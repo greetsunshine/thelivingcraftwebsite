@@ -15,7 +15,12 @@ pnpm-debug.log*
 
 # environment variables
 .env
+.env.local
 .env.production
+
+# downloaded binaries / tools
+turso_cli-*/
+*.exe
 
 # macOS-specific files
 .DS_Store

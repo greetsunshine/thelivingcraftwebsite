@@ -1,0 +1,188 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const steps = [
+  { n: '01', label: 'Initial Assessment',  desc: 'Map current state, surface real gaps, define what success looks like in 90 days' },
+  { n: '02', label: 'Goal Alignment',       desc: 'Set 30/60/90-day milestones that are measurable, not aspirational' },
+  { n: '03', label: 'Sessions + Action',    desc: 'Bi-weekly sessions, each ending with a specific action contract before the next one' },
+  { n: '04', label: 'Day 45 Review',        desc: 'Mid-arc checkpoint — course-correct before momentum is lost' },
+  { n: '05', label: 'Day 90 Review',        desc: 'Outcomes assessment, what changed, and whether to run another arc' },
+];
+---
+
+<BaseLayout
+  title="Mentoring & Coaching"
+  description="1:1 career transformation mentoring for senior engineers and leaders. Compress 2 years of AI leadership growth into a 90-day arc."
+>
+
+  <!-- ─── HERO ──────────────────────────────────────────────── -->
+  <section
+    class="relative py-28 overflow-hidden"
+    style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+  >
+    <div class="absolute inset-0 opacity-[0.04]"
+         style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+    <div class="relative container mx-auto px-6 max-w-4xl">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Services / Mentoring</p>
+      <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+        Career Transformation<br/>
+        <span style="background: linear-gradient(135deg, #ec4899, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          for Senior Technical Leaders
+        </span>
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mb-3 leading-relaxed">
+        1:1 mentoring designed for <span class="text-white font-medium">ultra fast learning</span>. What most
+        leaders figure out over two years of trial and error — compressed into a structured 90-day arc.
+      </p>
+      <p class="text-gray-500 text-sm font-mono mb-10">Not participation. Transformation.</p>
+      <div class="flex flex-wrap gap-4">
+        <a href="/contact/?source=mentoring"
+           class="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+           style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+          Apply for Mentoring →
+        </a>
+        <a href="#how-it-works"
+           class="inline-flex items-center gap-2 px-6 py-3 text-gray-300 hover:text-white font-medium rounded-xl border border-gray-700/60 hover:border-gray-500/60 transition-colors">
+          See how it works
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── TWO TRACKS ───────────────────────────────────────── -->
+  <section class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6">
+      <div class="mb-14">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Engagement Tracks</p>
+        <h2 class="text-4xl font-bold text-white">Two tracks.<br/>One principle: compress the arc.</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Track A -->
+        <div class="relative p-8 bg-dark-card border border-gray-700/40 rounded-2xl flex flex-col overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-0.5" style="background: #4f46e5;"></div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-mono font-bold"
+                 style="background: rgba(79,70,229,0.15); border: 1px solid rgba(79,70,229,0.3); color: #818cf8;">A</div>
+            <p class="text-xs font-mono text-gray-400 uppercase tracking-widest">Engineering to Leadership</p>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Staff / Principal → AI Leader</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-8 flex-1">
+            For Staff and Principal engineers moving into Engineering Manager or AI-focused leadership roles.
+            Concrete leadership reps each fortnight — not reflection, action. Each session ends with a specific
+            thing to do before the next one.
+          </p>
+          <ul class="space-y-2.5 mb-8">
+            {[
+              'Identify the leadership gaps that are actually holding you back',
+              'Execute leadership decisions with confidence, not permission',
+              'Build visibility with the stakeholders who matter',
+            ].map(o => (
+              <li class="flex items-start gap-2 text-sm text-gray-300">
+                <span class="flex-shrink-0 mt-0.5" style="color: #818cf8;">›</span>
+                {o}
+              </li>
+            ))}
+          </ul>
+          <div class="flex gap-8 pt-6 border-t border-gray-700/40">
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">Bi-weekly</p>
+              <p class="text-gray-500 text-xs">Sessions</p>
+            </div>
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">90-day arc</p>
+              <p class="text-gray-500 text-xs">Duration</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Track B -->
+        <div class="relative p-8 bg-dark-card border border-gray-700/40 rounded-2xl flex flex-col overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-0.5" style="background: #ec4899;"></div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-mono font-bold"
+                 style="background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.3); color: #f472b6;">B</div>
+            <p class="text-xs font-mono text-gray-400 uppercase tracking-widest">Leader to AI Leader</p>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">EM / Director / CTO → AI Strategy Owner</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-8 flex-1">
+            For Engineering Managers, Directors, and CTOs who need to own an AI strategy. Your strategy is
+            stress-tested against your real org constraints in session 1 — no generic frameworks handed over.
+          </p>
+          <ul class="space-y-2.5 mb-8">
+            {[
+              'Build a defensible AI strategy your board will fund',
+              'Diagnose your org\'s actual blockers — not the stated ones',
+              'Run the stakeholder conversations that move things forward',
+            ].map(o => (
+              <li class="flex items-start gap-2 text-sm text-gray-300">
+                <span class="flex-shrink-0 mt-0.5" style="color: #f472b6;">›</span>
+                {o}
+              </li>
+            ))}
+          </ul>
+          <div class="flex gap-8 pt-6 border-t border-gray-700/40">
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">Monthly</p>
+              <p class="text-gray-500 text-xs">Strategy sessions</p>
+            </div>
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">+ Async</p>
+              <p class="text-gray-500 text-xs">Ongoing support</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── PROCESS ──────────────────────────────────────────── -->
+  <section id="how-it-works" class="bg-dark-secondary py-24">
+    <div class="container mx-auto px-6">
+      <div class="mb-14">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">The 90-Day Arc</p>
+        <h2 class="text-4xl font-bold text-white">How it works</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {steps.map((s, i) => (
+          <div class="relative p-6 bg-dark-card border border-gray-700/40 rounded-xl flex flex-col">
+            {i < steps.length - 1 && (
+              <div class="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-px bg-gray-700 z-10"></div>
+            )}
+            <p class="text-accent font-mono text-sm font-bold mb-3">{s.n}</p>
+            <p class="text-white font-semibold text-sm mb-2 leading-snug">{s.label}</p>
+            <p class="text-gray-400 text-xs leading-relaxed">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── INTAKE CTA ───────────────────────────────────────── -->
+  <section class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6 max-w-xl text-center">
+      <div class="relative p-px rounded-2xl overflow-hidden"
+           style="background: linear-gradient(135deg, rgba(236,72,153,0.5), rgba(244,114,182,0.1), rgba(236,72,153,0.0));">
+        <div class="p-12 bg-dark-card rounded-2xl">
+          <h2 class="text-3xl font-bold text-white mb-4">Spots are limited.</h2>
+          <p class="text-gray-400 text-sm leading-relaxed mb-8">
+            I work with a small number of clients at a time to ensure depth, not scale.
+            If you're considering it, reach out early.
+          </p>
+          <a href="/contact/?source=mentoring"
+             class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+             style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+            Apply for Mentoring →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

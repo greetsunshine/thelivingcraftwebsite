@@ -1,0 +1,68 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;        // absolute URL, 1200×630
+  ogType?: 'website' | 'article';
+  canonical?: string;
+  noindex?: boolean;
+  schema?: Record<string, unknown>;  // JSON-LD object (merged with Organization)
+}
+
+const {
+  title,
+  description,
+  ogTitle,
+  ogDescription,
+  ogImage = 'https://thelivingcraft.com/og/home.png',
+  ogType = 'website',
+  canonical,
+  noindex = false,
+  schema,
+} = Astro.props;
+
+const siteUrl = 'https://thelivingcraft.com';
+const resolvedCanonical = canonical ?? (siteUrl + Astro.url.pathname);
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'The Living Craft',
+  url: siteUrl,
+  description: 'Agentic AI training, mentoring, and consulting for senior technical leaders',
+  founder: { '@type': 'Person', name: 'Sunil Mathew' },
+  sameAs: ['https://linkedin.com/in/sunilmathew'],
+};
+
+const schemas = schema
+  ? [organizationSchema, schema]
+  : [organizationSchema];
+---
+
+<!-- Primary meta -->
+<meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex,nofollow" />}
+
+<!-- Canonical -->
+<link rel="canonical" href={resolvedCanonical} />
+
+<!-- Open Graph -->
+<meta property="og:title" content={ogTitle ?? title} />
+<meta property="og:description" content={ogDescription ?? description} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={resolvedCanonical} />
+<meta property="og:site_name" content="The Living Craft" />
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={ogTitle ?? title} />
+<meta name="twitter:description" content={ogDescription ?? description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- JSON-LD -->
+{schemas.map(s => (
+  <script type="application/ld+json" set:html={JSON.stringify(s)} />
+))}

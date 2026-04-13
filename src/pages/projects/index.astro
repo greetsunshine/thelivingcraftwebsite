@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const allProjects = await getCollection('projects');
+// Sort: Live first, then In Progress, then Planned
+const statusOrder = { Live: 0, 'In Progress': 1, Planned: 2 };
+allProjects.sort((a, b) => statusOrder[a.data.status] - statusOrder[b.data.status]);
+
+const tagColors: Record<string, string> = {
+  violet:  'rgba(79,70,229,0.15)',
+  cyan:    'rgba(6,182,212,0.15)',
+  pink:    'rgba(236,72,153,0.15)',
+  emerald: 'rgba(16,185,129,0.15)',
+  amber:   'rgba(245,158,11,0.15)',
+};
+const tagText: Record<string, string> = {
+  violet:  '#818cf8',
+  cyan:    '#22d3ee',
+  pink:    '#f472b6',
+  emerald: '#34d399',
+  amber:   '#fbbf24',
+};
+const statusColors: Record<string, string> = {
+  emerald: '#34d399',
+  amber:   '#fbbf24',
+  gray:    '#6b7280',
+};
+---
+
+<BaseLayout
+  title="Projects"
+  description="Open-source tools, frameworks, and public work from The Living Craft — built in public for senior technical leaders building with AI."
+>
+
+  <!-- ─── HERO ──────────────────────────────────────────────── -->
+  <section
+    class="relative py-24 overflow-hidden"
+    style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 65%);"
+  >
+    <div class="absolute inset-0 opacity-[0.04]"
+         style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+    <div class="relative container mx-auto px-6">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Projects</p>
+      <h1 class="text-5xl font-bold text-white mb-5 max-w-2xl leading-tight">
+        Built in public.<br/>Useful by design.
+      </h1>
+      <p class="text-gray-400 text-lg max-w-xl leading-relaxed">
+        Tools, frameworks, and reference implementations. Everything here is either
+        open source or explained in enough detail to be usable without the source.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ─── PROJECT GRID ─────────────────────────────────────── -->
+  <section class="bg-dark-primary py-20">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {allProjects.map(p => (
+          <a href={`/projects/${p.id}/`}
+             class="group p-8 bg-dark-card border border-gray-700/40 rounded-2xl hover:border-accent/20 transition-colors duration-300 flex flex-col">
+
+            <!-- Header row -->
+            <div class="flex items-center justify-between mb-5">
+              <span class="px-2.5 py-1 text-xs font-mono rounded-md"
+                    style={`background: ${tagColors[p.data.tagColor]}; color: ${tagText[p.data.tagColor]};`}>
+                {p.data.tag}
+              </span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full"
+                      style={`background: ${statusColors[p.data.statusColor]};`}></span>
+                <span class="text-xs font-mono" style={`color: ${statusColors[p.data.statusColor]};`}>
+                  {p.data.status}
+                </span>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-white mb-1 group-hover:text-accent-light transition-colors duration-200">
+              {p.data.title}
+            </h3>
+            <p class="text-gray-500 text-sm font-mono mb-5">{p.data.subtitle}</p>
+            <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-1">{p.data.description}</p>
+
+            <!-- Stack -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              {p.data.stack.map(s => (
+                <span class="px-2.5 py-1 text-xs font-mono text-gray-400 bg-dark-secondary border border-gray-700/40 rounded-lg">
+                  {s}
+                </span>
+              ))}
+            </div>
+
+            <div class="pt-4 border-t border-gray-700/40">
+              <span class="text-accent text-xs font-medium group-hover:translate-x-0.5 transition-transform duration-200 inline-block">
+                View project →
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── PHILOSOPHY ───────────────────────────────────────── -->
+  <section class="bg-dark-secondary py-20">
+    <div class="container mx-auto px-6 max-w-3xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+        <div>
+          <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Philosophy</p>
+          <h2 class="text-3xl font-bold text-white mb-5 leading-snug">
+            Why build in public?
+          </h2>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">
+            Everything at The Living Craft is about compressing the time between learning something
+            and using it. Building in public forces clarity — you have to explain the decisions,
+            which makes you make better ones.
+          </p>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            If something here saves you a week of wrong-direction work, that's the whole point.
+          </p>
+        </div>
+        <div class="space-y-4">
+          {[
+            { n: '01', text: 'Open source where possible — proprietary where necessary' },
+            { n: '02', text: 'Every project has a companion writeup explaining the decisions' },
+            { n: '03', text: 'Status is honest — Planned means planned, not vaporware' },
+          ].map(item => (
+            <div class="flex gap-4 p-5 bg-dark-card border border-gray-700/30 rounded-xl">
+              <span class="text-accent font-mono text-sm flex-shrink-0">{item.n}</span>
+              <p class="text-gray-300 text-sm leading-relaxed">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── CTA ──────────────────────────────────────────────── -->
+  <section class="bg-dark-primary py-20">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-2xl font-bold text-white mb-4">Want to collaborate on a project?</h2>
+      <p class="text-gray-400 mb-8 text-sm">Open to research partnerships and co-authoring with practitioners building in this space.</p>
+      <a href="/contact/?source=other"
+         class="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-xl transition-opacity hover:opacity-90"
+         style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+        Get in touch →
+      </a>
+    </div>
+  </section>
+
+</BaseLayout>

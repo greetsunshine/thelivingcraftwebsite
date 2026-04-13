@@ -1,0 +1,238 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const courses = [
+  {
+    n: '01',
+    audience: 'EMs · PMs · Tech Leads',
+    title: 'Agentic AI Project Strategy',
+    desc: 'Define scope, set milestones, and structure delivery for AI projects that actually ship.',
+    outcomes: [
+      'Scope an agentic AI project in under a week',
+      'Build a milestone framework that survives contact with reality',
+      'Align stakeholders on what "done" looks like for AI',
+    ],
+    duration: '8 weeks',
+    format: 'Live cohort',
+    ufl: 'Each session maps to a real project decision you face that week',
+    color: '#4f46e5',
+  },
+  {
+    n: '02',
+    audience: 'EMs · CTOs',
+    title: 'Building Agentic Teams',
+    desc: 'Hire, form, and structure the cross-functional teams that build and operate autonomous AI systems.',
+    outcomes: [
+      'Write job descriptions that attract the right candidates',
+      'Design a team topology optimised for agentic AI work',
+      'Role templates and hiring rubrics — usable before the cohort ends',
+    ],
+    duration: '8 weeks',
+    format: 'Live cohort',
+    ufl: 'Hiring rubrics delivered week 1 — usable before the cohort ends',
+    color: '#ec4899',
+  },
+  {
+    n: '03',
+    audience: 'Staff Engineers · Architects',
+    title: 'Agentic Architectures Deep Dive',
+    desc: 'Orchestration patterns, tool use, memory, evaluation loops — the architectural decisions that determine production success.',
+    outcomes: [
+      'Evaluate orchestration frameworks for your specific constraints',
+      'Design a memory architecture for stateful agents',
+      'Build an evaluation loop that catches failures before production',
+    ],
+    duration: '10 weeks',
+    format: 'Live cohort',
+    ufl: 'Architecture decision records (ADRs) are the core artifact — not slides',
+    color: '#06b6d4',
+  },
+  {
+    n: '04',
+    audience: 'VPs · CTOs · Senior EMs',
+    title: 'Managing Implementation Challenges',
+    desc: 'Stakeholder alignment, rollout sequencing, and incident response for AI systems in real organisations.',
+    outcomes: [
+      'Run a stakeholder alignment session in week 1',
+      'Build a rollout sequence that reduces blast radius',
+      'Respond to an AI system incident before it becomes a crisis',
+    ],
+    duration: '6 weeks',
+    format: 'Live cohort',
+    ufl: 'Incident simulations in week 2 — learn from synthetic failure before real failure',
+    color: '#10b981',
+  },
+];
+---
+
+<BaseLayout
+  title="Agentic AI Training"
+  description="Leadership-grade Agentic AI training cohorts for Engineering Managers, Architects, and CTOs. Built for ultra fast learning."
+>
+
+  <style>
+    .course-card {
+      position: relative;
+      background: #16213e;
+      border: 1px solid rgba(75,85,99,0.4);
+      border-radius: 1rem;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .course-card:hover { transform: translateY(-2px); }
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+  </style>
+
+  <!-- ─── HERO ──────────────────────────────────────────────── -->
+  <section
+    class="relative py-28 overflow-hidden"
+    style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+  >
+    <div class="absolute inset-0 opacity-[0.04]"
+         style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+    <div class="relative container mx-auto px-6 max-w-4xl">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Services / Training</p>
+      <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+        Agentic AI Training<br/>
+        <span style="background: linear-gradient(135deg, #4f46e5, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          for Technical Leaders
+        </span>
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mb-8 leading-relaxed">
+        Leadership-grade programs built for <span class="text-white font-medium">ultra fast learning</span> —
+        not YouTube tutorials. You'll leave with implementation-ready knowledge and a peer cohort doing
+        the same work.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a href="#programs"
+           class="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+           style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+          View Programs
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </a>
+        <a href="/contact/?source=training"
+           class="inline-flex items-center gap-2 px-6 py-3 text-gray-300 hover:text-white font-medium rounded-xl border border-gray-700/60 hover:border-gray-500/60 transition-colors">
+          Talk to us first
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── DIFFERENTIATORS ──────────────────────────────────── -->
+  <section class="bg-dark-secondary py-20">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          {
+            title: 'Every session, a usable artifact',
+            body: "Not notes. Not slides. Each session ends with something you can use in your org the next morning — a template, a decision record, a hiring rubric.",
+          },
+          {
+            title: 'Cohort model — your seniority level',
+            body: '≤20 participants at your level. No juniors, no generic content. Peer pressure and shared context accelerate the learning in ways solo study cannot.',
+          },
+          {
+            title: 'Live + async — built for executives',
+            body: 'Weekly live sessions, structured async discussion between. Designed so you never have to choose between shipping and learning.',
+          },
+        ].map((d, i) => (
+          <div class="p-7 bg-dark-card border border-gray-700/30 rounded-2xl">
+            <p class="text-accent font-mono text-sm font-bold mb-4">0{i + 1}</p>
+            <h3 class="text-white font-bold text-base mb-3 leading-snug">{d.title}</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">{d.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── COURSE CARDS ─────────────────────────────────────── -->
+  <section id="programs" class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6">
+      <div class="mb-14">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Programs</p>
+        <h2 class="text-4xl font-bold text-white">Choose your program</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {courses.map(c => (
+          <div class="course-card p-8 flex flex-col" style={`--accent-color: ${c.color};`}>
+            <!-- Top colour bar -->
+            <div class="absolute top-0 left-0 right-0 h-0.5" style={`background: ${c.color};`}></div>
+
+            <div class="flex items-center justify-between mb-5">
+              <p class="font-mono text-sm font-bold" style={`color: ${c.color};`}>{c.n}</p>
+              <p class="text-xs font-mono text-gray-500">{c.audience}</p>
+            </div>
+
+            <h3 class="text-2xl font-bold text-white mb-3">{c.title}</h3>
+            <p class="text-gray-400 text-sm leading-relaxed mb-6">{c.desc}</p>
+
+            <!-- UFL badge -->
+            <div class="flex items-start gap-3 p-4 rounded-xl mb-6"
+                 style={`background: ${c.color}10; border-left: 2px solid ${c.color}60;`}>
+              <span class="text-xs font-mono font-bold flex-shrink-0 mt-0.5"
+                    style={`color: ${c.color};`}>UFL</span>
+              <p class="text-gray-300 text-xs leading-relaxed">{c.ufl}</p>
+            </div>
+
+            <!-- Outcomes -->
+            <p class="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-3">You'll be able to</p>
+            <ul class="space-y-2.5 mb-8 flex-1">
+              {c.outcomes.map(o => (
+                <li class="flex items-start gap-2 text-sm text-gray-300">
+                  <span class="flex-shrink-0 mt-0.5" style={`color: ${c.color};`}>›</span>
+                  {o}
+                </li>
+              ))}
+            </ul>
+
+            <!-- Specs + CTA -->
+            <div class="flex items-center gap-6 pt-6 border-t border-gray-700/40">
+              <div>
+                <p class="text-white font-mono font-semibold text-sm">{c.duration}</p>
+                <p class="text-gray-600 text-xs">Duration</p>
+              </div>
+              <div>
+                <p class="text-white font-mono font-semibold text-sm">{c.format}</p>
+                <p class="text-gray-600 text-xs">Format</p>
+              </div>
+              <div class="ml-auto">
+                <a href="/contact/?source=training"
+                   class="text-sm font-medium transition-colors hover:opacity-80"
+                   style={`color: ${c.color};`}>
+                  Request info →
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── CTA ──────────────────────────────────────────────── -->
+  <section class="bg-dark-secondary py-20">
+    <div class="container mx-auto px-6 text-center max-w-2xl">
+      <h2 class="text-3xl font-bold text-white mb-4">Not sure which program fits?</h2>
+      <p class="text-gray-400 mb-8">A 30-minute scoping call is enough to know. No commitment, no pitch.</p>
+      <a href="/contact/?source=training"
+         class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+         style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+        Book a 30-min scoping call →
+      </a>
+    </div>
+  </section>
+
+</BaseLayout>

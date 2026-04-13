@@ -1,0 +1,469 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const timeline = [
+  {
+    period: '1999 – 2011',
+    company: 'Consulting — Technology, Retail, Healthcare, Financial Services',
+    role: 'Tech Lead → Development Manager',
+    desc: 'A decade of consulting across diverse sectors and domains — delivery management, enterprise programmes, quality leadership, and building high-performing teams. Led delivery centers of 300+ associates, drove CMMI Level 5 certification, and managed Fortune 1 client relationships.',
+  },
+  {
+    period: '2011 – 2021',
+    company: 'Walmart Labs',
+    role: 'Director of Engineering',
+    desc: '10 years. Grew from Program Manager to Director of Engineering, leading 100+ associates across the US, UK, and China. Delivered 300+ products, platforms serving 2.1M users, and pioneered AI-driven chatbot platforms with NPS 80%+.',
+  },
+  {
+    period: '2021 – 2022',
+    company: 'Amazon',
+    role: 'Senior Engineering Leader',
+    desc: 'Led re-architecture of Amazon Prime membership core flows — microservices redesign focused on latency reduction and reliability. Built the onboarding platform for third-party Prime membership extensions.',
+  },
+  {
+    period: '2022 – 2024',
+    company: 'Google',
+    role: 'Senior Engineering Leader',
+    desc: 'Led a 50-person distributed team. Shipped a Generative AI-powered video editor, managed two Workspace flagship products — one serving 85M monthly users, the other running 31B weekly executions. Mentored 20+ engineers.',
+  },
+  {
+    period: '2024 – Present',
+    company: 'Agentic AI Startup',
+    role: 'Senior Engineering Leader',
+    desc: 'Leading AI initiatives at an Agentic AI firm servicing top tech clients including Google. Built the AI practice, matured Agentic SDLC, LLM Ops, and evaluation frameworks. Multi-agent implementation across RAG, NL2SQL, and Agent-to-Agent Orchestration.',
+  },
+];
+
+const strengths = [
+  {
+    title: 'Agentic AI — hands-on, not theoretical',
+    body: 'Built multi-agent systems in production: RAG pipelines, NL2SQL, Agent-to-Agent Orchestration. Established Agentic SDLC practices, LLM Ops, and agent performance evaluation frameworks. The curriculum comes from doing the work.',
+  },
+  {
+    title: 'Fortune 100 at the leadership level',
+    body: 'Over a decade of engineering leadership at Google, Amazon, and Walmart — not as an individual contributor, but as the person making architectural decisions, running the stakeholder conversations, and owning the roadmap.',
+  },
+  {
+    title: 'Full-lifecycle, cross-functional breadth',
+    body: 'From strategy and business case through architecture, build, deployment, and long-term maintenance — across customer-centric retail and healthcare products, ERP systems (SAP, Mainframe), cloud platforms, and modern microservices. Not a specialist in one layer. Fluent across all of them.',
+  },
+  {
+    title: 'Scale that most AI leaders haven\'t seen',
+    body: '85 million monthly users. 31 billion weekly executions. 300+ products. 2.1 million-user platforms. The patterns of what breaks — and what scales — are encoded in every programme and engagement.',
+  },
+  {
+    title: '400+ hours of teaching, coaching, and mentoring',
+    body: 'Accumulated across top IT companies including Google, Amazon, and Walmart — running leadership development programmes, mentoring engineers into senior roles, coaching teams through Agile transformation, and facilitating global ideathons and hackathons.',
+  },
+  {
+    title: 'People leadership across geographies',
+    body: 'Built and led teams of up to 150 engineers, architects, and PMs across India, the US, UK, and China. Mentored 20+ engineers into senior roles at Google alone. Knows the difference between managing people and genuinely developing them.',
+  },
+];
+
+const certs = [
+  { year: '2024', label: 'Executive Coaching', org: 'BetterUp' },
+  { year: '2021', label: 'Leadership Catalyst Program', org: 'Indian School of Business' },
+  { year: '2019', label: 'Leadership for Senior Leadership', org: 'ISB Hyderabad' },
+  { year: '2018', label: 'Strategic Leadership in Technology', org: 'IIM Bangalore' },
+  { year: '2010', label: 'CMMi High Maturity', org: 'Cognizant' },
+];
+---
+
+<BaseLayout
+  title="About"
+  description="Sunil Mathew — 26 years of engineering and product leadership at Google, Amazon, and Walmart. Founder of The Living Craft, practitioner-grade Agentic AI training and consulting."
+>
+
+  <!-- ─── HERO ──────────────────────────────────────────────── -->
+  <section
+    class="relative py-28 overflow-hidden"
+    style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+  >
+    <div class="absolute inset-0 opacity-[0.04]"
+         style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+    <div class="relative container mx-auto px-6 max-w-4xl">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">About</p>
+      <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+        26 years of building.<br/>
+        <span style="background: linear-gradient(135deg, #4f46e5, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          Now teaching it right.
+        </span>
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl leading-relaxed mb-5">
+        Sunil Mathew. Senior engineering leader with 26+ years of hands-on experience
+        at <span class="text-white font-medium">Google, Amazon, and Walmart</span> — and now
+        deep in the Agentic AI space, building the systems and the people who run them.
+      </p>
+      <p class="text-gray-500 text-sm font-mono">
+        The Living Craft is the programme I wish had existed when I was figuring this out.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ─── METRICS STRIP ────────────────────────────────────── -->
+  <section class="bg-dark-secondary border-y border-gray-800/60 py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        {[
+          { n: '26+',   label: 'Years of practice' },
+          { n: '400+',  label: 'Hours of coaching & teaching' },
+          { n: '85M+',  label: 'Monthly users led' },
+          { n: '150+',  label: 'Engineers led' },
+        ].map(m => (
+          <div>
+            <p class="text-3xl font-bold mb-1"
+               style="background: linear-gradient(135deg, #4f46e5, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              {m.n}
+            </p>
+            <p class="text-gray-500 text-sm font-mono">{m.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── PERSONAL NARRATIVE ──────────────────────────────── -->
+  <section class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6 max-w-3xl">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">The real story</p>
+      <h2 class="text-4xl font-bold text-white mb-12 leading-snug">
+        Failures, pivots, and the one thing<br/>that compounded through all of it.
+      </h2>
+
+      <div class="space-y-10">
+
+        <!-- Chapter 1 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-px bg-gradient-to-b from-accent to-transparent mt-2 ml-1"></div>
+          <div>
+            <p class="text-accent font-mono text-xs font-semibold uppercase tracking-widest mb-3">Early career — the illusion of expertise</p>
+            <p class="text-gray-300 text-sm leading-relaxed mb-3">
+              I was good at the technical work early. Good enough that I confused being good at
+              execution with understanding the full picture. The first time I moved into a delivery
+              management role, I struggled — not because the work was harder, but because the
+              feedback loop was completely different. In engineering, you know quickly when
+              something is wrong. In leadership, you can be wrong for months before it surfaces.
+            </p>
+            <p class="text-gray-500 text-sm leading-relaxed italic border-l-2 border-accent/30 pl-4">
+              The lesson: technical competence does not transfer automatically to leadership
+              competence. They are different skills, learned differently. I had to build the second
+              one from scratch while pretending I already had it.
+            </p>
+          </div>
+        </div>
+
+        <!-- Chapter 2 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-px bg-gradient-to-b from-accent/60 to-transparent mt-2 ml-1"></div>
+          <div>
+            <p class="text-accent font-mono text-xs font-semibold uppercase tracking-widest mb-3">Walmart — scale exposes everything</p>
+            <p class="text-gray-300 text-sm leading-relaxed mb-3">
+              Ten years at Walmart Labs was where the real education happened. At that scale —
+              300+ products, 100+ people, geographies, stakeholders, legacy systems — everything
+              that works at small scale breaks. I made every manageable mistake: over-engineered
+              solutions, under-communicated decisions, hired for skills instead of learning
+              velocity, built roadmaps that didn't survive first contact with org reality.
+            </p>
+            <p class="text-gray-300 text-sm leading-relaxed mb-3">
+              I also had some real wins: an Agile transformation that actually landed,
+              chatbot platforms that users loved (NPS 80%+), and the realisation that the
+              leaders I most respected weren't the ones who got things right — they were the
+              ones who course-corrected fastest.
+            </p>
+            <p class="text-gray-500 text-sm leading-relaxed italic border-l-2 border-accent/30 pl-4">
+              The lesson: the gap between a good decision and a great one is almost always
+              the speed of the feedback loop. Shrink the loop, improve the outcome.
+              That insight became the structural principle behind everything I now teach.
+            </p>
+          </div>
+        </div>
+
+        <!-- Chapter 3 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-px bg-gradient-to-b from-accent/40 to-transparent mt-2 ml-1"></div>
+          <div>
+            <p class="text-accent font-mono text-xs font-semibold uppercase tracking-widest mb-3">Google — learning in a different league</p>
+            <p class="text-gray-300 text-sm leading-relaxed mb-3">
+              Moving to Google was humbling in the best way. The bar for rigor — in engineering,
+              in decisions, in communication — was higher than anything I'd encountered before.
+              I led a 50-person distributed team shipping products at a scale most engineers
+              never see. I also mentored 20+ engineers through that period, and discovered
+              something I hadn't expected: teaching accelerates your own learning faster
+              than almost anything else.
+            </p>
+            <p class="text-gray-500 text-sm leading-relaxed italic border-l-2 border-accent/30 pl-4">
+              The lesson: the people who grow fastest are the ones who actively teach what
+              they know. Explaining something forces clarity. Clarity forces better decisions.
+              400+ hours of coaching and mentoring later, this is the core of how I design
+              every programme.
+            </p>
+          </div>
+        </div>
+
+        <!-- Chapter 4: the realisation -->
+        <div class="p-8 bg-dark-card border border-accent/20 rounded-2xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-0.5"
+               style="background: linear-gradient(90deg, #4f46e5, #818cf8, transparent);"></div>
+          <p class="text-accent font-mono text-xs font-semibold uppercase tracking-widest mb-4">The realisation</p>
+          <p class="text-white text-lg font-semibold leading-relaxed mb-4">
+            The real skill is not knowing the most. It's learning the fastest — and building
+            systems around you that do the same.
+          </p>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">
+            Every role, every failure, every pivot reinforced the same pattern: the leaders
+            who compound over time are not the ones with the deepest expertise at any single
+            moment. They're the ones who've built the most disciplined, fastest learning loops —
+            in themselves, in their teams, and in their organisations.
+          </p>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            The Living Craft is built on this belief. Not as a philosophy — as an engineering
+            constraint. Every programme, every engagement, every session is designed to
+            produce a measurable improvement in learning velocity. If it doesn't do that,
+            it doesn't belong in the curriculum.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── STORY + TIMELINE ─────────────────────────────────── -->
+  <section class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-16">
+
+        <!-- Left: narrative -->
+        <div class="lg:col-span-2">
+          <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">The story</p>
+          <h2 class="text-3xl font-bold text-white mb-6 leading-snug">
+            Not theory.<br/>Every scar earned.
+          </h2>
+          <div class="space-y-4 text-gray-400 text-sm leading-relaxed">
+            <p>
+              I started as a Tech Lead and spent the next 26 years doing the work — not
+              advising on it from the outside. A decade of consulting across Technology,
+              Retail, Healthcare, and Financial Services, then 10 years directing engineering
+              at Walmart Labs, building Prime membership infrastructure at Amazon, and
+              leading large distributed teams at Google shipping products used by tens of
+              millions of people daily.
+            </p>
+            <p>
+              The breadth is deliberate. I've worked across the full lifecycle — strategy,
+              business case, architecture, build, deployment, and long-term maintenance —
+              across customer-centric retail and healthcare platforms, ERP systems (SAP, Mainframe),
+              and modern cloud-native microservices. That cross-functional fluency is what
+              allows me to advise at the level of real org constraints, not just technical ones.
+            </p>
+            <p>
+              When Generative AI arrived, I moved fast — building real systems, not evaluating
+              them. At an Agentic AI firm servicing top tech clients including Google, I built
+              multi-agent systems in production: RAG pipelines, NL2SQL, Agent-to-Agent
+              Orchestration, Agentic SDLC, and LLM Ops frameworks.
+            </p>
+            <p>
+              <span class="text-white">Now I'm starting this venture.</span> Not because the
+              work stopped being interesting — but because what I enjoy most is the two things
+              that sit underneath all of it: <span class="text-white">problem solving</span> and
+              <span class="text-white">skill development</span>. The Living Craft is where I get
+              to do both, every day, with the people who are trying to figure out the same things
+              I spent 26 years figuring out.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: timeline -->
+        <div class="lg:col-span-3">
+          <div class="space-y-0">
+            {timeline.map((t, i) => (
+              <div class="flex gap-5">
+                <div class="flex flex-col items-center flex-shrink-0">
+                  <div class="w-2.5 h-2.5 rounded-full bg-accent mt-1 flex-shrink-0 ring-2 ring-accent/20"></div>
+                  {i < timeline.length - 1 && (
+                    <div class="w-px flex-1 bg-gradient-to-b from-accent/30 to-gray-800 mt-1"></div>
+                  )}
+                </div>
+                <div class="pb-8">
+                  <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <p class="text-accent font-mono text-xs font-semibold">{t.period}</p>
+                    <span class="text-gray-700 text-xs">·</span>
+                    <p class="text-gray-500 text-xs font-mono">{t.company}</p>
+                  </div>
+                  <p class="text-white font-semibold text-sm mb-2">{t.role}</p>
+                  <p class="text-gray-400 text-sm leading-relaxed">{t.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── STRENGTHS ────────────────────────────────────────── -->
+  <section class="bg-dark-secondary py-24">
+    <div class="container mx-auto px-6">
+      <div class="mb-14">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Why it matters</p>
+        <h2 class="text-4xl font-bold text-white">What you get that you<br/>don't get elsewhere</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {strengths.map((s, i) => (
+          <div class="relative p-8 bg-dark-card border border-gray-700/40 rounded-2xl overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-0.5"
+                 style="background: linear-gradient(90deg, #4f46e5, transparent);"></div>
+            <p class="text-accent/20 text-6xl font-bold absolute top-3 right-5 select-none leading-none">
+              {String(i + 1).padStart(2, '0')}
+            </p>
+            <h3 class="text-white font-bold text-lg mb-3 pr-10 leading-snug">{s.title}</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── ULTRA FAST LEARNING ─────────────────────────────── -->
+  <section class="bg-dark-primary py-24">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+
+        <!-- Left: philosophy -->
+        <div>
+          <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Core principle</p>
+          <h2 class="text-4xl font-bold text-white mb-6 leading-snug">
+            Why continuous learning<br/>
+            <span style="background: linear-gradient(135deg, #4f46e5, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              is the lever, not the tagline
+            </span>
+          </h2>
+          <div class="space-y-4 text-gray-400 text-sm leading-relaxed">
+            <p>
+              26 years in this field taught me one thing above all else: the leaders who compound
+              fastest are not the smartest — they're the ones who've built the most disciplined
+              learning loops. Every career inflection point I've had came from compressing a
+              learning cycle that others were content to let run for years.
+            </p>
+            <p>
+              <span class="text-white">Ultra Fast Learning is not about shortcuts.</span> It's about
+              ruthless sequencing — knowing what to learn first, what to skip until later, and how
+              to extract usable insight from every session rather than letting it sit in notes you'll
+              never revisit.
+            </p>
+            <p>
+              This principle is structural in everything The Living Craft delivers. It's not a
+              feature of the programme — it is the programme.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: how UFL is implemented per service -->
+        <div class="space-y-4">
+          <p class="text-xs font-mono uppercase tracking-widest text-gray-600 mb-6">How it's built into each service</p>
+
+          <div class="p-6 bg-dark-card border border-gray-700/40 rounded-2xl border-l-2" style="border-left-color: #4f46e5;">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-mono font-bold text-accent uppercase tracking-widest">Training</span>
+            </div>
+            <p class="text-white font-semibold text-sm mb-2">Artifact before the next session</p>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Every session ends with a concrete, usable output — a template, decision record,
+              hiring rubric, or architectural ADR. Not slides to review later. Something you can use
+              tomorrow morning. Cohorts of ≤20 at your seniority level compress learning through
+              shared context and deliberate peer pressure.
+            </p>
+          </div>
+
+          <div class="p-6 bg-dark-card border border-gray-700/40 rounded-2xl border-l-2" style="border-left-color: #ec4899;">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-mono font-bold uppercase tracking-widest" style="color: #ec4899;">Mentoring</span>
+            </div>
+            <p class="text-white font-semibold text-sm mb-2">Action contract every fortnight</p>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              The 90-day arc has hard checkpoints at day 30, 45, and 90. Every bi-weekly session
+              ends with a specific action contract — not a reflection, a commitment. Milestones are
+              measurable, not aspirational. Mid-arc course-correction is built in so momentum is
+              never lost to slow drift.
+            </p>
+          </div>
+
+          <div class="p-6 bg-dark-card border border-gray-700/40 rounded-2xl border-l-2" style="border-left-color: #06b6d4;">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-mono font-bold uppercase tracking-widest" style="color: #06b6d4;">Consulting</span>
+            </div>
+            <p class="text-white font-semibold text-sm mb-2">Your team learns while the work gets done</p>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              Engagements are structured so your team builds competence during delivery — not
+              handed a finished product to maintain without understanding. Working drafts are in
+              your hands by week 2. Learning milestones are embedded into the project plan, not
+              added as an afterthought.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── CERTIFICATIONS ───────────────────────────────────── -->
+  <section class="bg-dark-primary py-20">
+    <div class="container mx-auto px-6 max-w-3xl">
+      <div class="mb-10">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Education & Certifications</p>
+        <h2 class="text-3xl font-bold text-white">Continuous learning, practised not preached</h2>
+      </div>
+
+      <!-- Degree -->
+      <div class="p-5 bg-dark-card border border-gray-700/40 rounded-2xl mb-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+            <span class="text-accent text-[10px] font-mono font-bold">BTech</span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-sm">B.Tech. — Electrical & Electronics Engineering</p>
+            <p class="text-gray-500 text-xs mt-0.5">M.A. College of Engineering, Kothamangalam, Kerala · 1999</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certs -->
+      <div class="space-y-3">
+        {certs.map(c => (
+          <div class="flex items-center gap-4 p-4 bg-dark-card border border-gray-700/30 rounded-xl">
+            <span class="text-accent font-mono text-xs w-10 flex-shrink-0">{c.year}</span>
+            <div>
+              <p class="text-white text-sm font-medium">{c.label}</p>
+              <p class="text-gray-500 text-xs">{c.org}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── CTA ──────────────────────────────────────────────── -->
+  <section class="bg-dark-secondary py-24">
+    <div class="container mx-auto px-6 text-center max-w-2xl">
+      <h2 class="text-3xl font-bold text-white mb-4">If the background fits what you need, let's talk.</h2>
+      <p class="text-gray-400 mb-8 leading-relaxed">
+        Discovery calls are 30 minutes, no pitch — just a direct conversation about your
+        situation and whether there's a fit.
+      </p>
+      <a href="/contact/"
+         class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+         style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+        Book a Discovery Call →
+      </a>
+    </div>
+  </section>
+
+</BaseLayout>
