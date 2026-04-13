@@ -16,6 +16,7 @@ const courses = [
     format: 'Live cohort',
     ufl: 'Each session maps to a real project decision you face that week',
     color: '#4f46e5',
+    source: 'training-strategy',
   },
   {
     n: '02',
@@ -31,6 +32,7 @@ const courses = [
     format: 'Live cohort',
     ufl: 'Hiring rubrics delivered week 1 — usable before the cohort ends',
     color: '#ec4899',
+    source: 'training-teams',
   },
   {
     n: '03',
@@ -46,6 +48,7 @@ const courses = [
     format: 'Live cohort',
     ufl: 'Architecture decision records (ADRs) are the core artifact — not slides',
     color: '#06b6d4',
+    source: 'training-architecture',
   },
   {
     n: '04',
@@ -61,6 +64,7 @@ const courses = [
     format: 'Live cohort',
     ufl: 'Incident simulations in week 2 — learn from synthetic failure before real failure',
     color: '#10b981',
+    source: 'training-implementation',
   },
 ];
 ---
@@ -208,7 +212,7 @@ const courses = [
                 <p class="text-gray-600 text-xs">Format</p>
               </div>
               <div class="ml-auto">
-                <a href="/contact/?source=training"
+                <a href={`/contact/?source=${c.source}`}
                    class="text-sm font-medium transition-colors hover:opacity-80"
                    style={`color: ${c.color};`}>
                   Request info →
