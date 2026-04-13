@@ -3,4 +3,28 @@
   publish = "dist"
 
 [build.environment]
-  OPENROUTER_API_TOKEN = "@openrouter_api_token"
+  NODE_VERSION = "22"
+
+# ─── Scheduled cron jobs ──────────────────────────────────────────────────────
+
+[[cron]]
+  # Scribe: review content calendar and draft the week's content
+  schedule = "0 7 * * 1"
+  handler = "netlify/functions/cron/content-schedule"
+
+[[cron]]
+  # Archivist: send weekly pipeline summary to Slack
+  schedule = "0 8 * * 5"
+  handler = "netlify/functions/cron/weekly-pipeline"
+
+[[cron]]
+  # Listener: synthesize feedback and generate monthly insight brief
+  schedule = "0 9 1 * *"
+  handler = "netlify/functions/cron/monthly-synthesis"
+
+# ─── Redirects ────────────────────────────────────────────────────────────────
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/"
+  status = 301

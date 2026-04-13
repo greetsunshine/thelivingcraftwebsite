@@ -1,0 +1,217 @@
+---
+export const prerender = false;
+
+import { queryLeads } from '../../lib/db';
+import type { PipelineStage, ServiceIntent } from '../../lib/db';
+
+// Read optional filters from query params
+const url = Astro.url;
+const stageFilter = (url.searchParams.get('stage') as PipelineStage | null) ?? undefined;
+const intentFilter = (url.searchParams.get('intent') as ServiceIntent | null) ?? undefined;
+const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
+const perPage = 20;
+
+let leads: Awaited<ReturnType<typeof queryLeads>> = [];
+let dbError = '';
+
+try {
+  leads = await queryLeads({
+    stage: stageFilter,
+    intent: intentFilter,
+    limit: perPage,
+    offset: (page - 1) * perPage,
+  });
+} catch (err) {
+  dbError = err instanceof Error ? err.message : String(err);
+}
+
+function urgencyColor(urgency: string): string {
+  if (urgency === 'high') return '#f97316';
+  if (urgency === 'medium') return '#facc15';
+  return '#64748b';
+}
+
+function seniorityLabel(score: number): string {
+  const labels: Record<number, string> = { 5: 'CTO/VP', 4: 'Director/Staff', 3: 'Sr EM/Arch', 2: 'EM/Sr IC', 1: 'IC' };
+  return labels[score] ?? String(score);
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function confidenceBar(conf: number): string {
+  const pct = Math.round(conf * 100);
+  const color = conf >= 0.8 ? '#4ade80' : conf >= 0.6 ? '#facc15' : '#f87171';
+  return `<span style="font-family:'JetBrains Mono',monospace;color:${color}">${pct}%</span>`;
+}
+
+const stages: PipelineStage[] = ['new_lead', 'contacted', 'qualified', 'proposal_sent', 'closed_won', 'closed_lost'];
+const intents: ServiceIntent[] = ['training', 'mentoring', 'consulting', 'other'];
+
+function buildFilter(params: Record<string, string | undefined>): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v) p.set(k, v);
+  }
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leads — Admin — The Living Craft</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    header { border-bottom: 1px solid #1e293b; padding: 16px 0; }
+    header .inner { display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 14px; font-weight: 600; color: #fff; margin: 0; }
+    header nav { display: flex; gap: 24px; }
+    header nav a { font-size: 13px; color: #94a3b8; text-decoration: none; }
+    header nav a:hover, header nav a.active { color: #fff; }
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin: 32px 0 24px; }
+    .page-title { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .page-subtitle { font-size: 13px; color: #64748b; margin: 0; font-family: 'JetBrains Mono', monospace; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .filter-btn { font-size: 12px; font-family: 'JetBrains Mono', monospace; padding: 5px 12px; border-radius: 6px; border: 1px solid #1e293b; background: transparent; color: #64748b; text-decoration: none; cursor: pointer; }
+    .filter-btn:hover { border-color: #4f46e5; color: #a5b4fc; }
+    .filter-btn.active { background: #1e1b4b; border-color: #4f46e5; color: #a5b4fc; }
+    .filter-sep { width: 1px; background: #1e293b; margin: 0 4px; }
+    .table-wrap { background: #16213e; border: 1px solid #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 32px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; padding: 12px 16px; text-align: left; background: #0f1829; border-bottom: 1px solid #1e293b; }
+    td { font-size: 13px; color: #94a3b8; padding: 14px 16px; border-top: 1px solid #0f1829; vertical-align: top; }
+    tr:first-child td { border-top: none; }
+    tr:hover td { background: #1a2540; }
+    .lead-name { font-weight: 600; color: #e2e8f0; display: block; margin-bottom: 2px; }
+    .lead-email { font-size: 12px; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+    .badge-training { background: #1e3a5f; color: #60a5fa; border: 1px solid #1d4ed8; }
+    .badge-mentoring { background: #1e1b4b; color: #a5b4fc; border: 1px solid #4338ca; }
+    .badge-consulting { background: #1a2e1a; color: #86efac; border: 1px solid #166534; }
+    .badge-other { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .badge-stage { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .message-preview { font-size: 12px; color: #64748b; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .empty-state { text-align: center; padding: 64px 24px; }
+    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #475569; font-size: 13px; }
+    .error-banner { background: #2d0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 16px; color: #f87171; font-size: 13px; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container inner">
+      <h1>The Living Craft <span class="mono" style="color:#4f46e5">/admin</span></h1>
+      <nav>
+        <a href="/admin/">Overview</a>
+        <a href="/admin/leads/" class="active">Leads</a>
+        <a href="/">← Site</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Lead Pipeline</h2>
+        <p class="page-subtitle">{leads.length} records · Classified by The Concierge</p>
+      </div>
+    </div>
+
+    {dbError && <div class="error-banner">DB error: {dbError}</div>}
+
+    <!-- Stage filters -->
+    <div class="filters">
+      <a href={`/admin/leads/${buildFilter({ intent: intentFilter })}`}
+         class={`filter-btn ${!stageFilter ? 'active' : ''}`}>All stages</a>
+      {stages.map(s => (
+        <a href={`/admin/leads/${buildFilter({ stage: s, intent: intentFilter })}`}
+           class={`filter-btn ${stageFilter === s ? 'active' : ''}`}>
+          {s.replace('_', ' ')}
+        </a>
+      ))}
+      <div class="filter-sep"></div>
+      <a href={`/admin/leads/${buildFilter({ stage: stageFilter })}`}
+         class={`filter-btn ${!intentFilter ? 'active' : ''}`}>All services</a>
+      {intents.map(i => (
+        <a href={`/admin/leads/${buildFilter({ intent: i, stage: stageFilter })}`}
+           class={`filter-btn ${intentFilter === i ? 'active' : ''}`}>
+          {i}
+        </a>
+      ))}
+    </div>
+
+    <!-- Leads table -->
+    <div class="table-wrap">
+      {leads.length === 0 ? (
+        <div class="empty-state">
+          <p>No leads yet. Submit the contact form to trigger The Concierge.</p>
+        </div>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Company / Role</th>
+              <th>Service</th>
+              <th>Seniority</th>
+              <th>Urgency</th>
+              <th>Confidence</th>
+              <th>Stage</th>
+              <th>Date</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map(lead => (
+              <tr>
+                <td>
+                  <span class="lead-name">{lead.name}</span>
+                  <span class="lead-email">{lead.email}</span>
+                </td>
+                <td>
+                  {lead.company && <div style="font-size:12px;color:#e2e8f0">{lead.company}</div>}
+                  {lead.role_title && <div style="font-size:12px;color:#64748b">{lead.role_title}</div>}
+                </td>
+                <td>
+                  <span class={`badge badge-${lead.service_intent}`}>{lead.service_intent}</span>
+                </td>
+                <td class="mono" style="color:#e2e8f0;font-size:12px">
+                  {lead.seniority_score}/5
+                  <div style="color:#64748b;font-size:11px">{seniorityLabel(lead.seniority_score)}</div>
+                </td>
+                <td>
+                  <span class="mono" style={`font-size:12px;color:${urgencyColor(lead.urgency)}`}>{lead.urgency}</span>
+                </td>
+                <td set:html={confidenceBar(lead.classification_confidence)} />
+                <td>
+                  <span class="badge badge-stage">{lead.pipeline_stage.replace('_', ' ')}</span>
+                </td>
+                <td class="mono" style="font-size:11px;color:#475569">{formatDate(lead.created_at)}</td>
+                <td>
+                  <span class="message-preview" title={lead.message}>{lead.message}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+
+    <!-- Pagination -->
+    {leads.length === perPage && (
+      <div style="text-align:center;margin-bottom:48px">
+        <a href={`/admin/leads/${buildFilter({ stage: stageFilter, intent: intentFilter, page: String(page + 1) })}`}
+           class="filter-btn">Load next page →</a>
+      </div>
+    )}
+  </div>
+</body>
+</html>
