@@ -3,11 +3,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const source = Astro.url.searchParams.get('source') ?? '';
 
+// Fine-grained source → human label (shown back to the visitor)
 const sourceLabels: Record<string, string> = {
-  training:   'Training programs',
-  mentoring:  'Mentoring & coaching',
-  consulting: 'Consulting',
+  training:                  'Training programs',
+  'training-strategy':       'Agentic AI Project Strategy',
+  'training-teams':          'Building Agentic Teams',
+  'training-architecture':   'Agentic Architectures Deep Dive',
+  'training-implementation': 'Managing Implementation Challenges',
+  mentoring:                 'Mentoring & coaching',
+  'mentoring-leadership':    'Mentoring — Engineering → AI Leader (Track A)',
+  'mentoring-strategy':      'Mentoring — Leader → AI Strategy Owner (Track B)',
+  'mentoring-interviews':    'Mentoring — Senior Interview Loops: MAANG & Beyond (Track C)',
+  consulting:                'Consulting',
+  'consulting-governance':   'Consulting — Governance Framework Design',
+  'consulting-roi':          'Consulting — ROI Assessment & Business Case',
+  'consulting-adoption':     'Consulting — Agentic AI Adoption Strategy',
 };
+
+// Derive coarse intent from fine-grained source (e.g. "mentoring-interviews" → "mentoring")
+// so the dropdown pre-selects the right top-level option.
+const coarseIntent = source.split('-')[0];
+const detectedLabel = sourceLabels[source];
 
 const options = [
   { value: 'training',   label: 'Training programs' },
@@ -68,9 +84,34 @@ const options = [
   </section>
 
 
+  <!-- ─── BOOK A CALL (Cal.com inline embed) ───────────────── -->
+  <section class="bg-dark-primary py-16 border-b border-gray-800/60">
+    <div class="container mx-auto px-6 max-w-4xl">
+      <div class="text-center mb-10">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Book a Discovery Call</p>
+        <h2 class="text-3xl font-bold text-white mb-3">Pick a time that works</h2>
+        <p class="text-gray-400 text-sm max-w-lg mx-auto">
+          30-minute discovery call on Google Meet. No deck, no pitch — just a direct conversation.
+        </p>
+      </div>
+
+      <div id="my-cal-inline"
+           class="rounded-2xl overflow-hidden border border-gray-800/60 bg-dark-card"
+           style="min-height: 640px;"></div>
+    </div>
+  </section>
+
+
   <!-- ─── FORM + SIDEBAR ───────────────────────────────────── -->
   <section class="bg-dark-primary py-20">
     <div class="container mx-auto px-6">
+      <div class="text-center mb-12 max-w-2xl mx-auto">
+        <p class="text-xs font-mono uppercase tracking-widest text-gray-500 mb-3">Or send a message</p>
+        <p class="text-gray-400 text-sm">
+          Prefer to share context in writing before booking? Use the form below —
+          I read every enquiry personally and respond within 1 business day.
+        </p>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
 
         <!-- Form -->
@@ -88,6 +129,13 @@ const options = [
             <p class="hidden">
               <label>Don't fill this in: <input name="bot-field" /></label>
             </p>
+
+            {detectedLabel && (
+              <div class="p-4 rounded-xl border border-accent/30 bg-accent/5">
+                <p class="text-[10px] font-mono uppercase tracking-widest text-accent mb-1">You came from</p>
+                <p class="text-white text-sm">{detectedLabel}</p>
+              </div>
+            )}
 
             <!-- Name + email row -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -112,7 +160,7 @@ const options = [
               <label for="interest" class="field-label">I'm interested in</label>
               <select id="interest" name="interest" class="field-input" style="background-color: #0d0d14;">
                 {options.map(o => (
-                  <option value={o.value} selected={o.value === source || undefined}>{o.label}</option>
+                  <option value={o.value} selected={o.value === coarseIntent || undefined}>{o.label}</option>
                 ))}
               </select>
             </div>
@@ -196,5 +244,59 @@ const options = [
       </div>
     </div>
   </section>
+
+  <!-- ─── Cal.com inline embed loader ──────────────────────── -->
+  <script is:inline>
+    (function (C, A, L) {
+      let p = function (a, ar) { a.q.push(ar); };
+      let d = C.document;
+      C.Cal = C.Cal || function () {
+        let cal = C.Cal;
+        let ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement("script")).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          const api = function () { p(api, arguments); };
+          const namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === "string") {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ["initNamespace", namespace]);
+          } else {
+            p(cal, ar);
+          }
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, "https://app.cal.com/embed/embed.js", "init");
+
+    Cal("init", "discovery-call", { origin: "https://cal.com" });
+    Cal.ns["discovery-call"]("inline", {
+      elementOrSelector: "#my-cal-inline",
+      config: { layout: "month_view" },
+      calLink: "thelivingcraft/discovery-call",
+    });
+    Cal.ns["discovery-call"]("ui", {
+      theme: "dark",
+      hideEventTypeDetails: false,
+      layout: "month_view",
+      cssVarsPerTheme: {
+        dark: {
+          "cal-bg": "#0a0a0f",
+          "cal-bg-muted": "#16213e",
+          "cal-brand": "#4f46e5",
+          "cal-text": "#ffffff",
+          "cal-text-muted": "#9ca3af",
+          "cal-border": "rgba(75,85,99,0.4)",
+        },
+      },
+    });
+  </script>
 
 </BaseLayout>

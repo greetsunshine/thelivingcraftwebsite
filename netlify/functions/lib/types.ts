@@ -7,6 +7,7 @@ export interface FormSubmission {
   company?: string;
   service_interest?: string;
   message: string;
+  source?: string;
 }
 
 export type ServiceIntent = 'training' | 'mentoring' | 'consulting' | 'other';

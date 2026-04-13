@@ -109,6 +109,60 @@ export async function updateLeadStage(id: string, stage: PipelineStage): Promise
   await sql`UPDATE leads SET pipeline_stage = ${stage}, updated_at = NOW() WHERE id = ${id}`;
 }
 
+export async function findLeadByEmail(email: string): Promise<Lead | null> {
+  const sql = getSql();
+  const rows = await sql`SELECT * FROM leads WHERE email = ${email.toLowerCase().trim()} LIMIT 1`;
+  return rows.length > 0 ? rowToLead(rows[0]) : null;
+}
+
+export async function setFirstContactBookedAt(id: string, when: Date): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE leads
+    SET first_contact_booked_at = COALESCE(first_contact_booked_at, ${when.toISOString()}),
+        updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+// ─── Bookings ────────────────────────────────────────────────────────────────
+
+export type BookingStatus = 'confirmed' | 'rescheduled' | 'cancelled';
+
+export interface BookingUpsert {
+  lead_id: string | null;
+  cal_booking_uid: string;
+  event_type?: string;
+  scheduled_for: Date;
+  end_time?: Date;
+  meeting_url?: string;
+  attendee_email: string;
+  attendee_name?: string;
+  status: BookingStatus;
+  notes?: string;
+}
+
+export async function upsertBooking(b: BookingUpsert): Promise<void> {
+  const sql = getSql();
+  await sql`
+    INSERT INTO bookings
+      (lead_id, cal_booking_uid, event_type, scheduled_for, end_time,
+       meeting_url, attendee_email, attendee_name, status, notes)
+    VALUES
+      (${b.lead_id}, ${b.cal_booking_uid}, ${b.event_type ?? null},
+       ${b.scheduled_for.toISOString()}, ${b.end_time?.toISOString() ?? null},
+       ${b.meeting_url ?? null}, ${b.attendee_email.toLowerCase().trim()},
+       ${b.attendee_name ?? null}, ${b.status}, ${b.notes ?? null})
+    ON CONFLICT (cal_booking_uid) DO UPDATE SET
+      scheduled_for = EXCLUDED.scheduled_for,
+      end_time      = EXCLUDED.end_time,
+      meeting_url   = EXCLUDED.meeting_url,
+      status        = EXCLUDED.status,
+      notes         = EXCLUDED.notes,
+      updated_at    = NOW()
+  `;
+}
+
 // ─── Agent Runs ──────────────────────────────────────────────────────────────
 
 export async function createAgentRun(run: {

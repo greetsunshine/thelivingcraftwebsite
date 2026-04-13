@@ -34,6 +34,7 @@ export const handler: BackgroundHandler = async (event) => {
       company: data.company ?? data.Company ?? undefined,
       service_interest: data.service_interest ?? data['service-interest'] ?? data.interest ?? undefined,
       message: data.message ?? data.Message ?? '',
+      source: data.source ?? data.Source ?? undefined,
     };
   } catch (err) {
     console.error('[submission-created-background] Failed to parse payload:', err);

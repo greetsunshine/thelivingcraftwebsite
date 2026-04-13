@@ -150,6 +150,7 @@ function buildSubmissionMessage(s: FormSubmission): string {
   if (s.role) lines.push(`**Role/Title:** ${s.role}`);
   if (s.company) lines.push(`**Company:** ${s.company}`);
   if (s.service_interest) lines.push(`**Service interest (self-reported):** ${s.service_interest}`);
+  if (s.source) lines.push(`**CTA clicked:** ${s.source} (specific offering they engaged with — strong signal for service_intent classification)`);
   lines.push('', `**Message:**`, s.message);
   return lines.join('\n');
 }

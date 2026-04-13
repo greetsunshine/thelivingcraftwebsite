@@ -72,6 +72,27 @@ CREATE TABLE IF NOT EXISTS content_calendar (
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ─── Bookings (Cal.com discovery calls) ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS bookings (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id         UUID REFERENCES leads(id) ON DELETE SET NULL,
+  cal_booking_uid TEXT NOT NULL UNIQUE,
+  event_type      TEXT,
+  scheduled_for   TIMESTAMPTZ NOT NULL,
+  end_time        TIMESTAMPTZ,
+  meeting_url     TEXT,
+  attendee_email  TEXT NOT NULL,
+  attendee_name   TEXT,
+  status          TEXT NOT NULL DEFAULT 'confirmed'
+                    CHECK (status IN ('confirmed','rescheduled','cancelled')),
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Track when a lead first booked a discovery call (used by Archivist daily brief)
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_contact_booked_at TIMESTAMPTZ;
+
 -- ─── Indexes ────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_leads_pipeline_stage  ON leads (pipeline_stage);
 CREATE INDEX IF NOT EXISTS idx_leads_service_intent  ON leads (service_intent);
@@ -79,3 +100,6 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_at      ON leads (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_content_drafts_status ON content_drafts (status);
 CREATE INDEX IF NOT EXISTS idx_agent_runs_created_at ON agent_runs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_content_calendar_date ON content_calendar (scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_scheduled_for ON bookings (scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_bookings_lead_id      ON bookings (lead_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_attendee     ON bookings (attendee_email);
