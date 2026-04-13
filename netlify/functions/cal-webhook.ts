@@ -80,18 +80,39 @@ export const handler: Handler = async (event) => {
   try {
     body = JSON.parse(rawBody);
   } catch {
+    console.warn('[cal-webhook] Invalid JSON body:', rawBody.slice(0, 500));
     return { statusCode: 400, body: 'Invalid JSON' };
   }
 
   const { triggerEvent, payload } = body;
+
+  // Ping tests and unhandled events: ack so Cal.com marks the webhook healthy.
+  // Only the three booking events carry the payload shape we care about.
+  const handledEvents: CalTriggerEvent[] = [
+    'BOOKING_CREATED',
+    'BOOKING_RESCHEDULED',
+    'BOOKING_CANCELLED',
+  ];
+  if (!handledEvents.includes(triggerEvent)) {
+    console.log(`[cal-webhook] Acknowledging non-booking event: ${triggerEvent}`);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, ignored: triggerEvent }) };
+  }
+
   if (!payload?.uid || !payload?.startTime) {
+    console.warn(
+      `[cal-webhook] ${triggerEvent} missing payload.uid or startTime. Raw body:`,
+      rawBody.slice(0, 1000)
+    );
     return { statusCode: 400, body: 'Missing payload fields' };
   }
 
   const primaryAttendee = payload.attendees?.[0];
   const attendeeEmail = primaryAttendee?.email?.toLowerCase().trim();
   if (!attendeeEmail) {
-    console.warn('[cal-webhook] No attendee email on payload uid:', payload.uid);
+    console.warn(
+      `[cal-webhook] ${triggerEvent} missing attendee email. uid:${payload.uid} Raw body:`,
+      rawBody.slice(0, 1000)
+    );
     return { statusCode: 400, body: 'Missing attendee email' };
   }
 
