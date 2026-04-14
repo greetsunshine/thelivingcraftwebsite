@@ -151,6 +151,13 @@ ALTER TABLE leads ADD COLUMN IF NOT EXISTS fit_score INTEGER;
 -- Mark synthetic / demo leads so they're easy to filter out of real pipeline
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS is_test_data BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- Concierge first-reply drafting (Phase 3 auto-reply)
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_reply_draft        TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_reply_subject      TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_reply_status       TEXT
+  CHECK (first_reply_status IN ('drafted','approved','sent','rejected'));
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_reply_sent_at      TIMESTAMPTZ;
+
 -- ─── Content Calendar expansion (Scribe Phase 1) ────────────────────────────
 ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS heat_score REAL;
 ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS enterprise_relevance_score REAL;

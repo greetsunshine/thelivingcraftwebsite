@@ -3,13 +3,32 @@ import { getAnthropicClient, MODELS } from '../lib/anthropic-client.js';
 import { runAgentLoop } from '../lib/agent-loop.js';
 import { ToolRegistry } from '../lib/tool-executor.js';
 import { CONCIERGE_SYSTEM_PROMPT } from '../lib/prompts/concierge.js';
-import { upsertLeadRecord } from '../lib/db-client.js';
+import {
+  upsertLeadRecord,
+  saveFirstReplyDraft,
+  markFirstReplySent,
+} from '../lib/db-client.js';
 import { orchCreateTask } from '../lib/orchestrator.js';
+import { emailNotify } from '../lib/notifiers.js';
 import type { AgentResult, FormSubmission, ServiceIntent, Lead, TaskPriority } from '../lib/types.js';
 
 // ─── Tool definitions ────────────────────────────────────────────────────────
 
 const CONCIERGE_TOOLS: Tool[] = [
+  {
+    name: 'save_first_reply',
+    description:
+      'Save a personalized first-reply email draft for this lead. Call this AFTER write_crm_record, passing the same lead email so the draft can be linked to the CRM record. Your draft becomes auto-sent if classification_confidence >= 0.8 AND seniority_score >= 3, otherwise held for owner review.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        lead_email: { type: 'string', description: "Same email as write_crm_record" },
+        subject: { type: 'string', description: 'Short, specific subject line — not "Re: Your inquiry"' },
+        body: { type: 'string', description: 'Plain-text reply body, under 150 words, signed "Sunil"' },
+      },
+      required: ['lead_email', 'subject', 'body'],
+    },
+  },
   {
     name: 'write_crm_record',
     description:
@@ -64,10 +83,25 @@ const CONCIERGE_TOOLS: Tool[] = [
 
 interface SavedLeadHolder {
   lead: Lead | null;
+  replyDraft: { subject: string; body: string } | null;
 }
 
 function buildRegistry(holder: SavedLeadHolder): ToolRegistry {
   const registry = new ToolRegistry();
+
+  registry.register('save_first_reply', async (input) => {
+    const email = (input.lead_email as string).toLowerCase().trim();
+    // Defer DB write until after we know the lead id — we stash the draft and
+    // let the outer flow persist it once upsertLeadRecord has returned.
+    holder.replyDraft = {
+      subject: input.subject as string,
+      body: input.body as string,
+    };
+    if (holder.lead && holder.lead.email.toLowerCase() === email) {
+      await saveFirstReplyDraft(holder.lead.id, holder.replyDraft.subject, holder.replyDraft.body);
+    }
+    return { success: true, note: 'Draft stashed. Will persist once CRM record exists.' };
+  });
 
   registry.register('write_crm_record', async (input) => {
     const lead = await upsertLeadRecord({
@@ -85,6 +119,11 @@ function buildRegistry(holder: SavedLeadHolder): ToolRegistry {
 
     // Capture for downstream use
     holder.lead = lead;
+
+    // If save_first_reply was called before write_crm_record, flush the stashed draft now
+    if (holder.replyDraft) {
+      await saveFirstReplyDraft(lead.id, holder.replyDraft.subject, holder.replyDraft.body);
+    }
 
     console.log(`[Concierge] Lead saved — id:${lead.id} intent:${lead.service_intent} seniority:${lead.seniority_score} urgency:${lead.urgency} confidence:${lead.classification_confidence}`);
 
@@ -108,7 +147,7 @@ export interface ConciergeResult extends AgentResult {
 }
 
 export async function runConcierge(submission: FormSubmission): Promise<ConciergeResult> {
-  const holder: SavedLeadHolder = { lead: null };
+  const holder: SavedLeadHolder = { lead: null, replyDraft: null };
   const client = getAnthropicClient();
   const registry = buildRegistry(holder);
 
@@ -128,6 +167,33 @@ export async function runConcierge(submission: FormSubmission): Promise<Concierg
     });
 
     const saved = holder.lead;
+    const draft = holder.replyDraft;
+
+    // ── First-reply auto-send or hold for review ────────────────────────────
+    if (saved && draft) {
+      const shouldAutoSend =
+        saved.classification_confidence >= 0.8 && saved.seniority_score >= 3;
+
+      if (shouldAutoSend) {
+        try {
+          await emailNotify({
+            to: saved.email,
+            subject: draft.subject,
+            html: replyToHtml(draft.body),
+            text: draft.body,
+          });
+          await markFirstReplySent(saved.id);
+          console.log(`[Concierge] First reply auto-sent to ${saved.email}`);
+        } catch (err) {
+          console.error('[Concierge] Auto-send failed:', err);
+          // Fall through — draft is still saved as 'drafted' for manual review
+        }
+      } else {
+        console.log(
+          `[Concierge] First reply HELD for review — confidence:${saved.classification_confidence} seniority:${saved.seniority_score}`
+        );
+      }
+    }
 
     // Emit a follow-up task to the shared queue, priority scaled by seniority + urgency.
     if (saved) {
@@ -181,6 +247,18 @@ function computeFollowupPriority(lead: Lead): TaskPriority | null {
   if (u === 'high') return 3;                       // Anyone with high urgency
   if (s >= 2) return 4;                             // EM/Senior IC
   return null;                                      // Don't emit a task
+}
+
+function replyToHtml(body: string): string {
+  const escaped = body
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const paragraphs = escaped
+    .split(/\n\n+/)
+    .map((p) => `<p style="margin:0 0 12px">${p.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+  return `<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;color:#0f172a;max-width:560px;line-height:1.55;font-size:14px">${paragraphs}<p style="margin-top:24px;color:#64748b;font-size:12px">The Living Craft · <a href="https://thelivingcraft.ai" style="color:#4f46e5">thelivingcraft.ai</a></p></body></html>`;
 }
 
 function buildSubmissionMessage(s: FormSubmission): string {

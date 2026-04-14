@@ -1,8 +1,13 @@
 import type { Tool } from '@anthropic-ai/sdk/resources/messages.js';
 import { getAnthropicClient, MODELS } from '../lib/anthropic-client.js';
 import { ToolRegistry } from '../lib/tool-executor.js';
-import { SCRIBE_TREND_SCAN_PROMPT } from '../lib/prompts/scribe.js';
-import { createProposedTopic } from '../lib/db-client.js';
+import { SCRIBE_TREND_SCAN_PROMPT, SCRIBE_DRAFT_PROMPT } from '../lib/prompts/scribe.js';
+import {
+  createProposedTopic,
+  getApprovedTopicsToDraft,
+  saveContentDraft,
+  markCalendarDrafted,
+} from '../lib/db-client.js';
 import { orchCreateTask, runAgentWithAccounting } from '../lib/orchestrator.js';
 import type { AgentResult, TaskPriority, TaskCategory } from '../lib/types.js';
 
@@ -83,6 +88,131 @@ function buildRegistry(): ToolRegistry {
   // web_search is handled server-side by Anthropic — no local handler.
 
   return registry;
+}
+
+// ─── Phase 2 — Drafting ──────────────────────────────────────────────────────
+
+const SCRIBE_DRAFT_TOOLS: Tool[] = [
+  {
+    name: 'get_approved_topics',
+    description: 'Load owner-approved topics from content_calendar that are ready to draft (status=planned).',
+    input_schema: { type: 'object' as const, properties: {} },
+  },
+  {
+    name: 'save_content_draft',
+    description: 'Save a draft to content_drafts with status ready_for_review. Call once per format per topic.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        calendar_id: { type: 'string', description: 'content_calendar row id from get_approved_topics' },
+        format: { type: 'string', description: 'blog | linkedin | newsletter' },
+        topic: { type: 'string', description: 'Same topic text as in content_calendar' },
+        body: { type: 'string', description: 'Full draft body — markdown for blog, plain text for linkedin' },
+      },
+      required: ['calendar_id', 'format', 'topic', 'body'],
+    },
+  },
+  {
+    name: 'mark_drafted',
+    description: 'Mark a content_calendar entry as drafted and link it to a draft_id. Call once per topic after all its formats are saved.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        calendar_id: { type: 'string' },
+        draft_id: { type: 'string', description: 'Any draft id from that topic (usually the blog draft id)' },
+      },
+      required: ['calendar_id', 'draft_id'],
+    },
+  },
+  {
+    name: 'create_task',
+    description: 'Emit a task to the owner\'s shared queue. Use for the "review drafts" summary task at the end.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        category: { type: 'string', description: 'content_review' },
+        priority: { type: 'number', description: '1-5' },
+        related_url: { type: 'string' },
+      },
+      required: ['title', 'category', 'priority'],
+    },
+  },
+];
+
+function buildDraftRegistry(): ToolRegistry {
+  const registry = new ToolRegistry();
+
+  registry.register('get_approved_topics', async () => {
+    const topics = await getApprovedTopicsToDraft(5);
+    return { count: topics.length, topics };
+  });
+
+  registry.register('save_content_draft', async (input) => {
+    const id = await saveContentDraft({
+      calendar_id: input.calendar_id as string,
+      format: input.format as 'blog' | 'linkedin' | 'newsletter',
+      topic: input.topic as string,
+      body: input.body as string,
+    });
+    return { success: true, draft_id: id };
+  });
+
+  registry.register('mark_drafted', async (input) => {
+    await markCalendarDrafted(input.calendar_id as string, input.draft_id as string);
+    return { success: true };
+  });
+
+  registry.register('create_task', async (input) => {
+    const task = await orchCreateTask({
+      title: input.title as string,
+      description: input.description as string | undefined,
+      category: input.category as TaskCategory,
+      priority: input.priority as TaskPriority,
+      created_by: 'scribe',
+      related_url: (input.related_url as string | undefined) ?? '/admin/tasks/',
+    });
+    return { success: true, task_id: task?.id ?? null };
+  });
+
+  return registry;
+}
+
+export async function runScribeDraft(): Promise<AgentResult> {
+  const client = getAnthropicClient();
+  const registry = buildDraftRegistry();
+
+  // Short-circuit: if nothing is approved, skip the agent call entirely
+  const topics = await getApprovedTopicsToDraft(5);
+  if (topics.length === 0) {
+    console.log('[Scribe Phase 2] No approved topics to draft — skipping');
+    return { success: true, output: 'No approved topics ready for drafting.' };
+  }
+
+  try {
+    const result = await runAgentWithAccounting({
+      client,
+      agentName: 'scribe-draft',
+      model: MODELS.sonnet,
+      system: SCRIBE_DRAFT_PROMPT,
+      tools: SCRIBE_DRAFT_TOOLS,
+      initialMessages: [
+        {
+          role: 'user',
+          content: `Draft content for ${topics.length} approved topic(s). Load them via get_approved_topics, produce blog + linkedin for each, save via save_content_draft, mark_drafted when done, then emit the review task.`,
+        },
+      ],
+      executeToolCall: registry.execute,
+      maxRounds: 30,
+      maxTokens: 8192,
+    });
+    return { success: true, output: result.output };
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('[Scribe Phase 2] Error:', error);
+    return { success: false, output: '', error };
+  }
 }
 
 export async function runScribeTrendScan(): Promise<AgentResult> {

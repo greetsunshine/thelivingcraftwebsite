@@ -13,12 +13,12 @@
 import type { Handler } from '@netlify/functions';
 import { runDailyBrief } from './lib/daily-brief.js';
 import { runMarketer } from './agents/marketer.js';
-import { runScribeTrendScan } from './agents/scribe.js';
+import { runScribeTrendScan, runScribeDraft } from './agents/scribe.js';
 import { createAgentRun, finalizeAgentRun } from './lib/db-client.js';
 import { withIdempotency } from './lib/orchestrator.js';
 import { BudgetExceededError } from './lib/cost-tracker.js';
 
-type CronJob = 'daily-brief' | 'weekly-marketer' | 'weekly-scribe';
+type CronJob = 'daily-brief' | 'weekly-marketer' | 'weekly-scribe' | 'weekly-scribe-draft';
 
 export const handler: Handler = async (event) => {
   const job = (event.queryStringParameters?.job ?? 'daily-brief') as CronJob;
@@ -49,6 +49,11 @@ export const handler: Handler = async (event) => {
         }
         case 'weekly-scribe': {
           const r = await runScribeTrendScan();
+          summary = r.success ? r.output.slice(0, 300) : `FAILED: ${r.error}`;
+          break;
+        }
+        case 'weekly-scribe-draft': {
+          const r = await runScribeDraft();
           summary = r.success ? r.output.slice(0, 300) : `FAILED: ${r.error}`;
           break;
         }

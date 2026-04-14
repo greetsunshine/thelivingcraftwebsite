@@ -423,3 +423,84 @@ export async function createProposedTopic(t: {
   `;
   return rows[0].id as string;
 }
+
+export interface ApprovedTopic {
+  id: string;
+  topic: string;
+  angle: string | null;
+  format: 'blog' | 'linkedin' | 'newsletter';
+  scheduled_date: string;
+  sources_json: unknown;
+}
+
+export async function getApprovedTopicsToDraft(limit = 5): Promise<ApprovedTopic[]> {
+  const sql = getSql();
+  // 'planned' = owner-approved, not yet drafted. Scribe Phase 2 picks these up.
+  const rows = await sql`
+    SELECT id, topic, angle, format, scheduled_date, sources_json
+    FROM content_calendar
+    WHERE status = 'planned'
+    ORDER BY scheduled_date ASC LIMIT ${limit}
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    topic: r.topic as string,
+    angle: (r.angle as string | null),
+    format: r.format as 'blog' | 'linkedin' | 'newsletter',
+    scheduled_date: toIso(r.scheduled_date),
+    sources_json: r.sources_json,
+  }));
+}
+
+export async function saveContentDraft(d: {
+  calendar_id: string;
+  format: 'blog' | 'linkedin' | 'newsletter';
+  topic: string;
+  body: string;
+}): Promise<string> {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO content_drafts (format, topic, body, status, calendar_id)
+    VALUES (${d.format}, ${d.topic}, ${d.body}, 'ready_for_review', ${d.calendar_id})
+    RETURNING id
+  `;
+  return rows[0].id as string;
+}
+
+export async function markCalendarDrafted(id: string, draftId: string): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE content_calendar
+    SET status = 'drafted', draft_id = ${draftId}, updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+// ─── First-reply drafting (Concierge Phase 3) ────────────────────────────────
+
+export async function saveFirstReplyDraft(
+  leadId: string,
+  subject: string,
+  body: string
+): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE leads
+    SET first_reply_subject = ${subject},
+        first_reply_draft   = ${body},
+        first_reply_status  = 'drafted',
+        updated_at          = NOW()
+    WHERE id = ${leadId}
+  `;
+}
+
+export async function markFirstReplySent(leadId: string): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE leads
+    SET first_reply_status  = 'sent',
+        first_reply_sent_at = NOW(),
+        updated_at          = NOW()
+    WHERE id = ${leadId}
+  `;
+}
