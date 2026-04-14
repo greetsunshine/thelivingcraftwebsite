@@ -73,17 +73,13 @@ const MARKETER_TOOLS: Tool[] = [
       required: ['title', 'category', 'priority'],
     },
   },
+  // Anthropic server-side web search — executed by the API, results returned
+  // inline as web_search_tool_result blocks. No local handler needed.
   {
+    type: 'web_search_20250305',
     name: 'web_search',
-    description: 'Search the web for recent signals (news, announcements, LinkedIn posts, funding events).',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        query: { type: 'string' },
-      },
-      required: ['query'],
-    },
-  },
+    max_uses: 5,
+  } as unknown as Tool,
 ];
 
 function buildRegistry(): ToolRegistry {
@@ -129,12 +125,7 @@ function buildRegistry(): ToolRegistry {
     return { success: true, task_id: task?.id ?? null };
   });
 
-  registry.register('web_search', async (input) => {
-    // Placeholder — Anthropic server-side web_search tool supersedes this.
-    // Returning an empty result makes the agent rely on its own classification
-    // of existing leads when web search isn't yet plumbed.
-    return { query: input.query, results: [], note: 'Web search not yet plumbed in this run' };
-  });
+  // web_search is handled server-side by Anthropic — no local handler.
 
   return registry;
 }
