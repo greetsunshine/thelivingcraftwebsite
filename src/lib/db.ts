@@ -35,6 +35,7 @@ export interface Lead {
   pipeline_stage: PipelineStage;
   classification_confidence: number;
   enrichment_json?: string;
+  is_test_data?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -75,6 +76,7 @@ function rowToLead(row: Record<string, unknown>): Lead {
     pipeline_stage: row.pipeline_stage as PipelineStage,
     classification_confidence: row.classification_confidence as number,
     enrichment_json: row.enrichment_json ? JSON.stringify(row.enrichment_json) : undefined,
+    is_test_data: (row.is_test_data as boolean | null) ?? false,
     created_at: toIso(row.created_at),
     updated_at: toIso(row.updated_at),
   };

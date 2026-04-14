@@ -148,6 +148,9 @@ CREATE TABLE IF NOT EXISTS outreach_drafts (
 -- Fit score added by Marketer's weekly ranking
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS fit_score INTEGER;
 
+-- Mark synthetic / demo leads so they're easy to filter out of real pipeline
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS is_test_data BOOLEAN NOT NULL DEFAULT FALSE;
+
 -- ─── Content Calendar expansion (Scribe Phase 1) ────────────────────────────
 ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS heat_score REAL;
 ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS enterprise_relevance_score REAL;
