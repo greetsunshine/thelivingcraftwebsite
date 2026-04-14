@@ -7,6 +7,14 @@ import type {
   Urgency,
   PipelineStage,
   TriggerType,
+  Task,
+  TaskCategory,
+  TaskPriority,
+  TaskStatus,
+  TaskCreator,
+  TaskAssignee,
+  OutreachDraft,
+  TargetAccount,
 } from './types.js';
 
 function getSql() {
@@ -237,4 +245,181 @@ function toIso(value: unknown): string {
   if (value instanceof Date) return value.toISOString();
   if (typeof value === 'string') return value;
   return String(value);
+}
+
+// ─── Tasks ───────────────────────────────────────────────────────────────────
+
+export interface CreateTaskInput {
+  title: string;
+  description?: string;
+  category: TaskCategory;
+  priority: TaskPriority;
+  created_by: TaskCreator;
+  assignee?: TaskAssignee;
+  related_lead_id?: string;
+  related_url?: string;
+  due_by?: Date;
+  context?: Record<string, unknown>;
+  dedup_key?: string;
+}
+
+export async function createTask(input: CreateTaskInput): Promise<Task | null> {
+  const sql = getSql();
+  // ON CONFLICT on dedup_key means duplicate creates are silently dropped
+  const rows = await sql`
+    INSERT INTO tasks (
+      title, description, category, priority, assignee, created_by,
+      related_lead_id, related_url, due_by, context_json, dedup_key
+    ) VALUES (
+      ${input.title}, ${input.description ?? null}, ${input.category},
+      ${input.priority}, ${input.assignee ?? 'owner'}, ${input.created_by},
+      ${input.related_lead_id ?? null}, ${input.related_url ?? null},
+      ${input.due_by?.toISOString() ?? null},
+      ${input.context ? JSON.stringify(input.context) : null},
+      ${input.dedup_key ?? null}
+    )
+    ON CONFLICT (dedup_key) DO NOTHING
+    RETURNING *
+  `;
+  if (rows.length === 0) return null;
+  return rowToTask(rows[0]);
+}
+
+export async function getOpenTasks(
+  opts: { category?: TaskCategory; limit?: number } = {}
+): Promise<Task[]> {
+  const sql = getSql();
+  const limit = opts.limit ?? 200;
+  const rows = opts.category
+    ? await sql`
+        SELECT * FROM tasks
+        WHERE status = 'open' AND category = ${opts.category}
+        ORDER BY priority ASC, created_at ASC LIMIT ${limit}
+      `
+    : await sql`
+        SELECT * FROM tasks
+        WHERE status IN ('open','in_progress')
+           OR (status = 'snoozed' AND snoozed_until <= NOW())
+        ORDER BY priority ASC, created_at ASC LIMIT ${limit}
+      `;
+  return rows.map(rowToTask);
+}
+
+export async function updateTaskStatus(
+  id: string,
+  status: TaskStatus,
+  opts: { snoozed_until?: Date } = {}
+): Promise<void> {
+  const sql = getSql();
+  const completedAt = status === 'done' ? new Date().toISOString() : null;
+  const snoozedUntil = opts.snoozed_until?.toISOString() ?? null;
+  await sql`
+    UPDATE tasks
+    SET status        = ${status},
+        completed_at  = COALESCE(${completedAt}, completed_at),
+        snoozed_until = ${snoozedUntil},
+        updated_at    = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+function rowToTask(row: Record<string, unknown>): Task {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    description: (row.description as string | null) ?? undefined,
+    category: row.category as TaskCategory,
+    priority: row.priority as TaskPriority,
+    assignee: row.assignee as TaskAssignee,
+    created_by: row.created_by as TaskCreator,
+    related_lead_id: (row.related_lead_id as string | null) ?? undefined,
+    related_url: (row.related_url as string | null) ?? undefined,
+    due_by: row.due_by ? toIso(row.due_by) : undefined,
+    status: row.status as TaskStatus,
+    snoozed_until: row.snoozed_until ? toIso(row.snoozed_until) : undefined,
+    completed_at: row.completed_at ? toIso(row.completed_at) : undefined,
+    context_json: (row.context_json as Record<string, unknown> | null) ?? undefined,
+    dedup_key: (row.dedup_key as string | null) ?? undefined,
+    created_at: toIso(row.created_at),
+    updated_at: toIso(row.updated_at),
+  };
+}
+
+// ─── Outreach drafts & Target accounts ───────────────────────────────────────
+
+export async function createOutreachDraft(d: {
+  lead_id?: string;
+  target_account_id?: string;
+  channel: 'email' | 'linkedin';
+  signal_context?: string;
+  draft_subject?: string;
+  draft_body: string;
+}): Promise<OutreachDraft> {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO outreach_drafts
+      (lead_id, target_account_id, channel, signal_context, draft_subject, draft_body)
+    VALUES
+      (${d.lead_id ?? null}, ${d.target_account_id ?? null}, ${d.channel},
+       ${d.signal_context ?? null}, ${d.draft_subject ?? null}, ${d.draft_body})
+    RETURNING *
+  `;
+  const r = rows[0];
+  return {
+    id: r.id as string,
+    lead_id: (r.lead_id as string | null) ?? undefined,
+    target_account_id: (r.target_account_id as string | null) ?? undefined,
+    channel: r.channel as 'email' | 'linkedin',
+    signal_context: (r.signal_context as string | null) ?? undefined,
+    draft_subject: (r.draft_subject as string | null) ?? undefined,
+    draft_body: r.draft_body as string,
+    status: r.status as OutreachDraft['status'],
+    created_at: toIso(r.created_at),
+  };
+}
+
+export async function getTargetAccounts(limit = 100): Promise<TargetAccount[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT * FROM target_accounts ORDER BY tier ASC, last_checked_at ASC NULLS FIRST LIMIT ${limit}
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    company: r.company as string,
+    tier: r.tier as 'tier_1' | 'tier_2' | 'tier_3',
+    why_on_list: (r.why_on_list as string | null) ?? undefined,
+    signals_json: (r.signals_json as Record<string, unknown> | null) ?? undefined,
+    last_checked_at: r.last_checked_at ? toIso(r.last_checked_at) : undefined,
+  }));
+}
+
+export async function updateLeadFitScore(id: string, score: number): Promise<void> {
+  const sql = getSql();
+  await sql`UPDATE leads SET fit_score = ${score}, updated_at = NOW() WHERE id = ${id}`;
+}
+
+// ─── Content calendar (Scribe Phase 1) ───────────────────────────────────────
+
+export async function createProposedTopic(t: {
+  scheduled_date: Date;
+  format: 'blog' | 'linkedin' | 'newsletter';
+  topic: string;
+  angle?: string;
+  heat_score?: number;
+  enterprise_relevance_score?: number;
+  sources?: unknown;
+}): Promise<string> {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO content_calendar
+      (scheduled_date, format, topic, status, angle, heat_score,
+       enterprise_relevance_score, sources_json)
+    VALUES
+      (${t.scheduled_date.toISOString().slice(0, 10)}, ${t.format}, ${t.topic}, 'proposed',
+       ${t.angle ?? null}, ${t.heat_score ?? null},
+       ${t.enterprise_relevance_score ?? null},
+       ${t.sources ? JSON.stringify(t.sources) : null})
+    RETURNING id
+  `;
+  return rows[0].id as string;
 }

@@ -93,6 +93,93 @@ CREATE TABLE IF NOT EXISTS bookings (
 -- Track when a lead first booked a discovery call (used by Archivist daily brief)
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS first_contact_booked_at TIMESTAMPTZ;
 
+-- ─── Tasks (shared crew to-do queue) ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tasks (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title           TEXT NOT NULL,
+  description     TEXT,
+  category        TEXT NOT NULL CHECK (category IN (
+                    'lead_followup','outreach','content_review',
+                    'learning','pipeline_review','manual')),
+  priority        INTEGER NOT NULL CHECK (priority BETWEEN 1 AND 5),
+  assignee        TEXT NOT NULL DEFAULT 'owner' CHECK (assignee IN ('owner','agent')),
+  created_by      TEXT NOT NULL,
+  related_lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
+  related_url     TEXT,
+  due_by          TIMESTAMPTZ,
+  status          TEXT NOT NULL DEFAULT 'open'
+                    CHECK (status IN ('open','in_progress','done','dismissed','snoozed')),
+  snoozed_until   TIMESTAMPTZ,
+  completed_at    TIMESTAMPTZ,
+  context_json    JSONB,
+  dedup_key       TEXT UNIQUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── Target Accounts (Marketer watchlist) ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS target_accounts (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company        TEXT NOT NULL UNIQUE,
+  tier           TEXT NOT NULL DEFAULT 'tier_2'
+                   CHECK (tier IN ('tier_1','tier_2','tier_3')),
+  why_on_list    TEXT,
+  signals_json   JSONB,
+  last_checked_at TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── Outreach Drafts (Marketer output) ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS outreach_drafts (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id           UUID REFERENCES leads(id) ON DELETE SET NULL,
+  target_account_id UUID REFERENCES target_accounts(id) ON DELETE SET NULL,
+  channel           TEXT NOT NULL CHECK (channel IN ('email','linkedin')),
+  signal_context    TEXT,
+  draft_subject     TEXT,
+  draft_body        TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'ready_for_review'
+                      CHECK (status IN ('ready_for_review','approved','sent','rejected')),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Fit score added by Marketer's weekly ranking
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS fit_score INTEGER;
+
+-- ─── Content Calendar expansion (Scribe Phase 1) ────────────────────────────
+ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS heat_score REAL;
+ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS enterprise_relevance_score REAL;
+ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS sources_json JSONB;
+ALTER TABLE content_calendar ADD COLUMN IF NOT EXISTS angle TEXT;
+-- Add 'proposed' to the status CHECK by dropping and recreating the constraint.
+-- Safe to re-run: conditional on constraint existing with old definition.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.check_constraints
+    WHERE constraint_name LIKE '%content_calendar_status_check%'
+      AND check_clause NOT LIKE '%proposed%'
+  ) THEN
+    ALTER TABLE content_calendar DROP CONSTRAINT content_calendar_status_check;
+    ALTER TABLE content_calendar ADD CONSTRAINT content_calendar_status_check
+      CHECK (status IN ('proposed','planned','in_progress','drafted','published'));
+  END IF;
+END $$;
+
+-- ─── Agent Costs (monthly budget guard) ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS agent_costs (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_name    TEXT NOT NULL,
+  model         TEXT NOT NULL,
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd      REAL NOT NULL DEFAULT 0,
+  run_id        UUID,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── Indexes ────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_leads_pipeline_stage  ON leads (pipeline_stage);
 CREATE INDEX IF NOT EXISTS idx_leads_service_intent  ON leads (service_intent);
@@ -103,3 +190,10 @@ CREATE INDEX IF NOT EXISTS idx_content_calendar_date ON content_calendar (schedu
 CREATE INDEX IF NOT EXISTS idx_bookings_scheduled_for ON bookings (scheduled_for);
 CREATE INDEX IF NOT EXISTS idx_bookings_lead_id      ON bookings (lead_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_attendee     ON bookings (attendee_email);
+CREATE INDEX IF NOT EXISTS idx_tasks_status_priority ON tasks (status, priority) WHERE status = 'open';
+CREATE INDEX IF NOT EXISTS idx_tasks_category        ON tasks (category);
+CREATE INDEX IF NOT EXISTS idx_tasks_related_lead    ON tasks (related_lead_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_snoozed_until   ON tasks (snoozed_until) WHERE status = 'snoozed';
+CREATE INDEX IF NOT EXISTS idx_outreach_drafts_status ON outreach_drafts (status);
+CREATE INDEX IF NOT EXISTS idx_target_accounts_tier  ON target_accounts (tier);
+CREATE INDEX IF NOT EXISTS idx_agent_costs_month     ON agent_costs (created_at);

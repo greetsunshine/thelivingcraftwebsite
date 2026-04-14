@@ -5,22 +5,13 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# ─── Scheduled cron jobs ──────────────────────────────────────────────────────
-
-[[cron]]
-  # Scribe: review content calendar and draft the week's content
-  schedule = "0 7 * * 1"
-  handler = "netlify/functions/cron/content-schedule"
-
-[[cron]]
-  # Archivist: send weekly pipeline summary to Slack
-  schedule = "0 8 * * 5"
-  handler = "netlify/functions/cron/weekly-pipeline"
-
-[[cron]]
-  # Listener: synthesize feedback and generate monthly insight brief
-  schedule = "0 9 1 * *"
-  handler = "netlify/functions/cron/monthly-synthesis"
+# ─── Scheduled functions (Netlify-style) ─────────────────────────────────────
+# Netlify scheduled functions read their schedule from function config, not
+# netlify.toml. See each handler file:
+#   netlify/functions/cron-daily-brief-background.ts     (30 1 * * *  → 07:00 IST)
+#   netlify/functions/cron-weekly-marketer-background.ts ( 0 2 * * 1)
+#   netlify/functions/cron-weekly-scribe-background.ts   ( 0 3 * * 1)
+# The thin wrappers delegate to cron-dispatcher-background.ts.
 
 # ─── Redirects ────────────────────────────────────────────────────────────────
 

@@ -148,6 +148,54 @@ export async function queryPipelineSummary(): Promise<PipelineSummary> {
   };
 }
 
+export type TaskCategory =
+  | 'lead_followup'
+  | 'outreach'
+  | 'content_review'
+  | 'learning'
+  | 'pipeline_review'
+  | 'manual';
+
+export interface TaskRow {
+  id: string;
+  title: string;
+  description?: string;
+  category: TaskCategory;
+  priority: number;
+  created_by: string;
+  related_lead_id?: string;
+  related_url?: string;
+  due_by?: string;
+  status: string;
+  created_at: string;
+}
+
+export async function queryOpenTasks(): Promise<TaskRow[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, title, description, category, priority, created_by,
+           related_lead_id, related_url, due_by, status, created_at
+    FROM tasks
+    WHERE status IN ('open','in_progress')
+       OR (status = 'snoozed' AND snoozed_until <= NOW())
+    ORDER BY priority ASC, created_at ASC
+    LIMIT 500
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    description: (r.description as string | null) ?? undefined,
+    category: r.category as TaskCategory,
+    priority: r.priority as number,
+    created_by: r.created_by as string,
+    related_lead_id: (r.related_lead_id as string | null) ?? undefined,
+    related_url: (r.related_url as string | null) ?? undefined,
+    due_by: r.due_by ? toIso(r.due_by) : undefined,
+    status: r.status as string,
+    created_at: toIso(r.created_at),
+  }));
+}
+
 export async function queryRecentRuns(limit = 20): Promise<AgentRun[]> {
   const sql = getSql();
   const rows = await sql`

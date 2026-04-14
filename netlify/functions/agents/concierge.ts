@@ -4,7 +4,8 @@ import { runAgentLoop } from '../lib/agent-loop.js';
 import { ToolRegistry } from '../lib/tool-executor.js';
 import { CONCIERGE_SYSTEM_PROMPT } from '../lib/prompts/concierge.js';
 import { upsertLeadRecord } from '../lib/db-client.js';
-import type { AgentResult, FormSubmission, ServiceIntent, Lead } from '../lib/types.js';
+import { orchCreateTask } from '../lib/orchestrator.js';
+import type { AgentResult, FormSubmission, ServiceIntent, Lead, TaskPriority } from '../lib/types.js';
 
 // ─── Tool definitions ────────────────────────────────────────────────────────
 
@@ -127,6 +128,31 @@ export async function runConcierge(submission: FormSubmission): Promise<Concierg
     });
 
     const saved = holder.lead;
+
+    // Emit a follow-up task to the shared queue, priority scaled by seniority + urgency.
+    if (saved) {
+      const priority = computeFollowupPriority(saved);
+      if (priority !== null) {
+        await orchCreateTask({
+          title: `Reply to ${saved.name}${saved.company ? ` (${saved.company})` : ''} — ${saved.service_intent}`,
+          description: `${saved.role_title ?? 'Unknown role'} · seniority ${saved.seniority_score}/5 · urgency ${saved.urgency}\n\n"${saved.message.slice(0, 400)}${saved.message.length > 400 ? '…' : ''}"`,
+          category: 'lead_followup',
+          priority,
+          created_by: 'concierge',
+          related_lead_id: saved.id,
+          related_url: `/admin/leads/`,
+          due_by: priority <= 2 ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined,
+          context: {
+            service_intent: saved.service_intent,
+            seniority_score: saved.seniority_score,
+            urgency: saved.urgency,
+            confidence: saved.classification_confidence,
+          },
+          dedup_key: `concierge:lead:${saved.id}`,
+        });
+      }
+    }
+
     return {
       success: true,
       output: result.output,
@@ -138,6 +164,23 @@ export async function runConcierge(submission: FormSubmission): Promise<Concierg
     console.error('[Concierge] Error:', error);
     return { success: false, output: '', error };
   }
+}
+
+/**
+ * Priority rubric for Concierge-created follow-up tasks.
+ * Returns null if the lead isn't worth interrupting the owner for
+ * (low-seniority + low-urgency gets no task at all — the DB record is enough).
+ */
+function computeFollowupPriority(lead: Lead): TaskPriority | null {
+  const { seniority_score: s, urgency: u } = lead;
+
+  if (s >= 4 && u === 'high') return 1;             // CTO/VP/Director + high urgency
+  if (s >= 4) return 2;                             // CTO/VP/Director, any urgency
+  if (s >= 3 && u === 'high') return 2;             // Senior EM/Architect, high urgency
+  if (s >= 3) return 3;                             // Senior EM/Architect
+  if (u === 'high') return 3;                       // Anyone with high urgency
+  if (s >= 2) return 4;                             // EM/Senior IC
+  return null;                                      // Don't emit a task
 }
 
 function buildSubmissionMessage(s: FormSubmission): string {

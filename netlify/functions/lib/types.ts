@@ -58,3 +58,59 @@ export interface AgentResult {
   data?: Record<string, unknown>;
   error?: string;
 }
+
+// ─── Tasks (shared crew queue) ────────────────────────────────────────────────
+
+export type TaskCategory =
+  | 'lead_followup'
+  | 'outreach'
+  | 'content_review'
+  | 'learning'
+  | 'pipeline_review'
+  | 'manual';
+
+export type TaskPriority = 1 | 2 | 3 | 4 | 5;
+export type TaskStatus = 'open' | 'in_progress' | 'done' | 'dismissed' | 'snoozed';
+export type TaskAssignee = 'owner' | 'agent';
+export type TaskCreator = 'concierge' | 'scribe' | 'marketer' | 'archivist' | 'owner';
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  category: TaskCategory;
+  priority: TaskPriority;
+  assignee: TaskAssignee;
+  created_by: TaskCreator;
+  related_lead_id?: string;
+  related_url?: string;
+  due_by?: string;
+  status: TaskStatus;
+  snoozed_until?: string;
+  completed_at?: string;
+  context_json?: Record<string, unknown>;
+  dedup_key?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OutreachDraft {
+  id: string;
+  lead_id?: string;
+  target_account_id?: string;
+  channel: 'email' | 'linkedin';
+  signal_context?: string;
+  draft_subject?: string;
+  draft_body: string;
+  status: 'ready_for_review' | 'approved' | 'sent' | 'rejected';
+  created_at: string;
+}
+
+export interface TargetAccount {
+  id: string;
+  company: string;
+  tier: 'tier_1' | 'tier_2' | 'tier_3';
+  why_on_list?: string;
+  signals_json?: Record<string, unknown>;
+  last_checked_at?: string;
+}
