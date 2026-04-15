@@ -126,18 +126,18 @@ const statusColor: Record<string, string> = {
 
     .page-header { margin: 32px 0 16px; }
     .page-title { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .page-subtitle { font-size: 13px; color: #cbd5e1; margin: 0; font-family: 'JetBrains Mono', monospace; }
+    .page-subtitle { font-size: 13px; color: #94a3b8; margin: 0; font-family: 'JetBrains Mono', monospace; }
 
     /* Tabs */
     .tabs { display: flex; gap: 4px; border-bottom: 1px solid #1e293b; margin-bottom: 24px; }
     .tab-btn {
-      background: transparent; border: none; color: #cbd5e1; cursor: pointer;
+      background: transparent; border: none; color: #64748b; cursor: pointer;
       font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.08em;
       padding: 12px 18px; border-bottom: 2px solid transparent; margin-bottom: -1px;
       transition: color .15s, border-color .15s;
     }
-    .tab-btn:hover { color: #cbd5e1; }
+    .tab-btn:hover { color: #e2e8f0; }
     .tab-btn.active { color: #fff; border-bottom-color: #4f46e5; }
     .tab-btn .count { color: #94a3b8; margin-left: 6px; font-weight: 400; }
     .tab-btn.active .count { color: #94a3b8; }
@@ -175,13 +175,13 @@ const statusColor: Record<string, string> = {
     .task-due.none { color: #94a3b8; }
     .task-creator {
       font-family: 'JetBrains Mono', monospace; font-size: 10px;
-      color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.04em;
+      color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em;
     }
     .task-quick-actions { display: flex; gap: 4px; }
     .qa-btn {
       font-family: 'JetBrains Mono', monospace; font-size: 10px;
       width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 4px; border: 1px solid #1e293b; background: transparent; color: #cbd5e1;
+      border-radius: 4px; border: 1px solid #1e293b; background: transparent; color: #94a3b8;
       cursor: pointer;
     }
     .qa-btn:hover.done { border-color: #4ade80; color: #4ade80; }
@@ -400,25 +400,25 @@ const statusColor: Record<string, string> = {
     (function () {
       const VALID = new Set(['tasks', 'reading']);
 
-      function activate(name) {
+      function activate(name: string) {
         if (!VALID.has(name)) name = 'tasks';
-        document.querySelectorAll('.tab-btn').forEach((btn) => {
+        document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach((btn) => {
           btn.classList.toggle('active', btn.dataset.panel === name);
         });
-        document.querySelectorAll('.tab-panel').forEach((panel) => {
+        document.querySelectorAll<HTMLElement>('.tab-panel').forEach((panel) => {
           panel.classList.toggle('active', panel.id === 'panel-' + name);
         });
       }
 
-      function fromHash() {
+      function fromHash(): string {
         return (location.hash || '').replace('#', '') || 'tasks';
       }
 
       activate(fromHash());
 
-      document.querySelectorAll('.tab-btn').forEach((btn) => {
+      document.querySelectorAll<HTMLButtonElement>('.tab-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-          const name = btn.dataset.panel;
+          const name = btn.dataset.panel ?? 'tasks';
           history.replaceState(null, '', '#' + name);
           activate(name);
         });
