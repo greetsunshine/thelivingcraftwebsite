@@ -257,7 +257,7 @@ function buildDraftRegistry(): ToolRegistry {
       category: input.category as TaskCategory,
       priority: input.priority as TaskPriority,
       created_by: 'scribe',
-      related_url: (input.related_url as string | undefined) ?? '/admin/tasks/',
+      related_url: (input.related_url as string | undefined) ?? '/admin/workspace/#tasks',
     });
     return { success: true, task_id: task?.id ?? null };
   });

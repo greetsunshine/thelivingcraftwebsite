@@ -80,5 +80,5 @@ export const POST: APIRoute = async ({ params, request, redirect }) => {
       return new Response('Unknown action', { status: 400 });
   }
 
-  return redirect('/admin/tasks/', 303);
+  return redirect('/admin/workspace/#tasks', 303);
 };

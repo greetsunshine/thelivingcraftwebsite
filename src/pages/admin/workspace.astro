@@ -1,0 +1,431 @@
+---
+export const prerender = false;
+
+import {
+  queryOpenTasks,
+  queryReadingList,
+  type TaskRow,
+  type TaskCategory,
+  type ReadingItemRow,
+} from '../../lib/db';
+
+let tasks: TaskRow[] = [];
+let reading: ReadingItemRow[] = [];
+let tasksError = '';
+let readingError = '';
+
+try {
+  tasks = await queryOpenTasks();
+} catch (err) {
+  tasksError = err instanceof Error ? err.message : String(err);
+}
+try {
+  reading = await queryReadingList();
+} catch (err) {
+  readingError = err instanceof Error ? err.message : String(err);
+}
+
+// ── Tasks: bucket by due date ───────────────────────────────────────────
+type Bucket = 'overdue' | 'today' | 'week' | 'later' | 'nodue';
+const bucketLabel: Record<Bucket, string> = {
+  overdue: 'Overdue',
+  today:   'Today',
+  week:    'This week',
+  later:   'Later',
+  nodue:   'No due date',
+};
+const buckets: Record<Bucket, TaskRow[]> = {
+  overdue: [], today: [], week: [], later: [], nodue: [],
+};
+
+const now = new Date();
+const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const endOfToday = new Date(startOfToday.getTime() + 86_400_000);
+const endOfWeek = new Date(startOfToday.getTime() + 7 * 86_400_000);
+
+// hide snoozed from default view
+const visibleTasks = tasks.filter((t) => t.status !== 'snoozed');
+
+for (const t of visibleTasks) {
+  if (!t.due_by) {
+    // priority 1 with no due still counts as today
+    if (t.priority === 1) buckets.today.push(t);
+    else buckets.nodue.push(t);
+    continue;
+  }
+  const d = new Date(t.due_by).getTime();
+  if (d < startOfToday.getTime()) buckets.overdue.push(t);
+  else if (d < endOfToday.getTime()) buckets.today.push(t);
+  else if (d < endOfWeek.getTime()) buckets.week.push(t);
+  else buckets.later.push(t);
+}
+const bucketOrder: Bucket[] = ['overdue', 'today', 'week', 'later', 'nodue'];
+
+const priorityColor: Record<number, string> = {
+  1: '#f87171', 2: '#fb923c', 3: '#facc15', 4: '#60a5fa', 5: '#64748b',
+};
+const priorityLabel: Record<number, string> = {
+  1: 'DROP EVERYTHING', 2: 'TODAY', 3: 'THIS WEEK', 4: 'NEXT WEEK', 5: 'WHENEVER',
+};
+const categoryColor: Record<TaskCategory, string> = {
+  lead_followup: '#a5b4fc', outreach: '#fbbf24', content_review: '#86efac',
+  learning: '#67e8f9', pipeline_review: '#f472b6', manual: '#94a3b8',
+};
+
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 1) return 'just now';
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+function formatDue(iso?: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ── Reading ─────────────────────────────────────────────────────────────
+const technical = reading.filter((i) => i.category === 'technical');
+const business  = reading.filter((i) => i.category === 'business');
+
+function formatReadingRel(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days < 1) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
+const statusColor: Record<string, string> = {
+  unread: '#818cf8', reading: '#fbbf24', read: '#4ade80',
+  archived: '#64748b', dismissed: '#64748b',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace — Admin — The Living Craft</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e2e8f0; min-height: 100vh; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    header.site { border-bottom: 1px solid #1e293b; padding: 16px 0; }
+    header.site .inner { display: flex; align-items: center; justify-content: space-between; }
+    header.site h1 { font-size: 14px; font-weight: 600; color: #fff; margin: 0; }
+    header.site nav { display: flex; gap: 24px; }
+    header.site nav a { font-size: 13px; color: #94a3b8; text-decoration: none; }
+    header.site nav a:hover, header.site nav a.active { color: #fff; }
+
+    .page-header { margin: 32px 0 16px; }
+    .page-title { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .page-subtitle { font-size: 13px; color: #64748b; margin: 0; font-family: 'JetBrains Mono', monospace; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid #1e293b; margin-bottom: 24px; }
+    .tab-btn {
+      background: transparent; border: none; color: #64748b; cursor: pointer;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 12px 18px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover { color: #cbd5e1; }
+    .tab-btn.active { color: #fff; border-bottom-color: #4f46e5; }
+    .tab-btn .count { color: #475569; margin-left: 6px; font-weight: 400; }
+    .tab-btn.active .count { color: #94a3b8; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Buckets (tasks) */
+    .bucket { margin-bottom: 28px; }
+    .bucket-header {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid #1e293b;
+    }
+    .bucket-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: #cbd5e1; margin: 0;
+    }
+    .bucket-count { font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+
+    /* Compact task row */
+    .task-row {
+      background: #0f1829; border: 1px solid #1e293b; border-radius: 6px;
+      margin-bottom: 4px; overflow: hidden;
+    }
+    .task-row:hover { border-color: #334155; }
+    .task-row > summary {
+      list-style: none; cursor: pointer; padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 10px 1fr auto auto auto;
+      align-items: center; gap: 12px;
+    }
+    .task-row > summary::-webkit-details-marker { display: none; }
+    .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .task-title { font-size: 13px; color: #e2e8f0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .task-due { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fb923c; white-space: nowrap; }
+    .task-due.none { color: #475569; }
+    .task-creator {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .task-quick-actions { display: flex; gap: 4px; }
+    .qa-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 4px; border: 1px solid #1e293b; background: transparent; color: #64748b;
+      cursor: pointer;
+    }
+    .qa-btn:hover.done { border-color: #4ade80; color: #4ade80; }
+    .qa-btn:hover.dismiss { border-color: #f87171; color: #f87171; }
+    .action-form { display: inline; margin: 0; padding: 0; }
+
+    /* Expanded drawer */
+    .task-drawer { padding: 4px 16px 14px 30px; border-top: 1px solid #1e293b; background: #0a1220; }
+    .task-desc { font-size: 12px; color: #94a3b8; margin: 10px 0; white-space: pre-wrap; line-height: 1.5; }
+    .task-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; margin-bottom: 10px; }
+    .meta-badge { padding: 2px 8px; border-radius: 3px; border: 1px solid currentColor; background: transparent; }
+    .drawer-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .drawer-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 10px;
+      border-radius: 4px; border: 1px solid #334155; background: #0f1829; color: #94a3b8;
+      cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .drawer-btn:hover { border-color: #4f46e5; color: #fff; }
+
+    .empty-state { text-align: center; padding: 48px 24px; }
+    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #475569; font-size: 13px; }
+    .error-banner { background: #2d0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px; color: #f87171; font-size: 13px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
+
+    /* Reading */
+    .reading-group { margin-bottom: 36px; }
+    .reading-group-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+    .reading-group-title { font-size: 15px; font-weight: 600; color: #fff; margin: 0; }
+    .reading-group-count { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; }
+    .item-card { background: #16213e; border: 1px solid #1e293b; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }
+    .item-card:hover { border-color: #334155; }
+    .item-header { display: flex; justify-content: space-between; gap: 12px; }
+    .item-title { font-size: 14px; font-weight: 600; color: #e2e8f0; margin: 0 0 4px; }
+    .item-title a { color: inherit; text-decoration: none; }
+    .item-title a:hover { color: #818cf8; }
+    .item-why { font-size: 13px; color: #94a3b8; line-height: 1.5; margin: 4px 0 8px; }
+    .item-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; }
+    .item-actions { display: flex; gap: 6px; align-items: flex-start; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="container inner">
+      <h1>The Living Craft <span class="mono" style="color:#4f46e5">/admin</span></h1>
+      <nav>
+        <a href="/admin/">Overview</a>
+        <a href="/admin/leads/">Leads</a>
+        <a href="/admin/workspace/" class="active">Workspace</a>
+        <a href="/">← Site</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="page-header">
+      <h2 class="page-title">Workspace</h2>
+      <p class="page-subtitle">Tasks from the crew · Curated reading from The Scribe</p>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button id="tab-tasks" class="tab-btn" role="tab" data-panel="tasks">
+        Tasks<span class="count">{visibleTasks.length}</span>
+      </button>
+      <button id="tab-reading" class="tab-btn" role="tab" data-panel="reading">
+        Reading<span class="count">{reading.length}</span>
+      </button>
+    </div>
+
+    <!-- ── TASKS PANEL ──────────────────────────────────────── -->
+    <section id="panel-tasks" class="tab-panel" role="tabpanel">
+      {tasksError && <div class="error-banner">DB error: {tasksError}</div>}
+
+      {visibleTasks.length === 0 ? (
+        <div class="empty-state"><p>No open tasks. You're caught up.</p></div>
+      ) : (
+        bucketOrder.map((b) => (
+          buckets[b].length > 0 && (
+            <div class="bucket">
+              <div class="bucket-header">
+                <h3 class="bucket-title">{bucketLabel[b]}</h3>
+                <span class="bucket-count">{buckets[b].length}</span>
+              </div>
+              {buckets[b].map((t) => (
+                <details class="task-row">
+                  <summary>
+                    <span class="priority-dot" style={`background:${priorityColor[t.priority]}`} title={`P${t.priority} · ${priorityLabel[t.priority]}`}></span>
+                    <span class="task-title">{t.title}</span>
+                    <span class={`task-due ${t.due_by ? '' : 'none'}`}>{t.due_by ? formatDue(t.due_by) : '—'}</span>
+                    <span class="task-creator">{t.created_by}</span>
+                    <span class="task-quick-actions">
+                      <form class="action-form" method="POST" action={`/api/admin/tasks/${t.id}`} onclick="event.stopPropagation()">
+                        <input type="hidden" name="action" value="done" />
+                        <button class="qa-btn done" type="submit" title="Mark done">✓</button>
+                      </form>
+                      <form class="action-form" method="POST" action={`/api/admin/tasks/${t.id}`} onclick="event.stopPropagation()">
+                        <input type="hidden" name="action" value="dismiss" />
+                        <button class="qa-btn dismiss" type="submit" title="Dismiss">×</button>
+                      </form>
+                    </span>
+                  </summary>
+                  <div class="task-drawer">
+                    {t.description && <p class="task-desc">{t.description}</p>}
+                    <div class="task-meta">
+                      <span class="meta-badge" style={`color:${priorityColor[t.priority]}`}>P{t.priority} · {priorityLabel[t.priority]}</span>
+                      <span class="meta-badge" style={`color:${categoryColor[t.category]}`}>{t.category.replace('_', ' ')}</span>
+                      <span>created {formatRelative(t.created_at)}</span>
+                      {t.related_url && <a href={t.related_url} style="color:#4f46e5;text-decoration:none">→ open link</a>}
+                    </div>
+                    <div class="drawer-actions">
+                      <form class="action-form" method="POST" action={`/api/admin/tasks/${t.id}`}>
+                        <input type="hidden" name="action" value="snooze_1d" />
+                        <button class="drawer-btn" type="submit">+1d</button>
+                      </form>
+                      <form class="action-form" method="POST" action={`/api/admin/tasks/${t.id}`}>
+                        <input type="hidden" name="action" value="snooze_1w" />
+                        <button class="drawer-btn" type="submit">+1w</button>
+                      </form>
+                    </div>
+                  </div>
+                </details>
+              ))}
+            </div>
+          )
+        ))
+      )}
+    </section>
+
+    <!-- ── READING PANEL ────────────────────────────────────── -->
+    <section id="panel-reading" class="tab-panel" role="tabpanel">
+      {readingError && <div class="error-banner">DB error: {readingError}</div>}
+
+      {reading.length === 0 ? (
+        <div class="empty-state">
+          <p>Reading list is empty. Scribe runs Sunday 22:00 UTC — or trigger it manually.</p>
+        </div>
+      ) : (
+        <>
+          {technical.length > 0 && (
+            <div class="reading-group">
+              <div class="reading-group-header">
+                <h3 class="reading-group-title">Technical Frontier</h3>
+                <span class="reading-group-count">{technical.length} items · building agentic systems</span>
+              </div>
+              {technical.map((item) => (
+                <div class="item-card">
+                  <div class="item-header">
+                    <div style="flex:1;min-width:0">
+                      <p class="item-title"><a href={item.url} target="_blank" rel="noopener">{item.title}</a></p>
+                      <p class="item-why">{item.why_it_matters}</p>
+                      <div class="item-meta">
+                        <span style={`color:${item.relevance_score >= 0.9 ? '#4ade80' : item.relevance_score >= 0.7 ? '#facc15' : '#94a3b8'}`}>{Math.round(item.relevance_score * 100)}</span>
+                        {item.subcategory && <span class="meta-badge" style="color:#818cf8">{item.subcategory.replace('_', ' ')}</span>}
+                        {item.source && <span>· {item.source}</span>}
+                        {item.published_date && <span>· {item.published_date}</span>}
+                        <span>· saved {formatReadingRel(item.created_at)}</span>
+                        <span class="meta-badge" style={`color:${statusColor[item.status]}`}>{item.status}</span>
+                      </div>
+                    </div>
+                    <div class="item-actions">
+                      <form class="action-form" method="POST" action={`/api/admin/reading/${item.id}`}>
+                        <input type="hidden" name="action" value="read" />
+                        <button class="drawer-btn" type="submit">✓ Read</button>
+                      </form>
+                      <form class="action-form" method="POST" action={`/api/admin/reading/${item.id}`}>
+                        <input type="hidden" name="action" value="dismiss" />
+                        <button class="drawer-btn" type="submit">Dismiss</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {business.length > 0 && (
+            <div class="reading-group">
+              <div class="reading-group-header">
+                <h3 class="reading-group-title">Business Context</h3>
+                <span class="reading-group-count">{business.length} items · F500 buyer signals</span>
+              </div>
+              {business.map((item) => (
+                <div class="item-card">
+                  <div class="item-header">
+                    <div style="flex:1;min-width:0">
+                      <p class="item-title"><a href={item.url} target="_blank" rel="noopener">{item.title}</a></p>
+                      <p class="item-why">{item.why_it_matters}</p>
+                      <div class="item-meta">
+                        <span style={`color:${item.relevance_score >= 0.9 ? '#4ade80' : item.relevance_score >= 0.7 ? '#facc15' : '#94a3b8'}`}>{Math.round(item.relevance_score * 100)}</span>
+                        {item.subcategory && <span class="meta-badge" style="color:#fbbf24">{item.subcategory.replace('_', ' ')}</span>}
+                        {item.source && <span>· {item.source}</span>}
+                        {item.published_date && <span>· {item.published_date}</span>}
+                        <span>· saved {formatReadingRel(item.created_at)}</span>
+                        <span class="meta-badge" style={`color:${statusColor[item.status]}`}>{item.status}</span>
+                      </div>
+                    </div>
+                    <div class="item-actions">
+                      <form class="action-form" method="POST" action={`/api/admin/reading/${item.id}`}>
+                        <input type="hidden" name="action" value="read" />
+                        <button class="drawer-btn" type="submit">✓ Read</button>
+                      </form>
+                      <form class="action-form" method="POST" action={`/api/admin/reading/${item.id}`}>
+                        <input type="hidden" name="action" value="dismiss" />
+                        <button class="drawer-btn" type="submit">Dismiss</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const VALID = new Set(['tasks', 'reading']);
+
+      function activate(name) {
+        if (!VALID.has(name)) name = 'tasks';
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.panel === name);
+        });
+        document.querySelectorAll('.tab-panel').forEach((panel) => {
+          panel.classList.toggle('active', panel.id === 'panel-' + name);
+        });
+      }
+
+      function fromHash() {
+        return (location.hash || '').replace('#', '') || 'tasks';
+      }
+
+      activate(fromHash());
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const name = btn.dataset.panel;
+          history.replaceState(null, '', '#' + name);
+          activate(name);
+        });
+      });
+
+      window.addEventListener('hashchange', () => activate(fromHash()));
+    })();
+  </script>
+</body>
+</html>

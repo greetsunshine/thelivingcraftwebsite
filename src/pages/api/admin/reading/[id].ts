@@ -37,5 +37,5 @@ export const POST: APIRoute = async ({ params, request, redirect }) => {
     WHERE id = ${id}
   `;
 
-  return redirect('/admin/reading/', 303);
+  return redirect('/admin/workspace/#reading', 303);
 };

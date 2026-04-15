@@ -221,7 +221,7 @@ function buildBriefHtml(data: {
     ` : ''}
 
     <p style="margin:24px 0 0;font-size:12px;color:#64748b;text-align:center">
-      <a href="https://thelivingcraft.ai/admin/tasks/" style="color:#4f46e5">Open tasks dashboard →</a>
+      <a href="https://thelivingcraft.ai/admin/workspace/#tasks" style="color:#4f46e5">Open tasks dashboard →</a>
     </p>
   </div>
 </div>

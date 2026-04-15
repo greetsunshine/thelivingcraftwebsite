@@ -194,7 +194,10 @@ const fullTitle = title === 'The Living Craft' ? title : `${title} | The Living 
 
         <div class="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p class="text-gray-500 text-sm">© 2026 The Living Craft. All rights reserved.</p>
-          <p class="text-gray-600 text-xs font-mono">Practitioner-grade AI leadership.</p>
+          <div class="flex items-center gap-4">
+            <a id="owner-admin-link" href="/admin/workspace/" class="hidden text-xs font-mono text-accent/70 hover:text-accent transition-colors">/admin</a>
+            <p class="text-gray-600 text-xs font-mono">Practitioner-grade AI leadership.</p>
+          </div>
         </div>
       </div>
     </footer>
@@ -209,6 +212,18 @@ const fullTitle = title === 'The Living Craft' ? title : `${title} | The Living 
         iconOpen?.classList.toggle('hidden');
         iconClose?.classList.toggle('hidden');
       });
+
+      // Owner-only admin shortcut: unlock with /?owner=1, clear with /?owner=0
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('owner')) {
+          if (params.get('owner') === '1') localStorage.setItem('tlc_owner', '1');
+          else localStorage.removeItem('tlc_owner');
+        }
+        if (localStorage.getItem('tlc_owner') === '1') {
+          document.getElementById('owner-admin-link')?.classList.remove('hidden');
+        }
+      } catch { /* storage unavailable — skip */ }
     </script>
   </body>
 </html>
