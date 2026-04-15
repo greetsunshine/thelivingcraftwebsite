@@ -89,7 +89,7 @@ const posts = [
     0%   { background-position: -400px 0; }
     100% { background-position: 400px 0; }
   }
-  .logo-float   { animation: float 7s ease-in-out infinite; }
+  .logo-float   { animation: float 4s ease-in-out infinite; }
   .badge-glow   { animation: badge-glow 3s ease-in-out infinite; }
   .card-hover   { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
   .card-hover:hover { transform: translateY(-4px); }
@@ -117,7 +117,7 @@ const posts = [
      HERO  —  Split layout
 ════════════════════════════════════════════════════════════ -->
 <section
-  class="relative min-h-[92vh] flex items-center overflow-hidden"
+  class="relative min-h-[82vh] flex items-center overflow-hidden"
   style="background: radial-gradient(ellipse at 70% 40%, #1a1a2e 0%, #0a0a0f 55%);"
 >
   <!-- Dot grid -->
@@ -416,6 +416,40 @@ const posts = [
     .ap2{animation:ufl-pop 8s ease-in-out infinite 3.2s}
     .ap3{animation:ufl-pop 8s ease-in-out infinite 4.8s}
     .ap4{animation:ufl-pop 8s ease-in-out infinite 6.4s}
+
+    /* ── Retrieval-practice chips ───────────────────────── */
+    .recall-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .recall-term {
+      position: relative; cursor: pointer; user-select: none;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+      padding: 8px 14px; border-radius: 999px;
+      background: rgba(79,70,229,0.06); color: #c7d2fe;
+      border: 1px solid rgba(79,70,229,0.25);
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .recall-term:hover { background: rgba(79,70,229,0.14); border-color: rgba(129,140,248,0.55); color: #fff; }
+    .recall-term.primed { border-color: rgba(16,185,129,0.55); color: #6ee7b7; }
+    .recall-term.primed::after {
+      content: ''; position: absolute; top: -3px; right: -3px;
+      width: 6px; height: 6px; border-radius: 50%; background: #10b981;
+      box-shadow: 0 0 8px rgba(16,185,129,0.8);
+    }
+    .recall-pop {
+      position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%) translateY(4px);
+      min-width: 220px; max-width: 280px;
+      padding: 10px 14px; border-radius: 10px;
+      background: #0f1829; border: 1px solid rgba(99,102,241,0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-size: 12px; line-height: 1.45; color: #e2e8f0; text-align: left;
+      opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+      z-index: 20; text-transform: none; letter-spacing: 0;
+    }
+    .recall-pop.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .recall-pop.prompt { border-color: rgba(16,185,129,0.55); color: #a7f3d0; }
+    .recall-pop::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #0f1829;
+    }
   </style>
 
   <!-- Dot-grid background -->
@@ -563,6 +597,28 @@ const posts = [
 
       </div>
 
+      <!-- ── Principles behind the engine (retrieval-practice chips) ── -->
+      <div class="p-6 rounded-2xl border border-gray-700/30 mb-6"
+           style="background: rgba(15,15,25,0.8);">
+        <p class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-5 text-center">
+          The principles behind it · <span class="text-accent/80">hover to peek — then try to recall</span>
+        </p>
+        <div class="recall-row">
+          {([
+            { term: 'Retrieval',  def: 'Recalling beats re-reading. Your brain strengthens what it reconstructs, not what it re-sees.' },
+            { term: 'Spacing',    def: 'Forgetting is a feature. Space repetitions so forgetting can happen between them.' },
+            { term: 'Interleaving', def: 'Mixing topics beats blocking. Contrast trains your brain to discriminate between patterns.' },
+            { term: 'Feedback',   def: 'Tight loops beat long ones. Shrink the gap between attempt and correction to seconds.' },
+            { term: 'Elaboration', def: 'Explain it in your own words, link it to what you already know. Connections make it stick.' },
+            { term: 'Desirable difficulty', def: 'Comfort is the enemy of learning. Pick problems just past easy — struggle encodes memory.' },
+          ]).map(p => (
+            <button type="button" class="recall-term" data-def={p.def}>
+              {p.term}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <!-- ── Artifact output strip ──────────────────────── -->
       <div class="p-6 rounded-2xl border border-gray-700/30 mb-6"
            style="background: rgba(15,15,25,0.8);">
@@ -612,6 +668,94 @@ const posts = [
 
     </div>
   </div>
+
+  <script>
+    (function () {
+      const PRIMED_WINDOW_MS = 60_000;
+      const PEEK_MS = 2_000;
+      const PROMPT_MS = 2_500;
+
+      type ChipState = {
+        lastSeenAt: number;
+        peekTimer: number | null;
+        promptTimer: number | null;
+        pop: HTMLDivElement | null;
+      };
+      const states = new WeakMap<HTMLElement, ChipState>();
+
+      function ensurePop(chip: HTMLElement): HTMLDivElement {
+        let state = states.get(chip);
+        if (state?.pop) return state.pop;
+        const pop = document.createElement('div');
+        pop.className = 'recall-pop';
+        chip.appendChild(pop);
+        if (!state) {
+          state = { lastSeenAt: 0, peekTimer: null, promptTimer: null, pop };
+          states.set(chip, state);
+        } else {
+          state.pop = pop;
+        }
+        return pop;
+      }
+
+      function clearTimers(state: ChipState) {
+        if (state.peekTimer !== null) { window.clearTimeout(state.peekTimer); state.peekTimer = null; }
+        if (state.promptTimer !== null) { window.clearTimeout(state.promptTimer); state.promptTimer = null; }
+      }
+
+      document.querySelectorAll<HTMLButtonElement>('.recall-term').forEach((chip) => {
+        const def = chip.dataset.def ?? '';
+        const pop = ensurePop(chip);
+
+        chip.addEventListener('mouseenter', () => {
+          const state = states.get(chip)!;
+          clearTimers(state);
+          const now = Date.now();
+          const primed = chip.classList.contains('primed') && (now - state.lastSeenAt) < PRIMED_WINDOW_MS;
+
+          if (primed) {
+            // Second visit within window → force active recall
+            pop.textContent = 'Say it out loud first. Then peek.';
+            pop.classList.add('prompt', 'visible');
+            state.promptTimer = window.setTimeout(() => {
+              pop.textContent = def;
+              pop.classList.remove('prompt');
+            }, PROMPT_MS);
+          } else {
+            // First visit → show definition, then prime the chip
+            pop.textContent = def;
+            pop.classList.remove('prompt');
+            pop.classList.add('visible');
+            state.peekTimer = window.setTimeout(() => {
+              chip.classList.add('primed');
+              state.lastSeenAt = Date.now();
+            }, PEEK_MS);
+          }
+        });
+
+        chip.addEventListener('mouseleave', () => {
+          const state = states.get(chip)!;
+          clearTimers(state);
+          pop.classList.remove('visible');
+          // If we'd shown the def long enough to prime, keep the primed class;
+          // otherwise remove it so the next hover still peeks.
+          if (!chip.classList.contains('primed')) {
+            // nothing to do
+          }
+        });
+      });
+
+      // Reset 'primed' state after the window lapses so the cycle restarts.
+      window.setInterval(() => {
+        document.querySelectorAll<HTMLButtonElement>('.recall-term.primed').forEach((chip) => {
+          const state = states.get(chip);
+          if (state && (Date.now() - state.lastSeenAt) > PRIMED_WINDOW_MS) {
+            chip.classList.remove('primed');
+          }
+        });
+      }, 5_000);
+    })();
+  </script>
 </section>
 
 
