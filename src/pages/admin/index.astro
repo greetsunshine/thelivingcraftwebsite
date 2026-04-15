@@ -49,12 +49,12 @@ const intentOrder = ['training', 'mentoring', 'consulting', 'other'];
     header nav a { font-size: 13px; color: #94a3b8; text-decoration: none; }
     header nav a:hover, header nav a.active { color: #fff; }
     .page-title { margin: 32px 0 8px; font-size: 24px; font-weight: 700; color: #fff; }
-    .page-subtitle { font-size: 13px; color: #64748b; margin: 0 0 32px; }
+    .page-subtitle { font-size: 13px; color: #cbd5e1; margin: 0 0 32px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
     .stat-card { background: #16213e; border: 1px solid #1e293b; border-radius: 10px; padding: 20px; }
-    .stat-card .label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .stat-card .label { font-size: 11px; font-weight: 600; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
     .stat-card .value { font-size: 32px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
-    .stat-card .sub { font-size: 12px; color: #475569; margin-top: 4px; }
+    .stat-card .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
     .section-title { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 16px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
     .panel { background: #16213e; border: 1px solid #1e293b; border-radius: 10px; padding: 24px; }
@@ -62,9 +62,9 @@ const intentOrder = ['training', 'mentoring', 'consulting', 'other'];
     .bar-label { font-size: 12px; color: #94a3b8; min-width: 120px; font-family: 'JetBrains Mono', monospace; }
     .bar-track { flex: 1; background: #1e293b; border-radius: 4px; height: 6px; }
     .bar-fill { height: 6px; border-radius: 4px; background: #4f46e5; }
-    .bar-count { font-size: 12px; color: #64748b; font-family: 'JetBrains Mono', monospace; min-width: 24px; text-align: right; }
+    .bar-count { font-size: 12px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; min-width: 24px; text-align: right; }
     table { width: 100%; border-collapse: collapse; }
-    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; padding: 0 12px 10px; text-align: left; }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; padding: 0 12px 10px; text-align: left; }
     td { font-size: 13px; color: #94a3b8; padding: 10px 12px; border-top: 1px solid #1e293b; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
     .badge-success { background: #052e16; color: #4ade80; border: 1px solid #166534; }
@@ -156,7 +156,7 @@ const intentOrder = ['training', 'mentoring', 'consulting', 'other'];
     <div class="panel" style="margin-bottom: 48px;">
       <div class="section-title">Recent Agent Runs</div>
       {recentRuns.length === 0 ? (
-        <p style="font-size:13px; color:#475569; margin:0; font-family:'JetBrains Mono',monospace;">No runs yet.</p>
+        <p style="font-size:13px; color:#94a3b8; margin:0; font-family:'JetBrains Mono',monospace;">No runs yet.</p>
       ) : (
         <table>
           <thead>

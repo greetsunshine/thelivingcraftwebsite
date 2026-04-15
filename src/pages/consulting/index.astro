@@ -109,12 +109,12 @@ const processSteps = [
             </div>
 
             <!-- Scope -->
-            <p class="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-2">Scope includes</p>
+            <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">Scope includes</p>
             <p class="text-gray-400 text-xs font-mono mb-6">{e.detail}</p>
 
             <div class="pt-4 border-t border-gray-700/40 flex items-end justify-between gap-4">
               <div>
-                <p class="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-1">Deliverable</p>
+                <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">Deliverable</p>
                 <p class="text-sm font-semibold" style={`color: ${e.color};`}>{e.deliverable}</p>
               </div>
               <a href={`/contact/?source=${e.source}`}
@@ -146,7 +146,7 @@ const processSteps = [
             Fixed scope, fixed fee. Clear start, clear end, clear deliverable. Right for
             organisations with a specific problem that needs solving.
           </p>
-          <p class="text-xs font-mono text-gray-600">Pricing varies by scope — discovery call required</p>
+          <p class="text-xs font-mono text-gray-400">Pricing varies by scope — discovery call required</p>
         </div>
         <div class="p-8 bg-dark-card border border-gray-700/40 rounded-2xl">
           <div class="w-8 h-0.5 bg-accent mb-6 rounded-full"></div>
@@ -155,7 +155,7 @@ const processSteps = [
             Ongoing advisory for organisations that want continuous learning loops, not one-off
             deliverables. Right for orgs in active AI adoption who need a thinking partner.
           </p>
-          <p class="text-xs font-mono text-gray-600">Monthly engagement — apply to discuss</p>
+          <p class="text-xs font-mono text-gray-400">Monthly engagement — apply to discuss</p>
         </div>
       </div>
     </div>
@@ -173,7 +173,7 @@ const processSteps = [
               {s.n}
             </div>
             <p class="text-white text-sm font-semibold mb-1">{s.label}</p>
-            <p class="text-gray-500 text-xs">{s.sub}</p>
+            <p class="text-gray-400 text-xs">{s.sub}</p>
           </div>
         ))}
       </div>

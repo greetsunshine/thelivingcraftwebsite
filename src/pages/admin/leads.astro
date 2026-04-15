@@ -79,20 +79,20 @@ function buildFilter(params: Record<string, string | undefined>): string {
     header nav a:hover, header nav a.active { color: #fff; }
     .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin: 32px 0 24px; }
     .page-title { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .page-subtitle { font-size: 13px; color: #64748b; margin: 0; font-family: 'JetBrains Mono', monospace; }
+    .page-subtitle { font-size: 13px; color: #cbd5e1; margin: 0; font-family: 'JetBrains Mono', monospace; }
     .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-    .filter-btn { font-size: 12px; font-family: 'JetBrains Mono', monospace; padding: 5px 12px; border-radius: 6px; border: 1px solid #1e293b; background: transparent; color: #64748b; text-decoration: none; cursor: pointer; }
+    .filter-btn { font-size: 12px; font-family: 'JetBrains Mono', monospace; padding: 5px 12px; border-radius: 6px; border: 1px solid #1e293b; background: transparent; color: #cbd5e1; text-decoration: none; cursor: pointer; }
     .filter-btn:hover { border-color: #4f46e5; color: #a5b4fc; }
     .filter-btn.active { background: #1e1b4b; border-color: #4f46e5; color: #a5b4fc; }
     .filter-sep { width: 1px; background: #1e293b; margin: 0 4px; }
     .table-wrap { background: #16213e; border: 1px solid #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 32px; }
     table { width: 100%; border-collapse: collapse; }
-    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; padding: 12px 16px; text-align: left; background: #0f1829; border-bottom: 1px solid #1e293b; }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; padding: 12px 16px; text-align: left; background: #0f1829; border-bottom: 1px solid #1e293b; }
     td { font-size: 13px; color: #94a3b8; padding: 14px 16px; border-top: 1px solid #0f1829; vertical-align: top; }
     tr:first-child td { border-top: none; }
     tr:hover td { background: #1a2540; }
     .lead-name { font-weight: 600; color: #e2e8f0; display: block; margin-bottom: 2px; }
-    .lead-email { font-size: 12px; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+    .lead-email { font-size: 12px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; }
     .test-badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px; background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.4); font-size: 9px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; vertical-align: middle; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
     .badge-training { background: #1e3a5f; color: #60a5fa; border: 1px solid #1d4ed8; }
@@ -100,9 +100,9 @@ function buildFilter(params: Record<string, string | undefined>): string {
     .badge-consulting { background: #1a2e1a; color: #86efac; border: 1px solid #166534; }
     .badge-other { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     .badge-stage { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-    .message-preview { font-size: 12px; color: #64748b; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .message-preview { font-size: 12px; color: #cbd5e1; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .empty-state { text-align: center; padding: 64px 24px; }
-    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #475569; font-size: 13px; }
+    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 13px; }
     .error-banner { background: #2d0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 16px; color: #f87171; font-size: 13px; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
   </style>
 </head>
@@ -183,14 +183,14 @@ function buildFilter(params: Record<string, string | undefined>): string {
                 </td>
                 <td>
                   {lead.company && <div style="font-size:12px;color:#e2e8f0">{lead.company}</div>}
-                  {lead.role_title && <div style="font-size:12px;color:#64748b">{lead.role_title}</div>}
+                  {lead.role_title && <div style="font-size:12px;color:#cbd5e1">{lead.role_title}</div>}
                 </td>
                 <td>
                   <span class={`badge badge-${lead.service_intent}`}>{lead.service_intent}</span>
                 </td>
                 <td class="mono" style="color:#e2e8f0;font-size:12px">
                   {lead.seniority_score}/5
-                  <div style="color:#64748b;font-size:11px">{seniorityLabel(lead.seniority_score)}</div>
+                  <div style="color:#cbd5e1;font-size:11px">{seniorityLabel(lead.seniority_score)}</div>
                 </td>
                 <td>
                   <span class="mono" style={`font-size:12px;color:${urgencyColor(lead.urgency)}`}>{lead.urgency}</span>
@@ -199,7 +199,7 @@ function buildFilter(params: Record<string, string | undefined>): string {
                 <td>
                   <span class="badge badge-stage">{lead.pipeline_stage.replace('_', ' ')}</span>
                 </td>
-                <td class="mono" style="font-size:11px;color:#475569">{formatDate(lead.created_at)}</td>
+                <td class="mono" style="font-size:11px;color:#94a3b8">{formatDate(lead.created_at)}</td>
                 <td>
                   <span class="message-preview" title={lead.message}>{lead.message}</span>
                 </td>

@@ -126,12 +126,12 @@ const statusColor: Record<string, string> = {
 
     .page-header { margin: 32px 0 16px; }
     .page-title { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .page-subtitle { font-size: 13px; color: #64748b; margin: 0; font-family: 'JetBrains Mono', monospace; }
+    .page-subtitle { font-size: 13px; color: #cbd5e1; margin: 0; font-family: 'JetBrains Mono', monospace; }
 
     /* Tabs */
     .tabs { display: flex; gap: 4px; border-bottom: 1px solid #1e293b; margin-bottom: 24px; }
     .tab-btn {
-      background: transparent; border: none; color: #64748b; cursor: pointer;
+      background: transparent; border: none; color: #cbd5e1; cursor: pointer;
       font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.08em;
       padding: 12px 18px; border-bottom: 2px solid transparent; margin-bottom: -1px;
@@ -139,7 +139,7 @@ const statusColor: Record<string, string> = {
     }
     .tab-btn:hover { color: #cbd5e1; }
     .tab-btn.active { color: #fff; border-bottom-color: #4f46e5; }
-    .tab-btn .count { color: #475569; margin-left: 6px; font-weight: 400; }
+    .tab-btn .count { color: #94a3b8; margin-left: 6px; font-weight: 400; }
     .tab-btn.active .count { color: #94a3b8; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -154,7 +154,7 @@ const statusColor: Record<string, string> = {
       font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.08em; color: #cbd5e1; margin: 0;
     }
-    .bucket-count { font-size: 11px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+    .bucket-count { font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
 
     /* Compact task row */
     .task-row {
@@ -172,16 +172,16 @@ const statusColor: Record<string, string> = {
     .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .task-title { font-size: 13px; color: #e2e8f0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .task-due { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fb923c; white-space: nowrap; }
-    .task-due.none { color: #475569; }
+    .task-due.none { color: #94a3b8; }
     .task-creator {
       font-family: 'JetBrains Mono', monospace; font-size: 10px;
-      color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;
+      color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.04em;
     }
     .task-quick-actions { display: flex; gap: 4px; }
     .qa-btn {
       font-family: 'JetBrains Mono', monospace; font-size: 10px;
       width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 4px; border: 1px solid #1e293b; background: transparent; color: #64748b;
+      border-radius: 4px; border: 1px solid #1e293b; background: transparent; color: #cbd5e1;
       cursor: pointer;
     }
     .qa-btn:hover.done { border-color: #4ade80; color: #4ade80; }
@@ -191,7 +191,7 @@ const statusColor: Record<string, string> = {
     /* Expanded drawer */
     .task-drawer { padding: 4px 16px 14px 30px; border-top: 1px solid #1e293b; background: #0a1220; }
     .task-desc { font-size: 12px; color: #94a3b8; margin: 10px 0; white-space: pre-wrap; line-height: 1.5; }
-    .task-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; margin-bottom: 10px; }
+    .task-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; margin-bottom: 10px; }
     .meta-badge { padding: 2px 8px; border-radius: 3px; border: 1px solid currentColor; background: transparent; }
     .drawer-actions { display: flex; gap: 6px; margin-top: 8px; }
     .drawer-btn {
@@ -202,14 +202,14 @@ const statusColor: Record<string, string> = {
     .drawer-btn:hover { border-color: #4f46e5; color: #fff; }
 
     .empty-state { text-align: center; padding: 48px 24px; }
-    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #475569; font-size: 13px; }
+    .empty-state p { font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 13px; }
     .error-banner { background: #2d0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px; color: #f87171; font-size: 13px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
 
     /* Reading */
     .reading-group { margin-bottom: 36px; }
     .reading-group-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
     .reading-group-title { font-size: 15px; font-weight: 600; color: #fff; margin: 0; }
-    .reading-group-count { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; }
+    .reading-group-count { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
     .item-card { background: #16213e; border: 1px solid #1e293b; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }
     .item-card:hover { border-color: #334155; }
     .item-header { display: flex; justify-content: space-between; gap: 12px; }
@@ -217,7 +217,7 @@ const statusColor: Record<string, string> = {
     .item-title a { color: inherit; text-decoration: none; }
     .item-title a:hover { color: #818cf8; }
     .item-why { font-size: 13px; color: #94a3b8; line-height: 1.5; margin: 4px 0 8px; }
-    .item-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #475569; }
+    .item-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; }
     .item-actions { display: flex; gap: 6px; align-items: flex-start; flex-shrink: 0; }
   </style>
 </head>
