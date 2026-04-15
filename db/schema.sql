@@ -178,6 +178,30 @@ BEGIN
   END IF;
 END $$;
 
+-- ─── Reading List (Scribe Intelligence Phase) ──────────────────────────────
+CREATE TABLE IF NOT EXISTS reading_list (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title             TEXT NOT NULL,
+  url               TEXT NOT NULL,
+  source            TEXT,                                 -- publisher / site name
+  author            TEXT,
+  published_date    DATE,
+  category          TEXT NOT NULL CHECK (category IN ('technical','business')),
+  subcategory       TEXT,                                 -- e.g. 'design_patterns','governance','model_release'
+  why_it_matters    TEXT NOT NULL,                        -- 1-2 sentence "so what" for Sunil
+  relevance_score   REAL NOT NULL,                        -- 0.0-1.0
+  status            TEXT NOT NULL DEFAULT 'unread'
+                      CHECK (status IN ('unread','reading','read','archived','dismissed')),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (url)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reading_list_status      ON reading_list (status);
+CREATE INDEX IF NOT EXISTS idx_reading_list_category    ON reading_list (category);
+CREATE INDEX IF NOT EXISTS idx_reading_list_relevance   ON reading_list (relevance_score DESC);
+CREATE INDEX IF NOT EXISTS idx_reading_list_created_at  ON reading_list (created_at DESC);
+
 -- ─── Agent Costs (monthly budget guard) ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS agent_costs (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,12 +1,17 @@
 import type { Tool } from '@anthropic-ai/sdk/resources/messages.js';
 import { getAnthropicClient, MODELS } from '../lib/anthropic-client.js';
 import { ToolRegistry } from '../lib/tool-executor.js';
-import { SCRIBE_TREND_SCAN_PROMPT, SCRIBE_DRAFT_PROMPT } from '../lib/prompts/scribe.js';
+import {
+  SCRIBE_TREND_SCAN_PROMPT,
+  SCRIBE_DRAFT_PROMPT,
+  SCRIBE_INTELLIGENCE_PROMPT,
+} from '../lib/prompts/scribe.js';
 import {
   createProposedTopic,
   getApprovedTopicsToDraft,
   saveContentDraft,
   markCalendarDrafted,
+  createReadingItem,
 } from '../lib/db-client.js';
 import { orchCreateTask, runAgentWithAccounting } from '../lib/orchestrator.js';
 import type { AgentResult, TaskPriority, TaskCategory } from '../lib/types.js';
@@ -88,6 +93,87 @@ function buildRegistry(): ToolRegistry {
   // web_search is handled server-side by Anthropic — no local handler.
 
   return registry;
+}
+
+// ─── Phase 0 — Intelligence Scan (Sunday night) ──────────────────────────────
+
+const SCRIBE_INTELLIGENCE_TOOLS: Tool[] = [
+  {
+    name: 'create_reading_item',
+    description: 'Save a curated article to the reading list. De-dupes on URL — safe to call on duplicates.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        title:           { type: 'string' },
+        url:             { type: 'string', description: 'Real URL from web_search — never fabricate' },
+        source:          { type: 'string', description: 'Publisher / site name e.g. "Anthropic", "arXiv", "Gartner"' },
+        author:          { type: 'string' },
+        published_date:  { type: 'string', description: 'YYYY-MM-DD if known' },
+        category:        { type: 'string', description: 'technical | business' },
+        subcategory:     { type: 'string', description: 'See prompt for allowed values' },
+        why_it_matters:  { type: 'string', description: '1-2 sentence "so what" for Sunil — this is the whole product' },
+        relevance_score: { type: 'number', description: '0.0-1.0, how much Sunil should care' },
+      },
+      required: ['title', 'url', 'category', 'why_it_matters', 'relevance_score'],
+    },
+  },
+  // Anthropic server-side web search
+  {
+    type: 'web_search_20250305',
+    name: 'web_search',
+    max_uses: 10,
+  } as unknown as Tool,
+];
+
+function buildIntelligenceRegistry(): ToolRegistry {
+  const registry = new ToolRegistry();
+
+  registry.register('create_reading_item', async (input) => {
+    const id = await createReadingItem({
+      title: input.title as string,
+      url: input.url as string,
+      source: input.source as string | undefined,
+      author: input.author as string | undefined,
+      published_date: input.published_date as string | undefined,
+      category: input.category as 'technical' | 'business',
+      subcategory: input.subcategory as string | undefined,
+      why_it_matters: input.why_it_matters as string,
+      relevance_score: input.relevance_score as number,
+    });
+    return { success: true, id, deduped: id === null };
+  });
+
+  return registry;
+}
+
+export async function runScribeIntelligence(): Promise<AgentResult> {
+  const client = getAnthropicClient();
+  const registry = buildIntelligenceRegistry();
+
+  try {
+    const result = await runAgentWithAccounting({
+      client,
+      agentName: 'scribe-intelligence',
+      model: MODELS.sonnet,
+      system: SCRIBE_INTELLIGENCE_PROMPT,
+      tools: SCRIBE_INTELLIGENCE_TOOLS,
+      initialMessages: [
+        {
+          role: 'user',
+          content:
+            'Run your Sunday-night intelligence scan. Find 5-8 technical frontier articles and 3-5 business context articles from the last 14 days. Use web_search across multiple subcategories. Save each via create_reading_item with a sharp why_it_matters.',
+        },
+      ],
+      executeToolCall: registry.execute,
+      maxRounds: 30,
+      maxTokens: 4096,
+    });
+    return { success: true, output: result.output };
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    console.error('[Scribe Intelligence] Error:', error);
+    return { success: false, output: '', error };
+  }
 }
 
 // ─── Phase 2 — Drafting ──────────────────────────────────────────────────────

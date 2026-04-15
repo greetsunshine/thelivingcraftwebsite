@@ -172,6 +172,47 @@ export interface TaskRow {
   created_at: string;
 }
 
+export interface ReadingItemRow {
+  id: string;
+  title: string;
+  url: string;
+  source?: string;
+  author?: string;
+  published_date?: string;
+  category: 'technical' | 'business';
+  subcategory?: string;
+  why_it_matters: string;
+  relevance_score: number;
+  status: 'unread' | 'reading' | 'read' | 'archived' | 'dismissed';
+  created_at: string;
+}
+
+export async function queryReadingList(): Promise<ReadingItemRow[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, title, url, source, author, published_date, category, subcategory,
+           why_it_matters, relevance_score, status, created_at
+    FROM reading_list
+    WHERE status NOT IN ('archived','dismissed')
+    ORDER BY relevance_score DESC, created_at DESC
+    LIMIT 200
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    url: r.url as string,
+    source: (r.source as string | null) ?? undefined,
+    author: (r.author as string | null) ?? undefined,
+    published_date: r.published_date ? toIso(r.published_date).slice(0, 10) : undefined,
+    category: r.category as 'technical' | 'business',
+    subcategory: (r.subcategory as string | null) ?? undefined,
+    why_it_matters: r.why_it_matters as string,
+    relevance_score: r.relevance_score as number,
+    status: r.status as ReadingItemRow['status'],
+    created_at: toIso(r.created_at),
+  }));
+}
+
 export async function queryOpenTasks(): Promise<TaskRow[]> {
   const sql = getSql();
   const rows = await sql`

@@ -494,6 +494,110 @@ export async function saveFirstReplyDraft(
   `;
 }
 
+// ─── Reading list (Scribe Intelligence) ──────────────────────────────────────
+
+export interface ReadingItemInput {
+  title: string;
+  url: string;
+  source?: string;
+  author?: string;
+  published_date?: string;  // YYYY-MM-DD
+  category: 'technical' | 'business';
+  subcategory?: string;
+  why_it_matters: string;
+  relevance_score: number;
+}
+
+export async function createReadingItem(item: ReadingItemInput): Promise<string | null> {
+  const sql = getSql();
+  // ON CONFLICT (url) DO NOTHING → silently skip duplicates from re-runs
+  const rows = await sql`
+    INSERT INTO reading_list
+      (title, url, source, author, published_date, category, subcategory,
+       why_it_matters, relevance_score)
+    VALUES
+      (${item.title}, ${item.url}, ${item.source ?? null}, ${item.author ?? null},
+       ${item.published_date ?? null}, ${item.category}, ${item.subcategory ?? null},
+       ${item.why_it_matters}, ${item.relevance_score})
+    ON CONFLICT (url) DO NOTHING
+    RETURNING id
+  `;
+  return rows.length > 0 ? (rows[0].id as string) : null;
+}
+
+export interface ReadingItem {
+  id: string;
+  title: string;
+  url: string;
+  source?: string;
+  author?: string;
+  published_date?: string;
+  category: 'technical' | 'business';
+  subcategory?: string;
+  why_it_matters: string;
+  relevance_score: number;
+  status: 'unread' | 'reading' | 'read' | 'archived' | 'dismissed';
+  created_at: string;
+}
+
+export async function getReadingList(
+  opts: { category?: 'technical' | 'business'; status?: string; limit?: number } = {}
+): Promise<ReadingItem[]> {
+  const sql = getSql();
+  const limit = opts.limit ?? 200;
+  const rows = opts.category && opts.status
+    ? await sql`
+        SELECT * FROM reading_list
+        WHERE category = ${opts.category} AND status = ${opts.status}
+        ORDER BY relevance_score DESC, created_at DESC LIMIT ${limit}
+      `
+    : opts.category
+      ? await sql`
+          SELECT * FROM reading_list WHERE category = ${opts.category}
+          AND status NOT IN ('dismissed','archived')
+          ORDER BY relevance_score DESC, created_at DESC LIMIT ${limit}
+        `
+      : opts.status
+        ? await sql`
+            SELECT * FROM reading_list WHERE status = ${opts.status}
+            ORDER BY relevance_score DESC, created_at DESC LIMIT ${limit}
+          `
+        : await sql`
+            SELECT * FROM reading_list
+            WHERE status NOT IN ('dismissed','archived')
+            ORDER BY relevance_score DESC, created_at DESC LIMIT ${limit}
+          `;
+  return rows.map(rowToReadingItem);
+}
+
+export async function updateReadingStatus(
+  id: string,
+  status: 'unread' | 'reading' | 'read' | 'archived' | 'dismissed'
+): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE reading_list SET status = ${status}, updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+function rowToReadingItem(row: Record<string, unknown>): ReadingItem {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    url: row.url as string,
+    source: (row.source as string | null) ?? undefined,
+    author: (row.author as string | null) ?? undefined,
+    published_date: row.published_date ? toIso(row.published_date).slice(0, 10) : undefined,
+    category: row.category as 'technical' | 'business',
+    subcategory: (row.subcategory as string | null) ?? undefined,
+    why_it_matters: row.why_it_matters as string,
+    relevance_score: row.relevance_score as number,
+    status: row.status as ReadingItem['status'],
+    created_at: toIso(row.created_at),
+  };
+}
+
 export async function markFirstReplySent(leadId: string): Promise<void> {
   const sql = getSql();
   await sql`
