@@ -5,6 +5,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout
   title="The Living Craft"
   description="Practitioner-grade Agentic AI training, mentoring, and consulting — anchored in ultra fast learning. For Engineering Managers, Architects, and CTOs."
+  schema={{
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: 'What skills will keep me relevant as AI reshapes every engineering role?', acceptedAnswer: { '@type': 'Answer', text: 'The four capabilities in highest demand are agent architecture, AI-native team design, governance and risk, and strategic AI leadership. The Living Craft training programs are scoped to exactly these skills.' }},
+      { '@type': 'Question', name: 'How do I drive an Agentic AI transformation without stalling at proof-of-concept?', acceptedAnswer: { '@type': 'Answer', text: 'The Living Craft consulting engagements build governance frameworks, adoption roadmaps, and ROI models with your team — designed to move from POC to production deployment.' }},
+      { '@type': 'Question', name: 'How do I find or grow people with the right AI skills when the talent market is so thin?', acceptedAnswer: { '@type': 'Answer', text: 'We train your existing team in small, intensive cohorts — practitioner-led with usable artifacts from week one. Faster and more effective than trying to hire externally.' }},
+      { '@type': 'Question', name: 'How do I transition into AI leadership before the window closes?', acceptedAnswer: { '@type': 'Answer', text: 'Our 1:1 mentoring is designed for exactly this — engineering to AI leader, or leader to AI strategy owner, in structured 90-day arcs with measurable milestones.' }},
+      { '@type': 'Question', name: 'My board wants an AI strategy and ROI this quarter — how do I deliver?', acceptedAnswer: { '@type': 'Answer', text: 'We build board-ready ROI models and defensible AI strategies grounded in what is actually deployable — with a working draft by week two of the engagement.' }},
+    ],
+  }}
 >
 
 <style>

@@ -6,10 +6,14 @@ import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://thelivingcraft.com',
+  site: 'https://thelivingcraft.ai',
   output: 'static',
   adapter: netlify({ edgeMiddleware: true }),
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes('/admin/') && !page.includes('/api/'),
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
   },

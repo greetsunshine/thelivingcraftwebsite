@@ -134,6 +134,25 @@ const advantages = [
 <BaseLayout
   title="Agentic AI Training"
   description="Practitioner-grade Agentic AI training programs — intensive cohorts, weekend classes for leaders, MAANG interview prep, and building AI-first organisations."
+  schema={{
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Agentic AI Training Programs',
+    description: 'Practitioner-grade training for senior technical leaders — from 3-week intensives to weekend programs.',
+    url: 'https://thelivingcraft.ai/training/',
+    numberOfItems: 4,
+    itemListElement: programs.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Course',
+        name: p.title,
+        description: p.desc,
+        provider: { '@type': 'Organization', name: 'The Living Craft', url: 'https://thelivingcraft.ai' },
+        hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'blended', courseWorkload: p.duration },
+      },
+    })),
+  }}
 >
 
   <style>

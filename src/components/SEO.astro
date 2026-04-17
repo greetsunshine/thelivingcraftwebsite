@@ -16,14 +16,14 @@ const {
   description,
   ogTitle,
   ogDescription,
-  ogImage = 'https://thelivingcraft.com/og/home.png',
+  ogImage = 'https://thelivingcraft.ai/og/home.png',
   ogType = 'website',
   canonical,
   noindex = false,
   schema,
 } = Astro.props;
 
-const siteUrl = 'https://thelivingcraft.com';
+const siteUrl = 'https://thelivingcraft.ai';
 const resolvedCanonical = canonical ?? (siteUrl + Astro.url.pathname);
 
 const organizationSchema = {
