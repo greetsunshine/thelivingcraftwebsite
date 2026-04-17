@@ -1,77 +1,139 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-const courses = [
+const programs = [
   {
     n: '01',
-    audience: 'EMs · PMs · Tech Leads',
-    title: 'Agentic AI Project Strategy',
-    desc: 'Define scope, set milestones, and structure delivery for AI projects that actually ship.',
-    outcomes: [
-      'Scope an agentic AI project in under a week',
-      'Build a milestone framework that survives contact with reality',
-      'Align stakeholders on what "done" looks like for AI',
+    badge: 'Intensive',
+    title: 'Fast-Track Agentic AI Intensive',
+    tagline: 'For professionals who want to go deep, fast.',
+    desc: 'A full-immersion program designed for those ready to commit 3–4 weeks of focused learning. Small cohorts of fewer than 15 ensure every participant gets hands-on guidance, live code reviews, and direct access to the instructor. Available hybrid — join online or in-person.',
+    tracks: [
+      {
+        label: 'Track A — Building AI Systems',
+        audience: 'Engineers · Tech Leads · Hands-on Architects',
+        desc: 'For builders. You\'ll design, code, and deploy agentic systems from scratch — orchestration, tool use, memory, evaluation, and production hardening.',
+        outcomes: [
+          'Build a working multi-agent system end-to-end',
+          'Implement orchestration patterns, tool schemas, and memory architectures',
+          'Design evaluation loops that catch failures before production',
+          'Deploy and monitor agentic systems with confidence',
+        ],
+      },
+      {
+        label: 'Track B — Architecting & Deploying Enterprise Agentic Systems',
+        audience: 'Senior Engineers · Architects · Tech-savvy Leaders',
+        desc: 'For seasoned technologists with leadership experience. You\'ll architect enterprise-grade agentic systems — security, governance, scale, and organisational readiness.',
+        outcomes: [
+          'Design enterprise agentic architectures that pass security and compliance review',
+          'Build Architecture Decision Records (ADRs) for production agent systems',
+          'Create governance frameworks for AI deployment at scale',
+          'Develop rollout strategies that manage risk across business units',
+        ],
+      },
     ],
-    duration: '8 weeks',
-    format: 'Live cohort',
-    ufl: 'Each session maps to a real project decision you face that week',
+    duration: '3–4 weeks',
+    format: 'Mon–Fri · Hybrid (Online + In-person)',
+    cohort: '< 15 participants',
     color: '#4f46e5',
-    source: 'training-strategy',
+    source: 'training-intensive',
   },
   {
     n: '02',
-    audience: 'EMs · CTOs',
-    title: 'Building Agentic Teams',
-    desc: 'Hire, form, and structure the cross-functional teams that build and operate autonomous AI systems.',
+    badge: 'Weekend',
+    title: 'Weekend AI Leadership Program',
+    tagline: 'For leaders who can\'t pause their career to learn.',
+    desc: 'You\'re running a team, shipping product, and sitting in leadership meetings all week. This program is built around your schedule — weekend sessions that go deep, with mid-week AMA sessions to clear doubts and keep momentum between classes.',
     outcomes: [
-      'Write job descriptions that attract the right candidates',
-      'Design a team topology optimised for agentic AI work',
-      'Role templates and hiring rubrics — usable before the cohort ends',
+      'Build a working understanding of agentic AI — what it can and can\'t do today',
+      'Evaluate AI initiatives and vendors with confidence, not buzzwords',
+      'Develop your team\'s AI strategy without hiring an external consultant',
+      'Lead AI conversations with your board, peers, and engineering teams',
+      'Create an actionable 90-day AI roadmap for your organisation',
     ],
-    duration: '8 weeks',
-    format: 'Live cohort',
-    ufl: 'Hiring rubrics delivered week 1 — usable before the cohort ends',
+    duration: '6–8 weekends',
+    format: '6–8 weekend classes + mid-week AMA sessions',
+    cohort: 'Small cohorts',
     color: '#ec4899',
-    source: 'training-teams',
+    source: 'training-weekend',
   },
   {
     n: '03',
-    audience: 'Staff Engineers · Architects',
-    title: 'Agentic Architectures Deep Dive',
-    desc: 'Orchestration patterns, tool use, memory, evaluation loops — the architectural decisions that determine production success.',
+    badge: 'Interview Prep',
+    title: 'MAANG & Tier-1 Interview Mastery',
+    tagline: 'For leaders targeting their next career leap.',
+    desc: 'You\'ve built the career. Now you want the offer. This program is laser-focused on senior interview loops at Meta, Amazon, Apple, Netflix, Google, Microsoft, and top-tier AI companies. I\'ve been on the hiring side at Amazon and Google — I know what separates "strong hire" from "no hire" at L6+ levels.',
     outcomes: [
-      'Evaluate orchestration frameworks for your specific constraints',
-      'Design a memory architecture for stateful agents',
-      'Build an evaluation loop that catches failures before production',
+      'System design at staff/principal level — including AI/ML system design patterns',
+      'Behavioral interviews against real MAANG rubrics (Amazon Bar Raiser, Google L6+)',
+      'Mock interview loops with written rubric-based feedback after each round',
+      'Executive presence, panel dynamics, and offer negotiation at senior bands',
+      'Targeted preparation for AI-focused roles at OpenAI, Anthropic, and top AI labs',
     ],
-    duration: '10 weeks',
-    format: 'Live cohort',
-    ufl: 'Architecture decision records (ADRs) are the core artifact — not slides',
-    color: '#06b6d4',
-    source: 'training-architecture',
+    duration: '4–6 weeks',
+    format: 'Intensive 1:1 + mock loops',
+    cohort: 'Individual or small group',
+    color: '#f59e0b',
+    source: 'training-interview',
   },
   {
     n: '04',
-    audience: 'VPs · CTOs · Senior EMs',
-    title: 'Managing Implementation Challenges',
-    desc: 'Stakeholder alignment, rollout sequencing, and incident response for AI systems in real organisations.',
+    badge: 'Organisation',
+    title: 'Building Agentic Organisations',
+    tagline: 'For leaders building AI-first companies.',
+    desc: 'This isn\'t about adopting a tool. It\'s about rewiring how your organisation thinks, builds, and operates — with AI agents as first-class team members. From org design and team topology to governance, culture, and change management, this program equips you to lead the shift from "using AI" to "being an AI-native organisation."',
     outcomes: [
-      'Run a stakeholder alignment session in week 1',
-      'Build a rollout sequence that reduces blast radius',
-      'Respond to an AI system incident before it becomes a crisis',
+      'Design an AI-first organisational structure — team topologies, roles, and reporting lines',
+      'Build a governance framework that enables speed without sacrificing control',
+      'Create an AI adoption roadmap that sequences change across business units',
+      'Develop hiring strategies and capability-building plans for an agentic workforce',
+      'Lead cultural transformation — from AI-curious to AI-native',
     ],
-    duration: '6 weeks',
-    format: 'Live cohort',
-    ufl: 'Incident simulations in week 2 — learn from synthetic failure before real failure',
-    color: '#10b981',
-    source: 'training-implementation',
+    duration: '6–8 weeks',
+    format: 'Live cohort + advisory sessions',
+    cohort: 'Small cohorts · C-suite peers',
+    color: '#06b6d4',
+    source: 'training-org',
+  },
+];
+
+const advantages = [
+  {
+    ours: 'Practitioner-led by someone who built AI systems at Amazon & Google',
+    theirs: 'Taught by academics or career trainers who\'ve never shipped production AI',
+    icon: '01',
+  },
+  {
+    ours: 'Small cohorts (< 15) — every participant gets direct, personal attention',
+    theirs: 'Massive cohorts of 100+ where you\'re just another name on a Zoom grid',
+    icon: '02',
+  },
+  {
+    ours: 'You build real artifacts: ADRs, governance playbooks, hiring rubrics, working code',
+    theirs: 'You get slides, certificates, and theoretical knowledge you can\'t apply Monday morning',
+    icon: '03',
+  },
+  {
+    ours: 'Ultra fast learning — 8× faster to implementation-ready through ruthless sequencing',
+    theirs: 'Self-paced courses that drag on for months with no accountability or peer pressure',
+    icon: '04',
+  },
+  {
+    ours: 'Hybrid format: join live in-person or online — built for working professionals',
+    theirs: 'Pre-recorded videos with no live interaction, no Q&A, no course correction',
+    icon: '05',
+  },
+  {
+    ours: '26 years of Fortune 100 experience — Walmart, Amazon, Google — distilled into every session',
+    theirs: 'Generic AI content assembled from blog posts and documentation — no real-world depth',
+    icon: '06',
   },
 ];
 ---
 
 <BaseLayout
   title="Agentic AI Training"
-  description="Leadership-grade Agentic AI training cohorts for Engineering Managers, Architects, and CTOs. Built for ultra fast learning."
+  description="Practitioner-grade Agentic AI training programs — intensive cohorts, weekend classes for leaders, MAANG interview prep, and building AI-first organisations."
 >
 
   <style>
@@ -84,11 +146,11 @@ const courses = [
       transition: border-color 0.3s, transform 0.3s;
     }
     .course-card:hover { transform: translateY(-2px); }
-    .course-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
+    .track-card {
+      background: rgba(10,10,20,0.6);
+      border: 1px solid rgba(75,85,99,0.3);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
     }
   </style>
 
@@ -105,13 +167,16 @@ const courses = [
       <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
         Agentic AI Training<br/>
         <span style="background: linear-gradient(135deg, #4f46e5, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-          for Technical Leaders
+          Built for How You Learn Best
         </span>
       </h1>
-      <p class="text-xl text-gray-400 max-w-2xl mb-8 leading-relaxed">
-        Leadership-grade programs built for <span class="text-white font-medium">ultra fast learning</span> —
-        not YouTube tutorials. You'll leave with implementation-ready knowledge and a peer cohort doing
-        the same work.
+      <p class="text-xl text-gray-400 max-w-2xl mb-4 leading-relaxed">
+        Four programs, each designed for a different stage of your AI journey. Whether you want to
+        go deep in 3 weeks, learn on weekends, land your next role, or transform your entire
+        organisation — there's a path built for you.
+      </p>
+      <p class="text-gray-400 text-sm font-mono mb-10">
+        Small cohorts. Practitioner-led. Real artifacts, not slides.
       </p>
       <div class="flex flex-wrap gap-4">
         <a href="#programs"
@@ -124,43 +189,42 @@ const courses = [
         </a>
         <a href="/contact/?source=training"
            class="inline-flex items-center gap-2 px-6 py-3 text-gray-300 hover:text-white font-medium rounded-xl border border-gray-700/60 hover:border-gray-500/60 transition-colors">
-          Talk to us first
+          Book a Free Call
         </a>
       </div>
     </div>
   </section>
 
 
-  <!-- ─── DIFFERENTIATORS ──────────────────────────────────── -->
+  <!-- ─── QUICK COMPARISON ────────────────────────────────── -->
   <section class="bg-dark-secondary py-20">
     <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          {
-            title: 'Every session, a usable artifact',
-            body: "Not notes. Not slides. Each session ends with something you can use in your org the next morning — a template, a decision record, a hiring rubric.",
-          },
-          {
-            title: 'Cohort model — your seniority level',
-            body: '≤20 participants at your level. No juniors, no generic content. Peer pressure and shared context accelerate the learning in ways solo study cannot.',
-          },
-          {
-            title: 'Live + async — built for executives',
-            body: 'Weekly live sessions, structured async discussion between. Designed so you never have to choose between shipping and learning.',
-          },
-        ].map((d, i) => (
-          <div class="p-7 bg-dark-card border border-gray-700/30 rounded-2xl">
-            <p class="text-accent font-mono text-sm font-bold mb-4">0{i + 1}</p>
-            <h3 class="text-white font-bold text-base mb-3 leading-snug">{d.title}</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">{d.body}</p>
-          </div>
+      <div class="mb-10">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Find Your Fit</p>
+        <h2 class="text-2xl font-bold text-white">Which program is right for you?</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {programs.map(p => (
+          <a href={`#program-${p.n}`}
+             class="group p-5 bg-dark-card border border-gray-700/30 rounded-xl hover:border-gray-600/60 transition-all">
+            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold mb-3 border"
+                  style={`color: ${p.color}; background: ${p.color}15; border-color: ${p.color}30;`}>
+              {p.badge}
+            </span>
+            <h3 class="text-white font-bold text-sm mb-1.5 group-hover:text-accent-light transition-colors">{p.title}</h3>
+            <p class="text-gray-400 text-xs leading-relaxed mb-3">{p.tagline}</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-gray-400">
+              <span>{p.duration}</span>
+              <span>{p.cohort}</span>
+            </div>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
 
-  <!-- ─── COURSE CARDS ─────────────────────────────────────── -->
+  <!-- ─── PROGRAM CARDS ───────────────────────────────────── -->
   <section id="programs" class="bg-dark-primary py-24">
     <div class="container mx-auto px-6">
       <div class="mb-14">
@@ -168,56 +232,162 @@ const courses = [
         <h2 class="text-4xl font-bold text-white">Choose your program</h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {courses.map(c => (
-          <div class="course-card p-8 flex flex-col" style={`--accent-color: ${c.color};`}>
-            <!-- Top colour bar -->
-            <div class="absolute top-0 left-0 right-0 h-0.5" style={`background: ${c.color};`}></div>
+      <div class="space-y-8">
+
+        <!-- ═══ PROGRAM 01 — INTENSIVE (with 2 tracks) ═══ -->
+        <div id="program-01" class="course-card p-8">
+          <div class="absolute top-0 left-0 right-0 h-0.5" style={`background: ${programs[0].color};`}></div>
+
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+              <p class="font-mono text-sm font-bold" style={`color: ${programs[0].color};`}>{programs[0].n}</p>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold border"
+                    style={`color: ${programs[0].color}; background: ${programs[0].color}15; border-color: ${programs[0].color}30;`}>
+                {programs[0].badge}
+              </span>
+            </div>
+          </div>
+
+          <h3 class="text-2xl md:text-3xl font-bold text-white mb-2">{programs[0].title}</h3>
+          <p class="text-sm font-mono mb-5" style={`color: ${programs[0].color};`}>{programs[0].tagline}</p>
+          <p class="text-gray-400 text-sm leading-relaxed mb-8 max-w-3xl">{programs[0].desc}</p>
+
+          <!-- Two tracks side by side -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+            {programs[0].tracks.map(t => (
+              <div class="track-card">
+                <p class="text-xs font-mono uppercase tracking-widest mb-1" style={`color: ${programs[0].color};`}>{t.label}</p>
+                <p class="text-[10px] font-mono text-gray-400 mb-3">{t.audience}</p>
+                <p class="text-gray-400 text-sm leading-relaxed mb-5">{t.desc}</p>
+                <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">You'll be able to</p>
+                <ul class="space-y-2">
+                  {t.outcomes.map(o => (
+                    <li class="flex items-start gap-2 text-sm text-gray-300">
+                      <span class="flex-shrink-0 mt-0.5" style={`color: ${programs[0].color};`}>›</span>
+                      {o}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <!-- Specs + CTA -->
+          <div class="flex flex-wrap items-center gap-6 pt-6 border-t border-gray-700/40">
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">{programs[0].duration}</p>
+              <p class="text-gray-400 text-xs">Duration</p>
+            </div>
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">{programs[0].format}</p>
+              <p class="text-gray-400 text-xs">Format</p>
+            </div>
+            <div>
+              <p class="text-white font-mono font-semibold text-sm">{programs[0].cohort}</p>
+              <p class="text-gray-400 text-xs">Cohort size</p>
+            </div>
+            <div class="ml-auto">
+              <a href={`/contact/?source=${programs[0].source}`}
+                 class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold text-sm rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+                 style={`background: linear-gradient(135deg, ${programs[0].color}, ${programs[0].color}cc);`}>
+                Book a Free Call →
+              </a>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ═══ PROGRAMS 02, 03, 04 — Standard layout ═══ -->
+        {programs.slice(1).map(p => (
+          <div id={`program-${p.n}`} class="course-card p-8">
+            <div class="absolute top-0 left-0 right-0 h-0.5" style={`background: ${p.color};`}></div>
 
             <div class="flex items-center justify-between mb-5">
-              <p class="font-mono text-sm font-bold" style={`color: ${c.color};`}>{c.n}</p>
-              <p class="text-xs font-mono text-gray-400">{c.audience}</p>
+              <div class="flex items-center gap-3">
+                <p class="font-mono text-sm font-bold" style={`color: ${p.color};`}>{p.n}</p>
+                <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold border"
+                      style={`color: ${p.color}; background: ${p.color}15; border-color: ${p.color}30;`}>
+                  {p.badge}
+                </span>
+              </div>
             </div>
 
-            <h3 class="text-2xl font-bold text-white mb-3">{c.title}</h3>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">{c.desc}</p>
-
-            <!-- UFL badge -->
-            <div class="flex items-start gap-3 p-4 rounded-xl mb-6"
-                 style={`background: ${c.color}10; border-left: 2px solid ${c.color}60;`}>
-              <span class="text-xs font-mono font-bold flex-shrink-0 mt-0.5"
-                    style={`color: ${c.color};`}>UFL</span>
-              <p class="text-gray-300 text-xs leading-relaxed">{c.ufl}</p>
-            </div>
+            <h3 class="text-2xl md:text-3xl font-bold text-white mb-2">{p.title}</h3>
+            <p class="text-sm font-mono mb-5" style={`color: ${p.color};`}>{p.tagline}</p>
+            <p class="text-gray-400 text-sm leading-relaxed mb-8 max-w-3xl">{p.desc}</p>
 
             <!-- Outcomes -->
             <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">You'll be able to</p>
-            <ul class="space-y-2.5 mb-8 flex-1">
-              {c.outcomes.map(o => (
+            <ul class="space-y-2.5 mb-8">
+              {p.outcomes.map(o => (
                 <li class="flex items-start gap-2 text-sm text-gray-300">
-                  <span class="flex-shrink-0 mt-0.5" style={`color: ${c.color};`}>›</span>
+                  <span class="flex-shrink-0 mt-0.5" style={`color: ${p.color};`}>›</span>
                   {o}
                 </li>
               ))}
             </ul>
 
             <!-- Specs + CTA -->
-            <div class="flex items-center gap-6 pt-6 border-t border-gray-700/40">
+            <div class="flex flex-wrap items-center gap-6 pt-6 border-t border-gray-700/40">
               <div>
-                <p class="text-white font-mono font-semibold text-sm">{c.duration}</p>
+                <p class="text-white font-mono font-semibold text-sm">{p.duration}</p>
                 <p class="text-gray-400 text-xs">Duration</p>
               </div>
               <div>
-                <p class="text-white font-mono font-semibold text-sm">{c.format}</p>
+                <p class="text-white font-mono font-semibold text-sm">{p.format}</p>
                 <p class="text-gray-400 text-xs">Format</p>
               </div>
+              <div>
+                <p class="text-white font-mono font-semibold text-sm">{p.cohort}</p>
+                <p class="text-gray-400 text-xs">Cohort size</p>
+              </div>
               <div class="ml-auto">
-                <a href={`/contact/?source=${c.source}`}
-                   class="text-sm font-medium transition-colors hover:opacity-80"
-                   style={`color: ${c.color};`}>
-                  Request info →
+                <a href={`/contact/?source=${p.source}`}
+                   class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold text-sm rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+                   style={`background: linear-gradient(135deg, ${p.color}, ${p.color}cc);`}>
+                  Book a Free Call →
                 </a>
               </div>
+            </div>
+          </div>
+        ))}
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── WHY THE LIVING CRAFT ─────────────────────────────── -->
+  <section id="why-us" class="py-24" style="background: #0f0f1a;">
+    <div class="container mx-auto px-6">
+      <div class="max-w-3xl mb-14">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Why Us</p>
+        <h2 class="text-4xl font-bold text-white mb-4 leading-tight">
+          How The Living Craft compares
+        </h2>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Most AI training programs are built by educators. Ours is built by a practitioner with
+          26 years of Fortune 100 engineering leadership — including building and shipping AI systems
+          at Amazon and Google.
+        </p>
+      </div>
+
+      <div class="space-y-4 max-w-4xl">
+        {advantages.map(a => (
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+            <!-- Ours -->
+            <div class="p-5 rounded-xl border border-accent/20 bg-accent/5">
+              <p class="text-[10px] font-mono uppercase tracking-widest text-accent mb-2">The Living Craft</p>
+              <p class="text-gray-200 text-sm leading-relaxed">{a.ours}</p>
+            </div>
+            <!-- VS divider -->
+            <div class="hidden md:flex items-center justify-center">
+              <span class="text-xs font-mono text-gray-400 px-3">vs</span>
+            </div>
+            <!-- Theirs -->
+            <div class="p-5 rounded-xl border border-gray-700/30 bg-dark-card">
+              <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">Typical programs</p>
+              <p class="text-gray-400 text-sm leading-relaxed">{a.theirs}</p>
             </div>
           </div>
         ))}
@@ -230,11 +400,11 @@ const courses = [
   <section class="bg-dark-secondary py-20">
     <div class="container mx-auto px-6 text-center max-w-2xl">
       <h2 class="text-3xl font-bold text-white mb-4">Not sure which program fits?</h2>
-      <p class="text-gray-400 mb-8">A 30-minute scoping call is enough to know. No commitment, no pitch.</p>
+      <p class="text-gray-400 mb-8">A 30-minute call is enough to know. No commitment, no pitch — just an honest conversation about where you are.</p>
       <a href="/contact/?source=training"
          class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
          style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
-        Book a 30-min scoping call →
+        Book a Free Call →
       </a>
     </div>
   </section>

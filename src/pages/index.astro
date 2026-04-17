@@ -1,79 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const metrics = [
-  { value: '200+', label: 'Senior Leaders Trained' },
-  { value: '40+',  label: 'Organisations Advised'  },
-  { value: '90',   label: 'Days to Transformation' },
-  { value: '4',    label: 'Expert-Led Programs'    },
-];
-
-const pillars = [
-  {
-    href: '/training/',
-    badge: 'Training',
-    badgeColor: 'text-violet-400 bg-violet-500/10 border-violet-500/20',
-    gradientFrom: 'rgba(139,92,246,0.08)',
-    gradientTo: 'rgba(79,70,229,0.04)',
-    title: 'Agentic AI Training',
-    desc: 'Cohort-based programs that compress years of AI expertise into weeks of structured, application-first learning.',
-    outcomes: ['Agentic project strategy', 'Team formation & hiring', 'Architecture patterns'],
-    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>`,
-  },
-  {
-    href: '/mentoring/',
-    badge: 'Mentoring',
-    badgeColor: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
-    gradientFrom: 'rgba(236,72,153,0.07)',
-    gradientTo: 'rgba(139,92,246,0.04)',
-    title: 'Career Transformation',
-    desc: '1:1 mentoring across three tracks — AI leadership, strategy ownership, and senior interview loops for MAANG & beyond.',
-    outcomes: ['Engineering → AI leader', 'Leader → AI strategy owner', 'MAANG senior interview loops'],
-    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
-  },
-  {
-    href: '/consulting/',
-    badge: 'Consulting',
-    badgeColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-    gradientFrom: 'rgba(6,182,212,0.07)',
-    gradientTo: 'rgba(79,70,229,0.04)',
-    title: 'Consulting',
-    desc: 'Governance frameworks, ROI models, and adoption strategy — built with your team using rapid learning loops, not handed over as a deck.',
-    outcomes: ['Governance playbook', 'Board-ready ROI model', '90-day adoption plan'],
-    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`,
-  },
-  {
-    href: '/blog/',
-    badge: 'Insights',
-    badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    gradientFrom: 'rgba(16,185,129,0.07)',
-    gradientTo: 'rgba(79,70,229,0.04)',
-    title: 'Blog & Projects',
-    desc: 'Practitioner-grade thought leadership from real deployments. Every post passes the "usable today" test.',
-    outcomes: ['Implementation field notes', 'Architecture deep-dives', 'Leadership frameworks'],
-    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
-  },
-];
-
-const posts = [
-  {
-    tag: 'Architecture', readTime: '8 min',
-    title: 'The 5 architecture decisions that determine whether agents work in production',
-    excerpt: 'Orchestration patterns, memory strategies, and evaluation loops — the choices made in week one you can\'t easily undo in week eight.',
-    date: 'Apr 2026',
-  },
-  {
-    tag: 'Leadership', readTime: '6 min',
-    title: 'What engineering managers need to know about agentic AI that nobody tells you',
-    excerpt: 'The technical concepts matter less than you think. The org dynamics matter more. A field guide from inside real implementations.',
-    date: 'Mar 2026',
-  },
-];
 ---
 
 <BaseLayout
   title="The Living Craft"
-  description="Practitioner-grade Agentic AI training, mentoring, and consulting for Engineering Managers, Architects, and CTOs. Ultra fast learning."
+  description="Practitioner-grade Agentic AI training, mentoring, and consulting — anchored in ultra fast learning. For Engineering Managers, Architects, and CTOs."
 >
 
 <style>
@@ -85,133 +16,480 @@ const posts = [
     0%, 100% { box-shadow: 0 0 0 0 rgba(79,70,229,0); }
     50%       { box-shadow: 0 0 16px 4px rgba(79,70,229,0.35); }
   }
-  @keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .logo-float { animation: none !important; }
   }
   .logo-float   { animation: float 4s ease-in-out infinite; }
   .badge-glow   { animation: badge-glow 3s ease-in-out infinite; }
   .card-hover   { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
   .card-hover:hover { transform: translateY(-4px); }
-  .gradient-border {
-    position: relative;
-    background: #16213e;
-    border-radius: 1rem;
-  }
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 1rem;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(79,70,229,0.4), rgba(99,102,241,0.1), transparent);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
 </style>
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     HERO  —  Split layout
+     HERO — Headline → Skills → CTAs (one block)
 ════════════════════════════════════════════════════════════ -->
 <section
-  class="relative min-h-[82vh] flex items-center overflow-hidden"
-  style="background: radial-gradient(ellipse at 70% 40%, #1a1a2e 0%, #0a0a0f 55%);"
+  class="relative overflow-hidden"
+  style="background: radial-gradient(ellipse at 60% 20%, #1a1a2e 0%, #0a0a0f 55%);"
 >
   <!-- Dot grid -->
   <div class="absolute inset-0 pointer-events-none"
-       style="background-image: radial-gradient(circle, rgba(79,70,229,0.18) 1px, transparent 1px); background-size: 32px 32px; mask-image: radial-gradient(ellipse at 60% 50%, black 40%, transparent 80%);"></div>
+       style="background-image: radial-gradient(circle, rgba(79,70,229,0.15) 1px, transparent 1px); background-size: 32px 32px; mask-image: radial-gradient(ellipse at 60% 30%, black 25%, transparent 70%);"></div>
+  <div class="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+       style="background: radial-gradient(circle, rgba(79,70,229,0.08), transparent 65%); filter: blur(60px);"></div>
 
-  <!-- Ambient orbs -->
-  <div class="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full pointer-events-none"
-       style="background: radial-gradient(circle, rgba(79,70,229,0.1), transparent 65%); filter: blur(60px);"></div>
-  <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
-       style="background: radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%); filter: blur(80px);"></div>
+  <div class="relative container mx-auto px-6">
 
-  <div class="relative container mx-auto px-6 py-24">
-    <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <!-- ── ROW 1: Headline + Edge Card ─────────────────── -->
+    <div class="pt-24 pb-14">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10 xl:gap-16 items-start">
 
-      <!-- Left: content -->
-      <div class="order-2 md:order-1">
+        <!-- Left: the hook -->
+        <div>
+          <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-accent/30 badge-glow mb-8"
+               style="background: rgba(79,70,229,0.1);">
+            <span class="w-2 h-2 rounded-full bg-accent opacity-80"></span>
+            <span class="text-xs font-mono uppercase tracking-widest text-accent">2026 — The Agentic AI era</span>
+          </div>
 
-        <!-- Eyebrow -->
-        <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-accent/30 badge-glow mb-8"
-             style="background: rgba(79,70,229,0.1);">
-          <span class="w-2 h-2 rounded-full bg-accent opacity-80"></span>
-          <span class="text-xs font-mono uppercase tracking-widest text-accent">
-            AI · Training · Consulting · Projects
-          </span>
-        </div>
-
-        <!-- H1 -->
-        <h1 class="text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
-          <span style="background: linear-gradient(135deg, #ffffff 30%, #a0a0c0 100%);
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                       background-clip: text;">
-            Lead the<br/>Agentic<br/>AI Shift
-          </span>
-        </h1>
-
-        <!-- Subhead -->
-        <p class="text-lg text-gray-400 max-w-lg mb-10 leading-relaxed">
-          Practitioner-grade training, mentoring, and consulting for Engineering Managers,
-          Architects, and CTOs. Built for
-          <span class="text-white font-semibold">ultra fast learning</span> —
-          every engagement produces results you use the next morning.
-        </p>
-
-        <!-- CTAs -->
-        <div class="flex flex-wrap gap-4 mb-12">
-          <a href="/training/"
-             class="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-accent/30 hover:shadow-accent/50"
-             style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
-            Explore Programs
-            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </a>
-          <a href="/contact/"
-             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-gray-300 hover:text-white font-semibold text-sm border border-gray-600/70 hover:border-gray-400 transition-all duration-200"
-             style="background: rgba(255,255,255,0.03);">
-            Book a Discovery Call
-          </a>
-        </div>
-
-        <!-- Role strip -->
-        <div class="flex flex-wrap gap-2">
-          {['Engineering Manager','Staff Engineer','Principal Architect','CTO','VP Engineering','AI Team Lead'].map(r => (
-            <span class="px-3 py-1 rounded-full text-xs font-mono text-gray-400 border border-gray-700/60"
-                  style="background: rgba(255,255,255,0.02);">
-              {r}
+          <h1 class="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.08] tracking-tight mb-6">
+            <span style="background: linear-gradient(135deg, #ffffff 30%, #a0a0c0 100%);
+                         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                         background-clip: text;">
+              The Agentic AI skills<br/>gap is real.<br/>
             </span>
-          ))}
-        </div>
-      </div>
+            <span class="text-accent">We close it — fast.</span>
+          </h1>
 
-      <!-- Right: logo card -->
-      <div class="order-1 md:order-2 flex justify-center md:justify-end">
-        <div class="relative logo-float">
-          <!-- Glow rings -->
-          <div class="absolute -inset-6 rounded-3xl pointer-events-none"
-               style="background: radial-gradient(circle, rgba(79,70,229,0.2), transparent 70%); filter: blur(24px);"></div>
-          <div class="absolute -inset-2 rounded-2xl pointer-events-none opacity-60"
-               style="background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%); filter: blur(12px);"></div>
-          <!-- Card -->
-          <div class="relative w-56 sm:w-64 lg:w-72 rounded-2xl overflow-hidden shadow-2xl shadow-black/60"
-               style="background: #f0ebe0; border: 1px solid rgba(255,255,255,0.08);">
-            <img src="/TheLivingCraftlogo.png" alt="The Living Craft" class="w-full h-auto object-contain" />
+          <p class="text-lg text-gray-400 max-w-xl leading-relaxed">
+            The leaders who learn to architect, build, and deploy autonomous AI systems
+            <em>this year</em> will have a compounding career advantage for the next decade.
+            We get you there in weeks — not the years most people spend fumbling through
+            self-study and generic courses.
+          </p>
+        </div>
+
+        <!-- Right: The Living Craft edge card -->
+        <div class="hidden lg:block">
+          <div class="rounded-2xl border border-gray-700/30 overflow-hidden"
+               style="background: linear-gradient(160deg, rgba(79,70,229,0.08), rgba(10,10,20,0.95));">
+
+            <!-- Brand header -->
+            <div class="p-5 flex items-center gap-3 border-b border-gray-700/30">
+              <div class="w-10 h-auto rounded-lg overflow-hidden border border-gray-700/50"
+                   style="background: #f0ebe0;">
+                <img src="/TheLivingCraftlogo.png" alt="The Living Craft" class="w-full h-auto object-contain" />
+              </div>
+              <div>
+                <p class="text-white font-bold text-sm">The Living <span class="text-accent">Craft</span></p>
+                <p class="text-gray-400 text-[10px] font-mono">Why we're different</p>
+              </div>
+            </div>
+
+            <!-- Pedigree — the headline credential -->
+            <div class="px-5 pt-5 pb-4">
+              <p class="text-[10px] font-mono uppercase tracking-widest text-accent mb-3">Pedigree</p>
+              <p class="text-white font-bold text-lg leading-snug mb-1">
+                26+ years at <span class="text-accent">Amazon</span> &amp; <span class="text-accent">Google</span>
+              </p>
+              <p class="text-gray-400 text-xs leading-relaxed">
+                Fortune 10 engineering leadership. Built and shipped production AI systems at global scale.
+              </p>
+            </div>
+
+            <!-- Edge items -->
+            <div class="px-5 pb-5 space-y-4">
+              <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <p class="text-white font-semibold text-xs">Billions-Scale Distributed Systems</p>
+                  <p class="text-gray-400 text-xs leading-relaxed">
+                    Multi-geography, high-scale architectures serving billions of users. Not prototypes — production systems under real load.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <div>
+                  <p class="text-white font-semibold text-xs">Hired &amp; Grew L6+ Talent</p>
+                  <p class="text-gray-400 text-xs leading-relaxed">
+                    Hired and grew senior talent at Amazon and Google. Developed and promoted senior engineers into staff and leadership roles.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <div>
+                  <p class="text-white font-semibold text-xs">Production-Ready in Weeks</p>
+                  <p class="text-gray-400 text-xs leading-relaxed">
+                    Structured fast learning. You ship usable artifacts from session one — not after a 6-month course.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stats footer -->
+            <div class="px-5 py-4 border-t border-gray-700/30 flex items-center justify-between"
+                 style="background: rgba(79,70,229,0.05);">
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold font-mono text-white">200+</span>
+                <span class="text-gray-400 text-xs font-mono">leaders trained</span>
+              </div>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold font-mono text-white">40+</span>
+                <span class="text-gray-400 text-xs font-mono">orgs advised</span>
+              </div>
+            </div>
           </div>
         </div>
+
+      </div>
+    </div>
+
+
+    <!-- ── ROW 2: Skills — flows naturally from headline ── -->
+    <div class="pb-10 pt-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div>
+          <p class="text-xs font-mono uppercase tracking-widest text-accent mb-2">The skills that will define careers</p>
+          <h2 class="text-2xl font-bold text-white">Four capabilities the market is desperate for</h2>
+        </div>
+        <p class="text-gray-400 text-sm max-w-xs">
+          The supply of people who have these? <span class="text-white font-semibold">Almost zero.</span>
+        </p>
       </div>
 
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { skill: 'Agent Architecture', one: 'Orchestration, memory, tool use, evaluation loops — the decisions that make or break production.', color: '#4f46e5' },
+          { skill: 'AI-Native Teams', one: 'New roles, topologies, and hiring rubrics for teams where AI agents are first-class members.', color: '#818cf8' },
+          { skill: 'Governance & Risk', one: 'Policies and frameworks that let you deploy fast enough to compete and safe enough to sleep.', color: '#6366f1' },
+          { skill: 'Strategic AI Leadership', one: 'Own the AI strategy at board level. Translate engineering reality into funded roadmaps.', color: '#a78bfa' },
+        ].map(s => (
+          <div class="p-5 rounded-xl border border-gray-700/30" style="background: rgba(15,15,25,0.7);">
+            <div class="w-6 h-0.5 rounded-full mb-4" style={`background: ${s.color};`}></div>
+            <h3 class="text-white font-bold text-sm mb-1.5">{s.skill}</h3>
+            <p class="text-gray-400 text-xs leading-relaxed">{s.one}</p>
+          </div>
+        ))}
+      </div>
     </div>
+
+
+    <!-- ── ROW 3: CTAs + role strip — after skills ──────── -->
+    <div class="pb-20 pt-8">
+      <div class="flex flex-wrap gap-4 mb-8">
+        <a href="#offerings"
+           class="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-accent/30 hover:shadow-accent/50"
+           style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+          See What We Offer
+          <svg class="w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </a>
+        <a href="/contact/"
+           class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-gray-300 hover:text-white font-semibold text-sm border border-gray-600/70 hover:border-gray-400 transition-all duration-200"
+           style="background: rgba(255,255,255,0.03);">
+          Book a Free Call
+        </a>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        {['Engineering Manager','Staff Engineer','Principal Architect','CTO','VP Engineering','AI Team Lead'].map(r => (
+          <span class="px-3 py-1 rounded-full text-xs font-mono text-gray-400 border border-gray-700/60"
+                style="background: rgba(255,255,255,0.02);">
+            {r}
+          </span>
+        ))}
+      </div>
+    </div>
+
   </div>
 
   <!-- Bottom fade -->
   <div class="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-       style="background: linear-gradient(to bottom, transparent, #0a0a0f);"></div>
+       style="background: linear-gradient(to bottom, transparent, #0f0f1a);"></div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     OFFERINGS — Training · Mentoring · Consulting
+     Each anchored to Ultra Fast Learning
+════════════════════════════════════════════════════════════ -->
+<section id="offerings" class="py-28" style="background: #0f0f1a;">
+  <div class="container mx-auto px-6">
+
+    <div class="text-center mb-16">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">What We Offer</p>
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">
+        Everything we do<br/>is built to accelerate you
+      </h2>
+      <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+        Train your team. Transform your career. Build your org's AI strategy. Ship real projects.
+        Four offerings, one principle — every engagement compresses months into weeks.
+      </p>
+    </div>
+
+
+    <!-- ── TRAINING ─────────────────────────────────────── -->
+    <div class="mb-6">
+      <a href="/training/"
+         class="card-hover group block rounded-2xl border border-gray-700/40 hover:border-violet-500/30 overflow-hidden transition-all duration-300"
+         style="background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(79,70,229,0.03), #16213e);">
+        <div class="h-1 w-full" style="background: linear-gradient(90deg, #8b5cf6, #6366f1, transparent);"></div>
+        <div class="p-8 md:p-10">
+          <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
+
+            <!-- Left: content -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-violet-500/30"
+                     style="background: rgba(139,92,246,0.1);">
+                  <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20">
+                  Training
+                </span>
+              </div>
+
+              <h3 class="text-2xl md:text-3xl font-bold text-white mb-3 group-hover:text-violet-300 transition-colors">
+                Agentic AI Training Programs
+              </h3>
+              <p class="text-gray-400 leading-relaxed mb-6 max-w-2xl">
+                Four programs designed for different learning styles and career stages.
+                Go deep in a 3-week intensive. Learn on weekends while keeping your day job.
+                Prep for MAANG interviews. Or learn to build an AI-first organisation from the ground up.
+              </p>
+
+              <!-- Speed lever -->
+              <div class="flex items-start gap-3 p-4 rounded-xl mb-6"
+                   style="background: rgba(139,92,246,0.08); border-left: 2px solid rgba(139,92,246,0.4);">
+                <span class="text-violet-400 flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </span>
+                <div>
+                  <p class="text-xs font-mono font-semibold text-violet-400 mb-1">Why it's fast</p>
+                  <p class="text-gray-300 text-sm leading-relaxed">
+                    Small cohorts (fewer than 15). Hybrid format (online + in-person). Every session produces a usable artifact — not slides.
+                  </p>
+                </div>
+              </div>
+
+              <span class="inline-flex items-center gap-2 text-sm font-semibold text-violet-400 group-hover:translate-x-1 transition-transform">
+                View all 4 programs →
+              </span>
+            </div>
+
+            <!-- Right: program list -->
+            <div class="space-y-3">
+              <p class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">Programs</p>
+              {[
+                { title: 'Fast-Track Intensive', sub: '3–4 weeks · Mon–Fri · 2 tracks', color: '#8b5cf6' },
+                { title: 'Weekend Leadership', sub: '6–8 weekends + mid-week AMA', color: '#a78bfa' },
+                { title: 'MAANG Interview Mastery', sub: '4–6 weeks · 1:1 + mock loops', color: '#c4b5fd' },
+                { title: 'Agentic Organisations', sub: '6–8 weeks · C-suite cohort', color: '#ddd6fe' },
+              ].map(prog => (
+                <div class="flex items-center gap-3 p-3 rounded-lg border border-gray-700/30 hover:border-violet-500/20 transition-colors"
+                     style="background: rgba(10,10,20,0.5);">
+                  <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style={`background: ${prog.color};`}></span>
+                  <div>
+                    <p class="text-white text-sm font-semibold">{prog.title}</p>
+                    <p class="text-gray-400 text-xs font-mono">{prog.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </a>
+    </div>
+
+
+    <!-- ── MENTORING + CONSULTING — side by side ─────── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+      <!-- Mentoring -->
+      <a href="/mentoring/"
+         class="card-hover group flex flex-col rounded-2xl border border-gray-700/40 hover:border-pink-500/30 overflow-hidden transition-all duration-300"
+         style="background: linear-gradient(135deg, rgba(236,72,153,0.05), rgba(139,92,246,0.03), #16213e);">
+        <div class="h-1 w-full" style="background: linear-gradient(90deg, #ec4899, #f472b6, transparent);"></div>
+        <div class="p-8 flex flex-col flex-1">
+
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-pink-500/30"
+                 style="background: rgba(236,72,153,0.1);">
+              <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold text-pink-400 bg-pink-500/10 border border-pink-500/20">
+              Mentoring
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-pink-300 transition-colors">
+            1:1 Career Transformation
+          </h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+            Personalised mentoring across three tracks — engineering to AI leadership,
+            leader to AI strategy owner, and senior interview loops for MAANG & beyond.
+            90-day arcs with measurable milestones, not vague coaching conversations.
+          </p>
+
+          <!-- Speed lever -->
+          <div class="flex items-start gap-3 p-4 rounded-xl mb-6"
+               style="background: rgba(236,72,153,0.06); border-left: 2px solid rgba(236,72,153,0.35);">
+            <span class="text-pink-400 flex-shrink-0 mt-0.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </span>
+            <div>
+              <p class="text-xs font-mono font-semibold text-pink-400 mb-1">Why it's fast</p>
+              <p class="text-gray-300 text-xs leading-relaxed">
+                Action contract every session. Day-45 checkpoint. What most leaders figure out in 2 years — compressed into a 90-day arc.
+              </p>
+            </div>
+          </div>
+
+          <!-- Track list -->
+          <div class="space-y-2 mb-6">
+            {[
+              { label: 'Engineering → AI Leader', sub: 'Bi-weekly · 90 days' },
+              { label: 'Leader → AI Strategy Owner', sub: 'Monthly + async' },
+              { label: 'MAANG Senior Interview Loops', sub: '4–6 week intensive' },
+            ].map(t => (
+              <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+                <span class="text-pink-400 opacity-60">›</span>
+                <span class="text-gray-300">{t.label}</span>
+                <span class="text-gray-400 ml-auto">{t.sub}</span>
+              </div>
+            ))}
+          </div>
+
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-pink-400 group-hover:translate-x-1 transition-transform mt-auto">
+            Learn more →
+          </span>
+        </div>
+      </a>
+
+      <!-- Consulting -->
+      <a href="/consulting/"
+         class="card-hover group flex flex-col rounded-2xl border border-gray-700/40 hover:border-cyan-500/30 overflow-hidden transition-all duration-300"
+         style="background: linear-gradient(135deg, rgba(6,182,212,0.05), rgba(79,70,229,0.03), #16213e);">
+        <div class="h-1 w-full" style="background: linear-gradient(90deg, #06b6d4, #22d3ee, transparent);"></div>
+        <div class="p-8 flex flex-col flex-1">
+
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-cyan-500/30"
+                 style="background: rgba(6,182,212,0.1);">
+              <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20">
+              Consulting
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-cyan-300 transition-colors">
+            Org-Level AI Strategy
+          </h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+            Governance frameworks, ROI models, and adoption strategy — built with your team,
+            not handed over as a deck. Your team learns while the work gets done.
+            Project-based or retainer, depending on what you need.
+          </p>
+
+          <!-- Speed lever -->
+          <div class="flex items-start gap-3 p-4 rounded-xl mb-6"
+               style="background: rgba(6,182,212,0.06); border-left: 2px solid rgba(6,182,212,0.35);">
+            <span class="text-cyan-400 flex-shrink-0 mt-0.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </span>
+            <div>
+              <p class="text-xs font-mono font-semibold text-cyan-400 mb-1">Why it's fast</p>
+              <p class="text-gray-300 text-xs leading-relaxed">
+                Working draft by end of week 2. Day-30 checkpoint. Your team builds competence during the engagement — not after it.
+              </p>
+            </div>
+          </div>
+
+          <!-- Engagement list -->
+          <div class="space-y-2 mb-6">
+            {[
+              { label: 'Governance Framework Design', sub: 'Playbook deliverable' },
+              { label: 'ROI Assessment & Business Case', sub: 'Board-ready model' },
+              { label: 'Agentic AI Adoption Strategy', sub: '90-day roadmap' },
+            ].map(e => (
+              <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+                <span class="text-cyan-400 opacity-60">›</span>
+                <span class="text-gray-300">{e.label}</span>
+                <span class="text-gray-400 ml-auto hidden sm:inline">{e.sub}</span>
+              </div>
+            ))}
+          </div>
+
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform mt-auto">
+            Learn more →
+          </span>
+        </div>
+      </a>
+
+    </div>
+
+
+    <!-- ── PROJECTS — Build Together ─────────────────── -->
+    <a href="/projects/"
+       class="card-hover group block rounded-2xl border border-gray-700/40 hover:border-emerald-500/30 overflow-hidden transition-all duration-300"
+       style="background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(79,70,229,0.03), #16213e);">
+      <div class="h-1 w-full" style="background: linear-gradient(90deg, #10b981, #34d399, transparent);"></div>
+      <div class="p-8 md:p-10">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+
+          <div>
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30"
+                   style="background: rgba(16,185,129,0.1);">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                Projects
+              </span>
+            </div>
+
+            <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-emerald-300 transition-colors">
+              Build Together — Real-World AI Projects
+            </h3>
+            <p class="text-gray-400 text-sm leading-relaxed max-w-2xl mb-4">
+              Learning sticks when you build something real. We collaborate on open projects that solve
+              actual problems — from agent evaluation frameworks to production deployment tooling.
+              Every project is built in public and serves as a portfolio piece you can point to.
+            </p>
+
+            <!-- Speed lever -->
+            <div class="flex items-start gap-3 p-4 rounded-xl"
+                 style="background: rgba(16,185,129,0.06); border-left: 2px solid rgba(16,185,129,0.35);">
+              <span class="text-emerald-400 flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </span>
+              <div>
+                <p class="text-xs font-mono font-semibold text-emerald-400 mb-1">Why it's fast</p>
+                <p class="text-gray-300 text-xs leading-relaxed">
+                  Learning by building. Every project is scoped to teach specific concepts while producing something deployable.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <span class="hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl border border-gray-700/40 text-emerald-400 group-hover:text-emerald-300 group-hover:translate-x-1 transition-all"
+                style="background: rgba(16,185,129,0.05);">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+
+        </div>
+      </div>
+    </a>
+
+  </div>
 </section>
 
 
@@ -221,7 +499,12 @@ const posts = [
 <section class="border-y border-gray-800/60" style="background: #111120;">
   <div class="container mx-auto px-6 py-10">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
-      {metrics.map(m => (
+      {[
+        { value: '200+', label: 'Senior Leaders Trained' },
+        { value: '40+',  label: 'Organisations Advised'  },
+        { value: '90',   label: 'Days to Production-Ready' },
+        { value: '5',    label: 'Expert-Led Programs'     },
+      ].map(m => (
         <div class="text-center">
           <p class="text-3xl lg:text-4xl font-extrabold font-mono mb-1"
              style="background: linear-gradient(135deg, #fff 40%, #a0a0c0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
@@ -236,576 +519,158 @@ const posts = [
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     THE GAP
+     FAST LEARNING FOUNDATION
 ════════════════════════════════════════════════════════════ -->
-<section class="py-28" style="background: #0f0f1a;">
+<section class="py-20" style="background: #0c0c18;">
   <div class="container mx-auto px-6">
-    <div class="max-w-2xl mb-16">
-      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-5">The Challenge</p>
-      <h2 class="text-4xl md:text-5xl font-bold leading-tight mb-6"
-          style="background: linear-gradient(135deg, #fff 50%, #808098); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-        Your team is experimenting.<br/>Your org needs results.
-      </h2>
-      <p class="text-gray-400 text-lg leading-relaxed">
-        Every week spent in proof-of-concept mode is a week your competitors are shipping.
-        The gap isn't technology — it's strategy, team design, and governance.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-5">
-      {[
-        {
-          n: '01',
-          headline: 'Projects stall at proof-of-concept',
-          body: 'Demos work. Production doesn\'t. The gap is strategic framing and team design, not model capability.',
-          color: 'rgba(139,92,246,0.12)',
-          border: 'rgba(139,92,246,0.25)',
-        },
-        {
-          n: '02',
-          headline: 'You can\'t form a team that knows what they\'re doing',
-          body: 'The talent market hasn\'t caught up. You need to build Agentic AI expertise from within — fast.',
-          color: 'rgba(79,70,229,0.12)',
-          border: 'rgba(79,70,229,0.25)',
-        },
-        {
-          n: '03',
-          headline: 'The board wants ROI — you need a framework',
-          body: 'Experimentation budgets are closing. Governance models and defensible ROI are now table stakes.',
-          color: 'rgba(99,102,241,0.12)',
-          border: 'rgba(99,102,241,0.25)',
-        },
-      ].map(c => (
-        <div class="card-hover relative p-8 rounded-2xl border overflow-hidden"
-             style={`background: ${c.color}; border-color: ${c.border};`}>
-          <!-- Number watermark -->
-          <div class="absolute top-5 right-6 font-mono font-black text-6xl leading-none select-none pointer-events-none"
-               style="color: rgba(255,255,255,0.04);">{c.n}</div>
-          <p class="text-xs font-mono text-accent mb-5 uppercase tracking-widest">{c.n}</p>
-          <h3 class="text-white font-bold text-lg mb-3 leading-snug">{c.headline}</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">{c.body}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════
-     4 PILLARS
-════════════════════════════════════════════════════════════ -->
-<section class="py-28 bg-dark-primary">
-  <div class="container mx-auto px-6">
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
-      <div>
-        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-5">How We Help</p>
-        <h2 class="text-4xl md:text-5xl font-bold text-white leading-tight">
-          Four paths to<br/>AI leadership
-        </h2>
-      </div>
-      <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
-        Every engagement is anchored in ultra fast learning.<br/>
-        No theory without same-week application.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-5">
-      {pillars.map(p => (
-        <a href={p.href}
-           class="card-hover gradient-border group block p-8 rounded-2xl"
-           style={`background: linear-gradient(135deg, ${p.gradientFrom}, ${p.gradientTo}, #16213e);`}>
-
-          <div class="flex items-start justify-between mb-6">
-            <!-- Icon + badge row -->
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-gray-700/60 group-hover:border-accent/30 transition-colors"
-                   style="background: rgba(255,255,255,0.04);">
-                <span class="text-accent">
-                  <Fragment set:html={p.icon} />
-                </span>
-              </div>
-              <span class={`px-2.5 py-1 rounded-full text-xs font-mono font-semibold border ${p.badgeColor}`}>
-                {p.badge}
-              </span>
-            </div>
-            <span class="text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all duration-200 text-xl leading-none mt-1">→</span>
-          </div>
-
-          <h3 class="text-xl font-bold text-white mb-3 leading-snug group-hover:text-accent-light transition-colors duration-200">
-            {p.title}
-          </h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-6">{p.desc}</p>
-
-          <!-- Outcome bullets -->
-          <ul class="space-y-1.5 border-t border-gray-700/50 pt-5">
-            {p.outcomes.map(o => (
-              <li class="flex items-center gap-2 text-xs text-gray-400 font-mono">
-                <span class="text-accent opacity-60">›</span>
-                {o}
-              </li>
-            ))}
-          </ul>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════
-     ULTRA FAST LEARNING — Animated Engine
-════════════════════════════════════════════════════════════ -->
-<section class="relative py-28 overflow-hidden" style="background: #0c0c18;">
-
-  <style>
-    /* ── Gear spins ──────────────────────────────────────── */
-    @keyframes ufl-gear-cw  { to { transform: rotate(360deg);  } }
-    @keyframes ufl-gear-ccw { to { transform: rotate(-360deg); } }
-    .ufl-gear-large { animation: ufl-gear-cw  8s linear infinite; transform-box: fill-box; transform-origin: center; }
-    .ufl-gear-small { animation: ufl-gear-ccw 5.3s linear infinite; transform-box: fill-box; transform-origin: center; }
-
-    /* ── Neural-node pulse (staggered) ──────────────────── */
-    @keyframes ufl-node { 0%,100%{opacity:.2} 50%{opacity:1} }
-    .un0{animation:ufl-node 2.4s ease-in-out infinite 0.0s}
-    .un1{animation:ufl-node 2.4s ease-in-out infinite 0.4s}
-    .un2{animation:ufl-node 2.4s ease-in-out infinite 0.8s}
-    .un3{animation:ufl-node 2.4s ease-in-out infinite 1.2s}
-    .un4{animation:ufl-node 2.4s ease-in-out infinite 1.6s}
-    .un5{animation:ufl-node 2.4s ease-in-out infinite 2.0s}
-
-    /* ── Signal pulse along edges ───────────────────────── */
-    @keyframes ufl-sig {
-      0%   { stroke-dashoffset: 60; opacity: 0;   }
-      15%  { opacity: 1; }
-      85%  { opacity: 1; }
-      100% { stroke-dashoffset: 0;  opacity: 0;   }
-    }
-    .us { stroke-dasharray: 5 60; }
-    .us0{animation:ufl-sig 2.4s linear infinite 0.0s}
-    .us1{animation:ufl-sig 2.4s linear infinite 0.4s}
-    .us2{animation:ufl-sig 2.4s linear infinite 0.8s}
-    .us3{animation:ufl-sig 2.4s linear infinite 1.2s}
-    .us4{animation:ufl-sig 2.4s linear infinite 1.6s}
-    .us5{animation:ufl-sig 2.4s linear infinite 2.0s}
-
-    /* ── Progress bars ───────────────────────────────────── */
-    @keyframes ufl-bar-slow {
-      0%  { width:0%;   }
-      90% { width:55%;  }
-      100%{ width:55%;  }
-    }
-    @keyframes ufl-bar-fast {
-      0%  { width:0%;   }
-      28% { width:100%; }
-      100%{ width:100%; }
-    }
-    .ufl-bar-slow { animation: ufl-bar-slow 9s cubic-bezier(.5,0,.9,1) infinite; }
-    .ufl-bar-fast { animation: ufl-bar-fast 2.6s cubic-bezier(.05,0,.15,1) infinite; }
-
-    /* ── Concept tape ────────────────────────────────────── */
-    @keyframes ufl-tape { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-    .ufl-tape { animation: ufl-tape 18s linear infinite; display:flex; white-space:nowrap; }
-
-    /* ── Artifact pop-in (staggered loop) ───────────────── */
-    @keyframes ufl-pop {
-      0%,100%{ opacity:0; transform:translateY(6px); }
-      10%,85%{ opacity:1; transform:translateY(0);   }
-    }
-    .ap0{animation:ufl-pop 8s ease-in-out infinite 0.0s}
-    .ap1{animation:ufl-pop 8s ease-in-out infinite 1.6s}
-    .ap2{animation:ufl-pop 8s ease-in-out infinite 3.2s}
-    .ap3{animation:ufl-pop 8s ease-in-out infinite 4.8s}
-    .ap4{animation:ufl-pop 8s ease-in-out infinite 6.4s}
-
-    /* ── Retrieval-practice chips ───────────────────────── */
-    .recall-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .recall-term {
-      position: relative; cursor: pointer; user-select: none;
-      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
-      padding: 8px 14px; border-radius: 999px;
-      background: rgba(79,70,229,0.06); color: #c7d2fe;
-      border: 1px solid rgba(79,70,229,0.25);
-      transition: background .2s, border-color .2s, color .2s;
-    }
-    .recall-term:hover { background: rgba(79,70,229,0.14); border-color: rgba(129,140,248,0.55); color: #fff; }
-    .recall-term.primed { border-color: rgba(16,185,129,0.55); color: #6ee7b7; }
-    .recall-term.primed::after {
-      content: ''; position: absolute; top: -3px; right: -3px;
-      width: 6px; height: 6px; border-radius: 50%; background: #10b981;
-      box-shadow: 0 0 8px rgba(16,185,129,0.8);
-    }
-    .recall-pop {
-      position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%) translateY(4px);
-      min-width: 220px; max-width: 280px;
-      padding: 10px 14px; border-radius: 10px;
-      background: #0f1829; border: 1px solid rgba(99,102,241,0.4);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      font-size: 12px; line-height: 1.45; color: #e2e8f0; text-align: left;
-      opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
-      z-index: 20; text-transform: none; letter-spacing: 0;
-    }
-    .recall-pop.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .recall-pop.prompt { border-color: rgba(16,185,129,0.55); color: #a7f3d0; }
-    .recall-pop::after {
-      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-      border: 6px solid transparent; border-top-color: #0f1829;
-    }
-  </style>
-
-  <!-- Dot-grid background -->
-  <div class="absolute inset-0 pointer-events-none opacity-[0.03]"
-       style="background-image:radial-gradient(circle,#4f46e5 1px,transparent 1px);background-size:28px 28px;"></div>
-
-  <div class="container mx-auto px-6">
-
-    <!-- Header -->
-    <div class="text-center mb-16">
-      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">The Method</p>
-      <h2 class="text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">
-        Ultra Fast Learning
-      </h2>
-      <p class="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
-        Not shortcuts. Ruthless sequencing — the right concepts, applied before the session ends.
-      </p>
-    </div>
-
-    <!-- ── Main engine visual ──────────────────────────── -->
     <div class="max-w-5xl mx-auto">
 
-      <!-- Three-column: neural net | compression | gear -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-center">
-
-        <!-- ── Neural network (logo element, animated) ── -->
-        <div class="flex flex-col items-center gap-4">
-          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest">Knowledge Graph</p>
-          <svg viewBox="0 0 140 140" class="w-36 h-36">
-            <!-- Edges (static, dim) -->
-            <g stroke="#4f46e5" stroke-width="0.8" opacity="0.25" fill="none">
-              <line x1="70" y1="62" x2="70" y2="28"/>
-              <line x1="70" y1="62" x2="99" y2="45"/>
-              <line x1="70" y1="62" x2="99" y2="78"/>
-              <line x1="70" y1="78" x2="70" y2="112"/>
-              <line x1="70" y1="78" x2="41" y2="95"/>
-              <line x1="70" y1="62" x2="41" y2="45"/>
-            </g>
-            <!-- Signal pulses -->
-            <line class="us us0" x1="70" y1="62" x2="70"  y2="28"  stroke="#818cf8" stroke-width="2"/>
-            <line class="us us1" x1="70" y1="62" x2="99"  y2="45"  stroke="#818cf8" stroke-width="2"/>
-            <line class="us us2" x1="70" y1="62" x2="99"  y2="78"  stroke="#818cf8" stroke-width="2"/>
-            <line class="us us3" x1="70" y1="78" x2="70"  y2="112" stroke="#818cf8" stroke-width="2"/>
-            <line class="us us4" x1="70" y1="78" x2="41"  y2="95"  stroke="#818cf8" stroke-width="2"/>
-            <line class="us us5" x1="70" y1="62" x2="41"  y2="45"  stroke="#818cf8" stroke-width="2"/>
-            <!-- Orbital nodes -->
-            <circle class="un1" cx="70"  cy="28"  r="7" fill="#6366f1"/>
-            <circle class="un2" cx="99"  cy="45"  r="7" fill="#818cf8"/>
-            <circle class="un3" cx="99"  cy="78"  r="7" fill="#6366f1"/>
-            <circle class="un4" cx="70"  cy="112" r="7" fill="#818cf8"/>
-            <circle class="un5" cx="41"  cy="95"  r="7" fill="#6366f1"/>
-            <circle class="un0" cx="41"  cy="45"  r="7" fill="#818cf8"/>
-            <!-- Centre node (always bright) -->
-            <circle cx="70" cy="70" r="10" fill="#4f46e5" opacity="0.9"/>
-            <circle cx="70" cy="70" r="5"  fill="#c7d2fe"/>
-          </svg>
-          <p class="text-gray-400 text-xs font-mono text-center leading-relaxed max-w-[130px]">
-            concepts connect<br/>and compound fast
-          </p>
-        </div>
-
-        <!-- ── Centre: compression stat ──────────────── -->
-        <div class="p-8 rounded-2xl border border-gray-700/30 relative overflow-hidden"
-             style="background: linear-gradient(135deg, rgba(79,70,229,0.07), rgba(10,10,20,0.95));">
-          <div class="absolute inset-0 pointer-events-none"
-               style="background: radial-gradient(ellipse at 50% 0%, rgba(79,70,229,0.12), transparent 70%);"></div>
-
-          <!-- Traditional -->
-          <div class="relative mb-6">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-gray-400 text-xs font-mono line-through">Traditional</span>
-              <span class="text-gray-400 text-xs font-mono">~24 months</span>
-            </div>
-            <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
-              <div class="ufl-bar-slow h-full rounded-full" style="background:#374151;"></div>
-            </div>
-          </div>
-
-          <!-- The Living Craft -->
-          <div class="relative mb-8">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-accent text-xs font-mono">The Living Craft</span>
-              <span class="text-accent text-xs font-mono font-semibold">90 days</span>
-            </div>
-            <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div class="ufl-bar-fast h-full rounded-full"
-                   style="background: linear-gradient(90deg,#4f46e5,#818cf8);"></div>
-            </div>
-          </div>
-
-          <!-- Ratio callout -->
-          <div class="relative text-center border-t border-gray-700/40 pt-6">
-            <p class="text-xs font-mono text-gray-400 mb-1">Time compression</p>
-            <p class="text-4xl font-bold font-mono text-white">
-              ~<span style="background:linear-gradient(135deg,#4f46e5,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">8×</span>
-            </p>
-            <p class="text-gray-400 text-xs font-mono mt-1">faster to implementation-ready</p>
-          </div>
-        </div>
-
-        <!-- ── Gear mechanism (logo element, animated) ── -->
-        <div class="flex flex-col items-center gap-4">
-          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest">The Craft Engine</p>
-          <svg viewBox="0 0 140 140" class="w-36 h-36">
-            <!-- Large gear -->
-            <g class="ufl-gear-large" style="transform-origin:75px 75px;">
-              <circle cx="75" cy="75" r="32" fill="none" stroke="#4f46e5" stroke-width="2"/>
-              <circle cx="75" cy="75" r="24" fill="none" stroke="#4f46e5" stroke-width="0.8" opacity="0.5"/>
-              <circle cx="75" cy="75" r="6"  fill="#4f46e5"/>
-              <!-- 8 teeth -->
-              <rect x="71" y="38" width="8" height="7" rx="1.5" fill="#4f46e5"/>
-              <rect x="71" y="95" width="8" height="7" rx="1.5" fill="#4f46e5"/>
-              <rect x="38" y="71" width="7" height="8" rx="1.5" fill="#4f46e5"/>
-              <rect x="95" y="71" width="7" height="8" rx="1.5" fill="#4f46e5"/>
-              <rect x="47" y="46" width="7" height="7" rx="1.5" fill="#4f46e5" transform="rotate(-45,50.5,49.5)"/>
-              <rect x="96" y="46" width="7" height="7" rx="1.5" fill="#4f46e5" transform="rotate(45,99.5,49.5)"/>
-              <rect x="47" y="91" width="7" height="7" rx="1.5" fill="#4f46e5" transform="rotate(45,50.5,94.5)"/>
-              <rect x="96" y="91" width="7" height="7" rx="1.5" fill="#4f46e5" transform="rotate(-45,99.5,94.5)"/>
-              <!-- Spokes -->
-              <line x1="75" y1="52" x2="75" y2="68" stroke="#4f46e5" stroke-width="1.5"/>
-              <line x1="75" y1="82" x2="75" y2="98" stroke="#4f46e5" stroke-width="1.5"/>
-              <line x1="52" y1="75" x2="68" y2="75" stroke="#4f46e5" stroke-width="1.5"/>
-              <line x1="82" y1="75" x2="98" y2="75" stroke="#4f46e5" stroke-width="1.5"/>
-              <line x1="58" y1="58" x2="68" y2="68" stroke="#4f46e5" stroke-width="1.2"/>
-              <line x1="82" y1="82" x2="92" y2="92" stroke="#4f46e5" stroke-width="1.2"/>
-              <line x1="92" y1="58" x2="82" y2="68" stroke="#4f46e5" stroke-width="1.2"/>
-              <line x1="68" y1="82" x2="58" y2="92" stroke="#4f46e5" stroke-width="1.2"/>
-            </g>
-            <!-- Small satellite gear -->
-            <g class="ufl-gear-small" style="transform-origin:43px 43px;">
-              <circle cx="43" cy="43" r="14" fill="none" stroke="#6366f1" stroke-width="1.5"/>
-              <circle cx="43" cy="43" r="5"  fill="#6366f1"/>
-              <rect x="39" y="27" width="8" height="5" rx="1" fill="#6366f1"/>
-              <rect x="39" y="51" width="8" height="5" rx="1" fill="#6366f1"/>
-              <rect x="27" y="39" width="5" height="8" rx="1" fill="#6366f1"/>
-              <rect x="51" y="39" width="5" height="8" rx="1" fill="#6366f1"/>
-            </g>
-            <!-- Shaft -->
-            <line x1="55" y1="55" x2="63" y2="63" stroke="#4f46e5" stroke-width="2" opacity="0.6"/>
-          </svg>
-          <p class="text-gray-400 text-xs font-mono text-center leading-relaxed max-w-[130px]">
-            precision + craft<br/>in every session
-          </p>
-        </div>
-
-      </div>
-
-      <!-- ── Principles behind the engine (retrieval-practice chips) ── -->
-      <div class="p-6 rounded-2xl border border-gray-700/30 mb-6"
-           style="background: rgba(15,15,25,0.8);">
-        <p class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-5 text-center">
-          The principles behind it · <span class="text-accent/80">hover to peek — then try to recall</span>
+      <div class="text-center mb-12">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">The foundation everything is built on</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-5 leading-tight">
+          Learning isn't a phase. It's the entire method.
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          Every training, mentoring session, consulting engagement, and project at The Living Craft
+          is anchored in these principles. They aren't nice-to-haves — they're why our participants
+          get production-ready in weeks while others spend years.
         </p>
-        <div class="recall-row">
-          {([
-            { term: 'Retrieval',  def: 'Recalling beats re-reading. Your brain strengthens what it reconstructs, not what it re-sees.' },
-            { term: 'Spacing',    def: 'Forgetting is a feature. Space repetitions so forgetting can happen between them.' },
-            { term: 'Interleaving', def: 'Mixing topics beats blocking. Contrast trains your brain to discriminate between patterns.' },
-            { term: 'Feedback',   def: 'Tight loops beat long ones. Shrink the gap between attempt and correction to seconds.' },
-            { term: 'Elaboration', def: 'Explain it in your own words, link it to what you already know. Connections make it stick.' },
-            { term: 'Desirable difficulty', def: 'Comfort is the enemy of learning. Pick problems just past easy — struggle encodes memory.' },
-          ]).map(p => (
-            <button type="button" class="recall-term" data-def={p.def}>
-              {p.term}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <!-- ── Artifact output strip ──────────────────────── -->
-      <div class="p-6 rounded-2xl border border-gray-700/30 mb-6"
-           style="background: rgba(15,15,25,0.8);">
-        <p class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-5 text-center">
-          What you walk away with after each session
-        </p>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[
-            { label: 'Architecture ADR',     color: '#4f46e5' },
-            { label: 'Hiring rubric',         color: '#ec4899' },
-            { label: 'Governance playbook',   color: '#06b6d4' },
-            { label: 'Board-ready ROI model', color: '#10b981' },
-            { label: 'Rollout sequence',      color: '#f59e0b' },
-          ].map((a, i) => (
-            <div class={`ap${i} flex items-center gap-2.5 px-4 py-3 rounded-xl border`}
-                 style={`background:${a.color}10; border-color:${a.color}30;`}>
-              <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style={`background:${a.color};`}></span>
-              <span class="text-xs font-mono leading-snug" style={`color:${a.color};`}>{a.label}</span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[
+          {
+            tenet: 'Apply Before You Leave',
+            desc: 'Every session ends with an artifact you use in your org the next morning. Not notes — working documents.',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>`,
+          },
+          {
+            tenet: 'Learn from Doing',
+            desc: 'You build real systems, solve real problems, and make real decisions — not hypothetical exercises.',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>`,
+          },
+          {
+            tenet: 'Tight Feedback Loops',
+            desc: 'Checkpoints every two weeks. Mid-arc corrections. You know what\'s working before the engagement ends.',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>`,
+          },
+          {
+            tenet: 'Peer Pressure, Not Willpower',
+            desc: 'Small cohorts at your seniority level. Shared stakes and shared deadlines drive the pace.',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>`,
+          },
+          {
+            tenet: 'Depth Over Breadth',
+            desc: 'We go deep on what matters, taught by someone who\'s done it at scale. No survey courses.',
+            icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>`,
+          },
+        ].map(t => (
+          <div class="p-5 rounded-xl border border-gray-700/30 text-center"
+               style="background: rgba(15,15,25,0.8);">
+            <div class="w-9 h-9 rounded-lg border border-accent/20 flex items-center justify-center mx-auto mb-4"
+                 style="background: rgba(79,70,229,0.1);">
+              <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Fragment set:html={t.icon} />
+              </svg>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- ── Concept tape ────────────────────────────────── -->
-      <div class="relative overflow-hidden rounded-xl border border-gray-800/60 py-3.5"
-           style="background:#08080f; -webkit-mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent); mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent);">
-        <div class="ufl-tape">
-          {([
-            'Orchestration patterns','Memory systems','Evaluation loops',
-            'Team formation','Governance frameworks','ROI models',
-            'Tool schema design','ADR practice','Stakeholder alignment',
-            'Agent-to-Agent protocols','Agentic SDLC','Production failure modes',
-            'Confidence gating','LLM Ops','Human-in-the-loop design',
-            'Orchestration patterns','Memory systems','Evaluation loops',
-            'Team formation','Governance frameworks','ROI models',
-            'Tool schema design','ADR practice','Stakeholder alignment',
-            'Agent-to-Agent protocols','Agentic SDLC','Production failure modes',
-            'Confidence gating','LLM Ops','Human-in-the-loop design',
-          ]).map((c) => (
-            <span class="inline-flex items-center gap-3 px-5">
-              <span class="w-1 h-1 rounded-full bg-accent opacity-50 flex-shrink-0"></span>
-              <span class="text-xs font-mono text-gray-400">{c}</span>
-            </span>
-          ))}
-        </div>
+            <h3 class="text-white font-bold text-sm mb-2">{t.tenet}</h3>
+            <p class="text-gray-400 text-xs leading-relaxed">{t.desc}</p>
+          </div>
+        ))}
       </div>
 
     </div>
   </div>
-
-  <script>
-    (function () {
-      const PRIMED_WINDOW_MS = 60_000;
-      const PEEK_MS = 2_000;
-      const PROMPT_MS = 2_500;
-
-      type ChipState = {
-        lastSeenAt: number;
-        peekTimer: number | null;
-        promptTimer: number | null;
-        pop: HTMLDivElement | null;
-      };
-      const states = new WeakMap<HTMLElement, ChipState>();
-
-      function ensurePop(chip: HTMLElement): HTMLDivElement {
-        let state = states.get(chip);
-        if (state?.pop) return state.pop;
-        const pop = document.createElement('div');
-        pop.className = 'recall-pop';
-        chip.appendChild(pop);
-        if (!state) {
-          state = { lastSeenAt: 0, peekTimer: null, promptTimer: null, pop };
-          states.set(chip, state);
-        } else {
-          state.pop = pop;
-        }
-        return pop;
-      }
-
-      function clearTimers(state: ChipState) {
-        if (state.peekTimer !== null) { window.clearTimeout(state.peekTimer); state.peekTimer = null; }
-        if (state.promptTimer !== null) { window.clearTimeout(state.promptTimer); state.promptTimer = null; }
-      }
-
-      document.querySelectorAll<HTMLButtonElement>('.recall-term').forEach((chip) => {
-        const def = chip.dataset.def ?? '';
-        const pop = ensurePop(chip);
-
-        chip.addEventListener('mouseenter', () => {
-          const state = states.get(chip)!;
-          clearTimers(state);
-          const now = Date.now();
-          const primed = chip.classList.contains('primed') && (now - state.lastSeenAt) < PRIMED_WINDOW_MS;
-
-          if (primed) {
-            // Second visit within window → force active recall
-            pop.textContent = 'Say it out loud first. Then peek.';
-            pop.classList.add('prompt', 'visible');
-            state.promptTimer = window.setTimeout(() => {
-              pop.textContent = def;
-              pop.classList.remove('prompt');
-            }, PROMPT_MS);
-          } else {
-            // First visit → show definition, then prime the chip
-            pop.textContent = def;
-            pop.classList.remove('prompt');
-            pop.classList.add('visible');
-            state.peekTimer = window.setTimeout(() => {
-              chip.classList.add('primed');
-              state.lastSeenAt = Date.now();
-            }, PEEK_MS);
-          }
-        });
-
-        chip.addEventListener('mouseleave', () => {
-          const state = states.get(chip)!;
-          clearTimers(state);
-          pop.classList.remove('visible');
-          // If we'd shown the def long enough to prime, keep the primed class;
-          // otherwise remove it so the next hover still peeks.
-          if (!chip.classList.contains('primed')) {
-            // nothing to do
-          }
-        });
-      });
-
-      // Reset 'primed' state after the window lapses so the cycle restarts.
-      window.setInterval(() => {
-        document.querySelectorAll<HTMLButtonElement>('.recall-term.primed').forEach((chip) => {
-          const state = states.get(chip);
-          if (state && (Date.now() - state.lastSeenAt) > PRIMED_WINDOW_MS) {
-            chip.classList.remove('primed');
-          }
-        });
-      }, 5_000);
-    })();
-  </script>
 </section>
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     BLOG TEASER
+     CHALLENGES — What senior leaders are asking right now
 ════════════════════════════════════════════════════════════ -->
 <section class="py-28 bg-dark-primary">
   <div class="container mx-auto px-6">
 
-    <div class="flex items-end justify-between mb-12">
-      <div>
-        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Read the Latest</p>
-        <h2 class="text-3xl md:text-4xl font-bold text-white">Practitioner Insights</h2>
-      </div>
-      <a href="/blog/" class="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
-        All posts
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
+    <div class="max-w-3xl mb-14">
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Sound familiar?</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+        The questions every senior leader is asking right now
+      </h2>
+      <p class="text-gray-400 leading-relaxed">
+        If you're leading engineering teams in 2026, you're facing at least one of these.
+        Here's how The Living Craft helps you answer each one.
+      </p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-5">
-      {posts.map((post, i) => (
-        <a href="/blog/"
-           class={`card-hover group flex flex-col rounded-2xl overflow-hidden border border-gray-700/30 hover:border-accent/30 transition-colors duration-300 ${i === 0 ? 'md:row-span-1' : ''}`}
-           style="background: rgba(22,33,62,0.4);">
-          <!-- Coloured top strip -->
-          <div class="h-1 w-full" style="background: linear-gradient(90deg, #4f46e5, #6366f1, transparent);"></div>
-          <div class="p-8 flex flex-col flex-1">
-            <div class="flex items-center gap-3 mb-5">
-              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-accent/10 text-accent border border-accent/20">
-                {post.tag}
-              </span>
-              <span class="text-gray-400 text-xs font-mono">{post.readTime} read</span>
-            </div>
-            <h3 class="text-white font-bold text-lg leading-snug mb-3 group-hover:text-accent-light transition-colors duration-200 flex-1">
-              {post.title}
-            </h3>
-            <p class="text-gray-400 text-sm leading-relaxed mb-8">{post.excerpt}</p>
-            <div class="flex items-center justify-between mt-auto">
-              <span class="text-gray-400 text-xs font-mono">{post.date}</span>
-              <span class="text-accent text-sm font-mono group-hover:translate-x-1 transition-transform duration-200 inline-block">
-                Read →
-              </span>
-            </div>
+    <div class="space-y-4 max-w-5xl">
+      {[
+        {
+          challenge: '"What skills will keep me and my team relevant as AI reshapes every role?"',
+          context: 'The market is shifting under your feet. Job descriptions are being rewritten. The skills that got you here won\'t keep you here.',
+          solve: 'Our training programs teach the four capabilities in highest demand — agent architecture, AI-native team design, governance, and strategic leadership. You learn what matters, not what\'s trendy.',
+          cta: 'Explore training programs',
+          href: '/training/',
+          color: '#4f46e5',
+        },
+        {
+          challenge: '"How do I actually drive an Agentic AI transformation without stalling at POC?"',
+          context: 'You\'ve seen the demos. Maybe you\'ve even built one. But going from proof-of-concept to production at org scale is a completely different problem.',
+          solve: 'Our consulting engagements build governance frameworks, adoption roadmaps, and ROI models with your team — not handed over as a deck. You ship production AI, not another pilot.',
+          cta: 'See consulting engagements',
+          href: '/consulting/',
+          color: '#06b6d4',
+        },
+        {
+          challenge: '"I can\'t find or grow people with the right AI skills — and hiring is painfully slow."',
+          context: 'The talent market hasn\'t caught up. You can\'t hire fast enough, and the people you have don\'t know what they don\'t know yet.',
+          solve: 'We train your existing team in small, intensive cohorts — hands-on, practitioner-led, with usable artifacts from week one. Faster and more effective than any hire.',
+          cta: 'See the intensive program',
+          href: '/training/',
+          color: '#8b5cf6',
+        },
+        {
+          challenge: '"How do I make the career leap into AI leadership before the window closes?"',
+          context: 'You\'re a strong engineer or engineering leader. But the AI-native leadership roles are being filled by people who moved first. The window is narrowing.',
+          solve: '1:1 mentoring designed for exactly this transition — engineering to AI leader, or leader to AI strategy owner. 90-day arcs with measurable milestones, not vague coaching.',
+          cta: 'Explore mentoring',
+          href: '/mentoring/',
+          color: '#ec4899',
+        },
+        {
+          challenge: '"My board wants an AI strategy and ROI — and I need to deliver it this quarter."',
+          context: 'Experimentation budgets are closing. The board isn\'t asking "should we do AI?" anymore. They\'re asking "where\'s the return?"',
+          solve: 'We build board-ready ROI models and defensible AI strategies with you — grounded in what\'s actually deployable, not aspirational slide decks. Working draft by week two.',
+          cta: 'See ROI consulting',
+          href: '/consulting/',
+          color: '#10b981',
+        },
+      ].map(c => (
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-0 rounded-2xl border border-gray-700/30 overflow-hidden hover:border-gray-600/40 transition-colors"
+             style="background: rgba(22,33,62,0.3);">
+
+          <!-- Left: the challenge -->
+          <div class="p-6 lg:p-8 lg:border-r lg:border-gray-700/30">
+            <p class="text-white font-bold leading-snug mb-3">{c.challenge}</p>
+            <p class="text-gray-400 text-sm leading-relaxed">{c.context}</p>
           </div>
-        </a>
+
+          <!-- Right: the answer -->
+          <div class="p-6 lg:p-8" style="background: rgba(79,70,229,0.03);">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-1.5 h-1.5 rounded-full" style={`background: ${c.color};`}></div>
+              <p class="text-[10px] font-mono uppercase tracking-widest" style={`color: ${c.color};`}>How we help</p>
+            </div>
+            <p class="text-gray-300 text-sm leading-relaxed mb-4">{c.solve}</p>
+            <a href={c.href}
+               class="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
+               style={`color: ${c.color};`}>
+              {c.cta} →
+            </a>
+          </div>
+
+        </div>
       ))}
     </div>
+
   </div>
 </section>
 
@@ -814,10 +679,8 @@ const posts = [
      FINAL CTA
 ════════════════════════════════════════════════════════════ -->
 <section class="relative py-32 overflow-hidden" style="background: #0c0c18;">
-  <!-- Grid texture -->
   <div class="absolute inset-0 pointer-events-none"
        style="background-image: linear-gradient(rgba(79,70,229,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(79,70,229,0.06) 1px, transparent 1px); background-size: 48px 48px;"></div>
-  <!-- Central glow -->
   <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
     <div class="w-[600px] h-[400px] rounded-full"
          style="background: radial-gradient(ellipse, rgba(79,70,229,0.12), transparent 70%); filter: blur(60px);"></div>
@@ -831,15 +694,15 @@ const posts = [
       Stop waiting for<br/>AI clarity. Build it.
     </h2>
 
-    <p class="text-gray-400 text-lg mb-12 max-w-sm mx-auto">
-      One conversation is enough to know if there's a fit. No pitch, no deck.
+    <p class="text-gray-400 text-lg mb-12 max-w-md mx-auto">
+      One conversation is enough to know if there's a fit. No pitch, no deck — just an honest conversation about where you are.
     </p>
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
       <a href="/contact/"
          class="group inline-flex items-center gap-2.5 px-10 py-5 rounded-xl text-white font-bold text-base transition-all duration-200 shadow-2xl shadow-accent/30 hover:shadow-accent/50"
          style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
-        Schedule a Discovery Call
+        Book a Free Call
         <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
