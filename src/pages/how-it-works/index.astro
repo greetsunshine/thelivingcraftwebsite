@@ -1,0 +1,433 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="How It Works"
+  description="Four weeks. Two sessions a week. One architecture problem that grows with you. The method behind The Living Craft's agent architecture cohort."
+>
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
+<section
+  class="relative py-28 overflow-hidden"
+  style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+>
+  <div class="absolute inset-0 opacity-[0.04]"
+       style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+  <div class="relative container mx-auto px-6 max-w-4xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">The method</p>
+    <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+      How it works
+    </h1>
+    <p class="text-xl text-gray-400 max-w-3xl leading-relaxed">
+      Four weeks. Two sessions a week. One architecture problem that grows with you.
+      You'll finish with a reference architecture you designed yourself — and the
+      confidence to defend it in any review.
+    </p>
+    <p class="text-gray-400 mt-6 max-w-3xl leading-relaxed">
+      Here's exactly what that looks like, and why it works when longer courses often don't.
+    </p>
+  </div>
+</section>
+
+
+<!-- ─── THE METHOD ────────────────────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">The method</p>
+    <h2 class="text-3xl font-bold text-white mb-6">Ultralearning, adapted for architecture</h2>
+
+    <div class="space-y-5 text-gray-400 text-sm leading-relaxed mb-14">
+      <p>
+        The cohort is built on ultralearning — a set of principles from Scott Young's research on
+        how people pick up hard skills faster than traditional programmes allow. I didn't invent
+        ultralearning. I adapted it to a domain I've lived in for two decades: designing distributed
+        systems that have to work.
+      </p>
+      <p class="text-white text-base font-medium">Four principles do most of the heavy lifting.</p>
+    </div>
+
+    <!-- Four principles -->
+    <div class="space-y-8">
+
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <h3 class="text-white font-bold text-lg mb-3">Directness — you learn the real thing, not a proxy</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          No toy problems. Every exercise is a constraint pulled from a real production agent
+          system — the kind of problem I've actually debugged. If it wouldn't show up in a
+          post-mortem, it doesn't show up in the cohort. That sounds intense, but it's actually
+          the part that makes this easier: you're not learning abstractly and hoping it transfers.
+          The transfer is built in.
+        </p>
+      </div>
+
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <h3 class="text-white font-bold text-lg mb-3">Drill — you get strong at the parts that feel weak</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Most courses move everyone through the same material at the same pace, which means half
+          the room is bored and half is lost. Here, when you notice "I can design memory layers
+          but eval harnesses are a fog" — we spend time on eval harnesses. The structure is designed
+          to find your weak spots and give you reps on exactly those.
+        </p>
+      </div>
+
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <h3 class="text-white font-bold text-lg mb-3">Tight feedback — you find out quickly, in a good way</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Every artifact you produce gets critique the same session you produce it. Peer review first,
+          my review second, your revision third — all inside three hours. The short loop is what makes
+          the learning fast. It also makes it kind: you don't sit for a week wondering if your design
+          is okay. You know by dinner.
+        </p>
+      </div>
+
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <h3 class="text-white font-bold text-lg mb-3">Retrieval under pressure — you practice the real move</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          You design from a blank page, explain it to other senior engineers, and revise when they
+          spot something you missed. That sounds uncomfortable, and it is the first time. It also
+          turns out to be the single most effective way to make knowledge stick — far more than
+          re-reading or note-taking. By week three, most participants tell me the "designing live"
+          part has become their favourite.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── THE FOUR WEEKS ────────────────────────────────────── -->
+<section class="py-24 bg-dark-secondary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">The four weeks</p>
+    <h2 class="text-3xl font-bold text-white mb-12">What you'll build, week by week</h2>
+
+    <div class="space-y-0">
+
+      <!-- Week 1 -->
+      <div class="flex gap-5">
+        <div class="flex flex-col items-center flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0">
+            <span class="text-accent font-mono text-xs font-bold">1</span>
+          </div>
+          <div class="w-px flex-1 bg-gradient-to-b from-accent/30 to-gray-800 mt-1"></div>
+        </div>
+        <div class="pb-10">
+          <h3 class="text-white font-bold text-lg mb-3">Foundations and your first architecture</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            We start with the decisions every agent system hinges on: control flow, state boundaries,
+            failure modes, basic orchestration. By Friday you've sketched a first-pass architecture
+            for your assigned problem. It won't be perfect — no first draft is, mine included — and
+            that's exactly what we want. The gaps are what the rest of the cohort is for.
+          </p>
+        </div>
+      </div>
+
+      <!-- Week 2 -->
+      <div class="flex gap-5">
+        <div class="flex flex-col items-center flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0">
+            <span class="text-accent font-mono text-xs font-bold">2</span>
+          </div>
+          <div class="w-px flex-1 bg-gradient-to-b from-accent/30 to-gray-800 mt-1"></div>
+        </div>
+        <div class="pb-10">
+          <h3 class="text-white font-bold text-lg mb-3">Memory and state</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            This is where most agent systems quietly fall over in production. Short-term versus
+            long-term memory, what belongs in vectors versus structured stores, how context windows
+            leak cost, retrieval strategies that survive scale. You'll extend your Week 1 architecture
+            with a real memory layer and talk through the trade-offs you chose. By the end of the week,
+            the fog around memory design usually lifts entirely.
+          </p>
+        </div>
+      </div>
+
+      <!-- Week 3 -->
+      <div class="flex gap-5">
+        <div class="flex flex-col items-center flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0">
+            <span class="text-accent font-mono text-xs font-bold">3</span>
+          </div>
+          <div class="w-px flex-1 bg-gradient-to-b from-accent/30 to-gray-800 mt-1"></div>
+        </div>
+        <div class="pb-10">
+          <h3 class="text-white font-bold text-lg mb-3">Tool use and orchestration</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Choosing tools, running them in parallel versus sequence, handling silent failures, and
+            the patterns for multi-agent coordination that don't turn into distributed-systems
+            nightmares. Your architecture grows a tool-use layer, and we stress-test it against
+            failure modes from real incidents. This is often the week participants say
+            "oh — this is the part nobody explained before."
+          </p>
+        </div>
+      </div>
+
+      <!-- Week 4 -->
+      <div class="flex gap-5">
+        <div class="flex flex-col items-center flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0">
+            <span class="text-accent font-mono text-xs font-bold">4</span>
+          </div>
+        </div>
+        <div class="pb-4">
+          <h3 class="text-white font-bold text-lg mb-3">Evaluation and production hardening</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            The part most courses skip. Offline evals, online evals, drift detection, the
+            observability surface you'll want at 3am, and the governance hooks that help security
+            sign off. You leave with an architecture you could hand to a team on Monday — and the
+            vocabulary to explain every choice you made.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── WHAT A SESSION LOOKS LIKE ─────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">Inside a session</p>
+    <h2 class="text-3xl font-bold text-white mb-6">What a session actually looks like</h2>
+
+    <p class="text-gray-400 text-sm leading-relaxed mb-10">
+      Sessions are three hours, not one. That's deliberate — an hour is enough to lecture at you,
+      not enough to do real design work together. Three hours is enough for you to build something,
+      get it critiqued, and improve it, all in the same room.
+    </p>
+
+    <div class="space-y-4">
+      <div class="p-5 rounded-xl border border-gray-700/30 bg-dark-card">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="text-accent font-mono text-xs font-semibold">20 min</span>
+          <h3 class="text-white font-semibold">Sprint opener</h3>
+        </div>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Quick review of what you produced between sessions, plus one real-world failure mode
+          I'll walk you through — usually pulled from a post-mortem relevant to the week's topic.
+          No slides. More like "let me show you something weird that happened."
+        </p>
+      </div>
+
+      <div class="p-5 rounded-xl border border-gray-700/30 bg-dark-card">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="text-accent font-mono text-xs font-semibold">90 min</span>
+          <h3 class="text-white font-semibold">Design block</h3>
+        </div>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          The central problem of the session. You design — on a shared whiteboard, in a doc,
+          sometimes alone, sometimes in pairs. You're not following along. You're building.
+          I'm there the whole time, circulating, asking questions, nudging when someone's stuck.
+        </p>
+      </div>
+
+      <div class="p-5 rounded-xl border border-gray-700/30 bg-dark-card">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="text-accent font-mono text-xs font-semibold">45 min</span>
+          <h3 class="text-white font-semibold">Walk-through and critique</h3>
+        </div>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          You explain your design to two other senior engineers, and they explain theirs to you.
+          You'll spot things in each other's work that none of you would have seen alone — that's
+          most of the value. I join in, ask questions, point out what's working, flag what isn't.
+          Nobody's trying to "win." Everyone's trying to ship better architecture by the end of the hour.
+        </p>
+      </div>
+
+      <div class="p-5 rounded-xl border border-gray-700/30 bg-dark-card">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="text-accent font-mono text-xs font-semibold">25 min</span>
+          <h3 class="text-white font-semibold">Revise and commit</h3>
+        </div>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          You make revisions on the spot, or you write down the specific change you'll make
+          before next session. That commitment is tracked — gently, not scarily. It's how we
+          keep momentum between sessions without anyone feeling chased.
+        </p>
+      </div>
+    </div>
+
+    <p class="text-gray-400 text-sm leading-relaxed mt-8">
+      Between sessions, plan for about 4–6 hours of focused work — revising your artifact based
+      on the critique. It's not busywork; it's where the learning consolidates. If your calendar
+      genuinely can't hold that right now, it's worth waiting for a cohort when it can. The method
+      only works if the time is there.
+    </p>
+  </div>
+</section>
+
+
+<!-- ─── GLIMPSE INSIDE ────────────────────────────────────── -->
+<section class="py-24 bg-dark-secondary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">A glimpse inside</p>
+    <h2 class="text-3xl font-bold text-white mb-4">Week 3, Tuesday</h2>
+    <p class="text-gray-400 text-sm leading-relaxed mb-10">
+      To make this less abstract — here's what a typical Tuesday of Week 3 might look like.
+    </p>
+
+    <div class="p-8 rounded-2xl border border-accent/20 bg-dark-card relative overflow-hidden mb-8">
+      <div class="absolute top-0 left-0 right-0 h-0.5"
+           style="background: linear-gradient(90deg, #4f46e5, #818cf8, transparent);"></div>
+      <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">The problem</p>
+      <p class="text-white font-semibold leading-relaxed">
+        Design the tool-use layer for an agent handling customer support escalations.
+        Latency budget: 3 seconds end-to-end. Five tools of varying reliability.
+        Non-negotiable: no single tool failure brings down the loop.
+      </p>
+    </div>
+
+    <div class="space-y-6">
+      <div>
+        <p class="text-white font-semibold mb-2">Sprint opener</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          I walk through a real incident — a misconfigured retry policy on a CRM lookup that took
+          down an agent fleet for 40 minutes. Concrete, not theoretical. You'll see exactly what
+          the fix looked like after.
+        </p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-2">Design block</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Everyone designs the tool-use layer from a blank page. Some choose parallel-first with
+          fallbacks. Some go sequential with aggressive timeouts. Someone usually proposes a hybrid
+          with a reliability-weighted router. There's rarely one right answer — which is the whole point.
+        </p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-2">Walk-through</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          The reliability-weighted router looks elegant until someone notices the routing logic itself
+          has no eval — a single point of failure. The parallel-first designs hold up better, but cost
+          twice as much in LLM calls, which matters for this latency budget. These are exactly the
+          trade-offs you'll be making in your own work.
+        </p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-2">Revise</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Everyone leaves with a revised design and one specific thing to test before Thursday.
+        </p>
+      </div>
+    </div>
+
+    <p class="text-gray-400 text-sm mt-8 font-medium">That's one session. There are eight.</p>
+  </div>
+</section>
+
+
+<!-- ─── WHY FOUR WEEKS IS ENOUGH ──────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">Honest expectations</p>
+    <h2 class="text-3xl font-bold text-white mb-8">Why four weeks is enough (and what "enough" honestly means)</h2>
+
+    <div class="space-y-5 text-gray-400 text-sm leading-relaxed">
+      <p>
+        Let me be straight with you: four weeks won't make you an expert in every corner of
+        agentic systems. Nobody can honestly promise that — not in four weeks, not in four months.
+      </p>
+      <p>
+        What four weeks <em>will</em> do is give you a defensible mental model of how production agent
+        architectures actually work, a reference design you built yourself, and the judgment to
+        know which corners of the space you still want to go deeper on — plus the skill to do that
+        deepening on your own, without needing another course. That's what ultralearning really
+        buys you: not completeness, but a foundation strong enough that you keep learning fast
+        on your own afterwards.
+      </p>
+      <p>
+        And the cohort doesn't fully end at week four. There's a 60-day support period afterwards —
+        a private channel, fortnightly group office hours, and the rest of the alumni. Most of the
+        real integration into your day job happens in those 60 days, once you're applying the work
+        to your own systems. You won't be on your own when it matters most.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── WHO THIS IS FOR ───────────────────────────────────── -->
+<section class="py-24 bg-dark-secondary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+      <!-- For -->
+      <div>
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">Who this is for</p>
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">
+          Staff engineers, principal architects, and senior engineering managers with at least
+          five years of shipping production systems, who now need to design and defend agent
+          architectures in their current role.
+        </p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          You don't need to already know agent systems. If you did, you wouldn't need the cohort.
+          What you do need is solid footing in distributed systems — we won't be covering what a
+          queue is or why eventual consistency matters. Everything past that, we build together.
+        </p>
+      </div>
+
+      <!-- Not for -->
+      <div>
+        <p class="text-xs font-mono uppercase tracking-widest text-gray-400 mb-6">Who this probably isn't for — yet</p>
+        <div class="space-y-4 text-gray-400 text-sm leading-relaxed">
+          <p>
+            Engineers earlier in their career who'd honestly get more out of strengthening
+            fundamentals first.
+          </p>
+          <p>
+            Anyone looking for a credential to list rather than a skill to use — the pace
+            rewards people who want to do the work, not perform it.
+          </p>
+          <p>
+            People who prefer to learn alone at their own speed — the method is deliberately
+            social, and the group is most of what makes it work.
+          </p>
+          <p class="text-gray-300">
+            If any of those describe you right now, that's completely fine. I'm happy to point
+            you toward resources that'll serve you better at this stage. Just say so on the application.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── WHAT HAPPENS NEXT ─────────────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">What happens next</p>
+
+    <div class="space-y-5 text-gray-400 text-sm leading-relaxed mb-10">
+      <p>
+        The application is three short questions: your current role, what you're trying to ship,
+        and one architecture problem you've been wrestling with recently. I read every one personally.
+      </p>
+      <p>
+        If it's a fit, I'll send you a calendar link and we'll have a real conversation — no sales
+        pitch. If it isn't a fit right now, I'll tell you honestly why, and usually point you
+        somewhere more useful.
+      </p>
+      <p class="text-white font-medium">Either way, you'll hear back from me.</p>
+    </div>
+
+    <a href="/apply/"
+       class="group inline-flex items-center gap-2.5 px-10 py-5 rounded-xl text-white font-bold text-base transition-all duration-200 shadow-2xl shadow-accent/30 hover:shadow-accent/50"
+       style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+      Apply for the next cohort
+      <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+</BaseLayout>

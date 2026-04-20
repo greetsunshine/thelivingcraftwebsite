@@ -1,0 +1,202 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const timeline = [
+  {
+    period: '1999 – 2011',
+    company: 'Consulting — Technology, Retail, Healthcare, Financial Services',
+    role: 'Tech Lead → Development Manager',
+    desc: 'A decade of consulting across diverse sectors. Led delivery centers of 300+ associates, drove CMMI Level 5, managed Fortune 1 client relationships.',
+  },
+  {
+    period: '2011 – 2021',
+    company: 'Walmart Labs',
+    role: 'Director of Engineering',
+    desc: '10 years. Grew from Program Manager to Director, leading 100+ associates across US, UK, and China. 300+ products, 2.1M-user platforms, AI-driven chatbot platforms with NPS 80%+.',
+  },
+  {
+    period: '2021 – 2022',
+    company: 'Amazon',
+    role: 'Senior Engineering Leader',
+    desc: 'Re-architected Prime membership core flows. Microservices redesign for latency and reliability. Built onboarding platform for third-party Prime extensions.',
+  },
+  {
+    period: '2022 – 2024',
+    company: 'Google',
+    role: 'Senior Engineering Leader',
+    desc: '50-person distributed team. Shipped a GenAI-powered video editor, two Workspace flagship products — 85M monthly users, 31B weekly executions. Mentored 20+ engineers.',
+  },
+  {
+    period: '2024 – Present',
+    company: 'Agentic AI',
+    role: 'Building agent systems in production',
+    desc: 'Multi-agent systems: RAG, NL2SQL, Agent-to-Agent Orchestration. Agentic SDLC, LLM Ops, evaluation frameworks. Now teaching what I\'ve shipped.',
+  },
+];
+---
+
+<BaseLayout
+  title="Founder"
+  description="Sunil Mathew — 26 years at Google, Amazon, and Walmart. Now teaching agent architecture to the leaders building it next."
+>
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
+<section
+  class="relative py-28 overflow-hidden"
+  style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+>
+  <div class="absolute inset-0 opacity-[0.04]"
+       style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+  <div class="relative container mx-auto px-6 max-w-4xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">Founder</p>
+    <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+      Sunil Mathew
+    </h1>
+    <p class="text-xl text-gray-400 max-w-2xl leading-relaxed">
+      26 years of engineering leadership at Google, Amazon, and Walmart.
+      Now deep in production agent systems — and teaching it to the leaders building it next.
+    </p>
+  </div>
+</section>
+
+
+<!-- ─── THE STORY ─────────────────────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">Why I teach</p>
+
+    <div class="space-y-6 text-gray-400 text-sm leading-relaxed">
+      <p>
+        I spent 26 years doing the work — not advising on it from the outside. A decade of
+        consulting, then directing engineering at Walmart Labs, building Prime infrastructure
+        at Amazon, and leading 50-person teams at Google shipping products used by tens of
+        millions of people daily.
+      </p>
+      <p>
+        When Generative AI arrived, I moved fast — building real systems, not evaluating them.
+        Multi-agent systems in production: RAG pipelines, NL2SQL, Agent-to-Agent Orchestration,
+        Agentic SDLC, and evaluation frameworks.
+      </p>
+      <p class="text-white text-base font-medium">
+        The one thing that compounded through all of it: learning velocity.
+      </p>
+      <p>
+        Every career inflection I've had came from compressing a learning cycle that others
+        were content to let run for years. The leaders who grow fastest aren't the smartest —
+        they're the ones who've built the most disciplined learning loops.
+      </p>
+      <p>
+        The Living Craft is built on this. Not as philosophy — as engineering constraint.
+        The cohort is designed to produce the same compression for you: four weeks of structured
+        building that would take twelve months of self-study to replicate.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── TIMELINE ──────────────────────────────────────────── -->
+<section class="py-24 bg-dark-secondary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-8">The path</p>
+
+    <div class="space-y-0">
+      {timeline.map((t, i) => (
+        <div class="flex gap-5">
+          <div class="flex flex-col items-center flex-shrink-0">
+            <div class="w-2.5 h-2.5 rounded-full bg-accent mt-1.5 flex-shrink-0 ring-2 ring-accent/20"></div>
+            {i < timeline.length - 1 && (
+              <div class="w-px flex-1 bg-gradient-to-b from-accent/30 to-gray-800 mt-1"></div>
+            )}
+          </div>
+          <div class="pb-8">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <p class="text-accent font-mono text-xs font-semibold">{t.period}</p>
+              <span class="text-gray-400 text-xs">·</span>
+              <p class="text-gray-400 text-xs font-mono">{t.company}</p>
+            </div>
+            <p class="text-white font-semibold text-sm mb-2">{t.role}</p>
+            <p class="text-gray-400 text-sm leading-relaxed">{t.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── THINGS SHIPPED ────────────────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-6">Things shipped</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-white font-bold mb-2">GenAI Video Editor</p>
+        <p class="text-gray-400 text-sm">Shipped at Google. AI-powered editing tool from zero to production.</p>
+      </div>
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-white font-bold mb-2">85M-user Workspace Products</p>
+        <p class="text-gray-400 text-sm">Two flagship Google products at global scale. 31B weekly executions.</p>
+      </div>
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-white font-bold mb-2">Multi-Agent Production Systems</p>
+        <p class="text-gray-400 text-sm">RAG, NL2SQL, orchestration — in production with real load, not demos.</p>
+      </div>
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-white font-bold mb-2">Agent Evaluation Frameworks</p>
+        <p class="text-gray-400 text-sm">LLM Ops and eval harnesses that tell you if your agent actually works.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── CONSULTING & MENTORING (folded in) ────────────────── -->
+<section class="py-20 bg-dark-secondary border-t border-gray-800/60">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <div class="space-y-8">
+
+      <div>
+        <p class="text-white font-semibold mb-2">Consulting</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          I take on a small number of consulting engagements each quarter — typically
+          governance frameworks, architecture reviews, or AI strategy for teams that need
+          a practitioner, not a slide deck. If that's what you need,
+          <a href="mailto:sunil@thelivingcraft.ai" class="text-accent hover:text-accent-light transition-colors">email me</a>.
+        </p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-2">1:1 Mentoring</p>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          I keep a handful of 1:1 mentoring spots open for senior leaders navigating the
+          transition into AI-native roles. These are structured 90-day arcs with real
+          milestones, not open-ended coaching. If you're interested, mention it in your
+          <a href="/apply/" class="text-accent hover:text-accent-light transition-colors">application</a>
+          and we'll discuss fit.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── CTA ────────────────────────────────────────────────── -->
+<section class="py-20 bg-dark-primary">
+  <div class="container mx-auto px-6 text-center max-w-2xl">
+    <h2 class="text-3xl font-bold text-white mb-4">If the background fits what you need</h2>
+    <p class="text-gray-400 mb-8">
+      The cohort is the best way to work with me. Fifteen people, four weeks, real builds.
+    </p>
+    <a href="/apply/"
+       class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+       style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+      Apply to the cohort →
+    </a>
+  </div>
+</section>
+
+</BaseLayout>

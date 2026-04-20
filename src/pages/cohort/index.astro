@@ -1,0 +1,149 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="The Cohort"
+  description="Dates, format, price, and everything you need to know about the four-week agent architecture cohort for senior technical leaders."
+>
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
+<section
+  class="relative py-28 overflow-hidden"
+  style="background: radial-gradient(ellipse at 50% -5%, #1a1a2e 0%, #0a0a0f 60%);"
+>
+  <div class="absolute inset-0 opacity-[0.04]"
+       style="background-image: radial-gradient(circle, #4f46e5 1px, transparent 1px); background-size: 28px 28px;"></div>
+
+  <div class="relative container mx-auto px-6 max-w-4xl">
+    <p class="text-xs font-mono uppercase tracking-widest text-accent mb-4">The offering</p>
+    <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+      The Cohort
+    </h1>
+    <p class="text-xl text-gray-400 max-w-2xl leading-relaxed">
+      Four weeks. Fifteen senior technical leaders. One outcome: you leave with the architecture
+      skills and the working system to prove it.
+    </p>
+  </div>
+</section>
+
+
+<!-- ─── DETAILS GRID ─────────────────────────────────────── -->
+<section class="py-24 bg-dark-primary">
+  <div class="container mx-auto px-6 max-w-4xl">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+
+      <!-- Dates -->
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Dates</p>
+        <p class="text-white font-bold text-lg mb-1">Next cohort: TBD</p>
+        <p class="text-gray-400 text-sm">Applications are open. Dates will be confirmed once the cohort fills.</p>
+      </div>
+
+      <!-- Format -->
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Format</p>
+        <p class="text-white font-bold text-lg mb-1">Live + async, remote-first</p>
+        <p class="text-gray-400 text-sm">Two live sessions per week. Async builds and reviews between sessions. All times accommodating US and India.</p>
+      </div>
+
+      <!-- Price -->
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Price</p>
+        <p class="text-white font-bold text-lg mb-1">TBD</p>
+        <p class="text-gray-400 text-sm">Pricing will be shared with accepted applicants. Corporate sponsorship options available.</p>
+      </div>
+
+      <!-- Cohort size -->
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Cohort size</p>
+        <p class="text-white font-bold text-lg mb-1">15 people maximum</p>
+        <p class="text-gray-400 text-sm">Small enough that every person gets direct feedback. Large enough for meaningful peer dynamics.</p>
+      </div>
+
+    </div>
+
+
+    <!-- What's included -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-bold text-white mb-8">What's included</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {[
+          '8 live sessions (2 per week, 3 hours each)',
+          'Weekly architecture builds with practitioner review',
+          'Custom evaluation framework for your use case',
+          'Architectural decision records you keep',
+          'Access to cohort Slack for duration + 90 days after',
+          '1:1 office hours (30 min/week)',
+        ].map(item => (
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <p class="text-gray-300 text-sm">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+
+    <!-- A typical week -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-bold text-white mb-8">A typical week</h2>
+      <div class="space-y-4">
+        {[
+          { day: 'Monday', activity: 'Live session — new concept introduced, architecture decision made together' },
+          { day: 'Tue–Wed', activity: 'Async build — you implement the decision in your own system' },
+          { day: 'Thursday', activity: 'Live session — builds reviewed, problems surfaced, patterns extracted' },
+          { day: 'Fri–Sun', activity: 'Iterate, refine, or rest. Office hours available Friday.' },
+        ].map(item => (
+          <div class="flex gap-4 p-4 rounded-xl border border-gray-700/30 bg-dark-card">
+            <span class="text-accent font-mono text-sm font-semibold w-20 flex-shrink-0">{item.day}</span>
+            <p class="text-gray-300 text-sm">{item.activity}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+
+    <!-- What you need to bring -->
+    <div>
+      <h2 class="text-2xl font-bold text-white mb-8">What you need to bring</h2>
+      <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
+        <ul class="space-y-3">
+          {[
+            'A real problem you\'re trying to solve with agents (work project, side project, or both)',
+            '8–10 hours per week of focused time (sessions + builds)',
+            'Comfort with code — you don\'t need to be a daily coder, but you need to read and reason about systems',
+            'A willingness to build in the open with your cohort',
+          ].map(item => (
+            <li class="flex items-start gap-3">
+              <span class="text-accent mt-1.5 flex-shrink-0">•</span>
+              <p class="text-gray-300 text-sm leading-relaxed">{item}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ─── CTA ────────────────────────────────────────────────── -->
+<section class="py-20 bg-dark-secondary border-t border-gray-800/60">
+  <div class="container mx-auto px-6 text-center max-w-2xl">
+    <h2 class="text-3xl font-bold text-white mb-4">Ready?</h2>
+    <p class="text-gray-400 mb-8">
+      The application is three questions. Takes two minutes.
+    </p>
+    <a href="/apply/"
+       class="inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl transition-opacity hover:opacity-90 shadow-lg"
+       style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+      Apply now →
+    </a>
+  </div>
+</section>
+
+</BaseLayout>
