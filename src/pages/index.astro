@@ -25,12 +25,10 @@ import { regionList } from '../data/regions';
         {regionList.map((r) => (
           <a href={r.path} class="card region-choice">
             <div>
-              <div class="k">{r.label}</div>
-              <div class="rc-price">{r.price}</div>
-              <div class="rc-unit">{r.priceUnit}</div>
-              <p class="rc-meta">{r.hybrid ? 'Live online · Bangalore hybrid available' : 'Live online'}</p>
+              <h3 class="rc-name">{r.label}</h3>
+              <p class="rc-meta">Agentic &amp; systems architecture · 5 weeks, live{r.hybrid ? ' · Bangalore hybrid available' : ''}</p>
             </div>
-            <span class="rc-cta">View the {r.label} cohort <span class="arrow">→</span></span>
+            <span class="rc-cta">View details &amp; pricing <span class="arrow">→</span></span>
           </a>
         ))}
       </div>

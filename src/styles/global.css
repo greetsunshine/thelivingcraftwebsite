@@ -102,9 +102,8 @@ header.nav{position:sticky;top:0;z-index:50;background:rgba(244,238,226,.86);bac
 /* region chooser (home) */
 .region-choices{align-items:stretch}
 a.region-choice{display:flex;flex-direction:column;justify-content:space-between;gap:24px;text-decoration:none}
-a.region-choice .rc-price{font-family:'Fraunces',serif;font-size:38px;font-weight:360;color:var(--ink);line-height:1;margin-top:14px}
-a.region-choice .rc-unit{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:8px}
-a.region-choice .rc-meta{font-size:14px;color:var(--ink-soft);margin-top:16px}
+a.region-choice .rc-name{font-family:'Fraunces',serif;font-size:32px;font-weight:380;color:var(--ink);line-height:1.05}
+a.region-choice .rc-meta{font-size:14px;color:var(--ink-soft);margin-top:14px;line-height:1.5}
 a.region-choice .rc-cta{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--clay)}
 a.region-choice .arrow{transition:transform .22s ease}
 a.region-choice:hover .rc-cta .arrow{transform:translateX(4px)}
