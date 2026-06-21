@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { regions } from '../../data/regions';
 ---
 
 <BaseLayout
@@ -51,8 +52,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <!-- Price -->
       <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card">
         <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">Price</p>
-        <p class="text-white font-bold text-lg mb-1">TBD</p>
-        <p class="text-gray-400 text-sm">Pricing will be shared with accepted applicants. Corporate sponsorship options available.</p>
+        <p class="text-white font-bold text-lg mb-1">Priced by region</p>
+        <p class="text-gray-400 text-sm">India ₹1,50,000 · Dubai AED 20,000 · Australia AUD 3,000. See Investment below.</p>
       </div>
 
       <!-- Cohort size -->
@@ -62,6 +63,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <p class="text-gray-400 text-sm">Small enough that every person gets direct feedback. Large enough for meaningful peer dynamics.</p>
       </div>
 
+    </div>
+
+
+    <!-- Investment by region -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-bold text-white mb-3">Investment</h2>
+      <p class="text-gray-400 mb-8 max-w-2xl">
+        Priced by region for the inaugural cohort. Corporate sponsorship and payment plans available.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {regions.map(r => (
+          <div class="p-6 rounded-2xl border border-gray-700/40 bg-dark-card relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-0.5"
+                 style="background: linear-gradient(90deg, #4f46e5, #818cf8, transparent);"></div>
+            <p class="text-xs font-mono uppercase tracking-widest text-accent mb-3">{r.label}</p>
+            <p class="text-white font-bold text-3xl mb-1">{r.price}</p>
+            <p class="text-gray-400 text-sm">{r.priceNote}</p>
+            {r.hybrid && (
+              <p class="mt-4 pt-4 border-t border-gray-700/40 text-sm text-gray-300">
+                <span class="text-accent font-mono text-xs uppercase tracking-wide">Bangalore</span><br/>
+                Hybrid — attend in person or online.
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
 
 
