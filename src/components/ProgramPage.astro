@@ -1,11 +1,13 @@
 ---
 import type { Region } from '../data/regions';
+import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
 
 interface Props {
   /** null = region unknown (no param, no geo match) → pricing shown as "By application". */
   region: Region | null;
 }
 const { region } = Astro.props;
+const regionKey = region?.key ?? '';
 
 // Region only affects pricing, the Bangalore hybrid option, and a few labels.
 const label = region?.label ?? '';
@@ -23,8 +25,6 @@ const cohort = {
   format: 'Live online',
 };
 
-const applyHref = `mailto:greetsunshine@gmail.com?subject=${encodeURIComponent(`The Living Craft${label ? ' ' + label : ''} — Application`)}`;
-const askHref = `mailto:greetsunshine@gmail.com?subject=${encodeURIComponent(`The Living Craft${label ? ' ' + label : ''} — Question`)}`;
 ---
 
 <!-- HERO -->
@@ -274,15 +274,83 @@ const askHref = `mailto:greetsunshine@gmail.com?subject=${encodeURIComponent(`Th
   </div>
 </section>
 
-<!-- FINAL CTA -->
+<!-- FINAL CTA — inline application form -->
 <section class="final" id="apply">
   <div class="wrap">
     <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The {cohortNameCap.toLowerCase()}</span>
     <h2>Learn the craft from someone<br>who <em>lived</em> it.</h2>
-    <p class="lead">A small founding cohort. Applications reviewed personally.</p>
-    <div class="hero-cta" style="justify-content:center">
-      <a class="btn btn-primary" href={applyHref}>Start your application <span class="arrow">→</span></a>
-      <a class="btn btn-ghost" href={askHref}>Ask me a question</a>
-    </div>
+    <p class="lead">A small founding cohort. I read every application myself and reply by email.</p>
+
+    <form id="applyForm" class="apply-form">
+      <input type="hidden" name="access_key" value={APPLY_ACCESS_KEY} />
+      <input type="hidden" name="subject" value="New application — The Living Craft" />
+      <input type="hidden" name="from_name" value="The Living Craft" />
+      <!-- honeypot -->
+      <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" />
+
+      <div class="form-grid">
+        <label>Name<input name="name" type="text" required autocomplete="name" /></label>
+        <label>Email<input name="email" type="email" required autocomplete="email" /></label>
+        <label>Current role / seniority<input name="role" type="text" placeholder="e.g. Staff Engineer" /></label>
+        <label>Company<input name="company" type="text" /></label>
+        <label class="full">Region
+          <select name="region">
+            <option value="India" selected={regionKey === 'india'}>India</option>
+            <option value="Dubai" selected={regionKey === 'dubai'}>Dubai</option>
+            <option value="Australia" selected={regionKey === 'australia'}>Australia</option>
+            <option value="Other" selected={regionKey === ''}>Other</option>
+          </select>
+        </label>
+        <label class="full">What are you building with agents/systems, and why now?
+          <textarea name="message" rows="4" placeholder="A few sentences on the real problem you'd bring into the room."></textarea>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" type="submit" style="background:var(--ochre);color:var(--ink)">
+        Submit application <span class="arrow">→</span>
+      </button>
+      <p class="form-status" id="formStatus" aria-live="polite"></p>
+      <p class="form-alt">Prefer email? <a href={`mailto:${CONTACT_EMAIL}?subject=The%20Living%20Craft%20%E2%80%94%20Question`}>Ask me a question →</a></p>
+    </form>
   </div>
 </section>
+
+<script is:inline>
+  (function () {
+    var f = document.getElementById('applyForm');
+    if (!f) return;
+    var status = document.getElementById('formStatus');
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var key = f.querySelector('input[name="access_key"]').value;
+      if (!key || key.indexOf('REPLACE_WITH') === 0) {
+        status.textContent = 'Applications open shortly — please email greetsunshine@gmail.com in the meantime.';
+        status.className = 'form-status err';
+        return;
+      }
+      status.textContent = 'Sending…';
+      status.className = 'form-status';
+      try {
+        var res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(f),
+        });
+        var json = await res.json();
+        if (json.success) {
+          f.reset();
+          f.querySelector('.form-grid').style.display = 'none';
+          f.querySelector('button[type="submit"]').style.display = 'none';
+          status.textContent = 'Thank you — your application is in. I review every one personally and will reply by email.';
+          status.className = 'form-status ok';
+        } else {
+          status.textContent = 'Something went wrong. Please email greetsunshine@gmail.com.';
+          status.className = 'form-status err';
+        }
+      } catch (err) {
+        status.textContent = 'Network error. Please email greetsunshine@gmail.com.';
+        status.className = 'form-status err';
+      }
+    });
+  })();
+</script>
