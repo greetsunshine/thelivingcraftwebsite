@@ -48,7 +48,7 @@ export const regions: Record<Region['key'], Region> = {
     path: '/dubai',
     title: 'The Living Craft — Dubai · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} Dubai cohort.`,
-    price: 'AED 20,000',
+    price: 'AED 8,000',
     priceUnit: 'per seat · founding rate',
     seats: '15 seats, capped',
     nextDate: 'Announced on application',
