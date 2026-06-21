@@ -1,57 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { regionList } from '../data/regions';
+import ProgramPage from '../components/ProgramPage.astro';
+import { regions } from '../data/regions';
 
-// Render on demand so we can geo-detect the visitor and route them to their region.
+// One page; only the pricing block changes by region. No redirect, no duplicate content.
 export const prerender = false;
 
-// Vercel provides the visitor's country as an ISO-3166 code on this header.
-// Map known markets to their region page; everyone else sees the chooser below.
-const countryToRegion: Record<string, string> = {
-  IN: '/india',       // India
-  AE: '/dubai',       // United Arab Emirates (Dubai)
-  AU: '/australia',   // Australia
-};
-const country = Astro.request.headers.get('x-vercel-ip-country')?.toUpperCase() ?? '';
-const destination = countryToRegion[country];
-if (destination) {
-  return Astro.redirect(destination, 302);
-}
+const VALID = ['india', 'dubai', 'australia'] as const;
+type Key = (typeof VALID)[number];
+
+// 1) explicit ?region= wins (shareable links)  2) else geo  3) else neutral pricing
+const param = Astro.url.searchParams.get('region')?.toLowerCase();
+const geoMap: Record<string, Key> = { IN: 'india', AE: 'dubai', AU: 'australia' };
+const geo = Astro.request.headers.get('x-vercel-ip-country')?.toUpperCase() ?? '';
+
+const key: Key | undefined = VALID.includes(param as Key) ? (param as Key) : geoMap[geo];
+const region = key ? regions[key] : null;
+
+// Region varies per visitor/param — don't let a shared cache serve the wrong price.
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const title = 'The Living Craft — Agentic & Systems Architecture by Sunil Mathew';
+const description =
+  'An application-only, 5-week program in agentic & systems architecture, taught from 26 years building and leading engineering at Google, Amazon, and Walmart.';
 ---
 
-<BaseLayout
-  title="The Living Craft — Choose your region"
-  description="An application-only program in agentic & systems architecture, taught by Sunil Mathew. Choose your cohort: India, Dubai, or Australia."
-  minimal={true}
->
-  <section class="hero" id="top" style="border-top:0">
-    <div class="wrap">
-      <div style="max-width:820px;text-align:center;margin:0 auto 56px">
-        <span class="eyebrow" style="justify-content:center">An application-only program in agentic &amp; systems architecture</span>
-        <h1 style="font-size:clamp(38px,6vw,66px);font-weight:360;margin:24px 0 20px;line-height:1.08">
-          Choose your <em style="font-style:italic;color:var(--clay)">region</em>.
-        </h1>
-        <p class="lead" style="max-width:48ch;margin:0 auto">
-          Taught by <strong style="color:var(--ink);font-weight:600">Sunil Mathew</strong> — 26 years building and leading
-          engineering at Google, Amazon &amp; Walmart. Pick where you'll join from; pricing and format are tailored to each cohort.
-        </p>
-      </div>
-
-      <div class="cards3 region-choices">
-        {regionList.map((r) => (
-          <a href={r.path} class="card region-choice">
-            <div>
-              <h3 class="rc-name">{r.label}</h3>
-              <p class="rc-meta">Agentic &amp; systems architecture · 5 weeks, live{r.hybrid ? ' · Bangalore hybrid available' : ''}</p>
-            </div>
-            <span class="rc-cta">View details &amp; pricing <span class="arrow">→</span></span>
-          </a>
-        ))}
-      </div>
-
-      <p class="faint" style="text-align:center;margin-top:40px;font-size:13px">
-        Not sure which fits? <a href="mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20%E2%80%94%20Which%20cohort" style="color:var(--clay)">Ask me →</a>
-      </p>
-    </div>
-  </section>
+<BaseLayout title={title} description={description} canonical="https://learning.thelivingcraft.ai/">
+  <ProgramPage region={region} />
 </BaseLayout>

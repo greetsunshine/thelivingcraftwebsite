@@ -2,16 +2,36 @@
 import type { Region } from '../data/regions';
 
 interface Props {
-  region: Region;
+  /** null = region unknown (no param, no geo match) → pricing shown as "By application". */
+  region: Region | null;
 }
 const { region } = Astro.props;
+
+// Region only affects pricing, the Bangalore hybrid option, and a few labels.
+const label = region?.label ?? '';
+const labelSuffix = label ? ` · ${label}` : '';
+const cohortNameCap = label ? `Inaugural ${label} cohort` : 'Inaugural cohort';
+const hybrid = region?.hybrid ?? false;
+const hasPrice = region !== null;
+
+// Cohort logistics are identical across regions — single source here.
+const cohort = {
+  nextDate: 'Announced on application',
+  closes: 'Rolling — until the cohort is full',
+  seats: '15 seats, capped',
+  commitment: '~5 hrs / week',
+  format: 'Live online',
+};
+
+const applyHref = `mailto:greetsunshine@gmail.com?subject=${encodeURIComponent(`The Living Craft${label ? ' ' + label : ''} — Application`)}`;
+const askHref = `mailto:greetsunshine@gmail.com?subject=${encodeURIComponent(`The Living Craft${label ? ' ' + label : ''} — Question`)}`;
 ---
 
 <!-- HERO -->
 <section class="hero" id="top" style="border-top:0">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture · {region.label}</span>
+      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture{labelSuffix}</span>
       <h1>Build systems<br>that <em>outlive</em><br>their makers.</h1>
       <p class="credential">
         I'm <strong>Sunil Mathew</strong> — <strong>26 years</strong> building and leading engineering at
@@ -22,7 +42,7 @@ const { region } = Astro.props;
         <a class="btn btn-primary" href="#apply">Apply for the next cohort <span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="#experience">Meet the maker</a>
       </div>
-      <p class="hero-note">Inaugural {region.label} cohort · {region.seats} · applications reviewed personally</p>
+      <p class="hero-note">{cohortNameCap} · {cohort.seats} · applications reviewed personally</p>
     </div>
     <div class="portrait">
       <div class="frame">
@@ -177,7 +197,7 @@ const { region } = Astro.props;
       <div class="card">
         <div class="k">// founding cohort</div>
         <h3>A founding-cohort rate</h3>
-        <p>The first {region.label} cohort enrols at a founding rate that won't return once the program has a track record.</p>
+        <p>The first {label ? label + ' ' : ''}cohort enrols at a founding rate that won't return once the program has a track record.</p>
       </div>
     </div>
   </div>
@@ -192,13 +212,13 @@ const { region } = Astro.props;
       <p class="lead">A cohort small enough that I know your system by name. Live sessions, architecture reviewed live in the room, and a group that stays in touch long after.</p>
     </div>
     <div>
-      <div class="detail-row"><span class="dk">Next cohort</span><span class="dv">{region.nextDate}</span></div>
-      <div class="detail-row"><span class="dk">Enrollment closes</span><span class="dv">{region.closes}</span></div>
+      <div class="detail-row"><span class="dk">Next cohort</span><span class="dv">{cohort.nextDate}</span></div>
+      <div class="detail-row"><span class="dk">Enrollment closes</span><span class="dv">{cohort.closes}</span></div>
       <div class="detail-row"><span class="dk">Duration</span><span class="dv">5 weeks · live</span></div>
-      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">{region.seats}</span></div>
-      <div class="detail-row"><span class="dk">Commitment</span><span class="dv">{region.commitment}</span></div>
-      <div class="detail-row"><span class="dk">Format</span><span class="dv">{region.format}</span></div>
-      {region.hybrid && (
+      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">{cohort.seats}</span></div>
+      <div class="detail-row"><span class="dk">Commitment</span><span class="dv">{cohort.commitment}</span></div>
+      <div class="detail-row"><span class="dk">Format</span><span class="dv">{cohort.format}</span></div>
+      {hybrid && (
         <div class="detail-row"><span class="dk">Bangalore</span><span class="dv">Hybrid — in person or online</span></div>
       )}
       <div class="detail-row"><span class="dk">Admission</span><span class="dv">By application</span></div>
@@ -214,15 +234,24 @@ const { region } = Astro.props;
       <h2>One cohort. <em>Priced for the few.</em></h2>
     </div>
     <div class="price-card">
-      <div class="seat">Inaugural {region.label} cohort · founding seats</div>
-      <div class="amt">{region.price} <small>{region.priceUnit}</small></div>
-      <div class="terms">Payment plans &amp; employer-sponsorship letters available.</div>
+      <div class="seat">{cohortNameCap} · founding seats</div>
+      {hasPrice ? (
+        <Fragment>
+          <div class="amt">{region!.price} <small>{region!.priceUnit}</small></div>
+          <div class="terms">Payment plans &amp; employer-sponsorship letters available.</div>
+        </Fragment>
+      ) : (
+        <Fragment>
+          <div class="amt" style="font-size:36px">By application</div>
+          <div class="terms">Investment is shared on application, tailored to your region. Payment plans &amp; employer-sponsorship available.</div>
+        </Fragment>
+      )}
       <ul>
         <li>5 weeks live, in a small founding cohort</li>
         <li>Live architecture review of your real system, in the room</li>
         <li>Direct access to me throughout</li>
         <li>Lifetime access to the cohort room</li>
-        {region.hybrid && <li>Bangalore: attend in person or online</li>}
+        {hybrid && <li>Bangalore: attend in person or online</li>}
       </ul>
       <a class="btn btn-primary" href="#apply" style="background:var(--ochre);color:var(--ink)">Apply for a seat <span class="arrow">→</span></a>
     </div>
@@ -248,12 +277,12 @@ const { region } = Astro.props;
 <!-- FINAL CTA -->
 <section class="final" id="apply">
   <div class="wrap">
-    <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The inaugural {region.label} cohort</span>
+    <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The {cohortNameCap.toLowerCase()}</span>
     <h2>Learn the craft from someone<br>who <em>lived</em> it.</h2>
     <p class="lead">A small founding cohort. Applications reviewed personally.</p>
     <div class="hero-cta" style="justify-content:center">
-      <a class="btn btn-primary" href={`mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20${region.label}%20%E2%80%94%20Application`}>Start your application <span class="arrow">→</span></a>
-      <a class="btn btn-ghost" href={`mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20${region.label}%20%E2%80%94%20Question`}>Ask me a question</a>
+      <a class="btn btn-primary" href={applyHref}>Start your application <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href={askHref}>Ask me a question</a>
     </div>
   </div>
 </section>

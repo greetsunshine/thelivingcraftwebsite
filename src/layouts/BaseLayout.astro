@@ -1,20 +1,14 @@
 ---
 import '../styles/global.css';
-import { regions, regionList } from '../data/regions';
 
 export interface Props {
   title: string;
   description?: string;
-  regionKey?: 'india' | 'dubai' | 'australia';
-  /** Chooser/landing pages: render minimal nav + footer (no in-page anchors). */
-  minimal?: boolean;
+  canonical?: string;
 }
 
-const { title, description, regionKey, minimal = false } = Astro.props;
+const { title, description, canonical } = Astro.props;
 const year = new Date().getFullYear();
-// Region pages stay self-contained: the logo returns to that region's own page,
-// and they never link to the other regions. Only the chooser (minimal) lists regions.
-const homeHref = regionKey ? regions[regionKey].path : '/';
 ---
 
 <!DOCTYPE html>
@@ -25,6 +19,7 @@ const homeHref = regionKey ? regions[regionKey].path : '/';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
@@ -40,16 +35,14 @@ const homeHref = regionKey ? regions[regionKey].path : '/';
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href={homeHref}><span class="dot"></span> the living craft</a>
-        {!minimal && (
-          <nav class="navlinks">
-            <a href="#experience">The Maker</a>
-            <a href="#curriculum">The Program</a>
-            <a href="#cohort">Format</a>
-            <a href="#pricing">Investment</a>
-            <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply&nbsp;<span class="arrow">→</span></a>
-          </nav>
-        )}
+        <a class="wordmark" href="#top"><span class="dot"></span> the living craft</a>
+        <nav class="navlinks">
+          <a href="#experience">The Maker</a>
+          <a href="#curriculum">The Program</a>
+          <a href="#cohort">Format</a>
+          <a href="#pricing">Investment</a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply&nbsp;<span class="arrow">→</span></a>
+        </nav>
       </div>
     </header>
 
@@ -65,21 +58,13 @@ const homeHref = regionKey ? regions[regionKey].path : '/';
             <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
             <p class="muted">A small, application-only program in agentic &amp; systems architecture — taught from 26 years at the bench.</p>
           </div>
-          {!minimal && (
-            <div class="foot-col">
-              <h5>Program</h5>
-              <a href="#experience">The maker</a>
-              <a href="#curriculum">Curriculum</a>
-              <a href="#cohort">Format</a>
-              <a href="#pricing">Investment</a>
-            </div>
-          )}
-          {minimal && (
-            <div class="foot-col">
-              <h5>Cohorts</h5>
-              {regionList.map((r) => <a href={r.path}>{r.label}</a>)}
-            </div>
-          )}
+          <div class="foot-col">
+            <h5>Program</h5>
+            <a href="#experience">The maker</a>
+            <a href="#curriculum">Curriculum</a>
+            <a href="#cohort">Format</a>
+            <a href="#pricing">Investment</a>
+          </div>
           <div class="foot-col">
             <h5>Connect</h5>
             <a href="mailto:greetsunshine@gmail.com">greetsunshine@gmail.com</a>
