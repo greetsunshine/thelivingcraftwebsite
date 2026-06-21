@@ -1,0 +1,259 @@
+---
+import type { Region } from '../data/regions';
+
+interface Props {
+  region: Region;
+}
+const { region } = Astro.props;
+---
+
+<!-- HERO -->
+<section class="hero" id="top" style="border-top:0">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture · {region.label}</span>
+      <h1>Build systems<br>that <em>outlive</em><br>their makers.</h1>
+      <p class="credential">
+        I'm <strong>Sunil Mathew</strong> — <strong>26 years</strong> building and leading engineering at
+        <strong>Google, Amazon, and Walmart</strong>, on systems serving up to <strong>100M+ users</strong>.
+        This is where I teach the craft of agentic &amp; systems architecture, in person, to a small cohort.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#apply">Apply for the next cohort <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#experience">Meet the maker</a>
+      </div>
+      <p class="hero-note">Inaugural {region.label} cohort · {region.seats} · applications reviewed personally</p>
+    </div>
+    <div class="portrait">
+      <div class="frame">
+        <img src="/sunil-profile.jpeg" alt="Sunil Mathew" />
+        <div class="warm"></div>
+      </div>
+      <div class="tag"><b>Sunil Mathew</b>Engineering leader · Google, Amazon, Walmart</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF BAR -->
+<div class="proofbar">
+  <div class="wrap inner">
+    <span class="label">26 years, shipped at</span>
+    <span class="logo">Google</span>
+    <span class="logo">Amazon</span>
+    <span class="logo">Walmart</span>
+    <span class="logo">Consulting</span>
+  </div>
+</div>
+
+<!-- WHO IT'S FOR -->
+<section id="whofor">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">01</span> Who this is for</span>
+      <h2>For engineers who've hit the <em>ceiling</em> of what tutorials teach.</h2>
+      <p class="lead">You can build. What you want now is judgment — the kind that only comes from having shipped the hard things and lived with the consequences. That's not in a course catalogue. It's transferred, person to person.</p>
+    </div>
+    <div class="cards3">
+      <div class="card">
+        <div class="k">// 01</div>
+        <h3>Senior &amp; staff engineers</h3>
+        <p>You write good code. You want to make the architectural calls that don't haunt the team in two years.</p>
+      </div>
+      <div class="card">
+        <div class="k">// 02</div>
+        <h3>Architects &amp; tech leads</h3>
+        <p>You're designing agentic and distributed systems where the failure modes are subtle and expensive.</p>
+      </div>
+      <div class="card">
+        <div class="k">// 03</div>
+        <h3>Engineering managers</h3>
+        <p>You set technical direction and need the depth to earn your team's trust on the decisions that matter.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSFORMATION -->
+<section id="transform">
+  <div class="wrap transform">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow"><span class="num">02</span> The transformation</span>
+      <h2>What you'll be able to do.</h2>
+      <p class="lead">By the end, the work shows up in how you decide — under real constraints, with real stakes.</p>
+    </div>
+    <ul class="tlist">
+      <li><span class="n">A.</span><div><h4>Design agentic systems that hold up in production</h4><p>Not demos — architectures with bounded failure, observability, and cost you can defend.</p></div></li>
+      <li><span class="n">B.</span><div><h4>Make the irreversible decisions with confidence</h4><p>Read trade-offs the way a craftsperson reads grain — knowing where it'll split before you cut.</p></div></li>
+      <li><span class="n">C.</span><div><h4>Reason about scale before it bites you</h4><p>Capacity, consistency, and blast radius as instinct, not afterthought.</p></div></li>
+      <li><span class="n">D.</span><div><h4>Mentor the way you were mentored here</h4><p>Carry the craft forward — the real measure of having learned it.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- THE MAKER — centerpiece -->
+<section class="experience" id="experience">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow"><span class="num">03</span> The maker</span>
+      <h2>The program is the <em>experience</em>.<br>Mine, handed to you directly.</h2>
+    </div>
+
+    <div class="statband">
+      <div class="stat"><div class="big">26<span>+</span></div><div class="cap">Years building software</div></div>
+      <div class="stat"><div class="big">3</div><div class="cap">Fortune-100s · Google, Amazon, Walmart</div></div>
+      <div class="stat"><div class="big">100M<span>+</span></div><div class="cap">Users served by systems built</div></div>
+      <div class="stat"><div class="big">150</div><div class="cap">Engineers led across geographies</div></div>
+    </div>
+
+    <div class="story">
+      <div class="maker-portrait">
+        <div class="mframe"><img src="/sunil-bw.jpg" alt="Sunil Mathew" /></div>
+        <div class="mcap">Sunil Mathew · Bengaluru, India</div>
+      </div>
+      <div>
+        <p>I didn't learn this from slides. I learned it shipping <strong>flagship products at Google</strong> — a Generative-AI video editor, and a Workspace platform running <strong>~31 billion executions a week</strong> — re-architecting <strong>Amazon Prime's</strong> membership core, and modernising <strong>300+ products at Walmart</strong> from legacy into microservices.</p>
+        <p>For 26 years I've designed systems at the scale where mistakes are expensive and decisions are irreversible. Somewhere along the way I realised the thing worth passing on wasn't the patterns — those are everywhere now. It was the <strong>judgment</strong>: the instinct for what will break, what will rot, and what will quietly carry a company for ten years.</p>
+        <p>Today I lead <strong>agentic-AI</strong> work — multi-agent orchestration, RAG, evals, LLM-Ops — the systems everyone's now racing to build. That judgment can't be downloaded. It has to be <strong>apprenticed</strong>. So I stopped only scaling teams and started scaling people — a few at a time, properly.</p>
+        <div class="pullquote">"Anyone can show you the agent pattern. I can show you the three times it was the wrong pattern in production — and how I knew before it cost us."</div>
+        <p style="margin-top:24px">This is the part of the craft no curriculum captures — taught the only way it transfers: in a small room, on real problems, with someone who's carried the outcome.</p>
+        <p class="faint" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#9a9079">Built and led engineering teams across the US · UK · China · India</p>
+        <div class="signature">— Sunil Mathew</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CURRICULUM -->
+<section id="curriculum">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">04</span> Inside the program</span>
+      <h2>A small set of deep things, done <em>properly</em>.</h2>
+      <p class="lead">Five weeks. Live, in a small cohort. Built around your real systems, not toy problems.</p>
+    </div>
+    <div class="modules">
+      <div class="mod"><div class="mk"><span class="num">M1</span><span class="wk">Week 1</span></div><h4>Foundations of durable architecture</h4><p>How systems actually fail, and how to design so the failure is bounded and boring.</p></div>
+      <div class="mod"><div class="mk"><span class="num">M2</span><span class="wk">Weeks 2–3</span></div><h4>Agentic systems that survive production</h4><p>Multi-agent orchestration, RAG, tool boundaries, evals, and cost — agents you'd put your name on.</p></div>
+      <div class="mod"><div class="mk"><span class="num">M3</span><span class="wk">Week 4</span></div><h4>Scale, consistency &amp; the hard trade-offs</h4><p>Reading CAP in the wild, capacity planning, and the decisions you can't take back.</p></div>
+      <div class="mod"><div class="mk"><span class="num">M4</span><span class="wk">Week 5</span></div><h4>Your system, reviewed in the room</h4><p>You bring a real architecture. We pressure-test it together as a cohort, the way a senior review should feel.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE EXPERIENCE — track record (replaces testimonials) -->
+<section class="inaugural" id="live-experience">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">05</span> Live experience</span>
+      <h2>I've spent a career growing <em>people</em>, not just systems.</h2>
+      <p class="lead">The craft only counts if it transfers — and it already has. This is the track record I bring into the room.</p>
+    </div>
+    <div class="cards3">
+      <div class="card">
+        <div class="k">// mentored</div>
+        <h3>100+ senior engineers, architects &amp; EMs</h3>
+        <p>Mentored and grown across global organisations — the people who now run the systems.</p>
+      </div>
+      <div class="card">
+        <div class="k">// coached</div>
+        <h3>100+ engineers coached</h3>
+        <p>One-on-one and in groups, from strong individual contributors toward real technical leadership.</p>
+      </div>
+      <div class="card">
+        <div class="k">// taught</div>
+        <h3>~100 engineering managers trained</h3>
+        <p>Ran classes on agentic systems and agentic architectures for managers leading the shift to AI.</p>
+      </div>
+      <div class="card">
+        <div class="k">// built</div>
+        <h3>Hired &amp; grew engineering teams</h3>
+        <p>Built and scaled high-performing teams across the US, UK, China, and India.</p>
+      </div>
+      <div class="card">
+        <div class="k">// shipping now</div>
+        <h3>Building an agentic-AI system, as a startup</h3>
+        <p>Currently in the trenches — so what you learn is current, not a memory from a past role.</p>
+      </div>
+      <div class="card">
+        <div class="k">// founding cohort</div>
+        <h3>A founding-cohort rate</h3>
+        <p>The first {region.label} cohort enrols at a founding rate that won't return once the program has a track record.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORMAT / COHORT -->
+<section id="cohort">
+  <div class="wrap cohort">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow"><span class="num">06</span> The format</span>
+      <h2>Small by design.</h2>
+      <p class="lead">A cohort small enough that I know your system by name. Live sessions, architecture reviewed live in the room, and a group that stays in touch long after.</p>
+    </div>
+    <div>
+      <div class="detail-row"><span class="dk">Next cohort</span><span class="dv">{region.nextDate}</span></div>
+      <div class="detail-row"><span class="dk">Enrollment closes</span><span class="dv">{region.closes}</span></div>
+      <div class="detail-row"><span class="dk">Duration</span><span class="dv">5 weeks · live</span></div>
+      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">{region.seats}</span></div>
+      <div class="detail-row"><span class="dk">Commitment</span><span class="dv">{region.commitment}</span></div>
+      <div class="detail-row"><span class="dk">Format</span><span class="dv">{region.format}</span></div>
+      {region.hybrid && (
+        <div class="detail-row"><span class="dk">Bangalore</span><span class="dv">Hybrid — in person or online</span></div>
+      )}
+      <div class="detail-row"><span class="dk">Admission</span><span class="dv">By application</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:center;margin:0 auto 48px">
+      <span class="eyebrow" style="justify-content:center"><span class="num">07</span> The investment</span>
+      <h2>One cohort. <em>Priced for the few.</em></h2>
+    </div>
+    <div class="price-card">
+      <div class="seat">Inaugural {region.label} cohort · founding seats</div>
+      <div class="amt">{region.price} <small>{region.priceUnit}</small></div>
+      <div class="terms">Payment plans &amp; employer-sponsorship letters available.</div>
+      <ul>
+        <li>5 weeks live, in a small founding cohort</li>
+        <li>Live architecture review of your real system, in the room</li>
+        <li>Direct access to me throughout</li>
+        <li>Lifetime access to the cohort room</li>
+        {region.hybrid && <li>Bangalore: attend in person or online</li>}
+      </ul>
+      <a class="btn btn-primary" href="#apply" style="background:var(--ochre);color:var(--ink)">Apply for a seat <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:center;margin:0 auto 44px">
+      <span class="eyebrow" style="justify-content:center"><span class="num">08</span> Questions</span>
+      <h2>Before you apply.</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>Why is it application-only?<span class="plus">+</span></summary><p>Because the room only works if everyone in it can keep up and contribute. I read every application myself to make sure the cohort is right — for you and for the people you'll learn alongside.</p></details>
+      <details><summary>Is this worth it over a recorded course?<span class="plus">+</span></summary><p>If you want the patterns, buy the book — they're cheap now. This is for the judgment that sits on top of the patterns: live, on your real systems, from someone who's been accountable for the outcome at scale. You're not buying videos — you're buying my attention and 26 years of hard-won judgment.</p></details>
+      <details><summary>What if my company pays?<span class="plus">+</span></summary><p>Most seats are employer-sponsored. I'll provide an ROI letter and an itemised outline your manager can approve.</p></details>
+      <details><summary>I'm strong but not "staff level." Should I apply?<span class="plus">+</span></summary><p>Apply. Seniority on paper matters less than whether you've shipped something you've had to live with. The application tells me.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final" id="apply">
+  <div class="wrap">
+    <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The inaugural {region.label} cohort</span>
+    <h2>Learn the craft from someone<br>who <em>lived</em> it.</h2>
+    <p class="lead">A small founding cohort. Applications reviewed personally.</p>
+    <div class="hero-cta" style="justify-content:center">
+      <a class="btn btn-primary" href={`mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20${region.label}%20%E2%80%94%20Application`}>Start your application <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href={`mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20${region.label}%20%E2%80%94%20Question`}>Ask me a question</a>
+    </div>
+  </div>
+</section>

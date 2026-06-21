@@ -3,19 +3,4 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "22"
-
-# ─── Scheduled functions (Netlify-style) ─────────────────────────────────────
-# Netlify scheduled functions read their schedule from function config, not
-# netlify.toml. See each handler file:
-#   netlify/functions/cron-daily-brief-background.ts     (30 1 * * *  → 07:00 IST)
-#   netlify/functions/cron-weekly-marketer-background.ts ( 0 2 * * 1)
-#   netlify/functions/cron-weekly-scribe-background.ts   ( 0 3 * * 1)
-# The thin wrappers delegate to cron-dispatcher-background.ts.
-
-# ─── Redirects ────────────────────────────────────────────────────────────────
-
-[[redirects]]
-  from = "/admin"
-  to = "/admin/"
-  status = 301
+  OPENROUTER_API_TOKEN = "@openrouter_api_token"
