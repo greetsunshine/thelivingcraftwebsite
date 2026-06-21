@@ -1,75 +1,88 @@
 ---
-// Define props for the layout
+import '../styles/global.css';
+import { regionList } from '../data/regions';
+
 export interface Props {
   title: string;
   description?: string;
+  regionKey?: 'india' | 'dubai' | 'australia';
 }
 
-const { title, description } = Astro.props;
+const { title, description, regionKey } = Astro.props;
+const year = new Date().getFullYear();
 ---
 
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
     <title>{title}</title>
-    <!-- Inter font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <!-- JetBrains Mono for technical terms -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="bg-dark-primary text-white font-sans min-h-screen">
-    <!-- Navbar -->
-    <nav class="py-6 px-6">
-      <div class="container mx-auto">
-        <h1 class="text-2xl font-bold">
-          The Living <span class="text-accent">Craft</span>
-        </h1>
+  <body>
+    <!-- Nav -->
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="wordmark" href="#top"><span class="dot"></span> the living craft</a>
+        <div class="region-switch" aria-label="Choose region">
+          {regionList.map((r) => (
+            <a href={r.path} class:list={['region-link', { active: r.key === regionKey }]}>{r.label}</a>
+          ))}
+        </div>
+        <nav class="navlinks">
+          <a href="#experience">The Maker</a>
+          <a href="#curriculum">The Program</a>
+          <a href="#cohort">Format</a>
+          <a href="#pricing">Investment</a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply&nbsp;<span class="arrow">→</span></a>
+        </nav>
       </div>
-    </nav>
+    </header>
 
-    <!-- Main content -->
     <main>
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark-primary py-12 px-6 mt-20">
-      <div class="container mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer class="site">
+      <div class="wrap">
+        <div class="foot-grid">
           <div>
-            <h3 class="text-lg font-semibold mb-4">The Living Craft</h3>
-            <p class="text-gray-400 text-sm">Advanced courses for engineering leaders.</p>
+            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <p class="muted">A small, application-only program in agentic &amp; systems architecture — taught from 26 years at the bench.</p>
           </div>
-          <div>
-            <h4 class="text-sm font-medium mb-4 text-gray-300">Courses</h4>
-            <ul class="space-y-2 text-sm text-gray-400">
-              <li><a href="#" class="hover:text-white transition">Agentic Architecture</a></li>
-              <li><a href="#" class="hover:text-white transition">Systems Design Mastery</a></li>
-            </ul>
+          <div class="foot-col">
+            <h5>Program</h5>
+            <a href="#experience">The maker</a>
+            <a href="#curriculum">Curriculum</a>
+            <a href="#cohort">Format</a>
+            <a href="#pricing">Investment</a>
           </div>
-          <div>
-            <h4 class="text-sm font-medium mb-4 text-gray-300">Company</h4>
-            <ul class="space-y-2 text-sm text-gray-400">
-              <li><a href="#" class="hover:text-white transition">About</a></li>
-              <li><a href="#" class="hover:text-white transition">Blog</a></li>
-              <li><a href="#" class="hover:text-white transition">Contact</a></li>
-            </ul>
+          <div class="foot-col">
+            <h5>Cohorts</h5>
+            {regionList.map((r) => <a href={r.path}>{r.label}</a>)}
           </div>
-          <div>
-            <h4 class="text-sm font-medium mb-4 text-gray-300">Legal</h4>
-            <ul class="space-y-2 text-sm text-gray-400">
-              <li><a href="#" class="hover:text-white transition">Privacy</a></li>
-              <li><a href="#" class="hover:text-white transition">Terms</a></li>
-              <li><a href="#" class="hover:text-white transition">Sitemap</a></li>
-            </ul>
+          <div class="foot-col">
+            <h5>Connect</h5>
+            <a href="mailto:greetsunshine@gmail.com">greetsunshine@gmail.com</a>
+            <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>
         </div>
-        <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p class="text-gray-400 text-sm">© 2024 The Living Craft. All rights reserved.</p>
-          <p class="text-gray-500 text-xs mt-2">Crafted for engineering leaders and architects.</p>
+        <div class="foot-bottom">
+          <span>© {year} The Living Craft · Sunil Mathew</span>
+          <span class="mono">Built as a demonstration of the craft.</span>
         </div>
       </div>
     </footer>
