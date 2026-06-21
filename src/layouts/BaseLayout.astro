@@ -6,9 +6,11 @@ export interface Props {
   title: string;
   description?: string;
   regionKey?: 'india' | 'dubai' | 'australia';
+  /** Chooser/landing pages: render minimal nav + footer (no in-page anchors). */
+  minimal?: boolean;
 }
 
-const { title, description, regionKey } = Astro.props;
+const { title, description, regionKey, minimal = false } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -35,19 +37,21 @@ const year = new Date().getFullYear();
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="#top"><span class="dot"></span> the living craft</a>
+        <a class="wordmark" href="/"><span class="dot"></span> the living craft</a>
         <div class="region-switch" aria-label="Choose region">
           {regionList.map((r) => (
-            <a href={r.path} class:list={['region-link', { active: r.key === regionKey }]}>{r.label}</a>
+            <a href={r.path} class:list={['region-link', { active: !minimal && r.key === regionKey }]}>{r.label}</a>
           ))}
         </div>
-        <nav class="navlinks">
-          <a href="#experience">The Maker</a>
-          <a href="#curriculum">The Program</a>
-          <a href="#cohort">Format</a>
-          <a href="#pricing">Investment</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply&nbsp;<span class="arrow">→</span></a>
-        </nav>
+        {!minimal && (
+          <nav class="navlinks">
+            <a href="#experience">The Maker</a>
+            <a href="#curriculum">The Program</a>
+            <a href="#cohort">Format</a>
+            <a href="#pricing">Investment</a>
+            <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply&nbsp;<span class="arrow">→</span></a>
+          </nav>
+        )}
       </div>
     </header>
 
@@ -63,13 +67,15 @@ const year = new Date().getFullYear();
             <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
             <p class="muted">A small, application-only program in agentic &amp; systems architecture — taught from 26 years at the bench.</p>
           </div>
-          <div class="foot-col">
-            <h5>Program</h5>
-            <a href="#experience">The maker</a>
-            <a href="#curriculum">Curriculum</a>
-            <a href="#cohort">Format</a>
-            <a href="#pricing">Investment</a>
-          </div>
+          {!minimal && (
+            <div class="foot-col">
+              <h5>Program</h5>
+              <a href="#experience">The maker</a>
+              <a href="#curriculum">Curriculum</a>
+              <a href="#cohort">Format</a>
+              <a href="#pricing">Investment</a>
+            </div>
+          )}
           <div class="foot-col">
             <h5>Cohorts</h5>
             {regionList.map((r) => <a href={r.path}>{r.label}</a>)}

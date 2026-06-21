@@ -29,7 +29,7 @@ export const regions: Record<Region['key'], Region> = {
   india: {
     key: 'india',
     label: 'India',
-    path: '/',
+    path: '/india',
     title: 'The Living Craft — India · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} India cohort, with a hybrid option in Bangalore.`,
     price: '₹1,50,000',

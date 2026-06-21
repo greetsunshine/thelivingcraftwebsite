@@ -1,11 +1,43 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ProgramPage from '../components/ProgramPage.astro';
-import { regions } from '../data/regions';
-
-const region = regions.india;
+import { regionList } from '../data/regions';
 ---
 
-<BaseLayout title={region.title} description={region.description} regionKey={region.key}>
-  <ProgramPage region={region} />
+<BaseLayout
+  title="The Living Craft — Choose your region"
+  description="An application-only program in agentic & systems architecture, taught by Sunil Mathew. Choose your cohort: India, Dubai, or Australia."
+  minimal={true}
+>
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div style="max-width:820px;text-align:center;margin:0 auto 56px">
+        <span class="eyebrow" style="justify-content:center">An application-only program in agentic &amp; systems architecture</span>
+        <h1 style="font-size:clamp(38px,6vw,66px);font-weight:360;margin:24px 0 20px;line-height:1.08">
+          Choose your <em style="font-style:italic;color:var(--clay)">region</em>.
+        </h1>
+        <p class="lead" style="max-width:48ch;margin:0 auto">
+          Taught by <strong style="color:var(--ink);font-weight:600">Sunil Mathew</strong> — 26 years building and leading
+          engineering at Google, Amazon &amp; Walmart. Pick where you'll join from; pricing and format are tailored to each cohort.
+        </p>
+      </div>
+
+      <div class="cards3 region-choices">
+        {regionList.map((r) => (
+          <a href={r.path} class="card region-choice">
+            <div>
+              <div class="k">{r.label}</div>
+              <div class="rc-price">{r.price}</div>
+              <div class="rc-unit">{r.priceUnit}</div>
+              <p class="rc-meta">{r.hybrid ? 'Live online · Bangalore hybrid available' : 'Live online'}</p>
+            </div>
+            <span class="rc-cta">View the {r.label} cohort <span class="arrow">→</span></span>
+          </a>
+        ))}
+      </div>
+
+      <p class="faint" style="text-align:center;margin-top:40px;font-size:13px">
+        Not sure which fits? <a href="mailto:greetsunshine@gmail.com?subject=The%20Living%20Craft%20%E2%80%94%20Which%20cohort" style="color:var(--clay)">Ask me →</a>
+      </p>
+    </div>
+  </section>
 </BaseLayout>

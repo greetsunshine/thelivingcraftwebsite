@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProgramPage from '../components/ProgramPage.astro';
+import { regions } from '../data/regions';
+
+const region = regions.india;
+---
+
+<BaseLayout title={region.title} description={region.description} regionKey={region.key}>
+  <ProgramPage region={region} />
+</BaseLayout>
