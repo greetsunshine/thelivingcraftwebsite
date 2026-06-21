@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { regionList } from '../data/regions';
+import { regions, regionList } from '../data/regions';
 
 export interface Props {
   title: string;
@@ -12,6 +12,9 @@ export interface Props {
 
 const { title, description, regionKey, minimal = false } = Astro.props;
 const year = new Date().getFullYear();
+// Region pages stay self-contained: the logo returns to that region's own page,
+// and they never link to the other regions. Only the chooser (minimal) lists regions.
+const homeHref = regionKey ? regions[regionKey].path : '/';
 ---
 
 <!DOCTYPE html>
@@ -37,12 +40,7 @@ const year = new Date().getFullYear();
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="/"><span class="dot"></span> the living craft</a>
-        <div class="region-switch" aria-label="Choose region">
-          {regionList.map((r) => (
-            <a href={r.path} class:list={['region-link', { active: !minimal && r.key === regionKey }]}>{r.label}</a>
-          ))}
-        </div>
+        <a class="wordmark" href={homeHref}><span class="dot"></span> the living craft</a>
         {!minimal && (
           <nav class="navlinks">
             <a href="#experience">The Maker</a>
@@ -76,10 +74,12 @@ const year = new Date().getFullYear();
               <a href="#pricing">Investment</a>
             </div>
           )}
-          <div class="foot-col">
-            <h5>Cohorts</h5>
-            {regionList.map((r) => <a href={r.path}>{r.label}</a>)}
-          </div>
+          {minimal && (
+            <div class="foot-col">
+              <h5>Cohorts</h5>
+              {regionList.map((r) => <a href={r.path}>{r.label}</a>)}
+            </div>
+          )}
           <div class="foot-col">
             <h5>Connect</h5>
             <a href="mailto:greetsunshine@gmail.com">greetsunshine@gmail.com</a>
