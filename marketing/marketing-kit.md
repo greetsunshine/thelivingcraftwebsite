@@ -32,7 +32,7 @@ Ready-to-use copy for outreach, social, and email. Swap the region link/price as
 The Living Craft is an application-only, 5-week cohort in agentic & systems architecture, taught by Sunil Mathew — 26 years building and leading engineering at Google, Amazon, and Walmart.
 
 **Medium (50 words):**
-The Living Craft is a small, application-only cohort for senior engineers, architects, and engineering managers who want the judgment behind great architecture — not just the patterns. Over 5 live weeks you design agentic and distributed systems on your own real problems, guided by Sunil Mathew, who has shipped these systems at Google, Amazon, and Walmart.
+The Living Craft is a small, application-only cohort for senior engineers, architects, and senior engineering leaders (≈15–25 years in) who want the judgment behind great architecture — not just the patterns. Over 5 live weeks you design agentic and distributed systems on your own real problems, guided by Sunil Mathew, who has shipped these systems at Google, Amazon, and Walmart.
 
 **Long (founder voice):**
 I've spent 26 years building systems at the scale where mistakes are expensive and decisions are irreversible — flagship products at Google (a Generative-AI video editor; a Workspace platform at ~31B weekly executions), Amazon Prime's membership core, 300+ products modernised at Walmart. The thing worth passing on was never the patterns — those are everywhere. It's the judgment: what will break, what will rot, and what will quietly carry a company for ten years. The Living Craft is where I hand that over, a few people at a time, on their real systems.
@@ -58,7 +58,7 @@ I've spent 26 years building systems at the scale where mistakes are expensive a
 >
 > So I'm opening a small, application-only cohort to hand that over — live, over 5 weeks, on your real systems.
 >
-> The Living Craft is for senior engineers, architects, and EMs designing agentic AI that has to survive production. 15 seats. I read every application myself.
+> The Living Craft is for senior engineers, architects, and senior engineering leaders designing agentic AI that has to survive production. 15 seats. I read every application myself.
 >
 > Apply 👉 learning.thelivingcraft.ai
 >
@@ -85,7 +85,7 @@ I've spent 26 years building systems at the scale where mistakes are expensive a
 >
 > Quick one. I'm Sunil Mathew — 26 years building engineering at Google, Amazon, and Walmart, on systems serving up to 100M+ users. I'm now leading agentic-AI work and teaching a small, application-only cohort: **The Living Craft**.
 >
-> It's 5 live weeks of agentic & systems architecture, built around *your* real systems — for senior engineers, architects, and EMs who want the judgment, not another tutorial. 15 seats, reviewed personally.
+> It's 5 live weeks of agentic & systems architecture, built around *your* real systems — for senior engineers, architects, and senior engineering leaders who want the judgment, not another tutorial. 15 seats, reviewed personally.
 >
 > If it's relevant, the details and application are here: **learning.thelivingcraft.ai/?region={REGION}** (investment: {PRICE}). One-pager attached.
 >

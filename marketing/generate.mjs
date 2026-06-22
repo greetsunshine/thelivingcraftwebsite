@@ -2,7 +2,7 @@
 // Run: node marketing/generate.mjs   then render with Chrome (see marketing/build.sh).
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const portrait = 'data:image/jpeg;base64,' + readFileSync('public/sunil-profile.jpeg').toString('base64');
+const portrait = 'data:image/jpeg;base64,' + readFileSync('public/sunil-profile.jpg').toString('base64');
 
 const regions = [
   { key: 'india', label: 'India', price: '₹1,50,000', hybrid: ' · Bangalore hybrid' },
@@ -73,9 +73,9 @@ footer .url{font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:var(--o
   <div class="col">
     <h2>Who it's for</h2>
     <ul>
-      <li><b>Senior &amp; staff engineers</b> <span>— making architectural calls that stick</span></li>
-      <li><b>Architects &amp; tech leads</b> <span>— designing agentic &amp; distributed systems</span></li>
-      <li><b>Engineering managers</b> <span>— setting technical direction with depth</span></li>
+      <li><b>Tech Leads &amp; Staff Engineers</b> <span>— making the architectural calls teams build on</span></li>
+      <li><b>Senior Engineering Managers &amp; Architects</b> <span>— directing agentic &amp; distributed systems</span></li>
+      <li><b>Senior Engineering Leaders &amp; Directors</b> <span>— owning outcomes; titles differ, judgment doesn't</span></li>
     </ul>
     <h2>What you'll be able to do</h2>
     <ul>
@@ -124,6 +124,7 @@ h1{font-family:Fraunces,serif;font-weight:380;font-size:62px;line-height:1.02;le
 h1 em{font-style:italic;color:var(--clay)}
 .cred{font-size:21px;color:var(--soft);max-width:560px;line-height:1.45}
 .cred b{color:var(--ink);font-weight:600}
+.aud{font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.03em;color:var(--faint);line-height:1.6;max-width:560px}
 .foot{display:flex;justify-content:space-between;align-items:flex-end}
 .foot .price{font-family:Fraunces,serif;font-size:30px;color:var(--clay)}
 .foot .url{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--faint)}
@@ -132,6 +133,7 @@ h1 em{font-style:italic;color:var(--clay)}
   <div><div class="wm"><span class="dot"></span>the living craft</div><div class="tag">${r.label} · agentic &amp; systems architecture</div></div>
   <h1>Build systems that <em>outlive</em> their makers.</h1>
   <div class="cred"><b>Sunil Mathew</b> — 26 years building &amp; leading engineering at Google, Amazon &amp; Walmart. An application-only, 5-week cohort.</div>
+  <div class="aud">Tech Leads &amp; Staff Engineers · Senior Engineering Managers &amp; Architects · Senior Engineering Leaders &amp; Directors</div>
   <div class="foot"><div class="price">${r.price} <span style="font-size:16px;color:var(--faint)">/ seat</span></div><div class="url">learning.thelivingcraft.ai</div></div>
 </div>
 <div class="right"><img src="${portrait}" alt="Sunil Mathew"><div class="ov"></div></div>
