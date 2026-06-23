@@ -1,0 +1,400 @@
+---
+import AssessmentLayout from '../layouts/AssessmentLayout.astro';
+import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
+
+// Static, board-facing landing page for the AI Readiness Assessment.
+// The "front door" of the practice: assessment → CAIO retainer → cohort.
+const title = 'AI Readiness Assessment — Sunil Mathew';
+const description =
+  'A fixed-scope, two-to-three week AI diagnostic run on your systems. Scorecard, prioritised use-case portfolio, build-vs-buy calls, governance posture, and a 90-day production roadmap your board can act on.';
+---
+
+<AssessmentLayout title={title} description={description} canonical="https://learning.thelivingcraft.ai/assessment">
+  <!-- 00 HERO -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="num">00</span> A fixed-scope AI diagnostic for leaders who are done with theatre · India</span>
+        <h1>Know where your AI breaks — <em>before</em> you bet the roadmap on it.</h1>
+        <p class="credential">
+          A two-to-three week diagnostic that tells you, plainly, what's worth building, what will quietly fail in production,
+          and what it takes to govern. Run on <strong>your systems</strong> — by someone who shipped agentic AI at
+          <strong>Google, Amazon, and Walmart</strong>, and is building it now.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#contact">Request a scope call <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#deliverables">See what you get</a>
+        </div>
+        <p class="hero-note">Fixed fee · fixed scope · board-ready output in three weeks</p>
+      </div>
+      <div class="portrait">
+        <div class="frame">
+          <img src="/sunil-profile.jpg" alt="Sunil Mathew" />
+          <div class="warm"></div>
+        </div>
+        <div class="tag"><b>Sunil Mathew</b>26 years · ex-Google, Amazon, Walmart</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF BAR -->
+  <div class="proofbar">
+    <div class="wrap inner">
+      <span class="label">26 years, shipped at</span>
+      <span class="logo">Google</span>
+      <span class="logo">Amazon</span>
+      <span class="logo">Walmart</span>
+      <span class="logo">Agentic AI, now</span>
+    </div>
+  </div>
+
+  <!-- 01 THE PROBLEM -->
+  <section id="problem">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> Why most AI programmes stall</span>
+        <h2>They don't fail in the model. They fail in the room where <em>no one owns the decision.</em></h2>
+      </div>
+      <div class="prose">
+        <p>You've run pilots. Maybe several. They demo well and then sit there — never quite production, never quite killed. Meanwhile AI is sprawling through the org one unsanctioned tool at a time, your CTO is already underwater, and the board is asking a question nobody can answer cleanly: what is our actual AI plan, and what is it costing us?</p>
+        <p>The gap is almost never technical. It's that no one has stepped back, looked at the whole board, and made the calls — which use cases are real, which data is trustworthy, what governance the regulator will expect, and what you should refuse to build at all.</p>
+        <p class="prose-emph">That's what this is for.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 WHAT IT IS -->
+  <section id="what" class="inaugural">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> What the assessment is</span>
+        <h2>Not a generic best-practices deck. <em>A map of your terrain.</em></h2>
+      </div>
+      <div class="prose">
+        <p>A fixed-fee, fixed-scope diagnostic of your specific systems, data, and ambitions. In two to three weeks I go deep enough to tell you the truth — where you're ready, where you're exposed, and the shortest credible path from where you are to AI that ships and holds up.</p>
+        <p class="prose-emph">You walk away with a decision-ready plan, not a reading list.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 WHAT YOU GET -->
+  <section id="deliverables">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> The deliverables</span>
+        <h2>Everything you need to <em>fund, sequence, and defend</em> an AI plan.</h2>
+      </div>
+      <div class="cards3">
+        <div class="card">
+          <div class="k">// 01</div>
+          <h3>AI Readiness Scorecard</h3>
+          <p>An honest read across five dimensions — data, governance, talent, infrastructure, and security. Where you stand, where the cliffs are.</p>
+        </div>
+        <div class="card">
+          <div class="k">// 02</div>
+          <h3>Prioritised use-case portfolio</h3>
+          <p>Your opportunities sequenced by business impact × implementation readiness, so you fund the few that matter and park the rest.</p>
+        </div>
+        <div class="card">
+          <div class="k">// 03</div>
+          <h3>Build-vs-buy calls</h3>
+          <p>For each priority use case — what to build, what to buy, and what to wait on — with the reasoning, not just the verdict.</p>
+        </div>
+        <div class="card">
+          <div class="k">// 04</div>
+          <h3>Governance &amp; compliance posture</h3>
+          <p>Mapped to India's DPDP Act and your sector regulator (IRDAI, RBI, SEBI), with global frameworks (NIST AI RMF, ISO 42001, EU AI Act) where you have cross-border exposure.</p>
+        </div>
+        <div class="card">
+          <div class="k">// 05</div>
+          <h3>90-day production roadmap</h3>
+          <p>The specific path to get your first one or two use cases into governed production — with owners and gates.</p>
+        </div>
+        <div class="card">
+          <div class="k">// 06</div>
+          <h3>Board-ready readout</h3>
+          <p>A session and a document your leadership can act on — written for executives, not engineers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 HOW IT RUNS -->
+  <section id="run">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> How it runs</span>
+        <h2>Three weeks. Light on your team. <em>Heavy on judgment.</em></h2>
+      </div>
+      <div class="phases">
+        <div class="phase">
+          <div class="pk"><span class="pn">Week 1</span><span class="pw">Discovery</span></div>
+          <h4>Discovery</h4>
+          <p>Structured interviews with your leaders and builders, plus a hands-on review of your systems, data, and current AI efforts.</p>
+        </div>
+        <div class="phase">
+          <div class="pk"><span class="pn">Week 2</span><span class="pw">Analysis</span></div>
+          <h4>Analysis</h4>
+          <p>Use-case mapping, build-vs-buy, and a governance and risk read against your regulatory reality.</p>
+        </div>
+        <div class="phase">
+          <div class="pk"><span class="pn">Week 3</span><span class="pw">Readout</span></div>
+          <h4>Roadmap &amp; readout</h4>
+          <p>The 90-day plan, the scorecard, and a live executive session to walk it through and pressure-test it together.</p>
+        </div>
+      </div>
+      <p class="note-line">Roughly 6–10 stakeholder interviews. Your team's time commitment stays small by design — the depth is my job, not theirs.</p>
+    </div>
+  </section>
+
+  <!-- 05 WHO IT'S FOR -->
+  <section id="fit" class="inaugural">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> Who this is for</span>
+        <h2>An honest fit, or not at all.</h2>
+      </div>
+      <div class="fit-grid">
+        <div class="fit-col fit-yes">
+          <div class="fit-head"><span class="fit-mark">✓</span> A fit if you're</div>
+          <ul>
+            <li>Mid-market or a regulated enterprise — insurance, banking, healthcare, financial services — with real AI ambition and real compliance stakes.</li>
+            <li>A funded startup (Series A–C) that needs governance and sequencing before pouring capital into the wrong build.</li>
+            <li>A PE firm wanting a clear-eyed read on a portfolio company's AI position.</li>
+          </ul>
+        </div>
+        <div class="fit-col fit-no">
+          <div class="fit-head"><span class="fit-mark">✕</span> Not a fit if you</div>
+          <ul>
+            <li>Want someone to rubber-stamp a decision you've already made.</li>
+            <li>Need a body to write code this week — this is the layer above delivery.</li>
+            <li>Aren't prepared to give straight answers in the interviews. The map is only as honest as the inputs.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 WHY ME — dark centerpiece -->
+  <section class="experience" id="maker">
+    <div class="wrap">
+      <div class="sec-head" style="margin-bottom:0">
+        <span class="eyebrow"><span class="num">06</span> Who runs it</span>
+        <h2>Twenty-six years deciding where systems break — and <em>living with the answer.</em></h2>
+      </div>
+
+      <div class="statband">
+        <div class="stat"><div class="big">26<span>+</span></div><div class="cap">Years building software</div></div>
+        <div class="stat"><div class="big">3</div><div class="cap">Fortune-100s · Google, Amazon, Walmart</div></div>
+        <div class="stat"><div class="big">100M<span>+</span></div><div class="cap">Users served by systems built</div></div>
+        <div class="stat"><div class="big">150</div><div class="cap">Engineers led across geographies</div></div>
+      </div>
+
+      <div class="story">
+        <div class="maker-portrait">
+          <div class="mframe"><img src="/sunil-bw.jpg" alt="Sunil Mathew" /></div>
+          <div class="mcap">Sunil Mathew · Bengaluru, India</div>
+        </div>
+        <div>
+          <p>I'm <strong>Sunil Mathew</strong>. I've spent 26 years building and leading engineering at <strong>Google, Amazon, and Walmart</strong> — on systems serving up to <strong>100M+ users</strong> — and I lead agentic-AI work today: multi-agent orchestration, RAG, evals, LLM-Ops. I'm currently building an agentic-AI product of my own, so what I tell you is <strong>current, not a memory</strong> from a past role.</p>
+          <div class="pullquote">"I've also spent that career deciding what <em>not</em> to build. That's most of what this assessment is."</div>
+          <p style="margin-top:24px"><a href="/caio" class="link-ochre">More about the work — Fractional CAIO <span class="arrow">→</span></a></p>
+          <div class="signature">— Sunil Mathew</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 INVESTMENT -->
+  <section id="investment">
+    <div class="wrap">
+      <div class="sec-head" style="text-align:center;margin:0 auto 48px">
+        <span class="eyebrow" style="justify-content:center"><span class="num">07</span> The investment</span>
+        <h2>Priced as a <em>decision</em>, not a project.</h2>
+      </div>
+      <!-- PRICING — ALL FIGURES ARE PLACEHOLDERS / STARTING ANCHORS. Flag for review before publishing. -->
+      <div class="price-card">
+        <div class="seat">Fixed fee · fixed scope</div>
+        <div class="amt">₹4,50,000</div>
+        <div class="terms">Founding rate: <strong style="color:#F4EEE2">₹3,50,000</strong> for the first three engagements.</div>
+        <ul>
+          <li>Two-to-three week diagnostic, run on your systems</li>
+          <li>Readiness scorecard across five dimensions</li>
+          <li>Prioritised use-case portfolio &amp; build-vs-buy calls</li>
+          <li>Governance posture mapped to your regulator</li>
+          <li>90-day production roadmap, owned by you</li>
+          <li>Live board-ready executive readout</li>
+        </ul>
+        <p class="credit-note">Proceed to a fractional CAIO engagement within 60 days and the full assessment fee is credited toward your first month.</p>
+        <a class="btn btn-primary" href="#contact" style="background:var(--ochre);color:var(--ink)">Request a scope call <span class="arrow">→</span></a>
+      </div>
+      <p class="fineprint">Payment plans and employer-sponsorship letters available. Pricing is indicative — confirmed on the scope call.</p>
+    </div>
+  </section>
+
+  <!-- 08 FAQ -->
+  <section id="faq" class="inaugural">
+    <div class="wrap">
+      <div class="sec-head" style="text-align:center;margin:0 auto 44px">
+        <span class="eyebrow" style="justify-content:center"><span class="num">08</span> Before you book</span>
+        <h2>Questions leaders ask.</h2>
+      </div>
+      <div class="faq">
+        <details open><summary>How is this different from a consulting firm's AI assessment?<span class="plus">+</span></summary><p>A Big Four engagement of comparable scope runs many times this, most of it spent on hierarchy and utilisation — and you often meet the senior name once. Here, the person who interviews your team, reads your systems, and writes the roadmap is the same person — me — and I've carried these decisions in production, not just in slides.</p></details>
+        <details><summary>We've barely started with AI. Is it too early?<span class="plus">+</span></summary><p>No — earlier is cheaper. The assessment is most valuable before you've sunk a year into the wrong build or let ungoverned tools spread.</p></details>
+        <details><summary>What do you need from us?<span class="plus">+</span></summary><p>Access to the right people for honest conversations, a look at your relevant systems and data, and a decision-maker in the room for the readout.</p></details>
+        <details><summary>What happens after?<span class="plus">+</span></summary><p>You own the roadmap outright — run it yourself, hand it to your team, or bring me back as a <a href="/caio" class="ftext-link">fractional Chief AI Officer</a> to drive it into production.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA — contact -->
+  <section class="final" id="contact">
+    <div class="wrap">
+      <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The first step</span>
+      <h2>Three weeks from now you could <em>stop guessing.</em></h2>
+      <p class="lead">Request a scope call. I read every enquiry myself and reply by email.</p>
+
+      <form id="contactForm" class="apply-form">
+        <input type="hidden" name="access_key" value={APPLY_ACCESS_KEY} />
+        <input type="hidden" name="subject" value="New enquiry — AI Readiness Assessment" />
+        <input type="hidden" name="from_name" value="AI Readiness Assessment — thelivingcraft.ai" />
+        <!-- honeypot -->
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" />
+
+        <div class="form-grid">
+          <label>Name<input name="name" type="text" required autocomplete="name" /></label>
+          <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
+          <label>Title<input name="role" type="text" placeholder="e.g. CEO, CTO, Board member" /></label>
+          <label>Company<input name="company" type="text" /></label>
+          <label class="full">What kind of organisation?
+            <select name="segment">
+              <option value="Regulated enterprise">Regulated enterprise (insurance, banking, healthcare, FS)</option>
+              <option value="Mid-market">Mid-market enterprise</option>
+              <option value="Funded startup">Funded startup (Series A–C)</option>
+              <option value="PE / portfolio">PE firm / portfolio company</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="full">Where are you with AI today?
+            <textarea name="message" rows="4" placeholder="A few sentences on where you are — pilots stuck, governance gaps, a board asking for a plan, or a regulatory question you need answered."></textarea>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" type="submit">
+          Request a scope call <span class="arrow">→</span>
+        </button>
+        <p class="form-status" id="formStatus" aria-live="polite"></p>
+        <p class="form-alt">Prefer email? <a href={`mailto:${CONTACT_EMAIL}?subject=AI%20Readiness%20Assessment%20%E2%80%94%20Scope%20call`}>Write to me directly →</a></p>
+      </form>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var f = document.getElementById('contactForm');
+      if (!f) return;
+      var status = document.getElementById('formStatus');
+      f.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var key = f.querySelector('input[name="access_key"]').value;
+        if (!key || key.indexOf('REPLACE_WITH') === 0) {
+          status.textContent = 'Please email apply@thelivingcraft.ai in the meantime.';
+          status.className = 'form-status err';
+          return;
+        }
+        status.textContent = 'Sending…';
+        status.className = 'form-status';
+        try {
+          var res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new FormData(f),
+          });
+          var json = await res.json();
+          if (json.success) {
+            f.reset();
+            f.querySelector('.form-grid').style.display = 'none';
+            f.querySelector('button[type="submit"]').style.display = 'none';
+            status.textContent = 'Thank you — your enquiry is in. I read every one personally and will reply by email.';
+            status.className = 'form-status ok';
+          } else {
+            status.textContent = 'Something went wrong. Please email apply@thelivingcraft.ai.';
+            status.className = 'form-status err';
+          }
+        } catch (err) {
+          status.textContent = 'Network error. Please email apply@thelivingcraft.ai.';
+          status.className = 'form-status err';
+        }
+      });
+    })();
+  </script>
+</AssessmentLayout>
+
+<style>
+  /* ---- shared practice components (mirrors caio.astro) ---- */
+  .wordmark-sub{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-faint);border-left:1px solid var(--line-strong);padding-left:10px;margin-left:2px;font-weight:400;
+  }
+  @media(max-width:520px){.wordmark-sub{display:none}}
+
+  .prose{max-width:62ch}
+  .prose p{font-size:18px;color:var(--ink-soft);margin-bottom:22px}
+  .prose .prose-emph{font-family:'Fraunces',serif;font-style:italic;font-size:24px;color:var(--ink);margin-top:4px}
+
+  .ftext-link{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--line-strong)}
+  .ftext-link:hover{text-decoration-color:var(--clay)}
+
+  .link-ochre{color:var(--ochre);font-weight:500;display:inline-flex;align-items:center;gap:8px}
+  .link-ochre .arrow{transition:transform .22s ease}
+  .link-ochre:hover .arrow{transform:translateX(4px)}
+
+  /* phases / timeline */
+  .phases{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;
+  }
+  .phase{background:var(--surface);padding:34px 30px}
+  .phase .pk{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+  .phase .pn{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--clay)}
+  .phase .pw{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);letter-spacing:.08em}
+  .phase h4{font-size:22px;font-weight:440;margin-bottom:10px}
+  .phase p{font-size:14.5px;color:var(--ink-soft)}
+  @media(max-width:760px){.phases{grid-template-columns:1fr}}
+  .note-line{margin-top:28px;font-size:14px;color:var(--ink-faint);font-family:'JetBrains Mono',monospace;letter-spacing:.02em}
+
+  /* fit / not-fit two columns */
+  .fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .fit-col{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:32px 30px}
+  .fit-col.fit-yes{border-top:3px solid var(--clay)}
+  .fit-col.fit-no{border-top:3px solid var(--line-strong)}
+  .fit-head{font-family:'Fraunces',serif;font-size:21px;font-weight:440;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+  .fit-mark{font-family:'Inter',sans-serif;font-size:16px;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .fit-yes .fit-mark{background:var(--clay);color:#FBF7EE}
+  .fit-no .fit-mark{background:var(--paper-2);color:var(--ink-faint);border:1px solid var(--line-strong)}
+  .fit-col ul{list-style:none;display:flex;flex-direction:column;gap:16px}
+  .fit-col li{font-size:15.5px;color:var(--ink-soft);padding-left:20px;position:relative;line-height:1.55}
+  .fit-col li::before{content:'—';position:absolute;left:0;color:var(--line-strong)}
+  .fit-yes li::before{color:var(--clay)}
+  @media(max-width:760px){.fit-grid{grid-template-columns:1fr}}
+
+  /* investment extras (built on global .price-card) */
+  .price-card .seat{margin-bottom:4px}
+  .credit-note{
+    font-size:14px;color:#b3a991;border-top:1px solid #3a3225;border-bottom:1px solid #3a3225;
+    padding:18px 0;margin:4px 0 28px;line-height:1.55;
+  }
+  .fineprint{margin-top:24px;text-align:center;font-size:13.5px;color:var(--ink-faint);max-width:64ch;margin-left:auto;margin-right:auto}
+
+  /* print: one-page leave-behind */
+  @media print{
+    header.nav,footer.site,.hero-cta,#contact form,.proofbar{display:none!important}
+    section{padding:24px 0;border-top:1px solid #ccc;page-break-inside:avoid}
+    body{font-size:12px;background:#fff}
+    .experience,.price-card{background:#fff;color:#000}
+    .experience h2,.experience .big,.price-card .amt{color:#000}
+    .story p,.stat .cap,.price-card li{color:#333}
+    .pullquote{color:#000;border-color:#999}
+  }
+</style>

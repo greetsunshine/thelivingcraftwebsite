@@ -1,0 +1,87 @@
+---
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+}
+
+const { title, description, canonical } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Nav — AI Readiness Assessment, brand-neutral, cross-linked -->
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="wordmark" href="#top">
+          <span class="dot"></span> Sunil Mathew
+          <span class="wordmark-sub">AI&nbsp;Readiness</span>
+        </a>
+        <nav class="navlinks">
+          <a href="#what">What it is</a>
+          <a href="#deliverables">What you get</a>
+          <a href="#run">How it runs</a>
+          <a href="#investment">Investment</a>
+          <a href="/caio">Fractional CAIO</a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="#contact">Request a scope call&nbsp;<span class="arrow">→</span></a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="site">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div>
+            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> Sunil Mathew</div>
+            <p class="muted">A fixed-scope AI diagnostic for leaders who are done with theatre — run on your systems, with a board-ready roadmap you own.</p>
+          </div>
+          <div class="foot-col">
+            <h5>The assessment</h5>
+            <a href="#what">What it is</a>
+            <a href="#deliverables">What you get</a>
+            <a href="#run">How it runs</a>
+            <a href="#investment">Investment</a>
+          </div>
+          <div class="foot-col">
+            <h5>Connect</h5>
+            <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+            <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="/caio">Fractional CAIO retainer →</a>
+            <a href="/">The Living Craft — cohort →</a>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <span>© {year} Sunil Mathew</span>
+          <span class="mono">AI Readiness Assessment · India</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
