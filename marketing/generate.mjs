@@ -96,7 +96,7 @@ footer .url{font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:var(--o
     <h2>Live experience</h2>
     <ul>
       <li>100+ senior engineers, architects &amp; EMs mentored</li>
-      <li>~100 engineering managers trained on agentic systems</li>
+      <li>~100 senior engineering leaders &amp; directors trained on agentic systems</li>
       <li>Building an agentic-AI system, as a startup, right now</li>
     </ul>
   </div>

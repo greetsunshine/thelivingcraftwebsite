@@ -45,7 +45,7 @@ I've spent 26 years building systems at the scale where mistakes are expensive a
 - Google · Amazon · Walmart (3 Fortune-100s)
 - Systems serving up to 100M+ users; a platform at ~31B weekly executions
 - Led teams of ~150 across the US, UK, China & India
-- 100+ senior engineers/architects/EMs mentored; ~100 EMs trained on agentic systems
+- 100+ senior engineers, architects & leaders mentored; ~100 senior engineering leaders & directors trained on agentic systems
 - Currently building an agentic-AI system as a startup — so it's current, not a memory
 
 ---
