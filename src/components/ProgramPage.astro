@@ -324,7 +324,7 @@ const cohort = {
       e.preventDefault();
       var key = f.querySelector('input[name="access_key"]').value;
       if (!key || key.indexOf('REPLACE_WITH') === 0) {
-        status.textContent = 'Applications open shortly — please email greetsunshine@gmail.com in the meantime.';
+        status.textContent = 'Applications open shortly — please email apply@thelivingcraft.ai in the meantime.';
         status.className = 'form-status err';
         return;
       }
@@ -344,11 +344,11 @@ const cohort = {
           status.textContent = 'Thank you — your application is in. I review every one personally and will reply by email.';
           status.className = 'form-status ok';
         } else {
-          status.textContent = 'Something went wrong. Please email greetsunshine@gmail.com.';
+          status.textContent = 'Something went wrong. Please email apply@thelivingcraft.ai.';
           status.className = 'form-status err';
         }
       } catch (err) {
-        status.textContent = 'Network error. Please email greetsunshine@gmail.com.';
+        status.textContent = 'Network error. Please email apply@thelivingcraft.ai.';
         status.className = 'form-status err';
       }
     });

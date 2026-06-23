@@ -106,7 +106,7 @@ footer .url{font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:var(--o
   <div class="seg"><div class="l">Admission</div><div class="v">By application</div></div>
   <div class="seg price"><div class="l">Investment</div><div class="v">${r.price}</div></div>
 </div>
-<footer><div class="cta">Apply for the ${r.label} cohort →</div><div class="url">learning.thelivingcraft.ai/?region=${r.key}<br>greetsunshine@gmail.com</div></footer>
+<footer><div class="cta">Apply for the ${r.label} cohort →</div><div class="url">learning.thelivingcraft.ai/?region=${r.key}<br>apply@thelivingcraft.ai</div></footer>
 </body></html>`;
 
 const social = (r) => `<!doctype html><html lang="en"><head><meta charset="utf-8">${fonts}<style>
