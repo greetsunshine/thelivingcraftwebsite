@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<!-- Source for assets/ai-judges-loop.png — the "AI builds / human judges" loop. Render at 1600x900. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1600px;height:900px;overflow:hidden}
+  body{background:#F4EEE2;color:#221C15;font-family:'Inter',sans-serif;position:relative}
+  .head{position:absolute;top:64px;left:0;width:100%;text-align:center}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:#B0512E}
+  .head h2{font-family:'Fraunces',serif;font-weight:360;font-size:42px;margin-top:14px;letter-spacing:-.01em}
+  .head h2 em{font-style:italic;color:#B0512E}
+  .stage{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+  .ai{color:#8C8170}
+  .human{color:#B0512E}
+  svg{position:absolute;top:0;left:0}
+  .node{position:absolute;width:300px;padding:26px 28px;border-radius:6px;background:#FBF7EE;border:1px solid #DCD2BE;box-shadow:0 6px 22px rgba(80,60,30,.06)}
+  .node.h{border:1.5px solid #B0512E;background:#fbf2e8}
+  .node .k{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+  .node h3{font-family:'Fraunces',serif;font-weight:440;font-size:24px;margin-bottom:7px;letter-spacing:-.01em}
+  .node p{font-size:14.5px;color:#5C5345;line-height:1.5}
+  .center{position:absolute;left:700px;top:386px;width:200px;height:128px;border-radius:8px;background:#221C15;color:#F4EEE2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px}
+  .center .big{font-family:'Fraunces',serif;font-style:italic;font-size:23px;line-height:1.18;color:#F4EEE2}
+  .center .sm{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#C2914A;margin-top:9px;text-transform:uppercase}
+  .legend{position:absolute;bottom:48px;left:0;width:100%;display:flex;justify-content:center;gap:44px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5C5345}
+  .legend .sw{display:inline-block;width:26px;height:0;border-top:2px solid #8C8170;vertical-align:middle;margin-right:10px}
+  .legend .sw.h{border-top:2px solid #B0512E}
+  /* node positions — circular loop */
+  #n1{left:650px;top:150px}      /* top: DIRECT (human) */
+  #n2{left:1090px;top:330px}     /* right: BUILD (ai) */
+  #n3{left:650px;top:622px}      /* bottom: CORRECT (human) */
+  #n4{left:210px;top:330px}      /* left: JUDGE (human) */
+</style>
+</head>
+<body>
+  <div class="head">
+    <div class="eyebrow">The operating model</div>
+    <h2>AI builds. The human <em>judges</em> and <em>directs</em>.</h2>
+  </div>
+
+  <!-- arrows: clockwise loop, drawn behind nodes -->
+  <svg width="1600" height="900">
+    <defs>
+      <marker id="arrowO" markerWidth="11" markerHeight="11" refX="7" refY="5" orient="auto">
+        <path d="M0,0 L9,5 L0,10 z" fill="#B79A6B"/>
+      </marker>
+      <marker id="arrowC" markerWidth="11" markerHeight="11" refX="7" refY="5" orient="auto">
+        <path d="M0,0 L9,5 L0,10 z" fill="#B0512E"/>
+      </marker>
+    </defs>
+    <!-- top-right: DIRECT -> BUILD (ochre) -->
+    <path d="M 965 250 A 360 360 0 0 1 1150 330" fill="none" stroke="#C2914A" stroke-width="2.5" marker-end="url(#arrowO)"/>
+    <!-- bottom-right: BUILD -> CORRECT (ochre) -->
+    <path d="M 1150 560 A 360 360 0 0 1 965 660" fill="none" stroke="#C2914A" stroke-width="2.5" marker-end="url(#arrowO)"/>
+    <!-- bottom-left: CORRECT -> JUDGE (clay) -->
+    <path d="M 640 660 A 360 360 0 0 1 450 560" fill="none" stroke="#B0512E" stroke-width="2.5" marker-end="url(#arrowC)"/>
+    <!-- top-left: JUDGE -> DIRECT (clay) -->
+    <path d="M 450 330 A 360 360 0 0 1 640 250" fill="none" stroke="#B0512E" stroke-width="2.5" marker-end="url(#arrowC)"/>
+  </svg>
+
+  <div class="center">
+    <div class="big">The loop you<br>run on purpose</div>
+    <div class="sm">at senior velocity</div>
+  </div>
+
+  <div class="node h" id="n1">
+    <div class="k human">Human · Direct</div>
+    <h3>Spec &amp; constrain</h3>
+    <p>Decompose the work; write acceptance criteria precise enough to grade against.</p>
+  </div>
+  <div class="node" id="n2">
+    <div class="k ai">AI · Build</div>
+    <h3>Generate</h3>
+    <p>The agent produces code, designs, and changes — fast, at volume, non-deterministic.</p>
+  </div>
+  <div class="node h" id="n3">
+    <div class="k human">Human · Correct</div>
+    <h3>Direct or discard</h3>
+    <p>Intervene, re-spec, or throw it away. Accountability stays with you.</p>
+  </div>
+  <div class="node h" id="n4">
+    <div class="k human">Human · Judge</div>
+    <h3>Evaluate &amp; secure</h3>
+    <p>Eval suites, review rigor, red-teaming. Verification parity with human work.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw"></span> AI builds</span>
+    <span><span class="sw h"></span> Human judges &amp; directs</span>
+  </div>
+</body>
+</html>
