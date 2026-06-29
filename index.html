@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Living Craft — Engineering judgment for the age of AI</title>
+<meta name="description" content="An application-only, 8-class cohort for engineering leaders who direct AI instead of competing with it: evaluation, reliability, and security judgment for agentic systems. Bangalore, hybrid." />
+
+<!-- Open Graph (preview values; see meta.md for production tags) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="The Living Craft — AI can write the code. It can't be accountable for it." />
+<meta property="og:description" content="An 8-class, application-only cohort in engineering judgment for the age of AI. Evaluation, reliability, and security for agentic systems. Bangalore, hybrid." />
+<meta property="og:image" content="assets/og-image.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#F4EEE2;        /* warm cream background */
+    --paper-2:#EFE7D7;      /* slightly deeper panel */
+    --surface:#FBF7EE;      /* card / raised surface */
+    --ink:#221C15;          /* warm near-black text */
+    --ink-soft:#5C5345;     /* muted body */
+    --ink-faint:#8C8170;    /* captions */
+    --line:#DCD2BE;         /* hairline */
+    --line-strong:#CBBEA3;
+    --clay:#B0512E;         /* primary accent — terracotta */
+    --clay-deep:#8F3F22;
+    --ochre:#C2914A;        /* secondary warm accent */
+    --green:#586147;        /* muted patina for small marks */
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:17px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  }
+  h1,h2,h3,h4,.serif{font-family:'Fraunces',Georgia,serif;font-weight:380;letter-spacing:-.01em;line-height:1.1}
+  .mono{font-family:'JetBrains Mono',monospace}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);display:inline-flex;gap:12px;align-items:center}
+  .eyebrow .num{color:var(--ink-faint)}
+  .lead{font-size:21px;line-height:1.6;color:var(--ink-soft)}
+  .muted{color:var(--ink-soft)}
+  .faint{color:var(--ink-faint)}
+  section{padding:104px 0;border-top:1px solid var(--line)}
+  .rule{height:1px;background:var(--line);border:0}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:10px;font-size:15px;font-weight:500;padding:14px 26px;border-radius:2px;transition:.22s ease;cursor:pointer;border:1px solid transparent}
+  .btn-primary{background:var(--clay);color:#FBF7EE}
+  .btn-primary:hover{background:var(--clay-deep);transform:translateY(-1px)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--ink);background:rgba(0,0,0,.02)}
+  .btn .arrow{transition:transform .22s ease}
+  .btn:hover .arrow{transform:translateX(4px)}
+
+  /* nav */
+  header.nav{position:sticky;top:0;z-index:50;background:rgba(244,238,226,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .wordmark{font-family:'Fraunces',serif;font-size:21px;font-weight:480;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  .wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--clay);display:inline-block}
+  .navlinks{display:flex;gap:30px;align-items:center;font-size:14px;color:var(--ink-soft)}
+  .navlinks a:hover{color:var(--ink)}
+  @media(max-width:880px){.navlinks a:not(.btn){display:none}}
+
+  /* hero */
+  .hero{padding:80px 0 92px}
+  .hero h1{font-size:clamp(38px,5.4vw,68px);font-weight:360;margin:26px 0 26px;max-width:16ch}
+  .hero h1 em{font-style:italic;color:var(--clay)}
+  .hero .lead{max-width:46ch;margin-bottom:34px}
+  .hero-cta{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .hero-note{font-size:13px;color:var(--ink-faint);margin-top:24px;font-family:'JetBrains Mono',monospace;letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:8px 16px}
+  .hero-note b{color:var(--ink-soft);font-weight:500}
+
+  /* section heading */
+  .sec-head{max-width:780px;margin-bottom:54px}
+  .sec-head h2{font-size:clamp(28px,4vw,44px);margin:18px 0 20px;font-weight:360}
+  .sec-head h2 em{font-style:italic;color:var(--clay)}
+
+  /* pain block */
+  .pain{background:var(--paper-2)}
+  .painlist{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .painlist .q{background:var(--surface);padding:30px 30px;display:flex;gap:18px;align-items:flex-start}
+  .painlist .q .n{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--clay);padding-top:4px;flex-shrink:0}
+  .painlist .q p{font-size:17px;color:var(--ink);line-height:1.55}
+  .pain-close{margin-top:34px;font-family:'Fraunces',serif;font-style:italic;font-size:23px;line-height:1.4;color:var(--ink);max-width:44ch}
+  .pain-close b{color:var(--clay);font-style:normal;font-weight:500}
+  @media(max-width:820px){.painlist{grid-template-columns:1fr}}
+
+  /* capability clusters */
+  .clusters{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  .cl{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:32px 30px;transition:.22s;position:relative}
+  .cl:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+  .cl.flag{border-color:var(--clay);box-shadow:0 0 0 1px var(--clay) inset}
+  .cl .k{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--clay);letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center}
+  .cl .flagtag{background:var(--clay);color:var(--surface);font-size:10px;letter-spacing:.14em;padding:3px 8px;border-radius:2px}
+  .cl h3{font-size:21px;margin:14px 0 8px;font-weight:440}
+  .cl .out{font-size:15px;color:var(--ink-soft);margin-bottom:16px}
+  .cl ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .cl li{font-size:14.5px;color:var(--ink-soft);padding-left:18px;position:relative;line-height:1.5}
+  .cl li::before{content:'—';position:absolute;left:0;color:var(--ochre)}
+  @media(max-width:820px){.clusters{grid-template-columns:1fr}}
+
+  /* who for / not for */
+  .fortwo{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .forcard{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:32px 30px}
+  .forcard.not{background:var(--paper-2)}
+  .forcard h3{font-size:20px;font-weight:440;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .forcard h3 .mk{font-family:'JetBrains Mono',monospace;font-size:18px}
+  .forcard.yes h3 .mk{color:var(--green)}
+  .forcard.not h3 .mk{color:var(--clay)}
+  .forcard ul{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .forcard li{font-size:15px;color:var(--ink-soft);padding-left:20px;position:relative;line-height:1.5}
+  .forcard.yes li::before{content:'+';position:absolute;left:0;color:var(--green);font-weight:600}
+  .forcard.not li::before{content:'×';position:absolute;left:0;color:var(--clay)}
+  @media(max-width:820px){.fortwo{grid-template-columns:1fr}}
+
+  /* included */
+  .incl{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .incl .it{background:var(--surface);padding:28px 26px}
+  .incl .it .ik{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--clay)}
+  .incl .it h4{font-size:18px;font-weight:440;margin:12px 0 8px}
+  .incl .it p{font-size:14.5px;color:var(--ink-soft)}
+  @media(max-width:820px){.incl{grid-template-columns:1fr}}
+
+  /* curriculum */
+  .modules{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .mod{background:var(--surface);padding:30px 30px;position:relative}
+  .mod.flag{background:#fbf2e8}
+  .mod .mk{display:flex;justify-content:space-between;align-items:baseline}
+  .mod .mk .num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--clay)}
+  .mod .mk .flagtag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--surface);background:var(--clay);padding:3px 8px;border-radius:2px}
+  .mod h4{font-size:19px;font-weight:440;margin:14px 0 9px}
+  .mod p{font-size:14.5px;color:var(--ink-soft)}
+  @media(max-width:820px){.modules{grid-template-columns:1fr}}
+
+  /* instructor — centerpiece */
+  .instructor{background:var(--ink);color:#EDE6D7;border-top:1px solid var(--ink)}
+  .instructor .eyebrow{color:var(--ochre)}
+  .instructor .eyebrow .num{color:#7d7461}
+  .instructor h2{font-size:clamp(28px,3.6vw,44px);font-weight:360;margin:18px 0 16px;color:#F4EEE2;max-width:20ch}
+  .instructor h2 em{font-style:italic;color:var(--ochre)}
+  .statband{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:52px 0 56px;border:1px solid #3a3225;border-radius:3px;overflow:hidden}
+  .stat{padding:28px 24px;border-right:1px solid #3a3225}
+  .stat:last-child{border-right:0}
+  .stat .big{font-family:'Fraunces',serif;font-size:42px;font-weight:360;color:#F4EEE2;line-height:1}
+  .stat .big span{color:var(--ochre)}
+  .stat .cap{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9a9079;margin-top:12px}
+  @media(max-width:820px){.statband{grid-template-columns:repeat(2,1fr)}.stat:nth-child(2){border-right:0}.stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid #3a3225}}
+  .story{display:grid;grid-template-columns:1.1fr .9fr;gap:54px;align-items:start}
+  .story p{color:#C9C0AE;margin-bottom:20px;font-size:16.5px}
+  .story p strong{color:#F4EEE2;font-weight:600}
+  .pullquote{font-family:'Fraunces',serif;font-style:italic;font-size:25px;line-height:1.38;color:#F4EEE2;border-left:2px solid var(--ochre);padding-left:24px;margin:8px 0 26px}
+  .credline{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#9a9079;line-height:1.9}
+  @media(max-width:820px){.story{grid-template-columns:1fr;gap:30px}}
+
+  /* social proof placeholder */
+  .proofph{border:1px dashed var(--line-strong);border-radius:3px;padding:48px 40px;text-align:center;background:var(--surface)}
+  .proofph .tag{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);display:inline-block;border:1px solid var(--clay);border-radius:2px;padding:6px 12px;margin-bottom:22px}
+  .proofph p{max-width:60ch;margin:0 auto 8px;color:var(--ink-soft);font-size:16px}
+  .proofph .honest{font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--ink);margin-top:22px;line-height:1.45}
+
+  /* faq */
+  .faq{max-width:840px;margin:0 auto}
+  details{border-bottom:1px solid var(--line);padding:6px 0}
+  summary{cursor:pointer;list-style:none;padding:20px 0;font-family:'Fraunces',serif;font-size:20px;font-weight:440;display:flex;justify-content:space-between;align-items:center;gap:20px}
+  summary::-webkit-details-marker{display:none}
+  summary .plus{color:var(--clay);font-family:'Inter';font-size:22px;transition:transform .2s;flex-shrink:0}
+  details[open] summary .plus{transform:rotate(45deg)}
+  details .a{padding:0 0 22px;color:var(--ink-soft);font-size:15.5px;max-width:70ch}
+
+  /* final cta */
+  .final{text-align:center;background:var(--paper-2)}
+  .final h2{font-size:clamp(30px,4.6vw,54px);font-weight:360;margin-bottom:20px}
+  .final h2 em{font-style:italic;color:var(--clay)}
+  .final .lead{max-width:52ch;margin:0 auto 14px}
+  .final .price{font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.08em;color:var(--ink);margin-bottom:34px}
+  .final .micro{font-size:13px;color:var(--ink-faint);margin-top:22px;font-family:'JetBrains Mono',monospace}
+
+  /* footer */
+  footer.site{background:var(--ink);color:#C9C0AE;padding:56px 0 40px;font-size:14px;border-top:1px solid var(--ink)}
+  .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+  .foot-grid .wordmark{color:#F4EEE2}
+  .foot-grid .muted{color:#9a9079;max-width:34ch;margin-top:12px}
+  .foot-bottom{margin-top:44px;padding-top:22px;border-top:1px solid #3a3225;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#7d7461;font-size:13px}
+
+  /* placeholder hint */
+  .ph-hint{outline:1px dashed rgba(176,81,46,.45);outline-offset:2px}
+
+  /* prototype banner */
+  .protobanner{background:var(--clay);color:#FBF7EE;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;padding:8px}
+  .protobanner b{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="protobanner">PROTOTYPE — visual preview for Kajabi hand-off. <b>{{COHORT_START}}</b> and <b>[PLACEHOLDER]</b> items are intentional and must be filled before publish.</div>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="wordmark" href="#top"><span class="dot"></span> The Living Craft</a>
+    <nav class="navlinks">
+      <a href="#pain">Why now</a>
+      <a href="#learn">What you'll learn</a>
+      <a href="#curriculum">Curriculum</a>
+      <a href="#instructor">Instructor</a>
+      <a class="btn btn-primary" style="padding:10px 20px" href="#apply">Apply <span class="arrow">→</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- 1. HERO -->
+<section class="hero" id="top" style="border-top:0">
+  <div class="wrap">
+    <span class="eyebrow">An application-only cohort · Bangalore, hybrid</span>
+    <h1>AI can write the code. It can't be <em>accountable</em> for it.</h1>
+    <p class="lead">
+      The Living Craft is an 8-class cohort for engineering leaders who direct AI instead of competing with it —
+      the judgment to evaluate what it builds, harden it against attack, and put your name on the result.
+      Built for L5/L6 engineers, architects, and the managers who sign off on what ships.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#apply">Apply for the cohort <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href="#curriculum">Read the curriculum</a>
+    </div>
+    <p class="hero-note">
+      <span>Cohort starts <b class="ph-hint">{{COHORT_START}}</b></span>
+      <span>· 8 classes</span>
+      <span>· <b>8–15 seats</b></span>
+      <span>· Applications open <b>5 July</b></span>
+      <span>· <b>₹1,20,000</b></span>
+    </p>
+  </div>
+</section>
+
+<!-- 2. PAIN -->
+<section class="pain" id="pain">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">01</span> The questions you're asking quietly</span>
+      <h2>You're shipping faster than you can <em>verify</em>. And you know it.</h2>
+      <p class="lead">The tools got good fast. The judgment to govern them didn't come in the box. If any of these are running in the back of your head, you're exactly who this cohort is for.</p>
+    </div>
+    <div class="painlist">
+      <div class="q"><span class="n">01</span><p>"I'm being asked to approve AI-generated code I didn't write and don't fully understand — and my name is on the review."</p></div>
+      <div class="q"><span class="n">02</span><p>"I review human pull requests with real rigor. I have no equivalent discipline for what an agent produces. Where's my verification parity?"</p></div>
+      <div class="q"><span class="n">03</span><p>"We ship agent changes and basically hope nothing breaks. I can't tell you our actual reliability — I can tell you it demos well."</p></div>
+      <div class="q"><span class="n">04</span><p>"Someone could slip an instruction into a document, an issue, or a config file and my agent would just… follow it. I don't know how exposed we are."</p></div>
+      <div class="q"><span class="n">05</span><p>"Half my team is faster with AI. I genuinely can't tell whose output I can trust and whose I have to re-derive from scratch."</p></div>
+      <div class="q"><span class="n">06</span><p>"My leadership wants an 'AI strategy.' What I actually need is a way to prove our AI-built systems are correct, safe, and won't embarrass us."</p></div>
+    </div>
+    <p class="pain-close">None of this is a tooling problem. It's a <b>judgment problem</b> — and judgment is the one thing the market isn't selling.</p>
+  </div>
+</section>
+
+<!-- 3. WHAT YOU'LL LEARN -->
+<section id="learn">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">02</span> The capabilities</span>
+      <h2>Six capabilities that separate <em>directing</em> AI from being replaced by it.</h2>
+      <p class="lead">Each cluster is a verb-led outcome you can demonstrate — not a topic you've heard of. Evaluation and security come first, on purpose: that's where engineering judgment is now scarcest and most valuable.</p>
+    </div>
+    <div class="clusters">
+      <div class="cl flag">
+        <div class="k"><span>// 01</span><span class="flagtag">FLAGSHIP</span></div>
+        <h3>Evaluate what AI builds</h3>
+        <p class="out">Build evaluation and reliability discipline so you can state — with evidence — whether an AI-built system actually works.</p>
+        <ul>
+          <li>Design eval suites and graders for non-deterministic systems; catch regressions before users do.</li>
+          <li>Establish <em>verification parity</em>: hold AI output to the same (or higher) bar as human output.</li>
+          <li>Quantify reliability — failure rates, blast radius, confidence — instead of trusting the demo.</li>
+        </ul>
+      </div>
+      <div class="cl flag">
+        <div class="k"><span>// 02</span><span class="flagtag">FLAGSHIP</span></div>
+        <h3>Secure &amp; red-team agentic systems</h3>
+        <p class="out">Find and close the attack surface agentic systems open up — before someone else does.</p>
+        <ul>
+          <li>Defend against prompt injection from untrusted content (documents, issues, web, tool output).</li>
+          <li>Contain malicious project-config / RCE risk: agents that execute code from configs they were "just reading."</li>
+          <li>Assess MCP and tool supply-chain exposure: what your agent can do, and who it implicitly trusts.</li>
+        </ul>
+      </div>
+      <div class="cl">
+        <div class="k"><span>// 03</span></div>
+        <h3>Direct AI as a force multiplier</h3>
+        <p class="out">Run the "AI builds, human judges" loop deliberately — spec, generate, critique, correct — at senior velocity.</p>
+        <ul>
+          <li>Decompose work into units an agent can build and you can verify.</li>
+          <li>Write specs and acceptance criteria precise enough to grade against.</li>
+          <li>Know when to direct, when to intervene, and when to throw the output away.</li>
+        </ul>
+      </div>
+      <div class="cl">
+        <div class="k"><span>// 04</span></div>
+        <h3>Review AI-generated code with rigor</h3>
+        <p class="out">Apply review discipline that scales to code no human first-drafted.</p>
+        <ul>
+          <li>Read for intent, edge cases, and silent failure — not just "does it run."</li>
+          <li>Build review checklists and guardrails your whole team can apply consistently.</li>
+          <li>Decide what you can responsibly sign off on, and document why.</li>
+        </ul>
+      </div>
+      <div class="cl">
+        <div class="k"><span>// 05</span></div>
+        <h3>Architect for reliability &amp; governance</h3>
+        <p class="out">Design AI-built systems that are observable, controllable, and defensible to leadership and auditors.</p>
+        <ul>
+          <li>Bound autonomy: permissions, sandboxing, human-in-the-loop checkpoints.</li>
+          <li>Instrument for observability and cost; make failure boring and recoverable.</li>
+          <li>Put governance — provenance, audit trails, policy — into the architecture, not a slide.</li>
+        </ul>
+      </div>
+      <div class="cl">
+        <div class="k"><span>// 06</span></div>
+        <h3>Lead an AI-augmented team</h3>
+        <p class="out">Set technical direction your team trusts when half the codebase is AI-assisted.</p>
+        <ul>
+          <li>Calibrate trust across the team: whose AI output is reliable, and how you know.</li>
+          <li>Establish standards for evaluation, review, and security that survive deadlines.</li>
+          <li>Make the build/verify economics legible to the people you report to.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. WHO FOR / NOT FOR -->
+<section id="fit">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">03</span> Fit</span>
+      <h2>A small room. It only works if it's the <em>right</em> people.</h2>
+    </div>
+    <div class="fortwo">
+      <div class="forcard yes">
+        <h3><span class="mk">+</span> This is for you if…</h3>
+        <ul>
+          <li>You're an Engineering Manager, Architect, or Senior Engineer at — or pushing toward — L5/L6.</li>
+          <li>You already ship real systems and are now accountable for AI-generated and agentic work.</li>
+          <li>You want judgment — evaluation, review, reliability, security — not another tour of tools.</li>
+          <li>You're prepared to bring a real system and have it pressure-tested in the room.</li>
+        </ul>
+      </div>
+      <div class="forcard not">
+        <h3><span class="mk">×</span> This is <em>not</em> for you if…</h3>
+        <ul>
+          <li>You want a "prompt engineering" or "learn ChatGPT" intro. This sits above that market.</li>
+          <li>You're looking for a passive, recorded course to watch at 2×.</li>
+          <li>You don't yet ship production code or own technical decisions.</li>
+          <li>You want certainty that tools will replace judgment. The premise here is the opposite.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. WHAT'S INCLUDED -->
+<section id="included">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">04</span> What you get</span>
+      <h2>Built like a senior review, not a <em>webinar</em>.</h2>
+    </div>
+    <div class="incl">
+      <div class="it"><div class="ik">01</div><h4>8 live classes</h4><p>Small-cohort, hands-on, taught live. Hybrid: in person in Bangalore + remote.</p></div>
+      <div class="it"><div class="ik">02</div><h4>Dual-track assessment</h4><p>Graded against an L5/L6 bar: a <em>code</em> track (an AI-built system made correct &amp; defensible) and an <em>architecture</em> track (a tradeoff writeup).</p></div>
+      <div class="it"><div class="ik">03</div><h4>Office hours</h4><p>Direct working time with the instructor between classes.</p></div>
+      <div class="it"><div class="ik">04</div><h4>Artifact reviews</h4><p>Your eval suites, threat models, and writeups reviewed individually.</p></div>
+      <div class="it"><div class="ik">05</div><h4>Recordings</h4><p>Every session recorded for the cohort to revisit.</p></div>
+      <div class="it"><div class="ik">06</div><h4>Certificate</h4><p>A completion certificate that reflects the dual-track bar — not attendance.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. CURRICULUM -->
+<section id="curriculum">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><span class="num">05</span> The 8 classes</span>
+      <h2>Eight classes. Evaluation and security <em>lead</em>, because that's where the judgment lives.</h2>
+      <p class="lead">Sequenced so the flagship disciplines come early and compound through the cohort.</p>
+    </div>
+    <div class="modules">
+      <div class="mod"><div class="mk"><span class="num">Class 1</span></div><h4>The judgment loop: AI builds, the human directs</h4><p>The operating model for the cohort — spec, generate, critique, correct at senior velocity — and where accountability sits.</p></div>
+      <div class="mod flag"><div class="mk"><span class="num">Class 2</span><span class="flagtag">FLAGSHIP</span></div><h4>Evaluation &amp; reliability</h4><p>Evals, graders, and reliability measurement for non-deterministic systems. Verification parity: holding AI output to a real bar. The spine of the program.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 3</span></div><h4>Security &amp; red-teaming for agentic systems</h4><p>Prompt injection, malicious project-config / RCE, MCP and tool supply-chain risk. You attack a system, then defend it.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 4</span></div><h4>Reviewing AI-generated code</h4><p>Review rigor for code no human first-drafted: intent, edge cases, silent failure, and what you can responsibly sign off on.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 5</span></div><h4>Architecting agentic systems</h4><p>Orchestration, tool boundaries, bounded autonomy, observability, and cost — designs you'd put your name on.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 6</span></div><h4>Governance, safety &amp; controls</h4><p>Permissions, sandboxing, human-in-the-loop, provenance, and audit trails — governance built into the architecture.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 7</span></div><h4>Leading AI-augmented teams</h4><p>Calibrating trust, setting team-wide standards, and making build/verify economics legible to leadership.</p></div>
+      <div class="mod"><div class="mk"><span class="num">Class 8</span></div><h4>Capstone review</h4><p>You present your dual-track work; the cohort and instructor pressure-test it the way a real senior review should feel.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. INSTRUCTOR -->
+<section class="instructor" id="instructor">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:0">
+      <span class="eyebrow"><span class="num">06</span> The instructor</span>
+      <h2>26 years at the bench. Director / L7-level at <em>Google, Amazon,</em> and <em>Walmart</em>.</h2>
+    </div>
+    <div class="statband">
+      <div class="stat"><div class="big">26<span>+</span></div><div class="cap">Years of experience</div></div>
+      <div class="stat"><div class="big">L7</div><div class="cap">Director-level scope</div></div>
+      <div class="stat"><div class="big">3</div><div class="cap">Tier-1: Google · Amazon · Walmart</div></div>
+      <div class="stat"><div class="big">HomeOps</div><div class="cap">Agentic-AI project, hands-on</div></div>
+    </div>
+    <div class="story">
+      <div>
+        <p><strong class="ph-hint">[PLACEHOLDER: instructor name]</strong> has spent ~26 years building and directing large-scale systems — at director / L7-level across <strong>Google, Amazon, and Walmart</strong> — and now teaches the judgment those rooms run on. Based in Bangalore.</p>
+        <p>This isn't theory from the sidelines. They're a hands-on builder: <strong>HomeOps</strong>, a personal agentic-AI project, is where these evaluation, reliability, and security practices get exercised on real, messy, autonomous systems — not slideware. That work runs in parallel with a <strong>live enterprise AI-adoption engagement</strong>, so the material is pressure-tested against both a builder's bench and an organization's reality.</p>
+        <p>The Tier-1 credentials aren't the point — they're the reason the judgment is worth ₹1,20,000 of your attention.</p>
+      </div>
+      <div>
+        <div class="pullquote">AI builds. The human judges and directs. The whole cohort is built around making you the human in that sentence.</div>
+        <p class="credline">~26 yrs experience<br>Director / L7-level<br>Google · Amazon · Walmart<br>Builder of HomeOps (agentic AI)<br>Bangalore</p>
+        <p class="credline ph-hint" style="margin-top:18px;color:#6f6757">[PLACEHOLDER: confirm exact titles, dates &amp; any figures before publishing — do not embellish.]</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. SOCIAL PROOF (placeholder only) -->
+<section id="proof">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:center;margin:0 auto 40px">
+      <span class="eyebrow" style="justify-content:center"><span class="num">07</span> From the cohort</span>
+      <h2>Earned, not invented.</h2>
+    </div>
+    <div class="proofph">
+      <span class="tag">[PLACEHOLDER: testimonials — none yet, first cohort]</span>
+      <p>This is the inaugural cohort, so there are no testimonials, ratings, or alumni outcomes to show — and we will not invent them. After the first cohort, replace this block with real, attributed quotes (name, role, company, with permission).</p>
+      <p class="honest">"This is the first cohort of The Living Craft. There's no wall of testimonials yet — there's the work, the curriculum, and the person teaching it. Apply on that basis."</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head" style="text-align:center;margin:0 auto 44px">
+      <span class="eyebrow" style="justify-content:center"><span class="num">08</span> Before you apply</span>
+      <h2>Questions worth answering first.</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>What are the prerequisites?<span class="plus">+</span></summary><div class="a">You ship production code or own technical decisions today, and you're working with — or accountable for — AI-generated/agentic systems. No specific framework is required; bring a real system you can work on. You should be comfortable in at least one programming language and reading code closely.</div></details>
+      <details><summary>What's the time commitment?<span class="plus">+</span></summary><div class="a">8 live classes plus assessment work between sessions: eval suites, a threat model, code, and an architecture tradeoff writeup. Budget meaningful focused time each week — this is graded against an L5/L6 bar, not watched passively. <span class="ph-hint">[PLACEHOLDER: confirm exact hours/week and class length.]</span></div></details>
+      <details><summary>How does the hybrid format work?<span class="plus">+</span></summary><div class="a">Bangalore-based, hybrid: attend in person or join remotely, with every session recorded. <span class="ph-hint">[PLACEHOLDER: confirm venue, in-person vs. remote split, and timezone for live sessions.]</span></div></details>
+      <details><summary>What's the application process?<span class="plus">+</span></summary><div class="a">Applications open <strong>5 July</strong>. You apply (not "buy"), we review fit against the L5/L6 bar and the cohort mix, and selected applicants are invited to enroll. The gate keeps the room small and the level high — 8–15 seats only.</div></details>
+      <details><summary>What's the refund policy?<span class="plus">+</span></summary><div class="a"><span class="ph-hint">[PLACEHOLDER: state the exact refund / deferral policy before publishing — do not invent terms.]</span></div></details>
+      <details><summary>Who is this <em>not</em> for?<span class="plus">+</span></summary><div class="a">Anyone wanting a beginner "how to use AI tools" course, a passive recorded program, or a promise that tools remove the need for judgment. This cohort is the opposite of that.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- 10. FINAL CTA -->
+<section class="final" id="apply">
+  <div class="wrap">
+    <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The next cohort</span>
+    <h2 style="margin-top:18px">Direct the AI. Don't be <em>replaced</em> by it.</h2>
+    <p class="lead">8 classes. 8–15 seats. Cohort starts <span class="ph-hint">{{COHORT_START}}</span>. Applications open 5 July. The room stays small on purpose — apply early.</p>
+    <p class="price">₹1,20,000 · Bangalore, hybrid · By application only</p>
+    <div class="hero-cta" style="justify-content:center">
+      <a class="btn btn-primary" href="#">Apply for the cohort <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href="#curriculum">Read the curriculum</a>
+    </div>
+    <p class="micro">It's an application, not a checkout. We read every one personally.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="wordmark"><span class="dot"></span> The Living Craft</div>
+        <p class="muted">An application-only cohort in engineering judgment for the age of AI — evaluation, reliability, and security for agentic systems. Bangalore, hybrid.</p>
+      </div>
+      <div style="max-width:30ch">
+        <p class="muted" style="margin-top:0">Cohort starts <span class="ph-hint" style="color:#C9C0AE">{{COHORT_START}}</span> · Applications open 5 July · ₹1,20,000</p>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 The Living Craft</span>
+      <span class="mono">Prototype for Kajabi hand-off · not the production site</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
