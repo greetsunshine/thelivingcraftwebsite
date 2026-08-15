@@ -25,17 +25,24 @@ import Anthropic from '@anthropic-ai/sdk';
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', 'src', 'data', 'latest.json');
 
-// Split by what each pass actually needs.
+// Both passes on Opus 5, and the research pass is the reason.
 //
-// Research is search-and-summarise over web results — high input volume, modest
-// reasoning — which is where Sonnet 5 is strong and where Opus 5's premium buys
-// little. It is also the dominant cost: five calls, each carrying full search
-// results in context. Transcription stays on Opus 5 because it decides what
-// survives into visitor-facing text and what gets flagged for review, and that
-// judgment is worth paying for on one short call.
+// I moved research to Sonnet 5 to cut cost, on the reasoning that
+// search-and-summarise doesn't need the premium. That was wrong for this task,
+// and the comparison is stark:
 //
-// Both support web_search_20260209 and adaptive thinking.
-const RESEARCH_MODEL = 'claude-sonnet-5';
+//   Opus 5   → 5–7 findings: arXiv preprints, the MCP maintainers' blog,
+//              Zscaler threat research. Every one carried a URL.
+//   Sonnet 5 → 22 findings, 16 with an EMPTY source. Of the 6 that survived
+//              the URL filter, 4 were content-marketing blogs and Substacks.
+//
+// The job isn't summarising — it's judging which of a hundred search results is
+// a primary artefact worth a senior engineer's attention, and holding the line
+// when the honest answer is "nothing this week". That judgment is the work.
+//
+// Cost is controlled by the levers that don't cost quality: 6 searches per
+// topic, a 6h cooldown, weekly cadence, and the console spend limit.
+const RESEARCH_MODEL = 'claude-opus-5';
 const TRANSCRIBE_MODEL = 'claude-opus-5';
 
 /**
@@ -176,8 +183,15 @@ ${topic}
 Today is ${today}. Discard anything older than 90 days or already common knowledge.
 
 Write up only what genuinely changes what a senior engineer should know, build, or watch
-out for. For each finding give a short title, two to four sentences written for that
-engineer, the source URL, and — separately — anything Sunil should know before trusting it
+out for.
+
+EVERY finding must carry the full URL you found it at, on its own line as `Source: https://…`.
+A finding you cannot attach a URL to is not a finding — leave it out rather than writing it
+up unsourced. Do not group several findings under one shared source; if two findings come
+from one page, repeat the URL on both.
+
+For each finding give a short title, two to four sentences written for that
+engineer, the Source line, and — separately — anything Sunil should know before trusting it
 (secondhand source, vendor claiming things about their own product, single unreplicated
 result). If nothing material turned up, say so plainly; an empty topic is expected some
 weeks and is better than padding.
@@ -216,8 +230,11 @@ concluding it is empty. If you run out, say the topic is under-searched rather t
     output_config: { effort: 'low', format: { type: 'json_schema', schema: ITEM_SCHEMA } },
     system:
       'You transcribe research notes into structured records. Use only what the notes contain — ' +
-      'no additions, no inference, no rewriting of the substance. Drop any finding that lacks a ' +
-      'usable source URL. If the notes report nothing material, return an empty list.',
+      'no additions, no inference, no rewriting of the substance.\n\n' +
+      'The source field must be the full http(s) URL the note carried. If a note has no URL, ' +
+      'OMIT that finding entirely — do not emit it with an empty or placeholder source, and do ' +
+      'not borrow a URL from a neighbouring finding. Fewer, sourced records beat more, unsourced ' +
+      'ones. If the notes report nothing material, return an empty list.',
     messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes.join('\n\n---\n\n')}` }],
   });
 
@@ -246,7 +263,36 @@ concluding it is empty. If you run out, say the topic is under-searched rather t
     throw new Error(`Could not parse the structured pass as JSON. Raw output:\n${raw.slice(0, 500)}`);
   }
 
-  return parsed.items ?? [];
+  // Enforce the source contract HERE, not in the prompt.
+  //
+  // The transcription system prompt already says "drop any finding that lacks a
+  // usable source URL". It didn't: a run emitted 22 items of which 16 had
+  // source: "". A data contract asked for politely is a suggestion; the visitor
+  // agent citing an unsourced claim to a prospect is the actual cost of that
+  // distinction, so the filter lives in code where it cannot be talked out of.
+  const items = parsed.items ?? [];
+  const sourced = items.filter((i) => /^https?:\/\/\S+$/i.test(String(i.source ?? '')));
+  const dropped = items.length - sourced.length;
+
+  if (dropped > 0) {
+    console.warn(
+      `  dropped ${dropped}/${items.length} finding(s) with no usable source URL:`,
+    );
+    for (const i of items) {
+      if (!/^https?:\/\/\S+$/i.test(String(i.source ?? ''))) {
+        console.warn(`    · ${i.id}`);
+      }
+    }
+    // A high drop rate means the research pass isn't carrying URLs through,
+    // which is a prompt or model problem rather than a bad week.
+    if (dropped / items.length > 0.5) {
+      console.warn(
+        '  NOTE: over half were unsourced — check the research pass is emitting a URL per finding.',
+      );
+    }
+  }
+
+  return sourced;
 }
 
 async function main() {

@@ -53,7 +53,13 @@ jobs:
             npm run gather
           fi
 
+      # Best-effort. Repos with "Allow GitHub Actions to create and approve pull
+      # requests" turned off fail this step with a permissions error — but the
+      # branch is still pushed, so the work survives. The next step turns that
+      # into a one-click compare link rather than a red X and a lost run.
       - name: Open a PR if anything changed
+        id: pr
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: 'Retriever: refresh latest.json'
@@ -70,3 +76,16 @@ jobs:
             nothing about our own pricing or dates, and is worth a prospect's
             attention.
           add-paths: src/data/latest.json
+
+      - name: Say where the branch is if the PR could not be opened
+        if: steps.pr.outcome == 'failure'
+        run: |
+          echo "### Retriever ran, PR not opened" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "GitHub Actions is not permitted to create pull requests in this repo," >> "$GITHUB_STEP_SUMMARY"
+          echo "so the findings were pushed to a branch instead. Open the PR here:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "<${{ github.server_url }}/${{ github.repository }}/compare/main...agent/latest-refresh?expand=1>" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "To let the workflow open it directly: Settings -> Actions -> General ->" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflow permissions -> tick 'Allow GitHub Actions to create and approve pull requests'." >> "$GITHUB_STEP_SUMMARY"
