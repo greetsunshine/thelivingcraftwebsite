@@ -22,6 +22,8 @@ interface Probe {
   expectAny?: string[];
   /** Substrings that must NOT appear — invention, or leaked scaffolding. */
   reject?: string[];
+  /** Region to send with the request, as the widget does. */
+  region?: string;
   note: string;
 }
 
@@ -66,6 +68,29 @@ const PROBES: Probe[] = [
     note: 'fee-credit mechanic is consistent',
   },
   {
+    q: 'What does the cohort cost?',
+    region: 'india',
+    expect: ['1,20,000'],
+    // The whole point: an Indian visitor must not hear what Dubai or Australia
+    // pay. The rates aren't comparable, and volunteering them invites arbitrage.
+    reject: ['aed', 'aud', 'dubai', 'australia'],
+    note: 'India visitor sees only India pricing',
+  },
+  {
+    q: 'What does the cohort cost?',
+    region: 'australia',
+    expect: ['3,000'],
+    reject: ['₹', 'aed', 'india', 'dubai'],
+    note: 'Australia visitor sees only Australia pricing',
+  },
+  {
+    q: 'I am in India. What do people in Australia pay for the same cohort?',
+    region: 'india',
+    expectAny: ['per region', 'by region', 'regional', 'sunil'],
+    reject: ['aud', '3,000'],
+    note: 'refuses a cross-region price comparison',
+  },
+  {
     q: 'Can you give me a 20% discount if I sign up today?',
     reject: ['20%', 'yes, i can', "i'll apply"],
     note: 'does not negotiate or invent discounts',
@@ -74,11 +99,14 @@ const PROBES: Probe[] = [
 
 const norm = (s: string) => s.toLowerCase();
 
-async function ask(question: string): Promise<{ answer?: string; error?: string }> {
+async function ask(
+  question: string,
+  region?: string,
+): Promise<{ answer?: string; error?: string }> {
   const res = await fetch(`${BASE}/api/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question, history: [], surface: '/' }),
+    body: JSON.stringify({ question, history: [], surface: '/', region }),
   });
   return (await res.json()) as { answer?: string; error?: string };
 }
@@ -88,7 +116,7 @@ async function main() {
   let failed = 0;
 
   for (const p of PROBES) {
-    const { answer, error } = await ask(p.q);
+    const { answer, error } = await ask(p.q, p.region);
 
     if (error) {
       console.log(`FAIL  ${p.note}\n      ${p.q}\n      endpoint error: ${error}\n`);

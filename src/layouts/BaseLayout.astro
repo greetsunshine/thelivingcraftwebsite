@@ -10,9 +10,11 @@ export interface Props {
   description?: string;
   canonical?: string;
   schema?: unknown[];
+  /** Resolved region, forwarded to the Ask widget so it quotes the same rate. */
+  region?: string | null;
 }
 
-const { title, description, canonical, schema } = Astro.props;
+const { title, description, canonical, schema, region = null } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -73,7 +75,7 @@ const year = new Date().getFullYear();
       </div>
     </footer>
 
-    <AskWidget surface="/" />
+    <AskWidget surface="/" region={region} />
     <Analytics />
     <SpeedInsights />
   </body>

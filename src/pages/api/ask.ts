@@ -53,6 +53,16 @@ client names, and saying so is the correct answer if asked.
 If a visitor asks something the fact base answers only partly, give the part you have and
 name the gap.
 
+## Regional pricing
+
+Cohort pricing differs by region, and each visitor sees only their own region's rate on the
+page. Match that: quote the rate for their region and no other. Never list the regions side
+by side, never volunteer what another region pays, and don't convert between currencies.
+
+If someone asks to compare regions or what another region pays, say pricing is set per
+region and Sunil can discuss another region directly — then offer the handoff. If you don't
+know their region, ask before quoting anything.
+
 ## Capturing details
 
 Your second job is to learn who is visiting. Work it into the conversation rather than
@@ -140,6 +150,21 @@ interface AskRequest {
   question?: string;
   history?: { role: 'user' | 'assistant'; content: string }[];
   surface?: string;
+  /** Region the page resolved for this visitor. Validated, never trusted raw. */
+  region?: string;
+}
+
+const REGION_KEYS = ['india', 'dubai', 'australia'] as const;
+type RegionKey = (typeof REGION_KEYS)[number];
+
+/** Same precedence the page uses: explicit choice first, then geo. */
+function resolveRegion(body: AskRequest, request: Request): RegionKey | null {
+  const claimed = (body.region ?? '').toLowerCase();
+  if ((REGION_KEYS as readonly string[]).includes(claimed)) return claimed as RegionKey;
+
+  const geo: Record<string, RegionKey> = { IN: 'india', AE: 'dubai', AU: 'australia' };
+  const country = (request.headers.get('x-vercel-ip-country') ?? '').toUpperCase();
+  return geo[country] ?? null;
 }
 
 const bad = (status: number, error: string) =>
@@ -190,6 +215,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   const client = new Anthropic({ apiKey });
   const surface = body.surface ?? '/';
+  const region = resolveRegion(body, request);
   // Observability, kept from the demo: which tools ran, how many turns, what it
   // cost. Lands in Vercel's function logs — enough to see the agent's behaviour
   // without standing up a tracing backend.
@@ -210,7 +236,11 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
         system: [
           {
             type: 'text',
-            text: `${SYSTEM}\n\nThe visitor is reading the ${surface} page.`,
+            text:
+              `${SYSTEM}\n\nThe visitor is reading the ${surface} page.\n` +
+              (region
+                ? `Their region is ${region}. Quote only ${region} pricing — the page they are looking at shows that region's rate and nothing else.`
+                : 'Their region is unknown. Do not quote or list cohort pricing until you have asked which region they would join from.'),
             cache_control: { type: 'ephemeral' },
           },
         ],
@@ -270,7 +300,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
               results.push({
                 type: 'tool_result',
                 tool_use_id: use.id,
-                content: formatRetrieved(searchKnowledge(input.query ?? '')),
+                content: formatRetrieved(searchKnowledge(input.query ?? '', region)),
               });
               break;
 

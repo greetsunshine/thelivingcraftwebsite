@@ -28,6 +28,12 @@ export interface Fact {
   surface: '/' | '/caio' | '/assessment' | 'practice';
   q: string;
   a: string;
+  /**
+   * Answer varies by the visitor's region; `a` is a placeholder that retrieval
+   * replaces. Set this and handle the id in knowledge.ts — a regional fact
+   * whose answer is served raw would leak every region's figures at once.
+   */
+  regional?: boolean;
   /** Extra retrieval terms that don't appear in `q` or `a`. */
   tags?: string[];
 }
@@ -82,6 +88,38 @@ export const cohortPricing = (Object.values(regions) as Region[]).map((r) => ({
   standard: r.standardPrice ?? null,
   unit: r.priceUnit,
 }));
+
+/**
+ * Cohort price for ONE region — never the full list.
+ *
+ * The page has always shown a single region's rate (regions.ts + ?region=), but
+ * the agent was quoting all three at once, so an Indian visitor heard about AED
+ * and AUD they'll never pay. Pricing is answered through this function so the
+ * conversation matches the page the visitor is looking at.
+ *
+ * With no region resolved, the honest move is to ask rather than list — hence
+ * no fallback that dumps every rate.
+ */
+export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
+  if (!key || !regions[key]) {
+    return [
+      'Cohort pricing is set per region, and each region sees only its own rate.',
+      "You do not know which region this visitor is in, so DO NOT quote a figure and DO NOT list the regions' rates.",
+      'Ask which region they would be joining from (India, Dubai, or Australia), then call this tool again mentioning that region.',
+    ].join(' ');
+  }
+
+  const r = regions[key];
+  const lines = [
+    `${r.label}: ${r.price} ${r.priceUnit}.`,
+    r.standardPrice
+      ? `That is the founding rate for the first cohort; it rises to ${r.standardPrice} for the cohorts that follow.`
+      : 'That is the founding rate for the first cohort; it rises for the cohorts that follow.',
+    'Payment plans are available. Many participants expense the program through their employer; an ROI letter and itemised outline are provided.',
+    `ONLY quote the ${r.label} figure. Do not mention what other regions pay, even if asked to compare — say pricing is set per region and Sunil can discuss another region directly.`,
+  ];
+  return lines.join(' ');
+};
 
 // ---------------------------------------------------------------------------
 // Consulting — Fractional CAIO (/caio) and Assessment (/assessment)
@@ -186,15 +224,15 @@ export const facts: Fact[] = [
     id: 'cohort-price',
     surface: '/',
     q: 'How much does the cohort cost?',
-    a: [
-      'Pricing is per region, at a founding rate for the first cohort:',
-      ...cohortPricing.map(
-        (p) =>
-          `- ${p.region}: ${p.founding}${p.standard ? ` (down from ${p.standard} for the cohorts that follow)` : ''}`,
-      ),
-      'Payment plans are available. Many participants expense the program through their employer; an ROI letter and itemised outline are provided.',
-    ].join('\n'),
-    tags: ['price', 'cost', 'fee', 'fees', 'tuition', 'how much', 'payment', 'discount'],
+    // Placeholder only — retrieval swaps this for cohortPriceAnswer(region) so
+    // a visitor is never quoted a rate that isn't theirs. See knowledge.ts.
+    a: 'Cohort pricing is regional and resolved per visitor.',
+    regional: true,
+    tags: [
+      'price', 'cost', 'fee', 'fees', 'tuition', 'how much', 'payment',
+      'discount', 'rupees', 'dirhams', 'dollars', 'afford', 'expensive',
+      'pay', 'paying', 'charge', 'rate', 'pricing',
+    ],
   },
   {
     id: 'cohort-curriculum',

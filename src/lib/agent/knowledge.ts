@@ -9,7 +9,8 @@
 // The agent may only answer from what this returns. That constraint is what
 // stops it inventing pricing, which the repo's hard rules forbid.
 
-import { facts, type Fact } from '../../data/facts';
+import { cohortPriceAnswer, facts, type Fact } from '../../data/facts';
+import type { Region } from '../../data/regions';
 import { getLatest, type LatestItem } from './latest';
 
 const STOP = new Set([
@@ -46,10 +47,45 @@ export interface Retrieved {
 }
 
 /**
+ * Region named in the question itself — the fallback when the request didn't
+ * carry one (no ?region= param, no geo header). Someone who writes "I'm in
+ * Dubai, what's the price?" has told us what we need.
+ *
+ * Only consulted when the request region is unknown. If the request DID resolve
+ * a region, that wins — otherwise "I'm in India, what does Australia pay?"
+ * would talk itself into the cross-region answer this is meant to prevent.
+ */
+function regionFromText(text: string): Region['key'] | null {
+  const t = text.toLowerCase();
+  if (/\b(india|indian|inr|rupee|bangalore|bengaluru|mumbai|delhi)\b/.test(t)) return 'india';
+  if (/\b(dubai|uae|emirates|aed|dirham|abu dhabi)\b/.test(t)) return 'dubai';
+  if (/\b(australia|australian|aud|sydney|melbourne|brisbane)\b/.test(t)) return 'australia';
+  return null;
+}
+
+/**
+ * Resolve a fact's answer for this visitor. Regional facts carry a placeholder
+ * in the fact base and are rendered here, so the region is applied in exactly
+ * one place and can't be forgotten at a call site.
+ */
+function answerFor(f: Fact, region: Region['key'] | null, query: string): string {
+  if (!f.regional) return f.a;
+  if (f.id === 'cohort-price') return cohortPriceAnswer(region ?? regionFromText(query));
+  return f.a;
+}
+
+/**
  * Rank facts against a query. Question text is weighted above answer text —
  * a fact whose *question* matches is far more likely to be the one asked.
+ *
+ * `region` scopes regional answers to the visitor. Scoring runs against the
+ * static text so ranking stays stable regardless of who is asking.
  */
-export function searchKnowledge(query: string, limit = 5): Retrieved[] {
+export function searchKnowledge(
+  query: string,
+  region?: Region['key'] | null,
+  limit = 5,
+): Retrieved[] {
   const q = tokenize(query).map(stem);
   if (q.length === 0) return [];
 
@@ -57,7 +93,7 @@ export function searchKnowledge(query: string, limit = 5): Retrieved[] {
     .map((f: Fact) => ({
       id: f.id,
       q: f.q,
-      a: f.a,
+      a: answerFor(f, region ?? null, query),
       surface: f.surface,
       score:
         score(q, f.q, 3) +

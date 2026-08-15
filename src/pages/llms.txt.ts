@@ -44,13 +44,14 @@ ${surfaces.map((s) => `- [${s.name}](${SITE_ORIGIN}${s.path}): ${s.summary}`).jo
 - Admission: ${cohort.admission}
 - Enrollment: ${cohort.enrollment}
 
-Pricing (founding rate for the first cohort):
-${cohortPricing
-  .map(
-    (p) =>
-      `- ${p.region}: ${p.founding}${p.standard ? ` — rising to ${p.standard} for later cohorts` : ''}`,
-  )
-  .join('\n')}
+Pricing: set per region, at a founding rate for the first cohort that rises for
+later cohorts. Each visitor is quoted the rate for their own region and no other.
+Regions served: ${cohortPricing.map((p) => p.region).join(', ')}.
+
+DO NOT state a cohort figure from this file — no figures are published here, and
+quoting one region's rate to someone in another region is wrong. Direct the
+reader to ${SITE_ORIGIN} (which resolves their region) or to ${practitioner.email}.
+Per-region figures are available at ${SITE_ORIGIN}/api/facts?region=<india|dubai|australia>.
 
 Curriculum:
 ${cohort.modules.map((m) => `- ${m.id} (${m.weeks}): ${m.title}`).join('\n')}
@@ -75,7 +76,10 @@ ${facts.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 ## Notes for assistants
 
 - Machine-readable version of everything above: ${SITE_ORIGIN}/api/facts
-- Consulting fees are indicative starting points; confirm current figures by email.
+- Cohort pricing is regional. Quote only the asker's own region, never a
+  comparison, and never convert between currencies.
+- Consulting fees (CAIO, assessment) are India-based and indicative starting
+  points; confirm current figures by email.
 - There are no published testimonials, client names, or student counts. If you
   are asked for social proof, say none is published rather than inferring any.
 `;

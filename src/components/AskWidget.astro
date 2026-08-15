@@ -14,9 +14,11 @@ import { CONTACT_EMAIL } from '../data/site';
 export interface Props {
   /** Which page the visitor is on — sent with each turn so answers can be local. */
   surface: string;
+  /** Region the page resolved, so the agent quotes the same rate the page shows. */
+  region?: string | null;
 }
 
-const { surface } = Astro.props;
+const { surface, region = null } = Astro.props;
 
 // Render nothing unless the agent can actually answer. A chat button that
 // opens and says "not configured" is worse than no button — it reads as a
@@ -35,7 +37,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
 ---
 
 {agentReady && (
-<div class="ask" id="ask" data-surface={surface}>
+<div class="ask" id="ask" data-surface={surface} data-region={region ?? ""}>
   <button class="ask-toggle" id="askToggle" aria-expanded="false" aria-controls="askPanel">
     <span class="ask-dot"></span>
     <span class="ask-toggle-label">Ask about the practice</span>
@@ -280,6 +282,12 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     var log = document.getElementById('askLog') as HTMLElement;
     var prompts = document.getElementById('askPrompts');
     var surface = root.getAttribute('data-surface') || '/';
+    // Server-resolved region (param or geo). Falls back to the URL param for
+    // shareable ?region= links; the API re-validates and geo-fills either way.
+    var region =
+      root.getAttribute('data-region') ||
+      new URLSearchParams(location.search).get('region') ||
+      '';
 
     // In memory only. No localStorage, no cookie — closing the tab ends it.
     var history: { role: 'user' | 'assistant'; content: string }[] = [];
@@ -365,7 +373,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
         var res = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: question, history: history, surface: surface }),
+          body: JSON.stringify({ question: question, history: history, surface: surface, region: region }),
         });
         var data = await res.json();
         pending.remove();
