@@ -52,12 +52,17 @@ const ITEM_SCHEMA = {
           body: {
             type: 'string',
             description:
-              'Two to four sentences. What changed and why it matters to an engineering or business leader. No marketing language.',
+              'Two to four sentences, written FOR A PROSPECTIVE CLIENT who will read it. What changed and why it matters to an engineering or business leader. No marketing language. Put NOTHING here that is addressed to Sunil or to a reviewer — no caveats about your own confidence, no "verify before quoting", no notes on source quality. Those belong in reviewNote.',
+          },
+          reviewNote: {
+            type: 'string',
+            description:
+              'For Sunil only; never shown to anyone else. Anything he should know before trusting this: source quality, what you could not confirm, whether the claim is primary-sourced or secondhand. Empty string if there is nothing to flag.',
           },
           source: { type: 'string', description: 'The URL this came from.' },
           tags: { type: 'array', items: { type: 'string' } },
         },
-        required: ['id', 'title', 'body', 'source', 'tags'],
+        required: ['id', 'title', 'body', 'reviewNote', 'source', 'tags'],
         additionalProperties: false,
       },
     },
@@ -78,7 +83,13 @@ Rules:
   from a separate source of truth and are not yours to restate.
 - No testimonials, client names, or metrics attributed to Sunil.
 - Write for a CTO or engineering director: what changed, and what it means for them.
-- Prefer primary sources (regulator, standards body, official announcement) over commentary.`;
+- Prefer primary sources (regulator, standards body, official announcement) over commentary.
+  Sunil sells regulatory depth, so a legal or regulatory claim cited to a vendor blog or a
+  trade-press summary is a liability. If you can only find a secondary source for such a
+  claim, still report it, but say so plainly in reviewNote.
+- The body is read aloud to prospective clients. Write it for them. Anything addressed to
+  Sunil — doubts, verification steps, source-quality concerns — goes in reviewNote, never
+  in the body.`;
 
 /**
  * Two passes, because web search and structured outputs can't share a call.
@@ -89,46 +100,69 @@ Rules:
  * then transcribe. The second call sees only the first's notes, so it can't
  * introduce a finding that wasn't researched.
  */
+/** Searches per topic. Shared across topics, the first one eats the budget. */
+const SEARCHES_PER_TOPIC = 10;
+
 async function gather(topics: string[]) {
   const client = new Anthropic();
   const today = new Date().toISOString().slice(0, 10);
 
-  // Pass 1 — research. Tools on, no output_config.format.
-  const research = await client.messages.create({
-    model: MODEL,
-    max_tokens: 8000,
-    thinking: { type: 'adaptive' },
-    output_config: { effort: 'medium' },
-    system: SYSTEM,
-    tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 12 }],
-    messages: [
-      {
-        role: 'user',
-        content: `Search for material developments in the last 90 days on each of these topics.
+  // Pass 1 — research, ONE CALL PER TOPIC.
+  //
+  // A single call covering all four topics starved the later ones: the first
+  // run exhausted a shared 12-search budget on topic one and reported items for
+  // the rest from whatever it already had, while the second run said so out
+  // loud — "three of four topics are under-searched rather than genuinely
+  // empty". Per-topic calls give each its own budget, so an empty topic means
+  // nothing was found rather than nothing was looked for.
+  const notes: string[] = [];
+  for (const [i, topic] of topics.entries()) {
+    console.log(`  [${i + 1}/${topics.length}] ${topic.slice(0, 68)}…`);
 
-${topics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+    const research = await client.messages.create({
+      model: MODEL,
+      max_tokens: 6000,
+      thinking: { type: 'adaptive' },
+      output_config: { effort: 'medium' },
+      system: SYSTEM,
+      tools: [
+        { type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES_PER_TOPIC },
+      ],
+      messages: [
+        {
+          role: 'user',
+          content: `Search for material developments in the last 90 days on this one topic:
+
+${topic}
 
 Today is ${today}. Discard anything older than 90 days or already common knowledge.
 
-Write up only the findings worth surfacing to a prospective client. For each one give a
-short title, two to four sentences on what changed and why it matters to an engineering or
-business leader, and the source URL. If nothing material turned up for a topic, say so
-plainly — an empty result is expected some weeks and is better than padding.`,
-      },
-    ],
-  });
+Write up only the findings worth surfacing to a prospective client. For each, give a short
+title, two to four sentences for that client, the source URL, and — separately — anything
+Sunil should know before trusting it. If nothing material turned up, say so plainly; an
+empty topic is expected some weeks and is better than padding.
 
-  if (research.stop_reason === 'refusal') {
-    throw new Error(`Research pass refused: ${research.stop_details?.explanation ?? 'no explanation'}`);
+You have ${SEARCHES_PER_TOPIC} searches for this topic alone, so search properly before
+concluding it is empty. If you run out, say the topic is under-searched rather than empty.`,
+        },
+      ],
+    });
+
+    if (research.stop_reason === 'refusal') {
+      console.warn(`      refused: ${research.stop_details?.explanation ?? 'no explanation'} — skipping`);
+      continue;
+    }
+
+    const text = research.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+      .trim();
+
+    if (text) notes.push(`## Topic: ${topic}\n\n${text}`);
   }
 
-  const notes = research.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map((b) => b.text)
-    .join('\n')
-    .trim();
-
-  if (!notes) return [];
+  if (notes.length === 0) return [];
 
   // Pass 2 — transcribe into the schema. No tools, so no citations, so the
   // structured-output constraint is satisfied.
@@ -141,7 +175,7 @@ plainly — an empty result is expected some weeks and is better than padding.`,
       'You transcribe research notes into structured records. Use only what the notes contain — ' +
       'no additions, no inference, no rewriting of the substance. Drop any finding that lacks a ' +
       'usable source URL. If the notes report nothing material, return an empty list.',
-    messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes}` }],
+    messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes.join('\n\n---\n\n')}` }],
   });
 
   if (structured.stop_reason === 'refusal') {

@@ -68,7 +68,21 @@ export const GET: APIRoute = ({ url }) => {
         question: f.q,
         answer: f.regional ? cohortPriceAnswer(region as never) : f.a,
       })),
-    latest: { refreshedAt: latest.refreshedAt, items: latest.items },
+    latest: {
+      refreshedAt: latest.refreshedAt,
+      // Field-by-field, NOT the whole item. reviewNote is Sunil's private
+      // assessment of a finding ("weakest-sourced… treat it accordingly") and
+      // this endpoint is public and crawled. Spreading the item would publish
+      // his own doubts about his own content.
+      items: latest.items.map(({ id, title, body, source, gatheredAt, tags }) => ({
+        id,
+        title,
+        body,
+        source,
+        gatheredAt,
+        tags,
+      })),
+    },
     notes: [
       'Cohort pricing is regional. Quote only the asker\'s own region, never a comparison, and never convert currencies.',
       'Consulting fees (CAIO, assessment) are India-based indicative anchors; confirm current figures by email.',

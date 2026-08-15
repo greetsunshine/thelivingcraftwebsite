@@ -17,7 +17,19 @@ import raw from '../../data/latest.json';
 export interface LatestItem {
   id: string;
   title: string;
+  /**
+   * Visitor-facing. The Q&A agent reads this and paraphrases it to prospects,
+   * so it must contain nothing addressed to the operator. The first retriever
+   * run put "confirm this before quoting to a client" in here — advice for
+   * Sunil that a visitor would have been told.
+   */
   body: string;
+  /**
+   * Operator-only: caveats, source-quality doubts, anything to check before
+   * trusting the item. Deliberately NOT included in formatLatest(), so it never
+   * reaches the agent's context and cannot be repeated to a visitor.
+   */
+  reviewNote?: string;
   /** Where the retriever got this — a URL, or 'operator' for hand-written notes. */
   source: string;
   /** ISO date the retriever wrote it. Surfaced so stale facts are visible. */
