@@ -27,12 +27,21 @@ const OUT = join(here, '..', 'src', 'data', 'latest.json');
 
 const MODEL = 'claude-opus-5';
 
-/** What the retriever sweeps when run with no arguments. */
+/**
+ * What the retriever sweeps when run with no arguments.
+ *
+ * Deliberately mapped to what the cohort teaches, because the job these serve
+ * is a prospect asking "is this material current, or am I paying for last
+ * year's thinking?" Each topic corresponds to a module:
+ *   M1 durable architecture · M2 agentic systems, evals, red-teaming
+ *   M3 scale and trade-offs  · plus what teams are actually hiring for
+ */
 const DEFAULT_TOPICS = [
-  'Recent changes to India DPDP Act rules or enforcement affecting enterprise AI deployments',
-  'Recent RBI, SEBI or IRDAI guidance on AI or model risk for regulated Indian firms',
-  'Recent EU AI Act milestones or ISO 42001 / NIST AI RMF developments relevant to enterprise AI governance',
-  'Notable recent developments in agentic AI evaluation, reliability engineering, or prompt-injection defence',
+  'New or shifting architecture patterns in production agentic AI systems — orchestration, tool design, context management, agent memory',
+  'Advances in evaluating and testing agentic AI — eval harnesses, benchmarks, and reliability engineering for non-deterministic systems',
+  'Security and red-teaming developments for agentic AI — prompt injection, tool-use exploitation, data exfiltration, containment patterns',
+  'Skills and competencies engineering leaders are hiring for, or building in their teams, to work on agentic AI',
+  'Significant model, framework, or tooling releases that change how production agentic systems are built',
 ];
 
 const ITEM_SCHEMA = {
@@ -71,25 +80,36 @@ const ITEM_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM = `You gather current, citable developments for the website of Sunil Mathew — a
-fractional Chief AI Officer and instructor working with India's regulated and mid-market
-enterprises. Your findings are read by a visitor-facing Q&A agent on that site.
+const SYSTEM = `You track what is genuinely moving in the agentic AI space — the trends, techniques,
+and skills that a senior engineer or engineering leader should know about right now.
+
+Your findings are read by a visitor-facing Q&A agent on Sunil Mathew's website. Sunil
+teaches The Living Craft, a live cohort on agentic and systems architecture, and runs a
+fractional Chief AI Officer practice. The visitors reading your findings are tech leads,
+architects, and engineering directors deciding whether his material is current.
+
+So the question behind every item is: does this change what a competent engineer should
+know, build, or watch out for? Not "is this in the news".
 
 Rules:
 - Only report things you actually found and can cite with a URL. Never infer, extrapolate,
   or fill a gap with what is probably true.
-- Return an empty list rather than padding with marginal items. Nothing is a valid answer.
+- Return an empty list rather than padding. Nothing is a valid answer for a quiet week, and
+  far better than dressing up a vendor announcement as a trend.
+- Substance over launches. A new framework release matters only if it changes how systems
+  get built; a benchmark matters only if it measures something people were guessing at.
+  Skip funding rounds, company news, and marketing.
+- Prefer the primary artefact — the paper, the release notes, the engineering write-up, the
+  official announcement — over someone's summary of it. Where you only have a secondhand
+  source, still report it, but say so in reviewNote.
+- Be sceptical of hype. If a claim is a vendor's about their own product, or a single
+  benchmark result with no independent replication, say so in reviewNote.
 - Never write about Sunil's own pricing, cohort dates, seat counts, or offers. Those come
   from a separate source of truth and are not yours to restate.
 - No testimonials, client names, or metrics attributed to Sunil.
-- Write for a CTO or engineering director: what changed, and what it means for them.
-- Prefer primary sources (regulator, standards body, official announcement) over commentary.
-  Sunil sells regulatory depth, so a legal or regulatory claim cited to a vendor blog or a
-  trade-press summary is a liability. If you can only find a secondary source for such a
-  claim, still report it, but say so plainly in reviewNote.
-- The body is read aloud to prospective clients. Write it for them. Anything addressed to
-  Sunil — doubts, verification steps, source-quality concerns — goes in reviewNote, never
-  in the body.`;
+- The body is read to prospective clients. Write it for them: what changed, and what a
+  senior engineer should do or think differently as a result. Anything addressed to Sunil —
+  doubts, verification steps, source-quality concerns — goes in reviewNote, never the body.`;
 
 /**
  * Two passes, because web search and structured outputs can't share a call.
@@ -101,7 +121,7 @@ Rules:
  * introduce a finding that wasn't researched.
  */
 /** Searches per topic. Shared across topics, the first one eats the budget. */
-const SEARCHES_PER_TOPIC = 10;
+const SEARCHES_PER_TOPIC = 8;
 
 async function gather(topics: string[]) {
   const client = new Anthropic();
@@ -137,10 +157,12 @@ ${topic}
 
 Today is ${today}. Discard anything older than 90 days or already common knowledge.
 
-Write up only the findings worth surfacing to a prospective client. For each, give a short
-title, two to four sentences for that client, the source URL, and — separately — anything
-Sunil should know before trusting it. If nothing material turned up, say so plainly; an
-empty topic is expected some weeks and is better than padding.
+Write up only what genuinely changes what a senior engineer should know, build, or watch
+out for. For each finding give a short title, two to four sentences written for that
+engineer, the source URL, and — separately — anything Sunil should know before trusting it
+(secondhand source, vendor claiming things about their own product, single unreplicated
+result). If nothing material turned up, say so plainly; an empty topic is expected some
+weeks and is better than padding.
 
 You have ${SEARCHES_PER_TOPIC} searches for this topic alone, so search properly before
 concluding it is empty. If you run out, say the topic is under-searched rather than empty.`,
@@ -168,7 +190,10 @@ concluding it is empty. If you run out, say the topic is under-searched rather t
   // structured-output constraint is satisfied.
   const structured = await client.messages.create({
     model: MODEL,
-    max_tokens: 4000,
+    // Generous: this scales with topic count, and running out truncates the
+    // JSON mid-string, which surfaces as an opaque parse error rather than
+    // "you ran out of room". 4000 was not enough for five topics.
+    max_tokens: 16000,
     thinking: { type: 'adaptive' },
     output_config: { effort: 'low', format: { type: 'json_schema', schema: ITEM_SCHEMA } },
     system:
@@ -180,6 +205,15 @@ concluding it is empty. If you run out, say the topic is under-searched rather t
 
   if (structured.stop_reason === 'refusal') {
     throw new Error(`Transcription pass refused: ${structured.stop_details?.explanation ?? 'no explanation'}`);
+  }
+
+  // Catch this before JSON.parse, or a truncated response reads as malformed
+  // JSON and sends you looking for a bug in the schema instead of the budget.
+  if (structured.stop_reason === 'max_tokens') {
+    throw new Error(
+      'Transcription pass hit max_tokens, so the JSON is cut off. Raise max_tokens ' +
+        'on the structured call, or sweep fewer topics per run.',
+    );
   }
 
   const raw = structured.content

@@ -46,11 +46,23 @@ Two agents, one handoff artefact:
   `get_latest_updates`, `capture_visitor` (leads → the same Web3Forms inbox).
   Retrieval in [src/lib/agent/knowledge.ts](src/lib/agent/knowledge.ts) is lexical, not embeddings — the
   corpus is ~20 facts and lexical scoring is auditable. UI: [src/components/AskWidget.astro](src/components/AskWidget.astro).
-- **Retriever agent** — [scripts/gather-latest.ts](scripts/gather-latest.ts) (`npm run gather`). Sweeps
-  regulatory and agentic-AI developments via Claude's server-side web search and
-  writes [src/data/latest.json](src/data/latest.json), which the Q&A agent reads. Scheduled weekly by
+- **Retriever agent** — [scripts/gather-latest.ts](scripts/gather-latest.ts) (`npm run gather`). Tracks
+  **trends and skills in the agentic AI space** — architecture patterns, evals
+  and reliability, agent security, what teams are hiring for, and releases that
+  change how systems get built. Topics map to the cohort's modules, because the
+  job they serve is a prospect asking "is this material current?". Writes
+  [src/data/latest.json](src/data/latest.json), which the Q&A agent reads. Scheduled weekly by
   [.github/workflows/gather-latest.yml](.github/workflows/gather-latest.yml), which opens a **PR rather than committing** —
   a human should see what the agent gathered before prospects do.
+  - It briefly tracked India/EU *regulatory* news instead. That was an
+    unrequested inference on my part, and wrong: a practice selling regulatory
+    depth citing trade press for an RBI claim is worse than saying nothing.
+  - One research call **per topic** — a shared search budget let the first topic
+    starve the rest, and the agent reported thin findings rather than admitting
+    the coverage gap.
+  - Items carry `reviewNote` for Sunil (source quality, what couldn't be
+    confirmed). It is excluded from `formatLatest()` **and** from `/api/facts`,
+    so his private doubts never reach a visitor or a crawler. Keep it that way.
 - The retriever is forbidden from writing our own prices/dates/seat counts. Those
   come from `facts.ts`; two sources could disagree and the Q&A agent would have no
   way to tell which is true.
