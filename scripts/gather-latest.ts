@@ -25,7 +25,18 @@ import Anthropic from '@anthropic-ai/sdk';
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', 'src', 'data', 'latest.json');
 
-const MODEL = 'claude-opus-5';
+// Split by what each pass actually needs.
+//
+// Research is search-and-summarise over web results — high input volume, modest
+// reasoning — which is where Sonnet 5 is strong and where Opus 5's premium buys
+// little. It is also the dominant cost: five calls, each carrying full search
+// results in context. Transcription stays on Opus 5 because it decides what
+// survives into visitor-facing text and what gets flagged for review, and that
+// judgment is worth paying for on one short call.
+//
+// Both support web_search_20260209 and adaptive thinking.
+const RESEARCH_MODEL = 'claude-sonnet-5';
+const TRANSCRIBE_MODEL = 'claude-opus-5';
 
 /**
  * What the retriever sweeps when run with no arguments.
@@ -120,8 +131,15 @@ Rules:
  * then transcribe. The second call sees only the first's notes, so it can't
  * introduce a finding that wasn't researched.
  */
-/** Searches per topic. Shared across topics, the first one eats the budget. */
-const SEARCHES_PER_TOPIC = 8;
+/**
+ * Searches per topic. Shared across topics, the first one eats the budget — so
+ * this is per topic, not per run.
+ *
+ * 6, down from 8: web search is billed per query and is a large share of a run.
+ * The skills topic came back empty at 8, which was a genuine absence rather
+ * than a starved search, so the extra two were not buying coverage.
+ */
+const SEARCHES_PER_TOPIC = 6;
 
 async function gather(topics: string[]) {
   const client = new Anthropic();
@@ -140,7 +158,7 @@ async function gather(topics: string[]) {
     console.log(`  [${i + 1}/${topics.length}] ${topic.slice(0, 68)}…`);
 
     const research = await client.messages.create({
-      model: MODEL,
+      model: RESEARCH_MODEL,
       max_tokens: 6000,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'medium' },
@@ -189,7 +207,7 @@ concluding it is empty. If you run out, say the topic is under-searched rather t
   // Pass 2 — transcribe into the schema. No tools, so no citations, so the
   // structured-output constraint is satisfied.
   const structured = await client.messages.create({
-    model: MODEL,
+    model: TRANSCRIBE_MODEL,
     // Generous: this scales with topic count, and running out truncates the
     // JSON mid-string, which surfaces as an opaque parse error rather than
     // "you ran out of room". 4000 was not enough for five topics.
@@ -248,7 +266,10 @@ async function main() {
   const topics = process.argv.slice(2);
   const useTopics = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
-  console.log(`Retriever: sweeping ${useTopics.length} topic(s) on ${MODEL}…`);
+  console.log(
+    `Retriever: sweeping ${useTopics.length} topic(s) — research on ${RESEARCH_MODEL}, ` +
+      `transcription on ${TRANSCRIBE_MODEL}.`,
+  );
   const found = await gather(useTopics);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -274,6 +295,16 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Retriever failed:', err instanceof Error ? err.message : err);
+  const msg = err instanceof Error ? err.message : String(err);
+
+  if (/credit balance/i.test(msg)) {
+    console.error('Retriever stopped: the Anthropic account is out of credit.\n');
+    console.error('  Top up:  https://console.anthropic.com/settings/billing');
+    console.error('  Cap it:  https://console.anthropic.com/settings/limits\n');
+    console.error('  Note this also takes the live site agent down — it shares the key.');
+    process.exit(1);
+  }
+
+  console.error('Retriever failed:', msg);
   process.exit(1);
 });

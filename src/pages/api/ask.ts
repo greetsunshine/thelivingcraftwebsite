@@ -358,6 +358,19 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     if (err instanceof Anthropic.RateLimitError) {
       return bad(429, 'Busy right now — try again in a moment, or email apply@thelivingcraft.ai.');
     }
+
+    // An exhausted credit balance arrives as a plain 400, so it reads as a
+    // generic failure in the logs while every visitor question breaks. Name it,
+    // because the fix is billing rather than anything in this codebase.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (err instanceof Anthropic.BadRequestError && /credit balance/i.test(msg)) {
+      console.error(
+        'ASK DOWN — Anthropic credit balance exhausted. The agent is failing for every ' +
+          'visitor until credit is added at console.anthropic.com/settings/billing.',
+      );
+      return bad(503, 'The assistant is briefly unavailable. Please email apply@thelivingcraft.ai — Sunil replies personally.');
+    }
+
     console.error('ask failed:', err);
     return bad(502, 'Something went wrong. Please email apply@thelivingcraft.ai.');
   }
