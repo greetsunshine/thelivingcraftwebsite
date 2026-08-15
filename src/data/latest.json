@@ -1,5 +1,5 @@
 {
-  "refreshedAt": "2026-08-12T00:00:00.000Z",
+  "refreshedAt": "2026-08-15T03:58:01.240Z",
   "items": [
     {
       "id": "seed-cohort-open",
@@ -7,7 +7,14 @@
       "body": "The inaugural cohort of The Living Craft starts September 2026 with 8 seats. Enrollment is rolling and closes when the seats are filled. The founding rate applies to this cohort only.",
       "source": "operator",
       "gatheredAt": "2026-08-12",
-      "tags": ["cohort", "applications", "open", "seats", "availability", "september"]
+      "tags": [
+        "cohort",
+        "applications",
+        "open",
+        "seats",
+        "availability",
+        "september"
+      ]
     },
     {
       "id": "seed-assessment-founding",
@@ -15,7 +22,109 @@
       "body": "The AI Readiness Assessment founding rate of ₹3,50,000 applies to the first three engagements. After that the fixed fee is ₹4,50,000.",
       "source": "operator",
       "gatheredAt": "2026-08-12",
-      "tags": ["assessment", "founding", "rate", "availability", "discount"]
+      "tags": [
+        "assessment",
+        "founding",
+        "rate",
+        "availability",
+        "discount"
+      ]
+    },
+    {
+      "id": "context-compaction-reliability-failure",
+      "title": "Context compaction shows up as a reliability failure, not just a cost lever",
+      "body": "A preliminary empirical study (Min et al., arXiv 2608.06503, 6 Aug 2026) finds that recurrent context compression in long-horizon agents weakens the influence of recent interactions, producing more blocked actions, repeated exploration, and run-to-run instability — behavioural effects that token-count metrics never surface. The authors propose TRACE, which evaluates each individual compaction event by running paired closed-loop continuations from the same environment state, then optimises the compression prompt while leaving all models frozen. If your agent compacts, the implication is that compaction boundaries should be evaluated as discrete events with executable outcomes rather than by eyeballing summary quality.",
+      "reviewNote": "Primary source (arXiv preprint), but the authors label it explicitly preliminary; results are on AppWorld only, single team (UVA + Nokia), no independent replication. Do not present TRACE as an established technique — the durable point is the failure-mode observation, not the proposed fix.",
+      "source": "https://arxiv.org/abs/2608.06503",
+      "tags": [
+        "agentic-ai",
+        "context-management",
+        "reliability",
+        "evaluation"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "control-context-compression-cliff",
+      "title": "Compressing system-side control context has a sharp, non-linear reliability cliff",
+      "body": "\"Control Under Compression\" (arXiv 2608.01056, 2 Aug 2026) targets agent control contexts — the persistent system-side instructions specifying tools, arguments, policies, execution protocols and recovery — rather than conversation history. Across a 15,525-run environment-verified benchmark, retaining 75% of context held success near the full-context baseline (92.7% and 92.4% versus 93.8%), but between 50% and 35% the methods diverged sharply, dropping to 47.0%, 39.0% and 19.9% at 35% depending on compression method. Failures appeared mainly as tool-execution and action-parsing errors, and reliability varied enough between control contexts that the authors argue universal compressor rankings are inappropriate and each context needs its own qualification. This reframes tool and policy prompt trimming as a runtime-reliability decision requiring per-context executable testing, with a safe-looking zone that ends abruptly.",
+      "reviewNote": "Primary source, methodologically the stronger of the two (large run count, environment-verified). Still a single unreplicated preprint; all results are on three fixed Qwen model identifiers, so the specific cliff thresholds may not transfer to other model families. Cite the shape of the finding, not the exact percentages, when talking to clients.",
+      "source": "https://arxiv.org/abs/2608.01056",
+      "tags": [
+        "agentic-ai",
+        "tool-design",
+        "context-management",
+        "reliability"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "mcp-2026-07-28-stateless-spec",
+      "title": "MCP went stateless — the 2026-07-28 spec is a breaking change for remote MCP server deployment",
+      "body": "The 2026-07-28 Model Context Protocol specification shipped with a stateless protocol core, Multi Round-Trip Requests, header-based routing, cacheable list results, authorization hardening, a formal extensions framework, and updated Tier 1 SDKs — the largest revision of the protocol since launch. The initialize/initialized handshake (SEP-2575) and the Mcp-Session-Id header (SEP-2567) are removed entirely; every request is now self-describing, with protocol version, client info and capabilities travelling in a _meta field inline on every request. A remote MCP server that previously needed sticky sessions, a shared session store and deep packet inspection at the gateway can now run behind a plain round-robin load balancer, route traffic on an Mcp-Method header, and let clients cache tools/list responses for as long as the server's ttlMs permits. If you have an MCP server in production behind a Redis session store, that architecture is now legacy — plan the migration rather than inheriting it.",
+      "reviewNote": "Primary source is the MCP maintainers' own blog, the right artefact for a spec release. The announcement includes promotional quotes from Microsoft and Netlify, and Google published its own framing of work it led (Google states it led the decoupling effort and co-founded the MCP Transports Working Group with Hugging Face) — treat \"widely adopted already\" and download-volume claims as vendor-sourced. The substance of the protocol change is verifiable from the spec itself.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+      "tags": [
+        "mcp",
+        "tooling-release",
+        "architecture"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "mcp-sdk-migration-edges",
+      "title": "MCP migration has sharp edges: silent version downgrade and three deprecated capabilities",
+      "body": "Beta releases of the Python, TypeScript, Go and C# SDKs are available with support for the 2026-07-28 spec. The trap: the streamable HTTP transport accepts 2026-07-28 only when you set StreamableHTTPOptions.Stateless = true — leave it unset and clients negotiate down to 2025-11-25, a silent behavioural downgrade rather than an error, so add an explicit assertion on negotiated protocol version to your integration tests. Breaking changes are otherwise confined to the capabilities the specification deprecates — roots, sampling and logging; if your agent design leans on server-initiated sampling, that is now on a deprecation path. Also note that server/discover is optional for clients to call but mandatory for every 2026-07-28 server to implement.",
+      "reviewNote": "Primary source, maintainer-authored. The SDKs were in beta at time of writing (three weeks ago) — worth re-checking whether Tier 1 SDKs have since gone stable before recommending anyone migrate production code.",
+      "source": "https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/",
+      "tags": [
+        "mcp",
+        "tooling-release",
+        "migration"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "stateless-mcp-authorization-shift",
+      "title": "Statelessness moves MCP authorization to the application layer — and most MCP risk was never in the transport",
+      "body": "Removing the session also removes per-session authorization context; as Google's write-up puts it, \"As the responsibility of managing state shifts from the transport layer to the application layer, security becomes paramount.\" An independent security review of the release is blunter: statelessness changes where authorization happens and how you deploy the server, but the vulnerabilities found in MCP servers sit in the functionality they expose, which the specification does not touch. The spec upgrade buys scale and cheaper operations, not safety — every request must now carry and re-verify its own authorization, and tool-level authorization design remains entirely your problem.",
+      "reviewNote": "Equixly is a security vendor writing about a protocol it does not own, which makes the critical framing more credible than a first-party post — but they sell MCP security testing, so the \"vulnerabilities are in your functionality\" conclusion is commercially convenient for them. The underlying claim (spec doesn't govern tool implementation) is structurally obvious and low-risk to repeat.",
+      "source": "https://equixly.com/blog/2026/08/05/stateless-mcp/",
+      "tags": [
+        "mcp",
+        "security",
+        "authorization",
+        "architecture"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "indirect-prompt-injection-live-campaigns",
+      "title": "Indirect prompt injection against web-browsing agents documented in live campaigns",
+      "body": "Zscaler ThreatLabz documented real-world campaigns embedding instructions in web content aimed at AI agents, describing indirect prompt injection as attacks that embed malicious instructions in content an AI agent retrieves — websites, documents, email — to influence the agent's reasoning during task execution. Their test setup matters: they built an autonomous agent with web browsing and payment-execution tools, ran it fully sandboxed with no real funds, and deliberately configured it with no spending limits to measure the maximum exploitation surface. The engineering takeaway is that spend caps, tool-scope limits and human confirmation on irreversible actions are the controls doing the actual work — not model-level instruction hardening.",
+      "reviewNote": "Vendor security research with a Zscaler product-coverage section at the end — campaign attribution and severity framing are their own and unreplicated. The \"no spending limits\" configuration is an adversarial worst case by design, so demonstrated impact should not be read as typical. The general point that prompt injection remains unsolved is separately supported by an OWASP researcher at Infosec Europe (https://www.infosecurity-magazine.com/news/infosec-europe-prompt-injection/), though that is a secondhand press report of a talk.",
+      "source": "https://www.zscaler.com/blogs/security-research/indirect-prompt-injection-web-content-targets-ai-agents",
+      "tags": [
+        "security",
+        "prompt-injection",
+        "agentic-ai",
+        "containment"
+      ],
+      "gatheredAt": "2026-08-15"
+    },
+    {
+      "id": "data-injection-broader-threat-model",
+      "title": "Early academic work argues the agent threat model is broader than instruction injection",
+      "body": "A Seoul National University–led preprint argues that agent security research has concentrated too narrowly: prior work has focused primarily on indirect prompt injection, whose most-studied category is instruction injection, where attacker-controlled untrusted data is interpreted as an instruction. The paper's case is that data injection — poisoning what the agent believes to be true, rather than what it is told to do — is a realistic threat class in its own right. If your agent threat model is built solely around \"untrusted text might contain commands\", this is a prompt to widen it.",
+      "reviewNote": "arXiv preprint, July 2026, not peer-reviewed and no independent replication. Only the abstract and reference sections were read in the search result, so the claim is deliberately kept narrow — do not let the Q&A agent describe specific attack results or success rates from this paper. Worth a full read before it goes anywhere near teaching material.",
+      "source": "https://arxiv.org/html/2607.05120v1",
+      "tags": [
+        "security",
+        "threat-modelling",
+        "agentic-ai",
+        "research"
+      ],
+      "gatheredAt": "2026-08-15"
     }
   ]
 }
