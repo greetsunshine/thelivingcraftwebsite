@@ -80,46 +80,103 @@ Rules:
 - Write for a CTO or engineering director: what changed, and what it means for them.
 - Prefer primary sources (regulator, standards body, official announcement) over commentary.`;
 
+/**
+ * Two passes, because web search and structured outputs can't share a call.
+ *
+ * Web search attaches citations to the text it produces, and structured outputs
+ * reject citations with a 400 — so asking one call to both search and emit
+ * schema-valid JSON fails. Splitting also gives each call one job: research,
+ * then transcribe. The second call sees only the first's notes, so it can't
+ * introduce a finding that wasn't researched.
+ */
 async function gather(topics: string[]) {
   const client = new Anthropic();
+  const today = new Date().toISOString().slice(0, 10);
 
-  const response = await client.messages.create({
+  // Pass 1 — research. Tools on, no output_config.format.
+  const research = await client.messages.create({
     model: MODEL,
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
-    output_config: {
-      effort: 'medium',
-      format: { type: 'json_schema', schema: ITEM_SCHEMA },
-    },
+    output_config: { effort: 'medium' },
     system: SYSTEM,
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 12 }],
     messages: [
       {
         role: 'user',
-        content: `Search for material developments in the last 90 days on each of these topics, then return the findings worth surfacing.
+        content: `Search for material developments in the last 90 days on each of these topics.
 
 ${topics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 
-Today is ${new Date().toISOString().slice(0, 10)}. Discard anything older than 90 days or already common knowledge.`,
+Today is ${today}. Discard anything older than 90 days or already common knowledge.
+
+Write up only the findings worth surfacing to a prospective client. For each one give a
+short title, two to four sentences on what changed and why it matters to an engineering or
+business leader, and the source URL. If nothing material turned up for a topic, say so
+plainly — an empty result is expected some weeks and is better than padding.`,
       },
     ],
   });
 
-  if (response.stop_reason === 'refusal') {
-    throw new Error(`Refused: ${response.stop_details?.explanation ?? 'no explanation'}`);
+  if (research.stop_reason === 'refusal') {
+    throw new Error(`Research pass refused: ${research.stop_details?.explanation ?? 'no explanation'}`);
   }
 
-  const parsed = JSON.parse(
-    response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join(''),
-  ) as { items: Omit<import('../src/lib/agent/latest').LatestItem, 'gatheredAt'>[] };
+  const notes = research.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('\n')
+    .trim();
 
-  return parsed.items;
+  if (!notes) return [];
+
+  // Pass 2 — transcribe into the schema. No tools, so no citations, so the
+  // structured-output constraint is satisfied.
+  const structured = await client.messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    thinking: { type: 'adaptive' },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: ITEM_SCHEMA } },
+    system:
+      'You transcribe research notes into structured records. Use only what the notes contain — ' +
+      'no additions, no inference, no rewriting of the substance. Drop any finding that lacks a ' +
+      'usable source URL. If the notes report nothing material, return an empty list.',
+    messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes}` }],
+  });
+
+  if (structured.stop_reason === 'refusal') {
+    throw new Error(`Transcription pass refused: ${structured.stop_details?.explanation ?? 'no explanation'}`);
+  }
+
+  const raw = structured.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+
+  let parsed: { items?: Omit<import('../src/lib/agent/latest').LatestItem, 'gatheredAt'>[] };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Could not parse the structured pass as JSON. Raw output:\n${raw.slice(0, 500)}`);
+  }
+
+  return parsed.items ?? [];
 }
 
 async function main() {
+  // Preflight. The SDK's own failure here is "Could not resolve authentication
+  // method. Expected one of apiKey, authToken, credentials, config, or
+  // profile…", which says nothing about where to put the key.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('ANTHROPIC_API_KEY is not set.\n');
+    console.error('  Local run:  put it in .env.local —');
+    console.error('    cp .env.example .env.local   # then paste your key after the =');
+    console.error('  One-off:    ANTHROPIC_API_KEY=sk-ant-… npm run gather\n');
+    console.error('  Key from:   https://console.anthropic.com/settings/keys');
+    console.error('  (`vercel env pull` will NOT work — Vercel redacts encrypted values.)');
+    process.exit(1);
+  }
+
   const topics = process.argv.slice(2);
   const useTopics = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
