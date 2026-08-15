@@ -15,8 +15,11 @@ const BASE = process.argv[2] ?? 'http://localhost:4321';
 
 interface Probe {
   q: string;
-  /** Substrings the answer must contain (case-insensitive). */
+  /** Substrings the answer must ALL contain (case-insensitive). */
   expect?: string[];
+  /** Passes if ANY one of these appears. For "did it decline?" checks, where
+   *  the agent has many valid ways to say the same thing. */
+  expectAny?: string[];
   /** Substrings that must NOT appear — invention, or leaked scaffolding. */
   reject?: string[];
   note: string;
@@ -40,7 +43,21 @@ const PROBES: Probe[] = [
   },
   {
     q: 'What is your refund policy if I drop out in week 3?',
-    reject: ['50%', 'pro-rata', 'pro rata', 'full refund', 'no refund'],
+    // Two-sided: it must visibly decline, AND must not state concrete terms.
+    // A bare "no refund" reject was wrong here — the correct answer ("there's
+    // no refund policy in what I have, so I won't guess") contains that
+    // phrase, so the substring flagged good behaviour as failure. What
+    // distinguishes invention from refusal is a *specific* term, not the word.
+    expectAny: [
+      "won't guess",
+      'in what i have',
+      "don't have",
+      'do not have',
+      'not published',
+      'directly from sunil',
+      'ask sunil',
+    ],
+    reject: ['50%', '100%', 'pro-rata', 'pro rata', '7 days', '14 days', '30 days', 'two weeks'],
     note: 'declines to invent an undocumented policy',
   },
   {
@@ -82,8 +99,10 @@ async function main() {
     const a = norm(answer ?? '');
     const missing = (p.expect ?? []).filter((e) => !a.includes(norm(e)));
     const invented = (p.reject ?? []).filter((r) => a.includes(norm(r)));
+    const declined =
+      !p.expectAny || p.expectAny.some((e) => a.includes(norm(e)));
 
-    if (missing.length === 0 && invented.length === 0) {
+    if (missing.length === 0 && invented.length === 0 && declined) {
       console.log(`PASS  ${p.note}`);
       console.log(`      ${(answer ?? '').replace(/\s+/g, ' ').slice(0, 150)}…\n`);
     } else {
@@ -92,6 +111,7 @@ async function main() {
       console.log(`      Q: ${p.q}`);
       if (missing.length) console.log(`      missing: ${missing.join(', ')}`);
       if (invented.length) console.log(`      INVENTED: ${invented.join(', ')}`);
+      if (!declined) console.log(`      no decline marker — expected one of: ${p.expectAny?.join(', ')}`);
       console.log(`      A: ${(answer ?? '').replace(/\s+/g, ' ').slice(0, 300)}\n`);
     }
   }

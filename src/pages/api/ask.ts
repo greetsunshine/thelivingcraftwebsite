@@ -23,7 +23,7 @@ import {
   searchKnowledge,
   searchLatest,
 } from '../../lib/agent/knowledge';
-import { captureVisitor, type VisitorCapture } from '../../lib/agent/capture';
+import { buildCapture, type CapturePayload, type VisitorCapture } from '../../lib/agent/capture';
 import { checkRate } from '../../lib/agent/ratelimit';
 
 export const prerender = false;
@@ -194,7 +194,9 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   // cost. Lands in Vercel's function logs — enough to see the agent's behaviour
   // without standing up a tracing backend.
   const trace: string[] = [];
-  let captured: VisitorCapture | null = null;
+  // Handed back to the widget, which does the actual delivery — Web3Forms
+  // refuses server-side posts on the free plan. See lib/agent/capture.ts.
+  let capture: CapturePayload | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
 
@@ -240,7 +242,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
             surface,
             turns: turn + 1,
             tools: trace,
-            captured: Boolean(captured),
+            captured: Boolean(capture),
             inputTokens,
             outputTokens,
           }),
@@ -249,7 +251,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
         return new Response(
           JSON.stringify({
             answer: answer || "I don't have that. Email apply@thelivingcraft.ai and Sunil will answer.",
-            captured: Boolean(captured),
+            capture,
           }),
           { headers: { 'Content-Type': 'application/json' } },
         );
@@ -281,8 +283,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
               break;
 
             case 'capture_visitor': {
-              const outcome = await captureVisitor(input as unknown as VisitorCapture, surface);
-              if (outcome.ok) captured = input as unknown as VisitorCapture;
+              const outcome = buildCapture(input as unknown as VisitorCapture, surface);
+              if (outcome.ok && outcome.payload) capture = outcome.payload;
               results.push({
                 type: 'tool_result',
                 tool_use_id: use.id,
@@ -318,7 +320,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       JSON.stringify({
         answer:
           "I'm going in circles on that one. Email apply@thelivingcraft.ai and Sunil will answer it directly.",
-        captured: Boolean(captured),
+        capture,
       }),
       { headers: { 'Content-Type': 'application/json' } },
     );

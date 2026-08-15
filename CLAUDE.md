@@ -84,6 +84,12 @@ Two agents, one handoff artefact:
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.
+- **Web3Forms is client-side only on the free plan.** A server-side POST returns
+  `403 {"success":false,"message":"This method is not allowed. Use our API in
+  client side..."}`. This bit the agent's lead capture: `/api/ask` ran the post
+  from a Vercel function and every handoff failed. The server now only validates
+  and returns a payload; [src/components/AskWidget.astro](src/components/AskWidget.astro) posts it from the
+  browser, same as the forms. **Don't move any Web3Forms call server-side.**
 - **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
   (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
   paths redirect to `/?region=`.

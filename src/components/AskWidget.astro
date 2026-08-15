@@ -330,6 +330,27 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
       return el;
     }
 
+    // Web3Forms rejects server-side posts on the free plan, so the lead is
+    // delivered from here — the same path the application forms already use.
+    // The agent has already told the visitor their details are on the way, so
+    // a failure has to be surfaced rather than swallowed.
+    async function deliverCapture(payload: Record<string, string>) {
+      try {
+        var res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        var json = await res.json();
+        if (!json.success) throw new Error(json.message || 'rejected');
+      } catch (err) {
+        bubble(
+          'One correction: that handoff did not go through. Please email apply@thelivingcraft.ai directly so your question reaches Sunil.',
+          'bot err',
+        );
+      }
+    }
+
     async function ask(question: string) {
       if (busy || !question.trim()) return;
       busy = true;
@@ -354,6 +375,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
           history.push({ role: 'user', content: question });
           history.push({ role: 'assistant', content: data.answer });
           if (history.length > 12) history = history.slice(-12);
+          if (data.capture) await deliverCapture(data.capture);
         } else {
           bubble(data.error || 'Something went wrong. Email apply@thelivingcraft.ai.', 'bot err');
         }
