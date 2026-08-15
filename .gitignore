@@ -29,3 +29,7 @@ pnpm-debug.log*
 .vercel
 # (`vercel env pull` appends its own `.env*` here — the negation for
 #  .env.example lives above, and a later broad rule would override it.)
+
+# stray API responses from local testing
+cap.json
+r[0-9].json
