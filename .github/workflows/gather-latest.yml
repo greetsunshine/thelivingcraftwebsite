@@ -1,0 +1,63 @@
+# Runs the retriever agent on a schedule and opens a PR with what it found.
+#
+# A PR rather than a direct commit on purpose: this agent's output is read
+# verbatim by the visitor-facing Q&A agent, so a human should see what it
+# gathered before prospects do. The diff is small and the review is quick.
+
+name: Gather latest
+
+on:
+  schedule:
+    # 06:00 UTC Mondays — 11:30 IST, so the diff is waiting at the start of the week.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Optional single topic to sweep instead of the defaults'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  gather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the retriever agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "${{ inputs.topic }}" ]; then
+            npm run gather -- "${{ inputs.topic }}"
+          else
+            npm run gather
+          fi
+
+      - name: Open a PR if anything changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'Retriever: refresh latest.json'
+          branch: agent/latest-refresh
+          delete-branch: true
+          title: 'Retriever: refresh what the site agent knows'
+          body: |
+            The retriever agent swept its topics and rewrote `src/data/latest.json`.
+
+            Review before merging — the visitor Q&A agent reads these items
+            verbatim and will repeat them to prospects.
+
+            Check that each item: is real, is cited with a working URL, says
+            nothing about our own pricing or dates, and is worth a prospect's
+            attention.
+          add-paths: src/data/latest.json

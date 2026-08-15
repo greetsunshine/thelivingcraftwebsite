@@ -172,6 +172,7 @@ a.region-choice:hover .rc-cta .arrow{transform:translateX(4px)}
 .price-card .seat{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre)}
 .price-card .amt{font-family:'Fraunces',serif;font-size:52px;color:#F4EEE2;margin:18px 0 6px;font-weight:360}
 .price-card .amt small{font-size:18px;color:#9a9079}
+.price-card .amt .was{font-size:30px;color:#9a9079;text-decoration:line-through;text-decoration-thickness:1px;margin-right:12px}
 .price-card .terms{font-size:14px;color:#b3a991;margin-bottom:30px}
 .price-card ul{list-style:none;text-align:left;max-width:380px;margin:0 auto 32px}
 .price-card li{padding:9px 0;font-size:15px;color:#d8cfbd;display:flex;gap:12px}

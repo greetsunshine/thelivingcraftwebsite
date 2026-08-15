@@ -1,15 +1,55 @@
 ---
 import CaioLayout from '../layouts/CaioLayout.astro';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
+import { SITE_ORIGIN, caio, faqFor, regulatory } from '../data/facts';
 
 // Static, board-facing landing page for the Fractional Chief AI Officer practice.
 // Sibling surface to the cohort page (/) — same design system, brand-neutral copy.
 const title = 'Fractional Chief AI Officer — Sunil Mathew';
 const description =
   'An embedded AI executive — part-time, accountable for outcomes. I own your AI strategy, governance, and roadmap, get your first use cases into production, and leave your team able to run it.';
+
+const schema = [
+  {
+    '@type': 'ProfessionalService',
+    '@id': `${SITE_ORIGIN}/caio#service`,
+    name: caio.name,
+    description,
+    url: `${SITE_ORIGIN}/caio`,
+    provider: { '@id': `${SITE_ORIGIN}/#person` },
+    areaServed: [{ '@type': 'Country', name: 'India' }],
+    // The regulatory list is the differentiator — make it machine-readable so
+    // "who does AI governance for RBI-regulated firms" can actually match.
+    knowsAbout: regulatory,
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Engagement tiers',
+      itemListElement: caio.tiers.map((t) => ({
+        '@type': 'Offer',
+        name: t.name,
+        description: `${t.days}. ${caio.minimum}.`,
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          price: t.from.replace(/[^\d]/g, ''),
+          priceCurrency: 'INR',
+          valueAddedTaxIncluded: false,
+        },
+      })),
+    },
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': `${SITE_ORIGIN}/caio#faq`,
+    mainEntity: faqFor('/caio').map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
 ---
 
-<CaioLayout title={title} description={description} canonical="https://learning.thelivingcraft.ai/caio">
+<CaioLayout title={title} description={description} canonical="/caio" schema={schema}>
   <!-- 00 HERO -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap hero-grid">

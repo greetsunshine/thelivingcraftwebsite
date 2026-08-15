@@ -10,6 +10,8 @@ export interface Region {
   description: string;
   // pricing
   price: string;
+  /** Rate for cohorts after the founding one — rendered struck through. Omit to hide. */
+  standardPrice?: string;
   priceUnit: string;
   // cohort logistics  (EDIT dates/seats/commitment when confirmed)
   seats: string;
@@ -23,7 +25,7 @@ export interface Region {
 }
 
 const sharedDescription =
-  'An application-only, 5-week program in agentic & systems architecture, taught from 26 years building and leading engineering at Google, Amazon, and Walmart.';
+  'An application-only, 6-week program in agentic & systems architecture, taught from 26 years building and leading engineering at Google, Amazon, and Walmart.';
 
 export const regions: Record<Region['key'], Region> = {
   india: {
@@ -32,11 +34,14 @@ export const regions: Record<Region['key'], Region> = {
     path: '/india',
     title: 'The Living Craft — India · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} India cohort, with a hybrid option in Bangalore.`,
-    price: '₹1,50,000',
+    // PRICING — REVIEW BEFORE PUBLISH. Founding rate for the first (Sept 2026) cohort;
+    // standardPrice is the rate for successive cohorts.
+    price: '₹1,20,000',
+    standardPrice: '₹1,50,000',
     priceUnit: 'per seat · founding rate',
-    seats: '15 seats, capped',
-    nextDate: 'Announced on application',
-    closes: 'Rolling — until the cohort is full',
+    seats: '8 seats, capped',
+    nextDate: 'September 2026',
+    closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
     hybrid: true,
@@ -48,11 +53,13 @@ export const regions: Record<Region['key'], Region> = {
     path: '/dubai',
     title: 'The Living Craft — Dubai · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} Dubai cohort.`,
+    // PRICING — PLACEHOLDER, REVIEW BEFORE PUBLISH. No standardPrice set: the successive-cohort
+    // rate outside India has not been calibrated, so no struck-through anchor is shown.
     price: 'AED 8,000',
     priceUnit: 'per seat · founding rate',
-    seats: '15 seats, capped',
-    nextDate: 'Announced on application',
-    closes: 'Rolling — until the cohort is full',
+    seats: '8 seats, capped',
+    nextDate: 'September 2026',
+    closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
     hybrid: false,
@@ -63,11 +70,12 @@ export const regions: Record<Region['key'], Region> = {
     path: '/australia',
     title: 'The Living Craft — Australia · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} Australia cohort.`,
+    // PRICING — PLACEHOLDER, REVIEW BEFORE PUBLISH. See the Dubai note on standardPrice.
     price: 'AUD 3,000',
     priceUnit: 'per seat · founding rate',
-    seats: '15 seats, capped',
-    nextDate: 'Announced on application',
-    closes: 'Rolling — until the cohort is full',
+    seats: '8 seats, capped',
+    nextDate: 'September 2026',
+    closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
     hybrid: false,

@@ -1,0 +1,21 @@
+{
+  "refreshedAt": "2026-08-12T00:00:00.000Z",
+  "items": [
+    {
+      "id": "seed-cohort-open",
+      "title": "Applications are open for the first cohort",
+      "body": "The inaugural cohort of The Living Craft starts September 2026 with 8 seats. Enrollment is rolling and closes when the seats are filled. The founding rate applies to this cohort only.",
+      "source": "operator",
+      "gatheredAt": "2026-08-12",
+      "tags": ["cohort", "applications", "open", "seats", "availability", "september"]
+    },
+    {
+      "id": "seed-assessment-founding",
+      "title": "Assessment founding rate still available",
+      "body": "The AI Readiness Assessment founding rate of ₹3,50,000 applies to the first three engagements. After that the fixed fee is ₹4,50,000.",
+      "source": "operator",
+      "gatheredAt": "2026-08-12",
+      "tags": ["assessment", "founding", "rate", "availability", "discount"]
+    }
+  ]
+}

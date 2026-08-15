@@ -27,6 +27,54 @@ practice** ("Sunil Mathew", mono descriptor "Fractional CAIO" / "AI Readiness"),
 but cross-linked surface. Open decision (flag to Sunil): umbrella vs personal brand vs new
 practice name — copy is written brand-neutral so the wordmark can be swapped.
 
+## The facts module — read this before editing any offer
+[src/data/facts.ts](src/data/facts.ts) is the **single source of truth** for every offer fact.
+Four consumers read it and nothing else: JSON-LD structured data, `/llms.txt`,
+`/api/facts`, and the visitor Q&A agent's grounding. Change a price, date, or seat
+count there and all four move together. Cohort pricing lives in
+[src/data/regions.ts](src/data/regions.ts) and is imported, not restated.
+
+Never state an offer fact directly in a page, a schema block, or an agent prompt —
+route it through `facts.ts`. The failure this prevents is subtle and bad: a stale
+number that is right on the page but wrong in the answer an AI assistant gives
+about us.
+
+## Agents
+Two agents, one handoff artefact:
+- **Visitor Q&A agent** — [src/pages/api/ask.ts](src/pages/api/ask.ts). Claude Opus 5 tool-use loop on a
+  Vercel function. Tools: `search_knowledge` (grounded facts),
+  `get_latest_updates`, `capture_visitor` (leads → the same Web3Forms inbox).
+  Retrieval in [src/lib/agent/knowledge.ts](src/lib/agent/knowledge.ts) is lexical, not embeddings — the
+  corpus is ~20 facts and lexical scoring is auditable. UI: [src/components/AskWidget.astro](src/components/AskWidget.astro).
+- **Retriever agent** — [scripts/gather-latest.ts](scripts/gather-latest.ts) (`npm run gather`). Sweeps
+  regulatory and agentic-AI developments via Claude's server-side web search and
+  writes [src/data/latest.json](src/data/latest.json), which the Q&A agent reads. Scheduled weekly by
+  [.github/workflows/gather-latest.yml](.github/workflows/gather-latest.yml), which opens a **PR rather than committing** —
+  a human should see what the agent gathered before prospects do.
+- The retriever is forbidden from writing our own prices/dates/seat counts. Those
+  come from `facts.ts`; two sources could disagree and the Q&A agent would have no
+  way to tell which is true.
+- **Grounding rule:** the Q&A agent may state a fact only if a tool returned it,
+  and must say "I don't know" and offer the handoff otherwise. This is how the
+  hard rules below survive contact with a chatbot — the easiest place on a site
+  to invent a price.
+- Both need `ANTHROPIC_API_KEY` (see [.env.example](.env.example)). Without it `/api/ask` returns
+  503 and the widget points visitors at the form — degrades, doesn't break. Set a
+  spend limit on the key; that's the real cost ceiling.
+
+## SEO / AISO
+- [src/components/SeoHead.astro](src/components/SeoHead.astro) — shared `<head>` for all three layouts: meta,
+  canonical, OG/Twitter, and one JSON-LD `@graph`. Pages pass a `schema` prop
+  (Course / ProfessionalService / Service + FAQPage); the Person node is shared
+  and `@id`-referenced so a crawler learns the surfaces are one practice.
+- `/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/api/facts` are all generated from
+  `facts.ts`. **robots.txt deliberately allows AI crawlers** — buyers here ask an
+  assistant before a search engine, and `/llms.txt` + `/api/facts` exist so the
+  answer they get is the one we wrote. Only `/api/ask` is disallowed (POST, costs
+  money per call, nothing to index).
+- Canonical host is `learning.thelivingcraft.ai`. The apex and `www` are
+  unattached (404) — flagged to Sunil, not fixed here.
+
 ## Shared infrastructure
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
@@ -53,7 +101,13 @@ practice name — copy is written brand-neutral so the wordmark can be swapped.
   Never "Buy now."
 - Keep regulated-industry depth prominent on consulting pages (DPDP Act, IRDAI, RBI, SEBI,
   NIST AI RMF, ISO 42001, EU AI Act) — it's a core differentiator.
-- No backend, no localStorage/sessionStorage, minimal JS.
+- No localStorage/sessionStorage. Minimal JS — the only client script beyond the
+  forms is the Ask widget.
+- **The no-backend rule now has exactly one exception:** the `/api/*` routes that
+  serve the Q&A agent and the facts endpoint. Still no database and no other
+  client storage — agent conversations live in the tab and die with it; leads go
+  to the same Web3Forms inbox as the forms. Don't widen the exception without a
+  reason as good.
 
 ## Positioning spine (cohort)
 "**AI builds, the human judges and directs.**" Differentiation = engineering **judgment**,

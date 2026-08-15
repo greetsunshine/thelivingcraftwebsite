@@ -1,15 +1,48 @@
 ---
 import AssessmentLayout from '../layouts/AssessmentLayout.astro';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
+import { SITE_ORIGIN, assessment, faqFor, regulatory } from '../data/facts';
 
 // Static, board-facing landing page for the AI Readiness Assessment.
 // The "front door" of the practice: assessment → CAIO retainer → cohort.
 const title = 'AI Readiness Assessment — Sunil Mathew';
 const description =
   'A fixed-scope, two-to-three week AI diagnostic run on your systems. Scorecard, prioritised use-case portfolio, build-vs-buy calls, governance posture, and a 90-day production roadmap your board can act on.';
+
+const schema = [
+  {
+    '@type': 'Service',
+    '@id': `${SITE_ORIGIN}/assessment#service`,
+    name: assessment.name,
+    description,
+    url: `${SITE_ORIGIN}/assessment`,
+    serviceType: 'AI readiness diagnostic',
+    provider: { '@id': `${SITE_ORIGIN}/#person` },
+    areaServed: [{ '@type': 'Country', name: 'India' }],
+    knowsAbout: regulatory,
+    offers: {
+      '@type': 'Offer',
+      name: `${assessment.name} — fixed fee, fixed scope`,
+      description: `Delivered in ${assessment.duration}. ${assessment.creditNote}`,
+      price: assessment.fee.replace(/[^\d]/g, ''),
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_ORIGIN}/assessment`,
+    },
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': `${SITE_ORIGIN}/assessment#faq`,
+    mainEntity: faqFor('/assessment').map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
 ---
 
-<AssessmentLayout title={title} description={description} canonical="https://learning.thelivingcraft.ai/assessment">
+<AssessmentLayout title={title} description={description} canonical="/assessment" schema={schema}>
   <!-- 00 HERO -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap hero-grid">

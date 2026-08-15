@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProgramPage from '../components/ProgramPage.astro';
 import { regions } from '../data/regions';
+import { SITE_ORIGIN, cohort, faqFor } from '../data/facts';
 
 // One page; only the pricing block changes by region. No redirect, no duplicate content.
 export const prerender = false;
@@ -22,9 +23,63 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 const title = 'The Living Craft — Agentic & Systems Architecture by Sunil Mathew';
 const description =
-  'An application-only, 5-week program in agentic & systems architecture, taught from 26 years building and leading engineering at Google, Amazon, and Walmart.';
+  'An application-only, 6-week program in agentic & systems architecture — first cohort starts September 2026, 8 seats. Taught from 26 years building and leading engineering at Google, Amazon, and Walmart.';
+
+// Course + FAQPage. The offers array carries the region prices so a rich result
+// or an AI answer quotes our number rather than guessing one.
+const schema = [
+  {
+    '@type': 'Course',
+    '@id': `${SITE_ORIGIN}/#course`,
+    name: cohort.name,
+    description,
+    url: SITE_ORIGIN,
+    provider: { '@id': `${SITE_ORIGIN}/#person` },
+    instructor: { '@id': `${SITE_ORIGIN}/#person` },
+    educationalLevel: 'Advanced',
+    teaches: cohort.outcomes,
+    syllabusSections: cohort.modules.map((m, i) => ({
+      '@type': 'Syllabus',
+      position: i + 1,
+      name: m.title,
+      timeRequired: 'PT5H',
+    })),
+    hasCourseInstance: [
+      {
+        '@type': 'CourseInstance',
+        courseMode: 'Online',
+        courseWorkload: cohort.commitment,
+        maximumAttendeeCapacity: cohort.seats,
+        startDate: '2026-09',
+        instructor: { '@id': `${SITE_ORIGIN}/#person` },
+      },
+    ],
+    offers: region
+      ? [
+          {
+            '@type': 'Offer',
+            price: region.price.replace(/[^\d]/g, ''),
+            priceCurrency:
+              region.key === 'india' ? 'INR' : region.key === 'dubai' ? 'AED' : 'AUD',
+            availability: 'https://schema.org/LimitedAvailability',
+            url: SITE_ORIGIN,
+            category: 'Founding rate',
+          },
+        ]
+      : undefined,
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': `${SITE_ORIGIN}/#faq`,
+    mainEntity: [...faqFor('/'), ...faqFor('practice')].map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
 ---
 
-<BaseLayout title={title} description={description} canonical="https://learning.thelivingcraft.ai/">
+<BaseLayout title={title} description={description} canonical="/" schema={schema}>
   <ProgramPage region={region} />
 </BaseLayout>

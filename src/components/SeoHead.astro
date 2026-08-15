@@ -1,0 +1,88 @@
+---
+// Shared <head>: meta, canonical, Open Graph, Twitter, JSON-LD, analytics.
+// Imported by all three layouts so the three surfaces can't drift apart.
+import { SITE_ORIGIN, practitioner } from '../data/facts';
+
+export interface Props {
+  title: string;
+  description?: string;
+  /** Path or absolute URL. Defaults to the current request path. */
+  canonical?: string;
+  /** JSON-LD graph nodes for this page. Serialised into one @graph script. */
+  schema?: unknown[];
+  /** OG image path, relative to the origin. */
+  image?: string;
+}
+
+const { title, description, canonical, schema = [], image = '/sunil-profile.jpg' } = Astro.props;
+
+const href = canonical
+  ? new URL(canonical, SITE_ORIGIN).href
+  : new URL(Astro.url.pathname, SITE_ORIGIN).href;
+const imageUrl = new URL(image, SITE_ORIGIN).href;
+
+// One @graph beats several loose scripts — nodes can @id-reference each other,
+// which is how a crawler learns the Person and the Course are the same practice.
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      '@id': `${SITE_ORIGIN}/#person`,
+      name: practitioner.name,
+      jobTitle: practitioner.role,
+      email: `mailto:${practitioner.email}`,
+      url: SITE_ORIGIN,
+      sameAs: practitioner.sameAs,
+      address: { '@type': 'PostalAddress', addressLocality: 'Bengaluru', addressCountry: 'IN' },
+      alumniOf: practitioner.companies.map((n) => ({ '@type': 'Organization', name: n })),
+      knowsAbout: [
+        'Agentic AI architecture',
+        'Multi-agent orchestration',
+        'LLM evaluation and reliability',
+        'AI red-teaming and prompt injection defence',
+        'Distributed systems architecture',
+        'AI governance and regulatory compliance',
+      ],
+    },
+    ...schema,
+  ],
+};
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" href="/favicon.ico" />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={href} />
+<meta name="author" content={practitioner.name} />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+<meta property="og:site_name" content="Sunil Mathew — The Living Craft" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={href} />
+<meta property="og:image" content={imageUrl} />
+<meta property="og:locale" content="en_IN" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+
+<!-- Machine-readable companions, advertised so agents and crawlers find them. -->
+<link rel="alternate" type="text/plain" href="/llms.txt" title="Site facts for LLMs" />
+<link rel="alternate" type="application/json" href="/api/facts" title="Structured practice facts" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(graph)} />
