@@ -37,9 +37,18 @@ jobs:
       - name: Run the retriever agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        # The script has a 6h cooldown so a rapid re-run can't drain the account
+        # (that is what took the live agent down on 2026-08-15). The weekly
+        # schedule is 7 days apart and never trips it. A manual "Run workflow"
+        # click is a deliberate human decision, so that path overrides it —
+        # otherwise the button would silently do nothing after a recent run.
         run: |
-          if [ -n "${{ inputs.topic }}" ]; then
-            npm run gather -- "${{ inputs.topic }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.topic }}" ]; then
+              npm run gather -- --force "${{ inputs.topic }}"
+            else
+              npm run gather -- --force
+            fi
           else
             npm run gather
           fi

@@ -263,12 +263,46 @@ async function main() {
     process.exit(1);
   }
 
-  const topics = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  const force = argv.includes('--force');
+  const topics = argv.filter((a) => a !== '--force');
+
+  // Cooldown. This is a weekly job; four runs in one hour while tuning the
+  // prompt drained the account's credit and took the LIVE SITE AGENT down with
+  // it, because they share a key. Nothing in the script objected — it was
+  // perfectly happy to spend the balance on iteration.
+  //
+  // Refusing a rapid re-run is the guard that matches how the damage actually
+  // happened. It is not a substitute for the console spend limit, which is the
+  // real ceiling; it is the part that lives in the repo.
+  const COOLDOWN_HOURS = 6;
+  if (!force) {
+    try {
+      const prev = JSON.parse(readFileSync(OUT, 'utf8')) as { refreshedAt?: string };
+      const last = prev.refreshedAt ? Date.parse(prev.refreshedAt) : NaN;
+      const hours = (Date.now() - last) / 3_600_000;
+
+      if (!Number.isNaN(hours) && hours < COOLDOWN_HOURS) {
+        const wait = (COOLDOWN_HOURS - hours).toFixed(1);
+        console.error(
+          `Skipped: last run was ${hours.toFixed(1)}h ago (cooldown ${COOLDOWN_HOURS}h).\n`,
+        );
+        console.error('  Each run is 5 web-searching model calls. Repeated runs are how the');
+        console.error('  credit balance emptied and the live agent went down on 2026-08-15.\n');
+        console.error(`  Wait ${wait}h, or override with:  npm run gather -- --force`);
+        console.error('  Tuning topics? Try one at a time:  npm run gather -- "your topic"');
+        process.exit(0);
+      }
+    } catch {
+      // No readable previous file — nothing to rate-limit against; proceed.
+    }
+  }
+
   const useTopics = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
   console.log(
     `Retriever: sweeping ${useTopics.length} topic(s) — research on ${RESEARCH_MODEL}, ` +
-      `transcription on ${TRANSCRIBE_MODEL}.`,
+      `transcription on ${TRANSCRIBE_MODEL}.${force ? ' (cooldown overridden)' : ''}`,
   );
   const found = await gather(useTopics);
   const today = new Date().toISOString().slice(0, 10);
