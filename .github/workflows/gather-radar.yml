@@ -1,0 +1,111 @@
+# Runs the radar agent and opens a PR with what it found.
+#
+# Sibling of gather-latest.yml, and a PR for a different reason. That one needs
+# review because a chatbot repeats its output to prospects. This one needs
+# review because Sunil repeats its output in board rooms — investment figures,
+# India hiring numbers, and claims about what is failing are exactly the
+# material that gets challenged, and the reviewNote on each item is where the
+# agent says how far it would trust its own finding.
+#
+# The console's "Run now" button dispatches this workflow rather than doing the
+# research in a Vercel function: a sweep is minutes of Opus web-search calls,
+# and the output has to land as a commit, which a function cannot produce.
+
+name: Gather radar
+
+on:
+  schedule:
+    # 06:30 UTC Mondays — half an hour after the visitor retriever, so the two
+    # never contend for the same rate limit or credit balance.
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Sweep one category only (trends, investment, working, failing, hiring-india, skills)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Never two radar sweeps at once. Each is six web-searching Opus calls against a
+# shared credit balance, and an overlapping run is how the live site agent went
+# down before.
+concurrency:
+  group: gather-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the radar agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        # The script has a 6h cooldown so a rapid re-run cannot drain the
+        # account. The weekly schedule never trips it. A manual dispatch is a
+        # deliberate human decision, so that path overrides it — otherwise the
+        # console's "Run now" button would silently do nothing after a recent run.
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.category }}" ]; then
+              npm run radar -- --force "--category=${{ inputs.category }}"
+            else
+              npm run radar -- --force
+            fi
+          else
+            npm run radar
+          fi
+
+      # Best-effort, same as the visitor retriever: repos with "Allow GitHub
+      # Actions to create and approve pull requests" turned off fail this step,
+      # but the branch is still pushed, so the work survives.
+      - name: Open a PR if anything changed
+        id: pr
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'Radar: refresh market intelligence'
+          branch: agent/radar-refresh
+          delete-branch: true
+          title: 'Radar: refresh what the console shows'
+          body: |
+            The radar agent swept its six categories and merged new findings into
+            `src/data/radar.json`.
+
+            This feed is operator-facing — the visitor Q&A agent does not read it.
+            Review it the way you would review a slide you are about to present:
+
+            - Is each number quoted as the source states it, not rounded or reframed?
+            - Does `sourceType` match what the source actually is? A vendor blog
+              graded `primary` is the failure mode to look for.
+            - For "what is failing": is this evidence, or is it an opinion piece?
+            - For India hiring: does the salary or headcount figure have a named
+              methodology behind it?
+
+            `reviewNote` on each item is the agent's own account of what it could
+            not confirm. Read those first.
+          add-paths: src/data/radar.json
+
+      - name: Say where the branch is if the PR could not be opened
+        if: steps.pr.outcome == 'failure'
+        run: |
+          echo "### Radar ran, PR not opened" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "GitHub Actions is not permitted to create pull requests in this repo," >> "$GITHUB_STEP_SUMMARY"
+          echo "so the findings were pushed to a branch instead. Open the PR here:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "<${{ github.server_url }}/${{ github.repository }}/compare/main...agent/radar-refresh?expand=1>" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "To let the workflow open it directly: Settings -> Actions -> General ->" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflow permissions -> tick 'Allow GitHub Actions to create and approve pull requests'." >> "$GITHUB_STEP_SUMMARY"

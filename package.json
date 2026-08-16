@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "gather": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-latest.ts",
+    "radar": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-radar.ts",
     "check": "astro check",
     "smoke": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/smoke-agent.ts"
   },
