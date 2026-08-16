@@ -25,6 +25,7 @@ import {
 } from '../../lib/agent/knowledge';
 import { buildCapture, type CapturePayload, type VisitorCapture } from '../../lib/agent/capture';
 import { checkRate } from '../../lib/agent/ratelimit';
+import { getBudget } from '../../lib/agent/budget';
 import { record } from '../../lib/admin/supabase';
 import { countryOf } from '../../lib/admin/visitor';
 
@@ -208,6 +209,22 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const question = (body.question ?? '').trim();
   if (!question) return bad(400, 'Ask a question.');
   if (question.length > MAX_QUESTION_CHARS) return bad(400, 'That question is too long.');
+
+  // Budget check goes AFTER the cheap validation and BEFORE the model call —
+  // no point pricing a malformed request, and no point paying for a valid one
+  // we've decided not to serve. Unknown or unreadable means allow: a monitoring
+  // dependency must not be able to take the assistant down (see budget.ts).
+  const budget = await getBudget();
+  if (budget.known && budget.overBudget) {
+    console.error(
+      `ASK PAUSED — month-to-date spend ${budget.spentUsd.toFixed(2)} USD has reached the ` +
+        `${budget.limitUsd.toFixed(2)} USD budget. Raise AGENT_MONTHLY_BUDGET_USD or wait for the month to roll.`,
+    );
+    return bad(
+      503,
+      'The assistant is paused for the moment. Please email apply@thelivingcraft.ai — Sunil reads and replies to every one himself.',
+    );
+  }
 
   // Trust the client for conversation display only — rebuild the turn list
   // ourselves and cap it, so a crafted history can't grow the context window.

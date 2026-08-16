@@ -7,8 +7,12 @@ import Bars from '../../components/admin/Bars.astro';
 import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, trafficPaths } from '../../lib/admin/queries';
 import { getRadar } from '../../lib/agent/radar';
 import { getLatest } from '../../lib/agent/latest';
+import { getBudget, formatUsd, WARN_FRACTION } from '../../lib/agent/budget';
 
 const DAYS = 30;
+
+// Cached for ten minutes upstream, so this adds no meaningful latency.
+const budget = await getBudget();
 
 // One round trip's worth of latency instead of eight. Every one of these
 // degrades to an empty result on its own, so a single slow rollup cannot take
@@ -206,6 +210,54 @@ const when = (iso: string) =>
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="panel">
+    <h2>Agent spend</h2>
+    <p class="sub">
+      Month to date, across the visitor assistant and both retrievers — they share one key.
+    </p>
+    {budget.known ? (
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+          <div>
+            <span class="label">This month</span>
+            <p style="margin-top:6px;font-size:26px;font-family:'Fraunces',serif">
+              {formatUsd(budget.spentUsd)}
+              <span style="font-size:15px;color:var(--ink-faint)"> of {formatUsd(budget.limitUsd)}</span>
+            </p>
+          </div>
+          <span
+            class="label"
+            style={`color:${budget.overBudget ? 'var(--clay-deep)' : budget.nearLimit ? 'var(--ochre)' : 'var(--go, #5A7A4C)'}`}
+          >
+            {budget.overBudget ? 'paused' : budget.nearLimit ? 'near limit' : 'ok'}
+          </span>
+        </div>
+        <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px">
+          <div
+            style={`height:100%;width:${Math.min(100, Math.round(budget.used * 100))}%;background:${
+              budget.overBudget ? 'var(--clay-deep)' : budget.nearLimit ? 'var(--ochre)' : 'var(--clay)'
+            }`}
+          />
+        </div>
+        <p class="sub" style="margin-top:10px">
+          {budget.overBudget
+            ? 'The assistant is declining questions and the retrievers will not run. Raise AGENT_MONTHLY_BUDGET_USD or wait for the month to roll.'
+            : budget.nearLimit
+              ? `Retrievers stand down above ${Math.round(WARN_FRACTION * 100)}%; the assistant keeps answering until 100%.`
+              : 'Read from the Anthropic cost report. This is a soft guard — the Console spend limit is the hard ceiling.'}
+        </p>
+      </div>
+    ) : (
+      <div class="card">
+        <span class="label">Not tracked</span>
+        <p style="margin-top:8px">{budget.note}</p>
+        <p class="sub" style="margin-top:8px">
+          Needs an organization account — the Admin API is unavailable for individual accounts.
+        </p>
+      </div>
+    )}
   </section>
 
   <section class="panel">

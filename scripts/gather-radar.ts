@@ -25,6 +25,7 @@ import { dirname, join } from 'node:path';
 import {
   RESEARCH_MODEL,
   TRANSCRIBE_MODEL,
+  enforceBudget,
   enforceCooldown,
   reportFailure,
   requireApiKey,
@@ -207,6 +208,7 @@ async function main() {
   }
 
   enforceCooldown(OUT, 6, force, 'radar');
+  await enforceBudget(force);
 
   // An ad-hoc topic still has to land in a category, because the console groups
   // by category and an uncategorised item would simply not render.

@@ -28,6 +28,7 @@ import { dirname, join } from 'node:path';
 import {
   RESEARCH_MODEL,
   TRANSCRIBE_MODEL,
+  enforceBudget,
   enforceCooldown,
   reportFailure,
   requireApiKey,
@@ -153,6 +154,7 @@ async function main() {
   const topics = argv.filter((a) => a !== '--force');
 
   enforceCooldown(OUT, 6, force, 'gather');
+  await enforceBudget(force);
 
   const useTopics = topics.length > 0 ? topics : DEFAULT_TOPICS;
 

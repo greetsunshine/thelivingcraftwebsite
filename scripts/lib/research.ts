@@ -40,6 +40,43 @@ export const SEARCHES_PER_TOPIC = 6;
 
 const SOURCE_URL = /^https?:\/\/\S+$/i;
 
+/**
+ * Refuses a sweep that would run past the monthly budget.
+ *
+ * Stricter than the check on /api/ask, deliberately. One visitor question is
+ * cents; a sweep is five web-searching Opus calls plus transcription, so it can
+ * cross a limit by itself. It stands down at 80% rather than 100% — better a
+ * skipped week of findings than an exhausted balance that takes the visitor
+ * agent down too, which is exactly what happened on 2026-08-15.
+ *
+ * Unknown budget means proceed: this is a guard, not a gate, and an unreadable
+ * cost API must not stop the weekly job.
+ */
+export async function enforceBudget(force: boolean): Promise<void> {
+  const { getBudget, formatUsd, WARN_FRACTION } = await import('../../src/lib/agent/budget.ts');
+  const budget = await getBudget();
+
+  if (!budget.known) return;
+  if (budget.used < WARN_FRACTION) return;
+
+  const state = budget.overBudget ? 'is over' : 'is close to';
+  console.error(
+    `Skipped: month-to-date spend ${formatUsd(budget.spentUsd)} ${state} the ` +
+      `${formatUsd(budget.limitUsd)} budget (${Math.round(budget.used * 100)}%).\n`,
+  );
+  console.error('  A sweep is 5 web-searching Opus calls plus transcription — enough to');
+  console.error('  finish the balance and take the site assistant down with it.\n');
+
+  if (force) {
+    console.error('  --force given: running anyway.\n');
+    return;
+  }
+
+  console.error('  Raise AGENT_MONTHLY_BUDGET_USD, wait for the month to roll, or');
+  console.error('  override deliberately with:  npm run gather -- --force');
+  process.exit(0);
+}
+
 /** Exits the process with instructions rather than the SDK's opaque auth error. */
 export function requireApiKey(): void {
   if (process.env.ANTHROPIC_API_KEY) return;
