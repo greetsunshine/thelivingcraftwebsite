@@ -6,8 +6,15 @@
 // costs more than the scraping does. /llms.txt and /api/facts exist so the
 // answer they get is the one we wrote.
 //
-// /api/ask is disallowed: it is a POST endpoint that costs money per call and
-// has nothing to index.
+// Four paths are disallowed, for three different reasons:
+//   /api/ask     a POST endpoint that costs money per call, nothing to index
+//   /api/track   the analytics beacon — indexing it would pollute its own data
+//   /api/lead    the lead ledger, POST only
+//   /admin       the console. robots.txt is a request, not a control, so this
+//                is politeness on top of the real defence: every /admin route
+//                is behind a session check in src/middleware.ts and sends
+//                X-Robots-Tag: noindex. Listing it here does reveal the path,
+//                which is fine — the password is the secret, not the URL.
 import type { APIRoute } from 'astro';
 import { SITE_ORIGIN } from '../data/facts';
 
@@ -30,6 +37,8 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
+const DISALLOW = ['/admin', '/api/ask', '/api/track', '/api/lead'];
+
 export const GET: APIRoute = () => {
   const body = [
     '# Search and AI crawlers are welcome here.',
@@ -37,9 +46,14 @@ export const GET: APIRoute = () => {
     '',
     'User-agent: *',
     'Allow: /',
-    'Disallow: /api/ask',
+    ...DISALLOW.map((p) => `Disallow: ${p}`),
     '',
-    ...AI_AGENTS.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', 'Disallow: /api/ask', '']),
+    ...AI_AGENTS.flatMap((ua) => [
+      `User-agent: ${ua}`,
+      'Allow: /',
+      ...DISALLOW.map((p) => `Disallow: ${p}`),
+      '',
+    ]),
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     '',
   ].join('\n');

@@ -292,12 +292,24 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     // In memory only. No localStorage, no cookie — closing the tab ends it.
     var history: { role: 'user' | 'assistant'; content: string }[] = [];
     var busy = false;
+    // Groups this tab's questions into one conversation in the admin console.
+    // Same lifetime as the history above: it exists in this closure and nowhere
+    // else, so it cannot follow anyone to another page or another day.
+    var sessionId = Math.random().toString(36).slice(2, 12);
+
+    // Opening the widget at all is a signal — it separates "read the page" from
+    // "had a question the page did not answer". Fired once, not on every reopen.
+    var opened = false;
 
     function open() {
       root!.setAttribute('data-open', 'true');
       panel.hidden = false;
       toggle.setAttribute('aria-expanded', 'true');
       input.focus();
+      if (!opened) {
+        opened = true;
+        window.lcTrack?.('ask_open');
+      }
     }
 
     function close() {
@@ -350,6 +362,24 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
           body: JSON.stringify(payload),
         });
         var json = await res.json();
+
+        // Record the agent's lead in the same ledger the forms write to, and
+        // from the same place — here, where delivery actually succeeds or
+        // fails. Doing it server-side in /api/ask would record a lead as
+        // captured before anyone knew whether Web3Forms would take it.
+        window.lcLead?.({
+          source: 'agent',
+          delivered: !!json.success,
+          interest: payload.interest,
+          name: payload.name,
+          email: payload.email,
+          role: payload.role,
+          company: payload.company,
+          region: payload.region,
+          context: payload.context,
+          question: payload.question,
+        });
+
         if (!json.success) throw new Error(json.message || 'rejected');
       } catch (err) {
         bubble(
@@ -368,12 +398,21 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
       bubble(question, 'user');
       input.value = '';
       var pending = thinking();
+      // The question text itself is logged server-side by /api/ask; this is the
+      // countable event, so the funnel can be read without joining tables.
+      window.lcTrack?.('ask_question');
 
       try {
         var res = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: question, history: history, surface: surface, region: region }),
+          body: JSON.stringify({
+            question: question,
+            history: history,
+            surface: surface,
+            region: region,
+            sessionId: sessionId,
+          }),
         });
         var data = await res.json();
         pending.remove();

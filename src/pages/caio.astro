@@ -330,6 +330,17 @@ const schema = [
             body: new FormData(f),
           });
           var json = await res.json();
+
+          // Ledger write — see the note on the cohort form. Read before reset,
+          // never awaited, never shown to the enquirer.
+          var d = Object.fromEntries(new FormData(f));
+          if (window.lcLead) window.lcLead({
+            source: 'form', interest: 'caio', delivered: !!json.success,
+            name: d.name, email: d.email, role: d.role, company: d.company,
+            message: d.message, context: d.intent, botcheck: d.botcheck,
+          });
+          if (window.lcTrack) window.lcTrack('apply_submit', { ok: !!json.success });
+
           if (json.success) {
             f.reset();
             f.querySelector('.form-grid').style.display = 'none';

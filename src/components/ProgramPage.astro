@@ -376,6 +376,20 @@ const cohort = {
           body: new FormData(f),
         });
         var json = await res.json();
+
+        // Record it beside the inbox. Read before f.reset() clears the fields,
+        // never awaited, and never surfaced to the applicant — Web3Forms has
+        // already accepted or rejected this, and the ledger cannot change that.
+        // `delivered` is the point: it is the only way a submission that never
+        // reached the inbox becomes visible instead of vanishing.
+        var d = Object.fromEntries(new FormData(f));
+        if (window.lcLead) window.lcLead({
+          source: 'form', interest: 'cohort', delivered: !!json.success,
+          name: d.name, email: d.email, role: d.role, company: d.company,
+          region: d.region, message: d.message, botcheck: d.botcheck,
+        });
+        if (window.lcTrack) window.lcTrack('apply_submit', { ok: !!json.success });
+
         if (json.success) {
           f.reset();
           f.querySelector('.form-grid').style.display = 'none';

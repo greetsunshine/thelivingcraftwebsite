@@ -25,6 +25,8 @@ import {
 } from '../../lib/agent/knowledge';
 import { buildCapture, type CapturePayload, type VisitorCapture } from '../../lib/agent/capture';
 import { checkRate } from '../../lib/agent/ratelimit';
+import { record } from '../../lib/admin/supabase';
+import { countryOf } from '../../lib/admin/visitor';
 
 export const prerender = false;
 
@@ -152,6 +154,13 @@ interface AskRequest {
   surface?: string;
   /** Region the page resolved for this visitor. Validated, never trusted raw. */
   region?: string;
+  /**
+   * Random per-tab id so the console can group an exchange into a conversation.
+   * Generated in the widget and held in memory only — it dies with the tab, is
+   * not a cookie or storage, and identifies nothing beyond "these questions
+   * were asked in one sitting".
+   */
+  sessionId?: string;
 }
 
 const REGION_KEYS = ['india', 'dubai', 'australia'] as const;
@@ -225,6 +234,30 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   let capture: CapturePayload | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
+  // Set when the fact base came back empty for a lookup. This is the single
+  // most useful thing the console reports: an unanswered question is a
+  // prospect telling you, unprompted, what facts.ts is missing.
+  let unanswered = false;
+
+  // Written to Supabase for /admin/questions. Nothing here is used to answer
+  // anything — the agent's grounding is still facts.ts and latest.json alone.
+  // If Supabase is unconfigured or down, record() no-ops and the agent is
+  // unaffected; the console simply has less to show.
+  const logExchange = (answer: string, turns: number) =>
+    record('questions', {
+      session_id: body.sessionId ? String(body.sessionId).slice(0, 40) : null,
+      surface,
+      region,
+      country: countryOf(request),
+      question: question.slice(0, 2000),
+      answer: answer.slice(0, 4000),
+      answered: !unanswered,
+      captured: Boolean(capture),
+      tools: trace,
+      turns,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+    });
 
   try {
     for (let turn = 0; turn < MAX_TURNS; turn++) {
@@ -278,6 +311,13 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
           }),
         );
 
+        // Log the exchange for the console. Awaited so the row is written
+        // before the function can be frozen — a Vercel function that returns
+        // with a promise in flight may never resume it. It is one insert, and
+        // record() swallows its own failures, so the visitor's answer is not
+        // at risk either way.
+        await logExchange(answer, turn + 1);
+
         return new Response(
           JSON.stringify({
             answer: answer || "I don't have that. Email apply@thelivingcraft.ai and Sunil will answer.",
@@ -296,13 +336,12 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
         try {
           switch (use.name) {
-            case 'search_knowledge':
-              results.push({
-                type: 'tool_result',
-                tool_use_id: use.id,
-                content: formatRetrieved(searchKnowledge(input.query ?? '', region)),
-              });
+            case 'search_knowledge': {
+              const retrieved = formatRetrieved(searchKnowledge(input.query ?? '', region));
+              if (retrieved.startsWith('NO_MATCH')) unanswered = true;
+              results.push({ type: 'tool_result', tool_use_id: use.id, content: retrieved });
               break;
+            }
 
             case 'get_latest_updates':
               results.push({
@@ -346,10 +385,16 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     }
 
     // Ran out of turns — the agent is looping on tools rather than answering.
+    // Logged as unanswered on purpose: from the visitor's side this is exactly
+    // as useless as "I don't know", and the console should surface it as such.
+    const stuck =
+      "I'm going in circles on that one. Email apply@thelivingcraft.ai and Sunil will answer it directly.";
+    unanswered = true;
+    await logExchange(stuck, MAX_TURNS);
+
     return new Response(
       JSON.stringify({
-        answer:
-          "I'm going in circles on that one. Email apply@thelivingcraft.ai and Sunil will answer it directly.",
+        answer: stuck,
         capture,
       }),
       { headers: { 'Content-Type': 'application/json' } },

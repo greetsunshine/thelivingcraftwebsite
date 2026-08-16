@@ -1,0 +1,122 @@
+---
+// First-party analytics beacon + the lead ledger's client half.
+//
+// This is the third client script on the site, after the forms and the Ask
+// widget, and it earns its place by being the only way the admin console can
+// see anything. @vercel/analytics is still loaded and still gives the headline
+// numbers, but its data lives in Vercel's dashboard — the site cannot query it,
+// so a console built on it would be a link to somebody else's product.
+//
+// Deliberately small and defensive: no dependencies, no cookies, no storage
+// (the no-localStorage rule holds), everything wrapped so a failure here can
+// never break a page or a form submission. If the endpoint is down the site
+// behaves exactly as it did before this file existed.
+//
+// Most events are captured by delegation rather than by editing pages, so
+// adding a section or a link does not mean remembering to instrument it.
+
+export interface Props {
+  /** Resolved region, where the page knows it. Recorded on the pageview only. */
+  region?: string | null;
+}
+
+const { region = null } = Astro.props;
+---
+
+<script is:inline data-region={region}>
+  (function () {
+    var region = document.currentScript ? document.currentScript.getAttribute('data-region') : null;
+
+    // Only the three real surfaces. The server enforces the same list; doing it
+    // here as well keeps a stray path from costing a request.
+    function surface() {
+      var p = (location.pathname || '/').replace(/\/+$/, '');
+      return p === '' ? '/' : p;
+    }
+
+    function send(type, meta) {
+      try {
+        var body = JSON.stringify({
+          type: type,
+          path: surface(),
+          referrer: document.referrer || null,
+          region: region,
+          meta: meta || null,
+        });
+
+        // sendBeacon survives the page being closed mid-navigation, which is
+        // exactly when the interesting events happen. keepalive fetch is the
+        // fallback; both are fire-and-forget and neither is awaited.
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+        } else {
+          fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: body,
+            keepalive: true,
+          }).catch(function () {});
+        }
+      } catch (e) {
+        /* analytics never surfaces to a visitor */
+      }
+    }
+
+    window.lcTrack = send;
+
+    // The lead ledger. Web3Forms is still the delivery path and is posted from
+    // the page exactly as before — this only records what happened, including
+    // whether that post succeeded. A lead that reached the database but not the
+    // inbox is the one thing the console most needs to be able to tell you.
+    window.lcLead = function (payload) {
+      try {
+        payload = payload || {};
+        payload.surface = surface();
+        fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true,
+        }).catch(function () {});
+      } catch (e) {
+        /* the lead is already in the inbox; losing the row is survivable */
+      }
+    };
+
+    send('pageview', null);
+
+    // --- delegated events, so new markup is instrumented for free -----------
+
+    // First interaction with an application form. Fires once per page: the
+    // useful signal is "started and did not finish", and a per-field event
+    // would drown it.
+    var started = false;
+    document.addEventListener(
+      'focusin',
+      function (e) {
+        if (started) return;
+        var el = e.target;
+        if (el && el.closest && el.closest('form.apply-form')) {
+          started = true;
+          send('apply_start', null);
+        }
+      },
+      true,
+    );
+
+    // Movement along the assessment -> CAIO -> cohort spine, plus jumps to the
+    // application form. This is the funnel the practice is built around, and
+    // nothing else on the page reports it.
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+
+      var href = a.getAttribute('href') || '';
+      if (href.indexOf('/caio') === 0 || href.indexOf('/assessment') === 0) {
+        send('cta_click', { to: href.split('?')[0].split('#')[0] });
+      } else if (href.indexOf('#apply') > -1 || href.indexOf('#scope') > -1) {
+        send('cta_click', { to: 'form' });
+      }
+    });
+  })();
+</script>

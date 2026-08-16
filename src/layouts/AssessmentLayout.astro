@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
+import Track from '../components/Track.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
@@ -74,6 +75,7 @@ const year = new Date().getFullYear();
       </div>
     </footer>
 
+    <Track />
     <AskWidget surface="/assessment" />
     <Analytics />
     <SpeedInsights />
