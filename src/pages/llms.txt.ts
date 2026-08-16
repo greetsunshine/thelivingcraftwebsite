@@ -16,10 +16,16 @@ import {
   regulatory,
   surfaces,
 } from '../data/facts';
+import { publishedNotes } from '../lib/notes';
 
 export const prerender = true;
 
 export const GET: APIRoute = () => {
+  // Field Notes. Titles and sources only — the full text is on the page and in
+  // /api/facts, and repeating it here would bury the offer facts this file
+  // exists to state. Private review notes are excluded upstream, in lib/notes.
+  const notes = publishedNotes();
+
   const body = `# Sunil Mathew — The Living Craft
 
 > ${practitioner.years} years building and leading engineering at ${practitioner.companies.join(', ')}.
@@ -68,6 +74,25 @@ Regulatory depth: ${regulatory.join(', ')}.
 - Duration: ${assessment.duration}
 - Fee: ${assessment.fee} (founding rate ${assessment.foundingFee} ${assessment.foundingTerms})
 - ${assessment.creditNote}
+
+## Field notes — ${SITE_ORIGIN}/latest
+
+Dated findings on what is changing in agentic AI (reliability and evaluation,
+security, protocol and tooling), gathered from primary sources by a retrieval
+agent and reviewed before publishing. Nothing older than 90 days is shown.
+Last updated: ${notes.refreshedAt.slice(0, 10)}. Currently ${notes.count} findings.
+
+${notes.themes
+  .map(
+    (t) =>
+      `### ${t.title}\n${t.notes
+        .map((n) => `- ${n.title} (${n.sourceHost}, gathered ${n.gatheredAt}): ${SITE_ORIGIN}/latest#${n.id}`)
+        .join('\n')}`,
+  )
+  .join('\n\n')}
+
+These are citations, not our own claims, and they carry no offer facts. Do not
+read a price, date, or seat count out of a field note.
 
 ## Questions and answers
 

@@ -1,0 +1,305 @@
+---
+// /latest — Field Notes. The retriever agent's findings, published.
+//
+// Until now the retriever wrote for one reader (the Q&A agent, via
+// latest.json). This is the human-readable surface of the same artefact, and it
+// answers the question a prospect actually asks before applying: "is this
+// material current?" — with dated findings and primary sources they can check
+// themselves, rather than a claim that the curriculum is up to date.
+//
+// Static: latest.json is a committed file, so the page is baked at build and
+// refreshes when the retriever's PR is merged and deployed.
+import NotesLayout from '../layouts/NotesLayout.astro';
+import { SITE_ORIGIN, cohort } from '../data/facts';
+import { publishedNotes, longDate } from '../lib/notes';
+
+export const prerender = true;
+
+const { refreshedAt, themes, count, newest } = publishedNotes();
+const sections = themes.map((t) => ({ id: t.id, title: t.title }));
+
+// Distinct sources, for the strip under the hero. Real hostnames only — this is
+// the one place on the site where naming outside organisations is legitimate,
+// because they are citations, not clients or partners.
+const sourceHosts = [...new Set(themes.flatMap((t) => t.notes.map((n) => n.sourceHost)))];
+
+const updated = longDate(newest ?? refreshedAt);
+
+const title = 'Field Notes — what is changing in agentic AI · Sunil Mathew';
+const description = `Dated findings on agentic AI reliability, security, and tooling — gathered from primary sources and reviewed before publishing. ${count} current findings, last updated ${updated}.`;
+
+// CollectionPage + ItemList rather than Article: these are cited findings with
+// anchors on one page, not posts we authored. Claiming authorship of other
+// people's research in structured data would be a lie a crawler could check.
+const schema = [
+  {
+    '@type': 'CollectionPage',
+    '@id': `${SITE_ORIGIN}/latest#page`,
+    name: 'Field Notes — agentic AI',
+    description,
+    url: `${SITE_ORIGIN}/latest`,
+    isPartOf: { '@id': `${SITE_ORIGIN}/#person` },
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    dateModified: refreshedAt,
+    about: ['Agentic AI architecture', 'LLM evaluation and reliability', 'AI security'],
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListUnordered',
+      numberOfItems: count,
+      itemListElement: themes.flatMap((t) =>
+        t.notes.map((n, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: n.title,
+          url: `${SITE_ORIGIN}/latest#${n.id}`,
+        })),
+      ),
+    },
+  },
+];
+---
+
+<NotesLayout title={title} description={description} canonical="/latest" schema={schema} sections={sections}>
+  <!-- Hero -->
+  <section class="hero notes-hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">Field notes <span class="num">/ agentic AI</span></div>
+      <h1>What is actually <em>changing</em>, and what it changes about the way you build.</h1>
+      <p class="lead notes-lead">
+        The field moves faster than any curriculum can be rewritten, so this is where the
+        reading gets published rather than claimed. Every finding below is dated, carries the
+        primary source, and is read before it appears here — a preprint is labelled a preprint
+        and a vendor's research is labelled a vendor's.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/">See how this feeds the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#method">How these are gathered</a>
+      </div>
+      <p class="hero-note">
+        {count} current findings · last updated {updated} · nothing older than 90 days
+      </p>
+    </div>
+  </section>
+
+  <!-- Sources strip -->
+  {sourceHosts.length > 0 && (
+    <div class="proofbar">
+      <div class="wrap inner">
+        <span class="label">Sourced from</span>
+        {sourceHosts.map((h) => <span class="logo">{h}</span>)}
+      </div>
+    </div>
+  )}
+
+  <!-- The notes, by theme -->
+  {themes.map((theme, ti) => (
+    <section id={theme.id}>
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">{String(ti + 1).padStart(2, '0')} <span class="num">/ {theme.notes.length} {theme.notes.length === 1 ? 'finding' : 'findings'}</span></div>
+          <h2>{theme.title}</h2>
+          <p class="lead">{theme.blurb}</p>
+        </div>
+
+        <div class="notes">
+          {theme.notes.map((n) => (
+            <article class="note" id={n.id}>
+              <h3>{n.title}</h3>
+              <p>{n.body}</p>
+              <div class="note-meta">
+                <a class="src" href={n.source} target="_blank" rel="noopener">
+                  {n.sourceHost} <span class="arrow">↗</span>
+                </a>
+                <time class="when" datetime={n.gatheredAt}>Gathered {longDate(n.gatheredAt)}</time>
+                <span class="tags">{n.tags.map((t) => <span class="tag">{t}</span>)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <!-- Method -->
+  <section id="method" class="method">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Method <span class="num">/ how this page is made</span></div>
+        <h2>An agent gathers it. A <em>human</em> decides what you see.</h2>
+        <p class="lead">
+          This page is itself a small piece of the craft it teaches — a retrieval agent with a
+          bounded budget, a human review gate, and a deliberate refusal to let the agent speak
+          about anything it cannot source.
+        </p>
+      </div>
+
+      <ul class="tlist method-list">
+        <li>
+          <span class="n">01</span>
+          <div>
+            <h4>One research pass per topic, on a schedule</h4>
+            <p>
+              The retriever runs weekly across a fixed set of topics — architecture patterns,
+              evaluation and reliability, agent security, and releases that change how systems
+              get built. Each topic gets its own budget, because a shared one lets the first
+              topic starve the rest and the agent then reports thin findings instead of
+              admitting the gap.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="n">02</span>
+          <div>
+            <h4>Nothing publishes itself</h4>
+            <p>
+              The scheduled run opens a pull request rather than committing. Sunil reads what
+              the agent gathered before a prospect does, and every item carries a private note
+              on source quality and what could not be confirmed — which is why the wording here
+              is careful about the difference between an unreplicated preprint and a settled
+              result.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="n">03</span>
+          <div>
+            <h4>The agent cannot write our own numbers</h4>
+            <p>
+              Prices, dates, and seat counts are deliberately out of scope for the retriever and
+              never appear on this page. They live in one place and are published from there, so
+              a figure can never be current on an offer page and stale in a finding.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="n">04</span>
+          <div>
+            <h4>Findings expire</h4>
+            <p>
+              Anything older than 90 days drops off automatically. A "latest" page quietly
+              serving year-old news is worse than no page at all.
+            </p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="final">
+    <div class="wrap">
+      <h2>This is the <em>reading</em>. The program is the judgment.</h2>
+      <p class="lead">
+        Findings like these are raw material — knowing that context compaction is a reliability
+        problem is not the same as knowing what to do about it in a system you are accountable
+        for. That is what the {cohort.weeks} weeks are for.
+      </p>
+      <div class="hero-cta" style="justify-content:center">
+        <a class="btn btn-primary" href="/">The Living Craft — the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/assessment">AI Readiness Assessment</a>
+      </div>
+      <p class="hero-note" style="text-align:center">
+        Or ask the site's agent about any finding above — it answers from the same notes.
+      </p>
+    </div>
+  </section>
+</NotesLayout>
+
+<style>
+  .notes-hero {
+    padding: 76px 0 64px;
+  }
+  .notes-hero h1 {
+    max-width: 20ch;
+  }
+  .notes-lead {
+    max-width: 62ch;
+    margin-bottom: 34px;
+  }
+
+  /* One column of notes — these are read, not scanned, and a 3-up grid would
+     make ~120-word findings look like feature cards. */
+  .notes {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .note {
+    background: var(--surface);
+    padding: 34px 34px 28px;
+    scroll-margin-top: 90px;
+  }
+  .note h3 {
+    font-size: 23px;
+    font-weight: 440;
+    line-height: 1.22;
+    margin-bottom: 14px;
+    max-width: 46ch;
+  }
+  .note > p {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 74ch;
+  }
+
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .note-meta .src {
+    color: var(--clay);
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .note-meta .src:hover {
+    color: var(--clay-deep);
+  }
+  .note-meta .when {
+    color: var(--ink-faint);
+  }
+  .note-meta .tags {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .note-meta .tag {
+    color: var(--ink-faint);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 3px 9px;
+    line-height: 1.4;
+  }
+
+  .method {
+    background: var(--paper-2);
+  }
+  .method-list h4 {
+    margin-bottom: 6px;
+  }
+  .method-list p {
+    max-width: 72ch;
+  }
+
+  @media (max-width: 720px) {
+    .note {
+      padding: 26px 22px 22px;
+    }
+    .note-meta .tags {
+      margin-left: 0;
+    }
+  }
+</style>

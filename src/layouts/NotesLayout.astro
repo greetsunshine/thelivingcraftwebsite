@@ -1,4 +1,10 @@
 ---
+// Layout for /latest — the published output of the retriever agent.
+//
+// Brand-neutral chrome, like the consulting surfaces: the notes are evidence
+// that the practice tracks its field, and they serve the cohort and the
+// consulting pages equally. Same design system, same nav grammar, so the
+// section reads as part of one site rather than a bolted-on blog.
 import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
@@ -11,9 +17,11 @@ export interface Props {
   description?: string;
   canonical?: string;
   schema?: unknown[];
+  /** Section anchors for the nav — passed in because the themes are data-driven. */
+  sections?: { id: string; title: string }[];
 }
 
-const { title, description, canonical, schema } = Astro.props;
+const { title, description, canonical, schema, sections = [] } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -23,20 +31,17 @@ const year = new Date().getFullYear();
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
   <body>
-    <!-- Nav — AI Readiness Assessment, brand-neutral, cross-linked -->
     <header class="nav">
       <div class="wrap nav-inner">
         <a class="wordmark" href="#top">
           <span class="dot"></span> Sunil Mathew
-          <span class="wordmark-sub">AI&nbsp;Readiness</span>
+          <span class="wordmark-sub">Field&nbsp;Notes</span>
         </a>
         <nav class="navlinks">
-          <a href="#what">What it is</a>
-          <a href="#deliverables">What you get</a>
-          <a href="#run">How it runs</a>
-          <a href="#investment">Investment</a>
+          {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
           <a href="/caio">Fractional CAIO</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="#contact">Request a scope call&nbsp;<span class="arrow">→</span></a>
+          <a href="/assessment">AI Readiness</a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow">→</span></a>
         </nav>
       </div>
     </header>
@@ -45,39 +50,39 @@ const year = new Date().getFullYear();
       <slot />
     </main>
 
-    <!-- Footer -->
     <footer class="site">
       <div class="wrap">
         <div class="foot-grid">
           <div>
             <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> Sunil Mathew</div>
-            <p class="muted">A fixed-scope AI diagnostic for leaders who are done with theatre — run on your systems, with a board-ready roadmap you own.</p>
+            <p class="muted">What is actually changing in agentic AI — gathered from primary sources, read before it is published.</p>
           </div>
           <div class="foot-col">
-            <h5>The assessment</h5>
-            <a href="#what">What it is</a>
-            <a href="#deliverables">What you get</a>
-            <a href="#run">How it runs</a>
-            <a href="#investment">Investment</a>
+            <h5>Field notes</h5>
+            {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
+            <a href="#method">How these are gathered</a>
+          </div>
+          <div class="foot-col">
+            <h5>The practice</h5>
+            <a href="/">The Living Craft — cohort →</a>
+            <a href="/caio">Fractional CAIO retainer →</a>
+            <a href="/assessment">AI Readiness Assessment →</a>
           </div>
           <div class="foot-col">
             <h5>Connect</h5>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
-            <a href="/caio">Fractional CAIO retainer →</a>
-            <a href="/">The Living Craft — cohort →</a>
-            <a href="/latest">Field notes — agentic AI →</a>
           </div>
         </div>
         <div class="foot-bottom">
           <span>© {year} Sunil Mathew</span>
-          <span class="mono">AI Readiness Assessment · India</span>
+          <span class="mono">Field notes · agentic AI</span>
         </div>
       </div>
     </footer>
 
     <Track />
-    <AskWidget surface="/assessment" />
+    <AskWidget surface="/latest" />
     <Analytics />
     <SpeedInsights />
   </body>
