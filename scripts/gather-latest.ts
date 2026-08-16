@@ -1,5 +1,5 @@
-// Retriever agent — gathers current, citable detail and writes it where the
-// visitor Q&A agent can read it (src/data/latest.json).
+// Retriever agent (visitor-facing) — gathers current, citable detail and writes
+// it where the visitor Q&A agent can read it (src/data/latest.json).
 //
 //   npm run gather              # refresh from the default topics
 //   npm run gather -- "topic"   # refresh one ad-hoc topic
@@ -7,43 +7,35 @@
 // Run it on a schedule (GitHub Action, cron) and commit the diff. The Q&A agent
 // picks it up on the next deploy.
 //
-// Ported from ~/agentic-observability-demo: same Anthropic tool-use loop, with
-// Claude's server-side web_search standing in for the demo's fixed knowledge
-// base, and a structured-output contract so the result lands as data rather
-// than prose that then needs parsing.
+// The mechanics — per-topic search budgets, the two-pass split, the cooldown,
+// the source filter — live in scripts/lib/research.ts and are shared with the
+// radar agent. What is specific to this agent is here: WHO reads the output.
 //
-// Guardrail worth naming: this agent may NOT restate our own offers. Prices,
-// dates, and seat counts live in src/data/facts.ts and flow to the visitor
-// agent directly. If a retriever could also write those, two sources could
-// disagree and the visitor agent would have no way to know which is true.
+// Everything this script writes is read verbatim by a chatbot talking to
+// prospects. That is why the topics map to what the cohort teaches, and why the
+// guardrail below is absolute: this agent may NOT restate our own offers.
+// Prices, dates, and seat counts live in src/data/facts.ts and flow to the
+// visitor agent directly. If a retriever could also write those, two sources
+// could disagree and the visitor agent would have no way to know which is true.
+//
+// For market intelligence — where big tech is investing, what is failing,
+// hiring in India — see gather-radar.ts. That feed is for Sunil and is
+// deliberately NOT wired into the visitor agent.
 
 import { writeFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import Anthropic from '@anthropic-ai/sdk';
+import {
+  RESEARCH_MODEL,
+  TRANSCRIBE_MODEL,
+  enforceCooldown,
+  reportFailure,
+  requireApiKey,
+  sweep,
+} from './lib/research.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', 'src', 'data', 'latest.json');
-
-// Both passes on Opus 5, and the research pass is the reason.
-//
-// I moved research to Sonnet 5 to cut cost, on the reasoning that
-// search-and-summarise doesn't need the premium. That was wrong for this task,
-// and the comparison is stark:
-//
-//   Opus 5   → 5–7 findings: arXiv preprints, the MCP maintainers' blog,
-//              Zscaler threat research. Every one carried a URL.
-//   Sonnet 5 → 22 findings, 16 with an EMPTY source. Of the 6 that survived
-//              the URL filter, 4 were content-marketing blogs and Substacks.
-//
-// The job isn't summarising — it's judging which of a hundred search results is
-// a primary artefact worth a senior engineer's attention, and holding the line
-// when the honest answer is "nothing this week". That judgment is the work.
-//
-// Cost is controlled by the levers that don't cost quality: 6 searches per
-// topic, a 6h cooldown, weekly cadence, and the console spend limit.
-const RESEARCH_MODEL = 'claude-opus-5';
-const TRANSCRIBE_MODEL = 'claude-opus-5';
 
 /**
  * What the retriever sweeps when run with no arguments.
@@ -129,54 +121,8 @@ Rules:
   senior engineer should do or think differently as a result. Anything addressed to Sunil —
   doubts, verification steps, source-quality concerns — goes in reviewNote, never the body.`;
 
-/**
- * Two passes, because web search and structured outputs can't share a call.
- *
- * Web search attaches citations to the text it produces, and structured outputs
- * reject citations with a 400 — so asking one call to both search and emit
- * schema-valid JSON fails. Splitting also gives each call one job: research,
- * then transcribe. The second call sees only the first's notes, so it can't
- * introduce a finding that wasn't researched.
- */
-/**
- * Searches per topic. Shared across topics, the first one eats the budget — so
- * this is per topic, not per run.
- *
- * 6, down from 8: web search is billed per query and is a large share of a run.
- * The skills topic came back empty at 8, which was a genuine absence rather
- * than a starved search, so the extra two were not buying coverage.
- */
-const SEARCHES_PER_TOPIC = 6;
-
-async function gather(topics: string[]) {
-  const client = new Anthropic();
-  const today = new Date().toISOString().slice(0, 10);
-
-  // Pass 1 — research, ONE CALL PER TOPIC.
-  //
-  // A single call covering all four topics starved the later ones: the first
-  // run exhausted a shared 12-search budget on topic one and reported items for
-  // the rest from whatever it already had, while the second run said so out
-  // loud — "three of four topics are under-searched rather than genuinely
-  // empty". Per-topic calls give each its own budget, so an empty topic means
-  // nothing was found rather than nothing was looked for.
-  const notes: string[] = [];
-  for (const [i, topic] of topics.entries()) {
-    console.log(`  [${i + 1}/${topics.length}] ${topic.slice(0, 68)}…`);
-
-    const research = await client.messages.create({
-      model: RESEARCH_MODEL,
-      max_tokens: 6000,
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'medium' },
-      system: SYSTEM,
-      tools: [
-        { type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES_PER_TOPIC },
-      ],
-      messages: [
-        {
-          role: 'user',
-          content: `Search for material developments in the last 90 days on this one topic:
+const researchPrompt = (topic: string, today: string, searches: number) =>
+  `Search for material developments in the last 90 days on this one topic:
 
 ${topic}
 
@@ -185,7 +131,7 @@ Today is ${today}. Discard anything older than 90 days or already common knowled
 Write up only what genuinely changes what a senior engineer should know, build, or watch
 out for.
 
-EVERY finding must carry the full URL you found it at, on its own line as `Source: https://…`.
+EVERY finding must carry the full URL you found it at, on its own line as \`Source: https://…\`.
 A finding you cannot attach a URL to is not a finding — leave it out rather than writing it
 up unsourced. Do not group several findings under one shared source; if two findings come
 from one page, repeat the URL on both.
@@ -196,153 +142,17 @@ engineer, the Source line, and — separately — anything Sunil should know bef
 result). If nothing material turned up, say so plainly; an empty topic is expected some
 weeks and is better than padding.
 
-You have ${SEARCHES_PER_TOPIC} searches for this topic alone, so search properly before
-concluding it is empty. If you run out, say the topic is under-searched rather than empty.`,
-        },
-      ],
-    });
-
-    if (research.stop_reason === 'refusal') {
-      console.warn(`      refused: ${research.stop_details?.explanation ?? 'no explanation'} — skipping`);
-      continue;
-    }
-
-    const text = research.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n')
-      .trim();
-
-    if (text) notes.push(`## Topic: ${topic}\n\n${text}`);
-  }
-
-  if (notes.length === 0) return [];
-
-  // Pass 2 — transcribe into the schema. No tools, so no citations, so the
-  // structured-output constraint is satisfied.
-  const structured = await client.messages.create({
-    model: TRANSCRIBE_MODEL,
-    // Generous: this scales with topic count, and running out truncates the
-    // JSON mid-string, which surfaces as an opaque parse error rather than
-    // "you ran out of room". 4000 was not enough for five topics.
-    max_tokens: 16000,
-    thinking: { type: 'adaptive' },
-    output_config: { effort: 'low', format: { type: 'json_schema', schema: ITEM_SCHEMA } },
-    system:
-      'You transcribe research notes into structured records. Use only what the notes contain — ' +
-      'no additions, no inference, no rewriting of the substance.\n\n' +
-      'The source field must be the full http(s) URL the note carried. If a note has no URL, ' +
-      'OMIT that finding entirely — do not emit it with an empty or placeholder source, and do ' +
-      'not borrow a URL from a neighbouring finding. Fewer, sourced records beat more, unsourced ' +
-      'ones. If the notes report nothing material, return an empty list.',
-    messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes.join('\n\n---\n\n')}` }],
-  });
-
-  if (structured.stop_reason === 'refusal') {
-    throw new Error(`Transcription pass refused: ${structured.stop_details?.explanation ?? 'no explanation'}`);
-  }
-
-  // Catch this before JSON.parse, or a truncated response reads as malformed
-  // JSON and sends you looking for a bug in the schema instead of the budget.
-  if (structured.stop_reason === 'max_tokens') {
-    throw new Error(
-      'Transcription pass hit max_tokens, so the JSON is cut off. Raise max_tokens ' +
-        'on the structured call, or sweep fewer topics per run.',
-    );
-  }
-
-  const raw = structured.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map((b) => b.text)
-    .join('');
-
-  let parsed: { items?: Omit<import('../src/lib/agent/latest').LatestItem, 'gatheredAt'>[] };
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error(`Could not parse the structured pass as JSON. Raw output:\n${raw.slice(0, 500)}`);
-  }
-
-  // Enforce the source contract HERE, not in the prompt.
-  //
-  // The transcription system prompt already says "drop any finding that lacks a
-  // usable source URL". It didn't: a run emitted 22 items of which 16 had
-  // source: "". A data contract asked for politely is a suggestion; the visitor
-  // agent citing an unsourced claim to a prospect is the actual cost of that
-  // distinction, so the filter lives in code where it cannot be talked out of.
-  const items = parsed.items ?? [];
-  const sourced = items.filter((i) => /^https?:\/\/\S+$/i.test(String(i.source ?? '')));
-  const dropped = items.length - sourced.length;
-
-  if (dropped > 0) {
-    console.warn(
-      `  dropped ${dropped}/${items.length} finding(s) with no usable source URL:`,
-    );
-    for (const i of items) {
-      if (!/^https?:\/\/\S+$/i.test(String(i.source ?? ''))) {
-        console.warn(`    · ${i.id}`);
-      }
-    }
-    // A high drop rate means the research pass isn't carrying URLs through,
-    // which is a prompt or model problem rather than a bad week.
-    if (dropped / items.length > 0.5) {
-      console.warn(
-        '  NOTE: over half were unsourced — check the research pass is emitting a URL per finding.',
-      );
-    }
-  }
-
-  return sourced;
-}
+You have ${searches} searches for this topic alone, so search properly before
+concluding it is empty. If you run out, say the topic is under-searched rather than empty.`;
 
 async function main() {
-  // Preflight. The SDK's own failure here is "Could not resolve authentication
-  // method. Expected one of apiKey, authToken, credentials, config, or
-  // profile…", which says nothing about where to put the key.
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('ANTHROPIC_API_KEY is not set.\n');
-    console.error('  Local run:  put it in .env.local —');
-    console.error('    cp .env.example .env.local   # then paste your key after the =');
-    console.error('  One-off:    ANTHROPIC_API_KEY=sk-ant-… npm run gather\n');
-    console.error('  Key from:   https://console.anthropic.com/settings/keys');
-    console.error('  (`vercel env pull` will NOT work — Vercel redacts encrypted values.)');
-    process.exit(1);
-  }
+  requireApiKey();
 
   const argv = process.argv.slice(2);
   const force = argv.includes('--force');
   const topics = argv.filter((a) => a !== '--force');
 
-  // Cooldown. This is a weekly job; four runs in one hour while tuning the
-  // prompt drained the account's credit and took the LIVE SITE AGENT down with
-  // it, because they share a key. Nothing in the script objected — it was
-  // perfectly happy to spend the balance on iteration.
-  //
-  // Refusing a rapid re-run is the guard that matches how the damage actually
-  // happened. It is not a substitute for the console spend limit, which is the
-  // real ceiling; it is the part that lives in the repo.
-  const COOLDOWN_HOURS = 6;
-  if (!force) {
-    try {
-      const prev = JSON.parse(readFileSync(OUT, 'utf8')) as { refreshedAt?: string };
-      const last = prev.refreshedAt ? Date.parse(prev.refreshedAt) : NaN;
-      const hours = (Date.now() - last) / 3_600_000;
-
-      if (!Number.isNaN(hours) && hours < COOLDOWN_HOURS) {
-        const wait = (COOLDOWN_HOURS - hours).toFixed(1);
-        console.error(
-          `Skipped: last run was ${hours.toFixed(1)}h ago (cooldown ${COOLDOWN_HOURS}h).\n`,
-        );
-        console.error('  Each run is 5 web-searching model calls. Repeated runs are how the');
-        console.error('  credit balance emptied and the live agent went down on 2026-08-15.\n');
-        console.error(`  Wait ${wait}h, or override with:  npm run gather -- --force`);
-        console.error('  Tuning topics? Try one at a time:  npm run gather -- "your topic"');
-        process.exit(0);
-      }
-    } catch {
-      // No readable previous file — nothing to rate-limit against; proceed.
-    }
-  }
+  enforceCooldown(OUT, 6, force, 'gather');
 
   const useTopics = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
@@ -350,7 +160,14 @@ async function main() {
     `Retriever: sweeping ${useTopics.length} topic(s) — research on ${RESEARCH_MODEL}, ` +
       `transcription on ${TRANSCRIBE_MODEL}.${force ? ' (cooldown overridden)' : ''}`,
   );
-  const found = await gather(useTopics);
+
+  const found = await sweep<Omit<import('../src/lib/agent/latest').LatestItem, 'gatheredAt'>>({
+    topics: useTopics,
+    system: SYSTEM,
+    researchPrompt,
+    schema: ITEM_SCHEMA,
+  });
+
   const today = new Date().toISOString().slice(0, 10);
 
   // Operator-authored items are hand-written and outrank anything the retriever
@@ -374,17 +191,4 @@ async function main() {
   if (found.length === 0) console.log('  (retriever found nothing material — that is a valid result)');
 }
 
-main().catch((err) => {
-  const msg = err instanceof Error ? err.message : String(err);
-
-  if (/credit balance/i.test(msg)) {
-    console.error('Retriever stopped: the Anthropic account is out of credit.\n');
-    console.error('  Top up:  https://console.anthropic.com/settings/billing');
-    console.error('  Cap it:  https://console.anthropic.com/settings/limits\n');
-    console.error('  Note this also takes the live site agent down — it shares the key.');
-    process.exit(1);
-  }
-
-  console.error('Retriever failed:', msg);
-  process.exit(1);
-});
+main().catch(reportFailure);
