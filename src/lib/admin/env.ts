@@ -6,10 +6,15 @@
 // into process.env. Reading only one works in exactly one of the two places,
 // and the failure is a silent "not configured" on whichever you test in.
 
-export const env = (key: string): string =>
-  (import.meta.env as Record<string, string | undefined>)[key] ??
-  process.env[key] ??
-  '';
+// Three runtimes now, not two. The retriever scripts import this (via the
+// budget guard) and run under plain `node`, where `import.meta.env` is
+// UNDEFINED — indexing it throws rather than returning undefined, which took
+// out the whole sweep before it reached the model. Vite only defines it inside
+// its own module graph.
+export const env = (key: string): string => {
+  const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
+  return viteEnv?.[key] ?? process.env[key] ?? '';
+};
 
 /**
  * What the console can and cannot do right now.
