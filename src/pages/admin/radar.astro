@@ -1,0 +1,157 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConsoleActions from '../../components/admin/ConsoleActions.astro';
+import FindingActions from '../../components/admin/FindingActions.astro';
+import { RADAR_CATEGORIES, RADAR_MAX_AGE_DAYS } from '../../data/radar-categories';
+import { getRadar } from '../../lib/agent/radar';
+import { capabilities } from '../../lib/admin/env';
+
+const caps = capabilities();
+const radar = getRadar();
+
+const selected = Astro.url.searchParams.get('c');
+const active = RADAR_CATEGORIES.find((c) => c.key === selected) ?? null;
+
+const shown = active ? radar.items.filter((i) => i.category === active.key) : radar.items;
+
+const countFor = (key: string) => radar.items.filter((i) => i.category === key).length;
+
+const age = (() => {
+  const t = Date.parse(radar.refreshedAt);
+  if (Number.isNaN(t) || t < 86_400_000) return null;
+  return Math.floor((Date.now() - t) / 86_400_000);
+})();
+
+// Source quality drives the pill colour, because it is the thing most worth
+// noticing at a glance. A vendor's own blog and a peer-reviewed paper are both
+// "a link"; only one of them is safe to quote in a board room.
+const SOURCE_TONE: Record<string, string> = {
+  primary: 'pill good',
+  press: 'pill',
+  vendor: 'pill warn',
+  secondhand: 'pill warn',
+};
+
+const host = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+};
+---
+
+<AdminLayout title="Radar" active="radar">
+  <div class="page-head">
+    <div>
+      <span class="label">
+        {radar.items.length} findings · {age === null ? 'never run' : `refreshed ${age} day${age === 1 ? '' : 's'} ago`}
+      </span>
+      <h1>Radar</h1>
+      <p>
+        Market intelligence gathered for you across six categories, kept for {RADAR_MAX_AGE_DAYS} days.
+        The visitor Q&A agent <strong>cannot read this</strong> — investment figures, hiring numbers
+        and claims about what is failing are yours to judge before repeating, not a chatbot's to
+        volunteer. What the visitor agent does read lives under
+        <a href="/admin/content" style="color:var(--clay)">Content</a>.
+      </p>
+    </div>
+
+    <div>
+      <button
+        class="btn primary"
+        data-run-agent="radar"
+        data-scoped="true"
+        data-status="#runStatus"
+        disabled={!caps.github}>Run the agent now</button
+      >
+      <p class="status-line" id="runStatus"></p>
+    </div>
+  </div>
+
+  {
+    !caps.github && (
+      <div class="notice">
+        <h3>GitHub is not connected</h3>
+        <p class="muted">
+          The radar still displays. Running the agent on demand and hiding a finding both open a
+          pull request, so they need <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> set —
+          a fine-grained PAT for this repo with Contents, Pull requests and Actions set to
+          read/write.
+        </p>
+      </div>
+    )
+  }
+
+  <nav class="cat-nav">
+    <a class={active ? '' : 'on'} href="/admin/radar">All · {radar.items.length}</a>
+    {
+      RADAR_CATEGORIES.map((c) => (
+        <a class={active?.key === c.key ? 'on' : ''} href={`/admin/radar?c=${c.key}`}>
+          {c.label} · {countFor(c.key)}
+        </a>
+      ))
+    }
+  </nav>
+
+  {active && <p class="muted" style="margin:-10px 0 22px;font-size:13.5px">{active.brief}</p>}
+
+  {
+    shown.length === 0 ? (
+      <div class="card">
+        <p class="muted">
+          {radar.items.length === 0
+            ? 'The radar has not run yet. Run it above, or wait for the Monday sweep — it opens a PR with what it finds.'
+            : 'Nothing in this category yet. An empty category is a real result: the agent is told to return nothing rather than pad.'}
+        </p>
+      </div>
+    ) : (
+      shown.map((item) => (
+        <article class="finding" data-id={item.id}>
+          <div class="finding-head">
+            <h3>{item.title}</h3>
+            <span class="pill on">{RADAR_CATEGORIES.find((c) => c.key === item.category)?.label ?? item.category}</span>
+          </div>
+
+          <p class="body">{item.body}</p>
+
+          {item.implication && <p class="implication">{item.implication}</p>}
+
+          {item.reviewNote && (
+            <p class="review">
+              <b>Before you repeat this:</b> {item.reviewNote}
+            </p>
+          )}
+
+          <div class="meta">
+            {item.sourceType && <span class={SOURCE_TONE[item.sourceType] ?? 'pill'}>{item.sourceType}</span>}
+            <a class="src" href={item.source} target="_blank" rel="noopener noreferrer">
+              {host(item.source)} ↗
+            </a>
+            <span class="faint mono" style="font-size:11.5px">
+              {item.publishedAt ? `published ${item.publishedAt} · ` : ''}found {item.gatheredAt}
+            </span>
+            {(item.tags ?? []).map((t) => (
+              <span class="pill">{t}</span>
+            ))}
+          </div>
+
+          <FindingActions
+            id={item.id}
+            file="radar"
+            title={item.title}
+            body={item.body}
+            implication={item.implication}
+            canWrite={caps.github}
+            hideLabel="Hide from the radar"
+          />
+        </article>
+      ))
+    )
+  }
+
+  <ConsoleActions />
+
+</AdminLayout>

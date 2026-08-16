@@ -1,0 +1,141 @@
+---
+// The one copy of the console's write behaviour: propose an edit, propose a
+// hide, dispatch an agent run.
+//
+// Wholly delegated, so both the radar and the content page get it by including
+// this component once and marking up their buttons — no per-page copy of the
+// fetch/report plumbing to drift.
+//
+// Every action here ends in a pull request or a workflow run, never in a
+// changed page. The status line says what happened and links to it, and that is
+// deliberately the whole feedback: optimistically hiding a card would claim the
+// live site had changed when it has not.
+---
+
+<script is:inline>
+  (function () {
+    function post(url, body) {
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, j: j }; });
+      });
+    }
+
+    // Built as DOM rather than innerHTML: the message can carry a GitHub error
+    // string, and this console is the last place to be pasting server text into
+    // markup.
+    function report(el, res, okText) {
+      el.textContent = '';
+      if (res.ok) {
+        el.className = 'status-line ok';
+        el.appendChild(document.createTextNode((res.j.message || okText) + ' '));
+        if (res.j.url) {
+          var a = document.createElement('a');
+          a.href = res.j.url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.style.color = 'var(--clay)';
+          a.textContent = 'Open it ↗';
+          el.appendChild(a);
+        }
+      } else {
+        el.className = 'status-line err';
+        el.textContent = res.j.error || 'That did not work.';
+      }
+    }
+
+    function pending(el, text) {
+      el.className = 'status-line';
+      el.textContent = text;
+    }
+
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+
+      // --- run an agent ---------------------------------------------------
+      var runBtn = t.closest('[data-run-agent]');
+      if (runBtn) {
+        var runOut = document.querySelector(runBtn.getAttribute('data-status'));
+        runBtn.disabled = true;
+        pending(runOut, 'Dispatching…');
+
+        var payload = { agent: runBtn.getAttribute('data-run-agent') };
+        if (runBtn.getAttribute('data-scoped') === 'true') {
+          payload.category = new URLSearchParams(location.search).get('c') || '';
+        }
+
+        post('/api/admin/run', payload)
+          .then(function (res) {
+            report(runOut, res, 'Started. It takes a few minutes and opens a PR.');
+            runBtn.disabled = false;
+          })
+          .catch(function () {
+            runOut.className = 'status-line err';
+            runOut.textContent = 'Network error.';
+            runBtn.disabled = false;
+          });
+        return;
+      }
+
+      var group = t.closest('.actions[data-id]');
+      if (!group) return;
+
+      var out = group.querySelector('.status-line');
+      var payloadBase = {
+        id: group.getAttribute('data-id'),
+        file: group.getAttribute('data-file'),
+      };
+
+      // --- hide -----------------------------------------------------------
+      if (t.closest('.hide-finding')) {
+        var hideBtn = t.closest('.hide-finding');
+        hideBtn.disabled = true;
+        pending(out, 'Opening a pull request…');
+
+        post('/api/admin/propose', Object.assign({ action: 'hide' }, payloadBase))
+          .then(function (res) {
+            report(out, res, 'Queued for removal.');
+            if (!res.ok) hideBtn.disabled = false;
+          })
+          .catch(function () {
+            out.className = 'status-line err';
+            out.textContent = 'Network error.';
+            hideBtn.disabled = false;
+          });
+        return;
+      }
+
+      // --- edit -----------------------------------------------------------
+      if (t.closest('.save-finding')) {
+        var saveBtn = t.closest('.save-finding');
+        var titleEl = group.querySelector('.edit-title');
+        var bodyEl = group.querySelector('.edit-body');
+        var implEl = group.querySelector('.edit-implication');
+
+        var patch = Object.assign({ action: 'edit' }, payloadBase, {
+          title: titleEl ? titleEl.value : undefined,
+          body: bodyEl ? bodyEl.value : undefined,
+        });
+        if (implEl) patch.implication = implEl.value;
+
+        saveBtn.disabled = true;
+        pending(out, 'Opening a pull request…');
+
+        post('/api/admin/propose', patch)
+          .then(function (res) {
+            report(out, res, 'Edit queued for review.');
+            saveBtn.disabled = false;
+          })
+          .catch(function () {
+            out.className = 'status-line err';
+            out.textContent = 'Network error.';
+            saveBtn.disabled = false;
+          });
+      }
+    });
+  })();
+</script>

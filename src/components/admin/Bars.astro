@@ -1,0 +1,61 @@
+---
+// Ranked magnitudes — top paths, referrers, countries, funnel steps.
+//
+// One hue throughout, on purpose. These rows are the same measure at different
+// magnitudes, not competing categories, so colouring them differently would
+// encode identity that does not exist and burn the categorical palette on
+// nothing. Every row carries its own number, so the bar is a second reading of
+// a value that is already legible as text.
+//
+// Plain HTML rather than SVG: these are labelled rows, and a div with a width
+// wraps, scales and stays selectable in a way a fixed viewBox does not.
+
+export interface Props {
+  rows: { label: string; value: number; note?: string }[];
+  /** Shown when there is nothing yet. */
+  empty?: string;
+  /** Cap the list; the caller says what was dropped. */
+  limit?: number;
+}
+
+const { rows, empty = 'Nothing recorded yet.', limit = 8 } = Astro.props;
+
+const shown = rows.slice(0, limit);
+// Scale to the largest row rather than to the total: these lists are usually
+// long-tailed, and a percentage-of-total scale renders everything below the
+// leader as an invisible sliver.
+const peak = Math.max(1, ...shown.map((r) => Number(r.value)));
+---
+
+{
+  shown.length === 0 ? (
+    <p class="faint" style="font-size:13.5px">
+      {empty}
+    </p>
+  ) : (
+    <div class="bars">
+      {shown.map((r) => (
+        <div class="bar-row">
+          <span class="bl" title={r.label}>
+            {r.label}
+          </span>
+          <span class="bv">
+            {r.value}
+            {r.note && <span class="faint"> · {r.note}</span>}
+          </span>
+          <span class="track">
+            <span class="fill" style={`width:${Math.max(2, (Number(r.value) / peak) * 100)}%`} />
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+{
+  rows.length > limit && (
+    <p class="faint" style="font-size:12.5px;margin-top:12px">
+      {rows.length - limit} more not shown.
+    </p>
+  )
+}

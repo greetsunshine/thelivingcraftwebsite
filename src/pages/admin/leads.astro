@@ -1,0 +1,193 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { LEAD_STATUSES, leadCounts, leads } from '../../lib/admin/queries';
+
+const params = Astro.url.searchParams;
+const status = params.get('status') ?? 'new';
+const search = (params.get('q') ?? '').slice(0, 120);
+
+const [rows, counts] = await Promise.all([
+  leads({ status, search, limit: 300 }),
+  leadCounts(),
+]);
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
+---
+
+<AdminLayout title="Leads" active="leads">
+  <div class="page-head">
+    <div>
+      <span class="label">{rows.length} shown · {counts.total} all time</span>
+      <h1>Leads</h1>
+      <p>
+        Everyone who filled in a form or gave the assistant their details. Web3Forms still
+        delivers every one of these to the inbox — this is the record beside it, which is why
+        a lead marked <strong>undelivered</strong> matters: it reached the database but the
+        email may never have arrived.
+      </p>
+    </div>
+    <a class="btn" href={`/api/admin/leads.csv?status=${encodeURIComponent(status)}`}>Export CSV</a>
+  </div>
+
+  {
+    counts.undelivered > 0 && (
+      <div class="notice">
+        <h3>{counts.undelivered} lead{counts.undelivered === 1 ? '' : 's'} never reached the inbox</h3>
+        <p class="muted">
+          The browser's Web3Forms post failed after the details were captured. Contact these
+          people directly — they believe they have applied.
+        </p>
+      </div>
+    )
+  }
+
+  <form class="toolbar" method="GET">
+    <input type="search" name="q" placeholder="Search name, email, company, message…" value={search} />
+    <select name="status">
+      {FILTERS.map((s) => <option value={s} selected={s === status}>{s === 'all' ? 'All statuses' : s}</option>)}
+    </select>
+    <button class="btn" type="submit">Filter</button>
+    {(search || status !== 'new') && <a class="btn" href="/admin/leads">Reset</a>}
+  </form>
+
+  <div class="table-scroll">
+    {
+      rows.length === 0 ? (
+        <p class="empty">
+          {search || status !== 'all'
+            ? 'No leads match that filter.'
+            : 'No leads yet. They will appear here as soon as someone submits a form.'}
+        </p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Who</th>
+              <th>Interest</th>
+              <th>What they said</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((l) => (
+              <tr data-lead={l.id}>
+                <td class="faint mono" style="font-size:12px;white-space:nowrap">
+                  {when(l.created_at)}
+                  <div style="margin-top:6px">
+                    <span class="pill">{l.source}</span>
+                  </div>
+                </td>
+
+                <td style="min-width:200px">
+                  <div style="font-weight:500">{l.name ?? '—'}</div>
+                  {l.email && (
+                    <div style="font-size:13px">
+                      <a href={`mailto:${l.email}`} style="color:var(--clay)">
+                        {l.email}
+                      </a>
+                    </div>
+                  )}
+                  <div class="faint" style="font-size:12.5px;margin-top:3px">
+                    {[l.role, l.company].filter(Boolean).join(' · ') || '—'}
+                  </div>
+                  {(l.region || l.country) && (
+                    <div class="faint" style="font-size:12px">{l.region ?? l.country}</div>
+                  )}
+                </td>
+
+                <td style="white-space:nowrap">
+                  <span class="pill">{l.interest ?? l.surface}</span>
+                  {!l.delivered && (
+                    <div style="margin-top:6px">
+                      <span class="pill warn">undelivered</span>
+                    </div>
+                  )}
+                </td>
+
+                <td style="max-width:420px">
+                  {l.message && <p style="font-size:13.5px">{l.message}</p>}
+                  {l.question && (
+                    <p style="font-size:13.5px;margin-top:6px">
+                      <span class="label">Asked</span> {l.question}
+                    </p>
+                  )}
+                  {l.context && (
+                    <p class="faint" style="font-size:13px;margin-top:6px">
+                      {l.context}
+                    </p>
+                  )}
+                  {!l.message && !l.question && !l.context && <span class="faint">—</span>}
+
+                  <textarea
+                    class="lead-note"
+                    rows="1"
+                    placeholder="Private note…"
+                    style="margin-top:10px;font-size:13px"
+                  >{l.admin_note ?? ''}</textarea>
+                </td>
+
+                <td style="white-space:nowrap">
+                  <select class="lead-status" style="width:auto">
+                    {LEAD_STATUSES.map((s) => (
+                      <option value={s} selected={s === l.status}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <p class="status-line" style="font-size:12px" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+
+  <script is:inline>
+    // Status and note edits save in place. Delegated, so it survives the table
+    // being re-rendered by a filter, and each row reports its own outcome —
+    // a silent failure here would look exactly like a successful save.
+    (function () {
+      function save(row, patch) {
+        var out = row.querySelector('.status-line');
+        if (out) { out.textContent = 'Saving…'; out.className = 'status-line'; }
+
+        fetch('/api/admin/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({ id: row.getAttribute('data-lead') }, patch)),
+        })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (res) {
+            if (!out) return;
+            if (res.ok) {
+              out.textContent = 'Saved';
+              out.className = 'status-line ok';
+            } else {
+              out.textContent = res.j.error || 'Could not save';
+              out.className = 'status-line err';
+            }
+          })
+          .catch(function () {
+            if (out) { out.textContent = 'Network error'; out.className = 'status-line err'; }
+          });
+      }
+
+      document.addEventListener('change', function (e) {
+        var el = e.target;
+        if (!el.closest) return;
+        var row = el.closest('tr[data-lead]');
+        if (!row) return;
+        if (el.classList.contains('lead-status')) save(row, { status: el.value });
+        if (el.classList.contains('lead-note')) save(row, { admin_note: el.value });
+      });
+    })();
+  </script>
+</AdminLayout>

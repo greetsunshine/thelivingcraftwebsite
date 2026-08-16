@@ -1,0 +1,233 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import LineChart from '../../components/admin/LineChart.astro';
+import Bars from '../../components/admin/Bars.astro';
+import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, trafficPaths } from '../../lib/admin/queries';
+import { getRadar } from '../../lib/agent/radar';
+import { getLatest } from '../../lib/agent/latest';
+
+const DAYS = 30;
+
+// One round trip's worth of latency instead of eight. Every one of these
+// degrades to an empty result on its own, so a single slow rollup cannot take
+// the page down with it.
+const [daily, paths, steps, counts, recent, qStats, gaps] = await Promise.all([
+  trafficDaily(DAYS),
+  trafficPaths(DAYS),
+  funnel(DAYS),
+  leadCounts(),
+  leads({ limit: 6 }),
+  questionStats(DAYS),
+  questions({ limit: 5, onlyGaps: true }),
+]);
+
+const views = daily.reduce((n, d) => n + Number(d.views), 0);
+const visitors = daily.reduce((n, d) => n + Number(d.visitors), 0);
+
+const stepOf = (type: string) => steps.find((s) => s.type === type)?.visitors ?? 0;
+
+// The spine the practice is built on, read as people rather than events: how
+// many landed, how many showed intent, how many actually handed over contact.
+const FUNNEL = [
+  { label: 'Landed on a page', value: stepOf('pageview') },
+  { label: 'Followed a cross-page CTA', value: stepOf('cta_click') },
+  { label: 'Opened the assistant', value: stepOf('ask_open') },
+  { label: 'Asked it something', value: stepOf('ask_question') },
+  { label: 'Started an application form', value: stepOf('apply_start') },
+  { label: 'Submitted it', value: stepOf('apply_submit') },
+];
+
+const radar = getRadar();
+const latest = getLatest();
+
+// null means "never run". A fresh radar.json carries the epoch as its
+// refreshedAt, which subtracts to ~20,000 days — a number that reads like a bug
+// rather than like "this has not run yet".
+const daysSince = (iso: string) => {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t) || t < 86_400_000) return null;
+  return Math.floor((Date.now() - t) / 86_400_000);
+};
+
+const radarAge = daysSince(radar.refreshedAt);
+const latestAge = daysSince(latest.refreshedAt);
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+---
+
+<AdminLayout title="Overview" active="overview">
+  <div class="page-head">
+    <div>
+      <span class="label">Last {DAYS} days</span>
+      <h1>Overview</h1>
+      <p>Traffic, what people asked, and who left their details.</p>
+    </div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="n">{views}</div>
+      <div class="k label">Page views</div>
+      <div class="note">{visitors} unique</div>
+    </div>
+    <div class="tile">
+      <div class="n">{counts.last7}</div>
+      <div class="k label">Leads · 7 days</div>
+      <div class="note">{counts.total} all time</div>
+    </div>
+    <div class="tile">
+      <div class="n">{qStats.total}</div>
+      <div class="k label">Questions asked</div>
+      <div class="note">{qStats.captured} led to a handoff</div>
+    </div>
+    {
+      /* Two alert tiles, and both mean "go and do something". An undelivered
+         lead never reached the inbox; an unanswered question is a hole in
+         facts.ts that a prospect already fell into. */
+      counts.undelivered > 0 ? (
+        <div class="tile alert">
+          <div class="n">{counts.undelivered}</div>
+          <div class="k label">Never delivered</div>
+          <div class="note">Reached the database, not the inbox</div>
+        </div>
+      ) : (
+        <div class="tile">
+          <div class="n">
+            {qStats.gaps}
+            <small> / {qStats.total}</small>
+          </div>
+          <div class="k label">Unanswered</div>
+          <div class="note">The agent had nothing to say</div>
+        </div>
+      )
+    }
+  </div>
+
+  <section class="panel">
+    <h2>Traffic</h2>
+    <p class="sub">First-party, bots excluded. Unique visitors reset daily by design.</p>
+    <div class="card">
+      <LineChart points={daily} />
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="grid-2">
+      <div>
+        <h2>Pages</h2>
+        <p class="sub">Views over {DAYS} days.</p>
+        <div class="card">
+          <Bars
+            rows={paths.map((p) => ({ label: p.path, value: Number(p.views), note: `${p.visitors} uniq` }))}
+            empty="No page views recorded yet."
+          />
+        </div>
+      </div>
+      <div>
+        <h2>Funnel</h2>
+        <p class="sub">Distinct visitors reaching each step.</p>
+        <div class="card">
+          <Bars rows={FUNNEL} limit={6} empty="No events recorded yet." />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="grid-2">
+      <div>
+        <h2>Latest leads</h2>
+        <p class="sub">
+          <a href="/admin/leads" style="color:var(--clay)">All leads →</a>
+        </p>
+        <div class="table-scroll">
+          {
+            recent.length === 0 ? (
+              <p class="empty">No leads yet.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Who</th>
+                    <th>Interest</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((l) => (
+                    <tr>
+                      <td class="faint mono" style="font-size:12px;white-space:nowrap">{when(l.created_at)}</td>
+                      <td>
+                        <div>{l.name ?? '—'}</div>
+                        <div class="faint" style="font-size:12.5px">{l.email}</div>
+                      </td>
+                      <td><span class="pill">{l.interest ?? l.surface}</span></td>
+                      <td>{!l.delivered && <span class="pill warn">undelivered</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          }
+        </div>
+      </div>
+
+      <div>
+        <h2>Questions it could not answer</h2>
+        <p class="sub">
+          Each one is a gap in <code class="mono">facts.ts</code>.
+          <a href="/admin/questions" style="color:var(--clay)">All questions →</a>
+        </p>
+        <div class="table-scroll">
+          {
+            gaps.length === 0 ? (
+              <p class="empty">Nothing unanswered.</p>
+            ) : (
+              <table>
+                <tbody>
+                  {gaps.map((q) => (
+                    <tr>
+                      <td>
+                        <div>{q.question}</div>
+                        <div class="faint mono" style="font-size:11.5px;margin-top:4px">
+                          {when(q.created_at)} · {q.surface ?? '/'}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Agents</h2>
+    <p class="sub">Both retrievers run weekly and open a PR rather than committing.</p>
+    <div class="grid-2">
+      <div class="card">
+        <span class="label">Radar · operator-facing</span>
+        <p style="margin-top:8px">
+          <strong>{radar.items.length}</strong> findings on the board,
+          {radarAge === null ? ' never run' : ` refreshed ${radarAge} day${radarAge === 1 ? '' : 's'} ago`}.
+        </p>
+        <p style="margin-top:10px"><a href="/admin/radar" style="color:var(--clay)">Open the radar →</a></p>
+      </div>
+      <div class="card">
+        <span class="label">Latest · read by the visitor agent</span>
+        <p style="margin-top:8px">
+          <strong>{latest.items.length}</strong> items live,
+          {latestAge === null ? ' never run' : ` refreshed ${latestAge} day${latestAge === 1 ? '' : 's'} ago`}.
+        </p>
+        <p style="margin-top:10px"><a href="/admin/content" style="color:var(--clay)">Review content →</a></p>
+      </div>
+    </div>
+  </section>
+</AdminLayout>

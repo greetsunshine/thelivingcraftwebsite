@@ -1,0 +1,127 @@
+---
+// Views and visitors over time. Inline SVG, no charting library.
+//
+// Two series on ONE axis, because they are the same unit counted two ways —
+// never a second y-scale. The pair is the brand's clay and ochre, checked for
+// colourblind separation rather than assumed (ΔE 13.8 deutan, 15.7 tritan,
+// 16.0 normal vision). Ochre sits under 3:1 against the surface, which obliges
+// visible labels rather than colour alone: both series are direct-labelled at
+// the right edge and the legend names them, so the chart is readable with no
+// colour perception at all — reinforced by the dashed stroke on visitors.
+//
+// Hover uses native SVG <title> on invisible hit columns. It is less polished
+// than a scripted tooltip and needs no script at all, which for a page rendered
+// once a day is the better trade.
+
+import type { DailyPoint } from '../../lib/admin/queries';
+
+export interface Props {
+  points: DailyPoint[];
+  height?: number;
+}
+
+const { points, height = 190 } = Astro.props;
+
+const W = 760;
+const H = height;
+const PAD = { top: 16, right: 58, bottom: 24, left: 38 };
+
+const plotW = W - PAD.left - PAD.right;
+const plotH = H - PAD.top - PAD.bottom;
+
+// A flat zero series should render as a flat line on a sane axis, not as noise
+// magnified to full height — so the floor is 4, not the data's own max.
+const peak = Math.max(4, ...points.map((p) => Math.max(Number(p.views), Number(p.visitors))));
+
+const x = (i: number) => PAD.left + (points.length <= 1 ? plotW / 2 : (i / (points.length - 1)) * plotW);
+const y = (v: number) => PAD.top + plotH - (v / peak) * plotH;
+
+const line = (get: (p: DailyPoint) => number) =>
+  points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(Number(get(p))).toFixed(1)}`).join(' ');
+
+const viewsPath = line((p) => p.views);
+const visitorsPath = line((p) => p.visitors);
+const areaPath = points.length
+  ? `${viewsPath} L${x(points.length - 1).toFixed(1)},${(PAD.top + plotH).toFixed(1)} L${x(0).toFixed(1)},${(PAD.top + plotH).toFixed(1)} Z`
+  : '';
+
+// Three gridlines including the baseline. More lines on a chart this short read
+// as texture rather than as scale.
+const ticks = [0, Math.round(peak / 2), peak];
+
+const last = points[points.length - 1];
+const first = points[0];
+
+const dayLabel = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+---
+
+<div class="legend">
+  <span class="key"><span class="swatch" style="background:var(--clay)"></span> Views</span>
+  <span class="key"
+    ><span class="swatch" style="background:var(--ochre);height:0;border-top:3px dashed var(--ochre)"></span> Unique
+    visitors</span
+  >
+</div>
+
+<svg class="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Daily views and unique visitors">
+  {
+    ticks.map((t) => (
+      <>
+        <line class="grid" x1={PAD.left} x2={W - PAD.right} y1={y(t)} y2={y(t)} />
+        <text class="axis" x={PAD.left - 8} y={y(t) + 3} text-anchor="end">
+          {t}
+        </text>
+      </>
+    ))
+  }
+
+  {points.length > 0 && <path class="area" d={areaPath} />}
+  {points.length > 0 && <path class="series-views" d={viewsPath} />}
+  {points.length > 0 && <path class="series-visitors" d={visitorsPath} />}
+
+  {
+    /* Direct labels at the right edge — the accessibility relief for ochre's
+       low contrast, and the number most often wanted anyway. */
+    last && (
+      <>
+        <text class="axis" x={W - PAD.right + 8} y={y(Number(last.views)) + 3} style="fill:var(--clay)">
+          {last.views} views
+        </text>
+        <text class="axis" x={W - PAD.right + 8} y={y(Number(last.visitors)) + 14} style="fill:var(--ink-soft)">
+          {last.visitors} visitors
+        </text>
+      </>
+    )
+  }
+
+  {
+    first && (
+      <text class="axis" x={PAD.left} y={H - 6}>
+        {dayLabel(first.day)}
+      </text>
+    )
+  }
+  {
+    last && (
+      <text class="axis" x={W - PAD.right} y={H - 6} text-anchor="end">
+        {dayLabel(last.day)}
+      </text>
+    )
+  }
+
+  {
+    /* Invisible full-height hit columns carrying a native tooltip. */
+    points.map((p, i) => (
+      <rect
+        x={x(i) - plotW / Math.max(1, points.length * 2)}
+        y={PAD.top}
+        width={plotW / Math.max(1, points.length)}
+        height={plotH}
+        fill="transparent"
+      >
+        <title>{`${dayLabel(p.day)} — ${p.views} views, ${p.visitors} unique`}</title>
+      </rect>
+    ))
+  }
+</svg>

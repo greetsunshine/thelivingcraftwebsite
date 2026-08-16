@@ -1,0 +1,148 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import LineChart from '../../components/admin/LineChart.astro';
+import Bars from '../../components/admin/Bars.astro';
+import { funnel, trafficBreakdown, trafficDaily, trafficPaths } from '../../lib/admin/queries';
+
+// Range is a link, not a control — the page is server-rendered, so a plain
+// query parameter needs no script and survives a bookmark.
+const RANGES = [7, 30, 90];
+const requested = Number(Astro.url.searchParams.get('days'));
+const days = RANGES.includes(requested) ? requested : 30;
+
+const [daily, paths, referrers, countries, devices, steps] = await Promise.all([
+  trafficDaily(days),
+  trafficPaths(days),
+  trafficBreakdown(days, 'referrer_host'),
+  trafficBreakdown(days, 'country'),
+  trafficBreakdown(days, 'device'),
+  funnel(days),
+]);
+
+const views = daily.reduce((n, d) => n + Number(d.views), 0);
+const visitors = daily.reduce((n, d) => n + Number(d.visitors), 0);
+const busiest = daily.reduce((best, d) => (Number(d.views) > Number(best.views) ? d : best), daily[0]);
+
+const stepOf = (type: string) => steps.find((s) => s.type === type)?.visitors ?? 0;
+
+const FUNNEL = [
+  { label: 'Landed on a page', value: stepOf('pageview') },
+  { label: 'Followed a cross-page CTA', value: stepOf('cta_click') },
+  { label: 'Opened the assistant', value: stepOf('ask_open') },
+  { label: 'Asked it something', value: stepOf('ask_question') },
+  { label: 'Started an application form', value: stepOf('apply_start') },
+  { label: 'Submitted it', value: stepOf('apply_submit') },
+];
+
+// A country code alone is a lookup task for the reader. Only the three that
+// have a pricing region are named — inventing a full ISO table here would be
+// 200 lines of data with no other consumer.
+const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia', GB: 'UK', US: 'United States', SG: 'Singapore' };
+---
+
+<AdminLayout title="Traffic" active="traffic">
+  <div class="page-head">
+    <div>
+      <span class="label">Last {days} days</span>
+      <h1>Traffic</h1>
+      <p>
+        First-party counts, recorded by the site itself. Bots are excluded and IP addresses are
+        never stored — a visitor is a salted daily hash, so the unique count resets at midnight
+        UTC and nobody is tracked across days.
+      </p>
+    </div>
+    <div class="cat-nav" style="margin:0">
+      {RANGES.map((r) => <a class={r === days ? 'on' : ''} href={`/admin/traffic?days=${r}`}>{r} days</a>)}
+    </div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="n">{views}</div>
+      <div class="k label">Page views</div>
+    </div>
+    <div class="tile">
+      <div class="n">{visitors}</div>
+      <div class="k label">Unique visitors</div>
+      <div class="note">Counted per day, then summed</div>
+    </div>
+    <div class="tile">
+      <div class="n">{views && visitors ? (views / visitors).toFixed(1) : '—'}</div>
+      <div class="k label">Views per visitor</div>
+    </div>
+    <div class="tile">
+      <div class="n">{busiest ? Number(busiest.views) : 0}</div>
+      <div class="k label">Busiest day</div>
+      <div class="note">
+        {busiest ? new Date(`${busiest.day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '—'}
+      </div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>Daily</h2>
+    <p class="sub">Hover a column for that day's figures.</p>
+    <div class="card">
+      <LineChart points={daily} height={220} />
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="grid-2">
+      <div>
+        <h2>Pages</h2>
+        <p class="sub">Which surface is doing the work.</p>
+        <div class="card">
+          <Bars
+            rows={paths.map((p) => ({ label: p.path, value: Number(p.views), note: `${p.visitors} uniq` }))}
+            empty="No page views recorded yet."
+          />
+        </div>
+      </div>
+      <div>
+        <h2>Funnel</h2>
+        <p class="sub">
+          Distinct visitors at each step of the assessment → CAIO → cohort spine.
+        </p>
+        <div class="card">
+          <Bars rows={FUNNEL} limit={6} empty="No events recorded yet." />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="grid-2">
+      <div>
+        <h2>Referrers</h2>
+        <p class="sub">Host only — never the full referring URL.</p>
+        <div class="card">
+          <Bars
+            rows={referrers.map((r) => ({ label: r.label, value: Number(r.views) }))}
+            empty="Nothing but direct visits so far."
+          />
+        </div>
+      </div>
+      <div>
+        <h2>Where from</h2>
+        <p class="sub">From Vercel's edge header, not a geo-IP lookup of our own.</p>
+        <div class="card">
+          <Bars
+            rows={countries.map((c) => ({ label: NAMED[c.label] ?? c.label, value: Number(c.views) }))}
+            empty="No country data yet."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Device</h2>
+    <p class="sub">Worth watching: the consulting pages are read on phones more than the cohort page.</p>
+    <div class="card">
+      <Bars rows={devices.map((d) => ({ label: d.label, value: Number(d.views) }))} limit={4} empty="No device data yet." />
+    </div>
+  </section>
+</AdminLayout>

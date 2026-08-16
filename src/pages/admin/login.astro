@@ -1,0 +1,63 @@
+---
+// Sign-in. A plain HTML form with no JavaScript at all — the one page on this
+// site where a script failing would lock the owner out of his own console.
+
+export const prerender = false;
+
+import '../../styles/admin.css';
+
+const params = Astro.url.searchParams;
+const failed = params.get('e') === '1';
+const throttled = params.get('e') === 'throttled';
+const wait = params.get('m') ?? '';
+
+// Only ever return to an admin path. Without this check, /admin/login?next=
+// is an open redirect: a link that looks like the console's own login and
+// lands somewhere else entirely once the password is accepted.
+const requested = params.get('next') ?? '/admin';
+const next = requested.startsWith('/admin') && !requested.startsWith('//') ? requested : '/admin';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · Console</title>
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="login-wrap">
+      <form class="login-card" method="POST" action="/api/admin/login">
+        <span class="label">The Living Craft</span>
+        <h1>Console</h1>
+        <p>Traffic, leads, the visitor agent's questions, and the radar.</p>
+
+        <input type="hidden" name="next" value={next} />
+
+        <label>
+          <span class="label">Password</span>
+          <input type="password" name="password" required autofocus autocomplete="current-password" />
+        </label>
+
+        {failed && <p class="status-line err">That password is not right.</p>}
+        {
+          throttled && (
+            <p class="status-line err">
+              Too many attempts. Try again in {wait} minute{wait === '1' ? '' : 's'}.
+            </p>
+          )
+        }
+
+        <button class="btn primary" type="submit" style="margin-top:8px">Sign in</button>
+      </form>
+    </div>
+  </body>
+</html>

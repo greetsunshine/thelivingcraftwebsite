@@ -1,0 +1,102 @@
+---
+// Shell for every admin page.
+//
+// Deliberately NOT built on SeoHead or BaseLayout. Those two exist to make the
+// public surfaces discoverable — canonical URLs, an OG card, a JSON-LD @graph
+// naming the practice. Every one of those is wrong here, and the JSON-LD in
+// particular would be actively bad: a structured-data block describing the
+// cohort, emitted from a page listing leads.
+//
+// So this head is the opposite: noindex, no canonical, no schema, no analytics
+// beacon. Access control lives in src/middleware.ts; this file only has to
+// avoid undoing it.
+
+import '../styles/admin.css';
+import { capabilities } from '../lib/admin/env';
+
+export interface Props {
+  title: string;
+  /** Which nav item is current. */
+  active?: 'overview' | 'traffic' | 'leads' | 'questions' | 'radar' | 'content';
+}
+
+const { title, active } = Astro.props;
+const caps = capabilities();
+
+const NAV = [
+  { key: 'overview', href: '/admin', label: 'Overview' },
+  { key: 'traffic', href: '/admin/traffic', label: 'Traffic' },
+  { key: 'leads', href: '/admin/leads', label: 'Leads' },
+  { key: 'questions', href: '/admin/questions', label: 'Questions' },
+  { key: 'radar', href: '/admin/radar', label: 'Radar' },
+  { key: 'content', href: '/admin/content', label: 'Content' },
+] as const;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Console</title>
+    <!-- Belt and braces: middleware sets X-Robots-Tag on the response, this
+         covers a crawler that somehow renders the page without seeing it. -->
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="admin-nav">
+      <div class="wrap admin-nav-inner">
+        <a class="admin-mark" href="/admin"><span class="dot"></span> Console</a>
+        <nav class="admin-links">
+          {
+            NAV.map((item) => (
+              <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+        <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
+        <form method="POST" action="/api/admin/logout">
+          <button class="btn small" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap">
+        {
+          /* One setup notice, shown once, rather than each panel apologising
+             separately. A half-configured console should say exactly what is
+             missing — the alternative is a page of zeroes that reads like "no
+             traffic" when it means "no database". */
+          !caps.data && (
+            <div class="notice">
+              <h3>Supabase is not connected</h3>
+              <p class="muted">
+                Traffic, leads, and questions are all empty until it is. Nothing on the public
+                site is affected — this is the console's storage only.
+              </p>
+              <ol>
+                <li>Create a Supabase project, then run <code>supabase/schema.sql</code> in its SQL editor.</li>
+                <li>
+                  Set <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code> in the
+                  Vercel project (and <code>.env.local</code> for dev).
+                </li>
+                <li>Redeploy.</li>
+              </ol>
+            </div>
+          )
+        }
+        <slot />
+      </div>
+    </main>
+  </body>
+</html>

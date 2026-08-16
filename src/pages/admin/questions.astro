@@ -1,0 +1,114 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { questionStats, questions } from '../../lib/admin/queries';
+
+const onlyGaps = Astro.url.searchParams.get('filter') === 'gaps';
+const DAYS = 30;
+
+const [rows, stats] = await Promise.all([
+  questions({ limit: 250, onlyGaps }),
+  questionStats(DAYS),
+]);
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+const gapRate = stats.total ? Math.round((stats.gaps / stats.total) * 100) : 0;
+---
+
+<AdminLayout title="Questions" active="questions">
+  <div class="page-head">
+    <div>
+      <span class="label">Last {DAYS} days</span>
+      <h1>Questions</h1>
+      <p>
+        Every question put to the site assistant, with the answer it gave. This is the closest
+        thing here to prospects telling you, unprompted, what the site fails to explain — and
+        an <strong>unanswered</strong> one is a fact missing from
+        <code class="mono">facts.ts</code>, not a bug in the agent. It is behaving correctly
+        when it refuses to guess.
+      </p>
+    </div>
+    <div class="cat-nav" style="margin:0">
+      <a class={onlyGaps ? '' : 'on'} href="/admin/questions">Everything</a>
+      <a class={onlyGaps ? 'on' : ''} href="/admin/questions?filter=gaps">Unanswered only</a>
+    </div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="n">{stats.total}</div>
+      <div class="k label">Asked</div>
+    </div>
+    <div class={stats.gaps > 0 ? 'tile alert' : 'tile'}>
+      <div class="n">{stats.gaps}<small> · {gapRate}%</small></div>
+      <div class="k label">Unanswered</div>
+      <div class="note">Fact base had nothing</div>
+    </div>
+    <div class="tile">
+      <div class="n">{stats.captured}</div>
+      <div class="k label">Led to a handoff</div>
+      <div class="note">Visitor left contact details</div>
+    </div>
+    <div class="tile">
+      <div class="n">{stats.total ? Math.round((stats.captured / stats.total) * 100) : 0}<small>%</small></div>
+      <div class="k label">Capture rate</div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="table-scroll">
+      {
+        rows.length === 0 ? (
+          <p class="empty">
+            {onlyGaps ? 'Nothing unanswered — the fact base is covering what people ask.' : 'No questions yet.'}
+          </p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Question</th>
+                <th>What it answered</th>
+                <th class="num">Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((q) => (
+                <tr>
+                  <td class="faint mono" style="font-size:12px;white-space:nowrap">
+                    {when(q.created_at)}
+                    <div style="margin-top:6px"><span class="pill">{q.surface ?? '/'}</span></div>
+                    {q.region && <div style="margin-top:5px" class="faint">{q.region}</div>}
+                  </td>
+
+                  <td style="max-width:340px">
+                    <p style="font-size:14px">{q.question}</p>
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+                      {!q.answered && <span class="pill warn">unanswered</span>}
+                      {q.captured && <span class="pill good">captured</span>}
+                      {(q.tools ?? []).length > 0 && (
+                        <span class="pill">{[...new Set(q.tools ?? [])].join(' · ')}</span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td style="max-width:460px">
+                    <p class="muted" style="font-size:13.5px">{q.answer ?? '—'}</p>
+                  </td>
+
+                  <td class="num faint mono" style="font-size:11.5px;white-space:nowrap">
+                    {(q.input_tokens ?? 0) + (q.output_tokens ?? 0)} tok
+                    <div>{q.turns ?? 0} turn{q.turns === 1 ? '' : 's'}</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
+    </div>
+  </section>
+</AdminLayout>

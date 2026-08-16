@@ -1,0 +1,68 @@
+---
+// Edit / hide controls for one agent finding, on both the radar and the content
+// review. Shared because the two pages must behave identically here: an edit is
+// a pull request either way, and two hand-maintained copies of that flow would
+// eventually disagree about it.
+//
+// The edit form is collapsed by default. These findings are meant to be read
+// first and corrected second — an always-open textarea invites rewriting the
+// agent's wording out of habit, and the wording is usually not the problem.
+
+export interface Props {
+  id: string;
+  /** Which store this item lives in. */
+  file: 'radar' | 'latest';
+  title: string;
+  body: string;
+  /** Radar findings only. */
+  implication?: string;
+  /** False when GITHUB_TOKEN is absent — the buttons explain rather than fail. */
+  canWrite: boolean;
+  /** Wording for the hide button; the consequence differs between the two files. */
+  hideLabel: string;
+}
+
+const { id, file, title, body, implication, canWrite, hideLabel } = Astro.props;
+---
+
+<div class="actions" data-id={id} data-file={file}>
+  <details class="raw" style="width:100%">
+    <summary>Edit the wording</summary>
+
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:12px;max-width:78ch">
+      <label>
+        <span class="label">Title</span>
+        <input type="text" class="edit-title" value={title} maxlength="300" />
+      </label>
+
+      <label>
+        <span class="label">Body</span>
+        <textarea class="edit-body" rows="4" maxlength="2000">{body}</textarea>
+      </label>
+
+      {
+        file === 'radar' && (
+          <label>
+            <span class="label">Implication</span>
+            <textarea class="edit-implication" rows="2" maxlength="2000">{implication ?? ''}</textarea>
+          </label>
+        )
+      }
+
+      <p class="faint" style="font-size:12.5px">
+        The source URL, the date it was found, and the source grading are not editable here.
+        Fixing the prose is editing; changing the citation would be fabrication — rerun the
+        agent instead.
+      </p>
+
+      <div>
+        <button class="btn small primary save-finding" disabled={!canWrite}>Propose this edit</button>
+      </div>
+    </div>
+  </details>
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%">
+    <button class="btn small hide-finding" disabled={!canWrite}>{hideLabel}</button>
+    <p class="status-line" style="margin:0;font-size:12.5px"></p>
+  </div>
+</div>

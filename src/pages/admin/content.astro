@@ -1,0 +1,325 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConsoleActions from '../../components/admin/ConsoleActions.astro';
+import FindingActions from '../../components/admin/FindingActions.astro';
+import { assessment, caio, cohort, cohortPricing, facts, surfaces } from '../../data/facts';
+import { getLatest } from '../../lib/agent/latest';
+import { capabilities } from '../../lib/admin/env';
+import { latestRun, openPullRequests } from '../../lib/admin/github';
+
+const caps = capabilities();
+const latest = getLatest();
+
+// GitHub is best-effort: a rate limit or a bad token should grey out two panels,
+// not take the content review down with them.
+let pulls: { number: number; title: string; url: string; branch: string }[] = [];
+let runs: Record<string, Awaited<ReturnType<typeof latestRun>>> = {};
+let ghError: string | null = null;
+
+if (caps.github) {
+  try {
+    const [prs, gather, radar] = await Promise.all([
+      openPullRequests(),
+      latestRun('gather-latest.yml'),
+      latestRun('gather-radar.yml'),
+    ]);
+    pulls = prs;
+    runs = { 'gather-latest.yml': gather, 'gather-radar.yml': radar };
+  } catch (err) {
+    ghError = err instanceof Error ? err.message : 'GitHub request failed.';
+  }
+}
+
+const age = (iso: string) => {
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? null : Math.floor((Date.now() - t) / 86_400_000);
+};
+
+const latestAge = age(latest.refreshedAt);
+
+// Items nearing the 90-day cutoff in lib/agent/latest.ts, past which they are
+// withheld from the agent entirely. Worth flagging before they silently vanish.
+const STALE_AT = 60;
+const staleItems = latest.items.filter((i) => (age(i.gatheredAt) ?? 0) >= STALE_AT);
+
+const host = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+};
+
+const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
+  if (!run) return 'never run';
+  if (run.status !== 'completed') return `${run.status}…`;
+  return run.conclusion === 'success' ? `last run OK · ${run.startedAt.slice(0, 10)}` : `last run ${run.conclusion}`;
+};
+---
+
+<AdminLayout title="Content" active="content">
+  <div class="page-head">
+    <div>
+      <span class="label">What is published</span>
+      <h1>Content</h1>
+      <p>
+        Everything a visitor or an AI assistant can be told about the practice, in one place.
+        Offer facts are read-only here on purpose — they live in
+        <code class="mono">facts.ts</code>, which four surfaces read from, and editing them
+        anywhere else is how a price ends up right on the page and wrong in the answer an
+        assistant gives about us.
+      </p>
+    </div>
+    <div>
+      <button class="btn primary" data-run-agent="latest" data-status="#runStatus" disabled={!caps.github}>
+        Run the retriever now
+      </button>
+      <p class="status-line" id="runStatus"></p>
+    </div>
+  </div>
+
+  {
+    ghError && (
+      <div class="notice">
+        <h3>GitHub could not be reached</h3>
+        <p class="muted">{ghError}</p>
+      </div>
+    )
+  }
+
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel">
+    <h2>Live surfaces</h2>
+    <p class="sub">Three pages, one cross-linked spine: assessment → CAIO → cohort.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Path</th><th>Name</th><th>Summary as published</th><th /></tr>
+        </thead>
+        <tbody>
+          {
+            surfaces.map((s) => (
+              <tr>
+                <td class="mono" style="white-space:nowrap">{s.path}</td>
+                <td style="white-space:nowrap">{s.name}</td>
+                <td class="muted" style="font-size:13.5px">{s.summary}</td>
+                <td>
+                  <a class="btn small" href={s.path} target="_blank" rel="noopener">Open ↗</a>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel">
+    <h2>Offer facts</h2>
+    <p class="sub">
+      The single source of truth, read by the JSON-LD schema, <code class="mono">/llms.txt</code>,
+      <code class="mono">/api/facts</code>, and the assistant's grounding. All consulting
+      pricing is still a placeholder for you to calibrate.
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <span class="label">Cohort</span>
+        <div style="margin-top:12px">
+          <div class="bar-row"><span class="bl">Length</span><span class="bv">{cohort.weeks} weeks</span></div>
+          <div class="bar-row"><span class="bl">Seats</span><span class="bv">{cohort.seats}</span></div>
+          <div class="bar-row"><span class="bl">Starts</span><span class="bv">{cohort.startsOn}</span></div>
+          <div class="bar-row"><span class="bl">Commitment</span><span class="bv">{cohort.commitment}</span></div>
+          {
+            cohortPricing.map((p) => (
+              <div class="bar-row">
+                <span class="bl">{p.region}</span>
+                <span class="bv">
+                  {p.founding} {p.unit}
+                  {p.standard && <span class="faint"> · was {p.standard}</span>}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="label">Consulting · placeholder pricing</span>
+        <div style="margin-top:12px">
+          {
+            caio.tiers.map((t) => (
+              <div class="bar-row">
+                <span class="bl">{t.name} · {t.days}</span>
+                <span class="bv">{t.from}</span>
+              </div>
+            ))
+          }
+          <div class="bar-row"><span class="bl">CAIO minimum</span><span class="bv">{caio.minimum}</span></div>
+          <div class="bar-row"><span class="bl">Assessment</span><span class="bv">{assessment.fee}</span></div>
+          <div class="bar-row">
+            <span class="bl">Founding rate</span>
+            <span class="bv">{assessment.foundingFee} <span class="faint">{assessment.foundingTerms}</span></span>
+          </div>
+          <div class="bar-row"><span class="bl">Fee credit</span><span class="bv">{assessment.creditWindow}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="raw" style="margin-top:16px">
+      <summary>All {facts.length} grounded facts the assistant can quote</summary>
+      <div class="table-scroll" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Page</th><th>Question</th><th>Grounded answer</th></tr>
+          </thead>
+          <tbody>
+            {
+              facts.map((f) => (
+                <tr>
+                  <td class="mono faint" style="font-size:11.5px;white-space:nowrap">{f.id}</td>
+                  <td class="mono" style="font-size:12px">{f.surface}</td>
+                  <td style="font-size:13.5px;min-width:200px">{f.q}</td>
+                  <td class="muted" style="font-size:13px">
+                    {f.regional ? <span class="pill">resolved per region at query time</span> : f.a}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel">
+    <h2>What the assistant repeats to visitors</h2>
+    <p class="sub">
+      {latest.items.length} live item{latest.items.length === 1 ? '' : 's'} ·
+      {latestAge === null ? ' never refreshed' : ` refreshed ${latestAge} day${latestAge === 1 ? '' : 's'} ago`} ·
+      withheld automatically after 90 days. These are spoken to prospects close to verbatim,
+      so read them as though you had said them yourself.
+    </p>
+
+    {
+      staleItems.length > 0 && (
+        <div class="notice">
+          <h3>{staleItems.length} item{staleItems.length === 1 ? '' : 's'} going stale</h3>
+          <p class="muted">
+            Past {STALE_AT} days old. At 90 they stop being served to the assistant with no further
+            warning — refresh the retriever or hide them deliberately.
+          </p>
+        </div>
+      )
+    }
+
+    {
+      latest.items.length === 0 ? (
+        <div class="card"><p class="muted">Nothing gathered yet.</p></div>
+      ) : (
+        latest.items.map((item) => (
+          <article class="finding" data-id={item.id}>
+            <div class="finding-head">
+              <h3>{item.title}</h3>
+              <span class={item.source === 'operator' ? 'pill on' : 'pill'}>
+                {item.source === 'operator' ? 'written by you' : 'gathered'}
+              </span>
+            </div>
+
+            <p class="body">{item.body}</p>
+
+            {item.reviewNote && (
+              <p class="review">
+                <b>Only you see this:</b> {item.reviewNote}
+              </p>
+            )}
+
+            <div class="meta">
+              {item.source === 'operator' ? (
+                <span class="pill">no external source</span>
+              ) : (
+                <a class="src" href={item.source} target="_blank" rel="noopener noreferrer">
+                  {host(item.source)} ↗
+                </a>
+              )}
+              <span class="faint mono" style="font-size:11.5px">
+                found {item.gatheredAt}
+                {(age(item.gatheredAt) ?? 0) >= STALE_AT ? ` · ${age(item.gatheredAt)} days old` : ''}
+              </span>
+              {(item.tags ?? []).map((t) => <span class="pill">{t}</span>)}
+            </div>
+
+            <FindingActions
+              id={item.id}
+              file="latest"
+              title={item.title}
+              body={item.body}
+              canWrite={caps.github}
+              hideLabel="Stop the assistant using this"
+            />
+          </article>
+        ))
+      )
+    }
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel">
+    <h2>Pending review</h2>
+    <p class="sub">
+      Both agents open a pull request rather than committing, and so does every edit made from
+      this console. Nothing here reaches a visitor until it is merged and deployed.
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <span class="label">Open pull requests</span>
+        {
+          !caps.github ? (
+            <p class="muted" style="margin-top:10px">Connect GitHub to see these.</p>
+          ) : pulls.length === 0 ? (
+            <p class="muted" style="margin-top:10px">Nothing waiting.</p>
+          ) : (
+            <div style="margin-top:12px">
+              {pulls.map((p) => (
+                <div class="bar-row">
+                  <span class="bl">
+                    <a href={p.url} target="_blank" rel="noopener" style="color:var(--clay)">
+                      #{p.number} {p.title} ↗
+                    </a>
+                  </span>
+                  <span class="bv faint">{p.branch}</span>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="card">
+        <span class="label">Agent runs</span>
+        <div style="margin-top:12px">
+          <div class="bar-row">
+            <span class="bl">Visitor retriever · weekly</span>
+            <span class="bv faint">{caps.github ? runLabel(runs['gather-latest.yml']) : '—'}</span>
+          </div>
+          <div class="bar-row">
+            <span class="bl">Radar · weekly</span>
+            <span class="bv faint">{caps.github ? runLabel(runs['gather-radar.yml']) : '—'}</span>
+          </div>
+        </div>
+        <p class="faint" style="font-size:12.5px;margin-top:12px">
+          Each run is several web-searching Opus calls against the same key the live assistant
+          uses. The scripts enforce a 6-hour cooldown; the spend limit on the key is the real
+          ceiling.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <ConsoleActions />
+</AdminLayout>
