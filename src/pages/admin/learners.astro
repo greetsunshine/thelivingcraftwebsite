@@ -1,0 +1,233 @@
+---
+// Seats: issue an access code, revoke one, see who has signed in.
+//
+// This page handles its own POST rather than posting to /api/admin/. The reason
+// is the access code: it exists in plaintext exactly once, in the response to
+// the request that created it. A redirect would have to carry it in the query
+// string, which puts a live credential into browser history and the platform's
+// request logs. Rendering it inline keeps it in one response body that is
+// already no-store.
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { capabilities } from '../../lib/admin/env';
+import { issueSeat, listLearners, setStatus } from '../../lib/craft/learners';
+
+const caps = capabilities();
+
+let issuedCode: string | null = null;
+let issuedFor: string | null = null;
+let error: string | null = null;
+let done: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = String(form.get('action') ?? '');
+
+  if (action === 'issue') {
+    const email = String(form.get('email') ?? '');
+    const result = await issueSeat({
+      email,
+      name: String(form.get('name') ?? ''),
+      cohort: String(form.get('cohort') ?? ''),
+      note: String(form.get('note') ?? ''),
+    });
+    if (result.ok && result.code) {
+      issuedCode = result.code;
+      issuedFor = email.trim().toLowerCase();
+    } else {
+      error = result.error ?? 'Could not issue that seat.';
+    }
+  }
+
+  if (action === 'revoke' || action === 'restore') {
+    const id = String(form.get('id') ?? '');
+    const to = action === 'revoke' ? 'revoked' : 'active';
+    done = (await setStatus(id, to))
+      ? `Seat ${action === 'revoke' ? 'revoked' : 'restored'}.`
+      : null;
+    if (!done) error = 'Could not change that seat.';
+  }
+}
+
+const rows = await listLearners();
+const active = rows.filter((r) => r.status === 'active').length;
+
+const when = (iso: string | null) =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : '—';
+---
+
+<AdminLayout title="Learners" active="learners">
+  <div class="page-head">
+    <div>
+      <span class="label">{active} active · {rows.length} total</span>
+      <h1>Learners</h1>
+      <p>
+        Who can sign in to <a href="/craft">the course area</a>. Issue a code when someone accepts
+        a seat and send it to them however you are already talking — there is no email sender in
+        this stack, deliberately.
+      </p>
+    </div>
+  </div>
+
+  {
+    !caps.data && (
+      <div class="notice">
+        <h3>Supabase is not connected</h3>
+        <p class="muted">
+          Seats live in the <code>learners</code> table. Set SUPABASE_URL and
+          SUPABASE_SERVICE_ROLE_KEY, and run supabase/schema.sql, then reload.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    issuedCode && (
+      <div class="notice code-notice">
+        <h3>Code issued for {issuedFor}</h3>
+        <p class="code">{issuedCode}</p>
+        <p class="muted">
+          Shown once. Only its HMAC is stored, so nobody — including you — can read it back
+          from the database. If it is lost, issue a new one; doing that invalidates this one.
+        </p>
+      </div>
+    )
+  }
+
+  {error && <div class="notice"><h3>{error}</h3></div>}
+  {done && !error && <div class="notice"><h3>{done}</h3></div>}
+
+  <form class="issue" method="POST">
+    <input type="hidden" name="action" value="issue" />
+    <label>
+      <span class="label">Email</span>
+      <input type="email" name="email" required placeholder="them@company.com" />
+    </label>
+    <label>
+      <span class="label">Name</span>
+      <input type="text" name="name" placeholder="Optional" />
+    </label>
+    <label>
+      <span class="label">Cohort</span>
+      <input type="text" name="cohort" value="cohort-1" />
+    </label>
+    <label class="wide">
+      <span class="label">Note</span>
+      <input type="text" name="note" placeholder="Optional — where they came from, what they build" />
+    </label>
+    <button class="btn primary" type="submit">Issue seat &amp; code</button>
+  </form>
+
+  <p class="muted hint">
+    Issuing for an email that already holds a seat re-issues its code rather than creating a
+    second row — which is also how you rotate a code someone forwarded on.
+  </p>
+
+  <div class="table-scroll">
+    {
+      rows.length === 0 ? (
+        <p class="empty">No seats yet. Issue the first one above.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Cohort</th>
+              <th>Status</th>
+              <th>Issued</th>
+              <th>Last signed in</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr>
+                <td>{r.email}</td>
+                <td>{r.name ?? '—'}</td>
+                <td class="mono">{r.cohort}</td>
+                <td>
+                  <span class={`pill ${r.status}`}>{r.status}</span>
+                </td>
+                <td>{when(r.created_at)}</td>
+                <td>{when(r.last_seen_at)}</td>
+                <td class="act">
+                  <form method="POST">
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="action" value={r.status === 'active' ? 'revoke' : 'restore'} />
+                    <button class="btn" type="submit">
+                      {r.status === 'active' ? 'Revoke' : 'Restore'}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+</AdminLayout>
+
+<style>
+  .issue {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    align-items: end;
+    margin: 8px 0 10px;
+  }
+  .issue label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .issue label.wide {
+    grid-column: 1 / -1;
+  }
+  .issue input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 11px;
+  }
+  .issue button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .hint {
+    font-size: 13px;
+    margin-bottom: 26px;
+  }
+
+  .code-notice .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 21px;
+    letter-spacing: 0.04em;
+    margin: 10px 0 12px;
+    user-select: all;
+    word-break: break-all;
+  }
+
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: 2px 7px;
+    opacity: 0.85;
+  }
+  .act form {
+    display: inline;
+  }
+
+  @media (max-width: 760px) {
+    .issue {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

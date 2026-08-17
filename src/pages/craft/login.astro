@@ -1,0 +1,164 @@
+---
+// Learner sign-in. A plain HTML form, no JavaScript — same reasoning as the
+// admin login: the one page where a failed script means nobody gets in.
+//
+// Reached without a session (middleware allowlists it), so it cannot use
+// CraftLayout, which needs a learner.
+import '../../styles/global.css';
+
+export const prerender = false;
+
+const params = Astro.url.searchParams;
+const failed = params.get('e') === '1';
+const throttled = params.get('e') === 'throttled';
+const wait = params.get('m') ?? '';
+
+// Only ever return to the course area. Without this, ?next= is an open redirect
+// wearing the cohort's own login page as a disguise.
+const requested = params.get('next') ?? '/craft';
+const next = requested.startsWith('/craft') && !requested.startsWith('//') ? requested : '/craft';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Sign in · The Living Craft</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="signin">
+      <form class="card" method="POST" action="/api/craft/login">
+        <div class="wordmark" style="margin-bottom:26px">
+          <span class="dot"></span> the living craft
+        </div>
+        <h1>Your cohort</h1>
+        <p class="muted">
+          Sign in with the email you applied with and the access code Sunil sent you.
+        </p>
+
+        <input type="hidden" name="next" value={next} />
+
+        <label>
+          <span class="lbl">Email</span>
+          <input type="email" name="email" required autofocus autocomplete="email" inputmode="email" />
+        </label>
+
+        <label>
+          <span class="lbl">Access code</span>
+          <input
+            type="text"
+            name="code"
+            required
+            autocomplete="one-time-code"
+            spellcheck="false"
+            placeholder="xxxxxx-xxxxxx-xxxxxx-xxxxxx"
+          />
+        </label>
+
+        {failed && <p class="err">That email and code don't match a seat. Check both, dashes optional.</p>}
+        {
+          throttled && (
+            <p class="err">
+              Too many attempts. Try again in {wait} minute{wait === '1' ? '' : 's'}.
+            </p>
+          )
+        }
+
+        <button class="btn btn-primary" type="submit">Sign in</button>
+
+        <p class="help">
+          Lost your code? Email <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+          and Sunil will issue a new one — the old one stops working when he does.
+        </p>
+      </form>
+    </div>
+  </body>
+</html>
+
+<style>
+  .signin {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 44px 40px 34px;
+    width: 100%;
+    max-width: 440px;
+  }
+  .card h1 {
+    font-size: 30px;
+    font-weight: 400;
+    margin-bottom: 10px;
+  }
+  .card > .muted {
+    font-size: 15px;
+    margin-bottom: 26px;
+    max-width: 36ch;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 18px;
+  }
+  .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  input {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    padding: 11px 13px;
+    width: 100%;
+  }
+  input[name='code'] {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--clay);
+    box-shadow: 0 0 0 3px rgba(176, 81, 46, 0.12);
+  }
+  button[type='submit'] {
+    width: 100%;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .err {
+    color: var(--clay-deep);
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .help {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-top: 22px;
+    line-height: 1.55;
+  }
+  .help a {
+    color: var(--clay);
+  }
+</style>

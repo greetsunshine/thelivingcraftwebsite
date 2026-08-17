@@ -19,6 +19,15 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// Set by the middleware's /craft gate, and only after the session cookie has
+// been verified AND the seat re-read as active. A page reading this can treat
+// it as proof of a signed-in learner; it is never populated on a public route.
+declare namespace App {
+  interface Locals {
+    learner?: import('./lib/craft/learners').Learner;
+  }
+}
+
 // Installed by src/components/Track.astro, which is an inline script and so has
 // already run by the time any bundled module script executes. Declared optional
 // anyway: every call site guards, because a page that renders without analytics

@@ -113,6 +113,52 @@ create index if not exists questions_created_idx on public.questions (created_at
 create index if not exists questions_answered_idx on public.questions (answered, created_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Learners — the people who hold a seat
+-- ---------------------------------------------------------------------------
+-- The first table here that is about a PERSON rather than an event, and the
+-- only one whose rows a non-admin can cause to be read. It gates /craft, the
+-- cohort's course area.
+--
+-- WHY A CODE AND NOT A PASSWORD. Eight seats. A password means a set-password
+-- flow, a reset flow, and an email sender to keep alive for eight people who
+-- each log in a handful of times over six weeks. Instead Sunil issues a
+-- 24-byte random code from /admin/learners when someone accepts a seat, and
+-- sends it however he is already talking to them. The code IS the credential:
+-- high entropy, no user-chosen weakness, revocable in one click.
+--
+-- Only the HMAC of the code is stored. A read of this table — a leaked service
+-- key, a Supabase console left open — does not yield anything that can sign in,
+-- because the HMAC secret lives in Vercel's env, not in the database.
+--
+-- `status` is the whole authorization model: 'active' signs in, anything else
+-- ('revoked', 'withdrawn') does not. Rows are kept rather than deleted so a
+-- withdrawn participant leaves a record.
+
+create table if not exists public.learners (
+  id           uuid        primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  email        text        not null,
+  name         text,
+  cohort       text        not null default 'cohort-1',
+  -- HMAC-SHA256 of the access code. Never the code itself.
+  code_hash    text        not null,
+  status       text        not null default 'active',
+  note         text,
+  last_seen_at timestamptz,
+  updated_at   timestamptz not null default now()
+);
+
+-- One seat per email. Two rows for one person means a revoked code that still
+-- signs in, so this is a correctness constraint, not tidiness.
+--
+-- The index is on the plain column, not lower(email), because the issuing path
+-- upserts on it and Postgres will only take a conflict target it has a matching
+-- index for. Case-insensitivity is preserved by normalising to lowercase on
+-- every write instead — see issueSeat() in src/lib/craft/learners.ts.
+create unique index if not exists learners_email_key on public.learners (email);
+create index if not exists learners_status_idx on public.learners (status, created_at desc);
+
+-- ---------------------------------------------------------------------------
 -- Lock everything down
 -- ---------------------------------------------------------------------------
 -- RLS enabled + zero policies = the anon and authenticated keys can do nothing.
@@ -121,10 +167,12 @@ create index if not exists questions_answered_idx on public.questions (answered,
 alter table public.events    enable row level security;
 alter table public.leads     enable row level security;
 alter table public.questions enable row level security;
+alter table public.learners  enable row level security;
 
 revoke all on public.events    from anon, authenticated;
 revoke all on public.leads     from anon, authenticated;
 revoke all on public.questions from anon, authenticated;
+revoke all on public.learners  from anon, authenticated;
 
 -- Keep updated_at honest so "last touched" in the console means something.
 create or replace function public.touch_updated_at() returns trigger
@@ -137,6 +185,10 @@ $$;
 
 drop trigger if exists leads_touch on public.leads;
 create trigger leads_touch before update on public.leads
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists learners_touch on public.learners;
+create trigger learners_touch before update on public.learners
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
