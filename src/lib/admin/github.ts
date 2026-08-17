@@ -33,10 +33,16 @@ async function gh<T>(path: string, init: RequestInit = {}): Promise<T> {
     const detail = await res.text();
     // Name the two failures that are actually about setup rather than code —
     // a scope missing from the PAT reads identically to a bug otherwise.
+    //
+    // All THREE permissions, not two. The message used to name Contents and
+    // Pull requests only, which sent a real 403 on workflow dispatch (Actions:
+    // write, the one it did not mention) looking for a fault in the two
+    // permissions that were already correct.
     if (res.status === 401 || res.status === 403) {
       throw new Error(
         `GitHub refused the request (${res.status}). Check GITHUB_TOKEN is a fine-grained PAT ` +
-          `for ${env('GITHUB_REPO')} with Contents and Pull requests set to read/write. ${detail.slice(0, 200)}`,
+          `for ${env('GITHUB_REPO')} with Contents, Pull requests AND Actions set to read/write ` +
+          `— running an agent needs Actions, editing findings does not. ${detail.slice(0, 200)}`,
       );
     }
     if (res.status === 404) {
