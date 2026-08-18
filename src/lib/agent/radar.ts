@@ -243,6 +243,70 @@ export interface WriteResult {
  * against a snapshot it had read minutes earlier, which was fine only because
  * nothing else could be writing at the same time.
  */
+/**
+ * Coerce whatever the agent produced into something Postgres will take as a date.
+ *
+ * The prompt asks for YYYY-MM-DD and the column is `date`, so this looked like
+ * it needed no defending. Then a run died on the insert with:
+ *
+ *   invalid input syntax for type date: "2026-07"
+ *
+ * which is not the model misbehaving — plenty of sources date themselves only
+ * to a month, and "July 2026" is the honest answer for those. The whole sweep
+ * failed on one such field, after the research had been paid for.
+ *
+ * So a partial date is widened to the first of its period rather than thrown
+ * away: losing "July 2026" entirely is worse than recording it as the 1st, and
+ * keeping the column a real `date` is what makes ordering and the published/
+ * gathered comparison work. Anything still unparseable becomes null — an
+ * unknown publication date is a normal outcome and must never cost the run.
+ */
+const publishedDate = (raw: unknown): string | null => {
+  const value = String(raw ?? '').trim();
+  if (!value) return null;
+
+  let year: number;
+  let month: number;
+  let day: number;
+
+  const partial = /^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/.exec(value);
+  const yearOnly = /^(\d{4})$/.exec(value);
+
+  if (partial) {
+    year = Number(partial[1]);
+    month = Number(partial[2]);
+    day = partial[3] ? Number(partial[3]) : 1;
+  } else if (yearOnly) {
+    year = Number(yearOnly[1]);
+    month = 1;
+    day = 1;
+  } else {
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) return null;
+    // LOCAL components on purpose. Date.parse of a bare date gives local
+    // midnight, so reading the UTC components moves it a day earlier anywhere
+    // east of Greenwich — "July 2026" became 2026-06-30 in IST. The date is a
+    // calendar fact about a document, not an instant, so the local reading is
+    // the one that matches what the source said.
+    const dt = new Date(parsed);
+    year = dt.getFullYear();
+    month = dt.getMonth() + 1;
+    day = dt.getDate();
+  }
+
+  // Reject impossible dates rather than let Postgres do it. Date.UTC silently
+  // rolls 2026-13-99 forward into 2027, so the only reliable check is to build
+  // it and see whether the parts survived — a shape-only regex happily accepts
+  // month 13, which is what put an invalid date in front of the insert to
+  // begin with.
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  if (utc.getUTCFullYear() !== year || utc.getUTCMonth() + 1 !== month || utc.getUTCDate() !== day) {
+    return null;
+  }
+
+  return utc.toISOString().slice(0, 10);
+};
+
 export async function saveFindings(items: IncomingFinding[]): Promise<WriteResult> {
   const client = db();
   if (!client) throw new Error('Supabase is not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
@@ -264,7 +328,7 @@ export async function saveFindings(items: IncomingFinding[]): Promise<WriteResul
     source: i.source,
     source_key: sourceKey(i.source),
     source_type: i.sourceType ?? null,
-    published_at: i.publishedAt ?? null,
+    published_at: publishedDate(i.publishedAt),
     tags: i.tags ?? null,
     status: 'new',
   });
