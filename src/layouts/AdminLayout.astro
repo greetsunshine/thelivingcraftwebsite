@@ -13,6 +13,7 @@
 
 import '../styles/admin.css';
 import { capabilities } from '../lib/admin/env';
+import { dbHealth, looksUnmigrated } from '../lib/admin/health';
 
 export interface Props {
   title: string;
@@ -22,6 +23,13 @@ export interface Props {
 
 const { title, active } = Astro.props;
 const caps = capabilities();
+
+// Checked on every admin page, cached for a minute, because a broken table has
+// to be visible from wherever you happen to be standing. Reading /admin/radar
+// and seeing "never run" is exactly the moment you need to be told that the
+// table behind it does not exist.
+const health = caps.data ? await dbHealth() : null;
+const unmigrated = health ? looksUnmigrated(health) : false;
 
 const NAV = [
   { key: 'overview', href: '/admin', label: 'Overview' },
@@ -97,6 +105,39 @@ const NAV = [
             </div>
           )
         }
+
+        {
+          /* Configured but not answering. Every number on the page below is
+             about to read as zero, and without this banner that is
+             indistinguishable from a quiet week. */
+          health && !health.ok && (
+            <div class="notice danger">
+              <h3>
+                {health.broken.length} of {health.probes.length} storage objects are not responding
+              </h3>
+              {unmigrated ? (
+                <p class="muted">
+                  Postgres reports these as missing, which almost always means{' '}
+                  <code>supabase/schema.sql</code> has not been run since the schema last grew. It
+                  is idempotent — re-run the whole file in the Supabase SQL editor.
+                </p>
+              ) : (
+                <p class="muted">
+                  Anything below that depends on these will render as empty rather than as an
+                  error. Treat the figures on this page as unreliable until it is fixed.
+                </p>
+              )}
+              <ul>
+                {health.broken.map((b) => (
+                  <li>
+                    <code>{b.name}</code> <span class="faint">({b.kind})</span> — {b.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+
         <slot />
       </div>
     </main>

@@ -8,11 +8,17 @@ import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, traf
 import { getRadar } from '../../lib/agent/radar';
 import { getLatest } from '../../lib/agent/latest';
 import { getBudget, formatUsd, WARN_FRACTION } from '../../lib/agent/budget';
+import { dbHealth } from '../../lib/admin/health';
 
 const DAYS = 30;
 
 // Cached for ten minutes upstream, so this adds no meaningful latency.
 const budget = await getBudget();
+
+// The layout already shouts if something is broken. This panel is the other
+// half: proof, when everything is fine, that the console actually asked —
+// "no leads yet" means much more when you can see the table answered with 0.
+const health = await dbHealth();
 
 // One round trip's worth of latency instead of eight. Every one of these
 // degrades to an empty result on its own, so a single slow rollup cannot take
@@ -283,4 +289,138 @@ const when = (iso: string) =>
       </div>
     </div>
   </section>
+
+  <section class="panel">
+    <h2>Storage</h2>
+    <p class="sub">
+      Every table and rollup the console depends on, probed directly. A count of <code class="mono"
+        >0</code
+      > here means the table answered and is empty — which is a different thing from a table that is
+      not there, and the two used to look identical.
+    </p>
+    <div class="card">
+      {
+        !health.configured ? (
+          <p class="muted">Supabase is not configured, so there is nothing to probe.</p>
+        ) : (
+          <>
+            <div class="health">
+              {health.probes.map((p) => (
+                <span class={p.ok ? 'obj' : 'obj bad'} title={p.error ?? ''}>
+                  <span class="dot" />
+                  {p.name}
+                  {p.kind === 'table' && p.ok && <span class="n">{p.rows}</span>}
+                </span>
+              ))}
+            </div>
+            <p class="faint" style="font-size:12.5px;margin-top:14px">
+              {health.ok
+                ? `All ${health.probes.length} responding. Re-checked at most once a minute.`
+                : `${health.broken.length} not responding — see the banner at the top of the page.`}
+            </p>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Retention</h2>
+    <p class="sub">
+      Analytics events are kept 180 days and visitor questions 365, then deleted. Leads and
+      learners are never purged on a timer — a real enquiry should not be lost to a cron job, so
+      those are erased one person at a time from their own pages.
+    </p>
+    <div class="card">
+      <p class="muted" style="font-size:14px">
+        Check first — the count tells you whether this is a routine tidy or something worth
+        pausing over.
+      </p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+        <button class="btn" id="purgeCheck" disabled={!health.configured}>Check what is stale</button>
+        <button class="btn primary" id="purgeApply" disabled hidden>Delete them</button>
+      </div>
+      <p class="status-line" id="purgeStatus"></p>
+      <p class="faint" style="font-size:12.5px;margin-top:10px">
+        The windows are function defaults in <code class="mono">supabase/schema.sql</code>, so
+        shortening them is a SQL change with no deploy. To run this unattended, enable pg_cron —
+        the schedule is written out, commented, at the bottom of that file. Until then the policy
+        is only real if someone presses this.
+      </p>
+    </div>
+  </section>
+
+  <script is:inline>
+    // Two steps on purpose. The first is read-only and tells you the size of
+    // what you are about to do; the second only appears once you have seen it.
+    (function () {
+      var check = document.getElementById('purgeCheck');
+      var apply = document.getElementById('purgeApply');
+      var out = document.getElementById('purgeStatus');
+      if (!check || !apply || !out) return;
+
+      function call(body) {
+        return fetch('/api/admin/purge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }).then(function (r) {
+          return r.json().then(function (j) { return { ok: r.ok, j: j }; });
+        });
+      }
+
+      check.addEventListener('click', function () {
+        check.disabled = true;
+        out.className = 'status-line';
+        out.textContent = 'Counting…';
+
+        call({}).then(function (res) {
+          check.disabled = false;
+          if (!res.ok) {
+            out.className = 'status-line err';
+            out.textContent = res.j.error || 'Could not check.';
+            return;
+          }
+          var total = res.j.events + res.j.questions;
+          out.className = 'status-line';
+          if (total === 0) {
+            out.textContent = 'Nothing is past its window.';
+            apply.hidden = true;
+            return;
+          }
+          out.textContent =
+            res.j.events + ' event(s) and ' + res.j.questions + ' question(s) are past their window.';
+          apply.hidden = false;
+          apply.disabled = false;
+        }).catch(function () {
+          check.disabled = false;
+          out.className = 'status-line err';
+          out.textContent = 'Network error.';
+        });
+      });
+
+      apply.addEventListener('click', function () {
+        if (!confirm('Delete everything past its retention window?\n\nThis cannot be undone. Leads and learners are not affected.')) return;
+        apply.disabled = true;
+        out.className = 'status-line';
+        out.textContent = 'Deleting…';
+
+        call({ apply: true }).then(function (res) {
+          if (!res.ok) {
+            apply.disabled = false;
+            out.className = 'status-line err';
+            out.textContent = res.j.error || 'Could not purge.';
+            return;
+          }
+          out.className = 'status-line ok';
+          out.textContent = 'Deleted ' + res.j.events + ' event(s) and ' + res.j.questions + ' question(s).';
+          apply.hidden = true;
+        }).catch(function () {
+          apply.disabled = false;
+          out.className = 'status-line err';
+          out.textContent = 'Network error.';
+        });
+      });
+    })();
+  </script>
 </AdminLayout>

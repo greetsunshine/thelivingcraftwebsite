@@ -151,6 +151,18 @@ textarea { resize: vertical; }
 .notice code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--paper-2); padding: 1px 5px; border-radius: 2px; }
 .notice ol, .notice ul { margin: 8px 0 0 20px; }
 .notice li { margin-bottom: 3px; }
+/* Something is broken and the numbers below cannot be trusted. Distinct from
+   the ordinary notice, which reports a setup step still to do. */
+.notice.danger { border-color: var(--clay); border-left-width: 3px; background: #fbf1ec; }
+.notice.danger h3 { color: var(--clay-deep); }
+
+/* Storage health */
+.health { display: flex; flex-wrap: wrap; gap: 8px; }
+.health .obj { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 2px; padding: 5px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--paper-2); }
+.health .obj .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex-shrink: 0; }
+.health .obj.bad { border-color: var(--clay); background: #fbf1ec; color: var(--clay-deep); }
+.health .obj.bad .dot { background: var(--clay); }
+.health .obj .n { color: var(--ink-faint); }
 
 /* --- charts ------------------------------------------------------------- */
 
