@@ -159,6 +159,54 @@ create unique index if not exists learners_email_key on public.learners (email);
 create index if not exists learners_status_idx on public.learners (status, created_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Intake — the pre-cohort self-assessment
+-- ---------------------------------------------------------------------------
+-- Was going to be a Google Form. It is here instead because everything a Google
+-- Form would have given us already exists on this site: a gate that knows which
+-- learner is asking, a console to read answers in, and a CSV route beside the
+-- leads one. The form asked for an email address only so that Google could tell
+-- respondents apart; behind /craft the session already answers that, so the
+-- question is gone and "limit 1 response" is a unique index instead.
+--
+-- WHY jsonb FOR THE ANSWERS. The three sections are 5 + 13 + 6 questions and
+-- the wording will change between cohorts. As columns that is a migration every
+-- time Sunil rewrites a prompt; as jsonb the question text lives in one array in
+-- src/lib/craft/intake.ts and the answers key off ids that outlive the wording.
+-- The cost is that Postgres cannot constrain the shape — so the endpoint
+-- validates against that same array before writing, and anything unrecognised
+-- is dropped rather than stored.
+--
+-- learner_id is the identity; email/name are a snapshot taken at submit time so
+-- an export still reads correctly after a seat is revoked and the row is gone.
+
+create table if not exists public.intake_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  email        text        not null,
+  name         text,
+  cohort       text        not null default 'cohort-1',
+  -- { q1..q5: 'solid' | 'rusty' | 'new' }
+  quick_check  jsonb       not null default '{}'::jsonb,
+  -- { A1..A7: 1-5 }
+  technical    jsonb       not null default '{}'::jsonb,
+  -- { B1..B6: 1-5 }
+  leadership   jsonb       not null default '{}'::jsonb,
+  -- { r1..r6: text }
+  reality      jsonb       not null default '{}'::jsonb,
+  -- Null while a learner is part-way through. Only a row with submitted_at set
+  -- is one Sunil should read as finished; the console counts on this to tell
+  -- "started and abandoned" from "not started", which a Google Form could not.
+  submitted_at timestamptz
+);
+
+-- One response per learner. This is what "limit 1 response" was, enforced where
+-- it cannot be worked around, and it is the conflict target the upsert needs.
+create unique index if not exists intake_learner_key on public.intake_responses (learner_id);
+create index if not exists intake_submitted_idx on public.intake_responses (submitted_at desc nulls last);
+
+-- ---------------------------------------------------------------------------
 -- Radar — market intelligence, for Sunil only
 -- ---------------------------------------------------------------------------
 -- Was src/data/radar.json, refreshed by a weekly agent that opened a pull
@@ -236,6 +284,7 @@ alter table public.events    enable row level security;
 alter table public.leads     enable row level security;
 alter table public.questions enable row level security;
 alter table public.learners  enable row level security;
+alter table public.intake_responses enable row level security;
 alter table public.radar_findings enable row level security;
 alter table public.radar_runs     enable row level security;
 
@@ -243,6 +292,7 @@ revoke all on public.events    from anon, authenticated;
 revoke all on public.leads     from anon, authenticated;
 revoke all on public.questions from anon, authenticated;
 revoke all on public.learners  from anon, authenticated;
+revoke all on public.intake_responses from anon, authenticated;
 revoke all on public.radar_findings from anon, authenticated;
 revoke all on public.radar_runs     from anon, authenticated;
 
@@ -261,6 +311,10 @@ create trigger leads_touch before update on public.leads
 
 drop trigger if exists learners_touch on public.learners;
 create trigger learners_touch before update on public.learners
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists intake_touch on public.intake_responses;
+create trigger intake_touch before update on public.intake_responses
   for each row execute function public.touch_updated_at();
 
 drop trigger if exists radar_touch on public.radar_findings;

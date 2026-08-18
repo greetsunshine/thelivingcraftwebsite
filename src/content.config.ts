@@ -17,11 +17,21 @@ import { glob } from 'astro/loaders';
 const sessions = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/sessions' }),
   schema: z.object({
-    /** Programme week, 1-6. Also the sort order and the URL slug. */
-    week: z.number().int().min(1).max(6),
+    /**
+     * Programme week, 0-6. Also the sort order and the URL slug.
+     *
+     * Week 0 is the pre-work — environment setup and the intake — rather than a
+     * taught session. It lives in this collection anyway because it is the same
+     * kind of thing to maintain: long-lived prose, reviewed as a diff, rendered
+     * by the same page. What it is NOT is a module, hence the optional below.
+     */
+    week: z.number().int().min(0).max(6),
     title: z.string(),
-    /** Module id from cohort.modules in src/data/facts.ts — M1..M4. */
-    module: z.enum(['M1', 'M2', 'M3', 'M4']),
+    /**
+     * Module id from cohort.modules in src/data/facts.ts — M1..M4.
+     * Absent on week 0, which belongs to no module.
+     */
+    module: z.enum(['M1', 'M2', 'M3', 'M4']).optional(),
     /** One line shown in the session list. */
     summary: z.string(),
     /**

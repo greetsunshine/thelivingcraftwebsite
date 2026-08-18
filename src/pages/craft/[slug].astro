@@ -24,7 +24,10 @@ if (index === -1) return Astro.rewrite('/404');
 const session = sessions[index];
 const prev = sessions[index - 1];
 const next = sessions[index + 1];
-const module = cohort.modules.find((m) => m.id === session.data.module);
+// Undefined on week 0 — pre-work, not a module's session.
+const module = session.data.module
+  ? cohort.modules.find((m) => m.id === session.data.module)
+  : undefined;
 const { Content } = await render(session);
 ---
 
@@ -36,7 +39,8 @@ const { Content } = await render(session);
   <section style="padding:40px 0 80px;border-top:0">
     <div class="wrap narrow">
       <div class="eyebrow">
-        Week {session.data.week} <span class="num">/ {session.data.module} · {module?.weeks}</span>
+        Week {session.data.week}
+        <span class="num">/ {module ? `${session.data.module} · ${module.weeks}` : 'Pre-work'}</span>
       </div>
       <h1 style="font-size:clamp(30px,4.4vw,46px);margin:18px 0 16px">{session.data.title}</h1>
       <p class="lead">{session.data.summary}</p>

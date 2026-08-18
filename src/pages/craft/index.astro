@@ -8,6 +8,7 @@
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
+import { getIntake } from '../../lib/craft/intake';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -16,7 +17,14 @@ export const prerender = false;
 const learner = Astro.locals.learner!;
 
 const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - b.data.week);
-const moduleOf = (id: string) => cohort.modules.find((m) => m.id === id);
+
+// Surfaced on this page rather than only inside week 0, because an unsubmitted
+// intake is the one outstanding task a learner has before the cohort starts and
+// it should not be two clicks deep.
+const intake = await getIntake(learner.id);
+const intakeState = intake?.submitted_at ? 'submitted' : intake ? 'draft' : 'todo';
+// Undefined on week 0, which is pre-work and belongs to no module.
+const moduleOf = (id?: string) => (id ? cohort.modules.find((m) => m.id === id) : undefined);
 const ready = sessions.filter((s) => s.data.status === 'ready').length;
 ---
 
@@ -44,6 +52,25 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
         <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
       </div>
 
+      <a class={`intake-card ${intakeState}`} href="/craft/intake">
+        <span class="ic-state mono">
+          {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
+        </span>
+        <span class="ic-body">
+          <span class="ic-t">Your intake</span>
+          <span class="ic-s">
+            {
+              intakeState === 'submitted'
+                ? 'Submitted — open it again to change any answer before we meet.'
+                : intakeState === 'draft'
+                  ? 'You have a saved draft. Finish it and submit before Class 1.'
+                  : 'Your baseline, before Class 1. About 20 minutes.'
+            }
+          </span>
+        </span>
+        <span class="arrow">→</span>
+      </a>
+
       <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
       <p class="muted" style="margin-bottom:26px">
         {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
@@ -59,7 +86,7 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
                 <span class="t">{s.data.title}</span>
                 <span class="s">{s.data.summary}</span>
                 <span class="mod mono">
-                  {s.data.module} · {moduleOf(s.data.module)?.title}
+                  {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
                 </span>
               </span>
               <span class="state mono">{s.data.status === 'ready' ? 'Ready' : 'In progress'}</span>
@@ -126,6 +153,50 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
   .factbar .v {
     font-size: 15px;
     font-weight: 500;
+  }
+
+  .intake-card {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+    margin-top: 28px;
+    padding: 22px 26px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--clay);
+    border-radius: 3px;
+    transition: 0.18s;
+  }
+  .intake-card:hover {
+    background: #fff;
+  }
+  .intake-card.submitted {
+    border-left-color: var(--line-strong, var(--line));
+  }
+  .ic-state {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--clay);
+  }
+  .intake-card.submitted .ic-state {
+    color: var(--ink-faint);
+  }
+  .ic-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ic-t {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 440;
+  }
+  .ic-s {
+    font-size: 15px;
+    color: var(--ink-soft);
+    max-width: 66ch;
   }
 
   .sessions {
@@ -198,6 +269,13 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     }
     .factbar > div:nth-child(2) {
       border-right: 0;
+    }
+    .intake-card {
+      grid-template-columns: 1fr auto;
+      gap: 10px 14px;
+    }
+    .intake-card .ic-state {
+      grid-column: 1 / -1;
     }
     .srow {
       grid-template-columns: 1fr;

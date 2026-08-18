@@ -17,7 +17,7 @@ import { capabilities } from '../lib/admin/env';
 export interface Props {
   title: string;
   /** Which nav item is current. */
-  active?: 'overview' | 'traffic' | 'leads' | 'questions' | 'radar' | 'content' | 'learners';
+  active?: 'overview' | 'traffic' | 'leads' | 'questions' | 'radar' | 'content' | 'learners' | 'intake';
 }
 
 const { title, active } = Astro.props;
@@ -31,6 +31,7 @@ const NAV = [
   { key: 'radar', href: '/admin/radar', label: 'Radar' },
   { key: 'content', href: '/admin/content', label: 'Content' },
   { key: 'learners', href: '/admin/learners', label: 'Learners' },
+  { key: 'intake', href: '/admin/intake', label: 'Intake' },
 ] as const;
 ---
 

@@ -1,0 +1,548 @@
+---
+// The intake questionnaire.
+//
+// Behind the craft gate, so the page already knows who is answering. That is
+// what removes the two things a Google Form needed and this does not: an email
+// question, and a "limit 1 response" setting. The seat is the identity, and the
+// unique index on learner_id is the limit.
+//
+// Answers save as a draft on every submit attempt and can be revised after
+// submitting. Thirteen scale rows and six paragraphs is more than one sitting
+// for most people, and losing it to a closed tab would be the kind of small
+// insult that makes someone answer the second half carelessly.
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import {
+  LEADERSHIP,
+  QUICK_CHECK,
+  QUICK_LABELS,
+  QUICK_OPTIONS,
+  REALITY,
+  SCALE,
+  SCALE_LEGEND,
+  TECHNICAL,
+  getIntake,
+} from '../../lib/craft/intake';
+import { cohort } from '../../data/facts';
+
+export const prerender = false;
+
+const learner = Astro.locals.learner!;
+const existing = await getIntake(learner.id);
+
+const quick = existing?.quick_check ?? {};
+const technical = existing?.technical ?? {};
+const leadership = existing?.leadership ?? {};
+const reality = existing?.reality ?? {};
+
+const submittedOn = existing?.submitted_at
+  ? new Date(existing.submitted_at).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  : null;
+
+const MATRICES = [
+  { key: 'technical', title: 'Technical', questions: TECHNICAL },
+  { key: 'leadership', title: 'Leadership', questions: LEADERSHIP },
+] as const;
+---
+
+<CraftLayout title="Intake" learner={learner} back={{ href: '/craft', label: 'Your cohort' }}>
+  <section class="hero" style="border-top:0;padding:40px 0 34px">
+    <div class="wrap">
+      <div class="eyebrow">Before we meet <span class="num">/ intake</span></div>
+      <h1 style="font-size:clamp(30px,4.4vw,46px);margin:18px 0 16px">Your baseline</h1>
+      <p class="lead" style="max-width:66ch">
+        Two things: where you are starting from, and what you are actually dealing with at work.
+        Sunil reads every one of these before the cohort meets, so the room is tuned to the people
+        in it rather than to a syllabus written for strangers.
+      </p>
+      <p class="muted" style="max-width:66ch;margin-top:14px">
+        There are no wrong answers, and nothing here is scored. An honest <em>new to me</em> is
+        worth more than a generous <em>solid</em> — the first shapes a session, the second wastes
+        one. Save a draft and come back if you would rather not do it in one sitting.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding-top:0;border-top:0">
+    <div class="wrap">
+      {
+        submittedOn && (
+          <div class="banner done">
+            <strong>Submitted {submittedOn}.</strong> You can still change any answer — re-submitting
+            updates your response and keeps the original date.
+          </div>
+        )
+      }
+
+      <form id="intake">
+        {/* ---------------- Section 1 ---------------- */}
+        <div class="sec">
+          <h2>Quick self-check</h2>
+          <p class="muted">Gut reaction, not a considered answer. This calibrates pace; it is not an entrance exam.</p>
+
+          <div class="qlist">
+            {
+              QUICK_CHECK.map((q) => (
+                <div class="qrow">
+                  <span class="qtext">{q.text}</span>
+                  <div class="opts">
+                    {QUICK_OPTIONS.map((opt) => (
+                      <label class="opt">
+                        <input
+                          type="radio"
+                          name={`quick_check.${q.id}`}
+                          value={opt}
+                          checked={quick[q.id] === opt}
+                        />
+                        <span>{QUICK_LABELS[opt]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* ---------------- Section 2 ---------------- */}
+        <div class="sec">
+          <h2>Baseline self-assessment</h2>
+          <p class="muted">
+            1 = couldn't do it · 3 = could do it with help · 5 = could lead it and defend the call.
+          </p>
+
+          {
+            MATRICES.map(({ key, title, questions }) => {
+              const answers = key === 'technical' ? technical : leadership;
+              return (
+                <div class="matrix">
+                  <h3>{title}</h3>
+
+                  <div class="mhead" aria-hidden="true">
+                    <span />
+                    <div class="mcells">
+                      {SCALE.map((n) => (
+                        <span class="mnum mono">{n}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div class="mrows">
+                    {questions.map((q) => (
+                      <div class="mrow">
+                        <span class="mlabel">
+                          <b class="mono">{q.id}</b> {q.text}
+                        </span>
+                        <div class="mcells">
+                          {SCALE.map((n) => (
+                            <label class="mcell">
+                              <input
+                                type="radio"
+                                name={`${key}.${q.id}`}
+                                value={n}
+                                checked={answers[q.id] === n}
+                                aria-label={`${q.id}: ${q.text} — ${n}, ${SCALE_LEGEND[n]}`}
+                              />
+                              <span class="mono n">{n}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+
+        {/* ---------------- Section 3 ---------------- */}
+        <div class="sec">
+          <h2>State of your production reality</h2>
+          <p class="muted">A few sentences each is plenty. Specifics beat polish.</p>
+
+          <div class="prose-qs">
+            {
+              REALITY.map((q) => (
+                <label class="pq">
+                  <span class="pqt">{q.text}</span>
+                  <textarea name={`reality.${q.id}`} rows="4" maxlength="4000">{reality[q.id] ?? ''}</textarea>
+                </label>
+              ))
+            }
+          </div>
+        </div>
+
+        <div id="formnote" class="banner" hidden></div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit" data-submit="true">
+            {submittedOn ? 'Update my answers' : 'Submit intake'}
+          </button>
+          <button class="btn" type="button" data-submit="false">Save draft</button>
+          <span class="muted" style="font-size:13px">
+            {cohort.seats} seats · Sunil reads every response before we meet.
+          </span>
+        </div>
+      </form>
+    </div>
+  </section>
+</CraftLayout>
+
+<script>
+  // Collect the flat `section.id` field names back into the nested shape the
+  // endpoint validates. Doing it here rather than posting FormData keeps the
+  // wire format identical to what parseAnswers() expects, so there is one
+  // description of the payload rather than two that drift.
+  const form = document.getElementById('intake') as HTMLFormElement | null;
+  const note = document.getElementById('formnote') as HTMLElement | null;
+  if (form && note) {
+    const buttons = Array.from(form.querySelectorAll<HTMLButtonElement>('button[data-submit]'));
+    let intent = true;
+    buttons.forEach((b) => b.addEventListener('click', () => (intent = b.dataset.submit === 'true')));
+
+    const say = (message: string, kind: 'ok' | 'bad') => {
+      note.textContent = message;
+      note.className = `banner ${kind === 'ok' ? 'done' : 'bad'}`;
+      note.hidden = false;
+      note.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    const collect = () => {
+      const answers: Record<string, Record<string, unknown>> = {
+        quick_check: {},
+        technical: {},
+        leadership: {},
+        reality: {},
+      };
+      for (const [name, value] of new FormData(form).entries()) {
+        const dot = name.indexOf('.');
+        if (dot < 0) continue;
+        const section = name.slice(0, dot);
+        const id = name.slice(dot + 1);
+        if (!(section in answers)) continue;
+        answers[section][id] = typeof value === 'string' ? value : String(value);
+      }
+      return answers;
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      buttons.forEach((b) => (b.disabled = true));
+      note.hidden = true;
+
+      try {
+        const response = await fetch('/api/craft/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submit: intent, answers: collect() }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+          say(
+            intent
+              ? 'Submitted — thank you. You can come back and change any answer before we meet.'
+              : 'Draft saved. Nothing has been submitted yet.',
+            'ok',
+          );
+        } else if (response.status === 422 && Array.isArray(data.missing)) {
+          // Draft is already saved server-side on a submit attempt? It is not —
+          // a 422 writes nothing. Say so, so nobody closes the tab believing
+          // their paragraphs are safe.
+          say(
+            `${data.error} Still to answer: ${data.missing.join(', ')}. Nothing was saved — ` +
+              'use Save draft to keep what you have written.',
+            'bad',
+          );
+        } else {
+          say(data.error ?? 'Something went wrong. Your answers were not saved.', 'bad');
+        }
+      } catch {
+        say('Could not reach the server. Your answers were not saved — please try again.', 'bad');
+      } finally {
+        buttons.forEach((b) => (b.disabled = false));
+      }
+    });
+  }
+</script>
+
+<style>
+  .sec {
+    border-top: 1px solid var(--line);
+    padding: 44px 0 8px;
+  }
+  .sec:first-of-type {
+    border-top: 0;
+    padding-top: 8px;
+  }
+  .sec h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 440;
+    margin: 0 0 6px;
+  }
+  .sec h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 34px 0 12px;
+  }
+  .sec > .muted {
+    max-width: 66ch;
+    margin-bottom: 22px;
+  }
+
+  /* --- Section 1 ---------------------------------------------------- */
+  .qlist {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .qrow {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+    padding: 18px 22px;
+  }
+  .qtext {
+    font-size: 15px;
+  }
+  .opts {
+    display: flex;
+    gap: 8px;
+  }
+  .opt {
+    cursor: pointer;
+  }
+  .opt input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .opt span {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 7px 13px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    transition: 0.15s;
+  }
+  .opt input:checked + span {
+    border-color: var(--clay);
+    color: var(--clay);
+    background: #fff;
+  }
+  .opt input:focus-visible + span {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+  }
+
+  /* --- Section 2 : the matrices ------------------------------------- */
+  .matrix {
+    margin-bottom: 12px;
+  }
+  .mhead,
+  .mrow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 20px;
+    align-items: center;
+  }
+  .mhead {
+    padding: 0 22px 8px;
+  }
+  .mcells {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .mnum {
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .mrow {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 0;
+    padding: 14px 22px;
+  }
+  .mrows .mrow:first-child {
+    border-top: 1px solid var(--line);
+    border-radius: 3px 3px 0 0;
+  }
+  .mrows .mrow:last-child {
+    border-radius: 0 0 3px 3px;
+  }
+  .mlabel {
+    font-size: 15px;
+  }
+  .mlabel b {
+    color: var(--clay);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin-right: 8px;
+    font-weight: 500;
+  }
+  .mcell {
+    cursor: pointer;
+    display: block;
+  }
+  .mcell input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mcell .n {
+    display: block;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 9px 0;
+    font-size: 12px;
+    color: var(--ink-faint);
+    transition: 0.15s;
+  }
+  .mcell input:checked + .n {
+    border-color: var(--clay);
+    background: var(--clay);
+    color: #fff;
+  }
+  .mcell input:focus-visible + .n {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+  }
+
+  /* --- Section 3 ---------------------------------------------------- */
+  .prose-qs {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .pq {
+    display: block;
+  }
+  .pqt {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 8px;
+    max-width: 70ch;
+  }
+  .pq textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    resize: vertical;
+  }
+  .pq textarea:focus {
+    outline: 0;
+    border-color: var(--clay);
+  }
+
+  /* --- Chrome ------------------------------------------------------- */
+  .banner {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--clay);
+    background: var(--surface);
+    padding: 14px 18px;
+    border-radius: 2px;
+    font-size: 15px;
+    margin: 26px 0;
+  }
+  .banner.bad {
+    border-left-color: #8f3f22;
+    background: #fff;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 34px 0 20px;
+    border-top: 1px solid var(--line);
+    margin-top: 40px;
+  }
+  .btn {
+    border: 1px solid var(--line-strong, var(--line));
+    background: none;
+    border-radius: 2px;
+    padding: 11px 20px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .btn:hover {
+    border-color: var(--clay);
+    color: var(--clay);
+  }
+  .btn.primary {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: #fff;
+  }
+  .btn.primary:hover {
+    background: var(--clay-deep, #8f3f22);
+    color: #fff;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  /* --- The stack -----------------------------------------------------
+     Below 700px a matrix stops being a matrix. Each row becomes its own
+     labelled 1-5 strip: the column header is gone, so the numbers that were
+     only in it appear inside every cell instead. No horizontal scrolling and
+     no 44px tap targets sitting side by side. */
+  @media (max-width: 700px) {
+    .qrow {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .opts {
+      flex-wrap: wrap;
+    }
+    .mhead {
+      display: none;
+    }
+    .mrow {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 16px 16px 18px;
+    }
+    .mcell .n {
+      display: block;
+      padding: 12px 0;
+      font-size: 13px;
+    }
+  }
+  @media (min-width: 701px) {
+    /* The number lives in the column header on desktop; repeating it in all
+       65 cells is noise. Screen readers still get it from aria-label. */
+    .mcell .n {
+      font-size: 0;
+      padding: 11px 0;
+    }
+  }
+</style>

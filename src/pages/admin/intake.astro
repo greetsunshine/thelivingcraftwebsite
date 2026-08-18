@@ -1,0 +1,375 @@
+---
+// Intake responses.
+//
+// The panel is built around the comparison rather than the individual: with
+// eight learners, what Sunil needs before week 1 is "where is this room weak",
+// not eight documents read one after another. So the scale answers render as a
+// per-question spread across the cohort, and the prose is collapsed underneath
+// per person.
+//
+// Anyone who has started but not submitted is shown FIRST and marked. Google
+// Forms could not tell those two states apart at all — an unsubmitted response
+// simply did not exist — and "three people have not answered" is the single
+// most actionable thing on this page in the week before a cohort starts.
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import {
+  LEADERSHIP,
+  QUICK_CHECK,
+  QUICK_LABELS,
+  QUICK_OPTIONS,
+  REALITY,
+  SCALE,
+  TECHNICAL,
+  listIntake,
+} from '../../lib/craft/intake';
+import { listLearners } from '../../lib/craft/learners';
+
+const [responses, learners] = await Promise.all([listIntake(), listLearners()]);
+
+const submitted = responses.filter((r) => r.submitted_at);
+const drafts = responses.filter((r) => !r.submitted_at);
+
+const active = learners.filter((l) => l.status === 'active');
+const answeredIds = new Set(responses.map((r) => r.learner_id));
+const notStarted = active.filter((l) => !answeredIds.has(l.id));
+
+/** Mean of a scale question across everyone who submitted. */
+const mean = (section: 'technical' | 'leadership', id: string): number | null => {
+  const values = submitted.map((r) => Number(r[section]?.[id])).filter((n) => Number.isInteger(n) && n >= 1);
+  if (!values.length) return null;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+};
+
+/** How many picked each option, for the section-1 questions. */
+const spread = (id: string) =>
+  QUICK_OPTIONS.map((opt) => ({
+    opt,
+    n: submitted.filter((r) => r.quick_check?.[id] === opt).length,
+  }));
+
+const when = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
+
+const MATRICES = [
+  { key: 'technical' as const, title: 'Technical', questions: TECHNICAL },
+  { key: 'leadership' as const, title: 'Leadership', questions: LEADERSHIP },
+];
+
+// Ordered so the rows needing action are at the top.
+const ordered = [...drafts, ...submitted];
+---
+
+<AdminLayout title="Intake" active="intake">
+  <div class="page-head">
+    <div>
+      <span class="label">
+        {submitted.length} submitted · {drafts.length} in progress · {notStarted.length} not started
+      </span>
+      <h1>Intake</h1>
+      <p>
+        The pre-cohort self-assessment, filled in at <code>/craft/intake</code>. Averages below
+        cover submitted responses only — a half-finished form would drag them toward whatever the
+        learner answered first.
+      </p>
+    </div>
+    <a class="btn" href="/api/admin/intake.csv">Export CSV</a>
+  </div>
+
+  {
+    notStarted.length > 0 && (
+      <div class="notice">
+        <h3>
+          {notStarted.length} active learner{notStarted.length === 1 ? ' has' : 's have'} not started
+        </h3>
+        <p class="muted">{notStarted.map((l) => l.name ?? l.email).join(' · ')}</p>
+      </div>
+    )
+  }
+
+  {
+    submitted.length === 0 ? (
+      <p class="muted" style="padding:26px 0">
+        No submitted responses yet. The cohort averages appear here once somebody submits.
+      </p>
+    ) : (
+      <>
+        <h2 class="sec-title">Where the room is</h2>
+        <p class="muted" style="margin-bottom:18px">
+          Mean of {submitted.length} submitted response{submitted.length === 1 ? '' : 's'}, 1–5. The
+          lowest rows are where a session earns its place.
+        </p>
+
+        {MATRICES.map(({ key, title, questions }) => (
+          <div class="block">
+            <h3>{title}</h3>
+            {questions
+              .map((q) => ({ q, avg: mean(key, q.id) }))
+              .sort((a, b) => (a.avg ?? 9) - (b.avg ?? 9))
+              .map(({ q, avg }) => (
+                <div class="brow">
+                  <span class="bid mono">{q.id}</span>
+                  <span class="btext">{q.text}</span>
+                  <span class="bbar">
+                    <span class="fill" style={`width:${avg ? (avg / 5) * 100 : 0}%`} />
+                  </span>
+                  <span class="bnum mono">{avg ? avg.toFixed(1) : '—'}</span>
+                </div>
+              ))}
+          </div>
+        ))}
+
+        <div class="block">
+          <h3>Quick self-check</h3>
+          {QUICK_CHECK.map((q) => (
+            <div class="qrow">
+              <span class="btext">{q.text}</span>
+              <span class="chips">
+                {spread(q.id).map(({ opt, n }) => (
+                  <span class={`chip ${n > 0 ? 'on' : ''}`}>
+                    {QUICK_LABELS[opt]} <b>{n}</b>
+                  </span>
+                ))}
+              </span>
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  <h2 class="sec-title">Responses</h2>
+
+  {
+    ordered.length === 0 ? (
+      <p class="muted" style="padding:20px 0">Nobody has opened the intake yet.</p>
+    ) : (
+      ordered.map((r) => (
+        <details class="person">
+          <summary>
+            <span class="pname">{r.name ?? r.email}</span>
+            <span class="pmail mono">{r.email}</span>
+            {r.submitted_at ? (
+              <span class="pill done mono">Submitted {when(r.submitted_at)}</span>
+            ) : (
+              <span class="pill draft mono">In progress</span>
+            )}
+          </summary>
+
+          <div class="pbody">
+            <div class="scales">
+              {MATRICES.map(({ key, title, questions }) => (
+                <div>
+                  <h4>{title}</h4>
+                  {questions.map((q) => (
+                    <div class="srow">
+                      <span class="mono">{q.id}</span>
+                      <span class="dots">
+                        {SCALE.map((n) => (
+                          <i class={Number(r[key]?.[q.id]) >= n ? 'on' : ''} />
+                        ))}
+                      </span>
+                      <span class="mono val">{r[key]?.[q.id] ?? '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <div class="prose">
+              {REALITY.map((q) => (
+                <div class="pblock">
+                  <h5>{q.text}</h5>
+                  <p>{r.reality?.[q.id] ?? <em class="muted">Not answered</em>}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </details>
+      ))
+    )
+  }
+</AdminLayout>
+
+<style>
+  .sec-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 440;
+    font-size: 22px;
+    margin: 42px 0 4px;
+  }
+  .block {
+    margin: 22px 0 30px;
+  }
+  .block h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+  .brow,
+  .qrow {
+    display: grid;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .brow {
+    grid-template-columns: 34px minmax(0, 1fr) 160px 36px;
+  }
+  .qrow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .bid {
+    font-size: 11px;
+    color: var(--clay);
+  }
+  .btext {
+    color: var(--ink-soft);
+  }
+  .bbar {
+    background: var(--line);
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bbar .fill {
+    display: block;
+    height: 100%;
+    background: var(--clay);
+  }
+  .bnum {
+    text-align: right;
+    font-size: 12px;
+  }
+  .chips {
+    display: flex;
+    gap: 6px;
+  }
+  .chip {
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 3px 8px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .chip.on {
+    color: var(--ink);
+    border-color: var(--line-strong, var(--line));
+  }
+  .chip b {
+    color: var(--clay);
+  }
+
+  .person {
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+  .person summary {
+    cursor: pointer;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pname {
+    font-weight: 500;
+  }
+  .pmail {
+    font-size: 12px;
+    color: var(--ink-faint);
+    flex: 1;
+  }
+  .pill {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 3px 8px;
+  }
+  .pill.done {
+    color: var(--clay);
+  }
+  .pill.draft {
+    color: #8f3f22;
+    border-color: #8f3f22;
+  }
+  .pbody {
+    padding: 4px 16px 20px;
+    border-top: 1px solid var(--line);
+  }
+  .scales {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+    margin: 16px 0 24px;
+  }
+  .scales h4,
+  .prose h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  .srow {
+    display: grid;
+    grid-template-columns: 26px 1fr 18px;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    padding: 3px 0;
+  }
+  .dots {
+    display: flex;
+    gap: 3px;
+  }
+  .dots i {
+    width: 100%;
+    height: 5px;
+    background: var(--line);
+    border-radius: 2px;
+  }
+  .dots i.on {
+    background: var(--clay);
+  }
+  .val {
+    text-align: right;
+    color: var(--ink-faint);
+  }
+  .prose .pblock {
+    margin-bottom: 16px;
+  }
+  .prose p {
+    font-size: 14px;
+    white-space: pre-wrap;
+    margin: 0;
+    max-width: 80ch;
+  }
+
+  @media (max-width: 760px) {
+    .brow {
+      grid-template-columns: 30px minmax(0, 1fr) 60px;
+    }
+    .brow .bbar {
+      display: none;
+    }
+    .qrow {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .scales {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
