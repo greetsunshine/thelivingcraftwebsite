@@ -227,27 +227,45 @@ async function main() {
       `${force ? ' (cooldown overridden)' : ''}`,
   );
 
-  const found = await sweep<GatheredRadarItem>({
-    topics,
-    system: SYSTEM,
-    researchPrompt,
-    schema: ITEM_SCHEMA,
-    // Six categories rather than five, each with a longer record. Running out
-    // truncates the JSON mid-string and surfaces as an opaque parse error.
-    maxTranscribeTokens: 24000,
-    transcribeSystem:
-      'Assign every record to exactly one of the six categories. If a finding genuinely spans ' +
-      'two, put it in the one where Sunil would look for it and mention the overlap in the body. ' +
-      'Grade sourceType from what the note says about the source, never from the domain name alone.',
-  });
-
-  // Record the sweep before writing findings, so a run that dies mid-flight
-  // still leaves evidence it happened — otherwise a crashing agent looks
-  // identical to one that was never triggered.
+  // Open the run record BEFORE the sweep, not after.
+  //
+  // This used to sit below, and the comment already claimed it was here — "so a
+  // run that dies mid-flight still leaves evidence it happened". It did not.
+  // A sweep that crashed left no row at all, so eleven minutes of paid research
+  // that failed on the last call was indistinguishable, in the console, from an
+  // agent nobody had ever triggered. That happened on 2026-08-18 and the radar
+  // read "never run" afterwards.
+  //
+  // Opening the record first also makes the cooldown honest: a failed run still
+  // spent the money, so it should still hold the next one off.
   const runId = await startRun(
     process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' ? 'manual' : 'schedule',
     selected.map((c) => c.key),
   );
+
+  let found: GatheredRadarItem[];
+  try {
+    found = await sweep<GatheredRadarItem>({
+      topics,
+      system: SYSTEM,
+      researchPrompt,
+      schema: ITEM_SCHEMA,
+      // Six categories rather than five, each with a longer record. Running out
+      // truncates the JSON mid-string and surfaces as an opaque parse error.
+      // The transcription call is streamed so this can exceed the SDK's
+      // ten-minute non-streaming ceiling — see scripts/lib/research.ts.
+      maxTranscribeTokens: 24000,
+      transcribeSystem:
+        'Assign every record to exactly one of the six categories. If a finding genuinely spans ' +
+        'two, put it in the one where Sunil would look for it and mention the overlap in the body. ' +
+        'Grade sourceType from what the note says about the source, never from the domain name alone.',
+    });
+  } catch (err) {
+    // The research is already paid for at this point. Recording why it died is
+    // the only thing left that has any value.
+    await finishRun(runId, { error: err instanceof Error ? err.message : String(err) });
+    throw err;
+  }
 
   const incoming: IncomingFinding[] = found.map((item) => ({
     id: item.id,

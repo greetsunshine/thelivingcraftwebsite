@@ -200,21 +200,38 @@ export async function sweep<T extends { id: string; source: string }>(spec: Swee
   // Pass 2 — transcribe. No tools, so no citations, so structured output is
   // allowed. It sees only pass 1's notes and therefore cannot introduce a
   // finding that was never researched.
-  const structured = await client.messages.create({
-    model: TRANSCRIBE_MODEL,
-    max_tokens: spec.maxTranscribeTokens ?? 16000,
-    thinking: { type: 'adaptive' },
-    output_config: { effort: 'low', format: { type: 'json_schema', schema: spec.schema } },
-    system:
-      'You transcribe research notes into structured records. Use only what the notes contain — ' +
-      'no additions, no inference, no rewriting of the substance.\n\n' +
-      'The source field must be the full http(s) URL the note carried. If a note has no URL, ' +
-      'OMIT that finding entirely — do not emit it with an empty or placeholder source, and do ' +
-      'not borrow a URL from a neighbouring finding. Fewer, sourced records beat more, unsourced ' +
-      'ones. If the notes report nothing material, return an empty list.' +
-      (spec.transcribeSystem ? `\n\n${spec.transcribeSystem}` : ''),
-    messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes.join('\n\n---\n\n')}` }],
-  });
+  //
+  // STREAMED, and not for progress output — nothing reads the deltas. The SDK
+  // refuses a non-streaming request whose estimated duration exceeds ten
+  // minutes, and it estimates from max_tokens. The radar sweeps six categories
+  // and needs 24000 to avoid truncating its JSON mid-string; that tipped it
+  // over, and the whole run died AFTER all six research calls had been paid
+  // for:
+  //
+  //   Streaming is required for operations that may take longer than 10 minutes
+  //
+  // The visitor retriever survived only because 16000 happened to sit under the
+  // threshold — which is luck, not design, and would break the moment a topic
+  // was added. Streaming removes the ceiling for both, and finalMessage() gives
+  // back exactly the same Message the non-streaming call returned, so every
+  // stop_reason check below is unchanged.
+  const structured = await client.messages
+    .stream({
+      model: TRANSCRIBE_MODEL,
+      max_tokens: spec.maxTranscribeTokens ?? 16000,
+      thinking: { type: 'adaptive' },
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: spec.schema } },
+      system:
+        'You transcribe research notes into structured records. Use only what the notes contain — ' +
+        'no additions, no inference, no rewriting of the substance.\n\n' +
+        'The source field must be the full http(s) URL the note carried. If a note has no URL, ' +
+        'OMIT that finding entirely — do not emit it with an empty or placeholder source, and do ' +
+        'not borrow a URL from a neighbouring finding. Fewer, sourced records beat more, unsourced ' +
+        'ones. If the notes report nothing material, return an empty list.' +
+        (spec.transcribeSystem ? `\n\n${spec.transcribeSystem}` : ''),
+      messages: [{ role: 'user', content: `Research notes from ${today}:\n\n${notes.join('\n\n---\n\n')}` }],
+    })
+    .finalMessage();
 
   if (structured.stop_reason === 'refusal') {
     throw new Error(`Transcription pass refused: ${structured.stop_details?.explanation ?? 'no explanation'}`);
