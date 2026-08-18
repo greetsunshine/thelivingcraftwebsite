@@ -93,12 +93,19 @@ beats polished.
 Please submit a couple of days before Class 1 so there is time to read the room
 before we meet.
 
-> If the self-check leaves you rating yourself *new to me* on Python, systems, or
-> reading diffs, message Sunil rather than worrying about it. We would far rather
-> help you arrive ready than have you catch up in a room of eight.
->
-> [PLACEHOLDER: Sunil to add the four prerequisite refresher links — Python,
-> distributed systems, LLM basics, reading diffs.]
+### If you want to brush up first
+
+Optional, and none of it is long. Skim whichever one matches an answer you rated
+*rusty* or *new to me* — there is nothing here you need to have memorised.
+
+- **Python, async** — [asyncio](https://docs.python.org/3/library/asyncio.html)
+- **Retries, timeouts, backoff** — [Timeouts, retries and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/), AWS Builders' Library
+- **Idempotency** — [Idempotent requests](https://stripe.com/docs/api/idempotent_requests), Stripe API docs
+- **Prompts, tokens, context** — [Prompt engineering overview](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview)
+
+If the self-check leaves you rating yourself *new to me* on Python, systems, or
+reading diffs, message Sunil rather than worrying about it. We would far rather
+help you arrive ready than have you catch up in a room of eight.
 
 ---
 
