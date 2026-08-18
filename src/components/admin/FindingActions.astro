@@ -1,8 +1,10 @@
 ---
 // Edit / hide controls for one agent finding, on both the radar and the content
-// review. Shared because the two pages must behave identically here: an edit is
-// a pull request either way, and two hand-maintained copies of that flow would
-// eventually disagree about it.
+// review. Shared because the two pages must present the same affordances, even
+// though what happens on submit now differs: the visitor retriever's findings
+// are edited by pull request (they are read aloud to prospects, so every change
+// should be a reviewable diff), while the radar writes straight to its table.
+// That difference is one `endpoint` prop rather than two copies of the form.
 //
 // The edit form is collapsed by default. These findings are meant to be read
 // first and corrected second — an always-open textarea invites rewriting the
@@ -16,16 +18,33 @@ export interface Props {
   body: string;
   /** Radar findings only. */
   implication?: string;
-  /** False when GITHUB_TOKEN is absent — the buttons explain rather than fail. */
+  /**
+   * False when the store's write path is unconfigured — GITHUB_TOKEN for
+   * 'latest', Supabase for 'radar'. The buttons explain rather than fail.
+   */
   canWrite: boolean;
-  /** Wording for the hide button; the consequence differs between the two files. */
+  /** Wording for the hide button; the consequence differs between the two stores. */
   hideLabel: string;
+  /** Where the buttons POST. Defaults to the pull-request flow. */
+  endpoint?: string;
+  /** 'hide' or 'restore' — the radar can put a dismissed finding back. */
+  hideAction?: 'hide' | 'restore';
 }
 
-const { id, file, title, body, implication, canWrite, hideLabel } = Astro.props;
+const {
+  id,
+  file,
+  title,
+  body,
+  implication,
+  canWrite,
+  hideLabel,
+  endpoint = '/api/admin/propose',
+  hideAction = 'hide',
+} = Astro.props;
 ---
 
-<div class="actions" data-id={id} data-file={file}>
+<div class="actions" data-id={id} data-file={file} data-endpoint={endpoint} data-hide-action={hideAction}>
   <details class="raw" style="width:100%">
     <summary>Edit the wording</summary>
 
@@ -56,7 +75,9 @@ const { id, file, title, body, implication, canWrite, hideLabel } = Astro.props;
       </p>
 
       <div>
-        <button class="btn small primary save-finding" disabled={!canWrite}>Propose this edit</button>
+        <button class="btn small primary save-finding" disabled={!canWrite}>
+          {endpoint === '/api/admin/propose' ? 'Propose this edit' : 'Save this edit'}
+        </button>
       </div>
     </div>
   </details>

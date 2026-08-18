@@ -111,20 +111,28 @@ none of their audience; that separation is load-bearing, see the radar entry.
     so his private doubts never reach a visitor or a crawler. Keep it that way.
     (The admin console *does* show it — that's the one place it belongs.)
 - **Radar agent** — [scripts/gather-radar.ts](scripts/gather-radar.ts) (`npm run radar`). The second
-  retriever. Writes [src/data/radar.json](src/data/radar.json), read **only** by `/admin/radar`.
+  retriever. Writes the **`radar_findings` table**, read **only** by `/admin/radar`.
   Six operator-facing categories in [src/data/radar-categories.ts](src/data/radar-categories.ts):
   trends · big-tech investment · what's working · what's failing · India hiring ·
-  durable skills. Weekly via [.github/workflows/gather-radar.yml](.github/workflows/gather-radar.yml), also a PR.
-  - **`/api/ask` must never import [src/lib/agent/radar.ts](src/lib/agent/radar.ts).** Two files exist
-    because there are two readers. "Google is investing $N billion in agents" is
+  durable skills. Weekly via [.github/workflows/gather-radar.yml](.github/workflows/gather-radar.yml), which writes
+  **straight to the database — no PR**. That gate is right for the visitor
+  retriever, whose output a chatbot repeats verbatim; here it meant a merge and a
+  deploy before Sunil could read his own notebook. Review moved rather than
+  vanished: findings arrive `status = 'new'`, and hiding or correcting one is an
+  UPDATE via `/api/admin/radar-item`. The sweep needs `SUPABASE_URL` +
+  `SUPABASE_SERVICE_ROLE_KEY` as **GitHub Actions secrets**, not just in Vercel.
+  - **`/api/ask` must never import [src/lib/agent/radar.ts](src/lib/agent/radar.ts) or query the radar
+    tables.** Two stores exist because there are two readers. "Google is investing $N billion in agents" is
     useful to Sunil and off-key from a chatbot answering a cohort question — and
     the categories that make this feed valuable (what's failing, salary and hiring
     numbers) are exactly the ones where a half-sourced claim repeated to a prospect
     does real damage. Keeping it off the agent's tool surface makes that
     structurally impossible instead of a matter of prompt discipline.
   - Unlike `latest.json`, which is replaced wholesale each run, the radar
-    **accumulates** — merged, deduped on id *and* canonical source URL, pruned at
-    120 days. A quarter of hiring signal beats this week's slice of it.
+    **accumulates** — pruned at 120 days. A quarter of hiring signal beats this
+    week's slice of it. Deduping is now a unique index on the normalised source
+    URL rather than a comparison in the script, so two overlapping sweeps cannot
+    race each other into two rows for one story.
   - Items carry `sourceType` (primary/press/vendor/secondhand), graded by the agent
     and shown as a coloured pill. A vendor blog and a peer-reviewed paper are both
     "a link"; only one is safe to quote to a board.

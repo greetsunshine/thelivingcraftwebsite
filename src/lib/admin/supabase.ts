@@ -8,7 +8,10 @@
 // bundled into a page.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { env } from './env';
+// Extension required: the radar retriever imports this module under
+// `node --experimental-strip-types`, whose ESM resolver will not guess one.
+// Vite resolves it either way. Same trap that broke both sweeps on 2026-08-17.
+import { env } from './env.ts';
 
 let cached: SupabaseClient | null = null;
 

@@ -69,10 +69,9 @@ export const CATEGORY_KEYS = RADAR_CATEGORIES.map((c) => c.key);
 /**
  * How long a finding stays on the radar.
  *
- * Lives here rather than beside the store because the retriever script prunes
- * with it and the console filters with it, and the script cannot import the
- * store module (that one pulls in radar.json, which plain Node will not load
- * without an import attribute).
+ * Lives here rather than beside the store because both the retriever script and
+ * the console filter by it, and this module has no imports of its own — so it
+ * can be read from either runtime without dragging anything else in.
  */
 export const RADAR_MAX_AGE_DAYS = 120;
 

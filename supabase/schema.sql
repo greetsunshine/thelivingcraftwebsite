@@ -159,6 +159,74 @@ create unique index if not exists learners_email_key on public.learners (email);
 create index if not exists learners_status_idx on public.learners (status, created_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Radar — market intelligence, for Sunil only
+-- ---------------------------------------------------------------------------
+-- Was src/data/radar.json, refreshed by a weekly agent that opened a pull
+-- request. The review gate made sense for the visitor-facing retriever, whose
+-- output a chatbot repeats verbatim to prospects. It made much less sense here:
+-- nothing on the public site reads the radar, so the PR was gating a private
+-- notebook — and it cost a merge and a deploy before Sunil could read what his
+-- own agent had found.
+--
+-- Moving it here changes what "review" means rather than removing it. Findings
+-- land with status = 'new'; hiding one is an UPDATE instead of a pull request,
+-- and reading one no longer requires shipping a deployment.
+--
+-- The visitor Q&A agent still cannot reach this. That was previously enforced
+-- by src/pages/api/ask.ts not importing a module; it is now enforced by ask.ts
+-- not querying a table. Keep it that way — investment figures, India hiring
+-- numbers and claims about what is failing are Sunil's to judge before
+-- repeating, not a chatbot's to volunteer.
+
+create table if not exists public.radar_findings (
+  -- The agent's own slug id. Stable across runs, which is what makes the
+  -- re-found-next-month case an upsert rather than a duplicate row.
+  id            text        primary key,
+  created_at    timestamptz not null default now(),
+  gathered_at   date        not null,
+  category      text        not null,
+  title         text        not null,
+  body          text        not null,
+  implication   text,
+  -- Operator-only, exactly like latest.json's reviewNote: what the agent could
+  -- not confirm about its own finding. Never rendered outside /admin.
+  review_note   text,
+  source        text        not null,
+  -- Host + path with the query string and trailing slash stripped. Deduping on
+  -- this is what stops the same story returning next month under a new slug.
+  source_key    text        not null,
+  source_type   text,
+  published_at  date,
+  tags          text[],
+  -- new = unread, kept = Sunil has read and kept it, hidden = dismissed.
+  status        text        not null default 'new',
+  updated_at    timestamptz not null default now()
+);
+
+create unique index if not exists radar_source_key on public.radar_findings (source_key);
+create index if not exists radar_category_idx on public.radar_findings (category, gathered_at desc);
+create index if not exists radar_status_idx on public.radar_findings (status, gathered_at desc);
+
+-- One row per sweep. The JSON file carried a `refreshedAt` field, and the
+-- console reads "never run" / "refreshed N days ago" off it; without a run
+-- record that reading would silently come from the newest FINDING instead,
+-- which is wrong in the case that matters — a sweep that legitimately found
+-- nothing new would look like a sweep that never happened.
+create table if not exists public.radar_runs (
+  id           uuid        primary key default gen_random_uuid(),
+  started_at   timestamptz not null default now(),
+  finished_at  timestamptz,
+  trigger      text        not null default 'schedule',
+  categories   text[],
+  found        int         not null default 0,
+  duplicates   int         not null default 0,
+  pruned       int         not null default 0,
+  error        text
+);
+
+create index if not exists radar_runs_started_idx on public.radar_runs (started_at desc);
+
+-- ---------------------------------------------------------------------------
 -- Lock everything down
 -- ---------------------------------------------------------------------------
 -- RLS enabled + zero policies = the anon and authenticated keys can do nothing.
@@ -168,11 +236,15 @@ alter table public.events    enable row level security;
 alter table public.leads     enable row level security;
 alter table public.questions enable row level security;
 alter table public.learners  enable row level security;
+alter table public.radar_findings enable row level security;
+alter table public.radar_runs     enable row level security;
 
 revoke all on public.events    from anon, authenticated;
 revoke all on public.leads     from anon, authenticated;
 revoke all on public.questions from anon, authenticated;
 revoke all on public.learners  from anon, authenticated;
+revoke all on public.radar_findings from anon, authenticated;
+revoke all on public.radar_runs     from anon, authenticated;
 
 -- Keep updated_at honest so "last touched" in the console means something.
 create or replace function public.touch_updated_at() returns trigger
@@ -189,6 +261,10 @@ create trigger leads_touch before update on public.leads
 
 drop trigger if exists learners_touch on public.learners;
 create trigger learners_touch before update on public.learners
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists radar_touch on public.radar_findings;
+create trigger radar_touch before update on public.radar_findings
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------

@@ -5,11 +5,18 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import ConsoleActions from '../../components/admin/ConsoleActions.astro';
 import FindingActions from '../../components/admin/FindingActions.astro';
 import { RADAR_CATEGORIES, RADAR_MAX_AGE_DAYS } from '../../data/radar-categories';
-import { getRadar } from '../../lib/agent/radar';
+import { getRadar, lastRadarRun } from '../../lib/agent/radar';
 import { capabilities } from '../../lib/admin/env';
 
 const caps = capabilities();
-const radar = getRadar();
+
+// Hidden findings stay hidden here but are not deleted — dismissing one is a
+// judgement, and a judgement worth revisiting. ?hidden=1 shows them again.
+const showHidden = Astro.url.searchParams.get('hidden') === '1';
+const [radar, lastRun] = await Promise.all([
+  getRadar({ includeHidden: showHidden }),
+  lastRadarRun(),
+]);
 
 const selected = Astro.url.searchParams.get('c');
 const active = RADAR_CATEGORIES.find((c) => c.key === selected) ?? null;
@@ -19,10 +26,14 @@ const shown = active ? radar.items.filter((i) => i.category === active.key) : ra
 const countFor = (key: string) => radar.items.filter((i) => i.category === key).length;
 
 const age = (() => {
+  if (!radar.refreshedAt) return null;
   const t = Date.parse(radar.refreshedAt);
-  if (Number.isNaN(t) || t < 86_400_000) return null;
+  if (Number.isNaN(t)) return null;
   return Math.floor((Date.now() - t) / 86_400_000);
 })();
+
+const ranWhen =
+  age === null ? 'never run' : age === 0 ? 'swept today' : `swept ${age} day${age === 1 ? '' : 's'} ago`;
 
 // Source quality drives the pill colour, because it is the thing most worth
 // noticing at a glance. A vendor's own blog and a peer-reviewed paper are both
@@ -47,11 +58,13 @@ const host = (url: string) => {
   <div class="page-head">
     <div>
       <span class="label">
-        {radar.items.length} findings · {age === null ? 'never run' : `refreshed ${age} day${age === 1 ? '' : 's'} ago`}
+        {radar.items.length} findings · {ranWhen}
       </span>
       <h1>Radar</h1>
       <p>
-        Market intelligence gathered for you across six categories, kept for {RADAR_MAX_AGE_DAYS} days.
+        Market intelligence gathered for you across six categories, kept for {RADAR_MAX_AGE_DAYS} days
+        and stored in the database — a sweep lands here directly, with no PR to merge and no deploy
+        to wait for.
         The visitor Q&A agent <strong>cannot read this</strong> — investment figures, hiring numbers
         and claims about what is failing are yours to judge before repeating, not a chatbot's to
         volunteer. What the visitor agent does read lives under
@@ -72,14 +85,39 @@ const host = (url: string) => {
   </div>
 
   {
+    lastRun?.error && (
+      <div class="notice">
+        <h3>The last sweep failed</h3>
+        <p class="muted">
+          Started {new Date(lastRun.startedAt).toLocaleString('en-GB')} · {lastRun.trigger}. The
+          findings below are from before it. <code>{lastRun.error.slice(0, 300)}</code>
+        </p>
+      </div>
+    )
+  }
+
+  {
+    !caps.data && (
+      <div class="notice">
+        <h3>Supabase is not connected</h3>
+        <p class="muted">
+          The radar lives in the <code>radar_findings</code> table. Set <code>SUPABASE_URL</code>
+          and <code>SUPABASE_SERVICE_ROLE_KEY</code>, and run <code>supabase/schema.sql</code>.
+        </p>
+      </div>
+    )
+  }
+
+  {
     !caps.github && (
       <div class="notice">
         <h3>GitHub is not connected</h3>
         <p class="muted">
-          The radar still displays. Running the agent on demand and hiding a finding both open a
-          pull request, so they need <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> set —
-          a fine-grained PAT for this repo with Contents, Pull requests and Actions set to
-          read/write.
+          The radar still displays, and hiding or editing a finding still works — those write to
+          the database now. Only <em>running</em> the agent needs GitHub, because the sweep is
+          minutes of web-searching Opus calls and runs in Actions rather than in a Vercel
+          function. Set <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> — a fine-grained
+          PAT for this repo with Contents, Pull requests and Actions at read/write.
         </p>
       </div>
     )
@@ -103,7 +141,7 @@ const host = (url: string) => {
       <div class="card">
         <p class="muted">
           {radar.items.length === 0
-            ? 'The radar has not run yet. Run it above, or wait for the Monday sweep — it opens a PR with what it finds.'
+            ? 'The radar has not run yet. Run it above, or wait for the Monday sweep — findings appear here as soon as it finishes.'
             : 'Nothing in this category yet. An empty category is a real result: the agent is told to return nothing rather than pad.'}
         </p>
       </div>
@@ -141,11 +179,13 @@ const host = (url: string) => {
           <FindingActions
             id={item.id}
             file="radar"
+            endpoint="/api/admin/radar-item"
             title={item.title}
             body={item.body}
             implication={item.implication}
-            canWrite={caps.github}
-            hideLabel="Hide from the radar"
+            canWrite={caps.data}
+            hideLabel={item.status === 'hidden' ? 'Restore to the radar' : 'Hide from the radar'}
+            hideAction={item.status === 'hidden' ? 'restore' : 'hide'}
           />
         </article>
       ))

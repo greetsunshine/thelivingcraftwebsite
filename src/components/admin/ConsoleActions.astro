@@ -70,7 +70,13 @@
 
         post('/api/admin/run', payload)
           .then(function (res) {
-            report(runOut, res, 'Started. It takes a few minutes and opens a PR.');
+            report(
+              runOut,
+              res,
+              runBtn.getAttribute('data-run-agent') === 'radar'
+                ? 'Started. It takes a few minutes; findings appear here when it finishes.'
+                : 'Started. It takes a few minutes and opens a PR.',
+            );
             runBtn.disabled = false;
           })
           .catch(function () {
@@ -90,15 +96,23 @@
         file: group.getAttribute('data-file'),
       };
 
+      // Two stores, two write paths. The visitor retriever's findings are
+      // edited by pull request; the radar writes to its table. The wording has
+      // to follow, or a radar edit that took effect immediately would still
+      // claim a PR was waiting for review.
+      var endpoint = group.getAttribute('data-endpoint') || '/api/admin/propose';
+      var viaPr = endpoint === '/api/admin/propose';
+
       // --- hide -----------------------------------------------------------
       if (t.closest('.hide-finding')) {
         var hideBtn = t.closest('.hide-finding');
+        var hideAction = group.getAttribute('data-hide-action') || 'hide';
         hideBtn.disabled = true;
-        pending(out, 'Opening a pull request…');
+        pending(out, viaPr ? 'Opening a pull request…' : 'Saving…');
 
-        post('/api/admin/propose', Object.assign({ action: 'hide' }, payloadBase))
+        post(endpoint, Object.assign({ action: hideAction }, payloadBase))
           .then(function (res) {
-            report(out, res, 'Queued for removal.');
+            report(out, res, viaPr ? 'Queued for removal.' : 'Done — reload to see it move.');
             if (!res.ok) hideBtn.disabled = false;
           })
           .catch(function () {
@@ -123,11 +137,11 @@
         if (implEl) patch.implication = implEl.value;
 
         saveBtn.disabled = true;
-        pending(out, 'Opening a pull request…');
+        pending(out, viaPr ? 'Opening a pull request…' : 'Saving…');
 
-        post('/api/admin/propose', patch)
+        post(endpoint, patch)
           .then(function (res) {
-            report(out, res, 'Edit queued for review.');
+            report(out, res, viaPr ? 'Edit queued for review.' : 'Saved.');
             saveBtn.disabled = false;
           })
           .catch(function () {

@@ -4,7 +4,7 @@
 // and who reads the result:
 //
 //   gather-latest.ts -> src/data/latest.json  read by the visitor Q&A agent
-//   gather-radar.ts  -> src/data/radar.json   read by Sunil, in /admin/radar
+//   gather-radar.ts  -> radar_findings table  read by Sunil, in /admin/radar
 //
 // Everything that makes them safe is identical, and all of it was learned the
 // expensive way: one research call per topic (a shared budget starves the later
@@ -102,20 +102,40 @@ export function enforceCooldown(outPath: string, hours: number, force: boolean, 
 
   try {
     const prev = JSON.parse(readFileSync(outPath, 'utf8')) as { refreshedAt?: string };
-    const last = prev.refreshedAt ? Date.parse(prev.refreshedAt) : NaN;
-    const since = (Date.now() - last) / 3_600_000;
-
-    if (!Number.isNaN(since) && since < hours) {
-      console.error(`Skipped: last run was ${since.toFixed(1)}h ago (cooldown ${hours}h).\n`);
-      console.error('  Each run is several web-searching Opus calls. Repeated runs are how the');
-      console.error('  credit balance emptied and the live agent went down on 2026-08-15.\n');
-      console.error(`  Wait ${(hours - since).toFixed(1)}h, or override with:  npm run ${label} -- --force`);
-      console.error(`  Tuning topics? Try one at a time:  npm run ${label} -- "your topic"`);
-      process.exit(0);
-    }
+    enforceCooldownAt(prev.refreshedAt ?? null, hours, force, label);
   } catch {
     // No readable previous file — nothing to rate-limit against; proceed.
   }
+}
+
+/**
+ * The same guard, given the timestamp directly.
+ *
+ * The radar's store moved from a JSON file to Postgres, so there is no
+ * `refreshedAt` field to stat — its last-run time comes from a query. The rule
+ * is identical and lives in one place; only the source of the timestamp
+ * differs. A null timestamp means nothing to rate-limit against, so proceed.
+ */
+export function enforceCooldownAt(
+  lastRunIso: string | null,
+  hours: number,
+  force: boolean,
+  label: string,
+): void {
+  if (force || !lastRunIso) return;
+
+  const last = Date.parse(lastRunIso);
+  if (Number.isNaN(last)) return;
+
+  const since = (Date.now() - last) / 3_600_000;
+  if (since >= hours) return;
+
+  console.error(`Skipped: last run was ${since.toFixed(1)}h ago (cooldown ${hours}h).\n`);
+  console.error('  Each run is several web-searching Opus calls. Repeated runs are how the');
+  console.error('  credit balance emptied and the live agent went down on 2026-08-15.\n');
+  console.error(`  Wait ${(hours - since).toFixed(1)}h, or override with:  npm run ${label} -- --force`);
+  console.error(`  Tuning topics? Try one at a time:  npm run ${label} -- "your topic"`);
+  process.exit(0);
 }
 
 export interface SweepSpec {

@@ -43,13 +43,14 @@ const FUNNEL = [
   { label: 'Submitted it', value: stepOf('apply_submit') },
 ];
 
-const radar = getRadar();
+const radar = await getRadar();
 const latest = getLatest();
 
-// null means "never run". A fresh radar.json carries the epoch as its
-// refreshedAt, which subtracts to ~20,000 days — a number that reads like a bug
-// rather than like "this has not run yet".
-const daysSince = (iso: string) => {
+// null means "never run" — for the radar because no run has been recorded, and
+// for latest because a fresh file carries the epoch as its refreshedAt, which
+// subtracts to ~20,000 days and reads like a bug rather than "not run yet".
+const daysSince = (iso: string | null) => {
+  if (!iso) return null;
   const t = Date.parse(iso);
   if (Number.isNaN(t) || t < 86_400_000) return null;
   return Math.floor((Date.now() - t) / 86_400_000);

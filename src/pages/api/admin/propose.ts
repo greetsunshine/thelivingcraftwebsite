@@ -18,13 +18,16 @@ export const prerender = false;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-/** The only two files the console may propose changes to. */
+/**
+ * The only file the console may propose changes to.
+ *
+ * The radar used to be here too. It lives in Postgres now and is edited
+ * directly through /api/admin/radar-item — a pull request to dismiss a stale
+ * hiring article was ceremony with no reader. This flow remains for the visitor
+ * retriever's findings, where a reviewable diff is the whole point: a chatbot
+ * repeats them verbatim to prospects.
+ */
 const FILES = {
-  radar: {
-    path: 'src/data/radar.json',
-    branch: 'console/radar-edits',
-    label: 'the radar',
-  },
   latest: {
     path: 'src/data/latest.json',
     branch: 'console/latest-edits',

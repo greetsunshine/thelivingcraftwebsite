@@ -1,5 +1,5 @@
 // Radar agent (operator-facing) — market intelligence for Sunil, written to
-// src/data/radar.json and read only by /admin/radar.
+// the radar_findings table and read only by /admin/radar.
 //
 //   npm run radar                       # sweep all six categories
 //   npm run radar -- --category=skills  # sweep one
@@ -16,17 +16,20 @@
 // our own prices, dates, or seat counts. Those live in src/data/facts.ts.
 //
 // It also ACCUMULATES rather than replacing. A quarter of India hiring signal is
-// worth more than this week's slice, so each run merges into what is already
-// there, drops duplicates, and prunes past the retention window.
+// worth more than this week's slice, so each run adds to what is already there,
+// drops duplicates, and prunes past the retention window.
+//
+// It writes to Postgres rather than to a committed file, and therefore needs
+// SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in its environment (GitHub Actions
+// secrets for the scheduled run, .env.local for a local one). Deduping is the
+// database's job now — a unique index on the normalised source URL — so two
+// overlapping sweeps cannot race each other into two rows for one story.
 
-import { writeFileSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import {
   RESEARCH_MODEL,
   TRANSCRIBE_MODEL,
   enforceBudget,
-  enforceCooldown,
+  enforceCooldownAt,
   reportFailure,
   requireApiKey,
   sweep,
@@ -36,9 +39,14 @@ import {
   RADAR_CATEGORIES,
   RADAR_MAX_AGE_DAYS,
 } from '../src/data/radar-categories.ts';
-
-const here = dirname(fileURLToPath(import.meta.url));
-const OUT = join(here, '..', 'src', 'data', 'radar.json');
+import {
+  finishRun,
+  lastRadarRun,
+  pruneFindings,
+  saveFindings,
+  startRun,
+  type IncomingFinding,
+} from '../src/lib/agent/radar.ts';
 
 interface GatheredRadarItem {
   id: string;
@@ -184,16 +192,6 @@ You have ${searches} searches for this topic alone, so search properly before co
 is empty. If you run out mid-way, say the topic is under-searched rather than empty — that
 distinction matters and a padded answer destroys it.`;
 
-/** Same URL, different slug, is the same story. Normalise before comparing. */
-const canonicalSource = (url: string): string => {
-  try {
-    const u = new URL(url);
-    return `${u.hostname.replace(/^www\./, '')}${u.pathname.replace(/\/+$/, '')}`.toLowerCase();
-  } catch {
-    return url.trim().toLowerCase();
-  }
-};
-
 async function main() {
   requireApiKey();
 
@@ -207,7 +205,12 @@ async function main() {
     process.exit(1);
   }
 
-  enforceCooldown(OUT, 6, force, 'radar');
+  // The cooldown used to read `refreshedAt` off the JSON file. With the store
+  // in Postgres the equivalent is the last run record — deliberately the run
+  // and not the newest finding, so a sweep that legitimately found nothing
+  // still counts as having run.
+  const previous = await lastRadarRun();
+  enforceCooldownAt(previous?.startedAt ?? null, 6, force, 'radar');
   await enforceBudget(force);
 
   // An ad-hoc topic still has to land in a category, because the console groups
@@ -238,56 +241,57 @@ async function main() {
       'Grade sourceType from what the note says about the source, never from the domain name alone.',
   });
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Record the sweep before writing findings, so a run that dies mid-flight
+  // still leaves evidence it happened — otherwise a crashing agent looks
+  // identical to one that was never triggered.
+  const runId = await startRun(
+    process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' ? 'manual' : 'schedule',
+    selected.map((c) => c.key),
+  );
 
-  // Merge into the existing radar rather than replacing it.
-  const existing = JSON.parse(readFileSync(OUT, 'utf8')) as {
-    items: (GatheredRadarItem & { gatheredAt: string })[];
-  };
+  const incoming: IncomingFinding[] = found.map((item) => ({
+    id: item.id,
+    category: item.category,
+    title: item.title,
+    body: item.body,
+    implication: item.implication,
+    reviewNote: item.reviewNote,
+    source: item.source,
+    sourceType: item.sourceType,
+    publishedAt: item.publishedAt,
+    tags: item.tags,
+  }));
 
-  const cutoff = Date.now() - RADAR_MAX_AGE_DAYS * 86_400_000;
-  const kept = existing.items.filter((i) => {
-    const t = Date.parse(i.gatheredAt);
-    return !Number.isNaN(t) && t >= cutoff;
-  });
-
-  const seenIds = new Set(kept.map((i) => i.id));
-  const seenSources = new Set(kept.map((i) => canonicalSource(i.source)));
-
-  const fresh: (GatheredRadarItem & { gatheredAt: string })[] = [];
-  let duplicates = 0;
-
-  for (const item of found) {
-    // Dedupe on the source URL as well as the id. The same story re-found next
-    // month usually comes back with a different slug, and a radar that shows it
-    // twice is one Sunil stops trusting.
-    if (seenIds.has(item.id) || seenSources.has(canonicalSource(item.source))) {
-      duplicates++;
-      continue;
-    }
-    seenIds.add(item.id);
-    seenSources.add(canonicalSource(item.source));
-    fresh.push({ ...item, gatheredAt: today });
+  let written;
+  try {
+    written = await saveFindings(incoming);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await finishRun(runId, { error: message });
+    throw err;
   }
 
-  const store = {
-    refreshedAt: new Date().toISOString(),
-    items: [...fresh, ...kept],
-  };
+  const pruned = await pruneFindings();
+  await finishRun(runId, {
+    found: written.inserted,
+    duplicates: written.duplicates,
+    pruned,
+  });
 
-  writeFileSync(OUT, `${JSON.stringify(store, null, 2)}\n`);
-
-  const pruned = existing.items.length - kept.length;
   console.log(
-    `Wrote ${store.items.length} item(s) to src/data/radar.json ` +
-      `(${fresh.length} new, ${duplicates} duplicate, ${pruned} pruned past ${RADAR_MAX_AGE_DAYS} days).`,
+    `Radar: ${written.inserted} new finding(s) saved ` +
+      `(${written.duplicates} already on the radar, ${pruned} pruned past ${RADAR_MAX_AGE_DAYS} days).`,
   );
+
+  const fresh = incoming;
 
   for (const key of CATEGORY_KEYS) {
     const n = fresh.filter((i) => i.category === key).length;
-    if (n > 0) console.log(`  ${key}: ${n} new`);
+    if (n > 0) console.log(`  ${key}: ${n} gathered`);
   }
-  if (fresh.length === 0) console.log('  (nothing new this run — that is a valid result)');
+  if (written.inserted === 0) {
+    console.log('  (nothing new this run — that is a valid result)');
+  }
 }
 
 main().catch(reportFailure);
