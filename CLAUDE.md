@@ -18,6 +18,13 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
 - **`/admin/*`** — the operator console. **Not a public surface**: password-gated,
   `noindex`, its own layout and stylesheet, and no SEO/JSON-LD of any kind. See
   *The admin console* below.
+- **`/craft/*`** — the cohort's course area, for people who hold a seat. **Not a public
+  surface**: gated per learner by an issued code (not a password), `noindex`, and never
+  prerendered — a static file under `dist/` would be served without the middleware, which
+  is the gate gone. Session material is Markdown in [src/content/sessions/](src/content/sessions/) (week 0 is the
+  pre-work and has no module); the pre-cohort questionnaire is
+  [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
+  [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/admin/intake`.
 
 **Cross-link spine:** assessment ⇄ CAIO ⇄ cohort. Assessment is the front door, the CAIO
 retainer is the expansion, the cohort is capability-transfer / lead-gen. The fee-credit
@@ -255,10 +262,12 @@ systems. Position *above* the commoditizing "how to use AI tools" market.
 
 ## Offer facts (single source of truth)
 ### Cohort (`/`)
-- **5-week** program · live online (Bangalore: hybrid) · **15 seats, capped** · ~5 hrs/week
-- Pricing per region (founding rate): India **₹1,50,000** · Dubai **AED 8,000** ·
-  Australia **AUD 3,000**. Edit in [src/data/regions.ts](src/data/regions.ts).
-- Dates: "Announced on application"; enrollment rolling until full. Admission by application.
+- **6-week** program · live online (Bangalore: hybrid) · **8 seats, capped** · ~5 hrs/week
+- Pricing per region (founding rate): India **₹1,20,000** (standard ₹1,50,000) ·
+  Dubai **AED 8,000** · Australia **AUD 3,000**. Edit in [src/data/regions.ts](src/data/regions.ts).
+- Starts **September 2026**; enrollment rolling until all 8 seats are filled. Admission
+  by application. These numbers live in `cohort` in [src/data/facts.ts](src/data/facts.ts) — this list
+  restates them for a reader, it does not define them.
 
 ### Consulting (`/caio`, `/assessment`) — pricing all placeholder
 - CAIO tiers: Advisory ~2 d/mo · Embedded ~1 d/wk · Transformation 2–3 d/wk. 90-day min.
