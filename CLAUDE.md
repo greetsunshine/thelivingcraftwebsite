@@ -53,10 +53,35 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/admin` + `/api/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — three tables (`events`, `leads`, `questions`), schema in
+- **Storage is Supabase** — seven tables (`events`, `leads`, `questions`, `learners`,
+  `intake_responses`, `radar_findings`, `radar_runs`), schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
+- **Every query degrades to empty on error — so the console probes and says so.**
+  That degradation is deliberate (one slow rollup must not 500 the page) but it
+  makes a *missing table* and *no rows yet* render identically; `/admin/radar` said
+  "never run" in both cases, and that cost a real diagnosis after the schema grew.
+  [src/lib/admin/health.ts](src/lib/admin/health.ts) probes every table and rollup, cached 60s, and
+  `AdminLayout` shows a red banner when anything is not answering. **If you add a
+  table or a rollup, add it to the probe lists** — otherwise it is invisible until
+  it breaks. This is the one place in the console where failing loudly is the point.
+- **Retention and erasure are separate mechanisms, on purpose.**
+  - *Retention* (timer): `events` 180 days, `questions` 365, via `admin_purge()`.
+    Windows are SQL function defaults, so shortening them needs no deploy. There is
+    a 30-day floor that **raises rather than clamps** — a 0 passed by a bug would
+    otherwise empty the table while looking like policy. Run from `/admin`, or
+    enable pg_cron (snippet is commented at the foot of the schema). Until then the
+    policy is only real if someone presses the button.
+  - *Erasure* (per person, deliberate): the **Erase** button on `/admin/leads` and
+    `/admin/learners`. Hard delete, never a soft flag — a DPDP deletion request is
+    not answered by filing someone differently while their details stay in the
+    table. Erasing a learner cascades to `intake_responses`; that `ON DELETE
+    CASCADE` is load-bearing, not convenience.
+  - `leads` and `learners` are **never** purged on a timer: a real enquiry must not
+    be lost to a cron job, and the schema keeps withdrawn seats on purpose.
+  - Neither reaches the **Web3Forms inbox copy**. A complete erasure means deleting
+    that email thread too, and the console cannot do it for you.
 - **Traffic is first-party** ([src/components/Track.astro](src/components/Track.astro) →
   [src/pages/api/track.ts](src/pages/api/track.ts)). `@vercel/analytics` is still
   loaded but its data lives in Vercel's dashboard where the site cannot query it.

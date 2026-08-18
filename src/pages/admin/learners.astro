@@ -11,7 +11,7 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { capabilities } from '../../lib/admin/env';
-import { issueSeat, listLearners, setStatus } from '../../lib/craft/learners';
+import { eraseLearner, issueSeat, listLearners, setStatus } from '../../lib/craft/learners';
 
 const caps = capabilities();
 
@@ -47,6 +47,17 @@ if (Astro.request.method === 'POST') {
       ? `Seat ${action === 'revoke' ? 'revoked' : 'restored'}.`
       : null;
     if (!done) error = 'Could not change that seat.';
+  }
+
+  // Erasure, not revocation. Revoking closes the door and keeps the record;
+  // this removes the person, and their intake answers with them via the
+  // cascade. It answers a deletion request — nothing else should use it.
+  if (action === 'erase') {
+    const id = String(form.get('id') ?? '');
+    done = (await eraseLearner(id))
+      ? 'Learner erased, along with their intake response. The inbox copy of their application is separate.'
+      : null;
+    if (!done) error = 'Could not erase that learner.';
   }
 }
 
@@ -160,6 +171,16 @@ const when = (iso: string | null) =>
                     <input type="hidden" name="action" value={r.status === 'active' ? 'revoke' : 'restore'} />
                     <button class="btn" type="submit">
                       {r.status === 'active' ? 'Revoke' : 'Restore'}
+                    </button>
+                  </form>
+                  <form
+                    method="POST"
+                    onsubmit={`return confirm('Permanently erase ${r.email} and their intake response?\\n\\nThis is for a deletion request — use Revoke to close their access and keep the record. It cannot be undone.')`}
+                  >
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="action" value="erase" />
+                    <button class="btn" type="submit" title="Erase this person entirely, including their intake answers">
+                      Erase
                     </button>
                   </form>
                 </td>

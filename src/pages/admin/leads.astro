@@ -141,6 +141,14 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
                     ))}
                   </select>
                   <p class="status-line" style="font-size:12px" />
+                  <button
+                    class="btn small lead-delete"
+                    style="margin-top:6px"
+                    data-email={l.email ?? 'this lead'}
+                    title="Permanently erase this record. Use for a deletion request, not for triage — archive handles that."
+                  >
+                    Erase
+                  </button>
                 </td>
               </tr>
             ))}
@@ -179,6 +187,46 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
             if (out) { out.textContent = 'Network error'; out.className = 'status-line err'; }
           });
       }
+
+      // Erasure. Confirmed, because it is the one irreversible action on this
+      // page and it sits next to a dropdown people use casually. The row is
+      // struck through rather than removed, so you can see what you just did
+      // and the table does not reflow under the cursor mid-triage.
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.lead-delete') : null;
+        if (!btn) return;
+
+        var row = btn.closest('tr[data-lead]');
+        if (!row) return;
+
+        var who = btn.getAttribute('data-email') || 'this lead';
+        if (!confirm('Permanently erase the record for ' + who + '?\n\nThis cannot be undone. The copy in your email inbox is separate and is not touched.')) return;
+
+        var out = row.querySelector('.status-line');
+        btn.disabled = true;
+        if (out) { out.textContent = 'Erasing…'; out.className = 'status-line'; }
+
+        fetch('/api/admin/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: row.getAttribute('data-lead'), action: 'delete' }),
+        })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (res) {
+            if (res.ok) {
+              row.style.opacity = '0.4';
+              row.style.textDecoration = 'line-through';
+              if (out) { out.textContent = 'Erased'; out.className = 'status-line ok'; out.style.textDecoration = 'none'; }
+            } else {
+              btn.disabled = false;
+              if (out) { out.textContent = res.j.error || 'Could not erase'; out.className = 'status-line err'; }
+            }
+          })
+          .catch(function () {
+            btn.disabled = false;
+            if (out) { out.textContent = 'Network error'; out.className = 'status-line err'; }
+          });
+      });
 
       document.addEventListener('change', function (e) {
         var el = e.target;

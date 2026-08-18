@@ -161,6 +161,52 @@ export async function issueSeat(input: {
   return { ok: true, code };
 }
 
+/**
+ * Erase a learner outright, taking their intake response with them.
+ *
+ * Distinct from revoking, and the distinction is the whole reason this exists.
+ * Revoking is an authorization decision: the row stays, because a withdrawn
+ * participant should leave a record and the schema says so. Erasure is a
+ * different obligation — a deletion request under the DPDP Act is not answered
+ * by setting a flag while the person's name, email and their answers to
+ * nineteen self-assessment questions remain in the table.
+ *
+ * intake_responses is removed by the ON DELETE CASCADE on its learner_id, so
+ * this is one statement rather than two that could half-succeed. That cascade
+ * is load-bearing, not convenience: without it, erasing someone would leave
+ * their intake answers orphaned and unreachable — deleted from the console's
+ * point of view and still sitting in Postgres.
+ *
+ * What this cannot reach: the copy of their application in the Web3Forms inbox,
+ * and any `leads` row from before they took a seat. Both are separate erasures.
+ */
+export async function eraseLearner(id: string): Promise<boolean> {
+  const client = db();
+  if (!client) return false;
+
+  // Read before deleting so the erasure itself can be logged. The email is
+  // recorded — enough to answer "did we action that request" — and nothing else.
+  const { data: doomed } = await client.from('learners').select('email').eq('id', id).single();
+
+  const { error } = await client.from('learners').delete().eq('id', id);
+  if (error) {
+    fail('eraseLearner', error);
+    return false;
+  }
+
+  console.log(
+    JSON.stringify({
+      at: 'learner.erased',
+      id,
+      email: doomed?.email ?? null,
+      erasedAt: new Date().toISOString(),
+      note: 'intake_responses cascaded; inbox and leads rows are separate',
+    }),
+  );
+
+  return true;
+}
+
 export async function setStatus(id: string, status: 'active' | 'revoked'): Promise<boolean> {
   const client = db();
   if (!client) return false;

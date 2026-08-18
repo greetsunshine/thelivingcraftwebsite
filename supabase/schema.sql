@@ -387,3 +387,89 @@ language sql stable as $$
   group by 1
   order by 2 desc;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Retention
+-- ---------------------------------------------------------------------------
+-- This practice sells regulated-industry AI governance. Holding visitor data
+-- indefinitely, with no stated period and no mechanism to enforce one, is not a
+-- position it can defend — least of all to the kind of buyer who asks.
+--
+-- What is and is not covered, and why:
+--
+--   events     PURGED. Analytics. `visitor` is already a hash that rotates
+--              daily, so an old row is barely personal to begin with; past a
+--              couple of quarters it is not answering any question either.
+--   questions  PURGED, on a longer window. These carry text a visitor typed,
+--              which can name them or their employer even though we never
+--              asked. They are the highest-signal thing here, hence a year
+--              rather than 180 days — but not forever.
+--
+--   leads      NOT purged. A lead is a commercial record with an inbox copy
+--              beside it, and quietly deleting one after N days would mean
+--              losing a real enquiry to a cron job. Erasure is per-person and
+--              deliberate: the Erase button on /admin/leads.
+--   learners   NOT purged, same reasoning, plus the schema keeps withdrawn
+--              seats on purpose. Erasing a learner cascades to their intake.
+--
+-- Defaults are arguments, not constants, so the window can be shortened without
+-- a migration.
+
+create or replace function public.admin_purge(event_days int default 180, question_days int default 365)
+returns table (events_deleted bigint, questions_deleted bigint)
+language plpgsql as $$
+declare
+  ev bigint;
+  qs bigint;
+begin
+  -- Guard rails. A caller that passes 0 — through a bug, an empty form field
+  -- coerced to a number, or a mistyped API call — would otherwise delete the
+  -- entire table, and that is a data-loss bug wearing a retention policy's
+  -- clothes. Refuse rather than clamp: silently doing something other than what
+  -- was asked is how you end up trusting a number that was never applied.
+  if event_days < 30 or question_days < 30 then
+    raise exception 'Retention windows below 30 days are refused (got events=%, questions=%)',
+      event_days, question_days;
+  end if;
+
+  with gone as (
+    delete from public.events
+    where created_at < now() - make_interval(days => event_days)
+    returning 1
+  )
+  select count(*) into ev from gone;
+
+  with gone as (
+    delete from public.questions
+    where created_at < now() - make_interval(days => question_days)
+    returning 1
+  )
+  select count(*) into qs from gone;
+
+  return query select ev, qs;
+end;
+$$;
+
+-- Counts what a purge WOULD remove, without removing it. The console shows this
+-- beside the button, because "delete 12,000 rows" and "delete 3" deserve
+-- different amounts of hesitation.
+create or replace function public.admin_purge_preview(event_days int default 180, question_days int default 365)
+returns table (events_stale bigint, questions_stale bigint)
+language sql stable as $$
+  select
+    (select count(*) from public.events
+      where created_at < now() - make_interval(days => event_days)),
+    (select count(*) from public.questions
+      where created_at < now() - make_interval(days => question_days));
+$$;
+
+-- Running it on a schedule, once you are happy with the windows. Left commented
+-- because pg_cron needs enabling per project (Database -> Extensions) and an
+-- unattended DELETE should be a decision someone made on purpose, not a line
+-- that arrived with the schema:
+--
+--   create extension if not exists pg_cron;
+--   select cron.schedule('purge', '0 3 * * 0', $cron$ select public.admin_purge(); $cron$);
+--
+-- Until then it is the button on /admin — which means the policy is only real
+-- if someone presses it.
