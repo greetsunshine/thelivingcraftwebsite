@@ -22,7 +22,13 @@
 //      A monitoring dependency that can take down the assistant is a worse
 //      problem than the one it solves — the console limit is the hard stop.
 
-import { env } from '../admin/env';
+// The .ts extension is REQUIRED, not a style choice. Vite resolves an
+// extensionless specifier when Astro builds the site, but this module is also
+// imported by the retriever scripts under `node --experimental-strip-types`,
+// where ESM will not guess an extension. Without it the guard throws
+// ERR_MODULE_NOT_FOUND before either sweep reaches the model — which is exactly
+// how the weekly gather and radar runs broke on 2026-08-17.
+import { env } from '../admin/env.ts';
 
 const COST_ENDPOINT = 'https://api.anthropic.com/v1/organizations/cost_report';
 const CACHE_MS = 10 * 60 * 1000;
