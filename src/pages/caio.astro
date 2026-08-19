@@ -364,10 +364,7 @@ const schema = [
   /* ---- CAIO-specific components (built on the shared craft tokens) ---- */
 
   /* wordmark descriptor */
-  .wordmark-sub{
-    font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--ink-faint);border-left:1px solid var(--line-strong);padding-left:10px;margin-left:2px;font-weight:400;
-  }
+  /* .wordmark-sub is the global pill — same as /latest and the course area. */
   @media(max-width:520px){.wordmark-sub{display:none}}
 
   /* problem prose */
@@ -453,6 +450,12 @@ const schema = [
     header.nav,footer.site,.hero-cta,#contact form,.proofbar,.tier .tcta{display:none!important}
     section{padding:24px 0;border-top:1px solid #ccc;page-break-inside:avoid}
     body{font-size:12px;background:#fff}
+    /* the hero is the noir surface now; browsers drop backgrounds when
+       printing, so without this the leave-behind opens with a blank block */
+    .hero > .wrap{background:#fff!important;color:#000!important;border-radius:0;padding:0}
+    .hero h1,.hero .credential,.hero .lead,.hero .hero-note,.hero .eyebrow,.hero .eyebrow .num{color:#000!important}
+    .hero h1 em{color:#000!important}
+    .portrait,.ask{display:none!important}
     .experience{background:#fff;color:#000}
     .experience h2,.experience .big,.story p strong{color:#000}
     .story p,.stat .cap{color:#333}

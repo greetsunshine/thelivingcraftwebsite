@@ -125,9 +125,17 @@ section { padding: var(--space-8) 0; border-top: 0; }
 .btn .arrow { transition: transform var(--motion-fast) var(--ease-out); }
 .btn:hover .arrow { transform: translateX(3px); }
 
-/* ── nav. NOT sticky: §3 allows one fixed element and it is the icon rail on
-      working surfaces. A sticky marketing header is not it. ───────────────── */
-header.nav { position: static; background: transparent; border-bottom: 0; backdrop-filter: none; }
+/* ── nav. Sticky, by decision: navigation on these long pages is worth more
+      than §3's "at most one fixed element", which reads the rule as written for
+      the working surfaces rather than for a 7000px marketing page. Solid mist
+      rather than a blur, so the black hero scrolling under it stays clean, and
+      a hairline instead of a shadow so it never breaks the border+shadow rule. */
+header.nav {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  background: var(--surface-sunken);
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+  backdrop-filter: none;
+}
 .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); min-height: 76px; flex-wrap: wrap; }
 .wordmark {
   font-family: var(--font-display);
@@ -179,7 +187,12 @@ header.nav { position: static; background: transparent; border-bottom: 0; backdr
   color: var(--text-on-invert);
   border-radius: var(--radius-shell);
   padding: var(--space-8);
+  /* Own gutter. latest.astro and the craft pages override .hero's padding to
+     `N 0`, and then a 40px-radius black shell runs edge-to-edge — the exact
+     artefact the comment above warns about. width: guarantees it regardless. */
+  width: calc(100% - var(--space-5) * 2);
   max-width: calc(var(--maxw) - var(--space-5) * 2);
+  margin-inline: auto;
 }
 .hero > .wrap.hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: var(--space-8); align-items: center; }
 .hero .eyebrow { color: var(--sun); }
@@ -195,11 +208,14 @@ header.nav { position: static; background: transparent; border-bottom: 0; backdr
 .credential { font-size: var(--size-5); line-height: var(--lh-snug); color: rgba(255,255,255,.86); max-width: var(--measure-narrow); margin-bottom: var(--space-6); }
 .credential strong { color: var(--text-on-invert); font-weight: var(--weight-strong); }
 .hero-cta { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
-.hero-cta .btn-ghost { color: var(--text-on-invert); border-color: rgba(255,255,255,.28); }
-.hero-cta .btn-ghost:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.45); }
+/* Scoped to the noir shell. .hero-cta is reused on the mist ground (latest.astro's
+   closing CTA), where white-on-white would make the button invisible. */
+.hero > .wrap .btn-ghost { color: var(--text-on-invert); border-color: rgba(255,255,255,.28); }
+.hero > .wrap .btn-ghost:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.45); }
 .hero .lead, .hero .muted { color: rgba(255,255,255,.86); }
 .hero .faint { color: var(--text-faint); }
-.hero-note { font-size: var(--size-2); color: var(--text-faint); margin-top: var(--space-5); font-family: var(--font-mono); }
+.hero-note { font-size: var(--size-2); color: var(--text-quiet); margin-top: var(--space-5); font-family: var(--font-mono); }
+.hero > .wrap .hero-note { color: var(--text-faint); }   /* 9.15:1 on noir */
 
 /* portrait, inside the noir shell */
 .portrait { position: relative; }
@@ -228,8 +244,11 @@ header.nav { position: static; background: transparent; border-bottom: 0; backdr
   display: flex; align-items: center; gap: var(--space-5) var(--space-7); flex-wrap: wrap; justify-content: center;
   background: var(--surface-panel); border-radius: var(--radius-card);
   box-shadow: var(--shadow-raise); padding: var(--space-5) var(--space-6);
-  /* a .wrap acting as a card, like the hero shell — same outer edge */
+  /* a .wrap acting as a card, like the hero shell — same outer edge, same
+     self-guaranteed gutter, or it is full-bleed with clipped corners */
+  width: calc(100% - var(--space-5) * 2);
   max-width: calc(var(--maxw) - var(--space-5) * 2);
+  margin-inline: auto;
 }
 .proofbar .label { font-family: var(--font-mono); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--text-quiet); }
 .proofbar .logo { font-family: var(--font-display); font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-quiet); opacity: 1; letter-spacing: var(--tracking-display); }

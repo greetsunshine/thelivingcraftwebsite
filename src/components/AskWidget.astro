@@ -39,15 +39,18 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
 {agentReady && (
 <div class="ask" id="ask" data-surface={surface} data-region={region ?? ""}>
   <button class="ask-toggle" id="askToggle" aria-expanded="false" aria-controls="askPanel">
-    <span class="ask-dot"></span>
+    <span class="ask-avatar" aria-hidden="true"></span>
     <span class="ask-toggle-label">Ask about the practice</span>
   </button>
 
   <div class="ask-panel" id="askPanel" role="dialog" aria-label="Ask about the practice" hidden>
     <div class="ask-head">
-      <div>
-        <div class="ask-title">Ask</div>
-        <div class="ask-sub">Answers drawn from this site. Not Sunil — he replies by email.</div>
+      <div class="ask-id">
+        <span class="ask-avatar ask-avatar--lg" aria-hidden="true"></span>
+        <div>
+          <div class="ask-title">Ask <span class="ask-live">agent</span></div>
+          <div class="ask-sub">Answers drawn from this site. Not Sunil — he replies by email.</div>
+        </div>
       </div>
       <button class="ask-close" id="askClose" aria-label="Close">×</button>
     </div>
@@ -91,15 +94,15 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   .ask-toggle {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3);
     background: var(--sun);
     color: var(--text-on-accent);
     border: 0;
     border-radius: var(--radius-control);
-    padding: 0 var(--space-5);
-    height: var(--control-h);
+    padding: 0 var(--space-5) 0 var(--space-2);
+    height: 52px;
     cursor: pointer;
-    font-family:var(--font-mono);
+    font-family:var(--font-body);
     font-size: var(--size-2);
     letter-spacing: var(--tracking-label);
     text-transform: none;
@@ -107,11 +110,15 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     transition: background 0.2s, transform 0.2s;
   }
   .ask-toggle:hover { background: var(--accent-hover); transform: none; }
-  .ask-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--ink-1);
+  /* The agent's face. A stroke chat glyph on noir, per §7: 1.6px stroke, single
+     colour, never filled. Typographic sigils stay typographic; this is chrome. */
+  .ask-avatar {
+    width: 30px; height: 30px; border-radius: var(--radius-pill);
     flex-shrink: 0;
+    background: var(--surface-invert) center / 16px 16px no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E");
   }
+  .ask-avatar--lg { width: 36px; height: 36px; background-size: 19px 19px; }
   .ask[data-open='true'] .ask-toggle { display: none; }
 
   /* panel */
@@ -133,9 +140,21 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--line);
-    background: var(--paper);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    background: var(--surface-panel);
+  }
+  .ask-id { display: flex; gap: var(--space-3); align-items: flex-start; }
+  /* ember = machine provenance. This is a machine answering, and it says so. */
+  .ask-live {
+    font-family: var(--font-mono); font-size: var(--size-1);
+    color: var(--agent-machine); font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-label);
+  }
+  .ask-live::before {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    border-radius: var(--radius-pill); background: var(--agent-machine);
+    margin-right: var(--space-1); vertical-align: 1px;
   }
   .ask-title {
     font-family:var(--font-display);
@@ -174,23 +193,44 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   .ask-log :global(.ask-msg) { font-size: 14.5px; line-height: 1.6; }
   .ask-log :global(.ask-msg p) { margin: 0 0 9px; }
   .ask-log :global(.ask-msg p:last-child) { margin-bottom: 0; }
-  .ask-log :global(.ask-msg.bot) { color: var(--ink-soft); }
+  /* Bot turns are bubbles with the agent's avatar beside them, so the log reads
+     as a conversation rather than as alternating paragraphs. The avatar is a
+     ::before because bubbles are built at runtime and this needs no JS change —
+     it also lands on the thinking indicator, which is what you want. */
+  .ask-log :global(.ask-msg.bot) {
+    position: relative;
+    align-self: flex-start;
+    max-width: 88%;
+    margin-left: 38px;
+    background: var(--surface-sunken);
+    color: var(--text-body);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-inner);
+    border-top-left-radius: var(--space-1);
+  }
+  .ask-log :global(.ask-msg.bot)::before {
+    content: ""; position: absolute; left: -38px; top: 0;
+    width: 30px; height: 30px; border-radius: var(--radius-pill);
+    background: var(--surface-invert) center / 16px 16px no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E");
+  }
   .ask-log :global(.ask-msg.user) {
     align-self: flex-end;
     max-width: 85%;
     background: var(--surface-invert);
     color: var(--text-on-invert);
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-inner);
+    border-bottom-right-radius: var(--space-1);
   }
-  .ask-log :global(.ask-msg.err) { color: var(--clay-deep); }
+  .ask-log :global(.ask-msg.err) { color: var(--danger); }
 
-  .ask-prompts { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 2px; }
+  .ask-prompts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-1) 0 0 38px; }
   .ask-chip {
     background: none;
-    border: 1px solid var(--line-strong);
-    border-radius: 2px;
-    padding: 7px 11px;
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-pill);
+    padding: 7px 13px;
     font-family:var(--font-body);
     font-size: 12.5px;
     color: var(--ink-soft);
@@ -215,47 +255,50 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
 
   /* input */
   .ask-form {
-    display: flex;
-    gap: 8px;
-    padding: 14px 20px 10px;
-    border-top: 1px solid var(--line);
+    display: flex; align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5) var(--space-2);
+    border-top: var(--border-w-hair) solid var(--border-hair);
   }
   .ask-form input {
     flex: 1;
     font-family:var(--font-body);
     font-size: 14.5px;
     color: var(--ink);
-    background: var(--paper);
-    border: 1px solid var(--line-strong);
-    border-radius: 2px;
-    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border: var(--border-w-hair) solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--space-4);
+    height: 40px;
   }
   .ask-form input::placeholder { color: var(--ink-faint); opacity: 0.75; }
-  .ask-form input:focus {
-    outline: none;
-    border-color: var(--clay);
-    box-shadow: 0 0 0 3px rgba(176, 81, 46, 0.12);
+  .ask-form input:focus { outline: none; border-color: var(--border-field); }
+  .ask-form input:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
   }
+  /* every action is sun */
   .ask-form button {
-    background: var(--clay);
-    color: #fff;
+    background: var(--sun);
+    color: var(--text-on-accent);
     border: 0;
-    border-radius: 2px;
-    width: 42px;
-    font-size: 17px;
+    border-radius: var(--radius-pill);
+    width: 40px; height: 40px;
+    flex: none;
+    font-size: var(--size-4);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--motion-fast) var(--ease-out);
   }
-  .ask-form button:hover:not(:disabled) { background: var(--clay-deep); }
+  .ask-form button:hover:not(:disabled) { background: var(--accent-hover); }
   .ask-form button:disabled { opacity: 0.4; cursor: default; }
 
   .ask-foot {
     padding: 0 20px 14px;
-    font-size: 11.5px;
-    color: var(--ink-faint);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
     text-align: center;
   }
-  .ask-foot a { color: var(--clay); }
+  .ask-foot a { color: var(--clay); text-decoration: underline; text-underline-offset: .2em; }
 
   @media (max-width: 520px) {
     .ask { right: 12px; bottom: 12px; left: 12px; }
