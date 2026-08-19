@@ -222,6 +222,19 @@ none of their audience; that separation is load-bearing, see the radar entry.
 - **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
   (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
   paths redirect to `/?region=`.
+  - The Vercel project is **connected to the GitHub repo** (production branch `main`),
+    so **a push to `main` deploys production**. Before that connection existed, every
+    deploy was a hand-run CLI command, and production silently drifted commits behind
+    `main` more than once.
+  - `pnpm promote` still exists and is still the right command **after a schema change**.
+    Git deploys inherit four of its five gates for free — only committed code ships, only
+    `main` targets production, the push *is* origin, and a failed build does not deploy —
+    but nothing checks that the prod DB has the tables the code expects. So: run
+    `supabase/schema.sql` first, then push. Shipping code ahead of its schema now shows up
+    as the console's "table is not answering" notice rather than as a crash, which is
+    survivable but confusing.
+  - A hand-run `vercel --prod` is blocked by a global guard hook and should stay that way;
+    `pnpm promote` is the guarded path ([scripts/promote.mjs](scripts/promote.mjs)).
 - Legacy reference files at repo root (`copy.md`, `index.html`, `section-map.md`, `meta.md`,
   `assets/`) predate the Astro build — treat as historical, not the source of truth.
 
