@@ -249,7 +249,7 @@ const schema = [
       <div class="price-card">
         <div class="seat">Fixed fee · fixed scope</div>
         <div class="amt">₹4,50,000</div>
-        <div class="terms">Founding rate: <strong style="color:#F4EEE2">₹3,50,000</strong> for the first three engagements.</div>
+        <div class="terms">Founding rate: <strong style="color:var(--text-loud)">₹3,50,000</strong> for the first three engagements.</div>
         <ul>
           <li>Two-to-three week diagnostic, run on your systems</li>
           <li>Readiness scorecard across five dimensions</li>
@@ -378,14 +378,14 @@ const schema = [
 <style>
   /* ---- shared practice components (mirrors caio.astro) ---- */
   .wordmark-sub{
-    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--ink-faint);border-left:1px solid var(--line-strong);padding-left:10px;margin-left:2px;font-weight:400;
   }
   @media(max-width:520px){.wordmark-sub{display:none}}
 
   .prose{max-width:62ch}
   .prose p{font-size:18px;color:var(--ink-soft);margin-bottom:22px}
-  .prose .prose-emph{font-family:'Fraunces',serif;font-style:italic;font-size:24px;color:var(--ink);margin-top:4px}
+  .prose .prose-emph{font-family:var(--font-display);font-weight:var(--weight-heavy);font-size:24px;color:var(--ink);margin-top:4px}
 
   .ftext-link{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--line-strong)}
   .ftext-link:hover{text-decoration-color:var(--clay)}
@@ -401,21 +401,21 @@ const schema = [
   }
   .phase{background:var(--surface);padding:34px 30px}
   .phase .pk{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
-  .phase .pn{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--clay)}
-  .phase .pw{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);letter-spacing:.08em}
-  .phase h4{font-size:22px;font-weight:440;margin-bottom:10px}
+  .phase .pn{font-family:var(--font-mono);font-size:13px;color:var(--clay)}
+  .phase .pw{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.08em}
+  .phase h4{font-size:22px;font-weight:var(--weight-strong);margin-bottom:10px}
   .phase p{font-size:14.5px;color:var(--ink-soft)}
   @media(max-width:760px){.phases{grid-template-columns:1fr}}
-  .note-line{margin-top:28px;font-size:14px;color:var(--ink-faint);font-family:'JetBrains Mono',monospace;letter-spacing:.02em}
+  .note-line{margin-top:28px;font-size:14px;color:var(--ink-faint);font-family:var(--font-mono);letter-spacing:.02em}
 
   /* fit / not-fit two columns */
   .fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
   .fit-col{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:32px 30px}
   .fit-col.fit-yes{border-top:3px solid var(--clay)}
   .fit-col.fit-no{border-top:3px solid var(--line-strong)}
-  .fit-head{font-family:'Fraunces',serif;font-size:21px;font-weight:440;margin-bottom:18px;display:flex;align-items:center;gap:12px}
-  .fit-mark{font-family:'Inter',sans-serif;font-size:16px;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-  .fit-yes .fit-mark{background:var(--clay);color:#FBF7EE}
+  .fit-head{font-family:var(--font-display);font-size:21px;font-weight:var(--weight-strong);margin-bottom:18px;display:flex;align-items:center;gap:12px}
+  .fit-mark{font-family:var(--font-body);font-size:16px;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .fit-yes .fit-mark{background:var(--clay);color:var(--paper-1)}
   .fit-no .fit-mark{background:var(--paper-2);color:var(--ink-faint);border:1px solid var(--line-strong)}
   .fit-col ul{list-style:none;display:flex;flex-direction:column;gap:16px}
   .fit-col li{font-size:15.5px;color:var(--ink-soft);padding-left:20px;position:relative;line-height:1.55}
@@ -426,7 +426,7 @@ const schema = [
   /* investment extras (built on global .price-card) */
   .price-card .seat{margin-bottom:4px}
   .credit-note{
-    font-size:14px;color:#b3a991;border-top:1px solid #3a3225;border-bottom:1px solid #3a3225;
+    font-size:var(--size-3);color:var(--text-quiet);border-top:var(--border-w-hair) solid var(--border-hair);border-bottom:var(--border-w-hair) solid var(--border-hair);
     padding:18px 0;margin:4px 0 28px;line-height:1.55;
   }
   .fineprint{margin-top:24px;text-align:center;font-size:13.5px;color:var(--ink-faint);max-width:64ch;margin-left:auto;margin-right:auto}

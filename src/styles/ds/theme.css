@@ -1,0 +1,160 @@
+/* Every value, on :root. Reconstructed from _ds_manifest.json.
+   Components read the semantic and domain aliases only, never the base layer. */
+:root {
+  /* --- brand: four values carry the identity, each with one job --- */
+  --noir:  #000000;   /* hero surfaces. one black area per view. never text. */
+  --ember: #fd8549;   /* promo + secondary feature cards. carries INK text, never white. */
+  --sun:   #ffc123;   /* every action. if it is yellow, it is clickable. */
+  --mist:  #f1f3f5;   /* the sunken ground white cards float on. */
+  --berry: #eb1450;   /* focus ring, error, refusal, rating marks. */
+
+  /* --- paper --- */
+  --paper-1: #ffffff;
+  --paper-2: #f7f8fa;
+  --paper-3: var(--mist);
+  --paper-invert: var(--noir);
+
+  /* --- ink. text is slate-black, never pure black: black belongs to surfaces --- */
+  --ink-1: #16212e;
+  --ink-2: #6d7885;
+  --ink-3: #a3acb8;
+  --ink-invert: #ffffff;
+
+  --line-hair: #e7eaef;
+  --line-rule: var(--ink-1);
+
+  --accent: var(--sun);
+  --accent-hover: #f2b010;
+  --accent-quiet: #fff4d6;
+  /* Accent as INK. Sun is a fill colour and cannot carry text (1.6:1 on white),
+     but the warm accent is used as text all over this site — eyebrows, list
+     markers, link hovers. This is the ember family at a text-safe weight. */
+  --accent-ink: #c4561c;          /* 5.9:1 on white */
+  --accent-ink-strong: #9d3f12;   /* 8.2:1 — hover / pressed */
+
+  /* danger is split: ink bar vs mark bar. sun cannot carry error. */
+  --danger: #cf0f45;              /* 5.5:1 on white — the ink */
+  --danger-mark: var(--berry);    /* 3:1 — fills, dots, the focus ring */
+  --danger-hover: #b70b3b;
+  --danger-quiet: #fde3ea;
+
+  /* --- semantic: text --- */
+  --text-loud: var(--ink-1);
+  --text-body: var(--ink-1);
+  --text-quiet: var(--ink-2);     /* 4.49:1 — every real label takes this */
+  --text-faint: var(--ink-3);     /* 2.29:1 — NOT a text colour on white */
+  --text-on-accent: var(--ink-1);
+  --text-on-invert: var(--ink-invert);
+
+  /* --- semantic: surface --- */
+  --surface-page: var(--paper-1);
+  --surface-panel: var(--paper-1);
+  --surface-sunken: var(--paper-3);
+  --surface-invert: var(--paper-invert);
+  --surface-hover: var(--paper-2);
+  --surface-active: #eceff3;
+  --surface-ember: var(--ember);
+  --surface-sun: var(--sun);
+
+  /* --- semantic: border --- */
+  --border-hair: var(--line-hair);
+  --border-rule: var(--line-rule);
+  --border-field: #d9dee5;
+  --border-w-hair: 1px;
+  --border-w-rule: 1.5px;
+  --border-w-heavy: 3px;
+
+  --link: var(--ink-1);
+  --link-hover: var(--berry);
+  --focus-ring: var(--danger-mark);
+
+  /* --- domain: agent provenance. colour is language here, not decoration --- */
+  --agent-machine: #c4561c;
+  --agent-machine-bg: #fdece1;
+  --agent-human: var(--ink-1);
+  --agent-human-bg: var(--paper-2);
+  --agent-uncertain: #8a6100;
+  --agent-uncertain-bg: var(--accent-quiet);
+  --agent-refused: var(--danger);
+  --agent-refused-bg: var(--danger-quiet);
+  --agent-refused-mark: var(--danger-mark);
+  --agent-cite: var(--ink-2);   /* was --ink-3 (2.29:1 on white) — see CORRECTIONS.md §8 */
+  --agent-rule: var(--border-w-heavy);
+
+  /* --- domain: the unwritten --- */
+  --state-unwritten-ink: var(--ink-3);
+  --state-unwritten-bg: var(--paper-2);
+  --state-unwritten-line: repeating-linear-gradient(90deg, var(--line-hair) 0 8px, transparent 8px 16px);
+
+  /* --- type --- */
+  --font-display:  "Figtree", "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-body:     "Figtree", "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-mono:     "JetBrains Mono", ui-monospace, monospace;
+  --font-marginal: "Figtree", "Avenir Next", sans-serif;
+  --font-features: "tnum" 1;
+
+  --size-1: 12px; --size-2: 13px; --size-3: 15px;
+  --size-4: 17px; --size-5: 20px; --size-6: 26px;
+  --size-7: 34px; --size-8: 46px; --size-9: 62px;
+
+  --lh-flat: 1; --lh-tight: 1.08; --lh-snug: 1.3;
+  --lh-normal: 1.55; --lh-loose: 1.7;
+
+  --tracking-display: -0.025em;
+  --tracking-normal: 0;
+  --tracking-caps: 0.06em;
+  --tracking-label: 0;
+  --tracking-mono: -0.01em;
+
+  --weight-normal: 400; --weight-medium: 500;
+  --weight-strong: 700; --weight-heavy: 800;
+
+  --case-label: none;   /* sentence case throughout, including labels */
+
+  /* --- space --- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
+  --space-4: 16px; --space-5: 24px; --space-6: 32px;
+  --space-7: 48px; --space-8: 72px; --space-9: 112px;
+
+  --measure-prose: 62ch;
+  --measure-narrow: 38ch;
+  --measure-marginal: 26ch;
+
+  /* --- radii are the brand. nothing is square except the page --- */
+  --radius-control: 999px;  /* buttons, chips, avatars */
+  --radius-field: 16px;     /* text inputs and selects */
+  --radius-tick: 6px;       /* the checkbox */
+  --radius-inner: 16px;
+  --radius-panel: 24px;
+  --radius-card: 28px;
+  --radius-shell: 40px;
+  --radius-pill: 999px;
+
+  /* --- elevation replaces rules. never a border AND a shadow --- */
+  --shadow-raise:   0 1px 2px rgba(22, 33, 46, 0.04), 0 10px 24px -14px rgba(22, 33, 46, 0.12);
+  --shadow-lift:    0 2px 4px rgba(22, 33, 46, 0.04), 0 22px 44px -20px rgba(22, 33, 46, 0.18);
+  --shadow-overlay: 0 8px 12px rgba(22, 33, 46, 0.06), 0 40px 80px -24px rgba(22, 33, 46, 0.26);
+
+  /* --- density: generous by default --- */
+  --row-h: 60px;
+  --control-h: 44px;
+  --pad-cell: var(--space-4) var(--space-5);
+  --pad-panel: var(--space-5);
+  --pad-control: 0 var(--space-5);
+
+  --control-primary-bg: var(--sun);
+  --control-primary-fg: var(--ink-1);
+  --control-primary-bg-hover: var(--accent-hover);
+}
+
+/* Same token names, retuned. Tables and log views only — never the marketing site. */
+[data-density="compact"] {
+  --row-h: 40px;
+  --control-h: 34px;
+  --pad-cell: var(--space-2) var(--space-3);
+  --pad-panel: var(--space-4);
+  --radius-field: 10px;
+  --radius-panel: 16px;
+  --radius-card: 16px;
+  --size-3: 14px;
+}

@@ -1,0 +1,23 @@
+/* The shared spine. Reconstructed verbatim from _ds_manifest.json.
+   Motion, easing, z-layers, breakpoints, focus geometry. No colour, no type. */
+:root {
+  --motion-instant: 0ms;
+  --motion-fast: 90ms;
+  --motion-base: 160ms;
+  --motion-slow: 260ms;
+
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-overlay: 100;
+  --z-dialog: 200;
+
+  --bp-reading: 44rem;
+  --bp-working: 68rem;
+  --bp-wide: 90rem;
+
+  --focus-w: 2px;
+  --focus-offset: 2px;
+}

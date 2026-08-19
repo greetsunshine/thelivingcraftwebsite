@@ -280,16 +280,16 @@ const MATRICES = [
     padding-top: 8px;
   }
   .sec h2 {
-    font-family: 'Fraunces', serif;
+    font-family:var(--font-display);
     font-size: 26px;
-    font-weight: 440;
+    font-weight:var(--weight-strong);
     margin: 0 0 6px;
   }
   .sec h3 {
-    font-family: 'JetBrains Mono', monospace;
+    font-family:var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--ink-faint);
     margin: 34px 0 12px;
   }
@@ -305,7 +305,7 @@ const MATRICES = [
     gap: 1px;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     overflow: hidden;
   }
   .qrow {
@@ -334,7 +334,7 @@ const MATRICES = [
   .opt span {
     display: inline-block;
     border: 1px solid var(--line);
-    border-radius: 2px;
+    border-radius: var(--radius-control);
     padding: 7px 13px;
     font-size: 13px;
     color: var(--ink-soft);
@@ -383,10 +383,10 @@ const MATRICES = [
   }
   .mrows .mrow:first-child {
     border-top: 1px solid var(--line);
-    border-radius: 3px 3px 0 0;
+    border-radius: var(--radius-inner) var(--radius-inner) 0 0;
   }
   .mrows .mrow:last-child {
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 var(--radius-inner) var(--radius-inner);
   }
   .mlabel {
     font-size: 15px;
@@ -411,7 +411,7 @@ const MATRICES = [
     display: block;
     text-align: center;
     border: 1px solid var(--line);
-    border-radius: 2px;
+    border-radius: var(--radius-inner);
     padding: 9px 0;
     font-size: 12px;
     color: var(--ink-faint);
@@ -446,7 +446,7 @@ const MATRICES = [
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     padding: 12px 14px;
     font: inherit;
     font-size: 15px;
@@ -464,12 +464,12 @@ const MATRICES = [
     border-left: 2px solid var(--clay);
     background: var(--surface);
     padding: 14px 18px;
-    border-radius: 2px;
+    border-radius: var(--radius-inner);
     font-size: 15px;
     margin: 26px 0;
   }
   .banner.bad {
-    border-left-color: #8f3f22;
+    border-left-color: var(--accent-ink-strong);
     background: #fff;
   }
   .actions {
@@ -484,7 +484,7 @@ const MATRICES = [
   .btn {
     border: 1px solid var(--line-strong, var(--line));
     background: none;
-    border-radius: 2px;
+    border-radius: var(--radius-control);
     padding: 11px 20px;
     font: inherit;
     font-size: 14px;
@@ -502,7 +502,7 @@ const MATRICES = [
     color: #fff;
   }
   .btn.primary:hover {
-    background: var(--clay-deep, #8f3f22);
+    background: var(--accent-ink-strong);
     color: #fff;
   }
   .btn:disabled {

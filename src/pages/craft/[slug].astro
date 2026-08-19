@@ -105,14 +105,14 @@ const { Content } = await render(session);
     background: var(--surface);
     border: 1px solid var(--line);
     border-left: 2px solid var(--ochre);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     padding: 26px 28px;
     color: var(--ink-soft);
   }
   .pending .label {
     font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--ochre);
     margin-bottom: 10px;
   }
@@ -124,7 +124,7 @@ const { Content } = await render(session);
      the only place on this site that emits unstyled headings and lists. */
   .prose :global(h2) {
     font-size: 25px;
-    font-weight: 440;
+    font-weight:var(--weight-strong);
     margin: 40px 0 14px;
   }
   .prose :global(h3) {
@@ -150,18 +150,18 @@ const { Content } = await render(session);
     text-underline-offset: 3px;
   }
   .prose :global(code) {
-    font-family: 'JetBrains Mono', monospace;
+    font-family:var(--font-mono);
     font-size: 0.88em;
     background: var(--paper-2);
     border: 1px solid var(--line);
-    border-radius: 2px;
+    border-radius: var(--radius-inner);
     padding: 1px 5px;
   }
   .prose :global(pre) {
-    background: var(--ink);
-    color: #ede6d7;
-    padding: 18px 20px;
-    border-radius: 3px;
+    background: var(--surface-invert);
+    color: var(--text-on-invert);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-inner);
     overflow-x: auto;
     margin-bottom: 20px;
   }
@@ -198,12 +198,12 @@ const { Content } = await render(session);
   }
   .pager .mono {
     font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--ink-faint);
   }
   .pager .t {
-    font-family: 'Fraunces', serif;
+    font-family:var(--font-display);
     font-size: 17px;
     line-height: 1.25;
   }

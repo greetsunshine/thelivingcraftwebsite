@@ -129,7 +129,7 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     overflow: hidden;
     background: var(--surface);
   }
@@ -144,10 +144,10 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     border-right: 0;
   }
   .factbar .k {
-    font-family: 'JetBrains Mono', monospace;
+    font-family:var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--ink-faint);
   }
   .factbar .v {
@@ -165,7 +165,7 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     background: var(--surface);
     border: 1px solid var(--line);
     border-left: 2px solid var(--clay);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     transition: 0.18s;
   }
   .intake-card:hover {
@@ -176,8 +176,8 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
   }
   .ic-state {
     font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--clay);
   }
   .intake-card.submitted .ic-state {
@@ -189,9 +189,9 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     gap: 4px;
   }
   .ic-t {
-    font-family: 'Fraunces', serif;
+    font-family:var(--font-display);
     font-size: 20px;
-    font-weight: 440;
+    font-weight:var(--weight-strong);
   }
   .ic-s {
     font-size: 15px;
@@ -205,7 +205,7 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     gap: 1px;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: var(--radius-inner);
     overflow: hidden;
   }
   .srow {
@@ -232,9 +232,9 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     gap: 5px;
   }
   .srow .t {
-    font-family: 'Fraunces', serif;
+    font-family:var(--font-display);
     font-size: 20px;
-    font-weight: 440;
+    font-weight:var(--weight-strong);
     line-height: 1.25;
   }
   .srow .s {
@@ -250,11 +250,11 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
   }
   .srow .state {
     font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--ink-faint);
     border: 1px solid var(--line);
-    border-radius: 2px;
+    border-radius: var(--radius-control);
     padding: 4px 9px;
     white-space: nowrap;
   }
