@@ -41,34 +41,65 @@ small — real participation.
 *~30 minutes. Do this first; it is the only step that can go slowly.*
 
 You are done with this step when you are watching a small AI agent resolve a
-billing dispute on your screen. That is our shared reference agent, and we grow
-and harden it all cohort.
+billing dispute on your screen. That is our shared reference agent — an
+**Autonomous Resolution Agent** that investigates an account and then takes a
+consequential action — and we grow and harden it all cohort.
 
-- [ ] Install the container tooling from your welcome email — the only slow step
-- [ ] Open the reference repo in the dev container; it builds itself, no manual installs
-- [ ] Add your model API key where the README shows — one line in `.env`
+Everything starts at the repo:
+**[github.com/greetsunshine/reference-agent](https://github.com/greetsunshine/reference-agent)**.
+It is private, so you will have an invitation to it in your email. If that link
+gives you a 404, tell Sunil before you do anything else — none of the steps
+below will work until you can open it.
+
+### Pick one of three paths
+
+**Dev Containers — recommended.** Nothing to install but the container tooling
+itself, and your environment ends up identical to everyone else's in the room.
+
+- [ ] Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it — the only slow step
+- [ ] Add the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) to VS Code
+- [ ] Clone the repo, open the folder in VS Code, and choose **Reopen in Container**
+- [ ] Let it build itself — no manual installs, no `pip`
+
+**Codespaces — no install at all.** On the repo, *Code → Codespaces → Create*.
+Everything is pre-built in the browser. Slower to start, nothing to clean up
+afterwards, and a good fallback if Docker fights you.
+
+**Plain Python — if you would rather.** `make setup` installs the requirements
+into whatever environment you are already in.
+
+### Then, whichever path you took
+
+- [ ] Copy `.env.example` to `.env`
+- [ ] Paste your model API key into it — one line
 - [ ] Run it: `make run`
 
 The simplest key to get hold of is a free one from
 [Google AI Studio](https://aistudio.google.com/apikey); the repo is configured
 for it out of the box. Any OpenAI-compatible endpoint works if you would rather
-use something else — see `.env.example`. If you move to a paid key, set a small
-spend limit on it. An agent that loops can spend real money, and that is not
+use something else — `.env.example` carries ready-made settings for OpenAI,
+Groq, Together and local Ollama. If you move to a paid key, set a small spend
+limit on it. An agent that loops can spend real money, and that is not
 hypothetical: it is Week 2.
 
-You are done when you see something like this:
+You are done when `make run` gives you something like this:
 
 ```
-# reference agent · billing dispute #4471
-▸ plan   investigate account, decide credit
-▸ tool   lookup_account(id=4471) → past_due: ₹0
-▸ act    issue_credit(₹1,200) → done
-resolved · tokens 1,284 · 2.1s · ₹2.10
+▸ plan  ticket #4471 — Billing dispute — charged twice for Pro...
+▸ tool  lookup_account(account_id='4471') -> {'found': True, ...}
+▸ tool  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
+▸ done  All done.
+tokens 660 · steps 4 · 0.4s · ~₹0.38
 ```
 
-**Optional, two minutes.** Give it a weird ticket — an angry customer whose
-account does not exist — and just *notice* what it does. Do not fix anything. We
-dig into what you saw in Class 1.
+**No key yet, or your key is misbehaving?** Run `make mock`. It forces a
+deterministic brain, needs no key at all, and still prints the full trace — so a
+key problem never stops you seeing the agent work. `make run` falls back to it
+on its own, too.
+
+**Optional, two minutes.** Run `make weird` — ticket #9999, an angry customer
+whose account does not exist — and just *notice* what it does. Do not fix
+anything. We dig into what you saw in Class 1.
 
 **Stuck?** Do not burn more than twenty minutes fighting it. Email Sunil with
 your OS and the error and we will get you sorted. Arriving with a working
