@@ -455,7 +455,9 @@ const schema = [
     .hero > .wrap{background:#fff!important;color:#000!important;border-radius:0;padding:0}
     .hero h1,.hero .credential,.hero .lead,.hero .hero-note,.hero .eyebrow,.hero .eyebrow .num{color:#000!important}
     .hero h1 em{color:#000!important}
-    .portrait,.ask{display:none!important}
+    .portrait{display:none!important}
+    /* :global — the widget is its own component and carries a different cid */
+    :global(.ask){display:none!important}
     .experience{background:#fff;color:#000}
     .experience h2,.experience .big,.story p strong{color:#000}
     .story p,.stat .cap{color:#333}

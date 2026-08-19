@@ -50,6 +50,12 @@
   --maxw: 1160px;
 }
 
+/* Prose comes from Markdown, where a list means a list. reset.css strips
+   markers globally for UI lists; reading surfaces get them back. */
+.prose :where(ul), .prose :where(ol) { list-style: revert; }
+.prose :where(ul) { list-style-type: disc; }
+.prose :where(ol) { list-style-type: decimal; }
+
 /* ── base ─────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -110,6 +116,13 @@ section { padding: var(--space-8) 0; border-top: 0; }
               border-color var(--motion-fast) var(--ease-out);
 }
 .btn:active { transform: translateY(1px); }
+/* reset.css sets a:hover{color:--link-hover} at (0,1,1), which outranks the
+   .btn-* skins at (0,1,0) — so every anchor CTA turned berry on hover while the
+   <button> in the same form did not. These restate the skin at (0,2,1). */
+a.btn:hover, a.btn-primary:hover { color: var(--control-primary-fg); }
+a.btn-ghost:hover { color: var(--text-body); }
+.hero > .wrap a.btn:hover, .hero > .wrap a.btn-ghost:hover { color: var(--text-on-invert); }
+a.btn-primary:hover { color: var(--control-primary-fg); }
 .btn-primary {
   background: var(--control-primary-bg);
   color: var(--control-primary-fg);
@@ -181,7 +194,9 @@ header.nav {
    noir shell goes on the INNER wrap. Put on the section it goes full-bleed, and
    a 40px radius on a shell touching the viewport edge reads as a mistake.
    The shell's outer edge lands on the same gutter as the body text below it. */
-.hero { background: transparent; padding: var(--space-2) var(--space-5) var(--space-8); }
+/* No horizontal padding here — the shell below subtracts its own gutter, and
+   both together double-inset it (48px a side) and misalign it with body text. */
+.hero { background: transparent; padding: var(--space-2) 0 var(--space-8); }
 .hero > .wrap {
   background: var(--surface-invert);
   color: var(--text-on-invert);
@@ -198,7 +213,7 @@ header.nav {
 .hero .eyebrow { color: var(--sun); }
 .hero .eyebrow .num { color: var(--text-faint); }   /* faint is legitimate on noir: 9.15:1 */
 .hero h1 {
-  font-size: clamp(var(--size-8), 5.6vw, var(--size-9));
+  font-size: clamp(var(--size-7), 5.6vw, var(--size-9));
   font-weight: var(--weight-heavy);
   margin: var(--space-4) 0 var(--space-5);
   max-width: 15ch;                                   /* wraps early on purpose */
@@ -236,7 +251,7 @@ header.nav {
   color: var(--text-quiet); max-width: 82%;
 }
 .portrait .tag b { color: var(--text-loud); font-weight: var(--weight-strong); display: block; font-size: var(--size-2); font-family: var(--font-body); }
-@media (max-width: 900px) { .hero > .wrap.hero-grid { grid-template-columns: 1fr; gap: var(--space-6); } .portrait { max-width: 340px; } }
+@media (max-width: 900px) { .hero > .wrap.hero-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); } .portrait { max-width: 340px; } }
 
 /* ── proof bar ────────────────────────────────────────────────────────────── */
 .proofbar { background: transparent; border: 0; padding: 0 0 var(--space-8); }
@@ -443,7 +458,25 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
 .backbar a:hover { color: var(--text-loud); }
 
 @media (max-width: 900px) {
-  .hero { padding: 0 var(--space-4) var(--space-6); }
+  .hero { padding: 0 0 var(--space-6); }
   .hero > .wrap { padding: var(--space-6); border-radius: var(--radius-card); }
   .wrap { padding: 0 var(--space-4); }
+}
+
+/* Phones. This block must stay LAST: it shares specificity with the 900px block
+   above and both match here, so order decides. A nowrap pill with 24px sides is
+   331px wide for "Apply for the September 2026 cohort" — wider than the shell it
+   sits in at 375px, which is what pushed the whole hero past the viewport. */
+@media (max-width: 560px) {
+  .hero > .wrap { padding: var(--space-5); }
+  .hero > .wrap.hero-grid { gap: var(--space-5); }
+  .btn {
+    white-space: normal;
+    height: auto;
+    min-height: var(--control-h);
+    padding: var(--space-2) var(--space-4);
+    text-align: center;
+  }
+  .hero-cta { width: 100%; }
+  .hero-cta .btn { width: 100%; }
 }
