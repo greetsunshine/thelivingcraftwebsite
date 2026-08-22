@@ -229,7 +229,7 @@ const when = (iso: string) =>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
           <div>
             <span class="label">This month</span>
-            <p style="margin-top:6px;font-size:26px;font-family:'Fraunces',serif">
+            <p style="margin-top:6px;font-size:26px;font-family:var(--font-display);">
               {formatUsd(budget.spentUsd)}
               <span style="font-size:15px;color:var(--ink-faint)"> of {formatUsd(budget.limitUsd)}</span>
             </p>
@@ -241,7 +241,7 @@ const when = (iso: string) =>
             {budget.overBudget ? 'paused' : budget.nearLimit ? 'near limit' : 'ok'}
           </span>
         </div>
-        <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px">
+        <div style="height:6px;background:var(--line);border-radius: var(--radius-inner);overflow:hidden;margin-top:12px">
           <div
             style={`height:100%;width:${Math.min(100, Math.round(budget.used * 100))}%;background:${
               budget.overBudget ? 'var(--clay-deep)' : budget.nearLimit ? 'var(--ochre)' : 'var(--clay)'

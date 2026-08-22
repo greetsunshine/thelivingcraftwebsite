@@ -179,7 +179,7 @@ const when = (iso: string | null) =>
                   >
                     <input type="hidden" name="id" value={r.id} />
                     <input type="hidden" name="action" value="erase" />
-                    <button class="btn" type="submit" title="Erase this person entirely, including their intake answers">
+                    <button class="btn danger" type="submit" title="Erase this person entirely, including their intake answers">
                       Erase
                     </button>
                   </form>
@@ -224,7 +224,7 @@ const when = (iso: string | null) =>
   }
 
   .code-notice .code {
-    font-family: 'JetBrains Mono', monospace;
+    font-family:var(--font-mono);
     font-size: 21px;
     letter-spacing: 0.04em;
     margin: 10px 0 12px;
@@ -233,12 +233,12 @@ const when = (iso: string | null) =>
   }
 
   .pill {
-    font-family: 'JetBrains Mono', monospace;
+    font-family:var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     border: 1px solid currentColor;
-    border-radius: 2px;
+    border-radius: var(--radius-inner);
     padding: 2px 7px;
     opacity: 0.85;
   }
