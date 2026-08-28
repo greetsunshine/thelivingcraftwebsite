@@ -11,6 +11,12 @@ so the page renders and the shape is agreed; none of it is teaching material
 yet. While `status: draft`, learners see a short "still being written" note
 instead of this body, so drafting in the open is safe.]
 
+[TERMINOLOGY — week 1 now claims the bare word **harness** for the agent
+harness: the loop, the tool layer, the per-turn context assembly and the trace.
+So in this week, and in the outcomes list, always write **evaluation harness**
+in full. Never the bare word. Two different harnesses one week apart, with the
+same name, is a confusion the room will not recover from mid-session.]
+
 ## Before the session
 
 [PLACEHOLDER: pre-work. What to read, what to bring, what to have running. Keep

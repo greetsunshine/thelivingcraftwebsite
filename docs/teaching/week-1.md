@@ -23,6 +23,44 @@ intend to compare, and check the JSON-that-does-not-parse case is among them —
 that failure is the sharpest thing in the block and you cannot rely on getting
 it live.
 
+## The word "harness" — decided 2026-08-28
+
+Week 1 §1 claims the **bare word** for the agent harness: the loop and its
+stopping condition, the tool layer, the per-turn context assembly, the trace.
+Four parts, four files in the reference agent, named on screen in the first
+fifteen minutes.
+
+Everywhere else it must be qualified. Week 3 and outcome 2 in `facts.ts` say
+**evaluation harness** in full, always — a note to that effect sits in
+`week-3.md` where the writing will happen. Two harnesses one week apart sharing
+a name is a confusion a room does not recover from mid-session.
+
+The reason for claiming it at all is week 5: you cannot go deeper on a harness
+that was never named. Drill 1 in week 1 now ends with an explicit forward
+promise — three files had to agree for one fact to escape, *and week 5 asks what
+happens when one loop is no longer enough*. That promise is in a file learners
+read, so week 5 has to keep it.
+
+**Still open, and none of it is decided:**
+
+- **What leaves week 5 to make room.** It cannot hold harness composition, five
+  scale topics, and the governance outcome that currently has no week. The
+  suggestion on the table was to cut caching (least judgment-heavy, most easily
+  read up on) and send governance to week 6, where reviewing eight architectures
+  raises "how does your team review AI-written code" on its own.
+- **Composition, not internals.** Planner/executor splits, sub-agents,
+  orchestration, where the boundaries between loops go — those fit week 5's
+  irreversibility spine. Context assembly, memory and retries inside the loop are
+  weeks 1–3 material and sit oddly next to it.
+- **The reference agent needs a decomposable shape by week 5.** A single `run()`
+  cannot be split into planner and executor in a 45-minute drill unless the repo
+  has been heading that way since week 2. That is a change to the roadmap in
+  `INSTRUCTOR.md`, not just to a session file.
+- **Week 5's front-matter summary now reads "The harness at scale: …"**, so that
+  the week 1 promise is not dangling. The session title and the M3 module title
+  in `facts.ts` are untouched — change them or revert the summary, but the two
+  should agree before week 5 is written.
+
 ## Block 4 — the five questions
 
 The five questions are the teaching frame; **the answers stay in the room**.

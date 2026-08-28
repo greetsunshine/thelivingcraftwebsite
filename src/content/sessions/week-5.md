@@ -2,7 +2,7 @@
 week: 5
 title: "Scale, consistency & the irreversible trade-offs"
 module: M3
-summary: "The calls you cannot walk back, and how to tell which ones those are before you make them."
+summary: "The harness at scale: the calls you cannot walk back, and how to tell which ones those are before you make them."
 status: draft
 ---
 
@@ -10,6 +10,22 @@ status: draft
 so the page renders and the shape is agreed; none of it is teaching material
 yet. While `status: draft`, learners see a short "still being written" note
 instead of this body, so drafting in the open is safe.]
+
+[THREAD — this is where the harness lands. Week 1 introduces it (the loop, the
+tool layer, the per-turn context assembly, the trace — four files) and drill 1
+there ends with an explicit promise that week 5 asks what happens to the harness
+when one loop is no longer enough. That promise is now made in a file learners
+read, so this week has to keep it.
+
+The argument that makes it this week rather than another: harness shape is the
+least reversible decision in the course. A cache, a model or a retry policy is
+an afternoon's work to change; a decomposition your team has built on for six
+months is not. Caching, routing and idempotency then read as consequences of
+the shape you chose rather than as a list of five scale topics.
+
+Open, and not decided yet — see docs/teaching/week-1.md: what leaves this week
+to make room, and whether the reference agent has a decomposable shape by now.
+It will not, unless the week 2–4 roadmap heads that way on purpose.]
 
 ## Before the session
 

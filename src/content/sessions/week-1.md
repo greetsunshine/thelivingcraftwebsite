@@ -60,11 +60,28 @@ So we read those four lines closely and name what we are looking at:
 **An agent is a control loop over an unreliable oracle.** Plan, act, observe,
 repeat, until a stopping condition. The model is one component inside it — the
 only one that is probabilistic, and the only one you cannot unit-test into
-submission. Draw the loop. Mark the model. Then notice how much of the diagram
-is ordinary software you already know how to make reliable.
+submission. Draw the loop. Mark the model.
 
-That last observation is the one to hold on to. Most of what makes an agent
-trustworthy is not novel.
+Everything you drew that is not the model is the **harness**: the loop and its
+stopping condition, the tool layer, the context assembled for each turn, and the
+trace that lets you see any of it. That word is worth having, because for the
+rest of the cohort the harness is the thing we are building. The model is a
+dependency.
+
+The reference agent makes this literal — four files, one per part, small enough
+to hold in your head at once.
+
+| | |
+|---|---|
+| [`agent.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/agent.py) | the loop and the stopping condition |
+| [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py) | the tool layer — what the agent is able to do |
+| [`llm.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/llm.py) | the model adapter, and `_build_prompt`, which reassembles the context from scratch every single turn |
+| [`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py) | the trace — the only reason you can see what happened |
+
+Three of those four files are ordinary software you already know how to make
+reliable. That is the observation to hold on to: most of what makes an agent
+trustworthy is not novel, and almost none of it is in the file with the model in
+it.
 
 ## 2 · The Problem
 
@@ -105,7 +122,8 @@ The answer is in [`tools.py`](https://github.com/greetsunshine/reference-agent/b
 `{"credited": true}`. No ceiling, no existence check, no approval. **The money
 moved because nothing in the system was ever going to stop it.**
 
-Which gives us the other three ideas the rest of the cohort hangs off:
+Which gives us the other three ideas the rest of the cohort hangs off. They are
+not a list — they are a tour of the harness you just drew, one part at a time.
 
 **Tools are your real API surface.** Every tool you expose is a capability you
 have handed to something you cannot fully predict. `issue_credit(₹1,200)` is not
@@ -121,6 +139,9 @@ bug wearing a costume.
 caps, tool scopes, human confirmation on irreversible actions, and what happens
 when a step fails halfway. A durable system is not one that does not fail — it
 is one whose failures are bounded, visible, and cheap.
+
+Tools, context, boundaries: the tool layer, the per-turn assembly, and what you
+put between the parts. Everything from week 2 onwards is added to one of them.
 
 > The line we keep coming back to: **AI builds, the human judges and directs.**
 > Every decision in this session is one a person has to own, and "the model
@@ -149,6 +170,12 @@ calls `sys.exit`. Three files — `agent.py`, `trace.py`, `main.py` — to let o
 failure reach the outside world. That ratio is the drill: **an outcome nobody
 plumbed out is not an outcome**, and this is the cheap version of the same
 argument you will have about your own service next week.
+
+It is also the first thing the harness tells you about itself. Three files had
+to agree for one fact to escape, and that is with four files and one loop. Hold
+that number — in week 5 we come back to the harness and ask what happens to it
+when one loop is no longer enough, which is the least reversible decision in
+this whole course.
 
 **Drill 2 · Put cost on every step.**
 [`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)
