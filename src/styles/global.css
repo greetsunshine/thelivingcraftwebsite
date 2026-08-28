@@ -415,6 +415,13 @@ details p { padding: 0 0 var(--space-5); color: var(--text-quiet); font-size: va
 /* ── application form ─────────────────────────────────────────────────────── */
 .apply-form { max-width: 580px; margin: var(--space-6) auto 0; text-align: left; background: var(--surface-panel); border-radius: var(--radius-card); box-shadow: var(--shadow-raise); padding: var(--space-6); }
 .apply-form .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+/* The fee, stated inside the form — the last thing before the submit button,
+   because the form is deep-linkable and skips the pricing block. */
+.fee-note { background: var(--surface-sunken); border-radius: var(--radius-inner); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-5); }
+.fee-note .fee-k { display: block; font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); margin-bottom: var(--space-2); }
+.fee-note p { font-size: var(--size-2); margin: 0; }
+.fee-note p + p { margin-top: var(--space-2); color: var(--text-quiet); }
+.fee-note #feeAmount { font-weight: var(--weight-strong); color: var(--text-loud); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
 .apply-form label {
   display: flex; flex-direction: column; gap: var(--space-1);

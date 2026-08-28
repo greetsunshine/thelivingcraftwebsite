@@ -1,5 +1,7 @@
 ---
 import type { Region } from '../data/regions';
+import { regionList } from '../data/regions';
+import { cohort as cohortFacts } from '../data/facts';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
 
 interface Props {
@@ -22,6 +24,30 @@ const hybrid = region?.hybrid ?? false;
 // figure (regions.ts → publicPrice). Everything else region-specific — the
 // hybrid note, the apply form's preselected region — stays on.
 const hasPrice = region?.publicPrice ?? false;
+
+/**
+ * Fee copy for the apply form, keyed by the values of its region <select>.
+ *
+ * The form is reachable by deep link (/#apply from the nav, a post, the Ask
+ * widget's handoff), which skips the pricing block entirely — so someone could
+ * apply having never seen a number. This puts the fee at the last moment before
+ * they commit, and follows the region they pick rather than the one we guessed.
+ *
+ * Same gate as the pricing block: only a region with `publicPrice` puts a
+ * figure into the HTML. An unpublished rate must not reach a public surface
+ * through this route either — the withheld copy is what ships instead.
+ */
+const FEE_FOUNDING_NOTE =
+  'This first cohort enrols at a founding rate that rises for the cohorts that follow.';
+const FEE_WITHHELD = `Shared on application, tailored to your region. ${FEE_FOUNDING_NOTE}`;
+/** One construction of the published fee sentence; the FAQ and the form share it. */
+const feeLine = (r: Region) =>
+  `${r.price} ${r.priceUnit}${r.standardPrice ? `, rising to ${r.standardPrice} for the cohorts that follow` : ''}.`;
+const feeCopy: Record<string, string> = { Other: FEE_WITHHELD };
+for (const r of regionList) {
+  feeCopy[r.label] = r.publicPrice ? feeLine(r) : FEE_WITHHELD;
+}
+const feeInitial = feeCopy[label] ?? FEE_WITHHELD;
 
 // Cohort logistics are identical across regions — single source here.
 const cohort = {
@@ -281,14 +307,14 @@ const cohort = {
           </div>
           <div class="terms">
             {region!.standardPrice
-              ? `Founding rate for the first cohort — ${region!.standardPrice} for the cohorts that follow. Payment plans available.`
-              : 'Founding rate for the first cohort; it rises for the cohorts that follow. Payment plans available.'}
+              ? `Founding rate for the first cohort — ${region!.standardPrice} for the cohorts that follow. Payment is due ${cohortFacts.paymentDue}; payment plans available.`
+              : `Founding rate for the first cohort; it rises for the cohorts that follow. Payment is due ${cohortFacts.paymentDue}; payment plans available.`}
           </div>
         </Fragment>
       ) : (
         <Fragment>
           <div class="amt" style="font-size:36px">By application</div>
-          <div class="terms">Investment is shared on application, tailored to your region. The first cohort enrols at a founding rate that rises for the cohorts that follow. Payment plans available.</div>
+          <div class="terms">Investment is shared on application, tailored to your region. The first cohort enrols at a founding rate that rises for the cohorts that follow. Payment is due {cohortFacts.paymentDue}; payment plans available.</div>
         </Fragment>
       )}
       <ul>
@@ -313,6 +339,8 @@ const cohort = {
     <div class="faq">
       <details open><summary>Why is it application-only?<span class="plus">+</span></summary><p>Because the room only works if everyone in it can keep up and contribute. I read every application myself to make sure the cohort is right — for you and for the people you'll learn alongside.</p></details>
       <details><summary>Is this worth it over a recorded course?<span class="plus">+</span></summary><p>If you want the patterns, buy the book — they're cheap now. This is for the judgment that sits on top of the patterns: live, on your real systems, from someone who's been accountable for the outcome at scale. You're not buying videos — you're buying my attention and 26 years of hard-won judgment.</p></details>
+      <details><summary>What does it cost?<span class="plus">+</span></summary><p>{hasPrice ? `${feeLine(region!)} Payment is due ${cohortFacts.paymentDue}, and payment plans are available.` : `Pricing is set per region and shared on application. ${FEE_FOUNDING_NOTE} Payment is due ${cohortFacts.paymentDue}, and payment plans are available.`}</p></details>
+      <details><summary>What am I committing to by applying?<span class="plus">+</span></summary><p>Nothing. An application is you telling me what you'd bring into the room, and me reading it and replying by email. Money only enters the conversation if I offer you one of the eight seats and you want it — and the fee is then due {cohortFacts.paymentDue}.</p></details>
       <details><summary>What if my company pays?<span class="plus">+</span></summary><p>Many participants expense the program through their employer. I'll provide an ROI letter and an itemised outline your manager can approve.</p></details>
       <details><summary>What does my team get out of it?<span class="plus">+</span></summary><p>The frameworks come home with you — an evaluation rubric, a threat model, a reliability and review-and-governance template. You don't just leave more capable; your team inherits the discipline.</p></details>
       <details><summary>I'm strong but not "staff level." Should I apply?<span class="plus">+</span></summary><p>Apply. Seniority on paper matters less than whether you've shipped something you've had to live with. The application tells me.</p></details>
@@ -352,6 +380,16 @@ const cohort = {
         </label>
       </div>
 
+      <div class="fee-note" id="feeNote" data-fee={JSON.stringify(feeCopy)}>
+        <span class="fee-k">The fee</span>
+        <p id="feeAmount" aria-live="polite">{feeInitial}</p>
+        <p>
+          Due {cohortFacts.paymentDue} — applying costs nothing and commits you to
+          nothing. Payment plans are available, and many participants expense it
+          through their employer; I provide an ROI letter and an itemised outline.
+        </p>
+      </div>
+
       <button class="btn btn-primary" type="submit">
         Submit application <span class="arrow">→</span>
       </button>
@@ -366,6 +404,19 @@ const cohort = {
     var f = document.getElementById('applyForm');
     if (!f) return;
     var status = document.getElementById('formStatus');
+
+    // The fee follows the region they select, not the one geo guessed for them.
+    var feeNote = document.getElementById('feeNote');
+    var feeAmount = document.getElementById('feeAmount');
+    var regionSel = f.querySelector('select[name="region"]');
+    if (feeNote && feeAmount && regionSel) {
+      var feeMap = {};
+      try { feeMap = JSON.parse(feeNote.getAttribute('data-fee') || '{}'); } catch (e) {}
+      regionSel.addEventListener('change', function () {
+        var copy = feeMap[regionSel.value];
+        if (copy) feeAmount.textContent = copy;
+      });
+    }
     f.addEventListener('submit', async function (e) {
       e.preventDefault();
       var key = f.querySelector('input[name="access_key"]').value;
@@ -401,6 +452,7 @@ const cohort = {
           f.reset();
           f.querySelector('.form-grid').style.display = 'none';
           f.querySelector('button[type="submit"]').style.display = 'none';
+          if (feeNote) feeNote.style.display = 'none';
           status.textContent = 'Thank you — your application is in. I review every one personally and will reply by email.';
           status.className = 'form-status ok';
         } else {

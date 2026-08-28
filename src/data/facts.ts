@@ -66,6 +66,13 @@ export const cohort = {
   format: 'Live online (Bangalore: hybrid — in person or online)',
   admission: 'By application; every application read personally',
   enrollment: 'Rolling until all 8 seats are filled',
+  /**
+   * When the fee is due. Applying is free and being offered a seat is free —
+   * this is the only date money is attached to, which is why it is stated on
+   * the page, in the form, in the FAQ and in the agent's answer rather than
+   * left to the acceptance email.
+   */
+  paymentDue: 'one week before the cohort starts',
   modules: [
     { id: 'M1', weeks: 'Week 1', title: 'Foundations of durable architecture' },
     { id: 'M2', weeks: 'Weeks 2–4', title: "Agentic systems you'd put your name on" },
@@ -130,6 +137,7 @@ export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
       `The cohort runs in ${r.label}, but the ${r.label} rate is not published.`,
       'DO NOT state, estimate, or convert a figure, and DO NOT offer another region rate as a guide — the rates are not comparable.',
       `Say that pricing for ${r.label} is shared on application and that Sunil discusses it directly, then offer to take their details so he can follow up.`,
+      `You MAY say when it is due: payment is due ${cohort.paymentDue}, and applying commits them to nothing.`,
     ].join(' ');
   }
 
@@ -138,7 +146,7 @@ export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
     r.standardPrice
       ? `That is the founding rate for the first cohort; it rises to ${r.standardPrice} for the cohorts that follow.`
       : 'That is the founding rate for the first cohort; it rises for the cohorts that follow.',
-    'Payment plans are available. Many participants expense the program through their employer; an ROI letter and itemised outline are provided.',
+    `Payment is due ${cohort.paymentDue}. Payment plans are available, and many participants expense the program through their employer; an ROI letter and itemised outline are provided.`,
     `ONLY quote the ${r.label} figure. Do not mention what other regions pay, even if asked to compare — say pricing is set per region and Sunil can discuss another region directly.`,
   ];
   return lines.join(' ');
@@ -282,8 +290,8 @@ export const facts: Fact[] = [
     id: 'cohort-apply',
     surface: '/',
     q: 'How do I apply?',
-    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Sunil reads every application himself and replies by email. Admission is by application because the room only works if everyone in it can keep up and contribute.`,
-    tags: ['apply', 'application', 'enroll', 'sign up', 'register', 'join'],
+    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Sunil reads every application himself and replies by email. Admission is by application because the room only works if everyone in it can keep up and contribute. Applying costs nothing and commits you to nothing — the fee is only relevant once a seat is offered and accepted.`,
+    tags: ['apply', 'application', 'enroll', 'sign up', 'register', 'join', 'commit', 'obligation'],
   },
   {
     id: 'cohort-vs-course',

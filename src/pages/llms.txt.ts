@@ -49,6 +49,7 @@ ${surfaces.map((s) => `- [${s.name}](${SITE_ORIGIN}${s.path}): ${s.summary}`).jo
 - Format: ${cohort.format}
 - Admission: ${cohort.admission}
 - Enrollment: ${cohort.enrollment}
+- Payment due: ${cohort.paymentDue}
 
 Pricing: set per region, at a founding rate for the first cohort that rises for
 later cohorts. Each visitor is quoted the rate for their own region and no other.
