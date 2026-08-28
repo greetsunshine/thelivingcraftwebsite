@@ -3,7 +3,11 @@ import type { Region } from '../data/regions';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
 
 interface Props {
-  /** null = region unknown (no param, no geo match) → pricing shown as "By application". */
+  /**
+   * null = region unknown (no param, no geo match) → pricing shown as
+   * "shared on application". A resolved region whose `publicPrice` is false
+   * shows the same block: it is served, its rate just isn't published.
+   */
   region: Region | null;
 }
 const { region } = Astro.props;
@@ -14,7 +18,10 @@ const label = region?.label ?? '';
 const labelSuffix = label ? ` · ${label}` : '';
 const cohortNameCap = label ? `Inaugural ${label} cohort` : 'Inaugural cohort';
 const hybrid = region?.hybrid ?? false;
-const hasPrice = region !== null;
+// Not `region !== null`: a region can be resolved and still withhold its
+// figure (regions.ts → publicPrice). Everything else region-specific — the
+// hybrid note, the apply form's preselected region — stays on.
+const hasPrice = region?.publicPrice ?? false;
 
 // Cohort logistics are identical across regions — single source here.
 const cohort = {

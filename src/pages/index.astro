@@ -54,7 +54,9 @@ const schema = [
         instructor: { '@id': `${SITE_ORIGIN}/#person` },
       },
     ],
-    offers: region
+    // Only a region whose rate is published gets an Offer node — a figure in
+    // structured data is a figure, whether or not the page renders it.
+    offers: region?.publicPrice
       ? [
           {
             '@type': 'Offer',

@@ -57,6 +57,17 @@ Four consumers read it and nothing else: JSON-LD structured data, `/llms.txt`,
 count there and all four move together. Cohort pricing lives in
 [src/data/regions.ts](src/data/regions.ts) and is imported, not restated.
 
+**A region can be served without its price being published.** `Region.publicPrice`
+in [src/data/regions.ts](src/data/regions.ts) gates the figure on every public surface at once — the
+pricing block, the JSON-LD `Offer`, `/api/facts`, and the Q&A agent — and all four
+fall back to "shared on application". It is off for Dubai and Australia, whose rates
+are uncalibrated and carry no struck-through `standardPrice` telling a reader the
+price will rise; India is on. Public consumers must read `publicCohortPricing`, not
+`cohortPricing` — the console reads the full list on purpose, because a working number
+Sunil cannot see in his own console is one he restates from memory somewhere else.
+Turning a region on is one boolean; adding a fifth public consumer that reads
+`cohortPricing` is how the figure gets out anyway.
+
 Never state an offer fact directly in a page, a schema block, or an agent prompt —
 route it through `facts.ts`. The failure this prevents is subtle and bad: a stale
 number that is right on the page but wrong in the answer an AI assistant gives

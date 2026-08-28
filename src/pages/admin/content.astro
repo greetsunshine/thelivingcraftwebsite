@@ -140,6 +140,7 @@ const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
                 <span class="bv">
                   {p.founding} {p.unit}
                   {p.standard && <span class="faint"> · was {p.standard}</span>}
+                  {!p.published && <span class="faint"> · not published</span>}
                 </span>
               </div>
             ))

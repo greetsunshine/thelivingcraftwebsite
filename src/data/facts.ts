@@ -87,7 +87,17 @@ export const cohortPricing = (Object.values(regions) as Region[]).map((r) => ({
   founding: r.price,
   standard: r.standardPrice ?? null,
   unit: r.priceUnit,
+  /** Whether this figure may be stated publicly — regions.ts → publicPrice. */
+  published: r.publicPrice,
 }));
+
+/**
+ * The rates that may leave the building. Public consumers (/api/facts) read
+ * this; the admin console reads `cohortPricing` and sees all three, because a
+ * working number Sunil can't see in his own console is a number he'll restate
+ * from memory somewhere else.
+ */
+export const publicCohortPricing = cohortPricing.filter((p) => p.published);
 
 /**
  * Cohort price for ONE region — never the full list.
@@ -110,6 +120,19 @@ export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
   }
 
   const r = regions[key];
+
+  // Served, but the rate is not published (regions.ts → publicPrice). The agent
+  // is the easiest surface on this site to state a number on, so it withholds
+  // exactly as the page and the schema do — and is told not to reach for
+  // another region's figure as a substitute.
+  if (!r.publicPrice) {
+    return [
+      `The cohort runs in ${r.label}, but the ${r.label} rate is not published.`,
+      'DO NOT state, estimate, or convert a figure, and DO NOT offer another region rate as a guide — the rates are not comparable.',
+      `Say that pricing for ${r.label} is shared on application and that Sunil discusses it directly, then offer to take their details so he can follow up.`,
+    ].join(' ');
+  }
+
   const lines = [
     `${r.label}: ${r.price} ${r.priceUnit}.`,
     r.standardPrice

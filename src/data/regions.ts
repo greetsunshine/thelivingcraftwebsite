@@ -13,6 +13,20 @@ export interface Region {
   /** Rate for cohorts after the founding one — rendered struck through. Omit to hide. */
   standardPrice?: string;
   priceUnit: string;
+  /**
+   * Publish this region's figure on the PUBLIC surfaces — the pricing block,
+   * the JSON-LD offer, /api/facts, and the Q&A agent. False keeps the region
+   * fully served (it still appears in the apply form and the regions-served
+   * list); only the number is withheld, and every surface falls back to
+   * "shared on application".
+   *
+   * Off for Dubai and Australia: those rates are uncalibrated placeholders,
+   * and unlike India they carry no struck-through standardPrice telling a
+   * reader the price will rise — so a published figure is an anchor that is
+   * hard to raise later and easy to screenshot. The admin console still shows
+   * all three; it is the one place the real working numbers belong.
+   */
+  publicPrice: boolean;
   // cohort logistics  (EDIT dates/seats/commitment when confirmed)
   seats: string;
   nextDate: string;
@@ -39,6 +53,7 @@ export const regions: Record<Region['key'], Region> = {
     price: '₹1,20,000',
     standardPrice: '₹1,50,000',
     priceUnit: 'per seat · founding rate',
+    publicPrice: true,
     seats: '8 seats, capped',
     nextDate: 'September 2026',
     closes: 'Rolling — until all 8 seats are filled',
@@ -57,6 +72,8 @@ export const regions: Record<Region['key'], Region> = {
     // rate outside India has not been calibrated, so no struck-through anchor is shown.
     price: 'AED 8,000',
     priceUnit: 'per seat · founding rate',
+    // Not published — see publicPrice on the Region interface.
+    publicPrice: false,
     seats: '8 seats, capped',
     nextDate: 'September 2026',
     closes: 'Rolling — until all 8 seats are filled',
@@ -73,6 +90,8 @@ export const regions: Record<Region['key'], Region> = {
     // PRICING — PLACEHOLDER, REVIEW BEFORE PUBLISH. See the Dubai note on standardPrice.
     price: 'AUD 3,000',
     priceUnit: 'per seat · founding rate',
+    // Not published — see publicPrice on the Region interface.
+    publicPrice: false,
     seats: '8 seats, capped',
     nextDate: 'September 2026',
     closes: 'Rolling — until all 8 seats are filled',
