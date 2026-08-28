@@ -170,9 +170,25 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 3px 10px; border-radius: var(--radius-pill);
   border: var(--border-w-hair) solid var(--border-field); color: var(--text-quiet); white-space: nowrap;
 }
-.pill.on { background: var(--sun); border-color: var(--sun); color: var(--text-on-accent); }
+/* Filled, but never sun: on /admin/radar this labels a finding's category and
+   sits right under .cat-nav's filter chips, which ARE clickable and DO use
+   solid sun. Two things that look the same and only one of which responds to a
+   click is a bug you find by watching someone click it. */
+.pill.on {
+  background: var(--surface-active);
+  border-color: var(--surface-active);
+  color: var(--text-body);
+}
 .pill.warn { border-color: var(--danger); color: var(--danger); }
-.pill.good { border-color: var(--agent-human); color: var(--agent-human); }
+/* A primary source has to be readable as such at a glance — that is the whole
+   point of grading sourceType. Ink alone was too close to the neutral default;
+   the accent ink separates it from both that and the danger red on vendor and
+   secondhand. */
+.pill.good {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+  font-weight: var(--weight-medium);
+}
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
@@ -285,7 +301,9 @@ details.raw summary { cursor: pointer; font-size: var(--size-2); color: var(--te
 details.raw pre { margin-top: var(--space-2); padding: var(--space-3); background: var(--surface-sunken); border-radius: var(--radius-inner); overflow-x: auto; font-family: var(--font-mono); font-size: var(--size-1); line-height: var(--lh-normal); }
 
 .status-line { font-size: var(--size-2); min-height: 1.3em; margin-top: var(--space-2); }
-.status-line.ok { color: var(--text-loud); }
+/* Not --text-loud: it resolves to --text-body, so "Saved" rendered identically
+   to "Saving…" and a finished action confirmed nothing. */
+.status-line.ok { color: var(--accent-ink); font-weight: var(--weight-medium); }
 .status-line.err { color: var(--danger); }
 
 /* --- login -------------------------------------------------------------- */

@@ -91,6 +91,11 @@
   text-transform: var(--case-label);
   color: var(--text-quiet);
   font-feature-settings: var(--font-features);
+  /* Stated, not inherited. global.css weights h1-h4 at 800 and JetBrains Mono
+     is only loaded at 400/500, so an <h3 class="klabel"> — the intake's matrix
+     titles — came out synthetically bolded. */
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-normal);
 }
 .klabel.accent { color: var(--clay); }
 
@@ -383,6 +388,37 @@ a.row:hover .t { color: var(--clay); }
   margin-bottom: var(--space-4);
 }
 .prose hr { height: 1px; background: var(--border-hair); border: 0; margin: var(--space-6) 0; }
+
+/* Tables. Week 0's class agenda is a Markdown table and week 0 is the one
+   session that is `status: ready`, so this is on a page learners read today.
+   The global `* { padding: 0 }` strips the UA cell padding, which without these
+   rules renders the agenda as two run-together columns. Hairlines are legal
+   here — the table sits inside the .panel, so they are dividers, not a second
+   edge. */
+.prose table {
+  width: 100%;
+  margin-bottom: var(--space-5);
+  border-collapse: collapse;
+  font-size: var(--size-3);
+  color: var(--text-quiet);
+}
+.prose th, .prose td {
+  padding: var(--space-3) var(--space-4) var(--space-3) 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.prose th {
+  color: var(--text-loud);
+  font-weight: var(--weight-strong);
+}
+.prose tr:last-child td { border-bottom: 0; }
+/* A headerless two-column table is the agenda shape: a time, then what happens
+   in it. Keep the time column from wrapping mid-value. */
+.prose td:first-child { white-space: nowrap; padding-right: var(--space-5); }
+@media (max-width: 560px) {
+  .prose td:first-child { white-space: normal; }
+}
 
 /* ── sign-in ─────────────────────────────────────────────────────────────────
    The one page reached without a session, so it gets the shell with no nav and

@@ -62,10 +62,22 @@ const here = Astro.url.pathname.replace(/\/+$/, '') || '/craft';
   <body>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href={learner ? '/craft' : '/craft/login'}>
-          <span class="dot"></span> the living craft
-          <span class="wordmark-sub">Cohort</span>
-        </a>
+        {/* Signed out there is nowhere for the wordmark to go: linking it back to
+            /craft/login would drop the ?next= the middleware set, so a learner
+            who clicked it would lose the deep link they arrived with. */}
+        {
+          learner ? (
+            <a class="wordmark" href="/craft">
+              <span class="dot" /> the living craft
+              <span class="wordmark-sub">Cohort</span>
+            </a>
+          ) : (
+            <div class="wordmark">
+              <span class="dot" /> the living craft
+              <span class="wordmark-sub">Cohort</span>
+            </div>
+          )
+        }
         {
           learner && (
             <nav class="navlinks">
