@@ -49,16 +49,16 @@ const MATRICES = [
 ---
 
 <CraftLayout title="Intake" learner={learner} back={{ href: '/craft', label: 'Your cohort' }}>
-  <section class="hero" style="border-top:0;padding:40px 0 34px">
-    <div class="wrap">
+  <section class="page-head">
+    <div class="wrap reading">
       <div class="eyebrow">Before we meet <span class="num">/ intake</span></div>
-      <h1 style="font-size:clamp(30px,4.4vw,46px);margin:18px 0 16px">Your baseline</h1>
-      <p class="lead" style="max-width:66ch">
+      <h1>Your baseline</h1>
+      <p class="lead">
         Two things: where you are starting from, and what you are actually dealing with at work.
         Sunil reads every one of these before the cohort meets, so the room is tuned to the people
         in it rather than to a syllabus written for strangers.
       </p>
-      <p class="muted" style="max-width:66ch;margin-top:14px">
+      <p class="muted">
         There are no wrong answers, and nothing here is scored. An honest <em>new to me</em> is
         worth more than a generous <em>solid</em> — the first shapes a session, the second wastes
         one. Save a draft and come back if you would rather not do it in one sitting.
@@ -66,31 +66,34 @@ const MATRICES = [
     </div>
   </section>
 
-  <section style="padding-top:0;border-top:0">
-    <div class="wrap">
+  <section style="padding-top:0">
+    <div class="wrap reading">
       {
         submittedOn && (
-          <div class="banner done">
-            <strong>Submitted {submittedOn}.</strong> You can still change any answer — re-submitting
-            updates your response and keeps the original date.
+          <div class="panel tight marked notice">
+            <strong>Submitted {submittedOn}.</strong> You can still change any answer —
+            re-submitting updates your response and keeps the original date.
           </div>
         )
       }
 
       <form id="intake">
         {/* ---------------- Section 1 ---------------- */}
-        <div class="sec">
+        <div class="craft-sec">
           <h2>Quick self-check</h2>
-          <p class="muted">Gut reaction, not a considered answer. This calibrates pace; it is not an entrance exam.</p>
+          <p class="muted">
+            Gut reaction, not a considered answer. This calibrates pace; it is not an entrance
+            exam.
+          </p>
 
-          <div class="qlist">
+          <div class="stack">
             {
               QUICK_CHECK.map((q) => (
-                <div class="qrow">
+                <div class="row qrow">
                   <span class="qtext">{q.text}</span>
                   <div class="opts">
                     {QUICK_OPTIONS.map((opt) => (
-                      <label class="opt">
+                      <label class="choice">
                         <input
                           type="radio"
                           name={`quick_check.${q.id}`}
@@ -108,7 +111,7 @@ const MATRICES = [
         </div>
 
         {/* ---------------- Section 2 ---------------- */}
-        <div class="sec">
+        <div class="craft-sec">
           <h2>Baseline self-assessment</h2>
           <p class="muted">
             1 = couldn't do it · 3 = could do it with help · 5 = could lead it and defend the call.
@@ -119,26 +122,26 @@ const MATRICES = [
               const answers = key === 'technical' ? technical : leadership;
               return (
                 <div class="matrix">
-                  <h3>{title}</h3>
+                  <h3 class="klabel">{title}</h3>
 
                   <div class="mhead" aria-hidden="true">
                     <span />
-                    <div class="mcells">
+                    <div class="scale">
                       {SCALE.map((n) => (
-                        <span class="mnum mono">{n}</span>
+                        <span class="klabel mnum">{n}</span>
                       ))}
                     </div>
                   </div>
 
-                  <div class="mrows">
+                  <div class="stack">
                     {questions.map((q) => (
-                      <div class="mrow">
+                      <div class="row mrow">
                         <span class="mlabel">
-                          <b class="mono">{q.id}</b> {q.text}
+                          <b class="klabel accent">{q.id}</b> {q.text}
                         </span>
-                        <div class="mcells">
+                        <div class="scale">
                           {SCALE.map((n) => (
-                            <label class="mcell">
+                            <label class="scale-cell">
                               <input
                                 type="radio"
                                 name={`${key}.${q.id}`}
@@ -146,7 +149,7 @@ const MATRICES = [
                                 checked={answers[q.id] === n}
                                 aria-label={`${q.id}: ${q.text} — ${n}, ${SCALE_LEGEND[n]}`}
                               />
-                              <span class="mono n">{n}</span>
+                              <span class="n">{n}</span>
                             </label>
                           ))}
                         </div>
@@ -160,7 +163,7 @@ const MATRICES = [
         </div>
 
         {/* ---------------- Section 3 ---------------- */}
-        <div class="sec">
+        <div class="craft-sec">
           <h2>State of your production reality</h2>
           <p class="muted">A few sentences each is plenty. Specifics beat polish.</p>
 
@@ -169,21 +172,21 @@ const MATRICES = [
               REALITY.map((q) => (
                 <label class="pq">
                   <span class="pqt">{q.text}</span>
-                  <textarea name={`reality.${q.id}`} rows="4" maxlength="4000">{reality[q.id] ?? ''}</textarea>
+                  <textarea class="field" name={`reality.${q.id}`} rows="4" maxlength="4000">{reality[q.id] ?? ''}</textarea>
                 </label>
               ))
             }
           </div>
         </div>
 
-        <div id="formnote" class="banner" hidden></div>
+        <div id="formnote" class="panel tight marked notice" hidden></div>
 
         <div class="actions">
-          <button class="btn primary" type="submit" data-submit="true">
+          <button class="btn btn-primary" type="submit" data-submit="true">
             {submittedOn ? 'Update my answers' : 'Submit intake'}
           </button>
-          <button class="btn" type="button" data-submit="false">Save draft</button>
-          <span class="muted" style="font-size:13px">
+          <button class="btn btn-ghost" type="button" data-submit="false">Save draft</button>
+          <span class="note">
             {cohort.seats} seats · Sunil reads every response before we meet.
           </span>
         </div>
@@ -206,7 +209,7 @@ const MATRICES = [
 
     const say = (message: string, kind: 'ok' | 'bad') => {
       note.textContent = message;
-      note.className = `banner ${kind === 'ok' ? 'done' : 'bad'}`;
+      note.className = `panel tight marked notice${kind === 'ok' ? '' : ' bad'}`;
       note.hidden = false;
       note.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
@@ -271,278 +274,80 @@ const MATRICES = [
 </script>
 
 <style>
-  .sec {
-    border-top: 1px solid var(--line);
-    padding: 44px 0 8px;
+  /* The matrix is the one thing in the area with no counterpart anywhere else,
+     so its geometry stays here. Everything it is made of — the panel, the row
+     dividers, the scale cells, the label — comes from craft.css. */
+  .matrix + .matrix {
+    margin-top: var(--space-6);
   }
-  .sec:first-of-type {
-    border-top: 0;
-    padding-top: 8px;
-  }
-  .sec h2 {
-    font-family:var(--font-display);
-    font-size: 26px;
-    font-weight:var(--weight-strong);
-    margin: 0 0 6px;
-  }
-  .sec h3 {
-    font-family:var(--font-mono);
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ink-faint);
-    margin: 34px 0 12px;
-  }
-  .sec > .muted {
-    max-width: 66ch;
-    margin-bottom: 22px;
+  .matrix > h3 {
+    margin-bottom: var(--space-3);
   }
 
-  /* --- Section 1 ---------------------------------------------------- */
-  .qlist {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    overflow: hidden;
-  }
-  .qrow {
-    background: var(--surface);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 20px;
-    align-items: center;
-    padding: 18px 22px;
-  }
-  .qtext {
-    font-size: 15px;
-  }
-  .opts {
-    display: flex;
-    gap: 8px;
-  }
-  .opt {
-    cursor: pointer;
-  }
-  .opt input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .opt span {
-    display: inline-block;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    padding: 7px 13px;
-    font-size: 13px;
-    color: var(--ink-soft);
-    white-space: nowrap;
-    transition: 0.15s;
-  }
-  .opt input:checked + span {
-    border-color: var(--clay);
-    color: var(--clay);
-    background: #fff;
-  }
-  .opt input:focus-visible + span {
-    outline: 2px solid var(--clay);
-    outline-offset: 2px;
-  }
-
-  /* --- Section 2 : the matrices ------------------------------------- */
-  .matrix {
-    margin-bottom: 12px;
-  }
+  .qrow,
   .mhead,
   .mrow {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 260px;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: var(--space-5);
     align-items: center;
   }
   .mhead {
-    padding: 0 22px 8px;
-  }
-  .mcells {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    padding: 0 var(--space-6) var(--space-2);
   }
   .mnum {
     text-align: center;
-    font-size: 11px;
-    color: var(--ink-faint);
   }
-  .mrow {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-top: 0;
-    padding: 14px 22px;
-  }
-  .mrows .mrow:first-child {
-    border-top: 1px solid var(--line);
-    border-radius: var(--radius-inner) var(--radius-inner) 0 0;
-  }
-  .mrows .mrow:last-child {
-    border-radius: 0 0 var(--radius-inner) var(--radius-inner);
-  }
+  .qtext,
   .mlabel {
-    font-size: 15px;
+    font-size: var(--size-3);
   }
   .mlabel b {
-    color: var(--clay);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    margin-right: 8px;
-    font-weight: 500;
-  }
-  .mcell {
-    cursor: pointer;
-    display: block;
-  }
-  .mcell input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .mcell .n {
-    display: block;
-    text-align: center;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    padding: 9px 0;
-    font-size: 12px;
-    color: var(--ink-faint);
-    transition: 0.15s;
-  }
-  .mcell input:checked + .n {
-    border-color: var(--clay);
-    background: var(--clay);
-    color: #fff;
-  }
-  .mcell input:focus-visible + .n {
-    outline: 2px solid var(--clay);
-    outline-offset: 2px;
+    margin-right: var(--space-2);
   }
 
-  /* --- Section 3 ---------------------------------------------------- */
+  .opts {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
   .prose-qs {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-  }
-  .pq {
-    display: block;
+    gap: var(--space-5);
   }
   .pqt {
     display: block;
-    font-size: 15px;
-    margin-bottom: 8px;
+    font-size: var(--size-3);
+    margin-bottom: var(--space-2);
     max-width: 70ch;
   }
-  .pq textarea {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    padding: 12px 14px;
-    font: inherit;
-    font-size: 15px;
-    color: var(--ink);
-    resize: vertical;
-  }
-  .pq textarea:focus {
-    outline: 0;
-    border-color: var(--clay);
-  }
 
-  /* --- Chrome ------------------------------------------------------- */
-  .banner {
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--clay);
-    background: var(--surface);
-    padding: 14px 18px;
-    border-radius: var(--radius-inner);
-    font-size: 15px;
-    margin: 26px 0;
-  }
-  .banner.bad {
-    border-left-color: var(--accent-ink-strong);
-    background: #fff;
-  }
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    padding: 34px 0 20px;
-    border-top: 1px solid var(--line);
-    margin-top: 40px;
-  }
-  .btn {
-    border: 1px solid var(--line-strong, var(--line));
-    background: none;
-    border-radius: var(--radius-control);
-    padding: 11px 20px;
-    font: inherit;
-    font-size: 14px;
-    color: var(--ink);
-    cursor: pointer;
-    transition: 0.15s;
-  }
-  .btn:hover {
-    border-color: var(--clay);
-    color: var(--clay);
-  }
-  .btn.primary {
-    background: var(--clay);
-    border-color: var(--clay);
-    color: #fff;
-  }
-  .btn.primary:hover {
-    background: var(--accent-ink-strong);
-    color: #fff;
-  }
-  .btn:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  /* --- The stack -----------------------------------------------------
-     Below 700px a matrix stops being a matrix. Each row becomes its own
+  /* Below 700px a matrix stops being a matrix. Each row becomes its own
      labelled 1-5 strip: the column header is gone, so the numbers that were
      only in it appear inside every cell instead. No horizontal scrolling and
      no 44px tap targets sitting side by side. */
   @media (max-width: 700px) {
-    .qrow {
+    .qrow,
+    .mrow {
       grid-template-columns: 1fr;
-      gap: 12px;
+      gap: var(--space-3);
     }
     .opts {
-      flex-wrap: wrap;
+      justify-content: flex-start;
     }
     .mhead {
       display: none;
-    }
-    .mrow {
-      grid-template-columns: 1fr;
-      gap: 12px;
-      padding: 16px 16px 18px;
-    }
-    .mcell .n {
-      display: block;
-      padding: 12px 0;
-      font-size: 13px;
     }
   }
   @media (min-width: 701px) {
     /* The number lives in the column header on desktop; repeating it in all
        65 cells is noise. Screen readers still get it from aria-label. */
-    .mcell .n {
+    .scale-cell .n {
       font-size: 0;
-      padding: 11px 0;
+      padding: 12px 0;
     }
   }
 </style>

@@ -1,0 +1,110 @@
+---
+// Field notes, inside the gate.
+//
+// The same findings as the public /latest, read through publishedNotes() — one
+// policy module, so the two things withheld there (Sunil's private reviewNote,
+// and operator items that restate our own prices) are withheld here too. This
+// page does not get its own view of the data and must not: a second reader with
+// its own filtering is how an operator-only field eventually reaches a learner.
+//
+// It exists because the craft nav pointed at /latest, and a learner who
+// followed it left the gated area mid-session and landed on the marketing site
+// — public nav, an APPLY button, a closing CTA selling them the cohort they are
+// already sitting in. Same notes, chrome that knows who is reading.
+//
+// /latest stays exactly as it was. It is a prospect-facing page with JSON-LD and
+// a canonical URL, and it is doing a different job.
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { publishedNotes, longDate } from '../../lib/notes';
+
+// Gated: never prerender, same as every page in here.
+export const prerender = false;
+
+const learner = Astro.locals.learner!;
+const { refreshedAt, themes, count, newest } = publishedNotes();
+const updated = longDate(newest ?? refreshedAt);
+---
+
+<CraftLayout title="Field notes" learner={learner} back={{ href: '/craft', label: 'Your cohort' }}>
+  <section class="page-head">
+    <div class="wrap reading">
+      <div class="eyebrow">Field notes <span class="num">/ agentic AI</span></div>
+      <h1>What is changing while we are teaching it.</h1>
+      <p class="lead">
+        A retrieval agent reads the field weekly; Sunil reads what it gathered before it appears.
+        Every finding is dated and carries its primary source, so you can check it rather than
+        take it. Bring anything here that touches your system to a session.
+      </p>
+      <p class="klabel updated">
+        {count} current {count === 1 ? 'finding' : 'findings'} · last updated {updated} · nothing
+        older than 90 days
+      </p>
+
+      {
+        themes.length === 0 && (
+          <div class="panel marked quiet" style="margin-top:var(--space-6)">
+            <p class="klabel">Nothing gathered yet</p>
+            <p class="muted">
+              The retriever runs weekly and its findings land here once Sunil has read them. An
+              empty page means the first sweep has not been merged, not that the field is quiet.
+            </p>
+          </div>
+        )
+      }
+
+      {
+        themes.map((theme) => (
+          <div class="craft-sec">
+            <h2>{theme.title}</h2>
+            <p class="muted">{theme.blurb}</p>
+
+            <div class="stack">
+              {theme.notes.map((n) => (
+                <article class="row" id={n.id}>
+                  <h3>{n.title}</h3>
+                  <p class="muted">{n.body}</p>
+                  <div class="note-meta">
+                    <a class="src" href={n.source} target="_blank" rel="noopener">
+                      {n.sourceHost} <span class="arrow">↗</span>
+                    </a>
+                    <time class="when" datetime={n.gatheredAt}>
+                      Gathered {longDate(n.gatheredAt)}
+                    </time>
+                    <span class="tags">
+                      {n.tags.map((t) => (
+                        <span class="pill">{t}</span>
+                      ))}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</CraftLayout>
+
+<style>
+  .updated {
+    display: block;
+    margin-top: var(--space-5);
+  }
+  .row h3 {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-snug);
+    color: var(--text-loud);
+    margin-bottom: var(--space-3);
+    max-width: 46ch;
+  }
+  .row > p {
+    max-width: 74ch;
+  }
+  /* The notes are the one place in the area a learner may want to link to a
+     single item, so anchors clear the sticky header. */
+  .row[id] {
+    scroll-margin-top: 96px;
+  }
+</style>

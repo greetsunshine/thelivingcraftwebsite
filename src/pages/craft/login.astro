@@ -2,9 +2,12 @@
 // Learner sign-in. A plain HTML form, no JavaScript — same reasoning as the
 // admin login: the one page where a failed script means nobody gets in.
 //
-// Reached without a session (middleware allowlists it), so it cannot use
-// CraftLayout, which needs a learner.
-import '../../styles/global.css';
+// Reached without a session (middleware allowlists it), so it passes no learner
+// to CraftLayout and gets the bare shell — wordmark, no nav, no footer
+// identity. It used to hand-roll the whole document instead, which is how it
+// ended up the only page in the area on the current design system while the
+// three behind the gate were still on the previous one.
+import CraftLayout from '../../layouts/CraftLayout.astro';
 
 export const prerender = false;
 
@@ -19,148 +22,58 @@ const requested = params.get('next') ?? '/craft';
 const next = requested.startsWith('/craft') && !requested.startsWith('//') ? requested : '/craft';
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow, noarchive" />
-    <title>Sign in · The Living Craft</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="signin">
-      <form class="card" method="POST" action="/api/craft/login">
-        <div class="wordmark" style="margin-bottom:26px">
-          <span class="dot"></span> the living craft
-        </div>
-        <h1>Your cohort</h1>
-        <p class="muted">
-          Sign in with the email you applied with and the access code Sunil sent you.
-        </p>
+<CraftLayout title="Sign in">
+  <div class="signin">
+    <form class="panel" method="POST" action="/api/craft/login">
+      <h1>Your cohort</h1>
+      <p class="muted">
+        Sign in with the email you applied with and the access code Sunil sent you.
+      </p>
 
-        <input type="hidden" name="next" value={next} />
+      <input type="hidden" name="next" value={next} />
 
-        <label>
-          <span class="lbl">Email</span>
-          <input type="email" name="email" required autofocus autocomplete="email" inputmode="email" />
-        </label>
+      <label>
+        <span class="lbl">Email</span>
+        <input class="field" type="email" name="email" required autofocus autocomplete="email" inputmode="email" />
+      </label>
 
-        <label>
-          <span class="lbl">Access code</span>
-          <input
-            type="text"
-            name="code"
-            required
-            autocomplete="one-time-code"
-            spellcheck="false"
-            placeholder="xxxxxx-xxxxxx-xxxxxx-xxxxxx"
-          />
-        </label>
+      <label>
+        <span class="lbl">Access code</span>
+        <input
+          class="field code"
+          type="text"
+          name="code"
+          required
+          autocomplete="one-time-code"
+          spellcheck="false"
+          placeholder="xxxxxx-xxxxxx-xxxxxx-xxxxxx"
+        />
+      </label>
 
-        {failed && <p class="err">That email and code don't match a seat. Check both, dashes optional.</p>}
-        {
-          throttled && (
-            <p class="err">
-              Too many attempts. Try again in {wait} minute{wait === '1' ? '' : 's'}.
-            </p>
-          )
-        }
+      {failed && <p class="err">That email and code don't match a seat. Check both, dashes optional.</p>}
+      {
+        throttled && (
+          <p class="err">
+            Too many attempts. Try again in {wait} minute{wait === '1' ? '' : 's'}.
+          </p>
+        )
+      }
 
-        <button class="btn btn-primary" type="submit">Sign in</button>
+      <button class="btn btn-primary" type="submit">Sign in</button>
 
-        <p class="help">
-          Lost your code? Email <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
-          and Sunil will issue a new one — the old one stops working when he does.
-        </p>
-      </form>
-    </div>
-  </body>
-</html>
+      <p class="help">
+        Lost your code? Email <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+        and Sunil will issue a new one — the old one stops working when he does.
+      </p>
+    </form>
+  </div>
+</CraftLayout>
 
 <style>
-  .signin {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-  }
-  .card {
-    background: var(--surface-panel);
-    border: 0;                        /* §3: never a border and a shadow */
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-7) var(--space-6) var(--space-6);
-    width: 100%;
-    max-width: 440px;
-  }
-  .card h1 {
-    font-size: var(--size-7);
-    font-weight: var(--weight-heavy);
-    letter-spacing: var(--tracking-display);
-    margin-bottom: var(--space-2);
-  }
-  .card > .muted {
-    font-size: 15px;
-    margin-bottom: 26px;
-    max-width: 36ch;
-  }
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    margin-bottom: var(--space-4);
-  }
-  /* §2: sentence case throughout, including field labels. */
-  .lbl {
-    font-family: var(--font-marginal);
-    font-size: var(--size-1);
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--text-quiet);
-  }
-  input {
-    font-family: var(--font-body);
-    font-size: var(--size-3);
-    color: var(--text-body);
-    background: var(--surface-panel);
-    border: var(--border-w-rule) solid var(--border-field);
-    border-radius: var(--radius-field);
-    height: var(--control-h);
-    padding: 0 var(--space-4);
-    width: 100%;
-  }
-  input[name='code'] {
-    font-family:var(--font-mono);
+  /* The one thing this page needs that the area does not: a code is read
+     character by character when someone is checking it against an email. */
+  .code {
+    font-family: var(--font-mono);
     letter-spacing: 0.04em;
   }
-  input:focus { outline: none; border-color: var(--text-body); }
-  input:focus-visible {
-    outline: var(--focus-w) solid var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-  button[type='submit'] {
-    width: 100%;
-    justify-content: center;
-    margin-top: 6px;
-  }
-  .err {
-    color: var(--danger);
-    font-size: var(--size-3);
-    margin-bottom: 14px;
-  }
-  .help {
-    font-size: 13px;
-    color: var(--ink-faint);
-    margin-top: 22px;
-    line-height: 1.55;
-  }
-  .help a { color: var(--clay); text-decoration: underline; text-underline-offset: .2em; }
 </style>

@@ -25,6 +25,19 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
   [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/admin/intake`.
+  Five pages — sign-in, the index, a session, the intake, and field notes — and **all
+  five go through [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro)**, including sign-in. Its `learner`
+  prop is optional and that is the whole mechanism: no learner renders the bare shell
+  (wordmark, no nav, no footer identity). Sign-in used to hand-roll its own `<head>`,
+  and the fonts, favicon and noindex tag then drifted from the layout's.
+  - **`/craft/notes` is the field notes, inside the gate.** The nav used to point at the
+    public `/latest`, so a learner mid-session left the gated area and landed on the
+    marketing site — public nav, an APPLY button, a closing CTA selling them the cohort
+    they are already sitting in. Both pages read the same [src/lib/notes.ts](src/lib/notes.ts), and must
+    keep doing so: that module is where `reviewNote` and operator items are withheld, and
+    a second reader with its own filtering is how an operator-only field eventually
+    reaches a learner. `/latest` is unchanged — it is prospect-facing, with JSON-LD and a
+    canonical URL, doing a different job.
 
 **Cross-link spine:** assessment ⇄ CAIO ⇄ cohort. Assessment is the front door, the CAIO
 retainer is the expansion, the cohort is capability-transfer / lead-gen. The fee-credit
@@ -208,6 +221,22 @@ none of their audience; that separation is load-bearing, see the radar entry.
   working density (tables and hairlines, not 104px sections). It deliberately does
   **not** import `global.css`: it uses four of those 220 lines, and sharing them
   would mean every change to the public design reflows the console.
+  The course area has [src/styles/craft.css](src/styles/craft.css), which — unlike `admin.css` — is **additive to
+  `global.css`, never a replacement**: a learner who applied on the strength of the public
+  pages should not land somewhere that looks like a different product, so the noir hero,
+  the sun button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all still come from
+  `global.css`. `craft.css` holds only what the marketing pages have no use for —
+  `panel`/`stack`/`row`, the state `pill`, `klabel`, `facts`, `page-head`, the intake's
+  scale cells, the pager, the sign-in card. It exists because those pieces had been
+  written four times in four page-scoped `<style>` blocks and had drifted: sign-in was on
+  the illustration-led system while the three pages behind the gate were the old
+  warm-craft structure with new tokens poured into it. Two laws it holds and page-scoped
+  CSS kept breaking: **a panel gets a shadow or a border, never both** (hairlines are
+  legal *inside* a panel, as row dividers), and **if it is yellow it is clickable** —
+  `--sun` is a fill and cannot carry text, `--clay` is the accent as ink. A status pill is
+  therefore never sun. One trap: `global.css` already owns short names like `.mod` (the
+  public module card), so a bare `.mod` in a session row renders inside a phantom nested
+  card. Namespace anything generic.
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.

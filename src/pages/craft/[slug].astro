@@ -36,41 +36,44 @@ const { Content } = await render(session);
   learner={learner}
   back={{ href: '/craft', label: 'All sessions' }}
 >
-  <section style="padding:40px 0 80px;border-top:0">
-    <div class="wrap narrow">
+  <section class="page-head">
+    <div class="wrap reading">
       <div class="eyebrow">
         Week {session.data.week}
         <span class="num">/ {module ? `${session.data.module} · ${module.weeks}` : 'Pre-work'}</span>
       </div>
-      <h1 style="font-size:clamp(30px,4.4vw,46px);margin:18px 0 16px">{session.data.title}</h1>
+      <h1>{session.data.title}</h1>
       <p class="lead">{session.data.summary}</p>
 
-      {
-        session.data.recordingUrl && (
-          <a class="btn btn-ghost" style="margin-top:26px" href={session.data.recordingUrl}>
-            Watch the recording <span class="arrow">→</span>
-          </a>
-        )
-      }
-
-      <hr class="rule" style="margin:38px 0" />
+      <div class="head-row">
+        <span class={`pill ${session.data.status === 'ready' ? 'live' : ''}`}>
+          {session.data.status === 'ready' ? 'Ready' : 'In progress'}
+        </span>
+        {
+          session.data.recordingUrl && (
+            <a class="btn btn-primary" href={session.data.recordingUrl}>
+              Watch the recording <span class="arrow">→</span>
+            </a>
+          )
+        }
+      </div>
 
       {
         session.data.status === 'ready' ? (
-          <article class="prose">
+          <article class="panel prose">
             <Content />
           </article>
         ) : (
-          <div class="pending">
-            <p class="mono label">Still being written</p>
-            <p>
+          <div class="panel marked quiet">
+            <p class="klabel">Still being written</p>
+            <p class="muted">
               This session has not been written up yet. It will appear here before the week it is
               taught — the material is prepared close to the cohort deliberately, so it reflects
               what is true in the field now rather than what was true when the page was built.
             </p>
-            <p style="margin-top:14px">
+            <p class="muted">
               If you need the shape of it sooner, email{' '}
-              <a href={`mailto:${practitioner.email}`}>{practitioner.email}</a>.
+              <a class="inline-link" href={`mailto:${practitioner.email}`}>{practitioner.email}</a>.
             </p>
           </div>
         )
@@ -79,7 +82,7 @@ const { Content } = await render(session);
       <nav class="pager">
         {prev ? (
           <a href={`/craft/${prev.id}`}>
-            <span class="mono">← Week {prev.data.week}</span>
+            <span class="klabel">← Week {prev.data.week}</span>
             <span class="t">{prev.data.title}</span>
           </a>
         ) : (
@@ -87,7 +90,7 @@ const { Content } = await render(session);
         )}
         {next && (
           <a class="right" href={`/craft/${next.id}`}>
-            <span class="mono">Week {next.data.week} →</span>
+            <span class="klabel">Week {next.data.week} →</span>
             <span class="t">{next.data.title}</span>
           </a>
         )}
@@ -97,117 +100,14 @@ const { Content } = await render(session);
 </CraftLayout>
 
 <style>
-  .narrow {
-    max-width: 780px;
-  }
-
-  .pending {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--ochre);
-    border-radius: var(--radius-inner);
-    padding: 26px 28px;
-    color: var(--ink-soft);
-  }
-  .pending .label {
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ochre);
-    margin-bottom: 10px;
-  }
-  .pending a {
-    color: var(--clay);
-  }
-
-  /* Markdown from the session files. Scoped tags, because the collection body is
-     the only place on this site that emits unstyled headings and lists. */
-  .prose :global(h2) {
-    font-size: 25px;
-    font-weight:var(--weight-strong);
-    margin: 40px 0 14px;
-  }
-  .prose :global(h3) {
-    font-size: 20px;
-    font-weight: 460;
-    margin: 30px 0 10px;
-  }
-  .prose :global(p) {
-    color: var(--ink-soft);
-    margin-bottom: 16px;
-  }
-  .prose :global(ul),
-  .prose :global(ol) {
-    color: var(--ink-soft);
-    margin: 0 0 18px 22px;
-  }
-  .prose :global(li) {
-    margin-bottom: 8px;
-  }
-  .prose :global(a) {
+  /* The title, the measure and the status row all come from craft.css's
+     .page-head, which the intake and the field notes use too. */
+  .inline-link {
     color: var(--clay);
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 0.2em;
   }
-  .prose :global(code) {
-    font-family:var(--font-mono);
-    font-size: 0.88em;
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    padding: 1px 5px;
-  }
-  .prose :global(pre) {
-    background: var(--surface-invert);
-    color: var(--text-on-invert);
-    padding: var(--space-4) var(--space-5);
-    border-radius: var(--radius-inner);
-    overflow-x: auto;
-    margin-bottom: 20px;
-  }
-  .prose :global(pre code) {
-    background: none;
-    border: 0;
-    padding: 0;
-    color: inherit;
-  }
-  .prose :global(blockquote) {
-    border-left: 2px solid var(--ochre);
-    padding-left: 18px;
-    color: var(--ink-soft);
-    font-style: italic;
-    margin-bottom: 18px;
-  }
-
-  .pager {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    margin-top: 56px;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
-  }
-  .pager a {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-width: 46%;
-  }
-  .pager .right {
-    text-align: right;
-  }
-  .pager .mono {
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ink-faint);
-  }
-  .pager .t {
-    font-family:var(--font-display);
-    font-size: 17px;
-    line-height: 1.25;
-  }
-  .pager a:hover .t {
-    color: var(--clay);
+  .inline-link:hover {
+    color: var(--clay-deep);
   }
 </style>

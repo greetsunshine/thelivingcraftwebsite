@@ -1,26 +1,47 @@
 ---
-// Chrome for the course area.
+// Chrome for the course area — every page under /craft, including sign-in.
 //
 // The same design system as the public site, deliberately: a learner who
 // applied on the strength of that page should not land somewhere that looks
 // like a different product. What changes is what the chrome is FOR — no CTAs,
-// no pricing, no application form. They already bought.
+// no pricing, no application form. They already bought. The course area's own
+// components live in craft.css, which is additive to global.css and never a
+// replacement for it.
+//
+// `learner` is optional, and that is what folds /craft/login in here. Sign-in
+// is reached without a session, so it cannot show a nav that says "sign out" or
+// a footer that names who you are — but it is the same site, and duplicating
+// the whole <head> to say so meant the fonts, the favicon and the noindex tag
+// were maintained in two places and had already drifted. No learner renders the
+// bare shell: wordmark, no links, no footer identity.
 //
 // No SeoHead here. This area is noindex by middleware header and by robots.txt,
 // and a canonical tag or OG image on a page no crawler may fetch is noise.
 import '../styles/global.css';
+import '../styles/craft.css';
 import type { Learner } from '../lib/craft/learners';
 
 export interface Props {
   title: string;
-  learner: Learner;
-  /** Shown as a back-link when the page is a session rather than the index. */
+  /** Absent only on sign-in, which has no session yet. */
+  learner?: Learner;
+  /** Shown as a back-link when the page is not the index. */
   back?: { href: string; label: string };
 }
 
 const { title, learner, back } = Astro.props;
 const year = new Date().getFullYear();
-const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
+const firstName = learner ? (learner.name ?? learner.email).split(/[\s@]/)[0] : null;
+
+// The nav is the whole map of the area — three destinations, no submenus. Kept
+// here rather than per page so adding a fourth is one edit and cannot go
+// missing on one page and not another.
+const NAV = [
+  { href: '/craft', label: 'Sessions' },
+  { href: '/craft/notes', label: 'Field notes' },
+  { href: '/craft/intake', label: 'Intake' },
+];
+const here = Astro.url.pathname.replace(/\/+$/, '') || '/craft';
 ---
 
 <!DOCTYPE html>
@@ -41,18 +62,25 @@ const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
   <body>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="/craft">
+        <a class="wordmark" href={learner ? '/craft' : '/craft/login'}>
           <span class="dot"></span> the living craft
           <span class="wordmark-sub">Cohort</span>
         </a>
-        <nav class="navlinks">
-          <a href="/craft">Sessions</a>
-          <a href="/latest">Field notes</a>
-          <span class="who mono">{firstName}</span>
-          <form method="POST" action="/api/craft/logout" style="display:inline">
-            <button class="signout mono" type="submit">Sign out</button>
-          </form>
-        </nav>
+        {
+          learner && (
+            <nav class="navlinks">
+              {NAV.map((item) => (
+                <a href={item.href} class={here === item.href ? 'on' : ''} aria-current={here === item.href ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))}
+              <span class="who klabel">{firstName}</span>
+              <form method="POST" action="/api/craft/logout" style="display:inline">
+                <button class="signout klabel" type="submit">Sign out</button>
+              </form>
+            </nav>
+          )
+        }
       </div>
     </header>
 
@@ -60,7 +88,9 @@ const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
       {
         back && (
           <div class="wrap backbar">
-            <a class="mono" href={back.href}>← {back.label}</a>
+            <a class="klabel" href={back.href}>
+              ← {back.label}
+            </a>
           </div>
         )
       }
@@ -76,6 +106,16 @@ const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
               Your cohort area. Sessions, pre-work, and what to bring to the room.
             </p>
           </div>
+          {
+            learner && (
+              <div class="foot-col">
+                <h5>The area</h5>
+                {NAV.map((item) => (
+                  <a href={item.href}>{item.label}</a>
+                ))}
+              </div>
+            )
+          }
           <div class="foot-col">
             <h5>Stuck?</h5>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
@@ -87,7 +127,7 @@ const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
         </div>
         <div class="foot-bottom">
           <span>© {year} The Living Craft · Sunil Mathew</span>
-          <span class="mono">Signed in as {learner.email}</span>
+          {learner && <span class="klabel">Signed in as {learner.email}</span>}
         </div>
       </div>
     </footer>
@@ -96,31 +136,32 @@ const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
 
 <style>
   /* .wordmark-sub is the global pill, shared with /latest, /caio, /assessment. */
+  .navlinks .on {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+  }
+  /* --text-faint is 2.29:1 on white and ruled out as a text colour; the name
+     is quiet, not invisible. */
   .navlinks .who {
-    font-size: 12px;
-    color: var(--ink-faint);
-    letter-spacing: 0.04em;
+    color: var(--text-quiet);
   }
   .signout {
     background: none;
     border: 0;
-    border-bottom: 1px solid var(--line-strong);
+    border-bottom: var(--border-w-hair) solid var(--border-field);
     padding: 2px 0;
-    font-size: 12px;
-    color: var(--ink-soft);
+    color: var(--text-quiet);
     cursor: pointer;
-    letter-spacing: 0.04em;
   }
   .signout:hover {
     color: var(--clay);
     border-color: var(--clay);
   }
   .backbar {
-    padding-top: 26px;
+    padding-top: var(--space-5);
   }
   .backbar a {
-    font-size: 13px;
-    color: var(--ink-faint);
+    color: var(--text-quiet);
   }
   .backbar a:hover {
     color: var(--clay);

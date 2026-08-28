@@ -26,16 +26,30 @@ const intakeState = intake?.submitted_at ? 'submitted' : intake ? 'draft' : 'tod
 // Undefined on week 0, which is pre-work and belongs to no module.
 const moduleOf = (id?: string) => (id ? cohort.modules.find((m) => m.id === id) : undefined);
 const ready = sessions.filter((s) => s.data.status === 'ready').length;
+
+const INTAKE_COPY = {
+  submitted: {
+    state: 'Done',
+    line: 'Submitted — open it again to change any answer before we meet.',
+  },
+  draft: {
+    state: 'In progress',
+    line: 'You have a saved draft. Finish it and submit before Class 1.',
+  },
+  todo: {
+    state: 'To do',
+    line: 'Your baseline, before Class 1. About 20 minutes.',
+  },
+} as const;
+const intakeCopy = INTAKE_COPY[intakeState];
 ---
 
 <CraftLayout title="Your cohort" learner={learner}>
-  <section class="hero" style="border-top:0;padding:64px 0 44px">
+  <section class="hero craft-hero">
     <div class="wrap">
       <div class="eyebrow">The Living Craft <span class="num">/ cohort 1</span></div>
-      <h1 style="font-size:clamp(34px,5vw,56px);margin:20px 0 18px">
-        Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.
-      </h1>
-      <p class="lead" style="max-width:60ch">
+      <h1>Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.</h1>
+      <p class="lead">
         This is where the material lives — the session outlines, what to do before each one,
         and what to bring to the room. It fills in as we go; nothing here is a recording of a
         course that already exists.
@@ -43,246 +57,98 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     </div>
   </section>
 
-  <section style="padding-top:0;border-top:0">
+  <section style="padding-top:0">
     <div class="wrap">
-      <div class="factbar">
-        <div><span class="k">Starts</span><span class="v">{cohort.startsOn}</span></div>
-        <div><span class="k">Length</span><span class="v">{cohort.weeks} weeks</span></div>
-        <div><span class="k">Commitment</span><span class="v">{cohort.commitment}</span></div>
-        <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
+      <div class="facts">
+        <div><span class="klabel">Starts</span><span class="v">{cohort.startsOn}</span></div>
+        <div><span class="klabel">Length</span><span class="v">{cohort.weeks} weeks</span></div>
+        <div><span class="klabel">Commitment</span><span class="v">{cohort.commitment}</span></div>
+        <div><span class="klabel">Format</span><span class="v">{cohort.format}</span></div>
       </div>
 
-      <a class={`intake-card ${intakeState}`} href="/craft/intake">
-        <span class="ic-state mono">
-          {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
-        </span>
-        <span class="ic-body">
-          <span class="ic-t">Your intake</span>
-          <span class="ic-s">
-            {
-              intakeState === 'submitted'
-                ? 'Submitted — open it again to change any answer before we meet.'
-                : intakeState === 'draft'
-                  ? 'You have a saved draft. Finish it and submit before Class 1.'
-                  : 'Your baseline, before Class 1. About 20 minutes.'
-            }
-          </span>
+      <a
+        class={`panel marked task ${intakeState === 'submitted' ? 'quiet' : ''}`}
+        style="margin-top:var(--space-5)"
+        href="/craft/intake"
+      >
+        <span class={`pill ${intakeState === 'submitted' ? 'done' : 'live'}`}>{intakeCopy.state}</span>
+        <span class="body">
+          <span class="t">Your intake</span>
+          <span class="s">{intakeCopy.line}</span>
         </span>
         <span class="arrow">→</span>
       </a>
 
-      <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
-      <p class="muted" style="margin-bottom:26px">
-        {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
-        you are not missing anything that exists.
-      </p>
+      <div class="craft-sec">
+        <h2>Sessions</h2>
+        <p class="muted">
+          {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
+          you are not missing anything that exists.
+        </p>
 
-      <div class="sessions">
-        {
-          sessions.map((s) => (
-            <a class={`srow ${s.data.status}`} href={`/craft/week-${s.data.week}`}>
-              <span class="wk mono">Week {s.data.week}</span>
-              <span class="body">
-                <span class="t">{s.data.title}</span>
-                <span class="s">{s.data.summary}</span>
-                <span class="mod mono">
-                  {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
+        <div class="stack">
+          {
+            sessions.map((s) => (
+              <a class="row hoverable srow" href={`/craft/week-${s.data.week}`}>
+                <span class="klabel accent sess-wk">Week {s.data.week}</span>
+                <span class="body">
+                  <span class="t">{s.data.title}</span>
+                  <span class="s">{s.data.summary}</span>
+                  <span class="klabel sess-mod">
+                    {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
+                  </span>
                 </span>
-              </span>
-              <span class="state mono">{s.data.status === 'ready' ? 'Ready' : 'In progress'}</span>
-            </a>
-          ))
-        }
+                <span class={`pill state ${s.data.status === 'ready' ? 'live' : ''}`}>
+                  {s.data.status === 'ready' ? 'Ready' : 'In progress'}
+                </span>
+              </a>
+            ))
+          }
+        </div>
       </div>
 
-      <h2 style="font-size:28px;margin:64px 0 8px">What you are expected to bring</h2>
-      <p class="muted" style="max-width:70ch;margin-bottom:22px">
-        A real system you are accountable for. Every session works on yours, not on a toy —
-        which is why the room is capped at {cohort.seats} seats.
-      </p>
+      <div class="craft-sec">
+        <h2>What you are expected to bring</h2>
+        <p class="muted">
+          A real system you are accountable for. Every session works on yours, not on a toy —
+          which is why the room is capped at {cohort.seats} seats.
+        </p>
 
-      <ul class="tlist">
-        {
-          cohort.outcomes.map((o, i) => (
-            <li>
-              <span class="n">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <p style="font-size:16px">{o}</p>
-              </div>
-            </li>
-          ))
-        }
-      </ul>
+        <ul class="tlist">
+          {
+            cohort.outcomes.map((o, i) => (
+              <li>
+                <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <p>{o}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
 
-      <h2 style="font-size:28px;margin:64px 0 8px">Getting hold of Sunil</h2>
-      <p class="muted" style="max-width:70ch">
-        Email <a href={`mailto:${practitioner.email}`} style="color:var(--clay)">{practitioner.email}</a>
-        — between sessions, not only during them. Bring the system, the constraint, and what you
-        have already tried.
-      </p>
+      <div class="craft-sec">
+        <h2>Getting hold of Sunil</h2>
+        <p class="muted">
+          Email <a href={`mailto:${practitioner.email}`} class="inline-link">{practitioner.email}</a>
+          — between sessions, not only during them. Bring the system, the constraint, and what you
+          have already tried.
+        </p>
+      </div>
     </div>
   </section>
 </CraftLayout>
 
 <style>
-  .factbar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    overflow: hidden;
-    background: var(--surface);
-  }
-  .factbar > div {
-    padding: 20px 22px;
-    border-right: 1px solid var(--line);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .factbar > div:last-child {
-    border-right: 0;
-  }
-  .factbar .k {
-    font-family:var(--font-mono);
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ink-faint);
-  }
-  .factbar .v {
-    font-size: 15px;
-    font-weight: 500;
-  }
-
-  .intake-card {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr) auto;
-    gap: 20px;
-    align-items: center;
-    margin-top: 28px;
-    padding: 22px 26px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--clay);
-    border-radius: var(--radius-inner);
-    transition: 0.18s;
-  }
-  .intake-card:hover {
-    background: #fff;
-  }
-  .intake-card.submitted {
-    border-left-color: var(--line-strong, var(--line));
-  }
-  .ic-state {
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
+  /* Everything this page draws now comes from craft.css. What is left is the
+     one link that is prose rather than a control. */
+  .inline-link {
     color: var(--clay);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
-  .intake-card.submitted .ic-state {
-    color: var(--ink-faint);
-  }
-  .ic-body {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .ic-t {
-    font-family:var(--font-display);
-    font-size: 20px;
-    font-weight:var(--weight-strong);
-  }
-  .ic-s {
-    font-size: 15px;
-    color: var(--ink-soft);
-    max-width: 66ch;
-  }
-
-  .sessions {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    overflow: hidden;
-  }
-  .srow {
-    background: var(--surface);
-    display: grid;
-    grid-template-columns: 90px 1fr auto;
-    gap: 22px;
-    align-items: start;
-    padding: 24px 26px;
-    transition: 0.18s;
-  }
-  .srow:hover {
-    background: #fff;
-  }
-  .srow .wk {
-    font-size: 12px;
-    color: var(--clay);
-    letter-spacing: 0.08em;
-    padding-top: 3px;
-  }
-  .srow .body {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .srow .t {
-    font-family:var(--font-display);
-    font-size: 20px;
-    font-weight:var(--weight-strong);
-    line-height: 1.25;
-  }
-  .srow .s {
-    font-size: 15px;
-    color: var(--ink-soft);
-    max-width: 66ch;
-  }
-  .srow .mod {
-    font-size: 11px;
-    color: var(--ink-faint);
-    letter-spacing: 0.06em;
-    margin-top: 3px;
-  }
-  .srow .state {
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ink-faint);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    padding: 4px 9px;
-    white-space: nowrap;
-  }
-  .srow.ready .state {
-    color: var(--clay);
-    border-color: var(--line-strong);
-  }
-
-  @media (max-width: 780px) {
-    .factbar {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .factbar > div:nth-child(2) {
-      border-right: 0;
-    }
-    .intake-card {
-      grid-template-columns: 1fr auto;
-      gap: 10px 14px;
-    }
-    .intake-card .ic-state {
-      grid-column: 1 / -1;
-    }
-    .srow {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .srow .state {
-      justify-self: start;
-    }
+  .inline-link:hover {
+    color: var(--clay-deep);
   }
 </style>
