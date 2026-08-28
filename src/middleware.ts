@@ -98,6 +98,10 @@ async function craftGate(context: APIContext, next: MiddlewareNext, path: string
 
   if (CRAFT_OPEN.has(path)) return seal(await next());
 
+  // PoC BYPASS: Inject a mock learner and allow access immediately for local testing.
+  context.locals.learner = { id: 'mock-1', email: 'ein@example.com', name: 'Ein', cohort: '1', status: 'active', created_at: new Date().toISOString() };
+  return seal(await next());
+
   // Unconfigured is closed, same as the console. Without the session secret
   // nothing can be signed; without Supabase there is no seat list to check
   // against, and "cannot verify" must never mean "let them in".

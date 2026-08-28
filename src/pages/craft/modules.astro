@@ -1,0 +1,113 @@
+---
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { cohort } from '../../data/facts';
+export const prerender = false;
+const learner = Astro.locals.learner!;
+---
+<CraftLayout title="Modules" learner={learner}>
+  <div class="modules-page">
+    <h1 class="modules-title">Modules</h1>
+    <p class="modules-sub">{cohort.weeks} weeks · {cohort.modules.length} modules</p>
+
+    <div class="modules-grid">
+      {cohort.modules.map((m, i) => (
+        <div class={`module-card ${i === 0 ? 'active' : ''}`}>
+          <div class="module-header">
+            <span class="mono module-id">{m.id}</span>
+            <span class="mono module-weeks">{m.weeks}</span>
+          </div>
+          <h3 class="module-name">{m.title}</h3>
+          <div class="module-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style={`width: ${i === 0 ? '65' : i === 1 ? '20' : '0'}%`}></div>
+            </div>
+            <span class="mono progress-label">{i === 0 ? '65%' : i === 1 ? '20%' : 'Not started'}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</CraftLayout>
+
+<style>
+  .modules-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 0;
+  }
+  .modules-title {
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 0 0 4px;
+  }
+  .modules-sub {
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 28px;
+    transition: all 0.2s;
+  }
+  .module-card:hover {
+    background: var(--surface-hover);
+    box-shadow: var(--shadow-raise);
+  }
+  .module-card.active {
+    border-left: 3px solid var(--clay);
+  }
+  .module-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .module-id {
+    font-size: 12px;
+    color: var(--clay);
+    letter-spacing: 0.08em;
+    font-weight: var(--weight-medium);
+  }
+  .module-weeks {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+  .module-name {
+    font-size: 18px;
+    font-family: var(--font-display);
+    font-weight: var(--weight-strong);
+    margin: 0 0 20px;
+    line-height: 1.3;
+  }
+  .module-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--paper-2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--clay);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+</style>

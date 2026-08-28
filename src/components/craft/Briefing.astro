@@ -1,0 +1,51 @@
+---
+import { mockBriefing } from '../../data/mock-dashboard';
+
+const { date, body, urgent } = mockBriefing;
+---
+
+<div class={`briefing-card ${urgent ? 'urgent' : ''}`}>
+  <div class="b-header">
+    <span class="mono date">{date}</span>
+    {urgent && <span class="mono badge">Action Needed</span>}
+  </div>
+  <p class="b-body">{body}</p>
+</div>
+
+<style>
+  .briefing-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+  .briefing-card.urgent {
+    border-left: 3px solid var(--clay);
+  }
+  .b-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .date {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: var(--tracking-label);
+  }
+  .badge {
+    font-size: 11px;
+    color: var(--clay);
+    background: var(--agent-machine-bg);
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    letter-spacing: var(--tracking-label);
+  }
+  .b-body {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 70ch;
+  }
+</style>

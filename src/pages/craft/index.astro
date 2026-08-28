@@ -9,6 +9,9 @@ import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
 import { getIntake } from '../../lib/craft/intake';
+import Briefing from '../../components/craft/Briefing.astro';
+import MemberState from '../../components/craft/MemberState.astro';
+import PrReviewCard from '../../components/craft/PrReviewCard.astro';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -29,102 +32,161 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
 ---
 
 <CraftLayout title="Your cohort" learner={learner}>
-  <section class="hero" style="border-top:0;padding:64px 0 44px">
-    <div class="wrap">
-      <div class="eyebrow">The Living Craft <span class="num">/ cohort 1</span></div>
-      <h1 style="font-size:clamp(34px,5vw,56px);margin:20px 0 18px">
-        Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.
-      </h1>
-      <p class="lead" style="max-width:60ch">
-        This is where the material lives — the session outlines, what to do before each one,
-        and what to bring to the room. It fills in as we go; nothing here is a recording of a
-        course that already exists.
-      </p>
-    </div>
-  </section>
-
-  <section style="padding-top:0;border-top:0">
-    <div class="wrap">
-      <div class="factbar">
-        <div><span class="k">Starts</span><span class="v">{cohort.startsOn}</span></div>
-        <div><span class="k">Length</span><span class="v">{cohort.weeks} weeks</span></div>
-        <div><span class="k">Commitment</span><span class="v">{cohort.commitment}</span></div>
-        <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
+  <div class="content-card">
+    <section class="hero-black">
+      <div class="wrap">
+        <div class="eyebrow" style="color: var(--sun);">The Living Craft <span class="num" style="color: var(--ink-faint);">/ cohort 1</span></div>
+        <h1 style="font-size:clamp(34px,5vw,56px);margin:20px 0 18px; color: var(--paper-1);">
+          Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.
+        </h1>
+        <p class="lead" style="max-width:60ch; color: var(--ink-faint);">
+          This is where the material lives — the session outlines, what to do before each one,
+          and what to bring to the room. It fills in as we go; nothing here is a recording of a
+          course that already exists.
+        </p>
       </div>
+    </section>
 
-      <a class={`intake-card ${intakeState}`} href="/craft/intake">
-        <span class="ic-state mono">
-          {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
-        </span>
-        <span class="ic-body">
-          <span class="ic-t">Your intake</span>
-          <span class="ic-s">
-            {
-              intakeState === 'submitted'
-                ? 'Submitted — open it again to change any answer before we meet.'
-                : intakeState === 'draft'
-                  ? 'You have a saved draft. Finish it and submit before Class 1.'
-                  : 'Your baseline, before Class 1. About 20 minutes.'
-            }
-          </span>
-        </span>
-        <span class="arrow">→</span>
-      </a>
+    <div class="card-body">
+      <section style="padding-top:0;border-top:0">
+        <div class="wrap">
+          <div class="factbar">
+            <div><span class="k">Starts</span><span class="v">{cohort.startsOn}</span></div>
+            <div><span class="k">Length</span><span class="v">{cohort.weeks} weeks</span></div>
+            <div><span class="k">Commitment</span><span class="v">{cohort.commitment}</span></div>
+            <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
+          </div>
 
-      <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
-      <p class="muted" style="margin-bottom:26px">
-        {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
-        you are not missing anything that exists.
-      </p>
-
-      <div class="sessions">
-        {
-          sessions.map((s) => (
-            <a class={`srow ${s.data.status}`} href={`/craft/week-${s.data.week}`}>
-              <span class="wk mono">Week {s.data.week}</span>
-              <span class="body">
-                <span class="t">{s.data.title}</span>
-                <span class="s">{s.data.summary}</span>
-                <span class="mod mono">
-                  {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
-                </span>
+          <a class={`intake-card ${intakeState}`} href="/craft/intake">
+            <span class="ic-state mono">
+              {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
+            </span>
+            <span class="ic-body">
+              <span class="ic-t">Your intake</span>
+              <span class="ic-s">
+                {
+                  intakeState === 'submitted'
+                    ? 'Submitted — open it again to change any answer before we meet.'
+                    : intakeState === 'draft'
+                      ? 'You have a saved draft. Finish it and submit before Class 1.'
+                      : 'Your baseline, before Class 1. About 20 minutes.'
+                }
               </span>
-              <span class="state mono">{s.data.status === 'ready' ? 'Ready' : 'In progress'}</span>
-            </a>
-          ))
-        }
-      </div>
+            </span>
+            <span class="arrow">→</span>
+          </a>
 
-      <h2 style="font-size:28px;margin:64px 0 8px">What you are expected to bring</h2>
-      <p class="muted" style="max-width:70ch;margin-bottom:22px">
-        A real system you are accountable for. Every session works on yours, not on a toy —
-        which is why the room is capped at {cohort.seats} seats.
-      </p>
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Your Briefing</h2>
+            <Briefing />
+            <MemberState />
+            <PrReviewCard />
+          </div>
 
-      <ul class="tlist">
-        {
-          cohort.outcomes.map((o, i) => (
-            <li>
-              <span class="n">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <p style="font-size:16px">{o}</p>
+          <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
+          <p class="muted" style="margin-bottom:26px">
+            {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
+            you are not missing anything that exists.
+          </p>
+
+          <div class="sessions">
+            {
+              sessions.map((s) => (
+                <a class={`srow ${s.data.status}`} href={`/craft/week-${s.data.week}`}>
+                  <span class="wk mono">Week {s.data.week}</span>
+                  <span class="body">
+                    <span class="t">{s.data.title}</span>
+                    <span class="s">{s.data.summary}</span>
+                    <span class="mod mono">
+                      {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
+                    </span>
+                  </span>
+                  <span class="state mono">{s.data.status === 'ready' ? 'Ready' : 'In progress'}</span>
+                </a>
+              ))
+            }
+          </div>
+
+          <h2 style="font-size:28px;margin:64px 0 8px">What you are expected to bring</h2>
+          <p class="muted" style="max-width:70ch;margin-bottom:22px">
+            A real system you are accountable for. Every session works on yours, not on a toy —
+            which is why the room is capped at {cohort.seats} seats.
+          </p>
+
+          <ul class="tlist">
+            {
+              cohort.outcomes.map((o, i) => (
+                <li>
+                  <span class="n" style="color: var(--sun);">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <p style="font-size:16px">{o}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+
+          <h2 style="font-size:28px;margin:64px 0 8px">Getting hold of Sunil</h2>
+          <p class="muted" style="max-width:70ch">
+            Email <a href={`mailto:${practitioner.email}`} style="color:var(--ink);">{practitioner.email}</a>
+            — between sessions, not only during them. Bring the system, the constraint, and what you
+            have already tried.
+          </p>
+        </div>
+      </section>
+      
+      <footer class="card-footer">
+        <div class="wrap">
+          <div class="foot-grid" style="display:flex; justify-content:space-between; margin-bottom:32px;">
+            <div>
+              <div class="wordmark" style="margin-bottom:14px">
+                <span class="dot" style="color:var(--sun);"></span> the living craft
               </div>
-            </li>
-          ))
-        }
-      </ul>
-
-      <h2 style="font-size:28px;margin:64px 0 8px">Getting hold of Sunil</h2>
-      <p class="muted" style="max-width:70ch">
-        Email <a href={`mailto:${practitioner.email}`} style="color:var(--clay)">{practitioner.email}</a>
-        — between sessions, not only during them. Bring the system, the constraint, and what you
-        have already tried.
-      </p>
+              <p class="muted" style="max-width:32ch">
+                Your cohort area. Sessions, pre-work, and what to bring to the room.
+              </p>
+            </div>
+            <div class="foot-col">
+              <h5 style="font-size:11px; color:var(--ink-faint); margin-bottom:8px;" class="mono">Reach out</h5>
+              <a href="mailto:apply@thelivingcraft.ai" style="font-weight:var(--weight-strong); font-size:16px;">apply@thelivingcraft.ai</a>
+              <p class="muted" style="margin-top:8px;max-width:26ch">
+                Email Sunil directly — there is no support queue, and there does not need to be
+                one for eight people.
+              </p>
+            </div>
+          </div>
+          <div class="foot-bottom" style="display:flex; justify-content:space-between; padding-top:24px; border-top:1px solid var(--line-hair); color:var(--ink-faint); font-size:12px;">
+            <span>© {new Date().getFullYear()} The Living Craft · Sunil Mathew</span>
+            <span class="mono">Signed in as {learner.email}</span>
+          </div>
+        </div>
+      </footer>
     </div>
-  </section>
+  </div>
 </CraftLayout>
 
 <style>
+  .content-card {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    margin-bottom: 48px;
+    overflow: hidden;
+  }
+  .hero-black {
+    background: var(--noir);
+    padding: 64px 0 44px;
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+  }
+  .card-body {
+    padding-bottom: 24px;
+  }
+  .card-footer {
+    background: var(--paper-2);
+    padding: 48px 0 24px;
+    border-top: 1px solid var(--line-hair);
+  }
   .factbar {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -169,7 +231,7 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     transition: 0.18s;
   }
   .intake-card:hover {
-    background: #fff;
+    background: var(--surface-hover);
   }
   .intake-card.submitted {
     border-left-color: var(--line-strong, var(--line));
@@ -218,7 +280,10 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     transition: 0.18s;
   }
   .srow:hover {
-    background: #fff;
+    background: var(--surface-hover);
+  }
+  .review-row:hover {
+    background: var(--surface-hover);
   }
   .srow .wk {
     font-size: 12px;
