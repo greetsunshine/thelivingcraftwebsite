@@ -30,8 +30,11 @@ from a model rather than from a framework's documentation.
       room for that block, which costs you nothing.
 - [ ] Bring one real system you are accountable for at work. Not a diagram —
       just be ready to describe what it does and what breaks at 3am.
-- [ ] Optional, two minutes: run `make weird-mock` and *notice* what happens. Do
-      not fix anything, and do not read the code yet. We open on it together.
+- [ ] Run `make retry` and `make injected` — five minutes, and the one piece of
+      pre-work that is not optional. Week 0 has the detail; the short version is
+      that in both of them the agent does not make a mistake and the system
+      loses the money anyway. Do not fix anything and do not read the code yet.
+      `make retry` needs no key; `make injected` does.
 
 ## 1 · The Concept
 
@@ -45,11 +48,13 @@ We start with the case that works.
 ▸ tool  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
 ▸ done  All done.
 tokens 660 (in 540 / out 120) · steps 4 · 0.0s · ~₹0.38
+paid out ₹1,200 · 1 credit
 ```
 
 That is `make run` on the deterministic brain, which is what is on the screen in
 the room — with your own key the four lines look the same and the tokens, time
-and cost are yours.
+and cost are yours. The payout line is the one to keep watching all cohort; the
+tokens are the cheap number on it.
 
 Four lines. A customer disputes a charge, something investigates, something
 takes a consequential action, it stops. That is an agent — there is no more to

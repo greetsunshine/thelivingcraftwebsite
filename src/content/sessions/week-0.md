@@ -96,11 +96,13 @@ Groq, Together and local Ollama. If you move to a paid key, set a small spend
 limit on it. An agent that loops can spend real money, and that is not
 hypothetical: it is Week 2.
 
-`make mock` will carry you through setup without a key, but Class 1 runs a
-**model bake-off** — the same ticket through two different models — and that
-needs a working key and a second model name to try. Get the key working this
-week rather than in the session. If it will not cooperate, say so and you will
-pair with someone in the room.
+`make mock` will carry you through setup without a key. Two things do need one:
+`make injected` in the pre-work above, and the **model bake-off** in Class 1 —
+the same ticket through two different models — which also wants a second model
+name to try. So get the key working this week rather than in the session.
+`make retry` needs no key either way, so a key problem never costs you both
+demos. If it will not cooperate, say so and you will pair with someone in the
+room.
 
 You are done when `make run` gives you something like this:
 
@@ -110,11 +112,14 @@ You are done when `make run` gives you something like this:
 ▸ tool  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
 ▸ done  All done.
 tokens 660 (in 540 / out 120) · steps 4 · 0.0s · ~₹0.38
+paid out ₹1,200 · 1 credit
 ```
 
 Those exact figures are the deterministic brain's, so they are the ones you see
 before your key is in place. With a key, the four trace lines look the same and
 the tokens, the time and the cost are yours.
+
+The last line is the one to watch all cohort. The tokens are the cheap number.
 
 **No key yet, or your key is misbehaving?** Run `make mock`. It forces the
 deterministic brain, needs no key at all, and still prints the full trace — so a
@@ -122,11 +127,22 @@ key problem never stops you seeing the agent work. `make run` falls back to it
 on its own too, printing a grey `no LLM_API_KEY found` notice above the trace so
 you always know which brain you are watching.
 
-**Optional, two minutes.** Run `make weird-mock` — ticket #9999, an angry
-customer whose account does not exist — and just *notice* what it does. Do not
-fix anything. We dig into what you saw in Class 1. Use that target rather than
-`make weird`: it pins the deterministic brain, so the whole room arrives having
-seen the same trace and we open on one shared thing rather than eight.
+**Then, before Class 1 — five minutes, and not optional.** Two commands:
+
+```
+make retry      # no key needed
+make injected   # needs your key
+```
+
+Run them and just *notice*. Do not fix anything, and do not read the code yet.
+Both have the same shape and it is not the shape people expect: **the agent does
+not make a mistake, and the system loses the money anyway.** `make retry` pays
+one customer ₹3,600 for a single ₹1,200 double-charge across three runs it got
+right every time. `make injected` credits ₹250,000 on an honest ₹1,200 dispute.
+
+Bring what you saw — we pick both up in Class 1. The question there is never
+"why was the model wrong?" — usually it wasn't. It is *what in this codebase
+would have stopped it?*
 
 **Stuck?** Do not burn more than twenty minutes fighting it. Email Sunil with
 your OS and the error and we will get you sorted. Arriving with a working
