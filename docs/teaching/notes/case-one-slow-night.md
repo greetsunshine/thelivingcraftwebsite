@@ -80,6 +80,62 @@ Three things worth naming explicitly:
    The system was not failing loudly and being ignored; it was failing quietly
    and reporting success. That is `▸ done reached step budget` in our own repo.
 
+## Where the key comes from, and who dedupes
+
+The room will get to "we need idempotency" quickly. These are the two things it
+will then get wrong, and both are worth the time.
+
+### The key cannot be minted inside the run
+
+Idempotency is not a property of the payment. It is a property of the **request**,
+carried by a key the **caller** generates, and someone has to decide what makes
+two requests the same request.
+
+So if the agent mints a key at step 1 — a `uuid4()`, a hash of the run — the
+redelivered run mints a *different* one, the provider sees two distinct requests,
+and it pays twice regardless. **A key scoped to the run cannot defend against a
+redelivered run.** It has to derive from something stable across runs: the refund
+request id on the queue message, or an order id plus a period.
+
+Watch for the near-miss too. A hash of `(account_id, amount)` is stable across
+runs, and it is *too* stable — a customer legitimately owed two identical ₹1,200
+refunds receives one. Deduplication needs an identity for the request, not a
+fingerprint of its contents.
+
+### The model is told, the tool decides
+
+The other proposal is: put every previous action in the context and have the model
+check before it pays. Take it seriously — it sounds like good engineering, and the
+context *should* carry it. But the ordering is backwards, and three things in our
+own repo show why.
+
+1. **History is per-run; the money is not.** `run()` builds
+   `state = {"ticket": ticket, "history": []}` fresh on every call, while
+   `LEDGER` in `tools.py` is module-level and accumulates. `make retry` calls
+   `run()` three times, so history is **empty** at the start of each. The model
+   cannot check a history that was just reset. That asymmetry is the bug.
+2. **Concurrency.** Two consumers take the same message at once. Both start with
+   empty history, both check, both see nothing, both pay. Only a check at the
+   point of write has a single serialisation point.
+3. **It is §2's second wrong answer in better clothes.** *"Fix the prompt — tell
+   it to check"* is already listed as an answer rooms give, and the reply is
+   unchanged: what happens on the ticket you have not thought of yet, and how
+   would you find out it had failed? You could never tell correct reasoning from
+   luck.
+
+The version that works is the one **already argued in `tools.py`'s commented
+block**: the tool refuses via the key, and the refusal *returns* rather than
+raises, so it lands in history, reaches the next prompt, and lets the agent
+escalate on its own.
+
+> **Context carries the fact. Code enforces the rule.** Reverse them and a
+> correctness guarantee has been moved inside the probabilistic component.
+
+And the corollary, which is where the instinct was right all along: once the tool
+refuses, swallowing that refusal is the worst available option. A silent refusal
+is a step-budget stop by another name — the agent loops or reports success and
+nobody learns anything.
+
 ## Wiring it to the repo
 
 Every boundary in the table is absent from the reference agent, and the room can

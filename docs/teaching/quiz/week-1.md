@@ -237,7 +237,61 @@ is the argument for pushing state out of the agent, and it is week 2.
 
 ---
 
-### Q13 · Bringing it home
+### Q13 · Where does the idempotency key come from
+`apply` · ask immediately after the room says "we need idempotency"
+
+> The agent generates an idempotency key and passes it to the payments provider.
+> The queue redelivers the request and a fresh run starts. Which key prevents the
+> second payment?
+
+- **A.** A `uuid4()` minted at the start of the run
+- **B.** A hash of the conversation history so far
+- **C.** The refund request id carried on the queue message ✅
+- **D.** A hash of `(account_id, amount)`
+
+**Why the others are attractive and wrong.** **A** is the most common answer and
+it fails at exactly the moment it is needed: a fresh run mints a fresh uuid, the
+provider sees two distinct requests, it pays twice. **B** is worse — history is
+empty at the start of a redelivered run, and it changes on every step within a
+run. **D** is the interesting near-miss: it is stable across runs, and it is *too*
+stable, so a customer legitimately owed two identical ₹1,200 refunds receives one.
+
+**The point to land:** deduplication needs an identity for the request, not a
+fingerprint of its contents — and a key scoped to the run cannot defend against a
+redelivered run.
+
+---
+
+### Q14 · Who dedupes
+`judge` · the best distractor in this bank, because the wrong answer sounds like
+good engineering
+
+> A room proposes: put every previous action into the context, and have the model
+> check whether it already paid before paying again. Give three reasons this does
+> not hold, and the version of the idea that does.
+
+**Three reasons, all visible in our repo.**
+1. `run()` builds `state = {"ticket": ..., "history": []}` fresh on every call,
+   while `LEDGER` in `tools.py` is module-level. `make retry` calls `run()` three
+   times, so history is **empty** each time and `LEDGER` is not. The model cannot
+   check a history that was just reset.
+2. Two consumers take the same message concurrently. Both see empty history, both
+   pay. Only a check at the point of write has a single serialisation point.
+3. It is a prompt instruction guarding an irreversible action. You could never
+   distinguish "it reasoned correctly" from "it got lucky".
+
+**The version that works** is already argued in `tools.py`'s commented block: the
+tool refuses via the key, and the refusal *returns* rather than raises, so it
+lands in history, reaches the next prompt, and lets the agent escalate on its own.
+**Context carries the fact; code enforces the rule.**
+
+**Credit the instinct** — it is half right, and the half it gets right matters:
+once the tool refuses, swallowing that refusal is the worst option available. A
+silent refusal is a step-budget stop by another name.
+
+---
+
+### Q15 · Bringing it home
 `judge` · After-block prompt
 
 > You can add exactly two of these five boundaries to your own system this
@@ -265,4 +319,10 @@ could actually observe. This is the decision record, in miniature.
 - Q11 is the session's spine as a test question — a better model changes the odds
   of an action, a boundary changes the set of possible ones. Worth using late,
   after the bake-off has made a better model look like the answer.
-- Q13, like Q8, belongs in the After block.
+- Q13 and Q14 come after the room has said "idempotency", not before. Both are
+  answers to a question they have already asked, which is when they land.
+- Q14 is the one to protect time for. "Put the actions in the context and let the
+  model check" is what a senior room proposes, it sounds like good engineering,
+  and taking it apart is the session's spine in miniature — a boundary changes the
+  set of possible actions, an instruction changes the odds.
+- Q15, like Q8, belongs in the After block.
