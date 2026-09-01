@@ -6,6 +6,9 @@ summary: "Draw the map: what an agent actually is as a system, and where it brea
 status: draft
 ---
 
+WebPage: https://claude.ai/code/artifact/435ed083-117f-45d1-8827-ee939e7d1889?via=auto_preview
+
+
 We start with an agent that works, break it in front of you, fix what we can in
 forty-five minutes, and then put a system on the table that cannot be fixed in
 forty-five minutes. By the end you will be able to draw your own architecture on

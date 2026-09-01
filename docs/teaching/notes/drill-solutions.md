@@ -155,46 +155,126 @@ Watch for these in the review move; at least one shows up almost every time.
 ### The problem
 
 `trace.py` prints tokens, latency and rupees once, at the end. That tells you a
-run cost ₹0.38 and nothing about which step spent it. On a six-step run with one
-runaway tool call, the summary looks identical to a well-behaved run of the same
-total.
+run cost ₹0.38 and nothing about which step spent it. A six-step run with one
+runaway call looks identical to a well-behaved run of the same total.
 
-Second defect in the same line: the summary says `steps 4` on a run that went
-round the loop three times. `len(self.steps)` counts **trace lines**, not
-iterations — so the number moves when you add a print statement.
+Second defect on the same line: `steps 4` on a run that went round the loop three
+times. `len(self.steps)` counts **trace lines**, so the number moves when someone
+adds a print statement.
+
+### Decide before you prompt
+
+Two questions, and the second is the one that matters.
+
+**What is a step?** A loop iteration, a model call, or a trace line — it currently
+counts the third. The defensible answer is model calls: the thing that costs
+money, and the thing a budget is set against.
+
+**Which cost belongs to which step?** The model call that *decided* an action and
+the tool execution that *performed* it are different events with different owners.
+Tokens are spent by the decision; money is spent by the execution. Attribute both
+to "step 3" and you have merged two things that fail differently and are fixed by
+different people. This is drill 2's version of drill 1's `escalate` question, and
+an assistant will merge them silently.
 
 ### The solution
 
-`LLM` already counts calls (`self.calls`) and cumulative tokens. Capture the
-delta around each model call in `agent.py`:
+Record usage per call in `llm.py`, not in the loop — the loop should not know how
+the model bills, and keeping it here means mock and real cannot drift apart.
 
 ```python
-before = (llm.tokens_in, llm.tokens_out)
-action = llm.next_action(state)
-cost = (llm.tokens_in - before[0], llm.tokens_out - before[1])
+# __init__
+self.usage = []   # one row per model call
+
+def next_action(self, state):
+    """Wrapper that measures one model call."""
+    t0, bi, bo = time.time(), self.tokens_in, self.tokens_out
+    action = self._next_action(state)
+    self.usage.append({"call": self.calls,
+                       "in": self.tokens_in - bi,
+                       "out": self.tokens_out - bo,
+                       "secs": time.time() - t0})
+    return action
+
+def _next_action(self, state):      # the existing body, unchanged
+    ...
 ```
 
-Then pass it into the trace line for that step. The cleanest version records it
-in `llm.py` instead — append `(tokens_in, tokens_out, seconds)` to a
-`self.usage` list per call — so the loop does not have to know how the model
-bills.
-
-For `steps`: decide what the number should **mean**, then make it mean that. The
-defensible answer is model calls, because that is the thing that costs money and
-the thing a budget is set against — and `llm.calls` already holds it:
+Then in `trace.py`'s `summary`, and note `steps` now means model calls —
+`llm.calls` already holds it, so that half is one word:
 
 ```python
-f"steps {llm.calls} · ..."
+f"steps {llm.calls} · {dt:.1f}s · ~₹{cost:.2f}"))
+
+for u in getattr(llm, "usage", []):
+    c = (u["in"] / 1e6 * pin + u["out"] / 1e6 * pout) * USD_INR
+    print(_fmt("meta", f"  call {u['call']}  {u['in']:>5} in / {u['out']:>4} out"
+                       f"  {u['secs']:>5.1f}s  ~₹{c:.2f}"))
 ```
 
-One word, and the number stops moving when someone adds a print.
+### What it reveals — this is the payload
+
+Measured on `gemini-3.5-flash`, ticket 4471, a three-call run:
+
+```
+tokens 983 (in 702 / out 281) · steps 3 · 12.8s · ~₹0.65
+  call 1    165 in /   73 out    3.6s  ~₹0.16
+  call 2    243 in /   97 out    4.3s  ~₹0.22
+  call 3    294 in /  111 out    4.8s  ~₹0.26
+```
+
+The run is not evenly priced. The last step costs **63% more than the first**, and
+prompt tokens grow 165 → 294 — **1.78× over three calls**, before anything has
+gone wrong.
+
+The reason is `_build_prompt`: it replays the entire history every turn, so
+**every step pays for every step before it.** On a six-step run with fat tool
+results the curve is far steeper.
+
+That makes drill 2 the moment "context is state" stops being an assertion and
+becomes a number. Say it explicitly — the third idea in §2 and this drill are the
+same fact seen from two directions, and this is the direction a CFO understands.
+
+### The trap: mock mode teaches the opposite
+
+The mock adds a flat 180 in / 40 out per call, so the profile is perfectly level:
+
+```
+  call 1    180 in /   40 out    ~₹0.13
+  call 2    180 in /   40 out    ~₹0.13
+  call 3    180 in /   40 out    ~₹0.13
+```
+
+A learner without a key does the drill correctly and concludes cost is evenly
+distributed, which is the opposite of the truth. **Either require a key for this
+drill, or fix the mock.**
+
+The fix is one line in `llm.py` and it is tested — estimate from the prompt
+actually built rather than a constant:
+
+```python
+self.tokens_in += (len(SYSTEM) + len(prompt)) // 4
+```
+
+which yields 153 → 205 → 234, tracking the real model's shape closely. **The cost:
+it changes the numbers in the sample traces in week 0 and week 1** (`tokens 660`
+→ `712`, `₹0.38` → `₹0.40`). Worth it, but it is a decision, not a tidy-up.
+
+### What the assistant will get wrong
+
+- **Puts the measurement in `agent.py`.** Works, and now the loop knows how the
+  model bills. Mock and real drift the first time one of them changes.
+- **Wraps wall-clock around the whole loop iteration**, so tool latency is
+  attributed to the model. Ask which number they would take to a provider.
+- **Fixes the visible half only** — prints the per-step breakdown and leaves
+  `steps {len(self.steps)}`, so the line still contains a number that lies.
+- **Adds a tokenizer dependency** to count tokens the API already returned in
+  `r.usage`. Ask what happens to that count when the provider changes.
 
 ### Running it
 
-This is the fiddly one. If the clock beats you it finishes cleanly in the After
-block — the session copy already says so.
-
----
+This is the fiddly one. Drills 1 and 3 go in the room; if the clock beats you,
+this finishes cleanly in the After block — the session copy already says so.
 
 ## Drill 3 · Grade the tools by blast radius
 
