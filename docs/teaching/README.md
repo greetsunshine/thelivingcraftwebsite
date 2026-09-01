@@ -17,6 +17,12 @@ Nothing in this directory is imported, rendered, or deployed.
     quiz/week-N.md     question bank, tagged by topic and difficulty, with the
                        rationale for every distractor
 
+The files here are the source. The teaching surface built from them is a
+published Artifact — week 1's is at
+https://claude.ai/code/artifact/435ed083-117f-45d1-8827-ee939e7d1889 — where each
+problem carries its solution behind a click, so a solution is never on screen
+while a room is meant to be producing it. Edit here, then republish.
+
 The quiz banks are teaching material, not an assessment product — there is no
 quiz surface in `/craft` and none is planned. If one is ever built, these become
 its source, which is the reason they carry answers and distractor rationale
