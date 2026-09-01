@@ -86,10 +86,20 @@ Every boundary in the table is absent from the reference agent, and the room can
 check each one:
 
 - no timeout anywhere in `agent.py`
-- `tools.py` — `issue_credit` takes any amount, no ceiling, no key
+- `tools.py` — `issue_credit` takes any amount and moves it. A ceiling and an
+  existence check exist in the file **as a commented-out block**, so the boundary
+  is written but not enforced; the idempotency key is genuinely absent
 - `agent.py:15` — the loop has no memory of previous runs
 - step-budget exhaustion prints `done` and exits zero
 - `trace.py` reports cost once, at the end
+
+That commented block is worth reading aloud rather than skipping. Its docstring
+explains why the checks **return a refusal instead of raising**: `agent.py:34`
+calls the tool as a bare `fn(**args)` with no `try/except`, so an exception kills
+the run, while a returned refusal lands in history, reaches the next prompt, and
+lets the agent escalate on its own. That is a durability decision — bounded,
+visible, cheap — argued in four lines, and it is the best worked example of the
+week's sentence anywhere in the repo.
 
 `make retry` is this case study, executable, in ten seconds.
 
