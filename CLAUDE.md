@@ -25,6 +25,31 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
   [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/admin/intake`.
+  Six learner surfaces beyond the sessions themselves — **doubts, reading, quiz, ADR,
+  feedback, familiarity** — each with a console counterpart. What they are and why they
+  are shaped the way they are is the learning agent, below.
+
+## The learning agent — read the status doc before building
+**[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
+reading before any further work on `/craft` or its admin pages.** It is the audit of what
+is built, what contradicts the spec, and what is left, against
+[docs/learning-agent-specs-02-09-2026.md](docs/learning-agent-specs-02-09-2026.md) — which
+is the design of record and supersedes the 28 August PoC write-up.
+
+Two rules, and they are the reason the file is worth having:
+- **Read it first.** It exists so nobody re-audits the branch or rebuilds something that
+  is already done. Several surfaces look missing and are merely unlinked; several look
+  finished and do the opposite of what the spec asks.
+- **Update it in the same commit as the code.** A status line that was right the day it
+  was written and wrong a week later is worse than none. Move the checkbox, adjust the
+  counts in the summary table, and add a changelog row.
+
+**Schema is ahead of production right now.** Not yet applied: the `doubts.answer_source`
+and `submissions.status` columns, and the `feedback_responses` table. **Run
+[supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
+idempotent. Shipping code ahead of its schema shows up as the console's "table is not
+answering" banner rather than a crash, which is survivable and confusing. Clear this
+paragraph once it has been run.
 
 **Cross-link spine:** assessment ⇄ CAIO ⇄ cohort. Assessment is the front door, the CAIO
 retainer is the expansion, the cohort is capability-transfer / lead-gen. The fee-credit
@@ -50,8 +75,10 @@ number that is right on the page but wrong in the answer an AI assistant gives
 about us.
 
 ## The admin console (`/admin`)
-Password-gated operator surface. Four jobs: traffic, leads, the questions visitors
-asked the Q&A agent, and content review. Nothing on the public site reads from it,
+Password-gated operator surface. Five jobs: traffic, leads, the questions visitors
+asked the Q&A agent, content review, and **teaching the cohort** — `/admin/doubts`,
+`/admin/quiz`, `/admin/adrs`, `/admin/quiz-adr-comparison`, `/admin/feedback`,
+`/admin/familiarity`, all described under *The learning agent*. Nothing on the public site reads from it,
 and if every one of its env vars is missing the public pages behave exactly as they
 did before it existed.
 
@@ -60,11 +87,17 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/admin` + `/api/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — seven tables (`events`, `leads`, `questions`, `learners`,
-  `intake_responses`, `radar_findings`, `radar_runs`), schema in
+- **Storage is Supabase** — thirteen tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
+  - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
+  - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
+    `submissions`, `quiz_responses`, `doubts`, `feedback`, `feedback_responses`.
+    All but the last are keyed to `learner_id` with `ON DELETE CASCADE`, so erasing
+    someone from `/admin/learners` really erases them. `feedback_responses` is the
+    exception on purpose: it is Sunil's note to the whole room, holds no personal
+    data, and must survive one learner leaving.
 - **Every query degrades to empty on error — so the console probes and says so.**
   That degradation is deliberate (one slow rollup must not 500 the page) but it
   makes a *missing table* and *no rows yet* render identically; `/admin/radar` said
@@ -235,6 +268,20 @@ none of their audience; that separation is load-bearing, see the radar entry.
     survivable but confusing.
   - A hand-run `vercel --prod` is blocked by a global guard hook and should stay that way;
     `pnpm promote` is the guarded path ([scripts/promote.mjs](scripts/promote.mjs)).
+- **Building locally needs Node ≥ 22.12.** The nvm default here is 20.20.1, which Astro
+  refuses outright (`Node.js v20.20.1 is not supported`) — that error is the toolchain, not
+  the code. The system install at `/c/Program Files/nodejs` is 24.x and works:
+  `export PATH="/c/Program Files/nodejs:$PATH"` before `npm run build` or `npx astro check`.
+- **`astro check` has a standing baseline of 8 errors**, all in
+  [src/components/craft/GuideSidebar.astro](src/components/craft/GuideSidebar.astro)
+  (possibly-null DOM queries — the mock chat panel, see *guided-walkthrough/plan.md* §14).
+  `npm run build` passes regardless. **Compare against 8, not 0** — a clean run means you
+  fixed something, and 9 means you broke something.
+  - Was 11 with 3 more in `middleware.ts`, from a `PoC BYPASS` that injected a mock
+    `Learner` object missing `note` and `last_seen_at`. Removed 2 September — it returned
+    before the seat check entirely, so `/craft` had no gate. **If `astro check` ever reports
+    those 3 back, someone has reintroduced a bypass, not a type error** — treat it as the
+    security regression it is, not a baseline drift.
 - Legacy reference files at repo root (`copy.md`, `index.html`, `section-map.md`, `meta.md`,
   `assets/`) predate the Astro build — treat as historical, not the source of truth.
 

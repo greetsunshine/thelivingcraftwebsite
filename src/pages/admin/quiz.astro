@@ -1,0 +1,190 @@
+---
+export const prerender = false;
+
+// Sunil's half of the quiz (spec §5.4).
+//
+// NOT a percentage per learner — the spec is explicit that a score does nothing
+// here. What opens a session is the spread: "five picked the queue, three picked
+// direct calls". And the one flag worth having is CONFIDENT AND WRONG, which is
+// the characteristic failure of experienced people meeting a new domain.
+// Unsure-and-wrong is someone learning normally and is deliberately not flagged.
+//
+// Every number on this page is computed in src/lib/craft/quiz.ts. No model runs.
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getQuizItems, listAllResponsesWithLearner, itemDistribution } from '../../lib/craft/quiz';
+
+const [items, responses] = await Promise.all([getQuizItems(), listAllResponsesWithLearner()]);
+const distribution = itemDistribution(items, responses);
+
+const answered = new Set(responses.map((r) => r.learner_id)).size;
+const flagged = distribution.reduce((n, d) => n + d.confidentlyWrong.length, 0);
+---
+
+<AdminLayout title="Quiz" active="quiz">
+  <div class="page-head">
+    <div>
+      <span class="label">
+        {responses.length} responses · {answered} {answered === 1 ? 'learner' : 'learners'} ·
+        {flagged} confidently wrong
+      </span>
+      <h1>Quiz — the room</h1>
+      <p>
+        How the room answered each question, not how each person scored. Questions where
+        someone was sure and wrong come first: that is the gap worth ten minutes on Thursday.
+      </p>
+    </div>
+  </div>
+
+  {distribution.length === 0 ? (
+    <p class="empty">No responses yet.</p>
+  ) : (
+    <div class="items">
+      {distribution.map((d) => (
+        <section class="item">
+          <header class="item-head">
+            <div class="item-id">
+              <span class="pill">{d.item.id}</span>
+              <span class="pill cap">{d.item.capability}</span>
+              <span class="pill cap">{d.item.difficulty}</span>
+            </div>
+            <span class="faint mono tally">
+              {d.correct} of {d.responses} correct
+            </span>
+          </header>
+
+          <p class="stem">{d.item.body}</p>
+
+          {d.confidentlyWrong.length > 0 && (
+            <p class="flag">
+              <strong>{d.confidentlyWrong.length} sure and wrong</strong>
+              — {d.confidentlyWrong.join(', ')}
+            </p>
+          )}
+
+          <ul class="spread">
+            {d.spread.map((o) => (
+              <li class={o.correct ? 'opt correct' : 'opt'}>
+                <div class="opt-head">
+                  <span class="opt-key">{o.key.toUpperCase()}</span>
+                  <span class="opt-text">{o.text}</span>
+                  <span class="opt-n mono">{o.count}</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span
+                    class="bar-fill"
+                    style={`width:${d.responses ? (o.count / d.responses) * 100 : 0}%`}
+                  ></span>
+                </div>
+                {o.count > 0 && (
+                  <p class="opt-who faint">
+                    {o.learners.join(', ')}
+                    {o.confident > 0 && <span class="sure"> · {o.confident} sure</span>}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {d.item.rationale && (
+            <p class="rationale">
+              <span class="label">Why</span>
+              {d.item.rationale}
+            </p>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+</AdminLayout>
+
+<style>
+  .items { display: flex; flex-direction: column; gap: 40px; }
+
+  .item { border-top: 2px solid var(--ink); padding-top: 14px; }
+
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .item-id { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill.cap { color: var(--ink-faint); }
+  .tally { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .stem {
+    margin: 14px 0 0;
+    max-width: 78ch;
+    font-size: 14.5px;
+    white-space: pre-wrap;
+  }
+
+  .flag {
+    margin: 14px 0 0;
+    padding: 10px 14px;
+    background: var(--paper-2);
+    border-left: 3px solid var(--clay-deep);
+    font-size: 13.5px;
+    max-width: 78ch;
+  }
+  .flag strong { color: var(--clay-deep); }
+
+  .spread {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 820px;
+  }
+
+  .opt-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13.5px;
+  }
+  .opt-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    width: 14px;
+    flex: none;
+  }
+  .opt-text { flex: 1; }
+  .opt-n {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    flex: none;
+  }
+
+  .opt.correct .opt-key,
+  .opt.correct .opt-text { color: var(--good); }
+
+  .bar {
+    height: 3px;
+    background: var(--line);
+    margin-top: 6px;
+  }
+  .bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--ink-faint);
+  }
+  .opt.correct .bar-fill { background: var(--good); }
+
+  .opt-who { font-size: 11.5px; margin: 5px 0 0; }
+  .sure { color: var(--clay); }
+
+  .rationale {
+    margin: 18px 0 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    max-width: 78ch;
+  }
+  .rationale .label { display: block; margin-bottom: 3px; }
+</style>

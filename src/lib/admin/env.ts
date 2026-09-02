@@ -11,9 +11,27 @@
 // UNDEFINED — indexing it throws rather than returning undefined, which took
 // out the whole sweep before it reached the model. Vite only defines it inside
 // its own module graph.
+import fs from 'node:fs';
+import path from 'node:path';
+
 export const env = (key: string): string => {
   const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
-  return viteEnv?.[key] ?? process.env[key] ?? '';
+  let val = viteEnv?.[key] ?? process.env[key] ?? '';
+  
+  // Fallback: manually parse .env.local to pick up changes without a dev server restart
+  if (!val) {
+    try {
+      const content = fs.readFileSync('d:\\thelivingcraftwebsite\\.env.local', 'utf-8');
+      const match = content.match(new RegExp(`^${key}=(.*)$`, 'm'));
+      if (match) {
+        val = match[1].trim();
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  
+  return val;
 };
 
 /**

@@ -2,8 +2,10 @@
 week: 6
 title: "Your system, reviewed in the room"
 module: M4
-summary: "Each participant's architecture on the table, reviewed by the room and by Sunil."
+summary: "Presenting and defending your own agentic system architecture."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding

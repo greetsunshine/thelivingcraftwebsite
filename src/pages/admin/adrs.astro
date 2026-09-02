@@ -1,0 +1,212 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getCollection } from 'astro:content';
+import { listAllSubmissionsWithLearner, submissionGaps } from '../../lib/craft/submissions';
+import { marked } from 'marked';
+
+const rows = await listAllSubmissionsWithLearner();
+
+// The useful half is the gap. Listing what came in cannot tell you who is
+// missing — that only exists against the roster.
+//
+// Note §10: the dashboard tells Sunil and Sunil reaches out. Nothing here
+// chases anyone automatically; automated chasing of senior professionals reads
+// as surveillance.
+const assignmentWeeks = (await getCollection('sessions'))
+  .filter((s) => s.data.assignment && s.data.assignment !== 'TBD')
+  .map((s) => s.data.week)
+  .sort((a, b) => a - b);
+const gaps = (await submissionGaps(assignmentWeeks)).filter((g) => g.missing.length > 0);
+
+const weeks = Array.from(new Set(rows.map(r => r.week))).sort((a, b) => b - a);
+const byWeek = rows.reduce((acc, row) => {
+  if (!acc[row.week]) acc[row.week] = [];
+  acc[row.week].push(row);
+  return acc;
+}, {} as Record<number, typeof rows>);
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+---
+
+<AdminLayout title="ADRs" active="adrs">
+  <div class="page-head">
+    <div>
+      <span class="label">{rows.length} total</span>
+      <h1>Architecture Decision Records</h1>
+      <p>Submissions from learners for weekly assignments.</p>
+    </div>
+  </div>
+
+  {assignmentWeeks.length > 0 && (
+    <section class="gaps">
+      <h2>Not in yet</h2>
+      {gaps.length === 0 ? (
+        <p class="faint">Everyone is up to date on weeks {assignmentWeeks.join(', ')}.</p>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Learner</th><th>Missing</th><th>Submitted</th></tr></thead>
+            <tbody>
+              {gaps.map((g) => (
+                <tr>
+                  <td>
+                    <div style="font-weight:500">{g.learner_name ?? '—'}</div>
+                    <div style="font-size:13px"><a href={`mailto:${g.learner_email}`} style="color:var(--clay)">{g.learner_email}</a></div>
+                  </td>
+                  <td>{g.missing.map((w) => <span class="pill warn">week {w}</span>)}</td>
+                  <td class="faint">{g.submitted.length > 0 ? g.submitted.map((w) => `week ${w}`).join(', ') : 'none'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )}
+
+  <div class="table-scroll">
+    {
+      weeks.length === 0 ? (
+        <p class="empty">No submissions yet.</p>
+      ) : (
+        weeks.map(week => (
+          <div class="week-section" style="margin-bottom: 48px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--line); padding-bottom:16px;">
+              <h2 style="margin:0; font-size:20px;">Week {week}</h2>
+              <button class="btn btn-primary synthesize-btn" data-week={week}>Synthesize Room Summary (Week {week})</button>
+            </div>
+            
+            <div id={`synthesis-result-${week}`} class="synthesis-result markdown-body" style="display:none; background: var(--paper-2); border: 1px solid var(--line-strong); padding: 24px; border-radius: var(--radius-card); margin-bottom: 24px;">
+              <div class="content" style="font-size: 15px; line-height: 1.6;"></div>
+            </div>
+
+            <div class="adrs-list">
+              {byWeek[week].map((s) => (
+                <div class="adr-card" id={`adr-${s.id}`}>
+                  <div class="adr-header">
+                    <div>
+                      <div style="font-weight:500; font-size:16px">{s.learner_name ?? '—'} <span class="faint">({s.learner_email})</span></div>
+                      <div class="faint mono" style="font-size:12px; margin-top:4px">
+                        {s.submitted_at ? `Submitted ${when(s.submitted_at)}` : when(s.updated_at)}
+                      </div>
+                    </div>
+                    {s.repo_url && (
+                      <a href={s.repo_url} target="_blank" rel="noopener noreferrer" class="btn small">View Repo</a>
+                    )}
+                  </div>
+                  <div class="adr-body markdown-body" set:html={marked.parse(s.adr_markdown)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )
+    }
+  </div>
+</AdminLayout>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  // @ts-ignore
+  const marked = window.marked;
+  
+  document.querySelectorAll('.synthesize-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const week = btn.getAttribute('data-week');
+      const resultDiv = document.getElementById(`synthesis-result-${week}`);
+      const contentDiv = resultDiv?.querySelector('.content');
+      
+      if (!resultDiv || !contentDiv) return;
+
+      btn.textContent = 'Synthesizing...';
+      (btn as HTMLButtonElement).disabled = true;
+      
+      resultDiv.style.display = 'block';
+      contentDiv.innerHTML = '<span class="faint mono">Calling model...</span>';
+
+      try {
+        const res = await fetch('/api/admin/adr-synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ week }),
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          contentDiv.innerHTML = marked.parse(data.summary);
+        } else {
+          contentDiv.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
+        }
+      } catch (err) {
+        contentDiv.innerHTML = `<span style="color:var(--danger)">Failed to fetch synthesis</span>`;
+      } finally {
+        btn.textContent = `Synthesize Room Summary (Week ${week})`;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  .adrs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .adr-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+  .adr-header {
+    background: var(--paper-2);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .adr-body {
+    padding: 24px;
+    background: var(--paper-1);
+  }
+  
+  /* Basic markdown typography */
+  .markdown-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 800px;
+  }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  .markdown-body p, .markdown-body ul, .markdown-body pre {
+    margin-bottom: 1em;
+  }
+  .markdown-body pre {
+    background: var(--noir);
+    color: var(--paper-1);
+    padding: 16px;
+    border-radius: var(--radius-inner);
+    overflow-x: auto;
+  }
+</style>
+
+<style>
+  .gaps {
+    margin-bottom: 52px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .gaps h2 { font-size: 20px; margin: 0 0 14px; }
+  .gaps .pill.warn {
+    color: var(--clay-deep);
+    border-color: var(--clay-deep);
+    margin-right: 4px;
+  }
+</style>

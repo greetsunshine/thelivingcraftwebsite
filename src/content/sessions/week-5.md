@@ -2,8 +2,10 @@
 week: 5
 title: "Scale, consistency & the irreversible trade-offs"
 module: M3
-summary: "The calls you cannot walk back, and how to tell which ones those are before you make them."
+summary: "When to use an agent, when to use a workflow, and when to just write code."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding

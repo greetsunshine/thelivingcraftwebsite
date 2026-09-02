@@ -1,0 +1,257 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { listAllFeedbackWithLearner, listAllResponses } from '../../lib/craft/feedback';
+
+const [rows, responses] = await Promise.all([listAllFeedbackWithLearner(), listAllResponses()]);
+const responseFor = new Map(responses.map((r) => [r.week, r]));
+
+const weeks = Array.from(new Set(rows.map(r => r.week))).sort((a, b) => b - a);
+const byWeek = rows.reduce((acc, row) => {
+  if (!acc[row.week]) acc[row.week] = [];
+  acc[row.week].push(row);
+  return acc;
+}, {} as Record<number, typeof rows>);
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+---
+
+<AdminLayout title="Feedback" active="feedback">
+  <div class="page-head">
+    <div>
+      <span class="label">{rows.length} total</span>
+      <h1>Session Feedback</h1>
+      <p>
+        What the room said, and what you changed because of it. The second half is the
+        feature — without a visible change, response rates collapse by week 3.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    {
+      weeks.length === 0 ? (
+        <p class="empty">No feedback yet.</p>
+      ) : (
+        weeks.map(week => (
+          <div class="week-section" style="margin-bottom: 48px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom: 1px solid var(--line); padding-bottom:16px;">
+              <h2 style="margin:0; font-size:20px;">Week {week}</h2>
+              <button class="btn btn-primary synthesize-btn" data-week={week}>Synthesize Week {week}</button>
+            </div>
+            
+            <div id={`synthesis-result-${week}`} class="synthesis-result markdown-body" style="display:none; background: var(--paper-2); border: 1px solid var(--line-strong); padding: 24px; border-radius: var(--radius-card); margin-bottom: 24px;">
+              <div class="content" style="font-size: 15px; line-height: 1.6;"></div>
+            </div>
+
+            <div class="loop" data-week={week}>
+              <div class="loop-head">
+                <span class="label">What changed</span>
+                {responseFor.get(week)?.published_at
+                  ? <span class="pill live">Published — the cohort can see this</span>
+                  : responseFor.get(week)
+                    ? <span class="pill">Draft — not visible to anyone yet</span>
+                    : <span class="faint">Nothing written yet</span>}
+              </div>
+              <textarea class="loop-box" rows="3" placeholder="You said the drill was rushed — week 4 gives it twenty more minutes.">{responseFor.get(week)?.body ?? ''}</textarea>
+              <div class="loop-actions">
+                <button class="btn btn-primary loop-publish">Publish to the cohort</button>
+                <button class="btn loop-draft">Save draft</button>
+                <span class="loop-msg faint"></span>
+              </div>
+            </div>
+
+            <div class="feedback-list">
+              {byWeek[week].map((f) => (
+                <div class="feedback-card">
+                  <div class="f-header">
+                    <div>
+                      <div style="font-weight:500; font-size:16px">{f.learner_name ?? '—'} <span class="faint">({f.learner_email})</span></div>
+                      <div class="faint mono" style="font-size:12px; margin-top:4px">
+                        {when(f.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="f-body">
+                    <div class="f-question">
+                      <h4>What landed well, or shifted your thinking?</h4>
+                      <p>{f.landed}</p>
+                    </div>
+                    <div class="f-question">
+                      <h4>What felt too fast, too slow, or unclear?</h4>
+                      <p>{f.pacing}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )
+    }
+  </div>
+</AdminLayout>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.loop').forEach((box) => {
+    const week = Number(box.dataset.week);
+    const text = box.querySelector('.loop-box') as HTMLTextAreaElement;
+    const msg = box.querySelector('.loop-msg') as HTMLElement;
+
+    const save = async (publish: boolean, btn: HTMLButtonElement) => {
+      if (!text.value.trim()) {
+        msg.textContent = 'Write the note first.';
+        msg.style.color = 'var(--clay-deep)';
+        return;
+      }
+      if (publish && !confirm('Publish this to the cohort? They will see it on their feedback page.')) return;
+
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = publish ? 'Publishing...' : 'Saving...';
+      try {
+        const res = await fetch('/api/admin/feedback-response', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ week, body: text.value, publish }),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error ?? 'Failed');
+        msg.textContent = publish ? 'Published.' : 'Draft saved.';
+        msg.style.color = 'var(--good)';
+        if (publish) setTimeout(() => window.location.reload(), 900);
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'Failed';
+        msg.style.color = 'var(--clay-deep)';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    };
+
+    box.querySelector('.loop-publish')?.addEventListener('click', (e) =>
+      save(true, e.currentTarget as HTMLButtonElement));
+    box.querySelector('.loop-draft')?.addEventListener('click', (e) =>
+      save(false, e.currentTarget as HTMLButtonElement));
+  });
+</script>
+
+<style>
+  .loop {
+    margin-bottom: 28px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border-left: 3px solid var(--clay);
+  }
+  .loop-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .loop-head .faint { font-size: 12.5px; }
+  .pill.live { color: var(--good); border-color: var(--good); }
+  .loop-box {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    resize: vertical;
+  }
+  .loop-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .loop-msg { font-size: 12px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  // @ts-ignore
+  const marked = window.marked;
+  
+  document.querySelectorAll('.synthesize-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const week = btn.getAttribute('data-week');
+      const resultDiv = document.getElementById(`synthesis-result-${week}`);
+      const contentDiv = resultDiv?.querySelector('.content');
+      
+      if (!resultDiv || !contentDiv) return;
+
+      btn.textContent = 'Synthesizing...';
+      (btn as HTMLButtonElement).disabled = true;
+      
+      resultDiv.style.display = 'block';
+      contentDiv.innerHTML = '<span class="faint mono">Calling model...</span>';
+
+      try {
+        const res = await fetch('/api/admin/feedback-synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ week }),
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          contentDiv.innerHTML = marked.parse(data.summary);
+        } else {
+          contentDiv.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
+        }
+      } catch (err) {
+        contentDiv.innerHTML = `<span style="color:var(--danger)">Failed to fetch synthesis</span>`;
+      } finally {
+        btn.textContent = `Synthesize Week ${week}`;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  .feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .feedback-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+  .f-header {
+    background: var(--paper-2);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .f-body {
+    padding: 24px;
+    background: var(--paper-1);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .f-question h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .f-question p {
+    font-size: 14.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    margin: 0;
+  }
+</style>

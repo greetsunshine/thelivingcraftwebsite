@@ -1,0 +1,207 @@
+---
+export const prerender = false;
+
+// The pairing (spec §5.5), computed. The comparison logic lives in
+// src/lib/craft/pairing.ts — including why an 'unclear' verdict is a correct
+// answer here rather than a missing one.
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getCollection } from 'astro:content';
+import { marked } from 'marked';
+import { listAllSubmissionsWithLearner } from '../../lib/craft/submissions';
+import { getQuizItems, listAllResponsesWithLearner } from '../../lib/craft/quiz';
+import { buildPairings, verdictTally, VERDICT_LABEL, VERDICT_NOTE } from '../../lib/craft/pairing';
+
+const [items, responses, submissions, sessions] = await Promise.all([
+  getQuizItems(),
+  listAllResponsesWithLearner(),
+  listAllSubmissionsWithLearner(),
+  getCollection('sessions'),
+]);
+
+const learners = buildPairings({ items, responses, submissions });
+const tally = verdictTally(learners);
+
+// Weeks with an assignment but no items in the bank cannot be compared. That is
+// authoring, not a bug, so the page says which weeks rather than rendering empty.
+const banked = new Set(items.map((i) => i.week));
+const unbanked = sessions
+  .filter((s) => s.data.week >= 1 && s.data.assignment && s.data.assignment !== 'TBD' && !banked.has(s.data.week))
+  .map((s) => s.data.week);
+---
+
+<AdminLayout title="Quiz vs ADR" active="quiz-adr">
+  <div class="page-head">
+    <div>
+      <span class="label">{learners.length} {learners.length === 1 ? 'learner' : 'learners'} with a submitted record</span>
+      <h1>Quiz vs ADR</h1>
+      <p>
+        The quiz rehearses a decision in the abstract; the ADR records what they actually
+        did. Where the two disagree is the gap this programme exists to close.
+      </p>
+    </div>
+  </div>
+
+  {unbanked.length > 0 && (
+    <p class="notice">
+      No quiz items exist yet for week{unbanked.length > 1 ? 's' : ''} {unbanked.join(', ')} —
+      add <code>docs/teaching/quiz/week-N.md</code> and those weeks start comparing themselves.
+    </p>
+  )}
+
+  {tally.length > 0 && (
+    <div class="tally">
+      {tally.map((t) => (
+        <div class={`tally-cell v-${t.verdict}`}>
+          <span class="n">{t.count}</span>
+          <span class="k">{VERDICT_LABEL[t.verdict]}</span>
+        </div>
+      ))}
+    </div>
+  )}
+
+  {learners.length === 0 ? (
+    <p class="empty">
+      Nothing to compare yet — this needs a submitted ADR and a quiz answer on a capability
+      that week covers.
+    </p>
+  ) : (
+    <div class="learners">
+      {learners.map((l) => (
+        <section class="learner">
+          <h2>
+            {l.name ?? '—'} <span class="faint mono email">{l.email}</span>
+          </h2>
+
+          {l.weeks.map((w) => (
+            <div class="week">
+              <header class="week-head">
+                <span class="label">Week {w.week}</span>
+                {w.pairings.length === 0 && (
+                  <span class="faint">No quiz answers on this week's capabilities.</span>
+                )}
+              </header>
+
+              {w.pairings.length > 0 && (
+                <ul class="verdicts">
+                  {w.pairings.map((p) => (
+                    <li class={`verdict v-${p.verdict}`}>
+                      <div class="v-head">
+                        <strong>{VERDICT_LABEL[p.verdict]}</strong>
+                        <span class="pill">{p.item.id}</span>
+                        <span class="pill cap">{p.item.capability}</span>
+                      </div>
+                      <p class="v-note">{VERDICT_NOTE[p.verdict]}</p>
+                      <p class="v-detail mono faint">
+                        quiz: picked {p.response.answer.toUpperCase()}
+                        {p.quizCorrect === true ? ' ✓' : p.quizCorrect === false ? ' ✗' : ''}
+                        , key {p.item.answer.toUpperCase()}, confidence {p.response.confidence}/5
+                        {' · '}
+                        record leans {p.leansTo ? p.leansTo.toUpperCase() : '—'}
+                        {p.leansTo && ` (margin ${p.margin})`}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {w.submission && (
+                <details class="record">
+                  <summary>Read the record</summary>
+                  <div class="markdown-body" set:html={marked.parse(w.submission.adr_markdown)} />
+                  {w.submission.repo_url && (
+                    <p class="mono repo">
+                      <a href={w.submission.repo_url} target="_blank" rel="noopener noreferrer">
+                        ↗ {w.submission.repo_url}
+                      </a>
+                    </p>
+                  )}
+                </details>
+              )}
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
+  )}
+</AdminLayout>
+
+<style>
+  .notice {
+    margin: 0 0 28px;
+    padding: 12px 16px;
+    background: var(--paper-2);
+    border-left: 3px solid var(--ochre);
+    font-size: 13.5px;
+    max-width: 78ch;
+  }
+
+  .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 44px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .tally-cell {
+    flex: 1 1 160px;
+    padding: 16px 18px;
+    border-left: 3px solid var(--line-strong);
+  }
+  .tally-cell .n {
+    display: block;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 30px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tally-cell .k {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* The gap the programme targets gets the accent; agreement stays quiet. */
+  .v-knew-not-applied { border-left-color: var(--clay-deep); }
+  .v-aligned-wrong { border-left-color: var(--ochre); }
+  .v-applied-not-known { border-left-color: var(--ink-faint); }
+  .v-aligned-correct { border-left-color: var(--good); }
+  .v-unclear { border-left-color: var(--line-strong); }
+
+  .learners { display: flex; flex-direction: column; gap: 52px; }
+  .learner > h2 {
+    font-size: 22px;
+    margin: 0 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .email { font-size: 13px; }
+
+  .week { margin-bottom: 26px; }
+  .week-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .week-head .faint { font-size: 13px; }
+
+  .verdicts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .verdict { padding: 12px 16px; border-left: 3px solid var(--line-strong); background: var(--surface); }
+  .v-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .v-head strong { font-size: 14px; }
+  .pill.cap { color: var(--ink-faint); }
+  .v-note { margin: 6px 0 0; font-size: 13px; color: var(--ink-soft); max-width: 76ch; }
+  .v-detail { margin: 8px 0 0; font-size: 11.5px; }
+
+  .record { margin-top: 14px; }
+  .record summary { cursor: pointer; font-size: 12.5px; color: var(--clay); }
+  .record .markdown-body {
+    margin-top: 12px;
+    padding-left: 16px;
+    border-left: 2px solid var(--line);
+    font-size: 13.5px;
+    line-height: 1.6;
+    max-width: 78ch;
+  }
+  .markdown-body h2, .markdown-body h3 { font-size: 14px; margin: 1.2em 0 0.3em; }
+  .markdown-body p, .markdown-body ul { margin-bottom: 0.9em; }
+  .repo { font-size: 12px; margin-top: 10px; }
+</style>

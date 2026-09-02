@@ -24,8 +24,14 @@ const TABLES = [
   'questions',
   'learners',
   'intake_responses',
+  'familiarity_responses',
   'radar_findings',
   'radar_runs',
+  'submissions',
+  'quiz_responses',
+  'doubts',
+  'feedback',
+  'feedback_responses',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */

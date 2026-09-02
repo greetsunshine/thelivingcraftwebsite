@@ -1,0 +1,261 @@
+---
+export const prerender = false;
+
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getIntake, TECHNICAL, LEADERSHIP, SCALE, SCALE_LEGEND } from '../../lib/craft/intake';
+import { getFamiliarity, missingFamiliarityAnswers } from '../../lib/craft/familiarity';
+
+const learner = Astro.locals.learner!;
+const intake = await getIntake(learner.id);
+const familiarity = await getFamiliarity(learner.id);
+
+const isSubmitted = familiarity?.submitted_at != null;
+
+const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
+  const w0 = intake?.[section]?.[qId] ?? 0;
+  const w6 = familiarity?.[section]?.[qId] ?? 0;
+  if (!w0 || !w6) return '<span class="faint">—</span>';
+  
+  const diff = w6 - w0;
+  if (diff > 0) return `<span style="color: var(--clay)">+${diff}</span>`;
+  if (diff < 0) return `<span style="color: var(--danger)">${diff}</span>`;
+  return `<span class="faint">0</span>`;
+};
+---
+
+<CraftLayout title="Week 6 Familiarity" learner={learner}>
+  <div class="wrap" style="max-width: 780px; margin: 0 auto; padding-top: 40px; padding-bottom: 80px;">
+    <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Familiarity Check</h1>
+    <p class="lead" style="margin-bottom: 48px;">
+      Re-assess your familiarity with the core capabilities now that the cohort is ending.
+      See how your answers compare to Week 0.
+    </p>
+
+    {isSubmitted ? (
+      <div class="results-view">
+        <h2 style="margin-bottom: 24px;">Your Progression</h2>
+        
+        <div class="result-section">
+          <h3>Technical Capabilities</h3>
+          <table class="delta-table">
+            <thead>
+              <tr>
+                <th>Capability</th>
+                <th class="num">Week 0</th>
+                <th class="num">Week 6</th>
+                <th class="num">Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {TECHNICAL.map(q => (
+                <tr>
+                  <td>{q.id}: {q.text}</td>
+                  <td class="num faint">{intake?.technical?.[q.id] || '—'}</td>
+                  <td class="num">{familiarity?.technical?.[q.id] || '—'}</td>
+                  <td class="num" set:html={renderDelta(q.id, 'technical')} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="result-section" style="margin-top: 48px;">
+          <h3>Leadership Capabilities</h3>
+          <table class="delta-table">
+            <thead>
+              <tr>
+                <th>Capability</th>
+                <th class="num">Week 0</th>
+                <th class="num">Week 6</th>
+                <th class="num">Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEADERSHIP.map(q => (
+                <tr>
+                  <td>{q.id}: {q.text}</td>
+                  <td class="num faint">{intake?.leadership?.[q.id] || '—'}</td>
+                  <td class="num">{familiarity?.leadership?.[q.id] || '—'}</td>
+                  <td class="num" set:html={renderDelta(q.id, 'leadership')} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ) : (
+      <form id="familiarityForm" class="familiarity-form">
+        <div class="scale-legend">
+          <h4>The Scale</h4>
+          <ul>
+            {SCALE.map(n => <li><strong>{n}</strong> - {SCALE_LEGEND[n]}</li>)}
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <h2>Technical</h2>
+          {TECHNICAL.map(q => (
+            <div class="q-row">
+              <div class="q-text">{q.id}: {q.text}</div>
+              <div class="q-radios">
+                {SCALE.map(n => (
+                  <label class="radio-label">
+                    <input type="radio" name={`t_${q.id}`} value={n} required />
+                    <span>{n}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="section-block" style="margin-top: 48px;">
+          <h2>Leadership</h2>
+          {LEADERSHIP.map(q => (
+            <div class="q-row">
+              <div class="q-text">{q.id}: {q.text}</div>
+              <div class="q-radios">
+                {SCALE.map(n => (
+                  <label class="radio-label">
+                    <input type="radio" name={`l_${q.id}`} value={n} required />
+                    <span>{n}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="actions" style="margin-top:48px; padding-top:24px; border-top:1px solid var(--line);">
+          <button type="submit" class="btn btn-primary submit-btn">Submit Re-assessment</button>
+          <span class="mono msg" style="display:none; margin-left:16px;"></span>
+        </div>
+      </form>
+    )}
+  </div>
+</CraftLayout>
+
+<script>
+  const form = document.getElementById('familiarityForm') as HTMLFormElement;
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.submit-btn') as HTMLButtonElement;
+      const msg = form.querySelector('.msg') as HTMLSpanElement;
+      
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+      msg.style.display = 'none';
+
+      const formData = new FormData(form);
+      const answers = {
+        technical: {} as Record<string, number>,
+        leadership: {} as Record<string, number>,
+      };
+
+      for (const [key, val] of formData.entries()) {
+        if (key.startsWith('t_')) answers.technical[key.replace('t_', '')] = parseInt(val as string, 10);
+        if (key.startsWith('l_')) answers.leadership[key.replace('l_', '')] = parseInt(val as string, 10);
+      }
+
+      try {
+        const res = await fetch('/api/craft/familiarity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers, submit: true })
+        });
+        
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          throw new Error('Failed to submit');
+        }
+      } catch (err) {
+        msg.textContent = 'Something went wrong.';
+        msg.style.display = 'inline-block';
+        msg.style.color = 'var(--danger)';
+        btn.disabled = false;
+        btn.textContent = 'Submit Re-assessment';
+      }
+    });
+  }
+</script>
+
+<style>
+  .scale-legend {
+    background: var(--paper-2);
+    padding: 24px;
+    border-radius: var(--radius-inner);
+    margin-bottom: 40px;
+    border: 1px solid var(--line);
+  }
+  .scale-legend h4 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .scale-legend ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .scale-legend li { font-size: 14.5px; }
+
+  .section-block h2 {
+    font-size: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .q-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line-light);
+  }
+  .q-text {
+    font-size: 15px;
+    font-weight: 500;
+    max-width: 400px;
+  }
+  .q-radios {
+    display: flex;
+    gap: 12px;
+  }
+  .radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--paper-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    transition: 0.1s;
+    font-size: 14px;
+    font-family: var(--font-mono);
+  }
+  .radio-label input { display: none; }
+  .radio-label:has(input:checked) {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: var(--paper-1);
+  }
+  .radio-label:hover:not(:has(input:checked)) {
+    background: var(--surface-hover);
+  }
+
+  .delta-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .delta-table th, .delta-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    font-size: 15px;
+  }
+  .delta-table th {
+    font-weight: 600;
+    background: var(--paper-2);
+  }
+  .delta-table .num {
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+</style>

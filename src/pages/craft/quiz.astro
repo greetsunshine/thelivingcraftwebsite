@@ -1,0 +1,306 @@
+---
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
+import { marked } from 'marked';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+
+// getLearnerItems, never getQuizItems: the key must not reach this page.
+const allItems = await getLearnerItems();
+const responses = await getQuizResponses(learner.id);
+
+// Find the first unanswered item
+const answeredIds = new Set(responses.map(r => r.item_id));
+const nextItem = allItems.find(item => !answeredIds.has(item.id));
+
+const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 100);
+---
+
+<CraftLayout title="Knowledge Check" learner={learner}>
+  <div class="wrap" style="max-width: 640px; margin: 0 auto; padding-top: 40px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h1 style="font-size:clamp(26px,4vw,36px);margin:0">Knowledge Check</h1>
+      <div class="faint mono" style="font-size:12px">{answeredIds.size} of {allItems.length} completed</div>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" style={`width: ${progress}%`}></div>
+    </div>
+
+    {nextItem ? (
+      <div class="quiz-card">
+        <div class="q-header">
+          <span class="mono faint">Question</span>
+          <span class="badge">{nextItem.capability}</span>
+        </div>
+        
+        <div class="q-body markdown-body" set:html={marked.parse(nextItem.body)} />
+
+        <form class="quiz-form" method="POST" action="/api/craft/quiz" id="quizForm">
+          <input type="hidden" name="item_id" value={nextItem.id} />
+          
+          <div class="field">
+            <label for={nextItem.options ? undefined : "answer"}>Your answer</label>
+            {nextItem.options ? (
+              <div class="mcq-options">
+                {nextItem.options.map(opt => (
+                  <label class="mcq-option">
+                    <input type="radio" name="answer" value={opt.key} required />
+                    <span class="mcq-text"><strong>{opt.key.toUpperCase()})</strong> {opt.text}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <input type="text" id="answer" name="answer" required autocomplete="off" class="input" placeholder="e.g. true, false..." />
+            )}
+          </div>
+
+          <div class="field" style="margin-top:24px">
+            <label style="margin-bottom:12px">How confident are you?</label>
+            <div class="confidence-scale">
+              <label class="c-radio">
+                <input type="radio" name="confidence" value="1" required />
+                <span>1 - Guessed</span>
+              </label>
+              <label class="c-radio">
+                <input type="radio" name="confidence" value="2" />
+                <span>2</span>
+              </label>
+              <label class="c-radio">
+                <input type="radio" name="confidence" value="3" />
+                <span>3 - Somewhat sure</span>
+              </label>
+              <label class="c-radio">
+                <input type="radio" name="confidence" value="4" />
+                <span>4</span>
+              </label>
+              <label class="c-radio">
+                <input type="radio" name="confidence" value="5" />
+                <span>5 - Certain</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:32px">
+            <button type="submit" class="btn btn-primary submit-btn">Submit Answer</button>
+            <span class="mono msg" style="display:none;"></span>
+          </div>
+        </form>
+      </div>
+    ) : (
+      <div class="quiz-done">
+        <h2>You're all caught up!</h2>
+        <p class="muted">Check back later for more questions as the cohort progresses.</p>
+        <a href="/craft" class="btn" style="margin-top:24px">Back to cohort</a>
+      </div>
+    )}
+  </div>
+</CraftLayout>
+
+<script>
+  const form = document.getElementById('quizForm') as HTMLFormElement;
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.submit-btn') as HTMLButtonElement;
+      const msg = form.querySelector('.msg') as HTMLSpanElement;
+      
+      btn.disabled = true;
+      btn.textContent = 'Checking...';
+      msg.style.display = 'none';
+
+      const formData = new FormData(form);
+      const data = {
+        item_id: formData.get('item_id'),
+        answer: formData.get('answer'),
+        confidence: parseInt(formData.get('confidence') as string, 10),
+      };
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+          // Disable all inputs — no retries.
+          const textInput = form.querySelector('#answer') as HTMLInputElement;
+          if (textInput) textInput.disabled = true;
+          form.querySelectorAll('input[name="answer"]').forEach(
+            (r) => ((r as HTMLInputElement).disabled = true)
+          );
+          form.querySelectorAll('input[name="confidence"]').forEach(
+            (r) => ((r as HTMLInputElement).disabled = true)
+          );
+          btn.style.display = 'none';
+
+          if (result.difficulty === 'judge') {
+            msg.innerHTML = `<strong>Response recorded.</strong><br/><em>Note: Judgement items are not auto-scored.</em><br/>Rationale: ${result.rationale || ''}`;
+            msg.style.color = 'var(--ink)';
+          } else if (result.correct) {
+            msg.innerHTML = `<strong>Correct!</strong> The answer is <strong>${result.correctAnswer.toUpperCase()}</strong>.<br/>${result.rationale || ''}`;
+            msg.style.color = 'var(--clay)';
+          } else {
+            msg.innerHTML = `<strong>Incorrect.</strong> The correct answer is <strong>${result.correctAnswer.toUpperCase()}</strong>.<br/>${result.rationale || ''}`;
+            msg.style.color = 'var(--danger)';
+          }
+          msg.style.display = 'block';
+
+          // Advance to next item after a moment to read the answer.
+          setTimeout(() => window.location.reload(), 2500);
+        } else {
+          throw new Error('Failed to submit');
+        }
+      } catch (err) {
+        msg.textContent = 'Something went wrong.';
+        msg.style.display = 'inline-block';
+        msg.style.color = 'var(--danger)';
+        btn.disabled = false;
+        btn.textContent = 'Submit Answer';
+      }
+    });
+  }
+</script>
+
+<style>
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--line);
+    border-radius: 2px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--clay);
+    transition: width 0.3s ease;
+  }
+
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 32px 40px;
+  }
+  
+  .q-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  
+  .q-body {
+    margin-bottom: 40px;
+  }
+  
+  /* Basic markdown typography */
+  .markdown-body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .markdown-body p, .markdown-body ul, .markdown-body pre {
+    margin-bottom: 1em;
+  }
+  .markdown-body pre {
+    background: var(--noir);
+    color: var(--paper-1);
+    padding: 16px;
+    border-radius: var(--radius-inner);
+    overflow-x: auto;
+  }
+  
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-weight: 500;
+  }
+  .input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: var(--paper-1);
+    font-family: inherit;
+    font-size: 15px;
+  }
+  
+  .confidence-scale {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .c-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal !important;
+    cursor: pointer;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    padding: 10px 16px;
+    border-radius: var(--radius-inner);
+    transition: 0.1s;
+  }
+  .c-radio:hover {
+    border-color: var(--line-strong);
+  }
+  
+  .mcq-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .mcq-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-weight: normal !important;
+    cursor: pointer;
+    background: var(--paper-1);
+    border: 1px solid var(--line);
+    padding: 16px;
+    border-radius: var(--radius-inner);
+    transition: 0.1s;
+  }
+  .mcq-option:hover {
+    border-color: var(--line-strong);
+  }
+  .mcq-option input[type="radio"] {
+    margin-top: 4px;
+  }
+  .mcq-text {
+    line-height: 1.5;
+  }
+  
+  .quiz-done {
+    text-align: center;
+    padding: 64px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+  }
+  .quiz-done h2 {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+</style>

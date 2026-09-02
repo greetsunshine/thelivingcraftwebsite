@@ -1,0 +1,382 @@
+---
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { listLearnerSubmissions, ADR_MAX_CHARS } from '../../lib/craft/submissions';
+import { marked } from 'marked';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+const submissions = await listLearnerSubmissions(learner.id);
+
+const sessions = (await getCollection('sessions'))
+  .filter(s => s.data.assignment)
+  .sort((a, b) => a.data.week - b.data.week);
+
+// Default to the first session without a submission, or the last session if all submitted
+const unsubmitted = sessions.find(s => !submissions.some(sub => sub.week === s.data.week && sub.status === 'submitted'));
+const defaultWeek = unsubmitted ? unsubmitted.data.week : (sessions[sessions.length - 1]?.data.week ?? 1);
+
+const parseADR = (markdown: string) => {
+  const sections = { ctx: '', dec: '', alt: '', con: '', uns: '' };
+  if (!markdown) return sections;
+  
+  const ctxMatch = markdown.match(/## Context\n+([\s\S]*?)(?=\n##|$)/i);
+  const decMatch = markdown.match(/## Decision\n+([\s\S]*?)(?=\n##|$)/i);
+  const altMatch = markdown.match(/## Alternatives\n+([\s\S]*?)(?=\n##|$)/i);
+  const conMatch = markdown.match(/## Consequences\n+([\s\S]*?)(?=\n##|$)/i);
+  const unsMatch = markdown.match(/## Unsure about\n+([\s\S]*?)(?=\n##|$)/i);
+
+  if (ctxMatch) sections.ctx = ctxMatch[1].trim();
+  if (decMatch) sections.dec = decMatch[1].trim();
+  if (altMatch) sections.alt = altMatch[1].trim();
+  if (conMatch) sections.con = conMatch[1].trim();
+  if (unsMatch) sections.uns = unsMatch[1].trim();
+  
+  return sections;
+};
+---
+
+<CraftLayout title="ADRs" learner={learner}>
+  <div class="wrap" style="max-width: 780px; margin: 0 auto; padding-top: 40px;">
+    <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Architecture Decision Records</h1>
+    <p class="lead" style="margin-bottom: 48px;">
+      Document your design decisions for each week's assignment. These form the basis of what we review.
+    </p>
+
+    <div class="adr-container">
+      <div class="adr-sidebar">
+        <h3 class="mono faint" style="font-size:12px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Assignments</h3>
+        <div class="week-nav">
+          {sessions.map(s => {
+            const sub = submissions.find(sub => sub.week === s.data.week);
+            const isDefault = s.data.week === defaultWeek;
+            const done = sub?.status === 'submitted';
+            return (
+              <button 
+                class={`week-btn ${isDefault ? 'active' : ''} ${done ? 'submitted' : ''}`}
+                data-week={s.data.week}
+              >
+                <span class="wk">Week {s.data.week}</span>
+                <span class="title">{s.data.assignment}</span>
+                {done ? <span class="badge ok">✓</span> : sub ? <span class="badge draft">draft</span> : null}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div class="adr-content">
+        {sessions.map(s => {
+          const sub = submissions.find(sub => sub.week === s.data.week);
+          return (
+            <div class="week-panel" id={`panel-${s.data.week}`} style={{ display: s.data.week === defaultWeek ? 'block' : 'none' }}>
+              <div style="margin-bottom:24px">
+                <h2 style="font-size:24px;margin:0 0 4px">Week {s.data.week}: {s.data.assignment}</h2>
+                {sub?.status === 'draft' && <p class="faint mono" style="font-size:12px">Draft saved {new Date(sub.updated_at).toLocaleString('en-GB')}</p>}
+              </div>
+
+              {sub?.status === 'submitted' ? (
+                <div class="submitted-view">
+                  <p class="locked-note mono">
+                    Submitted{sub.submitted_at ? ` ${new Date(sub.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}.
+                    Sunil reads these as a set, so the text is fixed once it is in — ask him if you need it reopened.
+                  </p>
+                  <div class="markdown-body" set:html={marked.parse(sub.adr_markdown)} />
+                  {sub.repo_url && (
+                    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line);">
+                      <a href={sub.repo_url} target="_blank" rel="noopener noreferrer" style="color:var(--clay);font-family:var(--font-mono);font-size:13px">
+                        ↗ {sub.repo_url}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              <form class="adr-form" method="POST" action="/api/craft/adr" id={`form-${s.data.week}`} style={{ display: sub?.status === 'submitted' ? 'none' : 'block' }}>
+                <input type="hidden" name="week" value={s.data.week} />
+                
+                {(() => {
+                  const parsed = sub ? parseADR(sub.adr_markdown) : { ctx: '', dec: '', alt: '', con: '', uns: '' };
+                  return (
+                    <div class="fields-group">
+                      <div class="field">
+                        <label for={`ctx-${s.data.week}`}>Context</label>
+                        <textarea id={`ctx-${s.data.week}`} name="ctx" required rows="3" placeholder="What is the problem we are solving?">{parsed.ctx}</textarea>
+                      </div>
+                      <div class="field" style="margin-top:16px">
+                        <label for={`dec-${s.data.week}`}>Decision</label>
+                        <textarea id={`dec-${s.data.week}`} name="dec" required rows="3" placeholder="What is the solution?">{parsed.dec}</textarea>
+                      </div>
+                      <div class="field" style="margin-top:16px">
+                        <label for={`alt-${s.data.week}`}>Alternatives</label>
+                        <textarea id={`alt-${s.data.week}`} name="alt" required rows="3" placeholder="What else did you consider?">{parsed.alt}</textarea>
+                      </div>
+                      <div class="field" style="margin-top:16px">
+                        <label for={`con-${s.data.week}`}>Consequences</label>
+                        <textarea id={`con-${s.data.week}`} name="con" required rows="3" placeholder="What are the trade-offs of this decision?">{parsed.con}</textarea>
+                      </div>
+                      <div class="field" style="margin-top:16px">
+                        <label for={`uns-${s.data.week}`}>Unsure about</label>
+                        <textarea id={`uns-${s.data.week}`} name="uns" required rows="3" placeholder="What are the unknowns?">{parsed.uns}</textarea>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div class="field" style="margin-top:24px">
+                  <label for={`repo-${s.data.week}`}>Repository URL (optional)</label>
+                  <input type="url" id={`repo-${s.data.week}`} name="repo_url" value={sub?.repo_url ?? ''} placeholder="https://github.com/..." class="input" />
+                </div>
+
+                <p class="cap-note faint">
+                  One page. {ADR_MAX_CHARS.toLocaleString('en-GB')} characters at most — the cap is
+                  the point: it forces a choice about what actually matters.
+                </p>
+
+                <div class="actions" style="margin-top:24px">
+                  <button type="submit" class="btn btn-primary submit-btn" data-submit="true">Submit</button>
+                  <button type="submit" class="btn draft-btn" data-submit="false">Save draft</button>
+                  <span class="mono msg" style="display:none;"></span>
+                </div>
+              </form>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  </div>
+</CraftLayout>
+
+<script>
+  // Navigation
+  const btns = document.querySelectorAll('.week-btn');
+  const panels = document.querySelectorAll('.week-panel');
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const week = btn.getAttribute('data-week');
+      
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      panels.forEach(p => {
+        (p as HTMLElement).style.display = p.id === `panel-${week}` ? 'block' : 'none';
+      });
+    });
+  });
+
+  // Forms. Two buttons, one handler: which one was pressed decides whether this
+  // is a draft or the final snapshot. A submitted ADR has no edit path at all —
+  // reopening one is a conversation with Sunil.
+  document.querySelectorAll<HTMLFormElement>('.adr-form').forEach(form => {
+    let pressed: HTMLButtonElement | null = null;
+    form.querySelectorAll<HTMLButtonElement>('button[type="submit"]').forEach(b => {
+      b.addEventListener('click', () => { pressed = b; });
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = pressed ?? (form.querySelector('.submit-btn') as HTMLButtonElement);
+      const submitting = btn.dataset.submit === 'true';
+      const msg = form.querySelector('.msg') as HTMLSpanElement;
+      const original = btn.textContent;
+
+      if (submitting && !confirm('Submit this record? The text is fixed once it is in.')) return;
+
+      btn.disabled = true;
+      btn.textContent = submitting ? 'Submitting...' : 'Saving...';
+      msg.style.display = 'none';
+
+      const formData = new FormData(form);
+      const section = (name: string) => ((formData.get(name) as string) ?? '').trim();
+
+      const adr_markdown = [
+        '## Context\n' + section('ctx'),
+        '## Decision\n' + section('dec'),
+        '## Alternatives\n' + section('alt'),
+        '## Consequences\n' + section('con'),
+        '## Unsure about\n' + section('uns'),
+      ].join('\n\n');
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            week: parseInt(formData.get('week') as string, 10),
+            adr_markdown,
+            repo_url: formData.get('repo_url'),
+            submit: submitting,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error ?? 'Could not save that.');
+
+        if (submitting) {
+          window.location.reload();
+        } else {
+          msg.textContent = 'Draft saved.';
+          msg.style.color = 'var(--ink-soft)';
+          msg.style.display = 'inline-block';
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'Could not save that.';
+        msg.style.display = 'inline-block';
+        msg.style.color = 'var(--danger)';
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  });
+
+</script>
+
+<style>
+  .locked-note {
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+    margin: 0 0 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    max-width: 62ch;
+  }
+  .cap-note {
+    font-size: 13px;
+    margin: 24px 0 0;
+    max-width: 60ch;
+  }
+  .badge.draft {
+    font-size: 10px;
+    letter-spacing: var(--tracking-label);
+    color: var(--ink-faint);
+  }
+  .adr-container {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 40px;
+  }
+  
+  .week-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .week-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-inner);
+    text-align: left;
+    cursor: pointer;
+    transition: 0.1s;
+    position: relative;
+  }
+  .week-btn:hover {
+    background: var(--surface-hover);
+  }
+  .week-btn.active {
+    background: var(--surface);
+    border-color: var(--line-strong);
+  }
+  
+  .week-btn .wk {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .week-btn .title {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .week-btn .badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-invert);
+    color: var(--text-on-invert);
+  }
+  
+  .adr-content {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 40px;
+  }
+  
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-weight: 500;
+  }
+  textarea, .input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: var(--paper-1);
+    font-family: inherit;
+    font-size: 15px;
+  }
+  textarea {
+    resize: vertical;
+  }
+  
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .msg {
+    font-size: 12px;
+  }
+  
+  .submitted-view {
+    padding: 24px;
+    background: var(--paper-1);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+  }
+  
+  /* Basic markdown typography */
+  .markdown-body {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  .markdown-body p, .markdown-body ul, .markdown-body pre {
+    margin-bottom: 1em;
+  }
+  .markdown-body pre {
+    background: var(--noir);
+    color: var(--paper-1);
+    padding: 16px;
+    border-radius: var(--radius-inner);
+    overflow-x: auto;
+  }
+  
+  @media (max-width: 780px) {
+    .adr-container {
+      grid-template-columns: 1fr;
+    }
+    .adr-content {
+      padding: 24px;
+    }
+  }
+</style>

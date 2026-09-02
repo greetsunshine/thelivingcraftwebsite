@@ -1,0 +1,207 @@
+---
+export const prerender = false;
+
+// Sunil's half of the familiarity re-ask (spec §5.6).
+//
+// "Six of eight rated A5 at 2 or below" aims week 3 before it is taught. That
+// is the whole return on asking the question at week 0, and it was the missing
+// half of this feature.
+//
+// NOTHING HERE ASSIGNS A LEVEL. Every figure is a count over what people said
+// about themselves — see §2 and §10 on why a room of eight director-level
+// engineers gets counts and not scores.
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { listIntake } from '../../lib/craft/intake';
+import { listFamiliarity, roomByCapability, sayShowFlags } from '../../lib/craft/familiarity';
+import { listAllDoubtsWithLearner } from '../../lib/craft/doubts';
+
+const [intakeRows, week6, doubts] = await Promise.all([
+  listIntake(),
+  listFamiliarity(),
+  listAllDoubtsWithLearner(),
+]);
+
+const submitted = intakeRows.filter((r) => r.submitted_at);
+const room = roomByCapability(submitted, week6);
+
+// "Has this person asked anything about this capability?" — the show half of
+// say-vs-show. Counted here, from doubts that were tagged.
+const asked = new Map<string, number>();
+for (const d of doubts) {
+  if (!d.capability_id) continue;
+  const key = `${d.learner_id}:${d.capability_id}`;
+  asked.set(key, (asked.get(key) ?? 0) + 1);
+}
+const nameOf = new Map(doubts.map((d) => [d.learner_id, d.learner_name ?? d.learner_email]));
+const flags = sayShowFlags(submitted, asked);
+
+const cohortSize = submitted.length;
+const reAsked = week6.length;
+
+const bar = (values: number[]) => {
+  const counts = [1, 2, 3, 4, 5].map((n) => values.filter((v) => v === n).length);
+  const total = values.length || 1;
+  return counts.map((c, i) => ({ rating: i + 1, count: c, pct: (c / total) * 100 }));
+};
+---
+
+<AdminLayout title="Familiarity" active="familiarity">
+  <div class="page-head">
+    <div>
+      <span class="label">
+        {cohortSize} intake {cohortSize === 1 ? 'response' : 'responses'} · {reAsked} re-asked at week 6
+      </span>
+      <h1>Familiarity — the room</h1>
+      <p>
+        Where the room says it is, per capability, weakest first. Self-ratings on the
+        intake's own 1–5 behavioural scale — what people believe about themselves, which is
+        useful for aiming a session and is not evidence of capability.
+      </p>
+    </div>
+  </div>
+
+  {cohortSize === 0 ? (
+    <p class="empty">No submitted intake responses yet.</p>
+  ) : (
+    <div class="caps">
+      {room.map((c) => (
+        <section class="cap">
+          <header class="cap-head">
+            <span class="pill">{c.id}</span>
+            <p class="cap-text">{c.text}</p>
+            {c.lowAtStart > 0 && (
+              <span class="low">
+                <strong>{c.lowAtStart} of {c.before.length}</strong> at 2 or below
+              </span>
+            )}
+          </header>
+
+          <div class="rows">
+            <div class="row">
+              <span class="row-label label">Week 0</span>
+              <div class="scale">
+                {bar(c.before).map((b) => (
+                  <div class={`slot${b.count ? ' filled' : ''}`} title={`${b.count} rated ${b.rating}`}>
+                    <span class="slot-bar" style={`height:${Math.max(b.pct, b.count ? 8 : 0)}%`}></span>
+                    <span class="slot-n mono">{b.count || ''}</span>
+                    <span class="slot-k mono">{b.rating}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {c.after.length > 0 && (
+              <div class="row">
+                <span class="row-label label">Week 6</span>
+                <div class="scale">
+                  {bar(c.after).map((b) => (
+                    <div class={`slot after${b.count ? ' filled' : ''}`} title={`${b.count} rated ${b.rating}`}>
+                      <span class="slot-bar" style={`height:${Math.max(b.pct, b.count ? 8 : 0)}%`}></span>
+                      <span class="slot-n mono">{b.count || ''}</span>
+                      <span class="slot-k mono">{b.rating}</span>
+                    </div>
+                  ))}
+                </div>
+                <span class="movement mono faint">
+                  {c.moved > 0 ? `+${c.moved}` : c.moved} across {c.after.length}
+                  {c.flat > 0 && ` · ${c.flat} unchanged`}
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+  )}
+
+  <section class="flags-block">
+    <h2>Says, but has not asked</h2>
+    <p class="faint">
+      Rated a capability 4 or 5 at intake and has asked nothing about it all cohort. Not a
+      score and not shown to the learner — a prompt to look, and often just someone who
+      genuinely knows it.
+    </p>
+
+    {flags.length === 0 ? (
+      <p class="empty">Nothing flagged.</p>
+    ) : (
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Learner</th><th>Capability</th><th>Self-rating</th><th>Why flagged</th></tr>
+          </thead>
+          <tbody>
+            {flags.map((f) => (
+              <tr>
+                <td>{nameOf.get(f.learner_id) ?? f.learner_id.slice(0, 8)}</td>
+                <td><span class="pill">{f.capability}</span></td>
+                <td class="mono">{f.selfRating}/5</td>
+                <td class="faint">{f.reason}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+</AdminLayout>
+
+<style>
+  .caps { display: flex; flex-direction: column; gap: 30px; }
+
+  .cap { border-top: 1px solid var(--line); padding-top: 16px; }
+
+  .cap-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .cap-text { margin: 0; flex: 1 1 340px; font-size: 14px; max-width: 70ch; }
+  .low { font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+  .low strong { color: var(--clay-deep); }
+
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .row-label { width: 56px; flex: none; padding-bottom: 4px; }
+
+  .scale {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 54px;
+  }
+  .slot {
+    position: relative;
+    width: 42px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+  }
+  .slot-bar {
+    width: 100%;
+    background: var(--line-strong);
+    min-height: 1px;
+  }
+  .slot.filled .slot-bar { background: var(--ink-faint); }
+  .slot.after.filled .slot-bar { background: var(--clay); }
+  .slot-n {
+    position: absolute;
+    top: 0;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .slot-k { font-size: 10px; color: var(--ink-faint); }
+
+  .movement { font-size: 11.5px; padding-bottom: 4px; }
+
+  .flags-block { margin-top: 64px; padding-top: 20px; border-top: 2px solid var(--ink); }
+  .flags-block h2 { font-size: 20px; margin: 0 0 6px; }
+  .flags-block > p { max-width: 72ch; font-size: 13.5px; margin-bottom: 20px; }
+</style>

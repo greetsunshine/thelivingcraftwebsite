@@ -46,22 +46,22 @@ export const SCALE_LEGEND: Record<number, string> = {
 };
 
 export const TECHNICAL: Question[] = [
-  { id: 'A1', text: "Draw an agent's anatomy" },
-  { id: 'A2', text: 'Read a trace (success / cost / latency)' },
-  { id: 'A3', text: 'Add a guardrail on an irreversible action' },
-  { id: 'A4', text: 'Choose prompt / RAG / fine-tune' },
-  { id: 'A5', text: 'Design an eval that catches a missed failure' },
-  { id: 'A6', text: 'Reason about latency / cost / quality with numbers' },
-  { id: 'A7', text: 'Harden against prompt injection & data leakage' },
+  { id: 'A1', text: 'I can accurately diagram the anatomy and components of an agentic system.' },
+  { id: 'A2', text: 'I can read a system trace and confidently analyze success, cost, and latency.' },
+  { id: 'A3', text: 'I can implement robust guardrails on irreversible actions.' },
+  { id: 'A4', text: 'I know when to choose prompting vs RAG vs fine-tuning for a specific problem.' },
+  { id: 'A5', text: 'I can design an evaluation harness that reliably catches edge cases and missed failures.' },
+  { id: 'A6', text: 'I can reason about the trade-offs between latency, cost, and quality with concrete numbers.' },
+  { id: 'A7', text: 'I can harden an agentic application against prompt injection and data leakage.' },
 ];
 
 export const LEADERSHIP: Question[] = [
-  { id: 'B1', text: 'Explain an agentic system to an exec' },
-  { id: 'B2', text: 'Make & defend agent-vs-workflow / build-vs-buy' },
-  { id: 'B3', text: 'Define "good enough to ship"' },
-  { id: 'B4', text: 'Explain unit economics to finance' },
-  { id: 'B5', text: 'Make a go/no-go call & defend it to a board' },
-  { id: 'B6', text: 'Lead a team through adopting agents' },
+  { id: 'B1', text: 'I can effectively explain the value and risks of an agentic system to an executive.' },
+  { id: 'B2', text: 'I can make and defend the choice between agent vs workflow or build vs buy.' },
+  { id: 'B3', text: 'I can confidently define when an agent is "good enough to ship".' },
+  { id: 'B4', text: 'I can explain the unit economics of an LLM feature to finance.' },
+  { id: 'B5', text: 'I can make a go/no-go call for production and defend it to a board.' },
+  { id: 'B6', text: 'I can successfully lead a team through the process of adopting agents.' },
 ];
 
 /** Section 3 — prose. Short answers are fine; specifics beat polish. */

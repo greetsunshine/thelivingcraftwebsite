@@ -3,7 +3,9 @@ week: 1
 title: "Foundations of durable architecture"
 module: M1
 summary: "Draw the map: what an agent actually is as a system, and where it breaks before you have written a line of it."
-status: draft
+status: ready
+topics: ['A1', 'A2', 'A3']
+assignment: "One boundary you drew, and the alternative you rejected"
 ---
 
 You arrived with a working agent and, if you poked it, a small mystery: an angry

@@ -17,8 +17,11 @@ import { dbHealth, looksUnmigrated } from '../lib/admin/health';
 
 export interface Props {
   title: string;
-  /** Which nav item is current. */
-  active?: 'overview' | 'traffic' | 'leads' | 'questions' | 'radar' | 'content' | 'learners' | 'intake';
+  /**
+   * Which nav item is current. Derived from NAV, so adding a console page means
+   * one edit (the nav entry) rather than two that can drift apart.
+   */
+  active?: (typeof NAV)[number]['key'];
 }
 
 const { title, active } = Astro.props;
@@ -40,6 +43,12 @@ const NAV = [
   { key: 'content', href: '/admin/content', label: 'Content' },
   { key: 'learners', href: '/admin/learners', label: 'Learners' },
   { key: 'intake', href: '/admin/intake', label: 'Intake' },
+  { key: 'doubts', href: '/admin/doubts', label: 'Doubts' },
+  { key: 'adrs', href: '/admin/adrs', label: 'ADRs' },
+  { key: 'quiz', href: '/admin/quiz', label: 'Quiz' },
+  { key: 'quiz-adr', href: '/admin/quiz-adr-comparison', label: 'Quiz vs ADR' },
+  { key: 'feedback', href: '/admin/feedback', label: 'Feedback' },
+  { key: 'familiarity', href: '/admin/familiarity', label: 'Familiarity' },
 ] as const;
 ---
 

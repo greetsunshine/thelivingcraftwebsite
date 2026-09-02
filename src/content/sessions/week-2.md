@@ -4,6 +4,8 @@ title: "Agentic systems you'd put your name on — part 1"
 module: M2
 summary: "From a demo that works once to a system with bounded failure and something to observe."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding

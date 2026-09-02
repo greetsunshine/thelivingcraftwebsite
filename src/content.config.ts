@@ -39,6 +39,19 @@ const sessions = defineCollection({
      * placeholder body. Nothing half-written should reach someone who paid.
      */
     status: z.enum(['draft', 'ready']).default('draft'),
+    /**
+     * Capability ids (A1–A7, B1–B6) this session covers. The mapping that
+     * connects sessions to the intake's 13 capabilities, and through them to
+     * quiz items, doubts, reading suggestions, and the week-6 re-ask.
+     * Default [] so draft sessions don't break.
+     */
+    topics: z.array(z.string()).default([]),
+    /**
+     * Short title for the week's assignment / homework. Present on weeks 1–6,
+     * absent on week 0 (pre-work). Used by the ADR submission page to label
+     * what the learner is writing about.
+     */
+    assignment: z.string().optional(),
     /** Set once the session has been taught; unlocks the recording block. */
     taughtOn: z.string().optional(),
     recordingUrl: z.string().url().optional(),

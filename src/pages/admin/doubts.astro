@@ -1,0 +1,241 @@
+---
+export const prerender = false;
+
+// Sunil's half of the doubts feature (spec §5.1). The job is not "list what was
+// asked" — it is "five people are circling the same confusion about evals, and
+// it is Wednesday." So content doubts are grouped by the cluster label the
+// classifier gave them and ordered by how many DIFFERENT people are in each.
+//
+// Counting is code. The model supplied the labels and nothing else.
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { listAllDoubtsWithLearner, clusterDoubts } from '../../lib/craft/doubts';
+
+const rows = await listAllDoubtsWithLearner();
+const clusters = clusterDoubts(rows);
+const course = rows.filter((d) => d.kind === 'course');
+
+const open = rows.filter((d) => d.status !== 'answered').length;
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+const DOUBT_STATUSES = ['new', 'routed', 'answered'];
+
+const sourceLabel: Record<string, string> = {
+  facts: 'from facts.ts',
+  session: 'from the session page',
+  relay: 'relayed your earlier answer',
+  sunil: 'your answer',
+};
+---
+
+<AdminLayout title="Doubts" active="doubts">
+  <div class="page-head">
+    <div>
+      <span class="label">{rows.length} total · {open} waiting on you</span>
+      <h1>Doubts</h1>
+      <p>
+        Questions about the material, grouped by theme. Logistics questions are answered from
+        <code>facts.ts</code> and the session pages before they reach you — they are listed
+        separately at the foot of the page.
+      </p>
+    </div>
+  </div>
+
+  {clusters.length === 0 ? (
+    <p class="empty">Nothing about the material yet.</p>
+  ) : (
+    <div class="clusters">
+      {clusters.map((c) => (
+        <section class="cluster">
+          <header class="cluster-head">
+            <div>
+              <h2>{c.label}</h2>
+              {c.capability_id && <span class="pill cap">{c.capability_id}</span>}
+            </div>
+            <div class="cluster-count">
+              <strong>{c.learners}</strong>
+              <span>{c.learners === 1 ? 'person' : 'people'}</span>
+              {c.open > 0 && <span class="pill open">{c.open} open</span>}
+            </div>
+          </header>
+
+          <div class="cluster-body">
+            {c.doubts.map((d) => (
+              <article class="doubt" data-doubt={d.id}>
+                <div class="doubt-meta">
+                  <span class="who">{d.learner_name ?? d.learner_email}</span>
+                  <span class="faint mono when">{when(d.created_at)}</span>
+                </div>
+
+                <p class="doubt-body">{d.body}</p>
+
+                {d.answer && (
+                  <div class="doubt-answer">
+                    <span class="label">{sourceLabel[d.answer_source ?? ''] ?? 'answered'}</span>
+                    <p>{d.answer}</p>
+                  </div>
+                )}
+
+                <div class="doubt-actions">
+                  <details>
+                    <summary>{d.answer_source === 'sunil' ? 'Revise your answer' : 'Answer this'}</summary>
+                    <textarea
+                      class="answer-box"
+                      rows="4"
+                      placeholder="Your words. Anything saved here can be relayed verbatim to the next person who asks the same thing — nothing else can."
+                    >{d.answer_source === 'sunil' ? d.answer : ''}</textarea>
+                    <div class="answer-actions">
+                      <button class="btn primary save-answer">Save answer</button>
+                      <select class="doubt-status">
+                        {DOUBT_STATUSES.map((s) => (
+                          <option value={s} selected={s === d.status}>{s}</option>
+                        ))}
+                      </select>
+                      <span class="status-line faint"></span>
+                    </div>
+                  </details>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  )}
+
+  <section class="course-block">
+    <h2>Logistics</h2>
+    <p class="faint">
+      Answered by code from <code>facts.ts</code> and session frontmatter. Here so you can see
+      what the syllabus does not make obvious — anything marked <em>unanswered</em> fell
+      through and is waiting on you.
+    </p>
+
+    {course.length === 0 ? (
+      <p class="empty">None yet.</p>
+    ) : (
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>When</th><th>Learner</th><th>Asked</th><th>Answered from</th></tr>
+          </thead>
+          <tbody>
+            {course.map((d) => (
+              <tr>
+                <td class="faint mono" style="font-size:12px;white-space:nowrap">{when(d.created_at)}</td>
+                <td style="min-width:180px">{d.learner_name ?? d.learner_email}</td>
+                <td style="max-width:420px">{d.body}</td>
+                <td style="white-space:nowrap">
+                  {d.answer_source
+                    ? <span class="pill">{sourceLabel[d.answer_source]}</span>
+                    : <span class="pill warn">unanswered — with you</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+</AdminLayout>
+
+<script>
+  function post(body: Record<string, unknown>) {
+    return fetch('/api/admin/doubts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then((r) => r.json().then((j) => ({ ok: r.ok, j })));
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-doubt]').forEach((row) => {
+    const id = row.dataset.doubt!;
+    const line = row.querySelector('.status-line') as HTMLElement | null;
+    const say = (text: string, bad = false) => {
+      if (!line) return;
+      line.textContent = text;
+      line.style.color = bad ? 'var(--clay-deep)' : 'var(--good)';
+    };
+
+    row.querySelector('.save-answer')?.addEventListener('click', async () => {
+      const box = row.querySelector('.answer-box') as HTMLTextAreaElement;
+      if (!box.value.trim()) return say('Write an answer first.', true);
+      say('Saving...');
+      const { ok, j } = await post({ id, answer: box.value });
+      say(ok ? 'Saved — it can now be relayed.' : (j.error ?? 'Failed'), !ok);
+    });
+
+    row.querySelector('.doubt-status')?.addEventListener('change', async (e) => {
+      const status = (e.target as HTMLSelectElement).value;
+      say('Saving...');
+      const { ok, j } = await post({ id, status });
+      say(ok ? 'Status updated.' : (j.error ?? 'Failed'), !ok);
+    });
+  });
+</script>
+
+<style>
+  .clusters { display: flex; flex-direction: column; gap: 32px; }
+
+  .cluster { border-top: 2px solid var(--ink); }
+
+  .cluster-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 0 12px;
+  }
+  .cluster-head > div:first-child { display: flex; align-items: baseline; gap: 10px; }
+  .cluster-head h2 { font-size: 20px; margin: 0; }
+
+  .cluster-count { display: flex; align-items: baseline; gap: 8px; }
+  .cluster-count strong {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 26px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cluster-count span { font-size: 13px; color: var(--ink-soft); }
+
+  .pill.cap { color: var(--ink-faint); }
+  .pill.open { color: var(--clay); border-color: var(--clay); }
+  .pill.warn { color: var(--clay-deep); border-color: var(--clay-deep); }
+
+  .cluster-body { display: flex; flex-direction: column; }
+
+  .doubt { padding: 16px 0; border-top: 1px solid var(--line); }
+  .doubt-meta { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; }
+  .who { font-weight: 500; font-size: 13.5px; }
+  .when { font-size: 11.5px; }
+  .doubt-body { margin: 0; white-space: pre-wrap; font-size: 14px; max-width: 78ch; }
+
+  .doubt-answer {
+    margin-top: 12px;
+    padding-left: 14px;
+    border-left: 2px solid var(--line-strong);
+  }
+  .doubt-answer p { margin: 4px 0 0; font-size: 13.5px; white-space: pre-wrap; max-width: 78ch; }
+
+  .doubt-actions { margin-top: 12px; }
+  .doubt-actions summary { cursor: pointer; font-size: 12.5px; color: var(--clay); }
+  .answer-box {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 13.5px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    resize: vertical;
+  }
+  .answer-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .answer-actions .status-line { font-size: 12px; }
+
+  .course-block { margin-top: 64px; padding-top: 20px; border-top: 2px solid var(--ink); }
+  .course-block h2 { font-size: 20px; margin: 0 0 6px; }
+  .course-block > p { max-width: 70ch; font-size: 13.5px; margin-bottom: 20px; }
+</style>

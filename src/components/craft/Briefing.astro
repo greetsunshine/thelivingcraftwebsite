@@ -1,15 +1,16 @@
 ---
-import { mockBriefing } from '../../data/mock-dashboard';
-
-const { date, body, urgent } = mockBriefing;
+// The briefing will eventually be populated from session feedback synthesis.
+// For now, it's a static welcome.
 ---
 
-<div class={`briefing-card ${urgent ? 'urgent' : ''}`}>
+<div class="briefing-card">
   <div class="b-header">
-    <span class="mono date">{date}</span>
-    {urgent && <span class="mono badge">Action Needed</span>}
+    <span class="mono date">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
   </div>
-  <p class="b-body">{body}</p>
+  <p class="b-body">
+    Welcome to the cohort. As we progress, this space will highlight synthesis from the
+    room's session feedback and key patterns from the week's work.
+  </p>
 </div>
 
 <style>

@@ -9,9 +9,12 @@ import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
 import { getIntake } from '../../lib/craft/intake';
+import { suggestionsFor } from '../../lib/craft/reading';
+import { listDoubts } from '../../lib/craft/doubts';
+import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
+import { listLearnerSubmissions } from '../../lib/craft/submissions';
+import { listLearnerFeedback } from '../../lib/craft/feedback';
 import Briefing from '../../components/craft/Briefing.astro';
-import MemberState from '../../components/craft/MemberState.astro';
-import PrReviewCard from '../../components/craft/PrReviewCard.astro';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -26,6 +29,23 @@ const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - 
 // it should not be two clicks deep.
 const intake = await getIntake(learner.id);
 const intakeState = intake?.submitted_at ? 'submitted' : intake ? 'draft' : 'todo';
+const reading = intakeState === 'submitted' ? suggestionsFor({ ...intake!.technical, ...intake!.leadership }) : [];
+
+const [doubts, quizItems, quizResponses, adrs, feedbacks] = await Promise.all([
+  listDoubts(learner.id),
+  getLearnerItems(),
+  getQuizResponses(learner.id),
+  listLearnerSubmissions(learner.id),
+  listLearnerFeedback(learner.id),
+]);
+
+const openDoubts = doubts.filter(d => d.status !== 'answered').length;
+const quizCompleted = new Set(quizResponses.map(r => r.item_id)).size;
+const quizTotal = quizItems.length;
+// Drafts are not submissions — the dashboard counts what is actually in.
+const adrCount = adrs.filter((a) => a.status === 'submitted').length;
+const pendingFeedback = sessions.filter(s => s.data.taughtOn && s.data.week >= 1 && !feedbacks.some(f => f.week === s.data.week)).length;
+
 // Undefined on week 0, which is pre-work and belongs to no module.
 const moduleOf = (id?: string) => (id ? cohort.modules.find((m) => m.id === id) : undefined);
 const ready = sessions.filter((s) => s.data.status === 'ready').length;
@@ -79,8 +99,45 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
           <div style="margin-top: 48px;">
             <h2 style="font-size:28px;margin:0 0 20px">Your Briefing</h2>
             <Briefing />
-            <MemberState />
-            <PrReviewCard />
+          </div>
+
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Activity</h2>
+            <div class="activity-grid">
+              <a href="/craft/doubts" class="activity-card">
+                <div class="a-val mono">{openDoubts}</div>
+                <div class="a-label">Open doubts</div>
+              </a>
+              <a href="/craft/quiz" class="activity-card">
+                <div class="a-val mono">{quizCompleted}/{quizTotal}</div>
+                <div class="a-label">Quiz items completed</div>
+              </a>
+              <a href="/craft/adr" class="activity-card">
+                <div class="a-val mono">{adrCount}</div>
+                <div class="a-label">ADRs submitted</div>
+              </a>
+              <a href="/craft/feedback" class="activity-card">
+                <div class="a-val mono">{pendingFeedback}</div>
+                <div class="a-label">Feedback pending</div>
+              </a>
+            </div>
+          </div>
+
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Suggested Reading</h2>
+            {reading.length > 0 ? (
+              <div class="reading-grid">
+                {reading.map((r) => (
+                  <a href={r.item.source} target="_blank" rel="noopener noreferrer" class="reading-card">
+                    <div class="r-reason mono">{r.reason}</div>
+                    <div class="r-title">{r.item.title}</div>
+                    <div class="r-meta mono">{r.item.sourceHost}</div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p class="muted">Complete your intake to get personalised reading based on your baseline.</p>
+            )}
           </div>
 
           <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
@@ -261,6 +318,71 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     max-width: 66ch;
   }
 
+  .activity-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .activity-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: 0.18s;
+  }
+  .activity-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+  }
+  .a-val {
+    font-size: 24px;
+    color: var(--clay);
+  }
+  .a-label {
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .reading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .reading-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: 0.18s;
+  }
+  .reading-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+  }
+  .r-reason {
+    font-size: 11px;
+    color: var(--clay);
+    letter-spacing: var(--tracking-label);
+  }
+  .r-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1.3;
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+  }
+  .r-meta {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: auto;
+  }
+
   .sessions {
     display: flex;
     flex-direction: column;
@@ -341,6 +463,9 @@ const ready = sessions.filter((s) => s.data.status === 'ready').length;
     }
     .intake-card .ic-state {
       grid-column: 1 / -1;
+    }
+    .activity-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
     .srow {
       grid-template-columns: 1fr;

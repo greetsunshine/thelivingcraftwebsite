@@ -207,6 +207,21 @@ create unique index if not exists intake_learner_key on public.intake_responses 
 create index if not exists intake_submitted_idx on public.intake_responses (submitted_at desc nulls last);
 
 -- ---------------------------------------------------------------------------
+-- Familiarity — the week-6 re-ask of the technical and leadership questions
+-- ---------------------------------------------------------------------------
+create table if not exists public.familiarity_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  technical    jsonb       not null default '{}'::jsonb,
+  leadership   jsonb       not null default '{}'::jsonb,
+  submitted_at timestamptz
+);
+create unique index if not exists familiarity_learner_key on public.familiarity_responses (learner_id);
+create index if not exists familiarity_submitted_idx on public.familiarity_responses (submitted_at desc nulls last);
+
+-- ---------------------------------------------------------------------------
 -- Radar — market intelligence, for Sunil only
 -- ---------------------------------------------------------------------------
 -- Was src/data/radar.json, refreshed by a weekly agent that opened a pull
@@ -275,6 +290,117 @@ create table if not exists public.radar_runs (
 create index if not exists radar_runs_started_idx on public.radar_runs (started_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Submissions — ADR decision records, one per learner per week
+-- ---------------------------------------------------------------------------
+create table if not exists public.submissions (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  adr_markdown text        not null,
+  repo_url     text,
+  submitted_at timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists submissions_learner_week on public.submissions (learner_id, week);
+
+-- A submitted ADR is a snapshot, not a live document: Sunil reads eight of these
+-- a week and must not be reading against a moving target (spec §5.5). Drafts stay
+-- editable; submitting freezes the text. Additive so an existing deployment
+-- picks it up without dropping the table.
+alter table public.submissions add column if not exists status text not null default 'submitted';
+alter table public.submissions alter column submitted_at drop not null;
+do $$ begin
+  alter table public.submissions add constraint submissions_status_check
+    check (status in ('draft', 'submitted'));
+exception when duplicate_object then null; end $$;
+
+-- ---------------------------------------------------------------------------
+-- Quiz responses — one row per learner per item
+-- ---------------------------------------------------------------------------
+create table if not exists public.quiz_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  item_id      text        not null,
+  answer       text        not null,
+  confidence   int         not null check (confidence between 1 and 5),
+  answered_at  timestamptz not null default now()
+);
+create unique index if not exists quiz_learner_item on public.quiz_responses (learner_id, item_id);
+
+-- ---------------------------------------------------------------------------
+-- Doubts — learner questions, classified and clustered
+-- ---------------------------------------------------------------------------
+create table if not exists public.doubts (
+  id            uuid        primary key default gen_random_uuid(),
+  learner_id    uuid        not null references public.learners(id) on delete cascade,
+  body          text        not null,
+  kind          text        not null check (kind in ('course', 'content')),
+  capability_id text,
+  cluster_id    text,
+  answer        text,
+  -- Where the answer came from. 'facts'/'session' are code-grounded relays of
+  -- the syllabus; 'sunil' is his own words, and is the ONLY source eligible to
+  -- be relayed to the next person who asks the same thing; 'relay' is that
+  -- repeat. Nothing here is ever a model's own opinion — see src/lib/craft/doubts.ts.
+  answer_source text        check (answer_source in ('facts', 'session', 'relay', 'sunil')),
+  status        text        not null default 'new',
+  created_at    timestamptz not null default now()
+);
+-- Additive, so an existing deployment picks it up without dropping the table.
+alter table public.doubts add column if not exists answer_source text;
+do $$ begin
+  alter table public.doubts add constraint doubts_answer_source_check
+    check (answer_source in ('facts', 'session', 'relay', 'sunil'));
+exception when duplicate_object then null; end $$;
+
+create index if not exists doubts_learner_idx on public.doubts (learner_id, created_at desc);
+create index if not exists doubts_status_idx on public.doubts (status, created_at desc);
+-- Relay reads "what has Sunil already answered", so it filters on both.
+create index if not exists doubts_source_idx on public.doubts (answer_source, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Feedback — post-session responses, two questions per session
+-- ---------------------------------------------------------------------------
+create table if not exists public.feedback (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  landed       text        not null,
+  pacing       text        not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists feedback_learner_week on public.feedback (learner_id, week);
+
+-- ---------------------------------------------------------------------------
+-- Feedback responses — what changed because of what they said
+-- ---------------------------------------------------------------------------
+-- "You said the drill was rushed — week 4 gives it twenty more minutes." Spec
+-- §5.3 says that line IS the feature: without a visible loop, response rates
+-- collapse by week 3 and the feedback form becomes theatre.
+--
+-- NOTE ON §7's CASCADE RULE. Every other learner table is keyed to learner_id
+-- with ON DELETE CASCADE, because it holds one person's data. This one is not
+-- keyed to anyone: it is Sunil's note to the room, one row per week, and it
+-- holds no personal data to erase. Erasing a learner must not delete the note
+-- the whole cohort can see.
+--
+-- It is teaching-adjacent, so §6 deserves an answer too: this lives in Postgres
+-- rather than in src/content/ because it is per-cohort operational writing that
+-- is thrown away between cohorts, not session material that is revised and
+-- reviewed as a diff.
+create table if not exists public.feedback_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  week         int         not null check (week between 1 and 6),
+  body         text        not null,
+  -- Null while Sunil is drafting. Learners only ever read published rows.
+  published_at timestamptz,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists feedback_response_week on public.feedback_responses (week);
+
+-- ---------------------------------------------------------------------------
 -- Lock everything down
 -- ---------------------------------------------------------------------------
 -- RLS enabled + zero policies = the anon and authenticated keys can do nothing.
@@ -285,16 +411,28 @@ alter table public.leads     enable row level security;
 alter table public.questions enable row level security;
 alter table public.learners  enable row level security;
 alter table public.intake_responses enable row level security;
+alter table public.familiarity_responses enable row level security;
 alter table public.radar_findings enable row level security;
 alter table public.radar_runs     enable row level security;
+alter table public.submissions    enable row level security;
+alter table public.quiz_responses enable row level security;
+alter table public.doubts         enable row level security;
+alter table public.feedback       enable row level security;
+alter table public.feedback_responses enable row level security;
 
 revoke all on public.events    from anon, authenticated;
 revoke all on public.leads     from anon, authenticated;
 revoke all on public.questions from anon, authenticated;
 revoke all on public.learners  from anon, authenticated;
 revoke all on public.intake_responses from anon, authenticated;
+revoke all on public.familiarity_responses from anon, authenticated;
 revoke all on public.radar_findings from anon, authenticated;
 revoke all on public.radar_runs     from anon, authenticated;
+revoke all on public.submissions    from anon, authenticated;
+revoke all on public.quiz_responses from anon, authenticated;
+revoke all on public.doubts         from anon, authenticated;
+revoke all on public.feedback       from anon, authenticated;
+revoke all on public.feedback_responses from anon, authenticated;
 
 -- Keep updated_at honest so "last touched" in the console means something.
 create or replace function public.touch_updated_at() returns trigger
@@ -317,8 +455,24 @@ drop trigger if exists intake_touch on public.intake_responses;
 create trigger intake_touch before update on public.intake_responses
   for each row execute function public.touch_updated_at();
 
+drop trigger if exists familiarity_touch on public.familiarity_responses;
+create trigger familiarity_touch before update on public.familiarity_responses
+  for each row execute function public.touch_updated_at();
+
 drop trigger if exists radar_touch on public.radar_findings;
 create trigger radar_touch before update on public.radar_findings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists submissions_touch on public.submissions;
+create trigger submissions_touch before update on public.submissions
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists feedback_touch on public.feedback;
+create trigger feedback_touch before update on public.feedback
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists feedback_response_touch on public.feedback_responses;
+create trigger feedback_response_touch before update on public.feedback_responses
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------

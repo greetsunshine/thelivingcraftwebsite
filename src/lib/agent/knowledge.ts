@@ -20,7 +20,7 @@ const STOP = new Set([
   'would', 'should', 'me', 'my', 'your', 'about', 'there', 'have', 'has', 'get',
 ]);
 
-const tokenize = (s: string): string[] =>
+export const tokenize = (s: string): string[] =>
   s
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s₹]/gu, ' ')
@@ -28,10 +28,16 @@ const tokenize = (s: string): string[] =>
     .filter((t) => t.length > 1 && !STOP.has(t));
 
 /** Light stemming so "pricing"/"priced"/"prices" all reach "pric". */
-const stem = (t: string): string =>
+export const stem = (t: string): string =>
   t.replace(/(ing|ed|es|s)$/u, '').replace(/(.)\1$/u, '$1');
 
-function score(queryTokens: string[], haystack: string, weight: number): number {
+/**
+ * Exported because the course area's doubt router needs the SAME scorer, not a
+ * second one of its own. Two lexical implementations drift, and the one that
+ * drifts is the one that decides whether a learner's question was answerable
+ * from grounded facts or has to go to Sunil.
+ */
+export function score(queryTokens: string[], haystack: string, weight: number): number {
   const hay = new Set(tokenize(haystack).map(stem));
   let hits = 0;
   for (const q of queryTokens) if (hay.has(q)) hits += 1;

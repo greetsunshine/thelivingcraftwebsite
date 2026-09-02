@@ -4,6 +4,8 @@ title: "Agentic systems you'd put your name on — part 2"
 module: M2
 summary: "Evaluation harnesses and quality gates: proving the thing works before it is trusted."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding

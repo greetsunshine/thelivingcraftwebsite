@@ -4,6 +4,8 @@ title: "Agentic systems you'd put your name on — part 3"
 module: M2
 summary: "Threat-modelling and red-teaming your own system: injection, exfiltration, containment."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding
