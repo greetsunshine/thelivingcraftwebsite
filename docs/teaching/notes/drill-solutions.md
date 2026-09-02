@@ -312,6 +312,125 @@ consequence, not of the verb.
 
 ---
 
+## Drill 4 · Check the arguments before you dispatch
+
+*Added 2026-09-02. In the room; it is small.*
+
+### The problem
+
+`agent.py` looks the action up in a dict and calls `fn(**args)` with whatever the
+model produced. Nothing declares what a tool accepts and nothing checks. Two
+costs, one loud and one silent, and the silent one is why this drill exists.
+
+**Loud:** a stray key raises `TypeError` out of the loop and takes the run down —
+and, as drill 1 establishes, an exception out of `run()` also skips
+`trace.summary()`, so you lose the cost line on exactly the run you most want it.
+
+**Silent:** the account id arrives as a string from the naive brain and as an
+**int** from a real model, on the same ticket. Nothing reports it, because
+`lookup_account` calls `str()` on the way in. Remove that coercion and a
+legitimate ticket returns `{'found': False}`:
+
+```
+▸ tool  lookup_account(account_id=4471) -> {'found': False, 'account_id': 4471}
+▸ think No account found, so I cannot verify the charge. Handing to a human.
+▸ esc   {'escalated': True, 'reason': 'account 4471 not found'}
+paid out ₹0 · no credit issued
+```
+
+The reasoning is impeccable, the trace is clean, nothing errors, and the payout
+line reads ₹0 — which after an hour of watching money leave wrongly looks like a
+success. **This is the only failure in the session where the system fails closed
+and a real customer waits.** Ask what dashboard would have caught it. Nothing in
+this repo would, and probably nothing in theirs.
+
+### Decide before you prompt
+
+> What does the tool do when the arguments are wrong — refuse, coerce, or raise?
+
+This is drill 4's version of drill 1's `escalate` question, and an assistant will
+answer it silently.
+
+- **Coerce** is what the repo does today, and it is precisely why the failure is
+  invisible.
+- **Raise** loses the summary and turns a recoverable bad argument into a dead run.
+- **Refuse and return** puts the refusal into history, so it reaches the next
+  step's prompt and the agent can escalate on its own — the same argument
+  `tools.py` makes for its guard returning rather than raising.
+
+Second decision worth forcing: is `4471` as an int a **violation** or a
+**coercion**? Both are defensible. The undefendable answer is the current one,
+where it is neither because nobody decided.
+
+### The solution
+
+Declare the contract next to the tools, in `tools.py`. No dependency — the repo
+has one on purpose.
+
+```python
+CONTRACTS = {
+    "lookup_account": {"account_id": str},
+    "issue_credit":   {"account_id": str, "amount": (int, float)},
+    "escalate":       {"reason": str},
+}
+
+
+def check(action, args):
+    """Return None if the call is well-formed, else a reason it is not."""
+    spec = CONTRACTS.get(action)
+    if spec is None:
+        return f"unknown tool: {action!r}"
+    extra = set(args) - set(spec)
+    if extra:
+        return f"unexpected arguments: {sorted(extra)}"
+    missing = set(spec) - set(args)
+    if missing:
+        return f"missing arguments: {sorted(missing)}"
+    for k, t in spec.items():
+        if not isinstance(args[k], t):
+            return f"{k} should be {getattr(t, '__name__', t)}, got {type(args[k]).__name__}"
+    return None
+```
+
+Then in `agent.py`, before the call — refusing into history rather than raising:
+
+```python
+bad = check(act, args)
+if bad:
+    trace.step("warn", f"refused {act}: {bad}")
+    state["history"].append({"action": act, "args": args,
+                             "result": {"refused": True, "reason": bad}})
+    continue
+```
+
+Run `make run` with a real key afterwards and the int is named instead of
+vanishing into a `str()` call.
+
+### The word to use
+
+Say **tool schema** at least once. That is what Anthropic and OpenAI both call
+the declaration in their function-calling APIs, and it is what they will meet the
+moment they leave this repo. *Contract* is the better word for the idea; *schema*
+is the word that will be on the page in front of them next week.
+
+### What the assistant will get wrong
+
+- **Reaches for a schema library.** Pydantic, jsonschema, dataclasses. Ask what
+  the failure actually needed.
+- **Coerces instead of refusing** — `str(args["account_id"])` — reproducing the
+  exact bug the drill exists to expose, one layer up. The most common outcome.
+- **Raises.** Loses the cost line, and turns a bad argument into an outage.
+- **Derives the contract from the function signature** with `inspect`. Clever,
+  and it means the contract can never disagree with the code — which sounds like
+  a feature until you ask what the contract is *for*. It is where you write down
+  what you will accept from an untrusted producer; deriving it from the consumer
+  defeats the point.
+- **Validates but never plumbs the refusal into history**, so the model never
+  learns its call was rejected and repeats it until the step budget runs out.
+  Drill 1's lesson, rediscovered.
+
+---
+
 ## What not to fix
 
 `issue_credit` stays unguarded. Sitting with a visible, money-moving tool for a
