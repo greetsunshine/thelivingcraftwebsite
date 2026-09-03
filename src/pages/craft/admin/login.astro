@@ -4,18 +4,18 @@
 
 export const prerender = false;
 
-import '../../styles/admin.css';
+import '../../../styles/admin.css';
 
 const params = Astro.url.searchParams;
 const failed = params.get('e') === '1';
 const throttled = params.get('e') === 'throttled';
 const wait = params.get('m') ?? '';
 
-// Only ever return to an admin path. Without this check, /admin/login?next=
+// Only ever return to an admin path. Without this check, /craft/admin/login?next=
 // is an open redirect: a link that looks like the console's own login and
 // lands somewhere else entirely once the password is accepted.
-const requested = params.get('next') ?? '/admin';
-const next = requested.startsWith('/admin') && !requested.startsWith('//') ? requested : '/admin';
+const requested = params.get('next') ?? '/craft/admin';
+const next = requested.startsWith('/craft/admin') && !requested.startsWith('//') ? requested : '/craft/admin';
 ---
 
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ const next = requested.startsWith('/admin') && !requested.startsWith('//') ? req
   </head>
   <body data-density="compact">
     <div class="login-wrap">
-      <form class="login-card" method="POST" action="/api/admin/login">
+      <form class="login-card" method="POST" action="/api/craft/admin/login">
         <span class="label">The Living Craft</span>
         <h1>Console</h1>
         <p>Traffic, leads, the visitor agent's questions, and the radar.</p>

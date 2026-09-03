@@ -1,4 +1,4 @@
-// The radar store — market intelligence for Sunil, read only by /admin/radar.
+// The radar store — market intelligence for Sunil, read only by /craft/admin/radar.
 //
 // WHY THIS IS NOT latest.json. There are two retriever agents writing two
 // stores because they serve two different readers, and merging them would break

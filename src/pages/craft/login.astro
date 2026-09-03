@@ -17,9 +17,12 @@ const throttled = params.get('e') === 'throttled';
 const wait = params.get('m') ?? '';
 
 // Only ever return to the course area. Without this, ?next= is an open redirect
-// wearing the cohort's own login page as a disguise.
+// wearing the cohort's own login page as a disguise. /craft/admin is excluded
+// even though it starts with /craft: the console is not the learner's to return
+// to, and a seat code sent there only bounces off the admin gate.
 const requested = params.get('next') ?? '/craft';
-const next = requested.startsWith('/craft') && !requested.startsWith('//') ? requested : '/craft';
+const ok = requested.startsWith('/craft') && !requested.startsWith('//') && !requested.startsWith('/craft/admin');
+const next = ok ? requested : '/craft';
 ---
 
 <CraftLayout title="Sign in">

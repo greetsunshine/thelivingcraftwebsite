@@ -6,17 +6,17 @@
 // costs more than the scraping does. /llms.txt and /api/facts exist so the
 // answer they get is the one we wrote.
 //
-// Five paths are disallowed, for three different reasons:
+// Four paths are disallowed, for two different reasons:
 //   /api/ask     a POST endpoint that costs money per call, nothing to index
 //   /api/track   the analytics beacon — indexing it would pollute its own data
 //   /api/lead    the lead ledger, POST only
-//   /admin       the console. robots.txt is a request, not a control, so this
-//                is politeness on top of the real defence: every /admin route
-//                is behind a session check in src/middleware.ts and sends
-//                X-Robots-Tag: noindex. Listing it here does reveal the path,
-//                which is fine — the password is the secret, not the URL.
-//   /craft       the cohort's course area, gated the same way per learner. Same
-//                reasoning: the seat code is the secret, not the path.
+//   /craft       the cohort's course area AND, under /craft/admin, the operator
+//                console — one prefix now covers both. robots.txt is a request,
+//                not a control, so this is politeness on top of the real
+//                defence: every route under it is behind a session check in
+//                src/middleware.ts and sends X-Robots-Tag: noindex. Listing the
+//                prefix does reveal it, which is fine — the seat code and the
+//                password are the secrets, not the paths.
 import type { APIRoute } from 'astro';
 import { SITE_ORIGIN } from '../data/facts';
 
@@ -39,7 +39,7 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
-const DISALLOW = ['/admin', '/craft', '/api/ask', '/api/track', '/api/lead'];
+const DISALLOW = ['/craft', '/api/ask', '/api/track', '/api/lead'];
 
 export const GET: APIRoute = () => {
   const body = [

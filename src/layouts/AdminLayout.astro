@@ -25,21 +25,21 @@ const { title, active } = Astro.props;
 const caps = capabilities();
 
 // Checked on every admin page, cached for a minute, because a broken table has
-// to be visible from wherever you happen to be standing. Reading /admin/radar
+// to be visible from wherever you happen to be standing. Reading /craft/admin/radar
 // and seeing "never run" is exactly the moment you need to be told that the
 // table behind it does not exist.
 const health = caps.data ? await dbHealth() : null;
 const unmigrated = health ? looksUnmigrated(health) : false;
 
 const NAV = [
-  { key: 'overview', href: '/admin', label: 'Overview' },
-  { key: 'traffic', href: '/admin/traffic', label: 'Traffic' },
-  { key: 'leads', href: '/admin/leads', label: 'Leads' },
-  { key: 'questions', href: '/admin/questions', label: 'Questions' },
-  { key: 'radar', href: '/admin/radar', label: 'Radar' },
-  { key: 'content', href: '/admin/content', label: 'Content' },
-  { key: 'learners', href: '/admin/learners', label: 'Learners' },
-  { key: 'intake', href: '/admin/intake', label: 'Intake' },
+  { key: 'overview', href: '/craft/admin', label: 'Overview' },
+  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic' },
+  { key: 'leads', href: '/craft/admin/leads', label: 'Leads' },
+  { key: 'questions', href: '/craft/admin/questions', label: 'Questions' },
+  { key: 'radar', href: '/craft/admin/radar', label: 'Radar' },
+  { key: 'content', href: '/craft/admin/content', label: 'Content' },
+  { key: 'learners', href: '/craft/admin/learners', label: 'Learners' },
+  { key: 'intake', href: '/craft/admin/intake', label: 'Intake' },
 ] as const;
 ---
 
@@ -65,7 +65,7 @@ const NAV = [
   <body data-density="compact">
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
-        <a class="admin-mark" href="/admin"><span class="dot"></span> Console</a>
+        <a class="admin-mark" href="/craft/admin"><span class="dot"></span> Console</a>
         <nav class="admin-links">
           {
             NAV.map((item) => (
@@ -76,7 +76,7 @@ const NAV = [
           }
         </nav>
         <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
-        <form method="POST" action="/api/admin/logout">
+        <form method="POST" action="/api/craft/admin/logout">
           <button class="btn small" type="submit">Sign out</button>
         </form>
       </div>

@@ -1,7 +1,7 @@
 ---
 // Seats: issue an access code, revoke one, see who has signed in.
 //
-// This page handles its own POST rather than posting to /api/admin/. The reason
+// This page handles its own POST rather than posting to /api/craft/admin/. The reason
 // is the access code: it exists in plaintext exactly once, in the response to
 // the request that created it. A redirect would have to carry it in the query
 // string, which puts a live credential into browser history and the platform's
@@ -9,9 +9,9 @@
 // already no-store.
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { capabilities } from '../../lib/admin/env';
-import { eraseLearner, issueSeat, listLearners, setStatus } from '../../lib/craft/learners';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { capabilities } from '../../../lib/admin/env';
+import { eraseLearner, issueSeat, listLearners, setStatus } from '../../../lib/craft/learners';
 
 const caps = capabilities();
 

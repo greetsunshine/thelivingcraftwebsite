@@ -8,7 +8,7 @@
 // remembering to widen this file.
 
 import type { APIRoute } from 'astro';
-import { LEADERSHIP, QUICK_CHECK, REALITY, TECHNICAL, listIntake } from '../../../lib/craft/intake';
+import { LEADERSHIP, QUICK_CHECK, REALITY, TECHNICAL, listIntake } from '../../../../lib/craft/intake';
 
 export const prerender = false;
 

@@ -13,7 +13,7 @@
 // most actionable thing on this page in the week before a cohort starts.
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import {
   LEADERSHIP,
   QUICK_CHECK,
@@ -23,8 +23,8 @@ import {
   SCALE,
   TECHNICAL,
   listIntake,
-} from '../../lib/craft/intake';
-import { listLearners } from '../../lib/craft/learners';
+} from '../../../lib/craft/intake';
+import { listLearners } from '../../../lib/craft/learners';
 
 const [responses, learners] = await Promise.all([listIntake(), listLearners()]);
 
@@ -74,7 +74,7 @@ const ordered = [...drafts, ...submitted];
         learner answered first.
       </p>
     </div>
-    <a class="btn" href="/api/admin/intake.csv">Export CSV</a>
+    <a class="btn" href="/api/craft/admin/intake.csv">Export CSV</a>
   </div>
 
   {

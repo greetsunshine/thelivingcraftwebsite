@@ -11,7 +11,7 @@
 // merged and the site redeploys, not before.
 
 import type { APIRoute } from 'astro';
-import { ghConfigured, proposeChange, readRepoFile } from '../../../lib/admin/github';
+import { ghConfigured, proposeChange, readRepoFile } from '../../../../lib/admin/github';
 
 export const prerender = false;
 
@@ -22,7 +22,7 @@ const json = (body: unknown, status = 200) =>
  * The only file the console may propose changes to.
  *
  * The radar used to be here too. It lives in Postgres now and is edited
- * directly through /api/admin/radar-item — a pull request to dismiss a stale
+ * directly through /api/craft/admin/radar-item — a pull request to dismiss a stale
  * hiring article was ceremony with no reader. This flow remains for the visitor
  * retriever's findings, where a reviewable diff is the whole point: a chatbot
  * repeats them verbatim to prospects.

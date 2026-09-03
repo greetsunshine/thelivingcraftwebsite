@@ -30,7 +30,7 @@ const COLUMNS = 'id, email, name, cohort, status, note, created_at, last_seen_at
  * The learner this session belongs to, but only while the seat is active.
  *
  * Checked on every gated request rather than trusted from the cookie, so
- * revoking a seat in /admin takes effect on the learner's next page load
+ * revoking a seat in /craft/admin takes effect on the learner's next page load
  * instead of whenever their 30-day cookie happens to expire. That costs one
  * indexed primary-key lookup per page — the right trade for eight people.
  */

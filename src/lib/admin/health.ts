@@ -3,7 +3,7 @@
 // This exists because of a specific way the console could lie. Every query in
 // queries.ts degrades to an empty result when it errors — deliberately, so one
 // slow rollup cannot 500 the whole page. The cost of that choice is that a
-// MISSING TABLE and NO ROWS YET render identically: /admin/radar says "never
+// MISSING TABLE and NO ROWS YET render identically: /craft/admin/radar says "never
 // run" whether the agent found nothing or the table was never created.
 //
 // That is the worst kind of bug, because it looks like the correct answer. It

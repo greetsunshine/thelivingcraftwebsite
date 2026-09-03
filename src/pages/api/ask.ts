@@ -256,7 +256,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   // prospect telling you, unprompted, what facts.ts is missing.
   let unanswered = false;
 
-  // Written to Supabase for /admin/questions. Nothing here is used to answer
+  // Written to Supabase for /craft/admin/questions. Nothing here is used to answer
   // anything — the agent's grounding is still facts.ts and latest.json alone.
   // If Supabase is unconfigured or down, record() no-ops and the agent is
   // unaffected; the console simply has less to show.

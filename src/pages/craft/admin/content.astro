@@ -1,13 +1,13 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import ConsoleActions from '../../components/admin/ConsoleActions.astro';
-import FindingActions from '../../components/admin/FindingActions.astro';
-import { assessment, caio, cohort, cohortPricing, facts, surfaces } from '../../data/facts';
-import { getLatest } from '../../lib/agent/latest';
-import { capabilities } from '../../lib/admin/env';
-import { latestRun, openPullRequests } from '../../lib/admin/github';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConsoleActions from '../../../components/admin/ConsoleActions.astro';
+import FindingActions from '../../../components/admin/FindingActions.astro';
+import { assessment, caio, cohort, cohortPricing, facts, surfaces } from '../../../data/facts';
+import { getLatest } from '../../../lib/agent/latest';
+import { capabilities } from '../../../lib/admin/env';
+import { latestRun, openPullRequests } from '../../../lib/admin/github';
 
 const caps = capabilities();
 const latest = getLatest();

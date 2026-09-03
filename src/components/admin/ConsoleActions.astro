@@ -68,7 +68,7 @@
           payload.category = new URLSearchParams(location.search).get('c') || '';
         }
 
-        post('/api/admin/run', payload)
+        post('/api/craft/admin/run', payload)
           .then(function (res) {
             report(
               runOut,
@@ -100,8 +100,8 @@
       // edited by pull request; the radar writes to its table. The wording has
       // to follow, or a radar edit that took effect immediately would still
       // claim a PR was waiting for review.
-      var endpoint = group.getAttribute('data-endpoint') || '/api/admin/propose';
-      var viaPr = endpoint === '/api/admin/propose';
+      var endpoint = group.getAttribute('data-endpoint') || '/api/craft/admin/propose';
+      var viaPr = endpoint === '/api/craft/admin/propose';
 
       // --- hide -----------------------------------------------------------
       if (t.closest('.hide-finding')) {

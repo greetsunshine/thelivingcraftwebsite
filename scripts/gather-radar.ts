@@ -1,5 +1,5 @@
 // Radar agent (operator-facing) — market intelligence for Sunil, written to
-// the radar_findings table and read only by /admin/radar.
+// the radar_findings table and read only by /craft/admin/radar.
 //
 //   npm run radar                       # sweep all six categories
 //   npm run radar -- --category=skills  # sweep one

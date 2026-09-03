@@ -74,7 +74,7 @@ better on every axis that matters: it is in Sunil's words, it is behavioural
 rather than abstract, it distinguishes technical from leadership capability, and
 **every learner has already answered it at week 0**. The PoC specified an
 "intake agent to establish baseline member state"; that baseline exists and is
-readable at `/admin/intake`.
+readable at `/craft/admin/intake`.
 
 One vocabulary, six surfaces. Sessions carry capability ids, quiz items carry
 one, doubts are tagged with one, reading is matched against them, and the
@@ -323,13 +323,13 @@ New tables, all in `supabase/schema.sql`:
 Three rules, none of them optional:
 
 1. **Every one of these is keyed to `learner_id` and needs `ON DELETE
-   CASCADE`.** Erasing a learner from `/admin/learners` is a hard delete
+   CASCADE`.** Erasing a learner from `/craft/admin/learners` is a hard delete
    answering a DPDP request. A table that does not cascade leaves orphaned
    personal data behind and the console cannot see it.
 2. **Every new table and rollup goes in the probe lists in
    `src/lib/admin/health.ts`.** Queries degrade to empty on error, so a missing
    table renders identically to "no submissions yet". This already cost a real
-   diagnosis once on `/admin/radar`.
+   diagnosis once on `/craft/admin/radar`.
 3. **Run `supabase/schema.sql` against prod before pushing.** A push to `main`
    deploys production, and nothing checks that the database has the tables the
    code expects.
@@ -345,7 +345,7 @@ deliberate — the risky parts come after the boring parts work.
 |---|---|---|---|
 | 0 | `topics: string[]` on the session schema, tagged to capability ids | no | Everything keys off this. Half a day. |
 | 1 | Reading suggestions from `latest.json` | no | Safest first ticket |
-| 2 | Doubt capture — form, table, `/admin/doubts` | no | Just an inbox at this stage |
+| 2 | Doubt capture — form, table, `/craft/admin/doubts` | no | Just an inbox at this stage |
 | 3 | Assignment + ADR submission, and the who-has-submitted view | no | The tracking substrate |
 | 4 | Quiz surface, with the answer-key split | no | Scoring is code; §5.4 |
 | 5 | Doubt clustering and capability tagging | **yes** | First model work |

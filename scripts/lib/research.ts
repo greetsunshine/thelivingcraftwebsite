@@ -4,7 +4,7 @@
 // and who reads the result:
 //
 //   gather-latest.ts -> src/data/latest.json  read by the visitor Q&A agent
-//   gather-radar.ts  -> radar_findings table  read by Sunil, in /admin/radar
+//   gather-radar.ts  -> radar_findings table  read by Sunil, in /craft/admin/radar
 //
 // Everything that makes them safe is identical, and all of it was learned the
 // expensive way: one research call per topic (a shared budget starves the later

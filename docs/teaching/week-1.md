@@ -351,7 +351,7 @@ three hours will stare at a blank page for the first ten minutes otherwise.
 ## Block 5 — the Horizon
 
 Deliberately not written out in the session file. The framing above it is
-durable and stays; the specifics come from `/admin/radar` in the week you teach
+durable and stays; the specifics come from `/craft/admin/radar` in the week you teach
 it, under **Trends**, **Hiring — India** and **Durable skills**.
 
 Quote the primary-sourced findings and say that they are primary. Skip the

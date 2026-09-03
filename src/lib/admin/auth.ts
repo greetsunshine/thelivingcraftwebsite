@@ -93,7 +93,7 @@ export const COOKIE_NAME = COOKIE;
 // limiter: a serverless fleet gives each cold instance its own counter, so this
 // bounds guessing rather than preventing it. The real defence is that the
 // password is a 24-byte random string, not that this counter is airtight. What
-// it does stop is a script pointed at /admin/login for an afternoon.
+// it does stop is a script pointed at /craft/admin/login for an afternoon.
 
 interface Attempt {
   count: number;

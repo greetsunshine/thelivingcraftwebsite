@@ -14,8 +14,8 @@
 // — so the console is the one place where the guard is a human decision.
 
 import type { APIRoute } from 'astro';
-import { dispatchWorkflow, ghConfigured } from '../../../lib/admin/github';
-import { CATEGORY_KEYS } from '../../../data/radar-categories';
+import { dispatchWorkflow, ghConfigured } from '../../../../lib/admin/github';
+import { CATEGORY_KEYS } from '../../../../data/radar-categories';
 
 export const prerender = false;
 

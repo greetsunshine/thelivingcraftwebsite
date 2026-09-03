@@ -39,7 +39,7 @@ const {
   implication,
   canWrite,
   hideLabel,
-  endpoint = '/api/admin/propose',
+  endpoint = '/api/craft/admin/propose',
   hideAction = 'hide',
 } = Astro.props;
 ---
@@ -76,7 +76,7 @@ const {
 
       <div>
         <button class="btn small primary save-finding" disabled={!canWrite}>
-          {endpoint === '/api/admin/propose' ? 'Propose this edit' : 'Save this edit'}
+          {endpoint === '/api/craft/admin/propose' ? 'Propose this edit' : 'Save this edit'}
         </button>
       </div>
     </div>

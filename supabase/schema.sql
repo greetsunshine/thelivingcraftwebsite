@@ -122,7 +122,7 @@ create index if not exists questions_answered_idx on public.questions (answered,
 -- WHY A CODE AND NOT A PASSWORD. Eight seats. A password means a set-password
 -- flow, a reset flow, and an email sender to keep alive for eight people who
 -- each log in a handful of times over six weeks. Instead Sunil issues a
--- 24-byte random code from /admin/learners when someone accepts a seat, and
+-- 24-byte random code from /craft/admin/learners when someone accepts a seat, and
 -- sends it however he is already talking to them. The code IS the credential:
 -- high entropy, no user-chosen weakness, revocable in one click.
 --
@@ -237,7 +237,7 @@ create table if not exists public.radar_findings (
   body          text        not null,
   implication   text,
   -- Operator-only, exactly like latest.json's reviewNote: what the agent could
-  -- not confirm about its own finding. Never rendered outside /admin.
+  -- not confirm about its own finding. Never rendered outside /craft/admin.
   review_note   text,
   source        text        not null,
   -- Host + path with the query string and trailing slash stripped. Deduping on
@@ -408,7 +408,7 @@ $$;
 --   leads      NOT purged. A lead is a commercial record with an inbox copy
 --              beside it, and quietly deleting one after N days would mean
 --              losing a real enquiry to a cron job. Erasure is per-person and
---              deliberate: the Erase button on /admin/leads.
+--              deliberate: the Erase button on /craft/admin/leads.
 --   learners   NOT purged, same reasoning, plus the schema keeps withdrawn
 --              seats on purpose. Erasing a learner cascades to their intake.
 --
@@ -471,5 +471,5 @@ $$;
 --   create extension if not exists pg_cron;
 --   select cron.schedule('purge', '0 3 * * 0', $cron$ select public.admin_purge(); $cron$);
 --
--- Until then it is the button on /admin — which means the policy is only real
+-- Until then it is the button on /craft/admin — which means the policy is only real
 -- if someone presses it.

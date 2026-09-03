@@ -74,7 +74,7 @@ meeting.]
 
 [PLACEHOLDER: the closing beat, present in every session. The durable framing —
 the career/skills question this week's material raises — gets written here. The
-specifics do NOT: they are pulled from `/admin/radar` (Trends · Hiring — India ·
+specifics do NOT: they are pulled from `/craft/admin/radar` (Trends · Hiring — India ·
 Durable skills) in the week you teach it, so nothing dated is committed to this
 file. See week 1 for the pattern.]
 

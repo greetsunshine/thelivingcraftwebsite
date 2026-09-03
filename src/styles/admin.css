@@ -170,7 +170,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 3px 10px; border-radius: var(--radius-pill);
   border: var(--border-w-hair) solid var(--border-field); color: var(--text-quiet); white-space: nowrap;
 }
-/* Filled, but never sun: on /admin/radar this labels a finding's category and
+/* Filled, but never sun: on /craft/admin/radar this labels a finding's category and
    sits right under .cat-nav's filter chips, which ARE clickable and DO use
    solid sun. Two things that look the same and only one of which responds to a
    click is a bug you find by watching someone click it. */
