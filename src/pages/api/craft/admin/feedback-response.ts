@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { saveFeedbackResponse } from '../../../lib/craft/feedback';
+import { saveFeedbackResponse } from '../../../../lib/craft/feedback';
 
 export const prerender = false;
 

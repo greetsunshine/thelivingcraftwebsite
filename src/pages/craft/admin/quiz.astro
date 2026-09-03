@@ -11,8 +11,8 @@ export const prerender = false;
 //
 // Every number on this page is computed in src/lib/craft/quiz.ts. No model runs.
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getQuizItems, listAllResponsesWithLearner, itemDistribution } from '../../lib/craft/quiz';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getQuizItems, listAllResponsesWithLearner, itemDistribution } from '../../../lib/craft/quiz';
 
 const [items, responses] = await Promise.all([getQuizItems(), listAllResponsesWithLearner()]);
 const distribution = itemDistribution(items, responses);
@@ -148,7 +148,7 @@ const flagged = distribution.reduce((n, d) => n + d.confidentlyWrong.length, 0);
     font-size: 13.5px;
   }
   .opt-key {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--ink-faint);
     width: 14px;

@@ -1,12 +1,12 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import ConsoleActions from '../../components/admin/ConsoleActions.astro';
-import FindingActions from '../../components/admin/FindingActions.astro';
-import { RADAR_CATEGORIES, RADAR_MAX_AGE_DAYS } from '../../data/radar-categories';
-import { getRadar, lastRadarRun } from '../../lib/agent/radar';
-import { capabilities } from '../../lib/admin/env';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConsoleActions from '../../../components/admin/ConsoleActions.astro';
+import FindingActions from '../../../components/admin/FindingActions.astro';
+import { RADAR_CATEGORIES, RADAR_MAX_AGE_DAYS } from '../../../data/radar-categories';
+import { getRadar, lastRadarRun } from '../../../lib/agent/radar';
+import { capabilities } from '../../../lib/admin/env';
 
 const caps = capabilities();
 
@@ -68,7 +68,7 @@ const host = (url: string) => {
         The visitor Q&A agent <strong>cannot read this</strong> — investment figures, hiring numbers
         and claims about what is failing are yours to judge before repeating, not a chatbot's to
         volunteer. What the visitor agent does read lives under
-        <a href="/admin/content" style="color:var(--clay)">Content</a>.
+        <a href="/craft/admin/content" style="color:var(--clay)">Content</a>.
       </p>
     </div>
 
@@ -124,10 +124,10 @@ const host = (url: string) => {
   }
 
   <nav class="cat-nav">
-    <a class={active ? '' : 'on'} href="/admin/radar">All · {radar.items.length}</a>
+    <a class={active ? '' : 'on'} href="/craft/admin/radar">All · {radar.items.length}</a>
     {
       RADAR_CATEGORIES.map((c) => (
-        <a class={active?.key === c.key ? 'on' : ''} href={`/admin/radar?c=${c.key}`}>
+        <a class={active?.key === c.key ? 'on' : ''} href={`/craft/admin/radar?c=${c.key}`}>
           {c.label} · {countFor(c.key)}
         </a>
       ))
@@ -179,7 +179,7 @@ const host = (url: string) => {
           <FindingActions
             id={item.id}
             file="radar"
-            endpoint="/api/admin/radar-item"
+            endpoint="/api/craft/admin/radar-item"
             title={item.title}
             body={item.body}
             implication={item.implication}

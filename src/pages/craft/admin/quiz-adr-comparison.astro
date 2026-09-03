@@ -5,12 +5,12 @@ export const prerender = false;
 // src/lib/craft/pairing.ts — including why an 'unclear' verdict is a correct
 // answer here rather than a missing one.
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getCollection } from 'astro:content';
 import { marked } from 'marked';
-import { listAllSubmissionsWithLearner } from '../../lib/craft/submissions';
-import { getQuizItems, listAllResponsesWithLearner } from '../../lib/craft/quiz';
-import { buildPairings, verdictTally, VERDICT_LABEL, VERDICT_NOTE } from '../../lib/craft/pairing';
+import { listAllSubmissionsWithLearner } from '../../../lib/craft/submissions';
+import { getQuizItems, listAllResponsesWithLearner } from '../../../lib/craft/quiz';
+import { buildPairings, verdictTally, VERDICT_LABEL, VERDICT_NOTE } from '../../../lib/craft/pairing';
 
 const [items, responses, submissions, sessions] = await Promise.all([
   getQuizItems(),
@@ -151,7 +151,7 @@ const unbanked = sessions
   }
   .tally-cell .n {
     display: block;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: var(--font-display);
     font-size: 30px;
     line-height: 1;
     font-variant-numeric: tabular-nums;

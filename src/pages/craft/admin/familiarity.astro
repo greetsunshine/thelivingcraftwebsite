@@ -11,10 +11,10 @@ export const prerender = false;
 // about themselves — see §2 and §10 on why a room of eight director-level
 // engineers gets counts and not scores.
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { listIntake } from '../../lib/craft/intake';
-import { listFamiliarity, roomByCapability, sayShowFlags } from '../../lib/craft/familiarity';
-import { listAllDoubtsWithLearner } from '../../lib/craft/doubts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listIntake } from '../../../lib/craft/intake';
+import { listFamiliarity, roomByCapability, sayShowFlags } from '../../../lib/craft/familiarity';
+import { listAllDoubtsWithLearner } from '../../../lib/craft/doubts';
 
 const [intakeRows, week6, doubts] = await Promise.all([
   listIntake(),

@@ -35,20 +35,20 @@ const health = caps.data ? await dbHealth() : null;
 const unmigrated = health ? looksUnmigrated(health) : false;
 
 const NAV = [
-  { key: 'overview', href: '/admin', label: 'Overview' },
-  { key: 'traffic', href: '/admin/traffic', label: 'Traffic' },
-  { key: 'leads', href: '/admin/leads', label: 'Leads' },
-  { key: 'questions', href: '/admin/questions', label: 'Questions' },
-  { key: 'radar', href: '/admin/radar', label: 'Radar' },
-  { key: 'content', href: '/admin/content', label: 'Content' },
-  { key: 'learners', href: '/admin/learners', label: 'Learners' },
-  { key: 'intake', href: '/admin/intake', label: 'Intake' },
-  { key: 'doubts', href: '/admin/doubts', label: 'Doubts' },
-  { key: 'adrs', href: '/admin/adrs', label: 'ADRs' },
-  { key: 'quiz', href: '/admin/quiz', label: 'Quiz' },
-  { key: 'quiz-adr', href: '/admin/quiz-adr-comparison', label: 'Quiz vs ADR' },
-  { key: 'feedback', href: '/admin/feedback', label: 'Feedback' },
-  { key: 'familiarity', href: '/admin/familiarity', label: 'Familiarity' },
+  { key: 'overview', href: '/craft/admin', label: 'Overview' },
+  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic' },
+  { key: 'leads', href: '/craft/admin/leads', label: 'Leads' },
+  { key: 'questions', href: '/craft/admin/questions', label: 'Questions' },
+  { key: 'radar', href: '/craft/admin/radar', label: 'Radar' },
+  { key: 'content', href: '/craft/admin/content', label: 'Content' },
+  { key: 'learners', href: '/craft/admin/learners', label: 'Learners' },
+  { key: 'intake', href: '/craft/admin/intake', label: 'Intake' },
+  { key: 'doubts', href: '/craft/admin/doubts', label: 'Doubts' },
+  { key: 'adrs', href: '/craft/admin/adrs', label: 'ADRs' },
+  { key: 'quiz', href: '/craft/admin/quiz', label: 'Quiz' },
+  { key: 'quiz-adr', href: '/craft/admin/quiz-adr-comparison', label: 'Quiz vs ADR' },
+  { key: 'feedback', href: '/craft/admin/feedback', label: 'Feedback' },
+  { key: 'familiarity', href: '/craft/admin/familiarity', label: 'Familiarity' },
 ] as const;
 ---
 
@@ -65,14 +65,14 @@ const NAV = [
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body data-density="compact">
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
-        <a class="admin-mark" href="/admin"><span class="dot"></span> Console</a>
+        <a class="admin-mark" href="/craft/admin"><span class="dot"></span> Console</a>
         <button
           type="button"
           class="admin-burger"
@@ -83,21 +83,30 @@ const NAV = [
         >
           <span class="burger" aria-hidden="true"></span>
         </button>
-        <nav class="admin-links" id="adminLinks">
-          {
-            NAV.map((item) => (
-              <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
-                {item.label}
-              </a>
-            ))
-          }
-        </nav>
-        <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
-        <form method="POST" action="/api/admin/logout">
-          <button class="btn small" type="submit">Sign out</button>
-        </form>
+        {/* One wrapper so the phone sheet can hold the destinations AND the two
+            actions, the way the course area does. On desktop it is
+            display:contents, so these lay out on the bar exactly as before. */}
+        <div class="admin-sheet" id="adminLinks">
+          <nav class="admin-links">
+            {
+              NAV.map((item) => (
+                <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))
+            }
+          </nav>
+          <div class="admin-sheet-tail">
+            <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
+            <form method="POST" action="/api/craft/admin/logout">
+              <button class="btn small" type="submit">Sign out</button>
+            </form>
+          </div>
+        </div>
       </div>
     </header>
+
+    <div class="nav-scrim" id="adminNavScrim" hidden></div>
 
     <main>
       <div class="wrap">
@@ -169,31 +178,41 @@ const NAV = [
   function initAdminNav() {
     const toggle = document.getElementById('adminNavToggle');
     const links = document.getElementById('adminLinks');
-    if (!toggle || !links) return;
+    const scrim = document.getElementById('adminNavScrim');
+    if (!toggle || !links || !scrim) return;
 
     const setOpen = (open: boolean) => {
       links.classList.toggle('is-open', open);
       toggle.setAttribute('aria-expanded', String(open));
+      scrim.hidden = !open;
+      // the scrim fades, so it needs a frame between unhide and the class
+      if (open) requestAnimationFrame(() => scrim.classList.add('is-open'));
+      else scrim.classList.remove('is-open');
+      document.body.style.overflow = open ? 'hidden' : '';
     };
+
+    const close = () => setOpen(false);
 
     toggle.addEventListener('click', () =>
       setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
 
-    links.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () { setOpen(false); });
-    });
+    scrim.addEventListener('click', close);
+    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
-        setOpen(false);
-        toggle.focus();
+        close();
+        (toggle as HTMLElement).focus();
       }
     });
 
-    var wide = window.matchMedia('(min-width: 721px)');
-    wide.addEventListener('change', function (e) { if (e.matches) setOpen(false); });
+    // Dragging back to desktop width must not leave a hidden sheet holding the
+    // body scroll lock.
+    window.matchMedia('(min-width: 721px)')
+      .addEventListener('change', (e) => { if (e.matches) close(); });
 
-    setOpen(false);
+    close();
   }
+
   initAdminNav();
 </script>

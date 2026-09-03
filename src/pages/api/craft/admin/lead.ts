@@ -16,8 +16,8 @@
 // cannot reach it — a complete erasure means deleting that thread too.
 
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/admin/supabase';
-import { LEAD_STATUSES } from '../../../lib/admin/queries';
+import { db } from '../../../../lib/admin/supabase';
+import { LEAD_STATUSES } from '../../../../lib/admin/queries';
 
 export const prerender = false;
 

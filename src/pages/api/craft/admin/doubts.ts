@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { updateDoubtStatus, answerDoubtAsSunil, type DoubtStatus } from '../../../lib/craft/doubts';
+import { updateDoubtStatus, answerDoubtAsSunil, type DoubtStatus } from '../../../../lib/craft/doubts';
 
 export const prerender = false;
 

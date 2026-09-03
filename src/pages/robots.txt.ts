@@ -10,8 +10,10 @@
 //   /api/ask     a POST endpoint that costs money per call, nothing to index
 //   /api/track   the analytics beacon — indexing it would pollute its own data
 //   /api/lead    the lead ledger, POST only
-//   /admin       the console. robots.txt is a request, not a control, so this
-//                is politeness on top of the real defence: every /admin route
+//   /craft       the cohort's course area AND, under /craft/admin, the operator
+//                console. One line covers both now. robots.txt is a request, not
+//                a control, so this is politeness on top of the real defence:
+//                the session checks in middleware.ts.
 //                is behind a session check in src/middleware.ts and sends
 //                X-Robots-Tag: noindex. Listing it here does reveal the path,
 //                which is fine — the password is the secret, not the URL.
@@ -39,7 +41,7 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
-const DISALLOW = ['/admin', '/craft', '/api/ask', '/api/track', '/api/lead'];
+const DISALLOW = ['/craft', '/api/ask', '/api/track', '/api/lead'];
 
 export const GET: APIRoute = () => {
   const body = [

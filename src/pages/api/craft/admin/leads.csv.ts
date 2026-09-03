@@ -5,7 +5,7 @@
 // pipeline, the data walks out without a migration.
 
 import type { APIRoute } from 'astro';
-import { leads } from '../../../lib/admin/queries';
+import { leads } from '../../../../lib/admin/queries';
 
 export const prerender = false;
 

@@ -1,14 +1,14 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import LineChart from '../../components/admin/LineChart.astro';
-import Bars from '../../components/admin/Bars.astro';
-import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, trafficPaths } from '../../lib/admin/queries';
-import { getRadar } from '../../lib/agent/radar';
-import { getLatest } from '../../lib/agent/latest';
-import { getBudget, formatUsd, WARN_FRACTION } from '../../lib/agent/budget';
-import { dbHealth } from '../../lib/admin/health';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import LineChart from '../../../components/admin/LineChart.astro';
+import Bars from '../../../components/admin/Bars.astro';
+import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, trafficPaths } from '../../../lib/admin/queries';
+import { getRadar } from '../../../lib/agent/radar';
+import { getLatest } from '../../../lib/agent/latest';
+import { getBudget, formatUsd, WARN_FRACTION } from '../../../lib/agent/budget';
+import { dbHealth } from '../../../lib/admin/health';
 
 const DAYS = 30;
 
@@ -152,7 +152,7 @@ const when = (iso: string) =>
       <div>
         <h2>Latest leads</h2>
         <p class="sub">
-          <a href="/admin/leads" style="color:var(--clay)">All leads →</a>
+          <a href="/craft/admin/leads" style="color:var(--clay)">All leads →</a>
         </p>
         <div class="table-scroll">
           {
@@ -191,7 +191,7 @@ const when = (iso: string) =>
         <h2>Questions it could not answer</h2>
         <p class="sub">
           Each one is a gap in <code class="mono">facts.ts</code>.
-          <a href="/admin/questions" style="color:var(--clay)">All questions →</a>
+          <a href="/craft/admin/questions" style="color:var(--clay)">All questions →</a>
         </p>
         <div class="table-scroll">
           {
@@ -229,7 +229,7 @@ const when = (iso: string) =>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
           <div>
             <span class="label">This month</span>
-            <p style="margin-top:6px;font-size:26px;font-family:'Fraunces',serif">
+            <p style="margin-top:6px;font-size:26px;font-family:var(--font-display);">
               {formatUsd(budget.spentUsd)}
               <span style="font-size:15px;color:var(--ink-faint)"> of {formatUsd(budget.limitUsd)}</span>
             </p>
@@ -241,7 +241,7 @@ const when = (iso: string) =>
             {budget.overBudget ? 'paused' : budget.nearLimit ? 'near limit' : 'ok'}
           </span>
         </div>
-        <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px">
+        <div style="height:6px;background:var(--line);border-radius: var(--radius-inner);overflow:hidden;margin-top:12px">
           <div
             style={`height:100%;width:${Math.min(100, Math.round(budget.used * 100))}%;background:${
               budget.overBudget ? 'var(--clay-deep)' : budget.nearLimit ? 'var(--ochre)' : 'var(--clay)'
@@ -277,7 +277,7 @@ const when = (iso: string) =>
           <strong>{radar.items.length}</strong> findings on the board,
           {radarAge === null ? ' never run' : ` refreshed ${radarAge} day${radarAge === 1 ? '' : 's'} ago`}.
         </p>
-        <p style="margin-top:10px"><a href="/admin/radar" style="color:var(--clay)">Open the radar →</a></p>
+        <p style="margin-top:10px"><a href="/craft/admin/radar" style="color:var(--clay)">Open the radar →</a></p>
       </div>
       <div class="card">
         <span class="label">Latest · read by the visitor agent</span>
@@ -285,7 +285,7 @@ const when = (iso: string) =>
           <strong>{latest.items.length}</strong> items live,
           {latestAge === null ? ' never run' : ` refreshed ${latestAge} day${latestAge === 1 ? '' : 's'} ago`}.
         </p>
-        <p style="margin-top:10px"><a href="/admin/content" style="color:var(--clay)">Review content →</a></p>
+        <p style="margin-top:10px"><a href="/craft/admin/content" style="color:var(--clay)">Review content →</a></p>
       </div>
     </div>
   </section>
@@ -360,7 +360,7 @@ const when = (iso: string) =>
       if (!check || !apply || !out) return;
 
       function call(body) {
-        return fetch('/api/admin/purge', {
+        return fetch('/api/craft/admin/purge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),

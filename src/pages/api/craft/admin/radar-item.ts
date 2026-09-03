@@ -1,16 +1,16 @@
 // Hide, restore, or correct one radar finding — straight to the database.
 //
-// The sibling endpoint /api/admin/propose does the same job for the visitor
+// The sibling endpoint /api/craft/admin/propose does the same job for the visitor
 // retriever's findings by opening a pull request, because those are read aloud
 // to prospects and every change to them should be a reviewable diff. The radar
 // is Sunil's private notebook; a merge and a deploy to dismiss a stale hiring
 // article was ceremony without a reader.
 //
-// Behind the admin session — middleware closes everything under /api/admin/
+// Behind the admin session — middleware closes everything under /api/craft/admin/
 // that is not on its allowlist.
 
 import type { APIRoute } from 'astro';
-import { editFinding, setFindingStatus } from '../../../lib/agent/radar';
+import { editFinding, setFindingStatus } from '../../../../lib/agent/radar';
 
 export const prerender = false;
 

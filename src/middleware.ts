@@ -3,14 +3,23 @@
 // Auth lives here rather than at the top of each page for one reason: a new
 // page added later is protected by default. Per-page checks are correct until
 // the day someone forgets one, and the failure mode is a public leads table —
-// or, now, a course area that anyone can read. Everything under /admin,
-// /api/admin, /craft and /api/craft is closed unless it is on the short
-// allowlists below.
+// or, now, a course area that anyone can read. Everything under /craft,
+// /api/craft, /craft/admin and /api/craft/admin is closed unless it is on the
+// short allowlists below.
 //
 // The two areas do NOT share a session. One admin password opens the console;
 // a per-learner code opens /craft. An admin cookie is not accepted at /craft
-// and a learner cookie is not accepted at /admin — different secrets' domain
+// and a learner cookie is not accepted at /craft/admin — different secrets' domain
 // prefixes see to it (src/lib/craft/auth.ts), and neither grants the other.
+//
+// THE CONSOLE LIVES *INSIDE* THE COURSE AREA'S URL SPACE, AND THAT MAKES THE
+// ORDER OF THE TWO CHECKS BELOW LOAD-BEARING. /craft/admin/leads matches both
+// prefixes. If craftGate is reached first, a seat code — which every learner
+// holds — opens the leads ledger, the questions log, and every other learner's
+// intake answers. The console prefix is therefore tested FIRST, and the craft
+// gate only ever sees what the console check has already declined. Do not
+// reorder these, and do not let the console prefix become a subset of an
+// allowlist entry.
 //
 // Note this runs at build time too, for prerendered routes. That is harmless —
 // no public path matches the prefixes — but it is why the check is a cheap
@@ -24,17 +33,22 @@ import { COOKIE_NAME as CRAFT_COOKIE, readSession } from './lib/craft/auth';
 import { activeLearner } from './lib/craft/learners';
 
 /** Reachable without a session, because they are how you get one. */
-const OPEN = new Set(['/admin/login', '/api/admin/login', '/api/admin/logout']);
+const OPEN = new Set(['/craft/admin/login', '/api/craft/admin/login', '/api/craft/admin/logout']);
 const CRAFT_OPEN = new Set(['/craft/login', '/api/craft/login', '/api/craft/logout']);
 
-const isAdminPath = (p: string) => p === '/admin' || p.startsWith('/admin/') || p.startsWith('/api/admin/');
+const isAdminPath = (p: string) =>
+  p === '/craft/admin' || p.startsWith('/craft/admin/') || p.startsWith('/api/craft/admin/');
 const isCraftPath = (p: string) => p === '/craft' || p.startsWith('/craft/') || p.startsWith('/api/craft/');
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const path = context.url.pathname.replace(/\/+$/, '') || '/';
 
-  if (isCraftPath(path)) return craftGate(context, next, path);
-  if (!isAdminPath(path)) return next();
+  // Console first — see the note at the top of this file. Both predicates match
+  // /craft/admin/*; only the admin one may answer for it.
+  if (!isAdminPath(path)) {
+    if (isCraftPath(path)) return craftGate(context, next, path);
+    return next();
+  }
 
   // Never index, never cache, never share. Set before the auth branch so it is
   // on the login page and on every rejection too.
@@ -76,7 +90,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const next_ = encodeURIComponent(context.url.pathname + context.url.search);
-  return seal(context.redirect(`/admin/login?next=${next_}`, 302));
+  return seal(context.redirect(`/craft/admin/login?next=${next_}`, 302));
 });
 
 /**

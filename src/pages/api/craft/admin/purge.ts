@@ -10,7 +10,7 @@
 // whether to preview or to act.
 
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/admin/supabase';
+import { db } from '../../../../lib/admin/supabase';
 
 export const prerender = false;
 

@@ -1,9 +1,9 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getCollection } from 'astro:content';
-import { listAllSubmissionsWithLearner, submissionGaps } from '../../lib/craft/submissions';
+import { listAllSubmissionsWithLearner, submissionGaps } from '../../../lib/craft/submissions';
 import { marked } from 'marked';
 
 const rows = await listAllSubmissionsWithLearner();
@@ -128,7 +128,7 @@ const when = (iso: string) =>
       contentDiv.innerHTML = '<span class="faint mono">Calling model...</span>';
 
       try {
-        const res = await fetch('/api/admin/adr-synthesize', {
+        const res = await fetch('/api/craft/admin/adr-synthesize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ week }),

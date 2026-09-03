@@ -1,10 +1,10 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import LineChart from '../../components/admin/LineChart.astro';
-import Bars from '../../components/admin/Bars.astro';
-import { funnel, trafficBreakdown, trafficDaily, trafficPaths } from '../../lib/admin/queries';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import LineChart from '../../../components/admin/LineChart.astro';
+import Bars from '../../../components/admin/Bars.astro';
+import { funnel, trafficBreakdown, trafficDaily, trafficPaths } from '../../../lib/admin/queries';
 
 // Range is a link, not a control — the page is server-rendered, so a plain
 // query parameter needs no script and survives a bookmark.
@@ -54,7 +54,7 @@ const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia',
       </p>
     </div>
     <div class="cat-nav" style="margin:0">
-      {RANGES.map((r) => <a class={r === days ? 'on' : ''} href={`/admin/traffic?days=${r}`}>{r} days</a>)}
+      {RANGES.map((r) => <a class={r === days ? 'on' : ''} href={`/craft/admin/traffic?days=${r}`}>{r} days</a>)}
     </div>
   </div>
 

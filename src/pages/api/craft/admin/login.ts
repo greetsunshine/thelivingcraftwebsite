@@ -1,17 +1,17 @@
 // Exchange the password for a session cookie.
 //
 // Reached without a session — middleware allowlists this path, because it is
-// how a session is obtained. Everything else under /api/admin/ is closed.
+// how a session is obtained. Everything else under /api/craft/admin/ is closed.
 
 import type { APIRoute } from 'astro';
-import { COOKIE_NAME, checkPassword, clearThrottle, issueSession, throttleLogin } from '../../../lib/admin/auth';
+import { COOKIE_NAME, checkPassword, clearThrottle, issueSession, throttleLogin } from '../../../../lib/admin/auth';
 
 export const prerender = false;
 
 /** Never send anyone anywhere but back into the console. */
 const safeNext = (raw: unknown): string => {
   const value = typeof raw === 'string' ? raw : '';
-  return value.startsWith('/admin') && !value.startsWith('//') ? value : '/admin';
+  return value.startsWith('/craft/admin') && !value.startsWith('//') ? value : '/craft/admin';
 };
 
 export const POST: APIRoute = async ({ request, cookies, redirect, clientAddress }) => {
@@ -21,11 +21,11 @@ export const POST: APIRoute = async ({ request, cookies, redirect, clientAddress
 
   const gate = throttleLogin(key);
   if (!gate.ok) {
-    return redirect(`/admin/login?e=throttled&m=${gate.retryInMin}&next=${encodeURIComponent(next)}`, 303);
+    return redirect(`/craft/admin/login?e=throttled&m=${gate.retryInMin}&next=${encodeURIComponent(next)}`, 303);
   }
 
   if (!(await checkPassword(String(form.get('password') ?? '')))) {
-    return redirect(`/admin/login?e=1&next=${encodeURIComponent(next)}`, 303);
+    return redirect(`/craft/admin/login?e=1&next=${encodeURIComponent(next)}`, 303);
   }
 
   clearThrottle(key);

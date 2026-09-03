@@ -1,8 +1,8 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { listAllFeedbackWithLearner, listAllResponses } from '../../lib/craft/feedback';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listAllFeedbackWithLearner, listAllResponses } from '../../../lib/craft/feedback';
 
 const [rows, responses] = await Promise.all([listAllFeedbackWithLearner(), listAllResponses()]);
 const responseFor = new Map(responses.map((r) => [r.week, r]));
@@ -112,7 +112,7 @@ const when = (iso: string) =>
       btn.disabled = true;
       btn.textContent = publish ? 'Publishing...' : 'Saving...';
       try {
-        const res = await fetch('/api/admin/feedback-response', {
+        const res = await fetch('/api/craft/admin/feedback-response', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ week, body: text.value, publish }),
@@ -193,7 +193,7 @@ const when = (iso: string) =>
       contentDiv.innerHTML = '<span class="faint mono">Calling model...</span>';
 
       try {
-        const res = await fetch('/api/admin/feedback-synthesize', {
+        const res = await fetch('/api/craft/admin/feedback-synthesize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ week }),

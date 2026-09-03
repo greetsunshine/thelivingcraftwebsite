@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/admin/supabase';
+import { db } from '../../../../lib/admin/supabase';
 import Anthropic from '@anthropic-ai/sdk';
 
 export const prerender = false;
@@ -26,12 +26,12 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const { data, error } = await client
-    .from('feedback')
-    .select('landed, pacing, learners(name)')
+    .from('submissions')
+    .select('adr_markdown, learners(name)')
     .eq('week', week);
 
   if (error || !data || data.length === 0) {
-    return new Response(JSON.stringify({ error: 'No feedback found for this week' }), { status: 404 });
+    return new Response(JSON.stringify({ error: 'No ADRs found for this week' }), { status: 404 });
   }
 
   // @ts-ignore
@@ -42,27 +42,28 @@ export const POST: APIRoute = async ({ request }) => {
 
   const anthropic = new Anthropic({ apiKey });
   
-  const feedbackList = data.map(f => {
-    const name = (f.learners as any)?.name ?? 'Anonymous';
-    return `Learner: ${name}\nWhat landed well: ${f.landed}\nWhat was too fast/slow: ${f.pacing}`;
+  const adrList = data.map(s => {
+    const name = (s.learners as any)?.name ?? 'Anonymous';
+    return `Learner: ${name}\nADR:\n${s.adr_markdown}`;
   }).join('\n\n---\n\n');
 
-  const prompt = `You are helping an instructor synthesize post-session feedback from an advanced technical cohort.
-Here is the feedback from ${data.length} learners for week ${week}:
+  const prompt = `You are helping an instructor synthesize the architecture decision records (ADRs) submitted by an advanced technical cohort.
+Here are the ADRs from ${data.length} learners for week ${week}:
 
-${feedbackList}
+${adrList}
 
-Your task is to synthesize this feedback into a concise, actionable summary of "What to change before Thursday".
-Do not invent or assume things not in the feedback.
+Your task is to synthesize these ADRs into a concise room summary. 
 Format your output as markdown. Focus on:
-1. Where the room is confused.
-2. What landed well and should be reinforced.
-3. Specific pacing adjustments needed.`;
+1. Where the room converged (patterns or decisions most people chose).
+2. Where the room split (differing approaches or major disagreements).
+3. What nobody mentioned (blind spots, missing considerations, or trade-offs that were ignored).
+
+Do not evaluate or grade the learners.`;
 
   try {
     const response = await anthropic.messages.create({
       model: SUMMARY_MODEL,
-      max_tokens: 400,
+      max_tokens: 500,
       messages: [{ role: 'user', content: prompt }]
     });
 
@@ -76,7 +77,7 @@ Format your output as markdown. Focus on:
     
     return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
   } catch (err) {
-    console.error('Feedback synthesis failed:', err);
+    console.error('ADR synthesis failed:', err);
     return new Response(JSON.stringify({ error: 'Synthesis failed' }), { status: 500 });
   }
 };

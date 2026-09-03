@@ -1,8 +1,8 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { LEAD_STATUSES, leadCounts, leads } from '../../lib/admin/queries';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { LEAD_STATUSES, leadCounts, leads } from '../../../lib/admin/queries';
 
 const params = Astro.url.searchParams;
 const status = params.get('status') ?? 'new';
@@ -31,7 +31,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
         email may never have arrived.
       </p>
     </div>
-    <a class="btn" href={`/api/admin/leads.csv?status=${encodeURIComponent(status)}`}>Export CSV</a>
+    <a class="btn" href={`/api/craft/admin/leads.csv?status=${encodeURIComponent(status)}`}>Export CSV</a>
   </div>
 
   {
@@ -52,7 +52,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
       {FILTERS.map((s) => <option value={s} selected={s === status}>{s === 'all' ? 'All statuses' : s}</option>)}
     </select>
     <button class="btn" type="submit">Filter</button>
-    {(search || status !== 'new') && <a class="btn" href="/admin/leads">Reset</a>}
+    {(search || status !== 'new') && <a class="btn" href="/craft/admin/leads">Reset</a>}
   </form>
 
   <div class="table-scroll">
@@ -142,7 +142,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
                   </select>
                   <p class="status-line" style="font-size:12px" />
                   <button
-                    class="btn small lead-delete"
+                    class="btn small danger lead-delete"
                     style="margin-top:6px"
                     data-email={l.email ?? 'this lead'}
                     title="Permanently erase this record. Use for a deletion request, not for triage — archive handles that."
@@ -167,7 +167,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
         var out = row.querySelector('.status-line');
         if (out) { out.textContent = 'Saving…'; out.className = 'status-line'; }
 
-        fetch('/api/admin/lead', {
+        fetch('/api/craft/admin/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(Object.assign({ id: row.getAttribute('data-lead') }, patch)),
@@ -206,7 +206,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
         btn.disabled = true;
         if (out) { out.textContent = 'Erasing…'; out.className = 'status-line'; }
 
-        fetch('/api/admin/lead', {
+        fetch('/api/craft/admin/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: row.getAttribute('data-lead'), action: 'delete' }),

@@ -1,8 +1,8 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { questionStats, questions } from '../../lib/admin/queries';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { questionStats, questions } from '../../../lib/admin/queries';
 
 const onlyGaps = Astro.url.searchParams.get('filter') === 'gaps';
 const DAYS = 30;
@@ -32,8 +32,8 @@ const gapRate = stats.total ? Math.round((stats.gaps / stats.total) * 100) : 0;
       </p>
     </div>
     <div class="cat-nav" style="margin:0">
-      <a class={onlyGaps ? '' : 'on'} href="/admin/questions">Everything</a>
-      <a class={onlyGaps ? 'on' : ''} href="/admin/questions?filter=gaps">Unanswered only</a>
+      <a class={onlyGaps ? '' : 'on'} href="/craft/admin/questions">Everything</a>
+      <a class={onlyGaps ? 'on' : ''} href="/craft/admin/questions?filter=gaps">Unanswered only</a>
     </div>
   </div>
 
