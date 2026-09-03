@@ -24,7 +24,7 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
 ---
 
 <CraftLayout title="Week 6 Familiarity" learner={learner}>
-  <div class="wrap" style="max-width: 780px; margin: 0 auto; padding-top: 40px; padding-bottom: 80px;">
+  <div class="wrap page-narrow" style="max-width: 780px; margin: 0 auto; padding-bottom: 80px;">
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Familiarity Check</h1>
     <p class="lead" style="margin-bottom: 48px;">
       Re-assess your familiarity with the core capabilities now that the cohort is ending.
@@ -278,5 +278,13 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
       font-size: 11px;
       color: var(--ink-faint);
     }
+  }
+
+  .page-narrow { padding-top: 40px; padding-bottom: 56px; }
+
+  @media (max-width: 780px) {
+    /* 40px under a fixed bar on a phone is a lot of nothing; the room is
+       better spent between the blocks below. */
+    .page-narrow { padding-top: 24px; padding-bottom: 40px; }
   }
 </style>

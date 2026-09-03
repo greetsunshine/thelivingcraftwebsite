@@ -18,7 +18,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
 ---
 
 <CraftLayout title="Knowledge Check" learner={learner}>
-  <div class="wrap" style="max-width: 640px; margin: 0 auto; padding-top: 40px;">
+  <div class="wrap page-narrow" style="max-width: 640px; margin: 0 auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
       <h1 style="font-size:clamp(26px,4vw,36px);margin:0">Knowledge Check</h1>
       <div class="faint mono" style="font-size:12px">{answeredIds.size} of {allItems.length} completed</div>
@@ -313,5 +313,13 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     .c-radio { padding: 9px 13px; font-size: 13px; }
     .mcq-option { padding: 14px; }
     .q-header { flex-wrap: wrap; gap: 8px; }
+  }
+
+  .page-narrow { padding-top: 40px; padding-bottom: 56px; }
+
+  @media (max-width: 780px) {
+    /* 40px under a fixed bar on a phone is a lot of nothing; the room is
+       better spent between the blocks below. */
+    .page-narrow { padding-top: 24px; padding-bottom: 40px; }
   }
 </style>

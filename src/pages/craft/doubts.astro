@@ -30,7 +30,7 @@ const sourceLabel: Record<AnswerSource, string> = {
 ---
 
 <CraftLayout title="Your Doubts" learner={learner}>
-  <div class="wrap" style="max-width: 780px; margin: 0 auto; padding-top: 40px;">
+  <div class="wrap page-narrow" style="max-width: 780px; margin: 0 auto;">
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Doubts &amp; Questions</h1>
     <p class="lead" style="margin-bottom: 40px;">
       Anything about dates, deadlines or format gets answered here straight away.
@@ -366,5 +366,13 @@ const sourceLabel: Record<AnswerSource, string> = {
     .doubt-card { padding: 16px 18px; }
     .d-header { flex-wrap: wrap; gap: 8px; }
     .answer-actions { width: 100%; }
+  }
+
+  .page-narrow { padding-top: 40px; padding-bottom: 56px; }
+
+  @media (max-width: 780px) {
+    /* 40px under a fixed bar on a phone is a lot of nothing; the room is
+       better spent between the blocks below. */
+    .page-narrow { padding-top: 24px; padding-bottom: 40px; }
   }
 </style>
