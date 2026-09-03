@@ -98,6 +98,34 @@ async function craftGate(context: APIContext, next: MiddlewareNext, path: string
 
   if (CRAFT_OPEN.has(path)) return seal(await next());
 
+  // LOCAL DEV ONLY, double-gated so it cannot reach production by accident:
+  //
+  //   import.meta.env.DEV is a build-time constant, false in every `astro
+  //   build` output — which is what Vercel runs. There is no request-time
+  //   value that can flip it back on once built, so this branch is compiled
+  //   OUT of the production bundle entirely, not merely skipped at runtime.
+  //
+  //   CRAFT_DEV_BYPASS must also be '1' in .env.local (gitignored, never
+  //   committed), so it does not silently activate for every contributor who
+  //   runs `npm run dev` — it has to be deliberately opted into.
+  //
+  // This replaces the earlier `PoC BYPASS`, which had neither gate and shipped
+  // on the branch with the real check unreachable below it. Never repeat that:
+  // if this needs to be more permissive, add a gate, don't remove one.
+  if (import.meta.env.DEV && import.meta.env.CRAFT_DEV_BYPASS === '1') {
+    context.locals.learner = {
+      id: 'dev-preview',
+      email: 'preview@example.com',
+      name: 'Preview Learner',
+      cohort: 'cohort-1',
+      status: 'active',
+      note: null,
+      created_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+    };
+    return seal(await next());
+  }
+
   // Unconfigured is closed, same as the console. Without the session secret
   // nothing can be signed; without Supabase there is no seat list to check
   // against, and "cannot verify" must never mean "let them in".
