@@ -66,7 +66,16 @@ const WEEK_FILE = /^week-(\d+)\.md$/;
 // handful of flat keys per item. One file per week; each `##` heading starts an
 // item and its text is the id, metadata runs until the first blank line, and
 // everything after that is the question.
-function parseWeekFile(raw: string, fallbackWeek: number): QuizItemWithAnswer[] {
+function parseWeekFile(input: string, fallbackWeek: number): QuizItemWithAnswer[] {
+  // Normalise line endings FIRST. This repo is developed on Windows with
+  // git's autocrlf on, so the same file is LF in the repository and CRLF in a
+  // checkout. Every per-line regex below ends in `$`, which in JavaScript
+  // (without the m flag) matches only at end-of-string, never before a
+  // trailing carriage return. Left unnormalised, a metadata line fails to
+  // match, the parse bails, and the item is dropped WITHOUT ERROR: the bank
+  // reads as empty and the quiz surface renders nothing.
+  const raw = input.replace(new RegExp(String.fromCharCode(13), 'g'), '');
+
   const fm = raw.match(FRONTMATTER);
   const head = fm ? fm[1] : '';
   const rest = fm ? fm[2] : raw;
