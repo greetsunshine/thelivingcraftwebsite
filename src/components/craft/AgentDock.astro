@@ -1,0 +1,355 @@
+---
+// The learner agent, docked to the bottom of every /craft page.
+//
+// WHY THE BOTTOM. It used to be a 380px column on the right, which cost a fifth
+// of the width on a laptop and had nowhere to go on a phone. Docked, it is one
+// bar until it is wanted, and the content keeps the full width.
+//
+// TWO HEIGHTS, ONE NUMBER. Collapsed it is --dock-h (76px); expanded it is half
+// the viewport. The layout reserves exactly --dock-h for it, and the toggle
+// rewrites that variable on :root, so the shell and the dock can never disagree
+// about how much room this takes.
+//
+// PERSISTENT MEANS PERSISTENT. transition:persist keeps this element — and the
+// conversation inside it — alive across ClientRouter navigations instead of
+// remounting it per page. Without it, "persistent across every screen" would be
+// a fresh empty panel on every click.
+//
+// NO BROWSER STORAGE. Open/closed lives in a class on the element and dies with
+// the tab, like every other piece of client state in this repo.
+//
+// WHAT THIS PANEL SAYS IS STILL A MOCK. The replies below are keyword matches,
+// and they are not what the doubts flow actually does — see
+// docs/learning-agent/guided-walkthrough/plan.md §14. Moving it was this change;
+// making it real is the next one.
+---
+
+<div class="agent-dock" id="agentDock" transition:persist>
+  <!-- always visible -->
+  <div class="dock-bar">
+    <div class="dock-avatar" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+    </div>
+
+    <form class="dock-form" id="dockForm">
+      <input
+        id="dockInput"
+        class="dock-input"
+        type="text"
+        autocomplete="off"
+        placeholder="Ask about the course"
+        data-placeholder-wide="Ask about the course — dates and format answered here, anything about the material goes to Sunil"
+      />
+    </form>
+
+    <button
+      type="button"
+      class="dock-toggle"
+      id="dockToggle"
+      aria-expanded="false"
+      aria-controls="dockBody"
+      title="Expand"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+      <span class="sr-only">Expand the assistant</span>
+    </button>
+  </div>
+
+  <!-- revealed on expand -->
+  <div class="dock-body" id="dockBody">
+    <div class="dock-chat" id="dockChat"></div>
+    <div class="dock-chips" id="dockChips"></div>
+  </div>
+</div>
+
+<script>
+  // Bound on astro:page-load because ClientRouter swaps pages without a full
+  // reload. The dock element itself is transition:persist'd, so re-binding a
+  // listener to the same node would stack handlers — hence the guard flag.
+  function initAgentDock() {
+    const dock = document.getElementById('agentDock');
+    if (!dock || dock.dataset.bound === '1') return;
+    dock.dataset.bound = '1';
+
+    const toggle = document.getElementById('dockToggle');
+    const form = document.getElementById('dockForm') as HTMLFormElement | null;
+    const input = document.getElementById('dockInput') as HTMLInputElement | null;
+    const chat = document.getElementById('dockChat');
+    const chips = document.getElementById('dockChips');
+    if (!toggle || !form || !input || !chat || !chips) return;
+
+    const OPEN_H = 'min(50vh, 520px)';
+    const SHUT_H = '76px';
+
+    const setOpen = (open: boolean) => {
+      dock.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('title', open ? 'Collapse' : 'Expand');
+      // One number, written once: the shell reserves whatever this says.
+      document.documentElement.style.setProperty('--dock-h', open ? OPEN_H : SHUT_H);
+      if (open) chat.scrollTop = chat.scrollHeight;
+    };
+
+    toggle.addEventListener('click', () => setOpen(!dock.classList.contains('is-open')));
+
+    const INITIAL_CHIPS = [
+      "What's due this week?",
+      'When is the next session?',
+      'Ask Sunil something',
+    ];
+
+    function renderChips(list: string[]) {
+      chips!.replaceChildren();
+      for (const text of list) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'dock-chip';
+        b.textContent = text;
+        b.addEventListener('click', () => {
+          input!.value = text;
+          send();
+        });
+        chips!.appendChild(b);
+      }
+    }
+
+    function bubble(role: 'you' | 'agent', text: string, note?: string) {
+      const row = document.createElement('div');
+      row.className = `dock-msg ${role}`;
+      const b = document.createElement('div');
+      b.className = 'dock-bubble';
+      b.textContent = text;
+      row.appendChild(b);
+      if (note) {
+        const n = document.createElement('p');
+        n.className = 'dock-note mono';
+        n.textContent = note;
+        row.appendChild(n);
+      }
+      chat!.appendChild(row);
+      chat!.scrollTop = chat!.scrollHeight;
+    }
+
+    function send() {
+      const text = input!.value.trim();
+      if (!text) return;
+      if (!dock!.classList.contains('is-open')) setOpen(true);
+
+      bubble('you', text);
+      input!.value = '';
+
+      // Placeholder replies. Not the real doubts flow — see the note above.
+      window.setTimeout(() => {
+        const q = text.toLowerCase();
+        if (q.includes('due') || q.includes('session') || q.includes('when')) {
+          bubble(
+            'agent',
+            'Week 3 — Evals that catch what review misses. Live online, Thursday. The drill is due before week 4.',
+            'From the week 3 session page',
+          );
+        } else if (q.includes('sunil')) {
+          bubble('agent', 'Sent to Sunil. He reads these before the next session.', 'Routed, not answered');
+        } else {
+          bubble(
+            'agent',
+            'Sent to Sunil. He reads these before the next session — if several people ask the same thing, it usually becomes part of it.',
+            'Not answered here, on purpose',
+          );
+        }
+      }, 500);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      send();
+    });
+
+    // The long placeholder only fits a wide bar; the short one is the default
+    // so a phone never shows a truncated sentence.
+    const wide = input.dataset.placeholderWide;
+    const shortText = input.placeholder;
+    const fitPlaceholder = () => {
+      if (!wide) return;
+      input.placeholder = window.innerWidth >= 860 ? wide : shortText;
+    };
+    fitPlaceholder();
+    window.addEventListener('resize', fitPlaceholder);
+
+    renderChips(INITIAL_CHIPS);
+    setOpen(false);
+  }
+
+  document.addEventListener('astro:page-load', initAgentDock);
+</script>
+
+<style is:global>
+  .agent-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    height: var(--dock-h, 76px);
+    background: var(--surface);
+    /* a shadow, not a border — §9 */
+    box-shadow: var(--shadow-overlay);
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: height 0.22s ease;
+  }
+
+  .dock-bar {
+    height: 76px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+  }
+
+  .agent-dock.is-open .dock-bar {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dock-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    background: var(--noir);
+    color: var(--sun);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+
+  .dock-form { flex: 1 1 auto; min-width: 0; }
+
+  .dock-input {
+    width: 100%;
+    height: var(--control-h);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    padding: 0 22px;
+    font-family: inherit;
+    font-size: var(--size-3);
+    color: var(--ink);
+  }
+  .dock-input::placeholder { color: var(--ink-faint); }
+  .dock-input:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .dock-toggle {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .dock-toggle svg { transition: transform 0.22s ease; }
+  .agent-dock.is-open .dock-toggle svg { transform: rotate(180deg); }
+  .dock-toggle:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .dock-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+  }
+  .agent-dock.is-open .dock-body { display: flex; }
+
+  .dock-chat {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dock-msg { display: flex; flex-direction: column; max-width: 70%; }
+  .dock-msg.you { align-self: flex-end; align-items: flex-end; }
+  .dock-msg.agent { align-self: flex-start; }
+
+  .dock-bubble {
+    padding: 13px 20px;
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    border-radius: var(--radius-card);
+  }
+  .dock-msg.you .dock-bubble {
+    background: var(--noir);
+    color: var(--paper-1);
+    border-bottom-right-radius: 6px;
+  }
+  .dock-msg.agent .dock-bubble {
+    background: var(--paper-2);
+    color: var(--ink);
+    border-bottom-left-radius: 6px;
+  }
+
+  .dock-note {
+    margin: 7px 0 0 20px;
+    font-size: var(--size-1);
+    color: var(--ink-faint);
+  }
+
+  .dock-chips {
+    flex: none;
+    display: flex;
+    gap: 10px;
+    padding: 0 24px 20px;
+    overflow-x: auto;
+  }
+
+  .dock-chip {
+    flex: none;
+    border: 1px solid var(--line);
+    background: transparent;
+    border-radius: var(--radius-pill);
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: var(--size-2);
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .dock-chip:hover { color: var(--ink); border-color: var(--line-strong); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 860px) {
+    .dock-bar { height: 72px; gap: 12px; padding: 0 14px; }
+    .dock-input { font-size: var(--size-2); padding: 0 18px; }
+    .dock-msg { max-width: 88%; }
+    .dock-chat { padding: 16px 14px; gap: 13px; }
+    .dock-chips { padding: 0 14px 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .agent-dock, .dock-toggle svg { transition: none; }
+  }
+</style>

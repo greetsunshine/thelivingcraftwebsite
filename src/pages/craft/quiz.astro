@@ -303,4 +303,15 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     font-size: 28px;
     margin-bottom: 12px;
   }
+
+  @media (max-width: 780px) {
+    .wrap { padding-top: 24px !important; }
+    .quiz-card { padding: 22px 18px; }
+    /* Five confidence options will not sit on one phone row. Wrapping keeps
+       every target at its full tap size instead of squeezing them. */
+    .confidence-scale { gap: 8px; }
+    .c-radio { padding: 9px 13px; font-size: 13px; }
+    .mcq-option { padding: 14px; }
+    .q-header { flex-wrap: wrap; gap: 8px; }
+  }
 </style>

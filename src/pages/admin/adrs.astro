@@ -52,12 +52,12 @@ const when = (iso: string) =>
             <tbody>
               {gaps.map((g) => (
                 <tr>
-                  <td>
+                  <td data-label="Learner">
                     <div style="font-weight:500">{g.learner_name ?? '—'}</div>
                     <div style="font-size:13px"><a href={`mailto:${g.learner_email}`} style="color:var(--clay)">{g.learner_email}</a></div>
                   </td>
-                  <td>{g.missing.map((w) => <span class="pill warn">week {w}</span>)}</td>
-                  <td class="faint">{g.submitted.length > 0 ? g.submitted.map((w) => `week ${w}`).join(', ') : 'none'}</td>
+                  <td data-label="Missing">{g.missing.map((w) => <span class="pill warn">week {w}</span>)}</td>
+                  <td data-label="Submitted" class="faint">{g.submitted.length > 0 ? g.submitted.map((w) => `week ${w}`).join(', ') : 'none'}</td>
                 </tr>
               ))}
             </tbody>

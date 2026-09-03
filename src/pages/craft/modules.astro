@@ -110,4 +110,8 @@ const learner = Astro.locals.learner!;
     letter-spacing: 0.06em;
     white-space: nowrap;
   }
+
+  @media (max-width: 780px) {
+    .modules-grid { grid-template-columns: 1fr; gap: 14px; }
+  }
 </style>

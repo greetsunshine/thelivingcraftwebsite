@@ -124,10 +124,10 @@ const sourceLabel: Record<string, string> = {
           <tbody>
             {course.map((d) => (
               <tr>
-                <td class="faint mono" style="font-size:12px;white-space:nowrap">{when(d.created_at)}</td>
-                <td style="min-width:180px">{d.learner_name ?? d.learner_email}</td>
-                <td style="max-width:420px">{d.body}</td>
-                <td style="white-space:nowrap">
+                <td data-label="When" class="faint mono" style="font-size:12px;white-space:nowrap">{when(d.created_at)}</td>
+                <td data-label="Learner" style="min-width:180px">{d.learner_name ?? d.learner_email}</td>
+                <td data-label="Asked" style="max-width:420px">{d.body}</td>
+                <td data-label="Answered from" style="white-space:nowrap">
                   {d.answer_source
                     ? <span class="pill">{sourceLabel[d.answer_source]}</span>
                     : <span class="pill warn">unanswered — with you</span>}

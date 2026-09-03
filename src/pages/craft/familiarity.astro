@@ -50,9 +50,9 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
               {TECHNICAL.map(q => (
                 <tr>
                   <td>{q.id}: {q.text}</td>
-                  <td class="num faint">{intake?.technical?.[q.id] || '—'}</td>
-                  <td class="num">{familiarity?.technical?.[q.id] || '—'}</td>
-                  <td class="num" set:html={renderDelta(q.id, 'technical')} />
+                  <td class="num faint" data-label="Week 0">{intake?.technical?.[q.id] || '—'}</td>
+                  <td class="num" data-label="Week 6">{familiarity?.technical?.[q.id] || '—'}</td>
+                  <td class="num" data-label="Delta" set:html={renderDelta(q.id, 'technical')} />
                 </tr>
               ))}
             </tbody>
@@ -74,9 +74,9 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
               {LEADERSHIP.map(q => (
                 <tr>
                   <td>{q.id}: {q.text}</td>
-                  <td class="num faint">{intake?.leadership?.[q.id] || '—'}</td>
-                  <td class="num">{familiarity?.leadership?.[q.id] || '—'}</td>
-                  <td class="num" set:html={renderDelta(q.id, 'leadership')} />
+                  <td class="num faint" data-label="Week 0">{intake?.leadership?.[q.id] || '—'}</td>
+                  <td class="num" data-label="Week 6">{familiarity?.leadership?.[q.id] || '—'}</td>
+                  <td class="num" data-label="Delta" set:html={renderDelta(q.id, 'leadership')} />
                 </tr>
               ))}
             </tbody>
@@ -257,5 +257,26 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
   .delta-table .num {
     text-align: center;
     font-family: var(--font-mono);
+  }
+
+  @media (max-width: 780px) {
+    /* The before/after table is four columns of mostly numbers. Rather than
+       scroll it sideways, the capability text takes the full width and the
+       three figures sit under it as a row. */
+    .delta-table, .delta-table tbody, .delta-table tr { display: block; width: 100%; }
+    .delta-table thead { display: none; }
+    .delta-table tr {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
+    }
+    .delta-table td { display: inline-block; border: 0; padding: 0; }
+    .delta-table td:first-child { display: block; margin-bottom: 6px; }
+    .delta-table td.num { min-width: 62px; }
+    .delta-table td.num::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 11px;
+      color: var(--ink-faint);
+    }
   }
 </style>

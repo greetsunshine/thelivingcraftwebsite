@@ -359,4 +359,12 @@ const sourceLabel: Record<AnswerSource, string> = {
     border-radius: var(--radius-inner);
     overflow-x: auto;
   }
+
+  @media (max-width: 780px) {
+    .doubt-form { padding: 20px 18px; }
+    .radio-group { flex-direction: column; gap: 12px; }
+    .doubt-card { padding: 16px 18px; }
+    .d-header { flex-wrap: wrap; gap: 8px; }
+    .answer-actions { width: 100%; }
+  }
 </style>

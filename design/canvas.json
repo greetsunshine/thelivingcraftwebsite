@@ -1,0 +1,71 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Learner · desktop · /craft",
+      "is_interactive": true
+    },
+    {
+      "file": "CraftMobile.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Learner · phone · /craft",
+      "is_interactive": true
+    },
+    {
+      "file": "CraftAdminDesktop.dc.html",
+      "x": 0,
+      "y": 1120,
+      "w": 1440,
+      "h": 900,
+      "title": "Console · desktop · /craft/admin"
+    },
+    {
+      "file": "CraftAdminPhone.dc.html",
+      "x": 1560,
+      "y": 1120,
+      "w": 390,
+      "h": 1180,
+      "title": "Console · phone (full page) · /craft/admin"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "agent-dock",
+      "x": 0,
+      "y": -150,
+      "w": 700,
+      "text": "The learner agent, relocated.\n\nCollapsed it is the bottom ~10% (88px of 900). Click the yellow arrow and it takes half the screen. Both artboards on this row are live — try it.\n\nIt is the same dock on every /craft screen, so the input is always one tap away."
+    },
+    {
+      "id": "agent-honesty",
+      "x": 1560,
+      "y": -150,
+      "w": 390,
+      "text": "Expanded, it shows the two-way split the code actually does: dates answered inline with a citation, anything about the material marked \"Sent to Sunil\" rather than answered.\n\nToday's panel is a mock that answers everything. This is what it should say instead."
+    },
+    {
+      "id": "console-note",
+      "x": 0,
+      "y": 970,
+      "w": 700,
+      "text": "The console — /craft/admin, never /admin.\n\nSame tokens as the learner area at data-density=\"compact\": mist ground, white raised cards, sun on the active nav item. Hairlines only INSIDE a card.\n\nThe nav already wraps rather than scrolls, so on a phone it just wraps to more rows — the app's own answer, not a new mechanism.\n\nTables are the real mobile problem: a three-column table cannot fit 390px, so below ~720px each row becomes its own raised card."
+    },
+    {
+      "id": "nav-note",
+      "x": 1560,
+      "y": 970,
+      "w": 390,
+      "text": "On the phone the learner's icon rail moves to the TOP.\n\nThe bottom belongs to the agent, and two stacked bars there would eat a quarter of the screen."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

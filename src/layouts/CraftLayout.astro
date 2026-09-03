@@ -11,7 +11,7 @@
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import type { Learner } from '../lib/craft/learners';
-import GuideSidebar from '../components/craft/GuideSidebar.astro';
+import AgentDock from '../components/craft/AgentDock.astro';
 
 export interface Props {
   title: string;
@@ -46,31 +46,60 @@ const isActive = (p: string) => path === p ? 'active' : '';
   </head>
   <body>
     <div class="app-layout">
-      <nav class="app-sidebar">
+      <!-- Phone chrome only. On a laptop the rail below is the whole nav and
+           this bar is not rendered at all. -->
+      <header class="mobile-bar">
+        <a class="mb-mark" href="/craft">
+          <span class="mb-dot" aria-hidden="true"></span>
+          <span>the living craft</span>
+        </a>
+        <button
+          type="button"
+          class="mb-burger"
+          id="navToggle"
+          aria-expanded="false"
+          aria-controls="appSidebar"
+          aria-label="Menu"
+        >
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <div class="nav-scrim" id="navScrim" hidden></div>
+
+      <nav class="app-sidebar" id="appSidebar">
         <div class="sidebar-top">
           <a href="/craft" class={`sidebar-icon ${isActive('/craft')}`} title="Dashboard">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="rail-label">Home</span>
           </a>
           <a href="/craft/modules" class={`sidebar-icon ${isActive('/craft/modules')}`} title="Modules">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            <span class="rail-label">Modules</span>
           </a>
           <a href="/craft/notes" class={`sidebar-icon ${isActive('/craft/notes')}`} title="Field Notes">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="rail-label">Notes</span>
           </a>
           <a href="/craft/doubts" class={`sidebar-icon ${isActive('/craft/doubts')}`} title="Doubts">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            <span class="rail-label">Doubts</span>
           </a>
           <a href="/craft/quiz" class={`sidebar-icon ${isActive('/craft/quiz')}`} title="Quiz">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            <span class="rail-label">Quiz</span>
           </a>
           <a href="/craft/adr" class={`sidebar-icon ${isActive('/craft/adr')}`} title="ADR" style="font-weight: 700; font-size: 13px;">
             ADR
+            <span class="rail-label">ADR</span>
           </a>
           <a href="/craft/feedback" class={`sidebar-icon ${isActive('/craft/feedback')}`} title="Session feedback">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="rail-label">Feedback</span>
           </a>
           <a href="/craft/familiarity" class={`sidebar-icon ${isActive('/craft/familiarity')}`} title="Familiarity check">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+            <span class="rail-label">Familiarity</span>
           </a>
         </div>
         <div class="sidebar-bottom">
@@ -95,14 +124,74 @@ const isActive = (p: string) => path === p ? 'active' : '';
         </div>
       </main>
 
-      <aside class="app-guide">
-        <GuideSidebar />
-      </aside>
     </div>
+
+    <!-- Docked to the bottom of the viewport, on every /craft page, rather than
+         a 380px column stolen from the content. Collapsed it is one bar; the
+         arrow expands it to half the screen. -->
+    <AgentDock />
   </body>
 </html>
 
+<script>
+  // The phone nav sheet. No stored state — it opens on tap and closes on
+  // navigate, Escape, scrim tap, or resize past the breakpoint.
+  function initCraftNav() {
+    const toggle = document.getElementById('navToggle');
+    const sheet = document.getElementById('appSidebar');
+    const scrim = document.getElementById('navScrim');
+    if (!toggle || !sheet || !scrim) return;
+
+    const setOpen = (open: boolean) => {
+      sheet.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      scrim.hidden = !open;
+      // the scrim fades, so it needs a frame between unhide and the class
+      if (open) requestAnimationFrame(() => scrim.classList.add('is-open'));
+      else scrim.classList.remove('is-open');
+      // the page behind must not scroll under an open sheet
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+
+    const close = () => setOpen(false);
+
+    toggle.addEventListener('click', () =>
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+
+    scrim.addEventListener('click', close);
+
+    // Tapping a destination should feel like arriving, not like leaving a menu
+    // open behind the new page.
+    sheet.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        close();
+        (toggle as HTMLElement).focus();
+      }
+    });
+
+    // Dragging the window back to desktop width must not leave a hidden sheet
+    // holding the body scroll lock.
+    let wide = window.matchMedia('(min-width: 861px)');
+    wide.addEventListener('change', (e) => { if (e.matches) close(); });
+
+    close();
+  }
+
+  document.addEventListener('astro:page-load', initCraftNav);
+</script>
+
 <style>
+  /* --- the shell -------------------------------------------------------- */
+  /*
+   * Two things drive this layout. The agent is docked to the BOTTOM of the
+   * viewport on every page, so the scrolling area has to reserve its height
+   * rather than sit under it. And below 860px the 64px icon rail becomes a row
+   * of pills at the TOP — the bottom belongs to the agent, and two stacked bars
+   * down there would eat a quarter of a phone screen.
+   */
+
   body {
     margin: 0;
     padding: 0;
@@ -110,11 +199,15 @@ const isActive = (p: string) => path === p ? 'active' : '';
     background: var(--noir); /* edges of screen behind the layout */
   }
 
+  /* Collapsed dock height. The dock itself overrides this when expanded, so
+     the content area and the dock always agree on one number. */
+  :global(:root) { --dock-h: 76px; --mobile-bar-h: 60px; }
+
   .app-layout {
     display: flex;
     width: 100vw;
     height: 100vh;
-    background: var(--mist); /* main background is mist */
+    background: var(--mist);
   }
 
   .app-sidebar {
@@ -126,6 +219,8 @@ const isActive = (p: string) => path === p ? 'active' : '';
     align-items: center;
     padding: 24px 0;
     border-right: 1px solid var(--line);
+    /* stop short of the dock */
+    height: calc(100vh - var(--dock-h));
   }
 
   .sidebar-top, .sidebar-bottom {
@@ -144,21 +239,24 @@ const isActive = (p: string) => path === p ? 'active' : '';
     justify-content: center;
     color: var(--ink-faint);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: color 0.15s ease, background 0.15s ease;
     background: transparent;
     border: none;
     position: relative;
   }
-  
+
   .sidebar-icon:hover {
     color: var(--ink);
     background: var(--paper-2);
   }
 
-  .sidebar-icon.active {
-    color: var(--ink);
+  .sidebar-icon:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
   }
-  
+
+  .sidebar-icon.active { color: var(--ink); }
+
   .sidebar-icon.active::before {
     content: '';
     position: absolute;
@@ -171,9 +269,19 @@ const isActive = (p: string) => path === p ? 'active' : '';
     background: var(--sun);
   }
 
+  /* Icon rail on desktop: the label is for screen readers and for the phone. */
+  .rail-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   .app-main {
     flex: 1;
-    height: 100vh;
+    height: calc(100vh - var(--dock-h));
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
@@ -186,22 +294,216 @@ const isActive = (p: string) => path === p ? 'active' : '';
     margin: 0 auto;
   }
 
-  .app-guide {
-    width: 380px;
-    background: var(--surface);
-    border-left: 1px solid var(--line);
-    height: 100vh;
-    flex-shrink: 0;
+  .backbar { padding-bottom: 24px; }
+  .backbar a { font-size: 13px; color: var(--ink-faint); }
+  .backbar a:hover { color: var(--clay); }
+
+  /* --- tablet ----------------------------------------------------------- */
+  @media (max-width: 1100px) {
+    .main-scroller { padding: 24px 28px; }
   }
 
-  .backbar {
-    padding-bottom: 24px;
+  /* --- the phone bar (hidden on desktop) --------------------------------- */
+  .mobile-bar { display: none; }
+  .nav-scrim { display: none; }
+
+  /* --- phone -------------------------------------------------------------
+   * The rail becomes a SHEET the burger opens, not a row of pills. Eight
+   * destinations as pills took three wrapped rows of permanent chrome; a sheet
+   * costs one bar and gives every destination a full-width row with its label,
+   * which is the whole advantage of a menu over a rail.
+   *
+   * The same <a> elements serve both presentations — one nav in the markup,
+   * restyled — so a link can never exist on the laptop and go missing here.
+   */
+  @media (max-width: 860px) {
+    .app-layout {
+      flex-direction: column;
+      /* the bar is fixed; this keeps content out from under it */
+      padding-top: var(--mobile-bar-h);
+    }
+
+    .mobile-bar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 70;
+      height: var(--mobile-bar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      background: var(--mist);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mb-mark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-display);
+      font-weight: var(--weight-strong);
+      font-size: var(--size-4);
+      letter-spacing: var(--tracking-display);
+      color: var(--ink);
+    }
+    .mb-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: var(--radius-pill);
+      background: var(--sun);
+      flex: none;
+    }
+
+    /* --- the burger ---
+       Three lines from one element: the middle is the span, the outer two are
+       its pseudo-elements. Open, the middle fades and the outer two cross. */
+    .mb-burger {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      border: 0;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .mb-burger:focus-visible {
+      outline: var(--focus-w) solid var(--focus-ring);
+      outline-offset: var(--focus-offset);
+    }
+
+    .burger, .burger::before, .burger::after {
+      display: block;
+      width: 20px;
+      height: 2px;
+      border-radius: 2px;
+      background: currentColor;
+      transition: transform 0.22s ease, opacity 0.14s ease;
+    }
+    .burger { position: relative; }
+    .burger::before, .burger::after {
+      content: '';
+      position: absolute;
+      left: 0;
+    }
+    .burger::before { top: -6px; }
+    .burger::after  { top: 6px; }
+
+    .mb-burger[aria-expanded='true'] .burger { opacity: 0; transform: scaleX(0.4); }
+    .mb-burger[aria-expanded='true'] .burger::before { transform: translateY(6px) rotate(45deg); opacity: 1; }
+    .mb-burger[aria-expanded='true'] .burger::after  { transform: translateY(-6px) rotate(-45deg); opacity: 1; }
+
+    /* --- the sheet --- */
+    .nav-scrim {
+      display: block;
+      position: fixed;
+      inset: var(--mobile-bar-h) 0 0 0;
+      z-index: 65;
+      background: rgba(22, 33, 46, 0.28);
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .nav-scrim[hidden] { display: none; }
+    .nav-scrim.is-open { opacity: 1; }
+
+    .app-sidebar {
+      position: fixed;
+      inset: var(--mobile-bar-h) 0 auto 0;
+      z-index: 68;
+      width: 100%;
+      height: auto;
+      max-height: calc(100vh - var(--mobile-bar-h) - var(--dock-h));
+      overflow-y: auto;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      gap: 0;
+      padding: 8px 0 12px;
+      border-right: 0;
+      background: var(--surface);
+      /* a shadow, not a border — §9 */
+      box-shadow: var(--shadow-overlay);
+      border-bottom-left-radius: var(--radius-card);
+      border-bottom-right-radius: var(--radius-card);
+      /* closed by default; the burger opens it */
+      transform: translateY(-8px);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.22s ease, opacity 0.18s ease, visibility 0.22s;
+    }
+    .app-sidebar.is-open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sidebar-top, .sidebar-bottom {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    .sidebar-bottom {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+    .sidebar-bottom form { display: block; }
+
+    /* full-width rows with their labels, not icons */
+    .sidebar-icon {
+      width: 100%;
+      height: auto;
+      min-height: 52px;
+      justify-content: flex-start;
+      gap: 14px;
+      padding: 0 20px;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: var(--size-4);
+      font-weight: var(--weight-normal);
+      text-align: left;
+    }
+    .sidebar-icon:hover { background: var(--paper-2); }
+    .sidebar-icon svg { flex: none; color: var(--ink-faint); }
+
+    .sidebar-icon.active { font-weight: var(--weight-medium); }
+    .sidebar-icon.active svg { color: var(--ink); }
+    /* the rail's dot marker becomes a left bar on a full-width row */
+    .sidebar-icon.active::before {
+      left: 0;
+      top: 0;
+      transform: none;
+      width: 3px;
+      height: 100%;
+      border-radius: 0;
+    }
+
+    /* ADR is a text glyph on the rail; the label carries it here */
+    .sidebar-icon[href$="/adr"] {
+      font-size: var(--size-4) !important;
+      font-weight: var(--weight-normal) !important;
+    }
+    .sidebar-icon[href$="/adr"].active { font-weight: var(--weight-medium) !important; }
+
+    .rail-label {
+      position: static;
+      width: auto;
+      height: auto;
+      clip-path: none;
+      overflow: visible;
+    }
+
+    .app-main { height: auto; flex: 1; min-height: 0; }
+    .main-scroller { padding: 20px 16px; }
   }
-  .backbar a {
-    font-size: 13px;
-    color: var(--ink-faint);
-  }
-  .backbar a:hover {
-    color: var(--clay);
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-sidebar, .nav-scrim, .burger, .burger::before, .burger::after {
+      transition: none;
+    }
   }
 </style>

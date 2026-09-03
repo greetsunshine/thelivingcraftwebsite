@@ -219,3 +219,153 @@ details.raw pre { margin-top: 10px; padding: 12px; background: var(--paper-2); b
 .login-card p { color: var(--ink-soft); font-size: 14px; margin-bottom: 22px; }
 .login-card label { display: block; margin-bottom: 16px; }
 .login-card button { width: 100%; justify-content: center; }
+
+/* ===========================================================================
+   Responsive. The console is scanned on a laptop most days and on a phone the
+   day something needs checking between sessions, so this is about the second
+   case: nothing hidden, nothing sideways-scrolling, no 44px targets shrunk.
+   =========================================================================== */
+
+@media (max-width: 900px) {
+  .wrap { padding: 0 16px; }
+  .page-head { align-items: flex-start; }
+  .page-head h1 { font-size: var(--size-6); }
+}
+
+/* The burger only exists on a phone. */
+.admin-burger { display: none; }
+
+@media (max-width: 720px) {
+  /* --- nav becomes a sheet behind a burger --------------------------------
+     Fourteen destinations will not sit on a phone row, and wrapping them into
+     pills cost three rows of permanent chrome. The burger keeps the bar to one
+     row and gives every destination a full-width row with room for its label. */
+  .admin-nav-inner { flex-wrap: nowrap; gap: 12px; min-height: 56px; }
+
+  .admin-burger {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    margin-left: auto;
+    order: 2;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .admin-burger:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .burger, .burger::before, .burger::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.22s ease, opacity 0.14s ease;
+  }
+  .burger { position: relative; }
+  .burger::before, .burger::after { content: ''; position: absolute; left: 0; }
+  .burger::before { top: -6px; }
+  .burger::after { top: 6px; }
+
+  .admin-burger[aria-expanded='true'] .burger { opacity: 0; transform: scaleX(0.4); }
+  .admin-burger[aria-expanded='true'] .burger::before { transform: translateY(6px) rotate(45deg); opacity: 1; }
+  .admin-burger[aria-expanded='true'] .burger::after { transform: translateY(-6px) rotate(-45deg); opacity: 1; }
+
+  .admin-links {
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-right: 0;
+    /* closed until the burger opens it */
+    display: none;
+    padding-bottom: 8px;
+  }
+  .admin-links.is-open { display: flex; }
+
+  .admin-links a {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-size: var(--size-4);
+  }
+  .admin-links a:last-child { border-bottom: 0; }
+  .admin-links a[aria-current='page'] {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+    border-bottom-color: var(--border-hair);
+    box-shadow: inset 3px 0 0 var(--sun);
+    padding-left: 12px;
+  }
+
+  /* "View site" and Sign out sit on the bar itself, before the burger. */
+  .admin-nav-inner > a.faint { order: 1; margin-left: auto; }
+  .admin-nav-inner > form { order: 3; }
+
+  /* --- tables become stacked cards ----------------------------------------
+     A three-column table cannot fit 390px. Scrolling it sideways hides the
+     column being scanned for, which is the whole reason the page was opened.
+     Each row becomes its own block, with the header text restated per cell
+     from data-label so a value is never orphaned from its column name. */
+  .table-scroll {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .table-scroll table,
+  .table-scroll tbody,
+  .table-scroll tr,
+  .table-scroll td { display: block; width: 100%; }
+
+  .table-scroll thead { display: none; }
+
+  .table-scroll tr {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .table-scroll td {
+    border-bottom: 0;
+    height: auto;
+    padding: 4px 0;
+  }
+  .table-scroll td:first-child { padding-top: 0; }
+  .table-scroll td:last-child { padding-bottom: 0; }
+
+  .table-scroll td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-marginal);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    margin-bottom: 2px;
+  }
+
+  /* --- grids collapse ------------------------------------------------------ */
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2, .grid-2-wide { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .tiles { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burger, .burger::before, .burger::after { transition: none; }
+}

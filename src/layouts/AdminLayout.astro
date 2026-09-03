@@ -73,7 +73,17 @@ const NAV = [
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
         <a class="admin-mark" href="/admin"><span class="dot"></span> Console</a>
-        <nav class="admin-links">
+        <button
+          type="button"
+          class="admin-burger"
+          id="adminNavToggle"
+          aria-expanded="false"
+          aria-controls="adminLinks"
+          aria-label="Menu"
+        >
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+        <nav class="admin-links" id="adminLinks">
           {
             NAV.map((item) => (
               <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
@@ -152,3 +162,38 @@ const NAV = [
     </main>
   </body>
 </html>
+
+<script>
+  // Phone nav sheet for the console. Fourteen destinations do not fit a phone
+  // row; the burger opens them as full-width rows instead.
+  function initAdminNav() {
+    const toggle = document.getElementById('adminNavToggle');
+    const links = document.getElementById('adminLinks');
+    if (!toggle || !links) return;
+
+    const setOpen = (open: boolean) => {
+      links.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    toggle.addEventListener('click', () =>
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+
+    links.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () { setOpen(false); });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    var wide = window.matchMedia('(min-width: 721px)');
+    wide.addEventListener('change', function (e) { if (e.matches) setOpen(false); });
+
+    setOpen(false);
+  }
+  initAdminNav();
+</script>

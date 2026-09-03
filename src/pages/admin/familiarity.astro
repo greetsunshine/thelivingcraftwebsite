@@ -134,10 +134,10 @@ const bar = (values: number[]) => {
           <tbody>
             {flags.map((f) => (
               <tr>
-                <td>{nameOf.get(f.learner_id) ?? f.learner_id.slice(0, 8)}</td>
-                <td><span class="pill">{f.capability}</span></td>
-                <td class="mono">{f.selfRating}/5</td>
-                <td class="faint">{f.reason}</td>
+                <td data-label="Learner">{nameOf.get(f.learner_id) ?? f.learner_id.slice(0, 8)}</td>
+                <td data-label="Capability"><span class="pill">{f.capability}</span></td>
+                <td data-label="Self-rating" class="mono">{f.selfRating}/5</td>
+                <td data-label="Why flagged" class="faint">{f.reason}</td>
               </tr>
             ))}
           </tbody>
