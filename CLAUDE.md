@@ -15,7 +15,7 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
   Static. Files: [src/pages/assessment.astro](src/pages/assessment.astro), [src/layouts/AssessmentLayout.astro](src/layouts/AssessmentLayout.astro).
-- **`/admin/*`** — the operator console. **Not a public surface**: password-gated,
+- **`/craft/admin/*`** — the operator console. **Not a public surface**: password-gated,
   `noindex`, its own layout and stylesheet, and no SEO/JSON-LD of any kind. See
   *The admin console* below.
 - **`/craft/*`** — the cohort's course area, for people who hold a seat. **Not a public
@@ -24,7 +24,7 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   is the gate gone. Session material is Markdown in [src/content/sessions/](src/content/sessions/) (week 0 is the
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
-  [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/admin/intake`.
+  [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/craft/admin/intake`.
   Six learner surfaces beyond the sessions themselves — **doubts, reading, quiz, ADR,
   feedback, familiarity** — each with a console counterpart. What they are and why they
   are shaped the way they are is the learning agent, below.
@@ -74,17 +74,17 @@ route it through `facts.ts`. The failure this prevents is subtle and bad: a stal
 number that is right on the page but wrong in the answer an AI assistant gives
 about us.
 
-## The admin console (`/admin`)
+## The operator console (`/craft/admin`)
 Password-gated operator surface. Five jobs: traffic, leads, the questions visitors
-asked the Q&A agent, content review, and **teaching the cohort** — `/admin/doubts`,
-`/admin/quiz`, `/admin/adrs`, `/admin/quiz-adr-comparison`, `/admin/feedback`,
-`/admin/familiarity`, all described under *The learning agent*. Nothing on the public site reads from it,
+asked the Q&A agent, content review, and **teaching the cohort** — `/craft/admin/doubts`,
+`/craft/admin/quiz`, `/craft/admin/adrs`, `/craft/admin/quiz-adr-comparison`, `/craft/admin/feedback`,
+`/craft/admin/familiarity`, all described under *The learning agent*. Nothing on the public site reads from it,
 and if every one of its env vars is missing the public pages behave exactly as they
 did before it existed.
 
 - **Auth** — one password (`ADMIN_PASSWORD`) exchanged for an HMAC-signed HttpOnly
   cookie ([src/lib/admin/auth.ts](src/lib/admin/auth.ts)). Enforced in
-  [src/middleware.ts](src/middleware.ts) over the whole `/admin` + `/api/admin/*`
+  [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
 - **Storage is Supabase** — thirteen tables, schema in
@@ -95,12 +95,12 @@ did before it existed.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
     `submissions`, `quiz_responses`, `doubts`, `feedback`, `feedback_responses`.
     All but the last are keyed to `learner_id` with `ON DELETE CASCADE`, so erasing
-    someone from `/admin/learners` really erases them. `feedback_responses` is the
+    someone from `/craft/admin/learners` really erases them. `feedback_responses` is the
     exception on purpose: it is Sunil's note to the whole room, holds no personal
     data, and must survive one learner leaving.
 - **Every query degrades to empty on error — so the console probes and says so.**
   That degradation is deliberate (one slow rollup must not 500 the page) but it
-  makes a *missing table* and *no rows yet* render identically; `/admin/radar` said
+  makes a *missing table* and *no rows yet* render identically; `/craft/admin/radar` said
   "never run" in both cases, and that cost a real diagnosis after the schema grew.
   [src/lib/admin/health.ts](src/lib/admin/health.ts) probes every table and rollup, cached 60s, and
   `AdminLayout` shows a red banner when anything is not answering. **If you add a
@@ -110,11 +110,11 @@ did before it existed.
   - *Retention* (timer): `events` 180 days, `questions` 365, via `admin_purge()`.
     Windows are SQL function defaults, so shortening them needs no deploy. There is
     a 30-day floor that **raises rather than clamps** — a 0 passed by a bug would
-    otherwise empty the table while looking like policy. Run from `/admin`, or
+    otherwise empty the table while looking like policy. Run from `/craft/admin`, or
     enable pg_cron (snippet is commented at the foot of the schema). Until then the
     policy is only real if someone presses the button.
-  - *Erasure* (per person, deliberate): the **Erase** button on `/admin/leads` and
-    `/admin/learners`. Hard delete, never a soft flag — a DPDP deletion request is
+  - *Erasure* (per person, deliberate): the **Erase** button on `/craft/admin/leads` and
+    `/craft/admin/learners`. Hard delete, never a soft flag — a DPDP deletion request is
     not answered by filing someone differently while their details stay in the
     table. Erasing a learner cascades to `intake_responses`; that `ON DELETE
     CASCADE` is load-bearing, not convenience.
@@ -144,7 +144,7 @@ did before it existed.
   fabrication. Rerun the agent instead.
 - **"Run now" dispatches the GitHub Action**, never researches inline: a sweep is
   minutes of Opus web-search calls and has to land as a commit.
-- Reading `/admin` needs Supabase; the write-back buttons need `GITHUB_TOKEN` +
+- Reading the console needs Supabase; the write-back buttons need `GITHUB_TOKEN` +
   `GITHUB_REPO` and disable themselves with an explanation when absent. Every panel
   degrades on its own — a missing var greys out one thing, not the page.
 
@@ -176,7 +176,7 @@ none of their audience; that separation is load-bearing, see the radar entry.
     so his private doubts never reach a visitor or a crawler. Keep it that way.
     (The admin console *does* show it — that's the one place it belongs.)
 - **Radar agent** — [scripts/gather-radar.ts](scripts/gather-radar.ts) (`npm run radar`). The second
-  retriever. Writes the **`radar_findings` table**, read **only** by `/admin/radar`.
+  retriever. Writes the **`radar_findings` table**, read **only** by `/craft/admin/radar`.
   Six operator-facing categories in [src/data/radar-categories.ts](src/data/radar-categories.ts):
   trends · big-tech investment · what's working · what's failing · India hiring ·
   durable skills. Weekly via [.github/workflows/gather-radar.yml](.github/workflows/gather-radar.yml), which writes
@@ -184,7 +184,7 @@ none of their audience; that separation is load-bearing, see the radar entry.
   retriever, whose output a chatbot repeats verbatim; here it meant a merge and a
   deploy before Sunil could read his own notebook. Review moved rather than
   vanished: findings arrive `status = 'new'`, and hiding or correcting one is an
-  UPDATE via `/api/admin/radar-item`. The sweep needs `SUPABASE_URL` +
+  UPDATE via `/api/craft/admin/radar-item`. The sweep needs `SUPABASE_URL` +
   `SUPABASE_SERVICE_ROLE_KEY` as **GitHub Actions secrets**, not just in Vercel.
   - **`/api/ask` must never import [src/lib/agent/radar.ts](src/lib/agent/radar.ts) or query the radar
     tables.** Two stores exist because there are two readers. "Google is investing $N billion in agents" is
@@ -223,9 +223,9 @@ none of their audience; that separation is load-bearing, see the radar entry.
   assistant before a search engine, and `/llms.txt` + `/api/facts` exist so the
   answer they get is the one we wrote. Disallowed: `/api/ask` (POST, costs money per
   call), `/api/track` and `/api/lead` (POST-only; indexing the beacon would pollute
-  its own data), and `/admin` — politeness only, since robots.txt is a request and
+  its own data), and the console — politeness only, since robots.txt is a request and
   the real defence is the session check in `middleware.ts`.
-- `SeoHead.astro` is for public surfaces only. **`/admin` must never use it** — a
+- `SeoHead.astro` is for public surfaces only. **`/craft/admin` must never use it** — a
   JSON-LD `@graph` describing the cohort, emitted from a page listing leads, is
   exactly the wrong artefact. `AdminLayout.astro` has its own minimal head.
 - Canonical host is `learning.thelivingcraft.ai`. The apex and `www` are
@@ -237,10 +237,13 @@ none of their audience; that separation is load-bearing, see the radar entry.
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
   Page-specific components (tiers, comparison rows, phase arc, fit/not-fit) live in scoped
   `<style>` blocks in the page files.
-  The console has its own [src/styles/admin.css](src/styles/admin.css) — same tokens and typefaces at a
-  working density (tables and hairlines, not 104px sections). It deliberately does
-  **not** import `global.css`: it uses four of those 220 lines, and sharing them
-  would mean every change to the public design reflows the console.
+  The console has its own [src/styles/admin.css](src/styles/admin.css) — the SAME design
+  system at a working density (tables and hairlines, not 104px sections). It imports
+  `ds/contract.css` and `ds/theme.css` — the TOKENS — and sets `data-density="compact"`
+  on `<body>`, which is the surface those compact values were written for. It still does
+  **not** import `global.css`: the console has no hero, no proofbar, no price card, and
+  pulling in 400 lines to use four of them would mean every change to the public design
+  silently reflows this one.
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.
@@ -272,16 +275,13 @@ none of their audience; that separation is load-bearing, see the radar entry.
   refuses outright (`Node.js v20.20.1 is not supported`) — that error is the toolchain, not
   the code. The system install at `/c/Program Files/nodejs` is 24.x and works:
   `export PATH="/c/Program Files/nodejs:$PATH"` before `npm run build` or `npx astro check`.
-- **`astro check` has a standing baseline of 8 errors**, all in
-  [src/components/craft/GuideSidebar.astro](src/components/craft/GuideSidebar.astro)
-  (possibly-null DOM queries — the mock chat panel, see *guided-walkthrough/plan.md* §14).
-  `npm run build` passes regardless. **Compare against 8, not 0** — a clean run means you
-  fixed something, and 9 means you broke something.
-  - Was 11 with 3 more in `middleware.ts`, from a `PoC BYPASS` that injected a mock
-    `Learner` object missing `note` and `last_seen_at`. Removed 2 September — it returned
-    before the seat check entirely, so `/craft` had no gate. **If `astro check` ever reports
-    those 3 back, someone has reintroduced a bypass, not a type error** — treat it as the
-    security regression it is, not a baseline drift.
+- **`astro check` is clean — 0 errors.** It was 8, all in `GuideSidebar.astro`; that
+  component is gone, replaced by `AgentDock.astro` with guarded DOM queries. **Compare
+  against 0**: any error is something you introduced.
+  - Was 11 before that, with 3 more in `middleware.ts` from a `PoC BYPASS` that injected
+    a mock `Learner` missing `note` and `last_seen_at`. **If those 3 ever reappear,
+    someone has reintroduced a bypass, not a type error** — treat it as the security
+    regression it is.
 - Legacy reference files at repo root (`copy.md`, `index.html`, `section-map.md`, `meta.md`,
   `assets/`) predate the Astro build — treat as historical, not the source of truth.
 

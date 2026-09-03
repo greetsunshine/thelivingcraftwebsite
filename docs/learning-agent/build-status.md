@@ -28,7 +28,9 @@
 | Specified, not yet built | **1** | was 10 |
 | Content gaps (writing, not engineering) | **2** | was 5 |
 
-**Every engineering item in the spec is now built except one** — reading opens. What is
+**Every engineering item in the spec is now built except one** — reading opens. Since the
+audit the surfaces are also responsive, the agent is docked to the bottom of every `/craft`
+page, and the dashboard carries a to-do panel; none of those were spec items. What is
 left is authoring: the quiz bank, and the session bodies weeks 2–6 come from.
 
 ---
@@ -86,7 +88,7 @@ feature."*
       as a result, not a failure.
 - [x] **Sunil can answer a doubt in his own words**, and only those answers are eligible to
       be relayed verbatim — with a citation and a date — to the next person who asks the
-      same thing. Relay never extends. — `/admin/doubts`
+      same thing. Relay never extends. — `/craft/admin/doubts`
 - [x] **All four model names corrected** to `claude-haiku-4-5-20251001`.
 - [x] **Both synthesis endpoints moved from `GET` to `POST`**, so a prefetch or a refresh
       cannot bill.
@@ -102,18 +104,18 @@ feature."*
 - [x] **Doubt clustering.** Grouped by theme, ordered by how many *different* people are in
       each — "five people are circling the same confusion about evals."
 - [x] **Per-question spread across the room**, with the **confident-and-wrong flag** first.
-      No percentage per learner anywhere. — `/admin/quiz`
+      No percentage per learner anywhere. — `/craft/admin/quiz`
 - [x] **The quiz/ADR match, computed by code.** Five verdicts including *knew it, did not
       reach for it* — and an honest `unclear` when the record does not lean far enough to
       say. — `src/lib/craft/pairing.ts`
 - [x] **The familiarity room view**, weakest capability first, plus the says-but-has-not-asked
-      flag. — `/admin/familiarity`
+      flag. — `/craft/admin/familiarity`
 - [x] **Who has not submitted**, computed against the active roster. Nothing chases anyone
-      automatically (§10). — `/admin/adrs`
+      automatically (§10). — `/craft/admin/adrs`
 - [x] **The two orphan pages are linked** — `/craft/familiarity` and `/craft/feedback` in the
-      course sidebar, `/admin/quiz-adr-comparison` and `/admin/familiarity` in the console nav.
+      course sidebar, `/craft/admin/quiz-adr-comparison` and `/craft/admin/familiarity` in the console nav.
 - [x] **The feedback loop is closed, visibly.** Sunil writes *"you said the drill was
-      rushed — week 4 gives it twenty more minutes"* on `/admin/feedback`, saves it as a
+      rushed — week 4 gives it twenty more minutes"* on `/craft/admin/feedback`, saves it as a
       draft or publishes it, and the cohort reads it on the page they submit feedback
       from. §5.3 says that line **is** the feature. — `feedback_responses`
 - [x] **The quiz bank is one file per week**, and items carry their own `week`. Nothing
@@ -246,4 +248,5 @@ Recorded here so they are not silently re-litigated.
 | 2 Sep 2026 | First audit of `feat/learner-dashboard-poc` against the 2 September spec. |
 | 2 Sep 2026 | Steps 1–6 done. All seven spec contradictions fixed; eight of ten missing items built. Two schema columns added — run `supabase/schema.sql` before deploying. |
 | 2 Sep 2026 | Steps 7–9 done. Feedback loop closed both ways (`feedback_responses`); quiz bank restructured to one file per week with items carrying their own `week`; `CLAUDE.md` and the teaching README brought up to date. Only reading-opens and the authoring remain. |
+| 3 Sep 2026 | Console moved to `/craft/admin` and restyled from `main`; both surfaces made responsive; the learner agent re-docked to the bottom of every page; a to-do panel added to the dashboard. Fixed a silent bug where the quiz bank parsed as EMPTY on any Windows checkout (CRLF vs `$` in the metadata regex) — the quiz surface and the room distribution rendered nothing, with no error. `astro check` baseline is now **0**, not 8. |
 | 2 Sep 2026 | Guided-walkthrough plan written ([guided-walkthrough/plan.md](guided-walkthrough/plan.md)), design only. Removed the `/craft` `PoC BYPASS` in `src/middleware.ts` before committing — it disabled the seat gate entirely. `astro check` baseline corrected from 11 to 8. |
