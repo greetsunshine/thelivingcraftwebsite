@@ -42,7 +42,7 @@ const sessions = defineCollection({
     /**
      * Capability ids (A1–A7, B1–B6) this session covers. The mapping that
      * connects sessions to the intake's 13 capabilities, and through them to
-     * quiz items, doubts, reading suggestions, and the week-6 re-ask.
+     * quiz items, discussion threads, reading suggestions, and the week-6 re-ask.
      * Default [] so draft sessions don't break.
      */
     topics: z.array(z.string()).default([]),
@@ -54,6 +54,31 @@ const sessions = defineCollection({
     assignment: z.string().optional(),
     /** Set once the session has been taught; unlocks the recording block. */
     taughtOn: z.string().optional(),
+    /**
+     * When the live session STARTS. Closes the week's "before" capability
+     * pulse — a rating taken after the teaching is not a baseline.
+     *
+     * Same format and same rule as `endsAt`: ISO 8601 with an offset, and
+     * absent means the before-pulse never opens rather than opening forever.
+     */
+    startsAt: z.string().datetime({ offset: true }).optional(),
+    /**
+     * When the live session ENDS — the moment the week's knowledge check opens
+     * and the learner is prompted to take it.
+     *
+     * A full ISO 8601 timestamp WITH an offset, e.g. '2026-09-15T20:30:00+05:30'.
+     * Not a date: "is the session over" is a question about an instant, and the
+     * cohort sits in India, Dubai and Australia, so a bare date would open the
+     * check on the wrong day for somebody. The offset is not optional for the
+     * same reason.
+     *
+     * ABSENT MEANS NOTHING OPENS AND NOTHING POPS UP. There is no fallback to
+     * `taughtOn` or to end-of-day, deliberately: guessing when a session ended
+     * would be inventing a fact, and the failure mode is a modal interrupting
+     * eight senior engineers at the wrong hour. Every session is unset today —
+     * Sunil fills these in with the real timetable.
+     */
+    endsAt: z.string().datetime({ offset: true }).optional(),
     recordingUrl: z.string().url().optional(),
   }),
 });

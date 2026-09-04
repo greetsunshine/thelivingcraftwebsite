@@ -328,6 +328,84 @@ create table if not exists public.quiz_responses (
 create unique index if not exists quiz_learner_item on public.quiz_responses (learner_id, item_id);
 
 -- ---------------------------------------------------------------------------
+-- Session prompts — "I have seen what this week's session opened"
+-- ---------------------------------------------------------------------------
+-- One row per learner per week, written when they dismiss the post-session
+-- prompt. Its only job is to stop that prompt coming back.
+--
+-- ONE ROW FOR THE WHOLE PROMPT, NOT ONE PER TASK. A session ending opens two
+-- things at the same instant — the feedback form and the knowledge check — and
+-- two modals racing each other onto one dashboard is not twice the prompt, it
+-- is a dialog people click past without reading. So there is a single prompt
+-- naming both, and a single dismissal.
+--
+-- WHY A TABLE FOR A DISMISSAL. The repo forbids localStorage and
+-- sessionStorage outright, so "they have already seen this" has nowhere else to
+-- live. Without the row the modal would reappear on every navigation, which is
+-- the nagging §10 rules out — so this small table is what keeps the feature on
+-- the right side of that rule rather than an optimisation.
+--
+-- WHAT IT IS NOT is a record of who ignored what. Nothing counts these, nothing
+-- reports on them, and there is no second prompt to schedule. A row means
+-- "shown once, done"; absence means "not shown yet". What survives a dismissal
+-- is the to-do panel on the dashboard, which the learner opens themselves —
+-- a list they choose to look at, not something that chases them.
+-- Anything that reads this table as compliance data is a change of purpose.
+--
+-- (Briefly called `quiz_prompts`, before the feedback form joined it in the
+-- same prompt. That name never reached production; if a dev database has one,
+-- it is an unused leftover and can be dropped.)
+-- `phase` distinguishes the two moments a week has: the run-up to the session
+-- and the hours after it. They are different prompts about different things, so
+-- dismissing one must not silence the other.
+create table if not exists public.session_prompts (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  phase        text        not null default 'after' check (phase in ('before', 'after')),
+  dismissed_at timestamptz not null default now()
+);
+alter table public.session_prompts add column if not exists phase text not null default 'after';
+do $$ begin
+  alter table public.session_prompts add constraint session_prompts_phase_check
+    check (phase in ('before', 'after'));
+exception when duplicate_object then null; end $$;
+create unique index if not exists session_prompts_learner_week_phase
+  on public.session_prompts (learner_id, week, phase);
+
+-- ---------------------------------------------------------------------------
+-- Capability pulses — the same question either side of one session
+-- ---------------------------------------------------------------------------
+-- Two ratings a week: one in the run-up to the session, one after it. Each
+-- covers ONLY the capabilities that session's `topics` names — three for week 1,
+-- not thirteen.
+--
+-- WHY SCOPED, AND WHY THAT IS THE WHOLE FEATURE. Asking all thirteen twice a
+-- week is twelve surveys of thirteen questions across six weeks, and a room of
+-- director-level engineers stops answering by week two. Three ratings takes
+-- half a minute, and — the part that matters — the delta is ATTRIBUTABLE. A
+-- movement on A5 either side of the session that taught A5 says something. The
+-- same movement measured six weeks apart says only that time passed.
+--
+-- This does NOT replace §5.6's week-0 intake and week-6 re-ask. Those are the
+-- cohort-level before/after over all thirteen capabilities and remain the
+-- evidence for the programme's outcome claims. This is per-session measurement
+-- at a different granularity, and week 6 deliberately has no after-pulse
+-- because the full re-ask covers that ground more thoroughly on the same day.
+create table if not exists public.capability_pulses (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  phase        text        not null check (phase in ('before', 'after')),
+  -- { "A1": 3, "A2": 2, "A3": 4 } — keyed by capability id, values 1-5.
+  ratings      jsonb       not null default '{}'::jsonb,
+  created_at   timestamptz not null default now()
+);
+create unique index if not exists capability_pulses_learner_week_phase
+  on public.capability_pulses (learner_id, week, phase);
+create index if not exists capability_pulses_week_idx on public.capability_pulses (week, phase);
+
+-- ---------------------------------------------------------------------------
 -- Doubts — learner questions, classified and clustered
 -- ---------------------------------------------------------------------------
 create table if not exists public.doubts (
@@ -357,6 +435,84 @@ create index if not exists doubts_learner_idx on public.doubts (learner_id, crea
 create index if not exists doubts_status_idx on public.doubts (status, created_at desc);
 -- Relay reads "what has Sunil already answered", so it filters on both.
 create index if not exists doubts_source_idx on public.doubts (answer_source, created_at desc);
+
+-- --- The discussion forum -------------------------------------------------
+--
+-- This table started life as a private learner→Sunil inbox and is now the
+-- THREAD table behind /craft/discussion. The name stayed: renaming a live table
+-- is a migration with real downside and no user-visible gain, and every row
+-- already here is a thread with no replies. The product noun is "discussion";
+-- the storage noun is still `doubts`. Nowhere else in the codebase says
+-- "doubt" any more — src/lib/craft/discussion.ts is the only file that has to
+-- know about the mismatch, and it says so at the top.
+--
+-- WHY A THREAD IS COHORT-VISIBLE BY DEFAULT. Eight people, six weeks, and the
+-- questions that stall someone on a Tuesday are usually stalling two others.
+-- Making them private by default meant Sunil answered the same thing three
+-- times and nobody learned from anybody.
+--
+-- WHY 'private' SURVIVES. "I don't understand any of this and I don't want to
+-- say so in front of the room" is a real question that only ever gets asked in
+-- private. Removing the private path to build the public one would have traded
+-- one capability for another rather than adding one.
+alter table public.doubts add column if not exists visibility text not null default 'cohort';
+do $$ begin
+  alter table public.doubts add constraint doubts_visibility_check
+    check (visibility in ('cohort', 'private'));
+exception when duplicate_object then null; end $$;
+
+-- Optional. A thread reads better with a subject line, but forcing one on a
+-- half-formed question is how you get "Question" fourteen times.
+alter table public.doubts add column if not exists title text;
+
+-- Sunil's pin. Ordering is otherwise purely chronological — see listThreads().
+alter table public.doubts add column if not exists pinned boolean not null default false;
+
+-- TWO MARKS, TWO MEANINGS, AND THEY ARE NOT INTERCHANGEABLE.
+--   resolved_reply_id  — the ASKER says this unblocked them. It is a report
+--                        about one person's Tuesday, not a claim of correctness.
+--   endorsed_reply_id  — SUNIL says this is right. That is the claim of
+--                        correctness, and only he can make it.
+-- Collapsing these into one "accepted answer" is the failure this whole
+-- surface is shaped to avoid: a confident peer answer wearing the authority of
+-- the course. See src/lib/craft/discussion.ts.
+alter table public.doubts add column if not exists resolved_reply_id uuid;
+alter table public.doubts add column if not exists endorsed_reply_id uuid;
+
+create index if not exists doubts_visibility_idx on public.doubts (visibility, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Discussion replies — peers, Sunil, and the syllabus
+-- ---------------------------------------------------------------------------
+-- author_role is the load-bearing column. A reply is read very differently
+-- depending on who wrote it, and the difference must be in the data rather
+-- than inferred from whether learner_id happens to be null:
+--
+--   'learner'    — a peer. Helpful, and possibly wrong. Shown with their name.
+--   'instructor' — Sunil. The only role whose words carry the course's
+--                  authority, and (see discussion.ts) the ONLY role whose text
+--                  is ever eligible to be relayed verbatim to a later asker.
+--   'system'     — a grounded answer from facts.ts or session frontmatter,
+--                  written by code, never by a model. Labelled as not-a-person
+--                  on screen.
+--
+-- ON §7's CASCADE RULE. learner_id cascades, so erasing someone really removes
+-- their replies — their words are their personal data. It is null for the other
+-- two roles, which the cascade simply does not touch, so Sunil's answers and
+-- the syllabus relays survive a learner leaving. Erasing a thread's AUTHOR
+-- takes the thread and therefore this table's rows on it, including other
+-- people's replies. That is deliberate: a DPDP deletion is not answered by
+-- keeping the conversation and removing the name from the top of it.
+create table if not exists public.discussion_replies (
+  id           uuid        primary key default gen_random_uuid(),
+  doubt_id     uuid        not null references public.doubts(id) on delete cascade,
+  learner_id   uuid        references public.learners(id) on delete cascade,
+  author_role  text        not null check (author_role in ('learner', 'instructor', 'system')),
+  body         text        not null,
+  created_at   timestamptz not null default now()
+);
+create index if not exists discussion_replies_thread on public.discussion_replies (doubt_id, created_at);
+create index if not exists discussion_replies_learner on public.discussion_replies (learner_id, created_at desc);
 
 -- ---------------------------------------------------------------------------
 -- Feedback — post-session responses, two questions per session
@@ -416,7 +572,10 @@ alter table public.radar_findings enable row level security;
 alter table public.radar_runs     enable row level security;
 alter table public.submissions    enable row level security;
 alter table public.quiz_responses enable row level security;
+alter table public.session_prompts enable row level security;
+alter table public.capability_pulses enable row level security;
 alter table public.doubts         enable row level security;
+alter table public.discussion_replies enable row level security;
 alter table public.feedback       enable row level security;
 alter table public.feedback_responses enable row level security;
 
@@ -430,7 +589,10 @@ revoke all on public.radar_findings from anon, authenticated;
 revoke all on public.radar_runs     from anon, authenticated;
 revoke all on public.submissions    from anon, authenticated;
 revoke all on public.quiz_responses from anon, authenticated;
+revoke all on public.session_prompts from anon, authenticated;
+revoke all on public.capability_pulses from anon, authenticated;
 revoke all on public.doubts         from anon, authenticated;
+revoke all on public.discussion_replies from anon, authenticated;
 revoke all on public.feedback       from anon, authenticated;
 revoke all on public.feedback_responses from anon, authenticated;
 

@@ -12,28 +12,46 @@ export const prerender = false;
 // engineers gets counts and not scores.
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getCollection } from 'astro:content';
 import { listIntake } from '../../../lib/craft/intake';
 import { listFamiliarity, roomByCapability, sayShowFlags } from '../../../lib/craft/familiarity';
-import { listAllDoubtsWithLearner } from '../../../lib/craft/doubts';
+import { listAllThreadsWithLearner } from '../../../lib/craft/discussion';
+import { listAllPulses, sessionMoves } from '../../../lib/craft/pulses';
 
-const [intakeRows, week6, doubts] = await Promise.all([
+const [intakeRows, week6, threads, pulses, sessions] = await Promise.all([
   listIntake(),
   listFamiliarity(),
-  listAllDoubtsWithLearner(),
+  listAllThreadsWithLearner(),
+  listAllPulses(),
+  getCollection('sessions'),
 ]);
+
+// Did the session move the thing it taught? Paired ratings only — see
+// sessionMoves() for why an unpaired mean measures who replied rather than what
+// they learned.
+const moves = sessionMoves(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    topics: s.data.topics,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+  })),
+  pulses,
+);
 
 const submitted = intakeRows.filter((r) => r.submitted_at);
 const room = roomByCapability(submitted, week6);
 
 // "Has this person asked anything about this capability?" — the show half of
-// say-vs-show. Counted here, from doubts that were tagged.
+// say-vs-show. Counted here, from discussion threads that were tagged.
 const asked = new Map<string, number>();
-for (const d of doubts) {
+for (const d of threads) {
   if (!d.capability_id) continue;
   const key = `${d.learner_id}:${d.capability_id}`;
   asked.set(key, (asked.get(key) ?? 0) + 1);
 }
-const nameOf = new Map(doubts.map((d) => [d.learner_id, d.learner_name ?? d.learner_email]));
+const nameOf = new Map(threads.map((d) => [d.learner_id, d.learner_name ?? d.learner_email]));
 const flags = sayShowFlags(submitted, asked);
 
 const cohortSize = submitted.length;
@@ -60,6 +78,66 @@ const bar = (values: number[]) => {
       </p>
     </div>
   </div>
+
+  {/* --- did the session move what it taught? ---------------------------- */}
+  <section class="moves-block">
+    <header class="block-head">
+      <h2>What each session moved</h2>
+      <span class="count">{moves.length} {moves.length === 1 ? 'session' : 'sessions'}</span>
+    </header>
+    <p class="block-note">
+      The same capabilities rated either side of one session, so the change is attributable
+      to that session rather than to six weeks passing. <strong>Smallest movement first</strong> —
+      a capability a session failed to shift is the one worth your attention, and a
+      biggest-gain ordering buries it. Paired ratings only: someone who answered before and
+      not after counts in neither column, because otherwise the difference measures who
+      replied rather than what they learned.
+    </p>
+
+    {moves.length === 0 ? (
+      <p class="empty">
+        Nothing yet. A row appears once at least one learner has rated both sides of a
+        session — which needs <code>startsAt</code> and <code>endsAt</code> on the session file.
+      </p>
+    ) : (
+      moves.map((m) => (
+        <section class="move">
+          <header class="move-head">
+            <h3>Week {m.week} · {m.title}</h3>
+            <span class="faint mono">{m.learners} {m.learners === 1 ? 'learner' : 'learners'} rated both sides</span>
+          </header>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  <th class="num">Before</th>
+                  <th class="num">After</th>
+                  <th class="num">Change</th>
+                  <th class="num">n</th>
+                </tr>
+              </thead>
+              <tbody>
+                {m.capabilities.map((c) => (
+                  <tr>
+                    <td data-label="Capability"><span class="pill">{c.capability}</span> {c.text}</td>
+                    <td data-label="Before" class="num faint">{c.before.toFixed(1)}</td>
+                    <td data-label="After" class="num">{c.after.toFixed(1)}</td>
+                    <td data-label="Change" class="num">
+                      <span class={c.change > 0 ? 'up' : c.change < 0 ? 'down' : 'flat'}>
+                        {c.change > 0 ? '+' : ''}{c.change.toFixed(1)}
+                      </span>
+                    </td>
+                    <td data-label="n" class="num faint">{c.n}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))
+    )}
+  </section>
 
   {cohortSize === 0 ? (
     <p class="empty">No submitted intake responses yet.</p>
@@ -146,6 +224,44 @@ const bar = (values: number[]) => {
     )}
   </section>
 </AdminLayout>
+
+<style>
+  .moves-block { margin-bottom: 52px; }
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-top: 2px solid var(--ink);
+    padding-top: 14px;
+  }
+  .block-head h2 { font-size: 20px; margin: 0; }
+  .block-head .count {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .block-note { max-width: 78ch; font-size: 13px; color: var(--ink-soft); margin: 6px 0 20px; }
+  .block-note strong { color: var(--ink); font-weight: 500; }
+
+  .move { margin-bottom: 26px; }
+  .move-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 4px;
+  }
+  .move-head h3 { font-size: 16px; margin: 0; }
+  .move-head span { font-size: 11.5px; }
+
+  /* Direction is the reading, so it gets colour; the magnitude is in the number. */
+  .up   { color: var(--good); font-weight: 500; }
+  .down { color: var(--clay-deep); font-weight: 500; }
+  .flat { color: var(--ink-faint); }
+</style>
 
 <style>
   .caps { display: flex; flex-direction: column; gap: 30px; }

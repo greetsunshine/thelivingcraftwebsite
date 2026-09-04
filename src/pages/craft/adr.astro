@@ -1,20 +1,49 @@
 ---
+// The ADR surface — one page per week, tied to that week's assignment (§5.5).
+//
+// WHAT "TIED TO" HAD TO START MEANING. This page used to list every session
+// whose `assignment` field was truthy, and weeks 2-6 carry the placeholder
+// string "TBD" — so it offered five submit forms headed "Week 2: TBD" for work
+// nobody had been set. Sunil's console and the dashboard both excluded the
+// placeholder already; this page was the one that did not.
+//
+// Both halves of the tie now come from src/lib/craft/assignments.ts:
+//   - the assignment must EXIST (not the placeholder), and
+//   - it must have been GIVEN — the session that sets it has ended, on the same
+//     clock the week's knowledge check opens on.
+//
+// THE TEMPLATE ITSELF STAYS FIXED, on purpose. §5.5 wants week 6 comparable to
+// week 1, so the five sections never vary by week. What varies is the brief
+// above them. The helper text under each label is the spec's own wording for
+// what that section is for, which is more use than "What is the solution?".
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { listLearnerSubmissions, ADR_MAX_CHARS } from '../../lib/craft/submissions';
+import { givenAssignments, assignments as allAssignments } from '../../lib/craft/assignments';
 import { marked } from 'marked';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
 const submissions = await listLearnerSubmissions(learner.id);
 
-const sessions = (await getCollection('sessions'))
-  .filter(s => s.data.assignment)
-  .sort((a, b) => a.data.week - b.data.week);
+const sessionData = (await getCollection('sessions')).map((s) => ({
+  week: s.data.week,
+  title: s.data.title,
+  assignment: s.data.assignment,
+  endsAt: s.data.endsAt,
+}));
 
-// Default to the first session without a submission, or the last session if all submitted
-const unsubmitted = sessions.find(s => !submissions.some(sub => sub.week === s.data.week && sub.status === 'submitted'));
-const defaultWeek = unsubmitted ? unsubmitted.data.week : (sessions[sessions.length - 1]?.data.week ?? 1);
+const live = givenAssignments(sessionData);
+// Written but not yet given — named on the page so an empty list explains
+// itself instead of looking broken.
+const upcoming = allAssignments(sessionData).filter((a) => !a.given);
+
+// The first one not yet submitted, else the most recent — where someone
+// arriving mid-cohort actually wants to land.
+const unsubmitted = live.find(
+  (a) => !submissions.some((sub) => sub.week === a.week && sub.status === 'submitted'),
+);
+const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.week ?? 0);
 
 const parseADR = (markdown: string) => {
   const sections = { ctx: '', dec: '', alt: '', con: '', uns: '' };
@@ -39,39 +68,75 @@ const parseADR = (markdown: string) => {
 <CraftLayout title="ADRs" learner={learner}>
   <div class="wrap page-narrow" style="max-width: 780px; margin: 0 auto;">
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Architecture Decision Records</h1>
-    <p class="lead" style="margin-bottom: 48px;">
-      Document your design decisions for each week's assignment. These form the basis of what we review.
+    <p class="lead" style="margin-bottom: 40px;">
+      One page per week, on the decision that week's assignment forced. Same five sections
+      every time — so week 6 can be read against week 1, and so can you.
     </p>
 
+    {live.length === 0 ? (
+      <div class="adr-blank">
+        <h2>No assignment has been set yet</h2>
+        <p>
+          Each week's decision record unlocks when that session ends and its assignment is
+          given. Nothing to write against before then.
+        </p>
+        {upcoming.length > 0 && (
+          <ul class="upcoming">
+            {upcoming.map((a) => (
+              <li><span class="mono wk">W{a.week}</span> {a.title}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    ) : (
     <div class="adr-container">
       <div class="adr-sidebar">
         <h3 class="mono faint" style="font-size:12px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Assignments</h3>
         <div class="week-nav">
-          {sessions.map(s => {
-            const sub = submissions.find(sub => sub.week === s.data.week);
-            const isDefault = s.data.week === defaultWeek;
+          {live.map(a => {
+            const sub = submissions.find(sub => sub.week === a.week);
+            const isDefault = a.week === defaultWeek;
             const done = sub?.status === 'submitted';
             return (
-              <button 
+              <button
                 class={`week-btn ${isDefault ? 'active' : ''} ${done ? 'submitted' : ''}`}
-                data-week={s.data.week}
+                data-week={a.week}
               >
-                <span class="wk">Week {s.data.week}</span>
-                <span class="title">{s.data.assignment}</span>
+                <span class="wk">Week {a.week}</span>
+                <span class="title">{a.title}</span>
                 {done ? <span class="badge ok">✓</span> : sub ? <span class="badge draft">draft</span> : null}
               </button>
             )
           })}
         </div>
+
+        {upcoming.length > 0 && (
+          <p class="later faint">
+            {upcoming.length} more {upcoming.length === 1 ? 'assignment' : 'assignments'} unlock
+            as those sessions run.
+          </p>
+        )}
       </div>
 
       <div class="adr-content">
-        {sessions.map(s => {
-          const sub = submissions.find(sub => sub.week === s.data.week);
+        {live.map(a => {
+          const sub = submissions.find(sub => sub.week === a.week);
           return (
-            <div class="week-panel" id={`panel-${s.data.week}`} style={{ display: s.data.week === defaultWeek ? 'block' : 'none' }}>
+            <div class="week-panel" id={`panel-${a.week}`} style={{ display: a.week === defaultWeek ? 'block' : 'none' }}>
+              {/* The brief. The ADR is about THIS, and it should be readable
+                  without leaving the form to go and remember what was set. */}
+              <div class="brief">
+                <p class="mono brief-eyebrow">Week {a.week} assignment · {a.sessionTitle}</p>
+                <h2>{a.title}</h2>
+                <p class="brief-note">
+                  Write the decision this forced you into — not a summary of the session.
+                  <a href={`/craft/quiz?week=${a.week}`}>The week {a.week} check</a> rehearsed
+                  the same trade-off in the abstract; this is where you record what you
+                  actually did about it.
+                </p>
+              </div>
+
               <div style="margin-bottom:24px">
-                <h2 style="font-size:24px;margin:0 0 4px">Week {s.data.week}: {s.data.assignment}</h2>
                 {sub?.status === 'draft' && <p class="faint mono" style="font-size:12px">Draft saved {new Date(sub.updated_at).toLocaleString('en-GB')}</p>}
               </div>
 
@@ -92,40 +157,52 @@ const parseADR = (markdown: string) => {
                 </div>
               ) : null}
 
-              <form class="adr-form" method="POST" action="/api/craft/adr" id={`form-${s.data.week}`} style={{ display: sub?.status === 'submitted' ? 'none' : 'block' }}>
-                <input type="hidden" name="week" value={s.data.week} />
-                
+              <form class="adr-form" method="POST" action="/api/craft/adr" id={`form-${a.week}`} style={{ display: sub?.status === 'submitted' ? 'none' : 'block' }}>
+                <input type="hidden" name="week" value={a.week} />
+
                 {(() => {
                   const parsed = sub ? parseADR(sub.adr_markdown) : { ctx: '', dec: '', alt: '', con: '', uns: '' };
                   return (
+                    /* Five fixed sections, never varying by week (§5.5) — the
+                       hint under each is the spec's own statement of what that
+                       section is for. */
                     <div class="fields-group">
                       <div class="field">
-                        <label for={`ctx-${s.data.week}`}>Context</label>
-                        <textarea id={`ctx-${s.data.week}`} name="ctx" required rows="3" placeholder="What is the problem we are solving?">{parsed.ctx}</textarea>
+                        <label for={`ctx-${a.week}`}>Context</label>
+                        <p class="hint">The constraint that forced a decision.</p>
+                        <textarea id={`ctx-${a.week}`} name="ctx" required rows="3" placeholder="What was true about the system, the deadline or the team that meant you had to choose?">{parsed.ctx}</textarea>
                       </div>
-                      <div class="field" style="margin-top:16px">
-                        <label for={`dec-${s.data.week}`}>Decision</label>
-                        <textarea id={`dec-${s.data.week}`} name="dec" required rows="3" placeholder="What is the solution?">{parsed.dec}</textarea>
+                      <div class="field" style="margin-top:20px">
+                        <label for={`dec-${a.week}`}>Decision</label>
+                        <p class="hint">What you chose.</p>
+                        <textarea id={`dec-${a.week}`} name="dec" required rows="3" placeholder="State it plainly, in the past tense. Not what you would do — what you did.">{parsed.dec}</textarea>
                       </div>
-                      <div class="field" style="margin-top:16px">
-                        <label for={`alt-${s.data.week}`}>Alternatives</label>
-                        <textarea id={`alt-${s.data.week}`} name="alt" required rows="3" placeholder="What else did you consider?">{parsed.alt}</textarea>
+                      <div class="field load-bearing" style="margin-top:20px">
+                        <label for={`alt-${a.week}`}>Alternatives</label>
+                        <p class="hint">
+                          What you rejected, and <strong>why it lost</strong>. This is the section
+                          Sunil reads first — anyone can state a decision, the rejected options are
+                          where judgement is visible.
+                        </p>
+                        <textarea id={`alt-${a.week}`} name="alt" required rows="4" placeholder="The option you seriously considered, and the specific reason it did not survive.">{parsed.alt}</textarea>
                       </div>
-                      <div class="field" style="margin-top:16px">
-                        <label for={`con-${s.data.week}`}>Consequences</label>
-                        <textarea id={`con-${s.data.week}`} name="con" required rows="3" placeholder="What are the trade-offs of this decision?">{parsed.con}</textarea>
+                      <div class="field" style="margin-top:20px">
+                        <label for={`con-${a.week}`}>Consequences</label>
+                        <p class="hint">What it costs later, and what you would watch in production.</p>
+                        <textarea id={`con-${a.week}`} name="con" required rows="3" placeholder="The bill this decision sends you in three months, and the signal that tells you it has arrived.">{parsed.con}</textarea>
                       </div>
-                      <div class="field" style="margin-top:16px">
-                        <label for={`uns-${s.data.week}`}>Unsure about</label>
-                        <textarea id={`uns-${s.data.week}`} name="uns" required rows="3" placeholder="What are the unknowns?">{parsed.uns}</textarea>
+                      <div class="field" style="margin-top:20px">
+                        <label for={`uns-${a.week}`}>Unsure about</label>
+                        <p class="hint">One line — what you are least confident in.</p>
+                        <textarea id={`uns-${a.week}`} name="uns" required rows="2" placeholder="The part you would want a second opinion on.">{parsed.uns}</textarea>
                       </div>
                     </div>
                   );
                 })()}
 
                 <div class="field" style="margin-top:24px">
-                  <label for={`repo-${s.data.week}`}>Repository URL (optional)</label>
-                  <input type="url" id={`repo-${s.data.week}`} name="repo_url" value={sub?.repo_url ?? ''} placeholder="https://github.com/..." class="input" />
+                  <label for={`repo-${a.week}`}>Repository URL (optional)</label>
+                  <input type="url" id={`repo-${a.week}`} name="repo_url" value={sub?.repo_url ?? ''} placeholder="https://github.com/..." class="input" />
                 </div>
 
                 <p class="cap-note faint">
@@ -144,6 +221,7 @@ const parseADR = (markdown: string) => {
         })}
       </div>
     </div>
+    )}
   </div>
 </CraftLayout>
 
@@ -322,6 +400,91 @@ const parseADR = (markdown: string) => {
   .field label {
     font-weight: 500;
   }
+
+  /* The spec's own statement of what each section is for, in place of the
+     generic placeholder text that was here. */
+  .hint {
+    margin: -4px 0 2px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+  .hint strong { color: var(--ink); font-weight: 500; }
+
+  /* §5.5: "Alternatives is the load-bearing section." */
+  .field.load-bearing {
+    padding-left: 14px;
+    border-left: 2px solid var(--accent-ink);
+  }
+
+  /* --- the brief ------------------------------------------------------- */
+  .brief {
+    background: var(--paper-2);
+    border-radius: var(--radius-inner);
+    padding: 20px 22px;
+    margin-bottom: 24px;
+  }
+  .brief-eyebrow {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 8px;
+  }
+  .brief h2 {
+    font-size: 21px;
+    line-height: 1.3;
+    margin: 0 0 10px;
+  }
+  .brief-note {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 64ch;
+  }
+  .brief-note a { color: var(--clay); }
+
+  /* --- nothing set yet ------------------------------------------------- */
+  .adr-blank {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: 48px 36px;
+    text-align: center;
+  }
+  .adr-blank h2 { font-size: 21px; margin: 0 0 10px; }
+  .adr-blank > p {
+    margin: 0 auto;
+    max-width: 50ch;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+  .upcoming {
+    list-style: none;
+    margin: 28px auto 0;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--line);
+    max-width: 46ch;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .upcoming .wk {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    margin-right: 8px;
+  }
+
+  .later {
+    margin-top: 16px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
   textarea, .input {
     width: 100%;
     padding: 12px 16px;

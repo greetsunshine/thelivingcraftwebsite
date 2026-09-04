@@ -25,9 +25,64 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
   [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/craft/admin/intake`.
-  Six learner surfaces beyond the sessions themselves — **doubts, reading, quiz, ADR,
+  Six learner surfaces beyond the sessions themselves — **discussion, reading, quiz, ADR,
   feedback, familiarity** — each with a console counterpart. What they are and why they
   are shaped the way they are is the learning agent, below.
+
+  **Discussion (`/craft/discussion`) is the cohort's forum**, and was a private
+  learner→Sunil inbox until 4 September. Learners answer each other. The rule that makes
+  that safe is not moderation, it is that a reply carries an `author_role` and the three
+  roles can never be mistaken for one another: `learner` (their face and name),
+  `instructor` (a rule down the side — the course's position), `system` (machine-orange,
+  labelled *not a person*, and only ever code quoting `facts.ts` or session frontmatter).
+  **Only `instructor` replies are eligible for relay** to a later asker, so no amount of
+  peer approval can turn a guess into something the machine repeats as fact. And the two
+  marks stay separate on purpose: *solved it* is the asker's report, *endorsed* is Sunil's
+  verdict. Collapsing them into one "accepted answer" is how a grateful asker promotes a
+  wrong answer into the cohort's working belief.
+
+  **The knowledge check belongs to a session and opens when that session ends.** The
+  trigger is `endsAt` in the session's frontmatter — a full ISO timestamp *with an offset*,
+  because the cohort sits in three time zones and a bare date opens the check on the wrong
+  day for somebody. **Absent `endsAt` opens nothing and prompts nobody**; there is no
+  fallback to `taughtOn` or to end-of-day, because guessing when a session ended is
+  inventing a fact. Every session file is unset until Sunil enters the timetable.
+  **There is exactly ONE prompt at a time** ([src/lib/craft/prompts.ts](src/lib/craft/prompts.ts)),
+  naming everything that moment opened — after a session that is the feedback form, the
+  week's check and the after-pulse, all at the same instant. Never add a second modal for
+  a fourth thing: two stacked dialogs are not twice the prompt, they are a thing people
+  click past. Tasks are ordered by how fast each **decays** (pulse, feedback, check). A
+  week has two moments, before and after; when both windows are live the **after** one
+  wins, and the before-pulse waits on the to-do. Shown **once** per moment; dismissal is permanent
+  (`session_prompts`, keyed by week AND phase) and is never counted or reported.
+  What survives a dismissal is the **to-do panel** on the dashboard — a passive list the
+  learner opens themselves. That pairing is what keeps this inside spec §10, which cuts
+  *"automated nudges to learners about missing submissions"*: a prompt at the moment
+  something becomes relevant, plus a list you choose to look at, is not a chase.
+  **Adding "remind them again on Friday" is that cut feature returning under a new name.**
+
+  **The familiarity check runs twice a week — a "pulse" either side of each session**
+  ([src/lib/craft/pulses.ts](src/lib/craft/pulses.ts)). A pulse covers **only the
+  capabilities that session teaches** (its `topics`), about three of them. Never widen it
+  to all thirteen: twice a week for six weeks at thirteen each is 156 ratings per learner,
+  the room stops answering by week two, and the data then skews toward the compliant.
+  Scoping is also what makes the delta *attributable* — movement on A5 either side of the
+  session that taught A5 says something; the same movement six weeks apart says only that
+  time passed. `startsAt` closes the before-pulse (a baseline taken after the teaching is
+  not a baseline) and the API re-checks that window on save. **This does not replace §5.6**
+  — the week-0 intake and week-6 re-ask over all thirteen stay as they are, and week 6 has
+  no after-pulse because the re-ask covers it that day. Sunil's read is *what each session
+  moved*, **paired ratings only**: an unpaired mean measures who replied, not what they
+  learned.
+
+  **An ADR is tied to the week's assignment, and unlocks on that same clock.**
+  [src/lib/craft/assignments.ts](src/lib/craft/assignments.ts) owns both halves of the tie:
+  the assignment must be real (weeks 2–6 carry the placeholder `"TBD"`, which is a truthy
+  string and once reached the learner as five submit forms headed *"Week 2: TBD"*), and it
+  must have been *given* — its session has ended. **Never hand-write `!== 'TBD'` again**;
+  that literal in four separate files is why three surfaces disagreed about how many
+  assignments existed. The five ADR sections are fixed and must not vary by week (§5.5
+  wants week 6 readable against week 1); what varies is the brief above them.
 
 ## The learning agent — read the status doc before building
 **[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
@@ -44,7 +99,9 @@ Two rules, and they are the reason the file is worth having:
   was written and wrong a week later is worse than none. Move the checkbox, adjust the
   counts in the summary table, and add a changelog row.
 
-**Schema is ahead of production right now.** Not yet applied: the `doubts.answer_source`
+**Schema is ahead of production right now.** Not yet applied: the `discussion_replies`
+table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
+`resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table and `capability_pulses`; the `doubts.answer_source`
 and `submissions.status` columns, and the `feedback_responses` table. **Run
 [supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
 idempotent. Shipping code ahead of its schema shows up as the console's "table is not
@@ -76,7 +133,7 @@ about us.
 
 ## The operator console (`/craft/admin`)
 Password-gated operator surface. Five jobs: traffic, leads, the questions visitors
-asked the Q&A agent, content review, and **teaching the cohort** — `/craft/admin/doubts`,
+asked the Q&A agent, content review, and **teaching the cohort** — `/craft/admin/discussion`,
 `/craft/admin/quiz`, `/craft/admin/adrs`, `/craft/admin/quiz-adr-comparison`, `/craft/admin/feedback`,
 `/craft/admin/familiarity`, all described under *The learning agent*. Nothing on the public site reads from it,
 and if every one of its env vars is missing the public pages behave exactly as they
@@ -87,17 +144,27 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — thirteen tables, schema in
+- **Storage is Supabase** — sixteen tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
   - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
-    `submissions`, `quiz_responses`, `doubts`, `feedback`, `feedback_responses`.
-    All but the last are keyed to `learner_id` with `ON DELETE CASCADE`, so erasing
+    `submissions`, `quiz_responses`, `session_prompts`, `capability_pulses`, `doubts`,
+    `discussion_replies`,
+    `feedback`, `feedback_responses`.
+    All but the last two are keyed to `learner_id` with `ON DELETE CASCADE`, so erasing
     someone from `/craft/admin/learners` really erases them. `feedback_responses` is the
     exception on purpose: it is Sunil's note to the whole room, holds no personal
-    data, and must survive one learner leaving.
+    data, and must survive one learner leaving. `discussion_replies` is the half-exception:
+    a learner's own replies cascade with them, but Sunil's and the syllabus's are
+    `learner_id null` and survive — while erasing a thread's *author* still takes the whole
+    thread, replies included, because keeping the conversation and removing the name from
+    the top of it is not a deletion.
+  - **`doubts` is the discussion forum's THREAD table.** The name predates the forum and
+    stayed: renaming a live table is a migration with real downside and nothing a reader
+    would ever see. [src/lib/craft/discussion.ts](src/lib/craft/discussion.ts) is the only
+    file that has to hold both names, and it says so at the top.
 - **Every query degrades to empty on error — so the console probes and says so.**
   That degradation is deliberate (one slow rollup must not 500 the page) but it
   makes a *missing table* and *no rows yet* render identically; `/craft/admin/radar` said

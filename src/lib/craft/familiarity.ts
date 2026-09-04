@@ -191,7 +191,8 @@ export interface SayShowFlag {
   learner_id: string;
   capability: string;
   selfRating: number;
-  doubts: number;
+  /** Discussion threads this learner opened against this capability. */
+  threads: number;
   reason: string;
 }
 
@@ -205,7 +206,7 @@ export interface SayShowFlag {
  */
 export function sayShowFlags(
   intake: { learner_id: string; technical: Record<string, number>; leadership: Record<string, number> }[],
-  doubtsByLearnerCapability: Map<string, number>,
+  threadsByLearnerCapability: Map<string, number>,
 ): SayShowFlag[] {
   const flags: SayShowFlag[] = [];
 
@@ -213,13 +214,13 @@ export function sayShowFlags(
     for (const section of ['technical', 'leadership'] as const) {
       for (const [capability, rating] of Object.entries(row[section] ?? {})) {
         if (rating < 4) continue;
-        const asked = doubtsByLearnerCapability.get(`${row.learner_id}:${capability}`) ?? 0;
+        const asked = threadsByLearnerCapability.get(`${row.learner_id}:${capability}`) ?? 0;
         if (asked > 0) continue;
         flags.push({
           learner_id: row.learner_id,
           capability,
           selfRating: rating,
-          doubts: asked,
+          threads: asked,
           reason: `Rated ${rating}/5 at intake and has asked nothing about it.`,
         });
       }

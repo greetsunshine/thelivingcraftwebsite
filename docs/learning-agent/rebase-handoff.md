@@ -46,7 +46,7 @@ inverted. That is a security regression, not a styling bug.
 
 | File | Guidance |
 |---|---|
-| `src/layouts/CraftLayout.astro` | **Take main's, then decide.** Main rebuilt it as a three-destination top nav; our version is the icon rail plus the bottom agent dock. Neither is obviously right — main's comment says "no submenus", and our five extra learner pages need a home. **Ask Sunil**; do not settle it in a merge. |
+| `src/layouts/CraftLayout.astro` | **Take main's, then decide.** Main rebuilt it as a three-destination top nav; our version is the icon rail plus the bottom agent dock. Neither is obviously right — main's comment says "no submenus", and our five extra learner pages need a home. **Ask Sunil**; do not settle it in a merge. Note this now also has to hold `/craft/discussion/<id>`, the branch's only nav destination with pages beneath it. |
 | `docs/teaching/quiz/week-1.md` | **Take main's.** 328 lines of real questions against our one-item placeholder. But main's prose format (`### Q1 · Title`, `✅`, free-text rationale) is **not** what `parseWeekFile()` reads. Do not rewrite his teaching material into our format to make the parser happy — raise it as a decision. |
 | `src/pages/craft/{index,intake,notes}.astro`, `src/content/sessions/week-*.md` | Prefer main's. Re-apply our dashboard additions (activity counters, reading suggestions, intake card, to-do panel) onto main's version rather than merging line by line. |
 | `CLAUDE.md`, `docs/teaching/README.md` | Combine; the sections are mostly disjoint. |
@@ -80,10 +80,11 @@ Then update [build-status.md](build-status.md) and PR #6's description in the sa
 
 ## Two standing notes
 
-**The schema is ahead of production.** `doubts.answer_source`, `submissions.status` and
+**The schema is ahead of production.** The `discussion_replies` table and five additive
+columns on `doubts`, plus `doubts.answer_source`, `submissions.status` and
 the `feedback_responses` table are not applied. `supabase/schema.sql` is idempotent — run
 the whole file before any deploy.
 
 **The agent dock's replies are still keyword-matched.** Moving it to the bottom of every
-`/craft` page was done; wiring it to `/api/craft/doubts` is specced in
+`/craft` page was done; wiring it to `/api/craft/discussion` is specced in
 [guided-walkthrough/plan.md](guided-walkthrough/plan.md) §14 and not built.

@@ -1,99 +1,226 @@
 ---
+// The knowledge check, one week at a time.
+//
+// WHY THIS IS SCOPED BY WEEK NOW. It used to serve every item in the bank as
+// one flat sequence, which made "this week's check" a phrase with nothing
+// behind it — and the post-session prompt needs something specific to point at.
+// A check now belongs to a session the way the assignment does.
+//
+// A CHECK OPENS WHEN ITS SESSION ENDS, AND NOT BEFORE. Serving week 4's
+// questions in week 2 would not leak the answer key (getLearnerItems strips it)
+// but it would spend the questions before the teaching that makes them a
+// calibration rather than a quiz. So `?week=N` is refused unless that check is
+// open — the check on the URL, not just on the link.
 import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
 import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
+import { weeklyChecks, type WeeklyCheck } from '../../lib/craft/checks';
 import { marked } from 'marked';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
 
 // getLearnerItems, never getQuizItems: the key must not reach this page.
-const allItems = await getLearnerItems();
-const responses = await getQuizResponses(learner.id);
+const [sessions, allItems, responses] = await Promise.all([
+  getCollection('sessions'),
+  getLearnerItems(),
+  getQuizResponses(learner.id),
+]);
 
-// Find the first unanswered item
-const answeredIds = new Set(responses.map(r => r.item_id));
-const nextItem = allItems.find(item => !answeredIds.has(item.id));
+const checks = weeklyChecks(
+  sessions.map((s) => ({ week: s.data.week, title: s.data.title, endsAt: s.data.endsAt })),
+  allItems,
+  responses,
+);
 
-const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 100);
+// Newest week first: the check someone wants is almost always the last one.
+const ordered = [...checks].sort((a, b) => b.week - a.week);
+const anyOpen = ordered.some((c) => c.isOpen);
+
+const weekParam = Astro.url.searchParams.get('week');
+const requested = weekParam !== null && /^\d+$/.test(weekParam) ? Number(weekParam) : null;
+const active: WeeklyCheck | null =
+  requested !== null ? (checks.find((c) => c.week === requested && c.isOpen) ?? null) : null;
+
+// A week that is not open — or does not exist — falls back to the list rather
+// than rendering an empty shell that looks broken.
+if (requested !== null && !active) return Astro.redirect('/craft/quiz');
+
+const answeredIds = new Set(responses.map((r) => r.item_id));
+const weekItems = active ? allItems.filter((i) => i.week === active.week) : [];
+const nextItem = active ? weekItems.find((i) => !answeredIds.has(i.id)) : undefined;
+
+const position = active ? weekItems.findIndex((i) => i.id === nextItem?.id) + 1 : 0;
+const progress = active
+  ? Math.round((active.answered / Math.max(active.itemCount, 1)) * 100)
+  : 0;
+
+const opensLabel = (c: WeeklyCheck) =>
+  c.opensAt
+    ? new Date(c.opensAt).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
 ---
 
-<CraftLayout title="Knowledge Check" learner={learner}>
+<CraftLayout
+  title={active ? `Week ${active.week} check` : 'Knowledge Check'}
+  learner={learner}
+  back={active ? { href: '/craft/quiz', label: 'All checks' } : undefined}
+>
   <div class="wrap page-narrow" style="max-width: 640px; margin: 0 auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <h1 style="font-size:clamp(26px,4vw,36px);margin:0">Knowledge Check</h1>
-      <div class="faint mono" style="font-size:12px">{answeredIds.size} of {allItems.length} completed</div>
-    </div>
-    
-    <div class="progress-bar">
-      <div class="progress-fill" style={`width: ${progress}%`}></div>
-    </div>
-
-    {nextItem ? (
-      <div class="quiz-card">
-        <div class="q-header">
-          <span class="mono faint">Question</span>
-          <span class="badge">{nextItem.capability}</span>
+    {active ? (
+      <>
+        <div class="check-head">
+          <div>
+            <p class="mono eyebrow">Week {active.week} · {active.title}</p>
+            <h1>Knowledge Check</h1>
+          </div>
+          <div class="faint mono count">{active.answered} of {active.itemCount}</div>
         </div>
-        
-        <div class="q-body markdown-body" set:html={marked.parse(nextItem.body)} />
 
-        <form class="quiz-form" method="POST" action="/api/craft/quiz" id="quizForm">
-          <input type="hidden" name="item_id" value={nextItem.id} />
-          
-          <div class="field">
-            <label for={nextItem.options ? undefined : "answer"}>Your answer</label>
-            {nextItem.options ? (
-              <div class="mcq-options">
-                {nextItem.options.map(opt => (
-                  <label class="mcq-option">
-                    <input type="radio" name="answer" value={opt.key} required />
-                    <span class="mcq-text"><strong>{opt.key.toUpperCase()})</strong> {opt.text}</span>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <input type="text" id="answer" name="answer" required autocomplete="off" class="input" placeholder="e.g. true, false..." />
-            )}
-          </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style={`width: ${progress}%`}></div>
+        </div>
 
-          <div class="field" style="margin-top:24px">
-            <label style="margin-bottom:12px">How confident are you?</label>
-            <div class="confidence-scale">
-              <label class="c-radio">
-                <input type="radio" name="confidence" value="1" required />
-                <span>1 - Guessed</span>
-              </label>
-              <label class="c-radio">
-                <input type="radio" name="confidence" value="2" />
-                <span>2</span>
-              </label>
-              <label class="c-radio">
-                <input type="radio" name="confidence" value="3" />
-                <span>3 - Somewhat sure</span>
-              </label>
-              <label class="c-radio">
-                <input type="radio" name="confidence" value="4" />
-                <span>4</span>
-              </label>
-              <label class="c-radio">
-                <input type="radio" name="confidence" value="5" />
-                <span>5 - Certain</span>
-              </label>
+        {nextItem ? (
+          <div class="quiz-card">
+            <div class="q-header">
+              <span class="mono faint">Question {position} of {active.itemCount}</span>
+              <span class="badge">{nextItem.capability}</span>
             </div>
-          </div>
 
-          <div class="actions" style="margin-top:32px">
-            <button type="submit" class="btn btn-primary submit-btn">Submit Answer</button>
-            <span class="mono msg" style="display:none;"></span>
+            <div class="q-body markdown-body" set:html={marked.parse(nextItem.body)} />
+
+            <form class="quiz-form" method="POST" action="/api/craft/quiz" id="quizForm">
+              <input type="hidden" name="item_id" value={nextItem.id} />
+
+              <div class="field">
+                <label for={nextItem.options ? undefined : 'answer'}>Your answer</label>
+                {nextItem.options ? (
+                  <div class="mcq-options">
+                    {nextItem.options.map((opt) => (
+                      <label class="mcq-option">
+                        <input type="radio" name="answer" value={opt.key} required />
+                        <span class="mcq-text"><strong>{opt.key.toUpperCase()})</strong> {opt.text}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <input type="text" id="answer" name="answer" required autocomplete="off" class="input" placeholder="e.g. true, false..." />
+                )}
+              </div>
+
+              <div class="field" style="margin-top:24px">
+                <label style="margin-bottom:12px">How confident are you?</label>
+                <div class="confidence-scale">
+                  <label class="c-radio">
+                    <input type="radio" name="confidence" value="1" required />
+                    <span>1 - Guessed</span>
+                  </label>
+                  <label class="c-radio">
+                    <input type="radio" name="confidence" value="2" />
+                    <span>2</span>
+                  </label>
+                  <label class="c-radio">
+                    <input type="radio" name="confidence" value="3" />
+                    <span>3 - Somewhat sure</span>
+                  </label>
+                  <label class="c-radio">
+                    <input type="radio" name="confidence" value="4" />
+                    <span>4</span>
+                  </label>
+                  <label class="c-radio">
+                    <input type="radio" name="confidence" value="5" />
+                    <span>5 - Certain</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="actions" style="margin-top:32px">
+                <button type="submit" class="btn btn-primary submit-btn">Submit Answer</button>
+                <span class="mono msg" style="display:none;"></span>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        ) : (
+          <div class="quiz-done">
+            <h2>Week {active.week} is done</h2>
+            <p class="muted">
+              All {active.itemCount} answered. Sunil sees the spread across the room, not a
+              score for you — where several people picked the same wrong option is what
+              opens the next session.
+            </p>
+            <a href="/craft/quiz" class="btn" style="margin-top:24px">All checks</a>
+          </div>
+        )}
+      </>
     ) : (
-      <div class="quiz-done">
-        <h2>You're all caught up!</h2>
-        <p class="muted">Check back later for more questions as the cohort progresses.</p>
-        <a href="/craft" class="btn" style="margin-top:24px">Back to cohort</a>
-      </div>
+      <>
+        <h1 style="font-size:clamp(26px,4vw,36px);margin:0 0 12px">Knowledge Check</h1>
+        <p class="lead" style="margin-bottom:36px">
+          One short check per session, opening when that session ends. Every question carries
+          a confidence rating — the point is calibration, not a score, and nothing here is
+          marked against you.
+        </p>
+
+        {ordered.length === 0 ? (
+          <div class="quiz-done">
+            <h2>Nothing here yet</h2>
+            <p class="muted">Checks appear once the question bank for a week is written.</p>
+          </div>
+        ) : (
+          <>
+            {!anyOpen && (
+              <p class="note">
+                No check is open yet. Each one unlocks the moment its session finishes —
+                you'll be told when that happens, and it will be waiting here either way.
+              </p>
+            )}
+
+            <ol class="check-list">
+              {ordered.map((c) => (
+                <li class={`check ${c.isOpen ? '' : 'locked'}`}>
+                  {c.isOpen ? (
+                    <a class="c-link" href={`/craft/quiz?week=${c.week}`}>
+                      <span class="c-week mono">W{c.week}</span>
+                      <span class="c-main">
+                        <span class="c-title">{c.title}</span>
+                        <span class="c-sub faint">
+                          {c.isComplete
+                            ? `All ${c.itemCount} answered`
+                            : c.inProgress
+                              ? `${c.answered} of ${c.itemCount} answered`
+                              : `${c.itemCount} ${c.itemCount === 1 ? 'question' : 'questions'}`}
+                        </span>
+                      </span>
+                      <span class={`c-state ${c.isComplete ? 'done' : c.inProgress ? 'part' : 'go'}`}>
+                        {c.isComplete ? 'Complete' : c.inProgress ? 'Continue' : 'Start'}
+                      </span>
+                    </a>
+                  ) : (
+                    <div class="c-link">
+                      <span class="c-week mono">W{c.week}</span>
+                      <span class="c-main">
+                        <span class="c-title">{c.title}</span>
+                        <span class="c-sub faint">
+                          {opensLabel(c)
+                            ? `Opens ${opensLabel(c)}`
+                            : 'Opens when the session ends'}
+                        </span>
+                      </span>
+                      <span class="c-state shut">Locked</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+      </>
     )}
   </div>
 </CraftLayout>
@@ -105,7 +232,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
       e.preventDefault();
       const btn = form.querySelector('.submit-btn') as HTMLButtonElement;
       const msg = form.querySelector('.msg') as HTMLSpanElement;
-      
+
       btn.disabled = true;
       btn.textContent = 'Checking...';
       msg.style.display = 'none';
@@ -123,9 +250,9 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        
+
         const result = await res.json();
-        
+
         if (res.ok) {
           // Disable all inputs — no retries.
           const textInput = form.querySelector('#answer') as HTMLInputElement;
@@ -150,7 +277,8 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
           }
           msg.style.display = 'block';
 
-          // Advance to next item after a moment to read the answer.
+          // Advance to next item after a moment to read the answer. Stays on
+          // the same ?week=, so the sequence does not jump into another week.
           setTimeout(() => window.location.reload(), 2500);
         } else {
           throw new Error('Failed to submit');
@@ -167,6 +295,82 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
 </script>
 
 <style>
+  /* --- the week list --------------------------------------------------- */
+  .note {
+    background: var(--paper-2);
+    border-radius: var(--radius-inner);
+    padding: 16px 20px;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    max-width: 62ch;
+  }
+
+  .check-list { list-style: none; margin: 0; padding: 0; }
+  .check + .check { border-top: 1px solid var(--line); }
+
+  .c-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 12px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-inner);
+  }
+  a.c-link:hover { background: var(--surface-hover); }
+  .check.locked .c-link { opacity: 0.62; }
+
+  .c-week {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+  }
+  .check.locked .c-week { background: transparent; border: 1px dashed var(--line-strong); }
+
+  .c-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .c-title { font-size: 15.5px; font-weight: 500; line-height: 1.35; }
+  .c-sub { font-size: 12.5px; }
+
+  .c-state {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    padding: 6px 13px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+  .c-state.go   { background: var(--sun); color: var(--ink); }
+  .c-state.part { border: 1px solid var(--accent-ink); color: var(--accent-ink); }
+  .c-state.done { background: var(--paper-2); color: var(--ink-soft); }
+  .c-state.shut { border: 1px solid var(--line-strong); color: var(--ink-faint); }
+
+  /* --- one check ------------------------------------------------------- */
+  .check-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .check-head h1 { font-size: clamp(26px, 4vw, 36px); margin: 0; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 6px;
+  }
+  .count { font-size: 12px; }
+
   .progress-bar {
     width: 100%;
     height: 4px;
@@ -187,7 +391,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     border-radius: var(--radius-card);
     padding: 32px 40px;
   }
-  
+
   .q-header {
     display: flex;
     justify-content: space-between;
@@ -204,11 +408,11 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     color: var(--ink-soft);
     letter-spacing: 0.05em;
   }
-  
+
   .q-body {
     margin-bottom: 40px;
   }
-  
+
   /* Basic markdown typography */
   .markdown-body {
     font-size: 16px;
@@ -224,7 +428,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     border-radius: var(--radius-inner);
     overflow-x: auto;
   }
-  
+
   .field {
     display: flex;
     flex-direction: column;
@@ -242,7 +446,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     font-family: inherit;
     font-size: 15px;
   }
-  
+
   .confidence-scale {
     display: flex;
     gap: 16px;
@@ -263,7 +467,7 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
   .c-radio:hover {
     border-color: var(--line-strong);
   }
-  
+
   .mcq-options {
     display: flex;
     flex-direction: column;
@@ -291,18 +495,19 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
   .mcq-text {
     line-height: 1.5;
   }
-  
+
   .quiz-done {
     text-align: center;
-    padding: 64px 20px;
+    padding: 56px 24px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
   }
   .quiz-done h2 {
-    font-size: 28px;
+    font-size: 25px;
     margin-bottom: 12px;
   }
+  .quiz-done p { max-width: 48ch; margin: 0 auto; }
 
   @media (max-width: 780px) {
     .wrap { padding-top: 24px !important; }
@@ -313,6 +518,8 @@ const progress = Math.round((answeredIds.size / Math.max(allItems.length, 1)) * 
     .c-radio { padding: 9px 13px; font-size: 13px; }
     .mcq-option { padding: 14px; }
     .q-header { flex-wrap: wrap; gap: 8px; }
+    .c-link { padding: 15px 6px; gap: 12px; }
+    .c-week { width: 34px; height: 34px; font-size: 11.5px; }
   }
 
   .page-narrow { padding-top: 40px; padding-bottom: 56px; }

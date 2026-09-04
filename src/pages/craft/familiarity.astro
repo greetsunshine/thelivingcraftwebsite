@@ -1,15 +1,66 @@
 ---
 export const prerender = false;
 
+// Two instruments live on this page, at two different granularities.
+//
+//   THE PULSE — three-ish ratings either side of one session, on just the
+//   capabilities that session teaches. Twice a week. The delta is attributable
+//   to a session because it is measured around one.
+//
+//   THE WEEK-6 RE-ASK (§5.6) — all thirteen, against the week-0 intake. Once.
+//   The cohort-level before/after, and the evidence behind the outcome claims.
+//
+// They are not alternatives and the pulse does not replace the re-ask. Week 6
+// has no after-pulse precisely because the re-ask happens that day and covers
+// the same ground more thoroughly — see NO_AFTER_PULSE_WEEK in pulses.ts.
 import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
 import { getIntake, TECHNICAL, LEADERSHIP, SCALE, SCALE_LEGEND } from '../../lib/craft/intake';
 import { getFamiliarity, missingFamiliarityAnswers } from '../../lib/craft/familiarity';
+import {
+  pulseWindows,
+  pulsesDue,
+  findWindow,
+  listLearnerPulses,
+  type PulsePhase,
+} from '../../lib/craft/pulses';
 
 const learner = Astro.locals.learner!;
-const intake = await getIntake(learner.id);
-const familiarity = await getFamiliarity(learner.id);
+const [intake, familiarity, sessions, pulses] = await Promise.all([
+  getIntake(learner.id),
+  getFamiliarity(learner.id),
+  getCollection('sessions'),
+  listLearnerPulses(learner.id),
+]);
 
 const isSubmitted = familiarity?.submitted_at != null;
+
+const windows = pulseWindows(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    topics: s.data.topics,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+  })),
+  pulses,
+);
+const due = pulsesDue(windows);
+
+// `?week=N&phase=before|after` renders that one pulse. A closed or unknown
+// window falls back to the hub rather than to an empty form — and the API
+// re-checks the window on save, because this page may have sat open in a tab
+// since before the session started.
+const wp = Astro.url.searchParams;
+const askedWeek = /^\d+$/.test(wp.get('week') ?? '') ? Number(wp.get('week')) : null;
+const askedPhase = wp.get('phase') === 'before' || wp.get('phase') === 'after'
+  ? (wp.get('phase') as PulsePhase)
+  : null;
+const active =
+  askedWeek !== null && askedPhase !== null
+    ? findWindow(windows, askedWeek, askedPhase)
+    : null;
+const activeOpen = active && active.isOpen ? active : null;
 
 const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
   const w0 = intake?.[section]?.[qId] ?? 0;
@@ -23,13 +74,85 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
 };
 ---
 
-<CraftLayout title="Week 6 Familiarity" learner={learner}>
+<CraftLayout
+  title={activeOpen ? `Week ${activeOpen.week} familiarity` : 'Familiarity Check'}
+  learner={learner}
+  back={activeOpen ? { href: '/craft/familiarity', label: 'Familiarity' } : undefined}
+>
   <div class="wrap page-narrow" style="max-width: 780px; margin: 0 auto; padding-bottom: 80px;">
+
+  {activeOpen ? (
+    <>
+      <p class="mono eyebrow">
+        Week {activeOpen.week} · {activeOpen.phase === 'before' ? 'before the session' : 'after the session'}
+      </p>
+      <h1 style="font-size:clamp(26px,4vw,38px);margin:0 0 14px">{activeOpen.title}</h1>
+      <p class="lead" style="margin-bottom:32px">
+        {activeOpen.phase === 'before'
+          ? 'Where you are with what this session covers, before it runs. Answer honestly rather than aspirationally — this is the baseline the "after" is measured against, and flattering it now just hides the movement.'
+          : 'The same questions you answered before the session. Nothing is compared to anybody else, and nothing here is a score.'}
+      </p>
+
+      <form id="pulseForm" class="familiarity-form" data-week={activeOpen.week} data-phase={activeOpen.phase}>
+        <div class="scale-legend">
+          <h4>The Scale</h4>
+          <ul>
+            {SCALE.map(n => <li><strong>{n}</strong> - {SCALE_LEGEND[n]}</li>)}
+          </ul>
+        </div>
+
+        <div class="section-block">
+          {activeOpen.capabilities.map(q => (
+            <div class="q-row">
+              <div class="q-text">{q.id}: {q.text}</div>
+              <div class="q-radios">
+                {SCALE.map(n => (
+                  <label class="radio-label">
+                    <input type="radio" name={q.id} value={n} required />
+                    <span>{n}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="actions" style="margin-top:40px; padding-top:24px; border-top:1px solid var(--line);">
+          <button type="submit" class="btn btn-primary submit-btn">Save</button>
+          <span class="mono msg" style="display:none; margin-left:16px;"></span>
+        </div>
+      </form>
+    </>
+  ) : (
+    <>
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Familiarity Check</h1>
-    <p class="lead" style="margin-bottom: 48px;">
-      Re-assess your familiarity with the core capabilities now that the cohort is ending.
-      See how your answers compare to Week 0.
+    <p class="lead" style="margin-bottom: 40px;">
+      A short rating either side of each session, on just what that session covers — and
+      once at the end, the full thirteen against your week&nbsp;0 answers.
     </p>
+
+    {due.length > 0 && (
+      <section class="pulses-due">
+        <h2>Open now</h2>
+        <ul>
+          {due.map((w) => (
+            <li>
+              <a href={`/craft/familiarity?week=${w.week}&phase=${w.phase}`}>
+                <span class="p-week mono">W{w.week}</span>
+                <span class="p-main">
+                  <span class="p-title">{w.title}</span>
+                  <span class="p-sub faint">
+                    {w.phase === 'before' ? 'Before the session' : 'After the session'} ·
+                    {' '}{w.capabilities.length} {w.capabilities.length === 1 ? 'rating' : 'ratings'}
+                  </span>
+                </span>
+                <span class="p-go mono">{w.phase === 'before' ? 'Baseline' : 'Follow-up'}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     {isSubmitted ? (
       <div class="results-view">
@@ -132,10 +255,55 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
         </div>
       </form>
     )}
+    </>
+  )}
   </div>
 </CraftLayout>
 
 <script>
+  // The per-session pulse. Separate from the week-6 re-ask below because they
+  // post to different endpoints and mean different things.
+  const pulseForm = document.getElementById('pulseForm') as HTMLFormElement | null;
+  if (pulseForm) {
+    pulseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = pulseForm.querySelector('.submit-btn') as HTMLButtonElement;
+      const msg = pulseForm.querySelector('.msg') as HTMLSpanElement;
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      msg.style.display = 'none';
+
+      const ratings: Record<string, number> = {};
+      new FormData(pulseForm).forEach((value, key) => {
+        ratings[key] = parseInt(value as string, 10);
+      });
+
+      try {
+        const res = await fetch('/api/craft/pulse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            week: Number(pulseForm.dataset.week),
+            phase: pulseForm.dataset.phase,
+            ratings,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error ?? 'Failed');
+        window.location.href = '/craft/familiarity';
+      } catch (err) {
+        msg.textContent = err instanceof Error && err.message !== 'Failed'
+          ? err.message
+          : 'Could not save that. Try again.';
+        msg.style.display = 'inline-block';
+        msg.style.color = 'var(--danger)';
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    });
+  }
+
   const form = document.getElementById('familiarityForm') as HTMLFormElement;
   if (form) {
     form.addEventListener('submit', async (e) => {
@@ -180,6 +348,67 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
     });
   }
 </script>
+
+<style>
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 8px;
+  }
+
+  .pulses-due { margin-bottom: 44px; }
+  .pulses-due h2 {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 12px;
+  }
+  .pulses-due ul { list-style: none; margin: 0; padding: 0; }
+  .pulses-due li + li { border-top: 1px solid var(--line); }
+  .pulses-due a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 12px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-inner);
+  }
+  .pulses-due a:hover { background: var(--surface-hover); }
+  .p-week {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .p-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .p-title { font-size: 15px; font-weight: 500; }
+  .p-sub { font-size: 12.5px; }
+  .p-go {
+    flex: none;
+    font-size: 11.5px;
+    padding: 6px 13px;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 780px) {
+    .pulses-due a { padding: 13px 6px; gap: 11px; }
+    .p-week { width: 32px; height: 32px; font-size: 11px; }
+  }
+</style>
 
 <style>
   .scale-legend {

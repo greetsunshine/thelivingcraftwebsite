@@ -14,7 +14,7 @@ learning-agent spec asked for.
 | 1 | Auto-start on first sign-in. Nudge up to three more times during the first weeks if unfinished. A permanent ⓘ afterwards. | Needs three columns on `learners` (§5) and a nudge ladder (§6). |
 | 2 | **Spine first, then tours on demand** — not one long walkthrough. | Big architectural simplification: **no tour ever crosses a page** (§4). |
 | 3 | Familiarity comes out of the sidebar; it appears as a dashboard card when due. | §10. Correcting an earlier mistake of mine, not a new feature. |
-| 4 | The right-hand Guide panel becomes real later, as a doubts widget. | Specced in §12 so it is not re-litigated; not in this build. |
+| 4 | The right-hand Guide panel becomes real later, as a discussion widget. | Specced in §12 so it is not re-litigated; not in this build. |
 
 **Decision 2 is the one that matters technically.** The original design had a 19-step
 sequence walking *into* six pages, which meant tour state had to survive a navigation —
@@ -77,7 +77,7 @@ interface TourStep {
 }
 
 interface Tour {
-  id: 'spine' | 'modules' | 'doubts' | 'quiz' | 'adr' | 'feedback';
+  id: 'spine' | 'modules' | 'discussion' | 'quiz' | 'adr' | 'feedback';
   label: string;     // 'What's on this page?'
   route: string;     // every step in a tour lives on this one route
   steps: TourStep[];
@@ -201,10 +201,11 @@ survives restyling, and `grep -r data-tour src/` lists every commitment the tour
 
 | File | Values |
 |---|---|
-| `CraftLayout.astro` | `nav-modules`, `nav-doubts`, `nav-quiz`, `nav-adr`, `nav-feedback`, `tour-help` |
+| `CraftLayout.astro` | `nav-modules`, `nav-discussion`, `nav-quiz`, `nav-adr`, `nav-feedback`, `tour-help` |
 | `craft/index.astro` | `factbar`, `intake-card`, `activity`, `reading` |
 | `craft/modules.astro` | `week-list`, `week-card` |
-| `craft/doubts.astro` | `doubt-split`, `doubt-history` |
+| `craft/discussion.astro` | `thread-composer`, `thread-filters`, `thread-list` |
+| `craft/discussion/[id].astro` | `reply-roles`, `reply-marks` |
 | `craft/quiz.astro` | `quiz-card`, `quiz-confidence` |
 | `craft/adr.astro` | `adr-sections`, `adr-actions` |
 | `craft/feedback.astro` | `feedback-form`, `feedback-changes` |
@@ -219,7 +220,7 @@ survives restyling, and `grep -r data-tour src/` lists every commitment the tour
 |---|---|---|
 | 1 | *(centred)* | What this place is, that it takes ninety seconds, that Escape leaves at any point and the ⓘ brings it back. |
 | 2 | `nav-modules` | Session material — one page a week, filling in as the cohort runs. |
-| 3 | `nav-doubts` | **The important one.** Two kinds of question: dates and deadlines answered here from the syllabus, anything about the material goes to Sunil — never answered by a model improvising. |
+| 3 | `nav-discussion` | **The important one.** Two kinds of question: dates and deadlines answered here from the syllabus, anything about the material goes to Sunil — never answered by a model improvising. |
 | 4 | `nav-quiz` | Calibration, not examination. Nobody is scored or ranked. |
 | 5 | `nav-adr` | One page a week on the decision that week's drill forced. |
 | 6 | `nav-feedback` | Two questions after each session — and what changed because of them comes back here. Ends by pointing at the ⓘ. |
@@ -232,12 +233,12 @@ before week 1.
 | Tour | Steps |
 |---|---|
 | **Modules** | `week-list` — six weeks plus pre-work. · `week-card` — ready vs. still being written. |
-| **Doubts** | `doubt-split` — the two-way split, and that the material half reaches a person. · `doubt-history` — what Sunil sees: the same question from five people, grouped. |
+| **Discussion** | `thread-composer` — the two-way split, and that the material half reaches both the room and Sunil. · `reply-roles` — the three voices, and that only Sunil's carries the course's position. · `reply-marks` — why *solved it* and *endorsed* are different marks. |
 | **Quiz** | `quiz-card` — one question at a time, after the session. · `quiz-confidence` — **the point of the feature**: confident-and-wrong is the only dangerous state; a low rating costs nothing and tells Sunil something true. |
 | **ADR** | `adr-sections` — five sections, same every week; Alternatives is the load-bearing one. · `adr-actions` — draft freely, submitting freezes it, and the one-page cap is deliberate. |
 | **Feedback** | `feedback-form` — two questions, sixty seconds. · `feedback-changes` — what changed because of them. |
 
-**Every step must read correctly on an empty page.** A first-time learner has no doubts, no
+**Every step must read correctly on an empty page.** A first-time learner has no threads, no
 submissions and no answers, so copy describes what a surface is *for* and what will appear
 — never "here are your results".
 
@@ -352,26 +353,29 @@ advertises a product decision that was reversed.
 
 *Made real as written, it would violate §5.1.* Ask it "explain the worker-loop" and it
 returns a substantive technical answer. That is a content question answered with a fresh
-opinion — exactly what the doubts rewrite removed. Rebuilding it as a working tutor chat
+opinion — exactly what the discussion rewrite removed. Rebuilding it as a working tutor chat
 would reintroduce that bug in a more prominent position than it ever had.
 
 ### What it should become
 
-**A doubts widget in chat clothing.** Not a tutor. The same two-way split that
-`src/lib/craft/doubts.ts` already implements, in an always-present panel instead of on one
-page:
+**A discussion widget in chat clothing.** Not a tutor. The same two-way split that
+`src/lib/craft/discussion.ts` already implements, in an always-present panel instead of on
+one page:
 
-- Typed question → `POST /api/craft/doubts`, exactly as `/craft/doubts` does now.
+- Typed question → `POST /api/craft/discussion` with `action: 'post'`, exactly as
+  `/craft/discussion` does now.
 - **Logistics** are answered inline from `facts.ts` and session frontmatter, with the
   citation the code already returns.
-- **Anything about the material** is captured, tagged, and the panel says so plainly:
-  *"Sent to Sunil — he reads these before the next session."* No improvised answer.
+- **Anything about the material** becomes a thread in the room, and the panel says so
+  plainly and links to it: *"Posted to Discussion — the cohort can see it, and Sunil reads
+  the room before each session."* No improvised answer.
 - Where Sunil has already answered that question, his answer is relayed verbatim with its
-  date — the relay path that exists.
+  date — the relay path that exists, and which filters on `author_role = 'instructor'` so
+  a peer's reply is never what comes back.
 - The chips become real: *"What's due this week?"*, *"When is the next session?"* — questions
   the grounded half can actually answer — not "I disagree with the D5 finding".
-- The one canned reply that maps to something real is *"I've drafted a message to Sunil"*.
-  That is the escalation relay, and it is now `POST /api/craft/doubts-send-to-sunil`.
+- The canned reply that maps to something real is *"Ask Sunil to weigh in"*. That is the
+  escalation relay: `POST /api/craft/discussion` with `action: 'ask-sunil'`.
 
 Net effect: the panel becomes a second entry point to a feature that is already built and
 already correct, rather than a second implementation of anything.

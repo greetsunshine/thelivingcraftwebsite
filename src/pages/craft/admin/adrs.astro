@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getCollection } from 'astro:content';
 import { listAllSubmissionsWithLearner, submissionGaps } from '../../../lib/craft/submissions';
+import { givenAssignmentWeeks } from '../../../lib/craft/assignments';
 import { marked } from 'marked';
 
 const rows = await listAllSubmissionsWithLearner();
@@ -14,10 +15,18 @@ const rows = await listAllSubmissionsWithLearner();
 // Note §10: the dashboard tells Sunil and Sunil reaches out. Nothing here
 // chases anyone automatically; automated chasing of senior professionals reads
 // as surveillance.
-const assignmentWeeks = (await getCollection('sessions'))
-  .filter((s) => s.data.assignment && s.data.assignment !== 'TBD')
-  .map((s) => s.data.week)
-  .sort((a, b) => a - b);
+//
+// GIVEN assignments only, not merely written ones. A week whose session has not
+// run yet would otherwise report all eight learners as missing work nobody has
+// been set — the loudest possible way to say nothing.
+const assignmentWeeks = givenAssignmentWeeks(
+  (await getCollection('sessions')).map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    assignment: s.data.assignment,
+    endsAt: s.data.endsAt,
+  })),
+);
 const gaps = (await submissionGaps(assignmentWeeks)).filter((g) => g.missing.length > 0);
 
 const weeks = Array.from(new Set(rows.map(r => r.week))).sort((a, b) => b - a);

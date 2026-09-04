@@ -10,12 +10,17 @@ import { getCollection } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
 import { getIntake } from '../../lib/craft/intake';
 import { suggestionsFor } from '../../lib/craft/reading';
-import { listDoubts } from '../../lib/craft/doubts';
+import { listThreads, isUnanswered } from '../../lib/craft/discussion';
 import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
 import { listLearnerSubmissions } from '../../lib/craft/submissions';
 import { listLearnerFeedback } from '../../lib/craft/feedback';
 import { getFamiliarity } from '../../lib/craft/familiarity';
+import { weeklyChecks } from '../../lib/craft/checks';
+import { sessionPrompt, feedbackWeeksDue, dismissedPrompts } from '../../lib/craft/prompts';
+import { pulseWindows, pulsesDue, listLearnerPulses } from '../../lib/craft/pulses';
+import { givenAssignments } from '../../lib/craft/assignments';
 import Briefing from '../../components/craft/Briefing.astro';
+import SessionPrompt from '../../components/craft/SessionPrompt.astro';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -32,20 +37,56 @@ const intake = await getIntake(learner.id);
 const intakeState = intake?.submitted_at ? 'submitted' : intake ? 'draft' : 'todo';
 const reading = intakeState === 'submitted' ? suggestionsFor({ ...intake!.technical, ...intake!.leadership }) : [];
 
-const [doubts, quizItems, quizResponses, adrs, feedbacks] = await Promise.all([
-  listDoubts(learner.id),
+const [threads, quizItems, quizResponses, adrs, feedbacks, dismissed, pulses] = await Promise.all([
+  listThreads(learner.id),
   getLearnerItems(),
   getQuizResponses(learner.id),
   listLearnerSubmissions(learner.id),
   listLearnerFeedback(learner.id),
+  dismissedPrompts(learner.id),
+  listLearnerPulses(learner.id),
 ]);
 
-const openDoubts = doubts.filter(d => d.status !== 'answered').length;
+// The post-session prompt — ONE card naming whatever the session that just
+// ended opened: the feedback form, the week's check, or both. Null unless a
+// session has actually ended (`endsAt` in its frontmatter, in the past),
+// something is genuinely outstanding, and this learner has not already closed
+// it once. Every session file is unset today, so this is null everywhere until
+// the real timetable lands — see src/lib/craft/checks.ts for why there is no
+// fallback guess at when a session finished.
+const promptSessions = sessions.map((s) => ({
+  week: s.data.week,
+  title: s.data.title,
+  endsAt: s.data.endsAt,
+}));
+const checks = weeklyChecks(promptSessions, quizItems, quizResponses);
+const windows = pulseWindows(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    topics: s.data.topics,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+  })),
+  pulses,
+);
+const pulseTodo = pulsesDue(windows);
+const prompt = sessionPrompt(promptSessions, checks, feedbacks, windows, dismissed);
+
+// Cohort-wide, not just theirs. When this was a private inbox the useful number
+// was "your questions still waiting"; in a forum the useful number is "things
+// the room has not answered", because that one is an invitation to go and help.
+const openThreads = threads.filter(isUnanswered).length;
 const quizCompleted = new Set(quizResponses.map(r => r.item_id)).size;
 const quizTotal = quizItems.length;
 // Drafts are not submissions — the dashboard counts what is actually in.
 const adrCount = adrs.filter((a) => a.status === 'submitted').length;
-const pendingFeedback = sessions.filter(s => s.data.taughtOn && s.data.week >= 1 && !feedbacks.some(f => f.week === s.data.week)).length;
+// Sessions that have ended with no feedback in. Same `sessionEnded()` clock as
+// the prompt that invited them — this used to test `taughtOn`, a fourth
+// definition of "the session happened" which could disagree with the modal that
+// had just asked for it.
+const feedbackDue = feedbackWeeksDue(promptSessions, feedbacks);
+const pendingFeedback = feedbackDue.length;
 
 // Undefined on week 0, which is pre-work and belongs to no module.
 const moduleOf = (id?: string) => (id ? cohort.modules.find((m) => m.id === id) : undefined);
@@ -83,23 +124,57 @@ if (intakeState !== 'submitted') {
   });
 }
 
-const quizLeft = Math.max(quizTotal - quizCompleted, 0);
-if (quizLeft > 0) {
+// The pulses, first in the list: a "before" one closes when the session starts
+// and is the only item here that can expire unfilled.
+if (pulseTodo.length > 0) {
+  const closing = pulseTodo.filter((w) => w.phase === 'before').length;
   todos.push({
-    id: 'quiz',
-    label: 'Answer the open quiz items',
-    detail: 'One at a time, with a confidence rating. Calibration, not examination.',
-    href: '/craft/quiz',
-    count: quizLeft,
+    id: 'pulse',
+    label: pulseTodo.length === 1
+      ? `Rate where you are — week ${pulseTodo[0].week}, ${pulseTodo[0].phase === 'before' ? 'before' : 'after'}`
+      : 'Rate where you are',
+    detail: closing > 0
+      ? 'Half a minute each. The "before" one closes when that session starts — after it, there is no baseline left to take.'
+      : 'Half a minute each, on just what that session covered.',
+    href: pulseTodo.length === 1
+      ? `/craft/familiarity?week=${pulseTodo[0].week}&phase=${pulseTodo[0].phase}`
+      : '/craft/familiarity',
+    count: pulseTodo.length,
   });
 }
 
-// A week is outstanding when it has a real assignment and no SUBMITTED record.
-// A saved draft still counts as outstanding — it is not in until it is in.
-const adrWeeksDue = sessions
-  .filter((s) => s.data.assignment && s.data.assignment !== 'TBD' && s.data.taughtOn)
-  .filter((s) => !adrs.some((a) => a.week === s.data.week && a.status === 'submitted'))
-  .map((s) => s.data.week);
+// Only checks that are actually OPEN. Counting the whole bank would put week
+// 4's questions on the to-do list in week 2, for a check that cannot be taken.
+const checksDue = checks.filter((c) => c.isOpen && !c.isComplete);
+if (checksDue.length > 0) {
+  const weeks = checksDue.map((c) => c.week);
+  const left = checksDue.reduce((n, c) => n + (c.itemCount - c.answered), 0);
+  todos.push({
+    id: 'quiz',
+    label: weeks.length === 1 ? `Take the week ${weeks[0]} knowledge check` : 'Take your knowledge checks',
+    detail: `${left} question${left === 1 ? '' : 's'} open across week${weeks.length > 1 ? 's' : ''} ${weeks.join(', ')}. One at a time, with a confidence rating — calibration, not examination.`,
+    href: checksDue.length === 1 ? `/craft/quiz?week=${weeks[0]}` : '/craft/quiz',
+    count: left,
+  });
+}
+
+// A week is outstanding when its assignment has actually been GIVEN and there
+// is no SUBMITTED record. A saved draft still counts as outstanding — it is not
+// in until it is in.
+//
+// "Given" comes from src/lib/craft/assignments.ts rather than being re-tested
+// here. This used to read `assignment !== 'TBD' && taughtOn`, which was a third
+// definition of the same idea and disagreed with the ADR page itself.
+const adrWeeksDue = givenAssignments(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    assignment: s.data.assignment,
+    endsAt: s.data.endsAt,
+  })),
+)
+  .filter((a) => !adrs.some((sub) => sub.week === a.week && sub.status === 'submitted'))
+  .map((a) => a.week);
 
 if (adrWeeksDue.length > 0) {
   todos.push({
@@ -111,12 +186,15 @@ if (adrWeeksDue.length > 0) {
   });
 }
 
+// The reminder that outlives a dismissed prompt. A learner who closed the modal
+// after week 3's session still sees this until they fill it in — but it sits in
+// a list they open themselves, and nothing ever escalates it (§10).
 if (pendingFeedback > 0) {
   todos.push({
     id: 'feedback',
-    label: 'Leave session feedback',
-    detail: 'Two questions, sixty seconds. It changes the next session, not the next cohort.',
-    href: '/craft/feedback',
+    label: pendingFeedback === 1 ? `Give feedback on week ${feedbackDue[0]}` : 'Leave session feedback',
+    detail: `Outstanding for week${pendingFeedback > 1 ? 's' : ''} ${feedbackDue.join(', ')}. Two questions, about a minute — it changes the next session, not the next cohort.`,
+    href: pendingFeedback === 1 ? `/craft/feedback?week=${feedbackDue[0]}` : '/craft/feedback',
     count: pendingFeedback,
   });
 }
@@ -134,6 +212,8 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 ---
 
 <CraftLayout title="Your cohort" learner={learner}>
+  {prompt && <SessionPrompt prompt={prompt} />}
+
   <div class="content-card">
     <section class="hero-black">
       <div class="wrap">
@@ -201,9 +281,9 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
           <div style="margin-top: 48px;">
             <h2 style="font-size:28px;margin:0 0 20px">Activity</h2>
             <div class="activity-grid">
-              <a href="/craft/doubts" class="activity-card">
-                <div class="a-val mono">{openDoubts}</div>
-                <div class="a-label">Open doubts</div>
+              <a href="/craft/discussion" class="activity-card">
+                <div class="a-val mono">{openThreads}</div>
+                <div class="a-label">Unanswered in the room</div>
               </a>
               <a href="/craft/quiz" class="activity-card">
                 <div class="a-val mono">{quizCompleted}/{quizTotal}</div>

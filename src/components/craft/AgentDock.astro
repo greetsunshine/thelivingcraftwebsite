@@ -19,9 +19,10 @@
 // the tab, like every other piece of client state in this repo.
 //
 // WHAT THIS PANEL SAYS IS STILL A MOCK. The replies below are keyword matches,
-// and they are not what the doubts flow actually does — see
-// docs/learning-agent/guided-walkthrough/plan.md §14. Moving it was this change;
-// making it real is the next one.
+// and they are not what /craft/discussion actually does — see
+// docs/learning-agent/guided-walkthrough/plan.md §14. Moving it was one change;
+// wiring it to /api/craft/discussion is the next one. Until then it points at
+// the forum rather than pretending to be it.
 ---
 
 <div class="agent-dock" id="agentDock" transition:persist>
@@ -95,7 +96,7 @@
     const INITIAL_CHIPS = [
       "What's due this week?",
       'When is the next session?',
-      'Ask Sunil something',
+      'Ask the cohort something',
     ];
 
     function renderChips(list: string[]) {
@@ -138,7 +139,7 @@
       bubble('you', text);
       input!.value = '';
 
-      // Placeholder replies. Not the real doubts flow — see the note above.
+      // Placeholder replies. Not the real discussion flow — see the note above.
       window.setTimeout(() => {
         const q = text.toLowerCase();
         if (q.includes('due') || q.includes('session') || q.includes('when')) {
@@ -148,11 +149,15 @@
             'From the week 3 session page',
           );
         } else if (q.includes('sunil')) {
-          bubble('agent', 'Sent to Sunil. He reads these before the next session.', 'Routed, not answered');
+          bubble(
+            'agent',
+            'Post it in Discussion and mark it for Sunil — he reads those before the next session.',
+            'Routed, not answered',
+          );
         } else {
           bubble(
             'agent',
-            'Sent to Sunil. He reads these before the next session — if several people ask the same thing, it usually becomes part of it.',
+            'That one belongs in Discussion, where the rest of the cohort can see it. Somebody has usually hit the same thing, and Sunil reads the room before each session.',
             'Not answered here, on purpose',
           );
         }

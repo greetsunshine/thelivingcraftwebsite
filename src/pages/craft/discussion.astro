@@ -1,0 +1,456 @@
+---
+// The cohort's discussion forum.
+//
+// This replaced a private "Doubts & Questions" inbox where every question went
+// to Sunil alone. Eight people over six weeks kept getting stuck on the same
+// things in parallel, and he answered each one privately three times while
+// nobody learned from anybody.
+//
+// WHAT THE UI HAS TO CARRY, and why it is shaped this way:
+//
+//   1. A peer answer and Sunil's answer must never look alike. See the reply
+//      styling on the thread page — this is the whole safety argument of the
+//      feature, not a visual preference.
+//   2. "Needs an answer" must be one click away, or threads rot unanswered and
+//      the room stops posting by week three.
+//   3. Private must stay possible and must LOOK private, so the person using it
+//      is certain the room cannot see them.
+//
+// Filtering is client-side on data attributes: eight learners is a small enough
+// corpus that a round-trip per tab would be slower and worse.
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { listThreads, isUnanswered } from '../../lib/craft/discussion';
+import { initials, tintOf, relativeTime, excerpt, displayTitle } from '../../lib/craft/people';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+const threads = await listThreads(learner.id);
+
+const counts = {
+  all: threads.length,
+  open: threads.filter(isUnanswered).length,
+  sunil: threads.filter((t) => t.instructor_replied).length,
+  mine: threads.filter((t) => t.learner_id === learner.id).length,
+};
+
+// Pinned first, then by the last thing that happened. A thread somebody
+// answered an hour ago is more alive than one posted yesterday.
+const ordered = [...threads].sort(
+  (a, b) =>
+    Number(b.pinned) - Number(a.pinned) || b.last_activity.localeCompare(a.last_activity),
+);
+---
+
+<CraftLayout title="Discussion" learner={learner}>
+  <div class="wrap forum">
+    <header class="forum-head">
+      <div class="fh-text">
+        <h1>Discussion</h1>
+        <p class="lead">
+          The cohort's room. Ask what you're stuck on, answer what you know, and argue
+          about the rest — that's most of where the learning happens.
+        </p>
+      </div>
+      <button type="button" class="btn btn-primary new-btn" id="newBtn">Start a discussion</button>
+    </header>
+
+    {/* The composer. Collapsed by default so the room, not the form, is the page. */}
+    <section class="composer" id="composer" hidden>
+      <form id="threadForm">
+        <div class="field">
+          <label for="title">Title <span class="faint">— optional, but it helps people find it</span></label>
+          <input type="text" id="title" name="title" maxlength="140"
+                 placeholder="Why does the retry wrapper need idempotency?" />
+        </div>
+
+        <div class="field">
+          <label for="body">What's on your mind?</label>
+          <textarea id="body" name="body" required rows="5"
+                    placeholder="Be as specific as you can. Paste code if it helps — the more concrete it is, the better the answers."></textarea>
+        </div>
+
+        <div class="opts">
+          <fieldset class="opt-group">
+            <legend>What kind of question is it?</legend>
+            <label class="opt">
+              <input type="radio" name="kind" value="content" checked />
+              <span><strong>About the material</strong><span class="faint">Goes to the room, and to Sunil</span></span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="kind" value="course" />
+              <span><strong>Dates, deadlines, format</strong><span class="faint">Answered from the syllabus straight away</span></span>
+            </label>
+          </fieldset>
+
+          <fieldset class="opt-group">
+            <legend>Who can see it?</legend>
+            <label class="opt">
+              <input type="radio" name="visibility" value="cohort" checked />
+              <span><strong>The whole cohort</strong><span class="faint">Anyone can reply</span></span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="visibility" value="private" />
+              <span><strong>Just Sunil</strong><span class="faint">Nobody else in the cohort sees it</span></span>
+            </label>
+          </fieldset>
+        </div>
+
+        <div class="composer-actions">
+          <button type="submit" class="btn btn-primary" id="postBtn">Post</button>
+          <button type="button" class="btn" id="cancelBtn">Cancel</button>
+          <span class="mono msg" id="postMsg" hidden></span>
+        </div>
+      </form>
+    </section>
+
+    <nav class="filters" aria-label="Filter discussions">
+      <button type="button" class="filter is-on" data-filter="all">All <span class="n">{counts.all}</span></button>
+      <button type="button" class="filter" data-filter="open">Needs an answer <span class="n">{counts.open}</span></button>
+      <button type="button" class="filter" data-filter="sunil">Sunil answered <span class="n">{counts.sunil}</span></button>
+      <button type="button" class="filter" data-filter="mine">Mine <span class="n">{counts.mine}</span></button>
+    </nav>
+
+    {ordered.length === 0 ? (
+      <div class="blank">
+        <h2>Nobody has posted yet</h2>
+        <p>Someone has to go first. A half-formed question is still a good question — that's
+        rather the point of asking it in a room of eight rather than a search box.</p>
+      </div>
+    ) : (
+      <ol class="threads" id="threadList">
+        {ordered.map((t) => (
+          <li
+            class="thread"
+            data-open={isUnanswered(t) ? '1' : '0'}
+            data-sunil={t.instructor_replied ? '1' : '0'}
+            data-mine={t.learner_id === learner.id ? '1' : '0'}
+          >
+            <a class="t-link" href={`/craft/discussion/${t.id}`}>
+              <span class={`avatar tint-${tintOf(t.learner_email || t.learner_id)}`} aria-hidden="true">
+                {initials(t.learner_name, t.learner_email)}
+              </span>
+
+              <span class="t-main">
+                <span class="t-title">{displayTitle(t.title, t.body)}</span>
+                <span class="t-excerpt">{excerpt(t.body)}</span>
+
+                <span class="t-meta">
+                  <span class="t-who">{t.learner_id === learner.id ? 'You' : (t.learner_name ?? t.learner_email)}</span>
+                  <span class="dot" aria-hidden="true">·</span>
+                  <span>{relativeTime(t.created_at)}</span>
+                  {t.reply_count > 0 && (
+                    <>
+                      <span class="dot" aria-hidden="true">·</span>
+                      <span>{t.reply_count} {t.reply_count === 1 ? 'reply' : 'replies'}</span>
+                    </>
+                  )}
+                </span>
+              </span>
+
+              <span class="t-tags">
+                {t.pinned && <span class="tag pinned">Pinned</span>}
+                {t.visibility === 'private' && <span class="tag private">Private</span>}
+                {t.instructor_replied && <span class="tag sunil">Sunil answered</span>}
+                {t.resolved_reply_id && <span class="tag solved">Solved</span>}
+                {isUnanswered(t) && <span class="tag open">Needs an answer</span>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    )}
+
+    <p class="empty-filter" id="emptyFilter" hidden>Nothing in this view.</p>
+  </div>
+</CraftLayout>
+
+<script>
+  function initForum() {
+    const newBtn = document.getElementById('newBtn');
+    const composer = document.getElementById('composer');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const form = document.getElementById('threadForm') as HTMLFormElement | null;
+    if (!newBtn || !composer || !form || !cancelBtn) return;
+
+    const open = (on: boolean) => {
+      composer.hidden = !on;
+      newBtn.setAttribute('aria-expanded', String(on));
+      if (on) (document.getElementById('title') as HTMLInputElement)?.focus();
+    };
+
+    // `hidden` is boolean | "until-found" in the DOM lib, so coerce rather than
+    // pass it straight through as the next open-state.
+    newBtn.addEventListener('click', () => open(!!composer.hidden));
+    cancelBtn.addEventListener('click', () => open(false));
+
+    const postBtn = document.getElementById('postBtn') as HTMLButtonElement;
+    const msg = document.getElementById('postMsg') as HTMLElement;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      postBtn.disabled = true;
+      postBtn.textContent = 'Posting…';
+      msg.hidden = true;
+
+      try {
+        const res = await fetch('/api/craft/discussion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'post',
+            title: data.get('title'),
+            body: data.get('body'),
+            kind: data.get('kind'),
+            visibility: data.get('visibility'),
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error ?? 'Failed');
+
+        // Straight into the thread. The answer, if the syllabus had one, is
+        // already the first reply there — no need to duplicate it here.
+        window.location.href = `/craft/discussion/${result.id}`;
+      } catch (err) {
+        msg.textContent = err instanceof Error && err.message !== 'Failed'
+          ? err.message
+          : 'Could not post that. Try again.';
+        msg.hidden = false;
+        postBtn.disabled = false;
+        postBtn.textContent = 'Post';
+      }
+    });
+
+    // --- filters ---------------------------------------------------------
+    const list = document.getElementById('threadList');
+    const emptyNote = document.getElementById('emptyFilter');
+
+    document.querySelectorAll<HTMLButtonElement>('.filter').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter').forEach((b) => b.classList.remove('is-on'));
+        btn.classList.add('is-on');
+
+        const want = btn.dataset.filter;
+        let shown = 0;
+        list?.querySelectorAll<HTMLElement>('.thread').forEach((row) => {
+          const on = want === 'all' || row.dataset[want as string] === '1';
+          row.hidden = !on;
+          if (on) shown++;
+        });
+        if (emptyNote) emptyNote.hidden = shown > 0 || !list;
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initForum);
+</script>
+
+<style>
+  .forum { padding-top: 40px; padding-bottom: 56px; max-width: 900px; }
+
+  /* --- head ------------------------------------------------------------- */
+  .forum-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .fh-text { max-width: 56ch; }
+  .forum-head h1 { font-size: clamp(30px, 4.4vw, 46px); margin: 0 0 12px; }
+  .forum-head .lead { margin: 0; }
+  .new-btn { flex: none; }
+
+  /* --- composer --------------------------------------------------------- */
+  .composer {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+  .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .field label { font-weight: 500; font-size: 14px; }
+  .field .faint { font-weight: 400; }
+  .composer input[type='text'],
+  .composer textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-field);
+    background: var(--paper-1);
+    font-family: inherit;
+    font-size: 16px;
+  }
+  .composer textarea { resize: vertical; line-height: 1.55; }
+
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .opt-group { border: 0; padding: 0; margin: 0; }
+  .opt-group legend {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+    padding: 0;
+  }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .opt:has(input:checked) { border-color: var(--ink); background: var(--paper-2); }
+  .opt input { margin-top: 3px; flex: none; }
+  .opt span { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+  .opt strong { font-weight: 500; }
+  .opt .faint { font-size: 12.5px; }
+
+  .composer-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .msg { font-size: 12px; color: var(--danger); }
+
+  /* --- filters ---------------------------------------------------------- */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filter {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--line);
+    background: transparent;
+    border-radius: var(--radius-pill);
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .filter:hover { border-color: var(--line-strong); color: var(--ink); }
+  .filter.is-on { background: var(--surface-invert); color: var(--text-on-invert); border-color: transparent; }
+  .filter .n {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- thread list ------------------------------------------------------ */
+  .threads { list-style: none; margin: 0; padding: 0; }
+  .thread + .thread { border-top: 1px solid var(--line); }
+
+  .t-link {
+    display: flex;
+    gap: 16px;
+    padding: 20px 12px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-inner);
+    align-items: flex-start;
+  }
+  .t-link:hover { background: var(--surface-hover); }
+
+  .avatar {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-pill);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--paper-1);
+  }
+  /* Deterministic per person — see tintOf() in src/lib/craft/people.ts. */
+  .tint-0 { background: #2f4858; }
+  .tint-1 { background: #5c4b8a; }
+  .tint-2 { background: #a04a2a; }
+  .tint-3 { background: #1f6b5b; }
+  .tint-4 { background: #7a3b52; }
+  .tint-5 { background: #4a5d23; }
+  .tint-6 { background: #8a6100; }
+  .tint-7 { background: #3d5a80; }
+
+  .t-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .t-title { font-size: 16.5px; font-weight: 500; line-height: 1.35; }
+  .t-link:hover .t-title { color: var(--link-hover, var(--clay)); }
+  .t-excerpt {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .t-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .t-who { font-weight: 500; color: var(--ink-soft); }
+  .t-meta .dot { opacity: 0.5; }
+
+  .t-tags { flex: none; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .tag {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .tag.sunil   { background: var(--accent-quiet); color: var(--accent-ink-strong); }
+  .tag.solved  { background: var(--agent-human-bg); color: var(--agent-human); }
+  .tag.open    { border-color: var(--line-strong); color: var(--ink-soft); }
+  .tag.private { border-color: var(--line-strong); color: var(--ink-faint); }
+  .tag.pinned  { background: var(--surface-invert); color: var(--text-on-invert); }
+
+  /* --- empties ---------------------------------------------------------- */
+  .blank {
+    text-align: center;
+    padding: 64px 24px;
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+  }
+  .blank h2 { font-size: 20px; margin: 0 0 10px; }
+  .blank p { margin: 0 auto; max-width: 50ch; color: var(--ink-soft); font-size: 15px; }
+  .empty-filter { padding: 40px 0; text-align: center; color: var(--ink-faint); }
+
+  @media (max-width: 780px) {
+    .forum { padding-top: 24px; padding-bottom: 40px; }
+    .forum-head { margin-bottom: 24px; gap: 16px; }
+    .new-btn { width: 100%; }
+    .composer { padding: 20px 18px; }
+    .opts { grid-template-columns: 1fr; gap: 16px; }
+
+    .t-link { padding: 16px 8px; gap: 12px; }
+    .avatar { width: 32px; height: 32px; font-size: 11.5px; }
+    .t-title { font-size: 15.5px; }
+    /* Tags move under the text: a right-hand column at 360px squeezes the
+       title into two words per line. */
+    .t-link { flex-wrap: wrap; }
+    .t-tags { flex-direction: row; flex-wrap: wrap; width: 100%; padding-left: 44px; }
+  }
+</style>

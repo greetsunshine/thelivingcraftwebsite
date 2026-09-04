@@ -1,0 +1,249 @@
+---
+// The post-session prompt.
+//
+// One card, shown once, naming whatever the session that just ended opened —
+// the feedback form, the week's knowledge check, or both. See the header of
+// src/lib/craft/prompts.ts for why it is one prompt rather than one per task,
+// and why "once" is the whole design rather than a nicety.
+//
+// THREE THINGS IT DELIBERATELY DOES NOT DO:
+//   - It does not say "you have not done this yet". The subject is the session
+//     that just finished, not the learner's record.
+//   - It does not block. Escape, the scrim and "Later" are all the same
+//     permanent dismissal — a modal that punishes you for closing it the wrong
+//     way is a dark pattern.
+//   - It does not come back. What survives is the to-do panel on the dashboard,
+//     which the learner opens themselves.
+import type { SessionPrompt, PromptTaskId } from '../../lib/craft/prompts';
+
+export interface Props {
+  prompt: SessionPrompt;
+}
+
+const { prompt } = Astro.props;
+const [primary, ...rest] = prompt.tasks;
+
+/** The button verb per task. The list item already says what the thing is. */
+const ACTION: Record<PromptTaskId, string> = {
+  pulse: 'Rate them',
+  feedback: 'Give feedback',
+  check: 'Take the check',
+};
+---
+
+<div
+  class="session-prompt"
+  id="sessionPrompt"
+  data-week={prompt.week}
+  data-phase={prompt.phase}
+  hidden
+>
+  <div class="sp-scrim" id="spScrim"></div>
+
+  <div
+    class="sp-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="spTitle"
+    aria-describedby="spBody"
+  >
+    <p class="sp-eyebrow mono">
+      Week {prompt.week} · {prompt.phase === 'before' ? 'session coming up' : 'session complete'}
+    </p>
+
+    <h2 id="spTitle">{prompt.title}</h2>
+
+    <p id="spBody" class="sp-body">
+      {prompt.phase === 'before'
+        ? 'Before this one runs, a quick baseline — so the same question after it means something.'
+        : prompt.tasks.length > 1
+          ? `${prompt.tasks.length} things opened when that session ended. All short, and none of them marked against you.`
+          : 'One thing opened when that session ended.'}
+    </p>
+
+    <ul class="sp-tasks">
+      {prompt.tasks.map((t) => (
+        <li>
+          <span class="t-label">{t.label}</span>
+          <span class="t-detail">{t.detail}</span>
+        </li>
+      ))}
+    </ul>
+
+    <div class="sp-actions">
+      {/* Feedback leads when both are open — sixty seconds, and it is the one
+          that decays. "Was the pacing right" is worth asking today and nearly
+          worthless a week from now. */}
+      <a class="btn btn-primary" href={primary.href} id="spGo">
+        {ACTION[primary.id]}
+      </a>
+      {rest.map((t) => (
+        <a class="btn sp-secondary" href={t.href}>{ACTION[t.id]}</a>
+      ))}
+      <button type="button" class="btn sp-later" id="spLater">Later</button>
+    </div>
+
+    <p class="sp-foot">
+      Anything you skip stays on your <a href="/craft">to-do list</a>. You won't be asked again.
+    </p>
+  </div>
+</div>
+
+<script>
+  function initSessionPrompt() {
+    const root = document.getElementById('sessionPrompt');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const week = Number(root.dataset.week);
+    const phase = root.dataset.phase;
+    const card = root.querySelector('.sp-card') as HTMLElement | null;
+    const go = document.getElementById('spGo');
+    const later = document.getElementById('spLater');
+    const scrim = document.getElementById('spScrim');
+    if (!card || !go || !later || !scrim) return;
+
+    // Captured before the dialog takes focus, so closing it hands focus back to
+    // whatever the learner was on rather than to the top of the document.
+    const previous = document.activeElement as HTMLElement | null;
+
+    // Fire-and-forget. If the write fails the learner still gets on with what
+    // they were doing and sees the prompt once more later — the wrong way to
+    // fail, but far better than a modal that will not close because the network
+    // is down.
+    const remember = () =>
+      fetch('/api/craft/session-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ week, phase }),
+      }).catch(() => {});
+
+    const close = () => {
+      remember();
+      root.hidden = true;
+      document.body.style.overflow = '';
+      previous?.focus();
+    };
+
+    // Following ANY of the links is also a dismissal: they answered the
+    // invitation, and it must not be waiting when they come back. Whatever they
+    // skipped is on the to-do list.
+    card.querySelectorAll('a[href^="/craft/"]').forEach((a) => {
+      if (a.id !== 'spGo' && !a.classList.contains('sp-secondary')) return;
+      a.addEventListener('click', remember);
+    });
+
+    later.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !root.hidden) close();
+    });
+
+    root.hidden = false;
+    document.body.style.overflow = 'hidden';
+    (go as HTMLElement).focus();
+  }
+
+  document.addEventListener('astro:page-load', initSessionPrompt);
+</script>
+
+<style>
+  .session-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .sp-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(22, 33, 46, 0.42);
+    backdrop-filter: blur(5px);
+  }
+
+  .sp-card {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    /* a shadow, not a border — §9 */
+    box-shadow: var(--shadow-overlay);
+    padding: 34px 36px 28px;
+    max-width: 500px;
+    width: 100%;
+    animation: sp-in 0.24s ease;
+  }
+
+  @keyframes sp-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .sp-eyebrow {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 12px;
+  }
+
+  .sp-card h2 {
+    font-size: 24px;
+    line-height: 1.22;
+    letter-spacing: -0.015em;
+    margin: 0 0 10px;
+  }
+
+  .sp-body {
+    margin: 0 0 20px;
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .sp-tasks {
+    list-style: none;
+    margin: 0 0 24px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sp-tasks li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 13px 16px;
+    background: var(--paper-2);
+    border-radius: var(--radius-inner);
+  }
+  .t-label { font-size: 14.5px; font-weight: 500; }
+  .t-detail { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+
+  .sp-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .sp-foot {
+    margin: 20px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .sp-foot a { color: var(--clay); }
+
+  @media (max-width: 520px) {
+    .session-prompt { padding: 16px; align-items: flex-end; }
+    .sp-card { padding: 26px 22px 22px; }
+    .sp-card h2 { font-size: 21px; }
+    .sp-actions { flex-direction: column; }
+    .sp-actions > * { width: 100%; text-align: center; }
+    /* Reversed so the dismissal is not the first thing under the thumb. */
+    .sp-later { order: 3; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sp-card { animation: none; }
+  }
+</style>

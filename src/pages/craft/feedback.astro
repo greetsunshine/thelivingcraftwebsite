@@ -2,6 +2,7 @@
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { listLearnerFeedback, listPublishedResponses } from '../../lib/craft/feedback';
+import { sessionEnded } from '../../lib/craft/checks';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
@@ -12,13 +13,28 @@ const [feedbacks, changes] = await Promise.all([
   listPublishedResponses(),
 ]);
 
-// Only ask for feedback on taught sessions
+// Only sessions that have actually ENDED, on the same clock as the prompt that
+// invites people here and the to-do that reminds them. This tested `taughtOn`,
+// which was a fifth definition of "the session happened" — and the one that
+// would have made the prompt link to an empty page.
 const sessions = (await getCollection('sessions'))
-  .filter(s => s.data.taughtOn && s.data.week >= 1)
+  .filter((s) => s.data.week >= 1 && sessionEnded(s.data.endsAt))
   .sort((a, b) => b.data.week - a.data.week); // Newest first
 
 const submittedWeeks = new Set(feedbacks.map(f => f.week));
-const pendingSessions = sessions.filter(s => !submittedWeeks.has(s.data.week));
+const allPending = sessions.filter(s => !submittedWeeks.has(s.data.week));
+
+// `?week=N` narrows to one form — the prompt and the to-do both link that way,
+// and landing on a stack of three when you were asked about one is disorienting.
+// An unknown or already-submitted week falls back to the full list rather than
+// rendering an empty page.
+const weekParam = Astro.url.searchParams.get('week');
+const requested = weekParam !== null && /^\d+$/.test(weekParam) ? Number(weekParam) : null;
+const focused = requested !== null && allPending.some((s) => s.data.week === requested);
+const pendingSessions = focused
+  ? allPending.filter((s) => s.data.week === requested)
+  : allPending;
+const hiddenCount = allPending.length - pendingSessions.length;
 ---
 
 <CraftLayout title="Session Feedback" learner={learner}>
@@ -41,6 +57,14 @@ const pendingSessions = sessions.filter(s => !submittedWeeks.has(s.data.week));
           ))}
         </ul>
       </section>
+    )}
+
+    {hiddenCount > 0 && (
+      <p class="other-weeks">
+        <a href="/craft/feedback">
+          {hiddenCount} other session{hiddenCount === 1 ? '' : 's'} still {hiddenCount === 1 ? 'wants' : 'want'} feedback →
+        </a>
+      </p>
     )}
 
     {pendingSessions.length > 0 ? (
@@ -75,8 +99,12 @@ const pendingSessions = sessions.filter(s => !submittedWeeks.has(s.data.week));
       </div>
     ) : (
       <div class="feedback-done">
-        <h2>All caught up.</h2>
-        <p class="muted">You've submitted feedback for all taught sessions.</p>
+        <h2>{sessions.length === 0 ? 'No session has run yet' : 'All caught up.'}</h2>
+        <p class="muted">
+          {sessions.length === 0
+            ? 'The form for a week opens when that session ends. Nothing to say about a session that has not happened.'
+            : "You've given feedback on every session that has run."}
+        </p>
         <a href="/craft" class="btn" style="margin-top:24px">Back to cohort</a>
       </div>
     )}
@@ -126,6 +154,14 @@ const pendingSessions = sessions.filter(s => !submittedWeeks.has(s.data.week));
     });
   });
 </script>
+
+<style>
+  .other-weeks {
+    margin: -24px 0 28px;
+    font-size: 13.5px;
+  }
+  .other-weeks a { color: var(--clay); }
+</style>
 
 <style>
   .changes {

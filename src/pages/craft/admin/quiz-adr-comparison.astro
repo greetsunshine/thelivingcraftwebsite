@@ -11,6 +11,7 @@ import { marked } from 'marked';
 import { listAllSubmissionsWithLearner } from '../../../lib/craft/submissions';
 import { getQuizItems, listAllResponsesWithLearner } from '../../../lib/craft/quiz';
 import { buildPairings, verdictTally, VERDICT_LABEL, VERDICT_NOTE } from '../../../lib/craft/pairing';
+import { assignments } from '../../../lib/craft/assignments';
 
 const [items, responses, submissions, sessions] = await Promise.all([
   getQuizItems(),
@@ -25,9 +26,16 @@ const tally = verdictTally(learners);
 // Weeks with an assignment but no items in the bank cannot be compared. That is
 // authoring, not a bug, so the page says which weeks rather than rendering empty.
 const banked = new Set(items.map((i) => i.week));
-const unbanked = sessions
-  .filter((s) => s.data.week >= 1 && s.data.assignment && s.data.assignment !== 'TBD' && !banked.has(s.data.week))
-  .map((s) => s.data.week);
+const unbanked = assignments(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    assignment: s.data.assignment,
+    endsAt: s.data.endsAt,
+  })),
+)
+  .filter((a) => !banked.has(a.week))
+  .map((a) => a.week);
 ---
 
 <AdminLayout title="Quiz vs ADR" active="quiz-adr">
