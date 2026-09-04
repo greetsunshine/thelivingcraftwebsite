@@ -56,6 +56,14 @@ failure of the morning. Record them from the models you actually intend to
 compare, and check the JSON-that-does-not-parse case is among them; that failure
 is the sharpest thing in the block and you cannot rely on getting it live.
 
+## The run of show
+
+The minute-by-minute script is [`week-1-script.md`](week-1-script.md) — cumulative
+clock, what to say at each beat, what to type, the running request cost, and what
+to cut when the clock beats you. That is the one to have open in the room. This
+file is the reference behind it: why each beat is shaped the way it is, what a
+room gets wrong, and the drill solutions.
+
 ## What to have them run, and when
 
 Every request costs against **20 per day, per model, per project**. A run is up to

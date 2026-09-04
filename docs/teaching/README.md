@@ -11,6 +11,9 @@ worst possible thing to show someone who paid for the course. Same reasoning as
 Nothing in this directory is imported, rendered, or deployed.
 
     week-N.md          how to run session N — staging, open items, the clock
+    week-N-script.md   the run of show: a cumulative clock, what to say, what to
+                       type, and the running request cost. For following live in
+                       the room, not for reading beforehand
     notes/<topic>.md   the material behind a paragraph the session states in four
                        sentences: the full argument, the code it points at, the
                        common wrong answers and what to do with them
