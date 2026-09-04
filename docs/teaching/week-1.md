@@ -56,6 +56,87 @@ failure of the morning. Record them from the models you actually intend to
 compare, and check the JSON-that-does-not-parse case is among them; that failure
 is the sharpest thing in the block and you cannot rely on getting it live.
 
+## What to have them run, and when
+
+Every request costs against **20 per day, per model, per project**. A run is up to
+3 requests. The order below fits the day into 18 of the 20 on the default model,
+and 15 once `make prompt` is pinned (see below).
+
+### What each command costs
+
+| Command | Ticket | Brain | Requests |
+|---|---|---|---|
+| `make mock` | 4471 | pinned mock | **0** |
+| `make weird-mock` | 9999 | pinned mock | **0** |
+| `make retry` | 4471 ×3 | pinned mock | **0** |
+| `make run` | 4471 | real if a key is set | up to 3 |
+| `make weird` | 9999 | real if a key is set | up to 3 |
+| `make prompt` | 4471 | **real if a key is set** | up to 3 |
+| `make injected` | 8001 ×2 | always real, refuses without a key | up to 6 |
+| `make chaos` | 7002 ×6 | always real | **up to 18** |
+
+`--mock` on anything pins the deterministic brain: `python -m src.main --ticket
+7002 --mock` is free and works for any ticket.
+
+### The order
+
+**Block 1 · `make mock`, then `make prompt`.** `mock` is the opening trace and it
+must be the pinned target — `make run` uses their key and gives eight different
+screens. `prompt` opens the box on one step. *Costs 3, and should cost 0 —
+see below.*
+
+**Block 2 · one command per failure, in this order.**
+
+1. `make weird-mock` — ₹5,000, free
+2. `make retry` — ₹3,600, free
+3. `make injected` — ₹2,50,000, **6 requests, and this is the one that must be
+   real.** The mock ignores the poisoned note entirely; the demo refuses to start
+   without a key rather than quietly showing them nothing.
+4. the quiet one — `python -m src.main --ticket 4471 --mock` after they have seen
+   a real run, so the string/int mismatch shows. Free.
+
+*Block 2 costs 6.*
+
+**Block 3 · the bake-off, `make weird` twice.** Once on the default model, once
+on a second: `python -m src.main --ticket 9999 --model <other>`. **Quota is per
+model**, so the second model draws on its own 20 — say this in the room, it is
+the cheapest fix available. *Costs 3 on the default model.*
+
+**Block 3, the builds · verify with the mock targets. All free.** This is the
+part that saves the day, and it is worth telling them explicitly. The guardrails
+go in `tools.py`, and the mock brain still dispatches through `tools.py` — so a
+pinned run exercises every check they just wrote. Verified 2026-09-04 with the
+block uncommented:
+
+    ticket 9999   paid out ₹0 · no credit issued      <- existence check fired
+    ticket 7002   paid out ₹0 · no credit issued      <- ceiling fired
+    ticket 4471   paid out ₹1,200 · 1 credit          <- legitimate one still passes
+
+That last line is the acceptance test. A guardrail that stops everything is not a
+guardrail, and `make mock` proves it for nothing.
+
+**The one exception:** the injection fix cannot be verified on the mock, because
+the mock never reads the note. Budget **one** re-run of `make injected` at the
+end. *Costs 6.*
+
+### The rules to say out loud
+
+- **Never `make chaos` as a room exercise.** Eighteen requests is a member's
+  whole day in one command. Run it from the front, once, or not at all.
+- **Verify builds with `make mock` and `make weird-mock`, not `make run`.**
+- **The bake-off's second model has its own allowance.**
+- **A 429 is not a broken key.** Show them the quota id in the body —
+  `GenerateRequestsPerDayPerProjectPerModel-FreeTier` — so nobody spends the
+  break re-issuing credentials.
+
+### `make prompt` should be free and is not
+
+It has no `--mock`, so it uses their key like `make run` does. Block 1's card
+claims it costs no requests; that is true only for someone without a key, and the
+pre-work now requires everyone to have one. Either pin `--mock` in the target, or
+teach `python -m src.main --ticket 4471 --show-prompt --mock`. Pinning returns 3
+requests to every member, in the block that needs none.
+
 ## What the models actually do — checked 2026-09-02
 
 Run before you teach this, because it changes what you can claim.
@@ -264,6 +345,42 @@ and five minutes before naming any of it:
   regulator the model's reasoning, it does not exist.
 - **No tool-calling API.** An English sentence and a dict lookup.
 
+### One ticket is many model calls — open block 1 with this
+
+Verified on the mock, 2026-09-04: ticket 4471 takes **3 model calls and 2 tool
+executions**. `llm.calls` holds the real number; the summary line's `steps 4`
+counts trace lines, which is drill 2's second defect.
+
+Rooms arrive picturing one request per ticket. Correct it early, because three
+later beats depend on it — drill 2's cost curve, the teardown's spend-cap
+question, and the quota arithmetic they will hit on their own keys.
+
+**Separate two things the industry calls by one name.** A *tool call* is
+something the model **emits** — a name and arguments. **Running** it is your own
+code. When someone says "the agent made four calls", ask which kind: one is
+billed by the provider, the other by your infrastructure. Drill 3's blast-radius
+grading is about the second kind, and the confusion shows up there if you let it
+stand.
+
+**The three consequences, and the third is the whiteboard one:**
+
+1. **Latency is the sum of the calls.** 6.9s across three round trips on a real
+   model; no provider speed collapses that to one.
+2. **Cost grows faster than steps** — every call re-sends the whole history.
+   Drill 2 measures exactly this, so plant it here and collect it there.
+3. **Nobody sets how many calls a ticket costs — the model does.** It runs until
+   it emits `resolve` or `escalate`. The unit price of a ticket is therefore a
+   variable controlled by the probabilistic component, bounded only by
+   `MAX_STEPS = 6`. Say the reframe out loud: **the step budget is not a safety
+   valve for runaway loops, it is the only upper bound on what one ticket can
+   cost.** That is the sentence that connects block 1 to teardown question 4, and
+   it is the one a director will repeat to their own leadership.
+
+**The arithmetic that makes it real, and it is theirs.** Free tier is 20 requests
+per day per model; one run is about three; so six runs a day. Put that on the
+board next to the "3 model calls" number and the quota stops being a logistics
+annoyance and becomes the same lesson.
+
 ### Optional live demo — carry the thought forward
 
 Two minutes, no key, and it converts "we didn't do it" into "we chose not to,
@@ -328,6 +445,52 @@ Then the levers-versus-controls split, which is the block's payoff: everything i
 `llm.py` moves a probability, and only `MAX_STEPS` and the `TOOLS` dictionary
 change what is possible. Say the second list out loud — it is two items long and
 that is the point.
+
+### The question the room asks here, and how to take it
+
+Someone will say some version of **"can we not just make the thinking better —
+better prompt, better model, more context?"** It arrives almost every time, right
+after the levers list, and it is the correct question. Do not swat it.
+
+**Concede the whole of it first.** All three work. A sharper system prompt
+produces better-chosen actions, a stronger model reasons more carefully, more
+relevant context gives it more to reason from. A room that hears you deny any of
+that stops trusting the rest of the block.
+
+**Then move the argument to the shape of the improvement, not its size.** The
+line to land, and it is worth writing on the board:
+
+> All three move the mean. None of them moves the floor.
+
+They change how often the agent does something expensive. They do not change what
+it is able to do on the run that goes wrong, which is the run you will be
+explaining to someone.
+
+**Three supports, in the order they work:**
+
+1. **This morning's evidence.** On three of the four tickets the model is already
+   correct, so better thinking has nothing to improve. On the fourth it is not
+   thinking badly — it is reasoning correctly from a record that lies. Sharper
+   reasoning follows a false instruction *more* precisely.
+2. **Richer context is the double-edged one**, and the repo argues it for you: in
+   `make injected` the context is the attack, so more context is more surface.
+   Ties straight into `notes/context-as-state.md`.
+3. **The structural point, which is specific to us.** Because the thought is used
+   once and never carried, improving it only improves the one action it sits
+   beside — it does not compound down the trajectory the way the paper intends.
+   The return on prompt-engineering *this* loop is genuinely lower, and they can
+   read why in `agent.py`.
+
+**Do not overclaim on point 1.** We have run `injected` on one model. That a
+*stronger* model follows the poisoned note more confidently is a plausible
+prediction and the session copy should not state it as measured until someone has
+actually run the comparison. What is verified: the model paid ₹2,50,000 following
+a note in its own system of record.
+
+**Close it, do not win it.** "Improve the thinking — it is worth doing, it is
+just not a boundary. A control is something you can point at in code, test,
+review and defend afterwards. 'We used a better model' is none of those." Then
+move on; the four failures make the argument better than you can.
 
 ## Block 4 — the five questions
 

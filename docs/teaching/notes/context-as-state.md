@@ -77,9 +77,15 @@ drops it.
 
 **Be precise about this or a staff engineer will correct you.** The reasoning is
 not decoration and it does not "influence nothing" — it influences the action it
-was written alongside. What is missing is only the carry into later steps. Real
-ReAct interleaves reasoning into the trajectory precisely so that later steps can
+was written alongside. What is missing is only the carry into later steps. The
+paper interleaves reasoning into the trajectory precisely so that later steps can
 use it. We pay for it, use it once, and discard it.
+
+**Do not say "this is not real ReAct."** There is no conformance test, most
+people use the name for the thought/action/observation shape alone, and plenty of
+production implementations truncate or drop earlier reasoning for exactly the
+cost and anchoring reasons above. The defensible claim is narrower and stronger:
+**we keep the format and drop the mechanism the paper is about.**
 
 ### The two-minute demo
 

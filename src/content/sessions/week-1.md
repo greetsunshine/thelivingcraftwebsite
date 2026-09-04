@@ -10,6 +10,11 @@ Instructor notes: https://claude.ai/code/artifact/435ed083-117f-45d1-8827-ee939e
 
 Learner Notes: https://claude.ai/code/artifact/80c83cbc-7c49-472b-ab3c-e28cc48e014a?via=auto_preview
 
+Design Review: https://claude.ai/code/artifact/87abaa6e-d690-45ba-969b-d814cef7bf2a?via=auto_preview
+
+Design Spec: https://claude.ai/code/artifact/62d1288c-2560-4dc9-9098-0436259e48b4?via=auto_preview
+
+
 We start with an agent that works, break it in front of you four different ways,
 fix what can honestly be fixed in an afternoon, and then put a system on the
 table that cannot be fixed in an afternoon.
@@ -86,17 +91,75 @@ the definition than this.
 
 So we read those lines closely and name what we are looking at:
 
-**An agent is a control loop over an unreliable oracle.** The pattern has a name
-you will meet in every framework's documentation: **ReAct** — reason and act,
-from Yao et al., 2022. Its three phases are **thought, action, observation**, and
-they repeat until a stopping condition. The model is one component inside that
-loop — the only one that is probabilistic, and the only one you cannot unit-test
-into submission. Draw the loop. Mark the model.
+**An agent is a control loop over an unreliable oracle.** The loop has a name:
+**ReAct** — reason and act, from Yao et al., 2022. Its three phases are
+**thought, action, observation**, and they repeat until a stopping condition. The
+model is one component inside that loop — the only one that is probabilistic, and
+the only one you cannot unit-test into submission. Draw the loop. Mark the model.
+
+Be careful with the name when you go reading. ReAct was a *prompting technique*,
+invented when models had no way to call a tool except by writing text you then
+parsed. Native tool calling arrived soon after and mostly replaced that scaffold:
+frameworks kept the loop, dropped the format, and many of them still say "ReAct"
+for any tool-use loop. So this repo, which parses the JSON by hand, is closer to
+the paper than most production agents you will read next week — which is exactly
+why it is worth an afternoon.
 
 Our system prompt already asks the model for exactly those keys, so this repo was
 speaking ReAct before any of the prose was. Two words to watch. `▸ plan` at the
 top of a run is the ticket being announced once, before the loop starts, so it is
 not a phase. And what the code calls a tool *result* is the **observation**.
+
+**How the loop ends.** The model can end it two ways: `resolve`, when it believes
+the case is closed, or `escalate`, when it hands the case to a person. Any other
+action — `lookup_account`, `issue_credit` — is a step, and the loop goes round
+again with that observation added.
+
+If the model does neither, the loop ends the run itself, two more ways. It stops
+after `MAX_STEPS = 6` whatever state things are in, and it stops immediately if
+the model names an action that does not exist. **So four exits, and the model
+chooses only two of them.**
+
+That asymmetry is worth holding on to. The two exits the model controls announce
+themselves clearly. The two the loop controls are the ones nobody is watching,
+and both of them are a drill this afternoon.
+
+### One run is many calls, and you do not know how many
+
+This is the thing to say before anything else about the loop, because almost
+everyone arrives with the wrong picture of it.
+
+**Each step is its own model call.** The model returns one thought and one
+action, the loop runs that single tool, appends the observation, and then calls
+the model *again* with a freshly built prompt. Resolving ticket #4471 — a
+lookup, a credit, and a decision that it is done — takes **three model calls and
+two tool executions**. Nothing about the tool execution involves the model; that
+part is ordinary local code.
+
+Worth separating two things the industry uses one phrase for. A **tool call** is
+something the *model emits* — a name and some arguments. **Running** that tool is
+your code doing work. When someone says "the agent made four calls", ask which
+kind they mean, because one costs money at the provider and the other costs money
+in your infrastructure.
+
+Three consequences, and the third is the one that belongs on a whiteboard:
+
+- **Latency is the sum of the calls, not one of them.** That run took 6.9 seconds
+  across three round trips, and no amount of provider speed collapses it to one.
+- **Cost grows faster than the number of steps.** Every call re-sends the whole
+  history, so step three pays for steps one and two as well. Drill 2 makes you
+  measure exactly this.
+- **You do not decide how many calls a ticket takes — the model does.** It runs
+  until it emits `resolve` or `escalate`. So the price of handling one ticket is
+  not a number you set; it is a variable the probabilistic component controls,
+  and the only thing bounding it is `MAX_STEPS = 6` in `agent.py`. That reframes
+  the step budget: it is not a safety valve for runaway loops, it is the sole
+  upper bound on what a single ticket can cost you.
+
+The practical version of that arrives before you do. The free tier most of you
+are on allows **20 requests per day, per model**, and one run is about three. Six
+runs. That is the whole of your allowance, and it is the step count that spends
+it.
 
 Everything you drew that is not the model is the **harness**: the loop and its
 stopping condition, the tool layer, the context assembled for each step, and the
@@ -162,6 +225,50 @@ context — moves a **probability**. `MAX_STEPS` in `agent.py` and the contents 
 the `TOOLS` dictionary are the only two things in this codebase that change what
 is **possible**. One of those lists is where teams spend their time. The other
 is the one that holds under audit.
+
+### "Can we not just make the thinking better?"
+
+Somebody asks this in every room, usually right here, and it is the correct
+question. Better prompt. Stronger model. Richer context. Three real levers, and
+they all work.
+
+**Take the instinct seriously, because all three do improve the reasoning.** A
+sharper system prompt produces better-chosen actions. A stronger model reasons
+more carefully. More relevant context gives it more to reason from. None of that
+is in dispute and none of it is wasted effort.
+
+Then notice what kind of improvement it is. **All three move the mean. Not one of
+them moves the floor.** They change how *often* the agent does something
+expensive. They do not change what it is *able* to do on the run where it goes
+wrong — and that run is the one you will be explaining.
+
+Watch for that in this morning's four runs, because the evidence is unusually
+clean:
+
+- On three of the four tickets the model is **already right**. Better thinking
+  has nothing to improve.
+- On the fourth it pays ₹2,50,000, and better thinking does not help, because it
+  is not thinking badly. It is reasoning correctly from a record that lies to it.
+  Sharper reasoning follows a false instruction more precisely, not less.
+
+**Richer context is the one to be most careful with**, and this repo makes the
+case on its own. In `make injected` the context *is* the attack. More context is
+more surface. A longer window holds more stale facts and makes the oldest one
+older. And the obvious enrichment — carrying the model's own reasoning forward —
+would restate an attacker's instruction as the agent's own words, where a rule
+about untrusted tool output no longer reaches it.
+
+There is a structural reason too, specific to this codebase. Because the thought
+is used once and never carried forward, improving it only improves **the single
+action it was written beside**. In the paper, better reasoning compounds down the
+trajectory. Here it does not compound at all. So the return on prompt-engineering
+this loop is lower than your instinct says, for a reason you can read in
+`agent.py`.
+
+> Improve the thinking. It is worth doing, it is just not a boundary. A control
+> is something you can point at in code, test, review and defend after the fact.
+> "We used a better model" is none of those.
+
 
 ## 2 · The Problem
 
