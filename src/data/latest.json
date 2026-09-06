@@ -1,5 +1,5 @@
 {
-  "refreshedAt": "2026-08-15T03:58:01.240Z",
+  "refreshedAt": "2026-09-06T03:47:44.694Z",
   "items": [
     {
       "id": "seed-cohort-open",
@@ -31,100 +31,255 @@
       ]
     },
     {
-      "id": "context-compaction-reliability-failure",
-      "title": "Context compaction shows up as a reliability failure, not just a cost lever",
-      "body": "A preliminary empirical study (Min et al., arXiv 2608.06503, 6 Aug 2026) finds that recurrent context compression in long-horizon agents weakens the influence of recent interactions, producing more blocked actions, repeated exploration, and run-to-run instability — behavioural effects that token-count metrics never surface. The authors propose TRACE, which evaluates each individual compaction event by running paired closed-loop continuations from the same environment state, then optimises the compression prompt while leaving all models frozen. If your agent compacts, the implication is that compaction boundaries should be evaluated as discrete events with executable outcomes rather than by eyeballing summary quality.",
-      "reviewNote": "Primary source (arXiv preprint), but the authors label it explicitly preliminary; results are on AppWorld only, single team (UVA + Nokia), no independent replication. Do not present TRACE as an established technique — the durable point is the failure-mode observation, not the proposed fix.",
-      "source": "https://arxiv.org/abs/2608.06503",
+      "id": "agent-decided-context-compression",
+      "title": "Agents that decide for themselves when to compress context — and can retrieve what they dropped",
+      "body": "An ACM paper (26 Jul 2026) proposes letting the agent itself choose the compression moment rather than triggering summarisation on a token threshold. Discarded content is offloaded to an external memory store and queried on demand, so compaction becomes a two-tier short-term/long-term arrangement rather than lossy-and-final. The authors also ship a post-training pipeline that builds demonstrations of good context management, treating this as a learned skill rather than a middleware policy. If you currently run a fixed \"summarise at 80% of the window\" rule, this is the pattern that supersedes it.",
+      "reviewNote": "Single paper, no independent replication. Authors flag two limitations worth repeating in the cohort — the method only helps if the base model can already sustain long-horizon tool use, and they re-implemented the compression baselines themselves because no prior work had been evaluated on their three benchmarks, so comparison numbers are their own construction. Student model is Qwen3.5-9B, so results may not transfer to frontier-model agents.",
+      "source": "https://arxiv.org/abs/2607.23809v1",
       "tags": [
-        "agentic-ai",
+        "context-management",
+        "agent-memory",
+        "architecture"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "context-as-environment-scroll",
+      "title": "\"Context as an environment\" — binding tool output to variables instead of serialising it into the prompt",
+      "body": "Scroll (21 Aug 2026) reframes an agent session as an executable Session Environment: an append-only event log plus a sandboxed, persistent Python kernel holding a typed namespace across model calls. Tool outputs, retrieved history and derived state are bound to variables rather than re-serialised into the prompt each turn, and retrieval happens at query time rather than ingestion time. The design argument is worth internalising even if you never use the implementation: fixed memory representations force you to commit to what matters before you know what future turns will need. Anyone building a memory layer on an extract-and-embed-at-write-time pipeline should read the critique.",
+      "reviewNote": "The paper is candid that it does NOT reproduce its baselines (Mem0, Hindsight, Exabase M-1) — it takes each system's best published number under that system's own preferred configuration, different backbones and judges included. It explicitly says cross-system comparison is \"indicative rather than controlled\". Treat the BEAM10M leaderboard framing as unverified; the architectural idea is the durable part, not the win margins.",
+      "source": "https://arxiv.org/abs/2608.21690",
+      "tags": [
+        "context-management",
+        "agent-memory",
+        "architecture"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "compression-execution-instability",
+      "title": "Context compression is being shown to cause execution instability, not just information loss",
+      "body": "An empirical study posted 6 Aug 2026 examines long-horizon agents under context compression and frames the failure mode as execution instability — agents behaving inconsistently across runs after compaction, rather than simply forgetting facts. This is a different risk class from what most teams currently test for: your evals probably check answer quality after summarisation, not run-to-run determinism of the action sequence. If you operate compacting agents in production, this argues for adding trajectory-variance checks to your test harness.",
+      "reviewNote": "Weakest-sourced of the architecture set. I saw the paper's framing and reference list but not its results tables, so the summary is drawn from the abstract-level claim rather than verified findings — please skim it before teaching from it. Also unreplicated.",
+      "source": "https://arxiv.org/html/2608.06503v1",
+      "tags": [
         "context-management",
         "reliability",
         "evaluation"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "control-context-compression-cliff",
-      "title": "Compressing system-side control context has a sharp, non-linear reliability cliff",
-      "body": "\"Control Under Compression\" (arXiv 2608.01056, 2 Aug 2026) targets agent control contexts — the persistent system-side instructions specifying tools, arguments, policies, execution protocols and recovery — rather than conversation history. Across a 15,525-run environment-verified benchmark, retaining 75% of context held success near the full-context baseline (92.7% and 92.4% versus 93.8%), but between 50% and 35% the methods diverged sharply, dropping to 47.0%, 39.0% and 19.9% at 35% depending on compression method. Failures appeared mainly as tool-execution and action-parsing errors, and reliability varied enough between control contexts that the authors argue universal compressor rankings are inappropriate and each context needs its own qualification. This reframes tool and policy prompt trimming as a runtime-reliability decision requiring per-context executable testing, with a safe-looking zone that ends abruptly.",
-      "reviewNote": "Primary source, methodologically the stronger of the two (large run count, environment-verified). Still a single unreplicated preprint; all results are on three fixed Qwen model identifiers, so the specific cliff thresholds may not transfer to other model families. Cite the shape of the finding, not the exact percentages, when talking to clients.",
-      "source": "https://arxiv.org/abs/2608.01056",
+      "id": "compaction-environment-statefulness",
+      "title": "Compaction strategy interacts with environment statefulness, not just token budget",
+      "body": "An empirical study of execution instability under context compression finds that in a stateful API-use benchmark (AppWorld), dropping an observation from working context does not permanently lose it, because the agent can re-query application state — undercutting the usual assumption that summary-based compaction beats FIFO truncation. The practical read: the right compaction strategy depends on whether your agent's environment is re-queryable, and knowledge-heavy tasks and stateful-tool tasks want different answers. Teams currently pick one compaction policy globally; this suggests that is a mistake.",
+      "reviewNote": "Preprint, August 2026, single evaluation harness and a single model used as both compressor and agent (MiniMax-M3), which limits generality. The conceptual distinction is more durable than the specific result.",
+      "source": "https://arxiv.org/html/2608.06503v1",
       "tags": [
-        "agentic-ai",
-        "tool-design",
         "context-management",
-        "reliability"
+        "architecture",
+        "tooling"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "mcp-2026-07-28-stateless-spec",
-      "title": "MCP went stateless — the 2026-07-28 spec is a breaking change for remote MCP server deployment",
-      "body": "The 2026-07-28 Model Context Protocol specification shipped with a stateless protocol core, Multi Round-Trip Requests, header-based routing, cacheable list results, authorization hardening, a formal extensions framework, and updated Tier 1 SDKs — the largest revision of the protocol since launch. The initialize/initialized handshake (SEP-2575) and the Mcp-Session-Id header (SEP-2567) are removed entirely; every request is now self-describing, with protocol version, client info and capabilities travelling in a _meta field inline on every request. A remote MCP server that previously needed sticky sessions, a shared session store and deep packet inspection at the gateway can now run behind a plain round-robin load balancer, route traffic on an Mcp-Method header, and let clients cache tools/list responses for as long as the server's ttlMs permits. If you have an MCP server in production behind a Redis session store, that architecture is now legacy — plan the migration rather than inheriting it.",
-      "reviewNote": "Primary source is the MCP maintainers' own blog, the right artefact for a spec release. The announcement includes promotional quotes from Microsoft and Netlify, and Google published its own framing of work it led (Google states it led the decoupling effort and co-founded the MCP Transports Working Group with Hugging Face) — treat \"widely adopted already\" and download-volume claims as vendor-sourced. The substance of the protocol change is verifiable from the spec itself.",
+      "id": "mcp-stateless-spec-2026-07-28",
+      "title": "MCP dropped its handshake and sessions — the protocol is now stateless",
+      "body": "The 2026-07-28 MCP specification removes the initialize/initialized handshake and the Mcp-Session-Id header entirely; every request is now self-describing and independent. If you built remote MCP servers on Redis session stores, sticky routing, or gateway packet inspection, that machinery is now dead weight, and servers become deployable on ordinary serverless and edge infrastructure. This is a breaking wire-format change with a formal deprecation policy attached, so plan a dual-support window rather than a flip. Tier 1 SDKs (TypeScript, Python, Go, C#) shipped alongside it.",
+      "reviewNote": "Primary source, written by the two lead maintainers, so trustworthy on spec facts — but it is also the project advocating its own release. The \"practical effect is immediate\" framing is theirs. An earlier pass had the release's existence and date confirmed but the stateless characterisation only secondhand from a Register piece (23 July 2026, pre-release); read https://modelcontextprotocol.io/specification/2026-07-28/changelog directly before publishing further specifics. There is also a newer roadmap post (~2 weeks old) not yet reviewed.",
       "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
       "tags": [
         "mcp",
-        "tooling-release",
+        "protocol",
+        "tooling",
         "architecture"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "mcp-sdk-migration-edges",
-      "title": "MCP migration has sharp edges: silent version downgrade and three deprecated capabilities",
-      "body": "Beta releases of the Python, TypeScript, Go and C# SDKs are available with support for the 2026-07-28 spec. The trap: the streamable HTTP transport accepts 2026-07-28 only when you set StreamableHTTPOptions.Stateless = true — leave it unset and clients negotiate down to 2025-11-25, a silent behavioural downgrade rather than an error, so add an explicit assertion on negotiated protocol version to your integration tests. Breaking changes are otherwise confined to the capabilities the specification deprecates — roots, sampling and logging; if your agent design leans on server-initiated sampling, that is now on a deprecation path. Also note that server/discover is optional for clients to call but mandatory for every 2026-07-28 server to implement.",
-      "reviewNote": "Primary source, maintainer-authored. The SDKs were in beta at time of writing (three weeks ago) — worth re-checking whether Tier 1 SDKs have since gone stable before recommending anyone migrate production code.",
-      "source": "https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/",
+      "id": "mcp-routing-headers-gateway",
+      "title": "The MCP release adds required routing headers — moving policy into the gateway tier",
+      "body": "Alongside removing sessions, the spec adds required method and tool-name HTTP headers so gateways can route and police agent traffic without parsing the JSON body. Per-tool rate limiting, authorization, and observability therefore move out of your application code and into the edge/gateway tier — a real change to where policy lives in an agentic stack. Developer reaction has split between those calling it a rediscovery of REST and those arguing a shared standard was always the point.",
+      "reviewNote": "Secondhand — InfoQ reporting on the spec plus community reaction. Header facts are verifiable against the spec itself; the \"is it just an API again\" framing is editorial. Useful precisely because it is not the maintainers' own account.",
+      "source": "https://www.infoq.com/news/2026/08/mcp-stateless-gateway",
       "tags": [
         "mcp",
-        "tooling-release",
-        "migration"
+        "protocol",
+        "gateway",
+        "architecture"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "stateless-mcp-authorization-shift",
-      "title": "Statelessness moves MCP authorization to the application layer — and most MCP risk was never in the transport",
-      "body": "Removing the session also removes per-session authorization context; as Google's write-up puts it, \"As the responsibility of managing state shifts from the transport layer to the application layer, security becomes paramount.\" An independent security review of the release is blunter: statelessness changes where authorization happens and how you deploy the server, but the vulnerabilities found in MCP servers sit in the functionality they expose, which the specification does not touch. The spec upgrade buys scale and cheaper operations, not safety — every request must now carry and re-verify its own authorization, and tool-level authorization design remains entirely your problem.",
-      "reviewNote": "Equixly is a security vendor writing about a protocol it does not own, which makes the critical framing more credible than a first-party post — but they sell MCP security testing, so the \"vulnerabilities are in your functionality\" conclusion is commercially convenient for them. The underlying claim (spec doesn't govern tool implementation) is structurally obvious and low-risk to repeat.",
-      "source": "https://equixly.com/blog/2026/08/05/stateless-mcp/",
+      "id": "governance-decay-compaction",
+      "title": "Context compaction can silently delete safety constraints — and it reproduces in shipping frameworks",
+      "body": "A paper on \"Governance Decay\" reports that when long-horizon agents compact their context, policy and safety constraints get summarised away, and the agent then violates them. The authors state they reproduced this in production context managers — a LangGraph StateGraph with a summarisation-memory node, LangChain's LangMem SummarizationNode, and AutoGen's BufferedChatCompletionContext, where recency eviction deterministically drops the policy. If you rely on a system prompt or policy block surviving compaction in a long-running agent, that assumption needs a test, not a hope.",
+      "reviewNote": "Single paper, no independent replication found, and reported violation rates come from small samples (n=20 per condition) on specific models. Treat the mechanism as the finding and the numbers as indicative. Worth someone reproducing against one of the named components — strong live demo if it holds.",
+      "source": "https://arxiv.org/pdf/2606.22528",
+      "tags": [
+        "context-management",
+        "safety",
+        "frameworks"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "microsoft-agent-framework-harness",
+      "title": "Microsoft Agent Framework's agent harness reached release",
+      "body": "The harness layer — shell and filesystem access, human-in-the-loop approval flows, and automatic context compaction that monitors token usage and compacts mid-loop to survive long tool-calling chains — is now released rather than preview. The significance is less the vendor and more the consolidation: \"harness\" is becoming a named, buyable layer between model reasoning and real execution, distinct from the orchestration graph. Engineers who wrote their own approval and compaction plumbing should at least benchmark against what is now off-the-shelf.",
+      "reviewNote": "Vendor announcement about its own product; all capability claims are Microsoft's. Note the direct tension with the Governance Decay finding — automatic mid-loop compaction is exactly the mechanism that paper implicates. That pairing is the interesting thing to say, but it is an inference across two sources, not something either states.",
+      "source": "https://devblogs.microsoft.com/agent-framework/the-microsoft-agent-framework-harness-is-now-released/",
+      "tags": [
+        "tooling",
+        "frameworks",
+        "harness"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "cloudflare-mcp-v2",
+      "title": "Cloudflare rewrote its MCP stack around the stateless model",
+      "body": "Cloudflare reports MCP servers can now run entirely in a Worker with no stateful infrastructure, and that its SDKs and interaction model were rewritten for the new protocol. This is concrete evidence that the stateless change is real at the infrastructure tier rather than aspirational in the spec — the edge platforms have already shipped for it. If you deferred a remote MCP deployment on cost or ops complexity grounds, that calculation has changed.",
+      "reviewNote": "Vendor blog about its own platform; operational-simplicity and cost claims are theirs with no independent measurement. Fine as evidence that the ecosystem moved; not fine as a cost benchmark.",
+      "source": "https://blog.cloudflare.com/mcp-v2/",
       "tags": [
         "mcp",
+        "infrastructure",
+        "tooling"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "bootstrap-ci-llm-eval",
+      "title": "Confidence intervals are becoming table stakes for eval reporting — and the naive ones are wrong",
+      "body": "Indeed's engineering team published a worked treatment of bootstrap confidence intervals for LLM evaluation, aimed at teams reporting a single accuracy number off a fixed test set. LLMs are operationally non-deterministic — even at temperature zero, hardware, batching and API behaviour produce different outputs for the same input, and variance from model outputs can exceed variance from data sampling. They also note the compensating advantage that, unlike most non-deterministic systems, you can re-sample an LLM cheaply after initial data collection. Practical takeaway: your eval harness should record repeated runs per item, not one, and report an interval — otherwise you cannot distinguish a real regression from run-to-run noise.",
+      "reviewNote": "Vendor engineering blog, but methodology rather than product promotion — Indeed is not selling an eval tool here. The statistical approach (bootstrap, coverage simulation) is standard and independently checkable; they run their own coverage simulations including for Cohen's κ. Safe to teach from.",
+      "source": "https://engineering.indeedblog.com/blog/2026/07/bootstrap-confidence-intervals-for-llm-evaluation/",
+      "tags": [
+        "evaluation",
+        "reliability",
+        "testing"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "benchmark-measurement-artefact",
+      "title": "A July 2026 synthesis puts numbers on how much published agent benchmark performance is measurement artefact",
+      "body": "A survey paper pulls together measurement-validity critiques of the benchmarks most teams still quote in vendor selection. Re-analysis of SWE-bench found a substantial share of reported successes were attributable to solution leakage or weak test suites; after correction, one study saw a representative SWE-agent configuration's success rate fall from roughly 12.5% to roughly 4%. A separate test-augmentation effort found that adding stronger auto-generated unit tests changed leaderboard rankings in roughly 25–41% of cases across SWE-bench Lite and Verified. If weak oracles can move rankings by a third, your own internal agent evals are measuring your grader as much as your agent — budget real effort for adversarial review of grading logic, not just the task set.",
+      "reviewNote": "Synthesis, i.e. secondhand — underlying results are Aleithan et al. (2024), Yu et al. (arXiv:2506.09289) and others. Cite the primary papers if using the specific numbers publicly. arXiv preprint, no peer review visible.",
+      "source": "https://arxiv.org/pdf/2607.05775",
+      "tags": [
+        "evaluation",
+        "benchmarks"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "cost-adjusted-agent-eval",
+      "title": "Cost-adjusted comparison is entering the mainstream of agent evaluation",
+      "body": "The same synthesis surfaces the Holistic Agent Leaderboard work as the reference point for cost-aware evaluation: it evaluated over 21,000 agent rollouts across nine models and nine benchmarks at a cost of roughly $40,000, and proposed cost-adjusted comparisons because headline accuracy does not account for the substantial variation in compute or dollar cost needed to reach it. For architects this changes the shape of the evaluation table you present to a steering committee: accuracy alone is not a decision variable, and an agent configuration that wins on accuracy at 10× the token spend is usually the wrong default.",
+      "reviewNote": "Reported via the July 2026 synthesis; the HAL paper itself is arXiv:2510.11977 (Kapoor et al.), which the synthesis states was accepted at ICLR 2026 — confirm that acceptance directly before repeating it. The HAL paper predates the 90-day window; what is new is its uptake as a standard framing.",
+      "source": "https://arxiv.org/pdf/2607.05775",
+      "tags": [
+        "evaluation",
+        "benchmarks",
+        "cost"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "harness-as-unit-under-test",
+      "title": "The agent harness — not just the model — is starting to be treated as the unit under test",
+      "body": "A June 2026 benchmark suite for the research lifecycle explicitly evaluates frontier LLMs and agentic harnesses together, arguing the current generation of benchmarks is too coarse: SWE-bench, Terminal-Bench and WebArena primarily measure task completion and execution correctness, giving valuable but coarse-grained signals, while qualities like methodological rigour, uncertainty awareness and responsible judgement remain largely unmeasured. If you are choosing between agent scaffolds, this is the emerging discipline: hold the model fixed, vary the harness, and measure — because scaffold choices (tool exposure, context budgeting, retry policy) move outcomes as much as model choice does.",
+      "reviewNote": "arXiv preprint, unreviewed, and the authors are proposing their own benchmark — the claim that existing benchmarks are inadequate is self-serving in the usual way. The durable idea (harness-as-unit-of-evaluation) is worth teaching; the specific suite is not yet something to recommend.",
+      "source": "https://arxiv.org/pdf/2606.07462",
+      "tags": [
+        "evaluation",
+        "harness",
+        "benchmarks"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "deterministic-scaffold-regression-testing",
+      "title": "Separating the deterministic scaffold from the stochastic core, and regression-testing it with no LLM in the loop",
+      "body": "A June 2026 paper proposes gating the deterministic parts of a production LLM agent — routing, tool dispatch, state handling — with a regression-locked test harness that invokes no model at all. This is the cheapest reliability win available to most teams and is under-practised: a large fraction of agent incidents are scaffold bugs, not model failures, and those are fully testable with conventional deterministic CI. Architecturally it argues for drawing an explicit seam between scaffold and model call, so the scaffold side can be pinned by ordinary unit and regression tests.",
+      "reviewNote": "Weakest-evidenced item in the eval set. I could only retrieve the paper's title and reference list, not its results section, so I described the approach the title states and its engineering rationale — I have NOT verified any claimed effect sizes or evaluation. Read the paper before presenting it as more than a design pattern. Single-author-style preprint, no replication.",
+      "source": "https://arxiv.org/pdf/2606.11686",
+      "tags": [
+        "evaluation",
+        "reliability",
+        "testing",
+        "architecture"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "adaptive-attacks-on-out-of-band-guardrails",
+      "title": "Adaptive evaluation says \"put the guardrail outside the model\" is necessary but not sufficient",
+      "body": "The field has largely settled on a defensive posture: rather than training the model to refuse malicious instructions, enforce security outside the model with a deterministic policy that mediates the agent's actions. This paper subjects those out-of-band defenses to adaptive attackers — attackers who know the policy exists and design around it — which is the evaluation most vendor and framework benchmarks skip. If you have built a policy-mediation layer (an action broker, a tool allowlist, a capability gate) and validated it against a static injection corpus, treat that validation as expired: the correct test is an attacker who has read your policy.",
+      "reviewNote": "I read the abstract and listing page only, not the full results, so I stated the framing and not the numeric findings. arXiv preprint, no peer review, single research group, no independent replication. Do not let the Q&A agent quote effectiveness figures from this — there are none in what I verified.",
+      "source": "https://arxiv.org/abs/2606.26479v1",
+      "tags": [
         "security",
-        "authorization",
-        "architecture"
+        "red-teaming",
+        "prompt-injection"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "indirect-prompt-injection-live-campaigns",
-      "title": "Indirect prompt injection against web-browsing agents documented in live campaigns",
-      "body": "Zscaler ThreatLabz documented real-world campaigns embedding instructions in web content aimed at AI agents, describing indirect prompt injection as attacks that embed malicious instructions in content an AI agent retrieves — websites, documents, email — to influence the agent's reasoning during task execution. Their test setup matters: they built an autonomous agent with web browsing and payment-execution tools, ran it fully sandboxed with no real funds, and deliberately configured it with no spending limits to measure the maximum exploitation surface. The engineering takeaway is that spend caps, tool-scope limits and human confirmation on irreversible actions are the controls doing the actual work — not model-level instruction hardening.",
-      "reviewNote": "Vendor security research with a Zscaler product-coverage section at the end — campaign attribution and severity framing are their own and unreplicated. The \"no spending limits\" configuration is an adversarial worst case by design, so demonstrated impact should not be read as typical. The general point that prompt injection remains unsolved is separately supported by an OWASP researcher at Infosec Europe (https://www.infosecurity-magazine.com/news/infosec-europe-prompt-injection/), though that is a secondhand press report of a talk.",
-      "source": "https://www.zscaler.com/blogs/security-research/indirect-prompt-injection-web-content-targets-ai-agents",
+      "id": "indirect-injection-defense-replication",
+      "title": "A replication study of indirect prompt-injection defenses, measuring the security/utility tradeoff",
+      "body": "A peer-reviewed paper published 2026-08-31 evaluates indirect prompt injection defenses in tool-using LLM agents on three axes — security, utility, and replication. The premise is that LLM agents which retrieve external content and use tools are vulnerable to indirect prompt injection. The replication dimension is the reason this matters: most published defenses report their own numbers on their own harness, and an independent re-run is the thing engineers have been guessing at. If you are selecting a defense, this is the class of source to weight over a defense author's self-report.",
+      "reviewNote": "MDPI Computers — peer-reviewed but a fast-turnaround venue with variable rigour; submitted 21 July 2026, accepted 28 August 2026, a five-week review cycle. I verified the abstract and metadata, not the results tables. Worth reading in full before the Q&A agent cites specific defense rankings.",
+      "source": "https://www.mdpi.com/2073-431X/15/9/570",
       "tags": [
         "security",
         "prompt-injection",
-        "agentic-ai",
-        "containment"
+        "evaluation"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
     },
     {
-      "id": "data-injection-broader-threat-model",
-      "title": "Early academic work argues the agent threat model is broader than instruction injection",
-      "body": "A Seoul National University–led preprint argues that agent security research has concentrated too narrowly: prior work has focused primarily on indirect prompt injection, whose most-studied category is instruction injection, where attacker-controlled untrusted data is interpreted as an instruction. The paper's case is that data injection — poisoning what the agent believes to be true, rather than what it is told to do — is a realistic threat class in its own right. If your agent threat model is built solely around \"untrusted text might contain commands\", this is a prompt to widen it.",
-      "reviewNote": "arXiv preprint, July 2026, not peer-reviewed and no independent replication. Only the abstract and reference sections were read in the search result, so the claim is deliberately kept narrow — do not let the Q&A agent describe specific attack results or success rates from this paper. Worth a full read before it goes anywhere near teaching material.",
-      "source": "https://arxiv.org/html/2607.05120v1",
+      "id": "cve-2026-25905-mcp-tool-shadowing",
+      "title": "CVE-2026-25905: sandbox escape in MCP Run Python enables tool shadowing",
+      "body": "Because the sandboxed Python code can modify the JS runtime, an attacker can dynamically overwrite or \"shadow\" existing MCP tools registered on the server — for example, replacing a secure file-reading tool with a malicious version that exfiltrates data to an external server. The lesson generalises beyond this one package: a sandbox that shares a runtime with the tool registry is not a containment boundary, because escaping the sandbox lets you rewrite what every other tool on that server does. Audit whether your MCP servers register tools in a runtime that sandboxed code can reach.",
+      "reviewNote": "Primary source (GitHub Advisory Database). I did not verify affected version ranges or patch status — check those before the Q&A agent tells anyone they are or aren't exposed.",
+      "source": "https://github.com/advisories/GHSA-pfv4-wmph-5gc6",
       "tags": [
         "security",
-        "threat-modelling",
-        "agentic-ai",
-        "research"
+        "mcp",
+        "cve",
+        "containment"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "container-per-mcp-server",
+      "title": "Container-per-MCP-server is becoming the published reference pattern",
+      "body": "The consolidating containment guidance is concrete: run each MCP server in its own container (Docker, Podman, Firejail, gVisor), constrain the filesystem to a named volume, drop capabilities, no network unless required, no /host mounts — with MCP Sandbox and Anthropic's containerized-server pattern publishing reference configs. For a senior engineer, the shift is that \"which MCP servers do we trust\" is the wrong question; the working default is that every connector is untrusted and isolation is per-server, not per-agent. This is a deployment-topology decision, so it is cheaper to make now than to retrofit.",
+      "reviewNote": "Secondhand — vendor-adjacent blog summarising other people's guidance, including Anthropic's. The underlying reference configs are the thing to cite; I did not reach them directly. The same page carries aggregate claims elsewhere (CVE counts, exposed-server counts) I would not repeat without a primary source.",
+      "source": "https://agentmelt.com/blog/mcp-security-2026-attacks-and-defenses/",
+      "tags": [
+        "security",
+        "mcp",
+        "containment",
+        "deployment"
+      ],
+      "gatheredAt": "2026-09-06"
+    },
+    {
+      "id": "microsoft-agentic-failure-taxonomy-v2",
+      "title": "Microsoft updated its taxonomy of agentic AI failure modes to v2.0",
+      "body": "Microsoft published a v2.0 update to its taxonomy of failure modes in agentic AI systems on 2026-06-04, adding seven new failure mode categories including supply chain compromise and goal hijacking, drawn from a year of red teaming.",
+      "reviewNote": "Flagged as borderline, not counted in the main security set: 94 days old, just outside the 90-day window, and it is Microsoft reporting on its own red-teaming programme. Included so it isn't mistaken for a gap in coverage.",
+      "source": "https://www.microsoft.com/en-us/security/blog/2026/06/04/updating-taxonomy-failure-modes-agentic-ai-systems-year-red-teaming-taught-us/",
+      "tags": [
+        "security",
+        "red-teaming",
+        "taxonomy"
+      ],
+      "gatheredAt": "2026-09-06"
     }
   ]
 }
