@@ -1,6 +1,6 @@
 # Context is state, and state has a lifetime
 
-*Teaching notes for week 1 §2, third idea. Not learner-facing — the session copy
+*Teaching notes for week 1 §2, second of the three ideas. Not learner-facing — the session copy
 is four sentences on purpose. This is what stands behind them.*
 
 ## The reframe
