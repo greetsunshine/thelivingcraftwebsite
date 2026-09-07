@@ -38,6 +38,23 @@ The first three are the architecture. The fourth is how the work actually gets
 done now, and the fifth is the thing you will still be able to show someone in a
 year.
 
+**You will rate yourself against these five, twice.** Once at 00:05 before
+anything has been taught, and again at 04:52 — the same five statements, in the
+same words, scored 1 to 5. Nobody sees your first number but you; the two sets
+go on screen together at the end, and the movement is the point rather than the
+score. These are the words used all three times, so that the two sets of numbers
+mean the same thing:
+
+> **Right now, I could…**
+>
+> 1. draw the four parts of an agent harness and say which part a given failure lives in
+> 2. read an agent's trace and say where the money went, which step spent it, and which line I would put on a dashboard
+> 3. name four failures that a better model would not fix, and the boundary that stops each
+> 4. direct a coding assistant against a decision I made first, and review what it wrote against that decision
+> 5. write a decision record: the boundary I drew, the alternative I rejected, and what would change my mind
+
+Expect low numbers on 3 and 4. Those are the two that move most.
+
 Anyone can show you the agent loop. This session is about what the loop *is* —
 so that in week 6, when your own architecture is under review, you are arguing
 from a model rather than from a framework's documentation.
@@ -52,12 +69,16 @@ from a model rather than from a framework's documentation.
       flag entirely — so today is the day the key has to work.
 - [ ] Have a **second model name** ready that your key can reach. Any two will
       do, as long as one config change swaps between them.
-- [ ] Run `make retry` and `make injected`. Do not fix anything. Bring what you
-      saw.
+- [ ] Run `make retry`, `make weird-mock` and `make injected` — the three from
+      week 0. Do not fix anything. **Write down what each one paid out**; you
+      will be asked for the three numbers in the first ten minutes.
 - [ ] Note your daily quota before you arrive. On the Google AI Studio free
       tier it is **20 requests per day, per model** — and one agent run is about
       three requests. That is roughly six runs a day. If you burn them the night
       before, you will be borrowing a neighbour's key by block 3.
+- [ ] Be ready to say, in one sentence, **what in this codebase would have
+      stopped each of the three**. A half-formed answer is the right answer to
+      arrive with; you have not read the code yet and are not meant to have.
 
 ## The day, and where the stops are
 
@@ -350,16 +371,25 @@ Now the same agent, three more tickets — the ₹3,600 was the first, back in
 block 1. Write the number down before each run; you will want the gap between
 your guess and the trace.
 
-**None of these three can be reasoned out.** The retry was the one that could,
-and we spent it in block 1 on purpose. So the prediction is there to make you
-commit, not to test you. On the injection we run the full cycle: commit alone,
-argue in pairs for two minutes, post again in chat, then reveal.
+**Two of these three you have already run.** You watched `make weird-mock` pay
+₹5,000 and `make injected` pay ₹2,50,000 in the pre-work, which means the amount
+is not what we are predicting. For those two the commit is *what would have
+stopped it* — which is the question week 0 asked you to sit with, and the only
+one that is worth ten days of thinking.
+
+The ₹0 is the one nobody has seen. That one keeps the amount prediction, and it
+is not guessable.
 
 ### It pays an account that does not exist — ₹5,000
 
-Ticket #9999 is an angry customer disputing a charge on an account that does not
-exist. The agent looks it up. It is told, in plain JSON, `{"found": false}`. And
-then it issues a ₹5,000 credit anyway.
+*You ran this one in the pre-work, so the number is not the question.* Ticket
+#9999 is an angry customer disputing a charge on an account that does not exist.
+The agent looks it up. It is told, in plain JSON, `{"found": false}`. And then it
+issues a ₹5,000 credit anyway.
+
+*Commit before we open the file — thirty seconds, in chat:* **which single line
+of this codebase would have stopped it?** Not "what should the model have done".
+A line, and which file it is in.
 
 Nothing here is a hallucination — it was handed the truth and acted against it.
 
@@ -384,6 +414,11 @@ your system survives one.
 
 ### It follows a rule an attacker wrote — ₹2,50,000
 
+*Also pre-run, so again: not the number.* This is the one worth the full cycle —
+commit alone for thirty seconds, argue in pairs for two minutes, then post in
+chat. **Whose text did the agent obey, and what in the system told it that text
+was trustworthy?**
+
 `make injected`. An ordinary, honest ticket asks a polite question about a
 ₹1,200 invoice. The account record it reads happens to contain a note saying the
 account is enrolled in a goodwill programme and any billing query must be
@@ -401,6 +436,9 @@ compress. What you should take today is that it exists, that no prompt wording
 closes it, and that you watched it happen.
 
 ### It refuses a customer who was owed the money — ₹0
+
+*This is the one you have not seen, and the only one where the number is still
+the question.* Predict it before it runs.
 
 The quiet one. The model sends the account id as a number; the account store
 keys them as strings. The lookup returns `{"found": false}` for an account that

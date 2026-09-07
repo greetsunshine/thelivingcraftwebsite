@@ -127,22 +127,43 @@ key problem never stops you seeing the agent work. `make run` falls back to it
 on its own too, printing a grey `no LLM_API_KEY found` notice above the trace so
 you always know which brain you are watching.
 
-**Then, before Class 1 — five minutes, and not optional.** Two commands:
+**Then, before Class 1 — ten minutes, and not optional.** Three commands:
 
 ```
-make retry      # no key needed
-make injected   # needs your key
+make retry        # no key needed
+make weird-mock   # no key needed
+make injected     # needs your key
 ```
 
 Run them and just *notice*. Do not fix anything, and do not read the code yet.
-Both have the same shape and it is not the shape people expect: **the agent does
-not make a mistake, and the system loses the money anyway.** `make retry` pays
-one customer ₹3,600 for a single ₹1,200 double-charge across three runs it got
-right every time. `make injected` credits ₹250,000 on an honest ₹1,200 dispute.
+All three have the same shape and it is not the shape people expect: **the agent
+does not make a mistake, and the system loses the money anyway.**
 
-Bring what you saw — we pick both up in Class 1. The question there is never
-"why was the model wrong?" — usually it wasn't. It is *what in this codebase
-would have stopped it?*
+- `make retry` pays one customer ₹3,600 for a single ₹1,200 double-charge,
+  across three runs it got right every time.
+- `make weird-mock` pays ₹5,000 on an account that does not exist. Watch the
+  lookup come back and read what it says before the money moves.
+- `make injected` credits ₹250,000 on an honest ₹1,200 dispute.
+
+Note what each one paid out; you will be asked for the three numbers in the
+first ten minutes of Class 1.
+
+Bring what you saw — we pick all three up in Class 1. **The question there is
+never "why was the model wrong?"** — usually it wasn't. It is *what in this
+codebase would have stopped it?* That is the question you are being given ten
+days to sit with, and arriving with a half-formed answer beats arriving with
+none.
+
+**One thing you have not seen yet, and should not go looking for.** There is a
+fourth way this agent loses money, and it is the only one that costs ₹0 and
+looks like a success on every dashboard you own. We do that one together.
+
+**Your daily quota.** On the Google AI Studio free tier you get **20 model
+requests per day, per model** — and one agent run is roughly three requests,
+one per step. That is about **six runs a day**. `make retry`, `make mock` and
+`make weird-mock` cost you none of it; only `make injected` and `make run` do.
+Do not burn the allowance experimenting the night before Class 1, or you will be
+watching over a neighbour's shoulder for the drills.
 
 **Stuck?** Do not burn more than twenty minutes fighting it. Email Sunil with
 your OS and the error and we will get you sorted. Arriving with a working
