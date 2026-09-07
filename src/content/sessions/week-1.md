@@ -59,9 +59,40 @@ from a model rather than from a framework's documentation.
       three requests. That is roughly six runs a day. If you burn them the night
       before, you will be borrowing a neighbour's key by block 3.
 
+## The day, and where the stops are
+
+**Five hours.** Five teaching blocks, one fifteen-minute break, and two
+five-minute stand-ups where you leave the screen completely. Nothing runs for
+more than an hour without a stop — this is a remote room, and an hour is about
+as long as anyone holds attention through a screen.
+
+| time | | what happens |
+|---|---|---|
+| 00:00 | opening | the five outcomes, your first confidence rating, four questions from the pre-work |
+| 00:15 | **1 · The Concept** | it works, you draw it, then it loses ₹3,600 and what you drew gets its name |
+| 01:10 | stand up | five minutes, cameras off |
+| 01:15 | **2 · The Problem** | three more failures, then the pattern under all four |
+| 02:05 | break | fifteen minutes |
+| 02:20 | **3 · The Drill** | three drills in the room, hands on keyboards |
+| 03:20 | stand up | five minutes again |
+| 03:25 | **4 · The Teardown** | the same agent at enterprise scale, then write a boundary down |
+| 04:20 | quiz | eight questions in chat, deliberately mixed up |
+| 04:30 | **5 · The Horizon** | which half of your work survives the next capability jump |
+| 04:50 | close | the assignment, the same rating again, two lines in chat |
+
+**After every block there is a checkpoint** — a short list of things you should
+now be able to do, printed here in its place. If one of them is not true for
+you, say so at the time rather than at the end. It is a signal to slow down, not
+a test of you.
+
+At 00:05 you will rate yourself 1 to 5 against the five outcomes above, and at
+04:52 you will rate yourself against the identical five. Nobody sees the first
+number but you. The two sets go on screen together at the end, and the movement
+is the point rather than the score.
+
 ## 1 · The Concept
 
-*~45 minutes.*
+*00:15 to 01:10 — ~55 minutes.*
 
 We start with the case that works.
 
@@ -89,7 +120,34 @@ Two tool calls. A customer disputes a charge, something investigates, something
 takes a consequential action, it stops. That is an agent — there is no more to
 the definition than this.
 
-So we read those lines closely and name what we are looking at:
+### Break it once, before anything has a name — ₹3,600
+
+Before a single thing gets its proper name, we break it. A framework lands far
+better as the answer to a question you already have than as vocabulary handed
+out in advance.
+
+*Answer first, in chat, thirty seconds:* Ravi really was double-charged and is
+owed ₹1,200. The queue delivers his ticket, times out, and delivers it again.
+Later a support engineer re-runs it by hand. **How much does he get paid?**
+
+Rooms split between ₹1,200 and ₹3,600, and the argument is worth having before
+the answer arrives.
+
+`make retry`. He gets **₹3,600**. The agent reasons correctly all three times
+and pays ₹1,200 on each of them.
+
+**Not one wrong decision was made in any of those three runs.** There is no bug
+to find and no prompt to improve. This one needs no key and no model at all,
+which is the point: **there is no smarter brain that fixes it.** Nothing in the
+system remembers that it already acted. We design the fix in block 4, question 1.
+
+This is the only one of today's four failures you can reason your way to, which
+is exactly why it comes first — you get to work it out rather than be shown it.
+The other three stay in block 2, where they work as surprises.
+
+You will want to know *why* it did not remember. That is the next thing we do,
+and the answer is not a fault in the model. So we read those opening lines
+closely and name what we are looking at:
 
 **An agent is a control loop over an unreliable oracle.** The loop has a name:
 **ReAct** — reason and act, from Yao et al., 2022. Its three phases are
@@ -122,7 +180,7 @@ chooses only two of them.**
 
 That asymmetry is worth holding on to. The two exits the model controls announce
 themselves clearly. The two the loop controls are the ones nobody is watching,
-and both of them are a drill this afternoon.
+and both of them are a drill in block 3.
 
 ### One run is many calls, and you do not know how many
 
@@ -242,7 +300,7 @@ them moves the floor.** They change how *often* the agent does something
 expensive. They do not change what it is *able* to do on the run where it goes
 wrong — and that run is the one you will be explaining.
 
-Watch for that in this morning's four runs, because the evidence is unusually
+Watch for that across today's four runs, because the evidence is unusually
 clean:
 
 - On three of the four tickets the model is **already right**. Better thinking
@@ -270,12 +328,32 @@ this loop is lower than your instinct says, for a reason you can read in
 > "We used a better model" is none of those.
 
 
+### Checkpoint · 01:10
+
+Before you stand up. Then one number in chat, 1 to 5, on the last one only.
+
+- Draw the ReAct loop and name its three phases
+- Name the four parts of the harness and point at the file each one lives in
+- Say how many calls to the model one ticket takes, and why you do not control that number
+- **Explain the difference between something that changes the odds and something that changes what is possible**
+
+If your number on the last one is below 3, say so. It is the sentence the
+whole day rests on, and block 2 does not land without it.
+
+*Five minutes, cameras off, away from the screen. Not a break — a reset.*
+
 ## 2 · The Problem
 
-*~60 minutes.*
+*01:15 to 02:05 — ~50 minutes.*
 
-Now the same agent, four different tickets. Write the number down before each
-run; you will want the gap between your guess and the trace.
+Now the same agent, three more tickets — the ₹3,600 was the first, back in
+block 1. Write the number down before each run; you will want the gap between
+your guess and the trace.
+
+**None of these three can be reasoned out.** The retry was the one that could,
+and we spent it in block 1 on purpose. So the prediction is there to make you
+commit, not to test you. On the injection we run the full cycle: commit alone,
+argue in pairs for two minutes, post again in chat, then reveal.
 
 ### It pays an account that does not exist — ₹5,000
 
@@ -303,17 +381,6 @@ ticket is usually escalated correctly. The naive policy is standing in for a
 worse brain than the one you are paying for today — a cheaper model, a fallback
 during an outage, next quarter's cost reduction. The question it asks is whether
 your system survives one.
-
-### It pays three times for one mistake — ₹3,600
-
-`make retry`. The queue delivers ticket #4471, times out, and delivers it again.
-Later a support engineer re-runs it by hand. Ravi really was double-charged,
-₹1,200 really is the right credit, and the agent reasons correctly all three
-times.
-
-This one needs no key and no model at all, which is the point: **there is no
-smarter brain that fixes it.** Nothing in the system remembers that it already
-acted. We design the fix in block 4, question 1.
 
 ### It follows a rule an attacker wrote — ₹2,50,000
 
@@ -419,11 +486,25 @@ put between the parts. Everything from week 2 onwards is added to one of them.
 > Every decision in this session is one a person has to own, and "the model
 > decided" is not an answer you can give a board.
 
-*Fifteen minute break here.*
+### Checkpoint · 02:05
+
+Same again — read them, then one number in chat on the last one.
+
+- Name four ways this agent loses money, with the amount for each
+- Say which part of the harness each of those four failures lives in
+- Explain why a better model does not fix any of them
+- **Read a trace and say what it is not telling you**
+
+This is the checkpoint that matters most. Everything after the break assumes
+the third one is solid.
+
+*Fifteen minute break here — 02:05 to 02:20. It falls straight after the
+₹2,50,000 on purpose; most rooms carry on arguing about it, which is what the
+break is for.*
 
 ## 3 · The Drill
 
-*~60 minutes, hands-on.*
+*02:20 to 03:20 — ~60 minutes, hands-on.*
 
 Four exercises. Each is a real defect in the agent you have been running, and
 each one is the floor — not clever, just absent from most production agents.
@@ -533,9 +614,24 @@ the honest shape of the answer: "use a better model" is a real effect on the
 tickets where the record is honest, and no effect at all on the one where it is
 not. The better model moves next quarter. The boundary you drew does not.
 
+### Checkpoint · 03:20
+
+Read these, and post a number 1 to 5 on the last one.
+
+- Make a silent failure announce itself to a machine, not just to a person reading a terminal
+- Grade a tool by what it can do rather than by what it is called
+- Write a contract for a tool and refuse a call that does not match it
+- **Give a coding assistant a decision instead of a task, and review what it returns against that decision**
+
+The drill block is where it is easiest to get quietly stuck and say nothing
+about it. A number in chat is the only way anyone finds out before the
+teardown, so put one in even if it is a 2.
+
+*Five minutes, stand up again.*
+
 ## 4 · The Teardown
 
-*~50 minutes. In pairs, then the room.*
+*03:25 to 04:15 — ~50 minutes. In pairs, then the room.*
 
 Everything so far fits on one screen. Now the version that does not.
 
@@ -558,7 +654,7 @@ Five questions. Take two in pairs, bring the sharpest answer back to the room.
 does what every well-behaved distributed system does and retries. Did the
 customer receive ₹1,200 or ₹2,400 — and how would you know? Now design the fix,
 and say which component owns it. You watched the small version of this in
-`make retry` before the break; the answer that works on one process is not the
+`make retry` back in block 1; the answer that works on one process is not the
 answer that works on forty.
 
 **2 · The blast radius of a good deploy.** Someone improves the policy text. It
@@ -578,7 +674,7 @@ money rather than confidence.
 
 **5 · When the model is down.** The provider has an outage. Queue, fail closed,
 or fall back to rules — and what do you tell the customer waiting inside a
-four-hour SLA? Remember what failing closed looked like this morning: ₹0 paid,
+four-hour SLA? Remember what failing closed looked like earlier today: ₹0 paid,
 a clean trace, and a customer who was owed the money.
 
 None of these are model problems. Every one is a boundary someone either drew or
@@ -586,7 +682,8 @@ did not.
 
 ### Write the boundary down
 
-*Last ~20 minutes of the block, in the same pairs.*
+*03:50 to 04:15, in the same pairs — fifteen minutes to write, then ten to
+review somebody else's.*
 
 Pick the one question you argued hardest about and write it up as a one-page
 decision record, in the shape you would put in front of an architecture review:
@@ -597,18 +694,30 @@ decision record, in the shape you would put in front of an architecture review:
 4. **The design.** The checks, in the order they run, and what each does when it fails: refuse, escalate, or ask a person. Say where the state lives.
 5. **What can go wrong.** One row per case: what arrives, what your rule does, what the customer sees.
 6. **Alternatives.** One you rejected, and why. "Use a better model" counts, and rejecting it well is most of today.
-7. **Open questions.** What you could not settle in twenty minutes.
+7. **Open questions.** What you could not settle in fifteen minutes.
 
-Then swap with another pair and review theirs against four questions: would it
-have stopped what we watched; does it survive a restart; is every goal testable;
-and what does a customer experience when it wrongly says no?
+At 04:05 you swap with another pair and review theirs. Four questions, each
+scored 0, 1 or 2 by the reviewing pair — the written comment matters more than
+the number, and there is no assessment behind this. It exists to make ten
+minutes of review structured enough to finish.
+
+1. **Would it have stopped what we watched?** Take the four runs one at a time
+   and trace each through their checks. Any run that still gets through is your
+   finding.
+2. **Does it survive a restart?** If the memory lives in a Python list, the
+   second delivery still pays.
+3. **Is every goal testable?** Could you write a check that passes or fails
+   without a person judging it? If not, it is a wish rather than a goal.
+4. **What does a blocked customer experience?** A guard that silently refuses a
+   legitimate ₹1,200 credit has swapped one failure for another. You watched
+   that one at ₹0.
 
 This is the artefact week 2 opens with. You will be implementing your own
 document, so write it for the person who has to build it, which next week is you.
 
 ### Closing the loop — the leader's framing
 
-*Last ~10 minutes of the block.*
+*04:09, the last few minutes of the block.*
 
 The trade-off running under all five questions is **autonomy against
 reversibility**, and it is a business decision dressed as an engineering one.
@@ -620,9 +729,27 @@ demand for a guarantee nobody can give, but **"here is what it can do without a
 human, here is what it cannot, and here is what it costs us if it is wrong."**
 That sentence survives a board meeting. The first one does not.
 
+### Checkpoint · 04:15
+
+No rating on this one — you are mid-argument and the exit poll is eight minutes away. Just read them.
+
+- Take a failure you watched at one-agent scale and say what changes at forty processes
+- Say what an audit trail has to contain beyond a stored prompt and completion
+- **Write a boundary down in a form somebody else could actually implement**
+
+
+## The quiz
+
+*04:20 to 04:30.*
+
+Eight questions in chat, mixed across every topic of the day rather than grouped
+by block. The jumbling is the point: sorting them by topic lets you pattern-match
+on the heading instead of on the problem. Everybody answers, then we take up the
+ones that split the room.
+
 ## 5 · The Horizon
 
-*~20 minutes.*
+*04:30 to 04:50 — ~20 minutes.*
 
 Every session closes here: what is moving in the field right now, and what it
 means for the person you are three years from today. Not a news round-up — the
@@ -643,16 +770,40 @@ We look at where the demand actually is — what is being hired for in India rig
 now, at what level, and which skills employers say they cannot fill — against
 what is quietly being absorbed into tooling.
 
+## Close
+
+*04:50 to 05:00.*
+
+**04:50 — the assignment.** Four things, set out under *After* below.
+
+**04:52 — the same five statements again.** The identical five outcomes you
+rated at 00:05, same words, same order, 1 to 5. Both sets then go on screen
+together, and we name the two that moved most.
+
+**04:56 — two lines in chat.** Everybody answers both:
+
+> The one thing I will change in my own build this week is ______
+>
+> The thing I am still fuzzy on is ______
+
+The second line is the one that matters. It sets what week 2 opens with, so an
+honest *"I still do not really follow why the context gets rebuilt"* is worth
+more than a tidy answer.
+
 ## After
 
 *~2 hours before next week.*
 
-- Apply the named failure and the per-step cost to **your own** system, or to
-  the piece of it you can reach
-- Take your decision record from block 4 and answer one question about a system
-  your team owns: **where is the limit written down, and who agreed to it?** If
-  the answer is a number inside a function, you have found your week 2 work
-- Post it for the room to read before next session
+1. **Drill 4** on the reference agent — put cost on every step. It is the
+   fiddliest of the four and the one that does not need the room.
+2. **The same changes applied to your own system**, or to the piece of it you
+   can reach. Drills 1 and 2 transfer almost directly.
+3. **Finish your decision record** from block 4. Week 2 opens by building it.
+4. **Answer one question about a system your team owns:** *where is the limit
+   written down, and who agreed to it?* If the answer is a number inside a
+   function, you have found your week 2 work.
+
+Post what you find for the room to read before next session.
 
 The decision record is the artefact of this cohort, not the code. It is also the
 thing you will still be able to show someone in a year.

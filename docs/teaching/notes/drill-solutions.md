@@ -428,8 +428,9 @@ it changes the numbers in the sample traces in week 0 and week 1** (`tokens 660`
 
 ### Running it
 
-This is the fiddly one. Drills 1 and 3 go in the room; if the clock beats you,
-this finishes cleanly in the After block — the session copy already says so.
+This is the fiddly one, and it is homework rather than a room exercise. Drills 1,
+2 and 3 are done together; this one goes into the After block, where it gives
+that block something concrete to do.
 
 ## What not to fix
 
