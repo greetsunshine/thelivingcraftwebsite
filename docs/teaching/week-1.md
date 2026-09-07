@@ -198,7 +198,7 @@ something you could watch a person do, not something they understand. If you
 cannot picture a member doing it in front of you, it does not belong on the list.
 
 **Where each is earned.** 1 in block 1's diagram and file table · 2 in block 2's
-payout line and drill 2 · 3 in the four runs and the pattern table · 4 across all
+payout line and drill 4 · 3 in the four runs and the pattern table · 4 across all
 four drills · 5 in block 4's write-up.
 
 **Say them at the top and again at the end.** At the top they set the contract;
@@ -263,7 +263,7 @@ The copy tells them to write down the guard they wanted and stop. Week 2 opens b
 building it properly — budget, allow and deny, human approval, durable state —
 and it is worth more after a week of looking at the thing unguarded.
 
-**Drill 4 is new (2026-09-02)** and it is the one with a failure behind it that
+**Drill 3 is new (2026-09-02)** and it is the one with a failure behind it that
 nobody expects. A real model sends `account_id` as an int; the store keys are
 strings; `lookup_account` happens to call `str()` and hides it. Remove that cast
 and a legitimate ticket returns `{'found': False}`, the agent escalates with
@@ -357,16 +357,16 @@ and five minutes before naming any of it:
 
 Verified on the mock, 2026-09-04: ticket 4471 takes **3 model calls and 2 tool
 executions**. `llm.calls` holds the real number; the summary line's `steps 4`
-counts trace lines, which is drill 2's second defect.
+counts trace lines, which is drill 4's second defect.
 
 Rooms arrive picturing one request per ticket. Correct it early, because three
-later beats depend on it — drill 2's cost curve, the teardown's spend-cap
+later beats depend on it — drill 4's cost curve, the teardown's spend-cap
 question, and the quota arithmetic they will hit on their own keys.
 
 **Separate two things the industry calls by one name.** A *tool call* is
 something the model **emits** — a name and arguments. **Running** it is your own
 code. When someone says "the agent made four calls", ask which kind: one is
-billed by the provider, the other by your infrastructure. Drill 3's blast-radius
+billed by the provider, the other by your infrastructure. Drill 2's blast-radius
 grading is about the second kind, and the confusion shows up there if you let it
 stand.
 
@@ -375,7 +375,7 @@ stand.
 1. **Latency is the sum of the calls.** 6.9s across three round trips on a real
    model; no provider speed collapses that to one.
 2. **Cost grows faster than steps** — every call re-sends the whole history.
-   Drill 2 measures exactly this, so plant it here and collect it there.
+   Drill 4 measures exactly this, so plant it here and collect it there.
 3. **Nobody sets how many calls a ticket costs — the model does.** It runs until
    it emits `resolve` or `escalate`. The unit price of a ticket is therefore a
    variable controlled by the probabilistic component, bounded only by
@@ -423,7 +423,7 @@ compounds across the run rather than adding a constant.
 
 **Three arguments against carrying it, in the order they land:**
 
-1. **Cost, compounding.** The number above, and drill 2 is where they will see
+1. **Cost, compounding.** The number above, and drill 4 is where they will see
    the same curve from the other direction.
 2. **Anchoring.** An early wrong line of reasoning returns each step as the
    model's own confident prose, and models tend to stay consistent with what they
@@ -554,7 +554,7 @@ the room will want to argue about the injection. Hold that argument to the
 missing piece and defer the defence to week 5, or it eats block 3.
 
 If you have to cut to fit a shorter room: drop the second bake-off comparison
-against `injected`, then drill 2 (it finishes cleanly in After, and the copy
+against `injected`, then drill 4 (it finishes cleanly in After, and the copy
 already says so). Do not cut the pattern table or the decision-record write-up —
 the first is the argument and the second is what week 2 opens with.
 

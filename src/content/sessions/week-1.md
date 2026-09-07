@@ -147,7 +147,7 @@ Three consequences, and the third is the one that belongs on a whiteboard:
 - **Latency is the sum of the calls, not one of them.** That run took 6.9 seconds
   across three round trips, and no amount of provider speed collapses it to one.
 - **Cost grows faster than the number of steps.** Every call re-sends the whole
-  history, so step three pays for steps one and two as well. Drill 2 makes you
+  history, so step three pays for steps one and two as well. Drill 4 makes you
   measure exactly this.
 - **You do not decide how many calls a ticket takes — the model does.** It runs
   until it emits `resolve` or `escalate`. So the price of handling one ticket is
@@ -432,8 +432,10 @@ Every one of them makes a failure **visible, named or measurable**. None of them
 prevents anything, and that is deliberate: prevention is week 2, and it is worth
 more when you have spent a week looking at the thing unguarded.
 
-Do **1, 3 and 4 in the room**; they are small. Drill 2 is the fiddly one, and if
-the clock beats us it finishes cleanly in the After block.
+**Drills 1, 2 and 3 happen in the room.** Drill 4 is your homework — it is the
+fiddliest of the four, it needs changes in two files and a decision about what
+the word "steps" should mean, and it is the one that does not need the rest of us
+in order to do it.
 
 **Drill 1 · Make the failure say its name.**
 [`agent.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/agent.py)
@@ -442,12 +444,22 @@ budget`. An agent that gave up is reporting success. Give it its own outcome,
 its own colour, and a non-zero exit code — then ask how many dashboards in your
 own org are currently counting that as green.
 
-Notice what that costs. The outcome exists only inside `run()`, which returns a
-`state` dict that `main()` drops on the floor, and nothing in the repo ever
-calls `sys.exit`. Three files — `agent.py`, `trace.py`, `main.py` — to let one
-failure reach the outside world. That ratio is the drill: **an outcome nobody
-plumbed out is not an outcome**, and this is the cheap version of the same
-argument you will have about your own service next week.
+Notice how far the fix has to travel. The outcome exists only inside `run()`,
+which returns a `state` dict that `main()` drops on the floor, and nothing in
+the repo ever calls `sys.exit`.
+
+So there is a gradient, and where you stop on it is the whole drill:
+
+| what you change | who can now see the failure |
+|---|---|
+| one line in `agent.py` — use the existing `warn` kind | a person reading the terminal |
+| plus a real `gaveup` kind in `trace.py` | a person, with its own name and colour |
+| plus carry the outcome out and exit non-zero in `main.py` | a **machine** — cron, CI, a supervisor, a monitor |
+
+One line makes it honest to a human. Three files make it honest to a process,
+and the thing that wakes you at two in the morning is a process. **Stopping after
+the first line is the failure this drill is about** — your terminal now looks
+right, and every automated consumer is still being told the run succeeded.
 
 It is also the first thing the harness tells you about itself. Three files had
 to agree for one fact to escape, and that is with four files and one loop. Hold
@@ -455,23 +467,13 @@ that number — in week 5 we come back to the harness and ask what happens to it
 when one loop is no longer enough, which is the least reversible decision in
 this whole course.
 
-**Drill 2 · Put cost on every step.**
-[`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)
-prints tokens, latency and rupees *once, at the end*. That tells you a run cost
-₹0.38 and nothing about which step spent it. Capture the token delta around each
-model call and attribute it to the step.
-
-While you are in there: the summary says `steps 4` on a run that went round the
-loop three times, because it is counting trace lines rather than turns. Decide
-what that number should mean, and make it mean that.
-
-**Drill 3 · Grade the tools by blast radius.** Three tools in
+**Drill 2 · Grade the tools by blast radius.** Three tools in
 [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py):
 `lookup_account`, `issue_credit`, `escalate`. Sort them into **read**,
 **write**, and **irreversible**, and print the grade beside every call — so a
 line that moves money never again looks like a line that read a row.
 
-**Drill 4 · Check the arguments before you dispatch.** This is the fix for the
+**Drill 3 · Check the arguments before you dispatch.** This is the fix for the
 customer who was refused. `agent.py` looks the action up in a dictionary and
 calls `fn(**args)` with whatever the model produced. Declare what each tool
 accepts — names and types — and check the arguments against it before the call,
@@ -483,6 +485,16 @@ arrives as a string from the naive brain and as a number from a real model, on
 the same ticket — which nothing anywhere reports, because `lookup_account`
 happens to call `str()` on the way in. Your tool contract is a real interface
 between two systems, and right now nobody owns it.
+
+**Drill 4 · Put cost on every step.**
+[`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)
+prints tokens, latency and rupees *once, at the end*. That tells you a run cost
+₹0.38 and nothing about which step spent it. Capture the token delta around each
+model call and attribute it to the step.
+
+While you are in there: the summary says `steps 4` on a run that went round the
+loop three times, because it is counting trace lines rather than turns. Decide
+what that number should mean, and make it mean that.
 
 **Then stop.** You will want to fix `issue_credit` — put a ceiling on it, check
 the account exists, remember what it already paid. Do not. Sitting with a

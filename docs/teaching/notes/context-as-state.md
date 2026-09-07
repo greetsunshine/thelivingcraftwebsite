@@ -107,7 +107,7 @@ for h in state["history"]:
 239 / 447 / 562 characters to 239 / 491 / 678 — about 13% more input overall, 21%
 on the last step. That is with canned thoughts of around 30 characters; a real
 model's ran nearer 180, so the true figure is several times this, and it
-compounds because every step re-sends every earlier thought. Drill 2 shows the
+compounds because every step re-sends every earlier thought. Drill 4 shows the
 same curve from the other direction.
 
 ### Three arguments against carrying it, in the order they land

@@ -168,11 +168,11 @@ about.
 ambiguous, the assistant will decide it silently, and that is a business rule set
 by autocomplete.
 
-**02:20 · Drill 3 — grade the tools by blast radius.** Quick. The argument worth
+**02:20 · Drill 2 — grade the tools by blast radius.** Quick. The argument worth
 having is `escalate`: most rooms say write. Ask what would make it irreversible —
 *if escalation notified the customer, it would be.*
 
-**02:30 · Drill 4 — check the arguments before you dispatch.** The fix for the
+**02:30 · Drill 3 — check the arguments before you dispatch.** The fix for the
 ₹0. `fn(**args)` with whatever came back. Two things to notice: a stray key
 raises `TypeError` and takes the run down, and the account id arrives as a string
 from the mock and a number from a real model on the same ticket.
@@ -198,7 +198,7 @@ Verification for everything they built is free — the guardrails live in
 
     make mock · make weird-mock · make retry         # Q +0
 
-**Q after block 3: 12** (drill 2 goes to the After block if the clock beats you)
+**Q after block 3: 12** (drill 4 goes to the After block if the clock beats you)
 
 ---
 
@@ -253,8 +253,8 @@ The ones nobody claims tell you what to fix before the next cohort.
 
 ## If you are running late
 
-Cut in this order: the second bake-off comparison · drill 2 (it finishes cleanly
-in the After block and the copy already says so) · drill 3.
+Cut in this order: the second bake-off comparison · drill 4 (it finishes cleanly
+in the After block and the copy already says so) · drill 2.
 
 **Do not cut** the pattern table or the decision-record write-up. The first is
 the argument of the whole day; the second is what week 2 opens with.
