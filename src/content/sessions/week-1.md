@@ -586,24 +586,89 @@ that number — in week 5 we come back to the harness and ask what happens to it
 when one loop is no longer enough, which is the least reversible decision in
 this whole course.
 
-**Drill 2 · Grade the tools by consequence.** Three tools in
-[`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py):
-`lookup_account`, `issue_credit`, `escalate`. Sort them into **read**,
-**write**, and **irreversible**, and print the grade beside every call — so a
-line that moves money never again looks like a line that read a row.
+**Drill 2 · Grade the tools by consequence.** Look at two lines from a run that
+worked:
 
-**Drill 3 · Check the arguments before you dispatch.** This is the fix for the
-customer who was refused. `agent.py` looks the action up in a dictionary and
-calls `fn(**args)` with whatever the model produced. Declare what each tool
-accepts — names and types — and check the arguments against it before the call,
-refusing loudly when they do not match.
+```
+▸ tool  lookup_account(account_id='4471') -> {'found': True, ...}
+▸ tool  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
+```
 
-Two things to notice while you are in there. A stray key does not fail politely;
-`fn(**args)` raises `TypeError` and takes the run down. And the account id
-arrives as a string from the naive brain and as a number from a real model, on
-the same ticket — which nothing anywhere reports, because `lookup_account`
-happens to call `str()` on the way in. Your tool contract is a real interface
-between two systems, and right now nobody owns it.
+One read a row out of a file. The other moved ₹1,200 you cannot get back. Same
+colour, same shape, same single line — nothing for your eye to catch on. Fine
+with two calls on a screen. Not fine at a hundred runs a night in a log file,
+when the question on Tuesday morning is *did anything irreversible happen while
+we were asleep?*
+
+So write down what each of the three tools in
+[`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py)
+actually does to the world, and put that grade into the trace line. Three
+levels, one test each:
+
+- **read** — run it twice, nothing is different. `lookup_account`.
+- **write** — something changed and you could change it back. `escalate`.
+- **irreversible** — something changed and you cannot. `issue_credit`.
+
+**This prevents nothing.** `issue_credit` still pays whatever it is told. All
+you have built is a label — and the label is the point, because *"ask a human
+before irreversible actions"* is a rule you cannot write until something in the
+code knows which actions are irreversible. Week 2 is that rule.
+
+`escalate` is the one to argue about. Most rooms call it a write. Ask what would
+have to change for it to be irreversible: if escalating also emailed the
+customer, it would be. Same function, different grade — because **the grade
+describes what the function reaches, not what it is called.**
+
+**Drill 3 · Check the arguments before you dispatch.** At every step the model
+returns two things: the name of a tool, and the arguments to call it with.
+`agent.py` takes the name, looks it up, and calls the function with whatever
+came back:
+
+```python
+fn = TOOLS.get(act)      # agent.py:38
+res = fn(**args)         # agent.py:43
+```
+
+`fn(**args)` means *take the dictionary the model produced and use its keys as
+this function's parameter names*. The model is filling in a function call by
+hand, and nothing in between looks at what it wrote. There is no declaration
+anywhere of what a tool accepts, so there is nothing to check against even if
+you wanted to.
+
+Two things go wrong, and the quiet one is why this drill exists.
+
+**Loud.** The model writes `account` instead of `account_id`. Python raises
+`TypeError`, the run dies — and because it never reaches the end,
+`trace.summary()` never prints, so you lose the cost line on exactly the run you
+wanted it for.
+
+**Quiet — this is the ₹0.** The account id arrives as a string from the mock
+brain (`'4471'`) and as a number from a real model (`4471`), on the same ticket.
+Nothing reports it, because `lookup_account` happens to call `str()` on the way
+in and quietly repairs it. **That one `str()` is doing real work and nobody
+knows it is there.** Take it away and an honest ticket gets ₹0, with a clean
+trace and no error anywhere.
+
+So: write down what each tool accepts — names and types — next to the tools, and
+check the arguments against it before the call. **Decide first what happens when
+they do not match**, because your assistant will decide for you and not mention
+it:
+
+- **coerce** — quietly fix it up. This is what the code does today, and it is
+  exactly why the ₹0 was invisible.
+- **raise** — honest, but it kills the run and takes the cost line with it.
+- **refuse and return** — do not call the tool, return a refusal. It lands in
+  the history, reaches the next prompt, and the model can correct itself or
+  escalate.
+
+The industry word for that declaration is a **tool schema** — it is what
+Anthropic and OpenAI both call it in their function-calling APIs, so it is the
+word you will meet next week. *Contract* is the better word for the idea.
+
+This does not stop the agent paying the wrong person either. It makes a
+wrong-shaped call **say so, out loud, in the trace**, instead of being repaired
+behind your back. Which is week 1 in one sentence: you cannot fix what the
+system will not tell you about.
 
 **Drill 4 · Put cost on every step.**
 [`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)

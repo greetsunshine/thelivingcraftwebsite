@@ -154,19 +154,43 @@ Watch for these in the review move; at least one shows up almost every time.
 
 ### The problem
 
-`lookup_account`, `issue_credit` and `escalate` are three entries in one dict.
-Nothing in the code or the trace distinguishes a call that read a row from one
-that moved money.
+Here are two lines from a run that worked:
 
-The axis is **consequence, not spread**. What separates the three is whether
-anything changed and whether it can be taken back — read (nothing happened),
-write (recoverable), irreversible (not). That is why the drill is not called
-blast radius: radius is about how far a fault travels, which is a week 4
-question. This one is about whether you can walk it back at all.
+```
+▸ tool  lookup_account(account_id='4471') -> {'found': True, ...}
+▸ tool  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
+```
+
+One of them read a row out of a file. The other one moved ₹1,200 that you cannot
+get back. **They are the same colour, the same shape and the same one line.**
+There is nothing for your eye to catch on.
+
+That is survivable with two calls on a screen in front of you. It stops being
+survivable at a hundred runs a night in a log file, when the question somebody
+asks you on Tuesday morning is *"did anything irreversible happen while we were
+asleep?"* — and answering it means reading every line and knowing, from memory,
+which function names spend money.
+
+So the problem is not that the agent did something wrong. It is that **the
+system cannot tell you what kind of thing it did.**
+
+### What "consequence" means here
+
+Three levels, and the test for each is one question:
+
+| grade | the test | in this repo |
+|---|---|---|
+| **read** | run it twice — is anything different? No. | `lookup_account` |
+| **write** | something changed, and you could change it back | `escalate` |
+| **irreversible** | something changed and you cannot change it back | `issue_credit` |
+
+This is about **whether you can walk it back**, not how far the damage spreads.
+Spread is blast radius, and that is a week 4 question. If you can undo it, it is
+a bad afternoon. If you cannot, it is a different conversation.
 
 ### The solution
 
-A grade beside the tool, in `tools.py`:
+Write down what each tool does to the world, in one place, in `tools.py`:
 
 ```python
 GRADES = {
@@ -176,19 +200,52 @@ GRADES = {
 }
 ```
 
-and in the trace line for each call, so a line that moves money never again looks
-like a line that read a row.
+Then put the grade into the trace line, so it is visible without anyone having
+to recognise the function name:
+
+```
+▸ tool  read          lookup_account(account_id='4471') -> {'found': True, ...}
+▸ tool  IRREVERSIBLE  issue_credit(account_id='4471', amount=1200) -> {'credited': True, ...}
+```
+
+The exact shape is theirs to choose — a column, a prefix, a colour. What matters
+is that **the irreversible line is the one the eye lands on first.**
+
+### Say plainly what this does not do
+
+Nothing here prevents anything. `issue_credit` still pays whatever it is told,
+and all three of the money failures still happen exactly as before. All they
+have built is a label.
+
+Say that out loud, and then say why the label matters: **"ask a human before
+irreversible actions" is a rule you cannot write until something in the code
+knows which actions are irreversible.** Week 2 is that rule. This drill is the
+sentence it needs.
 
 ### The argument worth having
 
-`escalate` is where the room will disagree, and it should. It creates work for a
-human and it is not undoable in the ordinary sense — but nothing is lost if it
-fires wrongly, only attention. Most rooms land on **write**. The useful move is
-to ask what would have to be true for it to be **irreversible**: if escalation
-notified the customer, it would be.
+Grade `escalate` and the room will split. Let it.
 
-That is the grading system doing its job — the grade is a property of
-consequence, not of the verb.
+- **Write** — it creates work for a person. Something in the world changed.
+- **Read** — open the function. It returns `{"escalated": True, "reason": ...}`
+  and touches nothing. No queue, no ticket, no person. Nothing changed at all.
+- **Irreversible** — you cannot un-escalate.
+
+Most rooms land on write. The move that makes the idea land is to ask: **what
+would have to change for it to become irreversible?** If escalating also sent
+the customer an email saying we are looking into it, it would be — you cannot
+recall the email. Same function, same name, different grade.
+
+That is the whole point. **The grade is not a property of the function. It is a
+property of what the function reaches.** Which is why it has to be written down
+deliberately, by a person, rather than guessed from the verb in its name.
+
+### If a pair finishes early
+
+Print a running count at the end of each run — *"this run made 1 irreversible
+call"* — and then say what number they would alert on. Most people say "more
+than one", which is wrong for a ticket that legitimately needs two credits.
+Arriving at that is the exercise.
 
 ---
 
@@ -198,18 +255,38 @@ consequence, not of the verb.
 
 ### The problem
 
-`agent.py` looks the action up in a dict and calls `fn(**args)` with whatever the
-model produced. Nothing declares what a tool accepts and nothing checks. Two
-costs, one loud and one silent, and the silent one is why this drill exists.
+**The loop does the model's homework without checking it.**
 
-**Loud:** a stray key raises `TypeError` out of the loop and takes the run down —
-and, as drill 1 establishes, an exception out of `run()` also skips
-`trace.summary()`, so you lose the cost line on exactly the run you most want it.
+At every step the model returns two things: the name of a tool, and the
+arguments to call it with. `agent.py` takes the name, looks it up, and calls the
+function with whatever arguments came back:
 
-**Silent:** the account id arrives as a string from the naive brain and as an
-**int** from a real model, on the same ticket. Nothing reports it, because
-`lookup_account` calls `str()` on the way in. Remove that coercion and a
-legitimate ticket returns `{'found': False}`:
+```python
+fn = TOOLS.get(act)      # agent.py:38
+res = fn(**args)         # agent.py:43
+```
+
+`fn(**args)` means *take the dictionary the model produced and use its keys as
+the parameter names of this function*. So the model is filling in a function
+call by hand, and **nothing between the model and the function looks at what it
+wrote.** No declaration of what the tool accepts exists anywhere, so there is
+nothing to check against even if you wanted to.
+
+Two things go wrong. One is loud, one is silent, and the silent one is why this
+drill exists.
+
+**Loud — the run dies.** The model writes `account` where the function expects
+`account_id`. Python raises `TypeError: unexpected keyword argument`, the
+exception comes out of `run()`, and the whole run stops. It gets worse: because
+the run never reaches its end, `trace.summary()` never prints — so you lose the
+tokens, the time and the cost line on precisely the run you most wanted them for.
+
+**Silent — the ₹0.** The account id is a **string** when the mock brain produces
+it (`'4471'`) and a **number** when a real model produces it (`4471`). Same
+ticket, same code, different type. Nothing reports this today, because
+`lookup_account` happens to call `str()` on the way in and quietly repairs it.
+
+Take that one `str()` away and run a completely honest ticket:
 
 ```
 ▸ tool  lookup_account(account_id=4471) -> {'found': False, 'account_id': 4471}
@@ -218,34 +295,39 @@ legitimate ticket returns `{'found': False}`:
 paid out ₹0 · no credit issued
 ```
 
-The reasoning is impeccable, the trace is clean, nothing errors, and the payout
-line reads ₹0 — which after an hour of watching money leave wrongly looks like a
-success. **This is the only failure in the session where the system fails closed
-and a real customer waits.** Ask what dashboard would have caught it. Nothing in
-this repo would, and probably nothing in theirs.
+Nothing errored. Nothing was logged. The reasoning is correct given what it was
+told. And a customer who was genuinely owed ₹1,200 got nothing.
+
+**That one `str()` was doing real work and nobody knew it was there.** This is
+the only failure in the session where the system fails closed and a real
+customer waits. Ask what dashboard would have caught it. Nothing in this repo
+would, and probably nothing in theirs.
 
 ### Decide before you prompt
 
-> What does the tool do when the arguments are wrong — refuse, coerce, or raise?
+> **When the arguments are wrong, what should happen?**
 
-This is drill 3's version of drill 1's `escalate` question, and an assistant will
-answer it silently.
+Pick one before you let an assistant near this, because it will pick one for you
+and never mention it.
 
-- **Coerce** is what the repo does today, and it is precisely why the failure is
-  invisible.
-- **Raise** loses the summary and turns a recoverable bad argument into a dead run.
-- **Refuse and return** puts the refusal into history, so it reaches the next
-  step's prompt and the agent can escalate on its own — the same argument
-  `tools.py` makes for its guard returning rather than raising.
+- **Coerce** — quietly fix it up. `str(account_id)`. This is what the code does
+  today, and it is exactly why the ₹0 was invisible. A repair nobody can see is
+  indistinguishable from nothing being wrong.
+- **Raise** — throw an exception. Honest, but it kills the run and takes the
+  cost line with it. A recoverable bad argument becomes an outage.
+- **Refuse and return** — do not call the tool; return a refusal instead. The
+  refusal lands in `history`, reaches the next step's prompt, and the model can
+  see it was rejected and either correct itself or escalate. This is the same
+  argument `tools.py` makes for its own guard returning rather than raising.
 
-Second decision worth forcing: is `4471` as an int a **violation** or a
-**coercion**? Both are defensible. The undefendable answer is the current one,
-where it is neither because nobody decided.
+A second decision worth forcing: is `4471` as a number a **violation** to refuse,
+or a **shape to accept and convert**? Both are defensible. The undefendable
+answer is today's, where it is neither, because nobody decided.
 
 ### The solution
 
-Declare the contract next to the tools, in `tools.py`. No dependency — the repo
-has one on purpose.
+Write down what each tool accepts, next to the tools, in `tools.py`. No library
+— the repo has no dependencies on purpose, and this needs about twenty lines.
 
 ```python
 CONTRACTS = {
@@ -272,7 +354,8 @@ def check(action, args):
     return None
 ```
 
-Then in `agent.py`, before the call — refusing into history rather than raising:
+Then check before you dispatch, in `agent.py`, refusing into history rather than
+raising:
 
 ```python
 bad = check(act, args)
@@ -283,22 +366,33 @@ if bad:
     continue
 ```
 
-Run `make run` with a real key afterwards and the int is named instead of
-vanishing into a `str()` call.
+Run `make run` with a real key afterwards and the number is **named** in the
+trace instead of vanishing into a `str()` call.
+
+### Say plainly what this does not do
+
+It does not stop the agent paying the wrong person, and it would not have
+prevented any of the three runs where money left. What it does is make a
+wrong-shaped call **say so, out loud, in the trace** — instead of being repaired
+behind your back, or killing the run.
+
+That is week 1 in one drill: **you cannot fix what the system will not tell you
+about.**
 
 ### The word to use
 
 Say **tool schema** at least once. That is what Anthropic and OpenAI both call
-the declaration in their function-calling APIs, and it is what they will meet the
-moment they leave this repo. *Contract* is the better word for the idea; *schema*
-is the word that will be on the page in front of them next week.
+this declaration in their function-calling APIs, and it is what they will meet
+the moment they leave this repo. *Contract* is the better word for the idea;
+*schema* is the word that will be on the page in front of them next week.
 
 ### What the assistant will get wrong
 
 - **Reaches for a schema library.** Pydantic, jsonschema, dataclasses. Ask what
   the failure actually needed.
 - **Coerces instead of refusing** — `str(args["account_id"])` — reproducing the
-  exact bug the drill exists to expose, one layer up. The most common outcome.
+  exact bug the drill exists to expose, one layer up. The most common outcome by
+  a distance.
 - **Raises.** Loses the cost line, and turns a bad argument into an outage.
 - **Derives the contract from the function signature** with `inspect`. Clever,
   and it means the contract can never disagree with the code — which sounds like
@@ -307,7 +401,14 @@ is the word that will be on the page in front of them next week.
   defeats the point.
 - **Validates but never plumbs the refusal into history**, so the model never
   learns its call was rejected and repeats it until the step budget runs out.
-  Drill 1's lesson, rediscovered.
+  Drill 1's lesson, rediscovered the hard way.
+
+### If a pair finishes early
+
+Ask what their checker should do if the model returns `args` as a JSON *string*
+rather than an object — `"{\"account_id\": \"4471\"}"` instead of a real
+dictionary. A violation to refuse, or a shape to accept and parse? Both are
+defensible; letting it through because it happens to work today is not.
 
 ---
 
