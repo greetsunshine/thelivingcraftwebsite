@@ -201,7 +201,11 @@ const when = (iso: string) =>
         const data = await res.json();
         
         if (res.ok) {
-          contentDiv.innerHTML = marked.parse(data.summary);
+          // See adrs.astro — a cut-off summary comes back 200 and looks whole.
+          const warning = data.truncated
+            ? `<p style="color:var(--danger);font-size:13px;margin:0 0 10px">${data.error}</p>`
+            : '';
+          contentDiv.innerHTML = warning + marked.parse(data.summary);
         } else {
           contentDiv.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
         }

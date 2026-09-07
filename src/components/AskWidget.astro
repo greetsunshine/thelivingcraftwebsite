@@ -253,6 +253,17 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     30% { opacity: 1; }
   }
 
+  /* the dots, now with a label saying which tool is running */
+  .ask-log :global(.ask-status) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-1);
+  }
+  .ask-log :global(.ask-status[hidden]) { display: none; }
+
   /* input */
   .ask-form {
     display: flex; align-items: center;
@@ -385,13 +396,76 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
       return el;
     }
 
-    function thinking() {
+    // A bot bubble that fills in as the answer streams.
+    //
+    // It replaces the old thinking() placeholder and keeps the dots, which now
+    // carry a label — "Checking the fact base" while a tool runs, rather than
+    // three pulsing dots for the length of an Opus call and no clue whether
+    // anything is happening.
+    //
+    // Re-renders from a text buffer on every delta instead of appending nodes.
+    // That is O(n²) in the length of the answer and irrelevant at two or three
+    // sentences, and it buys the same guarantee bubble() makes: textContent
+    // throughout, so a model response can never inject markup into the page.
+    function streaming() {
       var el = document.createElement('div');
       el.className = 'ask-msg bot';
-      el.innerHTML = '<div class="ask-thinking"><span></span><span></span><span></span></div>';
+
+      var status = document.createElement('p');
+      status.className = 'ask-status';
+      var dots = document.createElement('span');
+      dots.className = 'ask-thinking';
+      dots.innerHTML = '<span></span><span></span><span></span>';
+      var label = document.createElement('span');
+      status.appendChild(dots);
+      status.appendChild(label);
+      el.appendChild(status);
+
       log.appendChild(el);
       log.scrollTop = log.scrollHeight;
-      return el;
+
+      var raw = '';
+
+      function render() {
+        while (el.lastChild && el.lastChild !== status) el.removeChild(el.lastChild);
+        var paras = raw.split(/\n{2,}/);
+        for (var i = 0; i < paras.length; i++) {
+          var p = document.createElement('p');
+          p.textContent = paras[i].replace(/\n/g, ' ').trim();
+          if (p.textContent) el.appendChild(p);
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+
+      return {
+        // Ignored once text has started: a tool call after the first sentence
+        // should not blank what the visitor is already reading.
+        status: function (text: string) {
+          if (raw) return;
+          label.textContent = ' ' + text + '…';
+        },
+        push: function (delta: string) {
+          raw += delta;
+          status.hidden = true;
+          render();
+        },
+        text: function () {
+          return raw.trim();
+        },
+        /** Nothing more is coming. Drops the bubble if it never got any text. */
+        settle: function () {
+          status.hidden = true;
+          if (!raw.trim()) el.remove();
+          else render();
+        },
+        /** Settle, then say what went wrong. A partial answer is kept. */
+        fail: function (message: string) {
+          status.hidden = true;
+          if (!raw.trim()) el.remove();
+          else render();
+          bubble(message, 'bot err');
+        },
+      };
     }
 
     // Web3Forms rejects server-side posts on the free plan, so the lead is
@@ -441,10 +515,12 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
 
       bubble(question, 'user');
       input.value = '';
-      var pending = thinking();
       // The question text itself is logged server-side by /api/ask; this is the
       // countable event, so the funnel can be read without joining tables.
       window.lcTrack?.('ask_question');
+
+      var out = streaming();
+      out.status('Thinking');
 
       try {
         var res = await fetch('/api/ask', {
@@ -458,21 +534,71 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
             sessionId: sessionId,
           }),
         });
-        var data = await res.json();
-        pending.remove();
 
-        if (data.answer) {
-          bubble(data.answer, 'bot');
+        // Everything refused before the stream opens — rate limit, budget, an
+        // unconfigured key — comes back as ordinary JSON with a real status.
+        // A 200 with a body is the only thing that is a stream.
+        if (!res.ok || !res.body) {
+          var refused: any = {};
+          try {
+            refused = await res.json();
+          } catch (e) {}
+          out.fail(refused.error || 'Something went wrong. Email apply@thelivingcraft.ai.');
+          busy = false;
+          send.disabled = false;
+          input.focus();
+          return;
+        }
+
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var buf = '';
+        var capture: any = null;
+        var failed = '';
+
+        for (;;) {
+          var chunk = await reader.read();
+          if (chunk.value) buf += decoder.decode(chunk.value, { stream: true });
+
+          // Whole lines only. A network chunk can split a JSON object in half,
+          // and half an object is not a parse error to recover from — it is the
+          // first part of one that finishes in the next chunk.
+          var nl = buf.indexOf('\n');
+          while (nl >= 0) {
+            var line = buf.slice(0, nl).trim();
+            buf = buf.slice(nl + 1);
+            nl = buf.indexOf('\n');
+            if (!line) continue;
+            var ev: any;
+            try {
+              ev = JSON.parse(line);
+            } catch (e) {
+              continue;
+            }
+            if (ev.t === 'delta') out.push(ev.v);
+            else if (ev.t === 'status') out.status(ev.v);
+            else if (ev.t === 'done') capture = ev.capture;
+            else if (ev.t === 'error') failed = ev.v;
+          }
+
+          if (chunk.done) break;
+        }
+
+        var answer = out.text();
+        out.settle();
+
+        if (failed) {
+          bubble(failed, 'bot err');
+        } else if (answer) {
           history.push({ role: 'user', content: question });
-          history.push({ role: 'assistant', content: data.answer });
+          history.push({ role: 'assistant', content: answer });
           if (history.length > 12) history = history.slice(-12);
-          if (data.capture) await deliverCapture(data.capture);
+          if (capture) await deliverCapture(capture);
         } else {
-          bubble(data.error || 'Something went wrong. Email apply@thelivingcraft.ai.', 'bot err');
+          bubble('Something went wrong. Email apply@thelivingcraft.ai.', 'bot err');
         }
       } catch (err) {
-        pending.remove();
-        bubble('Network trouble. Email apply@thelivingcraft.ai and Sunil will pick it up.', 'bot err');
+        out.fail('Network trouble. Email apply@thelivingcraft.ai and Sunil will pick it up.');
       }
 
       busy = false;

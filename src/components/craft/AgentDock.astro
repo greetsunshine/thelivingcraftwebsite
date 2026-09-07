@@ -18,11 +18,18 @@
 // NO BROWSER STORAGE. Open/closed lives in a class on the element and dies with
 // the tab, like every other piece of client state in this repo.
 //
-// WHAT THIS PANEL SAYS IS STILL A MOCK. The replies below are keyword matches,
-// and they are not what /craft/discussion actually does — see
-// docs/learning-agent/guided-walkthrough/plan.md §14. Moving it was one change;
-// wiring it to /api/craft/discussion is the next one. Until then it points at
-// the forum rather than pretending to be it.
+// IT IS WIRED NOW, AND IT STILL DOES NOT IMPROVISE. Until 7 September the
+// replies here were keyword matches — a fourth voice, in a product that spends
+// real effort making the other three impossible to confuse, saying things no
+// source had said. It now asks /api/craft/discussion for a `lookup`, which is a
+// READ against exactly the two grounded sources a posted thread is answered
+// from: session frontmatter and facts.ts, then a verbatim answer Sunil has
+// already given. No model runs on this path.
+//
+// The important half is what happens when neither answers. It says so and hands
+// the question to the room with the text carried over — it does not guess, and
+// it does not quietly open a thread on the learner's behalf either. Asking here
+// writes nothing; posting is a thing you choose on the forum page.
 ---
 
 <div class="agent-dock" id="agentDock" transition:persist>
@@ -96,8 +103,28 @@
     const INITIAL_CHIPS = [
       "What's due this week?",
       'When is the next session?',
-      'Ask the cohort something',
+      'What does week 3 cover?',
     ];
+
+    // The answers come back as the markdown a forum reply is rendered from, and
+    // this panel writes textContent — so the emphasis markers have to go, or a
+    // learner reads "**Week 3 — Evals**" with the asterisks in it.
+    const plain = (s: string) =>
+      s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').trim();
+
+    // Grounded answers carry their own attribution as a trailing italic line —
+    // "From the week 3 session page", "Sunil answered this on 4 March". That is
+    // the note this panel already had a slot for, so it is lifted out of the
+    // body rather than shown twice or dropped.
+    function splitAttribution(md: string): { text: string; note?: string } {
+      const parts = md.split(/\n{2,}/);
+      const last = (parts[parts.length - 1] ?? '').trim();
+      const m = /^\*([^*].*)\*$/.exec(last);
+      if (m && parts.length > 1) {
+        return { text: plain(parts.slice(0, -1).join('\n\n')), note: plain(m[1]) };
+      }
+      return { text: plain(md) };
+    }
 
     function renderChips(list: string[]) {
       chips!.replaceChildren();
@@ -114,12 +141,23 @@
       }
     }
 
-    function bubble(role: 'you' | 'agent', text: string, note?: string) {
+    function bubble(
+      role: 'you' | 'agent',
+      text: string,
+      note?: string,
+      link?: { href: string; label: string },
+    ) {
       const row = document.createElement('div');
       row.className = `dock-msg ${role}`;
       const b = document.createElement('div');
       b.className = 'dock-bubble';
-      b.textContent = text;
+      // Paragraphs, textContent throughout — a grounded answer is still text
+      // from the database and never becomes markup.
+      for (const para of text.split(/\n{2,}/)) {
+        const p = document.createElement('p');
+        p.textContent = para.replace(/\n/g, ' ').trim();
+        if (p.textContent) b.appendChild(p);
+      }
       row.appendChild(b);
       if (note) {
         const n = document.createElement('p');
@@ -127,41 +165,61 @@
         n.textContent = note;
         row.appendChild(n);
       }
+      if (link) {
+        const a = document.createElement('a');
+        a.className = 'dock-link';
+        a.href = link.href;
+        a.textContent = link.label;
+        row.appendChild(a);
+      }
       chat!.appendChild(row);
       chat!.scrollTop = chat!.scrollHeight;
+      return row;
     }
 
-    function send() {
+    async function send() {
       const text = input!.value.trim();
       if (!text) return;
       if (!dock!.classList.contains('is-open')) setOpen(true);
 
       bubble('you', text);
       input!.value = '';
+      const pending = bubble('agent', 'Looking…');
+      pending.classList.add('is-pending');
 
-      // Placeholder replies. Not the real discussion flow — see the note above.
-      window.setTimeout(() => {
-        const q = text.toLowerCase();
-        if (q.includes('due') || q.includes('session') || q.includes('when')) {
-          bubble(
-            'agent',
-            'Week 3 — Evals that catch what review misses. Live online, Thursday. The drill is due before week 4.',
-            'From the week 3 session page',
-          );
-        } else if (q.includes('sunil')) {
-          bubble(
-            'agent',
-            'Post it in Discussion and mark it for Sunil — he reads those before the next session.',
-            'Routed, not answered',
-          );
-        } else {
-          bubble(
-            'agent',
-            'That one belongs in Discussion, where the rest of the cohort can see it. Somebody has usually hit the same thing, and Sunil reads the room before each session.',
-            'Not answered here, on purpose',
-          );
+      try {
+        const res = await fetch('/api/craft/discussion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'lookup', body: text }),
+        });
+        const data = await res.json();
+        pending.remove();
+
+        if (res.ok && data.answer) {
+          const { text: answer, note } = splitAttribution(String(data.answer));
+          bubble('agent', answer, note ?? 'From the course material');
+          return;
         }
-      }, 500);
+
+        // NOT GUESSING IS THE FEATURE. Everything the syllabus and the fact base
+        // can answer has been tried by this point; anything left is a question
+        // about the material, and the room plus Sunil is the honest answer to it.
+        bubble(
+          'agent',
+          "Nothing in the session pages or the programme facts answers that, so I am not going to guess at it. Put it to the room — somebody has usually hit the same thing, and Sunil reads Discussion before each session.",
+          'Not answered here, on purpose',
+          { href: `/craft/discussion?ask=${encodeURIComponent(text)}`, label: 'Ask the cohort →' },
+        );
+      } catch {
+        pending.remove();
+        bubble(
+          'agent',
+          'Could not reach the course data just now. Discussion still works.',
+          'Offline',
+          { href: '/craft/discussion', label: 'Open Discussion →' },
+        );
+      }
     }
 
     form.addEventListener('submit', (e) => {
@@ -314,6 +372,24 @@
     font-size: var(--size-1);
     color: var(--ink-faint);
   }
+
+  /* The handoff to the forum, shown only when nothing grounded answered. */
+  .dock-link {
+    display: inline-block;
+    margin: 8px 0 0 20px;
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+  }
+  .dock-link:hover { opacity: 0.72; }
+
+  .dock-msg.is-pending .dock-bubble { color: var(--ink-faint); }
+
+  /* Paragraphs inside a bubble — a session answer is two or three of them. */
+  .dock-bubble p { margin: 0; }
+  .dock-bubble p + p { margin-top: 8px; }
 
   .dock-chips {
     flex: none;

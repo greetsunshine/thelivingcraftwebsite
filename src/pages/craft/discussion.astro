@@ -183,6 +183,20 @@ const ordered = [...threads].sort(
     newBtn.addEventListener('click', () => open(!!composer.hidden));
     cancelBtn.addEventListener('click', () => open(false));
 
+    // Handed over by the agent dock, which routes here rather than guessing at
+    // anything the syllabus does not answer. Prefilling is what makes that a
+    // handoff instead of a dead end — nobody retypes the question they just
+    // typed, and the ones who would have given up are the ones worth hearing.
+    const carried = new URLSearchParams(location.search).get('ask');
+    if (carried) {
+      const bodyEl = document.getElementById('body') as HTMLTextAreaElement | null;
+      if (bodyEl) {
+        bodyEl.value = carried.slice(0, 6000);
+        open(true);
+        bodyEl.focus();
+      }
+    }
+
     const postBtn = document.getElementById('postBtn') as HTMLButtonElement;
     const msg = document.getElementById('postMsg') as HTMLElement;
 

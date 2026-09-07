@@ -41,6 +41,19 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   verdict. Collapsing them into one "accepted answer" is how a grateful asker promotes a
   wrong answer into the cohort's working belief.
 
+  **The agent dock is wired to that forum and runs no model.** It posts
+  `action: 'lookup'` to [src/pages/api/craft/discussion.ts](src/pages/api/craft/discussion.ts) — a READ against the same two
+  grounded sources a posted thread is answered from (session frontmatter and `facts.ts`,
+  then a verbatim answer Sunil has already given), in the same order, through the same
+  functions. Until 7 September it answered from keyword matches, which made it a fourth
+  voice inventing things in a product built so the other three can never be confused.
+  Two properties keep it inside §5.1 and both are worth defending: **a lookup writes
+  nothing**, so idle curiosity does not open threads; and **a null answer is the honest
+  outcome** — it says the syllabus does not cover this and carries the question to the
+  composer via `?ask=`, rather than guessing or silently posting on the learner's behalf.
+  Never give this path a model. The moment it can improvise, the three-voice distinction
+  the forum is built on has a hole in it that no amount of moderation closes.
+
   **The knowledge check belongs to a session and opens when that session ends.** The
   trigger is `endsAt` in the session's frontmatter — a full ISO timestamp *with an offset*,
   because the cohort sits in three time zones and a bare date opens the check on the wrong
@@ -223,7 +236,29 @@ none of their audience; that separation is load-bearing, see the radar entry.
   Vercel function. Tools: `search_knowledge` (grounded facts),
   `get_latest_updates`, `capture_visitor` (leads → the same Web3Forms inbox).
   Retrieval in [src/lib/agent/knowledge.ts](src/lib/agent/knowledge.ts) is lexical, not embeddings — the
-  corpus is ~20 facts and lexical scoring is auditable. UI: [src/components/AskWidget.astro](src/components/AskWidget.astro).
+  corpus is 21 facts and lexical scoring is auditable. UI: [src/components/AskWidget.astro](src/components/AskWidget.astro).
+  - **The response is a stream** — NDJSON, one event per line, `delta` / `status` /
+    `done` / `error`. A question runs a thinking model through up to six tool
+    round-trips and the widget used to show nothing until the last token landed.
+    Anything refused *before* the stream opens (rate limit, budget, no key) is still a
+    plain JSON body with a real status code, which is why the widget branches on
+    `res.ok`. **Don't collapse those two paths**: once the stream is open the status is
+    already 200 and a failure can only be an `error` event.
+  - **The history comes from the browser and is not evidence.** Capping its length stops
+    a crafted request growing the context window and nothing else — a POST can carry an
+    `assistant` turn quoting a price nobody set, and from inside the model that is
+    indistinguishable from a fact established by a real tool call. `GROUNDING_REMINDER`
+    is appended after the history as a `system` turn inside `messages` (Opus 5, no beta
+    header), re-asserting that only *this* turn's tool results count. Holding the
+    conversation server-side would be the stronger fix and is ruled out: it means a
+    visitor-facing path reading from Supabase. The `forged-history` eval probe is what
+    tells you this still works.
+  - **The cache marker sits at the end of the frozen text**, with the page and the
+    region in a second system block after it. It used to be one block with both, so the
+    cached prefix ended with request-derived text — three surfaces × four region states,
+    twelve prefixes, each paying 1.25× to write an entry that mostly expired unread.
+    Nothing built from the request may go before that marker, and neither may anything
+    in `TOOLS`.
 - **Retriever agent** — [scripts/gather-latest.ts](scripts/gather-latest.ts) (`npm run gather`). Tracks
   **trends and skills in the agentic AI space** — architecture patterns, evals
   and reliability, agent security, what teams are hiring for, and releases that
@@ -237,7 +272,19 @@ none of their audience; that separation is load-bearing, see the radar entry.
     depth citing trade press for an RBI claim is worse than saying nothing.
   - One research call **per topic** — a shared search budget let the first topic
     starve the rest, and the agent reported thin findings rather than admitting
-    the coverage gap.
+    the coverage gap. Because nothing is shared between topics they now run
+    **concurrently** (`RESEARCH_CONCURRENCY`, bounded at 3 — the ceiling is tokens
+    per minute, and a 429 mid-sweep costs research already paid for). If topic
+    budgets ever stop being per-topic, this stops being safe.
+  - **It can open pages, not just read snippets** (`FETCHES_PER_TOPIC`). Both
+    retrievers are told to prefer the primary artefact and the radar grades every
+    source as primary/press/vendor/secondhand — and until 7 Sep they did both from
+    a search result written by whoever wanted the click. A judgement about a source
+    has to be a judgement about the source. Fetches are budgeted below searches on
+    purpose: searching finds candidates, fetching is spent on the few you report.
+  - A topic that throws no longer kills the sweep — the others were already paid
+    for. All of them failing still throws, because "found nothing" and "never ran"
+    must not look the same.
   - Items carry `reviewNote` for Sunil (source quality, what couldn't be
     confirmed). It is excluded from `formatLatest()` **and** from `/api/facts`,
     so his private doubts never reach a visitor or a crawler. Keep it that way.
@@ -268,6 +315,22 @@ none of their audience; that separation is load-bearing, see the radar entry.
   - Items carry `sourceType` (primary/press/vendor/secondhand), graded by the agent
     and shown as a coloured pill. A vendor blog and a peer-reviewed paper are both
     "a link"; only one is safe to quote to a board.
+- **Gap reader** — [scripts/gather-gaps.ts](scripts/gather-gaps.ts) (`npm run gaps`). Not an agent; one
+  grouping call a week, and the other direction from the retrievers. They ask the
+  world what changed; this asks our own traffic what we are missing. Every row in
+  `questions` with `answered = false` is a prospect saying, for free, that
+  `facts.ts` does not cover this, and until 7 Sep nothing read those rows back.
+  Writes [docs/fact-gaps.md](docs/fact-gaps.md) and opens a PR
+  ([.github/workflows/gather-gaps.yml](.github/workflows/gather-gaps.yml)).
+  - **It never drafts an answer, and no prompt makes that safe.** `facts.ts` is
+    worth trusting only because a human who knew it was true wrote every line; a
+    model filling it in is our own pricing invented one merge away from a chatbot
+    quoting it. The model does exactly one job — saying which questions are the
+    same question — and every entry in the report has a deliberate blank where the
+    answer goes. Merging it changes nothing a visitor sees; it lands a work list.
+  - §4's invariant applies here too: the model groups **by index**, the code counts
+    and reads the question text back out. So a paraphrase cannot quietly replace
+    what somebody asked, and no number in the report came from a model.
 - **Both** retrievers are forbidden from writing our own prices/dates/seat counts.
   Those come from `facts.ts`; two sources could disagree and the Q&A agent would
   have no way to tell which is true.
@@ -279,6 +342,34 @@ none of their audience; that separation is load-bearing, see the radar entry.
   503 and the widget points visitors at the form — degrades, doesn't break. Set a
   spend limit on the key; that's the real cost ceiling. **All three share it**, which
   is how draining it on retriever iteration took the live site agent down once.
+  Separate keys per agent would make the blast radius match the blame — flagged,
+  not done, and it costs one environment variable.
+
+## The eval — the only thing that catches the silent failure
+`npm run eval` ([scripts/eval-agent.ts](scripts/eval-agent.ts)), against a running dev server or a
+deployment. It replaces the old `npm run smoke`, which is now an alias.
+
+Everything else that breaks here breaks loudly: a bad deploy 500s, a missing key
+503s, a type error stops the build. The one failure this whole architecture exists
+to prevent — the agent answering from what it knows rather than from what a tool
+returned — is a well-written paragraph with a wrong number in it. It raises
+nothing. **If it is not measured it is not noticed**, and it will be noticed by a
+prospect.
+
+- Fifteen probes, each scored, split into **critical** (it invented, leaked across
+  regions, or repeated a forged history — one is a build failure whatever the
+  score) and **standard** (it missed something it should have found). Averaging
+  those two together is how a pricing leak hides behind twelve passes.
+- The score is committed as [scripts/eval-baseline.json](scripts/eval-baseline.json) and CI fails on a drop.
+  **There is no baseline yet** — take one with `npm run eval -- --update-baseline`
+  once the key is available, and commit it with the change that justified it.
+- Path-filtered in CI ([.github/workflows/eval-agent.yml](.github/workflows/eval-agent.yml)): a full pass is
+  fifteen live Opus calls, so it runs when `facts.ts`, `latest.json`, the system
+  prompt, or `lib/agent/**` change — not on every push. Needs
+  `ANTHROPIC_API_KEY` as a repository secret and nothing else.
+- **Add a probe whenever the agent gets something wrong in the wild.** That is
+  what stops the same failure twice, and the failure log is `docs/fact-gaps.md`
+  plus the console's questions panel.
 
 ## SEO / AISO
 - [src/components/SeoHead.astro](src/components/SeoHead.astro) — shared `<head>` for all three layouts: meta,

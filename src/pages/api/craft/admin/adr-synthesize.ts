@@ -9,6 +9,16 @@ export const prerender = false;
 // money per call, and a browser prefetch or a refresh must not bill.
 const SUMMARY_MODEL = 'claude-haiku-4-5-20251001';
 
+// Was 500, which is not enough for three headings over eight ADRs — the summary
+// ran out mid-sentence, and because nothing checked stop_reason it was returned
+// as though it were finished. A truncated synthesis is worse than none: the
+// third heading is "what nobody mentioned", so the section most likely to be
+// cut is the one carrying the blind spots this endpoint exists to surface.
+//
+// Haiku output is cheap enough that this ceiling should never be the binding
+// constraint. If it is ever hit again, the check below says so out loud.
+const MAX_SUMMARY_TOKENS = 2000;
+
 export const POST: APIRoute = async ({ request }) => {
   let week: number;
   try {
@@ -63,19 +73,48 @@ Do not evaluate or grade the learners.`;
   try {
     const response = await anthropic.messages.create({
       model: SUMMARY_MODEL,
-      max_tokens: 500,
+      max_tokens: MAX_SUMMARY_TOKENS,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const block = response.content[0];
-    if (block && block.type === 'text') {
-      return new Response(JSON.stringify({ summary: block.text }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (response.stop_reason === 'refusal') {
+      return new Response(JSON.stringify({ error: 'The model declined to summarise these.' }), { status: 502 });
     }
-    
-    return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
+
+    // Take every text block, not just the first. One block is the usual shape
+    // and not a guarantee, and reading content[0] alone silently drops the rest.
+    const summary = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('')
+      .trim();
+
+    if (!summary) {
+      return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
+    }
+
+    // Truncation is not a summary that is merely short — it stops mid-sentence,
+    // and it looks exactly like a finished one to whoever reads the panel. Say
+    // so rather than presenting a cut-off room summary as the room's position.
+    if (response.stop_reason === 'max_tokens') {
+      console.error(
+        `ADR synthesis for week ${week} hit max_tokens (${MAX_SUMMARY_TOKENS}) over ` +
+          `${data.length} ADRs — the summary is cut off. Raise MAX_SUMMARY_TOKENS.`,
+      );
+      return new Response(
+        JSON.stringify({
+          summary,
+          truncated: true,
+          error: 'This summary was cut off before it finished. Re-run it, or read the ADRs directly.',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    return new Response(JSON.stringify({ summary }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
     console.error('ADR synthesis failed:', err);
     return new Response(JSON.stringify({ error: 'Synthesis failed' }), { status: 500 });

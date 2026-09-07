@@ -9,6 +9,11 @@ export const prerender = false;
 // money per call, and a browser prefetch or a refresh must not bill.
 const SUMMARY_MODEL = 'claude-haiku-4-5-20251001';
 
+// Was 400. See the note in adr-synthesize.ts — same bug, same fix. Here the
+// truncated section is "specific pacing adjustments", which is the only part of
+// the summary that changes what Sunil does before the next session.
+const MAX_SUMMARY_TOKENS = 2000;
+
 export const POST: APIRoute = async ({ request }) => {
   let week: number;
   try {
@@ -62,19 +67,43 @@ Format your output as markdown. Focus on:
   try {
     const response = await anthropic.messages.create({
       model: SUMMARY_MODEL,
-      max_tokens: 400,
+      max_tokens: MAX_SUMMARY_TOKENS,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const block = response.content[0];
-    if (block && block.type === 'text') {
-      return new Response(JSON.stringify({ summary: block.text }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (response.stop_reason === 'refusal') {
+      return new Response(JSON.stringify({ error: 'The model declined to summarise these.' }), { status: 502 });
     }
-    
-    return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
+
+    const summary = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('')
+      .trim();
+
+    if (!summary) {
+      return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
+    }
+
+    if (response.stop_reason === 'max_tokens') {
+      console.error(
+        `Feedback synthesis for week ${week} hit max_tokens (${MAX_SUMMARY_TOKENS}) over ` +
+          `${data.length} responses — the summary is cut off. Raise MAX_SUMMARY_TOKENS.`,
+      );
+      return new Response(
+        JSON.stringify({
+          summary,
+          truncated: true,
+          error: 'This summary was cut off before it finished. Re-run it, or read the responses directly.',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    return new Response(JSON.stringify({ summary }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (err) {
     console.error('Feedback synthesis failed:', err);
     return new Response(JSON.stringify({ error: 'Synthesis failed' }), { status: 500 });

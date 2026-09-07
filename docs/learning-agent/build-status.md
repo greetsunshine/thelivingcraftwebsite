@@ -421,11 +421,15 @@ Recorded here so they are not silently re-litigated.
   - **Familiarity comes out of the sidebar** and becomes a dashboard card at week 6,
     matching how intake is already handled. (It is in the rail today because of the
     "link the orphan pages" fix — the wrong lever.)
-  - **The agent dock becomes a discussion widget**, not a tutor chat. It is still a mock
-    with keyword-matched replies; they now point at `/craft/discussion` rather than
-    advertising the killed PoC design, but wiring it to `/api/craft/discussion` is not
-    done. Making it a tutor as originally written would violate §5.1. The tour cannot
-    ship over the top of it.
+  - **The agent dock is a discussion widget, not a tutor chat — and it is wired now**
+    (7 Sep). It calls `/api/craft/discussion` with `action: 'lookup'`, a READ that runs
+    the same two grounded sources a posted thread is answered from — session frontmatter
+    and `facts.ts`, then a verbatim answer Sunil has already given — and runs no model at
+    all. A `lookup` writes nothing, so idle curiosity does not open a thread. When nothing
+    grounded answers, it says so and carries the question to the forum composer via
+    `?ask=`, which `/craft/discussion` now prefills. Making it a tutor as originally
+    written would violate §5.1; this is the version that does not. The tour can now ship
+    over the top of it.
 
 ---
 
@@ -433,6 +437,7 @@ Recorded here so they are not silently re-litigated.
 
 | Date | Change |
 |---|---|
+| 7 Sep 2026 | **The agent dock stopped improvising.** It answered from keyword matches on every `/craft` page — a fourth voice, in a product that spends real effort making the other three impossible to confuse, saying things no source had said. It now asks `/api/craft/discussion` for a `lookup`: a read against session frontmatter and `facts.ts`, then a verbatim past answer from Sunil, with **no model on the path**. Asking writes nothing, so curiosity no longer opens threads. When nothing grounded answers it says so and hands the question to the composer, which `/craft/discussion` prefills from `?ask=`. Also fixed here: the ADR and feedback synthesizers capped output at 500 and 400 tokens and never checked `stop_reason`, so a summary of eight ADRs stopped mid-sentence in "what nobody mentioned" and was presented as finished. |
 | 2 Sep 2026 | First audit of `feat/learner-dashboard-poc` against the 2 September spec. |
 | 2 Sep 2026 | Steps 1–6 done. All seven spec contradictions fixed; eight of ten missing items built. Two schema columns added — run `supabase/schema.sql` before deploying. |
 | 2 Sep 2026 | Steps 7–9 done. Feedback loop closed both ways (`feedback_responses`); quiz bank restructured to one file per week with items carrying their own `week`; `CLAUDE.md` and the teaching README brought up to date. Only reading-opens and the authoring remain. |

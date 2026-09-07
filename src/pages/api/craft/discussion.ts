@@ -18,6 +18,9 @@ import {
   replyAsLearner,
   markResolved,
   askSunil,
+  answerFromGround,
+  relayApprovedAnswer,
+  BODY_MAX_CHARS,
   type SessionFact,
 } from '../../../lib/craft/discussion';
 
@@ -88,6 +91,34 @@ export const POST: APIRoute = async ({ request, locals }) => {
         answerSource: result.answerSource ?? null,
         escalated: result.escalated ?? false,
       },
+      200,
+    );
+  }
+
+  // A READ. It writes nothing, and that is the entire point of it existing
+  // separately from 'post'.
+  //
+  // The agent dock at the bottom of every /craft page asks this on every
+  // question a learner types into it. Routing that through postThread would
+  // mean a forum thread per idle "when is week 3", which is both noise in the
+  // room and a write triggered by curiosity.
+  //
+  // It reaches exactly the two grounded sources 'post' reaches, in the same
+  // order and through the same functions — session frontmatter and facts.ts
+  // first, then a verbatim answer Sunil has already given. No model runs here.
+  // A null answer is the honest outcome and the dock says so, rather than
+  // improvising, which is the behaviour spec §5.1 is actually about.
+  if (action === 'lookup') {
+    const { body } = payload;
+    if (!body || typeof body !== 'string' || body.trim() === '') {
+      return json({ error: 'Ask something first.' }, 400);
+    }
+
+    const q = body.trim().slice(0, BODY_MAX_CHARS);
+    const grounded = answerFromGround(q, await sessionFacts()) ?? (await relayApprovedAnswer(q));
+
+    return json(
+      { answer: grounded?.answer ?? null, answerSource: grounded?.source ?? null },
       200,
     );
   }
