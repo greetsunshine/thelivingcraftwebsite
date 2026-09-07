@@ -168,7 +168,7 @@ about.
 ambiguous, the assistant will decide it silently, and that is a business rule set
 by autocomplete.
 
-**02:20 · Drill 2 — grade the tools by blast radius.** Quick. The argument worth
+**02:20 · Drill 2 — grade the tools by consequence.** Quick. The argument worth
 having is `escalate`: most rooms say write. Ask what would make it irreversible —
 *if escalation notified the customer, it would be.*
 

@@ -42,7 +42,7 @@ built by people who have spent a week looking at the gap.
 
 ## The three tools, and what they can reach
 
-The point of grading is that **blast radius has nothing to do with the name.**
+The point of grading is that **consequence has nothing to do with the name.**
 
 | tool | looks like | actually |
 |---|---|---|

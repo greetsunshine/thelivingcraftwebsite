@@ -586,7 +586,7 @@ that number — in week 5 we come back to the harness and ask what happens to it
 when one loop is no longer enough, which is the least reversible decision in
 this whole course.
 
-**Drill 2 · Grade the tools by blast radius.** Three tools in
+**Drill 2 · Grade the tools by consequence.** Three tools in
 [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py):
 `lookup_account`, `issue_credit`, `escalate`. Sort them into **read**,
 **write**, and **irreversible**, and print the grade beside every call — so a
@@ -657,7 +657,7 @@ not. The better model moves next quarter. The boundary you drew does not.
 Read these, and post a number 1 to 5 on the last one.
 
 - Make a silent failure announce itself to a machine, not just to a person reading a terminal
-- Grade a tool by what it can do rather than by what it is called
+- Grade a tool by its consequence rather than by its name
 - Write a contract for a tool and refuse a call that does not match it
 - **Give a coding assistant a decision instead of a task, and review what it returns against that decision**
 

@@ -150,13 +150,19 @@ Watch for these in the review move; at least one shows up almost every time.
 
 ---
 
-## Drill 2 · Grade the tools by blast radius
+## Drill 2 · Grade the tools by consequence
 
 ### The problem
 
 `lookup_account`, `issue_credit` and `escalate` are three entries in one dict.
 Nothing in the code or the trace distinguishes a call that read a row from one
 that moved money.
+
+The axis is **consequence, not spread**. What separates the three is whether
+anything changed and whether it can be taken back — read (nothing happened),
+write (recoverable), irreversible (not). That is why the drill is not called
+blast radius: radius is about how far a fault travels, which is a week 4
+question. This one is about whether you can walk it back at all.
 
 ### The solution
 
