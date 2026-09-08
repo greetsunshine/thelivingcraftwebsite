@@ -236,6 +236,18 @@ sustain attention.
 Ask what happens to the queue at 2am, and on the Monday after a long weekend.
 A human in the loop is a human with a shift pattern.
 
+**Then test their threshold against the two failures they watched.** Whatever
+ceiling a pair proposes, an amount rule would have caught the **₹2,50,000** —
+it was one enormous decision, and any plausible line sits below it. It would not
+have caught the **₹3,600**, which was three perfectly ordinary ₹1,200 credits,
+each one under every threshold in the room.
+
+That contrast is the cleanest demonstration available all day that **a boundary
+has to be designed against the failures you have actually seen**, not against a
+number that feels large. It is also why novelty and velocity are on the list
+above: velocity is the trigger that catches the ₹3,600, and it is the one nobody
+proposes first.
+
 ### Where it lands
 
 Week 2 — human confirmation on irreversible actions is one of the four things
