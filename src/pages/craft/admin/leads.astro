@@ -26,7 +26,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
       <h1>Leads</h1>
       <p>
         Everyone who filled in a form or gave the assistant their details. Web3Forms still
-        delivers every one of these to the inbox — this is the record beside it, which is why
+        delivers every one of these to the inbox. This is the record beside it, which is why
         a lead marked <strong>undelivered</strong> matters: it reached the database but the
         email may never have arrived.
       </p>
@@ -40,7 +40,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
         <h3>{counts.undelivered} lead{counts.undelivered === 1 ? '' : 's'} never reached the inbox</h3>
         <p class="muted">
           The browser's Web3Forms post failed after the details were captured. Contact these
-          people directly — they believe they have applied.
+          people directly. They believe they have applied.
         </p>
       </div>
     )
@@ -145,7 +145,7 @@ const FILTERS = ['new', 'contacted', 'qualified', 'archived', 'all'];
                     class="btn small danger lead-delete"
                     style="margin-top:6px"
                     data-email={l.email ?? 'this lead'}
-                    title="Permanently erase this record. Use for a deletion request, not for triage — archive handles that."
+                    title="Permanently erase this record. Use it for a deletion request, not for triage. Archive handles triage."
                   >
                     Erase
                   </button>

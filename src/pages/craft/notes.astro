@@ -31,9 +31,9 @@ const updated = longDate(newest ?? refreshedAt);
       <div class="eyebrow">Field notes <span class="num">/ agentic AI</span></div>
       <h1>What is changing while we are teaching it.</h1>
       <p class="lead">
-        A retrieval agent reads the field weekly; Sunil reads what it gathered before it appears.
-        Every finding is dated and carries its primary source, so you can check it rather than
-        take it. Bring anything here that touches your system to a session.
+        A retrieval agent reads the field every week. Sunil reads what it gathered before anything
+        appears here. Every finding is dated and carries its original source, so you can check it
+        rather than take our word for it. Bring anything here that touches your system to a session.
       </p>
       <p class="klabel updated">
         {count} current {count === 1 ? 'finding' : 'findings'} · last updated {updated} · nothing
@@ -45,8 +45,9 @@ const updated = longDate(newest ?? refreshedAt);
           <div class="panel marked quiet" style="margin-top:var(--space-6)">
             <p class="klabel">Nothing gathered yet</p>
             <p class="muted">
-              The retriever runs weekly and its findings land here once Sunil has read them. An
-              empty page means the first sweep has not been merged, not that the field is quiet.
+              The retriever runs weekly, and its findings appear here once Sunil has read them. An
+              empty page means the first sweep has not been merged yet. It does not mean the field
+              is quiet.
             </p>
           </div>
         )

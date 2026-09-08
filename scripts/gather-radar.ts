@@ -84,7 +84,7 @@ const ITEM_SCHEMA = {
           body: {
             type: 'string',
             description:
-              'Two to four sentences. What was found, with the specific numbers, names and dates where the source gives them. Written for a director-level engineer who will decide whether to act on it. No marketing language and no hedging filler.',
+              'Two to four sentences. What was found, with the specific numbers, names and dates where the source gives them. Written for a director-level engineer who will decide whether to act on it. No marketing language and no hedging filler. Plain English: one idea per sentence, under 25 words, no idioms, active voice, at most one em dash.',
           },
           implication: {
             type: 'string',

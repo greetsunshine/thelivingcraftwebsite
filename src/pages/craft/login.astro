@@ -53,7 +53,7 @@ const next = ok ? requested : '/craft';
         />
       </label>
 
-      {failed && <p class="err">That email and code don't match a seat. Check both, dashes optional.</p>}
+      {failed && <p class="err">That email and code do not match a seat. Check both. Dashes are optional.</p>}
       {
         throttled && (
           <p class="err">
@@ -66,7 +66,7 @@ const next = ok ? requested : '/craft';
 
       <p class="help">
         Lost your code? Email <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
-        and Sunil will issue a new one — the old one stops working when he does.
+        and Sunil will issue a new one. The old code stops working as soon as he does.
       </p>
     </form>
   </div>

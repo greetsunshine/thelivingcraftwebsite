@@ -94,7 +94,7 @@ const NAV = [
               <h3>Supabase is not connected</h3>
               <p class="muted">
                 Traffic, leads, and questions are all empty until it is. Nothing on the public
-                site is affected — this is the console's storage only.
+                site is affected. This is the console's storage only.
               </p>
               <ol>
                 <li>Create a Supabase project, then run <code>supabase/schema.sql</code> in its SQL editor.</li>
@@ -121,7 +121,7 @@ const NAV = [
                 <p class="muted">
                   Postgres reports these as missing, which almost always means{' '}
                   <code>supabase/schema.sql</code> has not been run since the schema last grew. It
-                  is idempotent — re-run the whole file in the Supabase SQL editor.
+                  is idempotent, so re-run the whole file in the Supabase SQL editor.
                 </p>
               ) : (
                 <p class="muted">

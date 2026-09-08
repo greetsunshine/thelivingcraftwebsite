@@ -27,9 +27,9 @@ export interface Question {
 }
 
 export const QUICK_CHECK: Question[] = [
-  { id: 'q1', text: 'Read/write Python — functions, dicts, basic async.' },
-  { id: 'q2', text: 'Reason about APIs & distributed systems (retries, timeouts, idempotency).' },
-  { id: 'q3', text: 'Basics of calling an LLM (prompts, tokens, context).' },
+  { id: 'q1', text: 'Read and write Python: functions, dicts, basic async.' },
+  { id: 'q2', text: 'Reason about APIs and distributed systems: retries, timeouts, idempotency.' },
+  { id: 'q3', text: 'The basics of calling an LLM: prompts, tokens, context.' },
   { id: 'q4', text: 'Seen at least one LLM/agent prototype up close.' },
   { id: 'q5', text: 'Read a code diff and reason about what it does.' },
 ];
@@ -42,37 +42,37 @@ export const SCALE_LEGEND: Record<number, string> = {
   2: 'With a lot of help',
   3: 'With help',
   4: 'On my own',
-  5: 'Could lead & defend it',
+  5: 'Could lead it and defend it',
 };
 
 export const TECHNICAL: Question[] = [
   { id: 'A1', text: "Draw an agent's anatomy" },
-  { id: 'A2', text: 'Read a trace (success / cost / latency)' },
+  { id: 'A2', text: 'Read a trace: success, cost, latency' },
   { id: 'A3', text: 'Add a guardrail on an irreversible action' },
-  { id: 'A4', text: 'Choose prompt / RAG / fine-tune' },
+  { id: 'A4', text: 'Choose between prompting, RAG and fine-tuning' },
   { id: 'A5', text: 'Design an eval that catches a missed failure' },
-  { id: 'A6', text: 'Reason about latency / cost / quality with numbers' },
-  { id: 'A7', text: 'Harden against prompt injection & data leakage' },
+  { id: 'A6', text: 'Reason about latency, cost and quality with numbers' },
+  { id: 'A7', text: 'Harden a system against prompt injection and data leaks' },
 ];
 
 export const LEADERSHIP: Question[] = [
   { id: 'B1', text: 'Explain an agentic system to an exec' },
-  { id: 'B2', text: 'Make & defend agent-vs-workflow / build-vs-buy' },
+  { id: 'B2', text: 'Make and defend agent-versus-workflow and build-versus-buy calls' },
   { id: 'B3', text: 'Define "good enough to ship"' },
   { id: 'B4', text: 'Explain unit economics to finance' },
-  { id: 'B5', text: 'Make a go/no-go call & defend it to a board' },
+  { id: 'B5', text: 'Make a go or no-go call, and defend it to a board' },
   { id: 'B6', text: 'Lead a team through adopting agents' },
 ];
 
 /** Section 3 — prose. Short answers are fine; specifics beat polish. */
 export const REALITY: Question[] = [
-  { id: 'r1', text: 'Your context — what you build, where you sit, the system you own.' },
+  { id: 'r1', text: 'Your context. What you build, where you sit, and the system you own.' },
   {
     id: 'r2',
-    text: 'Your agentic reality — are you building with agents today? How far have you got? Or what is pushing you toward it?',
+    text: 'Your agentic reality. Are you building with agents today? How far have you got? Or what is pushing you toward it?',
   },
-  { id: 'r3', text: "Where you're stuck — reliability, evaluation, cost, governance, leadership?" },
-  { id: 'r4', text: "A real use case of your own you'd love to get right." },
+  { id: 'r3', text: 'Where you are stuck. Reliability, evaluation, cost, governance, or leadership?' },
+  { id: 'r4', text: 'A real use case of your own that you would love to get right.' },
   { id: 'r5', text: 'What "shipped" means for you.' },
   { id: 'r6', text: 'One outcome you want to walk away able to do.' },
 ];

@@ -6,31 +6,32 @@ summary: "The harness at scale: the calls you cannot walk back, and how to tell 
 status: draft
 ---
 
-[PLACEHOLDER: session outline — Sunil to write. Everything below is scaffolding
-so the page renders and the shape is agreed; none of it is teaching material
-yet. While `status: draft`, learners see a short "still being written" note
-instead of this body, so drafting in the open is safe.]
+[PLACEHOLDER: session outline for Sunil to write. Everything below is
+scaffolding, so that the page renders and the shape is agreed. None of it is
+teaching material yet. While `status: draft`, learners see a short "still being
+written" note instead of this body, so drafting in the open is safe.]
 
-[THREAD — this is where the harness lands. Week 1 introduces it (the loop, the
-tool layer, the per-turn context assembly, the trace — four files) and drill 1
-there ends with an explicit promise that week 5 asks what happens to the harness
-when one loop is no longer enough. That promise is now made in a file learners
-read, so this week has to keep it.
+[THREAD. This is where the harness lands. Week 1 introduces it as four files:
+the loop, the tool layer, the per-turn context assembly, and the trace. Drill 1
+there ends with an explicit promise. It says week 5 asks what happens to the
+harness when one loop is no longer enough. That promise is now made in a file
+learners read, so this week has to keep it.
 
-The argument that makes it this week rather than another: harness shape is the
-least reversible decision in the course. A cache, a model or a retry policy is
-an afternoon's work to change; a decomposition your team has built on for six
-months is not. Caching, routing and idempotency then read as consequences of
-the shape you chose rather than as a list of five scale topics.
+Here is the argument for placing it this week rather than another. Harness shape
+is the least reversible decision in the course. A cache, a model or a retry
+policy takes an afternoon to change. A decomposition your team has built on for
+six months does not. Caching, routing and idempotency then read as consequences
+of the shape you chose, rather than as a list of five scale topics.
 
-Open, and not decided yet — see docs/teaching/week-1.md: what leaves this week
-to make room, and whether the reference agent has a decomposable shape by now.
-It will not, unless the week 2–4 roadmap heads that way on purpose.]
+Two things are still open, and not decided yet. See docs/teaching/week-1.md. What
+leaves this week to make room, and whether the reference agent has a shape that
+can be split up by now. It will not, unless the week 2 to 4 roadmap heads that
+way on purpose.]
 
 ## Before the session
 
 [PLACEHOLDER: pre-work. What to read, what to bring, what to have running. Keep
-it to something a working engineer can do in under an hour — the commitment is
+it to something a working engineer can do in under an hour. The commitment is
 ~5 hrs/week including the live session.]
 
 ## 1 · The Concept
@@ -38,17 +39,17 @@ it to something a working engineer can do in under an hour — the commitment is
 *~15 minutes.*
 
 [PLACEHOLDER: the idea of the week, shown working on the smallest example that
-is still real. Success first — the room sees it behave, and names what it is
+is still real. Success comes first. The room sees it behave, and names what it is
 looking at, before anything breaks.]
 
 ## 2 · The Problem
 
 *~30 minutes.*
 
-[PLACEHOLDER: the same system, broken. Work the room for fixes and take the
-answers in the order rooms actually give them, so the real constraint is
-derived rather than lectured. The positioning spine is "AI builds, the human
-judges and directs" — this is where the judgment gets practised.]
+[PLACEHOLDER: the same system, broken. Work the room for fixes, and take the
+answers in the order rooms actually give them. That way the real constraint is
+worked out rather than lectured. The positioning spine is "AI builds, the human
+judges and directs", and this is where the judgment gets practised.]
 
 ## 3 · The Drill
 
@@ -63,20 +64,21 @@ week keeps its opening.]
 *~35 minutes. In pairs, then the room.*
 
 [PLACEHOLDER: the same problem at enterprise scale, where block 3's fix is no
-longer sufficient. Constructed teaching case, labelled as constructed — no real
-client, product, or metric. Four or five questions, taken in pairs. Closes on
-the leader's framing: the week's trade-off, stated the way it survives a board
+longer enough. Constructed teaching case, labelled as constructed. No real
+client, product, or metric. Four or five questions, taken in pairs. Closes on the
+leader's framing: the week's trade-off, stated the way it survives a board
 meeting.]
 
 ## 5 · The Horizon
 
 *~10 minutes.*
 
-[PLACEHOLDER: the closing beat, present in every session. The durable framing —
-the career/skills question this week's material raises — gets written here. The
-specifics do NOT: they are pulled from `/craft/admin/radar` (Trends · Hiring — India ·
-Durable skills) in the week you teach it, so nothing dated is committed to this
-file. See week 1 for the pattern.]
+[PLACEHOLDER: the closing beat, present in every session. Write the durable
+framing here, which is the career and skills question this week's material
+raises. Do NOT write the specifics here. Those are pulled from
+`/craft/admin/radar` (Trends · Hiring — India · Durable skills) in the week you
+teach it, so nothing dated is committed to this file. See week 1 for the
+pattern.]
 
 ## After
 
@@ -86,4 +88,4 @@ will be asked to show.]
 ## Reading
 
 [PLACEHOLDER: sources. Field Notes at /latest already tracks what is changing in
-the field — link the relevant findings here rather than restating them.]
+the field. Link the relevant findings here rather than restating them.]

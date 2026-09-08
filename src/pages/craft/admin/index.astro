@@ -222,7 +222,7 @@ const when = (iso: string) =>
   <section class="panel">
     <h2>Agent spend</h2>
     <p class="sub">
-      Month to date, across the visitor assistant and both retrievers — they share one key.
+      Month to date, across the visitor assistant and both retrievers. They share one key.
     </p>
     {budget.known ? (
       <div class="card">
@@ -253,7 +253,7 @@ const when = (iso: string) =>
             ? 'The assistant is declining questions and the retrievers will not run. Raise AGENT_MONTHLY_BUDGET_USD or wait for the month to roll.'
             : budget.nearLimit
               ? `Retrievers stand down above ${Math.round(WARN_FRACTION * 100)}%; the assistant keeps answering until 100%.`
-              : 'Read from the Anthropic cost report. This is a soft guard — the Console spend limit is the hard ceiling.'}
+              : 'Read from the Anthropic cost report. This is a soft guard. The Console spend limit is the hard ceiling.'}
         </p>
       </div>
     ) : (
@@ -261,7 +261,7 @@ const when = (iso: string) =>
         <span class="label">Not tracked</span>
         <p style="margin-top:8px">{budget.note}</p>
         <p class="sub" style="margin-top:8px">
-          Needs an organization account — the Admin API is unavailable for individual accounts.
+          Needs an organization account. The Admin API is unavailable for individual accounts.
         </p>
       </div>
     )}
@@ -295,7 +295,7 @@ const when = (iso: string) =>
     <p class="sub">
       Every table and rollup the console depends on, probed directly. A count of <code class="mono"
         >0</code
-      > here means the table answered and is empty — which is a different thing from a table that is
+      > here means the table answered and is empty. That is a different thing from a table that is
       not there, and the two used to look identical.
     </p>
     <div class="card">
@@ -328,12 +328,12 @@ const when = (iso: string) =>
     <h2>Retention</h2>
     <p class="sub">
       Analytics events are kept 180 days and visitor questions 365, then deleted. Leads and
-      learners are never purged on a timer — a real enquiry should not be lost to a cron job, so
+      learners are never purged on a timer. A real enquiry should not be lost to a cron job, so
       those are erased one person at a time from their own pages.
     </p>
     <div class="card">
       <p class="muted" style="font-size:14px">
-        Check first — the count tells you whether this is a routine tidy or something worth
+        Check first. The count tells you whether this is a routine tidy or something worth
         pausing over.
       </p>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
@@ -343,8 +343,8 @@ const when = (iso: string) =>
       <p class="status-line" id="purgeStatus"></p>
       <p class="faint" style="font-size:12.5px;margin-top:10px">
         The windows are function defaults in <code class="mono">supabase/schema.sql</code>, so
-        shortening them is a SQL change with no deploy. To run this unattended, enable pg_cron —
-        the schedule is written out, commented, at the bottom of that file. Until then the policy
+        shortening them is a SQL change with no deploy. To run this unattended, enable pg_cron.
+        The schedule is written out, commented, at the bottom of that file. Until then the policy
         is only real if someone presses this.
       </p>
     </div>

@@ -66,7 +66,7 @@ const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
       <h1>Content</h1>
       <p>
         Everything a visitor or an AI assistant can be told about the practice, in one place.
-        Offer facts are read-only here on purpose — they live in
+        Offer facts are read-only here on purpose. They live in
         <code class="mono">facts.ts</code>, which four surfaces read from, and editing them
         anywhere else is how a price ends up right on the page and wrong in the answer an
         assistant gives about us.
@@ -212,7 +212,7 @@ const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
           <h3>{staleItems.length} item{staleItems.length === 1 ? '' : 's'} going stale</h3>
           <p class="muted">
             Past {STALE_AT} days old. At 90 they stop being served to the assistant with no further
-            warning — refresh the retriever or hide them deliberately.
+            warning. Refresh the retriever, or hide them deliberately.
           </p>
         </div>
       )

@@ -50,9 +50,9 @@ const intakeCopy = INTAKE_COPY[intakeState];
       <div class="eyebrow">The Living Craft <span class="num">/ cohort 1</span></div>
       <h1>Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.</h1>
       <p class="lead">
-        This is where the material lives — the session outlines, what to do before each one,
-        and what to bring to the room. It fills in as we go; nothing here is a recording of a
-        course that already exists.
+        This is where the material lives. You will find the session outlines, what to do before
+        each one, and what to bring to the room. It fills in as we go. Nothing here is a recording
+        of a course that already exists.
       </p>
     </div>
   </section>
@@ -82,8 +82,8 @@ const intakeCopy = INTAKE_COPY[intakeState];
       <div class="craft-sec">
         <h2>Sessions</h2>
         <p class="muted">
-          {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
-          you are not missing anything that exists.
+          {ready} of {sessions.length} written. Each one opens up as it is finished. You are not
+          missing anything that already exists.
         </p>
 
         <div class="stack">
@@ -110,8 +110,8 @@ const intakeCopy = INTAKE_COPY[intakeState];
       <div class="craft-sec">
         <h2>What you are expected to bring</h2>
         <p class="muted">
-          A real system you are accountable for. Every session works on yours, not on a toy —
-          which is why the room is capped at {cohort.seats} seats.
+          Bring a real system you are accountable for. Every session works on yours, not on a toy
+          problem. That is why the room is capped at {cohort.seats} seats.
         </p>
 
         <ul class="tlist">
@@ -131,9 +131,9 @@ const intakeCopy = INTAKE_COPY[intakeState];
       <div class="craft-sec">
         <h2>Getting hold of Sunil</h2>
         <p class="muted">
-          Email <a href={`mailto:${practitioner.email}`} class="inline-link">{practitioner.email}</a>
-          — between sessions, not only during them. Bring the system, the constraint, and what you
-          have already tried.
+          Email <a href={`mailto:${practitioner.email}`} class="inline-link">{practitioner.email}</a>.
+          Write between sessions, not only during them. Bring the system, the constraint, and what
+          you have already tried.
         </p>
       </div>
     </div>
