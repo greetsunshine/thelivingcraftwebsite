@@ -343,6 +343,24 @@ none of their audience; that separation is load-bearing, see the radar entry.
     survivable but confusing.
   - A hand-run `vercel --prod` is blocked by a global guard hook and should stay that way;
     `pnpm promote` is the guarded path ([scripts/promote.mjs](scripts/promote.mjs)).
+  - **Check for parallel work before you commit and before you push. Sunil edits this
+    repo directly and from other sessions, so the tree and the remote both move under
+    you.** Two checks, and both have already failed once:
+    - **`git status` before staging, and stage explicit paths — never `git add -A`.**
+      Uncommitted files you did not write are normal here, not leftovers. `git add -A`
+      once swept a 313-line teaching note Sunil had written into a commit whose message
+      claimed authorship of it, and pushed it unread. If a file you did not write is in
+      the way, read it and say so; do not commit it silently, and never assume it is
+      stale. The same sweep once caught `walkthrough/` — personal notes destined for a
+      learner-visible repo.
+    - **`git fetch && git log HEAD..origin/main` before pushing**, and re-read anything
+      you are about to edit that came back changed. Because a push deploys production,
+      a stale picture of `main` is not a merge conflict you notice — it is work built on
+      content that has already been replaced.
+  - **Before writing a new file under `docs/teaching/`, list the directory.** The answer
+    to "does a note for this already exist?" is a `ls`, not a memory of the last time you
+    looked. Two notes answering the same question is the duplication the rest of this file
+    exists to prevent, and it is how the two drift.
 - Legacy reference files at repo root (`copy.md`, `index.html`, `section-map.md`, `meta.md`,
   `assets/`) predate the Astro build — treat as historical, not the source of truth.
 
