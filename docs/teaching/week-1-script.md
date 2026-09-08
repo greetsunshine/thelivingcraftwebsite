@@ -211,10 +211,24 @@ four-hour SLA, an audit obligation.
 **03:03 · Pairs take two questions each.** Twelve minutes. Assign, do not let
 them choose — otherwise everyone takes the retry one.
 
-**03:15 · Back to the room**, sharpest answer per pair. Connect each to the
-morning: Q1 is `make retry` at forty processes. Q3 — *the thought was never
-stored, so if you planned to show a regulator the reasoning, it does not exist.*
-Q5 — *failing closed is the ₹0 run: clean trace, customer owed money.*
+**03:15 · Back to the room.** Ten minutes, five questions — **two minutes each,
+one thing per pair.** Do not collect every answer or you will eat the write-up.
+
+Steer toward these. Full material, read beforehand, is
+[`notes/teardown-five-questions.md`](notes/teardown-five-questions.md).
+
+| | Steer toward | Watch for |
+|---|---|---|
+| **Q1** | A timeout is an **unknown**, not a failure. Idempotency key from the queue's dispute id. Owned by the **tool**, not the loop — the loop's memory dies with the process and two consumers race. | `uuid4()` minted per run. Most common answer, fails exactly when needed. Also `hash(account, amount)` — too stable, one refund for a customer owed two. |
+| **Q2** | **"Nothing errored" is the problem statement.** Prompt changes fail distributionally and silently. Wants an eval set before merge, plus a distribution monitor — credit rate, mean amount, escalation rate — and a version stamped on every decision. | "Test it before shipping." Agree loudly, then ask **against what**. The missing answer is week 3. |
+| **Q3** | **No.** A completion is a paraphrase, not evidence; model and policy versions are absent so it is not reproducible; and the reasoning was never stored. | "We can ask the model to explain it later." **Spend time here** — it has no memory of that run, so it confabulates a plausible account, to a regulator. |
+| **Q4** | **p(wrong) × amount > cost of review.** A line in rupees, not a feeling. Good answers add novelty, velocity, divergence — and notice the threshold moves when p(wrong) does, which means measuring it. | "Above ₹5,000." Fine number, no derivation — the same undecided ceiling they hardcoded an hour ago. |
+| **Q5** | Rules fallback for the unambiguous cases, queue the rest. **The fallback is a different system with its own risk profile**, not a degraded agent, so it needs its own limits. Slow is more dangerous than down. | "Retry until it recovers" — that is how you keep a struggling provider down. "Switch to a backup model" — untested, in production, at the worst moment. |
+
+Connect each back to the morning as you go: Q1 is `make retry` at forty
+processes. Q3 — *the thought was never stored, so if you planned to show a
+regulator the reasoning, it does not exist.* Q5 — *failing closed is the ₹0 run:
+clean trace, customer owed money.*
 
 **03:25 · Write the boundary down.** Same pairs, one page, seven headings, 
 **hand the headings out pre-printed.** Two people who have known each other three

@@ -502,7 +502,20 @@ move on; the four failures make the argument better than you can.
 
 ## Block 4 — the five questions
 
-The five questions are the teaching frame; **the answers stay in the room**.
+The five questions are the teaching frame; **the answers stay off the screen** —
+the room produces them, and the block is worthless if they are reading yours.
+
+**You still need to know what a good answer contains.** That is
+[`notes/teardown-five-questions.md`](notes/teardown-five-questions.md), added
+2026-09-08: for each of the five, what a strong answer holds, the wrong answers
+worth spending time on, the one thing to push, and which week it lands in. Read
+it before you run the block — fifty minutes on five open questions is the part of
+the day where you are most exposed.
+
+Two of those wrong answers are worth knowing cold, because they are held by
+capable people and they are dangerous rather than merely incorrect: **"a `uuid4()`
+at the start of the run"** on question 1, and **"we can ask the model to explain
+it later"** on question 3. The second is confabulation presented to a regulator.
 
 If you would rather anchor any of them in something you have actually seen on
 the enterprise engagement, anonymise it and swap it in — a lived example beats a
