@@ -61,6 +61,95 @@ senior, but English is a second or third language for most. The sessions are liv
 five hours long. A sentence a reader has to read twice is a sentence lost in the room.
 Dense compression costs comprehension and buys nothing.
 
+## Teaching standard — read this before writing any session, note, drill or slide
+This section governs **structure**: what a teaching artifact has to contain and in
+what order. **Communication style** above still governs the sentences. Scope is
+[src/content/sessions/](src/content/sessions/), everything under [docs/teaching/](docs/teaching/), the quiz banks, and
+the published teaching Artifacts built from them. It does not touch `/`, `/caio`
+or `/assessment`.
+
+### Who the room is
+Eight senior engineers — Staff+, engineering managers, architects, directors. They
+have shipped systems and they are past tutorials. They are peers, not students.
+Write for someone who will notice a step you skipped.
+
+### What counts as finished
+A participant can do something afterwards that they could not do before, and it is
+visible when they do it. An artifact that only conveys information has not met the
+bar yet. That is the test to apply before calling any of this done.
+
+### Rules for anything you produce
+- **Capability language.** Outcomes are things people do: predict, defend,
+  diagnose, prescribe, ship, measure. Never "understand", "learn about", "be
+  introduced to", "gain familiarity with". If you cannot test an outcome by
+  watching someone, rewrite it.
+- **Never answer first.** Introduce a concept as a question the learner commits to
+  before seeing the answer. Prediction, then reveal, then discussion. On a slide or
+  in an Artifact the prediction and the reveal sit on separate surfaces, never both
+  on screen at once. In prose, pose the problem before the resolution.
+- **Retrieval over restatement.** A recap is a set of questions, not a summary.
+  Review sections interleave topics instead of walking them in order. Mixing is
+  what makes them stick.
+- **Diagnosis before explanation.** Every failure case is a puzzle first. Show the
+  setup and withhold the cause and the fix. Two questions each time: what went
+  wrong, and which single control would have prevented it.
+- **One anchor artifact.** Abstract ideas land on the shared reference system, not
+  on a fresh example each time. The room's own agent, its tokens, its failure, its
+  model swap. Do not introduce a second system to illustrate a second idea.
+- **Concrete numbers.** ₹4L refunded, 40,000 tickets a day, 200,000 invoices, a
+  31-second call against a 30-second limit. Never "a large volume" or "significant
+  cost". This is the *Concrete over abstract* sentence rule applied to magnitudes,
+  and it matters more here: senior engineers reason from the number.
+  - Invented numbers **inside a teaching case are fine and are the point**. The
+    ban under *Hard rules* is about our own practice: client names, student
+    counts, our metrics, salary figures we cannot source. A case study's ₹4L
+    refund is fiction the room knows is fiction. A claim about the agentic job
+    market is not. Keep the two apart.
+- **Visible timing and named roles.** An activity states its own duration and says
+  who does it: "Pairs, 5 minutes". Assign specific people or specific pairs. An
+  unassigned prompt to a room of eight produces silence.
+- **Cut, do not compress.** If material will not fit, remove a topic. Never shrink
+  the type, delete the practice, or speed up delivery to make room. Half a skill
+  taught properly beats a whole one rushed.
+- **Facilitation notes are a contract.** Every activity and every failure artifact
+  carries six things: the run time, the facilitation sequence, the full answer key,
+  the expected wrong answer and what is right about it, one extension probe, and
+  the single line the block exists to land. Notes are never duplicated across
+  artifacts. If two carry the same text, one of them is wrong.
+- **Anti-hype voice.** Workbench, not showroom. No glowing brains, no humanoid
+  robots, no career-outcome promises, no framework tours. State the trade-off, name
+  the failure mode, give the number. If a sentence would survive in a vendor deck,
+  cut it. This is the same restraint the public pages hold, applied inside the gate.
+
+### How Sunil wants this worked
+- Produce the full draft, not a list of clarifying questions. He reacts to
+  artifacts, not to scoping.
+- When there is a real tension, name it and recommend a position with the trade-off
+  stated. Do not hand over balanced options with no lean.
+- Say out loud when you drop a mechanic, and say why. A prediction cycle, an answer
+  key or a checkpoint that quietly goes missing is the failure mode he cares about
+  most.
+
+### Report before you finish
+Check each of these and state which ones you could not satisfy. Do not drop one
+quietly.
+- Outcomes are verb-led and observable.
+- A prediction precedes every reveal, on a separate surface.
+- Every failure case is posed as a puzzle.
+- A "✅ You can now…" checkpoint closes each teaching block.
+- Activities show their own timing and name their participants.
+- The notes contract is satisfied, and no two artifacts share notes.
+- Numbers are concrete, not qualitative.
+- No placeholders, brackets, TODOs or leftover generation prompts anywhere,
+  including image alt text.
+
+### Reference
+The per-session build contract is [docs/teaching/threads.md](docs/teaching/threads.md) — read the week's
+row before writing any block of that week. [docs/teaching/README.md](docs/teaching/README.md) says which
+kind of note belongs in which file. Read them when building or revising a session.
+Do not inline either one here.
+
+
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort. Application-only program in agentic & systems
   architecture. Single page; region (India/Dubai/Australia) only changes the pricing
