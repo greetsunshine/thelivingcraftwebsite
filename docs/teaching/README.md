@@ -10,6 +10,9 @@ worst possible thing to show someone who paid for the course. Same reasoning as
 
 Nothing in this directory is imported, rendered, or deployed.
 
+    threads.md         the contract between the six sessions: the five areas
+                       every week owes something to, and what each week owes.
+                       Read the week's row before writing any block of it
     week-N.md          how to run session N — staging, open items, the clock
     week-N-script.md   the run of show: a cumulative clock, what to say, what to
                        type, and the running request cost. For following live in
@@ -35,6 +38,31 @@ all have gone on screen for a paying participant the moment that file flipped to
     learner notes     https://claude.ai/code/artifact/80c83cbc-7c49-472b-ab3c-e28cc48e014a
     design review     https://claude.ai/code/artifact/87abaa6e-d690-45ba-969b-d814cef7bf2a
     design spec       https://claude.ai/code/artifact/62d1288c-2560-4dc9-9098-0436259e48b4
+
+Week 2 is built and published **one topic at a time**, so each topic is a pair of pages
+rather than a whole session. The topic list and the shared label vocabulary are in
+`threads.md`. Topic 1 of 5, guardrails:
+
+    learner    https://claude.ai/code/artifact/b6cc3049-8e36-4865-ac75-13c8c30d6331
+    instructor https://claude.ai/code/artifact/94a3dee1-5c2f-4fa4-83e3-72beab968ebc
+
+The same caution applies as for week 1: these are a second surface saying what
+`src/content/sessions/week-2.md` says. The session file is what the site serves and is
+therefore the source of truth. The pages are built from it.
+
+**The reference agent now has per-week make targets**, and the Makefile states the rule
+at the top: every week gets its own prefixed targets and its own module under `src/`, a
+later week never changes an earlier week's target, and a demo never edits the shared
+agent. Week 1's targets keep their unprefixed names because the pre-work and the session
+page print them; `w1-` aliases point at the same recipes.
+
+    w2-guarded   ticket 9999 with data/policy.json loaded. Refused, and the trace
+                 names the rule and the file. Block 1 opens on it
+    w2-goodwill  the ceiling holds, and another team's tool walks past it into the
+                 same ledger. Block 2's first failure
+
+`agent.py` is deliberately left unguarded. Moving the check into the dispatch is drill 1,
+and a demo that has already done it takes the drill away.
 
 The learner-notes artifact is the one to watch: it is a *second* surface saying
 what `src/content/sessions/week-1.md` says, and two of those drift. The session

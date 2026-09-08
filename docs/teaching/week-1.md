@@ -564,7 +564,7 @@ corridor does the work.
 
 Block 2 is now the long one and the most likely to overrun — four failures, and
 the room will want to argue about the injection. Hold that argument to the
-missing piece and defer the defence to week 5, or it eats block 3.
+missing piece and defer the defence to week 4, or it eats block 3.
 
 If you have to cut to fit a shorter room: drop the second bake-off comparison
 against `injected`, then drill 4 (it finishes cleanly in After, and the copy

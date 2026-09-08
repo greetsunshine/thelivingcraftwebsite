@@ -2,7 +2,7 @@
 week: 6
 title: "Your system, reviewed in the room"
 module: M4
-summary: "Each participant's architecture on the table, reviewed by the room and by Sunil."
+summary: "Your own system, read by the room against the same five questions all cohort."
 status: draft
 ---
 

@@ -2,7 +2,7 @@
 week: 4
 title: "Agentic systems you'd put your name on — part 3"
 module: M2
-summary: "Threat-modelling and red-teaming your own system: injection, exfiltration, containment."
+summary: "Attack your own system before somebody else does. What an attacker writes, and what it costs you."
 status: draft
 ---
 

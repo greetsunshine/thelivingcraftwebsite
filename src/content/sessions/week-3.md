@@ -2,7 +2,7 @@
 week: 3
 title: "Agentic systems you'd put your name on — part 2"
 module: M2
-summary: "Evaluation harnesses and quality gates: proving the thing works before it is trusted."
+summary: "Your fix passed and proved nothing. How to test a system that answers differently every time."
 status: draft
 ---
 

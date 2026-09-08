@@ -2,142 +2,739 @@
 week: 2
 title: "Agentic systems you'd put your name on — part 1"
 module: M2
-summary: "From a demo that works once to a system with bounded failure and something to observe."
+summary: "Put a check in front of the money, then find out what that check costs you."
 status: draft
 ---
 
-Last week you watched a tool that pays out money with nothing standing in front
-of it. Today we put something in front of it. That something is a check that runs
-before the money moves.
+Last week you watched a tool that pays out money with nothing in front of it.
+Today you put something in front of it. A check that runs before the money moves.
 
-Then we spend most of the day on what that check costs you. It will refuse an
-honest customer. A second piece of code will never call it at all. And the fix
-that works on your screen in the room will still pay twice when you run it from a
-second terminal.
+Then you spend most of the day on what that check costs. It refuses an honest
+customer who is owed ₹8,400. A second piece of code walks past it without
+calling it. And the fix that shows one payment on your screen still pays twice
+when you run it from a second terminal.
 
 **By the end of this session you will be able to:**
 
-1. **Keep the limit outside the function.** A rule like *"never credit more than
-   one month's charge"* should sit in a file you can open and read. It should not
-   be a number buried inside the function that moves the money. You will also be
-   able to say who is allowed to change that number. Week 1 ended with a
-   question. *Where is the limit written down, and who agreed to it?* This is the
-   answer to it.
-2. **Stop an action you cannot undo, and write down why.** Week 1 graded every
-   tool as read, write, or irreversible. Irreversible means you cannot get it
-   back. Before an irreversible tool runs, your code should check the rule and
-   keep a record of what happened. That record holds what was asked for, which
-   rule applied, and who or what said yes. You will also decide what the code
-   does when the person who should approve is not there. If you do not decide
-   that, the code decides it for you. Whatever it does is then your policy.
-3. **Pay once, even when the same request arrives twice.** You will make the
-   agent recognise a request it has already handled. Then you will test it the
-   hard way. Stop the program, start it again, send the same ticket, and check
-   that it still pays once. A fix that only works inside one running program is
-   not yet a fix.
-4. **Say what your own check broke.** Every check refuses something, and some of
-   what it refuses is honest work. You will be able to name that customer, and
-   then say which of the two mistakes costs less: paying someone who should not
-   have been paid, or refusing someone who should have been. Answer it with a
-   number, not with a feeling.
-5. **Turn your decision record into a table someone else can build from.** One
-   row for each action: what it does, whether you can undo it, what the limit
-   is, what happens when someone goes over it, and who is allowed to move the
-   number.
+1. *Guardrails.* **Keep the limit outside the function.**
+   Write a rule like "never credit more than one month's charge" in a file you
+   can open and read. Do not bury it as a
+   number inside the function that moves the money. Say who is allowed to change
+   it. Week 1 ended with a question: where is the limit written down, and who
+   agreed to it? This is the answer.
+2. *Human-in-the-loop approval.* **Stop an action you cannot undo, and record why.**
+   Week 1 graded every tool as read, write or irreversible. Irreversible means you cannot get it back.
+   Before an irreversible tool runs, your code checks the rule and writes one
+   line: what was asked, which rule applied, and who said yes. You also decide
+   what the code does when no approver is available. If you do not decide that,
+   the code decides for you. Whatever it does then is your policy.
+3. *Reliability and idempotency.* **Pay once, even when the same request arrives twice.**
+   Make the agent recognise a ticket it has already paid. Then test it the hard way. Stop the
+   program, start it again, send the same ticket, and count the payments. A fix
+   that only holds inside one running program is not a fix yet.
+4. *Risk trade-offs.* **Name what your own check broke.**
+   Every check refuses something. Some of what it refuses is honest work. Name that customer. Then say which mistake
+   costs less: paying someone who should not be paid, or refusing someone who
+   should be. Answer with a number.
+5. *Governance.* **Turn your decision record into a policy table.**
+   One row per action. What it does, whether you can undo it, the limit, what
+   happens when someone goes over it, and who can move the number. Another engineer should be able to build from
+   your table without asking you a question.
 
-One and two build the check. Three is the one that looks finished and is not.
-Four is the price you pay for having a check at all. Five is what you hand to
-the person who has to build it.
+The five topics in order: guardrails, human-in-the-loop approval, reliability and
+idempotency, risk trade-offs, governance. Outcomes 1 and 2 build the check.
+Outcome 3 is the one that looks finished and is not. Outcome 4 is the price of
+having a check at all. Outcome 5 is what you hand to the person who has to build
+it.
 
-**You will rate yourself against these five, twice.** Once at 00:05, before
-anything has been taught. Again at 04:52, on the same five statements, in the
-same words, scored 1 to 5. Nobody sees your first number but you. The two sets go
-on screen together at the end. What matters is how much you moved, not the score.
+Evaluation is deliberately not on that list. You will meet the need for it in
+drill 3, and week 3 is where it gets a method.
 
-These are the words used all three times, so that both sets of numbers mean the
-same thing:
+**You will rate yourself against these five, twice.** Once at 00:05 before
+anything has been taught, and again at 04:52. Same five statements, same words,
+scored 1 to 5. Nobody sees your first number but you. Both sets go on screen
+together at the end. These are the words used all three times, so that the two
+sets of numbers can be compared:
 
 > **Right now, I could…**
 >
-> 1. keep a limit in a file instead of inside the function, and say who is allowed to change it
+> 1. write a limit as data outside the function it constrains, and say who is allowed to change it
 > 2. stop an action I cannot undo, record why it was stopped, and say what happens when nobody is there to approve it
 > 3. make the same request pay only once, and show that it still holds after the program restarts
 > 4. name the honest customer my own check now refuses, and say which of the two mistakes costs less
-> 5. write a table someone else could build from: the action, can it be undone, the limit, what happens when it is crossed, who can change it
+> 5. write a policy table someone else could build from: action, can it be undone, the limit, what happens when it is crossed, who can change it
 
-Expect **high** scores on 1 and 3 at 00:05. Almost everyone believes their limits
-are already in config and their payments already run once. Block 3 is built to
-test that belief, and for some of you the belief will not survive. So this is the
-one session where a score that goes *down* at 04:52 is a good result. It means
-you found something real. You are measuring what changed, not grading yourself.
+Expect high scores on 1 and 3 at 00:05. Almost everyone believes their limits are
+already in config and their payments already run once. Block 3 tests both beliefs
+against a keyboard. Some of those scores will be lower at 04:52, and a score that
+drops is a good result here. It means you found something in your own system that
+you did not know was there.
 
-Anyone can add an `if` statement. This session is about where that check should
-sit, who agreed to the number inside it, and what your system does when the
+Anyone can add an `if` statement. This session is about where that check sits,
+who agreed to the number inside it, and what your system does at 2am when the
 person who was supposed to approve is asleep.
-
-[PLACEHOLDER: everything from here down is scaffolding for Sunil to write. The
-shape is agreed and the five outcomes above are written. None of the blocks below
-are teaching material yet. While `status: draft`, learners see a short "still
-being written" note instead of this body, so drafting in the open is safe.]
 
 ## Before the session
 
-[PLACEHOLDER: pre-work. What to read, what to bring, what to have running. Keep
-it to something a working engineer can do in under an hour. The commitment is
-~5 hrs/week including the live session.]
+*45 minutes.*
+
+- [ ] **Finish drill 4 from last week.** Put cost on every step. Block 3 turns
+      that measurement into a limit. Without the number you will be setting a
+      budget blind.
+- [ ] **Bring your decision record.** Two of them go on the shared screen in the
+      first ten minutes. It does not have to be finished.
+- [ ] **Run `make retry` once more.** Write down the final figure. Block 3 ends
+      with the same command telling you something different.
+- [ ] **Read the commented-out block inside `issue_credit`** in
+      [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py).
+      Do not uncomment it. Bring a written answer to one question. **Which of last
+      week's four failures would that block have stopped, and which would it have
+      missed?** Two of the four is the common answer. Say which two.
+- [ ] **Check your daily quota.** Block 3 needs a working key. The free tier gives
+      you 20 requests per model per day and one run costs about three.
+- [ ] **Write one sentence about your own system.** The smallest rule it enforces
+      before it does something expensive, and the file that rule lives in. If you
+      cannot find the file, write that instead. That answer is more useful.
+
+## The day, and where the stops are
+
+**Five hours.** Five teaching blocks, one break of fifteen minutes, and two
+stand-ups where you leave the screen. Nothing runs for more than an hour without
+a stop.
+
+| time | | what happens |
+|---|---|---|
+| 00:00 | opening | five outcomes, your first rating, two decision records on screen |
+| 00:15 | **1 · The Concept** | 55 minutes. The check working, and the four things it has to know |
+| 01:10 | stand up | five minutes, cameras off |
+| 01:15 | **2 · The Problem** | 50 minutes. Four ways the check itself fails |
+| 02:05 | break | fifteen minutes |
+| 02:20 | **3 · The Drill** | 60 minutes. Three drills, hands on keyboards |
+| 03:20 | stand up | five minutes again |
+| 03:25 | **4 · The Teardown** | 50 minutes. The same check at 40,000 disputes a month |
+| 04:20 | quiz | eight questions in chat |
+| 04:30 | **5 · The Horizon** | 20 minutes. Who is allowed to say what a system may do |
+| 04:50 | close | the assignment, the same rating again, two lines in chat |
+
+Every block ends with a checkpoint. If one of its lines is not true for you, say
+so at the time. It is a signal to slow down. It is not a test of you.
 
 ## 1 · The Concept
 
-*~15 minutes.*
+*00:15 to 01:10 — 55 minutes.*
 
-[PLACEHOLDER: the idea of the week, shown working on the smallest example that
-is still real. Success comes first. The room sees it behave, and names what it is
-looking at, before anything breaks.]
+### Your own writing, first
+
+*Whole room, 10 minutes.*
+
+Two decision records go on screen. They are yours, written last week.
+
+Before either one is read out, everybody writes one sentence, alone, in 60
+seconds:
+
+> Which sentence in my own record could a machine enforce tonight?
+
+Then read the two records. In each one, find the sentence that is a policy and
+the sentence that is a wish.
+
+A policy has a number in it and a person who owns the number. A wish has the word
+"should" and no number. Most records last week had four wishes and one policy.
+That ratio is the session in one line.
+
+### The check, working
+
+*Whole room, 8 minutes. Predict before anything runs.*
+
+Week 1 ended with `make weird-mock` paying ₹5,000 to account 9999. Account 9999
+does not exist. Today the same command refuses.
+
+Write down, alone, in 90 seconds:
+
+> The refusal line is about to print. What three facts does it have to contain
+> to be useful to you at 2am?
+
+Now the run.
+
+```
+▸ plan  ticket #9999 — Angry customer, disputing a charge...
+▸ think The customer is upset. I should credit the disputed amount.
+▸ tool  issue_credit(account_id='9999', amount=5000) -> REFUSED
+        rule: no credit to an account that does not exist
+        decided by: policy.yml, row 3
+paid out ₹0 · 0 credits · 1 refused
+```
+
+Most rooms write "it should say refused". Fewer write "it should say which rule
+refused it". Almost nobody writes "it should say where that rule is written".
+
+A refusal that does not name its rule is a mystery at 2am. Somebody will be
+looking at it while a customer waits.
+
+### What did the check have to know?
+
+*Whole room, 8 minutes.*
+
+The room lists it before the answer goes up. Take four or five answers out loud.
+
+The check needed exactly four facts:
+
+1. **Which action is this.** `issue_credit`, not `lookup_account`.
+2. **Can it be undone.** Last week's grade. This one cannot.
+3. **What is the limit.** A number, and the condition it applies to.
+4. **What has already happened.** Has this ticket already been paid?
+
+The first three are written down somewhere and cost nothing to read. The fourth
+needs memory that outlives the program. That is why it is the expensive one, and
+it is drill 3.
+
+### Where does the check go?
+
+*Show of hands, 3 minutes. No answer today.*
+
+There are two places to put it. Inside `issue_credit`, which is what the
+commented block in `tools.py` does. Or before the dispatch in `agent.py`, at the
+line `res = fn(**args)`.
+
+Vote. Count both numbers on the board and leave them there.
+
+Nobody says which one is right yet. Block 2 settles it, and it settles it with a
+failure rather than with an argument.
+
+### The tool contract grows two columns
+
+*Whole room, 8 minutes.*
+
+Last week, drill 3 wrote down what each tool accepts. Names and types. Add two
+more columns to the same table:
+
+| tool | accepts | can it be undone | limit |
+|---|---|---|---|
+| `lookup_account` | `account_id: str` | yes, it changes nothing | none needed |
+| `escalate` | `reason: str` | yes, you can un-escalate | none needed |
+| `issue_credit` | `account_id: str, amount: float` | **no** | the row in your policy file |
+
+The contract now carries policy, not just shape. That matters because the check
+reads this table rather than reading the function.
+
+The industry word for the first two columns is a **tool schema**. Anthropic and
+OpenAI both use it in their function-calling APIs, so it is the word you will
+meet in documentation. The last two columns are yours. No API gives you those.
+
+### The second record
+
+*Alone 2 minutes, then whole room 8 minutes.*
+
+Week 1 left a question open in the teardown. A regulator asks why one specific
+account was credited. A stored prompt and completion is not enough, because the
+model's stated reasoning was never kept.
+
+Write down, alone, in 2 minutes:
+
+> It is nine months from now. Somebody asks why account 4471 was credited ₹1,200
+> on 14 March. Write the one line you want to find in a file.
+
+Then compare. A working line carries six fields:
+
+```
+2026-03-14T11:04:22Z  ticket=4471  action=issue_credit  amount=1200
+                      rule=policy.yml#refund-ceiling  decision=allowed
+                      decided_by=policy
+```
+
+This is not the trace. The trace is for you, at your desk, today, and you throw
+it away. The decision log is for a stranger, in nine months, and you keep it for
+years. Different reader, different file, different retention.
+
+### Checkpoint · 01:10
+
+**You can now…**
+
+- Tell a policy from a wish in a written document, using the number-and-owner test
+- Name the four facts a check needs before it can refuse an action
+- Say which of those four needs memory that outlives the program
+- Write one decision log line, and say who reads it and when
+- **Say why a refusal that does not name its rule costs somebody an hour at 2am**
+
+Put a number from 1 to 5 in chat on the last one.
+
+*Five minutes. Stand up, cameras off, away from the screen.*
 
 ## 2 · The Problem
 
-*~30 minutes.*
+*01:15 to 02:05 — 50 minutes.*
 
-[PLACEHOLDER: the same system, broken. Work the room for fixes, and take the
-answers in the order rooms actually give them. That way the real constraint is
-worked out rather than lectured. The positioning spine is "AI builds, the human
-judges and directs", and this is where the judgment gets practised.]
+The check now exists. Four things go wrong with it. Each one is a puzzle first.
+You see the setup and the result. You do not see the cause.
+
+For each one, two questions, and you commit to both before the answer:
+
+> **What went wrong?**
+>
+> **Which single control would have prevented it?**
+
+### It refuses ₹8,400 that is genuinely owed
+
+*Pairs, 8 minutes.*
+
+Ticket #7310. Meera is on the ₹1,200 Pro plan. She cancelled in January and was
+charged for seven more months by mistake. She is owed ₹8,400.
+
+The check from block 1 is live. The ceiling is one month of her plan.
+
+```
+▸ tool  issue_credit(account_id='7310', amount=8400) -> REFUSED
+        rule: amount exceeds the ceiling of 1200
+paid out ₹0 · 0 credits · 1 refused
+```
+
+Meera gets nothing. The trace is clean. Nobody is paged.
+
+Answer the two questions in pairs before reading on.
+
+**What went wrong.** The ceiling was chosen by looking at what a normal case
+costs. One month, because a double charge is one month. Nobody asked what a
+legitimate case can cost at the top end. Seven months of a billing error is
+still one honest customer.
+
+**The control.** Over the limit has to mean *ask*, not *no*. A limit with only
+one outcome is a wall. A limit with two outcomes is a gate. This is drill 2.
+
+You watched a ₹0 last week too. That one was the model failing on its own. This
+one is different, and it is worse. **This time you wrote the rule that did it.**
+
+### A second piece of code pays without asking
+
+*Pairs, 8 minutes.*
+
+Three weeks from now, another team adds one tool. `apply_goodwill_credit`, for
+customers who complain on social media. Twenty lines. It appends to the same
+ledger.
+
+Nobody on that team has read your check. Nobody told them to.
+
+```
+▸ tool  apply_goodwill_credit(account_id='9999', amount=5000) -> {'credited': True}
+paid out ₹5,000 · 1 credit
+```
+
+Account 9999 still does not exist.
+
+Answer the two questions in pairs.
+
+**What went wrong.** The check lives inside `issue_credit`. It protects
+`issue_credit`. It does not protect the ledger, and the ledger is what holds the
+money.
+
+**The control.** The check belongs where every tool call passes through, which is
+the dispatch in `agent.py`. One line, `res = fn(**args)`, and every tool goes
+through it including the ones nobody has written yet.
+
+Now look at the two numbers still on the board from block 1. This is where that
+vote is settled. A check inside a tool is a check somebody has to remember. A
+check at the dispatch is a check nobody can forget.
+
+### The number nobody can change tonight
+
+*Whole room, 8 minutes.*
+
+Friday, 11pm. A ₹40,000 enterprise account has been billed twice. Operations
+wants the credit released tonight. Your ceiling is ₹1,200 and it lives in
+`policy.yml` in the repository.
+
+One question first, alone, in 60 seconds:
+
+> How many minutes from "please raise the limit" to the money leaving?
+
+Take three answers out loud before reading on.
+
+**What went wrong.** Nothing failed. That is the point of this one. The limit
+being written down is necessary and it is not sufficient. A limit you cannot
+change at 11pm on a Friday is a limit that gets worked around by hand, and the
+hand-worked path has no log at all.
+
+**The control.** The limit needs an owner, a change path, and a record of who
+changed it and when. Which is a second policy, about the first policy.
+
+The cost is real in both directions. A change that needs a code review is slow
+and leaves a record. A change made in an admin screen at 11pm is fast and leaves
+an argument. Pick one deliberately, because you are going to get one of them by
+accident.
+
+### Nobody is there to approve
+
+*Pairs, 8 minutes.*
+
+Your gate works. An irreversible credit over the limit now asks a human.
+
+It is 2:14am. The queue has 4 items in it. There is no human.
+
+Answer one question in pairs, and be specific:
+
+> **What does your code do right now?** Not what it should do. What does the code
+> you wrote in drill 2 actually do at 2:14am?
+
+Three answers exist. Wait, refuse, or allow.
+
+- **Wait.** The four-hour SLA is now burning while nothing happens.
+- **Refuse.** Meera's ₹8,400 is denied again, this time by a timeout.
+- **Allow.** The gate is decoration. It approves whatever nobody looked at.
+
+All three are a policy. Only one of them was chosen on purpose. The other two are
+what the code happens to do when the person who wrote it never asked the
+question.
+
+### The pattern under all four
+
+*Whole room, 10 minutes.*
+
+Build the table from the room's four answers, not from a slide.
+
+| what you added | what it fixed | where the failure went |
+|---|---|---|
+| a ceiling | pays too much | refuses an honest ₹8,400 |
+| a check in the tool | this tool overpaying | the next tool nobody checked |
+| a limit in the repository | the number is now written down | the number cannot move at 11pm |
+| a human gate | nobody approves alone | nobody approves at all at 2am |
+
+**A check does not remove a failure. It moves it. Your job is to know where it
+moved to, and to have chosen that place.**
+
+Three ideas hold the rest of the day:
+
+1. **The limit is data, not code.** Data has an owner, a change path and a
+   history. A number inside a function has none of the three.
+2. **The check belongs at the dispatch, not inside the tool.** Otherwise every
+   new tool is a new chance to forget.
+3. **The default when the decider is absent is the policy.** Whether or not
+   anybody chose it.
+
+### Checkpoint · 02:05
+
+**You can now…**
+
+- Name the honest customer your own ceiling would refuse, and the amount
+- Explain why a check inside a tool does not protect the ledger
+- Say what your code does at 2:14am when nobody answers the approval
+- **Take any control you have added and say where the failure moved to**
+
+Put a number from 1 to 5 in chat on the last one. This is the checkpoint that
+matters most today. Block 4 assumes it.
+
+*Fifteen minute break, 02:05 to 02:20.*
 
 ## 3 · The Drill
 
-*~45 minutes, hands-on.*
+*02:20 to 03:20 — 60 minutes, hands on keyboards.*
 
-[PLACEHOLDER: two or three exercises against the reference agent. Each should be
-a real defect, not a synthetic task. Say explicitly what NOT to fix, so the next
-week keeps its opening.]
+Three drills in the room. One at home. Every drill runs in the same order as last
+week: **decide, then build, then check.** Write the decision down before you type
+anything. Your assistant will make the decision for you otherwise, and it will
+not mention that it did.
+
+### Drill 1 · Move the limit out of the function
+
+*Alone, 15 minutes.*
+
+**Decide first, 2 minutes, in writing.** Where does the file live, what is one row
+of it, and what happens when the row is missing?
+
+Do not uncomment the block in `tools.py`. You read it in the pre-work and you
+know it does two jobs at once: it holds the rule, and it holds the number.
+
+Write the numbers as data. One row per tool, read by the code that dispatches.
+
+**Check when you are done.** Two questions, and you must be able to answer both:
+
+- Who owns this file? Name a role, not a person.
+- What happens the day a tool has no row? Refuse, allow, or crash. All three are
+  a decision, so make it explicit rather than discovering it later.
+
+### Drill 2 · Gate the action you cannot undo, and record it
+
+*Alone, 20 minutes.*
+
+**Decide first, 3 minutes, in writing.** Over the limit means ask. So what does
+asking look like in a program with no user in front of it?
+
+Build it before the dispatch. If the tool cannot be undone, and the request is
+over its limit, do not call the function. Ask.
+
+Write the decision log line at the same time. Six fields, from block 1.
+
+**Then the part that is actually the drill.** Decide what happens when nobody
+answers, and write that down as a rule with a number in it. "Waits 30 seconds,
+then escalates to the on-call queue and refuses" is a rule. "Waits for approval"
+is a wish, and you now know the difference.
+
+**Check.** Run ticket #7310 again. Meera is owed ₹8,400 and the ceiling is
+₹1,200. She should reach a human, not a refusal.
+
+### Drill 3 · Pay once, then watch your fix fail
+
+*Alone, 20 minutes.*
+
+**Decide first, 2 minutes, in writing.** What makes two payment requests "the
+same"? The ticket id, the account, the amount, or all three? Your answer decides
+whether a customer with two genuine disputes gets paid twice or once.
+
+Build it. Give each credit a key derived from the ticket. Keep the keys you have
+already paid. Refuse a key you have seen before.
+
+**Check, part one.** Run `make retry`. It delivers the same ticket three times.
+Last week it paid Ravi ₹3,600. Now it pays ₹1,200 once. It works.
+
+**Check, part two.** Open a second terminal. Run the same ticket again.
+
+```
+$ python -m src.main --ticket 4471
+paid out ₹1,200 · 1 credit
+```
+
+It pays again. Ravi has ₹2,400.
+
+The keys you remembered live in a Python list. The list dies with the process.
+`make retry` passed because all three deliveries ran inside one program, which is
+the one case that was never the problem.
+
+Stop here for a minute before block 4. **Your test passed and proved
+nothing, and nothing in the room told you.** You had no way to find out except by
+trying the case the test did not cover. Next week is about how you find that out
+on purpose.
+
+### Three things not to fix today
+
+*Whole room, 5 minutes.*
+
+You will want to fix all three. Each one is somebody else's week, and each one is
+better after you have spent seven days with the problem.
+
+- **The poisoned ticket from week 1.** You have been carrying it for two weeks.
+  The answer most people reach for is a line in the system prompt telling the
+  model to ignore instructions found in ticket text. That is the wrong shape of
+  answer and week 4 will show you an attack that walks straight through it. The
+  defence is not a better instruction, and building it needs a threat model
+  first. **Week 4.**
+- **Tests for any of this.** Drill 3 just showed you that a passing test is not
+  evidence. Writing more of them today would make the problem bigger, not
+  smaller. **Week 3.**
+- **A second agent to approve the first one.** **Week 5.**
+
+### Drill 4 · The run budget
+
+*Homework, about 45 minutes.*
+
+Take the per-step cost from last week's drill 4 and turn it into a limit. The
+loop stops at a number of rupees or a number of steps, whichever comes first, and
+it stops with a named outcome rather than a silent success.
+
+That last part is week 1's drill 1 again, now with money attached to it.
+
+### Checkpoint · 03:20
+
+**You can now…**
+
+- Write a limit as data and say who owns the file it lives in
+- Stop an irreversible call before it dispatches, and log the decision
+- State your timeout rule for an approval nobody answers, with a number in it
+- Show a test that passes while the bug it was written for is still live
+- **Review AI-written code for where it put the check, not whether the check
+  passes.** Ask your assistant to do drill 1 and watch where it puts the limit.
+  It is almost always inside the function.
+
+Put a number from 1 to 5 in chat on the last one.
+
+*Five minutes. Stand up again.*
 
 ## 4 · The Teardown
 
-*~35 minutes. In pairs, then the room.*
+*03:25 to 04:15 — 50 minutes. In pairs, then the room.*
 
-[PLACEHOLDER: the same problem at enterprise scale, where block 3's fix is no
-longer enough. Constructed teaching case, labelled as constructed. No real
-client, product, or metric. Four or five questions, taken in pairs. Closes on the
-leader's framing: the week's trade-off, stated the way it survives a board
-meeting.]
+**This is a constructed teaching case.** The shape is drawn from how systems of
+this kind are ordinarily built. No client, product or number here describes a
+real organisation.
+
+> **The system.** 40,000 disputes a month. The agent calls a payments service
+> that writes to the ledger of record. Credits above a threshold go to a human
+> approval queue. Four business units share the deployment. Most disputes must be
+> resolved within four hours. The firm must be able to explain any individual
+> credit years later.
+
+**Pairs, 12 minutes.** Each pair takes two questions. They are assigned, not
+chosen. Bring the sharper of your two answers back to the room.
+
+**1 · Where does the policy live for forty processes?** A file in the repository
+drifts between deployments. A policy service is a dependency in the path of every
+payment, and it has its own outages. When it is down, do you fail open or fail
+closed? Say which of block 2's four failures each choice hands you.
+
+**2 · Who can move the number, and how fast?** A ceiling changed through code
+review takes two hours and leaves a record. A ceiling changed in an admin screen
+takes 30 seconds and leaves an argument. Choose one, then say what the fast path
+costs you the first time somebody uses it wrongly.
+
+**3 · The approval queue is a capacity plan.** Set the threshold so that 6% of
+disputes need a human and you have created 2,400 approvals a month. That is 110 a
+working day. Who does them, what happens when the queue is 400 deep on a Friday,
+and what does the four-hour promise mean by then?
+
+**4 · Whose key is it?** The agent's, the payments service's, or the ledger's?
+Paying once is a property of the pair, not of one side. An agent that retries
+with a fresh key has removed the guarantee without touching the code that
+provides it.
+
+**5 · The credit landed and the log write failed.** Two records disagree. Which
+one is true, what do you tell the regulator, and what would have had to exist
+last Monday for this to be answerable at all?
+
+**Whole room, 10 minutes.** Two minutes per question. Take the answer, not the
+discussion.
+
+### Write the policy table
+
+*Same pairs, 15 minutes to write.*
+
+Last week you wrote a decision record. Today it grows a table. One row per action
+your system can take:
+
+| action | can it be undone | limit | over the limit | who moves the number | nobody answers |
+|---|---|---|---|---|---|
+| `issue_credit` | no | ₹1,200 or one month | ask on-call | payments lead | refuse after 30s, escalate |
+
+Six columns. Every cell has a value or the row is not finished. "TBD" in the last
+column is the 2:14am failure, written down in advance.
+
+*Swap with another pair, 10 minutes to review theirs.* Four questions, scored 0,
+1 or 2 each. The written comment matters more than the number.
+
+1. **Take the four failures from block 2 and walk each one through their table.**
+   Anything that still gets through is your finding. Say which row let it pass.
+2. **Does every row have a number?** A limit of "reasonable" is a wish.
+3. **Does the last column ever say nothing?** An empty cell is a decision made by
+   whoever wrote the code, not by them.
+4. **Could you build from this without asking them a question?** If you have to
+   ask, mark the cell you would have asked about.
+
+### The leader's framing
+
+*04:09. Whole room, 6 minutes.*
+
+Last week's trade-off was autonomy against reversibility. This week's is the
+wrong payment against the wrong refusal. Neither one costs zero.
+
+A wrong payment costs ₹5,000 and is visible in the ledger. A wrong refusal costs
+one customer, one complaint, and nothing you can see in a dashboard. That
+asymmetry is why most teams tighten the check and never find out what it cost
+them.
+
+Upward, the sentence sounds like this:
+
+> Here is the amount we will not pay without a person. Here is what it costs us
+> when we are wrong in each direction. Here is who can move that number, and how
+> long it takes.
+
+That survives a board meeting. "We added validation" does not.
+
+### Checkpoint · 04:15
+
+**You can now…**
+
+- Say where a shared policy lives at forty processes, and what happens when it is down
+- Turn an approval threshold into a monthly headcount number
+- Say which record you trust when the ledger and the log disagree
+- **State the cost of a wrong refusal, given that nothing in your monitoring will
+  ever show it to you**
+
+No rating on this one. You are mid-argument and the quiz is five minutes away.
+
+## The quiz
+
+*04:20 to 04:30.*
+
+Eight questions in chat, mixed across the whole day rather than grouped by block.
+The mixing is deliberate. Sorting questions by topic lets you answer from the
+heading instead of from the problem. Everybody answers. Then the room takes up
+the two or three that split it.
 
 ## 5 · The Horizon
 
-*~10 minutes.*
+*04:30 to 04:50 — 20 minutes.*
 
-[PLACEHOLDER: the closing beat, present in every session. Write the durable
-framing here, which is the career and skills question this week's material
-raises. Do NOT write the specifics here. Those are pulled from
-`/craft/admin/radar` (Trends · Hiring — India · Durable skills) in the week you
-teach it, so nothing dated is committed to this file. See week 1 for the
-pattern.]
+Every session ends here. What is moving in the field, and what it means for the
+person you are three years from now.
+
+**This week's question: who is allowed to say what a system may do?**
+
+Look at what you actually did today. You chose a number. You decided who may
+change it. You decided what happens when nobody is available to approve. Almost
+none of that was code, and none of it was a model.
+
+Those decisions used to belong to compliance, or to nobody. They are moving to
+engineering, because they are now enforced by code that engineers write. A coding
+assistant will write the check for you in 30 seconds. It has no view at all on
+what the number should be, and it will not tell you that it has no view.
+
+That gap is the job. It is also the part of your work that does not get cheaper
+when the next model ships.
+
+The specifics come from the radar in the week this is taught. What is being hired
+for in India, at what level, and what the job descriptions ask for. Nothing dated
+is written into this file.
+
+## Close
+
+*04:50 to 05:00.*
+
+**04:50 — the assignment.** Four things, set out under *After*.
+
+**04:52 — the same five statements.** Same words, same order, 1 to 5. Both sets
+go on screen together.
+
+Then one question out loud: **who scored themselves lower than at 00:05?** Hands
+up. This is the session where that happens, and it is worth saying out loud
+rather than hiding. A score that dropped means you found something in your own
+system during block 3.
+
+**04:56 — two lines in chat.** Everybody answers both:
+
+> The check I am adding to my own system this week is ______
+>
+> The thing I am still fuzzy on is ______
+
+The second line sets what week 3 opens with.
 
 ## After
 
-[PLACEHOLDER: what to apply to your own system before next week, and what you
-will be asked to show.]
+*About 2 hours before next week.*
+
+1. **Drill 4.** The run budget on the reference agent.
+2. **One row of the policy table for your own system.** Pick the most expensive
+   thing your system does without asking anybody. Fill in all six columns. The
+   last column is the one to go and check rather than assume.
+3. **Finish the policy table** from block 4.
+4. **Answer one question about a system your team owns.** *What does it do at 2am
+   when the person who should approve is asleep?* Find out. Do not guess. If the
+   answer surprises you, bring it to the room.
+
+Post what you find before next session.
+
+The policy table is the artefact of this week. Like the decision record, it is
+the thing you can still show somebody in a year.
 
 ## Reading
 
-[PLACEHOLDER: sources. Field Notes at /latest already tracks what is changing in
-the field. Link the relevant findings here rather than restating them.]
+None of it is required. None of it is long.
+
+- [Policy as data](https://www.openpolicyagent.org/docs/), Open Policy Agent
+  documentation. Read the first page only. It is the industrial version of drill
+  1: rules that live outside the code that enforces them, with their own history.
+- [Handling overload](https://sre.google/sre-book/handling-overload/), Google SRE
+  Book. Written about servers, and it reads exactly onto teardown question 3. An
+  approval queue is a queue, and queues have a capacity you either chose or did
+  not.
+- [Avoiding fallback in distributed
+  systems](https://aws.amazon.com/builders-library/avoiding-fallback-in-distributed-systems/),
+  AWS Builders' Library. The 2:14am question, argued properly. The fallback path
+  is the one that never gets tested and always gets used at the worst moment.
+- [Field notes](/latest) is refreshed weekly. Anything there about tool
+  permissions, agent authorisation or human-in-the-loop review is directly this
+  session. Bring it and we will take it in block 5.

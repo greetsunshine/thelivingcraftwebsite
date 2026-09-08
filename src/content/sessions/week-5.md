@@ -2,7 +2,7 @@
 week: 5
 title: "Scale, consistency & the irreversible trade-offs"
 module: M3
-summary: "The harness at scale: the calls you cannot walk back, and how to tell which ones those are before you make them."
+summary: "One loop is no longer enough. The decisions you cannot take back, and how to spot them first."
 status: draft
 ---
 

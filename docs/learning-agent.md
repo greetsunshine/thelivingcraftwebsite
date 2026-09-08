@@ -266,6 +266,67 @@ Someone who picks the right trade-off on Tuesday and does the opposite on Friday
 has hit the exact gap the programme exists to close — knowing the principle, not
 yet reaching for it under pressure.
 
+### 5.7 The system they own
+
+Every week's assignment says *"your own system"*. Nothing anywhere tells a
+learner what that phrase refers to, and nothing shows them their own answer.
+Week 1 hedges it as *"or the piece of it you can reach"*, which softens the
+ownership problem and not the real one.
+
+The intake already collects this as prose. `r1` asks for the system you own,
+`r2` for how far you have got with agents, `r4` for a real use case, `r5` for
+what shipped means. **Capture is not the gap.** The gap is that it is prose
+written once, ten days before week 1, and never read back.
+
+**Declare the kind, because it changes what every assignment means.**
+
+    (a) an existing system I own, that agents will change or replace
+    (b) an agentic system I am going to build
+
+Take week 2's assignment: *pick the most expensive thing your system does
+without asking anybody, and fill in six columns*. For **(a)** that is
+archaeology — go and find what is true today, and discover that the limit is a
+number in a function nobody has opened in a year. For **(b)** it is design —
+nothing exists, so every column is a decision being made now.
+
+Same six columns, opposite verbs. Today both learners read one sentence and one
+of them does the wrong exercise. **Once the kind is stored, every assignment can
+be written in both voices and the page shows the one that applies.** That is the
+whole reason this field exists, and it is worth more than the other five
+together.
+
+**Six fields, and every one is read by something later.**
+
+| Field | Read by |
+|---|---|
+| Kind, (a) or (b) | Every assignment, to pick its voice |
+| One line: what it does, and for whom | Week 6, as the introduction |
+| The consequential actions it takes, or will | Week 2 — this is the first column of the policy table |
+| Scale, as a number | Week 2 and week 5 teardowns, so the scale argued is theirs rather than 40,000 disputes |
+| Who else owns it | Week 2 — *who agreed to the number* is unanswerable without it |
+| Regulated, or under an SLA | Decides whether weeks 4 and 5 land hard or soft |
+
+Nothing here is collected for a profile page. Drop a field the moment nothing
+reads it.
+
+**Seeded from the intake, then editable all cohort.** Nobody retypes what they
+already wrote. The week 4 answer is better than the week 0 answer, because by
+then they have looked. Keep the edit history: a learner who rewrites *who else
+owns it* in week 2 has had the realisation the topic is designed to produce, and
+that is a better signal than anything they would say out loud.
+
+**What reads it.** Each week's assignment page, so the phrase *your own system*
+resolves to something they wrote. The ADR's Context section, which currently
+starts from a blank page. And the agent's grounding, so *"where would the limit
+go in my system?"* has an answer that is not generic.
+
+**Do not let the model write into it.** This is the learner's own description of
+their own system, and it is the one record in the whole feature set where an
+inferred field would be worse than an empty one. Code stores what they type.
+Section 4 already says this; it is repeated here because a system profile is
+exactly the place somebody will be tempted to auto-summarise the intake prose
+into structured fields and call it a convenience.
+
 ### 5.6 Familiarity
 
 **Re-ask the intake's thirteen questions in week 6.** Same wording, same scale,
@@ -302,6 +363,7 @@ The repo already decided this, in `src/content/config.ts`:
 | Session bodies, topics | `src/content/sessions/*.md` | Already there |
 | Quiz items, answers, rationale | `docs/teaching/quiz/week-N.md` | Already there; authored prose, revised between cohorts |
 | Assignment briefs, ADR prompts | Alongside the session | Same |
+| The system a learner owns | Supabase, seeded from `intake_responses` | People, not teaching. It is theirs, it changes mid-cohort, and it is erased with them |
 | Submissions, quiz responses, confidence | Supabase | People, not teaching |
 | Doubts, feedback | Supabase | Same |
 
@@ -315,6 +377,8 @@ you the diff review and the version history.
 
 New tables, all in `supabase/schema.sql`:
 
+    learner_systems    learner_id, kind, one_line, actions, scale, co_owners,
+                       constraints, updated_at
     submissions        learner_id, week, adr_markdown, repo_url, submitted_at
     quiz_responses     learner_id, item_id, answer, confidence, answered_at
     doubts             learner_id, body, kind, capability_id, cluster_id, status
@@ -344,6 +408,7 @@ deliberate — the risky parts come after the boring parts work.
 | # | Item | Model? | Notes |
 |---|---|---|---|
 | 0 | `topics: string[]` on the session schema, tagged to capability ids | no | Everything keys off this. Half a day. |
+| 0.5 | `learner_systems` — the six-field form, seeded from intake | no | §5.7. Needed before week 2's assignment reads right, so it is early rather than convenient. |
 | 1 | Reading suggestions from `latest.json` | no | Safest first ticket |
 | 2 | Doubt capture — form, table, `/craft/admin/doubts` | no | Just an inbox at this stage |
 | 3 | Assignment + ADR submission, and the who-has-submitted view | no | The tracking substrate |
