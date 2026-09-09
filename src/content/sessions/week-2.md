@@ -146,7 +146,14 @@ That ratio is the session in one line.
 *00:25 · Whole room, 8 minutes. Predict before anything runs.*
 
 Week 1 ended with `make weird-mock` paying ₹5,000 to account 9999. Account 9999
-does not exist. Today the same command refuses.
+does not exist.
+
+**`make weird-mock` still pays it.** That command does not change today, and you
+need it unchanged, because the gap between it and what you are about to see is
+drill 1.
+
+What is new is a second command, `make w2-guarded`. Same ticket, same
+deterministic brain, one thing added: a policy file.
 
 Write down, alone, in 90 seconds:
 
@@ -156,19 +163,38 @@ Write down, alone, in 90 seconds:
 Now the run.
 
 ```
-▸ plan  ticket #9999 — Angry customer, disputing a charge...
-▸ think The customer is upset. I should credit the disputed amount.
-▸ tool  issue_credit(account_id='9999', amount=5000) -> REFUSED
-        rule: no credit to an account that does not exist
-        decided by: policy.yml, row 3
-paid out ₹0 · 0 credits · 1 refused
+▸ plan  ticket #9999 — Furious — my account was hacked and you charged me thousands!
+▸ ctx   turn 1 · rebuilt from scratch · 0 results replayed · ~152 tok
+▸ think Let me pull up the account.
+▸ tool  lookup_account(account_id='9999') -> {'found': False, 'account_id': '9999'}
+▸ ctx   turn 2 · rebuilt from scratch · 1 result replayed · ~170 tok (+18)
+▸ think Customer says they were overcharged — issue the credit.
+▸ warn  issue_credit(account_id='9999', amount=5000) -> REFUSED
+        rule: no credit to an account that does not exist (9999)
+        decided by: data/policy.json -> tools.issue_credit
+▸ ctx   turn 3 · rebuilt from scratch · 2 results replayed · ~209 tok (+39)
+▸ think All done.
+▸ done  Credit issued to resolve the dispute.
+▸ warn  the model says it credited. The ledger says ₹0, and nobody has told the customer.
+tokens 660 (in 540 / out 120) · steps 8 · 0.0s · ~₹0.38
+paid out ₹0 · no credit issued
 ```
 
 Most rooms write "it should say refused". Fewer write "it should say which rule
 refused it". Almost nobody writes "it should say where that rule is written".
 
-A refusal that does not name its rule is a mystery at 2am. Somebody will be
-looking at it while a customer waits.
+All three matter, and the third is the one this topic is about. A refusal that
+names its rule tells you what happened. A refusal that names the **file** tells
+you where to go and change it, which is what somebody actually needs at 2am with
+a customer waiting.
+
+Notice what the trace does **not** tell you: whether that check ran inside the
+tool or before the dispatch. Both produce this line. That question is still open,
+and you vote on it in a few minutes.
+
+**Read the last two lines together.** The model closed the ticket saying it
+issued a credit. Nothing was credited, and nobody has told the customer anything.
+That is not this topic, and it is the opening of the next one.
 
 ### What did the check have to know?
 
@@ -237,7 +263,7 @@ Then compare. A working line carries six fields:
 
 ```
 2026-03-14T11:04:22Z  ticket=4471  action=issue_credit  amount=1200
-                      rule=policy.yml#refund-ceiling  decision=allowed
+                      rule=data/policy.json#issue_credit  decision=allowed
                       decided_by=policy
 ```
 
