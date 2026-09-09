@@ -125,7 +125,7 @@ so at the time. It is a signal to slow down. It is not a test of you.
 
 ### Your own writing, first
 
-*Whole room, 10 minutes.*
+*00:15 · Whole room, 10 minutes.*
 
 Two decision records go on screen. They are yours, written last week.
 
@@ -143,7 +143,7 @@ That ratio is the session in one line.
 
 ### The check, working
 
-*Whole room, 8 minutes. Predict before anything runs.*
+*00:25 · Whole room, 8 minutes. Predict before anything runs.*
 
 Week 1 ended with `make weird-mock` paying ₹5,000 to account 9999. Account 9999
 does not exist. Today the same command refuses.
@@ -172,7 +172,7 @@ looking at it while a customer waits.
 
 ### What did the check have to know?
 
-*Whole room, 8 minutes.*
+*00:33 · Whole room, 8 minutes.*
 
 The room lists it before the answer goes up. Take four or five answers out loud.
 
@@ -189,7 +189,7 @@ it is drill 3.
 
 ### Where does the check go?
 
-*Show of hands, 3 minutes. No answer today.*
+*00:41 · Show of hands, 3 minutes. No answer today.*
 
 There are two places to put it. Inside `issue_credit`, which is what the
 commented block in `tools.py` does. Or before the dispatch in `agent.py`, at the
@@ -202,7 +202,7 @@ failure rather than with an argument.
 
 ### The tool contract grows two columns
 
-*Whole room, 8 minutes.*
+*00:44 · Whole room, 8 minutes.*
 
 Last week, drill 3 wrote down what each tool accepts. Names and types. Add two
 more columns to the same table:
@@ -222,7 +222,7 @@ meet in documentation. The last two columns are yours. No API gives you those.
 
 ### The second record
 
-*Alone 2 minutes, then whole room 8 minutes.*
+*00:52 · Alone 2 minutes, then whole room 8 minutes.*
 
 Week 1 left a question open in the teardown. A regulator asks why one specific
 account was credited. A stored prompt and completion is not enough, because the
@@ -274,7 +274,7 @@ For each one, two questions, and you commit to both before the answer:
 
 ### It refuses ₹8,400 that is genuinely owed
 
-*Pairs, 8 minutes.*
+*01:15 · Pairs, 8 minutes.*
 
 Ticket #7310. Meera is on the ₹1,200 Pro plan. She cancelled in January and was
 charged for seven more months by mistake. She is owed ₹8,400.
@@ -304,7 +304,7 @@ one is different, and it is worse. **This time you wrote the rule that did it.**
 
 ### A second piece of code pays without asking
 
-*Pairs, 8 minutes.*
+*01:23 · Pairs, 8 minutes, then 2 minutes on the follow-up below.*
 
 Three weeks from now, another team adds one tool. `apply_goodwill_credit`, for
 customers who complain on social media. Twenty lines. It appends to the same
@@ -329,40 +329,115 @@ money.
 the dispatch in `agent.py`. One line, `res = fn(**args)`, and every tool goes
 through it including the ones nobody has written yet.
 
-Now look at the two numbers still on the board from block 1. This is where that
-vote is settled. A check inside a tool is a check somebody has to remember. A
-check at the dispatch is a check nobody can forget.
+Now look at the three numbers still on the board from block 1. This is where the
+first of them is settled. A check inside a tool is a check somebody has to
+remember. A check at the dispatch is a check nobody can forget. And if you voted
+for the ledger, you are right, and you are ahead of the drill: a dispatch check
+only covers callers that go through the agent, so move that tool into another
+team's service and the dispatch never sees it. That is the first question in the
+teardown.
 
-### The number nobody can change tonight
+**01:31 · The follow-up, two minutes.** What did the dispatch actually check?
 
-*Whole room, 8 minutes.*
+It refused the new tool for having no policy row. It never looked at the account.
+So somebody now writes a row for that tool: reversible false, a ceiling of
+₹5,000, a named owner. It looks complete.
 
-Friday, 11pm. A ₹40,000 enterprise account has been billed twice. Operations
-wants the credit released tonight. Your ceiling is ₹1,200 and it lives in
-`policy.yml` in the repository.
+> What happens to account 9999?
 
-One question first, alone, in 60 seconds:
+It gets paid. The row never says the account has to exist.
 
-> How many minutes from "please raise the limit" to the money leaving?
+**We moved the check out of the tool so that nobody had to remember it, and then
+put a rule inside the row that somebody has to remember.** Same failure, one
+level up, hiding in a file that felt safe because it was data.
 
-Take three answers out loud before reading on.
+So there are two kinds of rule and they cannot share a home.
 
-**What went wrong.** Nothing failed. That is the point of this one. The limit
-being written down is necessary and it is not sufficient. A limit you cannot
-change at 11pm on a Friday is a limit that gets worked around by hand, and the
-hand-worked path has no log at all.
+| Kind of rule | Where it lives | Examples |
+|---|---|---|
+| **An invariant**, true of every action you cannot undo | In the checker itself, never as a field. Nobody can switch it off, and nobody has to switch it on. | The account must exist. The amount must be a number. The amount must be positive. |
+| **A limit**, genuinely different per tool | In the row, with an owner | The ceiling. Who may change it. What happens when nobody approves. |
 
-**The control.** The limit needs an owner, a change path, and a record of who
-changed it and when. Which is a second policy, about the first policy.
+The test: **could a reasonable person want this switched off for one tool?** If
+yes, it is a limit and it belongs in the row. If no, it is an invariant, and
+putting it in the row is a bug you find later, with money.
 
-The cost is real in both directions. A change that needs a code review is slow
-and leaves a record. A change made in an admin screen at 11pm is fast and leaves
-an argument. Pick one deliberately, because you are going to get one of them by
-accident.
+### A ₹44,000 refund has to go out tonight
+
+*01:33 · Whole room, 8 minutes. First 60 seconds alone, in writing.*
+
+An enterprise account pays ₹4,000 a month. A billing error charged them twice
+for eleven months, so they are owed ₹44,000. Nobody disputes the amount and
+finance has already approved it.
+
+Two things make it tonight rather than Monday. The contract says credit notes go
+out within five working days, and tonight is the fifth. And the customer is
+holding a ₹6,00,000 invoice until the credit appears, which is why their account
+manager has called the on-call engineer twice this evening.
+
+Your ceiling is ₹1,200. It lives in `data/policy.json` in the repository. The
+agent refused the credit and escalated it to the approvals queue. Nobody is
+watching that queue at 11pm on a Friday.
+
+**Your check is doing exactly what you built it to do.**
+
+One question, alone, in 60 seconds:
+
+> The refund has to go out tonight. Your check says no. What actually happens?
+
+Take three answers out loud before reading on. Somebody always gets it.
+
+**What happens.** Somebody pays it by hand. Nobody ships a code change, a
+review, a merge and a deploy at 11pm on a Friday for one refund, so an
+operations engineer opens the payments console and sends ₹44,000 directly.
+
+**Read that again, because it is the opposite of what a guard is for.** Before
+you built the check, the ₹44,000 went through the agent and appeared in the
+trace. Now it goes around the agent and appears nowhere. No rule attached, no
+approver recorded, no row in the decision log. **The guard made the record
+worse.**
+
+Notice the size of what a ₹1,200 limit was holding up. Not ₹44,000. The customer
+was sitting on a ₹6,00,000 invoice, which is 500 times the ceiling that blocked
+it.
+
+**The control.** A limit needs three things and you wrote down one.
+
+1. **A value.** ₹1,200.
+2. **An owner.** A named role who is allowed to move it.
+3. **A way to move it that leaves a record.** Who changed it, when, from what to
+   what, and who approved.
+
+The third one is where the real decision is, and it is not a choice between fast
+and safe.
+
+- **Through a code review.** About two hours. The controls come free: the diff
+  records who changed the number, what it used to be, and who approved, and a
+  second person had to look.
+- **Through an admin screen.** About 30 seconds. You get none of those unless you
+  build them. The record, the check on who is allowed, the alert to somebody
+  else: all of it is work you have to choose to do.
+
+So the trade-off is **speed against how much of the control you have to build
+yourself.** A fast path that writes an audit row is perfectly possible. The slow
+path simply hands you the record free, from git.
+
+That gives three real options and only one of them is not a failure.
+
+| What you choose | What it costs you |
+|---|---|
+| The slow path, and nothing else | People go around it under pressure. Tonight's ₹44,000, with no record at all. |
+| A fast path, no record built | The change takes 30 seconds and nobody can say later who made it, or why. |
+| A fast path, record built | Engineering time. This is the answer. |
+
+**Every bit of friction you take out of the change path is a control you now have
+to rebuild on purpose.** Take the friction out and build nothing, and you have a
+fast path with no controls at all, which is worse than the guard you started the
+day with.
 
 ### Nobody is there to approve
 
-*Pairs, 8 minutes.*
+*01:41 · Pairs, 8 minutes.*
 
 Your gate works. An irreversible credit over the limit now asks a human.
 
@@ -385,7 +460,7 @@ question.
 
 ### The pattern under all four
 
-*Whole room, 10 minutes.*
+*01:49 · Whole room, 10 minutes.*
 
 Build the table from the room's four answers, not from a slide.
 
@@ -433,7 +508,7 @@ not mention that it did.
 
 ### Drill 1 · Move the limit out of the function
 
-*Alone, 15 minutes.*
+*02:20 · Alone, 15 minutes. The last two are on the shared screen.*
 
 **Decide first, 2 minutes, in writing.** Where does the file live, what is one row
 of it, and what happens when the row is missing?
@@ -443,7 +518,11 @@ know it does two jobs at once: it holds the rule, and it holds the number.
 
 Write the numbers as data. One row per tool, read by the code that dispatches.
 
-**Check when you are done.** Two questions, and you must be able to answer both:
+**Check when you are done.** At **02:33** one person's refusal message goes on the
+shared screen and is read out to the room. One question about it: **does it name
+the file?** That is the 00:25 question closed, against your own code.
+
+Then two questions you must be able to answer yourself:
 
 - Who owns this file? Name a role, not a person.
 - What happens the day a tool has no row? Refuse, allow, or crash. All three are
@@ -451,7 +530,7 @@ Write the numbers as data. One row per tool, read by the code that dispatches.
 
 ### Drill 2 · Gate the action you cannot undo, and record it
 
-*Alone, 20 minutes.*
+*02:35 · Alone, 20 minutes.*
 
 **Decide first, 3 minutes, in writing.** Over the limit means ask. So what does
 asking look like in a program with no user in front of it?
@@ -471,7 +550,7 @@ is a wish, and you now know the difference.
 
 ### Drill 3 · Pay once, then watch your fix fail
 
-*Alone, 20 minutes.*
+*02:55 · Alone, 20 minutes.*
 
 **Decide first, 2 minutes, in writing.** What makes two payment requests "the
 same"? The ticket id, the account, the amount, or all three? Your answer decides
@@ -503,7 +582,7 @@ on purpose.
 
 ### Three things not to fix today
 
-*Whole room, 5 minutes.*
+*03:15 · Whole room, 5 minutes.*
 
 You will want to fix all three. Each one is somebody else's week, and each one is
 better after you have spent seven days with the problem.
@@ -559,7 +638,7 @@ real organisation.
 > resolved within four hours. The firm must be able to explain any individual
 > credit years later.
 
-**Pairs, 12 minutes.** Each pair takes two questions. They are assigned, not
+**03:25 · Pairs, 12 minutes.** Each pair takes two questions. They are assigned, not
 chosen. Bring the sharper of your two answers back to the room.
 
 **1 · Where does the policy live for forty processes?** A file in the repository
@@ -586,12 +665,12 @@ provides it.
 one is true, what do you tell the regulator, and what would have had to exist
 last Monday for this to be answerable at all?
 
-**Whole room, 10 minutes.** Two minutes per question. Take the answer, not the
+**03:37 · Whole room, 10 minutes.** Two minutes per question, in order, so question 1 lands at 03:37, question 2 at 03:39, and question 5 finishes at 03:45. Take the answer, not the
 discussion.
 
 ### Write the policy table
 
-*Same pairs, 15 minutes to write.*
+*03:47 · Same pairs, 12 minutes to write.*
 
 Last week you wrote a decision record. Today it grows a table. One row per action
 your system can take:
@@ -603,7 +682,7 @@ your system can take:
 Six columns. Every cell has a value or the row is not finished. "TBD" in the last
 column is the 2:14am failure, written down in advance.
 
-*Swap with another pair, 10 minutes to review theirs.* Four questions, scored 0,
+*03:59 · Swap with another pair, 10 minutes to review theirs.* Four questions, scored 0,
 1 or 2 each. The written comment matters more than the number.
 
 1. **Take the four failures from block 2 and walk each one through their table.**
