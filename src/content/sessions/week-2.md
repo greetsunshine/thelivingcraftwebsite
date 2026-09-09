@@ -610,7 +610,8 @@ That last part is week 1's drill 1 again, now with money attached to it.
 
 ### Drill 5 · Make the number move without a restart
 
-*Homework, about 30 minutes. The code is three lines. The questions are the work.*
+*Optional homework, about 30 minutes. The only optional thing on this week's
+list. The code is three lines; the questions are the work.*
 
 Today you agreed that a limit has to be able to change without a deploy, and then
 built one that cannot. `guarded.py` reads `data/policy.json` once, in `main()`, so
@@ -639,6 +640,15 @@ Reading the file more often did not give you a change path. It gave you a faster
 way to change a number with no record of who changed it. **That gap is what a
 policy service is for**, and week 5 builds the version that works across
 processes.
+
+**Why it is optional, and who should still do it.** The rest of this week's
+homework is about your own system. This one is about the reference agent, so it
+is the item to drop if the week gets away from you. Do it anyway if the answer
+you wrote at 00:44 was that your own limits live in a file that ships with a
+deploy, because that is the system this drill is about.
+
+**If you are short of time, skip the code and answer question 3.** Week 3 opens
+near it.
 
 ### Checkpoint · 03:20
 
@@ -815,11 +825,12 @@ The second line sets what week 3 opens with.
 
 ## After
 
-*About 2 hours 30 before next week.*
+*About 2 hours, or 2 hours 30 with the optional drill.*
 
 1. **Drill 4.** The run budget on the reference agent. About 45 minutes.
-2. **Drill 5.** Make the ceiling move without a restart, and answer its three
-   questions in writing. About 30 minutes.
+2. **Drill 5, optional.** Make the ceiling move without a restart, and answer its
+   three questions in writing. About 30 minutes. If you drop one thing this week,
+   drop this one, and still answer question 3.
 3. **One row of the policy table for your own system.** Pick the most expensive
    thing your system does without asking anybody. Fill in all six columns. The
    last column is the one to go and check rather than assume.
