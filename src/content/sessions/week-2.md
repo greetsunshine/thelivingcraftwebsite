@@ -608,6 +608,38 @@ it stops with a named outcome rather than a silent success.
 
 That last part is week 1's drill 1 again, now with money attached to it.
 
+### Drill 5 · Make the number move without a restart
+
+*Homework, about 30 minutes. The code is three lines. The questions are the work.*
+
+Today you agreed that a limit has to be able to change without a deploy, and then
+built one that cannot. `guarded.py` reads `data/policy.json` once, in `main()`, so
+changing the ceiling still means restarting the program.
+
+**Decide first, in writing.** How often should that file be read? Every call,
+every run, or only when something tells you it changed? Each answer costs
+something different.
+
+**Build.** Load the policy where the check happens rather than once at start-up.
+
+**Check.** Refuse the ₹44,000. Edit the ceiling in `data/policy.json`. Run again
+without restarting anything. It pays.
+
+**Then the part that is actually the assignment.** Three questions, answered in
+writing, brought to the room.
+
+1. You just changed a limit and nothing recorded that you did it. **Where would
+   the audit row go, and what is in it?**
+2. On your machine you were allowed to edit that file because it is your machine.
+   In production, who is allowed? **Name the mechanism, not the role.**
+3. Save the file with a syntax error halfway through a run. What does the agent
+   do? **Whatever it does, is that what you would have chosen?**
+
+Reading the file more often did not give you a change path. It gave you a faster
+way to change a number with no record of who changed it. **That gap is what a
+policy service is for**, and week 5 builds the version that works across
+processes.
+
 ### Checkpoint · 03:20
 
 **You can now…**
@@ -783,14 +815,16 @@ The second line sets what week 3 opens with.
 
 ## After
 
-*About 2 hours before next week.*
+*About 2 hours 30 before next week.*
 
-1. **Drill 4.** The run budget on the reference agent.
-2. **One row of the policy table for your own system.** Pick the most expensive
+1. **Drill 4.** The run budget on the reference agent. About 45 minutes.
+2. **Drill 5.** Make the ceiling move without a restart, and answer its three
+   questions in writing. About 30 minutes.
+3. **One row of the policy table for your own system.** Pick the most expensive
    thing your system does without asking anybody. Fill in all six columns. The
    last column is the one to go and check rather than assume.
-3. **Finish the policy table** from block 4.
-4. **Answer one question about a system your team owns.** *What does it do at 2am
+4. **Finish the policy table** from block 4.
+5. **Answer one question about a system your team owns.** *What does it do at 2am
    when the person who should approve is asleep?* Find out. Do not guess. If the
    answer surprises you, bring it to the room.
 
