@@ -1,167 +1,213 @@
 ---
+// Field notes, for the room.
+//
+// ---------------------------------------------------------------------------
+// WHAT THIS REPLACED
+// ---------------------------------------------------------------------------
+// Four hardcoded notes with invented dates, invented week numbers, and an
+// invented quote attributed to Sunil. It read as real course material because
+// it was styled like it, and it was on the nav rail of every /craft page. The
+// repo's first hard rule is never to invent content; this was the one place
+// that did, and it was aimed at the people who paid.
+//
+// ---------------------------------------------------------------------------
+// ONE STORE, TWO RENDERINGS
+// ---------------------------------------------------------------------------
+// The retriever writes src/data/latest.json weekly; /latest shows it to
+// prospects and this shows it to the room. Neither is a copy — both read
+// src/lib/notes.ts, which owns what may be published:
+//
+//   * `reviewNote` is Sunil's private read on a source and never renders here.
+//     Fields are picked one by one in that module rather than spread, so a new
+//     operator-only field cannot leak by default.
+//   * `source: 'operator'` items are withheld — they restate our own prices and
+//     dates, which belong to facts.ts and would be a second source for the same
+//     fact.
+//
+// A SECOND READER WITH ITS OWN FILTERING IS HOW SOMETHING EVENTUALLY LEAKS.
+// Same rule as the quiz answer key. If this page ever needs a field that module
+// does not expose, add it there.
+//
+// ---------------------------------------------------------------------------
+// THE THREADS ARE SHOWN, NOT JOINED
+// ---------------------------------------------------------------------------
+// Week 1 promises this is "refreshed weekly". What it does not promise is that
+// every finding maps onto one of the five threads, and it does not: the themes
+// below predate the threads, nothing has landed under trace-and-bill, and
+// "reliability & evaluation" straddles evidence and state. So the matrix is
+// printed beside the notes rather than used to file them. Inventing that join
+// would put a mapping nobody decided into the course's own vocabulary.
+
 import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { publishedNotes, longDate } from '../../lib/notes';
+
 export const prerender = false;
 const learner = Astro.locals.learner!;
 
-const notes = [
-  {
-    date: 'Aug 24, 2026',
-    week: 4,
-    title: 'Visibility timeout pattern for SQS',
-    body: 'If the worker dies mid-processing, the message must return to the queue after a timeout. Without this, the message is silently lost. Key insight from Sunil: "A queue without a visibility timeout is a queue that lies to you."',
-    tags: ['D4', 'queues', 'reliability'],
-  },
-  {
-    date: 'Aug 19, 2026',
-    week: 3,
-    title: 'Exponential backoff — when fixed delay fails',
-    body: 'Fixed 1s retry loops cause thundering-herd problems against rate-limited APIs. The exponential backoff with jitter pattern is the standard answer. Added to my worker/api.ts after the A1 review flagged it.',
-    tags: ['D1', 'retry', 'backoff'],
-  },
-  {
-    date: 'Aug 12, 2026',
-    week: 2,
-    title: 'Blast radius as a design constraint',
-    body: 'Session takeaway: every architectural boundary is a blast-radius decision. The question isn\'t "will this fail?" — it\'s "when this fails, what else dies with it?" Applied this framing to my service mesh config.',
-    tags: ['D1', 'architecture', 'blast-radius'],
-  },
-  {
-    date: 'Aug 5, 2026',
-    week: 1,
-    title: 'First impressions — intake reflections',
-    body: 'Completed the intake assessment. Surprised by how much I assumed about my own system\'s failure modes without evidence. The intake forced me to articulate what I actually know vs. what I hope.',
-    tags: ['intake', 'reflection'],
-  },
-];
----
-<CraftLayout title="Field Notes" learner={learner}>
-  <div class="notes-page">
-    <div class="notes-header">
-      <div>
-        <h1 class="notes-title">Field Notes</h1>
-        <p class="notes-sub">Your personal learning journal — observations, insights, and things to remember.</p>
-      </div>
-      <button class="new-note-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-        New note
-      </button>
-    </div>
+const { refreshedAt, themes } = publishedNotes();
+const total = themes.reduce((n, t) => n + t.notes.length, 0);
 
-    <div class="notes-list">
-      {notes.map(n => (
-        <div class="note-card">
-          <div class="note-meta">
-            <span class="mono note-date">{n.date}</span>
-            <span class="mono note-week">Week {n.week}</span>
-          </div>
-          <h3 class="note-title">{n.title}</h3>
-          <p class="note-body">{n.body}</p>
-          <div class="note-tags">
-            {n.tags.map(t => (
-              <span class="mono tag">{t}</span>
+// Which week builds which thread, straight from each session's frontmatter —
+// which is itself the machine-readable half of docs/teaching/threads.md.
+const sessions = (await getCollection('sessions'))
+  .filter((s) => s.data.week >= 1)
+  .sort((a, b) => a.data.week - b.data.week);
+
+const THREAD_LABEL: Record<string, string> = {
+  boundaries: 'Boundaries',
+  evidence: 'Evidence',
+  'trace-and-bill': 'Trace and bill',
+  'untrusted-input': 'Untrusted input',
+  state: 'State',
+  retrieval: 'Retrieval',
+  'multi-agent': 'Multi-agent',
+};
+
+const threadRows = Object.keys(THREAD_LABEL)
+  .map((id) => ({
+    id,
+    label: THREAD_LABEL[id],
+    weeks: sessions
+      .filter((s) => (s.data.threads ?? []).some((t) => t.id === id))
+      .map((s) => ({
+        week: s.data.week,
+        weight: (s.data.threads ?? []).find((t) => t.id === id)!.weight,
+      })),
+  }))
+  .filter((r) => r.weeks.length > 0);
+
+const MARK: Record<string, string> = { builds: '●', second: '◐', named: '○' };
+---
+
+<CraftLayout title="Field notes" learner={learner}>
+  <div class="wrap page-narrow" style="max-width: 720px; margin: 0 auto;">
+    <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Field notes</h1>
+    <p class="lead" style="margin-bottom:8px">
+      What has actually moved in the agentic-AI space, gathered weekly and cited. This is the
+      same feed the public page carries — not a summary of the sessions, and not a substitute
+      for them.
+    </p>
+    <p class="mono faint" style="font-size:12.5px;margin-bottom:44px">
+      {total} {total === 1 ? 'item' : 'items'} · last refreshed {longDate(refreshedAt)}
+    </p>
+
+    {total === 0 ? (
+      <div class="empty">
+        <h2>Nothing gathered yet.</h2>
+        <p class="muted">
+          The retriever runs weekly and its findings land here. An empty week is a real result
+          and gets reported as one rather than padded.
+        </p>
+      </div>
+    ) : (
+      themes.map((theme) => (
+        <section class="theme">
+          <header class="theme-head">
+            <h2>{theme.title}</h2>
+            <span class="mono count">{theme.notes.length}</span>
+          </header>
+          <p class="theme-blurb">{theme.blurb}</p>
+
+          <ul class="notes">
+            {theme.notes.map((n) => (
+              <li class="note">
+                <h3>{n.title}</h3>
+                <p class="note-body">{n.body}</p>
+                <p class="note-meta mono">
+                  <a href={n.source} target="_blank" rel="noopener noreferrer">{n.sourceHost} ↗</a>
+                  <span class="faint"> · gathered {longDate(n.gatheredAt)}</span>
+                </p>
+              </li>
             ))}
-          </div>
+          </ul>
+        </section>
+      ))
+    )}
+
+    {/* Printed beside the notes, deliberately not used to file them. */}
+    {threadRows.length > 0 && (
+      <section class="threads">
+        <h2>The five threads, and which week builds them</h2>
+        <p class="theme-blurb">
+          The arc the six sessions run on. Nothing above is filed against these — a finding is
+          about the world, a thread is about the course, and pretending one maps onto the other
+          would be tidier than it is true.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Thread</th>
+                {sessions.map((s) => <th class="wk">W{s.data.week}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {threadRows.map((r) => (
+                <tr>
+                  <td>{r.label}</td>
+                  {sessions.map((s) => {
+                    const hit = r.weeks.find((w) => w.week === s.data.week);
+                    return (
+                      <td class="wk mono" title={hit ? hit.weight : undefined}>
+                        {hit ? MARK[hit.weight] : ''}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
-    </div>
+        <p class="mono faint key">● builds it · ◐ its second thread · ○ named or shown only</p>
+      </section>
+    )}
   </div>
 </CraftLayout>
 
 <style>
-  .notes-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 48px 0;
-  }
-  .notes-header {
+  .lead { max-width: 60ch; }
+  .faint { color: var(--ink-faint); }
+
+  .theme { margin-bottom: 52px; }
+  .theme-head {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 36px;
-  }
-  .notes-title {
-    font-size: clamp(28px, 4vw, 40px);
-    margin: 0 0 4px;
-  }
-  .notes-sub {
-    color: var(--ink-soft);
-    font-size: 15px;
-    margin: 0;
-  }
-  .new-note-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    background: var(--noir);
-    color: var(--paper-1);
-    border: none;
-    border-radius: var(--radius-control);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: var(--weight-medium);
-    cursor: pointer;
-    transition: opacity 0.15s;
-    white-space: nowrap;
-  }
-  .new-note-btn:hover {
-    opacity: 0.85;
-  }
-  .notes-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .note-card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-inner);
-    padding: 28px;
-    transition: all 0.15s;
-  }
-  .note-card:hover {
-    background: var(--surface-hover);
-    box-shadow: var(--shadow-raise);
-  }
-  .note-meta {
-    display: flex;
+    align-items: baseline;
     gap: 12px;
-    margin-bottom: 10px;
+    border-top: 2px solid var(--ink);
+    padding-top: 14px;
   }
-  .note-date {
-    font-size: 11px;
-    color: var(--ink-faint);
-    letter-spacing: 0.06em;
-  }
-  .note-week {
-    font-size: 11px;
-    color: var(--clay);
-    letter-spacing: 0.06em;
-  }
-  .note-title {
-    font-size: 18px;
-    font-family: var(--font-display);
-    font-weight: var(--weight-strong);
-    margin: 0 0 8px;
-  }
-  .note-body {
-    font-size: 15px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-    margin: 0 0 16px;
-    max-width: 70ch;
-  }
-  .note-tags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .tag {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    background: var(--paper-2);
-    color: var(--ink-soft);
-    letter-spacing: var(--tracking-label);
+  .theme-head h2 { font-size: 21px; margin: 0; }
+  .count { font-size: 12px; color: var(--ink-faint); }
+  .theme-blurb { font-size: 14.5px; color: var(--ink-soft); max-width: 60ch; margin: 8px 0 22px; }
+
+  .notes { list-style: none; margin: 0; padding: 0; }
+  .note { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .note h3 { font-size: 16.5px; margin: 0 0 8px; line-height: 1.32; }
+  .note-body { font-size: 14.5px; line-height: 1.6; margin: 0 0 10px; max-width: 64ch; }
+  .note-meta { font-size: 11.5px; margin: 0; }
+  .note-meta a { color: var(--accent-ink); text-decoration: none; }
+  .note-meta a:hover { text-decoration: underline; }
+
+  .threads { margin-top: 64px; padding-top: 22px; border-top: 2px solid var(--ink); }
+  .threads h2 { font-size: 21px; margin: 0 0 8px; }
+  .table-scroll { overflow-x: auto; }
+  .threads table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .threads th, .threads td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+  .threads th { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; }
+  .threads .wk { text-align: center; width: 44px; }
+  .key { font-size: 11.5px; margin-top: 12px; }
+
+  .empty { padding: 40px 0; }
+  .empty h2 { font-size: 20px; margin: 0 0 10px; }
+  .muted { color: var(--ink-soft); font-size: 14.5px; max-width: 56ch; }
+
+  /* Astro scopes styles per component, so `page-narrow` has to be declared in
+     every page that wears it — the sibling /craft pages each carry their own
+     copy. Using the class without this rule is a no-op, which is what this page
+     was doing. */
+  .page-narrow { padding-top: 40px; padding-bottom: 56px; }
+  @media (max-width: 780px) {
+    .page-narrow { padding-top: 24px; padding-bottom: 40px; }
   }
 </style>

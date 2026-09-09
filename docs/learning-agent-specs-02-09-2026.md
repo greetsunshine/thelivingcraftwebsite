@@ -12,6 +12,160 @@ It is deliberately **not** a code-review pipeline. See *What was cut*.
 
 ---
 
+## 0 · Amendment, 9 September 2026 — read this before §3, §5.5 and §5.6
+
+This spec was written on 2 September, before any session existed in full. Week 1
+now does, and it is the first evidence about what actually happens in the room.
+Three things below were wrong, and the teaching material is right in every case —
+it describes a real five-hour session, and this described a plan for one.
+
+**The rest of the spec stands.** §4's invariant, §10's cuts, the two-audience
+rule, and the doubts design all survive contact with week 1 unchanged.
+
+### A · There are three vocabularies, not one (amends §3)
+
+§3 says *"One vocabulary, six surfaces&hellip; this is what makes the whole thing
+one intern-sized project rather than six unrelated ones."* That vocabulary was
+the thirteen intake capabilities. The teaching material uses two others, and both
+do jobs the thirteen cannot.
+
+| Vocabulary | Where | When it fires |
+|---|---|---|
+| **13 capabilities** `A1–A7`, `B1–B6` | `src/lib/craft/intake.ts` | Week-0 intake and the week-6 re-ask, unchanged |
+| **5 threads** boundaries · evidence · trace-and-bill · untrusted-input · state | `docs/teaching/threads.md`, with a per-week matrix | When a session is written; the contract between the six |
+| **5 session outcomes** | each session's own frontmatter | Twice, inside the session |
+
+The resolution is not to pick one. The thirteen keep the cohort-level job they
+are good at; the five outcomes become the per-session instrument; the **threads**
+become the join between weeks, which is what §3 wanted a single vocabulary
+*for*. Session frontmatter now carries `outcomes` and `threads`; `topics` is
+gone, and the `topics: ['A1','A2','A3']` that was on week 1 was invented to
+satisfy the schema rather than read off anything.
+
+### B · The decision record has seven sections (amends §5.5)
+
+Not Context / Decision / Alternatives / Consequences / Unsure about, but:
+
+> Context · Goals · Non-goals · The design · What can go wrong · Alternatives ·
+> Open questions
+
+§5.5's *rule* is unchanged and is why this is a fixed list at all — the template
+must not vary by week, so week 6 reads against week 1. Two of the new sections
+carry constraints the five had nowhere to put: **Goals must be testable**
+(*"'Safer' is not a goal. 'No dispute is credited twice' is"*), and **What can go
+wrong is one row per case**. Both are checked by the in-room peer review.
+
+**Alternatives is still load-bearing**, in both. Week 1 puts it more bluntly than
+this spec did: *"'Use a better model' counts, and rejecting it well is most of
+today."*
+
+The template now lives in exactly one module, `src/lib/craft/adr.ts`, because it
+was previously written out three times inside one file.
+
+### C · The before-rating closes at first teaching, not at the session start (amends §5.6)
+
+The rule — *a baseline taken after the teaching is not a baseline* — is right.
+The boundary was fifteen minutes out. Week 1 opens at 00:00, takes its first
+rating at **00:05**, and does not teach until block 1 at **00:15**, so closing
+the window at `startsAt` refused the exact rating the rule exists to protect.
+
+The close is now derived from the run of show: the first `block` entry. See
+`src/lib/craft/schedule.ts`. A session with no run of show falls back to
+`startsAt`, which is the old behaviour and the right default — a session nobody
+has written a day for has told us nothing about when its teaching begins.
+
+### D · Decided 9 September, and built the same day
+
+Five things week 1 does that the build did not. Sunil decided each one; the
+reasoning is in the alignment audit. **All five are now written**, plus the
+session mode underneath four of them — see §0E.
+
+- **The quiz moves in-session to 04:20.** It opens at the `quiz` entry in the run
+  of show rather than at `endsAt`, and Sunil gets the distribution live — taking
+  up the ones that split the room needs it on screen while the room is there.
+  **Sunil picks the eight from the bank, in the session file, in his order**, one
+  order for the whole room so "question three" means the same thing to everybody.
+- **Checkpoints are captured, in the app, during the call** — four per session,
+  one tap each. They are in frontmatter already; nothing reads them back yet.
+- **Peer review gets a surface, with the comments and the numbers.** The comment
+  leads and the 0/1/2 sits beside it, and nothing sums, averages or ranks them —
+  which is what keeps §10 intact, because a review comment is not a rank. It
+  attaches to the **in-room pair draft**, a separate and lighter artefact from the
+  submitted record. **Pairs are set by Sunil in the room and confirmed in the
+  app**; a computed rotation cannot see who is stuck and breaks when somebody is
+  absent. Questions are in `src/lib/craft/adr.ts`.
+- **Field notes is one store with two renderings.** The retriever keeps writing
+  it, the public page is unchanged, and `/craft` gets its own view tying items to
+  the thread and week they bear on. A second store was rejected: the radar is
+  separate because its content is dangerous to repeat to a prospect, and that
+  argument does not apply here.
+- **The close asks all four questions** — the form's two about the session, the
+  session's two about the learner. The doubt (*"the thing I am still unsure
+  about"*) **opens a forum thread tagged to the week** rather than becoming a
+  feedback row, because in the forum another learner can answer it before Sunil
+  gets there. If completion drops at 04:56, the session's pair is the one to keep.
+
+**What those five add up to, which none of them says alone:
+`/craft` becomes a surface used DURING a session.** Five of the decisions put a
+learner in the course area while a live call is running — the two ratings, the
+four checkpoints, the quiz, and the pair draft with its review. Every page there
+was built for one person, alone, afterwards, with time to read. The brief is now
+ninety seconds on a phone or a second monitor while somebody is talking, showing
+the one thing this minute is asking for and nothing else.
+
+**Build session mode first.** Four surfaces need it, and building them one at a
+time means building it four times and getting four different answers. Two things
+are decisions waiting inside it rather than details of it: the agent dock sits at
+the foot of every `/craft` page, and the nav assumes a browsing visit. Neither
+belongs on a page opened for ninety seconds mid-call.
+
+---
+
+## 0E · Session mode, as built
+
+`/craft/live` ([src/pages/craft/live.astro](../src/pages/craft/live.astro)),
+resolved by [src/lib/craft/live.ts](../src/lib/craft/live.ts).
+
+**Exactly one thing is "now".** The others are a catch-up list, smaller and
+underneath. Same argument as the single prompt in §10's discussion: a screen with
+four equal asks is a screen people scroll past, and in a live room there is no
+second chance to read it. "Now" is the **most recently fired** outstanding ask,
+not the earliest — somebody who missed 01:10 and is standing in 03:20 is shown
+03:20, because the room has moved on and answering a question about a block that
+finished two hours ago is not the ask.
+
+**The chrome comes off.** `CraftLayout` takes `bare`, which drops the nav rail
+and the agent dock. A prop rather than a second layout, because §9 says every
+`/craft` page goes through that one shell and a fork drifts. The rail invites you
+elsewhere at the one moment the page has a single job; the dock covers the bottom
+of a phone with an assistant nobody is about to ask anything.
+
+**Nothing redirects anybody into it.** A banner on the dashboard while a session
+runs, and that is all. Somebody who opened the dashboard mid-call may have meant
+to, and hijacking that is not undoable from a phone with a room waiting.
+
+**Six asks are placed on the clock**, from four modules that do not know session
+mode exists — the two ratings from `pulses.ts`, the checkpoints from
+`checkpoints.ts`, the quiz from `checks.ts`, and the pair work from `pairs.ts`.
+This module only decides which is now.
+
+Two things it inherits without exception: no timetable means nothing is ever
+live, and every window is re-checked server-side on save rather than trusted from
+the page.
+
+### What each decision became
+
+| Decision | Where it lives |
+|---|---|
+| Checkpoints captured in the app | `checkpoint_ratings`, keyed by offset (`'01:10'`) not an index. One number on the checkpoint's **last** item, which is the session's own convention. Open from their moment until the session ends — a late answer beats none, but a slow-down signal after the fact is not one. Sunil's read is counts, never a mean: a 3.4 hides the two people at 2. |
+| Quiz at the quiz block | `checkOpensAt()` reads the run of show, falling back to `endsAt`. `itemsForCheck()` returns **Sunil's eight in Sunil's order** — one order for the whole room, so "question three" means the same thing to eight people. An empty `quiz` opens nothing, exactly like an unset `endsAt`. |
+| Peer review, comments and numbers | `pair_drafts` and `pair_reviews`, at `/craft/pair`. The draft is a **different object** from `submissions`: two names, fifteen minutes, reviewed ten minutes later. Same seven sections, because §5.5's template must not vary. The review's picker excludes your own and your partner's draft, re-checked on save. **Nothing sums the numbers.** |
+| Pairs set in the room | A dropdown of the active roster and a list of the other pairs' drafts. No computed rotation: it cannot see who is stuck and it breaks when somebody is absent. An unknown partner records as absent rather than refusing the draft. |
+| Field notes in `/craft` | `/craft/notes`, over the same `latest.json` through `src/lib/notes.ts` — one module owns what may be published, so `reviewNote` and operator items cannot leak to a second reader. The five threads are **printed beside** the notes, not used to file them; that join was considered and refused, because the themes predate the threads and nothing has landed under trace-and-bill. |
+| Four closing questions | `feedback` gains `changing` and `unsure`. The doubt **opens a forum thread** tagged to the week rather than becoming a feedback row. `unsure` is stored only when the forum write fails, so a row with it set is a visible delivery failure rather than lost text. |
+
+---
+
 ## 1 · What changed from the 28 August PoC
 
 The PoC specified seven agents around an automated PR reviewer: a webhook, 60k
@@ -63,6 +217,11 @@ them, not to Sunil, not internally. This is a decision, not an omission — see
 ---
 
 ## 3 · The vocabulary
+
+> **Amended 9 September — see §0A.** There are three vocabularies, not one. The
+> thirteen below keep the week-0 and week-6 job. The per-session instrument is
+> the session's own five outcomes, and the join between weeks is the five threads
+> in `docs/teaching/threads.md`.
 
 Everything keys off the **thirteen capabilities already defined in
 `src/lib/craft/intake.ts`** — `A1`–`A7` technical, `B1`–`B6` leadership — on the
@@ -224,6 +383,10 @@ as `reviewNote` reaching a visitor, and it gets the same treatment:
 
 ### 5.5 ADR
 
+> **Amended 9 September — see §0B.** Seven sections, not the five below. The
+> fixed-template rule and the load-bearing Alternatives note are unchanged, and
+> the list now lives in `src/lib/craft/adr.ts`.
+
 One page per week, tied to that week's assignment, on the decision the quiz
 rehearsed.
 
@@ -267,6 +430,12 @@ has hit the exact gap the programme exists to close — knowing the principle, n
 yet reaching for it under pressure.
 
 ### 5.6 Familiarity
+
+> **Amended 9 September — see §0C.** This section is unchanged: the week-0 intake
+> and the week-6 re-ask over all thirteen are exactly as written. What changed is
+> the *per-session* rating alongside it — it covers the session's own five
+> outcomes rather than a subset of the thirteen, and its baseline window closes at
+> first teaching rather than at the session start.
 
 **Re-ask the intake's thirteen questions in week 6.** Same wording, same scale,
 against the learner's own week-0 answers.

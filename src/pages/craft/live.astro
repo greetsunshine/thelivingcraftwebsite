@@ -1,0 +1,386 @@
+---
+// Session mode — the page you open during the call.
+//
+// ONE JOB, ONE SCREEN, NO SCROLLING. Everything else under /craft assumes a
+// person alone afterwards with time to read. This assumes ninety seconds on a
+// phone or a second monitor while somebody is talking, which is why it drops the
+// nav rail and the agent dock (CraftLayout's `bare`), shows exactly one thing to
+// do, and puts everything else below the fold on purpose.
+//
+// It exists at all because week 1 asks a learner for something nine times inside
+// its five hours. See src/lib/craft/live.ts for how "now" is chosen.
+//
+// NOTHING IS LIVE WITHOUT A TIMETABLE. No `startsAt`/`endsAt` means no session is
+// ever running and this page says so plainly — the same rule as everywhere else
+// keyed to the clock, and the failure mode of guessing is a page telling eight
+// people the room is doing something it is not.
+
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { liveSession, liveState, minutesUntil } from '../../lib/craft/live';
+import { listLearnerPulses } from '../../lib/craft/pulses';
+import { listLearnerCheckpoints, checkpointWindows } from '../../lib/craft/checkpoints';
+import { getQuizResponses } from '../../lib/craft/quiz';
+import { myDraft, draftsToReview, myReview } from '../../lib/craft/pairs';
+import { ordered, momentAt } from '../../lib/craft/schedule';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+const now = new Date();
+
+const sessions = (await getCollection('sessions')).map((s) => ({
+  week: s.data.week,
+  title: s.data.title,
+  outcomes: s.data.outcomes,
+  checkpoints: s.data.checkpoints,
+  runOfShow: s.data.runOfShow,
+  quiz: s.data.quiz,
+  pair: s.data.pair,
+  startsAt: s.data.startsAt,
+  endsAt: s.data.endsAt,
+}));
+
+const session = liveSession(sessions, now);
+
+const [pulses, checkpoints, responses, draft, others] = session
+  ? await Promise.all([
+      listLearnerPulses(learner.id),
+      listLearnerCheckpoints(learner.id),
+      getQuizResponses(learner.id),
+      myDraft(learner.id, session.week),
+      draftsToReview(learner.id, session.week),
+    ])
+  : [[], [], [], null, []];
+
+const quizAnswered = session
+  ? (session.quiz ?? []).length > 0 &&
+    (session.quiz ?? []).every((id) => responses.some((r) => r.item_id === id))
+  : false;
+
+// "Done" for the draft is having written something, not having finished — it is
+// fifteen minutes of work and nobody declares it complete. For the review it is
+// having reviewed any one of the other pairs, because the room swaps once.
+const pairDraftDone = Boolean(draft && draft.body.replace(/^##.*$/gm, '').trim());
+const reviewedAny = session
+  ? (await Promise.all(others.map((d) => myReview(d.id, learner.id)))).some((r) => r !== null)
+  : false;
+
+const state = session
+  ? liveState(session, pulses, checkpoints, quizAnswered, pairDraftDone, reviewedAny, now)
+  : null;
+
+// The checkpoint being answered, if the "now" ask is one and the URL names it.
+const asked = Astro.url.searchParams.get('checkpoint');
+const openCheckpoint =
+  session && asked
+    ? checkpointWindows(session, checkpoints, now).find((w) => w.at === asked && w.isOpen) ?? null
+    : null;
+
+const remaining = state ? minutesUntil(state.endsAt, now) : null;
+const inBlock = state ? minutesUntil(state.blockUntil, now) : null;
+
+// The day, for the strip along the bottom. Read-only — this is orientation, not
+// navigation, so nothing here is a link.
+const day = session
+  ? ordered(session.runOfShow).map((e) => {
+      const at = momentAt(session.startsAt, e.at);
+      return {
+        at: e.at,
+        label: e.label,
+        kind: e.kind ?? 'block',
+        past: at !== null && at.getTime() <= now.getTime(),
+        current: state?.block?.at === e.at,
+      };
+    })
+  : [];
+
+const SCALE = [1, 2, 3, 4, 5];
+---
+
+<CraftLayout title={session ? `Week ${session.week} · live` : 'Session'} learner={learner} bare>
+  <div class="live-wrap">
+    {!session ? (
+      <div class="idle">
+        <p class="mono eyebrow">Nothing is running</p>
+        <h1>No session is live right now.</h1>
+        <p class="idle-note">
+          This page wakes up while a session is on, and shows the one thing the room is being
+          asked for. Between sessions everything lives on the dashboard.
+        </p>
+        <a class="btn-primary" href="/craft">Back to the dashboard</a>
+      </div>
+    ) : (
+      <>
+        {/* --- where the room is ------------------------------------------ */}
+        <header class="live-head">
+          <div>
+            <p class="mono eyebrow">
+              Week {session.week}
+              {state?.block && <> · {state.block.label}</>}
+            </p>
+            <h1>{session.title}</h1>
+          </div>
+          <div class="clock mono">
+            {inBlock !== null && inBlock > 0 && <span class="in-block">{inBlock} min left in this block</span>}
+            {remaining !== null && <span class="faint">{remaining} min of the session</span>}
+          </div>
+        </header>
+
+        {/* --- the one thing ---------------------------------------------- */}
+        {openCheckpoint ? (
+          <section class="ask">
+            <p class="mono ask-kind">Checkpoint · {openCheckpoint.at}</p>
+            <h2>{openCheckpoint.question}</h2>
+            <p class="ask-note">
+              One number. <strong>If it is below 3, say so</strong> — that is the whole point of
+              asking, and it is the only way anyone finds out while there is still time.
+            </p>
+
+            <form id="cpForm" data-week={openCheckpoint.week} data-at={openCheckpoint.at}>
+              <div class="scale">
+                {SCALE.map((n) => (
+                  <label class="scale-btn">
+                    <input
+                      type="radio"
+                      name="rating"
+                      value={n}
+                      checked={openCheckpoint.answered === n}
+                      required
+                    />
+                    <span>{n}</span>
+                  </label>
+                ))}
+              </div>
+              <div class="ask-actions">
+                <button class="btn-primary" type="submit">
+                  {openCheckpoint.answered !== null ? 'Change it' : 'Send'}
+                </button>
+                <span class="msg mono" id="cpMsg" hidden></span>
+              </div>
+            </form>
+
+            {openCheckpoint.items.length > 1 && (
+              <details class="rest">
+                <summary class="mono">The rest of this checkpoint</summary>
+                <ul>
+                  {openCheckpoint.items.slice(0, -1).map((i) => <li>{i}</li>)}
+                </ul>
+                <p class="faint">Read these. Only the one above carries a number.</p>
+              </details>
+            )}
+          </section>
+        ) : state?.now ? (
+          <section class="ask">
+            <p class="mono ask-kind">{state.now.label} · {state.now.at}</p>
+            <h2>{state.now.detail}</h2>
+            <a class="btn-primary" href={state.now.href}>Open it</a>
+          </section>
+        ) : (
+          <section class="ask ask-clear">
+            <p class="mono ask-kind">Nothing owed</p>
+            <h2>You are up to date.</h2>
+            <p class="ask-note">
+              {state?.next
+                ? `Next up at ${state.next.at} — ${state.next.label.toLowerCase()}.`
+                : 'Nothing else is scheduled to ask you anything today.'}
+            </p>
+          </section>
+        )}
+
+        {/* --- what was missed, small and underneath ---------------------- */}
+        {state && state.behind.length > 0 && (
+          <section class="behind">
+            <p class="mono eyebrow">Still open from earlier</p>
+            <ul>
+              {state.behind.map((a) => (
+                <li>
+                  <a href={a.href}>
+                    <span class="mono when">{a.at}</span>
+                    <span class="what">{a.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p class="faint late-note">
+              A late answer is worth more than none, so these stay reachable until the session ends.
+            </p>
+          </section>
+        )}
+
+        {/* --- the day, for orientation only ------------------------------ */}
+        {day.length > 0 && (
+          <section class="day">
+            <p class="mono eyebrow">The day</p>
+            <ol class="strip">
+              {day.map((d) => (
+                <li class={`${d.past ? 'past' : ''} ${d.current ? 'current' : ''} k-${d.kind}`}>
+                  <span class="mono t">{d.at}</span>
+                  <span class="l">{d.label}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <p class="escape">
+          <a href="/craft">Leave session mode</a>
+        </p>
+      </>
+    )}
+  </div>
+</CraftLayout>
+
+<script>
+  function initLive() {
+    const form = document.getElementById('cpForm') as HTMLFormElement | null;
+    if (!form || form.dataset.bound === '1') return;
+    form.dataset.bound = '1';
+
+    const msg = document.getElementById('cpMsg') as HTMLElement;
+    const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const picked = form.querySelector<HTMLInputElement>('input[name="rating"]:checked');
+      if (!picked) return;
+
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Sending…';
+      msg.hidden = true;
+
+      try {
+        const res = await fetch('/api/craft/checkpoint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            week: Number(form.dataset.week),
+            at: form.dataset.at,
+            rating: Number(picked.value),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? 'Could not send that.');
+
+        // Straight back to the live page with no checkpoint named, so the next
+        // thing owed is what appears. Nobody should have to navigate mid-call.
+        window.location.href = '/craft/live';
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'Could not send that.';
+        msg.hidden = false;
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  }
+
+  initLive();
+  document.addEventListener('astro:page-load', initLive);
+</script>
+
+<style>
+  /* Deliberately roomy. Every target here is meant to be hit once, quickly,
+     possibly on a phone held in one hand while listening to somebody. */
+  .live-wrap { max-width: 620px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  .live-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .live-head h1 { font-size: clamp(21px, 3.6vw, 27px); margin: 4px 0 0; line-height: 1.2; }
+  .eyebrow { font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+  .clock { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px; }
+  .in-block { color: var(--accent-ink); font-weight: 500; }
+  .faint { color: var(--ink-faint); }
+
+  .ask {
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-panel);
+    padding: 26px 24px;
+  }
+  .ask-kind { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 10px; }
+  .ask h2 { font-size: clamp(19px, 3.4vw, 24px); line-height: 1.28; margin: 0 0 14px; }
+  .ask-note { font-size: 14.5px; color: var(--ink-soft); margin: 0 0 20px; max-width: 46ch; }
+  .ask-clear { border-color: var(--line-strong); }
+  .ask-clear h2 { color: var(--ink-soft); }
+
+  /* five big targets */
+  .scale { display: flex; gap: 10px; margin-bottom: 22px; }
+  .scale-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    background: var(--paper-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 17px;
+    cursor: pointer;
+    transition: 0.1s;
+  }
+  .scale-btn input { display: none; }
+  .scale-btn:has(input:checked) { background: var(--clay); border-color: var(--clay); color: var(--paper-1); }
+  .scale-btn:hover:not(:has(input:checked)) { background: var(--surface-hover); }
+
+  .ask-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .msg { font-size: 12.5px; color: var(--clay-deep); }
+
+  .rest { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .rest summary { font-size: 12px; color: var(--ink-faint); cursor: pointer; }
+  .rest ul { margin: 12px 0 8px; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+  .rest li { margin-bottom: 6px; }
+  .rest p { font-size: 12.5px; margin: 0; }
+
+  .behind { margin-top: 30px; }
+  .behind ul { list-style: none; margin: 10px 0 8px; padding: 0; }
+  .behind li { border-bottom: 1px solid var(--line); }
+  .behind a { display: flex; gap: 14px; padding: 11px 0; text-decoration: none; color: var(--ink); font-size: 14.5px; }
+  .behind a:hover .what { text-decoration: underline; }
+  .behind .when { color: var(--ink-faint); font-size: 12px; min-width: 44px; }
+  .late-note { font-size: 12.5px; margin: 0; }
+
+  .day { margin-top: 34px; }
+  .strip { list-style: none; margin: 10px 0 0; padding: 0; }
+  .strip li {
+    display: flex;
+    gap: 14px;
+    padding: 7px 0 7px 12px;
+    border-left: 2px solid var(--line);
+    font-size: 13.5px;
+    color: var(--ink-faint);
+  }
+  .strip li.past { color: var(--ink-soft); border-left-color: var(--line-strong); }
+  .strip li.current {
+    border-left-color: var(--clay);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .strip .t { min-width: 44px; font-size: 12px; flex: none; }
+  /* Takes the rest of the row, so a long label wraps under itself instead of
+     pushing the time column out of alignment down the strip. */
+  .strip .l { flex: 1; }
+  .strip li.k-break, .strip li.k-standup { font-style: italic; }
+
+  .escape { margin-top: 34px; font-size: 13px; }
+  .escape a { color: var(--ink-faint); }
+
+  .idle { text-align: center; padding: 60px 0; }
+  .idle h1 { font-size: clamp(22px, 4vw, 30px); margin: 8px 0 14px; }
+  .idle-note { font-size: 15px; color: var(--ink-soft); max-width: 44ch; margin: 0 auto 26px; }
+
+  @media (max-width: 520px) {
+    .live-wrap { padding: 20px 16px 48px; }
+    .clock { align-items: flex-start; flex-direction: row; gap: 12px; }
+    .scale { gap: 7px; }
+    .scale-btn { min-height: 52px; font-size: 16px; }
+  }
+</style>

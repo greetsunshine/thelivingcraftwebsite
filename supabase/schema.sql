@@ -374,36 +374,129 @@ create unique index if not exists session_prompts_learner_week_phase
   on public.session_prompts (learner_id, week, phase);
 
 -- ---------------------------------------------------------------------------
--- Capability pulses — the same question either side of one session
+-- Outcome ratings — the same five statements either side of one session
 -- ---------------------------------------------------------------------------
--- Two ratings a week: one in the run-up to the session, one after it. Each
--- covers ONLY the capabilities that session's `topics` names — three for week 1,
--- not thirteen.
+-- Two ratings a session: one before the teaching starts, one near the end. Both
+-- cover THE SAME FIVE STATEMENTS, written for that session, in that session's
+-- own words — "so that the two sets of numbers mean the same thing".
 --
--- WHY SCOPED, AND WHY THAT IS THE WHOLE FEATURE. Asking all thirteen twice a
--- week is twelve surveys of thirteen questions across six weeks, and a room of
--- director-level engineers stops answering by week two. Three ratings takes
--- half a minute, and — the part that matters — the delta is ATTRIBUTABLE. A
--- movement on A5 either side of the session that taught A5 says something. The
--- same movement measured six weeks apart says only that time passed.
+-- WAS `capability_pulses`, KEYED BY CAPABILITY ID. That version asked about
+-- three of the thirteen intake capabilities, named by a `topics` array on the
+-- session. Week 1, once written, turned out not to work that way: it rates five
+-- bespoke outcomes at 00:05 and again at 04:52, and nothing in the teaching
+-- material ever maps a week to A1–A3. Renamed rather than migrated because this
+-- table had not been applied to production yet — if it ever was, this is a
+-- rename plus a rewrite of every `ratings` key, not a drop.
+--
+-- WHY FIVE AND NOT THIRTEEN, which is unchanged and still the binding reason.
+-- Asking all thirteen twice a week is twelve surveys across six weeks, and a
+-- room of director-level engineers stops answering by week two — at which point
+-- the data is biased toward the compliant rather than merely sparse. Five takes
+-- half a minute, and the delta is ATTRIBUTABLE: movement on a statement either
+-- side of the session that taught it says something about that session. The same
+-- movement measured six weeks apart says only that time passed.
 --
 -- This does NOT replace §5.6's week-0 intake and week-6 re-ask. Those are the
 -- cohort-level before/after over all thirteen capabilities and remain the
--- evidence for the programme's outcome claims. This is per-session measurement
--- at a different granularity, and week 6 deliberately has no after-pulse
--- because the full re-ask covers that ground more thoroughly on the same day.
-create table if not exists public.capability_pulses (
+-- evidence for the programme's outcome claims. Two instruments, two jobs; see
+-- src/lib/craft/pulses.ts for why merging them again breaks both.
+create table if not exists public.outcome_ratings (
   id           uuid        primary key default gen_random_uuid(),
   learner_id   uuid        not null references public.learners(id) on delete cascade,
   week         int         not null check (week between 1 and 6),
   phase        text        not null check (phase in ('before', 'after')),
-  -- { "A1": 3, "A2": 2, "A3": 4 } — keyed by capability id, values 1-5.
+  -- { "harness": 3, "trace": 2, "failures": 1 } — keyed by the session's own
+  -- outcome ids, values 1-5. The ids live in the session's frontmatter.
   ratings      jsonb       not null default '{}'::jsonb,
   created_at   timestamptz not null default now()
 );
-create unique index if not exists capability_pulses_learner_week_phase
-  on public.capability_pulses (learner_id, week, phase);
-create index if not exists capability_pulses_week_idx on public.capability_pulses (week, phase);
+create unique index if not exists outcome_ratings_learner_week_phase
+  on public.outcome_ratings (learner_id, week, phase);
+create index if not exists outcome_ratings_week_idx on public.outcome_ratings (week, phase);
+
+-- ---------------------------------------------------------------------------
+-- Checkpoint ratings — one number, four times a session, while it can still help
+-- ---------------------------------------------------------------------------
+-- Every other instrument here reports after the fact. This one fires inside the
+-- session, on one named item per block, and its entire value is that Sunil can
+-- act on it before the next block starts: "the drill block is where it is
+-- easiest to get quietly stuck and say nothing about it."
+--
+-- A 2 means GO SLOWER. It is not a measure of the learner, nothing aggregates it
+-- into one, and §10's cut of levels and ranks holds — Sunil's read is a count of
+-- how many people are below 3 right now, never a mean and never a name in a
+-- ranked list.
+--
+-- Keyed by the checkpoint's OFFSET into the day ('01:10'), not an index. Offsets
+-- are stable, readable, and survive somebody inserting a checkpoint earlier in
+-- the session; indices do not.
+create table if not exists public.checkpoint_ratings (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  -- HH:MM from the session start, matching the session file's `checkpoints`.
+  at           text        not null check (at ~ '^[0-9]{2}:[0-9]{2}$'),
+  rating       int         not null check (rating between 1 and 5),
+  created_at   timestamptz not null default now()
+);
+create unique index if not exists checkpoint_ratings_learner_week_at
+  on public.checkpoint_ratings (learner_id, week, at);
+create index if not exists checkpoint_ratings_week_idx on public.checkpoint_ratings (week, at);
+
+-- ---------------------------------------------------------------------------
+-- Pair drafts — the decision record written in the room, by two people
+-- ---------------------------------------------------------------------------
+-- A DIFFERENT OBJECT FROM `submissions`, on purpose. Week 1 writes this in pairs
+-- in fifteen minutes at 03:50, has another pair review it ten minutes later, and
+-- then each person finishes THEIR OWN record at home. Folding the two together
+-- would make two learners' submitted records start identical, which ruins both
+-- Sunil's read of eight and the claim that the record is the artefact of the
+-- cohort.
+--
+-- So this is short-lived and shared; `submissions` is considered and individual.
+--
+-- `author_id` is whoever typed. `partner_id` is the other half of the pair, and
+-- is nullable because somebody's partner can be absent and a draft with one name
+-- on it is still worth reviewing. Both cascade with the learner.
+create table if not exists public.pair_drafts (
+  id           uuid        primary key default gen_random_uuid(),
+  week         int         not null check (week between 1 and 6),
+  author_id    uuid        not null references public.learners(id) on delete cascade,
+  partner_id   uuid        references public.learners(id) on delete set null,
+  -- Same seven sections as a submitted record, assembled as markdown by
+  -- src/lib/craft/adr.ts. One template, so week 6 reads against week 1.
+  body         text        not null default '',
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+-- One draft per pair per week, keyed on whoever typed it.
+create unique index if not exists pair_drafts_author_week on public.pair_drafts (author_id, week);
+create index if not exists pair_drafts_week_idx on public.pair_drafts (week, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Pair reviews — ten minutes, four questions, 0/1/2 and a comment
+-- ---------------------------------------------------------------------------
+-- THE ONLY PLACE IN THE PROGRAMME A NUMBER IS PUT ON SOMEBODY'S WORK, and it is
+-- put there by a peer, in the room, over ten minutes. It does not break §10's cut
+-- of learner-facing levels: nothing sums these, nothing averages them, and no
+-- name ever appears in a ranked list. Week 1 is explicit — "the written comment
+-- matters more than the number, and there is no assessment behind this. It exists
+-- to make ten minutes of review structured enough to finish."
+--
+-- If anything ever aggregates this column, that is the cut feature coming back.
+create table if not exists public.pair_reviews (
+  id           uuid        primary key default gen_random_uuid(),
+  draft_id     uuid        not null references public.pair_drafts(id) on delete cascade,
+  reviewer_id  uuid        not null references public.learners(id) on delete cascade,
+  -- { "goals-testable": { "score": 1, "comment": "…" }, … } keyed by the
+  -- question ids in src/lib/craft/adr.ts.
+  answers      jsonb       not null default '{}'::jsonb,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists pair_reviews_draft_reviewer
+  on public.pair_reviews (draft_id, reviewer_id);
+create index if not exists pair_reviews_draft_idx on public.pair_reviews (draft_id);
 
 -- ---------------------------------------------------------------------------
 -- Doubts — learner questions, classified and clustered
@@ -517,15 +610,31 @@ create index if not exists discussion_replies_learner on public.discussion_repli
 -- ---------------------------------------------------------------------------
 -- Feedback — post-session responses, two questions per session
 -- ---------------------------------------------------------------------------
+-- FOUR QUESTIONS, TWO JOBS. `landed` and `pacing` are about the SESSION and are
+-- what makes "what to change before Thursday" possible. `changing` and `unsure`
+-- are the two lines the room actually answers at the close, and they are about
+-- the LEARNER: a commitment and a doubt.
+--
+-- `unsure` is nullable and usually stays null here, because it does not belong
+-- in this table. The close's second line — "the thing I am still unsure about" —
+-- opens a thread in the forum instead, where another learner can answer it
+-- before Sunil gets there. The column exists so the text is not lost if the
+-- forum write fails; a row with `unsure` set and no thread is a delivery
+-- failure, not a design.
 create table if not exists public.feedback (
   id           uuid        primary key default gen_random_uuid(),
   learner_id   uuid        not null references public.learners(id) on delete cascade,
   week         int         not null check (week between 1 and 6),
   landed       text        not null,
   pacing       text        not null,
+  changing     text,
+  unsure       text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+-- Additive, for a table that may already exist in production.
+alter table public.feedback add column if not exists changing text;
+alter table public.feedback add column if not exists unsure text;
 create unique index if not exists feedback_learner_week on public.feedback (learner_id, week);
 
 -- ---------------------------------------------------------------------------
@@ -573,7 +682,10 @@ alter table public.radar_runs     enable row level security;
 alter table public.submissions    enable row level security;
 alter table public.quiz_responses enable row level security;
 alter table public.session_prompts enable row level security;
-alter table public.capability_pulses enable row level security;
+alter table public.outcome_ratings enable row level security;
+alter table public.checkpoint_ratings enable row level security;
+alter table public.pair_drafts enable row level security;
+alter table public.pair_reviews enable row level security;
 alter table public.doubts         enable row level security;
 alter table public.discussion_replies enable row level security;
 alter table public.feedback       enable row level security;
@@ -590,7 +702,10 @@ revoke all on public.radar_runs     from anon, authenticated;
 revoke all on public.submissions    from anon, authenticated;
 revoke all on public.quiz_responses from anon, authenticated;
 revoke all on public.session_prompts from anon, authenticated;
-revoke all on public.capability_pulses from anon, authenticated;
+revoke all on public.outcome_ratings from anon, authenticated;
+revoke all on public.checkpoint_ratings from anon, authenticated;
+revoke all on public.pair_drafts from anon, authenticated;
+revoke all on public.pair_reviews from anon, authenticated;
 revoke all on public.doubts         from anon, authenticated;
 revoke all on public.discussion_replies from anon, authenticated;
 revoke all on public.feedback       from anon, authenticated;

@@ -1,0 +1,375 @@
+---
+// The pair draft, and the review of somebody else's.
+//
+// Both halves of one hour: write with your partner at 03:50, review another
+// pair's at 04:05. Session mode links here; nothing else does, because outside a
+// session this page has no job — the finished, individual record lives at
+// /craft/adr and is a different object with a different lifespan.
+//
+// THE SEVEN SECTIONS ARE THE SAME as a submitted record, from the one module
+// that owns them (§5.5 — the template must not vary, so week 6 reads against
+// week 1). What varies is who wrote it and how long they had.
+//
+// THE REVIEW'S NUMBERS ARE NOT A SCORE. Four questions, 0/1/2 each, and the
+// comment box is deliberately the bigger control on the page: "the written
+// comment matters more than the number, and there is no assessment behind this."
+// Nothing sums them, here or anywhere.
+
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { ADR_SECTIONS, ADR_REVIEW_QUESTIONS, parseAdr, buildAdr, emptyAdr } from '../../lib/craft/adr';
+import { myDraft, draftsToReview, myReview } from '../../lib/craft/pairs';
+import { listLearners } from '../../lib/craft/learners';
+import { liveSession } from '../../lib/craft/live';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+
+const sessions = (await getCollection('sessions')).map((s) => ({
+  week: s.data.week,
+  title: s.data.title,
+  assignment: s.data.assignment,
+  startsAt: s.data.startsAt,
+  endsAt: s.data.endsAt,
+}));
+
+// The week is whichever session is live, else the one named in the URL. Outside
+// a session this page is reachable but has nothing to attach to, which it says.
+const live = liveSession(sessions);
+const param = Astro.url.searchParams.get('week');
+const week = live ? live.week : param && /^\d+$/.test(param) ? Number(param) : null;
+const session = week !== null ? sessions.find((s) => s.week === week) ?? null : null;
+
+const [draft, roster, others] = session
+  ? await Promise.all([
+      myDraft(learner.id, session.week),
+      listLearners(),
+      draftsToReview(learner.id, session.week),
+    ])
+  : [null, [], []];
+
+const sections = draft ? parseAdr(draft.body).sections : emptyAdr();
+const partners = roster.filter((l) => l.id !== learner.id && l.status === 'active');
+
+// Which of the others has this learner already reviewed.
+const reviewed = new Map<string, boolean>();
+for (const d of others) {
+  reviewed.set(d.id, (await myReview(d.id, learner.id)) !== null);
+}
+
+const pickedDraft = Astro.url.searchParams.get('review');
+const reviewing = others.find((d) => d.id === pickedDraft) ?? null;
+const existing = reviewing ? await myReview(reviewing.id, learner.id) : null;
+---
+
+<CraftLayout
+  title={session ? `Week ${session.week} · pair` : 'Pair work'}
+  learner={learner}
+  bare={Boolean(live)}
+  back={live ? { href: '/craft/live', label: 'Session' } : { href: '/craft', label: 'Dashboard' }}
+>
+  <div class="pair-wrap">
+    {!session ? (
+      <div class="idle">
+        <h1>Nothing to pair on.</h1>
+        <p class="muted">
+          This page belongs to a live session — the fifteen minutes you spend writing a decision
+          record with your partner, and the ten you spend reading another pair's. The finished
+          version you write alone lives under <a href="/craft/adr">ADR</a>.
+        </p>
+      </div>
+    ) : (
+      <>
+        <p class="mono eyebrow">Week {session.week} · in pairs</p>
+        <h1>{session.assignment ?? 'The decision record'}</h1>
+
+        {reviewing ? (
+          /* ---------- reviewing somebody else's ---------- */
+          <section class="panel">
+            <p class="mono panel-kind">
+              Reviewing · {reviewing.author_name ?? 'a pair'}
+              {reviewing.partner_name && <> and {reviewing.partner_name}</>}
+            </p>
+
+            <div class="their-record">
+              {ADR_SECTIONS.map((s) => {
+                const text = parseAdr(reviewing.body).sections[s.id];
+                return text ? (
+                  <div class="tr-section">
+                    <h3>{s.heading}</h3>
+                    <p>{text}</p>
+                  </div>
+                ) : null;
+              })}
+            </div>
+
+            <form id="reviewForm" data-week={session.week} data-draft={reviewing.id}>
+              <p class="review-note">
+                Four questions, ten minutes. <strong>The comment is the part that matters</strong> —
+                the number is only there to make the ten minutes finish.
+              </p>
+
+              {ADR_REVIEW_QUESTIONS.map((q) => {
+                const prior = (existing?.answers ?? {})[q.id];
+                return (
+                  <div class="q">
+                    <h3>{q.question}</h3>
+                    <p class="hint">{q.hint}</p>
+                    <textarea
+                      name={`comment-${q.id}`}
+                      rows="3"
+                      placeholder="What you actually found."
+                    >{prior?.comment ?? ''}</textarea>
+                    <div class="scores">
+                      {[0, 1, 2].map((n) => (
+                        <label class="score">
+                          <input
+                            type="radio"
+                            name={`score-${q.id}`}
+                            value={n}
+                            checked={prior ? prior.score === n : n === 0}
+                          />
+                          <span>{n}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div class="actions">
+                <button class="btn-primary" type="submit">
+                  {existing ? 'Update the review' : 'Send the review'}
+                </button>
+                <a class="cancel" href="/craft/pair">Back</a>
+                <span class="msg mono" id="reviewMsg" hidden></span>
+              </div>
+            </form>
+          </section>
+        ) : (
+          <>
+            {/* ---------- writing your own ---------- */}
+            <section class="panel">
+              <p class="mono panel-kind">Your pair's record</p>
+
+              <form id="draftForm" data-week={session.week}>
+                <div class="field">
+                  <label for="partner">Who are you writing this with?</label>
+                  <select id="partner" name="partner">
+                    <option value="">Working alone</option>
+                    {partners.map((p) => (
+                      <option value={p.id} selected={draft?.partner_id === p.id}>
+                        {p.name ?? p.email}
+                      </option>
+                    ))}
+                  </select>
+                  <p class="hint">
+                    Sunil pairs the room; this just records who you ended up with. Change it if it
+                    changes.
+                  </p>
+                </div>
+
+                {ADR_SECTIONS.map((s) => (
+                  <div class="field">
+                    <label for={s.id}>{s.heading}</label>
+                    <p class="hint">{s.hint}</p>
+                    <textarea id={s.id} name={s.id} rows={s.rows} placeholder={s.placeholder}
+                    >{sections[s.id]}</textarea>
+                  </div>
+                ))}
+
+                <div class="actions">
+                  <button class="btn-primary" type="submit">
+                    {draft ? 'Save' : 'Start it'}
+                  </button>
+                  <span class="msg mono" id="draftMsg" hidden></span>
+                </div>
+              </form>
+            </section>
+
+            {/* ---------- pick whose to review ---------- */}
+            <section class="panel">
+              <p class="mono panel-kind">Then review another pair's</p>
+              {others.length === 0 ? (
+                <p class="muted">
+                  Nobody else has started one yet. This fills in as the room writes.
+                </p>
+              ) : (
+                <ul class="others">
+                  {others.map((d) => (
+                    <li>
+                      <a href={`/craft/pair?review=${d.id}`}>
+                        <span class="who">
+                          {d.author_name ?? 'A pair'}
+                          {d.partner_name && <> and {d.partner_name}</>}
+                        </span>
+                        <span class="mono state">
+                          {reviewed.get(d.id) ? 'reviewed' : 'review →'}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
+      </>
+    )}
+  </div>
+</CraftLayout>
+
+<script is:inline define:vars={{ sectionIds: ADR_SECTIONS.map((s) => s.id), headings: ADR_SECTIONS.map((s) => s.heading), questionIds: ADR_REVIEW_QUESTIONS.map((q) => q.id) }}>
+  (function () {
+    const draftForm = document.getElementById('draftForm');
+    if (draftForm && draftForm.dataset.bound !== '1') {
+      draftForm.dataset.bound = '1';
+      const msg = document.getElementById('draftMsg');
+      draftForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = draftForm.querySelector('button[type="submit"]');
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        msg.hidden = true;
+
+        // Headings come from the same module the fields did, so the template
+        // exists in one place even across the wire.
+        const body = sectionIds
+          .map((id, i) => '## ' + headings[i] + '\n' + (draftForm.elements[id]?.value ?? '').trim())
+          .join('\n\n');
+
+        try {
+          const res = await fetch('/api/craft/pair', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'draft',
+              week: Number(draftForm.dataset.week),
+              partnerId: draftForm.elements['partner']?.value || null,
+              body,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error ?? 'Could not save that.');
+          msg.textContent = 'Saved.';
+          msg.hidden = false;
+        } catch (err) {
+          msg.textContent = err.message;
+          msg.hidden = false;
+        }
+        btn.disabled = false;
+        btn.textContent = original;
+      });
+    }
+
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm && reviewForm.dataset.bound !== '1') {
+      reviewForm.dataset.bound = '1';
+      const msg = document.getElementById('reviewMsg');
+      reviewForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = reviewForm.querySelector('button[type="submit"]');
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        msg.hidden = true;
+
+        const answers = {};
+        for (const id of questionIds) {
+          const picked = reviewForm.querySelector('input[name="score-' + id + '"]:checked');
+          answers[id] = {
+            score: picked ? Number(picked.value) : 0,
+            comment: reviewForm.elements['comment-' + id]?.value ?? '',
+          };
+        }
+
+        try {
+          const res = await fetch('/api/craft/pair', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'review',
+              week: Number(reviewForm.dataset.week),
+              draftId: reviewForm.dataset.draft,
+              answers,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error ?? 'Could not send that.');
+          window.location.href = '/craft/pair';
+        } catch (err) {
+          msg.textContent = err.message;
+          msg.hidden = false;
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    }
+  })();
+</script>
+
+<style>
+  .pair-wrap { max-width: 680px; margin: 0 auto; padding: 28px 20px 70px; }
+  .eyebrow { font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+  h1 { font-size: clamp(22px, 3.8vw, 30px); margin: 6px 0 26px; line-height: 1.22; }
+  .muted { color: var(--ink-soft); font-size: 14.5px; max-width: 56ch; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 24px 22px;
+    margin-bottom: 22px;
+  }
+  .panel-kind { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 18px; }
+
+  .field { margin-bottom: 22px; }
+  .field label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .hint { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; max-width: 58ch; }
+  textarea, select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14.5px;
+    line-height: 1.55;
+    padding: 10px 12px;
+    background: var(--paper-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-field);
+    color: var(--ink);
+  }
+  textarea { resize: vertical; }
+
+  .their-record { border-left: 2px solid var(--line-strong); padding-left: 16px; margin-bottom: 28px; }
+  .tr-section { margin-bottom: 16px; }
+  .tr-section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin: 0 0 4px; }
+  .tr-section p { font-size: 14.5px; line-height: 1.55; margin: 0; white-space: pre-wrap; }
+
+  .review-note { font-size: 14px; color: var(--ink-soft); margin: 0 0 24px; max-width: 56ch; }
+  .q { padding: 18px 0; border-top: 1px solid var(--line); }
+  .q h3 { font-size: 15.5px; margin: 0 0 3px; }
+  .scores { display: flex; gap: 8px; margin-top: 10px; }
+  .score {
+    display: flex; align-items: center; justify-content: center;
+    width: 42px; height: 38px;
+    background: var(--paper-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono); font-size: 14px; cursor: pointer;
+  }
+  .score input { display: none; }
+  .score:has(input:checked) { background: var(--clay); border-color: var(--clay); color: var(--paper-1); }
+
+  .actions { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+  .cancel { font-size: 13px; color: var(--ink-faint); }
+  .msg { font-size: 12.5px; color: var(--clay-deep); }
+
+  .others { list-style: none; margin: 0; padding: 0; }
+  .others li { border-bottom: 1px solid var(--line); }
+  .others a { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 0; text-decoration: none; color: var(--ink); font-size: 14.5px; }
+  .others a:hover .who { text-decoration: underline; }
+  .state { font-size: 11.5px; color: var(--ink-faint); }
+
+  .idle { padding: 50px 0; }
+  .idle h1 { margin-bottom: 12px; }
+</style>

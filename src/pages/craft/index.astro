@@ -21,6 +21,8 @@ import { pulseWindows, pulsesDue, listLearnerPulses } from '../../lib/craft/puls
 import { givenAssignments } from '../../lib/craft/assignments';
 import Briefing from '../../components/craft/Briefing.astro';
 import SessionPrompt from '../../components/craft/SessionPrompt.astro';
+import { liveSession } from '../../lib/craft/live';
+import { blockAt } from '../../lib/craft/schedule';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -57,14 +59,32 @@ const [threads, quizItems, quizResponses, adrs, feedbacks, dismissed, pulses] = 
 const promptSessions = sessions.map((s) => ({
   week: s.data.week,
   title: s.data.title,
+  quiz: s.data.quiz,
+  runOfShow: s.data.runOfShow,
+  startsAt: s.data.startsAt,
   endsAt: s.data.endsAt,
 }));
 const checks = weeklyChecks(promptSessions, quizItems, quizResponses);
+
+// Is a session on right now? Drives the banner at the top — the only way anybody
+// finds session mode, since nothing redirects them into it.
+const liveNow = liveSession(
+  sessions.map((s) => ({
+    week: s.data.week,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+    runOfShow: s.data.runOfShow,
+  })),
+);
+const liveBlock = liveNow
+  ? blockAt(liveNow.startsAt, liveNow.endsAt, liveNow.runOfShow)?.entry ?? null
+  : null;
 const windows = pulseWindows(
   sessions.map((s) => ({
     week: s.data.week,
     title: s.data.title,
-    topics: s.data.topics,
+    outcomes: s.data.outcomes,
+    runOfShow: s.data.runOfShow,
     startsAt: s.data.startsAt,
     endsAt: s.data.endsAt,
   })),
@@ -124,7 +144,7 @@ if (intakeState !== 'submitted') {
   });
 }
 
-// The pulses, first in the list: a "before" one closes when the session starts
+// The pulses, first in the list: a "before" one closes when the teaching starts
 // and is the only item here that can expire unfilled.
 if (pulseTodo.length > 0) {
   const closing = pulseTodo.filter((w) => w.phase === 'before').length;
@@ -134,7 +154,7 @@ if (pulseTodo.length > 0) {
       ? `Rate where you are — week ${pulseTodo[0].week}, ${pulseTodo[0].phase === 'before' ? 'before' : 'after'}`
       : 'Rate where you are',
     detail: closing > 0
-      ? 'Half a minute each. The "before" one closes when that session starts — after it, there is no baseline left to take.'
+      ? 'Half a minute each. The "before" one closes when the teaching starts — after that there is no baseline left to take.'
       : 'Half a minute each, on just what that session covered.',
     href: pulseTodo.length === 1
       ? `/craft/familiarity?week=${pulseTodo[0].week}&phase=${pulseTodo[0].phase}`
@@ -213,6 +233,23 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 
 <CraftLayout title="Your cohort" learner={learner}>
   {prompt && <SessionPrompt prompt={prompt} />}
+
+  {/* A session is running. A banner rather than a redirect, deliberately:
+      somebody who opened the dashboard during a call may have opened it on
+      purpose, and hijacking that is the kind of thing you cannot undo from a
+      phone with a room waiting. It disappears the moment the session ends. */}
+  {liveNow && (
+    <a class="live-banner" href="/craft/live">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="lb-main">
+        <strong>Week {liveNow.week} is running now</strong>
+        <span class="lb-sub">
+          {liveBlock ? liveBlock.label : 'In session'} · the room may be asking you for something
+        </span>
+      </span>
+      <span class="lb-go mono">Open →</span>
+    </a>
+  )}
 
   <div class="content-card">
     <section class="hero-black">
@@ -486,6 +523,29 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 
 
 <style>
+  /* A session is on. Sun means clickable, per the design system. */
+  .live-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 20px;
+    padding: 14px 20px;
+    background: var(--sun);
+    color: var(--noir);
+    border-radius: var(--radius-panel);
+    text-decoration: none;
+  }
+  .live-banner .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--noir); flex: none;
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { .live-banner .dot { animation: none; } }
+  .lb-main { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .lb-sub { font-size: 13px; opacity: 0.78; }
+  .lb-go { font-size: 12.5px; white-space: nowrap; }
+
   .content-card {
     background: var(--surface);
     border-radius: var(--radius-card);

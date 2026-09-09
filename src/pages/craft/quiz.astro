@@ -14,7 +14,7 @@
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
-import { weeklyChecks, type WeeklyCheck } from '../../lib/craft/checks';
+import { weeklyChecks, itemsForCheck, type WeeklyCheck } from '../../lib/craft/checks';
 import { marked } from 'marked';
 
 export const prerender = false;
@@ -28,7 +28,14 @@ const [sessions, allItems, responses] = await Promise.all([
 ]);
 
 const checks = weeklyChecks(
-  sessions.map((s) => ({ week: s.data.week, title: s.data.title, endsAt: s.data.endsAt })),
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    quiz: s.data.quiz,
+    runOfShow: s.data.runOfShow,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+  })),
   allItems,
   responses,
 );
@@ -47,7 +54,15 @@ const active: WeeklyCheck | null =
 if (requested !== null && !active) return Astro.redirect('/craft/quiz');
 
 const answeredIds = new Set(responses.map((r) => r.item_id));
-const weekItems = active ? allItems.filter((i) => i.week === active.week) : [];
+// The eight Sunil selected, in his order — not the whole bank. The room is
+// asked a chosen set, mixed across the day on purpose, and rendering the bank
+// instead would both change the lesson and break "question three".
+const weekItems = active
+  ? itemsForCheck(
+      { week: active.week, title: active.title, quiz: sessions.find((s) => s.data.week === active.week)?.data.quiz },
+      allItems,
+    )
+  : [];
 const nextItem = active ? weekItems.find((i) => !answeredIds.has(i.id)) : undefined;
 
 const position = active ? weekItems.findIndex((i) => i.id === nextItem?.id) + 1 : 0;

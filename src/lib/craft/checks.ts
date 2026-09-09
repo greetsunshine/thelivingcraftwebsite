@@ -1,7 +1,12 @@
 // Weekly knowledge checks — when one opens, and how far through it someone is.
 //
-// The INVITATION to take one is not here: a session ending opens the check and
-// the feedback form together, and both are named by a single prompt in
+// THE CHECK OPENS AT THE QUIZ BLOCK, NOT AT THE END OF THE SESSION. Week 1
+// runs it at 04:20, forty minutes before the close, and then spends ten minutes
+// taking up the ones that split the room — a check opening at `endsAt` would
+// open after the block that exists to discuss it. See checkOpensAt().
+//
+// The INVITATION to take one is not here: the feedback form and the after-rating
+// open at the close, and all of it is named by a single prompt in
 // src/lib/craft/prompts.ts. Two modals racing onto one dashboard is the thing
 // that design exists to prevent.
 //
@@ -17,6 +22,7 @@
 
 import { db } from '../admin/supabase';
 import type { QuizItem, QuizResponse } from './quiz';
+import { momentOfKind, type RunOfShowEntry } from './schedule';
 
 const fail = (where: string, err: unknown) => {
   console.error(`checks ${where} failed:`, err instanceof Error ? err.message : err);
@@ -30,7 +36,46 @@ const fail = (where: string, err: unknown) => {
 export interface CheckSession {
   week: number;
   title: string;
+  /** Item ids from that week's bank, in the order Sunil wants them asked. */
+  quiz?: string[];
+  runOfShow?: RunOfShowEntry[];
+  startsAt?: string;
   endsAt?: string;
+}
+
+/**
+ * When the week's check opens.
+ *
+ * NOT when the session ends, which is where this used to be. Week 1 runs its
+ * quiz at 04:20, forty minutes before the end, in the room — "eight questions in
+ * chat, deliberately mixed up", followed by ten minutes of taking up the ones
+ * that split the room. A check that opened at `endsAt` would open after the
+ * block that exists to discuss it.
+ *
+ * Falls back to `endsAt` for a session whose run of show names no quiz block,
+ * which is the old behaviour. Null when there is no timetable at all — the
+ * standing rule: nothing opens rather than something being guessed.
+ */
+export function checkOpensAt(session: CheckSession): Date | null {
+  return momentOfKind(session.startsAt, session.runOfShow, 'quiz', session.endsAt);
+}
+
+/**
+ * The items this week's check actually asks, in Sunil's order.
+ *
+ * The bank holds more than the room gets. Which eight, and in what order, is an
+ * editorial judgement about this room on this day — "mixed across every topic of
+ * the day rather than grouped by block, the mixing is the point" — so it comes
+ * from the session file and never from a rule over the bank.
+ *
+ * An id that names nothing is dropped rather than throwing: a typo in
+ * frontmatter should cost one question, not the whole check.
+ */
+export function itemsForCheck(session: CheckSession, items: QuizItem[]): QuizItem[] {
+  const byId = new Map(items.filter((i) => i.week === session.week).map((i) => [i.id, i]));
+  return (session.quiz ?? [])
+    .map((id) => byId.get(id))
+    .filter((i): i is QuizItem => i !== undefined);
 }
 
 /**
@@ -56,9 +101,9 @@ export interface WeeklyCheck {
   week: number;
   /** The session's title, so the prompt can name what it is checking. */
   title: string;
-  /** When the session ended, and therefore when this opened. Null = unknown. */
+  /** When it opened — the quiz block, or `endsAt` if none. Null = no timetable. */
   opensAt: string | null;
-  /** Has the session finished? False whenever `endsAt` is absent. */
+  /** False whenever there is no timetable, and before the quiz block. */
   isOpen: boolean;
   itemCount: number;
   answered: number;
@@ -80,31 +125,26 @@ export function weeklyChecks(
   now: Date = new Date(),
 ): WeeklyCheck[] {
   const answeredIds = new Set(responses.map((r) => r.item_id));
-  const byWeek = new Map<number, QuizItem[]>();
-  for (const item of items) {
-    const list = byWeek.get(item.week);
-    if (list) list.push(item);
-    else byWeek.set(item.week, [item]);
-  }
-
   const out: WeeklyCheck[] = [];
 
   for (const session of sessions) {
     // Week 0 is pre-work and has no session to end, so it has no check.
     if (session.week < 1) continue;
 
-    const weekItems = byWeek.get(session.week) ?? [];
-    if (weekItems.length === 0) continue; // no bank file yet — nothing to open
+    // Only what Sunil selected. An unselected week has no check — the same rule
+    // as an unset `endsAt`, and for the same reason: picking the questions on
+    // his behalf would be inventing the lesson.
+    const weekItems = itemsForCheck(session, items);
+    if (weekItems.length === 0) continue;
 
     const answered = weekItems.filter((i) => answeredIds.has(i.id)).length;
-    const ends = session.endsAt ? new Date(session.endsAt) : null;
-    const valid = ends && !Number.isNaN(ends.getTime()) ? ends : null;
+    const opens = checkOpensAt(session);
 
     out.push({
       week: session.week,
       title: session.title,
-      opensAt: valid ? valid.toISOString() : null,
-      isOpen: sessionEnded(session.endsAt, now),
+      opensAt: opens ? opens.toISOString() : null,
+      isOpen: opens !== null && now.getTime() >= opens.getTime(),
       itemCount: weekItems.length,
       answered,
       isComplete: answered >= weekItems.length,

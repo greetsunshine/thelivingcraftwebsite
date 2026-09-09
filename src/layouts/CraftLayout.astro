@@ -18,9 +18,21 @@ export interface Props {
   learner: Learner;
   /** Shown as a back-link when the page is a session rather than the index. */
   back?: { href: string; label: string };
+  /**
+   * Session mode: drop the nav rail and the agent dock.
+   *
+   * Both are right for someone browsing and wrong for someone who has ninety
+   * seconds inside a live call. The rail invites you to go somewhere else at the
+   * one moment the page has a single job, and the dock covers the bottom of a
+   * phone screen with an assistant nobody is going to ask anything.
+   *
+   * Every /craft page still goes through THIS layout — spec §9 — because the
+   * alternative is a second shell that drifts. This is a prop, not a fork.
+   */
+  bare?: boolean;
 }
 
-const { title, learner, back } = Astro.props;
+const { title, learner, back, bare = false } = Astro.props;
 const year = new Date().getFullYear();
 const firstName = (learner.name ?? learner.email).split(/[\s@]/)[0];
 
@@ -59,6 +71,7 @@ const isDiscussion =
           <span class="mb-dot" aria-hidden="true"></span>
           <span>the living craft</span>
         </a>
+        {!bare && (
         <button
           type="button"
           class="mb-burger"
@@ -69,10 +82,12 @@ const isDiscussion =
         >
           <span class="burger" aria-hidden="true"></span>
         </button>
+        )}
       </header>
 
       <div class="nav-scrim" id="navScrim" hidden></div>
 
+      {!bare && (
       <nav class="app-sidebar" id="appSidebar">
         <div class="sidebar-top">
           <a href="/craft" class={`sidebar-icon ${isActive('/craft')}`} title="Dashboard">
@@ -116,6 +131,7 @@ const isDiscussion =
           </form>
         </div>
       </nav>
+      )}
 
       <main class="app-main">
         <div class="main-scroller">
@@ -135,7 +151,7 @@ const isDiscussion =
     <!-- Docked to the bottom of the viewport, on every /craft page, rather than
          a 380px column stolen from the content. Collapsed it is one bar; the
          arrow expands it to half the screen. -->
-    <AgentDock />
+    {!bare && <AgentDock />}
   </body>
 </html>
 

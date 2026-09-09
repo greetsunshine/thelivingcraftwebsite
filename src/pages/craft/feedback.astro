@@ -41,8 +41,8 @@ const hiddenCount = allPending.length - pendingSessions.length;
   <div class="wrap page-narrow" style="max-width: 640px; margin: 0 auto;">
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Session Feedback</h1>
     <p class="lead" style="margin-bottom: 48px;">
-      Two questions per session. What you say changes the next one — what changed is
-      listed below, so you can see it.
+      Four questions per session — two about the session, two about you. What you say
+      changes the next one, and what changed is listed below so you can see it.
     </p>
 
     {changes.length > 0 && (
@@ -89,6 +89,32 @@ const hiddenCount = allPending.length - pendingSessions.length;
                 <textarea id={`pacing-${s.data.week}`} name="pacing" required rows="3"></textarea>
               </div>
 
+              {/* The two the room answers in chat at the close. Different job
+                  from the two above: those are about the session, these are
+                  about you. Neither is required — somebody who genuinely
+                  settled everything should not have to invent a doubt to get
+                  past a form at the end of five hours. */}
+              <div class="close-pair">
+                <p class="mono close-eyebrow">And two about you</p>
+
+                <div class="field">
+                  <label for={`changing-${s.data.week}`}>
+                    The one thing I will change in my own build this week is…
+                  </label>
+                  <textarea id={`changing-${s.data.week}`} name="changing" rows="2"></textarea>
+                </div>
+
+                <div class="field" style="margin-top:20px">
+                  <label for={`unsure-${s.data.week}`}>The thing I am still unsure about is…</label>
+                  <p class="hint">
+                    This one <strong>opens a thread in Discussion</strong> rather than coming to
+                    Sunil alone. Somebody in the room has usually hit the same thing, and they can
+                    answer it before he gets there.
+                  </p>
+                  <textarea id={`unsure-${s.data.week}`} name="unsure" rows="2"></textarea>
+                </div>
+              </div>
+
               <div class="actions" style="margin-top:24px">
                 <button type="submit" class="btn btn-primary submit-btn">Submit Feedback</button>
                 <span class="mono msg" style="display:none;"></span>
@@ -127,6 +153,8 @@ const hiddenCount = allPending.length - pendingSessions.length;
         week: parseInt(formData.get('week') as string, 10),
         landed: formData.get('landed'),
         pacing: formData.get('pacing'),
+        changing: formData.get('changing'),
+        unsure: formData.get('unsure'),
       };
 
       try {
@@ -137,10 +165,21 @@ const hiddenCount = allPending.length - pendingSessions.length;
         });
         
         if (res.ok) {
-          msg.textContent = 'Submitted!';
+          const data = await res.json();
+          // Say where the doubt went. "Submitted" would hide the fact that a
+          // thread now exists with their name on it in front of the room.
+          msg.textContent = data.threadId
+            ? 'Submitted — your question is now open in Discussion.'
+            : data.keptLocally
+              ? 'Submitted. Your question could not reach Discussion, so Sunil has it directly.'
+              : 'Submitted.';
           msg.style.color = 'var(--clay)';
           msg.style.display = 'inline-block';
-          setTimeout(() => window.location.reload(), 800);
+          setTimeout(() => {
+            window.location.href = data.threadId
+              ? `/craft/discussion/${data.threadId}`
+              : window.location.pathname;
+          }, 1200);
         } else {
           throw new Error('Failed to submit');
         }
@@ -156,6 +195,26 @@ const hiddenCount = allPending.length - pendingSessions.length;
 </script>
 
 <style>
+  /* The two about you, set apart from the two about the session. */
+  .close-pair {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  .close-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 16px;
+  }
+  .close-pair .hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 4px 0 8px;
+    max-width: 54ch;
+  }
+
   .other-weeks {
     margin: -24px 0 28px;
     font-size: 13.5px;

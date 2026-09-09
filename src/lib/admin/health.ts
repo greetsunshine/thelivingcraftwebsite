@@ -30,7 +30,10 @@ const TABLES = [
   'submissions',
   'quiz_responses',
   'session_prompts',
-  'capability_pulses',
+  'outcome_ratings',
+  'checkpoint_ratings',
+  'pair_drafts',
+  'pair_reviews',
   // Threads behind /craft/discussion. Still called `doubts` in Postgres — see
   // the note above the table in supabase/schema.sql.
   'doubts',

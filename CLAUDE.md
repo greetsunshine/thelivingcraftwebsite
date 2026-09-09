@@ -54,7 +54,53 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   Never give this path a model. The moment it can improvise, the three-voice distinction
   the forum is built on has a hole in it that no amount of moderation closes.
 
-  **The knowledge check belongs to a session and opens when that session ends.** The
+  **`/craft` is a surface people use DURING a session, not only after one.**
+  [src/pages/craft/live.astro](src/pages/craft/live.astro) is session mode, resolved by
+  [src/lib/craft/live.ts](src/lib/craft/live.ts). Week 1 asks a learner for something nine times
+  inside its five hours, and every page here was built for one person alone afterwards with time
+  to read. Four rules hold it together:
+  - **Exactly one thing is "now."** The rest is a catch-up list, smaller and underneath. Same
+    argument as the single prompt: four equal asks on one screen is a screen people scroll past,
+    and in a live room there is no second read. "Now" is the **most recently fired** outstanding
+    ask, never the earliest — the room has moved on from the checkpoint somebody missed.
+  - **The chrome comes off.** `CraftLayout` takes `bare`, dropping the nav rail and the agent
+    dock. **A prop, not a second layout** — §9 says every `/craft` page goes through that one
+    shell, and a fork drifts.
+  - **Nothing redirects anybody into it.** A banner on the dashboard while a session runs, and
+    that is all. Somebody who opened the dashboard mid-call may have meant to.
+  - **Asks come from the modules that own them** — the ratings from `pulses.ts`, checkpoints from
+    `checkpoints.ts`, the quiz from `checks.ts`, the pair work from `pairs.ts`. None of them knows
+    session mode exists; this one only places them on a clock.
+
+  **Checkpoints are the only instrument that arrives in time**
+  ([src/lib/craft/checkpoints.ts](src/lib/craft/checkpoints.ts)). Four a session, one number each,
+  on the checkpoint's **last** item — the session's own convention, "put one number in chat on the
+  last one only". Keyed by the offset (`'01:10'`), never an index, so inserting a checkpoint
+  earlier does not silently remap stored answers. Open from their moment until the session ends: a
+  late answer beats none, and a slow-down signal after the fact is not one. **Sunil's read is
+  counts, never a mean** — a 3.4 hides the two people at 2, and "does the next block land on
+  anybody" is a count. A 2 means *go slower*; nothing aggregates it into a level.
+
+  **The pair draft is a different object from a submission**
+  ([src/lib/craft/pairs.ts](src/lib/craft/pairs.ts), `/craft/pair`). Two names, fifteen minutes,
+  reviewed by another pair ten minutes later, never read again. A submission is one name, finished
+  alone, and is "the artefact of this cohort" a year later. **Never fold them together** — a pair
+  writing into one learner's submission makes two people's records start identical, which ruins
+  Sunil's read of eight. Same seven sections either way (§5.5). The review carries a 0/1/2 beside
+  each comment and **nothing sums, averages or ranks them**; if a function here ever returns a
+  total, that is §10's cut feature returning under a new name. Pairs are set by Sunil in the room
+  and merely recorded here — no computed rotation, which cannot see who is stuck and breaks when
+  somebody is absent.
+
+  **The knowledge check opens at the QUIZ BLOCK, not when the session ends.** Week 1 runs it at
+  04:20 and then spends ten minutes taking up the ones that split the room; opening at `endsAt`
+  would open it after the block that exists to discuss it. `checkOpensAt()` reads the run of show
+  and falls back to `endsAt`. **Sunil picks the eight**, in the session file, in his order —
+  `itemsForCheck()` returns exactly that, one order for the whole room so "question three" means
+  the same thing to eight people. An empty `quiz` array opens nothing, the same rule as an unset
+  `endsAt`: picking the questions on his behalf would be inventing the lesson.
+
+  **The old rule, still true of the timetable itself.** The
   trigger is `endsAt` in the session's frontmatter — a full ISO timestamp *with an offset*,
   because the cohort sits in three time zones and a bare date opens the check on the wrong
   day for somebody. **Absent `endsAt` opens nothing and prompts nobody**; there is no
@@ -74,19 +120,50 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   something becomes relevant, plus a list you choose to look at, is not a chase.
   **Adding "remind them again on Friday" is that cut feature returning under a new name.**
 
-  **The familiarity check runs twice a week — a "pulse" either side of each session**
-  ([src/lib/craft/pulses.ts](src/lib/craft/pulses.ts)). A pulse covers **only the
-  capabilities that session teaches** (its `topics`), about three of them. Never widen it
-  to all thirteen: twice a week for six weeks at thirteen each is 156 ratings per learner,
-  the room stops answering by week two, and the data then skews toward the compliant.
-  Scoping is also what makes the delta *attributable* — movement on A5 either side of the
-  session that taught A5 says something; the same movement six weeks apart says only that
-  time passed. `startsAt` closes the before-pulse (a baseline taken after the teaching is
-  not a baseline) and the API re-checks that window on save. **This does not replace §5.6**
-  — the week-0 intake and week-6 re-ask over all thirteen stay as they are, and week 6 has
-  no after-pulse because the re-ask covers it that day. Sunil's read is *what each session
-  moved*, **paired ratings only**: an unpaired mean measures who replied, not what they
-  learned.
+  **The familiarity check runs twice a session — a "pulse" either side of it**
+  ([src/lib/craft/pulses.ts](src/lib/craft/pulses.ts)). It rates **the session's own five
+  outcomes**, in that session's words, from the `outcomes` array in its frontmatter — the
+  same five both times, "so that the two sets of numbers mean the same thing".
+  - **It is NOT a subset of the thirteen intake capabilities, and `topics` is gone.** That
+    was the design until week 1 was written in full; the room rates five bespoke statements
+    and nothing in the teaching material ever maps a week to A1–A3. Three vocabularies
+    exist and each has a job: the **thirteen** for the week-0 intake and week-6 re-ask, the
+    session's **five outcomes** per session, and the **five threads** in
+    [docs/teaching/threads.md](docs/teaching/threads.md) as the contract between weeks.
+    Don't merge them again — see the amendment at §0 of the spec.
+  - Never widen the pulse to all thirteen: twice a week for six weeks at thirteen each is
+    156 ratings per learner, the room stops answering by week two, and the data then skews
+    toward the compliant. Five is what the session already asks for.
+  - **The before-pulse closes at FIRST TEACHING, not at `startsAt`.** The rule — a baseline
+    taken after the teaching is not a baseline — is right; the boundary was fifteen minutes
+    out. Week 1 opens at 00:00, rates at **00:05**, and teaches from **00:15**, so closing
+    at `startsAt` refused the very rating the rule protects. The close is derived from the
+    first `block` in `runOfShow` ([src/lib/craft/schedule.ts](src/lib/craft/schedule.ts)),
+    never configured twice, and the API re-checks it on save. No run of show falls back to
+    `startsAt`, which is the old behaviour and the right default.
+  - **This does not replace §5.6** — the week-0 intake and week-6 re-ask over all thirteen
+    stay as they are, and week 6 has no after-pulse because the re-ask covers it that day.
+  - Sunil's read is *what each session moved*, **paired ratings only**: an unpaired mean
+    measures who replied, not what they learned. Outcomes flagged `movesMost` carry Sunil's
+    before-the-fact prediction ("expect low numbers on 3 and 4"), reported beside the delta
+    and never weighted into it.
+  - The table is `outcome_ratings`, renamed from `capability_pulses` — it had not been
+    applied to production, so this is a rename rather than a migration.
+  - **The after-pulse opens at the CLOSE block, not at `endsAt`.** Week 1 takes the second
+    rating at 04:52 inside a close running 04:50–05:00, so opening at the end of the session
+    missed it by eight minutes — the same class of error as the before-window, the other way.
+    Once open it never closes; like feedback it sits on the to-do until it is done.
+
+  **Field notes (`/craft/notes`) is the same store the public `/latest` reads**, through
+  [src/lib/notes.ts](src/lib/notes.ts) — one module owns what may be published, so `reviewNote`
+  and `source: 'operator'` items cannot leak to a second reader. Week 1's reading list links
+  `/latest` and promises it is *"refreshed weekly"*, which the retriever already does.
+  **Until 9 September this page was a fabricated mock**: four invented notes with invented dates
+  and week numbers, and an invented quote attributed to Sunil, on the nav rail of every `/craft`
+  page. It read as course material because it was styled like it. The five threads are printed
+  *beside* the notes and never used to file them — the themes predate the threads, nothing has
+  landed under trace-and-bill, and inventing that join would put a mapping nobody decided into
+  the course's own vocabulary.
 
   **An ADR is tied to the week's assignment, and unlocks on that same clock.**
   [src/lib/craft/assignments.ts](src/lib/craft/assignments.ts) owns both halves of the tie:
@@ -94,8 +171,28 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   string and once reached the learner as five submit forms headed *"Week 2: TBD"*), and it
   must have been *given* — its session has ended. **Never hand-write `!== 'TBD'` again**;
   that literal in four separate files is why three surfaces disagreed about how many
-  assignments existed. The five ADR sections are fixed and must not vary by week (§5.5
-  wants week 6 readable against week 1); what varies is the brief above them.
+  assignments existed. The ADR sections are fixed and must not vary by week (§5.5 wants
+  week 6 readable against week 1); what varies is the brief above them.
+  - **Seven sections, not five, and they live in one module**
+    ([src/lib/craft/adr.ts](src/lib/craft/adr.ts)): Context · Goals · Non-goals · The
+    design · What can go wrong · Alternatives · Open questions. That is what week 1
+    actually asks for, written "in the shape you would put in front of an architecture
+    review". **Alternatives is still load-bearing.** Goals must be *testable* — "'Safer'
+    is not a goal, 'no dispute is credited twice' is" — and What can go wrong is one row
+    per case; both are checked by the in-room peer review at 04:05.
+  - The list used to be written out three times inside `adr.astro` (parse, render,
+    reassemble). Same mistake as the four copies of `'TBD'`, worse failure mode: a section
+    the parser did not know was dropped on the next save, taking the learner's text with
+    it. A record written under the old five headings still parses, and anything under an
+    unrecognised heading is shown back rather than discarded.
+
+  **A session file describes its own session.** Frontmatter carries `outcomes`, `threads`,
+  `runOfShow`, `checkpoints`, `prework`, `after` and `reading` alongside the prose. Before
+  9 September all of that was body text, so no surface could read any of it, and the
+  instruments were built against a spec written before any session existed in full. Offsets
+  in `runOfShow` and `checkpoints` are relative (`'02:20'`), never wall-clock — `startsAt`
+  is the only clock, and a run of show that restated it would be a second source for a fact
+  that already has one.
 
 ## The learning agent — read the status doc before building
 **[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
@@ -114,7 +211,8 @@ Two rules, and they are the reason the file is worth having:
 
 **Schema is ahead of production right now.** Not yet applied: the `discussion_replies`
 table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
-`resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table and `capability_pulses`; the `doubts.answer_source`
+`resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table, `outcome_ratings`,
+`checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the `doubts.answer_source`
 and `submissions.status` columns, and the `feedback_responses` table. **Run
 [supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
 idempotent. Shipping code ahead of its schema shows up as the console's "table is not
@@ -157,13 +255,14 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — sixteen tables, schema in
+- **Storage is Supabase** — nineteen tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
   - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
-    `submissions`, `quiz_responses`, `session_prompts`, `capability_pulses`, `doubts`,
+    `submissions`, `quiz_responses`, `session_prompts`, `outcome_ratings`,
+    `checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `doubts`,
     `discussion_replies`,
     `feedback`, `feedback_responses`.
     All but the last two are keyed to `learner_id` with `ON DELETE CASCADE`, so erasing

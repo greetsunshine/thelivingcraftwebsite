@@ -100,7 +100,7 @@ export function sessionPrompt(
       tasks.push({
         id: 'pulse',
         label: 'Where you are now',
-        detail: `${w.capabilities.length} ${w.capabilities.length === 1 ? 'rating' : 'ratings'}, the same ones you gave before the session. This is the half that makes the first half mean anything.`,
+        detail: `${w.outcomes.length} ${w.outcomes.length === 1 ? 'rating' : 'ratings'}, the same ones you gave before the session. This is the half that makes the first half mean anything.`,
         href: `/craft/familiarity?week=${latest.week}&phase=after`,
       });
     }
@@ -146,7 +146,7 @@ export function sessionPrompt(
       {
         id: 'pulse',
         label: 'Where you are before this one',
-        detail: `${upcoming.capabilities.length} ${upcoming.capabilities.length === 1 ? 'rating' : 'ratings'} on what this session covers. Takes half a minute, and it closes when the session starts — a baseline taken afterwards is not a baseline.`,
+        detail: `${upcoming.outcomes.length} ${upcoming.outcomes.length === 1 ? 'rating' : 'ratings'} on what this session covers. Takes half a minute, and it closes when the teaching starts — a baseline taken afterwards is not a baseline.`,
         href: `/craft/familiarity?week=${upcoming.week}&phase=before`,
       },
     ],

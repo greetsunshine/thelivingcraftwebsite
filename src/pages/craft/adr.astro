@@ -20,6 +20,7 @@ import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { listLearnerSubmissions, ADR_MAX_CHARS } from '../../lib/craft/submissions';
 import { givenAssignments, assignments as allAssignments } from '../../lib/craft/assignments';
+import { ADR_SECTIONS, parseAdr, emptyAdr } from '../../lib/craft/adr';
 import { marked } from 'marked';
 
 export const prerender = false;
@@ -45,31 +46,18 @@ const unsubmitted = live.find(
 );
 const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.week ?? 0);
 
-const parseADR = (markdown: string) => {
-  const sections = { ctx: '', dec: '', alt: '', con: '', uns: '' };
-  if (!markdown) return sections;
-  
-  const ctxMatch = markdown.match(/## Context\n+([\s\S]*?)(?=\n##|$)/i);
-  const decMatch = markdown.match(/## Decision\n+([\s\S]*?)(?=\n##|$)/i);
-  const altMatch = markdown.match(/## Alternatives\n+([\s\S]*?)(?=\n##|$)/i);
-  const conMatch = markdown.match(/## Consequences\n+([\s\S]*?)(?=\n##|$)/i);
-  const unsMatch = markdown.match(/## Unsure about\n+([\s\S]*?)(?=\n##|$)/i);
-
-  if (ctxMatch) sections.ctx = ctxMatch[1].trim();
-  if (decMatch) sections.dec = decMatch[1].trim();
-  if (altMatch) sections.alt = altMatch[1].trim();
-  if (conMatch) sections.con = conMatch[1].trim();
-  if (unsMatch) sections.uns = unsMatch[1].trim();
-  
-  return sections;
-};
+// The template lives in ONE place now — src/lib/craft/adr.ts. It used to be
+// written out three times in this file (parse, render, reassemble), which is the
+// same shape of mistake as the four hand-written copies of `'TBD'`, and worse in
+// its failure mode: a section the parser did not know about was dropped on the
+// next save, taking the learner's text with it.
 ---
 
 <CraftLayout title="ADRs" learner={learner}>
   <div class="wrap page-narrow" style="max-width: 780px; margin: 0 auto;">
     <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Architecture Decision Records</h1>
     <p class="lead" style="margin-bottom: 40px;">
-      One page per week, on the decision that week's assignment forced. Same five sections
+      One page per week, on the decision that week's assignment forced. Same seven sections
       every time — so week 6 can be read against week 1, and so can you.
     </p>
 
@@ -161,41 +149,53 @@ const parseADR = (markdown: string) => {
                 <input type="hidden" name="week" value={a.week} />
 
                 {(() => {
-                  const parsed = sub ? parseADR(sub.adr_markdown) : { ctx: '', dec: '', alt: '', con: '', uns: '' };
+                  const { sections, unmatched } = sub
+                    ? parseAdr(sub.adr_markdown)
+                    : { sections: emptyAdr(), unmatched: '' };
                   return (
-                    /* Five fixed sections, never varying by week (§5.5) — the
-                       hint under each is the spec's own statement of what that
-                       section is for. */
+                    /* Seven fixed sections, never varying by week (§5.5), read
+                       from the one module that owns them. The hint under each is
+                       the session's own statement of what that section is for. */
                     <div class="fields-group">
-                      <div class="field">
-                        <label for={`ctx-${a.week}`}>Context</label>
-                        <p class="hint">The constraint that forced a decision.</p>
-                        <textarea id={`ctx-${a.week}`} name="ctx" required rows="3" placeholder="What was true about the system, the deadline or the team that meant you had to choose?">{parsed.ctx}</textarea>
-                      </div>
-                      <div class="field" style="margin-top:20px">
-                        <label for={`dec-${a.week}`}>Decision</label>
-                        <p class="hint">What you chose.</p>
-                        <textarea id={`dec-${a.week}`} name="dec" required rows="3" placeholder="State it plainly, in the past tense. Not what you would do — what you did.">{parsed.dec}</textarea>
-                      </div>
-                      <div class="field load-bearing" style="margin-top:20px">
-                        <label for={`alt-${a.week}`}>Alternatives</label>
-                        <p class="hint">
-                          What you rejected, and <strong>why it lost</strong>. This is the section
-                          Sunil reads first — anyone can state a decision, the rejected options are
-                          where judgement is visible.
-                        </p>
-                        <textarea id={`alt-${a.week}`} name="alt" required rows="4" placeholder="The option you seriously considered, and the specific reason it did not survive.">{parsed.alt}</textarea>
-                      </div>
-                      <div class="field" style="margin-top:20px">
-                        <label for={`con-${a.week}`}>Consequences</label>
-                        <p class="hint">What it costs later, and what you would watch in production.</p>
-                        <textarea id={`con-${a.week}`} name="con" required rows="3" placeholder="The bill this decision sends you in three months, and the signal that tells you it has arrived.">{parsed.con}</textarea>
-                      </div>
-                      <div class="field" style="margin-top:20px">
-                        <label for={`uns-${a.week}`}>Unsure about</label>
-                        <p class="hint">One line — what you are least confident in.</p>
-                        <textarea id={`uns-${a.week}`} name="uns" required rows="2" placeholder="The part you would want a second opinion on.">{parsed.uns}</textarea>
-                      </div>
+                      {ADR_SECTIONS.map((s, i) => (
+                        <div
+                          class={`field${s.loadBearing ? ' load-bearing' : ''}`}
+                          style={i === 0 ? undefined : 'margin-top:20px'}
+                        >
+                          <label for={`${s.id}-${a.week}`}>{s.heading}</label>
+                          <p class="hint">
+                            {s.hint}
+                            {s.loadBearing && (
+                              <>
+                                {' '}This is the section Sunil reads first — anyone can state a
+                                decision, the rejected options are where judgement is visible.
+                              </>
+                            )}
+                          </p>
+                          <textarea
+                            id={`${s.id}-${a.week}`}
+                            name={s.id}
+                            data-heading={s.heading}
+                            required={s.required}
+                            rows={s.rows}
+                            placeholder={s.placeholder}
+                          >{sections[s.id]}</textarea>
+                        </div>
+                      ))}
+
+                      {/* Written under the old five-section template. Shown so it
+                          is not silently dropped on the next save — the learner
+                          moves what still matters into the seven above. */}
+                      {unmatched && (
+                        <div class="field carried" style="margin-top:20px">
+                          <label for={`carried-${a.week}`}>From your earlier draft</label>
+                          <p class="hint">
+                            These headings are no longer part of the template. Move anything worth
+                            keeping into the sections above; this box is not submitted.
+                          </p>
+                          <textarea id={`carried-${a.week}`} rows="4" readonly>{unmatched}</textarea>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -266,15 +266,13 @@ const parseADR = (markdown: string) => {
       msg.style.display = 'none';
 
       const formData = new FormData(form);
-      const section = (name: string) => ((formData.get(name) as string) ?? '').trim();
 
-      const adr_markdown = [
-        '## Context\n' + section('ctx'),
-        '## Decision\n' + section('dec'),
-        '## Alternatives\n' + section('alt'),
-        '## Consequences\n' + section('con'),
-        '## Unsure about\n' + section('uns'),
-      ].join('\n\n');
+      // Headings come off the form's own fields rather than a list repeated
+      // here, so the template can only be changed in one place. `data-heading`
+      // is stamped on each textarea from ADR_SECTIONS above.
+      const adr_markdown = Array.from(form.querySelectorAll<HTMLTextAreaElement>('textarea[data-heading]'))
+        .map((el) => `## ${el.dataset.heading}\n${((formData.get(el.name) as string) ?? '').trim()}`)
+        .join('\n\n');
 
       try {
         const res = await fetch(form.action, {

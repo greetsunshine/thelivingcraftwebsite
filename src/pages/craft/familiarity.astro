@@ -3,9 +3,11 @@ export const prerender = false;
 
 // Two instruments live on this page, at two different granularities.
 //
-//   THE PULSE — three-ish ratings either side of one session, on just the
-//   capabilities that session teaches. Twice a week. The delta is attributable
-//   to a session because it is measured around one.
+//   THE PULSE — the session's own FIVE OUTCOMES, rated either side of it, in
+//   that session's words. Twice a session. The delta is attributable because it
+//   is measured around one session and asks about that session's own claims.
+//   (It used to be three of the thirteen capabilities, chosen by a `topics`
+//   array. Week 1, once written, rates five bespoke statements instead.)
 //
 //   THE WEEK-6 RE-ASK (§5.6) — all thirteen, against the week-0 intake. Once.
 //   The cohort-level before/after, and the evidence behind the outcome claims.
@@ -16,7 +18,7 @@ export const prerender = false;
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { getIntake, TECHNICAL, LEADERSHIP, SCALE, SCALE_LEGEND } from '../../lib/craft/intake';
-import { getFamiliarity, missingFamiliarityAnswers } from '../../lib/craft/familiarity';
+import { getFamiliarity } from '../../lib/craft/familiarity';
 import {
   pulseWindows,
   pulsesDue,
@@ -39,7 +41,8 @@ const windows = pulseWindows(
   sessions.map((s) => ({
     week: s.data.week,
     title: s.data.title,
-    topics: s.data.topics,
+    outcomes: s.data.outcomes,
+    runOfShow: s.data.runOfShow,
     startsAt: s.data.startsAt,
     endsAt: s.data.endsAt,
   })),
@@ -101,10 +104,15 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
           </ul>
         </div>
 
+        {/* The session's own framing, word for word. The statements are the
+            same on both askings and in the printed session, which is the whole
+            reason the two sets of numbers can be compared. */}
+        <p class="prompt-stem">Right now, I could&hellip;</p>
+
         <div class="section-block">
-          {activeOpen.capabilities.map(q => (
+          {activeOpen.outcomes.map((q, i) => (
             <div class="q-row">
-              <div class="q-text">{q.id}: {q.text}</div>
+              <div class="q-text"><span class="q-n mono">{i + 1}</span> {q.text}</div>
               <div class="q-radios">
                 {SCALE.map(n => (
                   <label class="radio-label">
@@ -143,7 +151,7 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
                   <span class="p-title">{w.title}</span>
                   <span class="p-sub faint">
                     {w.phase === 'before' ? 'Before the session' : 'After the session'} ·
-                    {' '}{w.capabilities.length} {w.capabilities.length === 1 ? 'rating' : 'ratings'}
+                    {' '}{w.outcomes.length} {w.outcomes.length === 1 ? 'rating' : 'ratings'}
                   </span>
                 </span>
                 <span class="p-go mono">{w.phase === 'before' ? 'Baseline' : 'Follow-up'}</span>
@@ -434,12 +442,27 @@ const renderDelta = (qId: string, section: 'technical' | 'leadership') => {
     justify-content: space-between;
     align-items: center;
     padding: 16px 0;
-    border-bottom: 1px solid var(--line-light);
+    /* Was `--line-light`, which is defined nowhere — so the declaration was
+       invalid and this row had no bottom border at all. Pre-dates the outcome
+       work; found by auditing every custom property against its definitions. */
+    border-bottom: 1px solid var(--line);
   }
   .q-text {
     font-size: 15px;
     font-weight: 500;
     max-width: 400px;
+  }
+  .q-n {
+    color: var(--ink-faint);
+    font-size: 12px;
+    font-weight: 400;
+    margin-right: 4px;
+  }
+  /* "Right now, I could…" — the stem all five statements complete. */
+  .prompt-stem {
+    font-weight: 600;
+    font-size: 15.5px;
+    margin: 0 0 4px;
   }
   .q-radios {
     display: flex;

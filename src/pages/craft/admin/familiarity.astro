@@ -33,7 +33,8 @@ const moves = sessionMoves(
   sessions.map((s) => ({
     week: s.data.week,
     title: s.data.title,
-    topics: s.data.topics,
+    outcomes: s.data.outcomes,
+    runOfShow: s.data.runOfShow,
     startsAt: s.data.startsAt,
     endsAt: s.data.endsAt,
   })),
@@ -118,9 +119,9 @@ const bar = (values: number[]) => {
                 </tr>
               </thead>
               <tbody>
-                {m.capabilities.map((c) => (
+                {m.outcomes.map((c) => (
                   <tr>
-                    <td data-label="Capability"><span class="pill">{c.capability}</span> {c.text}</td>
+                    <td data-label="Outcome"><span class="pill">{c.outcome}</span> {c.text}</td>
                     <td data-label="Before" class="num faint">{c.before.toFixed(1)}</td>
                     <td data-label="After" class="num">{c.after.toFixed(1)}</td>
                     <td data-label="Change" class="num">
@@ -213,7 +214,7 @@ const bar = (values: number[]) => {
             {flags.map((f) => (
               <tr>
                 <td data-label="Learner">{nameOf.get(f.learner_id) ?? f.learner_id.slice(0, 8)}</td>
-                <td data-label="Capability"><span class="pill">{f.capability}</span></td>
+                <td data-label="Outcome"><span class="pill">{f.capability}</span></td>
                 <td data-label="Self-rating" class="mono">{f.selfRating}/5</td>
                 <td data-label="Why flagged" class="faint">{f.reason}</td>
               </tr>
