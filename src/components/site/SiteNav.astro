@@ -1,0 +1,137 @@
+---
+/**
+ * The wider site's route map.
+ *
+ * The four landing-page shells navigate WITHIN one document — #curriculum,
+ * #tiers, #method. This one navigates BETWEEN documents, so it is a different
+ * object: it marks where you are, and every destination is a real page.
+ *
+ * ORDER IS THE ROADMAP'S, NOT A DESIGNER'S PREFERENCE
+ *
+ * "Header order: Programmes, Advisory, Resources, Tools, About, then Explore
+ * the cohort. Logo returns home." Programmes first because most arrivals are
+ * deciding between the cohort and something for their team; About fifth
+ * because nobody visits an About page before they know what is on offer.
+ *
+ * AND NOTHING IS LINKED BEFORE IT EXISTS
+ *
+ * The roadmap: "Do not publish empty hubs merely to fill the navigation."
+ * `built: false` on a destination renders it as plain text with a note rather
+ * than a link — visible, so a reader can see the shape of the practice, and
+ * inert, so nobody lands on a page that apologises for itself. Flip the flag in
+ * the same commit that creates the page.
+ *
+ * The cohort action points at `/`, not at `/programmes/agentic-systems/`. Every
+ * October campaign post links to the root with `utm_content=lc-oct-dNN`, and
+ * the roadmap keeps that address working until redirects are approved and
+ * tested. Changing this line without doing that work breaks fifteen live posts.
+ */
+interface Destination {
+  href: string;
+  label: string;
+  built: boolean;
+}
+
+const DESTINATIONS: Destination[] = [
+  { href: '/programmes/', label: 'Programmes', built: false },
+  { href: '/advisory/', label: 'Advisory', built: false },
+  { href: '/resources/', label: 'Resources', built: false },
+  { href: '/tools/', label: 'Tools', built: false },
+  { href: '/about/', label: 'About', built: false },
+];
+
+/** Trailing slashes are noise for a comparison; strip once, compare simply. */
+const here = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isCurrent = (href: string) => {
+  const target = href.replace(/\/+$/, '') || '/';
+  return here === target || here.startsWith(`${target}/`);
+};
+---
+
+<header class="sitenav">
+  <div class="wrap sitenav-inner">
+    <a class="wordmark" href="/">
+      <span class="dot"></span> the living craft
+    </a>
+
+    <nav class="sitenav-links" aria-label="Sections">
+      {
+        DESTINATIONS.map((d) =>
+          d.built ? (
+            <a href={d.href} aria-current={isCurrent(d.href) ? 'page' : undefined}>
+              {d.label}
+            </a>
+          ) : (
+            /* Not a link, and not hidden either. A reader can see what the
+               practice covers; nothing sends them to an empty page. */
+            <span class="pending" title="Being written">
+              {d.label}
+            </span>
+          ),
+        )
+      }
+      <a class="btn btn-primary sitenav-cta" href="/">
+        Explore the cohort&nbsp;<span class="arrow">→</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .sitenav {
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    background: var(--surface-page);
+  }
+  .sitenav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    min-height: 76px;
+    flex-wrap: wrap;
+  }
+
+  .sitenav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    flex-wrap: wrap;
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .sitenav-links a:not(.btn) {
+    white-space: nowrap;
+    color: var(--text-quiet);
+  }
+  .sitenav-links a:not(.btn):hover {
+    color: var(--text-loud);
+  }
+  /* The current section is marked by weight and ink, not by an underline —
+     an underline here would read as a link state rather than as a position. */
+  .sitenav-links a[aria-current='page'] {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+
+  .pending {
+    white-space: nowrap;
+    color: var(--text-quiet);
+    /* The system's "unwritten" mark: a dashed underline that reads as a space
+       held open rather than as a disabled control. */
+    border-bottom: 1px dashed var(--border-field);
+    cursor: default;
+  }
+
+  .sitenav-cta {
+    padding: 10px 20px;
+  }
+
+  /* Below 900px the destinations fold away and the action stays. Same rule the
+     cohort nav follows: on a phone the one thing worth keeping is the way in. */
+  @media (max-width: 900px) {
+    .sitenav-links a:not(.btn),
+    .sitenav-links .pending {
+      display: none;
+    }
+  }
+</style>

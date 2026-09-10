@@ -451,6 +451,9 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
 .foot-col a { display: block; color: var(--text-body); padding: var(--space-1) 0; font-size: var(--size-3); }
 .foot-col a:hover { color: var(--accent-ink); }
 .foot-bottom { margin-top: var(--space-6); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--border-hair); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); color: var(--text-quiet); font-size: var(--size-2); }
+.foot-legal { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.foot-legal a { color: var(--text-quiet); }
+.foot-legal a:hover { color: var(--accent-ink); }
 
 /* ── course-area chrome (CraftLayout) ─────────────────────────────────────── */
 .backbar { padding-top: var(--space-5); }

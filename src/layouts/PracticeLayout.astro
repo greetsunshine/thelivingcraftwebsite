@@ -1,0 +1,268 @@
+---
+// Shell for the WIDER practice site — /about, /programmes/*, /advisory,
+// /resources, /contact, /privacy, /terms.
+//
+// Why a fifth layout rather than a prop on BaseLayout: the four existing shells
+// are each a single long landing page with anchor navigation (#curriculum,
+// #tiers, #method). This one is the opposite shape — many short pages that
+// navigate to each other — so its chrome is a route map, not an anchor list.
+// Everything below the chrome is the same design system, deliberately: one
+// stylesheet, one head, one set of tokens.
+//
+// Three decisions worth knowing before editing:
+//
+// 1. NO AskWidget. The visitor Q&A agent is grounded in facts.ts, which still
+//    holds the price, the start date and the six-week shape. These pages
+//    deliberately withhold all of that while decision D1 is open
+//    (docs/cohort-pipeline/build-plan.md). Hanging a widget that quotes those
+//    figures off a page written not to state them reproduces exactly the
+//    stale-fact failure facts.ts exists to prevent, in reverse. When D1 lands,
+//    add the widget here in one line — not before.
+//
+// 2. `noindex` emits a SECOND robots meta after SeoHead's. SeoHead hardcodes
+//    `index, follow` and is not ours to change in this stage; where two robots
+//    meta tags conflict the more restrictive one applies, so noindex wins.
+//    It is a workaround, not a pattern: give SeoHead a `noindex` prop the next
+//    time that file is open, and delete this.
+//
+// 3. The <style is:global> block holds ONLY the primitives every page in this
+//    section shares — prose measure, the pending-facts block, breadcrumbs.
+//    It is namespaced under .practice so it cannot reach the other four
+//    surfaces. Anything used by one page belongs in that page's scoped block,
+//    which is this repo's established split.
+import '../styles/global.css';
+import SeoHead from '../components/SeoHead.astro';
+import SiteNav from '../components/site/SiteNav.astro';
+import SiteFooter from '../components/site/SiteFooter.astro';
+import Track from '../components/Track.astro';
+import Analytics from '@vercel/analytics/astro';
+import SpeedInsights from '@vercel/speed-insights/astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  /** Path, e.g. '/about'. Defaults to the request path inside SeoHead. */
+  canonical?: string;
+  /** JSON-LD nodes. Emit one only where the VISIBLE content supports it. */
+  schema?: unknown[];
+  /**
+   * Keep this page out of the index. Used by /privacy and /terms, which are
+   * honest placeholders until the owner supplies the facts they need.
+   */
+  noindex?: boolean;
+}
+
+const { title, description, canonical, schema, noindex = false } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
+    {/* See note 2 above. The restrictive directive wins over SeoHead's. */}
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <SiteNav />
+
+    <main id="main" class="practice">
+      <slot />
+    </main>
+
+    <SiteFooter />
+
+    <Track />
+    <Analytics />
+    <SpeedInsights />
+  </body>
+</html>
+
+<style>
+  /* Visible only on keyboard focus. The section is many short pages with a
+     repeated header, which is precisely where a skip link earns its place. */
+  .skip {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    z-index: var(--z-dialog);
+    transform: translateY(-200%);
+    background: var(--surface-panel);
+    color: var(--text-loud);
+    border-radius: var(--radius-control);
+    padding: var(--space-3) var(--space-5);
+    box-shadow: var(--shadow-lift);
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+  }
+  .skip:focus-visible {
+    transform: none;
+  }
+</style>
+
+<style is:global>
+  /* ── shared page primitives for the /practice section ─────────────────────
+     Namespaced under .practice so nothing here can reach /, /caio,
+     /assessment, /latest or the course area. */
+
+  .practice .lede {
+    font-size: var(--size-5);
+    line-height: var(--lh-snug);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+
+  .practice .prose {
+    max-width: var(--measure-prose);
+  }
+  .practice .prose p {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    margin-bottom: var(--space-4);
+  }
+  .practice .prose p:last-child {
+    margin-bottom: 0;
+  }
+  .practice .prose strong {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+  /* Descriptive links, underlined in body copy — a roadmap requirement, and
+     the only way an inline link reads as one when every link inherits ink. */
+  .practice .prose a,
+  .practice .textlink {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .practice .prose a:hover,
+  .practice .textlink:hover {
+    color: var(--link-hover);
+    text-decoration-color: var(--link-hover);
+  }
+
+  /* A white card on the mist ground. Shadow, never a border — never both. */
+  .practice .panel {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+
+  .practice .stack > * + * {
+    margin-top: var(--space-5);
+  }
+
+  /* ── the pending-facts block ──────────────────────────────────────────────
+     Every visible [PLACEHOLDER: …] on this section renders through this, and
+     it takes the design system's "uncertain" colours rather than the error or
+     promo ones: an unanswered question is not a failure and not a promotion.
+     It must stay visually distinct from body copy — the entire point is that a
+     reader can tell at a glance which sentences are not yet facts. */
+  .practice .pending {
+    background: var(--agent-uncertain-bg);
+    color: var(--agent-uncertain);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5) var(--space-6);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    max-width: var(--measure-prose);
+  }
+  .practice .pending h3 {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--agent-uncertain);
+    margin-bottom: var(--space-3);
+  }
+  .practice .pending ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .practice .pending li {
+    padding-left: var(--space-5);
+    position: relative;
+  }
+  .practice .pending li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+  }
+  .practice .pending .who {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--agent-uncertain);
+    opacity: 0.85;
+    margin-top: var(--space-1);
+  }
+
+  /* ── breadcrumbs ─────────────────────────────────────────────────────────
+     Rendered wherever a BreadcrumbList is emitted, and only there: structured
+     data may describe breadcrumbs when the visible content supports it. */
+  .practice .crumbs {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    padding-top: var(--space-5);
+  }
+  .practice .crumbs a:hover {
+    color: var(--text-loud);
+  }
+  .practice .crumbs .sep {
+    color: var(--text-quiet);
+  }
+
+  /* Two-up card grid. global.css owns .cards3; this is its sibling, and it
+     lives here rather than in four page files that would each repeat it. */
+  .practice .cards2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  @media (max-width: 900px) {
+    .practice .cards2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* A card that is also a link. .card gives the surface; this gives the
+     affordance without turning the whole card yellow. */
+  .practice a.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .practice a.card:hover {
+    color: inherit;
+  }
+  .practice a.card .go {
+    margin-top: auto;
+    padding-top: var(--space-4);
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+    color: var(--accent-ink);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .practice a.card:hover .go {
+    color: var(--accent-ink-strong);
+  }
+  .practice a.card:hover .go .arrow {
+    transform: translateX(3px);
+  }
+  .practice a.card .go .arrow {
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+</style>

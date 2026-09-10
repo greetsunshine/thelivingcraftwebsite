@@ -7,10 +7,25 @@ it has since become the production site itself. Three cross-linked surfaces, one
 system. The Kajabi hand-off is **no longer the plan** — build directly in this repo.
 
 ## Surfaces (Astro routes)
-- **`/`** — *The Living Craft* cohort. Application-only program in agentic & systems
-  architecture. Single page; region (India/Dubai/Australia) only changes the pricing
-  block via `?region=` param or Vercel geo header. SSR (`prerender = false`).
-  Files: [src/pages/index.astro](src/pages/index.astro), [src/components/ProgramPage.astro](src/components/ProgramPage.astro), [src/data/regions.ts](src/data/regions.ts).
+- **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
+  Single page, still SSR (`prerender = false`). Files:
+  [src/pages/index.astro](src/pages/index.astro),
+  [src/components/cohort/CohortPage.astro](src/components/cohort/CohortPage.astro),
+  [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
+  [src/data/cohort-copy.ts](src/data/cohort-copy.ts),
+  [src/data/offer-display.ts](src/data/offer-display.ts).
+  - **The page no longer shows a price, and the region switch changes nothing on it.**
+    That is decision D1 held behind `PUBLISH_OFFER_FIGURES`. The region is still resolved
+    and still reaches the Ask widget, whose grounding is `facts.ts` and does still hold
+    the figures — so **the assistant will quote a rate the page withholds until D1 lands**.
+    Known, documented at the head of `offer-display.ts`, and not to be resolved by
+    inference. `regions.ts` and the `/india|/dubai|/australia` redirects are untouched.
+  - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
+    application, cohort enquiry, enterprise enquiry. The page renders from it and the API
+    validates against it, so a field cannot be required in the browser and optional on the
+    server. An enterprise enquiry is never counted as an application.
+  - `ProgramPage.astro` is the previous page and is no longer rendered by any route. It is
+    kept until D1 settles, because option A restores most of it.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
@@ -361,11 +376,19 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — nineteen tables, schema in
+- **Storage is Supabase** — twenty-nine tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
   - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
+  - *The pipeline* (new, and the cohort rebuild's own store): `organisations`, `people`,
+    `cohorts`, `form_submissions`, `opportunities`, `attributions`, `consents`,
+    `activities`, `tasks`, `audit_log`. **`form_submissions`, not `submissions`** — that
+    name was already taken by the learners' decision records and the collision would have
+    been silent. The save is one plpgsql function, `pipeline_submit()`, because six
+    sequential supabase-js calls have no transaction around them and a function killed
+    between two awaits leaves a person with no submission. `consents` has an UPDATE trigger
+    that refuses: a withdrawal is a new row, never an edit of the row that granted it.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
     `submissions`, `quiz_responses`, `session_prompts`, `outcome_ratings`,
     `checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `doubts`,

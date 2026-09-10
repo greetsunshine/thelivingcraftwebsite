@@ -17,6 +17,14 @@
 > [`build-plan.md`](build-plan.md). Until they land, the price region of the page is a flagged
 > placeholder and email dispatch is built but switched off. Neither blocks any other stage.
 
+> ### ⚠ Run `supabase/schema.sql` before the next deploy
+> Ten new tables (`organisations`, `people`, `cohorts`, `form_submissions`,
+> `opportunities`, `attributions`, `consents`, `activities`, `tasks`, `audit_log`) plus
+> `pipeline_submit()` and the append-only trigger on `consents`. All additive, and the file
+> is idempotent — re-run the whole thing in the Supabase SQL editor. **The public
+> application form does not work until this is run**, and it fails honestly: a 503 with a
+> retry, never a false success.
+
 > ### ⚠ Nothing is deployed and no acceptance case has been run
 > The register below starts, as delivered, with all eighteen cases `not run`. **A local
 > demonstration is not evidence of a working backend** — the brief is explicit. Cases are
@@ -29,9 +37,9 @@
 
 | | Count | |
 |---|---|---|
-| Stages complete | **0** | of 6 |
-| Acceptance cases passed | **0** | of 18 |
-| Records implemented | **0** | of 14 |
+| Stages complete | **0** | of 6 — stage 1 substantially built |
+| Acceptance cases passed | **0** | of 18 — none run against staging |
+| Records implemented | **10** | of 14 |
 | Decisions outstanding | **2** | D1, D2 |
 
 ---
@@ -40,18 +48,18 @@
 
 ### 1 · The page and three forms that save
 
-- [ ] Cohort page rebuilt against `cohort-page.md`, in the wireframe's module order
-- [ ] Video slot reserved at aspect ratio; player omitted until footage exists
-- [ ] Application form — role, design experience, learning goal, funding route
-- [ ] Cohort enquiry form — question
-- [ ] Enterprise enquiry form — organisation, role, team learning goal
-- [ ] Cohort ID resolved from server configuration, never a hidden input
-- [ ] Separate unticked marketing permission in the approved wording
-- [ ] `request_key` idempotency — same key, same reference, one acknowledgement
-- [ ] Success returned only after commit; DB failure preserves entered values
-- [ ] First-touch and submission-session attribution captured separately
+- [x] Cohort page rebuilt against `cohort-page.md`, in the wireframe's module order
+- [x] Video slot reserved at aspect ratio; player omitted until footage exists
+- [x] Application form — role, design experience, learning goal, funding route
+- [x] Cohort enquiry form — question
+- [x] Enterprise enquiry form — organisation, role, team learning goal
+- [x] Cohort ID resolved from server configuration, never a hidden input
+- [x] Separate unticked marketing permission in the approved wording
+- [x] `request_key` idempotency — same key, same reference, one acknowledgement
+- [x] Success returned only after commit; DB failure preserves entered values
+- [x] First-touch and submission-session attribution captured separately
 - [ ] 390px / keyboard / 200% zoom / screen-reader labels verified
-- [ ] Price and schedule region behind a flag, marked placeholder **(blocked: D1)**
+- [x] Price and schedule region behind a flag, marked placeholder **(blocked: D1)**
 
 ### 2 · Staff screens and named accounts
 
@@ -60,7 +68,7 @@
 - [ ] Leads — search, filters, explicit empty and failed-load states
 - [ ] Lead detail — contact, preferences, attribution, activity, tasks, tabs
 - [ ] Loading / empty / error / permission-denied states on every data screen
-- [ ] New tables added to the `lib/admin/health.ts` probe lists
+- [x] New tables added to the `lib/admin/health.ts` probe lists
 
 ### 3 · Pipeline and evidence
 
@@ -154,3 +162,4 @@ Before anything is published, per the brief's closing paragraph:
 | Date | Change |
 |---|---|
 | 10 Sep 2026 | Package read end to end; plan and status written. Scope agreed as the whole package. Console extends `/craft/admin` rather than forking a second staff area. D1 and D2 referred to Sunil. Nothing built yet. |
+| 10 Sep 2026 | **Stage 1 save path built.** Cohort page rebuilt against the delivered copy; three routes rendered from one definition in `lib/pipeline/forms.ts`; ten tables and `pipeline_submit()` added to the schema; `/api/pipeline/submit` returns success only after a commit. D1 held behind `PUBLISH_OFFER_FIGURES` — no price, date, week count or seat cap reaches the page or its JSON-LD. `resolveCohort()` returns three states, not two, so a database that cannot answer is a 503 and a retry while a cohort that is genuinely closed is a 409 — those were one refusal and the brief forbids presenting an unavailable source as a known state. `astro check` 0 errors. |

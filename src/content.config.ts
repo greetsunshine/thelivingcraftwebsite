@@ -252,4 +252,117 @@ const sessions = defineCollection({
   }),
 });
 
-export const collections = { sessions };
+// Public guides — the resource clusters at /resources/guides.
+//
+// SAME ARGUMENT AS `sessions`, DIFFERENT AUDIENCE. Long-lived prose, revised
+// rather than replaced, reviewed as a diff. What is different is that these
+// files ARE public: nothing gates them, a crawler reads them, and an assistant
+// may quote them back to a prospect. So the rules here are about attribution
+// and honesty rather than about draft material reaching a paying learner.
+//
+// The roadmap (docs/Website Rebuild 10-09-2026/Website_Growth_Roadmap.html,
+// "Search and answer quality requirements") is the source for the fields below:
+// author and reviewer identity, a meaningful revision date, one canonical page
+// per question. Each of those is a field here because each is a thing somebody
+// would otherwise be tempted to fake.
+//
+// THE FILENAME IS THE SLUG, and there is deliberately no `slug` field. The glob
+// loader derives `id` from the filename, the route reads `id`, and the roadmap
+// fixes the slug for every one of the sixteen planned pieces. A `slug` field
+// would be a second source for a fact that already has one — the same mistake as
+// a run of show that restates `startsAt`. Renaming the file renames the URL, on
+// purpose, so a redirect is a visible decision rather than a silent divergence.
+const guides = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/guides' }),
+  schema: z.object({
+    /** The visible <h1>. The body starts at `##`; the page owns the heading. */
+    title: z.string(),
+    /** One line, shown on the cluster index and used as the meta description. */
+    summary: z.string(),
+    /**
+     * A pillar answers a cluster's broad question and links to all of its
+     * supporting pieces; a supporting piece answers exactly one question from
+     * the roadmap's twelve-question visibility sample.
+     *
+     * Not a free string: the roadmap publishes one pillar and three supporting
+     * articles per cluster, and a third kind would be a change to that plan
+     * rather than a change to this file.
+     */
+    kind: z.enum(['pillar', 'supporting']),
+    /**
+     * The pillar this piece sits under, by slug. Absent ON THE PILLAR ITSELF and
+     * required in spirit on everything else — a supporting article with no
+     * pillar is an orphan, and the roadmap's rule is that every published page
+     * has at least one inbound internal link.
+     *
+     * Left optional rather than conditional because zod would express the
+     * condition as a refinement whose error message is worse than the reader's
+     * own judgement, and the index surfaces orphans anyway.
+     */
+    pillar: z.string().optional(),
+    /**
+     * The visibility-sample question this page answers, VERBATIM.
+     *
+     * The roadmap's instruction is "use the same wording at baseline and monthly
+     * review" — the twelve questions are a measurement instrument, and a
+     * paraphrase here breaks the join between a page and its own tracking row.
+     * So this is copied, never rewritten to fit the headline.
+     *
+     * Unset where a page answers no question in the sample. That is the honest
+     * state for a pillar, whose broad question is not one of the twelve, and it
+     * must not be filled with an approximation to make the metadata look
+     * complete. One canonical page per question, and no page claiming a question
+     * it does not answer.
+     */
+    question: z.string().optional(),
+    /** Who wrote it. Published on the page and in the Article JSON-LD. */
+    author: z.string(),
+    /**
+     * Who checked it — a real person who actually read this version.
+     *
+     * OPTIONAL, AND THAT IS THE POINT. Review and completion are two different
+     * marks and collapsing them is how an unreviewed page acquires a reviewer's
+     * name. Same reasoning as the forum's split between "solved it" (the asker's
+     * report) and "endorsed" (Sunil's verdict): one cannot be inferred from the
+     * other. Unset renders as "not yet reviewed" rather than as a blank, because
+     * a byline that quietly omits the reviewer reads as if there were one.
+     *
+     * Never populate this to satisfy an acceptance checklist. The checklist is
+     * asking whether a person read it, not whether the field is filled.
+     */
+    reviewedBy: z.string().optional(),
+    /**
+     * The date this page's CONTENT was last reviewed — YYYY-MM-DD.
+     *
+     * A date, not an instant: unlike a session's `endsAt`, nothing here opens or
+     * closes at a moment, and an offset would imply a precision the fact does
+     * not have.
+     *
+     * NEVER BUMP THIS WITHOUT A CONTENT REVIEW. The roadmap says so in as many
+     * words, and the reason is that a refreshed date is a claim to the reader
+     * and to a crawler that somebody looked at the page again. Touching it to
+     * look current is the same class of act as inventing a statistic.
+     */
+    revisedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    /**
+     * 'draft' means the writing is not finished. Drafts get NO ROUTE at all —
+     * getStaticPaths skips them — rather than a published page with a note on
+     * it, because this is a public surface and a half-written public page is
+     * something a crawler indexes and an assistant quotes.
+     *
+     * Defaults to draft: a new file is unfinished until somebody says otherwise.
+     *
+     * This is NOT the review gate. `status: 'ready'` says the prose is complete;
+     * `reviewedBy` says a human checked it. See the note there.
+     */
+    status: z.enum(['draft', 'ready']).default('draft'),
+    /**
+     * Neighbouring pieces, by slug — the "related links" the roadmap asks every
+     * guide to carry. The pillar link is NOT restated here; it comes from
+     * `pillar` above, so the two can never disagree about where a page sits.
+     */
+    related: z.array(z.string()).default([]),
+  }),
+});
+
+export const collections = { sessions, guides };

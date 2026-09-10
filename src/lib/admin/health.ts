@@ -40,6 +40,20 @@ const TABLES = [
   'discussion_replies',
   'feedback',
   'feedback_responses',
+  // The cohort pipeline — the public forms and everything downstream of them.
+  // These are the ones where a silent failure is worst: the console degrades to
+  // empty on error, so a missing table here looks exactly like a quiet week for
+  // applications, which is the one thing nobody would think to question.
+  'organisations',
+  'people',
+  'cohorts',
+  'form_submissions',
+  'opportunities',
+  'attributions',
+  'consents',
+  'activities',
+  'tasks',
+  'audit_log',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */
@@ -48,6 +62,19 @@ const FUNCTIONS = [
   'admin_traffic_paths',
   'admin_funnel',
 ] as const;
+
+/**
+ * `pipeline_submit` is deliberately NOT probed.
+ *
+ * Every other entry here is a read. This one writes — a person, a submission,
+ * an opportunity and a task — so probing it every sixty seconds would fill the
+ * pipeline with synthetic applications, and probing it with arguments designed
+ * to fail would tell you nothing about whether the real call works.
+ *
+ * Its ten tables are all probed above, which is the useful half: if the function
+ * is broken because something it writes to is missing, that shows up there. A
+ * function that exists and is subtly wrong is what the acceptance cases are for.
+ */
 
 export interface Probe {
   name: string;

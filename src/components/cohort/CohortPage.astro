@@ -1,0 +1,506 @@
+---
+/**
+ * The cohort page.
+ *
+ * WHERE THE WORDS COME FROM
+ *
+ * Every line of prose below is from the copy Team Alchemy delivered on
+ * 10 September — docs/Website Rebuild 10-09-2026/cohort-page.md — reproduced
+ * rather than paraphrased. It is approved copy about a real person's real
+ * offer, and "improving" a sentence here is how a claim nobody checked reaches
+ * a page. If a line reads awkwardly, that is a note for the copy round, not an
+ * edit to make in a component.
+ *
+ * The section order is the brief's own nine-module table, and it is not
+ * arbitrary: outcome, fit, example, outcomes, curriculum, process, Sunil,
+ * commitment, questions, application. Somebody arrives wondering whether this
+ * is for them, and each section answers the next question they have.
+ *
+ * THE VIDEO IS ABSENT ON PURPOSE
+ *
+ * The VSL has not been recorded. The brief: "Before footage is available, keep
+ * the written page complete and omit the player rather than presenting a
+ * broken video." So the slot holds its aspect ratio — reserving the space is
+ * what stops the layout jumping when it does arrive — and says plainly what
+ * goes there. A dead play button on a page asking for a serious commitment
+ * costs more than the empty space does.
+ *
+ * WHAT IS NOT ON THIS PAGE, AND WHY
+ *
+ *   * No price, no dates, no week count, no "seats remaining". See
+ *     src/data/offer-display.ts — that is decision D1, referred to Sunil, and
+ *     the flag holds the truthful default until he answers.
+ *   * No testimonials, logos, student counts or result claims. There are none
+ *     to show and CLAUDE.md is absolute about inventing them.
+ *   * No countdown, no scarcity device. "The open cohort targets eight
+ *     members" is the delivered wording and it is deliberately softer than
+ *     the "8 seats, capped" this replaces.
+ *   * No response-time promise. One business day to acknowledge is a proposal
+ *     "subject to capacity agreement" in the operating guide, and the guide
+ *     says in terms: do not place it in public copy as a guarantee.
+ */
+import RouteForm from './RouteForm.astro';
+import { COHORT_SIZE, COMMITMENT, FEES_NOTE, PUBLISH_OFFER_FIGURES } from '../../data/offer-display';
+import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
+
+
+---
+
+{/* ── 1 · Outcome and VSL ───────────────────────────────────────────────── */}
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">The Living Craft</p>
+      <h1>Design agentic systems.<br />Guide your <em>team</em>.</h1>
+      <p class="credential">
+        Build a working agentic system with <strong>Sunil Mathew</strong>. Develop the
+        ability to explain its design, examine its behaviour and guide the decisions
+        behind it.
+      </p>
+      <p class="hero-commit">{COMMITMENT}</p>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#ask">Ask about the cohort</a>
+      </div>
+
+      <p class="hero-note">Applying starts a conversation about fit. It is not a payment and not a confirmed place.</p>
+    </div>
+
+    {/* The reserved slot. Its aspect ratio is held so the page does not reflow
+        on the day the file lands, which is the brief's stated reason for
+        reserving it. */}
+    <div class="vsl" aria-label="Programme introduction video">
+      <div class="vsl-frame">
+        <p class="vsl-title">Sunil on the design question behind a working agent</p>
+        <p class="vsl-note">
+          Being recorded. Captions and a full transcript will be published with it.
+        </p>
+      </div>
+      <p class="vsl-cap">The written page below is complete. Nothing here needs the video.</p>
+    </div>
+  </div>
+</section>
+
+{/* ── 2 · Audience fit ──────────────────────────────────────────────────── */}
+<section class="wrap band" id="fit">
+  <div class="sec-head">
+    <p class="eyebrow">Who this is for</p>
+    <h2>For people who already work with <em>system design</em></h2>
+  </div>
+  <div class="two-up">
+    <p class="lead">
+      You may be an experienced engineer, architect or engineering leader. You
+      understand that a system’s design involves trade-offs, and you want to deepen
+      how you approach those choices in agentic systems.
+    </p>
+    <p class="body-copy">
+      Bring prior system-design exposure, a learning goal and the willingness to
+      build, explain your decisions and revise your work through feedback.
+    </p>
+  </div>
+</section>
+
+{/* ── 3 · Practical example ─────────────────────────────────────────────── */}
+<section class="wrap band" id="example">
+  <div class="sec-head">
+    <p class="eyebrow">An illustrative example</p>
+    <h2>Follow a decision <em>beyond the demo</em></h2>
+  </div>
+
+  <div class="example">
+    <div class="example-body">
+      <p class="body-copy">
+        Imagine a returns assistant that reads a policy and recommends a refund. Now
+        give it a tool that can issue the refund. The system can move money, and its
+        design needs to account for that responsibility.
+      </p>
+      <p class="body-copy">
+        What evidence permits the action? How does it recognise a repeated request?
+        What happens when the policy is unclear or a tool result is uncertain?
+      </p>
+      <p class="body-copy quiet">
+        This illustrative example shows the kind of connection you will practise:
+        from a design choice to behaviour you can examine.
+      </p>
+    </div>
+
+    {/* The one structural idea on the page that is a diagram rather than a
+        sentence — and it earns it, because the whole argument is that these
+        are two different responsibilities that look like one box. */}
+    <ol class="boundary" aria-label="Recommendation and action are separate responsibilities">
+      <li>
+        <span class="b-k">Reads</span>
+        <b>The policy</b>
+        <span class="b-n">Gathers the evidence it will rely on.</span>
+      </li>
+      <li>
+        <span class="b-k">Recommends</span>
+        <b>A refund</b>
+        <span class="b-n">A person can still read this and decide.</span>
+      </li>
+      <li class="b-line">
+        <span class="b-k">The boundary</span>
+        <b>What permits the action?</b>
+        <span class="b-n">Evidence, limits, repeated requests, an uncertain result.</span>
+      </li>
+      <li>
+        <span class="b-k">Acts</span>
+        <b>Issues the refund</b>
+        <span class="b-n">The system moves money. Its own controls, not the prompt’s.</span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+{/* ── 4 · Outcomes and curriculum ───────────────────────────────────────── */}
+<section class="wrap band" id="outcomes">
+  <div class="sec-head">
+    <p class="eyebrow">What you develop</p>
+    <h2>Develop practical <em>design judgment</em></h2>
+  </div>
+  <div class="two-up">
+    <p class="lead">
+      Build a working agentic system and connect its behaviour to the architecture
+      behind it. Practise explaining why a boundary exists, what evidence supports a
+      decision and what you would change next.
+    </p>
+    <p class="body-copy">
+      Develop how you design and critique agentic systems, review a team’s proposal
+      and provide useful guidance.
+    </p>
+  </div>
+</section>
+
+<section class="wrap band" id="curriculum">
+  <div class="sec-head">
+    <p class="eyebrow">The work</p>
+    <h2>What the work <em>explores</em></h2>
+  </div>
+  {/* Five areas, not five modules with durations. The brief: "Use validated
+      learning areas; no invented module durations." The old page carried four
+      modules with week ranges; those weeks are not in the delivered copy and
+      are not restated here. */}
+  <ol class="tlist explores">
+    {
+      EXPLORES.map((item, i) => (
+        <li>
+          <span class="n">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h4>{item.title}</h4>
+            <p>{item.body}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+{/* ── 5 · Learning process ──────────────────────────────────────────────── */}
+<section class="wrap band" id="process">
+  <div class="sec-head">
+    <p class="eyebrow">How it runs</p>
+    <h2>Build, examine and <em>revise</em></h2>
+  </div>
+  <div class="two-up">
+    <p class="lead">
+      The working system gives the discussions something concrete to return to.
+      Build an approach, examine what happens and use continuous feedback to
+      understand strengths, gaps and follow-up work.
+    </p>
+    <p class="body-copy">
+      Industry-specific practice is the default. Company-specific work needs a
+      separate conversation about scope and permission.
+    </p>
+  </div>
+</section>
+
+{/* ── 6 · Sunil ─────────────────────────────────────────────────────────── */}
+<section class="wrap band" id="sunil">
+  <div class="sec-head">
+    <p class="eyebrow">Who teaches it</p>
+    <h2>Work with <em>Sunil Mathew</em></h2>
+  </div>
+  {/* Source-backed only. The delivered copy names four employers and a focus,
+      and stops there — no titles, no tenure, no user counts, no team sizes,
+      and no employer endorsement. The brief asks for exactly that restraint
+      and the review notes on Sunil's own posts repeat it. */}
+  <p class="lead sunil-copy">
+    Sunil brings engineering and leadership experience from Google, Amazon, Walmart
+    and startups. His focus is the reasoning behind a system’s design and the
+    evidence that helps a team make its next decision.
+  </p>
+</section>
+
+{/* ── 7 · Commitment ───────────────────────────────────────────────────── */}
+<section class="wrap band" id="commitment">
+  <div class="sec-head">
+    <p class="eyebrow">The commitment</p>
+    <h2>Make room for <em>the work</em></h2>
+  </div>
+
+  <div class="commit">
+    <div class="commit-copy">
+      <p class="body-copy">
+        The programme includes 30 live hours with Sunil, plus independent work.
+        Confirm the session schedule, independent-work commitment, attendance support
+        and access arrangements before joining.
+      </p>
+      <p class="body-copy">
+        {COHORT_SIZE} Discuss current availability during the fit conversation.
+        Applying starts a discussion; admission, payment and attendance confirmation
+        are separate steps.
+      </p>
+    </div>
+
+    <div class="commit-facts">
+      <div class="detail-row"><span class="dk">Live hours</span><span class="dv">30, with Sunil</span></div>
+      <div class="detail-row"><span class="dk">Independent work</span><span class="dv">Additional; confirmed before joining</span></div>
+      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">Targets eight members</span></div>
+      <div class="detail-row"><span class="dk">Admission</span><span class="dv">By application, after a fit conversation</span></div>
+      <div class="detail-row"><span class="dk">Certificate</span><span class="dv">None</span></div>
+      <div class="detail-row">
+        <span class="dk">Schedule and fees</span>
+        <span class="dv">{PUBLISH_OFFER_FIGURES ? 'See below' : 'Confirmed in the final offer'}</span>
+      </div>
+    </div>
+  </div>
+
+  {
+    !PUBLISH_OFFER_FIGURES && (
+      /* Not a price card, and deliberately not shaped like one. It answers the
+         question rather than dodging it — a page that goes silent about cost
+         reads as evasive to exactly the audience this is written for. */
+      <p class="fees-note">{FEES_NOTE}</p>
+    )
+  }
+</section>
+
+{/* ── 8 · FAQs ──────────────────────────────────────────────────────────── */}
+<section class="wrap band" id="questions">
+  <div class="sec-head">
+    <p class="eyebrow">Before you apply</p>
+    <h2>Questions before <em>joining</em></h2>
+  </div>
+  <div class="faq">
+    {
+      QUESTIONS.map((item) => (
+        <details>
+          <summary>
+            {item.q}
+            <span class="plus" aria-hidden="true">
+              +
+            </span>
+          </summary>
+          <p>{item.a}</p>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+{/* ── 9 · Application ──────────────────────────────────────────────────── */}
+<section class="wrap band forms" id="apply">
+  <div class="sec-head">
+    <p class="eyebrow">Apply</p>
+    <h2>Start with your experience and <em>a question</em></h2>
+  </div>
+
+  <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
+
+  {/* The two secondary routes. Present and reachable, visually quieter — the
+      wireframe asks for a secondary action "without competing visually", and
+      an enquiry is a smaller ask that should not be dressed as an equal one. */}
+  <div class="alt-routes">
+    <div id="ask" class="alt-route">
+      <RouteForm route="enquiry" id="enquiry-form" />
+    </div>
+
+    <div id="team" class="alt-route">
+      <RouteForm route="enterprise" id="enterprise-form" />
+    </div>
+  </div>
+
+  <p class="contact-line">
+    Programme enquiries and employer-funding support, and enterprise enquiries:
+    <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+  </p>
+</section>
+
+<style>
+  .band { padding-block: var(--space-8); }
+
+  .hero-commit {
+    font-family: var(--font-mono);
+    font-size: var(--size-3);
+    color: var(--text-on-invert);
+    letter-spacing: var(--tracking-mono);
+    margin-bottom: var(--space-6);
+  }
+
+  /* ── the reserved video slot ─────────────────────────────────────────── */
+  .vsl { display: flex; flex-direction: column; gap: var(--space-3); }
+  .vsl-frame {
+    aspect-ratio: 16 / 9;
+    max-width: 100%;
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.06);
+    /* A dashed edge, not a shadow: this is the system's "unwritten" state, and
+       it should read as a space held open rather than as a broken component. */
+    border: var(--border-w-hair) dashed rgba(255, 255, 255, 0.28);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-6);
+  }
+  .vsl-title {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-on-invert);
+    line-height: var(--lh-snug);
+    max-width: 28ch;
+  }
+  .vsl-note {
+    font-size: var(--size-3);
+    color: rgba(255, 255, 255, 0.72);
+    line-height: var(--lh-snug);
+    max-width: 34ch;
+  }
+  .vsl-cap {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-faint);
+  }
+
+  /* ── prose ───────────────────────────────────────────────────────────── */
+  .two-up {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
+  }
+  .body-copy {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+  .body-copy + .body-copy { margin-top: var(--space-4); }
+  .body-copy.quiet { color: var(--text-quiet); font-size: var(--size-3); }
+  .sunil-copy { max-width: var(--measure-prose); }
+
+  /* ── the boundary diagram ────────────────────────────────────────────── */
+  .example { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
+  .example-body { display: flex; flex-direction: column; gap: var(--space-4); }
+
+  .boundary {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    counter-reset: none;
+  }
+  .boundary li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: var(--space-3) 0;
+  }
+  .boundary .b-k {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    letter-spacing: var(--tracking-mono);
+  }
+  .boundary b {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    letter-spacing: var(--tracking-display);
+  }
+  .boundary .b-n { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
+
+  /* The one item that is a question rather than a step, marked as the moment
+     the responsibility changes. */
+  .boundary .b-line {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+    margin-block: var(--space-2);
+  }
+  .boundary .b-line b { color: var(--accent-ink-strong); }
+
+  /* ── explores list ───────────────────────────────────────────────────── */
+  .explores { max-width: 880px; }
+
+  /* ── commitment ──────────────────────────────────────────────────────── */
+  .commit { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
+  .commit-copy { display: flex; flex-direction: column; gap: var(--space-4); }
+  .commit-facts {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-2) var(--space-6);
+  }
+  .fees-note {
+    margin-top: var(--space-6);
+    max-width: var(--measure-prose);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5) var(--space-6);
+  }
+
+  /* ── forms ───────────────────────────────────────────────────────────── */
+  .forms :global(.apply-form) { margin-inline: 0; }
+  .alt-routes {
+    margin-top: var(--space-8);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .alt-route {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-6);
+  }
+  .alt-route :global(.apply-form) {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+  }
+  .contact-line {
+    margin-top: var(--space-7);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .contact-line a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+
+  /* ── narrow ──────────────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .two-up,
+    .example,
+    .commit,
+    .alt-routes {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+    .band { padding-block: var(--space-7); }
+    .hero-commit { margin-bottom: var(--space-5); }
+  }
+
+  @media (max-width: 560px) {
+    .alt-route { padding: var(--space-5); }
+    .commit-facts { padding-inline: var(--space-5); }
+    .fees-note { padding: var(--space-5); }
+  }
+</style>

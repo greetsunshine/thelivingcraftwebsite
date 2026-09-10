@@ -928,3 +928,860 @@ $$;
 --
 -- Until then it is the button on /admin — which means the policy is only real
 -- if someone presses it.
+
+-- ===========================================================================
+-- THE COHORT PIPELINE
+-- ===========================================================================
+-- Everything below this line belongs to the cohort rebuild
+-- (docs/cohort-pipeline/build-plan.md, from the handoff package dated
+-- 10 September 2026). Nothing above it changes.
+--
+-- WHY A SECOND FAMILY OF TABLES rather than more columns on `leads`. `leads` is
+-- a LEDGER: one flat row per submission, written fire-and-forget beside the
+-- Web3Forms inbox, and it stays exactly that. This is a PIPELINE: the same
+-- person appears twice, an enquiry becomes an application without either record
+-- being lost, and an organisation order is not eight individual applications.
+-- Those are relationships, and the brief's whole data dictionary is about not
+-- collapsing them. Flattening them into `leads` is how "count one applicant for
+-- that cohort" quietly becomes "count every time they pressed the button".
+--
+-- NAMING. `public.submissions` was already taken -- it is the learners' decision
+-- records under /craft -- so a public form submission is `form_submissions`.
+-- Two different things with one name is worse than one slightly long name.
+--
+-- THE ERASURE RULE, restated for these tables. A DPDP deletion request is
+-- answered by deleting a person's rows, so `people` cascades to their
+-- submissions, attributions, opportunities, activities, tasks and consents.
+-- `audit_log` is the deliberate exception: it must survive, which is precisely
+-- why it never holds a name, an address, a phone number or a free-text answer.
+-- Record ids are the join. If you ever find yourself copying an answer into an
+-- audit row, you are moving personal data outside the cascade.
+
+-- ---------------------------------------------------------------------------
+-- Organisations
+-- ---------------------------------------------------------------------------
+-- The data dictionary is unusually firm here: "Name-only matches are review
+-- candidates, not automatic merges." So this table does NOT deduplicate by
+-- name. Two people typing "Acme" produce two rows, the second flagged for
+-- review, and a human decides whether they are the same company. The failure
+-- that prevents is silent and expensive: merging two unrelated Acmes joins two
+-- companies' contacts, notes and eventually their commercial terms, and there
+-- is no undo for that once an operator has worked against the merged view.
+--
+-- `domain` is nullable and stays null unless someone supplies it. It is NOT
+-- derived from the email address: personal addresses are accepted on every
+-- form by design, and deriving a domain from gmail.com would file half the
+-- pipeline under one imaginary organisation.
+
+create table if not exists public.organisations (
+  organisation_id uuid        primary key default gen_random_uuid(),
+  name            text        not null,
+  domain          text,
+  industry        text,
+  -- Set when this row was created despite an existing row with the same name.
+  -- The console's job is to offer the merge; the pipeline's job is to refuse to
+  -- make it on its own.
+  needs_review    boolean     not null default false,
+  review_reason   text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists organisations_name_idx on public.organisations (lower(name));
+create index if not exists organisations_review_idx on public.organisations (needs_review, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- People
+-- ---------------------------------------------------------------------------
+-- Matching is trimmed, case-normalised email and NOTHING ELSE. Two rules the
+-- dictionary names as mistakes, both enforced by that one choice:
+--
+--   * Plus-tags are not stripped. a+cohort@x.com and a@x.com are two addresses
+--     and only their owner knows whether they are one person.
+--   * Different addresses are never merged by name. There is more than one
+--     Priya Sharma.
+--
+-- `original_email` keeps whatever they typed, so a receipt goes to the address
+-- they gave rather than to one we tidied on their behalf. It is set once, by
+-- the first submission; a later submission does not rewrite it, because a
+-- second form post is not evidence that the first one was wrong.
+
+create table if not exists public.people (
+  person_id        uuid        primary key default gen_random_uuid(),
+  name             text        not null,
+  normalised_email text        not null unique,
+  original_email   text        not null,
+  phone            text,
+  role             text,
+  organisation_id  uuid        references public.organisations(organisation_id) on delete set null,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists people_created_idx on public.people (created_at desc);
+create index if not exists people_org_idx on public.people (organisation_id);
+create index if not exists people_name_idx on public.people (lower(name));
+
+-- ---------------------------------------------------------------------------
+-- Cohorts
+-- ---------------------------------------------------------------------------
+-- The cohort a submission belongs to is resolved HERE, server-side, and never
+-- read from a hidden input -- the brief: "The cohort ID is assigned from the
+-- server's active configuration, not accepted blindly from a hidden input."
+-- A hidden field is a value the visitor's browser can edit, and a form that
+-- files applications against a cohort of the sender's choosing is a data
+-- integrity problem that shows up months later as a roster nobody can explain.
+--
+-- `application_open` is the truthful closure switch (acceptance case E18):
+-- when it is false the application route refuses with honest wording and the
+-- enquiry route stays available. `schedule_reference` is free text pointing at
+-- the approved schedule; no date is ever inferred from an internal id.
+
+create table if not exists public.cohorts (
+  cohort_id          uuid        primary key default gen_random_uuid(),
+  public_label       text        not null,
+  route              text        not null default 'member' check (route in ('member', 'enterprise')),
+  application_open   boolean     not null default true,
+  schedule_reference text,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+
+-- Seed exactly one cohort, and only into an empty table, so re-running this
+-- file never adds a second. The label is a neutral placeholder and the schedule
+-- is null ON PURPOSE: the programme's public label, dates and fee are Sunil's
+-- to set, and a schema file inventing them would put a claim about the offer
+-- somewhere facts.ts cannot see it.
+insert into public.cohorts (public_label, route, application_open)
+select 'Open cohort', 'member', true
+where not exists (select 1 from public.cohorts);
+
+-- ---------------------------------------------------------------------------
+-- Form submissions -- what somebody actually sent
+-- ---------------------------------------------------------------------------
+-- The immutable evidence record. One row per accepted submission, kept even
+-- when the same person submits again, because "a repeated application updates
+-- the review context and keeps submission history".
+--
+-- `request_key` IS THE IDEMPOTENCY STORY and the unique index is the whole
+-- mechanism. The browser mints one key per form instance and sends the same key
+-- on every retry, so a double click, a refresh and a flaky network all resolve
+-- to one row and one reference (E02). Nothing else in this design prevents a
+-- duplicate application, and nothing else needs to.
+--
+-- `type` carries three values, not the dictionary's two. An enterprise enquiry
+-- is an enquiry in the dictionary's sense, but the brief also says it "is never
+-- counted as an application" AND that an organisation order is a different
+-- counting unit -- folding it into 'enquiry' loses the only field that says
+-- which. The member/enterprise split lives on `opportunities.route`; this
+-- column says which form was filled in.
+--
+-- `answers` is the validated field values from forms.ts, verbatim. Storing them
+-- as jsonb rather than as columns is deliberate: the questions belong to the
+-- form definition, which is copy and will be edited, and a copy edit must not
+-- be a migration. The console reads the labels back out of forms.ts.
+--
+-- `submitted_at` is the EVIDENCE date and `created_at` the entry date. They are
+-- the same instant today and the brief still asks for both, because an imported
+-- historical submission has a real submitted_at and a today created_at, and one
+-- report wants each.
+--
+-- `is_test` and `is_spam` exist because the metric definition for applications
+-- saved says "excluding retries and flagged tests/spam". A flagged row is still
+-- a row: a honeypot that misfires on somebody's password manager must not throw
+-- a real person's application away, it must file it where an operator finds it.
+
+create table if not exists public.form_submissions (
+  submission_id          uuid        primary key default gen_random_uuid(),
+  request_key            text        not null unique,
+  reference              text        not null unique,
+  type                   text        not null check (type in ('application', 'enquiry', 'enterprise')),
+  person_id              uuid        not null references public.people(person_id) on delete cascade,
+  organisation_id        uuid        references public.organisations(organisation_id) on delete set null,
+  cohort_id              uuid        references public.cohorts(cohort_id) on delete set null,
+  -- Filled in immediately after the opportunity is resolved. The brief says
+  -- applications and enquiries link to that record; deriving the link later
+  -- from person + cohort would be a second definition of it, and the two would
+  -- disagree the first time an operator moved something by hand.
+  opportunity_id         uuid,
+  answers                jsonb       not null default '{}'::jsonb,
+  funding_route          text        check (funding_route in ('self', 'employer', 'undecided')),
+  group_size             int         check (group_size is null or group_size between 1 and 100000),
+  submitted_at           timestamptz not null default now(),
+  -- Null until the owner supplies the data-controller facts and a privacy
+  -- notice is published. A made-up version string here would be a record
+  -- claiming somebody was shown a notice that does not exist.
+  privacy_notice_version text,
+  is_test                boolean     not null default false,
+  is_spam                boolean     not null default false,
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now()
+);
+
+create index if not exists form_submissions_submitted_idx on public.form_submissions (submitted_at desc);
+create index if not exists form_submissions_type_idx on public.form_submissions (type, submitted_at desc);
+create index if not exists form_submissions_person_idx on public.form_submissions (person_id, submitted_at desc);
+create index if not exists form_submissions_cohort_idx on public.form_submissions (cohort_id, type, submitted_at desc);
+create index if not exists form_submissions_opportunity_idx on public.form_submissions (opportunity_id);
+
+-- ---------------------------------------------------------------------------
+-- Opportunities -- the conversation, not the form
+-- ---------------------------------------------------------------------------
+-- One per person per cohort for the member route, one per person for the
+-- enterprise route, REUSED rather than duplicated. That reuse is what makes
+-- "an enquiry can later produce an application without losing either record"
+-- true: both submissions hang off one opportunity, the stage moves forward
+-- once, and the applicant is counted once (E05).
+--
+-- The partial unique indexes below enforce it in the database rather than only
+-- inside pipeline_submit(), because two requests arriving at the same instant
+-- is exactly the case a function-level check loses.
+--
+-- STAGES are the brief's, verbatim, in two families:
+--   member     enquiry, application_received, qualification, technical_review,
+--              offer, enrolled
+--   enterprise enquiry, qualification, technical_scoping, quote, order_agreed,
+--              delivery_coordination, closed
+--   side       on_hold, unsuitable, withdrawn, closed
+--
+-- `owner` is null until a named staff account owns it, and null here means
+-- exactly "unassigned" -- the Overview screen's unassigned-leads count reads
+-- it. It is deliberately not defaulted to a person nobody agreed to.
+
+create table if not exists public.opportunities (
+  opportunity_id   uuid        primary key default gen_random_uuid(),
+  person_id        uuid        references public.people(person_id) on delete cascade,
+  organisation_id  uuid        references public.organisations(organisation_id) on delete set null,
+  route            text        not null check (route in ('member', 'enterprise')),
+  cohort_id        uuid        references public.cohorts(cohort_id) on delete set null,
+  stage            text        not null check (stage in (
+                     'enquiry', 'application_received', 'qualification', 'technical_review',
+                     'offer', 'enrolled',
+                     'technical_scoping', 'quote', 'order_agreed', 'delivery_coordination',
+                     'on_hold', 'unsuitable', 'withdrawn', 'closed')),
+  owner            text,
+  stage_entered_at timestamptz not null default now(),
+  -- Required by the brief when closing or reversing a stage. Nothing in this
+  -- file enforces that; the console will, because only the console knows who
+  -- asked for the change.
+  closure_reason   text,
+  next_action      text,
+  due_at           timestamptz,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+-- Open = not one of the three terminal side states. on_hold IS open: a paused
+-- conversation is still that person's conversation, and a second submission
+-- while they are on hold belongs to it.
+create unique index if not exists opportunities_open_member
+  on public.opportunities (person_id, coalesce(cohort_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  where route = 'member' and stage not in ('unsuitable', 'withdrawn', 'closed');
+
+-- Enterprise is keyed to the PERSON, not the organisation, for the same reason
+-- organisations are not merged by name: two sponsors from one company are two
+-- conversations until a human says otherwise.
+create unique index if not exists opportunities_open_enterprise
+  on public.opportunities (person_id)
+  where route = 'enterprise' and stage not in ('unsuitable', 'withdrawn', 'closed');
+
+create index if not exists opportunities_stage_idx on public.opportunities (stage, updated_at desc);
+create index if not exists opportunities_owner_idx on public.opportunities (owner, due_at);
+create index if not exists opportunities_person_idx on public.opportunities (person_id);
+create index if not exists opportunities_org_idx on public.opportunities (organisation_id);
+create index if not exists opportunities_created_idx on public.opportunities (created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Attributions -- where they came from, kept in two halves
+-- ---------------------------------------------------------------------------
+-- One row per submission, and the two halves are never reconciled into one
+-- number. `first_*` is the first touch we were permitted to remember;
+-- `session_*` is the visit that submitted the form. They answer different
+-- questions and the operating guide says to show both with their definitions
+-- rather than picking a winner.
+--
+-- `self_reported` is the discovery answer. It is a THIRD piece of evidence and
+-- never an override: somebody can meet Sunil on LinkedIn in March and type the
+-- URL directly in September, and both facts are true.
+--
+-- MISSING STAYS MISSING. Absent UTM values are null. An absent referrer is
+-- direct/unknown and is never reconstructed by fingerprinting or by inference.
+-- `tracking_permission` records whether we were allowed to remember the first
+-- touch at all; with no consent surface built yet it is false on every row, and
+-- `first_*` is therefore null on every row. That is the honest state, not a
+-- gap to fill in (E07).
+
+create table if not exists public.attributions (
+  submission_id       uuid        primary key references public.form_submissions(submission_id) on delete cascade,
+  first_source        text,
+  first_medium        text,
+  first_campaign      text,
+  first_content       text,
+  first_term          text,
+  session_source      text,
+  session_medium      text,
+  session_campaign    text,
+  session_content     text,
+  session_term        text,
+  entry_path          text,
+  -- Bare host, never a full URL: a referrer's query string can carry the
+  -- linking site's own session token or somebody's search terms.
+  referrer_host       text,
+  self_reported       text,
+  tracking_permission boolean     not null default false,
+  first_captured_at   timestamptz,
+  session_captured_at timestamptz not null default now(),
+  created_at          timestamptz not null default now()
+);
+
+create index if not exists attributions_session_source_idx on public.attributions (session_source, session_captured_at desc);
+create index if not exists attributions_first_source_idx on public.attributions (first_source);
+
+-- ---------------------------------------------------------------------------
+-- Consents -- append-only, and enforced
+-- ---------------------------------------------------------------------------
+-- A consent record has to be able to say what the person actually saw, which
+-- means the wording and its version are copied into the row rather than
+-- referenced. If the marketing sentence is reworded, that is a NEW version and
+-- new rows; the old rows keep the old words, because the alternative is a
+-- record that quietly claims somebody agreed to a sentence written after they
+-- ticked the box.
+--
+-- A withdrawal is a NEW ROW with state='withdrawn', never an UPDATE of the row
+-- that granted it. The trigger below makes that structural instead of a matter
+-- of discipline: preserving the change is the dictionary's requirement, and an
+-- UPDATE destroys the evidence that permission was ever given. DELETE is left
+-- alone so erasure still works.
+
+create table if not exists public.consents (
+  consent_id      uuid        primary key default gen_random_uuid(),
+  person_id       uuid        not null references public.people(person_id) on delete cascade,
+  purpose         text        not null default 'marketing',
+  state           text        not null check (state in ('granted', 'withdrawn')),
+  wording         text        not null,
+  wording_version text        not null,
+  obtained_at     timestamptz not null default now(),
+  -- Where it came from: which form, an import, an unsubscribe link, an operator.
+  source          text,
+  withdrawn_at    timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists consents_person_idx on public.consents (person_id, obtained_at desc);
+create index if not exists consents_purpose_idx on public.consents (purpose, state, obtained_at desc);
+
+create or replace function public.consents_are_append_only() returns trigger
+language plpgsql as $$
+begin
+  raise exception 'consents is append-only: record a withdrawal as a new row rather than editing the row that granted permission';
+end;
+$$;
+
+drop trigger if exists consents_no_update on public.consents;
+create trigger consents_no_update before update on public.consents
+  for each row execute function public.consents_are_append_only();
+
+-- ---------------------------------------------------------------------------
+-- Activities and tasks
+-- ---------------------------------------------------------------------------
+-- An activity is something that happened; a task is something somebody owes.
+-- They are separate tables because "record manual contact here before further
+-- nurture" needs a chronological log nobody closes, and an overdue-work list
+-- needs rows that get completed.
+--
+-- `due_at` is nullable and is null by default. The proposed one-business-day
+-- acknowledgement and two-day technical response are explicitly "subject to
+-- capacity agreement" and must not be published as guarantees -- so until
+-- somebody agrees a number, a task carries no due date rather than a made-up
+-- one, and the overdue count stays honest.
+
+create table if not exists public.activities (
+  activity_id    uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  type           text        not null,
+  actor          text,
+  occurred_at    timestamptz not null default now(),
+  notes          text,
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists activities_opportunity_idx on public.activities (opportunity_id, occurred_at desc);
+create index if not exists activities_occurred_idx on public.activities (occurred_at desc);
+
+create table if not exists public.tasks (
+  task_id        uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  owner          text,
+  description    text        not null,
+  due_at         timestamptz,
+  completed_at   timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists tasks_open_idx on public.tasks (owner, due_at) where completed_at is null;
+create index if not exists tasks_opportunity_idx on public.tasks (opportunity_id, created_at desc);
+create index if not exists tasks_unassigned_idx on public.tasks (created_at desc) where completed_at is null and owner is null;
+
+-- ---------------------------------------------------------------------------
+-- Audit log -- restricted, and deliberately boring
+-- ---------------------------------------------------------------------------
+-- Who changed what, when, and why. It is the one table here that does NOT
+-- cascade when a person is erased, because the record that a stage was reversed
+-- has to outlive the conversation it was about.
+--
+-- That survival is exactly why NOTHING PERSONAL GOES IN IT. No name, no
+-- address, no phone number, no free-text answer, and never a credential or a
+-- token. Record ids are the join; when the person is erased the ids dangle,
+-- which is the correct outcome -- the history says a decision was made and no
+-- longer says about whom.
+
+create table if not exists public.audit_log (
+  audit_id       uuid        primary key default gen_random_uuid(),
+  record_type    text        not null,
+  record_id      uuid,
+  actor          text        not null,
+  previous_value jsonb,
+  new_value      jsonb,
+  occurred_at    timestamptz not null default now(),
+  reason         text
+);
+
+create index if not exists audit_log_record_idx on public.audit_log (record_type, record_id, occurred_at desc);
+create index if not exists audit_log_occurred_idx on public.audit_log (occurred_at desc);
+create index if not exists audit_log_actor_idx on public.audit_log (actor, occurred_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Lock the pipeline down, same rule as everything above
+-- ---------------------------------------------------------------------------
+
+alter table public.organisations    enable row level security;
+alter table public.people           enable row level security;
+alter table public.cohorts          enable row level security;
+alter table public.form_submissions enable row level security;
+alter table public.opportunities    enable row level security;
+alter table public.attributions     enable row level security;
+alter table public.consents         enable row level security;
+alter table public.activities       enable row level security;
+alter table public.tasks            enable row level security;
+alter table public.audit_log        enable row level security;
+
+revoke all on public.organisations    from anon, authenticated;
+revoke all on public.people           from anon, authenticated;
+revoke all on public.cohorts          from anon, authenticated;
+revoke all on public.form_submissions from anon, authenticated;
+revoke all on public.opportunities    from anon, authenticated;
+revoke all on public.attributions     from anon, authenticated;
+revoke all on public.consents         from anon, authenticated;
+revoke all on public.activities       from anon, authenticated;
+revoke all on public.tasks            from anon, authenticated;
+revoke all on public.audit_log        from anon, authenticated;
+
+drop trigger if exists organisations_touch on public.organisations;
+create trigger organisations_touch before update on public.organisations
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists people_touch on public.people;
+create trigger people_touch before update on public.people
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists cohorts_touch on public.cohorts;
+create trigger cohorts_touch before update on public.cohorts
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists form_submissions_touch on public.form_submissions;
+create trigger form_submissions_touch before update on public.form_submissions
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists opportunities_touch on public.opportunities;
+create trigger opportunities_touch before update on public.opportunities
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists tasks_touch on public.tasks;
+create trigger tasks_touch before update on public.tasks
+  for each row execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- pipeline_submit() -- the whole save, in one transaction
+-- ---------------------------------------------------------------------------
+-- The brief asks for this in one sentence and it is the hardest sentence in the
+-- document: "validate, resolve the contact, create the enquiry/application and
+-- initial task, and queue acknowledgement/owner notification in one reliable
+-- transaction or equivalent durable workflow. Return success only after the
+-- record is committed."
+--
+-- WHY IT IS SQL AND NOT TYPESCRIPT. supabase-js speaks PostgREST, and PostgREST
+-- gives one statement per request. Eight inserts from the Vercel function is
+-- eight transactions: a timeout after the fourth leaves a person with no
+-- opportunity, an opportunity with no task, or a submission whose attribution
+-- never landed -- and the caller cannot tell which. That is the "false success"
+-- E03 forbids, arriving through the back door. A plpgsql function is one
+-- statement to PostgREST and one transaction to Postgres: it all lands or none
+-- of it does, and only then does the API say the word "received".
+--
+-- WHAT IT DELIBERATELY DOES NOT DO: send anything. Queuing the acknowledgement
+-- is stage 4 and is switched off until there is a verified sender (decision D2).
+-- The task row is the durable "somebody owes this person a reply" in the
+-- meantime, and Web3Forms still delivers the inbox copy from the browser.
+--
+-- IDEMPOTENCY, which is the single most important behaviour here (E02): the
+-- first thing the function does is look for the request key, and a hit returns
+-- the reference that was already issued with already_existed = true. No second
+-- record, no second acknowledgement, no second applicant in the count. The
+-- unique index does the same job again underneath, for the case where two
+-- copies of the request are in flight at once and neither has committed yet.
+--
+-- THE REFERENCE IS GENERATED IN TYPESCRIPT and passed in. src/lib/pipeline/
+-- reference.ts owns the alphabet and the shape; a second implementation here
+-- would be the two-owners-of-one-format mistake CLAUDE.md keeps a whole section
+-- about. On the (vanishingly rare) collision this raises pipeline_reference_taken
+-- before writing anything and the caller retries with a fresh candidate.
+
+create or replace function public.pipeline_submit(
+  p_request_key            text,
+  p_reference              text,
+  p_type                   text,
+  p_cohort_id              uuid,
+  p_name                   text,
+  p_normalised_email       text,
+  p_original_email         text,
+  p_phone                  text        default null,
+  p_role                   text        default null,
+  p_organisation_name      text        default null,
+  p_industry               text        default null,
+  p_answers                jsonb       default '{}'::jsonb,
+  p_funding_route          text        default null,
+  p_group_size             int         default null,
+  p_privacy_notice_version text        default null,
+  p_owner                  text        default null,
+  p_task_due_at            timestamptz default null,
+  p_attribution            jsonb       default '{}'::jsonb,
+  p_consent                jsonb       default null,
+  p_is_test                boolean     default false,
+  p_is_spam                boolean     default false,
+  p_actor                  text        default 'public_form'
+)
+returns table (
+  submission_id   uuid,
+  reference       text,
+  already_existed boolean,
+  person_id       uuid,
+  opportunity_id  uuid
+)
+language plpgsql
+as $fn$
+-- Every bare identifier below that also names a column resolves to the column.
+-- The five OUT parameters share their names with real columns, which is exactly
+-- the ambiguity this setting decides; locals are v_-prefixed so they never
+-- collide either way.
+#variable_conflict use_column
+declare
+  v_submission_id uuid;
+  v_reference     text;
+  v_person_id     uuid;
+  v_org_id        uuid;
+  v_opp_id        uuid;
+  v_route         text;
+  v_stage         text;
+  v_target_stage  text;
+  v_org_name      text    := nullif(btrim(p_organisation_name), '');
+  v_dupes         int     := 0;
+  v_advanced      boolean := false;
+begin
+  if p_type not in ('application', 'enquiry', 'enterprise') then
+    raise exception 'pipeline_submit: unknown submission type';
+  end if;
+
+  -- 1 -- The request key. Everything else is downstream of this answer. -------
+  select s.submission_id, s.reference, s.person_id, s.opportunity_id
+    into v_submission_id, v_reference, v_person_id, v_opp_id
+    from public.form_submissions s
+   where s.request_key = p_request_key;
+
+  if v_submission_id is not null then
+    return query select v_submission_id, v_reference, true, v_person_id, v_opp_id;
+    return;
+  end if;
+
+  -- Checked before any write, so a collision costs nothing and the caller can
+  -- simply try again with another candidate.
+  if exists (select 1 from public.form_submissions s where s.reference = p_reference) then
+    raise exception 'pipeline_reference_taken';
+  end if;
+
+  -- 2 -- Organisation. Creates rather than merges; see the table comment. -----
+  if v_org_name is not null then
+    -- One exception to no-merging, and it is not a merge: the same person
+    -- naming the same organisation a second time is one record restated, not
+    -- two records that happen to share a name.
+    select p.organisation_id
+      into v_org_id
+      from public.people p
+      join public.organisations o on o.organisation_id = p.organisation_id
+     where p.normalised_email = p_normalised_email
+       and lower(o.name) = lower(v_org_name);
+
+    if v_org_id is null then
+      select count(*) into v_dupes
+        from public.organisations o
+       where lower(o.name) = lower(v_org_name);
+
+      insert into public.organisations (name, industry, needs_review, review_reason)
+      values (
+        v_org_name,
+        nullif(btrim(p_industry), ''),
+        v_dupes > 0,
+        case when v_dupes > 0 then
+          format('Name-only match with %s existing organisation record(s). Merging is an operator decision.', v_dupes)
+        end
+      )
+      returning organisations.organisation_id into v_org_id;
+    end if;
+  end if;
+
+  -- 3 -- Person, by normalised email and nothing else. -----------------------
+  insert into public.people (name, normalised_email, original_email, phone, role, organisation_id)
+  values (
+    p_name,
+    p_normalised_email,
+    p_original_email,
+    nullif(btrim(p_phone), ''),
+    nullif(btrim(p_role), ''),
+    v_org_id
+  )
+  on conflict (normalised_email) do nothing
+  returning people.person_id into v_person_id;
+
+  if v_person_id is null then
+    -- Already known. Fill blanks, overwrite nothing. A second submission is not
+    -- evidence that the first was wrong, and an operator correction must not be
+    -- undone by the next form post (E05). Their new answers are all preserved
+    -- on the submission itself, where the history belongs.
+    update public.people p
+       set phone           = coalesce(p.phone, nullif(btrim(p_phone), '')),
+           role            = coalesce(p.role, nullif(btrim(p_role), '')),
+           organisation_id = coalesce(p.organisation_id, v_org_id)
+     where p.normalised_email = p_normalised_email
+    returning p.person_id into v_person_id;
+  end if;
+
+  -- 4 -- The submission. Claims the request key before any further work. ------
+  begin
+    insert into public.form_submissions (
+      request_key, reference, type, person_id, organisation_id, cohort_id,
+      answers, funding_route, group_size, privacy_notice_version, is_test, is_spam
+    ) values (
+      p_request_key,
+      p_reference,
+      p_type,
+      v_person_id,
+      v_org_id,
+      p_cohort_id,
+      coalesce(p_answers, '{}'::jsonb),
+      nullif(p_funding_route, ''),
+      p_group_size,
+      nullif(p_privacy_notice_version, ''),
+      coalesce(p_is_test, false),
+      coalesce(p_is_spam, false)
+    )
+    returning form_submissions.submission_id into v_submission_id;
+  exception when unique_violation then
+    -- Two copies of one request in flight. The other one won; return its
+    -- reference rather than a second record.
+    select s.submission_id, s.reference, s.person_id, s.opportunity_id
+      into v_submission_id, v_reference, v_person_id, v_opp_id
+      from public.form_submissions s
+     where s.request_key = p_request_key;
+
+    if v_submission_id is null then raise; end if;
+
+    return query select v_submission_id, v_reference, true, v_person_id, v_opp_id;
+    return;
+  end;
+
+  -- 5 -- The opportunity. Reused when one is already open. -------------------
+  v_route        := case when p_type = 'enterprise' then 'enterprise' else 'member' end;
+  v_target_stage := case when p_type = 'application' then 'application_received' else 'enquiry' end;
+
+  if v_route = 'member' then
+    select o.opportunity_id, o.stage
+      into v_opp_id, v_stage
+      from public.opportunities o
+     where o.route = 'member'
+       and o.person_id = v_person_id
+       and o.cohort_id is not distinct from p_cohort_id
+       and o.stage not in ('unsuitable', 'withdrawn', 'closed')
+     order by o.created_at
+     limit 1
+       for update;
+  else
+    select o.opportunity_id, o.stage
+      into v_opp_id, v_stage
+      from public.opportunities o
+     where o.route = 'enterprise'
+       and o.person_id = v_person_id
+       and o.stage not in ('unsuitable', 'withdrawn', 'closed')
+     order by o.created_at
+     limit 1
+       for update;
+  end if;
+
+  if v_opp_id is null then
+    begin
+      insert into public.opportunities (
+        person_id, organisation_id, route, cohort_id, stage, owner, stage_entered_at
+      ) values (
+        v_person_id,
+        v_org_id,
+        v_route,
+        case when v_route = 'member' then p_cohort_id else null end,
+        v_target_stage,
+        nullif(p_owner, ''),
+        now()
+      )
+      returning opportunities.opportunity_id into v_opp_id;
+      v_stage := v_target_stage;
+    exception when unique_violation then
+      -- The partial index caught a concurrent create. Take theirs.
+      select o.opportunity_id, o.stage
+        into v_opp_id, v_stage
+        from public.opportunities o
+       where o.person_id = v_person_id
+         and o.route = v_route
+         and o.stage not in ('unsuitable', 'withdrawn', 'closed')
+       order by o.created_at
+       limit 1;
+      if v_opp_id is null then raise; end if;
+    end;
+
+  elsif v_stage = 'enquiry' and v_target_stage = 'application_received' then
+    -- The one automatic stage move in the whole pipeline, and it only ever runs
+    -- forward from the first stage. A repeat application from somebody already
+    -- at qualification or technical review is review context, not a demotion --
+    -- dragging them backwards would rewrite work an operator had done.
+    update public.opportunities o
+       set stage = 'application_received',
+           stage_entered_at = now()
+     where o.opportunity_id = v_opp_id;
+
+    v_advanced := true;
+    v_stage    := 'application_received';
+  end if;
+
+  update public.form_submissions s
+     set opportunity_id = v_opp_id
+   where s.submission_id = v_submission_id;
+
+  -- 6 -- The log line and the work it creates. -------------------------------
+  insert into public.activities (opportunity_id, type, actor, notes)
+  values (
+    v_opp_id,
+    case p_type
+      when 'application' then 'application_received'
+      when 'enterprise'  then 'enterprise_enquiry_received'
+      else 'enquiry_received'
+    end,
+    p_actor,
+    format('Submission %s.', p_reference)
+  );
+
+  if v_advanced then
+    insert into public.activities (opportunity_id, type, actor, notes)
+    values (v_opp_id, 'stage_changed', p_actor,
+            'Enquiry became an application for the same cohort.');
+
+    insert into public.audit_log (record_type, record_id, actor, previous_value, new_value, reason)
+    values (
+      'opportunity', v_opp_id, p_actor,
+      jsonb_build_object('stage', 'enquiry'),
+      jsonb_build_object('stage', 'application_received'),
+      'Application received from a person whose enquiry was already open.'
+    );
+  end if;
+
+  -- The wording is the operating guide's own description of the first job.
+  insert into public.tasks (opportunity_id, owner, description, due_at)
+  values (
+    v_opp_id,
+    nullif(p_owner, ''),
+    case p_type
+      when 'application' then 'Read the experience and learning goal, clarify readiness and funding route, then respond.'
+      when 'enterprise'  then 'Qualify the team enquiry, then coordinate technical scoping with Sunil.'
+      else 'Answer the question and record the reply.'
+    end,
+    p_task_due_at
+  );
+
+  -- 7 -- Attribution, and consent only if it was actually given. -------------
+  insert into public.attributions (
+    submission_id,
+    first_source, first_medium, first_campaign, first_content, first_term,
+    session_source, session_medium, session_campaign, session_content, session_term,
+    entry_path, referrer_host, self_reported, tracking_permission,
+    first_captured_at, session_captured_at
+  ) values (
+    v_submission_id,
+    nullif(p_attribution ->> 'first_source', ''),
+    nullif(p_attribution ->> 'first_medium', ''),
+    nullif(p_attribution ->> 'first_campaign', ''),
+    nullif(p_attribution ->> 'first_content', ''),
+    nullif(p_attribution ->> 'first_term', ''),
+    nullif(p_attribution ->> 'session_source', ''),
+    nullif(p_attribution ->> 'session_medium', ''),
+    nullif(p_attribution ->> 'session_campaign', ''),
+    nullif(p_attribution ->> 'session_content', ''),
+    nullif(p_attribution ->> 'session_term', ''),
+    nullif(p_attribution ->> 'entry_path', ''),
+    nullif(p_attribution ->> 'referrer_host', ''),
+    nullif(p_attribution ->> 'self_reported', ''),
+    coalesce((p_attribution ->> 'tracking_permission')::boolean, false),
+    nullif(p_attribution ->> 'first_captured_at', '')::timestamptz,
+    coalesce(nullif(p_attribution ->> 'session_captured_at', '')::timestamptz, now())
+  )
+  on conflict (submission_id) do nothing;
+
+  -- A receipt is not marketing consent, so nothing here is inferred from the
+  -- submission itself. A row exists only when the box was ticked, and it copies
+  -- the words that were on screen beside it.
+  if p_consent is not null and coalesce((p_consent ->> 'granted')::boolean, false) then
+    insert into public.consents (person_id, purpose, state, wording, wording_version, source)
+    values (
+      v_person_id,
+      coalesce(nullif(p_consent ->> 'purpose', ''), 'marketing'),
+      'granted',
+      p_consent ->> 'wording',
+      p_consent ->> 'wording_version',
+      coalesce(nullif(p_consent ->> 'source', ''), p_type)
+    );
+  end if;
+
+  -- 8 -- Audit. Ids and decisions only; re-read the table comment before -----
+  --      adding a field here.
+  insert into public.audit_log (record_type, record_id, actor, previous_value, new_value, reason)
+  values (
+    'form_submission', v_submission_id, p_actor, null,
+    jsonb_build_object(
+      'type',           p_type,
+      'route',          v_route,
+      'reference',      p_reference,
+      'cohort_id',      p_cohort_id,
+      'opportunity_id', v_opp_id,
+      'stage',          v_stage,
+      'is_test',        coalesce(p_is_test, false),
+      'is_spam',        coalesce(p_is_spam, false)
+    ),
+    'Public form submission committed.'
+  );
+
+  return query select v_submission_id, p_reference, false, v_person_id, v_opp_id;
+end;
+$fn$;
+
+-- This one WRITES, so it does not get the default public execute grant. Both
+-- browser-facing keys are already powerless against these tables (RLS on, zero
+-- policies), and this closes the second door as well: the function runs as its
+-- caller, so anon calling it would fail on the first insert -- but a write path
+-- reachable by an unauthenticated key is not a thing to leave lying around on
+-- the strength of a second mechanism.
+revoke all on function public.pipeline_submit from public;
+grant execute on function public.pipeline_submit to service_role;
