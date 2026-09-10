@@ -143,6 +143,13 @@ exists to prevent** — do not "fix" them into passes.
   appear in public copy as one.
 - **Reconciliation of the four reported enrolments and two positive responses**, person by
   person, before any appear in a live total.
+- **Sunil's review of the Agent Design Check rubric.** The roadmap asks for "transparent
+  rules reviewed by Sunil". The rules ARE transparent — all nineteen questions and every
+  next-step string are readable in one file, `src/data/agent-design-check.ts` — but the
+  human review has not happened, and `/tools` says so rather than implying it has. The
+  roadmap also gates the second tool on it: `/tools/architecture-review-skill/` is
+  deliberately unbuilt and shown as inert text, because packaging the method as a Claude or
+  Codex skill is explicitly "after rubric approval".
 
 ---
 
