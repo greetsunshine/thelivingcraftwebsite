@@ -1,0 +1,846 @@
+---
+// Overview and Leads, on one page, from the queries that can say "I don't know".
+//
+// ───────────────────────────────────────────────────────────────────────────
+// WHY THE TWO WIREFRAME SCREENS ARE ONE PAGE
+// ───────────────────────────────────────────────────────────────────────────
+//
+// The handoff draws "Staff overview" and "Lead list" as separate schematics,
+// and then says of the overview: "Each metric opens its filtered source
+// records." Every one of those records is the lead list. Two URLs meant a card,
+// a click, a page load and a lost place in the scroll to answer "which six
+// people are at offer?" — so the cards link to an anchor on the same page and
+// the answer is one jump away. This is the same argument that merged Work and
+// Baseline in the teaching console.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// THE FOUR RULES THIS SCREEN EXISTS TO KEEP
+// ───────────────────────────────────────────────────────────────────────────
+//
+// 1. UNKNOWN IS NEVER ZERO. Nothing here reads a number out of a failed query.
+//    Every figure comes from an `Answer` in state 'ok' and nothing else, and
+//    the three ways of having no answer render differently — see
+//    PipelinePanel.astro, which owns that distinction so it cannot drift.
+//    Acceptance case E14 is exactly this.
+//
+// 2. THE PIPELINE IS A SNAPSHOT AND SAYS SO. The operating guide forbids
+//    combining current-stage counts with period activity in one funnel. Six
+//    people at 'offer' today is not six offers made this month. So the stage
+//    lists carry no date range at all, and the period selector above them is
+//    scoped to the activity tiles in words on the screen.
+//
+// 3. APPLICATIONS AND APPLICANTS ARE DIFFERENT NUMBERS. `Totals` carries both
+//    because a repeat application is one more submission and the same person.
+//    Never label either as the other, and never let one card show both.
+//
+// 4. MEMBER AND ENTERPRISE ARE SEPARATE VIEWS AND ARE NEVER SUMMED. An
+//    organisation order is not eight individual applications. There is
+//    deliberately no combined total anywhere on this page.
+//
+// READ-ONLY, ON PURPOSE. Stage 2 of the build plan is "staff screens"; stage 3
+// is the pipeline writes. Nothing on this page mutates a record, so there is
+// nothing here to confirm. When a write does arrive it needs its own route
+// under /api/craft/admin/ with a server-side can() check — hiding a control is
+// not authorisation, and the brief says so twice.
+//
+// ELEMENT IDS ARE PAGE-SHARED. Everything scripted here is prefixed `pipeline`
+// for the same reason two "Run now" buttons once both wrote to `#runStatus`.
+
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PipelinePanel from '../../../components/admin/PipelinePanel.astro';
+import {
+  listLeads,
+  needsAttention,
+  pipelineNow,
+  stageLabel,
+  totals,
+  ENTERPRISE_STAGES,
+  MEMBER_STAGES,
+  SIDE_STATES,
+  type Answer,
+  type LeadRow,
+  type StageCount,
+} from '../../../lib/admin/pipeline-queries';
+import { can, refusal, ROLE_LABEL, type Capability } from '../../../lib/pipeline/roles';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+
+const params = Astro.url.searchParams;
+
+// The date range from the wireframe's filter row. It scopes the activity tiles
+// and NOTHING ELSE — see rule 2 at the head of this file.
+const PERIODS = [7, 30, 90] as const;
+const requested = Number(params.get('days'));
+const days = (PERIODS as readonly number[]).includes(requested) ? requested : 30;
+
+const route = params.get('route') ?? '';
+const stage = params.get('stage') ?? '';
+const owner = (params.get('owner') ?? '').slice(0, 80);
+const q = (params.get('q') ?? '').slice(0, 120);
+
+// "unassigned" is not a value in the owner column, so it cannot be an `eq`.
+// It is applied to the returned rows instead, and the screen says so rather
+// than presenting a display filter as a query filter.
+const unassignedOnly = owner.toLowerCase() === 'unassigned';
+
+const LEAD_CAP = 500;
+
+const [totalsAnswer, memberAnswer, enterpriseAnswer, attentionAnswer, leadsAnswer] =
+  await Promise.all([
+    totals(admin, days),
+    pipelineNow(admin, 'member'),
+    pipelineNow(admin, 'enterprise'),
+    needsAttention(admin),
+    listLeads(admin, {
+      route: route || undefined,
+      stage: stage || undefined,
+      owner: unassignedOnly ? undefined : owner || undefined,
+      search: q || undefined,
+      limit: LEAD_CAP,
+    }),
+  ]);
+
+let rows: LeadRow[] = leadsAnswer.state === 'ok' ? leadsAnswer.value : [];
+if (unassignedOnly) rows = rows.filter((r) => !r.owner);
+
+const filtered = Boolean(route || stage || owner || q);
+
+const here = Astro.url.pathname + Astro.url.search;
+
+// ---------------------------------------------------------------------------
+// Formatting
+// ---------------------------------------------------------------------------
+// Stored UTC, displayed Asia/Kolkata — the records section of the brief. The
+// zone is named once at the top of the page rather than on every row.
+
+const IST = 'Asia/Kolkata';
+
+const when = (iso: string | null | undefined): string =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: IST,
+      })
+    : '—';
+
+const readAt = (iso: string): string =>
+  new Date(iso).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: IST,
+  });
+
+const now = Date.now();
+const isOverdue = (due: string | null): boolean => Boolean(due) && Date.parse(due as string) < now;
+
+const leadHref = (extra: Record<string, string>): string => {
+  const next = new URLSearchParams();
+  if (days !== 30) next.set('days', String(days));
+  Object.entries(extra).forEach(([k, v]) => {
+    if (v) next.set(k, v);
+  });
+  const qs = next.toString();
+  return `/craft/admin/pipeline${qs ? `?${qs}` : ''}#leads`;
+};
+
+// ---------------------------------------------------------------------------
+// The stage snapshot, laid out on the line the brief defines
+// ---------------------------------------------------------------------------
+// The query returns only the stages that have rows in them. A stage missing
+// from that result is a genuine zero — the query SUCCEEDED — so the canonical
+// order is printed in full and the gaps read 0. That is the one place on this
+// page where a nought is honest, and it is honest because `Answer` already told
+// us the table answered.
+//
+// Side states never sort onto the line. 'closed' is both an enterprise stage
+// and a side state, so anything already on the line is not repeated below it,
+// and any stage the database holds that neither list knows about is printed
+// under "Also recorded" rather than silently dropped.
+
+interface Lane {
+  line: StageCount[];
+  side: StageCount[];
+  other: StageCount[];
+  max: number;
+}
+
+const lane = (answer: Answer<StageCount[]>, order: readonly string[]): Lane | null => {
+  if (answer.state !== 'ok') return null;
+
+  const found = new Map(answer.value.map((s) => [s.stage, s.count]));
+  const line = order.map((s) => ({ stage: s, count: found.get(s) ?? 0 }));
+  const side = SIDE_STATES.filter((s) => !order.includes(s)).map((s) => ({
+    stage: s as string,
+    count: found.get(s) ?? 0,
+  }));
+  const known = new Set<string>([...order, ...SIDE_STATES]);
+  const other = answer.value.filter((s) => !known.has(s.stage));
+
+  const max = Math.max(1, ...[...line, ...side, ...other].map((r) => r.count));
+  return { line, side, other, max };
+};
+
+const memberLane = lane(memberAnswer, MEMBER_STAGES);
+const enterpriseLane = lane(enterpriseAnswer, ENTERPRISE_STAGES);
+
+// The stage filter offers every stage either route can be in, plus the side
+// states, deduped and in a stable order.
+const ALL_STAGES = [...new Set<string>([...MEMBER_STAGES, ...ENTERPRISE_STAGES, ...SIDE_STATES])];
+
+// ---------------------------------------------------------------------------
+// What this screen will carry, and whether it is yours
+// ---------------------------------------------------------------------------
+// Not a row of disabled buttons. A control that does nothing teaches somebody
+// to click it and then teaches them the console is broken. This says plainly
+// what belongs on this screen, when it arrives, and — for the person actually
+// signed in — whether they hold it, naming who does when they do not.
+
+const SCREEN_ACTIONS: { cap: Capability; what: string; note: string }[] = [
+  {
+    cap: 'export.records',
+    what: 'Export these records',
+    note: 'Scoped CSV keeping the existing tracker fields, with spreadsheet formula prefixes escaped — stage 5.',
+  },
+  {
+    cap: 'erase.person',
+    what: 'Erase a person on request',
+    note: 'A hard delete, confirmed before it runs, never a soft flag. It belongs on the lead itself — stage 5.',
+  },
+];
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+---
+
+<AdminLayout title="Pipeline" active="pipeline">
+  <div class="page-head">
+    <div>
+      <span class="label">{whoLine}</span>
+      <h1>Pipeline</h1>
+      <p>
+        Applications, enquiries and enterprise interest saved by the public forms. Times are
+        Asia/Kolkata. <strong>Test and spam submissions are excluded</strong> from every figure on
+        this page — filtered in the query, and said here rather than done quietly.
+      </p>
+    </div>
+    <nav class="jump" aria-label="On this page">
+      <a href="#overview">Overview</a>
+      <a href="#leads">Leads</a>
+    </nav>
+  </div>
+
+  <!-- ==================== Overview ==================== -->
+  <section class="admin-section" id="overview" aria-labelledby="pipelineOverviewHead">
+    <div class="section-head">
+      <div>
+        <h2 id="pipelineOverviewHead">Overview</h2>
+        <p>
+          Activity in the selected period, then the pipeline as it stands right now. The two are
+          deliberately not one funnel.
+        </p>
+      </div>
+
+      <form class="toolbar" method="GET" id="pipelinePeriodForm">
+        {route && <input type="hidden" name="route" value={route} />}
+        {stage && <input type="hidden" name="stage" value={stage} />}
+        {owner && <input type="hidden" name="owner" value={owner} />}
+        {q && <input type="hidden" name="q" value={q} />}
+        <label class="label" for="pipelineDays">Period</label>
+        <select id="pipelineDays" name="days">
+          {PERIODS.map((p) => <option value={p} selected={p === days}>Last {p} days</option>)}
+        </select>
+        <button class="btn" type="submit">Apply</button>
+      </form>
+    </div>
+
+    {
+      totalsAnswer.state !== 'ok' ? (
+        <PipelinePanel
+          state={totalsAnswer.state}
+          reason={totalsAnswer.reason}
+          label="Activity totals"
+          capability="read.dashboard"
+          retry={here}
+        />
+      ) : (
+        <div class="tiles">
+          <a class="tile metric" href={leadHref({ route: 'member' })}>
+            <div class="n">{totalsAnswer.value.applications}</div>
+            <div class="k"><span class="label">Applications saved</span></div>
+            <p class="note">
+              Submission rows, last {days} days. A repeat application from the same person is a
+              second row here and one applicant next door.
+            </p>
+            <p class="src mono">saved backend records · read {readAt(totalsAnswer.at)}</p>
+            <span class="open">Open member leads →</span>
+          </a>
+
+          <a class="tile metric" href={leadHref({ route: 'member' })}>
+            <div class="n">{totalsAnswer.value.applicants}</div>
+            <div class="k"><span class="label">Unique applicants</span></div>
+            <p class="note">
+              Distinct person and cohort pairs, last {days} days. This is the number of people.
+            </p>
+            <p class="src mono">saved backend records · read {readAt(totalsAnswer.at)}</p>
+            <span class="open">Open member leads →</span>
+          </a>
+
+          <a class="tile metric" href={leadHref({ route: 'member', stage: 'enquiry' })}>
+            <div class="n">{totalsAnswer.value.enquiries}</div>
+            <div class="k"><span class="label">Cohort enquiries</span></div>
+            <p class="note">Questions, not applications. Never counted as one.</p>
+            <p class="src mono">saved backend records · read {readAt(totalsAnswer.at)}</p>
+            <span class="open">Open member enquiries →</span>
+          </a>
+
+          <a class="tile metric" href={leadHref({ route: 'enterprise' })}>
+            <div class="n">{totalsAnswer.value.enterprise}</div>
+            <div class="k"><span class="label">Enterprise enquiries</span></div>
+            <p class="note">
+              Organisations. One record whatever the group size, and never added to the member
+              figures.
+            </p>
+            <p class="src mono">saved backend records · read {readAt(totalsAnswer.at)}</p>
+            <span class="open">Open enterprise leads →</span>
+          </a>
+
+          <PipelinePanel
+            variant="tile"
+            state="pending"
+            label="Measured sessions"
+            reason="Analytics sessions are not joined to pipeline records in this build. The Traffic screen counts visits to the site, which is a different measure and must not be read as this one."
+          />
+
+          <PipelinePanel
+            variant="tile"
+            state="pending"
+            label="Paid members"
+            reason="Payment is finance evidence and no payment record is written yet — that arrives with stage 3. Enrolment needs Sunil's admission decision and a finance confirmation, so nothing here may be inferred from a stage."
+          />
+        </div>
+      )
+    }
+
+    <p class="tile-foot muted">
+      Submissions are counted from the form record; the leads below are the opportunity record.
+      They are different tables and will not match row for row — somebody with an enquiry and a
+      later application is two submissions and one lead.
+    </p>
+
+    <div class="grid-2-wide snapshot">
+      <div class="card">
+        <h3>Current pipeline</h3>
+        <p class="sub muted">
+          <strong>A snapshot, taken now.</strong> Not activity in the selected period: six people at
+          offer today is not six offers made this month. The two routes are separate lines and are
+          never added together.
+        </p>
+
+        <div class="lanes">
+          <div class="lane">
+            <h4 class="label">Member</h4>
+            {
+              memberLane && memberAnswer.state === 'ok' ? (
+                <>
+                  <div class="bars">
+                    {memberLane.line.map((s) => (
+                      <a class="bar-row" href={leadHref({ route: 'member', stage: s.stage })}>
+                        <span class="bl">{stageLabel(s.stage)}</span>
+                        <span class="bv">{s.count}</span>
+                        <span class="track">
+                          <span class="fill" style={`width:${(s.count / memberLane.max) * 100}%`} />
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                  <h5 class="label side-head">Side states</h5>
+                  <div class="bars">
+                    {memberLane.side.map((s) => (
+                      <a class="bar-row side" href={leadHref({ route: 'member', stage: s.stage })}>
+                        <span class="bl">{stageLabel(s.stage)}</span>
+                        <span class="bv">{s.count}</span>
+                      </a>
+                    ))}
+                  </div>
+                  {memberLane.other.length > 0 && (
+                    <>
+                      <h5 class="label side-head">Also recorded</h5>
+                      <div class="bars">
+                        {memberLane.other.map((s) => (
+                          <a class="bar-row side" href={leadHref({ route: 'member', stage: s.stage })}>
+                            <span class="bl">{stageLabel(s.stage)}</span>
+                            <span class="bv">{s.count}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <p class="src mono">opportunity records · read {readAt(memberAnswer.at)}</p>
+                </>
+              ) : (
+                memberAnswer.state !== 'ok' && (
+                  <PipelinePanel
+                    state={memberAnswer.state}
+                    reason={memberAnswer.reason}
+                    label="The member pipeline"
+                    capability="read.dashboard"
+                    retry={here}
+                  />
+                )
+              )
+            }
+          </div>
+
+          <div class="lane">
+            <h4 class="label">Enterprise</h4>
+            {
+              enterpriseLane && enterpriseAnswer.state === 'ok' ? (
+                <>
+                  <div class="bars">
+                    {enterpriseLane.line.map((s) => (
+                      <a class="bar-row" href={leadHref({ route: 'enterprise', stage: s.stage })}>
+                        <span class="bl">{stageLabel(s.stage)}</span>
+                        <span class="bv">{s.count}</span>
+                        <span class="track">
+                          <span
+                            class="fill"
+                            style={`width:${(s.count / enterpriseLane.max) * 100}%`}
+                          />
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                  {enterpriseLane.side.length > 0 && (
+                    <>
+                      <h5 class="label side-head">Side states</h5>
+                      <div class="bars">
+                        {enterpriseLane.side.map((s) => (
+                          <a
+                            class="bar-row side"
+                            href={leadHref({ route: 'enterprise', stage: s.stage })}
+                          >
+                            <span class="bl">{stageLabel(s.stage)}</span>
+                            <span class="bv">{s.count}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {enterpriseLane.other.length > 0 && (
+                    <>
+                      <h5 class="label side-head">Also recorded</h5>
+                      <div class="bars">
+                        {enterpriseLane.other.map((s) => (
+                          <a
+                            class="bar-row side"
+                            href={leadHref({ route: 'enterprise', stage: s.stage })}
+                          >
+                            <span class="bl">{stageLabel(s.stage)}</span>
+                            <span class="bv">{s.count}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <p class="src mono">opportunity records · read {readAt(enterpriseAnswer.at)}</p>
+                  <p class="lane-note muted">
+                    Participant nominations are stored separately from an order. An organisation
+                    order is not eight individual applications and is never counted as one.
+                  </p>
+                </>
+              ) : (
+                enterpriseAnswer.state !== 'ok' && (
+                  <PipelinePanel
+                    state={enterpriseAnswer.state}
+                    reason={enterpriseAnswer.reason}
+                    label="The enterprise pipeline"
+                    capability="read.dashboard"
+                    retry={here}
+                  />
+                )
+              )
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Needs attention</h3>
+        <p class="sub muted">Someone is waiting on us.</p>
+
+        {
+          attentionAnswer.state !== 'ok' ? (
+            <PipelinePanel
+              state={attentionAnswer.state}
+              reason={attentionAnswer.reason}
+              label="Needs attention"
+              capability="read.dashboard"
+              retry={here}
+            />
+          ) : (
+            <ul class="attention">
+              <li>
+                <a href={leadHref({ owner: 'unassigned' })}>
+                  <span class="n">{attentionAnswer.value.unassigned}</span>
+                  <span class="t">Unassigned leads</span>
+                </a>
+                <p class="src mono">opportunity records · read {readAt(attentionAnswer.at)}</p>
+              </li>
+              <li>
+                <span class="n">{attentionAnswer.value.overdue}</span>
+                <span class="t">Overdue tasks</span>
+                <p class="note muted">
+                  Tasks open from the lead that owns them; there is no task list of its own yet.
+                </p>
+                <p class="src mono">task records · read {readAt(attentionAnswer.at)}</p>
+              </li>
+            </ul>
+          )
+        }
+
+        <div class="pending-pair">
+          <PipelinePanel
+            state="pending"
+            label="Failed receipts"
+            reason="Receipts are stage 4, and dispatch stays off until the sending service and reply mailbox are settled. Nothing is being sent, so a zero here would be true today and a lie the day sending starts."
+          />
+          <PipelinePanel
+            state="pending"
+            label="Unknown send outcomes"
+            reason="Provider callbacks arrive with stage 4. Until then there is no send to have an outcome."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Leads ==================== -->
+  <section class="admin-section" id="leads" aria-labelledby="pipelineLeadsHead">
+    <div class="section-head">
+      <div>
+        <h2 id="pipelineLeadsHead">Leads</h2>
+        <p>
+          Every opportunity, newest touch first. Contact details are shown only to roles holding
+          <code>read.people</code>, and the query refuses rather than quietly returning less.
+        </p>
+      </div>
+    </div>
+
+    <form class="toolbar" method="GET" id="pipelineFilterForm">
+      {days !== 30 && <input type="hidden" name="days" value={days} />}
+      <input
+        type="search"
+        name="q"
+        value={q}
+        placeholder="Search name, email or organisation…"
+        aria-label="Search name, email or organisation"
+      />
+      <select name="route" aria-label="Route">
+        <option value="" selected={route === ''}>All routes</option>
+        <option value="member" selected={route === 'member'}>Member</option>
+        <option value="enterprise" selected={route === 'enterprise'}>Enterprise</option>
+      </select>
+      <select name="stage" aria-label="Stage">
+        <option value="" selected={stage === ''}>All stages</option>
+        {ALL_STAGES.map((s) => <option value={s} selected={s === stage}>{stageLabel(s)}</option>)}
+      </select>
+      <input
+        type="text"
+        name="owner"
+        value={owner}
+        placeholder="Owner"
+        aria-label="Owner — type unassigned for leads with no owner"
+        style="max-width:180px"
+      />
+      <button class="btn" type="submit">Filter</button>
+      {filtered && <a class="btn" href="/craft/admin/pipeline#leads">Reset</a>}
+      <p class="status-line" id="pipelineFilterStatus" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="toolbar-note muted">
+      Type <code>unassigned</code> in the owner box for leads nobody owns — that one filter is
+      applied to the rows after they are fetched, not in the query, so it is bounded by the
+      {LEAD_CAP}-row cap. Cohort and source filters are not built yet.
+    </p>
+
+    {
+      leadsAnswer.state !== 'ok' ? (
+        <PipelinePanel
+          state={leadsAnswer.state}
+          reason={leadsAnswer.reason}
+          label="The lead list"
+          capability="read.people"
+          retry={here}
+        />
+      ) : rows.length === 0 ? (
+        <div class="table-scroll">
+          <p class="empty">
+            {filtered
+              ? 'No records match these filters.'
+              : 'No leads recorded yet. They appear here as soon as the public forms save one.'}
+            <br />
+            <span class="src mono">
+              the query answered · read {readAt(leadsAnswer.at)} · test and spam excluded
+            </span>
+          </p>
+        </div>
+      ) : (
+        <>
+          <p class="count muted">
+            {rows.length} lead{rows.length === 1 ? '' : 's'}
+            {unassignedOnly ? ' with no owner' : ''} · newest touch first · at most {LEAD_CAP}{' '}
+            returned · read {readAt(leadsAnswer.at)}
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Contact</th>
+                  <th>Route and stage</th>
+                  <th>Last touch and next action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr>
+                    <td data-label="Contact" style="min-width:220px">
+                      <a
+                        class="who"
+                        href={`/craft/admin/pipeline/${encodeURIComponent(r.opportunity_id)}`}
+                      >
+                        {r.name ?? r.email ?? 'Record with no name'}
+                      </a>
+                      {r.email && (
+                        <div class="line">
+                          <a href={`mailto:${r.email}`} class="mail">
+                            {r.email}
+                          </a>
+                        </div>
+                      )}
+                      {r.organisation && <div class="line faint">{r.organisation}</div>}
+                      {!r.name && !r.email && (
+                        <div class="line faint">No contact details on this record.</div>
+                      )}
+                    </td>
+
+                    <td data-label="Route and stage" style="white-space:nowrap">
+                      <span class="pill">{r.route === 'enterprise' ? 'Enterprise' : 'Member'}</span>
+                      <div style="margin-top:6px">
+                        <span class="pill on">{stageLabel(r.stage)}</span>
+                      </div>
+                      <div class="line faint">In stage since {when(r.stage_entered_at)}</div>
+                    </td>
+
+                    <td data-label="Last touch and next action" style="min-width:240px">
+                      <div>
+                        <span class="label">Owner</span>{' '}
+                        {r.owner ?? <span class="unowned">Unassigned</span>}
+                      </div>
+                      <div class="line">
+                        <span class="label">Next</span> {r.next_action ?? '—'}
+                      </div>
+                      <div class="line faint">
+                        {r.due_at ? (
+                          <>
+                            Due {when(r.due_at)}
+                            {isOverdue(r.due_at) && <span class="pill warn overdue">overdue</span>}
+                          </>
+                        ) : (
+                          'No due date'
+                        )}
+                      </div>
+                      <div class="line faint">Last touch {when(r.updated_at)}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )
+    }
+
+    <div class="card actions-card">
+      <h3>Actions this screen will carry</h3>
+      <p class="sub muted">
+        Stage 2 is read-only, so there is no control here yet. Each is listed with whether your
+        roles hold it, because knowing who to ask is the useful half of a refusal.
+      </p>
+      <ul class="caps">
+        {SCREEN_ACTIONS.map((a) => (
+          <li>
+            <span class="what">{a.what}</span>
+            <span class="note muted">{a.note}</span>
+            {can(roles, a.cap) ? (
+              <span class="held mono">your roles hold this</span>
+            ) : (
+              <span class="not-held">{refusal(a.cap)}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <script is:inline>
+    // The loading state. These pages are server-rendered, so "loading" is a
+    // navigation — which on a slow console query looks exactly like a filter
+    // that did nothing. Submitting says so and disables the button, so nobody
+    // presses Filter three times and lands three requests.
+    //
+    // Everything here is prefixed `pipeline`: ids are page-shared on a composed
+    // console page, and two panels writing to one status line has already
+    // happened once in this console.
+    (function () {
+      var status = document.getElementById('pipelineFilterStatus');
+
+      function busy(form, message) {
+        if (!form) return;
+        form.addEventListener('submit', function () {
+          var btn = form.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Loading…';
+          }
+          if (status) {
+            status.textContent = message;
+            status.className = 'status-line';
+          }
+        });
+      }
+
+      busy(document.getElementById('pipelineFilterForm'), 'Loading leads…');
+      busy(document.getElementById('pipelinePeriodForm'), 'Loading the period…');
+    })();
+  </script>
+
+  <style>
+    /* Metric cards are links. The wireframe: "Each metric opens its filtered
+       source records." A number nobody can click through to is a number nobody
+       can check. */
+    .tile.metric { display: block; }
+    .tile.metric:hover { box-shadow: var(--shadow-lift); }
+    .tile.metric .n { font-variant-numeric: tabular-nums; }
+    .tile .src {
+      font-family: var(--font-mono);
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      margin-top: var(--space-2);
+      letter-spacing: var(--tracking-label);
+    }
+    .tile .open {
+      display: block;
+      margin-top: var(--space-3);
+      font-size: var(--size-2);
+      color: var(--accent-ink);
+      font-weight: var(--weight-medium);
+    }
+    .tile-foot {
+      font-size: var(--size-2);
+      margin-top: var(--space-3);
+      max-width: var(--measure-prose);
+      line-height: var(--lh-snug);
+    }
+
+    .snapshot { margin-top: var(--space-5); }
+    .card h3 { font-size: var(--size-5); color: var(--text-loud); }
+    .card .sub {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin: var(--space-1) 0 var(--space-4);
+    }
+
+    .lanes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+    @media (max-width: 900px) { .lanes { grid-template-columns: 1fr; } }
+    .lane h4 { display: block; font-family: var(--font-mono); margin-bottom: var(--space-3); }
+    .side-head { display: block; margin: var(--space-4) 0 var(--space-2); }
+    .lane .bar-row .bv { font-variant-numeric: tabular-nums; }
+    .lane .bar-row:hover .bl { color: var(--accent-ink); }
+    /* Side states are counts, not positions on the line — so no track drawn. */
+    .lane .bar-row.side .bl { color: var(--text-quiet); }
+    .lane .src {
+      display: block;
+      margin-top: var(--space-4);
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+    }
+    .lane-note { font-size: var(--size-2); line-height: var(--lh-snug); margin-top: var(--space-2); }
+
+    .attention { list-style: none; display: grid; gap: var(--space-4); }
+    .attention .n {
+      font-family: var(--font-mono);
+      font-size: var(--size-6);
+      font-variant-numeric: tabular-nums;
+      color: var(--text-loud);
+      margin-right: var(--space-2);
+    }
+    .attention .t { font-size: var(--size-3); }
+    .attention a:hover .t { color: var(--accent-ink); }
+    .attention .note,
+    .attention .src { font-size: var(--size-1); margin-top: var(--space-1); }
+    .attention .src { font-family: var(--font-mono); color: var(--text-quiet); }
+    .pending-pair { display: grid; gap: var(--space-3); margin-top: var(--space-5); }
+
+    .toolbar-note {
+      font-size: var(--size-2);
+      max-width: var(--measure-prose);
+      margin: 0 0 var(--space-4);
+      line-height: var(--lh-snug);
+    }
+    .toolbar-note code,
+    .section-head code {
+      font-family: var(--font-mono);
+      font-size: var(--size-1);
+      background: var(--surface-sunken);
+      padding: 1px 6px;
+      border-radius: var(--radius-tick);
+    }
+    #pipelineFilterStatus { margin-top: 0; }
+    .count { font-size: var(--size-2); margin-bottom: var(--space-2); }
+
+    td .line { font-size: var(--size-2); margin-top: 3px; }
+    td .who { font-weight: var(--weight-medium); color: var(--text-loud); }
+    td .who:hover { color: var(--accent-ink); text-decoration: underline; }
+    td .mail { color: var(--accent-ink); }
+    td .unowned { color: var(--danger); font-weight: var(--weight-medium); }
+    td .overdue { margin-left: var(--space-2); }
+    .table-scroll .src { display: block; margin-top: var(--space-2); font-size: var(--size-1); }
+
+    .actions-card { margin-top: var(--space-5); }
+    .caps { list-style: none; display: grid; gap: var(--space-3); }
+    .caps li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .caps .what { font-weight: var(--weight-medium); }
+    .caps .note { font-size: var(--size-2); line-height: var(--lh-snug); }
+    .caps .held {
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-label);
+    }
+    .caps .not-held {
+      font-size: var(--size-2);
+      color: var(--agent-uncertain);
+      font-weight: var(--weight-medium);
+    }
+
+    /* 390px. The stylesheet already turns .table-scroll rows into labelled
+       records; these are the pieces of this page that are not a table. */
+    @media (max-width: 720px) {
+      .section-head .toolbar { width: 100%; }
+      .lanes { gap: var(--space-5); }
+    }
+  </style>
+</AdminLayout>

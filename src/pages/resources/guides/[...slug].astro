@@ -1,0 +1,459 @@
+---
+// /resources/guides/<slug> — one authored guide, rendered from
+// src/content/guides/<slug>.md.
+//
+// WHY THIS FILE EXISTS AND WHAT MUST NEVER HAPPEN TO IT
+//
+// 1. DRAFTS GET NO ROUTE. getStaticPaths() filters on status === 'ready', so a
+//    draft is not built, not linked and not reachable — not "published with a
+//    note on it". This is a public surface: a half-written page here is
+//    something a crawler indexes and an assistant quotes back to a prospect,
+//    which is the opposite failure from a draft session under /craft (private,
+//    gated, and merely embarrassing). Never soften this to a noindex meta tag;
+//    noindex is a request, an absent file is not.
+//
+// 2. THE MARKDOWN IS TRUSTED, DELIBERATELY. These files live in the repo and
+//    reach it as a reviewed diff, so Astro's own Markdown rendering — raw HTML
+//    included — is the correct renderer here. src/lib/craft/markdown.ts and its
+//    renderMarkdown() exist for the opposite case: text somebody ELSE wrote
+//    (learner submissions, forum replies), where the html token must be dropped
+//    because the author is not the reviewer. Do not "fix" this page to use
+//    renderMarkdown(); it would break author-written HTML for no gain. Do not
+//    "fix" a learner surface to use <Content />; that is a real hole.
+//
+// 3. THE BODY IS WRAPPED IN .prose AND MUST STAY THAT WAY. ds/reset.css strips
+//    list markers globally so UI lists are not bulleted; global.css restores
+//    them under .prose. Take the class off and every bullet list in every guide
+//    silently loses its bullets.
+//
+// 4. NO INVENTED METADATA. reviewedBy is optional in the collection schema and
+//    unset on all four guides today, so the byline says so in as many words.
+//    Filling it in to satisfy an acceptance checklist is the same class of act
+//    as inventing a statistic — the checklist is asking whether a person read
+//    the page, not whether the field is populated. Same for revisedOn: never
+//    bump it without a content review.
+//
+// 5. STRUCTURED DATA ONLY WHERE THE VISIBLE CONTENT SUPPORTS IT. The Article
+//    node's author, headline and dateModified are all on the page in words; the
+//    BreadcrumbList matches the breadcrumb trail a reader can see and click. If
+//    a node ever describes something the page does not show, delete the node
+//    rather than adding the content to justify it.
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN, practitioner } from '../../../data/facts';
+
+export const prerender = true;
+
+type Guide = CollectionEntry<'guides'>;
+
+export async function getStaticPaths() {
+  // The draft gate. Also applied on the cluster index — the two are deliberate
+  // copies of one predicate rather than a shared helper, because a helper would
+  // have to live in src/lib and this is the whole of it. If a third surface ever
+  // needs the same filter, that is the moment it moves.
+  const published = await getCollection('guides', (g) => g.data.status === 'ready');
+  const bySlug = new Map(published.map((g) => [g.id, g]));
+
+  return published.map((entry) => {
+    // Cluster links, from the frontmatter rather than from the prose: the pillar
+    // first (so a supporting piece always offers the way up), then the declared
+    // neighbours in the order the author listed them. Anything not published is
+    // simply absent — a card pointing at a draft would be a 404 with a nice
+    // shadow on it.
+    const slugs = [entry.data.pillar, ...entry.data.related].filter(
+      (s): s is string => typeof s === 'string' && s !== entry.id,
+    );
+    const related = [...new Set(slugs)]
+      .map((s) => bySlug.get(s))
+      .filter((g): g is Guide => Boolean(g));
+
+    return { params: { slug: entry.id }, props: { entry, related } };
+  });
+}
+
+interface Props {
+  entry: Guide;
+  related: Guide[];
+}
+
+const { entry, related } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const path = `/resources/guides/${entry.id}`;
+const url = `${SITE_ORIGIN}${path}`;
+
+// A revision date is a DATE, not an instant, so it is formatted by splitting the
+// string rather than by constructing a Date. new Date('2026-09-10') is midnight
+// UTC, and toLocaleDateString() on a build machine behind UTC prints the 9th —
+// a silently wrong date on a page whose whole claim is that the date is
+// meaningful. No timezone can enter a fact that has no time in it.
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const readableDate = (iso: string): string => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : iso;
+};
+
+const pillar = related.find((g) => g.id === d.pillar);
+const kindLabel = d.kind === 'pillar' ? 'Pillar guide' : 'Guide';
+
+// "Who may call the tool" is a good headline and a poor page title; suffixing
+// the cluster it belongs to makes the tab and the search result describe the
+// subject without inventing a subtitle for it. Both halves come from frontmatter.
+const pageTitle = pillar
+  ? `${d.title} — ${pillar.data.title} · ${practitioner.name}`
+  : `${d.title} · ${practitioner.name}`;
+
+// The author is Sunil on all four, and the Person node SeoHead already emits is
+// the same person — so reference it by @id rather than describing him twice and
+// risking two descriptions that disagree. A guide by anyone else gets a plain
+// Person node, because the shared @id would then be a false identity claim.
+const authorNode =
+  d.author === practitioner.name
+    ? { '@id': `${SITE_ORIGIN}/#person` }
+    : { '@type': 'Person', name: d.author };
+
+const schema: unknown[] = [
+  {
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: d.title,
+    description: d.summary,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'en-GB',
+    author: authorNode,
+    // dateModified only. There is no datePublished field in the collection and
+    // no record of a first-published date to read, and guessing one would be
+    // inventing a fact a crawler treats as ours.
+    dateModified: d.revisedOn,
+    ...(d.question ? { about: d.question } : {}),
+  },
+  // reviewedBy is a property of WebPage, not of Article, so it gets its own node
+  // — and only when a real reviewer is named and shown in the byline.
+  ...(d.reviewedBy
+    ? [
+        {
+          '@type': 'WebPage',
+          '@id': `${url}#webpage`,
+          url,
+          reviewedBy: { '@type': 'Person', name: d.reviewedBy },
+          mainEntity: { '@id': `${url}#article` },
+        },
+      ]
+    : []),
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources` },
+      { '@type': 'ListItem', position: 3, name: 'Guides', item: `${SITE_ORIGIN}/resources/guides` },
+      // The current page carries no `item`: a breadcrumb to where you already
+      // are is not a link, and schema.org allows the last element to be a name.
+      { '@type': 'ListItem', position: 4, name: d.title },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={pageTitle} description={d.summary} canonical={path} schema={schema}>
+  <article class="guide wrap">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources/guides">Guides</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">{d.title}</li>
+      </ol>
+    </nav>
+
+    <header class="g-head">
+      <p class="eyebrow">{kindLabel}</p>
+      <h1>{d.title}</h1>
+
+      {
+        /* The visibility-sample question, verbatim from the roadmap. On the page
+           because it is the honest label for what this article is: one canonical
+           page for one question. Absent on the pillar, whose broad question is
+           not one of the twelve. */
+        d.question && (
+          <p class="qline">
+            <span class="k">Answers</span>
+            {d.question}
+          </p>
+        )
+      }
+
+      <dl class="byline">
+        <div>
+          <dt>Written by</dt>
+          <dd>{d.author}</dd>
+        </div>
+        <div>
+          <dt>Reviewed by</dt>
+          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
+        </div>
+        <div>
+          <dt>Last revised</dt>
+          <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
+        </div>
+      </dl>
+    </header>
+
+    {/* .prose is load-bearing — see note 3 at the top of this file. */}
+    <div class="sheet prose">
+      <Content />
+    </div>
+
+    {
+      related.length > 0 && (
+        <aside class="cluster" aria-labelledby="cluster-h">
+          <h2 id="cluster-h">Related guides</h2>
+          <div class="cards2">
+            {related.map((g) => (
+              <a class="card" href={`/resources/guides/${g.id}`}>
+                <span class="k">{g.id === d.pillar ? 'The pillar' : 'Next'}</span>
+                <h3>{g.data.title}</h3>
+                <p>{g.data.summary}</p>
+                <span class="go">
+                  Read this<span class="arrow">→</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </aside>
+      )
+    }
+  </article>
+</PracticeLayout>
+
+<style>
+  /* Reading page: mist ground, one white sheet, everything at the prose measure.
+     Elevation, never a rule — and never a border AND a shadow on one element. */
+  .guide {
+    padding-bottom: var(--space-9);
+  }
+
+  .g-head {
+    max-width: var(--measure-prose);
+    padding: var(--space-6) 0 var(--space-7);
+  }
+  .g-head h1 {
+    font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
+    color: var(--text-loud);
+    margin-top: var(--space-3);
+  }
+
+  /* The question this page answers. Mono label, sentence case, body text. */
+  .qline {
+    margin-top: var(--space-4);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+  }
+  .qline .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  /* Author, reviewer and revision date, published together because the roadmap
+     asks for all three and because a byline that omits the reviewer reads as if
+     there were one. */
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+  }
+  .byline dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+  .byline dd {
+    font-size: var(--size-3);
+    color: var(--text-body);
+  }
+  /* Quiet, not alarming: unreviewed is a state, not an error. */
+  .byline .unset {
+    color: var(--text-quiet);
+  }
+
+  .sheet {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-7);
+    /* The measure plus the sheet's own padding, so the text stops at 62ch and
+       the paper does not stop with it. */
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+  }
+
+  .cluster {
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+    margin-top: var(--space-8);
+  }
+  .cluster h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-5);
+  }
+  /* a.card is a flex column with its own gap; global.css gives .card h3 margins
+     for the non-link variant, and the two together read as uneven spacing. */
+  .cluster a.card h3,
+  .cluster a.card p {
+    margin: 0;
+  }
+
+  @media (max-width: 620px) {
+    .sheet {
+      padding: var(--space-5);
+      border-radius: var(--radius-panel);
+    }
+    .g-head {
+      padding-top: var(--space-5);
+    }
+  }
+</style>
+
+<style is:global>
+  /* ── the article body ─────────────────────────────────────────────────────
+     GLOBAL ON PURPOSE, NAMESPACED UNDER .guide. Astro's scoped styles are
+     applied by the compiler to elements it can see in the template; the HTML
+     <Content /> produces at build time carries no scope attribute, so a scoped
+     block reaches none of it. Every selector here starts at .guide so it cannot
+     touch another surface. */
+
+  /* Long-form reading takes the looser leading; PracticeLayout's .prose sets
+     the normal one for short blocks on the other pages in this section. */
+  .guide .prose p {
+    line-height: var(--lh-loose);
+  }
+
+  /* THE DIRECT ANSWER. Every guide opens with the answer in its first
+     paragraph — that is the acceptance criterion the whole cluster is written
+     against — so the page sets it in the answering voice rather than leaving a
+     reader to discover that the preamble is missing. Never add a lede or a
+     summary above it: the first thing after the byline must be the answer. */
+  .guide .prose > p:first-child {
+    font-size: var(--size-5);
+    line-height: var(--lh-snug);
+    color: var(--text-loud);
+    margin-bottom: var(--space-6);
+  }
+
+  .guide .prose h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin: var(--space-7) 0 var(--space-4);
+  }
+  .guide .prose h3 {
+    font-size: var(--size-5);
+    color: var(--text-loud);
+    margin: var(--space-6) 0 var(--space-3);
+  }
+
+  .guide .prose ul,
+  .guide .prose ol {
+    /* reset.css zeroes padding for UI lists; a marker with no inset hangs off
+       the edge of the sheet. */
+    padding-left: var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .guide .prose li {
+    font-size: var(--size-4);
+    line-height: var(--lh-loose);
+    color: var(--text-body);
+    margin-bottom: var(--space-2);
+  }
+  .guide .prose li::marker {
+    color: var(--text-quiet);
+  }
+
+  .guide .prose em {
+    font-style: italic;
+  }
+  .guide .prose blockquote {
+    margin: var(--space-5) 0;
+    padding-left: var(--space-5);
+    border-left: 2px solid var(--border-field);
+    color: var(--text-quiet);
+  }
+
+  .guide .prose code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-tick);
+    padding: 0.1em 0.35em;
+  }
+  /* Code blocks scroll in their own container rather than widening the page. */
+  .guide .prose pre {
+    overflow-x: auto;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+  .guide .prose pre code {
+    background: none;
+    padding: 0;
+    font-size: var(--size-2);
+  }
+
+  /* TABLES. A guide's Markdown may wrap one in <div class="scroll-x">…</div> —
+     these files are trusted, so raw HTML in them is a legitimate authoring tool
+     — and that is the form to prefer, because it keeps the table's semantics
+     for a screen reader. A bare Markdown table gets the fallback below: it
+     becomes its own scroll container, which costs the table role in some
+     screen readers but never makes the page scroll sideways. */
+  .guide .prose .scroll-x {
+    overflow-x: auto;
+    margin-bottom: var(--space-5);
+  }
+  .guide .prose > table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .guide .prose table {
+    border-collapse: collapse;
+    font-size: var(--size-3);
+  }
+  .guide .prose th,
+  .guide .prose td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    text-align: left;
+    vertical-align: top;
+  }
+  .guide .prose th {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+
+  .guide .prose hr {
+    border: 0;
+    border-top: 1px solid var(--border-hair);
+    margin: var(--space-7) 0;
+  }
+
+  .guide .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-panel);
+  }
+</style>

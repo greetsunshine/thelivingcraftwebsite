@@ -33,11 +33,11 @@ interface Destination {
 }
 
 const DESTINATIONS: Destination[] = [
-  { href: '/programmes/', label: 'Programmes', built: false },
-  { href: '/advisory/', label: 'Advisory', built: false },
-  { href: '/resources/', label: 'Resources', built: false },
-  { href: '/tools/', label: 'Tools', built: false },
-  { href: '/about/', label: 'About', built: false },
+  { href: '/programmes/', label: 'Programmes', built: true },
+  { href: '/advisory/', label: 'Advisory', built: true },
+  { href: '/resources/', label: 'Resources', built: true },
+  { href: '/tools/', label: 'Tools', built: true },
+  { href: '/about/', label: 'About', built: true },
 ];
 
 /** Trailing slashes are noise for a comparison; strip once, compare simply. */

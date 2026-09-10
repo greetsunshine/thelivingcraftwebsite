@@ -65,6 +65,4 @@ Finally, this guide does not cover what happens when a permitted call does not c
 
 The quickest useful exercise: list every tool your agent holds, and for each one write the sentence "this tool refuses to ___". If the sentence is empty, the tool has no permissions; it has instructions.
 
-- [What to do with uncertain evidence](/resources/guides/uncertain-evidence) — what should happen when the tool's checks cannot be satisfied.
-- [Designing agentic systems](/resources/guides/agentic-system-design) — where this decision sits among the other five.
-- [Agent Design Check](/tools/agent-design-check) — the tool-permission and external-action questions as a checklist you can run against a design.
+Then decide what should happen when one of those refusals fires, which is the next guide below. This decision is the fourth of the six in [Designing agentic systems](/resources/guides/agentic-system-design); the [Agent Design Check](/tools/agent-design-check) puts the tool-permission and external-action questions to a design as a checklist you can run in the browser.

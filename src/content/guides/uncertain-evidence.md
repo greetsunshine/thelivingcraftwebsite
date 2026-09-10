@@ -67,6 +67,4 @@ And the unknown-outcome case is only half a design problem. If the action was no
 
 A quick pass that tends to be productive: for each action your agent can take, write the three outcomes explicitly, then find the code path that currently implements the third one. If there isn't one, you have found the gap.
 
-- [Who may call the tool](/resources/guides/tool-permissions) — putting the evidence requirement where it is enforced.
-- [Designing agentic systems](/resources/guides/agentic-system-design) — the six decisions, of which this is the fifth.
-- [Agent Design Check](/tools/agent-design-check) — the uncertainty and recovery questions, as a checklist.
+Most of what makes the third outcome enforceable rather than aspirational sits at the tool, which is the guide linked below. This is the fifth of the six decisions in [Designing agentic systems](/resources/guides/agentic-system-design), and the [Agent Design Check](/tools/agent-design-check) asks the uncertainty and recovery questions of a design in the browser, reporting what is unanswered rather than scoring it.

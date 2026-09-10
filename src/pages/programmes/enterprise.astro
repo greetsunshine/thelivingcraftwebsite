@@ -1,0 +1,323 @@
+---
+/**
+ * /programmes/enterprise/ — the page for a sponsor or an L&D lead who is
+ * thinking about a group rather than about themselves.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Sponsor/L&D exploring a group. Needs domain relevance and practical
+ *    scope; explain readiness, group learning and coordination. Evidence:
+ *    approved scope and industry-default facts. Next step: enterprise enquiry."
+ *
+ * The reader here is not the reader of the cohort page. They are not asking
+ * whether they personally would enjoy it; they are asking whether it is
+ * defensible to put eight people's time and a budget line behind it, and
+ * whether it will survive contact with their industry. So the page leads with
+ * scope and coordination rather than with the subject, which they have usually
+ * already accepted by the time they arrive.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AN ENTERPRISE ENQUIRY IS NOT AN APPLICATION, AND THIS PAGE MUST NOT BLUR IT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The brief is explicit: "An enterprise enquiry is never counted as an
+ * application", and "participant nominations stored separately — an
+ * organisation order is not eight individual applications". That distinction is
+ * a data-model rule, but it starts here, in the copy: a page that invites a
+ * sponsor to "apply for your team" produces exactly the collapse the pipeline
+ * is built to prevent. The action on this page is a conversation, never an
+ * application.
+ *
+ * WHAT MUST NOT BE ADDED
+ *
+ *   * Hours. "30 live hours" belongs to the OPEN COHORT. The delivered copy
+ *     says only that an enterprise programme "normally brings 8–10
+ *     participants together with a schedule agreed for the group". Anything
+ *     more precise is invented.
+ *   * Fees, packages, tiers, day rates or a delivery guarantee. None are
+ *     approved; a pricing table here would be the first place a prospect
+ *     quotes back at us.
+ *   * Client names, logos, case studies or headcounts trained. There are none.
+ *   * A response-time promise — the operating guide forbids it in public copy.
+ *   * A second enterprise form. The enquiry route already exists on the cohort
+ *     page at /#team, wired to the pipeline with its own route, its own record
+ *     and its own idempotency key. A duplicate here would be a second form
+ *     definition to keep in step, which is how the two drift.
+ */
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { EXPLORES } from '../../data/cohort-copy';
+
+const title = 'Enterprise learning for a team — The Living Craft';
+const description =
+  'A group programme in agentic system design for one organisation: normally 8–10 participants, on a schedule agreed for the group, beginning with your learning objective and industry context.';
+
+/**
+ * The only structured data on this page, and it is here because the crumb
+ * trail above the heading is visibly rendered. The roadmap allows breadcrumbs
+ * "only when the visible content supports it"; a BreadcrumbList describing a
+ * trail nobody can see is markup written for a crawler alone.
+ */
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${SITE_ORIGIN}/programmes/enterprise/#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Programmes', item: `${SITE_ORIGIN}/programmes/` },
+      { '@type': 'ListItem', position: 3, name: 'Enterprise learning' },
+    ],
+  },
+];
+---
+
+<PracticeLayout
+  title={title}
+  description={description}
+  canonical="/programmes/enterprise/"
+  schema={schema}
+>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/programmes/">Programmes</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span aria-current="page">Enterprise learning</span>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Enterprise learning</p>
+      <h1>A programme for <em>one team</em></h1>
+      <p class="credential">
+        An enterprise programme normally brings <strong>8–10 participants</strong>
+        together with a schedule agreed for the group. It begins with your learning
+        objective, the experience of the people taking part and your industry context.
+        It is a separate purchase and a separate scoping conversation from the open
+        cohort.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/#team">Start the team conversation&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+      </div>
+      <p class="hero-note">
+        An enquiry is a conversation, not an application and not an order.
+      </p>
+    </div>
+  </section>
+
+  {/* ── who and when ─────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">When a group is the right shape</p>
+      <h2>When the decisions are <em>shared</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        A group programme earns its cost when several people will be arguing about the
+        same design and need the same vocabulary to do it. That is usually a team
+        putting an agent behind something that acts — a system that moves money, changes
+        a record or contacts a customer — where the awkward questions are going to be
+        settled in a review meeting rather than by one engineer.
+      </p>
+      <p>
+        <strong>One person, not a team?</strong> The
+        <a class="textlink" href="/">open cohort</a> is the cheaper and better answer,
+        and an employer can fund that place.
+        <strong>A live decision rather than capability?</strong> That is
+        <a class="textlink" href="/advisory/">advisory</a> — reviewing an architecture
+        you already have, not building capability across a group.
+      </p>
+    </div>
+  </section>
+
+  {/* ── the work ─────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What a group works on</p>
+      <h2>The same five areas, <em>argued out loud</em></h2>
+    </div>
+    <div class="prose intro">
+      <p>
+        Take the house example. A returns assistant reads a policy and recommends a
+        refund; give it a tool that can issue the refund and the system can move money.
+        In a group, the interesting part is that people disagree about what evidence
+        should permit the action — and that disagreement is the material. Everyone
+        leaves able to say why the boundary is where it is.
+      </p>
+      <p>
+        The example is illustrative. No customer incident is claimed, and nothing in it
+        requires your organisation to disclose anything.
+      </p>
+    </div>
+    <ol class="tlist">
+      {
+        EXPLORES.map((item, i) => (
+          <li>
+            <span class="n">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <h4>{item.title}</h4>
+              <p>{item.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  {/* ── domain relevance ─────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Domain relevance</p>
+      <h2>Industry context, <em>without your internals</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        <strong>Industry-specific practice is the default.</strong> The work is set in
+        the kind of system your team actually builds — the constraints, the review
+        culture and the failure modes of your sector — without anyone handing over
+        confidential architecture to make that possible.
+      </p>
+      <p>
+        <strong>Company-specific work needs a separate conversation</strong> about scope
+        and permission. It is not refused; it is simply not something to arrange by
+        email in an enquiry thread, because it changes what material is shared, who may
+        see it and what is agreed in writing first.
+      </p>
+      <p>
+        Please do not attach confidential company material to an enquiry. Your learning
+        objective, the experience of the participants and your industry are enough to
+        have a useful first conversation.
+      </p>
+    </div>
+  </section>
+
+  {/* ── readiness and coordination ───────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Readiness and coordination</p>
+      <h2>What a first conversation <em>needs from you</em></h2>
+    </div>
+    <div class="cards2">
+      <div class="panel">
+        <h3>Bring three things</h3>
+        <div class="detail-row"><span class="dk">Learning objective</span><span class="dv">What the group should be able to do afterwards</span></div>
+        <div class="detail-row"><span class="dk">Participant experience</span><span class="dv">Where the group sits on system design today</span></div>
+        <div class="detail-row"><span class="dk">Industry context</span><span class="dv">The sector and the constraints it works under</span></div>
+        <div class="detail-row"><span class="dk">Approximate group size</span><span class="dv">Normally 8–10 participants</span></div>
+      </div>
+      <div class="panel">
+        <h3>How coordination works</h3>
+        <div class="detail-row"><span class="dk">Schedule</span><span class="dv">Agreed for the group, not fixed in advance</span></div>
+        <div class="detail-row"><span class="dk">Nominations</span><span class="dv">Handled as one organisation’s group, not as individual applications</span></div>
+        <div class="detail-row"><span class="dk">Attendance and access</span><span class="dv">Confirmed before the group starts</span></div>
+        <div class="detail-row"><span class="dk">Certificate</span><span class="dv">None</span></div>
+      </div>
+    </div>
+
+    <aside class="pending">
+      <h3>Facts this page is waiting on</h3>
+      <ul>
+        <li>
+          Live hours, delivery format and how many sessions an enterprise group runs.
+          <span class="who">Sunil to approve the scope before publication</span>
+        </li>
+        <li>
+          Fees, payment schedule, cancellation and rescheduling terms.
+          <span class="who">Sunil with finance; nothing is published until agreed</span>
+        </li>
+        <li>
+          Contracting entity and the terms a purchase order would sit under.
+          <span class="who">The owner — the same facts <a href="/terms">terms</a> is waiting on</span>
+        </li>
+      </ul>
+    </aside>
+  </section>
+
+  {/* ── next step ────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Next step</p>
+      <h2>Start the <em>scoping conversation</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        The enterprise enquiry form asks for your organisation, your role, what the team
+        needs to learn, an approximate group size and your industry. It is recorded as
+        an enquiry from an organisation — never as a set of individual applications —
+        and the reply picks up from what you wrote rather than asking for it again.
+      </p>
+      <p>
+        You can also write directly to
+        <a class="textlink" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>.
+        No response-time commitment is published, because none has been agreed.
+      </p>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/#team">Start the team conversation&nbsp;<span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href="/programmes/">Compare all three routes</a>
+    </div>
+    <p class="revised">
+      Written <time datetime="2026-09-11">11 September 2026</time>. Scope and terms
+      pending Sunil’s factual approval.
+    </p>
+  </section>
+</PracticeLayout>
+
+<style>
+  .intro {
+    margin-bottom: var(--space-6);
+  }
+
+  .panel h3 {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin-bottom: var(--space-3);
+  }
+  .panel .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .panel .dv {
+    max-width: 30ch;
+  }
+
+  .pending {
+    margin-top: var(--space-6);
+  }
+  /* The pending block's own links: it sits on the uncertain ground, so an
+     inherited ink underline would disappear into it. */
+  .pending a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 640px) {
+    .panel .detail-row {
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .panel .dv {
+      text-align: left;
+      max-width: none;
+    }
+  }
+</style>

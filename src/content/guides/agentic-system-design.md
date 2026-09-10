@@ -125,10 +125,6 @@ If you have a design in front of you, the useful next step is to answer the six 
 
 The [Agent Design Check](/tools/agent-design-check) walks the same ground as a structured checklist you can run in the browser, and tells you which questions are still unanswered rather than scoring you.
 
-For the three decisions that carry the most weight:
+The three decisions that carry the most weight have a guide of their own, and they are linked at the foot of this page.
 
-- [When a workflow is enough](/resources/guides/workflow-or-agent) — deciding whether this needs an agent at all.
-- [Who may call the tool](/resources/guides/tool-permissions) — designing the authority each tool holds.
-- [What to do with uncertain evidence](/resources/guides/uncertain-evidence) — the third outcome, and how to route to it.
-
-And if you would rather practise this on a system you have built than read about it, that is what the open cohort is for: 30 live hours plus independent work, spent building a working agentic system and explaining the choices behind it.
+And if you would rather practise this on a system you are building than read about it, that is what the [open cohort](/) is for: you build a working agentic system and then have to explain the choices behind it to people who will argue with them.

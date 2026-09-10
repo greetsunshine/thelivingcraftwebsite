@@ -47,10 +47,18 @@ const EXTRA = [
   { path: '/resources/guides/tool-permissions', priority: '0.6' },
   { path: '/resources/guides/uncertain-evidence', priority: '0.6' },
 
-  // NOT YET LISTED, because they do not return 200 yet:
-  //   /resources/  /tools/  /tools/agent-design-check
-  //   /communication-preferences
-  // Add each one in the commit that makes it render.
+  { path: '/resources/', priority: '0.6' },
+  { path: '/tools/', priority: '0.6' },
+  { path: '/tools/agent-design-check', priority: '0.7' },
+
+  // Not an offer page, but a real one somebody may need to find in a hurry:
+  // how to stop receiving something. Indexed for that reason.
+  { path: '/communication-preferences', priority: '0.4' },
+
+  // STILL NOT LISTED, and correctly so:
+  //   /privacy and /terms   — noindex until the owner supplies their facts
+  //   /resources/templates/ — does not exist; the one `pending` left on the site
+  //   anything under /craft — closed by middleware and disallowed in robots
 ];
 
 // Build date, not request time — a lastmod that moves on every request tells

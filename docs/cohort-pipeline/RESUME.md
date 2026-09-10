@@ -59,11 +59,11 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 | Stage | State | Next action |
 |---|---|---|
 | 1 · Page and three forms that save | **built, verified** | Run the schema, then `npm run acceptance` |
-| 2 · Staff screens and named accounts | identity layer **built**; screens **drafted, unaudited** | Verify the screens render and that `unavailable` never shows as `0` |
+| 2 · Staff screens and named accounts | **built and audited** (read-only) | Nothing, until stage 3 adds writes |
 | 3 · Pipeline and evidence | schema only | Stage writes, meetings, offers, finance, attendance |
 | 4 · Communications | not started | Blocked on D2 |
 | 5 · Administration | not started | Import/export, retention, staff screen |
-| 6 · Wider site | **most pages built**; tools + a few routes in flight | Finish, then sitemap |
+| 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap | Later clusters are editorial briefs, not code |
 
 ---
 
@@ -71,18 +71,24 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 Verified with curl against `npm run dev` on `http://localhost:4321`.
 
-**Live and rendering:** `/`, `/about`, `/advisory`, `/contact`, `/programmes/`,
-`/programmes/enterprise`, `/resources/guides/`, `/resources/guides/<slug>`, `/privacy`,
-plus the untouched `/caio`, `/assessment`, `/latest`, `/craft/*`.
+**The whole public site now renders.** Eighteen URLs are in the sitemap and every one was
+checked to return 200: `/`, `/about`, `/advisory`, `/contact`, `/programmes/`,
+`/programmes/enterprise`, `/resources/`, `/resources/guides/` and its four slugs, `/tools/`,
+`/tools/agent-design-check`, `/communication-preferences`, plus the untouched `/caio`,
+`/assessment`, `/latest`.
 
-**In flight at the time of writing** (three agents were interrupted by a rate limit; check
-before assuming): `/tools/`, `/tools/agent-design-check`, `/terms`,
-`/communication-preferences`, `/resources/` (the hub — note `/resources/guides/` already
-works).
+**Deliberately NOT in the sitemap, and each for its own reason:** `/privacy` and `/terms`
+are `noindex` until the owner supplies their facts; `/resources/templates/` does not exist
+and is the single `pending` item left in the navigation; everything under `/craft` is closed
+by middleware and disallowed in robots.
 
-**Console:** `/craft/admin/pipeline` and `/craft/admin/pipeline/[id]` are drafted and gated
-correctly (302 to login without a session). They have **not** been audited for the
-unknown-is-never-zero rule, which is the property that matters most on them.
+**Console:** `/craft/admin/pipeline` and `/craft/admin/pipeline/[id]` render, are gated
+(302 to login without a session), and **have been audited**. Unknown never renders as zero:
+`unavailable`, `denied` and `no source yet` are distinguished by three signals each (a mono
+state word, a distinct heading, distinct styling), a retry is offered only for
+`unavailable`, and `denied` prints who does hold the capability. There are no write paths
+yet, by design — the eleven future actions render as text gated on `can()`, not as disabled
+buttons.
 
 ---
 
@@ -142,13 +148,10 @@ exists to prevent** — do not "fix" them into passes.
 
 ## Suggested order when picking this up
 
-1. Check whether the three in-flight routes landed; finish any that did not.
-2. Audit the console pipeline screens for unknown-never-zero. That is acceptance case E14
-   and the reason those screens can be trusted.
-3. Add the new public routes to `src/pages/sitemap.xml.ts` — **only routes that return 200.**
-4. Stage 3: stage transitions with a reason, meetings, offers, finance and attendance.
+1. ~~In-flight routes, console audit, sitemap.~~ **All done.** Stages 1, 2 and 6 are built.
+2. Stage 3: stage transitions with a reason, meetings, offers, finance and attendance.
    Enrolment needs Sunil's admission **and** finance-confirmed payment; they are separate
    people and separate capabilities on purpose.
-5. Stage 5's administration screen, so staff accounts can be managed without the CLI.
+3. Stage 5's administration screen, so staff accounts can be managed without the CLI.
 
 Stage 4 stays shut until D2 is answered.

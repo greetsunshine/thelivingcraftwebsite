@@ -1,0 +1,279 @@
+---
+// /resources/guides — the cluster index.
+//
+// WHY THIS FILE EXISTS AND WHAT MUST NEVER HAPPEN TO IT
+//
+// 1. IT LISTS WHAT EXISTS, AND NOTHING ELSE. The roadmap plans sixteen pieces
+//    across four clusters and says in as many words that it "does not claim any
+//    of the sixteen pieces exist". So this page renders the collection — never a
+//    hand-written list of titles, never a greyed-out row for something unwritten,
+//    never a hub whose purpose is to fill a navigation slot. The short honest
+//    note at the foot is the whole of what may be said about the unpublished
+//    clusters, and it names no titles and no dates.
+//
+// 2. SAME DRAFT GATE AS THE ARTICLE ROUTE. status === 'ready' or it is not here.
+//    The two filters are deliberate copies of one predicate; see the note in
+//    [...slug].astro.
+//
+// 3. EVERY PUBLISHED GUIDE APPEARS EXACTLY ONCE. The roadmap's rule is that
+//    every published page has at least one inbound internal link, and for a
+//    supporting piece this index plus its pillar are that link. A supporting
+//    piece whose pillar is unpublished would otherwise vanish, so it falls into
+//    the "Other guides" group rather than off the page. Do not "tidy" that
+//    fallback away — it is the orphan check the collection schema refers to.
+//
+// 4. STRUCTURED DATA: BREADCRUMBS ONLY. This page authored nothing, so it emits
+//    no Article node; the roadmap's list of what structured data may describe is
+//    what is honoured here, and an index that claims authorship of the pieces it
+//    links is exactly the sort of manufactured markup that list rules out.
+import { getCollection } from 'astro:content';
+import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../../data/facts';
+
+export const prerender = true;
+
+const published = await getCollection('guides', (g) => g.data.status === 'ready');
+
+const pillars = published.filter((g) => g.data.kind === 'pillar');
+const supporting = published.filter((g) => g.data.kind === 'supporting');
+
+// Supporting pieces sit in the order the PILLAR lists them in `related` — the
+// author's reading order, and the same order the roadmap lists them in. Anything
+// the pillar does not name still appears, at the end, rather than being dropped.
+const clusters = pillars.map((pillar) => {
+  const rank = new Map(pillar.data.related.map((slug, i) => [slug, i]));
+  const pieces = supporting
+    .filter((s) => s.data.pillar === pillar.id)
+    .sort((a, b) => (rank.get(a.id) ?? 99) - (rank.get(b.id) ?? 99));
+  return { pillar, pieces };
+});
+
+const pillarIds = new Set(pillars.map((p) => p.id));
+const orphans = supporting.filter((s) => !s.data.pillar || !pillarIds.has(s.data.pillar));
+
+const count = published.length;
+
+const path = '/resources/guides';
+const url = `${SITE_ORIGIN}${path}`;
+
+const title = 'Guides — designing systems that act · Sunil Mathew';
+const description =
+  'Written answers to the design questions that arrive when a language model stops recommending and starts doing: agent or workflow, tool permissions, uncertain evidence.';
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources` },
+      { '@type': 'ListItem', position: 3, name: 'Guides' },
+    ],
+  },
+];
+
+---
+
+<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+  <div class="guides wrap">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">Guides</li>
+      </ol>
+    </nav>
+
+    <header class="i-head">
+      <p class="eyebrow">Resources</p>
+      <h1>Guides</h1>
+      <p class="lede">
+        Design questions that arrive the moment a language model stops recommending and starts
+        doing. Each guide opens with the answer, says who it is for, works through an example,
+        is explicit about what the argument rests on, and ends with what it does not cover.
+      </p>
+    </header>
+
+    {
+      clusters.map(({ pillar, pieces }) => (
+        <section class="cluster" aria-labelledby={`c-${pillar.id}`}>
+          <a class="pillar-card" href={`/resources/guides/${pillar.id}`}>
+            <span class="k">Start here</span>
+            <h2 id={`c-${pillar.id}`}>{pillar.data.title}</h2>
+            <p>{pillar.data.summary}</p>
+            <span class="go">
+              Read the pillar<span class="arrow">→</span>
+            </span>
+          </a>
+
+          {pieces.length > 0 && (
+            <div class="cards3">
+              {pieces.map((g) => (
+                <a class="card" href={`/resources/guides/${g.id}`}>
+                  <h3>{g.data.title}</h3>
+                  <p>{g.data.summary}</p>
+                  {g.data.question && (
+                    <p class="q">
+                      <span class="k">Answers</span>
+                      {g.data.question}
+                    </p>
+                  )}
+                  <span class="go">
+                    Read this<span class="arrow">→</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+      ))
+    }
+
+    {
+      /* Only ever populated by a supporting piece whose pillar is not published.
+         See note 3 — the point is that nothing published is unreachable. */
+      orphans.length > 0 && (
+        <section class="cluster" aria-labelledby="orphans-h">
+          <h2 id="orphans-h" class="group-h">
+            Other guides
+          </h2>
+          <div class="cards3">
+            {orphans.map((g) => (
+              <a class="card" href={`/resources/guides/${g.id}`}>
+                <h3>{g.data.title}</h3>
+                <p>{g.data.summary}</p>
+                <span class="go">
+                  Read this<span class="arrow">→</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <p class="note">
+      {count === 1 ? 'One guide is published.' : `${count} guides are published.`} Further clusters
+      — evaluating agent behaviour, reliability and cost, and running a design review — are
+      planned and are not written yet. Nothing appears on this page until it has been written and
+      is ready to be read.
+    </p>
+  </div>
+</PracticeLayout>
+
+<style>
+  .guides {
+    padding-bottom: var(--space-9);
+  }
+
+  .i-head {
+    max-width: var(--measure-prose);
+    padding: var(--space-6) 0 var(--space-7);
+  }
+  .i-head h1 {
+    font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-4);
+  }
+
+  .cluster + .cluster {
+    margin-top: var(--space-8);
+  }
+
+  /* The pillar reads as the way in: one wide sheet above its three pieces. */
+  .pillar-card {
+    display: block;
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-7);
+    margin-bottom: var(--space-4);
+    transition: box-shadow var(--motion-base) var(--ease-out);
+  }
+  .pillar-card:hover {
+    box-shadow: var(--shadow-lift);
+  }
+  .pillar-card .k {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+  }
+  .pillar-card h2 {
+    font-size: clamp(var(--size-6), 3vw, var(--size-7));
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-3);
+  }
+  .pillar-card p {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  /* Only the pillar sheet is styled here. The three cards are `a.card`, which
+     PracticeLayout already dresses — including `margin-top: auto` on .go, which
+     is what bottom-aligns the three calls to action. Restating any of it in this
+     block would win on specificity and quietly break that alignment. */
+  .pillar-card .go {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+    color: var(--accent-ink);
+  }
+  .pillar-card:hover .go {
+    color: var(--accent-ink-strong);
+  }
+  .pillar-card:hover .go .arrow {
+    transform: translateX(3px);
+  }
+  .pillar-card .go .arrow {
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+
+  /* The question each piece answers, as marginalia under the summary. */
+  .cluster a.card .q {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+  }
+  .cluster a.card .q .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  .group-h {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-5);
+  }
+
+  /* What is not here, said plainly rather than as an empty row per unwritten
+     piece. Quiet, at the foot, and carrying no date. */
+  .note {
+    margin-top: var(--space-8);
+    max-width: var(--measure-prose);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 620px) {
+    .pillar-card {
+      padding: var(--space-5);
+      border-radius: var(--radius-panel);
+    }
+    .i-head {
+      padding-top: var(--space-5);
+    }
+  }
+</style>

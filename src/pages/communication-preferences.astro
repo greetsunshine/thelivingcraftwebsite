@@ -1,0 +1,317 @@
+---
+/**
+ * /communication-preferences — the unsubscribe landing page, written for the
+ * period before there is anything to unsubscribe from.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THERE IS NO FORM ON THIS PAGE, AND ADDING ONE WOULD BE THE BUG.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Automated email is not in service. There is no sending provider, no verified
+ * sending domain and no monitored reply mailbox, so nothing is sent by machine
+ * to anybody today. The outbox, the templates, the consent and suppression
+ * checks and the signed unsubscribe endpoint are built with dispatch off.
+ *
+ * A preference form here would therefore collect a choice and drop it. That is
+ * strictly worse than no form: it tells somebody their request has been handled
+ * when it has not, and the request it silently discards is the one request a
+ * person is entitled to have honoured immediately. So the page explains the two
+ * routes that work TODAY — reply to any message, or write to the mailbox — and
+ * says plainly that nothing automated is being sent.
+ *
+ * WHAT THIS PAGE BECOMES
+ *
+ * When email is switched on, this route is the destination of a signed opaque
+ * link in the footer of every message: one action, no login, no address
+ * exposed, and it cancels anything already queued. An invalid or expired link
+ * shows a generic confirmation and a contact route rather than an error that
+ * confirms whether an address exists. That is the brief's contract for this
+ * page, and it is why the route exists now rather than being invented later.
+ *
+ * TWO DISTINCTIONS THE PAGE MUST KEEP
+ *
+ *   * Unsubscribing and erasure are different actions. The brief says so in
+ *     terms. Stopping messages does not delete a record, and asking for a
+ *     record to be deleted is a different request answered on /privacy.
+ *   * A receipt is not marketing. The on-screen confirmation after a form, and
+ *     a person replying to something you asked, are not the thing this
+ *     permission governs — so withdrawing it does not stop a human reply to
+ *     your own question.
+ *
+ * The consent wording is imported, never retyped. src/lib/pipeline/consent.ts
+ * exists precisely so that "what did I agree to" has one answer; a paraphrase
+ * on this page would be a second, and this is the page where somebody comes to
+ * check.
+ *
+ * NOT noindex. Somebody looking for how to stop receiving something should be
+ * able to find this, and everything on it is true today. When dispatch is
+ * switched on, this page is rewritten in the same change.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+
+const title = 'Changing what you receive — The Living Craft';
+const description =
+  'How to change or withdraw permission to receive programme updates from The Living Craft. No automated email is currently sent; a reply or one line to apply@thelivingcraft.ai is all it takes.';
+---
+
+<PracticeLayout
+  title={title}
+  description={description}
+  canonical="/communication-preferences"
+>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Email preferences</p>
+      <h1>Changing what <em>you receive</em></h1>
+      <p class="credential">
+        No automated message is being sent to anybody today. If you want to change or
+        withdraw a permission you have given, reply to any message you have had from us,
+        or send one line to <strong>apply@thelivingcraft.ai</strong>. A person makes the
+        change and it is recorded.
+      </p>
+      <div class="hero-cta">
+        <a
+          class="btn btn-primary"
+          href="mailto:apply@thelivingcraft.ai?subject=Communication%20preferences"
+          >Write to us&nbsp;<span class="arrow">→</span></a
+        >
+        <a class="btn btn-ghost" href="/privacy">How your details are handled</a>
+      </div>
+      <p class="hero-note">
+        There is no form on this page, deliberately. See “Why there is no form here”.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What is being sent</p>
+      <h2>Nothing, <em>by machine</em></h2>
+    </div>
+
+    <ul class="fact-list">
+      <li>
+        <b>No automated email is in service.</b> There is no sending provider, no
+        verified sending domain and no monitored automated mailbox, so no message is
+        sent by machine — including anything marketing-shaped. Ticking the permission
+        box today records the permission and sends nothing.
+      </li>
+      <li>
+        <b>There is no acknowledgement email.</b> When you send an application or an
+        enquiry, the confirmation is the message on screen and the reference it gives
+        you. Nothing arrives in your inbox to confirm it.
+      </li>
+      <li>
+        <b>A reply from a person is not marketing.</b> If somebody answers a question
+        you asked, that is a human reply to your own message. Withdrawing marketing
+        permission does not stop it, and it should not — you asked.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">The permission</p>
+      <h2>What you may <em>have agreed to</em></h2>
+    </div>
+
+    <p class="body-copy">
+      There is one optional tick box, beside the application and enquiry forms, and it
+      says exactly this:
+    </p>
+
+    <blockquote class="quote">{MARKETING_CONSENT.wording}</blockquote>
+
+    <ul class="fact-list">
+      <li>
+        <b>It starts unticked and nothing depends on it.</b> It is asked separately from
+        the application, and refusing it changes nothing about how the application is
+        treated.
+      </li>
+      <li>
+        <b>The words above are the words that were recorded.</b> Your record points at
+        this exact version of the sentence. If it is ever reworded that becomes a new
+        version, and your record keeps pointing at the one you actually saw — so “what
+        did I agree to” has an answer that cannot be quietly rewritten.
+      </li>
+      <li>
+        <b>Withdrawing is a new entry, not an edit.</b> Changing your mind adds a
+        record that permission was withdrawn, and when. It does not overwrite the record
+        that it was given. Both survive on purpose: an edit would destroy the evidence
+        that permission ever existed, which is exactly the evidence you would want if
+        you later asked why you used to receive something.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Right now</p>
+      <h2>Two routes, and <em>both are read by a person</em></h2>
+    </div>
+
+    <div class="panel routes">
+      <div class="detail-row">
+        <span class="dk">You have had a message from us</span>
+        <span class="dv">Reply to it and say so</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You have not, or you would rather start fresh</span>
+        <span class="dv"
+          ><a class="textlink" href="mailto:apply@thelivingcraft.ai?subject=Communication%20preferences"
+            >apply@thelivingcraft.ai</a
+          ></span
+        >
+      </div>
+      <div class="detail-row">
+        <span class="dk">You want your details deleted, not just stopped</span>
+        <span class="dv"
+          >A different request — <a class="textlink" href="/privacy">how your details are handled</a></span
+        >
+      </div>
+    </div>
+
+    <div class="prose stack after-routes">
+      <p>
+        One line is enough. “Please stop sending me programme updates” is a complete
+        request, and it does not need a reason. You do not need to quote a reference,
+        though it makes the record easier to find if you have one to hand.
+      </p>
+      <p>
+        <strong>Stopping messages is not deletion.</strong> Withdrawing permission stops
+        what would be sent; it does not remove your application or enquiry, which is
+        kept so that a conversation you started can be answered. If you want the record
+        itself removed, ask for that instead — it is a different request, and
+        <a class="textlink" href="/privacy">how your details are handled</a> describes
+        what it does and the one thing it cannot reach.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Why there is no form here</p>
+      <h2>A form that posts nowhere is <em>worse than none</em></h2>
+    </div>
+
+    <div class="prose stack">
+      <p>
+        The obvious version of this page is a tick box and a save button. Until sending
+        is switched on there is nothing behind that button, so it would take a
+        preference, show a confirmation, and drop it. Telling somebody their request has
+        been handled when it has not is worse than not offering — and the request being
+        discarded is the one a person is most entitled to have honoured.
+      </p>
+      <p>
+        <strong>When email is switched on, this page changes shape.</strong> Every
+        message will carry a signed one-click link that lands here: no login, no form to
+        fill in, your address never shown on the page, and anything already queued
+        cancelled at the same moment. A link that has expired or been tampered with will
+        show a plain confirmation and a way to contact a person, rather than an error
+        that reveals whether an address is on file.
+      </p>
+    </div>
+
+    <aside class="pending">
+      <h3>What this page is waiting on</h3>
+      <ul>
+        <li>
+          A sending service, and a verified sending domain to send from.
+          <span class="who">The owner</span>
+        </li>
+        <li>
+          A monitored reply mailbox, so a reply reaches a person and joins the record it
+          belongs to.
+          <span class="who">The owner</span>
+        </li>
+      </ul>
+    </aside>
+
+    <p class="revised">Written <time datetime="2026-09-11">11 September 2026</time>.</p>
+  </section>
+</PracticeLayout>
+
+<style>
+  .band { padding-block: var(--space-8); }
+
+  .body-copy {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+
+  .fact-list {
+    list-style: none;
+    max-width: var(--measure-prose);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .fact-list li {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--border-hair);
+  }
+  .fact-list b {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    display: block;
+  }
+
+  /* The consent wording, quoted. Sunken ground rather than a card: it is a
+     sentence lifted into the page, not a panel with a job of its own. */
+  .quote {
+    margin: var(--space-5) 0;
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-loud);
+    max-width: var(--measure-prose);
+  }
+
+  /* Three rows of two cells — the same routing-table shape /contact uses, for
+     the same reason: it stacks cleanly at 390px where a table scrolls. */
+  .routes .detail-row:first-child { padding-top: 0; }
+  .routes .detail-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .routes .dk {
+    max-width: 40ch;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+  }
+  .routes .dv {
+    max-width: 34ch;
+    font-weight: var(--weight-normal);
+  }
+
+  .after-routes { margin-top: var(--space-6); }
+
+  .pending { margin-top: var(--space-6); }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 900px) {
+    .band { padding-block: var(--space-7); }
+  }
+  @media (max-width: 720px) {
+    .routes .detail-row {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .routes .dv {
+      text-align: left;
+      max-width: none;
+    }
+  }
+</style>

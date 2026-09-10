@@ -79,6 +79,4 @@ And the decision is reversible in one direction more easily than the other. Repl
 
 If you are weighing this now, the exercise that settles it fastest is to try writing the flowchart. Not to build it — to write it. The point at which you cannot continue is the point where the agent goes, and the parts you finished are the parts that should stay fixed.
 
-- [Designing agentic systems](/resources/guides/agentic-system-design) — the six decisions this is the first of.
-- [Who may call the tool](/resources/guides/tool-permissions) — the acting half, once you have drawn the seam.
-- [Agent Design Check](/tools/agent-design-check) — a structured pass over the same questions, in the browser.
+This is the first of the six decisions in [Designing agentic systems](/resources/guides/agentic-system-design), and once you have drawn the seam the next one is the acting half of it. If you would rather work through the whole set as a checklist, the [Agent Design Check](/tools/agent-design-check) asks the same questions in the browser and reports which ones you cannot yet answer.

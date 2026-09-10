@@ -1,0 +1,336 @@
+---
+/**
+ * /advisory/ — for a leader who has a design decision in front of them and does
+ * not want to open a consulting engagement to get an answer.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Leader facing a design decision. Wants useful guidance without unclear
+ *    project scope; explain framing, review and next-step planning. Evidence:
+ *    Sunil-approved service boundaries. Next step: scoping conversation."
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE WORDING ON THIS PAGE IS FENCED. THE FENCE IS THE PRODUCT.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The roadmap, verbatim: "Advisory wording is limited to use-case framing,
+ * architecture review and next-step guidance for this roadmap. Do not add
+ * implementation guarantees, fixed delivery packages or Fractional CAIO
+ * promotion without separate scoping. Sunil confirms service facts before
+ * publication."
+ *
+ * So three things may be described and nothing else. What must never appear
+ * here without a separate scoping decision from Sunil:
+ *
+ *   * An implementation guarantee, an outcome claim, or any sentence that
+ *     reads as "we will build it". The reader's stated fear is UNCLEAR PROJECT
+ *     SCOPE; a page that quietly widens is the thing they are afraid of.
+ *   * A fixed package, tier table, day rate, retainer or minimum term. Not one
+ *     of those is approved. The absence is deliberate and is explained on the
+ *     page rather than hidden.
+ *   * Promotion of the Fractional CAIO retainer. /caio is a real, separate
+ *     surface with its own scope and its own tiers. It is LINKED here, once,
+ *     factually, so a reader looking for a longer engagement can find it —
+ *     linking is not promoting, and absorbing its pitch into this page is
+ *     exactly what the roadmap rules out.
+ *   * Client names, case studies, engagement counts or results. There are
+ *     none.
+ *   * A response-time promise. One business day is a proposal "subject to
+ *     capacity agreement" and the operating guide forbids publishing it.
+ *
+ * The worked example is the site's house example, carried through from the
+ * cohort page and the guides, and shown here as the questions a review
+ * actually asks — because "what does a review consist of" is the reader's real
+ * question and a list of adjectives does not answer it.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+
+const title = 'Advisory — The Living Craft';
+const description =
+  'Bounded advisory on agentic system design: framing a use case, reviewing an architecture and agreeing the next useful piece of work. Not a delivery engagement.';
+---
+
+<PracticeLayout title={title} description={description} canonical="/advisory/">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Advisory</p>
+      <h1>Guidance on a decision, <em>not a project</em></h1>
+      <p class="credential">
+        Advisory here covers three things: <strong>framing a use case</strong>,
+        <strong>reviewing an architecture</strong> and <strong>agreeing the next useful
+        piece of work</strong>. It is deliberately bounded. There is no implementation
+        commitment, no delivery package and no open-ended scope attached to it.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="mailto:apply@thelivingcraft.ai?subject=Advisory%20scoping%20conversation">
+          Request a scope call&nbsp;<span class="arrow">→</span>
+        </a>
+        <a class="btn btn-ghost" href="/resources/">Read the method first</a>
+      </div>
+      <p class="hero-note">
+        A scoping conversation agrees what is in and what is out before anything else.
+      </p>
+    </div>
+  </section>
+
+  {/* ── who and when ─────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Who this is for</p>
+      <h2>You own the decision, and <em>the review is thin</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        Three moments bring people here. A team is about to give an agent authority to
+        act and nobody in the room has argued the boundary before. A design already
+        exists and needs a challenge from someone with no stake in it. Or there are six
+        candidate use cases and the first one has to be chosen for reasons that hold up
+        later.
+      </p>
+      <p>
+        It applies when the decision is yours to make and stays yours. If what you
+        actually need is to build the capability across a group, that is a
+        <a class="textlink" href="/programmes/enterprise/">team programme</a>, not
+        advisory.
+      </p>
+    </div>
+  </section>
+
+  {/* ── the three things ─────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What it covers</p>
+      <h2>Three things, and <em>the list ends there</em></h2>
+    </div>
+    <div class="cards3">
+      <div class="card">
+        <span class="k">One</span>
+        <h3>Framing a use case</h3>
+        <p>
+          What the system is for, where it stops, and whether the work needs an agent at
+          all. Often the useful outcome is that a fixed workflow was the right answer
+          and the question was never about the model.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Two</span>
+        <h3>Reviewing an architecture</h3>
+        <p>
+          A design you already have, examined against the decisions it has to answer:
+          evidence before action, tool authority, uncertainty, repeated actions, and
+          what you can see afterwards.
+        </p>
+      </div>
+      <div class="card">
+        <span class="k">Three</span>
+        <h3>Next-step guidance</h3>
+        <p>
+          Which piece of work comes next and why. Perhaps a test. Perhaps a narrower
+          permission. Perhaps a clearer explanation of the trade-off to the people
+          funding it.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ── worked example ───────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">A worked example</p>
+      <h2>What a review <em>actually asks</em></h2>
+    </div>
+    <div class="prose intro">
+      <p>
+        A returns assistant reads a policy and recommends a refund. The team wants to
+        connect a tool that issues it. On the diagram that is one more box; in
+        production the system can move money. Illustrative, and no customer incident is
+        claimed — but the questions are the ones a real review works through, in this
+        order.
+      </p>
+    </div>
+    <ol class="tlist">
+      <li>
+        <span class="n">01</span>
+        <div>
+          <h4>Does this need an agent at all?</h4>
+          <p>
+            If the steps can be written down before the request arrives, a workflow is
+            cheaper to run, easier to test and easier to defend.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">02</span>
+        <div>
+          <h4>What evidence has to hold before the action?</h4>
+          <p>
+            Named, listed and checked by the tool itself — not asserted in a prompt and
+            hoped for.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">03</span>
+        <div>
+          <h4>What is each tool allowed to do?</h4>
+          <p>
+            One job per tool, the narrowest scope that does that job, limits the tool
+            enforces rather than limits it is told about.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">04</span>
+        <div>
+          <h4>What happens when the evidence is uncertain?</h4>
+          <p>
+            Three outcomes rather than two: act, refuse, and hand over with the specific
+            gap named. A confidence threshold is not a plan.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">05</span>
+        <div>
+          <h4>Can the same action happen twice?</h4>
+          <p>
+            A timeout with an unknown outcome is the ordinary case, not the edge case.
+            The system needs a way to examine the state before repeating anything.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">06</span>
+        <div>
+          <h4>What can you see afterwards?</h4>
+          <p>
+            Which evidence was used, what each tool did, and whether the run stayed
+            inside its boundaries. Without that, an evaluation cannot point at a design
+            change.
+          </p>
+        </div>
+      </li>
+    </ol>
+    <p class="aside">
+      Those six are written out in full, with the reasoning, in the
+      <a class="textlink" href="/resources/">published guides</a>. Reading them costs
+      nothing and is the fastest way to tell whether this way of working suits your
+      team.
+    </p>
+  </section>
+
+  {/* ── the fence ────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The boundary</p>
+      <h2>What advisory <em>is not</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        <strong>It is not delivery.</strong> No implementation is committed, guaranteed
+        or included. If a review leads to work you want someone to build, that is a
+        separate conversation with a separate scope, and it does not begin by default.
+      </p>
+      <p>
+        <strong>It is not a package.</strong> No tiers, no day rate and no minimum term
+        are published, because none has been agreed. Anyone quoting you one from this
+        page would be quoting something that does not exist yet.
+      </p>
+      <p>
+        <strong>It is not the fractional CAIO retainer.</strong> That is a longer,
+        board-facing engagement with its own scope, described on
+        <a class="textlink" href="/caio">its own page</a>. A fixed-scope diagnostic with
+        a board-ready roadmap is the
+        <a class="textlink" href="/assessment">AI readiness assessment</a>. Both are
+        separate from what this page describes.
+      </p>
+      <p>
+        <strong>No response time is promised.</strong> A service target is under
+        discussion and will be published only once it has been agreed — not before.
+      </p>
+    </div>
+
+    <aside class="pending">
+      <h3>Facts this page is waiting on</h3>
+      <ul>
+        <li>
+          The shapes an advisory engagement can take — length, format and what a session
+          produces.
+          <span class="who">Sunil confirms service facts before publication</span>
+        </li>
+        <li>
+          Fees and commercial terms for advisory work.
+          <span class="who">Sunil with finance; deliberately not published until agreed</span>
+        </li>
+        <li>
+          Any example of past advisory work, in whatever form a client would permit.
+          <span class="who">None is claimed; none will be added without permission and a source</span>
+        </li>
+      </ul>
+    </aside>
+  </section>
+
+  {/* ── next step ────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Next step</p>
+      <h2>Start with the <em>decision in front of you</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        Write to
+        <a class="textlink" href="mailto:apply@thelivingcraft.ai?subject=Advisory%20scoping%20conversation">apply@thelivingcraft.ai</a>
+        with the decision you are facing, what you have already tried and who else has
+        to be convinced. That is enough for a first conversation, and it is enough to
+        say honestly whether this is the right thing at all.
+      </p>
+      <p>
+        Please do not attach confidential architecture or company documents to a first
+        enquiry. What material may be shared, and under what terms, is part of what a
+        scoping conversation settles.
+      </p>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="mailto:apply@thelivingcraft.ai?subject=Advisory%20scoping%20conversation">
+        Request a scope call&nbsp;<span class="arrow">→</span>
+      </a>
+      <a class="btn btn-ghost" href="/contact/">Other routes</a>
+    </div>
+    <p class="revised">
+      Written <time datetime="2026-09-11">11 September 2026</time>. Service facts pending
+      Sunil’s confirmation before publication.
+    </p>
+  </section>
+</PracticeLayout>
+
+<style>
+  .intro {
+    margin-bottom: var(--space-6);
+  }
+
+  .aside {
+    max-width: var(--measure-prose);
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+  }
+
+  .pending {
+    margin-top: var(--space-6);
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+</style>

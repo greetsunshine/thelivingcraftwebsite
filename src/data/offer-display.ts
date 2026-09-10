@@ -72,6 +72,25 @@ export const COMMITMENT = '30 live hours plus independent work.';
 export const COHORT_SIZE = 'The open cohort targets eight members.';
 
 /**
+ * The same two facts as a table cell rather than a sentence.
+ *
+ * WHY THESE EXIST AT ALL. A comparison table wants a fragment, not a sentence
+ * with a full stop — so the first page that needed one wrote "30, plus
+ * independent work" straight into the markup, in a file whose own header says
+ * "Never restate either inline". It was correct on the day, which is exactly
+ * what makes it dangerous: if D1 resolves to withholding, somebody flips
+ * PUBLISH_OFFER_FIGURES and those cells go on publishing a figure the module
+ * has withdrawn, in a table nobody thought to check.
+ *
+ * A shorter form is a real need. The fix is to own the short form here too,
+ * not to forbid the need. Both derive from the same facts as the sentences
+ * above and move with them.
+ */
+export const COMMITMENT_CELL = '30 live hours, plus independent work';
+
+export const COHORT_SIZE_CELL = 'Targets eight members';
+
+/**
  * What the page says where a price would be. Shown only while
  * PUBLISH_OFFER_FIGURES is false.
  *

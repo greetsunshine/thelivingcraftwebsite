@@ -1,0 +1,734 @@
+---
+// One lead, end to end: who they are, what they sent, where it came from, and
+// everything that has happened since.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// SECTIONS, NOT TABS
+// ───────────────────────────────────────────────────────────────────────────
+//
+// The wireframe draws tabs — Application / Attribution / Activity / Meetings /
+// Offer / Finance / Attendance. This renders them as sections behind an anchor
+// nav instead, and the reason is the job the screen does: somebody reading a
+// lead before a call wants the application AND the attribution AND the last
+// three activities, and tabs make that three clicks and a lost place. It also
+// removes a piece of client state that can disagree with the URL, and it means
+// ctrl-F finds everything on the record.
+//
+// The four sections with no records behind them yet — meetings, offer, finance,
+// attendance — are PRESENT AND MARKED, not omitted. An absent section reads as
+// "we forgot"; an empty one reads as "there are none". Neither is true: they
+// arrive with stage 3, and PipelinePanel's `pending` state says exactly that.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// WHAT MUST NOT HAPPEN HERE
+// ───────────────────────────────────────────────────────────────────────────
+//
+// * NOTHING IS INVENTED. Every field on this page came out of the record. A
+//   missing name renders as a missing name, never as a guess from the email
+//   address, and a missing referrer is left as the record has it — the brief
+//   keeps unknown attribution as `direct/unknown` rather than attributing it.
+//
+// * THE THREE EVIDENCE FIELDS STAY APART. First-touch, submission-session and
+//   the self-reported "how did you hear about us" are three separate facts and
+//   the third is never an override for the first two. Backend counts can
+//   legitimately exceed tracked sessions because analytics is blocked or
+//   declined; the brief's instruction is to show both with their definitions
+//   rather than reconcile them, which is what the three headings below do.
+//
+// * A GUESSED ID GETS "NOT FOUND", NEVER ANOTHER PERSON'S RECORD. That is
+//   enforced in `leadDetail`, which authorises `read.people` before it reads
+//   anything and looks the id up inside the authorised list. This page only has
+//   to render its refusal honestly.
+//
+// * READ-ONLY. The wireframe's action row (assign, note, meeting, preview
+//   email, pause nurture) is stage 3 and stage 4 work. It is listed at the foot
+//   with the role that holds each one rather than drawn as dead buttons — a
+//   control that does nothing teaches somebody the console is broken. Any write
+//   added later needs its own route under /api/craft/admin/ with a server-side
+//   can() check, and a confirmation step if it destroys anything.
+
+export const prerender = false;
+
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import PipelinePanel from '../../../../components/admin/PipelinePanel.astro';
+import { leadDetail, stageLabel } from '../../../../lib/admin/pipeline-queries';
+import { can, refusal, ROLE_LABEL, type Capability } from '../../../../lib/pipeline/roles';
+import { FORMS, isRoute } from '../../../../lib/pipeline/forms';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+
+const id = Astro.params.id ?? '';
+const answer = await leadDetail(admin, id);
+
+const here = Astro.url.pathname + Astro.url.search;
+
+const IST = 'Asia/Kolkata';
+
+const when = (iso: string | null | undefined): string =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: IST,
+      })
+    : '—';
+
+const now = Date.now();
+
+// ---------------------------------------------------------------------------
+// Answers are rendered in the form's own field order, with the form's own words
+// ---------------------------------------------------------------------------
+// `lib/pipeline/forms.ts` already holds the question wording and the option
+// labels, so the console shows the person the question they actually answered
+// rather than a column name with the underscores taken out. A key the form
+// definition does not know about is still shown — under "Also recorded" — for
+// the same reason the ADR parser shows back an unrecognised heading instead of
+// dropping it: a field the reader does not recognise is not a field the record
+// does not have.
+
+const fieldsFor = (type: string) => (isRoute(type) ? FORMS[type].fields : []);
+
+const optionLabel = (type: string, name: string, value: string): string => {
+  const field = fieldsFor(type).find((f) => f.name === name);
+  return field?.options?.find((o) => o.value === value)?.label ?? value;
+};
+
+const titleCase = (key: string): string =>
+  key.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+// The write actions the wireframe draws on this screen, each with the
+// capability that will gate it when it is built.
+const RECORD_ACTIONS: { cap: Capability; what: string; note: string }[] = [
+  { cap: 'write.task', what: 'Assign an owner or a task', note: 'Stage 3.' },
+  { cap: 'write.note', what: 'Add a note', note: 'Stage 3.' },
+  { cap: 'write.meeting', what: 'Schedule a meeting', note: 'Stage 3.' },
+  {
+    cap: 'write.stage',
+    what: 'Move the stage',
+    note: 'A stage change writes history; closing or reversing one requires a reason — stage 3.',
+  },
+  { cap: 'approve.fit', what: 'Record technical fit', note: 'Sunil’s decision — stage 3.' },
+  { cap: 'approve.offer', what: 'Approve an offer', note: 'Stage 3.' },
+  {
+    cap: 'confirm.payment',
+    what: 'Confirm payment',
+    note: 'Finance evidence. Enrolment needs this AND an admission decision, from two different people — stage 3.',
+  },
+  {
+    cap: 'send.approved',
+    what: 'Preview or send an approved message',
+    note: 'Stage 4, and dispatch stays off until the sending service is settled.',
+  },
+  { cap: 'manage.sequence', what: 'Pause or resume nurture', note: 'Stage 4.' },
+];
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+
+const detail = answer.state === 'ok' ? answer.value : null;
+const lead = detail?.lead ?? null;
+
+const openTasks = (detail?.tasks ?? []).filter((t) => !t.completed_at);
+const doneTasks = (detail?.tasks ?? []).filter((t) => t.completed_at);
+---
+
+<AdminLayout title="Lead" active="pipeline">
+  <div class="page-head">
+    <div>
+      <span class="label">
+        <a href="/craft/admin/pipeline#leads">← All leads</a> · {whoLine}
+      </span>
+      <h1>{lead ? (lead.name ?? lead.email ?? 'Lead record') : 'Lead'}</h1>
+      {
+        lead && (
+          <p>
+            <span class="pill">{lead.route === 'enterprise' ? 'Enterprise' : 'Member'}</span>{' '}
+            <span class="pill on">{stageLabel(lead.stage)}</span>{' '}
+            <span class="faint">in stage since {when(lead.stage_entered_at)}</span>
+          </p>
+        )
+      }
+    </div>
+    {
+      detail && (
+        <nav class="jump" aria-label="On this record">
+          <a href="#contact">Contact</a>
+          <a href="#next">Next action</a>
+          <a href="#application">Application</a>
+          <a href="#attribution">Attribution</a>
+          <a href="#activity">Activity</a>
+          <a href="#evidence">Evidence</a>
+        </nav>
+      )
+    }
+  </div>
+
+  {
+    answer.state !== 'ok' && (
+      <>
+        <PipelinePanel
+          state={answer.state}
+          reason={answer.reason}
+          label="This lead"
+          capability="read.people"
+          retry={here}
+        />
+        <p class="back-note muted">
+          A record id that does not resolve gets this same answer as one that is genuinely
+          unreachable, deliberately: guessing an id must never confirm that somebody exists.
+          <a href="/craft/admin/pipeline#leads">Back to the lead list</a>.
+        </p>
+      </>
+    )
+  }
+
+  {
+    detail && lead && (
+      <>
+        <!-- ============ Contact and preferences ============ -->
+        <section class="admin-section" id="contact" aria-labelledby="pipelineContactHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineContactHead">Contact and preferences</h2>
+              <p>Times are Asia/Kolkata. Contact details are visible because your roles hold read.people.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Who</h3>
+              <dl class="facts">
+                <dt>Name</dt>
+                <dd>{lead.name ?? <span class="none">Not given</span>}</dd>
+                <dt>Email</dt>
+                <dd>
+                  {lead.email ? (
+                    <a class="mail" href={`mailto:${lead.email}`}>{lead.email}</a>
+                  ) : (
+                    <span class="none">Not given</span>
+                  )}
+                </dd>
+                <dt>Organisation</dt>
+                <dd>{lead.organisation ?? <span class="none">Not given</span>}</dd>
+                <dt>Route</dt>
+                <dd>{lead.route === 'enterprise' ? 'Enterprise' : 'Member'}</dd>
+                <dt>Stage</dt>
+                <dd>{stageLabel(lead.stage)}</dd>
+                <dt>Owner</dt>
+                <dd>{lead.owner ?? <span class="unowned">Unassigned</span>}</dd>
+                <dt>Last touch</dt>
+                <dd>{when(lead.updated_at)}</dd>
+              </dl>
+            </div>
+
+            <div class="card">
+              <h3>Permissions</h3>
+              <p class="sub muted">
+                Recorded consent, in the wording and version the person was shown. A receipt is not
+                consent, and marketing permission is a separate, unticked choice on the form.
+              </p>
+              {detail.consents.length === 0 ? (
+                <p class="none-block">
+                  No consent record. That is not a "no" — it means nothing has been recorded
+                  against this person, so nothing may be sent on the strength of it.
+                </p>
+              ) : (
+                <ul class="consents">
+                  {detail.consents.map((c) => (
+                    <li>
+                      <div class="head">
+                        <span class="purpose">{titleCase(c.purpose)}</span>
+                        <span class={`pill ${c.state === 'granted' ? 'good' : ''}`}>{c.state}</span>
+                      </div>
+                      <p class="wording">“{c.wording}”</p>
+                      <p class="src mono">
+                        version {c.wording_version} · recorded {when(c.obtained_at)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <PipelinePanel
+                state="pending"
+                label="Sequence status"
+                reason="Nurture sequences are stage 4 and dispatch is off until the sending service and reply mailbox are settled. Nothing has been queued for this person."
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ Next action ============ -->
+        <section class="admin-section" id="next" aria-labelledby="pipelineNextHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineNextHead">Next action</h2>
+              <p>What this record is waiting on, and who it is waiting on.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <dl class="facts">
+              <dt>Next action</dt>
+              <dd>{lead.next_action ?? <span class="none">Not set</span>}</dd>
+              <dt>Due</dt>
+              <dd>
+                {lead.due_at ? (
+                  <>
+                    {when(lead.due_at)}
+                    {Date.parse(lead.due_at) < now && <span class="pill warn overdue">overdue</span>}
+                  </>
+                ) : (
+                  <span class="none">No due date</span>
+                )}
+              </dd>
+              <dt>Owner</dt>
+              <dd>{lead.owner ?? <span class="unowned">Unassigned</span>}</dd>
+            </dl>
+
+            <h3 class="sub-head">Tasks</h3>
+            {detail.tasks.length === 0 ? (
+              <p class="none-block">No tasks on this record.</p>
+            ) : (
+              <ul class="tasks">
+                {openTasks.map((t) => (
+                  <li>
+                    <span class="what">{t.description ?? 'No description'}</span>
+                    <span class="meta faint">
+                      {t.owner ?? 'Unassigned'} · due {when(t.due_at)}
+                      {t.due_at && Date.parse(t.due_at) < now && (
+                        <span class="pill warn overdue">overdue</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+                {doneTasks.map((t) => (
+                  <li class="done">
+                    <span class="what">{t.description ?? 'No description'}</span>
+                    <span class="meta faint">
+                      {t.owner ?? 'Unassigned'} · completed {when(t.completed_at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        <!-- ============ Application ============ -->
+        <section class="admin-section" id="application" aria-labelledby="pipelineAppHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineAppHead">What they sent</h2>
+              <p>
+                Every submission from this person, newest first, in the words the form asked them.
+                An enquiry and a later application are two records and one person — neither
+                replaces the other.
+              </p>
+            </div>
+          </div>
+
+          {detail.submissions.length === 0 ? (
+            <div class="card">
+              <p class="none-block">
+                No submission is joined to this record. The opportunity exists, so it was created
+                some other way — worth a look before you rely on the stage.
+              </p>
+            </div>
+          ) : (
+            detail.submissions.map((s) => {
+              const answers = s.answers ?? {};
+              const ordered = fieldsFor(s.type).filter((f) => answers[f.name]);
+              const extraKeys = Object.keys(answers).filter(
+                (k) => !fieldsFor(s.type).some((f) => f.name === k),
+              );
+              return (
+                <div class="card submission">
+                  <div class="sub-head-row">
+                    <h3>
+                      {s.type === 'application'
+                        ? 'Application'
+                        : s.type === 'enterprise'
+                          ? 'Enterprise enquiry'
+                          : 'Cohort enquiry'}
+                    </h3>
+                    <span class="src mono">
+                      {s.reference ? `ref ${s.reference} · ` : ''}
+                      {when(s.submitted_at)}
+                    </span>
+                  </div>
+
+                  {(s.funding_route || s.group_size !== null) && (
+                    <p class="meta-row">
+                      {s.funding_route && (
+                        <span class="pill">
+                          Funding: {optionLabel(s.type, 'funding', s.funding_route)}
+                        </span>
+                      )}
+                      {s.group_size !== null && (
+                        <span class="pill">Group size: {s.group_size}</span>
+                      )}
+                    </p>
+                  )}
+
+                  {ordered.length === 0 && extraKeys.length === 0 ? (
+                    <p class="none-block">No answers stored against this submission.</p>
+                  ) : (
+                    <dl class="facts wide">
+                      {ordered.map((f) => (
+                        <>
+                          <dt>{f.label}</dt>
+                          <dd class="answer">
+                            {f.options
+                              ? optionLabel(s.type, f.name, answers[f.name])
+                              : answers[f.name]}
+                          </dd>
+                        </>
+                      ))}
+                      {extraKeys.map((k) => (
+                        <>
+                          <dt>{titleCase(k)}</dt>
+                          <dd class="answer">{answers[k]}</dd>
+                        </>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </section>
+
+        <!-- ============ Attribution ============ -->
+        <section class="admin-section" id="attribution" aria-labelledby="pipelineAttrHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineAttrHead">Where it came from</h2>
+              <p>
+                Three separate pieces of evidence about one arrival, shown apart rather than
+                reconciled into a single "source". They disagree often and legitimately.
+              </p>
+            </div>
+          </div>
+
+          {detail.attribution === null ? (
+            <PipelinePanel
+              state="pending"
+              label="Attribution"
+              reason="No attribution row is stored against this person's most recent submission. That is not 'direct' — it is nothing recorded, and reading it as direct would invent a source."
+            />
+          ) : (
+            <div class="grid-2">
+              <div class="card">
+                <h3>First touch</h3>
+                <p class="sub muted">The first arrival we saw, kept for the life of the person.</p>
+                <dl class="facts">
+                  <dt>Source</dt>
+                  <dd>{detail.attribution.first_source ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Medium</dt>
+                  <dd>{detail.attribution.first_medium ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Campaign</dt>
+                  <dd>{detail.attribution.first_campaign ?? <span class="none">Not recorded</span>}</dd>
+                </dl>
+              </div>
+
+              <div class="card">
+                <h3>This submission</h3>
+                <p class="sub muted">The visit the form was actually sent from.</p>
+                <dl class="facts">
+                  <dt>Source</dt>
+                  <dd>{detail.attribution.session_source ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Medium</dt>
+                  <dd>{detail.attribution.session_medium ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Campaign</dt>
+                  <dd>{detail.attribution.session_campaign ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Content</dt>
+                  <dd>{detail.attribution.session_content ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Entry path</dt>
+                  <dd class="mono">{detail.attribution.entry_path ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Referrer host</dt>
+                  <dd class="mono">{detail.attribution.referrer_host ?? <span class="none">Not recorded</span>}</dd>
+                </dl>
+              </div>
+
+              <div class="card span-2">
+                <h3>What they said themselves</h3>
+                <p class="sub muted">
+                  The discovery answer from the form. A third piece of evidence and never an
+                  override for the two above — somebody who says "LinkedIn" may have arrived from a
+                  search that day.
+                </p>
+                <p class="self-reported">
+                  {detail.attribution.self_reported ?? <span class="none">Not answered</span>}
+                </p>
+                <p class="src mono">
+                  tracking permission:{' '}
+                  {detail.attribution.tracking_permission ? 'given' : 'not given'} — backend counts
+                  can legitimately exceed measured sessions where it was declined or blocked
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <!-- ============ Activity ============ -->
+        <section class="admin-section" id="activity" aria-labelledby="pipelineActivityHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineActivityHead">Chronological history</h2>
+              <p>Each entry keeps its occurrence time and the actor who recorded it.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            {detail.activities.length === 0 ? (
+              <p class="none-block">
+                Nothing recorded against this lead yet. Activity is written by the pipeline actions,
+                which arrive with stage 3.
+              </p>
+            ) : (
+              <ol class="history">
+                {detail.activities.map((a) => (
+                  <li>
+                    <span class="stamp mono">{when(a.occurred_at)}</span>
+                    <span class="kind">{titleCase(a.type)}</span>
+                    <span class="actor faint">{a.actor ?? 'actor not recorded'}</span>
+                    {a.notes && <p class="notes">{a.notes}</p>}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </section>
+
+        <!-- ============ Evidence, not yet recorded ============ -->
+        <section class="admin-section" id="evidence" aria-labelledby="pipelineEvidenceHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineEvidenceHead">Meetings, offer, finance, attendance</h2>
+              <p>
+                Four separate records on purpose. Attendance is independent of payment and payment
+                is independent of a stage — no one of them may be inferred from another.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <PipelinePanel
+              state="pending"
+              label="Meetings"
+              reason="Meeting records arrive with stage 3."
+            />
+            <PipelinePanel
+              state="pending"
+              label="Offer"
+              reason="Offer records arrive with stage 3. An offer is approved by Sunil and an admission decision is recorded separately from it."
+            />
+            <PipelinePanel
+              state="pending"
+              label="Finance"
+              reason="Payment evidence comes from finance and arrives with stage 3. There is no checkout in this release, so nothing on this page can show that money arrived."
+            />
+            <PipelinePanel
+              state="pending"
+              label="Attendance"
+              reason="Attendance records arrive with stage 3, and stay independent of payment — turning up to a session is not evidence of having paid for it."
+            />
+          </div>
+        </section>
+
+        <!-- ============ Actions ============ -->
+        <section class="admin-section" aria-labelledby="pipelineActionsHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineActionsHead">Actions on this record</h2>
+              <p>
+                This screen is read-only in stage 2. Each action below is listed with whether your
+                roles hold it — the refusal names who does, which is the half that tells you what to
+                do next.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <ul class="caps">
+              {RECORD_ACTIONS.map((a) => (
+                <li>
+                  <span class="what">{a.what}</span>
+                  <span class="note muted">{a.note}</span>
+                  {can(roles, a.cap) ? (
+                    <span class="held mono">your roles hold this</span>
+                  ) : (
+                    <span class="not-held">{refusal(a.cap)}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p class="foot muted">
+              Enrolment deliberately cannot be completed by one person: Sunil records the admission
+              decision and finance confirms the payment, and no role holds both.
+            </p>
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  <style>
+    .page-head .label a { color: var(--accent-ink); }
+    .page-head .pill { vertical-align: middle; }
+    .back-note {
+      font-size: var(--size-2);
+      margin-top: var(--space-4);
+      max-width: var(--measure-prose);
+      line-height: var(--lh-snug);
+    }
+    .back-note a { color: var(--accent-ink); }
+
+    .card h3 { font-size: var(--size-5); color: var(--text-loud); }
+    .card .sub {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin: var(--space-1) 0 var(--space-4);
+    }
+    .card .foot {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-4);
+    }
+    .span-2 { grid-column: 1 / -1; }
+
+    /* A record's fields read as label/value pairs, not as a table with one row. */
+    .facts {
+      display: grid;
+      grid-template-columns: minmax(120px, max-content) 1fr;
+      gap: var(--space-2) var(--space-4);
+      margin-top: var(--space-3);
+      font-size: var(--size-3);
+    }
+    .facts.wide { grid-template-columns: minmax(160px, 30%) 1fr; }
+    .facts dt {
+      font-family: var(--font-marginal);
+      font-size: var(--size-1);
+      letter-spacing: var(--tracking-label);
+      color: var(--text-quiet);
+      padding-top: 2px;
+    }
+    .facts dd { color: var(--text-body); overflow-wrap: anywhere; }
+    .facts dd.answer { white-space: pre-wrap; line-height: var(--lh-snug); }
+    .facts .mail { color: var(--accent-ink); }
+    @media (max-width: 560px) {
+      .facts, .facts.wide { grid-template-columns: 1fr; gap: var(--space-1); }
+      .facts dd { margin-bottom: var(--space-3); }
+    }
+
+    /* Absence has one look and it is never a zero or a blank cell. */
+    .none { color: var(--text-quiet); font-style: italic; }
+    .unowned { color: var(--danger); font-weight: var(--weight-medium); }
+    .none-block {
+      font-size: var(--size-2);
+      color: var(--text-quiet);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-2);
+    }
+    .overdue { margin-left: var(--space-2); }
+
+    .sub-head { margin-top: var(--space-5); font-size: var(--size-4) !important; }
+    .sub-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .src {
+      font-family: var(--font-mono);
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-label);
+    }
+
+    .submission { margin-bottom: var(--space-3); }
+    .meta-row { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
+
+    .consents { list-style: none; display: grid; gap: var(--space-4); margin-top: var(--space-2); }
+    .consents .head { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+    .consents .purpose { font-weight: var(--weight-medium); }
+    .consents .wording {
+      font-size: var(--size-2);
+      color: var(--text-quiet);
+      line-height: var(--lh-snug);
+      margin-top: var(--space-2);
+      max-width: var(--measure-prose);
+    }
+    .consents .src { display: block; margin-top: var(--space-1); }
+
+    .tasks { list-style: none; display: grid; gap: var(--space-3); margin-top: var(--space-2); }
+    .tasks li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .tasks li.done { opacity: 0.6; }
+    .tasks .what { font-size: var(--size-3); }
+    .tasks .meta { font-size: var(--size-2); }
+
+    .history { list-style: none; display: grid; gap: var(--space-4); }
+    .history li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-4);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .history .stamp {
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .history .kind { font-weight: var(--weight-medium); }
+    .history .actor { font-size: var(--size-2); }
+    .history .notes {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      margin-top: var(--space-2);
+      max-width: var(--measure-prose);
+      white-space: pre-wrap;
+    }
+
+    .self-reported {
+      font-size: var(--size-3);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-bottom: var(--space-3);
+    }
+
+    .caps { list-style: none; display: grid; gap: var(--space-3); }
+    .caps li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .caps .what { font-weight: var(--weight-medium); }
+    .caps .note { font-size: var(--size-2); line-height: var(--lh-snug); }
+    .caps .held {
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-label);
+    }
+    .caps .not-held {
+      font-size: var(--size-2);
+      color: var(--agent-uncertain);
+      font-weight: var(--weight-medium);
+    }
+  </style>
+</AdminLayout>
