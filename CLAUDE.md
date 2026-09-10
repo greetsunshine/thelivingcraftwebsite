@@ -241,12 +241,40 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   A checkpoint sorts BEFORE anything else at the same offset — week 1's 01:10 is a
   checkpoint and a stand-up, and the words are "read these before you stand up".
 
+## The cohort rebuild — read the status doc before building
+**[docs/cohort-pipeline/build-status.md](docs/cohort-pipeline/build-status.md) is required
+reading before any work on the public cohort page, the three application/enquiry forms, or
+the pipeline screens in the console.** The plan it is built against is
+[docs/cohort-pipeline/build-plan.md](docs/cohort-pipeline/build-plan.md); the source of
+record is the Cohort Handoff Package in
+[docs/Website Rebuild 10-09-2026/](docs/Website%20Rebuild%2010-09-2026/) (Team Alchemy,
+10 September 2026, handoff `LC-LAUNCH-2026-09-10`).
+
+Same two rules as the learning agent's status doc: **read it first**, and **update it in
+the same commit as the code**. Move the checkbox, adjust the counts, add a changelog row.
+
+Three things about that package are worth knowing before you open it:
+- **It specifies behaviour, not a stack.** Endpoint names, providers and hosting are ours
+  to choose; the eighteen acceptance cases are what it actually holds us to.
+- **The cohort page stays at `/`.** Every campaign post links to
+  `learning.thelivingcraft.ai/` with `utm_content=lc-oct-dNN`. The roadmap's
+  `/programmes/agentic-systems/` is a design target, and the current address keeps working
+  until redirects are approved and tested.
+- **Two decisions are outstanding from Sunil and both ship behind a flag** — whether we
+  still publish price, dates and the six-week shape (which changes `facts.ts`, `/llms.txt`
+  and what the Q&A agent may say about cost), and how an email actually gets sent. Neither
+  blocks any other stage. Don't resolve either one by inference.
+
+`/caio`, `/assessment`, `/latest` and everything under `/craft` are out of scope: the brief
+says no LMS, checkout, payment collection or new chatbot is required in this release.
+
 ## The learning agent — read the status doc before building
 **[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
 reading before any further work on `/craft` or its admin pages.** It is the audit of what
 is built, what contradicts the spec, and what is left, against
-[docs/learning-agent-specs-02-09-2026.md](docs/learning-agent-specs-02-09-2026.md) — which
-is the design of record and supersedes the 28 August PoC write-up.
+[docs/learning-agent/learning-agent-specs-02-09-2026.md](docs/learning-agent/learning-agent-specs-02-09-2026.md) —
+which is the design of record and supersedes the 28 August PoC write-up. (Both spec files
+moved under `docs/learning-agent/` alongside the status doc; the old paths are gone.)
 
 Two rules, and they are the reason the file is worth having:
 - **Read it first.** It exists so nobody re-audits the branch or rebuilds something that
