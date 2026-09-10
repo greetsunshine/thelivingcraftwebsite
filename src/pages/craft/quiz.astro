@@ -15,7 +15,7 @@ import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
 import { weeklyChecks, itemsForCheck, type WeeklyCheck } from '../../lib/craft/checks';
-import { marked } from 'marked';
+import { renderMarkdown } from '../../lib/craft/markdown';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
@@ -102,13 +102,13 @@ const opensLabel = (c: WeeklyCheck) =>
         </div>
 
         {nextItem ? (
-          <div class="quiz-card">
+          <div class="quiz-card" data-tour="quiz-card">
             <div class="q-header">
               <span class="mono faint">Question {position} of {active.itemCount}</span>
               <span class="badge">{nextItem.capability}</span>
             </div>
 
-            <div class="q-body markdown-body" set:html={marked.parse(nextItem.body)} />
+            <div class="q-body markdown-body" set:html={renderMarkdown(nextItem.body)} />
 
             <form class="quiz-form" method="POST" action="/api/craft/quiz" id="quizForm">
               <input type="hidden" name="item_id" value={nextItem.id} />
@@ -131,7 +131,7 @@ const opensLabel = (c: WeeklyCheck) =>
 
               <div class="field" style="margin-top:24px">
                 <label style="margin-bottom:12px">How confident are you?</label>
-                <div class="confidence-scale">
+                <div class="confidence-scale" data-tour="quiz-confidence">
                   <label class="c-radio">
                     <input type="radio" name="confidence" value="1" required />
                     <span>1 - Guessed</span>

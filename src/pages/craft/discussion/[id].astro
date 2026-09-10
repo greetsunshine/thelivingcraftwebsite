@@ -24,7 +24,7 @@
 import CraftLayout from '../../../layouts/CraftLayout.astro';
 import { getThread, type Reply } from '../../../lib/craft/discussion';
 import { initials, tintOf, relativeTime, displayTitle } from '../../../lib/craft/people';
-import { marked } from 'marked';
+import { renderMarkdown } from '../../../lib/craft/markdown';
 
 export const prerender = false;
 
@@ -121,7 +121,7 @@ const roleName = (r: Reply) =>
           </header>
 
           {asMarkdown(r) ? (
-            <div class="r-body prose" set:html={marked.parse(r.body)} />
+            <div class="r-body prose" set:html={renderMarkdown(r.body)} />
           ) : (
             <div class="r-body">{r.body}</div>
           )}

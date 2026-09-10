@@ -55,7 +55,7 @@ const ordered = [...threads].sort(
     </header>
 
     {/* The composer. Collapsed by default so the room, not the form, is the page. */}
-    <section class="composer" id="composer" hidden>
+    <section class="composer" id="composer" data-tour="thread-composer" hidden>
       <form id="threadForm">
         <div class="field">
           <label for="title">Title <span class="faint">— optional, but it helps people find it</span></label>
@@ -117,7 +117,7 @@ const ordered = [...threads].sort(
         rather the point of asking it in a room of eight rather than a search box.</p>
       </div>
     ) : (
-      <ol class="threads" id="threadList">
+      <ol class="threads" id="threadList" data-tour="thread-list">
         {ordered.map((t) => (
           <li
             class="thread"

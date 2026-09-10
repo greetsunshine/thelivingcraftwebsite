@@ -8,6 +8,9 @@
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection, render } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
+import { dayPlan } from '../../lib/craft/schedule';
+import { inlineCode } from '../../lib/craft/text';
+import { threadLabel, WEIGHT_LABEL } from '../../lib/craft/threads';
 
 export const prerender = false;
 
@@ -29,6 +32,28 @@ const module = session.data.module
   ? cohort.modules.find((m) => m.id === session.data.module)
   : undefined;
 const { Content } = await render(session);
+
+// The day as one ordered list — blocks, checkpoints and the two pair offsets
+// merged by dayPlan() rather than by this page, so the console and /craft/live
+// read the same order. Empty for a session with no run of show, which is every
+// week but this one.
+const day = dayPlan(session.data);
+// The walkthrough points at the first checkpoint rather than at all four,
+// so the row has to be identifiable without the markup counting anything.
+const firstCheckpoint = day.find((m) => m.kind === 'checkpoint')?.at ?? null;
+const outcomes = session.data.outcomes ?? [];
+const prework = session.data.prework;
+const after = session.data.after;
+const reading = session.data.reading ?? [];
+const threads = session.data.threads ?? [];
+
+// `movesMost` is deliberately NOT rendered here. It is Sunil's prediction that
+// an outcome moves most, and it is worth having — but telling somebody "you are
+// expected to score low on this one" immediately before they rate themselves is
+// the one thing that would spoil the baseline the rating exists to take. It is on
+// the console, beside the delta it is a claim about.
+
+const isExternal = (url: string) => !url.startsWith('/');
 ---
 
 <CraftLayout
@@ -57,9 +82,133 @@ const { Content } = await render(session);
 
       {
         session.data.status === 'ready' ? (
-          <article class="prose">
-            <Content />
-          </article>
+          <Fragment>
+            {outcomes.length > 0 && (
+              <section class="panel" data-tour="session-outcomes">
+                <h2 class="p-title">By the end of this session</h2>
+                <p class="p-note">
+                  You rate yourself against these five twice — once in the opening, before
+                  anything has been taught, and again at the close against the identical five,
+                  in the same words. Nobody sees the first number but you.
+                </p>
+                <ol class="outcomes">
+                  {outcomes.map((o) => (
+                    <li>
+                      <span class="o-stem mono">Right now, I could</span> {o.text}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
+            {prework && prework.items.length > 0 && (
+              <section class="panel">
+                <h2 class="p-title">Before the session</h2>
+                {prework.minutes && <p class="p-meta mono">~{prework.minutes} minutes</p>}
+                <ul class="ticks">
+                  {prework.items.map((item) => (
+                    <li set:html={inlineCode(item)} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {day.length > 0 && (
+              <section class="panel" data-tour="session-day">
+                <h2 class="p-title">The day, and where the stops are</h2>
+                <p class="p-note">
+                  Times are offsets from the start, not the clock. After most blocks there is a
+                  checkpoint — a short list of things you should now be able to do. If one of
+                  them is not true for you, say so at the time rather than at the end. It is a
+                  signal to slow down, not a test of you.
+                </p>
+                <ol class="day">
+                  {day.map((m) => (
+                    <li
+                      class={`m m-${m.kind}`}
+                      data-tour={m.kind === 'checkpoint' && m.at === firstCheckpoint ? 'session-checkpoint' : undefined}
+                    >
+                      <span class="m-at mono">{m.at}</span>
+                      <div class="m-body">
+                        <span class="m-label">{m.label}</span>
+                        {m.detail && <span class="m-detail">{m.detail}</span>}
+                        {m.items && (
+                          <Fragment>
+                            <ul class="cp">
+                              {m.items.map((item, i) => (
+                                <li
+                                  class={m.question !== null && i === m.items!.length - 1 ? 'asked' : undefined}
+                                  set:html={inlineCode(item)}
+                                />
+                              ))}
+                            </ul>
+                            <span class="cp-note mono">
+                              {m.question !== null
+                                ? 'one number, 1 to 5, on the last one only'
+                                : 'no rating on this one — just read them'}
+                            </span>
+                          </Fragment>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
+            <article class="prose">
+              <Content />
+            </article>
+
+            {after && after.items.length > 0 && (
+              <section class="panel">
+                <h2 class="p-title">After</h2>
+                {after.hours && <p class="p-meta mono">~{after.hours} hours before next week</p>}
+                <ol class="ticks numbered">
+                  {after.items.map((item) => (
+                    <li set:html={inlineCode(item)} />
+                  ))}
+                </ol>
+                {after.note && <p class="p-note">{after.note}</p>}
+              </section>
+            )}
+
+            {reading.length > 0 && (
+              <section class="panel">
+                <h2 class="p-title">Reading</h2>
+                <p class="p-note">None of it is required, and none of it is long.</p>
+                <ul class="reads">
+                  {reading.map((r) => (
+                    <li>
+                      <a
+                        href={r.url}
+                        target={isExternal(r.url) ? '_blank' : undefined}
+                        rel={isExternal(r.url) ? 'noopener noreferrer' : undefined}
+                      >
+                        {r.title}
+                        {isExternal(r.url) && <span class="ext" aria-hidden="true"> ↗</span>}
+                      </a>
+                      {r.note && <span class="r-note">{r.note}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {threads.length > 0 && (
+              <section class="threadbar">
+                <span class="tb-label mono">Threads this week</span>
+                <ul>
+                  {threads.map((t) => (
+                    <li>
+                      <span>{threadLabel(t.id)}</span>
+                      <span class="tb-weight mono">{WEIGHT_LABEL[t.weight]}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </Fragment>
         ) : (
           <div class="pending">
             <p class="mono label">Still being written</p>
@@ -99,6 +248,178 @@ const { Content } = await render(session);
 <style>
   .narrow {
     max-width: 780px;
+  }
+
+  /* --- the panels the frontmatter renders into ------------------------- */
+  /* A panel gets a border OR a shadow, never both. These are quiet ground
+     around the prose, so: border, no shadow. */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 26px 28px;
+    margin-bottom: 26px;
+  }
+  .p-title {
+    font-size: 19px;
+    font-weight: var(--weight-strong);
+    margin: 0 0 6px;
+  }
+  .p-meta {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+  .p-note {
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin: 0 0 16px;
+    max-width: 62ch;
+  }
+  .panel :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 1px 5px;
+  }
+
+  .outcomes {
+    list-style: decimal;
+    margin: 0 0 0 20px;
+    padding: 0;
+    color: var(--ink-soft);
+  }
+  .outcomes li { margin-bottom: 10px; }
+  .o-stem {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--ink-soft);
+  }
+  .ticks.numbered { list-style: decimal; margin-left: 20px; }
+  .ticks li { margin-bottom: 10px; }
+  .ticks:not(.numbered) li { padding-left: 22px; position: relative; }
+  .ticks:not(.numbered) li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 11px;
+    height: 11px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-tick);
+  }
+
+  /* --- the day --------------------------------------------------------- */
+  .day { list-style: none; margin: 0; padding: 0; }
+  .m {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .m:first-child { border-top: 0; padding-top: 0; }
+  .m-at {
+    flex: 0 0 46px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    padding-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .m-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .m-label { font-weight: 600; }
+  .m-detail { color: var(--ink-soft); font-size: 14.5px; }
+  /* The three that are not teaching read quieter than the five that are. */
+  .m-break .m-label,
+  .m-standup .m-label { font-weight: 400; color: var(--ink-soft); }
+  .m-checkpoint {
+    border-left: 2px solid var(--ochre);
+    padding-left: 14px;
+    margin-left: -16px;
+  }
+  .m-checkpoint .m-label { color: var(--ochre); font-size: 13px; }
+  .cp {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+  }
+  .cp li { padding-left: 16px; position: relative; margin-bottom: 5px; }
+  .cp li::before {
+    content: "·";
+    position: absolute;
+    left: 3px;
+    color: var(--ink-faint);
+  }
+  /* The one that carries the number. It is the ask, so it is the one that
+     reads as ink rather than as a list item. */
+  .cp li.asked { color: var(--ink); font-weight: 500; }
+  .cp-note {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    margin-top: 7px;
+  }
+  .m-pair-draft .m-label,
+  .m-pair-review .m-label { color: var(--clay); }
+
+  /* --- reading and threads --------------------------------------------- */
+  .reads { list-style: none; margin: 0; padding: 0; }
+  .reads li {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .reads li:first-child { border-top: 0; padding-top: 0; }
+  .reads a { color: var(--clay); text-decoration: underline; text-underline-offset: 3px; }
+  .reads .ext { text-decoration: none; }
+  .r-note { color: var(--ink-soft); font-size: 14.5px; }
+
+  .threadbar {
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    margin-bottom: 26px;
+  }
+  .tb-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .threadbar ul {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .threadbar li {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    padding: 4px 12px;
+    font-size: 13.5px;
+  }
+  .tb-weight { font-size: 11px; color: var(--ink-faint); }
+
+  @media (max-width: 640px) {
+    .panel { padding: 20px 18px; }
+    .m { gap: 12px; }
+    .m-checkpoint { margin-left: -12px; padding-left: 10px; }
   }
 
   .pending {
@@ -171,6 +492,33 @@ const { Content } = await render(session);
     padding: 0;
     color: inherit;
   }
+  .prose :global(table) {
+    /* display:block is what gives a wide table its own scroller — the page
+       body must never scroll sideways. */
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 20px;
+    font-size: 15px;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    text-align: left;
+    vertical-align: top;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .prose :global(th) {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .prose :global(td) { color: var(--ink-soft); }
+
   .prose :global(blockquote) {
     border-left: 2px solid var(--ochre);
     padding-left: 18px;

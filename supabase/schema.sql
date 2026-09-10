@@ -158,6 +158,30 @@ create table if not exists public.learners (
 create unique index if not exists learners_email_key on public.learners (email);
 create index if not exists learners_status_idx on public.learners (status, created_at desc);
 
+-- The guided walkthrough, in three additive columns.
+--
+-- On `learners` rather than in a table of their own: they are three scalars
+-- about one person, and putting them here means the hard delete on
+-- /craft/admin/learners erases them with no new work. Nothing here is personal
+-- data beyond "did this person read the intro", but it goes when they go.
+--
+-- `tour_completed_at` is set when the spine is FINISHED OR EXPLICITLY SKIPPED.
+-- Null means still eligible to be offered.
+--
+-- `tour_offers` counts how many times it has been put in front of them: 1 is
+-- the auto-start on first sign-in, 2 to 4 are the dashboard cards. At 4 it is
+-- never offered again.
+--
+-- `tour_offered_at` is when it was last offered, so a nudge cannot fire twice
+-- in one calendar day.
+--
+-- WHY NOT REUSE last_seen_at. It looks like a first-login flag and is not one —
+-- it is stamped on every authenticated request, so it is non-null before the
+-- learner has read step 1.
+alter table public.learners add column if not exists tour_completed_at timestamptz;
+alter table public.learners add column if not exists tour_offers int not null default 0;
+alter table public.learners add column if not exists tour_offered_at timestamptz;
+
 -- ---------------------------------------------------------------------------
 -- Intake — the pre-cohort self-assessment
 -- ---------------------------------------------------------------------------

@@ -46,7 +46,7 @@ const hiddenCount = allPending.length - pendingSessions.length;
     </p>
 
     {changes.length > 0 && (
-      <section class="changes">
+      <section class="changes" data-tour="feedback-changes">
         <h2>What changed</h2>
         <ul>
           {changes.map((c) => (
@@ -76,7 +76,7 @@ const hiddenCount = allPending.length - pendingSessions.length;
               <span class="mono faint">{s.data.title}</span>
             </div>
             
-            <form class="feedback-form" method="POST" action="/api/craft/feedback">
+            <form class="feedback-form" data-tour="feedback-form" method="POST" action="/api/craft/feedback">
               <input type="hidden" name="week" value={s.data.week} />
               
               <div class="field">

@@ -12,7 +12,6 @@
 // out the whole sweep before it reached the model. Vite only defines it inside
 // its own module graph.
 import fs from 'node:fs';
-import path from 'node:path';
 
 export const env = (key: string): string => {
   const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;

@@ -151,3 +151,102 @@ export function blockAt(
 
   return current ? { entry: current, until } : null;
 }
+
+// ---------------------------------------------------------------------------
+// The whole day, in one ordered list
+// ---------------------------------------------------------------------------
+// A session file describes its day in three separate arrays, because each one
+// is read by a different instrument: `runOfShow` places the blocks, `checkpoints`
+// is what the room is asked in `/craft/live`, and `pair` is two offsets inside
+// the teardown that are deliberately NOT run-of-show entries.
+//
+// A reader does not care about that split. The session page and the console both
+// want "what happens, in order", so the merge lives here — next to the only
+// function that knows how to compare two offsets — rather than being written out
+// once per surface and drifting.
+//
+// Ordering rule worth stating: a checkpoint sorts BEFORE anything else at the
+// same offset. Week 1's 01:10 is a checkpoint and a stand-up, and the session's
+// own words are "read these before you stand up".
+
+export type MomentKind = BlockKind | 'checkpoint' | 'pair-draft' | 'pair-review';
+
+export interface DayMoment {
+  at: string;
+  /** Offset in minutes — already parsed, so a consumer never re-parses. */
+  minutes: number;
+  kind: MomentKind;
+  label: string;
+  detail?: string;
+  /** Checkpoints only: everything the learner should now be able to do. */
+  items?: string[];
+  /**
+   * Checkpoints only: the item that carries the 1–5 number, or null when the
+   * checkpoint is unrated. Same rule as checkpoints.ts — always the LAST item,
+   * "put one number in chat on the last one only" — and derived the same way so
+   * the page and the room cannot disagree about which one is asked.
+   */
+  question?: string | null;
+}
+
+export interface DaySource {
+  runOfShow?: RunOfShowEntry[];
+  checkpoints?: { at: string; items: string[]; rated?: boolean }[];
+  pair?: { draftAt: string; reviewAt: string };
+}
+
+export function dayPlan(session: DaySource): DayMoment[] {
+  const moments: DayMoment[] = [];
+
+  for (const e of ordered(session.runOfShow)) {
+    moments.push({
+      at: e.at,
+      minutes: offsetMinutes(e.at)!,
+      kind: e.kind ?? 'block',
+      label: e.label,
+      detail: e.detail,
+    });
+  }
+
+  for (const c of session.checkpoints ?? []) {
+    const minutes = offsetMinutes(c.at);
+    if (minutes === null) continue;
+    const rated = c.rated !== false;
+    moments.push({
+      at: c.at,
+      minutes,
+      kind: 'checkpoint',
+      label: `Checkpoint · ${c.at}`,
+      items: c.items,
+      question: rated ? (c.items[c.items.length - 1] ?? null) : null,
+    });
+  }
+
+  if (session.pair) {
+    const draft = offsetMinutes(session.pair.draftAt);
+    const review = offsetMinutes(session.pair.reviewAt);
+    if (draft !== null) {
+      moments.push({
+        at: session.pair.draftAt,
+        minutes: draft,
+        kind: 'pair-draft',
+        label: 'Write the boundary down',
+        detail: 'in pairs, one page, the seven sections',
+      });
+    }
+    if (review !== null) {
+      moments.push({
+        at: session.pair.reviewAt,
+        minutes: review,
+        kind: 'pair-review',
+        label: 'Swap and review',
+        detail: "another pair's record, four questions, a comment beside each",
+      });
+    }
+  }
+
+  // A checkpoint closes the block it belongs to, so it sorts before the stand-up
+  // or break that shares its offset.
+  const rank = (m: DayMoment) => (m.kind === 'checkpoint' ? 0 : 1);
+  return moments.sort((a, b) => a.minutes - b.minutes || rank(a) - rank(b));
+}

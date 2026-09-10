@@ -1,6 +1,4 @@
 ---
-export const prerender = false;
-
 // Sunil's half of the quiz (spec §5.4).
 //
 // NOT a percentage per learner — the spec is explicit that a score does nothing
@@ -11,8 +9,7 @@ export const prerender = false;
 //
 // Every number on this page is computed in src/lib/craft/quiz.ts. No model runs.
 
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getQuizItems, listAllResponsesWithLearner, itemDistribution } from '../../../lib/craft/quiz';
+import { getQuizItems, listAllResponsesWithLearner, itemDistribution } from '../../lib/craft/quiz';
 
 const [items, responses] = await Promise.all([getQuizItems(), listAllResponsesWithLearner()]);
 const distribution = itemDistribution(items, responses);
@@ -20,83 +17,82 @@ const distribution = itemDistribution(items, responses);
 const answered = new Set(responses.map((r) => r.learner_id)).size;
 const flagged = distribution.reduce((n, d) => n + d.confidentlyWrong.length, 0);
 ---
-
-<AdminLayout title="Quiz" active="quiz">
-  <div class="page-head">
-    <div>
-      <span class="label">
-        {responses.length} responses · {answered} {answered === 1 ? 'learner' : 'learners'} ·
-        {flagged} confidently wrong
-      </span>
-      <h1>Quiz — the room</h1>
-      <p>
-        How the room answered each question, not how each person scored. Questions where
-        someone was sure and wrong come first: that is the gap worth ten minutes on Thursday.
-      </p>
-    </div>
+<section class="admin-section" id="quiz">
+<div class="section-head">
+  <div>
+    <span class="label">
+      {responses.length} responses · {answered} {answered === 1 ? 'learner' : 'learners'} ·
+      {flagged} confidently wrong
+    </span>
+    <h2>Quiz — the room</h2>
+    <p>
+      How the room answered each question, not how each person scored. Questions where
+      someone was sure and wrong come first: that is the gap worth ten minutes on Thursday.
+    </p>
   </div>
+</div>
 
-  {distribution.length === 0 ? (
-    <p class="empty">No responses yet.</p>
-  ) : (
-    <div class="items">
-      {distribution.map((d) => (
-        <section class="item">
-          <header class="item-head">
-            <div class="item-id">
-              <span class="pill">{d.item.id}</span>
-              <span class="pill cap">{d.item.capability}</span>
-              <span class="pill cap">{d.item.difficulty}</span>
-            </div>
-            <span class="faint mono tally">
-              {d.correct} of {d.responses} correct
-            </span>
-          </header>
+{distribution.length === 0 ? (
+  <p class="empty">No responses yet.</p>
+) : (
+  <div class="items">
+    {distribution.map((d) => (
+      <section class="item">
+        <header class="item-head">
+          <div class="item-id">
+            <span class="pill">{d.item.id}</span>
+            <span class="pill cap">{d.item.capability}</span>
+            <span class="pill cap">{d.item.difficulty}</span>
+          </div>
+          <span class="faint mono tally">
+            {d.correct} of {d.responses} correct
+          </span>
+        </header>
 
-          <p class="stem">{d.item.body}</p>
+        <p class="stem">{d.item.body}</p>
 
-          {d.confidentlyWrong.length > 0 && (
-            <p class="flag">
-              <strong>{d.confidentlyWrong.length} sure and wrong</strong>
-              — {d.confidentlyWrong.join(', ')}
-            </p>
-          )}
+        {d.confidentlyWrong.length > 0 && (
+          <p class="flag">
+            <strong>{d.confidentlyWrong.length} sure and wrong</strong>
+            — {d.confidentlyWrong.join(', ')}
+          </p>
+        )}
 
-          <ul class="spread">
-            {d.spread.map((o) => (
-              <li class={o.correct ? 'opt correct' : 'opt'}>
-                <div class="opt-head">
-                  <span class="opt-key">{o.key.toUpperCase()}</span>
-                  <span class="opt-text">{o.text}</span>
-                  <span class="opt-n mono">{o.count}</span>
-                </div>
-                <div class="bar" aria-hidden="true">
-                  <span
-                    class="bar-fill"
-                    style={`width:${d.responses ? (o.count / d.responses) * 100 : 0}%`}
-                  ></span>
-                </div>
-                {o.count > 0 && (
-                  <p class="opt-who faint">
-                    {o.learners.join(', ')}
-                    {o.confident > 0 && <span class="sure"> · {o.confident} sure</span>}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
+        <ul class="spread">
+          {d.spread.map((o) => (
+            <li class={o.correct ? 'opt correct' : 'opt'}>
+              <div class="opt-head">
+                <span class="opt-key">{o.key.toUpperCase()}</span>
+                <span class="opt-text">{o.text}</span>
+                <span class="opt-n mono">{o.count}</span>
+              </div>
+              <div class="bar" aria-hidden="true">
+                <span
+                  class="bar-fill"
+                  style={`width:${d.responses ? (o.count / d.responses) * 100 : 0}%`}
+                ></span>
+              </div>
+              {o.count > 0 && (
+                <p class="opt-who faint">
+                  {o.learners.join(', ')}
+                  {o.confident > 0 && <span class="sure"> · {o.confident} sure</span>}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
 
-          {d.item.rationale && (
-            <p class="rationale">
-              <span class="label">Why</span>
-              {d.item.rationale}
-            </p>
-          )}
-        </section>
-      ))}
-    </div>
-  )}
-</AdminLayout>
+        {d.item.rationale && (
+          <p class="rationale">
+            <span class="label">Why</span>
+            {d.item.rationale}
+          </p>
+        )}
+      </section>
+    ))}
+  </div>
+)}
+</section>
 
 <style>
   .items { display: flex; flex-direction: column; gap: 40px; }

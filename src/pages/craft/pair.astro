@@ -17,7 +17,7 @@
 
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
-import { ADR_SECTIONS, ADR_REVIEW_QUESTIONS, parseAdr, buildAdr, emptyAdr } from '../../lib/craft/adr';
+import { ADR_SECTIONS, ADR_REVIEW_QUESTIONS, parseAdr, emptyAdr } from '../../lib/craft/adr';
 import { myDraft, draftsToReview, myReview } from '../../lib/craft/pairs';
 import { listLearners } from '../../lib/craft/learners';
 import { liveSession } from '../../lib/craft/live';
@@ -219,94 +219,131 @@ const existing = reviewing ? await myReview(reviewing.id, learner.id) : null;
   </div>
 </CraftLayout>
 
-<script is:inline define:vars={{ sectionIds: ADR_SECTIONS.map((s) => s.id), headings: ADR_SECTIONS.map((s) => s.heading), questionIds: ADR_REVIEW_QUESTIONS.map((q) => q.id) }}>
-  (function () {
-    const draftForm = document.getElementById('draftForm');
-    if (draftForm && draftForm.dataset.bound !== '1') {
-      draftForm.dataset.bound = '1';
-      const msg = document.getElementById('draftMsg');
-      draftForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = draftForm.querySelector('button[type="submit"]');
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Saving…';
-        msg.hidden = true;
+<script>
+  // A module script, not `is:inline`, for one reason: it can import.
+  //
+  // The inline version could not, so the ADR body format was written out a
+  // second time in here — the exact duplication that cost a learner their text
+  // once before, when the section list lived in three places inside adr.astro.
+  // The file even imported `buildAdr` and never called it.
+  //
+  // Moving it also put this code under `astro check` for the first time, which
+  // is why it is now typed rather than reaching into `elements[...]` and hoping.
+  import { ADR_SECTIONS, ADR_REVIEW_QUESTIONS, buildAdr } from '../../lib/craft/adr';
 
-        // Headings come from the same module the fields did, so the template
-        // exists in one place even across the wire.
-        const body = sectionIds
-          .map((id, i) => '## ' + headings[i] + '\n' + (draftForm.elements[id]?.value ?? '').trim())
-          .join('\n\n');
+  const questionIds = ADR_REVIEW_QUESTIONS.map((q) => q.id);
 
-        try {
-          const res = await fetch('/api/craft/pair', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'draft',
-              week: Number(draftForm.dataset.week),
-              partnerId: draftForm.elements['partner']?.value || null,
-              body,
-            }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error ?? 'Could not save that.');
-          msg.textContent = 'Saved.';
-          msg.hidden = false;
-        } catch (err) {
-          msg.textContent = err.message;
-          msg.hidden = false;
-        }
-        btn.disabled = false;
-        btn.textContent = original;
-      });
-    }
+  const say = (el: HTMLElement | null, text: string) => {
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+  };
 
-    const reviewForm = document.getElementById('reviewForm');
-    if (reviewForm && reviewForm.dataset.bound !== '1') {
-      reviewForm.dataset.bound = '1';
-      const msg = document.getElementById('reviewMsg');
-      reviewForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = reviewForm.querySelector('button[type="submit"]');
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = 'Sending…';
-        msg.hidden = true;
+  const busy = (btn: HTMLButtonElement | null, on: boolean, label: string) => {
+    if (!btn) return;
+    btn.disabled = on;
+    btn.textContent = label;
+  };
 
-        const answers = {};
-        for (const id of questionIds) {
-          const picked = reviewForm.querySelector('input[name="score-' + id + '"]:checked');
-          answers[id] = {
-            score: picked ? Number(picked.value) : 0,
-            comment: reviewForm.elements['comment-' + id]?.value ?? '',
-          };
-        }
+  function bindDraft() {
+    const form = document.getElementById('draftForm') as HTMLFormElement | null;
+    if (!form || form.dataset.bound === '1') return;
+    form.dataset.bound = '1';
 
-        try {
-          const res = await fetch('/api/craft/pair', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'review',
-              week: Number(reviewForm.dataset.week),
-              draftId: reviewForm.dataset.draft,
-              answers,
-            }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error ?? 'Could not send that.');
-          window.location.href = '/craft/pair';
-        } catch (err) {
-          msg.textContent = err.message;
-          msg.hidden = false;
-          btn.disabled = false;
-          btn.textContent = original;
-        }
-      });
-    }
-  })();
+    const msg = document.getElementById('draftMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const original = btn?.textContent ?? 'Save the draft';
+      busy(btn, true, 'Saving…');
+      if (msg) msg.hidden = true;
+
+      const field = (name: string) =>
+        (form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? '';
+
+      // The ONE assembler. If the template ever changes shape, the parser and
+      // this move together — which is what stops a section the parser no longer
+      // recognises being dropped on the next save, taking the learner's text.
+      const body = buildAdr(
+        Object.fromEntries(ADR_SECTIONS.map((sec) => [sec.id, field(sec.id)])),
+      );
+
+      try {
+        const res = await fetch('/api/craft/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'draft',
+            week: Number(form.dataset.week),
+            partnerId: field('partner') || null,
+            body,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? 'Could not save that.');
+        say(msg, 'Saved.');
+      } catch (err) {
+        say(msg, err instanceof Error ? err.message : 'Could not save that.');
+      }
+
+      busy(btn, false, original);
+    });
+  }
+
+  function bindReview() {
+    const form = document.getElementById('reviewForm') as HTMLFormElement | null;
+    if (!form || form.dataset.bound === '1') return;
+    form.dataset.bound = '1';
+
+    const msg = document.getElementById('reviewMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const original = btn?.textContent ?? 'Send the review';
+      busy(btn, true, 'Sending…');
+      if (msg) msg.hidden = true;
+
+      // 0/1/2 beside each of the four questions. Nothing sums these — a total
+      // here would be §10's cut of scores and ranks arriving under a new name.
+      const answers: Record<string, { score: number; comment: string }> = {};
+      for (const id of questionIds) {
+        const picked = form.querySelector<HTMLInputElement>(`input[name="score-${id}"]:checked`);
+        const comment = form.elements.namedItem(`comment-${id}`) as HTMLTextAreaElement | null;
+        answers[id] = {
+          score: picked ? Number(picked.value) : 0,
+          comment: comment?.value ?? '',
+        };
+      }
+
+      try {
+        const res = await fetch('/api/craft/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'review',
+            week: Number(form.dataset.week),
+            draftId: form.dataset.draft,
+            answers,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? 'Could not send that.');
+        window.location.href = '/craft/pair';
+      } catch (err) {
+        say(msg, err instanceof Error ? err.message : 'Could not send that.');
+        busy(btn, false, original);
+      }
+    });
+  }
+
+  // Same convention as every other script in the course area: bind after the
+  // swap, and let the `dataset.bound` guards make a second call harmless.
+  document.addEventListener('astro:page-load', () => {
+    bindDraft();
+    bindReview();
+  });
 </script>
 
 <style>

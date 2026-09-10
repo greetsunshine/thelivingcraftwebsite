@@ -21,7 +21,7 @@ import { getCollection } from 'astro:content';
 import { listLearnerSubmissions, ADR_MAX_CHARS } from '../../lib/craft/submissions';
 import { givenAssignments, assignments as allAssignments } from '../../lib/craft/assignments';
 import { ADR_SECTIONS, parseAdr, emptyAdr } from '../../lib/craft/adr';
-import { marked } from 'marked';
+import { renderMarkdown } from '../../lib/craft/markdown';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
@@ -134,7 +134,7 @@ const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.wee
                     Submitted{sub.submitted_at ? ` ${new Date(sub.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}.
                     Sunil reads these as a set, so the text is fixed once it is in — ask him if you need it reopened.
                   </p>
-                  <div class="markdown-body" set:html={marked.parse(sub.adr_markdown)} />
+                  <div class="markdown-body" set:html={renderMarkdown(sub.adr_markdown)} />
                   {sub.repo_url && (
                     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line);">
                       <a href={sub.repo_url} target="_blank" rel="noopener noreferrer" style="color:var(--clay);font-family:var(--font-mono);font-size:13px">
@@ -156,7 +156,7 @@ const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.wee
                     /* Seven fixed sections, never varying by week (§5.5), read
                        from the one module that owns them. The hint under each is
                        the session's own statement of what that section is for. */
-                    <div class="fields-group">
+                    <div class="fields-group" data-tour="adr-sections">
                       {ADR_SECTIONS.map((s, i) => (
                         <div
                           class={`field${s.loadBearing ? ' load-bearing' : ''}`}
@@ -210,7 +210,7 @@ const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.wee
                   the point: it forces a choice about what actually matters.
                 </p>
 
-                <div class="actions" style="margin-top:24px">
+                <div class="actions" data-tour="adr-actions" style="margin-top:24px">
                   <button type="submit" class="btn btn-primary submit-btn" data-submit="true">Submit</button>
                   <button type="submit" class="btn draft-btn" data-submit="false">Save draft</button>
                   <span class="mono msg" style="display:none;"></span>
@@ -226,6 +226,7 @@ const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.wee
 </CraftLayout>
 
 <script>
+  import { ADR_SECTIONS, buildAdr } from '../../lib/craft/adr';
   // Navigation
   const btns = document.querySelectorAll('.week-btn');
   const panels = document.querySelectorAll('.week-panel');
@@ -267,12 +268,14 @@ const defaultWeek = unsubmitted ? unsubmitted.week : (live[live.length - 1]?.wee
 
       const formData = new FormData(form);
 
-      // Headings come off the form's own fields rather than a list repeated
-      // here, so the template can only be changed in one place. `data-heading`
-      // is stamped on each textarea from ADR_SECTIONS above.
-      const adr_markdown = Array.from(form.querySelectorAll<HTMLTextAreaElement>('textarea[data-heading]'))
-        .map((el) => `## ${el.dataset.heading}\n${((formData.get(el.name) as string) ?? '').trim()}`)
-        .join('\n\n');
+      // buildAdr() is the one assembler, and parseAdr() reads back what it
+      // writes. Reproducing the `## Heading` format here worked right up until
+      // the two disagreed — which is the failure this module was created to end.
+      const adr_markdown = buildAdr(
+        Object.fromEntries(
+          ADR_SECTIONS.map((sec) => [sec.id, (formData.get(sec.id) as string) ?? '']),
+        ),
+      );
 
       try {
         const res = await fetch(form.action, {

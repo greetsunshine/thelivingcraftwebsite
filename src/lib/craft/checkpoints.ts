@@ -29,7 +29,7 @@
 // earlier in the day; an index does not.
 
 import { db } from '../admin/supabase';
-import { momentAt, type RunOfShowEntry } from './schedule';
+import { momentAt } from './schedule';
 
 const fail = (where: string, err: unknown) => {
   console.error(`checkpoints ${where} failed:`, err instanceof Error ? err.message : err);

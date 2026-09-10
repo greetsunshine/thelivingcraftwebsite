@@ -20,13 +20,9 @@
 // the correct behaviour for a repo whose first hard rule is never to invent a
 // fact.
 
-import { db } from '../admin/supabase';
 import type { QuizItem, QuizResponse } from './quiz';
 import { momentOfKind, type RunOfShowEntry } from './schedule';
 
-const fail = (where: string, err: unknown) => {
-  console.error(`checks ${where} failed:`, err instanceof Error ? err.message : err);
-};
 
 /**
  * The session facts a check needs. Passed in rather than imported so this

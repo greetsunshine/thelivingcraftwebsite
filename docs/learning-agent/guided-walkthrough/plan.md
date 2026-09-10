@@ -1,6 +1,18 @@
 # The guided walkthrough — plan
 
-**Status:** design, not built. Nothing here is implemented.
+**Status: BUILT, 10 September 2026.** This file is kept as the design record — the
+reasoning below is still why the thing is shaped the way it is. What shipped differs from
+it in six places, all of them because `/craft` changed between 2 and 10 September:
+
+| | The plan said | What shipped |
+|---|---|---|
+| The spine | 6 steps over five rail destinations | **10 defined, 9 on an ordinary day** — the rail gained Field notes, and the dashboard gained a live banner, a to-do panel and an intake card worth naming. The live-banner step self-skips unless a session is actually running |
+| Page tours | 5 | **6** — `/craft/week-N` gained a day, an outcomes panel and checkpoints, which is now the page most worth touring |
+| §9's spine script | "five sections, ADR" | Seven sections — week 1 asks for seven, and `adr.ts` owns the list |
+| §14, the Guide panel | "the tour cannot ship over the top of it" | Resolved 7 Sep: the dock runs no model and answers from the same two grounded sources as the forum. The tour ships over something real |
+| §15, the `/craft` gate | "still bypassed, it has to come out" | Done. The bypass is double-gated (`import.meta.env.DEV` **and** `CRAFT_DEV_BYPASS=1`) and compiled out of every build |
+| §13 step 8, the CI check | "every target exists under src/" | `npm run check:tour`. It found a real hole on its first run |
+
 **Written:** 2 September 2026 · revised the same day with Sunil's four decisions.
 **Sits under:** [../build-status.md](../build-status.md) · a new item, not one the
 learning-agent spec asked for.

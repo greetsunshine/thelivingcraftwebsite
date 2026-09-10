@@ -16,7 +16,8 @@
     "eval": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/eval-agent.ts",
     "smoke": "npm run eval --",
     "gaps": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-gaps.ts",
-    "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs"
+    "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs",
+    "check:tour": "node scripts/check-tour.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

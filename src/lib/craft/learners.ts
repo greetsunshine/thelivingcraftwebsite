@@ -18,13 +18,35 @@ export interface Learner {
   note: string | null;
   created_at: string;
   last_seen_at: string | null;
+  /**
+   * The guided walkthrough, in three columns.
+   *
+   * Here rather than in a table of its own because they are three scalars
+   * about one person, and because they then go when the person goes — the
+   * hard delete on /craft/admin/learners needs no new work to erase them.
+   *
+   * `tour_completed_at` is set when the spine is FINISHED OR EXPLICITLY
+   * SKIPPED; null means still eligible to be offered. `tour_offers` counts
+   * how many times it has been put in front of them, and `tour_offered_at`
+   * is when, so a nudge cannot fire twice in one day.
+   *
+   * WHY NOT REUSE `last_seen_at`. It looks like a first-login flag and is
+   * not one: it is stamped on every authenticated request, so it is non-null
+   * before the learner has read step 1. Keying off it would mean somebody who
+   * closes the tab on step 3 is never offered the tour again.
+   */
+  tour_completed_at: string | null;
+  tour_offers: number;
+  tour_offered_at: string | null;
 }
 
 const fail = (where: string, err: unknown) => {
   console.error(`learners ${where} failed:`, err instanceof Error ? err.message : err);
 };
 
-const COLUMNS = 'id, email, name, cohort, status, note, created_at, last_seen_at';
+// One string literal, not a concatenation: supabase-js infers the row type
+// from the literal itself, and splitting it degrades every select to unknown.
+const COLUMNS = 'id, email, name, cohort, status, note, created_at, last_seen_at, tour_completed_at, tour_offers, tour_offered_at';
 
 /**
  * The learner this session belongs to, but only while the seat is active.
@@ -217,4 +239,61 @@ export async function setStatus(id: string, status: 'active' | 'revoked'): Promi
     return false;
   }
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// The guided walkthrough
+// ---------------------------------------------------------------------------
+// Both are fire-and-forget, like every other write on a learner-facing path.
+// The worst case for a lost `offered` row is that somebody is asked once more
+// than intended; the worst case for a lost `done` row is that they are asked
+// again tomorrow. Neither is worth failing a page render over.
+
+/**
+ * Record that the tour was put in front of this learner.
+ *
+ * Called by the CLIENT when the overlay or the card actually appears, not by
+ * the page that decides to render it. A GET that writes is the wrong shape,
+ * and "offered" should mean seen rather than intended.
+ */
+export async function recordTourOffer(id: string): Promise<void> {
+  const client = db();
+  if (!client) return;
+
+  try {
+    // Read-then-write rather than an atomic increment: this is one row per
+    // person, written at most once a day, and the failure mode of a lost race
+    // is one extra offer.
+    const { data, error } = await client
+      .from('learners')
+      .select('tour_offers')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+
+    const next = ((data?.tour_offers as number | undefined) ?? 0) + 1;
+    const { error: writeError } = await client
+      .from('learners')
+      .update({ tour_offers: next, tour_offered_at: new Date().toISOString() })
+      .eq('id', id);
+    if (writeError) throw writeError;
+  } catch (err) {
+    fail('recordTourOffer', err);
+  }
+}
+
+/** Finished it, or skipped it. Both mean "do not offer this again". */
+export async function recordTourDone(id: string): Promise<void> {
+  const client = db();
+  if (!client) return;
+
+  try {
+    const { error } = await client
+      .from('learners')
+      .update({ tour_completed_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  } catch (err) {
+    fail('recordTourDone', err);
+  }
 }

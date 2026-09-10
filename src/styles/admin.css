@@ -110,6 +110,30 @@ main { padding: var(--space-6) 0 var(--space-9); }
 .page-head h1 { font-size: var(--size-7); color: var(--text-loud); }
 .page-head p { color: var(--text-quiet); font-size: var(--size-3); max-width: var(--measure-prose); margin-top: var(--space-1); line-height: var(--lh-snug); }
 
+/* --- the nav, in two groups ---------------------------------------------
+   The bar carries two different jobs and used to run them together as one
+   undifferentiated row of fifteen. A label and a rule cost almost nothing
+   and turn scanning it into picking a side first. */
+.nav-group { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.nav-group-label { font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-faint); }
+.nav-rule { width: 1px; align-self: stretch; background: var(--border-hair); margin: 0 var(--space-2); }
+
+/* --- a page made of panels ---------------------------------------------
+   Three console pages are now composed of what used to be separate pages.
+   A rule between them, not a card around each: they are already full of
+   cards, and boxing a box is how a dense surface stops being readable. */
+.admin-section { margin-top: var(--space-7); padding-top: var(--space-6); border-top: var(--border-w-hair) solid var(--border-hair); }
+.admin-section:first-of-type { margin-top: var(--space-5); padding-top: 0; border-top: 0; }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-5); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.section-head h2 { font-size: var(--size-6); color: var(--text-loud); }
+.section-head p { color: var(--text-quiet); font-size: var(--size-3); max-width: var(--measure-prose); margin-top: var(--space-1); line-height: var(--lh-snug); }
+
+/* In-page nav for a composed page. Plain links to anchors — no JS, no tab
+   state to get out of step with the scroll position. */
+.jump { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+.jump a { font-size: var(--size-2); color: var(--text-quiet); border-bottom: var(--border-w-hair) solid var(--border-hair); padding-bottom: 2px; }
+.jump a:hover { color: var(--accent-ink); border-bottom-color: var(--accent-ink); }
+
 section.panel { margin-top: var(--space-6); }
 section.panel > h2 { font-size: var(--size-5); margin-bottom: var(--space-1); color: var(--text-loud); }
 section.panel > .sub { color: var(--text-quiet); font-size: var(--size-2); margin-bottom: var(--space-4); }

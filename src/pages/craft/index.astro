@@ -15,7 +15,7 @@ import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
 import { listLearnerSubmissions } from '../../lib/craft/submissions';
 import { listLearnerFeedback } from '../../lib/craft/feedback';
 import { getFamiliarity } from '../../lib/craft/familiarity';
-import { weeklyChecks } from '../../lib/craft/checks';
+import { weeklyChecks, sessionEnded } from '../../lib/craft/checks';
 import { sessionPrompt, feedbackWeeksDue, dismissedPrompts } from '../../lib/craft/prompts';
 import { pulseWindows, pulsesDue, listLearnerPulses } from '../../lib/craft/pulses';
 import { givenAssignments } from '../../lib/craft/assignments';
@@ -23,6 +23,7 @@ import Briefing from '../../components/craft/Briefing.astro';
 import SessionPrompt from '../../components/craft/SessionPrompt.astro';
 import { liveSession } from '../../lib/craft/live';
 import { blockAt } from '../../lib/craft/schedule';
+import { offerKind } from '../../lib/craft/tour';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -92,6 +93,25 @@ const windows = pulseWindows(
 );
 const pulseTodo = pulsesDue(windows);
 const prompt = sessionPrompt(promptSessions, checks, feedbacks, windows, dismissed);
+
+// The guided walkthrough, offered at most four times and never after the
+// learner's first fortnight — see offerKind() for the gates and why the window
+// counts from when the seat was issued rather than from the cohort start.
+//
+// `auto` opens the spine by itself. `nudge` and `last` render a dismissible
+// card instead: being grabbed by an overlay you already escaped once is worse
+// than being asked.
+const offer = offerKind(learner);
+//
+// AND NEVER ON TOP OF THE SESSION PROMPT. SessionPrompt is a modal at
+// z-index 200; the walkthrough opens at 90. Firing both puts two dialogs on
+// one screen, which is the exact thing the one-prompt rule exists to stop —
+// "two stacked dialogs are not twice the prompt, they are a thing people
+// click past". The prompt wins because it decays: the check and the rating
+// close, the walkthrough is still there tomorrow. Suppressing it here also
+// means no offer is recorded, so it is genuinely offered again rather than
+// silently spent.
+const tourAutoStart = offer === 'auto' && !prompt;
 
 // Cohort-wide, not just theirs. When this was a private inbox the useful number
 // was "your questions still waiting"; in a forum the useful number is "things
@@ -220,8 +240,12 @@ if (pendingFeedback > 0) {
 }
 
 // Only once week 6 has actually been taught — before that the page is a form
-// about a week that has not happened.
-if (week6?.data.taughtOn && !familiarity?.submitted_at) {
+// about a week that has not happened. Same clock as everything else on this
+// page: sessionEnded(), never `taughtOn`.
+const week6Done = sessionEnded(week6?.data.endsAt);
+const familiarityDue = week6Done && !familiarity?.submitted_at;
+
+if (familiarityDue) {
   todos.push({
     id: 'familiarity',
     label: 'Re-rate the thirteen capabilities',
@@ -231,15 +255,34 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 }
 ---
 
-<CraftLayout title="Your cohort" learner={learner}>
+<CraftLayout title="Your cohort" learner={learner} tourAutoStart={tourAutoStart}>
   {prompt && <SessionPrompt prompt={prompt} />}
 
   {/* A session is running. A banner rather than a redirect, deliberately:
       somebody who opened the dashboard during a call may have opened it on
       purpose, and hijacking that is the kind of thing you cannot undo from a
       phone with a room waiting. It disappears the moment the session ends. */}
+  {(offer === 'nudge' || offer === 'last') && (
+    <div class="tour-nudge" id="tourNudge">
+      <span class="tn-body">
+        <strong>There is a ninety-second tour of this place.</strong>
+        <span>
+          {
+            offer === 'last'
+              ? 'Last time we\u2019ll ask \u2014 the \u24D8 at the foot of the rail opens it whenever you want.'
+              : 'It names what each part is for, and nothing else.'
+          }
+        </span>
+      </span>
+      <span class="tn-actions">
+        <a class="tn-go" href="/craft?tour=spine">Take it</a>
+        <button type="button" class="tn-close" id="tourNudgeClose" aria-label="Dismiss">×</button>
+      </span>
+    </div>
+  )}
+
   {liveNow && (
-    <a class="live-banner" href="/craft/live">
+    <a data-tour="live-banner" class="live-banner" href="/craft/live">
       <span class="dot" aria-hidden="true"></span>
       <span class="lb-main">
         <strong>Week {liveNow.week} is running now</strong>
@@ -271,6 +314,7 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
         <div class="wrap">
           <button
             type="button"
+            data-tour="todo"
             class="todo-tab"
             id="todoTab"
             aria-haspopup="dialog"
@@ -291,7 +335,7 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
             <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
           </div>
 
-          <a class={`intake-card ${intakeState}`} href="/craft/intake">
+          <a data-tour="intake-card" class={`intake-card ${intakeState}`} href="/craft/intake">
             <span class="ic-state mono">
               {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
             </span>
@@ -309,6 +353,20 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
             </span>
             <span class="arrow">→</span>
           </a>
+
+          {familiarityDue && (
+            <a class="intake-card todo" href="/craft/familiarity">
+              <span class="ic-state mono">To do</span>
+              <span class="ic-body">
+                <span class="ic-t">The week 6 re-ask</span>
+                <span class="ic-s">
+                  The same thirteen questions as your intake, in the same words. The pair is
+                  the point — nobody is ranked against anybody.
+                </span>
+              </span>
+              <span class="arrow">→</span>
+            </a>
+          )}
 
           <div style="margin-top: 48px;">
             <h2 style="font-size:28px;margin:0 0 20px">Your Briefing</h2>
@@ -484,6 +542,24 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 </CraftLayout>
 
 <script>
+  // The walkthrough nudge. Rendered by the server when the ladder allows it;
+  // this only records that it was actually SEEN and lets it be waved away.
+  function initTourNudge() {
+    const card = document.getElementById('tourNudge');
+    if (!card) return;
+
+    void fetch('/api/craft/tour', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'offered' }),
+    }).catch(() => {});
+
+    document.getElementById('tourNudgeClose')?.addEventListener('click', () => {
+      card.remove();
+    });
+  }
+
+  document.addEventListener('astro:page-load', initTourNudge);
   // The to-do panel. No stored state: it opens on tap and closes on Escape,
   // on the scrim, on the close button, or on following an item.
   function initTodo() {
@@ -524,6 +600,44 @@ if (week6?.data.taughtOn && !familiarity?.submitted_at) {
 
 <style>
   /* A session is on. Sun means clickable, per the design system. */
+  /* The walkthrough nudge. Quiet: it is an offer, not an alert, and the one
+     yellow thing on it is the control you are meant to press. */
+  .tour-nudge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .tn-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tn-body span { color: var(--ink-soft); font-size: 14px; }
+  .tn-actions { display: flex; align-items: center; gap: 8px; }
+  .tn-go {
+    background: var(--sun);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: var(--radius-control);
+    padding: 7px 16px;
+  }
+  .tn-close {
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-faint);
+    padding: 6px 8px;
+    border-radius: var(--radius-control);
+  }
+  .tn-close:hover { color: var(--ink); }
+
   .live-banner {
     display: flex;
     align-items: center;

@@ -136,6 +136,13 @@ async function craftGate(context: APIContext, next: MiddlewareNext, path: string
       note: null,
       created_at: new Date().toISOString(),
       last_seen_at: new Date().toISOString(),
+      // A preview learner IS a first-time learner, so the walkthrough auto-starts
+      // here — that is the point of previewing. There is no row to write the
+      // dismissal back to, so it re-offers on every dashboard load. Escape closes
+      // it; the i at the foot of the rail reopens it.
+      tour_completed_at: null,
+      tour_offers: 0,
+      tour_offered_at: null,
     };
     return seal(await next());
   }

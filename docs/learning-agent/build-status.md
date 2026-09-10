@@ -2,7 +2,7 @@
 
 **Audited against:** [`docs/learning-agent-specs-02-09-2026.md`](../learning-agent-specs-02-09-2026.md)
 **Branch:** `feat/learner-dashboard-poc`
-**Last updated:** 4 September 2026
+**Last updated:** 10 September 2026
 
 > **This is a living document.** Every change to the learning agent updates it in the
 > same commit as the code. A status line that is right on the day it was written and
@@ -113,16 +113,16 @@ feature."*
 - [x] **Thread clustering.** Grouped by theme, ordered by how many *different* people are in
       each — "five people are circling the same confusion about evals."
 - [x] **Per-question spread across the room**, with the **confident-and-wrong flag** first.
-      No percentage per learner anywhere. — `/craft/admin/quiz`
+      No percentage per learner anywhere. — `/craft/admin/work#quiz`
 - [x] **The quiz/ADR match, computed by code.** Five verdicts including *knew it, did not
       reach for it* — and an honest `unclear` when the record does not lean far enough to
       say. — `src/lib/craft/pairing.ts`
 - [x] **The familiarity room view**, weakest capability first, plus the says-but-has-not-asked
-      flag. — `/craft/admin/familiarity`
+      flag. — `/craft/admin/baseline#familiarity`
 - [x] **Who has not submitted**, computed against the active roster. Nothing chases anyone
-      automatically (§10). — `/craft/admin/adrs`
+      automatically (§10). — `/craft/admin/work#adrs`
 - [x] **The two orphan pages are linked** — `/craft/familiarity` and `/craft/feedback` in the
-      course sidebar, `/craft/admin/quiz-adr-comparison` and `/craft/admin/familiarity` in the console nav.
+      course sidebar, `/craft/admin/work#quiz-adr` and `/craft/admin/baseline#familiarity` in the console nav.
 - [x] **The feedback loop is closed, visibly.** Sunil writes *"you said the drill was
       rushed — week 4 gives it twenty more minutes"* on `/craft/admin/feedback`, saves it as a
       draft or publishes it, and the cohort reads it on the page they submit feedback
@@ -260,7 +260,7 @@ Sunil's ask: *"2 times in a week, 1 before and 1 after the session."*
       of what you can do *now* is worthless tomorrow; feedback fades over days; calibration
       keeps.
 - [x] **Sunil gets the payoff: did the session move what it taught?**
-      `/craft/admin/familiarity` shows the before/after per capability per session,
+      `/craft/admin/baseline#familiarity` shows the before/after per capability per session,
       **smallest movement first** — the capability a session failed to shift is the one
       worth his attention, and a biggest-gain ordering buries it.
 - [x] **Paired ratings only.** Someone who rated before and not after counts in neither
@@ -414,29 +414,22 @@ Recorded here so they are not silently re-litigated.
 
 ## Related
 
-- [guided-walkthrough/plan.md](guided-walkthrough/plan.md) — a product tour of `/craft` for
-  first-time learners: a 90-second spine that auto-starts on first sign-in, plus per-page
-  tours pulled from a permanent ⓘ. **Design, not built**, and not something the spec asked
-  for. It also carries two decisions that land outside it:
-  - **Familiarity comes out of the sidebar** and becomes a dashboard card at week 6,
-    matching how intake is already handled. (It is in the rail today because of the
-    "link the orphan pages" fix — the wrong lever.)
-  - **The agent dock is a discussion widget, not a tutor chat — and it is wired now**
-    (7 Sep). It calls `/api/craft/discussion` with `action: 'lookup'`, a READ that runs
-    the same two grounded sources a posted thread is answered from — session frontmatter
-    and `facts.ts`, then a verbatim answer Sunil has already given — and runs no model at
-    all. A `lookup` writes nothing, so idle curiosity does not open a thread. When nothing
-    grounded answers, it says so and carries the question to the forum composer via
-    `?ask=`, which `/craft/discussion` now prefills. Making it a tutor as originally
-    written would violate §5.1; this is the version that does not. The tour can now ship
-    over the top of it.
-
+- [guided-walkthrough/plan.md](guided-walkthrough/plan.md) — the design. **Built on
+  10 September**, and the plan file carries a note at the top saying what changed between
+  the design and the build. Short version: the rail it was written against had five
+  destinations and now has six, the dashboard gained a live banner and a to-do panel, and
+  the session page gained a day worth touring. Two decisions the plan carried outside
+  itself both landed with it — **familiarity came out of the rail** into a dashboard card,
+  and **the agent dock was made real** (7 Sep) so the tour is not pointing at a mock.
 ---
 
 ## Changelog
 
 | Date | Change |
 |---|---|
+| 10 Sep 2026 | **Codebase sweep: one security defect, one silent-failure defect, and the duplication that caused the second.** (1) **Learner-authored markdown reached the operator console as raw HTML.** `marked` has not sanitised since v5, and `set:html={marked.parse(adr_markdown)}` on two console panels meant a decision record could execute script in the session holding the admin cookie. `src/lib/craft/markdown.ts` is now the only file importing `marked`; everything renders through `renderMarkdown()`, which drops HTML tokens and constrains link/image destinations. Verified against sixteen attack strings. **The console also pulled `marked` from an unpinned CDN at runtime** — same blast radius, worse, and unnecessary since it is already a dependency. Both copies removed. (2) **The quiz/ADR comparison had been reading `## Decision`** — a heading from the retired five-section template — so half its input was the empty string for every record written since 9 September, and it failed silently because a thinner input just produces more `unclear` verdicts. It goes through `parseAdr()` now, and falls back to `unmatched` so records under the old template still contribute. (3) **The `## Heading` format had four writers**, not one: `adr.astro` and `pair.astro` each rebuilt it client-side, and `pair.astro` imported `buildAdr` without calling it because its script was `is:inline`. Both are module scripts now, which also brought 29 lines of previously-unchecked DOM code under `astro check`. Same fix applied to the walkthrough, whose client re-implemented `tourFor()`. `astro check` is now **0 errors and 0 warnings**. |
+| 10 Sep 2026 | **The console went from fifteen destinations to ten, in two groups.** Three merges, each because the pages were one job filed twice: **Work** (the check + the decision records + the comparison — the comparison page was derived entirely from the other two), **Baseline** (the intake + the week-6 re-ask, which is one instrument asked twice and whose whole reading is the pair), and **Agents** (the radar + visitor content + unanswered questions, three review queues for machine output — the two *stores* stay separate, only the two review surfaces merged). Eight pages became `src/components/admin/*Panel.astro`, composed by three pages with an in-page jump nav. The merge introduced exactly one bug and it was caught by checking for duplicate ids: both "Run now" buttons used `#runStatus`, so on one page the content sweep wrote its progress into the radar's status line. Also removed: the Overview carried the Traffic page's Pages and Funnel panels *verbatim*, along with the `trafficPaths` rollup they ran on every render. |
+| 10 Sep 2026 | **Week 1's real material landed in both surfaces, and the guided walkthrough was built.** The session body was still the invented outline written before week 1 existed — a five-part shape that contradicted the run of show in its own frontmatter, with two `[PLACEHOLDER: Sunil …]` blocks and a pre-work list that disagreed with `prework:`. It is now the real session, recovered from the learner copy: five blocks, four checkpoints, the four failures with their amounts, the four drills, the enterprise teardown and the close. **And `/craft/week-N` now renders what the file carries** — outcomes, pre-work, the whole day with each checkpoint in place, after, reading, threads — via a new `dayPlan()` in `schedule.ts` that merges the run of show, the checkpoints and the pair offsets into one ordered list. **The console gained `/craft/admin/sessions`**, which is the same material from Sunil's side plus the room's checkpoint answers as counts — the first and only reader of `roomAtCheckpoints()`, which had been written and wired to nothing. **The walkthrough** is a ten-step spine (nine on an ordinary day — the live-banner step self-skips) that auto-starts on first sign-in plus six page tours pulled from a permanent ⓘ; no tour crosses a page, every target is a `data-tour` contract checked by `npm run check:tour`, and it is not rendered in session mode. Three additive columns on `learners`. **Two fabrications removed on the way:** `/craft/modules` drew a hardcoded `65%` progress bar keyed to array index, and `docs/teaching/threads.md` was cited in five places and did not exist. |
 | 9 Sep 2026 | **Session mode, and the five decided items, built.** `/craft` is now a surface people use *during* a session — `/craft/live` shows the one thing the room is asking for and nothing else, with the nav rail and agent dock dropped via a `bare` prop on `CraftLayout` (a prop, not a second shell: §9 says every page goes through that one). "Now" is the most recently fired outstanding ask, not the earliest. Nothing redirects into it; a banner on the dashboard is the only route. Built on top: **checkpoints** (`checkpoint_ratings`, keyed by offset, one number on the last item, counts never means); **the quiz at its own block** (`checkOpensAt()` off the run of show, `itemsForCheck()` returning Sunil's eight in his order, empty = nothing opens); **the pair draft and its review** (`pair_drafts` + `pair_reviews` at `/craft/pair` — a different object from `submissions`, same seven sections, picker excludes your own and your partner's, nothing sums the scores); **field notes in `/craft`** over the same `latest.json` through `src/lib/notes.ts`, with the five threads printed beside the notes rather than used to file them; and **four closing questions**, the doubt opening a forum thread rather than a feedback row. **Also fixed: the after-rating opened at `endsAt` and now opens at the close block** — week 1 rates at 04:52 inside a close running 04:50–05:00, the same class of error as the before-window, eight minutes the other way. **And `/craft/notes` was a fabricated mock** — four invented notes with invented dates and an invented quote attributed to Sunil, on the nav rail of every page. Three new tables; `supabase/schema.sql` still unrun. |
 | 9 Sep 2026 | **The five open items from the alignment audit are decided — and none of them is built.** Recorded at §0D of the spec before any code moves. The quiz moves in-session to 04:20 with Sunil picking the eight in the session file and reading the spread live; checkpoints are captured in the app during the call; peer review gets a surface carrying comments and numbers, attached to a new in-room *pair draft* rather than to the submitted record, with pairs set by Sunil in the room; Field notes becomes a second `/craft` rendering of the existing store; the close asks all four questions with the doubt opening a forum thread. **The thing none of them says alone: `/craft` becomes a surface used DURING a session**, which every page in it was built to be the opposite of. Session mode is the first thing to build, because four of the five need it. Two decisions sit inside it — what the agent dock and the nav do on a page someone opens for ninety seconds mid-call. Adds three tables to a schema that is already ahead of production. |
 | 9 Sep 2026 | **Aligned the learner agent with week 1, now that week 1 exists in full.** Three findings, and the teaching material was right in all three. (1) **There are three vocabularies, not one** — the thirteen intake capabilities, the five threads in `docs/teaching/threads.md`, and each session's own five outcomes. Spec §3's "one vocabulary, six surfaces" is amended: the thirteen keep week 0 and week 6, the five outcomes become the per-session instrument, the threads become the join between weeks. `topics` is gone, and the `topics: ['A1','A2','A3']` on week 1 was invented to satisfy the schema. (2) **The before-rating window closed exactly when the rating happens** — week 1 opens at 00:00, rates at 00:05, teaches from 00:15, and the close was at `startsAt`. As built, week 1's opening rating was refused. It now derives from the first `block` in the run of show (`src/lib/craft/schedule.ts`). (3) **The decision record has seven sections, not five**, and the list now lives in one module (`src/lib/craft/adr.ts`) instead of three copies inside `adr.astro`. Session frontmatter gained `outcomes`, `threads`, `runOfShow`, `checkpoints`, `prework`, `after` and `reading`, so a session file can describe its own session; week 1's are populated. `capability_pulses` → `outcome_ratings` (a rename, not a migration — it was never applied). **Four things are still open and deliberately not guessed at:** the quiz runs at 04:20 in chat rather than after `endsAt`; checkpoints are captured in frontmatter but nothing reads them back; the in-room peer review of the decision record has questions but no surface; and "Field notes" needs a definition for a learner. See spec §0D. |

@@ -41,6 +41,7 @@
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { publishedNotes, longDate } from '../../lib/notes';
+import { THREADS, threadLabel, WEIGHT_MARK } from '../../lib/craft/threads';
 
 export const prerender = false;
 const learner = Astro.locals.learner!;
@@ -54,20 +55,10 @@ const sessions = (await getCollection('sessions'))
   .filter((s) => s.data.week >= 1)
   .sort((a, b) => a.data.week - b.data.week);
 
-const THREAD_LABEL: Record<string, string> = {
-  boundaries: 'Boundaries',
-  evidence: 'Evidence',
-  'trace-and-bill': 'Trace and bill',
-  'untrusted-input': 'Untrusted input',
-  state: 'State',
-  retrieval: 'Retrieval',
-  'multi-agent': 'Multi-agent',
-};
-
-const threadRows = Object.keys(THREAD_LABEL)
+const threadRows = THREADS.map((t) => t.id)
   .map((id) => ({
     id,
-    label: THREAD_LABEL[id],
+    label: threadLabel(id),
     weeks: sessions
       .filter((s) => (s.data.threads ?? []).some((t) => t.id === id))
       .map((s) => ({
@@ -77,7 +68,6 @@ const threadRows = Object.keys(THREAD_LABEL)
   }))
   .filter((r) => r.weeks.length > 0);
 
-const MARK: Record<string, string> = { builds: '●', second: '◐', named: '○' };
 ---
 
 <CraftLayout title="Field notes" learner={learner}>
@@ -150,7 +140,7 @@ const MARK: Record<string, string> = { builds: '●', second: '◐', named: '○
                     const hit = r.weeks.find((w) => w.week === s.data.week);
                     return (
                       <td class="wk mono" title={hit ? hit.weight : undefined}>
-                        {hit ? MARK[hit.weight] : ''}
+                        {hit ? WEIGHT_MARK[hit.weight] : ''}
                       </td>
                     );
                   })}

@@ -1,0 +1,618 @@
+---
+// The guided walkthrough's one moving part.
+//
+// Mounted ONCE in CraftLayout, never per page, and never in session mode — a
+// walkthrough is the wrong thing to hand somebody who has ninety seconds inside
+// a live call.
+//
+// ---------------------------------------------------------------------------
+// NO LIBRARY
+// ---------------------------------------------------------------------------
+// driver.js and shepherd.js both supply the scrim and the positioning. With no
+// cross-route state the whole mechanism is a couple of hundred lines, and this
+// is a repo whose stated posture is minimal client JS on a page nobody outside
+// the cohort can load. The only fiddly part is edge-flipping, and it is bounded.
+//
+// ---------------------------------------------------------------------------
+// ONE DIMMER, NOT TWO — THIS WAS THE BUG THAT MADE THE FEATURE POINTLESS
+// ---------------------------------------------------------------------------
+// The first build had a full-viewport `.tour-scrim` painted at 50% AND a
+// `box-shadow: 0 0 0 9999px` on the spotlight rect. Two consequences, both bad:
+// the page outside the spotlight was dimmed twice (~75%), and — far worse — the
+// scrim sat at z-index 90 ABOVE the element being pointed at, so the spotlit
+// thing was dimmed along with everything else. A spotlight that dims its own
+// target is a yellow ring around a grey rectangle.
+//
+// So the scrim is now TRANSPARENT and exists only to catch clicks. The
+// spotlight's box-shadow is the only thing that darkens anything, and because a
+// box-shadow is painted outside the border box, the target shows through the
+// hole at full brightness. A step with no target parks a zero-size, borderless
+// spot at the centre, so the shadow still dims the whole screen.
+//
+// ---------------------------------------------------------------------------
+// A TARGET MUST BE VISIBLE, NOT MERELY PRESENT
+// ---------------------------------------------------------------------------
+// `document.querySelector('[data-tour=…]')` answers the wrong question twice.
+//
+// `/craft/discussion` carries the composer with a `hidden` attribute until you
+// click "Ask something" — present, `display:none`, and `getBoundingClientRect()`
+// on it is all zeros, which is a 12×12 spotlight in the top-left corner. That is
+// precisely the "(0,0) spotlight" the design promised never to have.
+//
+// `/craft/adr` renders one panel per assignment and hides all but the current
+// week, so the FIRST match is usually a hidden one while a perfectly good
+// visible one sits further down the document.
+//
+// And below 861px the nav rail becomes a sheet that is `visibility: hidden`
+// until the burger opens it — laid out, measurable, and invisible. Six of the
+// spine's ten steps point at it.
+//
+// So targets are resolved by `visibleTarget()`: the first match that actually
+// renders a box and is not `visibility: hidden`. Everything else self-skips,
+// which is the documented behaviour and now actually true.
+
+
+
+export interface Props {
+  /**
+   * Whether the spine should open by itself on this render. Decided on the
+   * server from `tour_completed_at`, because the client has no way to know and
+   * this repo stores nothing in the browser.
+   */
+  autoStart?: boolean;
+}
+
+const { autoStart = false } = Astro.props;
+---
+
+
+<div
+  id="tourRoot"
+  class="tour-root"
+  data-autostart={autoStart ? '1' : '0'}
+  hidden
+>
+  <div class="tour-scrim" id="tourScrim"></div>
+  <div class="tour-spot" id="tourSpot" aria-hidden="true"></div>
+
+  <div
+    class="tour-pop"
+    id="tourPop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tourTitle"
+    tabindex="-1"
+  >
+    {/* One live region over the parts that change, so a step change is
+        announced rather than silently swapped under a screen reader. */}
+    <div aria-live="polite">
+      <p class="tour-chapter mono" id="tourChapter"></p>
+      <h2 class="tour-title" id="tourTitle"></h2>
+      <p class="tour-body" id="tourBody"></p>
+    </div>
+
+    <div class="tour-foot">
+      <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-btns">
+        <button type="button" class="tour-skip" id="tourSkip">Skip</button>
+        <button type="button" class="tour-back" id="tourBack">Back</button>
+        <button type="button" class="tour-next" id="tourNext">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // The script, and the rule for which tour belongs to which page, both come
+  // from the module that owns them. This used to read the tours out of a
+  // <script type="application/json"> and re-implement `tourFor` beside it —
+  // two copies of one rule, and the kind that drifts silently the first time
+  // somebody adds a route pattern.
+  import { tourById, tourFor, SPINE_ID, type Tour, type TourStep } from '../../lib/craft/tour';
+
+  const MARGIN = 14;
+  const GAP = 14;
+
+  // CraftLayout uses <ClientRouter />, so initTour() runs again after every
+  // navigation — against a fresh DOM, with fresh element references. Listeners
+  // bound to `document` and `window` do NOT go with the swapped markup, so
+  // without this they accumulate one set per page visited, each closing over a
+  // detached menu. Everything bound outside the overlay is registered here and
+  // torn down at the top of the next init.
+  let teardown: (() => void) | null = null;
+
+  // The auto-start belongs to a browsing session, not to a page render.
+  //
+  // In production the database gate is the real one — `tour_offered_at` is
+  // stamped the first time and offerKind() then returns null for the rest of the
+  // day. But a dashboard render with NO database (local preview, or a Supabase
+  // outage) has nothing to write to, so the server keeps saying "auto" and the
+  // tour reopens on every single visit to /craft. This flag survives client-side
+  // navigation and resets on a hard reload, which is the behaviour somebody
+  // previewing the course area actually wants.
+  let autoStarted = false;
+
+  function initTour() {
+    teardown?.();
+    teardown = null;
+
+    const root = document.getElementById('tourRoot');
+    if (!root) return;
+
+    // Narrowing a const does not survive into the closures below, so the
+    // non-null value is captured once here rather than asserted five times.
+    const rootEl: HTMLElement = root;
+
+
+    const scrim = document.getElementById('tourScrim')!;
+    const spot = document.getElementById('tourSpot')!;
+    const pop = document.getElementById('tourPop')!;
+    const elChapter = document.getElementById('tourChapter')!;
+    const elTitle = document.getElementById('tourTitle')!;
+    const elBody = document.getElementById('tourBody')!;
+    const elDots = document.getElementById('tourDots')!;
+    const btnBack = document.getElementById('tourBack') as HTMLButtonElement;
+    const btnNext = document.getElementById('tourNext') as HTMLButtonElement;
+    const btnSkip = document.getElementById('tourSkip') as HTMLButtonElement;
+
+    // Step state lives here, in a closure, for exactly as long as the tour runs.
+    // That is what "no tour crosses a page" buys — see the note in tour.ts.
+    let steps: TourStep[] = [];
+    let tourId = '';
+    let i = 0;
+    let opener: HTMLElement | null = null;
+    let running = false;
+
+    const path = () => window.location.pathname.replace(/\/+$/, '') || '/';
+
+    const spineId = SPINE_ID;
+    const spine = () => tourById(SPINE_ID);
+    const pageTour = () => tourFor(path());
+
+    // ---- resolving a target ------------------------------------------------
+    // Rendered, and not invisible. `getClientRects()` is empty for anything
+    // `display:none`, itself or by an ancestor. `visibility` is inherited, so
+    // reading the computed value catches a child of the collapsed phone sheet
+    // without walking the tree.
+    const isVisible = (el: Element) => {
+      if (el.getClientRects().length === 0) return false;
+      return getComputedStyle(el).visibility !== 'hidden';
+    };
+
+    const visibleTarget = (name: string): HTMLElement | null =>
+      ([...document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`)].find(isVisible) as
+        | HTMLElement
+        | undefined) ?? null;
+
+    const found = (s: TourStep) => !s.target || visibleTarget(s.target) !== null;
+
+    function report(action: 'offered' | 'done') {
+      // Fire-and-forget, same as every other write on a learner path. Losing one
+      // costs at most a repeated offer.
+      void fetch('/api/craft/tour', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      }).catch(() => {});
+    }
+
+    // While the tour runs, nothing behind it is reachable by keyboard or by a
+    // screen reader. The scrim already stops the mouse; `aria-modal` alone does
+    // not stop Tab, so an assistive-technology user could walk straight out of
+    // the dialog into the page it is describing.
+    const backdrop = () => [...document.body.children].filter((el) => el !== rootEl);
+    const setInert = (on: boolean) => {
+      for (const el of backdrop()) (el as HTMLElement).inert = on;
+    };
+
+    function start(t: Tour | null, from?: HTMLElement) {
+      if (!t || running) return;
+      const usable = t.steps.filter(found);
+      if (usable.length === 0) return;
+
+      steps = usable;
+      tourId = t.id;
+      i = 0;
+      opener = from ?? null;
+      running = true;
+
+      rootEl.hidden = false;
+      setInert(true);
+      render();
+      pop.focus();
+    }
+
+    function stop() {
+      if (!running) return;
+      running = false;
+      rootEl.hidden = true;
+      setInert(false);
+
+      // Only the spine decides "done" — finished and skipped are the same
+      // record, because both mean "do not put this in front of them again".
+      // Closing a page tour says nothing about whether somebody has been shown
+      // around.
+      if (tourId === spineId) report('done');
+
+      opener?.focus();
+      opener = null;
+    }
+
+    function place(rect: DOMRect | null, placement?: string) {
+      const pw = pop.offsetWidth;
+      const ph = pop.offsetHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      if (!rect) {
+        pop.style.left = `${Math.round((vw - pw) / 2)}px`;
+        pop.style.top = `${Math.round((vh - ph) / 2)}px`;
+        return;
+      }
+
+      const fits = {
+        top: rect.top - ph - GAP >= MARGIN,
+        bottom: rect.bottom + ph + GAP <= vh - MARGIN,
+        left: rect.left - pw - GAP >= MARGIN,
+        right: rect.right + pw + GAP <= vw - MARGIN,
+      };
+
+      // The hint first, then anything that fits, then bottom as the last resort
+      // — clamped, so a popover that fits nowhere still lands on screen.
+      const order = [placement, 'bottom', 'top', 'right', 'left'].filter(Boolean) as string[];
+      const side = order.find((s) => fits[s as keyof typeof fits]) ?? 'bottom';
+
+      let left: number;
+      let top: number;
+      if (side === 'top' || side === 'bottom') {
+        left = rect.left + rect.width / 2 - pw / 2;
+        top = side === 'top' ? rect.top - ph - GAP : rect.bottom + GAP;
+      } else {
+        left = side === 'left' ? rect.left - pw - GAP : rect.right + GAP;
+        top = rect.top + rect.height / 2 - ph / 2;
+      }
+
+      pop.style.left = `${Math.round(Math.min(Math.max(left, MARGIN), vw - pw - MARGIN))}px`;
+      pop.style.top = `${Math.round(Math.min(Math.max(top, MARGIN), vh - ph - MARGIN))}px`;
+    }
+
+    /**
+     * Position the spotlight and the popover for the current step.
+     *
+     * Split out from render() so a window resize can re-place things WITHOUT
+     * scrolling the page again — a resize handler that re-runs scrollIntoView
+     * fights somebody dragging their window.
+     */
+    function measure(scroll: boolean) {
+      const s = steps[i];
+      if (!s) return;
+      const el = s.target ? visibleTarget(s.target) : null;
+
+      if (!el) {
+        // No target: a zero-size, borderless spot at the centre. The box-shadow
+        // still dims the whole viewport, which is what a centred step wants.
+        spot.classList.add('blank');
+        spot.style.opacity = '1';
+        spot.style.left = `${Math.round(window.innerWidth / 2)}px`;
+        spot.style.top = `${Math.round(window.innerHeight / 2)}px`;
+        spot.style.width = '0px';
+        spot.style.height = '0px';
+        place(null);
+        return;
+      }
+
+      // Scrolling is INSTANT on purpose. With `behavior: 'smooth'` the rect has
+      // to be read after the animation finishes, and reading it on the next
+      // frame — which is what this did — measures the position the target is
+      // moving away from. Every below-the-fold step was ringed in the wrong
+      // place. Instant also means the measurement below is synchronous, so the
+      // popover never renders for a frame at its unpositioned location.
+      if (scroll) el.scrollIntoView({ block: 'center', behavior: 'auto' });
+
+      const r = el.getBoundingClientRect();
+      spot.classList.remove('blank');
+      spot.style.opacity = '1';
+      spot.style.left = `${Math.round(r.left - 6)}px`;
+      spot.style.top = `${Math.round(r.top - 6)}px`;
+      spot.style.width = `${Math.round(r.width + 12)}px`;
+      spot.style.height = `${Math.round(r.height + 12)}px`;
+      place(r, s.placement);
+    }
+
+    function render() {
+      const s = steps[i];
+      if (!s) return stop();
+
+      elChapter.textContent = `${i + 1} of ${steps.length}`;
+      elTitle.textContent = s.title;
+      elBody.textContent = s.body;
+
+      elDots.replaceChildren(
+        ...steps.map((_, n) => {
+          const d = document.createElement('span');
+          d.className = n === i ? 'dot on' : 'dot';
+          return d;
+        }),
+      );
+
+      btnBack.hidden = i === 0;
+      btnNext.textContent = i === steps.length - 1 ? 'Done' : 'Next';
+
+      measure(true);
+    }
+
+    const next = () => (i >= steps.length - 1 ? stop() : (i++, render()));
+    const back = () => i > 0 && (i--, render());
+
+    btnNext.addEventListener('click', next);
+    btnBack.addEventListener('click', back);
+    btnSkip.addEventListener('click', stop);
+    scrim.addEventListener('click', stop);
+
+    pop.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') return stop();
+
+      // Enter must NOT be hijacked while a button has focus, or pressing Enter
+      // on Skip both advances the tour (this handler) and closes it (the
+      // button's own activation). Arrow keys are unambiguous and stay.
+      const onButton = (e.target as HTMLElement | null)?.tagName === 'BUTTON';
+      if (e.key === 'Enter' && !onButton) return next();
+      if (e.key === 'ArrowRight') return next();
+      if (e.key === 'ArrowLeft') return back();
+
+      // Focus stays inside the dialog while it is open.
+      if (e.key === 'Tab') {
+        const f = [btnSkip, btnBack, btnNext].filter((b) => !b.hidden);
+        const at = f.indexOf(document.activeElement as HTMLButtonElement);
+        e.preventDefault();
+        f[(at + (e.shiftKey ? -1 : 1) + f.length) % f.length]?.focus();
+      }
+    });
+
+    // Everything bound to a node that survives the swap goes in here.
+    const globals: (() => void)[] = [];
+    const onGlobal = (
+      node: Window | Document,
+      type: string,
+      fn: EventListenerOrEventListenerObject,
+    ) => {
+      node.addEventListener(type, fn);
+      globals.push(() => node.removeEventListener(type, fn));
+    };
+    teardown = () => {
+      globals.forEach((off) => off());
+      // A swap while the tour is open would otherwise leave the whole page inert.
+      if (running) setInert(false);
+    };
+
+    // Re-place rather than close, and WITHOUT re-scrolling: a resize mid-tour
+    // should not lose your place or yank the page around under you.
+    const remeasure = () => running && measure(false);
+    onGlobal(window, 'resize', remeasure);
+    onGlobal(window, 'orientationchange', remeasure);
+
+    // --- the ⓘ, and the two ways in ------------------------------------------
+    const help = document.querySelector<HTMLElement>('[data-tour="tour-help"]');
+    const menu = document.getElementById('tourMenu');
+
+    if (help && menu) {
+      const here = pageTour();
+      const btnPage = menu.querySelector<HTMLButtonElement>('[data-tour-open="page"]');
+      const btnSpine = menu.querySelector<HTMLButtonElement>('[data-tour-open="spine"]');
+
+      const closeMenu = () => {
+        menu.hidden = true;
+        help.setAttribute('aria-expanded', 'false');
+      };
+
+      // No page tour, or every one of its targets is missing: do not offer it.
+      if (btnPage) {
+        const usable = here ? here.steps.filter(found).length > 0 : false;
+        btnPage.hidden = !usable;
+        if (usable && here) btnPage.textContent = here.label;
+        btnPage.addEventListener('click', () => {
+          closeMenu();
+          start(here, help);
+        });
+      }
+
+      btnSpine?.addEventListener('click', () => {
+        closeMenu();
+        // The spine lives on the dashboard. From anywhere else, go there and let
+        // the ?tour= entry point open it — the ONE thing that survives a
+        // navigation, and it is an entry point, never a step cursor.
+        if (path() === '/craft') start(spine(), help);
+        else window.location.href = '/craft?tour=spine';
+      });
+
+      help.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = help.getAttribute('aria-expanded') === 'true';
+        menu.hidden = open;
+        help.setAttribute('aria-expanded', String(!open));
+      });
+      onGlobal(document, 'click', (e) => {
+        if (!menu.hidden && !menu.contains((e as MouseEvent).target as Node)) closeMenu();
+      });
+      onGlobal(document, 'keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Escape' && !menu.hidden) {
+          closeMenu();
+          help.focus();
+        }
+      });
+    }
+
+    // --- what opens on load ---------------------------------------------------
+    const params = new URLSearchParams(window.location.search);
+    const asked = params.get('tour');
+
+    if (asked) {
+      // An unknown id, or one belonging to another route, is ignored and the
+      // page renders normally. Tours no longer navigate, so a mismatch here is
+      // always a stale link rather than a redirect.
+      const t = tourById(asked);
+      const ok =
+        t && (t.id === spineId ? path() === (spine()?.route ?? '/craft') : pageTour()?.id === t.id);
+
+      // Spent on arrival, whether or not it opened anything. Left in the address
+      // bar it is a loaded gun: every reload of that URL reopens the tour, and
+      // every close writes `tour_completed_at` again.
+      params.delete('tour');
+      const qs = params.toString();
+      window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+
+      if (ok) {
+        autoStarted = true;
+        start(t!);
+      }
+    } else if (!autoStarted && rootEl.dataset.autostart === '1' && path() === '/craft') {
+      autoStarted = true;
+      report('offered');
+      start(spine());
+    }
+  }
+
+  document.addEventListener('astro:page-load', initTour);
+</script>
+
+<style>
+  .tour-root[hidden] {
+    display: none !important;
+  }
+
+  /*
+   * TRANSPARENT ON PURPOSE. This catches clicks so the page underneath cannot be
+   * operated while the tour is describing it; the dimming is entirely the
+   * spotlight's box-shadow. Give this a background and the spotlit element is
+   * dimmed along with everything else — see the note at the top of this file.
+   */
+  .tour-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+  }
+
+  .tour-spot {
+    position: fixed;
+    z-index: 91;
+    pointer-events: none;
+    border-radius: var(--radius-inner);
+    border: 2px solid var(--sun);
+    /* One element, one shadow: the shadow IS the scrim, and the hole in it is
+       this element's own box. */
+    box-shadow: 0 0 0 9999px rgba(15, 17, 20, 0.55);
+    opacity: 0;
+    transition:
+      left 180ms ease,
+      top 180ms ease,
+      width 180ms ease,
+      height 180ms ease,
+      opacity 140ms ease;
+  }
+  /* A step with no target: the shadow still dims everything, and there is no
+     ring around the nothing it is pointing at. */
+  .tour-spot.blank {
+    border-color: transparent;
+    border-radius: 0;
+  }
+
+  .tour-pop {
+    position: fixed;
+    z-index: 92;
+    width: min(360px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+    overflow-y: auto;
+    background: var(--surface);
+    /* A panel gets a border OR a shadow, never both. This one floats, so: shadow. */
+    box-shadow: 0 18px 44px rgba(15, 17, 20, 0.28);
+    border-radius: var(--radius-panel);
+    padding: 20px 22px 16px;
+  }
+  .tour-pop:focus {
+    outline: none;
+  }
+  .tour-pop:focus-visible {
+    outline: 2px solid var(--sun);
+    outline-offset: 3px;
+  }
+
+  .tour-chapter {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  .tour-title {
+    font-size: 17px;
+    font-weight: var(--weight-strong);
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .tour-body {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0 0 18px;
+  }
+
+  .tour-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .tour-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .tour-dots :global(.dot) {
+    width: 5px;
+    height: 5px;
+    border-radius: var(--radius-control);
+    background: var(--line);
+  }
+  .tour-dots :global(.dot.on) {
+    background: var(--ink-faint);
+  }
+
+  .tour-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tour-btns button {
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius-control);
+    padding: 7px 15px;
+    border: 1px solid transparent;
+  }
+  .tour-skip,
+  .tour-back {
+    background: none;
+    color: var(--ink-faint);
+  }
+  .tour-skip:hover,
+  .tour-back:hover {
+    color: var(--ink);
+  }
+  /* If it is yellow it is clickable — and sun is a fill, so the label on it is
+     ink, never white. */
+  .tour-next {
+    background: var(--sun);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .tour-btns button:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tour-spot {
+      transition: none;
+    }
+  }
+</style>

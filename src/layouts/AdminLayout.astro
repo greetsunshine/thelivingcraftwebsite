@@ -21,7 +21,7 @@ export interface Props {
    * Which nav item is current. Derived from NAV, so adding a console page means
    * one edit (the nav entry) rather than two that can drift apart.
    */
-  active?: (typeof NAV)[number]['key'];
+  active?: string;
 }
 
 const { title, active } = Astro.props;
@@ -34,22 +34,35 @@ const caps = capabilities();
 const health = caps.data ? await dbHealth() : null;
 const unmigrated = health ? looksUnmigrated(health) : false;
 
-const NAV = [
-  { key: 'overview', href: '/craft/admin', label: 'Overview' },
-  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic' },
-  { key: 'leads', href: '/craft/admin/leads', label: 'Leads' },
-  { key: 'questions', href: '/craft/admin/questions', label: 'Questions' },
-  { key: 'radar', href: '/craft/admin/radar', label: 'Radar' },
-  { key: 'content', href: '/craft/admin/content', label: 'Content' },
-  { key: 'learners', href: '/craft/admin/learners', label: 'Learners' },
-  { key: 'intake', href: '/craft/admin/intake', label: 'Intake' },
-  { key: 'discussion', href: '/craft/admin/discussion', label: 'Discussion' },
-  { key: 'adrs', href: '/craft/admin/adrs', label: 'ADRs' },
-  { key: 'quiz', href: '/craft/admin/quiz', label: 'Quiz' },
-  { key: 'quiz-adr', href: '/craft/admin/quiz-adr-comparison', label: 'Quiz vs ADR' },
-  { key: 'feedback', href: '/craft/admin/feedback', label: 'Feedback' },
-  { key: 'familiarity', href: '/craft/admin/familiarity', label: 'Familiarity' },
+// Fifteen destinations in one row was unreadable, and several of them were the
+// same job filed twice. Ten now, in two groups, because the console really does
+// serve two different mornings: the practice (who came, who asked, what the
+// agents found) and the cohort (who is in it, what they did, what moved).
+//
+// The merges, and why each one holds:
+//   quiz + adrs + quiz-adr  -> work      the third was derived from the first two
+//   intake + familiarity    -> baseline  one instrument, asked at week 0 and week 6
+//   radar + content + questions -> agents  three review queues for machine output
+//
+// Adding a page means one entry here — `active` is typed off this array, so a
+// page naming a key that does not exist fails the build rather than rendering
+// with no nav item lit.
+const NAV: readonly { key: string; href: string; label: string; group: 'practice' | 'cohort' }[] = [
+  { key: 'overview', href: '/craft/admin', label: 'Overview', group: 'practice' },
+  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic', group: 'practice' },
+  { key: 'leads', href: '/craft/admin/leads', label: 'Leads', group: 'practice' },
+  { key: 'agents', href: '/craft/admin/agents', label: 'Agents', group: 'practice' },
+
+  { key: 'learners', href: '/craft/admin/learners', label: 'Learners', group: 'cohort' },
+  { key: 'sessions', href: '/craft/admin/sessions', label: 'Sessions', group: 'cohort' },
+  { key: 'discussion', href: '/craft/admin/discussion', label: 'Discussion', group: 'cohort' },
+  { key: 'work', href: '/craft/admin/work', label: 'Work', group: 'cohort' },
+  { key: 'baseline', href: '/craft/admin/baseline', label: 'Baseline', group: 'cohort' },
+  { key: 'feedback', href: '/craft/admin/feedback', label: 'Feedback', group: 'cohort' },
 ] as const;
+
+const practice = NAV.filter((n) => n.group === 'practice');
+const cohort = NAV.filter((n) => n.group === 'cohort');
 ---
 
 <!DOCTYPE html>
@@ -88,13 +101,23 @@ const NAV = [
             display:contents, so these lay out on the bar exactly as before. */}
         <div class="admin-sheet" id="adminLinks">
           <nav class="admin-links">
-            {
-              NAV.map((item) => (
+            <span class="nav-group">
+              <span class="nav-group-label mono">Practice</span>
+              {practice.map((item) => (
                 <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
                   {item.label}
                 </a>
-              ))
-            }
+              ))}
+            </span>
+            <span class="nav-rule" aria-hidden="true"></span>
+            <span class="nav-group">
+              <span class="nav-group-label mono">Cohort</span>
+              {cohort.map((item) => (
+                <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))}
+            </span>
           </nav>
           <div class="admin-sheet-tail">
             <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>

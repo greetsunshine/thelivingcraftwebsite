@@ -17,6 +17,7 @@
 // than reporting a coin-flip as a finding. An 'unclear' row is not a failure of
 // the check; it is the check refusing to invent a signal.
 
+import { parseAdr } from './adr';
 import { tokenize, stem, score } from '../agent/knowledge';
 import { isCorrect, type QuizItemWithAnswer, type QuizResponse } from './quiz';
 import type { Submission } from './submissions';
@@ -45,16 +46,39 @@ export const VERDICT_NOTE: Record<Verdict, string> = {
 };
 
 /**
- * The Decision and Alternatives sections carry the choice. Context and
- * Consequences describe the situation and the cost, and matching against them
- * pulls in whatever the brief happened to say.
+ * The sections that carry the CHOICE, which is the only part worth comparing
+ * against a quiz answer. Context and What-can-go-wrong describe the situation
+ * and the cost; matching against those pulls in whatever the brief happened to
+ * say and makes every record look alike.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS READ WAS BROKEN AND SAID NOTHING ABOUT IT
+ * ---------------------------------------------------------------------------
+ * It used to grab `## Decision` with a regex of its own. There is no `## Decision`
+ * section — that was the retired five-section template (Context · Decision ·
+ * Alternatives · Consequences · Unsure about). Since the template became the
+ * seven that week 1 actually asks for, every record written under it returned
+ * the empty string for that half.
+ *
+ * The failure was invisible, which is the worst part. A thinner input produces
+ * more `unclear` verdicts, and `unclear` is a legitimate answer this module
+ * gives on purpose — so a broken read looked exactly like an honest one.
+ *
+ * So it goes through parseAdr() now rather than a private regex. There is one
+ * owner of what the sections are called and this is not it; a second copy of
+ * that list is precisely what put a retired heading in here for a day.
  */
 function decisionText(markdown: string): string {
-  const grab = (heading: string) => {
-    const m = markdown.match(new RegExp(`## ${heading}\\n+([\\s\\S]*?)(?=\\n##|$)`, 'i'));
-    return m ? m[1].trim() : '';
-  };
-  return `${grab('Decision')}\n${grab('Alternatives')}`.trim();
+  const { sections, unmatched } = parseAdr(markdown);
+
+  // `design` is where the checks and their order live — the decision, as made.
+  // `alternatives` is what was rejected and why, which is where judgement shows.
+  const current = [sections.design, sections.alternatives].filter(Boolean).join('\n');
+
+  // A record written under the old template still has its reasoning, filed by
+  // parseAdr under `unmatched` rather than thrown away. Reading it back is the
+  // whole reason that field exists.
+  return (current || unmatched).trim();
 }
 
 /**

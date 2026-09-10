@@ -24,7 +24,7 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   is the gate gone. Session material is Markdown in [src/content/sessions/](src/content/sessions/) (week 0 is the
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
-  [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/craft/admin/intake`.
+  [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/craft/admin/baseline`.
   Six learner surfaces beyond the sessions themselves — **discussion, reading, quiz, ADR,
   feedback, familiarity** — each with a console counterpart. What they are and why they
   are shaped the way they are is the learning agent, below.
@@ -186,6 +186,44 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
     it. A record written under the old five headings still parses, and anything under an
     unrecognised heading is shown back rather than discarded.
 
+  **The guided walkthrough is what a first-time learner meets**
+  ([src/lib/craft/tour.ts](src/lib/craft/tour.ts) is the script,
+  [src/components/craft/TourOverlay.astro](src/components/craft/TourOverlay.astro) plays it).
+  A ninety-second spine auto-starts on the first sign-in and names what each surface is
+  *for*; six shorter tours are pulled from the permanent ⓘ at the foot of the rail. Four
+  rules, and the first is the one the whole design turns on:
+  - **No tour ever crosses a page.** `route` is on the TOUR, not the step. That is what
+    removes tour state from the navigation entirely — step state lives in a closure and
+    dies with the tour. No `?tour=` step cursor (it is an *entry point* only), no
+    resume-after-swap, no `ClientRouter` re-entry bug. A tour needing two routes is not
+    expressible, deliberately.
+  - **It points, it never presses.** There is no `action` field and there must not be: a
+    tour that drives the UI can submit a real ADR or answer a real quiz item for somebody.
+  - **Every target is a `data-tour` contract**, never a class — a class is a styling
+    decision somebody renames in a redesign, breaking the tour silently. A missing target
+    at runtime skips its step and carries on; **`npm run check:tour` fails the build-time
+    version of that**, which is what turns a silent break into a review-time one.
+  - **Every step must read correctly on an empty page.** The person this exists for has no
+    threads, no submissions and no answers.
+  Offered at most **four** times — once as the auto-start, then up to three dismissible
+  cards — at most one a day, and never after fourteen days from `learners.created_at`
+  (there is no machine-readable cohort start date, and seats are issued rolling). The third
+  card says it is the last. State is three columns on `learners`, so erasing a learner
+  erases it. **Not rendered in session mode**: a walkthrough is the wrong thing to hand
+  somebody who has ninety seconds inside a live call.
+
+  **Familiarity is no longer in the nav rail.** A rail is for things you return to, and the
+  thirteen-question form is answered twice ever — week 0 and week 6. For weeks 1–5 that icon
+  led to a page asking somebody to re-rate themselves against nothing. It now matches the
+  intake exactly: a dashboard card plus a to-do line, both appearing only once week 6 has
+  ended. The page is unchanged and still reachable by URL. That gate is `sessionEnded()`,
+  not `taughtOn` — `taughtOn` here was a fifth definition of "the session happened".
+
+  **`/craft/modules` used to draw an invented progress bar** — `65%`, `20%`, `Not started`,
+  keyed to the card's index in the array and shown to a paying learner as their own
+  progress. Same defect as the field-notes mock, and it is gone: each card now lists the
+  weeks that module covers and whether each is written and taught, from the session files.
+
   **A session file describes its own session.** Frontmatter carries `outcomes`, `threads`,
   `runOfShow`, `checkpoints`, `prework`, `after` and `reading` alongside the prose. Before
   9 September all of that was body text, so no surface could read any of it, and the
@@ -193,6 +231,15 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   in `runOfShow` and `checkpoints` are relative (`'02:20'`), never wall-clock — `startsAt`
   is the only clock, and a run of show that restated it would be a second source for a fact
   that already has one.
+  **And the session page renders all of it** — `/craft/week-N` shows the five outcomes, the
+  pre-work, the whole day with each checkpoint printed in its place, the after-work, the
+  reading and the week's threads. Until 10 September the page rendered the Markdown body
+  and nothing else, so every field a session carried was readable by an instrument and by
+  no human. `dayPlan()` in [src/lib/craft/schedule.ts](src/lib/craft/schedule.ts) merges the
+  run of show, the checkpoints and the two pair offsets into one ordered list, so the
+  learner page, the console and `/craft/live` cannot disagree about what happens when.
+  A checkpoint sorts BEFORE anything else at the same offset — week 1's 01:10 is a
+  checkpoint and a stand-up, and the words are "read these before you stand up".
 
 ## The learning agent — read the status doc before building
 **[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
@@ -212,7 +259,8 @@ Two rules, and they are the reason the file is worth having:
 **Schema is ahead of production right now.** Not yet applied: the `discussion_replies`
 table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
 `resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table, `outcome_ratings`,
-`checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the `doubts.answer_source`
+`checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the three walkthrough columns on `learners`
+(`tour_completed_at`, `tour_offers`, `tour_offered_at`); the `doubts.answer_source`
 and `submissions.status` columns, and the `feedback_responses` table. **Run
 [supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
 idempotent. Shipping code ahead of its schema shows up as the console's "table is not
@@ -245,8 +293,38 @@ about us.
 ## The operator console (`/craft/admin`)
 Password-gated operator surface. Five jobs: traffic, leads, the questions visitors
 asked the Q&A agent, content review, and **teaching the cohort** — `/craft/admin/discussion`,
-`/craft/admin/quiz`, `/craft/admin/adrs`, `/craft/admin/quiz-adr-comparison`, `/craft/admin/feedback`,
-`/craft/admin/familiarity`, all described under *The learning agent*. Nothing on the public site reads from it,
+`/craft/admin/sessions`, `/craft/admin/work`, `/craft/admin/baseline` and `/craft/admin/feedback`,
+all described under *The learning agent*.
+
+**Ten destinations, in two groups, and three of them are composed pages.** The bar carried
+fifteen in one undifferentiated row, and several were the same job filed twice. What merged,
+and the argument for each:
+- **Work** = the week's check + the decision records + the comparison. The third page was
+  *derived entirely from the other two* — a panel that had been filed as a destination. They
+  are also one question asked three ways (did the idea land?), and disagreement between the
+  check and the record is only visible with both on one screen.
+- **Baseline** = the intake + the week-6 re-ask. One instrument: the same thirteen questions
+  in the same words, and §5.6 already treats them as one thing. The familiarity page could
+  not render without reading the intake responses, because the pair IS the reading. Two URLs
+  meant holding the before-numbers in your head while looking at the after-numbers.
+- **Agents** = the radar + visitor content + unanswered questions. Three review queues for
+  machine output. **This does not merge the two STORES** — `radar_findings` is still read only
+  by the radar panel and is still off the visitor agent's tool surface. Where Sunil looks is
+  not what the agent can reach.
+
+A merged page is composed from `src/components/admin/*Panel.astro`; each panel keeps its own
+scoped styles and script. **Two things to check when composing another one**: element ids were
+page-unique and are now page-shared (the two "Run now" buttons both wrote to `#runStatus`, so
+the content sweep reported its progress into the radar's status line), and only the page may
+carry an `<h1>`.
+**`/craft/admin/sessions` is the teaching plan from Sunil's side** — the day he wrote, the
+room's checkpoint answers against it as **counts, never a mean**, and a per-week list of what
+is not set yet and exactly what each omission stops. It is also the only reader of
+`roomAtCheckpoints()`, which was written, tested and wired to nothing: four numbers a session,
+captured while the session can still change, that no page displayed. **`movesMost` is rendered
+here and deliberately not on the learner page** — "expect low numbers on 3 and 4" is a fair
+claim to check a delta against, and exactly the wrong thing to show somebody in the ninety
+seconds before they rate themselves against those same five statements. Nothing on the public site reads from it,
 and if every one of its env vars is missing the public pages behave exactly as they
 did before it existed.
 
@@ -279,7 +357,7 @@ did before it existed.
     file that has to hold both names, and it says so at the top.
 - **Every query degrades to empty on error — so the console probes and says so.**
   That degradation is deliberate (one slow rollup must not 500 the page) but it
-  makes a *missing table* and *no rows yet* render identically; `/craft/admin/radar` said
+  makes a *missing table* and *no rows yet* render identically; `/craft/admin/agents` said
   "never run" in both cases, and that cost a real diagnosis after the schema grew.
   [src/lib/admin/health.ts](src/lib/admin/health.ts) probes every table and rollup, cached 60s, and
   `AdminLayout` shows a red banner when anything is not answering. **If you add a
@@ -389,7 +467,7 @@ none of their audience; that separation is load-bearing, see the radar entry.
     so his private doubts never reach a visitor or a crawler. Keep it that way.
     (The admin console *does* show it — that's the one place it belongs.)
 - **Radar agent** — [scripts/gather-radar.ts](scripts/gather-radar.ts) (`npm run radar`). The second
-  retriever. Writes the **`radar_findings` table**, read **only** by `/craft/admin/radar`.
+  retriever. Writes the **`radar_findings` table**, read **only** by the radar panel on `/craft/admin/agents`.
   Six operator-facing categories in [src/data/radar-categories.ts](src/data/radar-categories.ts):
   trends · big-tech investment · what's working · what's failing · India hiring ·
   durable skills. Weekly via [.github/workflows/gather-radar.yml](.github/workflows/gather-radar.yml), which writes
@@ -541,6 +619,45 @@ prospect.
     regression it is.
 - Legacy reference files at repo root (`copy.md`, `index.html`, `section-map.md`, `meta.md`,
   `assets/`) predate the Astro build — treat as historical, not the source of truth.
+
+## Rendering markdown that somebody else wrote
+**[src/lib/craft/markdown.ts](src/lib/craft/markdown.ts) is the only file that may import
+`marked`.** Everything else calls `renderMarkdown()`.
+
+`marked` has not sanitised anything since v5 — raw HTML in the source passes straight
+through, by design. Four surfaces were calling `marked.parse()` on learner-authored text and
+injecting the result, and the one that mattered was the console: a decision record containing
+`<img src=x onerror=…>` executed **in the session holding the admin cookie**, which made a
+learner field a path from the course area into the operator surface. The forum already
+guarded this (`asMarkdown()` lets only instructor and system replies through); the ADR path
+was missed.
+
+`renderMarkdown()` drops the `html` token and constrains link and image destinations to
+http/https/mailto/relative — `[click](javascript:…)` needs no tag at all, which is the half
+people forget. It does **not** escape the source before parsing: that turns a fenced code
+block containing markup into a block of `&lt;`.
+
+**The console also loaded `marked` from an unpinned CDN at runtime** — `cdn.jsdelivr.net/npm/marked`,
+no version, executing in the admin session, while `marked` was already a dependency. Both
+copies are gone. Do not reintroduce a CDN script here; the console has no CSP in front of it.
+
+## Two places that own a format, and the surfaces that must not re-implement it
+- **`buildAdr()` / `parseAdr()`** ([src/lib/craft/adr.ts](src/lib/craft/adr.ts)) own the
+  `## Heading` record format. The section LIST was consolidated on 9 September; the FORMAT was
+  not, and it survived in three more places — `adr.astro` and `pair.astro` each reassembled it
+  client-side, and `pair.astro` imported `buildAdr` without ever calling it because its script
+  was `is:inline` and an inline script cannot import. **A module `<script>` can** — Vite bundles
+  it — which is the fix, and it also puts that code under `astro check` for the first time.
+- **`tourFor()` / `tourById()`** ([src/lib/craft/tour.ts](src/lib/craft/tour.ts)) own which tour
+  belongs to which route. The overlay used to ship the tours as JSON in the DOM and re-implement
+  the matching beside it — two copies of one rule, the kind that drifts the first time somebody
+  adds a route pattern.
+
+**`pairing.ts` is what happens when a format has two owners.** Its quiz/ADR comparison read
+`## Decision` with a regex of its own — a heading from the retired five-section template. Every
+record written under the current seven returned the empty string for that half, and it failed
+*silently*: a thinner input produces more `unclear` verdicts, and `unclear` is a legitimate
+answer that module gives on purpose, so a broken read looked exactly like an honest one.
 
 ## Hard rules
 - **NEVER invent** testimonials, client names, logos, student counts, salary figures,

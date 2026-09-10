@@ -197,6 +197,35 @@ export async function allDrafts(week?: number): Promise<PairDraftWithNames[]> {
 // Reviews
 // ---------------------------------------------------------------------------
 
+/**
+ * Every review of a week, for the console's read.
+ *
+ * The symmetric partner of allDrafts(). reviewsOf() answers "who reviewed this
+ * one" and is the right shape inside the pair surface; asking it once per draft
+ * from a page listing six weeks is six round trips to count a number.
+ *
+ * Note what this does NOT return: a total. The scores are 0/1/2 beside a
+ * comment and nothing sums them — a function here that returned a total would
+ be §10's cut feature (levels, scores, ranks) coming back under a new name.
+ */
+export async function allReviews(week?: number): Promise<PairReview[]> {
+  const client = db();
+  if (!client) return [];
+
+  try {
+    // The review row carries no week of its own — it belongs to a draft, and the
+    // draft is what a week owns. So a week filter is a filter on the draft.
+    let q = client.from(REVIEWS).select("*, draft:pair_drafts!inner(week)");
+    if (typeof week === 'number') q = q.eq('draft.week', week);
+    const { data, error } = await q;
+    if (error) throw error;
+    return ((data ?? []) as any[]).map(({ draft: _draft, ...r }) => r as PairReview);
+  } catch (err) {
+    fail('allReviews', err);
+    return [];
+  }
+}
+
 export async function reviewsOf(draftId: string): Promise<PairReview[]> {
   const client = db();
   if (!client) return [];

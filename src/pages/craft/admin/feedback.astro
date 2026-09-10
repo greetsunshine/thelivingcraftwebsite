@@ -173,10 +173,8 @@ const when = (iso: string) =>
   .loop-msg { font-size: 12px; }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-  // @ts-ignore
-  const marked = window.marked;
+  import { renderMarkdown } from '../../../lib/craft/markdown';
   
   document.querySelectorAll('.synthesize-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -205,7 +203,7 @@ const when = (iso: string) =>
           const warning = data.truncated
             ? `<p style="color:var(--danger);font-size:13px;margin:0 0 10px">${data.error}</p>`
             : '';
-          contentDiv.innerHTML = warning + marked.parse(data.summary);
+          contentDiv.innerHTML = warning + renderMarkdown(data.summary);
         } else {
           contentDiv.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
         }
