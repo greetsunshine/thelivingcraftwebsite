@@ -43,8 +43,13 @@ Week 2 is built and published **one topic at a time**, so each topic is a pair o
 rather than a whole session. The topic list and the shared label vocabulary are in
 `threads.md`. Topic 1 of 5, guardrails:
 
+    topic 1 · guardrails · "Where the limit lives"
     learner    https://claude.ai/code/artifact/b6cc3049-8e36-4865-ac75-13c8c30d6331
     instructor https://claude.ai/code/artifact/94a3dee1-5c2f-4fa4-83e3-72beab968ebc
+
+    topic 2 · human in the loop · "Who answers at 2am"   (outline stage)
+    learner    https://claude.ai/code/artifact/e09aa8a7-17b3-40f9-9f71-3c0a476086e9
+    instructor https://claude.ai/code/artifact/2d642bdf-1797-4fd9-b929-d5297a57e6a0
 
 The same caution applies as for week 1: these are a second surface saying what
 `src/content/sessions/week-2.md` says. The session file is what the site serves and is
