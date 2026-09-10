@@ -468,7 +468,7 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
 
 /* Phones. This block must stay LAST: it shares specificity with the 900px block
    above and both match here, so order decides. A nowrap pill with 24px sides is
-   331px wide for "Apply for the September 2026 cohort" — wider than the shell it
+   331px wide for a long nowrap CTA label — wider than the shell it
    sits in at 375px, which is what pushed the whole hero past the viewport. */
 @media (max-width: 560px) {
   .hero > .wrap { padding: var(--space-5); }
