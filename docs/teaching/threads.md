@@ -178,8 +178,8 @@ area of the practice it belongs to and so the six weeks do not invent five names
 for the same thing. Draw from this list. Add to it only when a week genuinely
 covers something none of these names cover, and add it here at the same time.
 
-    Guardrails                    limits, allow and deny, what may run at all
-    Human-in-the-loop approval    gates, queues, what happens when nobody answers
+    Guardrails · the limit        limits, allow and deny, what may run at all
+    Guardrails · the human gate   approvals, queues, what happens when nobody answers
     Governance                    who owns a number, who may change it, decision
                                   records, risk-tiered review of AI-written code
     Evaluation framework          cases, scoring, pass bars, release gates
@@ -195,6 +195,12 @@ covers something none of these names cover, and add it here at the same time.
     Risk trade-offs               the cost of being wrong in each direction
 
 Which week uses which is set by the coverage table above. Two rules:
+
+**Guardrails is an umbrella, not one topic.** Six kinds, sorted by what each stands
+between: input, the limit, the human gate, state, resource, output. Week 2 builds
+two of them and the map is drawn at the top of week 2's second topic. When a week
+teaches a guardrail, say which of the six it is, because the room's instinct is
+to treat "guardrail" as one thing and then put a human in front of everything.
 
 - **The label names the area, not the drill.** "Guardrails", never "the ceiling
   in policy.yml".

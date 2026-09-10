@@ -16,13 +16,13 @@ when you run it from a second terminal.
 
 **By the end of this session you will be able to:**
 
-1. *Guardrails.* **Keep the limit outside the function.**
+1. *Guardrails · the limit.* **Keep the limit outside the function.**
    Write a rule like "never credit more than one month's charge" in a file you
    can open and read. Do not bury it as a
    number inside the function that moves the money. Say who is allowed to change
    it. Week 1 ended with a question: where is the limit written down, and who
    agreed to it? This is the answer.
-2. *Human-in-the-loop approval.* **Stop an action you cannot undo, and record why.**
+2. *Guardrails · the human gate.* **Stop an action you cannot undo, and record why.**
    Week 1 graded every tool as read, write or irreversible. Irreversible means you cannot get it back.
    Before an irreversible tool runs, your code checks the rule and writes one
    line: what was asked, which rule applied, and who said yes. You also decide
@@ -41,8 +41,8 @@ when you run it from a second terminal.
    happens when someone goes over it, and who can move the number. Another engineer should be able to build from
    your table without asking you a question.
 
-The five topics in order: guardrails, human-in-the-loop approval, reliability and
-idempotency, risk trade-offs, governance. Outcomes 1 and 2 build the check.
+The five topics in order: two kinds of guardrail, then reliability and idempotency,
+risk trade-offs, and governance. Outcomes 1 and 2 build the check.
 Outcome 3 is the one that looks finished and is not. Outcome 4 is the price of
 having a check at all. Outcome 5 is what you hand to the person who has to build
 it.
