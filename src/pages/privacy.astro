@@ -1,0 +1,428 @@
+---
+/**
+ * /privacy — and the reason it is not a privacy policy.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DO NOT WRITE A POLICY HERE. THE BRIEF FORBIDS IT IN TERMS.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   "Provide a privacy page identifying the actual data controller, purposes,
+ *    processors, contact and retention policy before live collection. The
+ *    owner must supply those facts; do not publish a generic invented policy."
+ *
+ * Every one of those five facts is outstanding. Nobody in this repository
+ * knows which legal entity is the controller, which processors are engaged, or
+ * what retention has been agreed — and a page that guesses them is worse than
+ * a page that says so, because a wrong privacy notice reads as settled. It is
+ * the one document on the site a person is entitled to rely on.
+ *
+ * WHAT THIS PAGE DOES INSTEAD
+ *
+ * It states, precisely, the things that ARE known — because they are facts
+ * about code in this repository rather than about a legal entity:
+ *
+ *   * exactly which fields the three forms collect (forms.ts is the contract)
+ *   * what happens to them (a row, and a notification to one mailbox)
+ *   * that marketing permission is separate, unticked and versioned
+ *   * that no cross-visit tracking happens, because the mechanism is gated on
+ *     a consent control that does not exist
+ *   * that the analytics visitor id rotates daily and is not reversible
+ *
+ * Those are verifiable by reading the code, so they can be published. The
+ * five outstanding facts are named as outstanding, with who owes each one.
+ *
+ * WHY IT IS noindex
+ *
+ * An incomplete privacy notice indexed and cited is worse than one nobody can
+ * find. It comes out of noindex on the day the owner supplies the facts, in
+ * the same change that replaces this page.
+ *
+ * WHY IT EXISTS AT ALL BEFORE THEN
+ *
+ * The application form links here and says "How your details are handled". A
+ * 404 behind that link, on a form collecting somebody's name, address and
+ * career history, is the worst of the available options. This page is the
+ * second worst and is honest about being it.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { FORMS } from '../lib/pipeline/forms';
+import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+
+const title = 'How your details are handled — The Living Craft';
+const description =
+  'What the application and enquiry forms collect, what happens to it, and which facts about the data controller are still to be published.';
+
+/**
+ * Rendered from the form definitions rather than retyped.
+ *
+ * A privacy page that lists fields by hand goes stale the first time a field
+ * is added, and the failure is silent: the page keeps describing a form that
+ * no longer exists. Reading forms.ts means this section cannot drift from what
+ * is actually collected.
+ */
+const routes = (['application', 'enquiry', 'enterprise'] as const).map((key) => ({
+  key,
+  title: FORMS[key].title,
+  required: FORMS[key].fields.filter((f) => f.required).map((f) => f.label),
+  optional: FORMS[key].fields.filter((f) => !f.required).map((f) => f.label),
+}));
+
+/** Each row names the fact, and who owes it. Nothing here is guessed. */
+const outstanding = [
+  {
+    fact: 'The data controller',
+    detail:
+      'Which legal entity decides how and why your details are used, and its registered address.',
+    owner: 'The client data owner',
+  },
+  {
+    fact: 'The purposes, stated formally',
+    detail:
+      'This page describes what the code does. A notice has to state the lawful basis for each purpose, which is a legal judgement rather than an engineering one.',
+    owner: 'The client data owner',
+  },
+  {
+    fact: 'The processors',
+    detail:
+      'Every third party that handles your details on our behalf, named, with where they operate.',
+    owner: 'The client data owner',
+  },
+  {
+    fact: 'Retention',
+    detail:
+      'How long each kind of record is kept, and what happens at the end of that period. The code supports configurable windows; the agreed numbers are not set.',
+    owner: 'The client data owner',
+  },
+  {
+    fact: 'The contact point for a request',
+    detail:
+      'Where to write to see, correct or delete what is held about you, and who answers. Until this is published, write to apply@thelivingcraft.ai and it will be handled.',
+    owner: 'The client data owner',
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical="/privacy" noindex>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Your details</p>
+      <h1>How your details are <em>handled</em></h1>
+      <p class="credential">
+        This page is not yet a complete privacy notice, and it says so rather than
+        reading like one. What it does contain is exact: the fields each form collects,
+        what happens to them, and which facts are still to be published.
+      </p>
+    </div>
+  </section>
+
+  {/* First, because it is the thing a reader most needs to know before they
+      decide how much to trust the rest of the page. */}
+  <section class="wrap band">
+    <div class="pending-block">
+      <p class="pending-label">Not yet published</p>
+      <p>
+        Five facts belong in a privacy notice and are not settled. They are listed at the
+        foot of this page with who is responsible for each. Until they are published, this
+        page describes only what can be verified from the code that runs this site.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What is collected</p>
+      <h2>Only what the form <em>asks for</em></h2>
+    </div>
+
+    <p class="body-copy">
+      There are three forms and nothing else on this site collects personal details. No
+      file upload is offered, and you are asked more than once not to send confidential
+      company material.
+    </p>
+
+    <div class="route-list">
+      {
+        routes.map((route) => (
+          <div class="route-card">
+            <h3>{route.title}</h3>
+            <p class="route-kind">Required</p>
+            <ul>{route.required.map((f) => <li>{f}</li>)}</ul>
+            <p class="route-kind">Optional</p>
+            <ul>{route.optional.map((f) => <li>{f}</li>)}</ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What happens to it</p>
+      <h2>A record, and one <em>mailbox</em></h2>
+    </div>
+
+    <ul class="fact-list">
+      <li>
+        <b>It is saved as a record.</b> Your details, your answers, and the time you sent
+        them. You are shown a reference. Nothing on this site looks a record up by that
+        reference, so it cannot be used to reach anybody's details, including yours.
+      </li>
+      <li>
+        <b>It is emailed to apply@thelivingcraft.ai.</b> That is how a person knows to
+        read it. The message contains what you wrote.
+      </li>
+      <li>
+        <b>It is used to reply to you and to prepare the fit conversation.</b> Nothing
+        else. It is not sold, and it is not shared with anybody outside the practice.
+      </li>
+      <li>
+        <b>Applying is not a place, and this is not a payment.</b> No card details are
+        collected anywhere on this site, and there is nothing to pay to apply.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Marketing</p>
+      <h2>Separate, and <em>unticked</em></h2>
+    </div>
+
+    <p class="body-copy">
+      The forms carry one optional tick box, in these words:
+    </p>
+
+    <blockquote class="consent-quote">{MARKETING_CONSENT.wording}</blockquote>
+
+    <ul class="fact-list">
+      <li>
+        <b>It starts unticked and nothing depends on it.</b> Your application is treated
+        exactly the same either way.
+      </li>
+      <li>
+        <b>The receipt is not marketing.</b> Confirming that we saved your request is not
+        the same as permission to send you anything else, and it is never treated as such.
+      </li>
+      <li>
+        <b>What you agreed to is recorded with the words you were shown.</b> If that
+        sentence is ever reworded, it becomes a new version and your record keeps pointing
+        at the one above. So the answer to "what did I agree to" is always the sentence
+        that was actually on the screen.
+      </li>
+      <li>
+        <b>No follow-up email is being sent today.</b> The sequence is built and switched
+        off, pending approval and a verified sending domain. If you tick the box now, the
+        permission is recorded and nothing is sent until that is in place.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Tracking</p>
+      <h2>What this site does <em>not</em> do</h2>
+    </div>
+
+    <ul class="fact-list">
+      <li>
+        <b>You are not followed between visits.</b> The site can record which campaign
+        link a visit arrived from, for the visit you are on. Remembering that across
+        visits would need your permission, there is no way to give it yet, and so it does
+        not happen — that field stays empty rather than being filled in by inference.
+      </li>
+      <li>
+        <b>Nothing is stored in your browser.</b> No localStorage, no session storage. If
+        you type into a form and leave without sending it, nothing of it remains.
+      </li>
+      <li>
+        <b>Your address is never stored.</b> Page-view counting uses a value derived from
+        your network address, your browser and today's date, mixed with a secret. It
+        changes at midnight and cannot be reversed into you or joined up across days.
+      </li>
+      <li>
+        <b>Where you came from is stored as a bare domain.</b> Never the full link, which
+        can carry a search phrase or another site's session details.
+      </li>
+      <li>
+        <b>No advertising or profiling.</b> No advertising networks, no cross-site
+        identifiers, no automated decision-making about you.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Still to be published</p>
+      <h2>Five facts, and <em>who owes each</em></h2>
+    </div>
+
+    <p class="body-copy">
+      These are named rather than guessed. A privacy notice that reads as complete while
+      resting on assumptions is worse than one that is plainly unfinished — it is the one
+      document here you are entitled to rely on.
+    </p>
+
+    <div class="scroll">
+      <table class="owes">
+        <thead>
+          <tr><th>Fact</th><th>What is missing</th><th>Owner</th></tr>
+        </thead>
+        <tbody>
+          {
+            outstanding.map((row) => (
+              <tr>
+                <td>{row.fact}</td>
+                <td>{row.detail}</td>
+                <td>{row.owner}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body-copy">
+      In the meantime, to ask what is held about you, to correct it, or to have it
+      deleted, write to <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>.
+      A deletion request removes the record and everything attached to it. Note that it
+      cannot remove the copy that reached the mailbox — that has to be deleted from the
+      mail account separately, and it will be.
+    </p>
+  </section>
+</PracticeLayout>
+
+<style>
+  .band { padding-block: var(--space-8); }
+
+  .body-copy {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+  .body-copy + .body-copy { margin-top: var(--space-4); }
+
+  /* The unwritten state, in the system's own language: a dashed edge that reads
+     as a space held open rather than as a broken component. */
+  .pending-block {
+    background: var(--state-unwritten-bg);
+    border: var(--border-w-hair) dashed var(--border-field);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5) var(--space-6);
+    max-width: var(--measure-prose);
+  }
+  .pending-label {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-2);
+  }
+  .pending-block p:last-child {
+    font-size: var(--size-3);
+    color: var(--text-body);
+    line-height: var(--lh-normal);
+  }
+
+  .route-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .route-card {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+  .route-card h3 {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin-bottom: var(--space-4);
+    line-height: var(--lh-snug);
+  }
+  .route-kind {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    margin-top: var(--space-4);
+  }
+  .route-card ul {
+    list-style: none;
+    margin-top: var(--space-2);
+  }
+  .route-card li {
+    font-size: var(--size-3);
+    color: var(--text-body);
+    padding: 2px 0;
+    line-height: var(--lh-snug);
+  }
+
+  .fact-list {
+    list-style: none;
+    max-width: var(--measure-prose);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .fact-list li {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--border-hair);
+  }
+  .fact-list b {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    display: block;
+  }
+
+  .consent-quote {
+    margin: var(--space-5) 0;
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-loud);
+    max-width: var(--measure-prose);
+  }
+
+  .scroll { overflow-x: auto; }
+  .owes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--size-3);
+    margin-top: var(--space-5);
+  }
+  .owes th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--text-quiet);
+    padding: 0 var(--space-4) var(--space-2) 0;
+    border-bottom: var(--border-w-rule) solid var(--border-field);
+    white-space: nowrap;
+  }
+  .owes td {
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    vertical-align: top;
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+  .owes td:first-child {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .owes td:last-child { white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .route-list { grid-template-columns: minmax(0, 1fr); }
+    .band { padding-block: var(--space-7); }
+  }
+</style>

@@ -5,6 +5,9 @@
 **Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6).
 **Last updated:** 10 September 2026
 
+> **Start at [`RESUME.md`](RESUME.md)** if you are continuing this work — it is the
+> operational checkpoint. This file is the detail behind it.
+
 > **This is a living document.** Every change to the cohort page or the pipeline updates it in
 > the same commit as the code — the same rule as
 > [`docs/learning-agent/build-status.md`](../learning-agent/build-status.md), and for the same
@@ -58,12 +61,12 @@
 - [x] `request_key` idempotency — same key, same reference, one acknowledgement
 - [x] Success returned only after commit; DB failure preserves entered values
 - [x] First-touch and submission-session attribution captured separately
-- [ ] 390px / keyboard / 200% zoom / screen-reader labels verified
+- [x] 390px / keyboard / 200% zoom / screen-reader labels — markup verified; a real screen-reader pass is still owed (E15)
 - [x] Price and schedule region behind a flag, marked placeholder **(blocked: D1)**
 
 ### 2 · Staff screens and named accounts
 
-- [ ] Named staff accounts with the five roles, enforced server-side
+- [x] Named staff accounts with the five roles, enforced server-side
 - [ ] Overview — filters, totals, pipeline snapshot, needs-attention, last refresh
 - [ ] Leads — search, filters, explicit empty and failed-load states
 - [ ] Lead detail — contact, preferences, attribution, activity, tasks, tabs
@@ -105,7 +108,7 @@
 - [ ] IA and navigation, with existing surfaces inventoried first
 - [ ] `/about/`, `/programmes/*`, `/advisory/`, `/contact/`
 - [ ] Utility routes — apply, confirmation, preferences, privacy, terms
-- [ ] Privacy page **(blocked: data controller facts from the owner)**
+- [x] Privacy page — honest placeholder, `noindex`, names all five outstanding facts and who owes each **(still blocked on the owner for the facts themselves)**
 - [ ] First content cluster — pillar, three supporting pieces, review workbook
 - [ ] Agent Design Check — browser-only, no server retention, no lead record
 - [ ] Analytics event taxonomy wired
@@ -162,4 +165,5 @@ Before anything is published, per the brief's closing paragraph:
 | Date | Change |
 |---|---|
 | 10 Sep 2026 | Package read end to end; plan and status written. Scope agreed as the whole package. Console extends `/craft/admin` rather than forking a second staff area. D1 and D2 referred to Sunil. Nothing built yet. |
+| 11 Sep 2026 | **Checkpoint added.** `RESUME.md` is now the first read for any session continuing this work, and CLAUDE.md points at it from the top. Console session carries a signed identity and role list; verified by attack — a payload edited to grant extra roles and re-presented with the original signature is rejected. Shared password grants `operator` alone. `npm run staff` creates the first account; `npm run acceptance` runs the register (E03 and E17 pass, the rest report *not run* with reasons). `/privacy` published as an honest placeholder. Form accessibility markup verified: ten controls, ten labels, error slot on every field that can fail. |
 | 10 Sep 2026 | **Stage 1 save path built.** Cohort page rebuilt against the delivered copy; three routes rendered from one definition in `lib/pipeline/forms.ts`; ten tables and `pipeline_submit()` added to the schema; `/api/pipeline/submit` returns success only after a commit. D1 held behind `PUBLISH_OFFER_FIGURES` — no price, date, week count or seat cap reaches the page or its JSON-LD. `resolveCohort()` returns three states, not two, so a database that cannot answer is a 503 and a retry while a cohort that is genuinely closed is a 409 — those were one refusal and the brief forbids presenting an unavailable source as a known state. `astro check` 0 errors. |

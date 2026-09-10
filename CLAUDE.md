@@ -6,6 +6,21 @@ practice. It started as marketing assets for a cohort landing page destined for 
 it has since become the production site itself. Three cross-linked surfaces, one design
 system. The Kajabi hand-off is **no longer the plan** — build directly in this repo.
 
+## ⚠ Checkpoint — read this before doing anything else
+**[docs/cohort-pipeline/RESUME.md](docs/cohort-pipeline/RESUME.md) is the checkpoint, and
+it is the FIRST thing to read in any session that continues this work** — including a
+session that was simply told "continue" with no other context, and including a subagent
+picking up one piece of it.
+
+It says where the work actually stands, which routes render today, what is in flight, what
+is blocked and on whom, and the handful of things that will otherwise cost an hour to
+rediscover. It is deliberately short; the detail is in `build-status.md` and in the code.
+
+**Update it in the same commit as the code**, the same rule the two status docs already
+carry. A checkpoint that was true yesterday and is wrong today is worse than none, because
+the next session will trust it. If you finish a stage, land a route, unblock a decision, or
+lose an hour to something surprising, that is a line in RESUME.md before you commit.
+
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
   Single page, still SSR (`prerender = false`). Files:
