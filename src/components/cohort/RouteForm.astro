@@ -46,6 +46,7 @@
  */
 import { FORMS, type Route } from '../../lib/pipeline/forms';
 import { MARKETING_CONSENT } from '../../lib/pipeline/consent';
+import { APPLY_ACCESS_KEY, isApplyConfigured } from '../../data/site';
 
 export interface Props {
   route: Route;
@@ -80,7 +81,13 @@ const form = FORMS[route];
 const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
 ---
 
-<form class="apply-form route-form" id={id} data-route={route} novalidate>
+<form
+  class="apply-form route-form"
+  id={id}
+  data-route={route}
+  data-notify={isApplyConfigured ? APPLY_ACCESS_KEY : undefined}
+  novalidate
+>
   <div class="rf-head">
     <h3>{heading ?? form.title}</h3>
     <p class="rf-intro">{form.intro}</p>
@@ -424,6 +431,43 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
       }
     };
 
+    /**
+     * Tell the inbox. Never blocks, never fails loudly, never retried.
+     *
+     * A retry here would send a second email for one application, and the
+     * console is the backstop: a submission with no `owner_notified` activity
+     * is visible there. Between the two, the failure mode is "somebody has to
+     * look at the console", not "an application is lost".
+     */
+    const notifyInbox = async (answers: Record<string, unknown>, reference: string) => {
+      const key = form.dataset.notify;
+      if (!key) return;
+
+      const label = { application: 'application', enquiry: 'enquiry', enterprise: 'team enquiry' }[
+        route
+      ];
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            access_key: key,
+            subject: `New ${label} — ${reference}`,
+            from_name: 'The Living Craft',
+            // The reference first, so the inbox copy and the console row can be
+            // matched by eye without a lookup.
+            reference,
+            route,
+            ...answers,
+          }),
+        });
+        report('owner_notified', { form: route, delivered: res.ok });
+      } catch {
+        report('owner_notified', { form: route, delivered: false });
+      }
+    };
+
     const saved = (reference: string, confirmation: string) => {
       const panel = document.createElement('div');
       panel.className = 'rf-saved';
@@ -491,6 +535,19 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
           | null;
 
         if (response.ok && payload && payload.ok) {
+          // The database is now the record. The inbox is the NOTIFICATION, and
+          // until D2 lands there is no other one — an application that saves
+          // and tells nobody sits in a table until somebody thinks to look.
+          //
+          // Deliberately AFTER the commit and deliberately not awaited into the
+          // person's experience: they are already told they succeeded, because
+          // they did. A failed notification is an operational problem, not
+          // theirs, so it is reported to the beacon rather than to them.
+          //
+          // Still posted from the BROWSER. Web3Forms refuses a server-side call
+          // on the free plan and CLAUDE.md is explicit that moving it is what
+          // broke the agent's lead capture once already.
+          void notifyInbox(input, payload.reference);
           saved(payload.reference, payload.confirmation);
           return;
         }

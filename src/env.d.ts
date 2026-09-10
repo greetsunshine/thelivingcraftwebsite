@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly SUPABASE_SERVICE_ROLE_KEY?: string;
   readonly GITHUB_TOKEN?: string;
   readonly GITHUB_REPO?: string;
+  readonly ADMIN_BOOTSTRAP_ROLES?: string;
 }
 
 interface ImportMeta {
@@ -25,6 +26,13 @@ interface ImportMeta {
 declare namespace App {
   interface Locals {
     learner?: import('./lib/craft/learners').Learner;
+    /**
+     * Set by the middleware's /craft/admin gate, only after the session cookie's
+     * signature has been checked. A page reading this can trust the roles on it
+     * — that trust is exactly what the HMAC buys, and it is why nothing else
+     * may write to this field.
+     */
+    admin?: import('./lib/admin/staff').Identity;
   }
 }
 

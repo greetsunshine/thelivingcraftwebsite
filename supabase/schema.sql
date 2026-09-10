@@ -1785,3 +1785,56 @@ $fn$;
 -- the strength of a second mechanism.
 revoke all on function public.pipeline_submit from public;
 grant execute on function public.pipeline_submit to service_role;
+
+-- ===========================================================================
+-- Staff -- named accounts, because a shared password cannot express a role
+-- ===========================================================================
+-- The console has one password, and everyone holding it is the same person as
+-- far as the server is concerned. That was right while the console showed
+-- traffic and a lead ledger. It stops being right the moment the brief says an
+-- Alchemy operator "cannot approve technical fit/offers or confirm finance
+-- evidence" and that finance confirmation is "reserved for finance".
+--
+-- Those are not preferences about who clicks what. They are the reason an
+-- enrolment means something: a seat is confirmed only when two people who
+-- cannot act for each other have each recorded their own fact. One account
+-- holding both powers turns that into one person's opinion.
+--
+-- The matrix itself lives in src/lib/pipeline/roles.ts, not here. Postgres
+-- stores WHO somebody is; the application decides what that lets them do, and
+-- keeping the two apart means a role change is a code review rather than an
+-- UPDATE somebody ran at speed.
+
+create table if not exists public.staff (
+  staff_id      uuid        primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  name          text        not null,
+  -- Lower-cased at the application boundary, and unique. Sign-in is by address
+  -- because staff already know their own; a separate username is one more thing
+  -- to forget for a team of five.
+  email         text        not null unique,
+  -- PBKDF2-SHA256, iterations and salt encoded in the string. Never a plain
+  -- digest: SHA-256 over a human-chosen password is a lookup table away from
+  -- being plaintext.
+  password_hash text        not null,
+  -- Role names from roles.ts. An array because one person genuinely holds two
+  -- in a practice this size -- Sunil is instructor and often programme owner.
+  -- An unrecognised name grants nothing, so a typo here fails closed.
+  roles         text[]      not null default '{}',
+  -- Revocation without deletion. Somebody leaving must lose access immediately
+  -- while their audit trail keeps a name against it -- a deleted row would turn
+  -- every action they ever took into "unknown actor", which is worse evidence
+  -- than the row costs to keep.
+  active        boolean     not null default true,
+  last_seen_at  timestamptz
+);
+
+create index if not exists staff_email_idx on public.staff (lower(email));
+create index if not exists staff_active_idx on public.staff (active) where active;
+
+drop trigger if exists staff_touch on public.staff;
+create trigger staff_touch before update on public.staff
+  for each row execute function public.touch_updated_at();
+
+alter table public.staff enable row level security;
