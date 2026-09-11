@@ -35,6 +35,27 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 
 ---
 
+## ⚠ QA finding, 11 September — D1 is leaking further than documented
+
+Every public **page** is clean: no price, no week count, no seat cap, no start-date claim,
+verified by fetching all sixteen and grepping the rendered HTML.
+
+**`/llms.txt` and `/api/facts` are not.** Both are public, both are generated from
+`facts.ts`, and both currently publish the six-week shape, the eight-seat cap, the September
+2026 start and `₹1,50,000`. And `robots.txt` deliberately allows AI crawlers — which is a
+sound decision on its own terms and is exactly what makes this sharp. The site is not merely
+willing to answer a question about price; it is **syndicating the withheld figures to every
+crawler, in a file built to be consumed.**
+
+The live state is therefore not D1 option A and not option B. It is option C arriving by
+accident rather than by decision, and broader than option C was ever described.
+
+**Not fixed, deliberately** — changing what the site tells the world about pricing is D1 and
+D1 is Sunil's. Whoever resolves it must move `facts.ts`, `/llms.txt`, `/api/facts` and
+`PUBLISH_OFFER_FIGURES` together, then re-run `npm run eval`, because the agent's grounding
+moves with them. The full note is at the head of `src/data/offer-display.ts`.
+
+
 ## Two decisions belong to Sunil, and both ship behind a flag
 
 Neither blocks any other work. **Do not resolve either by inference.**

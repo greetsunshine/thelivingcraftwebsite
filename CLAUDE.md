@@ -354,9 +354,10 @@ asked the Q&A agent, content review, and **teaching the cohort** — `/craft/adm
 `/craft/admin/sessions`, `/craft/admin/work`, `/craft/admin/baseline` and `/craft/admin/feedback`,
 all described under *The learning agent*.
 
-**Ten destinations, in two groups, and three of them are composed pages.** The bar carried
-fifteen in one undifferentiated row, and several were the same job filed twice. What merged,
-and the argument for each:
+**Fourteen destinations, in two groups, and three of them are composed pages.** The bar
+carried fifteen in one undifferentiated row and several were the same job filed twice; the
+merges below took it to ten, and the cohort pipeline has since added four — **pipeline**,
+**comms**, **records** and **admin**. What merged, and the argument for each:
 - **Work** = the week's check + the decision records + the comparison. The third page was
   *derived entirely from the other two* — a panel that had been filed as a destination. They
   are also one question asked three ways (did the idea land?), and disagreement between the
@@ -391,7 +392,7 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — thirty-seven tables, schema in
+- **Storage is Supabase** — forty-three tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
@@ -404,6 +405,11 @@ did before it existed.
     sequential supabase-js calls have no transaction around them and a function killed
     between two awaits leaves a person with no submission. `consents` has an UPDATE trigger
     that refuses: a withdrawal is a new row, never an edit of the row that granted it.
+  - *Communications* (stage 4, dispatch off): `message_templates`, `comms_sequences`,
+    `comms_messages`, `comms_suppressions`, `comms_events`. And `resource_requests` — the
+    V4 addendum's fourth record type, which **an anonymous download never reaches**: only
+    somebody who typed an address is a person, so a count there is people rather than
+    downloads.
   - *The evidence behind a stage*: `meetings`, `offers`, `payments`, `admissions`,
     `attendance`, `nominations`, `stage_history`. **There is no `enrolled` column
     anywhere** — enrolment is derived by `enrolment_blockers()`, which returns one row per

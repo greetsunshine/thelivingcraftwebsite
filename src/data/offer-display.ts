@@ -30,6 +30,37 @@
 // chatbot what it costs, gets ₹1,20,000, and hears something different in the
 // fit conversation.
 //
+// ───────────────────────────────────────────────────────────────────────────
+// AND IT IS WORSE THAN THE CHATBOT. MEASURED 11 SEPTEMBER, DURING QA.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Every public PAGE is clean — no price, no week count, no seat cap, no start
+// date, checked by fetching all sixteen and grepping the rendered HTML.
+//
+// `/llms.txt` and `/api/facts` are not. Both are public, both are generated
+// from facts.ts, and both currently publish:
+//
+//     "Application-only 6-week program … 8 seats, first cohort September 2026"
+//     "Cohort size: 8 seats, capped"
+//     "First cohort starts: September 2026"
+//     "Advisory — ~2 days / month, from ₹1,50,000 / month"
+//
+// And robots.txt DELIBERATELY ALLOWS AI CRAWLERS, because /llms.txt exists so
+// that the answer an assistant gives is the one we wrote. That reasoning is
+// sound and it is exactly what makes this sharp: the site is not merely willing
+// to answer a question about price, it is actively syndicating the withheld
+// figures to every crawler, in a file built to be consumed.
+//
+// So the live state is not option A and not option B. It is option C arriving
+// by accident rather than by decision — and broader than option C was ever
+// described, because "the assistant answers if asked" and "we publish a
+// machine-readable price list" are not the same commitment.
+//
+// THIS IS NOT FIXED HERE ON PURPOSE. Changing what the site tells the world
+// about pricing is D1, and D1 is Sunil's. Whoever resolves it must move
+// facts.ts, /llms.txt, /api/facts and this flag TOGETHER, and re-run
+// `npm run eval` afterwards — the agent's grounding changes with them.
+//
 // So the flag governs BOTH ends, and the two must be moved together.
 //
 // WHEN D1 IS ANSWERED

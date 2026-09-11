@@ -130,19 +130,41 @@ async function reachable(): Promise<boolean> {
 }
 
 /**
- * Is the schema applied?
+ * Can a row actually be written?
  *
  * Everything downstream depends on it, and the failure is diagnostic rather
- * than interesting: without the tables, every case fails for one reason and
- * the report says nothing useful. So it is detected once, and the cases that
- * need it report `not run` with that reason instead of eighteen identical
+ * than interesting: without a working store, every case fails for one reason
+ * and the report says nothing useful. So it is detected once, and the cases
+ * that need it report `not run` with that reason instead of fourteen identical
  * failures.
+ *
+ * ── IT DOES NOT KNOW WHICH OF TWO THINGS IS WRONG, AND MUST NOT PRETEND TO ──
+ *
+ * A 503 here means "the save did not commit". That has two quite different
+ * causes and this probe cannot see which, because both look identical from
+ * outside the process:
+ *
+ *   * Supabase is not CONFIGURED — the environment variables are absent or
+ *     placeholders. Fix: set them.
+ *   * Supabase is configured and the SCHEMA is not applied — the tables do not
+ *     exist. Fix: run supabase/schema.sql.
+ *
+ * This function used to assert the second one. That was wrong in this very
+ * repository, where the variables are placeholders, so every run printed a
+ * confident instruction to apply a schema against a database nobody had
+ * connected. A harness whose entire value is refusing to conflate states does
+ * not get to conflate two states in its own status line.
+ *
+ * The message now names both and says which check tells them apart. The
+ * console's own health probe (src/lib/admin/health.ts) CAN distinguish them,
+ * because it is inside the process and can see whether the client exists at
+ * all.
  */
-async function schemaApplied(): Promise<boolean> {
+async function canCommit(): Promise<boolean> {
   const { status } = await submit({
     route: 'enquiry',
     requestKey: uniqueKey(),
-    answers: { name: 'Probe', email: testEmail('probe'), question: 'Is the schema applied?' },
+    answers: { name: 'Probe', email: testEmail('probe'), question: 'Can a row be written?' },
   });
   return status === 200;
 }
@@ -156,13 +178,21 @@ async function run() {
     process.exit(1);
   }
 
-  const ready = await schemaApplied();
+  const ready = await canCommit();
   if (!ready) {
-    console.log('  supabase/schema.sql has NOT been applied to this environment.');
-    console.log('  Cases that need a committed row report "not run" below.\n');
+    console.log('  No row can be committed in this environment. Two possible causes, and');
+    console.log('  this probe cannot tell them apart from outside the process:');
+    console.log('    · Supabase is not configured — SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
+    console.log('      absent or placeholder. Check .env.local.');
+    console.log('    · Supabase is configured and supabase/schema.sql has not been run.');
+    console.log('  The console banner at /craft/admin distinguishes them; it is inside the');
+    console.log('  process and can see whether a client exists at all.');
+    console.log('  Cases needing a committed row report "not run" below.');
+    console.log('');
   }
 
-  const blocked = 'supabase/schema.sql is not applied to this environment.';
+  const blocked =
+    'No row could be committed: Supabase is either unconfigured or its schema is not applied. See the note at the top of this run.';
 
   // -- E01 ------------------------------------------------------------------
   if (ready) {
