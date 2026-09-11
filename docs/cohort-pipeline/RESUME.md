@@ -198,6 +198,32 @@ insert.
 reasoned, never executed. It is the first thing to exercise once a database exists.
 
 
+## ⚠ Two tokens are below AA on the ground `body` actually uses
+
+Measured 11 September, and independently recomputed. `theme.css` had one number simply
+wrong.
+
+| token | on white | on `--mist` |
+|---|---|---|
+| `--accent-ink` `#c4561c` (comment claimed **5.9:1**) | **4.47** | **4.02** |
+| `--text-quiet` / `--ink-2` `#6d7885` | 4.49 | **4.04** |
+| `--accent-ink-strong` `#9d3f12` | 6.66 | 5.99 |
+
+AA needs 4.5 for normal text. **`body` sits on `--mist`, not white**, so the lower column is
+the one that counts for anything on the page ground — breadcrumbs at 12px, `.lede`,
+`.muted`, footer headings, nav links. On a white card both pass.
+
+`--accent-ink-strong` clears both and is the obvious swap, but it is a whole-site visual
+change and an owner's call. **The comments in `theme.css` now carry the measured values**;
+the tokens are unchanged.
+
+The two traps the design system warns about are clean: `--ink-3` appears only on the noir
+hero (9.15:1) and one disabled button, and `--sun` as text only on noir (12.9:1).
+
+**Do not restate a contrast figure from memory.** The wrong one sat in that file for weeks
+and every reader who checked it was misled.
+
+
 ## Things that will bite you
 
 - **Astro's origin check refuses a POST with no `Origin` header** and returns 403. When
