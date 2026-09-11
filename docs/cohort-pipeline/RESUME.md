@@ -66,7 +66,7 @@ not a rebuild. Every previous interruption left most of the work done.
 | Owner | Files | What it was doing |
 |---|---|---|
 | Administration | `craft/admin/admin.astro`, `api/craft/admin/{staff,cohort}.ts` | Verifying that an operator session is refused 403 on every write, and that nothing renders a password hash |
-| Security audit | `lib/admin/{export,import,pipeline-queries,env}.ts`, `craft/admin/{records,pipeline*}.astro` | Authorisation bypasses, personal data in errors, unknown-as-zero. Also fixing the hard-coded `d:	helivingcraftwebsite\.env.local` path in `env.ts`, which does nothing on Vercel |
+| Security audit | `lib/admin/{export,import,pipeline-queries,env}.ts`, `craft/admin/{records,pipeline*}.astro` | Authorisation bypasses, personal data in errors, unknown-as-zero. Also fixing the hard-coded absolute `.env.local` path in `env.ts`, which does nothing on Vercel |
 | Communications | `supabase/schema.sql` (append), `lib/comms/**`, `api/{craft/admin/comms,unsubscribe}.ts`, `craft/admin/comms.astro` | Stage 4 with **dispatch off** — outbox, twelve versioned templates, double eligibility check, signed unsubscribe, failure queue |
 | Synthetic data | `scripts/seed.ts`, `scripts/acceptance.ts` (E14 only) | A seed that refuses to run against production, and the E14 reconciliation check |
 | Templates | `pages/resources/templates/**`, `content/templates/**`, `content.config.ts` (templates collection only) | The last `pending` item in the navigation |
