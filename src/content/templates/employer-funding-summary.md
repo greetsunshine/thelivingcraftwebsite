@@ -73,9 +73,9 @@ sections:
       The time commitment, when it falls, and what you propose to do about the work that
       does not stop while you are doing it.
     note: >-
-      Answer the cover question before it is asked. "{{COMMITMENT}}" is the commitment; the
-      schedule is confirmed before you join, so give your manager the shape rather than a
-      date you do not have yet.
+      Answer the cover question before it is asked. The commitment is stated in the example
+      below; the schedule is confirmed before you join, so give your manager the shape rather
+      than a date you do not have yet.
     example: |
       {{COMMITMENT}} The sessions are live, so they land in working hours; the independent
       work is mine to place.

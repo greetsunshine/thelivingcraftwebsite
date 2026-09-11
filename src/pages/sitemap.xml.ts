@@ -47,6 +47,15 @@ const EXTRA = [
   { path: '/resources/guides/tool-permissions', priority: '0.6' },
   { path: '/resources/guides/uncertain-evidence', priority: '0.6' },
 
+  // Four templates, each a blank plus a completed illustrative example. Listed
+  // at the guides' priority because that is what they are for a searcher: the
+  // answer to "give me the thing, not an article about the thing".
+  { path: '/resources/templates/', priority: '0.6' },
+  { path: '/resources/templates/agent-design-canvas', priority: '0.7' },
+  { path: '/resources/templates/design-review-agenda', priority: '0.6' },
+  { path: '/resources/templates/decision-record', priority: '0.7' },
+  { path: '/resources/templates/employer-funding-summary', priority: '0.6' },
+
   { path: '/resources/', priority: '0.6' },
   { path: '/tools/', priority: '0.6' },
   { path: '/tools/agent-design-check', priority: '0.7' },
