@@ -77,6 +77,7 @@
 // switch — a resource delivery queues and holds exactly like everything else.
 
 import { db } from '../admin/supabase';
+import { sqlstate } from './errors';
 import { checkEligibility, type Eligibility } from '../comms/eligibility';
 import { idempotencyKey } from '../comms/outbox';
 import { renderMessage, resourceTemplateFor } from '../comms/templates';
@@ -84,6 +85,7 @@ import { RESOURCES, type Resource } from '../../data/resources';
 import type { Attribution } from './attribution';
 import { canonicalResourceId } from './attribution';
 import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './forms';
+
 
 // ---------------------------------------------------------------------------
 // Which resource, and is it real
@@ -253,8 +255,13 @@ export const RESOURCE_SAVED = 'Your request is saved.';
  * that does not say "saved" when the database is down, and with the schema
  * unapplied today that is the path this actually takes.
  *
- * NEVER LOGS WHAT WAS TYPED. The error object from supabase-js can carry the
- * request body, and the request body is somebody's name and address.
+ * NEVER LOGS WHAT WAS TYPED, AND `error.message` IS WHAT WAS TYPED. A Postgres
+ * message quotes the offending literal — `invalid input syntax for type uuid:
+ * "…"`, a RAISE that interpolates a value, a constraint message naming the row —
+ * and every literal reaching this function is a name or an address. The same
+ * rule as `failed()` in lib/comms/outbox.ts ("Never `error.message`") and
+ * `sourceFailed()` in lib/admin/pipeline-queries.ts: the CODE goes to the log,
+ * the message does not go anywhere.
  */
 export async function saveResourceRequest(
   input: ResourceRequestInput,
@@ -279,7 +286,7 @@ export async function saveResourceRequest(
     });
 
     if (error) {
-      console.error(`resource_request_submit failed [${resourceId}]:`, error.message);
+      console.error(`resource_request_submit failed [${resourceId}]:`, sqlstate(error));
       return { ok: false, kind: 'unavailable', message: UNAVAILABLE };
     }
 
@@ -458,7 +465,7 @@ export async function queueResourceDelivery(req: DeliveryRequest): Promise<Deliv
           eligibility: verdict,
         };
       }
-      console.error('resource delivery queue failed:', error.message);
+      console.error('resource delivery queue failed:', sqlstate(error));
       return {
         state: 'failed',
         note: 'The outbox did not accept the delivery. The request is saved; queue it by hand from the console.',
@@ -509,7 +516,7 @@ export async function recordDelivery(requestId: string, outcome: DeliveryOutcome
       })
       .eq('request_id', requestId);
 
-    if (error) console.error('resource delivery writeback failed:', error.message);
+    if (error) console.error('resource delivery writeback failed:', sqlstate(error));
   } catch (err) {
     console.error('resource delivery writeback threw:', err instanceof Error ? err.name : 'unknown');
   }

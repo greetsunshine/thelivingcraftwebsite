@@ -89,6 +89,30 @@ const secret = (): string => env('COMMS_LINK_SECRET');
  */
 export const available = (): boolean => Boolean(secret());
 
+/**
+ * Domain separation, and it is not decoration.
+ *
+ * This token and the admin session cookie in `lib/admin/auth.ts` have the SAME
+ * WIRE FORMAT — `expires.payload.mac`, HMAC-SHA-256 over `expires.payload` —
+ * and differ only in which environment variable holds the key. If somebody ever
+ * sets `COMMS_LINK_SECRET` to the same value as `ADMIN_SESSION_SECRET`, and
+ * that is an easy thing to do to a variable `.env.example` does not even list,
+ * then an unsubscribe link is a valid admin session cookie: `verifySession()`
+ * finds no `s` and no `r`, so it returns a signed-in bootstrap identity with no
+ * roles, which is enough to get past middleware and open the console shell. The
+ * link is emailed, public, and lives for four hundred days.
+ *
+ * Prefixing what this module signs makes the two families structurally
+ * non-interchangeable whatever the operator does with the secrets: a MAC
+ * computed here can never equal one computed there, because the messages differ
+ * before the key is even chosen.
+ *
+ * CHANGING THIS STRING INVALIDATES EVERY OUTSTANDING LINK, which is the same
+ * cost as rotating the secret and is fine today — nothing mints a token yet,
+ * because `deliver()` has no adapter.
+ */
+const TOKEN_DOMAIN = 'lc.unsubscribe.v1';
+
 async function sign(payload: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -97,7 +121,7 @@ async function sign(payload: string): Promise<string> {
     false,
     ['sign'],
   );
-  return b64url(await crypto.subtle.sign('HMAC', key, enc.encode(payload)));
+  return b64url(await crypto.subtle.sign('HMAC', key, enc.encode(`${TOKEN_DOMAIN}|${payload}`)));
 }
 
 /** Content-constant comparison. Same argument as `safeEqual` in admin/auth.ts. */

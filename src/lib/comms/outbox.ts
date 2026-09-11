@@ -1245,6 +1245,34 @@ export async function reconcileMessage(messageId: string, actor: string): Promis
  * the list is a no-op, which is the correct end state — see `suppressionFor()`
  * in eligibility.ts for how a stored 'marketing' entry is WIDENED to 'all' by a
  * later bounce or complaint without any row ever being changed.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * THE ONE CASE WHERE "ALREADY SUPPRESSED" IS NOT THE SAME ANSWER
+ * ───────────────────────────────────────────────────────────────────────────
+ *
+ * `normalised_email` is UNIQUE and the table refuses UPDATE, so an address can
+ * hold exactly one scope for ever. That is right for narrowing and wrong for
+ * WIDENING, and the two cannot be told apart from the error code alone:
+ *
+ *   somebody unsubscribes            → stored row, scope 'marketing'
+ *   the same address then bounces,
+ *   and an operator records it by
+ *   hand at scope 'all'              → 23505
+ *
+ * Returning `ok: true` there reported a suppression that was never recorded.
+ * `suppressionFor()` still reads 'marketing', so TRANSACTIONAL mail to a dead
+ * or complaining address stays sendable — and the derived widening in
+ * eligibility.ts does not cover it, because that one fires on a `comms_messages`
+ * row reaching 'bounced' or 'complained', which a hand-entered suppression never
+ * creates. The console offers exactly this action ("hard bounce"/"complaint" at
+ * scope "all" on the Add a suppression by hand card), so it is the ordinary
+ * path, not an edge of one.
+ *
+ * So: the scope actually stored is read back, the cancellation runs either way
+ * (it is legal, and it is the half that protects the recipient), and a widening
+ * that could not be recorded is reported as the failure it is rather than as a
+ * no-op. Nothing here weakens an existing entry — this function can still only
+ * ever add.
  */
 export async function recordSuppression(args: {
   email: string;
@@ -1260,6 +1288,22 @@ export async function recordSuppression(args: {
   const email = args.email.trim().toLowerCase();
   if (!email || !email.includes('@')) return { ok: false, detail: 'That is not an address.' };
 
+  // Cancel anything queued for that address in the same breath. A suppression
+  // that takes effect tomorrow is not a suppression. Scoped to what was asked
+  // for, so a marketing entry never cancels a receipt somebody is owed.
+  const cancelQueued = async () => {
+    await client
+      .from('comms_messages')
+      .update({
+        state: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancel_reason: `suppressed: ${args.reason}`,
+      })
+      .eq('recipient', email)
+      .eq('state', 'queued')
+      .in('purpose', args.scope === 'all' ? ['marketing', 'transactional'] : ['marketing']);
+  };
+
   const { error } = await client.from('comms_suppressions').insert({
     normalised_email: email,
     person_id: args.personId ?? null,
@@ -1272,22 +1316,42 @@ export async function recordSuppression(args: {
   });
 
   if (error && (error as { code?: string }).code === '23505') {
-    return { ok: true, detail: 'Already suppressed. The list is one-way, so a second entry is not needed.' };
+    const { data, error: readErr } = await client
+      .from('comms_suppressions')
+      .select('scope')
+      .eq('normalised_email', email)
+      .maybeSingle();
+
+    await cancelQueued();
+
+    if (readErr) {
+      // The row exists and we cannot say at which scope. Do not assert that the
+      // stronger request landed — the whole point of this branch is that the
+      // two cases look identical from the error code.
+      return {
+        ok: false,
+        detail: `${failed('suppression list', readErr)} That address is already on the list, but the scope it is held at could not be read, so this entry is not confirmed.`,
+      };
+    }
+
+    const stored = String((data as { scope?: string } | null)?.scope ?? '');
+
+    if (stored === 'all' || args.scope === 'marketing') {
+      return {
+        ok: true,
+        detail: `Already suppressed at scope ${stored || 'unknown'}, which is at least as strong as this entry. The list is one-way, so a second entry is not needed; anything queued for that address was cancelled.`,
+      };
+    }
+
+    return {
+      ok: false,
+      detail:
+        'That address is already suppressed at scope marketing, and this application cannot widen it to all — the table refuses UPDATE by design, so one address holds one scope for ever. Anything queued for it has been cancelled, but TRANSACTIONAL mail to this address is still permitted by the eligibility check. Widening needs the stored row replaced by the data owner, out of band.',
+    };
   }
   if (error) return { ok: false, detail: failed('suppression list', error) };
 
-  // Cancel anything queued for that address in the same breath. A suppression
-  // that takes effect tomorrow is not a suppression.
-  await client
-    .from('comms_messages')
-    .update({
-      state: 'cancelled',
-      cancelled_at: new Date().toISOString(),
-      cancel_reason: `suppressed: ${args.reason}`,
-    })
-    .eq('recipient', email)
-    .eq('state', 'queued')
-    .in('purpose', args.scope === 'all' ? ['marketing', 'transactional'] : ['marketing']);
+  await cancelQueued();
 
   return { ok: true, detail: 'Suppressed, and anything queued for that address was cancelled.' };
 }

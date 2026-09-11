@@ -38,6 +38,7 @@
 //     let the person press the button again, which carries the same key.
 
 import { db } from '../admin/supabase';
+import { sqlstate } from './errors';
 import type { Attribution } from './attribution';
 import { MARKETING_CONSENT } from './consent';
 import { FORMS, normaliseEmail, type Route } from './forms';
@@ -141,7 +142,12 @@ export async function saveSubmission(input: SubmitInput): Promise<SubmitResult> 
     });
 
     if (error) {
-      console.error(`pipeline_submit failed [${route}]:`, error.message);
+      // SQLSTATE, never the message. A Postgres error quotes the literal it
+      // choked on — `invalid input syntax for type uuid: "…"`, or a RAISE that
+      // interpolates a value — and every literal reaching this function came
+      // out of somebody's application form. The code says what went wrong
+      // without saying whose data it was.
+      console.error(`pipeline_submit failed [${route}]:`, sqlstate(error));
       return { ok: false, kind: 'unavailable', message: UNAVAILABLE };
     }
 

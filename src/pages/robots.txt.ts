@@ -44,7 +44,18 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
-const DISALLOW = ['/craft', '/api/ask', '/api/track', '/api/lead', '/api/pipeline'];
+const DISALLOW = [
+  '/craft',
+  '/api/ask',
+  '/api/track',
+  '/api/lead',
+  '/api/pipeline',
+  // The one-click unsubscribe. It only exists inside an email, so a crawler
+  // should never meet it — but a link that acts on arrival is exactly the kind
+  // a prefetcher or a link-scanner follows on somebody's behalf, and the action
+  // is not one we want taken by a machine that has not read it.
+  '/api/unsubscribe',
+];
 
 export const GET: APIRoute = () => {
   const body = [

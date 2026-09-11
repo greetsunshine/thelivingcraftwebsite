@@ -143,6 +143,28 @@ exists to prevent** — do not "fix" them into passes.
 
 ---
 
+## Suppression holds ONE scope per address, for ever
+
+`comms_suppressions.normalised_email` is unique and the table refuses UPDATE, so an address
+suppressed at `marketing` cannot later be widened to `all` by writing again — the insert
+hits `23505`.
+
+That is deliberate (a suppression can only ever be added, never weakened) and it has a
+sharp edge the audit found: the code used to treat every `23505` as success, so recording a
+hard bounce for somebody who had already unsubscribed returned "suppressed at scope all",
+audited that claim, **and skipped cancelling their queued messages** — while
+`suppressionFor()` went on reading `marketing`, leaving transactional mail to a dead address
+sendable.
+
+It now reads the stored scope back and refuses honestly when a widening is requested, saying
+what is and is not true. **Widening is an out-of-band job for the data owner**, not something
+the console can do. If that becomes common, the fix is a scope-ranked table, not a looser
+insert.
+
+**Untested.** Supabase is unconfigured here, so the read-back branch is type-checked and
+reasoned, never executed. It is the first thing to exercise once a database exists.
+
+
 ## Things that will bite you
 
 - **Astro's origin check refuses a POST with no `Origin` header** and returns 403. When
