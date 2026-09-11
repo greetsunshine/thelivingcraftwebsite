@@ -90,6 +90,28 @@
 // task, the attribution and the audit line are all rules that live in one
 // place, and a seed that reimplemented them would produce a shape the real
 // pipeline cannot produce.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// AND THE DATABASE WOULD REJECT THE OBVIOUS SHORTCUT ANYWAY
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `opportunities` carries two PARTIAL unique indexes: one open member record
+// per person per cohort, one open enterprise record per person. They exist so
+// that "an enquiry can later become an application without losing either
+// record" is true in the database rather than only inside a function.
+//
+// Which is exactly what the interesting case here needs. Alpha appears three
+// times — an enquiry, an application, and a second application — and a seed
+// that inserted an opportunity per submission would be refused by the index on
+// the second row. Going through `pipeline_submit` produces ONE opportunity,
+// advanced once from enquiry to application_received and then left alone, with
+// three submissions hanging off it. That pair of numbers, three rows and one
+// applicant, is the first thing E14 checks.
+//
+// The same index is why the three terminal side states matter to a seed: they
+// are excluded from it, so Golf being withdrawn and Mike being closed leave the
+// index and cannot collide with anything. If you add a cast member, give them
+// their own slug or expect exactly this behaviour from sharing one.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { pathToFileURL } from 'node:url';
@@ -111,13 +133,25 @@ export const SEED_DOMAIN = 'thelivingcraft.invalid';
 /** PostgREST `like` pattern matching every address this file writes. */
 export const SEED_EMAIL_PATTERN = `%${SEED_TAG}@${SEED_DOMAIN}`;
 
-/** In an organisation name, so the two seeded companies are as findable. */
+/** In an organisation name, so the seeded companies are as findable. */
 export const SEED_ORG_MARK = '[seed]';
 
 export const isSeedEmail = (email: string | null | undefined): boolean =>
   typeof email === 'string' && email.endsWith(`${SEED_TAG}@${SEED_DOMAIN}`);
 
-const addr = (slug: string) => `${slug}${SEED_TAG}@${SEED_DOMAIN}`;
+/**
+ * The address for one member of the cast.
+ *
+ * Exported because acceptance case E14 has to look two of these up by name —
+ * the enterprise sponsor, and the first nominated participant who must NOT be
+ * findable as a lead. A second spelling of the format in the harness is the
+ * two-owners-of-one-format mistake, and it would fail in the direction that
+ * looks like a pass: a search for an address nobody wrote returns nothing,
+ * which is exactly what "a nominee is not a person" is supposed to prove.
+ */
+export const seedAddress = (slug: string): string => `${slug}${SEED_TAG}@${SEED_DOMAIN}`;
+
+const addr = seedAddress;
 
 /** Staff-shaped strings for `owner`, `approved_by`, `confirmed_by` and friends. */
 const STAFF = {
@@ -137,9 +171,20 @@ const STAFF = {
  */
 export const SEED_EXPECTATIONS = {
   people: 18,
-  organisations: 3,
+  /**
+   * FOUR, not three, and the fourth is the point of the pair.
+   *
+   * Two different sponsors name the same company. `pipeline_submit` creates a
+   * second organisation row flagged `needs_review` rather than merging them,
+   * because merging on a name alone is an operator's decision. So three
+   * company names produce four rows, and the extra one is the only way to see
+   * that flag set anywhere in the console.
+   */
+  organisations: 4,
   opportunities: 18,
   submissions: 20,
+  /** Every application row, flagged ones included. */
+  applicationRows: 14,
   /** Application rows the dashboard may count — excludes the flagged two. */
   countableApplications: 12,
   /** Distinct people behind those. One person applied twice. */
@@ -154,7 +199,8 @@ export const SEED_EXPECTATIONS = {
   /** Nominated participants. None of them is a person or an applicant. */
   nominations: 6,
   offers: 6,
-  payments: 6,
+  /** Six receipts and refunds in one insert, plus the enterprise refund. */
+  payments: 7,
   admissions: 3,
   meetings: 3,
   attendance: 3,
@@ -163,8 +209,48 @@ export const SEED_EXPECTATIONS = {
   overdueTasks: 1,
 } as const;
 
+/**
+ * The enterprise order's finance position, stated here so E14 reconciles
+ * against a number this file owns rather than one somebody retyped.
+ *
+ * Two currencies on one record, and the cross-currency sum is the number that
+ * must appear NOWHERE: 444400 dirhams-minor added to 7777700 rupees-minor is
+ * 8222100 of nothing at all, and it is the shape a wrong total arrives in.
+ */
+export const ENTERPRISE_NET = {
+  AED: 555500 - 111100,
+  INR: 7777700,
+  /** Never rendered. E14 asserts the page does not contain it. */
+  nonsenseSum: 555500 - 111100 + 7777700,
+} as const;
+
+/**
+ * THE DATES ARE LOAD-BEARING, and this is the rule they follow.
+ *
+ * E14 cannot compare a dashboard tile to a flat number, because the acceptance
+ * harness writes its own submissions into the same database before it gets
+ * there — and a case that only reconciles on a pristine database is a case
+ * that reports a confusing failure the second time anybody runs it.
+ *
+ * So it compares WINDOWS instead. The overview offers 7, 30 and 90 days, and
+ * this dataset is laid out so each boundary means exactly one thing:
+ *
+ *   inside 7 days   nothing seeded. Everything the harness itself writes lands
+ *                   here, so subtracting the 7-day tile removes the harness's
+ *                   own contribution exactly, whatever it grows into later.
+ *   8 to 28 days    every countable row, AND both flagged rows — which is what
+ *                   makes the exclusion visible. A totals query ignoring
+ *                   is_test would report 14 applications in this band, not 12.
+ *   45 days         the one backdated enquiry, and nothing else. It is the
+ *                   entire difference between the 30-day and 90-day tiles.
+ *
+ * Change a `daysAgo` and E14 starts measuring something else. `dateProblems()`
+ * below fails the run rather than letting that happen quietly.
+ */
+const WINDOW = { newest: 8, oldest: 28, backdated: 45 } as const;
+
 /** The one submission placed before a 30-day reporting window opens. */
-const BACKDATED_DAYS = 45;
+const BACKDATED_DAYS = WINDOW.backdated;
 
 // ---------------------------------------------------------------------------
 // Arguments — same shape as add-staff.ts, deliberately duplicated rather than
@@ -202,10 +288,14 @@ A synthetic pipeline dataset, for looking at screens that have never had data.
                of them and acceptance case E14 cannot run. Rarely what you want.
 
 WHAT IT WRITES
-  18 people, 3 organisations, 18 opportunities, 20 submissions, plus the
-  evidence behind them: meetings, offers, payments in two currencies, an
-  admission, attendance, and six nominated participants who are deliberately
-  NOT people and NOT applicants.
+  ${SEED_EXPECTATIONS.people} people, ${SEED_EXPECTATIONS.organisations} organisations, ${SEED_EXPECTATIONS.opportunities} opportunities and ${SEED_EXPECTATIONS.submissions} submissions, plus the
+  evidence behind them: ${SEED_EXPECTATIONS.meetings} meetings, ${SEED_EXPECTATIONS.offers} offers, ${SEED_EXPECTATIONS.payments} payments in two currencies,
+  ${SEED_EXPECTATIONS.admissions} admission decisions, ${SEED_EXPECTATIONS.attendance} attendance rows, and ${SEED_EXPECTATIONS.nominations} nominated participants who
+  are deliberately NOT people and NOT applicants.
+
+  Submissions are dated ${WINDOW.newest}-${WINDOW.oldest} days ago, with one enquiry at ${WINDOW.backdated} days.
+  Nothing lands inside 7 days: that is the gap acceptance case E14 subtracts
+  to remove its own writes from the dashboard's tiles.
 
   Every address carries a ${SEED_TAG} plus-tag on the ${SEED_DOMAIN} domain,
   which no resolver will ever answer for, so none of it can be emailed by
@@ -213,9 +303,13 @@ WHAT IT WRITES
 
 WHAT IT REFUSES
   A deployment environment. A project ref you did not name. A database holding
-  any address that could actually receive mail, or any learner record. Seeding
-  a live pipeline with invented applicants is a genuinely bad day, and the last
-  of those checks is the one doing most of the work.
+  any address that could actually receive mail, or any learner record — or one
+  that could not be asked, because a safety check that did not run is not a
+  safety check. It also refuses to run twice: this is a known quantity, and two
+  copies of it is a number nobody meant.
+
+  Seeding a live pipeline with invented applicants is a genuinely bad day, and
+  the live-data check is the one doing most of the work.
 `);
 };
 
@@ -246,6 +340,15 @@ WHAT IT REFUSES
 // and 2 are satisfied. There is no check that catches that one, and the honest
 // answer is that `--clear` is then the recovery path — which is why it is
 // written to be exact rather than approximate.
+//
+// Nor does any of it protect against a service-role key that reaches a second
+// project: gate 2 compares the ref in SUPABASE_URL against what you typed, and
+// both come from the same shell. If the URL is wrong, the flag agrees with it.
+//
+// What gate 3 now DOES cover, and did not: a probe that could not be run. An
+// error that is not "no such table" means the question went unanswered, and an
+// unanswered safety check is reported and refused rather than counted as a
+// clean bill of health.
 
 const PROD_ENV_SIGNALS = ['VERCEL', 'VERCEL_ENV', 'CI'] as const;
 
@@ -260,9 +363,19 @@ function projectRef(url: string): string | null {
   }
 }
 
+/**
+ * A refusal, thrown rather than exited.
+ *
+ * `process.exit()` while supabase-js still has keep-alive sockets open trips a
+ * libuv assertion on Windows and prints a crash on top of the message — which
+ * reads as a broken script rather than as the deliberate refusal it is.
+ * `scripts/acceptance.ts` carries the same note for the same reason. Throwing
+ * lets the loop drain and still exits non-zero.
+ */
+class Refusal extends Error {}
+
 const refuse = (...lines: string[]): never => {
-  console.error(`\n  ${lines.join('\n  ')}\n`);
-  process.exit(1);
+  throw new Refusal(`\n  ${lines.join('\n  ')}\n`);
 };
 
 /**
@@ -273,33 +386,75 @@ const refuse = (...lines: string[]): never => {
  * eventually a chat window, which is the failure the console's own error
  * strings are written to avoid.
  */
-async function looksLive(client: SupabaseClient): Promise<string[]> {
+/**
+ * The codes that mean "that table is not here", which is a legitimate answer.
+ *
+ * A scratch project with no schema says this about all three, and that is the
+ * emptiest a database can be. Every OTHER error means the question was not
+ * answered, which is a different thing entirely — see `looksLive`.
+ */
+const TABLE_ABSENT = new Set(['42P01', 'PGRST205', 'PGRST202', 'PGRST106']);
+
+interface LiveCheck {
+  /** What was found that a scratch project would not hold. */
+  found: string[];
+  /** Probes that could not be run at all. A gate that did not run is not a gate that passed. */
+  unanswered: string[];
+}
+
+async function looksLive(client: SupabaseClient): Promise<LiveCheck> {
   const found: string[] = [];
+  const unanswered: string[] = [];
 
-  const realPeople = await client
-    .from('people')
-    .select('person_id', { count: 'exact', head: true })
-    .not('normalised_email', 'like', `%.invalid`);
-  if (!realPeople.error && (realPeople.count ?? 0) > 0) {
-    found.push(`${realPeople.count} person record(s) with a deliverable address`);
-  }
+  /**
+   * One reading, and the three outcomes are kept apart.
+   *
+   * `absent` is an answer: the table is not here, so it holds nobody. `n > 0`
+   * is an answer: it holds somebody. ANYTHING ELSE — a wrong key, a network
+   * failure, a permission error — is the question going UNANSWERED, and the
+   * first version of this file treated that identically to "nothing found". A
+   * mistyped key would therefore have unlocked the strongest of the three
+   * gates, silently, which is the one failure mode a safety check may not have.
+   */
+  const read = (
+    table: string,
+    describe: (n: number) => string,
+    result: { count: number | null; error: { code?: string } | null },
+  ) => {
+    if (result.error) {
+      const code = typeof result.error.code === 'string' ? result.error.code : '';
+      if (TABLE_ABSENT.has(code)) return;
+      unanswered.push(`${table} (error code ${code || 'unknown'})`);
+      return;
+    }
+    if ((result.count ?? 0) > 0) found.push(describe(result.count ?? 0));
+  };
 
-  const realLeads = await client
-    .from('leads')
-    .select('id', { count: 'exact', head: true })
-    .not('email', 'like', `%.invalid`);
-  if (!realLeads.error && (realLeads.count ?? 0) > 0) {
-    found.push(`${realLeads.count} lead(s) with a deliverable address`);
-  }
+  read(
+    'people',
+    (n) => `${n} person record(s) with a deliverable address`,
+    await client
+      .from('people')
+      .select('person_id', { count: 'exact', head: true })
+      .not('normalised_email', 'like', '%.invalid'),
+  );
 
-  const learners = await client
-    .from('learners')
-    .select('id', { count: 'exact', head: true });
-  if (!learners.error && (learners.count ?? 0) > 0) {
-    found.push(`${learners.count} learner record(s)`);
-  }
+  read(
+    'leads',
+    (n) => `${n} lead(s) with a deliverable address`,
+    await client
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .not('email', 'like', '%.invalid'),
+  );
 
-  return found;
+  read(
+    'learners',
+    (n) => `${n} learner record(s)`,
+    await client.from('learners').select('id', { count: 'exact', head: true }),
+  );
+
+  return { found, unanswered };
 }
 
 // ---------------------------------------------------------------------------
@@ -400,7 +555,7 @@ const CAST: Person[] = [
     role: 'Staff engineer',
     funding: 'self',
     attribution: { ...DIRECT },
-    daysAgo: 6,
+    daysAgo: 9,
     answers: {
       name: 'Seed Enquirer Alpha',
       email: addr('alpha'),
@@ -560,7 +715,7 @@ const CAST: Person[] = [
     funding: 'undecided',
     taskOverdueDays: 3,
     attribution: { ...DIRECT },
-    daysAgo: 4,
+    daysAgo: 10,
     answers: {
       name: 'Seed Applicant India',
       email: addr('india'),
@@ -687,6 +842,12 @@ const CAST: Person[] = [
   {
     // Flagged as a test. Counted nowhere, visible to an operator who goes
     // looking. E14 checks it is absent from the totals.
+    //
+    // ITS DATE IS THE TEST. It sits comfortably inside the 30-day window with
+    // every countable row, so a totals query that forgot `is_test` would
+    // report fourteen applications in that band rather than twelve. Dated
+    // outside the window it would be excluded for the wrong reason and the
+    // case would pass without observing anything.
     slug: 'papa',
     name: 'Seed Applicant Papa',
     type: 'application',
@@ -695,7 +856,7 @@ const CAST: Person[] = [
     owner: STAFF.operator,
     isTest: true,
     attribution: { ...DIRECT },
-    daysAgo: 8,
+    daysAgo: 15,
     answers: {
       name: 'Seed Applicant Papa',
       email: addr('papa'),
@@ -716,7 +877,7 @@ const CAST: Person[] = [
     owner: STAFF.operator,
     isSpam: true,
     attribution: { ...DIRECT },
-    daysAgo: 7,
+    daysAgo: 12,
     answers: {
       name: 'Seed Applicant Quebec',
       email: addr('quebec'),
@@ -788,11 +949,84 @@ const STAGES: { slug: string; to: string; reason?: string; next?: string; dueInD
 const days = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 const hence = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString();
 
+/**
+ * Does the cast still sit where E14's arithmetic expects it?
+ *
+ * The counts in SEED_EXPECTATIONS and the bands in WINDOW are two descriptions
+ * of one dataset, and nothing stops somebody editing the cast and leaving both
+ * behind. That drift does not raise — E14 simply starts reconciling against a
+ * number nobody meant, and reports a failure whose cause is three files away.
+ *
+ * So it is checked before anything is written, and again in a dry run, which
+ * is the one place somebody editing this file is actually looking.
+ */
+function dateProblems(): string[] {
+  const out: string[] = [];
+  const countable = CAST.filter((p) => p.daysAgo !== BACKDATED_DAYS);
+
+  for (const p of countable) {
+    const d = p.daysAgo ?? 0;
+    if (d < WINDOW.newest || d > WINDOW.oldest) {
+      out.push(
+        `${p.slug} (${p.type}) is dated ${d} days ago, outside the ${WINDOW.newest}–${WINDOW.oldest} day band.`,
+      );
+    }
+  }
+
+  const backdated = CAST.filter((p) => p.daysAgo === BACKDATED_DAYS);
+  if (backdated.length !== 1) {
+    out.push(`${backdated.length} rows are backdated to ${BACKDATED_DAYS} days. E14 expects exactly one.`);
+  } else if (backdated[0]!.type !== 'enquiry') {
+    out.push('The backdated row must be an enquiry; E14 reads the enquiries tile to find it.');
+  }
+
+  const tally = (type: Person['type'], flagged: boolean) =>
+    CAST.filter((p) => p.type === type && Boolean(p.isTest || p.isSpam) === flagged).length;
+
+  const expect: [string, number, number][] = [
+    ['people', new Set(CAST.map((p) => p.slug)).size, SEED_EXPECTATIONS.people],
+    ['submissions', CAST.length, SEED_EXPECTATIONS.submissions],
+    ['applicationRows', CAST.filter((p) => p.type === 'application').length, SEED_EXPECTATIONS.applicationRows],
+    ['countableApplications', tally('application', false), SEED_EXPECTATIONS.countableApplications],
+    [
+      'countableApplicants',
+      new Set(CAST.filter((p) => p.type === 'application' && !p.isTest && !p.isSpam).map((p) => p.slug)).size,
+      SEED_EXPECTATIONS.countableApplicants,
+    ],
+    ['countableEnquiries', tally('enquiry', false), SEED_EXPECTATIONS.countableEnquiries],
+    [
+      'enquiriesInsideThirtyDays',
+      CAST.filter((p) => p.type === 'enquiry' && (p.daysAgo ?? 0) <= WINDOW.oldest).length,
+      SEED_EXPECTATIONS.enquiriesInsideThirtyDays,
+    ],
+    ['enterpriseSubmissions', tally('enterprise', false), SEED_EXPECTATIONS.enterpriseSubmissions],
+    ['flaggedTest', CAST.filter((p) => p.isTest).length, SEED_EXPECTATIONS.flaggedTest],
+    ['flaggedSpam', CAST.filter((p) => p.isSpam).length, SEED_EXPECTATIONS.flaggedSpam],
+  ];
+
+  for (const [label, actual, expected] of expect) {
+    if (actual !== expected) {
+      out.push(`The cast holds ${actual} ${label}; SEED_EXPECTATIONS says ${expected}.`);
+    }
+  }
+
+  return out;
+}
+
 interface Created {
   submissionId: string;
   personId: string;
   opportunityId: string;
   reference: string;
+}
+
+/** Exactly what `pipeline_submit()` returns, spelled the way Postgres spells it. */
+interface SubmitRow {
+  submission_id: string;
+  reference: string;
+  already_existed: boolean;
+  person_id: string;
+  opportunity_id: string;
 }
 
 async function submitOne(
@@ -849,12 +1083,17 @@ async function submitOne(
 
     if (error) {
       if (error.message.includes('pipeline_reference_taken')) continue;
-      refuse(`pipeline_submit refused a ${person.type} row: ${error.message}`);
+      refuse(
+        `pipeline_submit refused the ${person.type} row for ${person.slug}: ${error.message}`,
+        '',
+        'Rows written before this point are still there. They carry the seed markers,',
+        'so they come out cleanly:',
+        '',
+        '  npm run seed -- --project <ref> --clear',
+      );
     }
 
-    const row = (data as Created[] | null)?.[0] as
-      | { submission_id: string; reference: string; person_id: string; opportunity_id: string }
-      | undefined;
+    const row = (data as SubmitRow[] | null)?.[0];
     if (!row) refuse('pipeline_submit returned no row. The function exists but answered nothing.');
 
     // A submission arriving in the past is an ordinary fact — an import, a
@@ -882,6 +1121,21 @@ async function submitOne(
 // ---------------------------------------------------------------------------
 
 async function create(client: SupabaseClient, allTest: boolean, dryRun: boolean) {
+  // Before the database is touched at all: does this file still describe the
+  // dataset it claims to? A cast that has drifted from its own counts writes a
+  // dataset E14 will reconcile against the wrong numbers, and the failure it
+  // reports names the dashboard rather than this edit.
+  const problems = dateProblems();
+  if (problems.length) {
+    refuse(
+      'This file no longer agrees with itself. Nothing has been written.',
+      ...problems.map((p) => `  · ${p}`),
+      '',
+      'SEED_EXPECTATIONS, WINDOW and CAST are three descriptions of one dataset.',
+      'Fix the one that is wrong before seeding, or E14 checks a number nobody meant.',
+    );
+  }
+
   const { data: cohorts, error: cohortError } = await client
     .from('cohorts')
     .select('cohort_id, public_label, route')
@@ -925,7 +1179,10 @@ async function create(client: SupabaseClient, allTest: boolean, dryRun: boolean)
     console.log('\n  Dry run. Nothing was written.\n');
     console.log(`  Cohort:        ${cohorts?.[0]?.public_label ?? '—'}`);
     console.log(`  People:        ${SEED_EXPECTATIONS.people}`);
-    console.log(`  Organisations: ${SEED_EXPECTATIONS.organisations} (two share a name, so one is flagged for review)`);
+    console.log(
+      `  Organisations: ${SEED_EXPECTATIONS.organisations} rows for 3 company names — two sponsors name the same`,
+    );
+    console.log('                 company, so the second row is flagged needs_review, not merged');
     console.log(`  Opportunities: ${SEED_EXPECTATIONS.opportunities}`);
     console.log(`  Submissions:   ${SEED_EXPECTATIONS.submissions}`);
     console.log(
@@ -937,7 +1194,11 @@ async function create(client: SupabaseClient, allTest: boolean, dryRun: boolean)
     );
     console.log(`  Evidence:      ${SEED_EXPECTATIONS.meetings} meetings · ${SEED_EXPECTATIONS.offers} offers · ${SEED_EXPECTATIONS.payments} payments in 2 currencies`);
     console.log(`                 ${SEED_EXPECTATIONS.admissions} admissions · ${SEED_EXPECTATIONS.attendance} attendance rows · ${SEED_EXPECTATIONS.nominations} nominations`);
-    console.log(`  Left waiting:  ${SEED_EXPECTATIONS.unowned} unowned lead · ${SEED_EXPECTATIONS.overdueTasks} overdue task\n`);
+    console.log(`  Left waiting:  ${SEED_EXPECTATIONS.unowned} unowned lead · ${SEED_EXPECTATIONS.overdueTasks} overdue task`);
+    console.log(
+      `  Dated:         ${WINDOW.newest}–${WINDOW.oldest} days ago, and one enquiry at ${WINDOW.backdated} days.`,
+    );
+    console.log('                 Nothing inside 7 days, which is how E14 subtracts its own writes.\n');
     if (allTest) {
       console.log('  --all-test is set: every submission would be flagged, so the dashboard');
       console.log('  would count none of them and E14 could not run.\n');
@@ -1313,17 +1574,30 @@ async function create(client: SupabaseClient, allTest: boolean, dryRun: boolean)
     console.log(`    ${label.padEnd(22)} ${value}`);
   }
 
-  const drift: string[] = [];
-  if (counts.people !== SEED_EXPECTATIONS.people) drift.push('people');
-  if (counts.submissions !== SEED_EXPECTATIONS.submissions) drift.push('submissions');
-  if (counts.opportunities !== SEED_EXPECTATIONS.opportunities) drift.push('opportunities');
-  if (counts.nominations !== SEED_EXPECTATIONS.nominations) drift.push('nominations');
-  if (counts.payments !== SEED_EXPECTATIONS.payments + 1) drift.push('payments');
+  // Every count, against its expectation, by name. The first version of this
+  // checked five of them and compared payments against `payments + 1`, which
+  // is the arithmetic somebody writes when the constant is wrong and the
+  // comparison is being bent to agree with it.
+  const drift = (
+    [
+      ['people', counts.people, SEED_EXPECTATIONS.people],
+      ['organisations', counts.organisations, SEED_EXPECTATIONS.organisations],
+      ['opportunities', counts.opportunities, SEED_EXPECTATIONS.opportunities],
+      ['submissions', counts.submissions, SEED_EXPECTATIONS.submissions],
+      ['meetings', counts.meetings, SEED_EXPECTATIONS.meetings],
+      ['offers', counts.offers, SEED_EXPECTATIONS.offers],
+      ['payments', counts.payments, SEED_EXPECTATIONS.payments],
+      ['admissions', counts.admissions, SEED_EXPECTATIONS.admissions],
+      ['nominations', counts.nominations, SEED_EXPECTATIONS.nominations],
+      ['attendance', counts.attendance, SEED_EXPECTATIONS.attendance],
+    ] as const
+  )
+    .filter(([, actual, expected]) => actual !== expected)
+    .map(([label, actual, expected]) => `${label}: wrote ${actual}, expected ${expected}`);
 
   if (drift.length) {
-    console.log(
-      `\n  WARNING: ${drift.join(', ')} differ from SEED_EXPECTATIONS in this file.`,
-    );
+    console.log('\n  WARNING: what landed differs from SEED_EXPECTATIONS in this file.');
+    drift.forEach((d) => console.log(`    · ${d}`));
     console.log('  E14 reconciles against those numbers. Fix them before trusting it.\n');
   } else {
     console.log('\n  Counts agree with SEED_EXPECTATIONS. `npm run acceptance` can now run E14.');
@@ -1395,8 +1669,10 @@ async function countSeeded(client: SupabaseClient) {
 //     decision was made has to outlive the conversation. So its rows are
 //     matched by the submission and opportunity ids collected before anything
 //     is removed, which is why the order below matters.
-//   * `organisations` is SET NULL from `people`, so the two seeded companies
-//     survive their contacts and are deleted by their `[seed]` name.
+//   * `organisations` is SET NULL from `people`, so the seeded companies
+//     survive their contacts and are deleted by their `[seed]` name. There are
+//     four rows for three names -- two sponsors named one company and the
+//     pipeline flagged the second for review rather than merging it.
 //
 // Everything else — submissions, attributions, consents, opportunities,
 // activities, tasks, meetings, offers, admissions, attendance, nominations,
@@ -1479,8 +1755,16 @@ async function clear(client: SupabaseClient, dryRun: boolean) {
 
 async function main() {
   if (has('help') || process.argv.length <= 2) {
+    if (!has('help')) {
+      // Said before the usage rather than after it, because a wall of help
+      // text scrolls the important sentence off the top: this did nothing.
+      console.error('\n  Nothing was written. --project is required, and names which database you mean.');
+    }
     usage();
-    process.exit(has('help') ? 0 : 1);
+    // Asking for help is not a failure; being given no arguments at all is,
+    // because the next thing that happens is somebody assuming it ran.
+    process.exitCode = has('help') ? 0 : 1;
+    return;
   }
 
   const dryRun = has('dry-run');
@@ -1535,10 +1819,27 @@ async function main() {
 
   // Gate 3 — the wrong database altogether.
   const live = await looksLive(client);
-  if (live.length && !has('i-know-this-is-not-production')) {
+  const override = has('i-know-this-is-not-production');
+
+  // A probe that could not be run is not a probe that passed, and there is no
+  // override for it: the override exists for "I know what is in there", which
+  // is precisely what nobody knows when the question came back unanswered.
+  if (live.unanswered.length) {
+    refuse(
+      'The live-data check could not be completed, so it is not a check.',
+      ...live.unanswered.map((u) => `  · could not read ${u}`),
+      '',
+      'A missing table is fine and reads as empty. Anything else — a key that is not',
+      'accepted, a project that is not answering — means this script does not know what',
+      'is in that database, and it will not write invented applicants into one it',
+      'cannot see. Fix the connection and run it again.',
+    );
+  }
+
+  if (live.found.length && !override) {
     refuse(
       'This database holds records that a scratch project does not:',
-      ...live.map((l) => `  · ${l}`),
+      ...live.found.map((l) => `  · ${l}`),
       '',
       'An address that can receive mail is the clearest signal there is that this',
       'is somebody real. Point SUPABASE_URL at a different project.',
@@ -1548,9 +1849,9 @@ async function main() {
       'should not be reachable from muscle memory.',
     );
   }
-  if (live.length) {
+  if (live.found.length) {
     console.log('\n  WARNING: overriding the live-data check. This database holds:');
-    live.forEach((l) => console.log(`    · ${l}`));
+    live.found.forEach((l) => console.log(`    · ${l}`));
     console.log('  Continuing because --i-know-this-is-not-production was given.\n');
   }
 
@@ -1562,7 +1863,10 @@ async function main() {
 // has one definition rather than two that drift.
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   main().catch((err) => {
+    // A Refusal is already written for a reader; anything else is a surprise
+    // and gets whatever it has to say. `exitCode` rather than `exit()` — see
+    // the note on Refusal.
     console.error(err instanceof Error ? err.message : err);
-    process.exit(1);
+    process.exitCode = 1;
   });
 }

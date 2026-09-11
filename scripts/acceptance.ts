@@ -24,12 +24,11 @@
 //
 // WHAT IT DELIBERATELY DOES NOT COVER
 //
-// Seven of the eighteen cases cannot be driven from here and must not be
+// Six of the eighteen cases cannot be driven from here and must not be
 // reported as if they could:
 //
 //   E04, E09, E10  need a mail provider. Decision D2 is open; nothing sends.
 //   E11            needs two staff accounts with different roles.
-//   E14            needs a synthetic dataset and the dashboard reading it.
 //   E16            is a backup restore. That is a human with a runbook.
 //   E15            is partly here — labels, names, error wiring can be
 //                  checked in the markup — but the half that matters is a
@@ -38,6 +37,27 @@
 //
 // Those print as `not run` with the reason. A harness that quietly counted
 // them as passing would be the exact defect the register exists to prevent.
+//
+// E14 IS DRIVEN FROM HERE, AND HAS FOUR PRECONDITIONS
+//
+// It reconciles the dashboard against `npm run seed`, so it needs an applied
+// schema, that seed actually run, a console session, and a database holding
+// nothing but those two things. Each missing precondition is its own `not run`
+// reason rather than a failure — a reconciliation against an unknown quantity
+// is not a reconciliation, and reporting it as a failure would send somebody
+// looking for a bug in the counting.
+//
+// Two halves of E14 are conditional on the SESSION, and it says which it got:
+//
+//   read.dashboard  the operator bootstrap holds it, so the totals half always
+//                   runs once there is a session at all.
+//   read.finance    the operator does NOT hold it. Without a finance or
+//                   instructor account the per-currency half is observed only
+//                   as a refusal — which is itself worth recording, because a
+//                   refusal is the thing that must not render as a zero — and
+//                   the sums themselves go unexercised. Set
+//                   ACCEPTANCE_STAFF_EMAIL and ACCEPTANCE_STAFF_PASSWORD to a
+//                   named account that holds it and the whole case runs.
 
 const BASE = (() => {
   const i = process.argv.indexOf('--base');
@@ -518,7 +538,345 @@ async function run() {
         : `defused=${defused}, untouched=${untouched}, roundTrips=${roundTrips}.`,
     );
   }
-  record('E14', 'Synthetic dashboard dataset', 'not run', 'Needs a seeded dataset and the overview screen reading it.');
+  // -- E14 ------------------------------------------------------------------
+  // The dashboard RECONCILES, which is a different claim from "the dashboard
+  // renders".
+  //
+  // ─────────────────────────────────────────────────────────────────────────
+  // WHY IT SUBTRACTS TWO WINDOWS INSTEAD OF READING ONE NUMBER
+  // ─────────────────────────────────────────────────────────────────────────
+  //
+  // The obvious test is: seed twelve applications, read the tile, expect
+  // twelve. It does not work, because by the time this case runs the harness
+  // has written its own applications into the same database — E01, E02, E05
+  // and E07 all save one — and every one of those lands in the same 30-day
+  // window. A case written that way fails the first time anybody runs the
+  // register twice, and the failure says "the dashboard is wrong" when the
+  // dashboard is right.
+  //
+  // So `scripts/seed.ts` dates every row it writes at least 8 days ago, and
+  // everything this harness writes is minutes old. The 7-day tile therefore
+  // holds the harness's own contribution and nothing else, and
+  //
+  //     tile(30 days) − tile(7 days)
+  //
+  // is exactly what the seed put there, whatever this file grows into later.
+  // The subtraction survives new cases being added above it, which a hard
+  // number does not.
+  //
+  // ─────────────────────────────────────────────────────────────────────────
+  // WHAT EACH ASSERTION IS ACTUALLY FOR
+  // ─────────────────────────────────────────────────────────────────────────
+  //
+  //   applications − applicants = 1
+  //       One person applied twice. Two submission rows, one applicant. If
+  //       these two tiles ever agree, the console is reporting rows as people,
+  //       which is how a pipeline of eleven looks like a pipeline of twelve.
+  //
+  //   applications = 12 and not 14
+  //       Two flagged rows, one is_test and one is_spam, sit INSIDE the same
+  //       window. They are still rows — an operator can find them — and they
+  //       are counted nowhere. This is the only assertion that can see the
+  //       exclusion working, which is why the seed dates them where it does.
+  //
+  //   enquiries(90) − enquiries(30) = 1
+  //       One enquiry is backdated to 45 days. The reporting period is a real
+  //       filter on evidence dates and not a label on the screen.
+  //
+  //   a nominee is not a lead
+  //       Six nominated participants exist against the enterprise orders. None
+  //       of them is a person, an applicant, or findable in the lead list. "An
+  //       organisation order is not nine individual applications" is the
+  //       easiest overstatement available to this pipeline.
+  //
+  //   two currencies, two rows, no total
+  //       One enterprise order billed in AED and INR, with a refund against
+  //       the AED half. The net table must show a row per currency, the AED
+  //       net must be the receipt minus the refund, and the cross-currency sum
+  //       must appear nowhere on the page. Adding a dirham to a rupee produces
+  //       a number that is wrong and looks authoritative.
+  //
+  //   unknown is not zero
+  //       Two tiles on the overview have no source yet. They must render a
+  //       dash and a reason. A nought there is a claim that nothing happened.
+  {
+    const seedModule = await import('./seed.ts').catch(() => null);
+
+    const signIn = async (fields: Record<string, string>): Promise<string | null> => {
+      const res = await fetch(`${BASE}/api/craft/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: BASE },
+        body: new URLSearchParams(fields),
+        redirect: 'manual',
+      });
+      const cookie = (res.headers.get('set-cookie') ?? '').split(';')[0] ?? '';
+      return cookie.startsWith('lc_admin=') ? cookie : null;
+    };
+
+    const staffEmail = process.env.ACCEPTANCE_STAFF_EMAIL;
+    const staffPassword = process.env.ACCEPTANCE_STAFF_PASSWORD;
+    const sharedPassword = process.env.ADMIN_PASSWORD;
+
+    const cookie = !ready
+      ? null
+      : staffEmail && staffPassword
+        ? await signIn({ email: staffEmail, password: staffPassword })
+        : sharedPassword
+          ? await signIn({ password: sharedPassword })
+          : null;
+
+    const html = async (path: string): Promise<string | null> => {
+      const res = await fetch(`${BASE}${path}`, {
+        headers: { Cookie: cookie ?? '', Accept: 'text/html' },
+        redirect: 'manual',
+      });
+      return res.status === 200 ? res.text() : null;
+    };
+
+    /**
+     * One metric tile, by the label beside it.
+     *
+     * A tile is `<div class="n">12</div>` followed by its label, and a tile
+     * with no source is the same shape holding an em dash. Reading them the
+     * same way is deliberate: this case has to be able to tell a number from a
+     * dash, and a reader that only matched digits would report "not found" for
+     * exactly the state it exists to check.
+     */
+    const tileText = (page: string, label: string): string | null => {
+      const m = page.match(
+        new RegExp(`<div class="n"[^>]*>\\s*([^<]+?)\\s*</div>[\\s\\S]{0,200}?<span class="label">${label}</span>`),
+      );
+      return m?.[1] ?? null;
+    };
+
+    const tileNumber = (page: string, label: string): number | null => {
+      const raw = tileText(page, label);
+      if (raw === null) return null;
+      const n = Number(raw.replace(/[,\s]/g, ''));
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const leadIds = (page: string): string[] => [
+      ...new Set(
+        [...page.matchAll(/href="\/craft\/admin\/pipeline\/([0-9a-fA-F-]{36})"/g)].map((m) => m[1]!),
+      ),
+    ];
+
+    const leadEmails = (page: string): string[] =>
+      [...page.matchAll(/href="mailto:([^"]+)"/g)].map((m) => m[1]!.toLowerCase());
+
+    const notRun = (reason: string) => record('E14', 'Synthetic dashboard dataset', 'not run', reason);
+
+    if (!ready) {
+      notRun(`${blocked} Seed it with \`npm run seed\` once the tables exist.`);
+    } else if (!seedModule) {
+      notRun(
+        'scripts/seed.ts could not be imported, so what the seed created has no definition here. E14 will not reconcile against numbers retyped into this file.',
+      );
+    } else if (!cookie) {
+      notRun(
+        sharedPassword || staffEmail
+          ? 'A console sign-in was refused, so the dashboard could not be read.'
+          : 'No console credentials in this environment. Set ADMIN_PASSWORD, or ACCEPTANCE_STAFF_EMAIL and ACCEPTANCE_STAFF_PASSWORD for a named account that also holds read.finance.',
+      );
+    } else {
+      const { SEED_EXPECTATIONS, ENTERPRISE_NET, seedAddress, isSeedEmail } = seedModule;
+
+      const [w7, w30, w90] = await Promise.all([
+        html('/craft/admin/pipeline?days=7'),
+        html('/craft/admin/pipeline?days=30'),
+        html('/craft/admin/pipeline?days=90'),
+      ]);
+
+      const APPS = 'Applications saved';
+      const PEOPLE = 'Unique applicants';
+      const ENQ = 'Cohort enquiries';
+      const ENT = 'Enterprise enquiries';
+
+      // Every tile on every window must read as a number before anything is
+      // subtracted. A missing one would otherwise be treated as a zero by the
+      // arithmetic below, which is the exact defect this case exists to catch.
+      const unreadable: string[] = [];
+      if (!w7 || !w30 || !w90) {
+        unreadable.push('the overview did not return 200 for all three periods with this session');
+      } else {
+        for (const [period, page] of [[7, w7], [30, w30], [90, w90]] as const) {
+          for (const label of [APPS, PEOPLE, ENQ, ENT]) {
+            if (tileNumber(page, label) === null) {
+              unreadable.push(`${label} at ${period} days read ${JSON.stringify(tileText(page, label))}`);
+            }
+          }
+        }
+      }
+
+      if (!w7 || !w30 || !w90 || unreadable.length) {
+        // Either the totals answered `denied`/`unavailable`, or the markup
+        // moved. Both mean this case observed nothing, and neither is a fail.
+        notRun(
+          `The activity tiles did not read as numbers — ${unreadable.join('; ')}. ` +
+            'Either the signed-in roles do not hold read.dashboard, the source did not answer, or the tile markup has changed.',
+        );
+      } else {
+        const emails = leadEmails(w30);
+        const seeded = emails.filter((e) => isSeedEmail(e));
+        // The harness's own people, written by the cases above this one — see
+        // `testEmail` at the head of this file for the shape.
+        const isHarnessEmail = (e: string) => e.startsWith('acceptance+') && e.endsWith('.invalid');
+        const harness = emails.filter(isHarnessEmail);
+        const foreign = emails.filter((e) => !isSeedEmail(e) && !isHarnessEmail(e));
+
+        if (!seeded.length) {
+          notRun(
+            'No seeded records are in this database. Run `npm run seed -- --project <ref>` against this environment first — E14 reconciles the dashboard against a known quantity and there is nothing to reconcile against.',
+          );
+        } else if (foreign.length) {
+          // Deliberately does not print the addresses. A count is enough to
+          // decide and enough to explain, and these would be real people.
+          notRun(
+            `This database holds ${foreign.length} pipeline record(s) that neither the seed nor this harness created, so the tiles cannot be reconciled against a known quantity. Point --base at a scratch environment.`,
+          );
+        } else {
+          const n = (page: string, label: string) => tileNumber(page, label) ?? 0;
+
+          // Every seeded row is 8+ days old and everything this harness writes
+          // is minutes old, so the 7-day tile IS the harness's contribution.
+          const applications = n(w30, APPS) - n(w7, APPS);
+          const applicants = n(w30, PEOPLE) - n(w7, PEOPLE);
+          const enquiries30 = n(w30, ENQ) - n(w7, ENQ);
+          const enquiries90 = n(w90, ENQ) - n(w7, ENQ);
+          const enterprise = n(w30, ENT) - n(w7, ENT);
+          const applications90 = n(w90, APPS) - n(w7, APPS);
+
+          const checks: [string, boolean, string][] = [];
+
+          // The inequality is asserted FIRST in each chain, and deliberately.
+          // Put it after the equalities and TypeScript has already narrowed
+          // both sides to their literal expectations, so it reports the
+          // comparison as one that cannot fail — which is true of the types
+          // and says nothing about the two numbers the console rendered.
+          checks.push([
+            'applications ≠ applicants',
+            applications !== applicants &&
+              applications === SEED_EXPECTATIONS.countableApplications &&
+              applicants === SEED_EXPECTATIONS.countableApplicants,
+            `${applications} application rows from ${applicants} applicants (expected ${SEED_EXPECTATIONS.countableApplications} and ${SEED_EXPECTATIONS.countableApplicants})`,
+          ]);
+
+          checks.push([
+            'test and spam excluded',
+            applications !== SEED_EXPECTATIONS.applicationRows &&
+              applications === SEED_EXPECTATIONS.countableApplications,
+            `${SEED_EXPECTATIONS.applicationRows} application rows exist in the window, ${applications} are counted`,
+          ]);
+
+          checks.push([
+            'the reporting window is a real filter',
+            enquiries30 === SEED_EXPECTATIONS.enquiriesInsideThirtyDays &&
+              enquiries90 === SEED_EXPECTATIONS.countableEnquiries &&
+              applications90 === applications,
+            `${enquiries30} enquiries at 30 days, ${enquiries90} at 90; applications unchanged at ${applications90}`,
+          ]);
+
+          checks.push([
+            'enterprise is counted separately',
+            enterprise === SEED_EXPECTATIONS.enterpriseSubmissions,
+            `${enterprise} enterprise enquiries, none of them in the ${applications} applications`,
+          ]);
+
+          // -- nominations are not applicants --------------------------------
+          const nomineePage = await html(
+            `/craft/admin/pipeline?q=${encodeURIComponent(seedAddress('nominee-1'))}`,
+          );
+          const sponsorPage = await html(
+            `/craft/admin/pipeline?q=${encodeURIComponent(seedAddress('hotel'))}`,
+          );
+          const sponsorId = sponsorPage ? leadIds(sponsorPage)[0] : undefined;
+          const sponsorDetail = sponsorId ? await html(`/craft/admin/pipeline/${sponsorId}`) : null;
+
+          const nomineeLeads = nomineePage ? leadIds(nomineePage).length : -1;
+          const nomineeNames = sponsorDetail
+            ? (sponsorDetail.match(/Seed Nominee \d/g) ?? []).length
+            : -1;
+
+          checks.push([
+            'a nominated participant is not an applicant',
+            nomineeLeads === 0 && nomineeNames >= 4,
+            `the first nominee's address matches ${nomineeLeads} lead(s); the sponsor's record lists ${nomineeNames} nominated participants`,
+          ]);
+
+          // -- unknown is not zero -------------------------------------------
+          const sessions = tileText(w30, 'Measured sessions');
+          const paid = tileText(w30, 'Paid members');
+          checks.push([
+            'a source with nothing behind it renders a dash, not a nought',
+            sessions !== null &&
+              paid !== null &&
+              !/\d/.test(sessions) &&
+              !/\d/.test(paid) &&
+              w30.includes('no source yet'),
+            `the two sourceless tiles read ${JSON.stringify(sessions)} and ${JSON.stringify(paid)}`,
+          ]);
+
+          // -- money, per currency, never added ------------------------------
+          let financeNote: string;
+          if (!sponsorDetail) {
+            financeNote =
+              'The enterprise record could not be opened, so the per-currency half was not exercised.';
+            checks.push(['the enterprise record opens', false, financeNote]);
+          } else if (/data-state="denied"[\s\S]{0,400}?read\.finance/.test(sponsorDetail)) {
+            // The operator bootstrap does not hold read.finance. That refusal
+            // is itself the "never zero" property, so it is recorded as an
+            // observation and the sums are reported as unexercised rather than
+            // claimed.
+            financeNote =
+              'Finance rendered "not permitted" and named who does hold read.finance — never a zero. ' +
+              'THE PER-CURRENCY SUMS WERE NOT EXERCISED: this session does not hold read.finance. ' +
+              'Set ACCEPTANCE_STAFF_EMAIL and ACCEPTANCE_STAFF_PASSWORD to an account that does, and re-run.';
+            checks.push(['finance refuses rather than reporting zero', true, financeNote]);
+          } else {
+            const rows = [
+              ...sponsorDetail.matchAll(
+                /<td data-label="Currency" class="mono">([A-Z]{3})<\/td>([\s\S]*?)(?=<td data-label="Currency"|<\/tbody>)/g,
+              ),
+            ].map(([, currency, body]) => ({
+              currency: currency!,
+              net: Number(
+                body!.match(/<td data-label="Net">[\s\S]*?<span class="src mono">\s*(-?\d+) minor/)?.[1] ??
+                  NaN,
+              ),
+            }));
+
+            const aed = rows.find((r) => r.currency === 'AED');
+            const inr = rows.find((r) => r.currency === 'INR');
+            const noGrandTotal = !sponsorDetail.includes(String(ENTERPRISE_NET.nonsenseSum));
+
+            financeNote = `net rows ${JSON.stringify(rows)}; the cross-currency sum ${ENTERPRISE_NET.nonsenseSum} appears ${noGrandTotal ? 'nowhere' : 'ON THE PAGE'}`;
+            checks.push([
+              'two currencies, two rows, no grand total',
+              rows.length === 2 &&
+                aed?.net === ENTERPRISE_NET.AED &&
+                inr?.net === ENTERPRISE_NET.INR &&
+                noGrandTotal,
+              financeNote,
+            ]);
+          }
+
+          const failed = checks.filter(([, ok]) => !ok);
+          const evidence = checks
+            .map(([what, ok, detail]) => `${ok ? '✓' : '✗'} ${what} — ${detail}`)
+            .join(' · ');
+
+          record(
+            'E14',
+            'Synthetic dashboard dataset',
+            failed.length ? 'failed' : 'passed',
+            `${evidence} · read as ${staffEmail ? 'a named staff account' : 'the shared-password bootstrap (operator)'}, ` +
+              `${seeded.length} seeded and ${harness.length} harness lead(s) present, tiles subtracted across the 7/30/90-day periods.`,
+          );
+        }
+      }
+    }
+  }
   record('E15', '390px, keyboard, zoom and screen-reader form labels', 'not run', 'Partly checkable in markup — every field has a visible label, aria-describedby and aria-invalid. The half that matters is a person with a screen reader at 200% zoom, and this script will not claim it.');
   record('E16', 'Backup restore and integration disconnect', 'not run', 'A restore is a human with a runbook.');
 

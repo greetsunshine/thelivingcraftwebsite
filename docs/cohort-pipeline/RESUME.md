@@ -57,20 +57,10 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
-## In flight right now — check before you rebuild any of it
+## Nothing is in flight
 
-Three agents were working when this was last written, 11 September. **Each stopped run
-leaves real files on disk**, so the first move on picking this up is `git status` and a
-route check, not a rebuild. Every interruption so far has left most of the work done.
-
-| Owner | Files | State when last seen |
-|---|---|---|
-| Stage 4 TypeScript | `lib/comms/**`, `api/craft/admin/comms.ts`, `api/unsubscribe.ts`, `craft/admin/comms.astro` | Schema already committed (five tables). Building the outbox, eligibility, signed unsubscribe. **Dispatch stays off** |
-| Templates routing | `pages/resources/templates/**`, `content/templates/*.md`, `content.config.ts` (templates only) | Four templates written and committed; **nothing renders them, `/resources/templates/` is 404** |
-| Seed and E14 | `scripts/seed.ts`, `scripts/acceptance.ts` (E14 only) | ~1,500 lines written and **never executed once**. Expect it not to run |
-
-Nothing in that list touches `src/lib/pipeline/**`, `src/lib/admin/{auth,staff,csv,health}.ts`
-or `src/middleware.ts` — those are settled.
+All six stages are built. The work that remains needs somebody who is not us — see
+*Waiting on somebody who is not us* below — or an applied schema.
 
 
 ## Where the six stages stand
@@ -80,9 +70,9 @@ or `src/middleware.ts` — those are settled.
 | 1 · Page and three forms that save | **built, verified** | Run the schema, then `npm run acceptance` |
 | 2 · Staff screens and named accounts | **built and audited** (read-only) | Nothing, until stage 3 adds writes |
 | 3 · Pipeline and evidence | **built** — schema, write API, lead-detail UI | First real render once the schema is applied (see below) |
-| 4 · Communications | schema **built** (5 tables); TypeScript in flight | Dispatch stays off until D2 |
+| 4 · Communications | **built**, dispatch off | Enable only when every precondition on `/craft/admin/comms` is green |
 | 5 · Administration | **built** — staff, cohorts, health, retention, import/export | Verify against an applied schema |
-| 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap. Templates written, **not routed** | Route the templates; later clusters are editorial briefs, not code |
+| 6 · Wider site | **built**: IA, 9 pages, 4 guides, 4 templates, the design-check tool, sitemap | Later clusters are editorial briefs, not code |
 
 ---
 

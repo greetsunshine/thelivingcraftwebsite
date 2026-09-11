@@ -40,7 +40,7 @@
 
 | | Count | |
 |---|---|---|
-| Stages complete | **5** | of 6 — only communications (D2) is untouched |
+| Stages complete | **6** | of 6 — dispatch off, pending D2 |
 | Acceptance cases passed | **4** | of 18 — against dev, not staging |
 | Records implemented | **14** | of 14 |
 | Decisions outstanding | **2** | D1, D2 |
@@ -84,14 +84,14 @@
 
 ### 4 · Communications
 
-- [ ] Twelve templates as approved, versioned records
-- [ ] Durable outbox with bounded retries and a visible failure queue
-- [ ] Consent / approval / availability / stage / suppression checked at queue *and* dispatch
-- [ ] Day 2, 5, 9 scheduler at 10:00 Asia/Kolkata
-- [ ] Stop and pause rules; no automatic restart; no burst of missed messages
-- [ ] Signed opaque unsubscribe, no login, no contact details exposed
-- [ ] Authenticated, deduplicated, out-of-order-tolerant provider callbacks
-- [ ] Communications screen — inbox, outbox, templates, sequence history, failures
+- [x] Twelve templates as approved, versioned records
+- [x] Durable outbox with bounded retries and a visible failure queue
+- [x] Consent / approval / availability / stage / suppression checked at queue *and* dispatch
+- [x] Day 2, 5, 9 scheduler at 10:00 Asia/Kolkata
+- [x] Stop and pause rules; no automatic restart; no burst of missed messages
+- [x] Signed opaque unsubscribe, no login, no contact details exposed
+- [x] Authenticated, deduplicated, out-of-order-tolerant provider callbacks
+- [x] Communications screen — inbox, outbox, templates, sequence history, failures
 - [ ] Dispatch enabled **(blocked: D2, sender verification, reply mailbox)**
 
 ### 5 · Administration
@@ -111,7 +111,7 @@
 - [x] Privacy page — honest placeholder, `noindex`, names all five outstanding facts and who owes each **(still blocked on the owner for the facts themselves)**
 - [x] First content cluster — pillar, three supporting pieces, review workbook
 - [x] Agent Design Check — browser-only, no server retention, no lead record
-- [ ] Analytics event taxonomy wired
+- [x] Analytics event taxonomy wired
 
 ---
 

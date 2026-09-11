@@ -19,7 +19,8 @@
     "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs",
     "check:tour": "node scripts/check-tour.mjs",
     "staff": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/add-staff.ts",
-    "acceptance": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/acceptance.ts"
+    "acceptance": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/acceptance.ts",
+    "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
