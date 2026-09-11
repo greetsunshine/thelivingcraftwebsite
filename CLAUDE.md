@@ -391,19 +391,27 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — twenty-nine tables, schema in
+- **Storage is Supabase** — thirty-seven tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
   - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
   - *The pipeline* (new, and the cohort rebuild's own store): `organisations`, `people`,
     `cohorts`, `form_submissions`, `opportunities`, `attributions`, `consents`,
-    `activities`, `tasks`, `audit_log`. **`form_submissions`, not `submissions`** — that
-    name was already taken by the learners' decision records and the collision would have
-    been silent. The save is one plpgsql function, `pipeline_submit()`, because six
+    `activities`, `tasks`, `audit_log`, `staff`. **`form_submissions`, not `submissions`** —
+    that name was already taken by the learners' decision records and the collision would
+    have been silent. The save is one plpgsql function, `pipeline_submit()`, because six
     sequential supabase-js calls have no transaction around them and a function killed
     between two awaits leaves a person with no submission. `consents` has an UPDATE trigger
     that refuses: a withdrawal is a new row, never an edit of the row that granted it.
+  - *The evidence behind a stage*: `meetings`, `offers`, `payments`, `admissions`,
+    `attendance`, `nominations`, `stage_history`. **There is no `enrolled` column
+    anywhere** — enrolment is derived by `enrolment_blockers()`, which returns one row per
+    missing piece. `admissions` and `payments` are separate tables with separate authors
+    because enrolment needs two facts from two people who cannot act for each other; two
+    booleans on `opportunities` could both be set by whoever had the row open. Amounts are
+    minor units. A refund is a row plus a review task and changes no stage. A nomination is
+    **not** a person and **not** an applicant.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
     `submissions`, `quiz_responses`, `session_prompts`, `outcome_ratings`,
     `checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `doubts`,
