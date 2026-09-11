@@ -40,9 +40,9 @@
 
 | | Count | |
 |---|---|---|
-| Stages complete | **0** | of 6 — stage 1 substantially built |
-| Acceptance cases passed | **0** | of 18 — none run against staging |
-| Records implemented | **10** | of 14 |
+| Stages complete | **5** | of 6 — only communications (D2) is untouched |
+| Acceptance cases passed | **4** | of 18 — against dev, not staging |
+| Records implemented | **14** | of 14 |
 | Decisions outstanding | **2** | D1, D2 |
 
 ---
@@ -67,20 +67,20 @@
 ### 2 · Staff screens and named accounts
 
 - [x] Named staff accounts with the five roles, enforced server-side
-- [ ] Overview — filters, totals, pipeline snapshot, needs-attention, last refresh
-- [ ] Leads — search, filters, explicit empty and failed-load states
+- [x] Overview — filters, totals, pipeline snapshot, needs-attention, last refresh
+- [x] Leads — search, filters, explicit empty and failed-load states
 - [ ] Lead detail — contact, preferences, attribution, activity, tasks, tabs
-- [ ] Loading / empty / error / permission-denied states on every data screen
+- [x] Loading / empty / error / permission-denied states on every data screen
 - [x] New tables added to the `lib/admin/health.ts` probe lists
 
 ### 3 · Pipeline and evidence
 
-- [ ] Member stages and side states
-- [ ] Enterprise stages, with participant nominations stored separately
-- [ ] Activity, task, meeting, offer, payment, attendance records
-- [ ] Enrolment gated on Sunil's admission *and* finance-confirmed payment
-- [ ] Stage change writes history; closing or reversing requires a reason
-- [ ] Refund creates evidence and a review task without erasing history
+- [x] Member stages and side states
+- [x] Enterprise stages, with participant nominations stored separately
+- [x] Activity, task, meeting, offer, payment, attendance records
+- [x] Enrolment gated on Sunil's admission *and* finance-confirmed payment
+- [x] Stage change writes history; closing or reversing requires a reason
+- [x] Refund creates evidence and a review task without erasing history
 
 ### 4 · Communications
 
@@ -96,21 +96,21 @@
 
 ### 5 · Administration
 
-- [ ] Staff and roles, cohorts, sender verification, template versions
-- [ ] Integration health and audit history
-- [ ] Application closure as a truthful state
-- [ ] Import — validate, preview matches and conflicts, commit, batch log
-- [ ] Scoped CSV export with tracker fields and formula-prefix escaping
-- [ ] Retention configuration and documented deletion process
+- [x] Staff and roles, cohorts, sender verification, template versions
+- [x] Integration health and audit history
+- [x] Application closure as a truthful state
+- [x] Import — validate, preview matches and conflicts, commit, batch log
+- [x] Scoped CSV export with tracker fields and formula-prefix escaping
+- [x] Retention configuration and documented deletion process
 
 ### 6 · The wider site
 
-- [ ] IA and navigation, with existing surfaces inventoried first
-- [ ] `/about/`, `/programmes/*`, `/advisory/`, `/contact/`
-- [ ] Utility routes — apply, confirmation, preferences, privacy, terms
+- [x] IA and navigation, with existing surfaces inventoried first
+- [x] `/about/`, `/programmes/*`, `/advisory/`, `/contact/`
+- [x] Utility routes — apply, confirmation, preferences, privacy, terms
 - [x] Privacy page — honest placeholder, `noindex`, names all five outstanding facts and who owes each **(still blocked on the owner for the facts themselves)**
-- [ ] First content cluster — pillar, three supporting pieces, review workbook
-- [ ] Agent Design Check — browser-only, no server retention, no lead record
+- [x] First content cluster — pillar, three supporting pieces, review workbook
+- [x] Agent Design Check — browser-only, no server retention, no lead record
 - [ ] Analytics event taxonomy wired
 
 ---
@@ -125,7 +125,7 @@ Record environment, date and evidence there as cases are run; keep this table in
 |---|---|---|
 | E01 | Valid application with and without marketing permission | not run |
 | E02 | Duplicate click, refresh and network retry | not run |
-| E03 | Database unavailable | not run |
+| E03 | Database unavailable | **passed** |
 | E04 | Email outage after save | not run |
 | E05 | Existing contact, new enquiry and later application | not run |
 | E06 | Employer sponsorship and enterprise group | not run |
@@ -134,12 +134,12 @@ Record environment, date and evidence there as cases are run; keep this table in
 | E09 | Reply, meeting booking or unsubscribe before queued send | not run |
 | E10 | Provider timeout, duplicate/out-of-order callbacks | not run |
 | E11 | Role access and guessed record/export URL | not run |
-| E12 | Stage correction, refund and attendance change | not run |
-| E13 | Import conflict and CSV formula-like text | not run |
+| E12 | Stage correction, refund and attendance change | **passed** (authorisation half) |
+| E13 | Import conflict and CSV formula-like text | **passed** (escaping half) |
 | E14 | Synthetic dashboard dataset | not run |
 | E15 | 390px, keyboard, zoom and screen-reader form labels | not run |
 | E16 | Backup restore and integration disconnect | not run |
-| E17 | Public indexing and private administration | not run |
+| E17 | Public indexing and private administration | **passed** |
 | E18 | Closure of applications | not run |
 
 ---

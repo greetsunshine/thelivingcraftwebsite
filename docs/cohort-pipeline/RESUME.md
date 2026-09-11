@@ -63,9 +63,9 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 |---|---|---|
 | 1 · Page and three forms that save | **built, verified** | Run the schema, then `npm run acceptance` |
 | 2 · Staff screens and named accounts | **built and audited** (read-only) | Nothing, until stage 3 adds writes |
-| 3 · Pipeline and evidence | schema + write API **built**; console UI in flight | Verify the enrolment gate renders before it is hit |
+| 3 · Pipeline and evidence | **built** — schema, write API, lead-detail UI | First real render once the schema is applied (see below) |
 | 4 · Communications | not started | Blocked on D2 |
-| 5 · Administration | not started | Import/export, retention, staff screen |
+| 5 · Administration | **built** — staff, cohorts, health, retention, import/export | Verify against an applied schema |
 | 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap | Later clusters are editorial briefs, not code |
 
 ---
@@ -107,8 +107,11 @@ npm run staff -- --help   # Creates the first named console account.
 ```
 
 `npm run acceptance` prints CSV lines ready to paste into
-`Ein_Acceptance_Register.csv`. Two cases pass today (E03, E17); the rest report `not run`
-with a reason. **A harness that counted those as passing would be the defect the register
+`Ein_Acceptance_Register.csv`. **Four cases pass today — E03, E12, E13, E17**; the rest
+report `not run` with a reason. E12 and E13 test real properties: an operator session is
+refused 403 on `offer.approve` and on `payment` and NOT on `note` (so the refusals are the
+capability check rather than a rejected session), and the shipped CSV escaping defuses a
+formula while leaving `O'Brien` alone. **A harness that counted those as passing would be the defect the register
 exists to prevent** — do not "fix" them into passes.
 
 ---
@@ -129,6 +132,9 @@ exists to prevent** — do not "fix" them into passes.
   meant as six literal characters arrives as a control byte and a "replacement" silently
   matches itself. Use a raw string (`r"…"`). This cost twenty minutes and looked like a
   file that would not write.
+- **`src/lib/admin/csv.ts` must import NOTHING.** The acceptance harness runs under
+  `--experimental-strip-types`, whose resolver will not guess a missing file extension, so
+  one import there means E13 tests a copy of the escaping rule instead of the shipped one.
 - **Money is stored in MINOR UNITS** everywhere — `amount_minor`, a whole number. A float
   that has to be reconciled against a bank statement is how a rounding difference becomes
   an argument.
@@ -165,10 +171,16 @@ exists to prevent** — do not "fix" them into passes.
 
 ## Suggested order when picking this up
 
-1. ~~In-flight routes, console audit, sitemap.~~ **All done.** Stages 1, 2 and 6 are built.
-2. Stage 3: stage transitions with a reason, meetings, offers, finance and attendance.
+1. **Apply `supabase/schema.sql`, then look at the lead detail page.** Stage 3's
+   Meetings, Offer, Finance, Attendance and Nominations sections have never rendered with
+   real data — with no schema, `listLeads` never resolves a lead, so that whole branch is
+   type-checked and unexercised. It is the first thing to check after the schema lands.
+2. Then `npm run acceptance` again: E01, E02, E05, E06, E07, E08 and E18 should all become
+   answerable, and E14 needs a seeded dataset.
+3. Stage 3 remnants: stage transitions with a reason, meetings, offers, finance and attendance.
    Enrolment needs Sunil's admission **and** finance-confirmed payment; they are separate
    people and separate capabilities on purpose.
-3. Stage 5's administration screen, so staff accounts can be managed without the CLI.
+4. E11 needs two staff accounts with different roles — `npm run staff`, then sign in as
+   each and compare what the pipeline screens return.
 
 Stage 4 stays shut until D2 is answered.
