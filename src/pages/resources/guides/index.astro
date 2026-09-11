@@ -104,7 +104,7 @@ const schema: unknown[] = [
             <h2 id={`c-${pillar.id}`}>{pillar.data.title}</h2>
             <p>{pillar.data.summary}</p>
             <span class="go">
-              Read the pillar<span class="arrow">→</span>
+              Read the pillar<span class="arrow" aria-hidden="true">→</span>
             </span>
           </a>
 
@@ -121,7 +121,7 @@ const schema: unknown[] = [
                     </p>
                   )}
                   <span class="go">
-                    Read this<span class="arrow">→</span>
+                    Read this<span class="arrow" aria-hidden="true">→</span>
                   </span>
                 </a>
               ))}
@@ -145,7 +145,7 @@ const schema: unknown[] = [
                 <h3>{g.data.title}</h3>
                 <p>{g.data.summary}</p>
                 <span class="go">
-                  Read this<span class="arrow">→</span>
+                  Read this<span class="arrow" aria-hidden="true">→</span>
                 </span>
               </a>
             ))}

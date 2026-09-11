@@ -35,6 +35,39 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 
 ---
 
+## ⚠ QA finding, 11 September — facts.ts contradicts itself, and crawlers get both halves
+
+`src/data/facts.ts:352` answers *"Do you have testimonials, client names, or student
+outcomes?"* with:
+
+> "**None are published.** … 26 years at Google, Amazon, and Walmart, **100+ senior engineers
+> mentored, ~100 senior leaders and directors trained**, and a live enterprise AI-adoption
+> engagement in progress."
+
+Those are student counts, which CLAUDE.md's hard rules forbid **by name**, sitting in the
+same sentence that says none are published. `/llms.txt` renders them immediately above the
+line "There are no published testimonials, client names, or student counts."
+
+**Neither figure has any provenance in this repository.** CLAUDE.md's own Instructor section
+lists "100M+ users served; 150 engineers led" — it does not mention mentoring or training
+counts. They appear only here.
+
+And the V4 factual review is explicit on this class: *"never infer or publish user counts"*,
+and every product or programme claim needs a dated record and an approver before it may be
+used.
+
+**Not fixed, deliberately, and it should travel with D1.** Both findings are the same file
+and the same blast radius: `facts.ts` feeds JSON-LD, `/llms.txt`, `/api/facts` and the Q&A
+agent's grounding, and any edit means re-running `npm run eval`. Doing it once, with Sunil,
+is right; doing it twice is how the grounding and the eval baseline drift apart.
+
+The wider biography cluster is the same question — `/caio` and `/assessment` carry a stat
+band (26+ years, 3 Fortune-100s, 100M+ users, 150 engineers) plus "31 billion executions a
+week", "re-architected Prime's membership core", "modernised 300+ products". All predate
+this work, all are richer than the permitted claim, and all belong in that one review.
+
+---
+
 ## ⚠ QA finding, 11 September — D1 is leaking further than documented
 
 Every public **page** is clean: no price, no week count, no seat cap, no start-date claim,

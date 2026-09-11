@@ -63,7 +63,7 @@ const PRACTICE: Item[] = [
       </div>
 
       <div class="foot-col">
-        <h5>Programmes</h5>
+        <h2>Programmes</h2>
         {
           PROGRAMMES.map((i) =>
             i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
@@ -72,7 +72,7 @@ const PRACTICE: Item[] = [
       </div>
 
       <div class="foot-col">
-        <h5>Resources</h5>
+        <h2>Resources</h2>
         {
           RESOURCES.map((i) =>
             i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
@@ -81,7 +81,7 @@ const PRACTICE: Item[] = [
       </div>
 
       <div class="foot-col">
-        <h5>Practice</h5>
+        <h2>Practice</h2>
         {
           PRACTICE.map((i) =>
             i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
@@ -127,7 +127,7 @@ const PRACTICE: Item[] = [
     display: flex;
     flex-direction: column;
   }
-  .foot-col h5 {
+  .foot-col h2 {
     font-family: var(--font-marginal);
     font-size: var(--size-1);
     color: var(--text-quiet);

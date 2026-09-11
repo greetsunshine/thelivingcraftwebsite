@@ -194,7 +194,7 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
     type="submit"
     class={emphasis === 'primary' ? 'btn btn-primary' : 'btn btn-ghost'}
   >
-    {form.action}&nbsp;<span class="arrow">→</span>
+    {form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
   </button>
 
   {/* Live region. Assertive because a failed submit is the one moment where

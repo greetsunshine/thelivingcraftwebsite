@@ -25,6 +25,11 @@ const year = new Date().getFullYear();
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
   <body>
+    {/* Keyboard-only bypass for the header, the same one PracticeLayout carries.
+        This page is 7000px of anchor navigation and the header repeats on every
+        surface that uses this shell. */}
+    <a class="skip" href="#main">Skip to content</a>
+
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
@@ -35,12 +40,12 @@ const year = new Date().getFullYear();
           <a href="/#sunil">Sunil</a>
           <a href="/#commitment">Commitment</a>
           <a href="/#questions">Questions</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow">→</span></a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 
@@ -53,7 +58,7 @@ const year = new Date().getFullYear();
             <p class="muted">Build a working agentic system, and develop the ability to explain its design, examine its behaviour and guide the decisions behind it.</p>
           </div>
           <div class="foot-col">
-            <h5>Programme</h5>
+            <h2>Programme</h2>
             <a href="/#fit">Who it is for</a>
             <a href="/#curriculum">What the work explores</a>
             <a href="/#commitment">The commitment</a>
@@ -61,13 +66,13 @@ const year = new Date().getFullYear();
             <a href="/#team">Learning for a team</a>
           </div>
           <div class="foot-col">
-            <h5>Also by Sunil</h5>
-            <a href="/caio">Fractional CAIO retainer →</a>
-            <a href="/assessment">AI Readiness Assessment →</a>
-            <a href="/latest">Field notes — agentic AI →</a>
+            <h2>Also by Sunil</h2>
+            <a href="/caio">Fractional CAIO retainer <span aria-hidden="true">→</span></a>
+            <a href="/assessment">AI Readiness Assessment <span aria-hidden="true">→</span></a>
+            <a href="/latest">Field notes — agentic AI <span aria-hidden="true">→</span></a>
           </div>
           <div class="foot-col">
-            <h5>Connect</h5>
+            <h2>Connect</h2>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>
@@ -89,3 +94,26 @@ const year = new Date().getFullYear();
     <SpeedInsights />
   </body>
 </html>
+
+<style>
+  /* Visible only on keyboard focus, and above the sticky header (--z-sticky is
+     10). Same geometry as PracticeLayout's, deliberately — one bypass link that
+     behaves the same way wherever it appears. */
+  .skip {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    z-index: var(--z-dialog);
+    transform: translateY(-200%);
+    background: var(--surface-panel);
+    color: var(--text-loud);
+    border-radius: var(--radius-control);
+    padding: var(--space-3) var(--space-5);
+    box-shadow: var(--shadow-lift);
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+  }
+  .skip:focus-visible {
+    transform: none;
+  }
+</style>

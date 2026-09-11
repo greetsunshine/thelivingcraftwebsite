@@ -55,7 +55,7 @@ const schema = [
           <strong>Google, Amazon, and Walmart</strong>, and is building it now.
         </p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="#contact">Request a scope call <span class="arrow">→</span></a>
+          <a class="btn btn-primary" href="#contact">Request a scope call <span class="arrow" aria-hidden="true">→</span></a>
           <a class="btn btn-ghost" href="#deliverables">See what you get</a>
         </div>
         <p class="hero-note">Fixed fee · fixed scope · board-ready output in three weeks</p>
@@ -162,17 +162,17 @@ const schema = [
       <div class="phases">
         <div class="phase">
           <div class="pk"><span class="pn">Week 1</span><span class="pw">Discovery</span></div>
-          <h4>Discovery</h4>
+          <h3>Discovery</h3>
           <p>Structured interviews with your leaders and builders, plus a hands-on review of your systems, data, and current AI efforts.</p>
         </div>
         <div class="phase">
           <div class="pk"><span class="pn">Week 2</span><span class="pw">Analysis</span></div>
-          <h4>Analysis</h4>
+          <h3>Analysis</h3>
           <p>Use-case mapping, build-vs-buy, and a governance and risk read against your regulatory reality.</p>
         </div>
         <div class="phase">
           <div class="pk"><span class="pn">Week 3</span><span class="pw">Readout</span></div>
-          <h4>Roadmap &amp; readout</h4>
+          <h3>Roadmap &amp; readout</h3>
           <p>The 90-day plan, the scorecard, and a live executive session to walk it through and pressure-test it together.</p>
         </div>
       </div>
@@ -231,7 +231,7 @@ const schema = [
         <div>
           <p>I'm <strong>Sunil Mathew</strong>. I've spent 26 years building and leading engineering at <strong>Google, Amazon, and Walmart</strong> — on systems serving up to <strong>100M+ users</strong> — and I lead agentic-AI work today: multi-agent orchestration, RAG, evals, LLM-Ops. I'm currently building an agentic-AI product of my own, so what I tell you is <strong>current, not a memory</strong> from a past role.</p>
           <div class="pullquote">"I've also spent that career deciding what <em>not</em> to build. That's most of what this assessment is."</div>
-          <p style="margin-top:24px"><a href="/caio" class="link-ochre">More about the work — Fractional CAIO <span class="arrow">→</span></a></p>
+          <p style="margin-top:24px"><a href="/caio" class="link-ochre">More about the work — Fractional CAIO <span class="arrow" aria-hidden="true">→</span></a></p>
           <div class="signature">— Sunil Mathew</div>
         </div>
       </div>
@@ -259,7 +259,7 @@ const schema = [
           <li>Live board-ready executive readout</li>
         </ul>
         <p class="credit-note">Proceed to a fractional CAIO engagement within 60 days and the full assessment fee is credited toward your first month.</p>
-        <a class="btn btn-primary" href="#contact">Request a scope call <span class="arrow">→</span></a>
+        <a class="btn btn-primary" href="#contact">Request a scope call <span class="arrow" aria-hidden="true">→</span></a>
       </div>
       <p class="fineprint">Payment plans available. Pricing is indicative — confirmed on the scope call.</p>
     </div>
@@ -292,16 +292,28 @@ const schema = [
         <input type="hidden" name="access_key" value={APPLY_ACCESS_KEY} />
         <input type="hidden" name="subject" value="New enquiry — AI Readiness Assessment" />
         <input type="hidden" name="from_name" value="AI Readiness Assessment — thelivingcraft.ai" />
-        <!-- honeypot -->
-        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" />
+        <!-- Honeypot. .hp parks it off-screen at opacity 0, which hides it from
+             the eye but NOT from the accessibility tree: without aria-hidden a
+             screen-reader user meets an unlabelled checkbox inside the form and
+             a tick silently discards their enquiry. tabindex="-1" keeps it out
+             of the tab order, so aria-hidden here is not hiding a focusable
+             control. Same pairing as RouteForm.astro. -->
+        <input
+          type="checkbox"
+          name="botcheck"
+          class="hp"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        />
 
         <div class="form-grid">
-          <label>Name<input name="name" type="text" required autocomplete="name" /></label>
-          <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
-          <label>Title<input name="role" type="text" placeholder="e.g. CEO, CTO, Board member" /></label>
-          <label>Company<input name="company" type="text" /></label>
-          <label class="full">What kind of organisation?
-            <select name="segment">
+          <label for="f-name">Name<input id="f-name" name="name" type="text" required autocomplete="name" /></label>
+          <label for="f-email">Work email<input id="f-email" name="email" type="email" required autocomplete="email" /></label>
+          <label for="f-role">Title<input id="f-role" name="role" type="text" placeholder="e.g. CEO, CTO, Board member" /></label>
+          <label for="f-company">Company<input id="f-company" name="company" type="text" /></label>
+          <label class="full" for="f-segment">What kind of organisation?
+            <select id="f-segment" name="segment">
               <option value="Regulated enterprise">Regulated enterprise (insurance, banking, healthcare, FS)</option>
               <option value="Mid-market">Mid-market enterprise</option>
               <option value="Funded startup">Funded startup (Series A–C)</option>
@@ -309,16 +321,16 @@ const schema = [
               <option value="Other">Other</option>
             </select>
           </label>
-          <label class="full">Where are you with AI today?
-            <textarea name="message" rows="4" placeholder="A few sentences on where you are — pilots stuck, governance gaps, a board asking for a plan, or a regulatory question you need answered."></textarea>
+          <label class="full" for="f-message">Where are you with AI today?
+            <textarea id="f-message" name="message" rows="4" placeholder="A few sentences on where you are — pilots stuck, governance gaps, a board asking for a plan, or a regulatory question you need answered."></textarea>
           </label>
         </div>
 
         <button class="btn btn-primary" type="submit">
-          Request a scope call <span class="arrow">→</span>
+          Request a scope call <span class="arrow" aria-hidden="true">→</span>
         </button>
         <p class="form-status" id="formStatus" aria-live="polite"></p>
-        <p class="form-alt">Prefer email? <a href={`mailto:${CONTACT_EMAIL}?subject=AI%20Readiness%20Assessment%20%E2%80%94%20Scope%20call`}>Write to me directly →</a></p>
+        <p class="form-alt">Prefer email? <a href={`mailto:${CONTACT_EMAIL}?subject=AI%20Readiness%20Assessment%20%E2%80%94%20Scope%20call`}>Write to me directly <span aria-hidden="true">→</span></a></p>
       </form>
     </div>
   </section>
@@ -400,7 +412,7 @@ const schema = [
   .phase .pk{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
   .phase .pn{font-family:var(--font-mono);font-size:13px;color:var(--clay)}
   .phase .pw{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.08em}
-  .phase h4{font-size:22px;font-weight:var(--weight-strong);margin-bottom:10px}
+  .phase h3{font-size:22px;font-weight:var(--weight-strong);margin-bottom:10px}
   .phase p{font-size:14.5px;color:var(--ink-soft)}
   @media(max-width:760px){.phases{grid-template-columns:1fr}}
   .note-line{margin-top:28px;font-size:14px;color:var(--ink-faint);font-family:var(--font-mono);letter-spacing:.02em}

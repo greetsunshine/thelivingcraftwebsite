@@ -114,9 +114,9 @@ sections:
       The decision, the date you need it by, and what happens either way. Give a real reason
       for the date.
     note: >-
-      Your date, not ours. Places are limited and admission is by application, so the honest
-      framing is that a decision is needed before a place is offered — never that one is
-      being held for you.
+      Your date, not ours. The open cohort targets eight members and admission is by
+      application, so the honest framing is that a decision is needed before a place is
+      offered — never that one is being held for you.
     example: |
       Approval in principle by ⟨date⟩, so that I can apply while the cohort is open. The
       application is a fit conversation, not a purchase, so nothing is committed by

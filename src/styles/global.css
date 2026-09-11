@@ -58,7 +58,14 @@
 
 /* ── base ─────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* Smooth scrolling only for people who have not asked for less motion. The
+   reset's blanket rule zeroes transitions and animations but cannot reach
+   scroll-behavior, and every nav link on `/` is an in-page anchor — so without
+   this guard a reduced-motion visitor gets a long animated travel down a
+   7000px page on every click. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 body {
   background: var(--surface-sunken);
   color: var(--text-body);
@@ -305,7 +312,9 @@ a.region-choice:hover .rc-cta .arrow { transform: translateX(3px); }
 .tlist li:first-child { border-top: 0; }
 .tlist li:last-child { border-bottom: 0; }
 .tlist .n { font-family: var(--font-mono); font-size: var(--size-2); color: var(--clay); padding-top: 3px; flex: none; }
-.tlist h4 { font-size: var(--size-5); font-weight: var(--weight-strong); margin-bottom: var(--space-1); color: var(--text-loud); }
+/* h3 and h4 both, and the pages use h3: these items sit under an h2, so an h4
+   skipped a level. The h4 half stays for anything still written that way. */
+.tlist h3, .tlist h4 { font-size: var(--size-5); font-weight: var(--weight-strong); margin-bottom: var(--space-1); color: var(--text-loud); }
 .tlist p { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
 @media (max-width: 900px) { .transform { grid-template-columns: 1fr; gap: var(--space-5); } }
 
@@ -447,7 +456,11 @@ details p { padding: 0 0 var(--space-5); color: var(--text-quiet); font-size: va
 footer.site { background: transparent; border-top: var(--border-w-hair) solid var(--border-hair); padding: var(--space-7) 0 var(--space-6); font-size: var(--size-3); margin-top: var(--space-6); }
 .foot-grid { display: flex; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
 .foot-grid .muted { color: var(--text-quiet); max-width: 32ch; line-height: var(--lh-snug); }
-.foot-col h5 { font-family: var(--font-marginal); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--text-quiet); margin-bottom: var(--space-3); font-weight: var(--weight-medium); }
+/* h2, because the footer is a top-level landmark and an h5 here followed the
+   page's last h2 or h3 — a skipped level on every page that uses this footer.
+   The h5 half stays for CaioLayout, AssessmentLayout and NotesLayout, which
+   still emit one. Both render identically. */
+.foot-col h2, .foot-col h5 { font-family: var(--font-marginal); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--text-quiet); margin-bottom: var(--space-3); font-weight: var(--weight-medium); line-height: var(--lh-normal); }
 .foot-col a { display: block; color: var(--text-body); padding: var(--space-1) 0; font-size: var(--size-3); }
 .foot-col a:hover { color: var(--accent-ink); }
 .foot-bottom { margin-top: var(--space-6); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--border-hair); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); color: var(--text-quiet); font-size: var(--size-2); }

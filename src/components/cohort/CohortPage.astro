@@ -60,7 +60,7 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
       <p class="hero-commit">{COMMITMENT}</p>
 
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="#ask">Ask about the cohort</a>
       </div>
 
@@ -70,7 +70,10 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
     {/* The reserved slot. Its aspect ratio is held so the page does not reflow
         on the day the file lands, which is the brief's stated reason for
         reserving it. */}
-    <div class="vsl" aria-label="Programme introduction video">
+    {/* No aria-label here: on a <div> with no role it is prohibited and is not
+        exposed by any screen reader, so it was a label nobody heard. The
+        visible .vsl-title below says what the slot is. */}
+    <div class="vsl">
       <div class="vsl-frame">
         <p class="vsl-title">Sunil on the design question behind a working agent</p>
         <p class="vsl-note">
@@ -215,7 +218,7 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
         <li>
           <span class="n">{String(i + 1).padStart(2, '0')}</span>
           <div>
-            <h4>{item.title}</h4>
+            <h3>{item.title}</h3>
             <p>{item.body}</p>
           </div>
         </li>

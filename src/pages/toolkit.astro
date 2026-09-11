@@ -106,7 +106,7 @@ const schema: unknown[] = [
           cards.length > 0 && (
             <a class="btn btn-primary" href={`${cards[0].resource.path}/`}>
               Start with the {cards[0].resource.title.toLowerCase()}&nbsp;
-              <span class="arrow">→</span>
+              <span class="arrow" aria-hidden="true">→</span>
             </a>
           )
         }
@@ -164,7 +164,7 @@ const schema: unknown[] = [
 
             <div class="actions">
               <a class="btn btn-primary" href={`${r.path}/`}>
-                Read it&nbsp;<span class="arrow">→</span>
+                Read it&nbsp;<span class="arrow" aria-hidden="true">→</span>
               </a>
               <a class="btn btn-ghost" href={href} download={file}>
                 Download the spreadsheet
