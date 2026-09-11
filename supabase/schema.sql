@@ -2109,3 +2109,453 @@ create trigger meetings_touch before update on public.meetings
 drop trigger if exists offers_touch on public.offers;
 create trigger offers_touch before update on public.offers
   for each row execute function public.touch_updated_at();
+
+-- ===========================================================================
+-- Communications -- everything up to the moment of sending, and not the send
+-- ===========================================================================
+-- Stage 4 of the cohort rebuild. Five tables: the approved wordings, the
+-- sequences, the outbox, the suppression list and the provider event log.
+--
+-- ---------------------------------------------------------------------------
+-- NOTHING HERE SENDS ANYTHING. THAT IS THE DESIGN, NOT AN UNFINISHED EDGE.
+-- ---------------------------------------------------------------------------
+--
+-- Decision D2 is open: there is no sending provider, no verified sending
+-- domain and no monitored reply mailbox. The handoff package ships the twelve
+-- templates marked "disabled_pending_exact_version_approval_and_route_tests",
+-- and the brief names sender verification, reply handling and suppression as
+-- launch dependencies rather than as nice-to-haves.
+--
+-- So a row in comms_messages is a message that WOULD go, held at the last
+-- step. Everything a real outbox has to get right -- idempotency, the calendar
+-- clock, the second eligibility check, bounded retries, one-way suppression,
+-- out-of-order callbacks -- is here and exercisable. The only missing piece is
+-- the provider adapter, and it is one named function in src/lib/comms/outbox.ts.
+--
+-- ---------------------------------------------------------------------------
+-- THE THREE PROPERTIES THIS SCHEMA MAKES STRUCTURAL RATHER THAN CAREFUL
+-- ---------------------------------------------------------------------------
+--
+--   1. AN APPROVED WORDING CANNOT BE EDITED. message_templates content columns
+--      are frozen by a trigger from the moment the row exists. "What went out
+--      and which wording it used must be answerable later" is only true if the
+--      row a message points at still says what it said.
+--
+--   2. A MESSAGE STATE ONLY EVER MOVES ONE WAY. The brief: "A delivered
+--      callback must not override a later bounce, complaint or unsubscribe
+--      suppression." A rank function plus a trigger makes a regression
+--      impossible rather than unlikely, with exactly one door in the other
+--      direction: a reconciled unknown outcome, which is the brief's rule that
+--      you never blind-retry a send that may have landed.
+--
+--   3. SUPPRESSION IS ONE-WAY. comms_suppressions refuses UPDATE and DELETE.
+--      A stale callback, a race, or somebody clicking the wrong button cannot
+--      put an address back on a list it came off.
+
+-- ---------------------------------------------------------------------------
+-- message_templates -- approved by version, never edited in place
+-- ---------------------------------------------------------------------------
+-- One row per (key, version). The twelve from the handoff package are loaded
+-- by the console, UNAPPROVED, because approval is a person's act and neither a
+-- schema file nor a loader can perform it. approved_at is null is what every
+-- eligibility check reads, and it is why nothing is sendable today even with a
+-- provider wired.
+--
+-- The body is stored as it arrived, character for character. content_hash is
+-- computed by the application over version|key|subject|body|actions and
+-- re-checked on read: it is how the console proves the row still matches the
+-- package rather than trusting that nobody ran an UPDATE.
+
+create table if not exists public.message_templates (
+  template_id   uuid        primary key default gen_random_uuid(),
+  -- The package's own id: 'application-day2', 'enquiry-receipt', ...
+  template_key  text        not null,
+  -- The package version the wording came from, e.g. 'LC-LAUNCH-2026-09-10'.
+  -- A new form of words is a NEW ROW with a new version, never an edit.
+  version       text        not null,
+  route         text        not null check (route in ('application', 'enquiry', 'enterprise')),
+  -- 0 for a receipt; 2, 5 or 9 for nurture. Calendar days, not hour multiples.
+  day_offset    int         not null check (day_offset >= 0),
+  purpose       text        not null check (purpose in ('transactional', 'marketing')),
+  subject       text        not null,
+  body          text        not null,
+  -- Action KEYS, not links. The implementation reference: "The unsubscribe
+  -- action key must be rendered as a signed one-action link by the chosen email
+  -- integration; no literal token belongs in a sent email."
+  actions       text[]      not null default '{}',
+  content_hash  text        not null,
+  -- Approval is a fact with an author and a time, or it is absent. There is no
+  -- 'pending' state -- an unapproved template simply has no approval recorded.
+  approved_at   timestamptz,
+  approved_by   text,
+  -- Withdrawing approval is allowed and is NOT an edit: the wording is
+  -- untouched, it simply stops being sendable. A wording found to be wrong has
+  -- to be stoppable in one action without rewriting history.
+  revoked_at     timestamptz,
+  revoked_by     text,
+  revoked_reason text,
+  created_at    timestamptz not null default now()
+);
+
+create unique index if not exists message_templates_key_version
+  on public.message_templates (template_key, version);
+create index if not exists message_templates_route_idx
+  on public.message_templates (route, day_offset);
+create index if not exists message_templates_approved_idx
+  on public.message_templates (approved_at desc nulls last);
+
+-- The content columns are frozen. Approval columns are not -- approving and
+-- revoking are the only two things anybody may do to a template row.
+create or replace function public.message_templates_are_immutable() returns trigger
+language plpgsql as $trg$
+begin
+  if new.template_key is distinct from old.template_key
+     or new.version      is distinct from old.version
+     or new.route        is distinct from old.route
+     or new.day_offset   is distinct from old.day_offset
+     or new.purpose      is distinct from old.purpose
+     or new.subject      is distinct from old.subject
+     or new.body         is distinct from old.body
+     or new.actions      is distinct from old.actions
+     or new.content_hash is distinct from old.content_hash
+  then
+    raise exception 'message_templates wording is immutable: a new form of words is a new version row, not an edit to an approved one';
+  end if;
+  return new;
+end;
+$trg$;
+
+drop trigger if exists message_templates_no_content_update on public.message_templates;
+create trigger message_templates_no_content_update before update on public.message_templates
+  for each row execute function public.message_templates_are_immutable();
+
+-- ---------------------------------------------------------------------------
+-- comms_sequences -- one per person for this programme, and it does not restart
+-- ---------------------------------------------------------------------------
+-- "A person has one active sequence for this programme; an enquiry-to-
+-- application change stops the enquiry sequence and creates a human review task
+-- rather than restarting marketing."
+--
+-- The partial unique index below is that sentence in the database. Two forms
+-- posted seconds apart cannot both open a sequence, which is exactly the case
+-- an application-level check loses.
+--
+-- 'stopped' IS TERMINAL AND NOTHING IN THE CODE MOVES IT BACK. "Stopped
+-- sequences do not restart automatically." Resume exists only for 'paused',
+-- only by hand, and it never replays what was missed -- see the cancel-on-resume
+-- rule in src/lib/comms/outbox.ts.
+
+create table if not exists public.comms_sequences (
+  sequence_id    uuid        primary key default gen_random_uuid(),
+  person_id      uuid        not null references public.people(person_id) on delete cascade,
+  opportunity_id uuid        references public.opportunities(opportunity_id) on delete set null,
+  -- The submission that started it. The anchor for every calendar-day offset.
+  submission_id  uuid        references public.form_submissions(submission_id) on delete set null,
+  route          text        not null check (route in ('application', 'enquiry', 'enterprise')),
+  cohort_id      uuid        references public.cohorts(cohort_id) on delete set null,
+  state          text        not null default 'active'
+                             check (state in ('active', 'paused', 'stopped', 'completed')),
+  -- The saved submission's time. Offsets are calendar days from ITS
+  -- Asia/Kolkata date, not 24-hour multiples from this instant.
+  anchor_at      timestamptz not null,
+  started_at     timestamptz not null default now(),
+  paused_at      timestamptz,
+  paused_reason  text,
+  stopped_at     timestamptz,
+  stopped_reason text,
+  resumed_at     timestamptz,
+  resumed_by     text,
+  completed_at   timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- One live sequence per person, full stop. A paused sequence still occupies the
+-- slot: pausing is not a way to start a second one.
+create unique index if not exists comms_sequences_one_live
+  on public.comms_sequences (person_id)
+  where state in ('active', 'paused');
+
+create index if not exists comms_sequences_state_idx on public.comms_sequences (state, started_at desc);
+create index if not exists comms_sequences_person_idx on public.comms_sequences (person_id, started_at desc);
+create index if not exists comms_sequences_opp_idx on public.comms_sequences (opportunity_id);
+
+-- ---------------------------------------------------------------------------
+-- comms_messages -- the durable outbox
+-- ---------------------------------------------------------------------------
+-- The data dictionary's communication record: "message_id; person/opportunity
+-- link; purpose; template/version; sequence step; recipient; queued/sent/
+-- delivered/replied/bounced states and timestamps; provider ID; failure
+-- reason."
+--
+-- WHY THE SUBJECT AND BODY ARE COPIED ONTO THE ROW. The template is already
+-- immutable, so this is not protection against an edit -- it is so that a
+-- message can be read a year later without resolving anything. "What went out"
+-- is one row.
+--
+-- idempotency_key IS THE WHOLE DUPLICATE STORY, the same mechanism as
+-- form_submissions.request_key. It is derived from sequence + template + step,
+-- so a scheduler that runs twice, a retried queue call and a double-clicked
+-- manual send all collapse to one row. Nothing else prevents a duplicate send
+-- and nothing else needs to.
+--
+-- recipient is a snapshot of the address at queue time. If somebody corrects
+-- their address afterwards the queued message is cancelled and re-queued rather
+-- than silently re-aimed -- a message approved for one address is not approved
+-- for another.
+
+create table if not exists public.comms_messages (
+  message_id       uuid        primary key default gen_random_uuid(),
+  idempotency_key  text        not null unique,
+  sequence_id      uuid        references public.comms_sequences(sequence_id) on delete set null,
+  person_id        uuid        references public.people(person_id) on delete cascade,
+  opportunity_id   uuid        references public.opportunities(opportunity_id) on delete set null,
+  submission_id    uuid        references public.form_submissions(submission_id) on delete set null,
+  template_key     text        not null,
+  template_version text        not null,
+  purpose          text        not null check (purpose in ('transactional', 'marketing')),
+  -- 0 for a receipt, 2/5/9 for a nurture step, null for a manual message.
+  sequence_step    int,
+  recipient        text        not null,
+  subject          text        not null,
+  -- Rendered at queue time and stored as text. The unsubscribe ACTION KEY is
+  -- still a key here; the signed link is materialised by the provider adapter
+  -- at the moment of dispatch, so no token is ever written to this table.
+  body             text        not null,
+  state            text        not null default 'queued'
+                               check (state in ('queued', 'cancelled', 'sending', 'unknown',
+                                                'sent', 'delivered', 'replied', 'failed',
+                                                'bounced', 'complained')),
+  -- The moment it becomes due. 10:00 Asia/Kolkata on the offset calendar day
+  -- for nurture; the save instant for a receipt.
+  scheduled_for    timestamptz not null,
+  queued_at        timestamptz not null default now(),
+  -- Set when a dispatcher claims it. A stale claim is reconciled, never simply
+  -- taken back -- see the trigger below.
+  claimed_at       timestamptz,
+  sent_at          timestamptz,
+  delivered_at     timestamptz,
+  failed_at        timestamptz,
+  cancelled_at     timestamptz,
+  cancel_reason    text,
+  -- Bounded retries. MAX_ATTEMPTS lives in outbox.ts; this is the count.
+  attempts         int         not null default 0,
+  next_attempt_at  timestamptz,
+  last_error       text,
+  -- Whose reference this is, and the reference itself. Reconciliation asks the
+  -- provider about THIS id before any retry.
+  provider            text,
+  provider_message_id text,
+  reconciled_at    timestamptz,
+  reconciled_note  text,
+  -- The failure queue's "staff alert" half: set once, so the same failure does
+  -- not alert on every sweep.
+  alerted_at       timestamptz,
+  -- A message produced by the console's "send test" path. Excluded from every
+  -- count, the same way form_submissions.is_test is.
+  is_test          boolean     not null default false,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists comms_messages_due_idx
+  on public.comms_messages (scheduled_for) where state = 'queued';
+create index if not exists comms_messages_state_idx
+  on public.comms_messages (state, scheduled_for desc);
+create index if not exists comms_messages_sequence_idx
+  on public.comms_messages (sequence_id, sequence_step);
+create index if not exists comms_messages_person_idx
+  on public.comms_messages (person_id, scheduled_for desc);
+create index if not exists comms_messages_opp_idx
+  on public.comms_messages (opportunity_id, scheduled_for desc);
+create index if not exists comms_messages_provider_idx
+  on public.comms_messages (provider, provider_message_id);
+-- The failure queue, as an index rather than a second table: a message that
+-- needs a human is one whose outcome is unknown or which gave up.
+create index if not exists comms_messages_failures_idx
+  on public.comms_messages (updated_at desc)
+  where state in ('unknown', 'failed', 'bounced', 'complained');
+
+-- How final a state is. Higher is more final. A message may only move UP.
+--
+-- The ordering is the brief's rule made arithmetic: delivered (40) can become
+-- bounced (70), because a bounce can genuinely arrive after a delivery
+-- notification; bounced can never become delivered, because a stale callback
+-- must not lift a suppression. 'cancelled' sits at 15 so it is reachable from
+-- 'queued' and from nowhere else -- a message already handed to a provider
+-- cannot be un-sent by clicking cancel.
+create or replace function public.comms_state_rank(s text) returns int
+language sql immutable parallel safe as $fn$
+  select case s
+    when 'queued'     then 10
+    when 'cancelled'  then 15
+    when 'sending'    then 20
+    when 'unknown'    then 25
+    when 'sent'       then 30
+    when 'delivered'  then 40
+    when 'replied'    then 50
+    when 'failed'     then 60
+    when 'bounced'    then 70
+    when 'complained' then 80
+    else 0
+  end;
+$fn$;
+
+-- THE ONE-WAY RULE, AND ITS SINGLE DOOR.
+--
+-- A state may stay where it is or move up. The one permitted descent is
+-- unknown -> queued, and only as part of a reconciliation that established the
+-- message never left: reconciled_at must be newly set and provider_message_id
+-- must be null. That is the brief's "on a provider timeout with unknown send
+-- outcome, reconcile using the provider message reference before retrying",
+-- enforced rather than documented.
+create or replace function public.comms_messages_state_is_one_way() returns trigger
+language plpgsql as $trg$
+begin
+  if new.state = old.state then
+    return new;
+  end if;
+
+  if old.state = 'unknown' and new.state = 'queued' then
+    if new.reconciled_at is null or new.reconciled_at is not distinct from old.reconciled_at then
+      raise exception 'a message returns to the queue only as part of a reconciliation: set reconciled_at';
+    end if;
+    if new.provider_message_id is not null then
+      raise exception 'this message has a provider reference, so it may have landed: resolve it to sent or failed rather than re-queueing it';
+    end if;
+    return new;
+  end if;
+
+  if public.comms_state_rank(new.state) < public.comms_state_rank(old.state) then
+    raise exception 'message state is one-way: % cannot become % (a stale callback must never lift a later bounce, complaint or unsubscribe)', old.state, new.state;
+  end if;
+
+  return new;
+end;
+$trg$;
+
+drop trigger if exists comms_messages_one_way on public.comms_messages;
+create trigger comms_messages_one_way before update on public.comms_messages
+  for each row execute function public.comms_messages_state_is_one_way();
+
+-- ---------------------------------------------------------------------------
+-- comms_suppressions -- one-way, and deliberately not cascaded
+-- ---------------------------------------------------------------------------
+-- Keyed on the normalised address, NOT on person_id, and the person link is
+-- on delete set null. That is on purpose, and it is the brief's: "Deletion and
+-- unsubscribe are different actions; retain only necessary suppression and
+-- audit evidence under the agreed policy."
+--
+-- If suppression cascaded with the person, erasing somebody who had complained
+-- would make them sendable again the next time they touched a form. The address
+-- and the reason are the minimum that prevents it, and NOTHING ELSE about the
+-- person is kept here -- no name, no answers, no opportunity.
+--
+-- THE RETENTION OF THAT ADDRESS AFTER AN ERASURE NEEDS THE DATA OWNER'S
+-- AGREEMENT. It belongs with the outstanding privacy facts. Do not treat this
+-- comment as the sign-off.
+--
+-- SCOPE IS THE ONE DISTINCTION WORTH A COLUMN:
+--   'marketing' -- an unsubscribe. Receipts still go: somebody who asks us to
+--                  do something is still owed the acknowledgement that we did.
+--   'all'       -- a hard bounce or a complaint. Nothing goes, transactional
+--                  included. Mail to a dead address is pointless; mail to
+--                  somebody who reported us as spam is harmful.
+
+create table if not exists public.comms_suppressions (
+  suppression_id   uuid        primary key default gen_random_uuid(),
+  normalised_email text        not null unique,
+  -- Null once the person is erased. The suppression outlives them by design.
+  person_id        uuid        references public.people(person_id) on delete set null,
+  reason           text        not null check (reason in ('unsubscribe', 'hard_bounce', 'complaint', 'manual')),
+  scope            text        not null check (scope in ('marketing', 'all')),
+  -- Where it came from: 'unsubscribe-link', a provider name, or a staff actor.
+  source           text,
+  -- Never the provider's raw payload, which carries the address and often the
+  -- original body. A category and a reference only.
+  detail           text,
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists comms_suppressions_reason_idx
+  on public.comms_suppressions (reason, created_at desc);
+create index if not exists comms_suppressions_person_idx
+  on public.comms_suppressions (person_id);
+
+-- One-way, structurally. There is no console path that lifts a suppression, and
+-- this is why: neither a race, a stale provider callback nor a mis-click can put
+-- an address back on a list it came off. Re-subscription is a deliberate act
+-- outside this application, taken with the data owner.
+create or replace function public.comms_suppressions_are_one_way() returns trigger
+language plpgsql as $trg$
+begin
+  raise exception 'comms_suppressions is one-way: an address is never un-suppressed by this application';
+end;
+$trg$;
+
+drop trigger if exists comms_suppressions_no_update on public.comms_suppressions;
+create trigger comms_suppressions_no_update before update on public.comms_suppressions
+  for each row execute function public.comms_suppressions_are_one_way();
+
+drop trigger if exists comms_suppressions_no_delete on public.comms_suppressions;
+create trigger comms_suppressions_no_delete before delete on public.comms_suppressions
+  for each row execute function public.comms_suppressions_are_one_way();
+
+-- ---------------------------------------------------------------------------
+-- comms_events -- every provider callback, including the ones we refuse
+-- ---------------------------------------------------------------------------
+-- "Provider callbacks are authenticated, deduplicated and tolerate out-of-order
+-- delivery."
+--
+--   * AUTHENTICATED happens at the endpoint, not here.
+--   * DEDUPLICATED is the unique index on (provider, provider_event_id). A
+--     provider that retries its webhook writes one row, not two.
+--   * OUT-OF-ORDER is why `applied` exists. A delivered callback arriving after
+--     a bounce is STORED, marked not applied, and its outcome says why. Dropping
+--     it would leave nothing to point at when somebody asks why the provider's
+--     dashboard and this table disagree.
+--
+-- The payload itself is NOT stored. A provider's bounce payload routinely
+-- carries the address, the subject and a chunk of the original body, and this
+-- table is read by anybody with console access. A digest is enough to prove two
+-- callbacks were the same one.
+
+create table if not exists public.comms_events (
+  event_id            uuid        primary key default gen_random_uuid(),
+  provider            text        not null,
+  -- The provider's own id for this event. The dedupe key.
+  provider_event_id   text        not null,
+  provider_message_id text,
+  message_id          uuid        references public.comms_messages(message_id) on delete set null,
+  type                text        not null check (type in ('delivered', 'bounce_hard', 'bounce_soft',
+                                                           'complaint', 'reply', 'unsubscribe', 'deferred')),
+  -- The provider's clock. received_at is ours. They disagree, which is the whole
+  -- reason out-of-order arrival is a case rather than a curiosity.
+  occurred_at         timestamptz,
+  received_at         timestamptz not null default now(),
+  payload_digest      text,
+  applied             boolean     not null default false,
+  -- Why it was or was not applied, in words, e.g. 'refused: already bounced'.
+  outcome             text,
+  created_at          timestamptz not null default now()
+);
+
+create unique index if not exists comms_events_provider_key
+  on public.comms_events (provider, provider_event_id);
+create index if not exists comms_events_message_idx on public.comms_events (message_id, received_at desc);
+create index if not exists comms_events_type_idx on public.comms_events (type, received_at desc);
+create index if not exists comms_events_received_idx on public.comms_events (received_at desc);
+
+alter table public.message_templates  enable row level security;
+alter table public.comms_sequences    enable row level security;
+alter table public.comms_messages     enable row level security;
+alter table public.comms_suppressions enable row level security;
+alter table public.comms_events       enable row level security;
+
+drop trigger if exists comms_sequences_touch on public.comms_sequences;
+create trigger comms_sequences_touch before update on public.comms_sequences
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists comms_messages_touch on public.comms_messages;
+create trigger comms_messages_touch before update on public.comms_messages
+  for each row execute function public.touch_updated_at();

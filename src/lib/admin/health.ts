@@ -65,6 +65,14 @@ const TABLES = [
   'attendance',
   'nominations',
   'stage_history',
+  // Stage 4's store. Dispatch is off (decision D2), but the tables are probed
+  // anyway: a missing `comms_suppressions` is the one that matters, because
+  // suppression failing open is how somebody who unsubscribed gets mail.
+  'message_templates',
+  'comms_sequences',
+  'comms_messages',
+  'comms_suppressions',
+  'comms_events',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */
@@ -130,11 +138,34 @@ export async function dbHealth(force = false): Promise<Health> {
   }
 
   const probes = await Promise.all([
-    // head:true fetches no rows — this asks "does this relation exist and can I
-    // read it", which is exactly the question, at close to zero cost.
+    // ── DO NOT PUT `head: true` BACK. IT MADE EVERY MISSING TABLE PROBE GREEN.
+    //
+    // This is the defect this whole module exists to prevent, committed inside
+    // the module itself, and it was invisible for the same reason it is worth
+    // a long comment: the output looked exactly like a healthy database.
+    //
+    // `head: true` makes postgrest-js send a bare HTTP HEAD. PostgREST answers
+    // a missing relation with 404 and the 42P01 error in the BODY — but a HEAD
+    // response has no body, so the client sees a 404 with an empty string, and
+    // postgrest-js has an explicit branch for that shape:
+    //
+    //     if (res.status === 404 && body === "") {
+    //       status = 204; statusText = "No Content";
+    //     } else error = { message: body };
+    //
+    // A 204 with `error: null`. So a table that does not exist returned
+    // `ok: true, rows: 0` — reported as "responding, and empty". Against a
+    // database where nothing had been created, the console said
+    // "37 of 41 responding" and drew no banner. Only the four rollups were
+    // caught, because an RPC POSTs a body and its error therefore survives.
+    //
+    // A GET keeps the body, so the error arrives. `limit(0)` means no rows are
+    // transferred — the cost is one round trip and an exact count from the
+    // Content-Range header, the same as before, and this asks the actual
+    // question: does this relation exist and may I read it.
     ...TABLES.map(async (name): Promise<Probe> => {
       try {
-        const { count, error } = await client.from(name).select('*', { count: 'exact', head: true });
+        const { count, error } = await client.from(name).select('*', { count: 'exact' }).limit(0);
         return error
           ? { name, kind: 'table', ok: false, error: error.message.slice(0, 300) }
           : { name, kind: 'table', ok: true, rows: count ?? 0 };
@@ -156,6 +187,42 @@ export async function dbHealth(force = false): Promise<Health> {
         return { name, kind: 'function', ok: false, error: err instanceof Error ? err.message.slice(0, 300) : 'threw' };
       }
     }),
+
+    // Two read-only functions with signatures of their own. Both were invisible
+    // until they broke, which is the condition this module exists to remove.
+    //
+    // The two WRITE functions — `admin_purge` and `pipeline_submit` — are
+    // deliberately still absent. Probing them every sixty seconds would delete
+    // rows and create applications respectively, and probing them with
+    // arguments chosen to fail would prove nothing about the real call.
+    (async (): Promise<Probe> => {
+      const name = 'admin_purge_preview';
+      try {
+        const { error } = await client.rpc(name, {});
+        return error
+          ? { name, kind: 'function', ok: false, error: error.message.slice(0, 300) }
+          : { name, kind: 'function', ok: true };
+      } catch (err) {
+        return { name, kind: 'function', ok: false, error: err instanceof Error ? err.message.slice(0, 300) : 'threw' };
+      }
+    })(),
+
+    (async (): Promise<Probe> => {
+      const name = 'enrolment_blockers';
+      try {
+        // The nil uuid matches no opportunity, so this returns every blocker
+        // and touches nothing. A read with a guaranteed-empty subject is the
+        // safest way to ask whether a function exists with the right signature.
+        const { error } = await client.rpc(name, {
+          p_opportunity_id: '00000000-0000-0000-0000-000000000000',
+        });
+        return error
+          ? { name, kind: 'function', ok: false, error: error.message.slice(0, 300) }
+          : { name, kind: 'function', ok: true };
+      } catch (err) {
+        return { name, kind: 'function', ok: false, error: err instanceof Error ? err.message.slice(0, 300) : 'threw' };
+      }
+    })(),
 
     // Two arguments rather than one, so it needs its own probe.
     (async (): Promise<Probe> => {

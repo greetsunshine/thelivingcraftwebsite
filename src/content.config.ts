@@ -365,4 +365,100 @@ const guides = defineCollection({
   }),
 });
 
-export const collections = { sessions, guides };
+// Public templates — the artefacts at /resources/templates.
+//
+// WHAT A TEMPLATE IS HERE, AND WHY THE SHAPE IS WHAT IT IS
+//
+// The roadmap's row for this page is one sentence long and both halves of it
+// are load-bearing: "Engineer needs to run a review or request funding. Wants
+// something usable immediately. Evidence: completed example and blank usable
+// artifact."
+//
+// A blank artefact on its own is a stationery cupboard — the reader has to
+// infer from the headings what belongs under them, which is the hard part. A
+// completed example on its own is a case study — admirable, and you cannot
+// take it into your own review. The PAIR is the deliverable, and that is why
+// `sections` below carries the blank prompt and the worked answer TOGETHER,
+// one array, one entry per section.
+//
+// THE PROPERTY THAT ARRANGEMENT BUYS. The blank, the plain-text download and
+// the completed example are all generated from this one list, in this one
+// order. They cannot drift into three documents with different headings — the
+// exact failure that made `pairing.ts` read `## Decision` out of records
+// written under seven other headings and return the empty string in silence.
+//
+// NOTHING IN A WORKED EXAMPLE IS A CLAIM ABOUT THE WORLD. Every example here
+// continues the returns assistant from the VSL script and the published
+// pillar guide, and each template says so on its face. Where a real record
+// would carry a measurement, the example carries ⟨angle brackets⟩ rather than
+// a plausible-looking number: an illustrative scenario may not smuggle in a
+// statistic, and showing the reader where their own evidence goes teaches more
+// than a fabricated one would.
+const templates = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/templates' }),
+  schema: z.object({
+    /** The visible <h1>. The body starts at `##`; the page owns the heading. */
+    title: z.string(),
+    /** One line, on the index and as the meta description. */
+    summary: z.string(),
+    /** What the artefact IS, as a noun phrase: "One page, six boxes." */
+    artifact: z.string(),
+    /** The moment this is the right thing to reach for. One line, on the index. */
+    useWhen: z.string(),
+    /** Sort order on the index. Editorial, not alphabetical. */
+    order: z.number().int(),
+    /**
+     * Download filename base — the reader gets `<fileBase>.md`.
+     *
+     * Separate from the slug on purpose. The slug is a URL and answers to the
+     * roadmap's reserved names; the filename lands in somebody's Downloads
+     * folder next to nine other files and wants to say what it is there.
+     */
+    fileBase: z.string().regex(/^[a-z0-9-]+$/),
+    /** Who wrote it. Published on the page and in the Article JSON-LD. */
+    author: z.string(),
+    /** Who checked it. Optional, and unset renders as "not yet reviewed" —
+     *  same rule, and the same reason, as the guides collection above. */
+    reviewedBy: z.string().optional(),
+    /** YYYY-MM-DD. Never bumped without a content review. */
+    revisedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    /** Drafts get no route at all. Same gate as the guides. */
+    status: z.enum(['draft', 'ready']).default('draft'),
+    /**
+     * Fill-in lines above the first section — "Date", "Author", "Status".
+     * Labels only; the blank supplies the colon and the empty space after it.
+     */
+    header: z.array(z.string()).default([]),
+    /** The template itself. See the note above on why the pair lives together. */
+    sections: z
+      .array(
+        z.object({
+          heading: z.string(),
+          /** The question a colleague would ask. Printed under the heading in
+           *  the blank, and carried into the download as a `>` line so it is
+           *  one keystroke to delete. */
+          prompt: z.string(),
+          /** A second line, where a section carries a rule rather than a question. */
+          note: z.string().optional(),
+          /** Suggested minutes. The agenda uses it; nothing else has to. */
+          minutes: z.number().int().positive().optional(),
+          /** The worked answer for this section. Markdown. */
+          example: z.string().default(''),
+        }),
+      )
+      .min(1),
+    /** How the completed example is framed. `note` is the illustrative label
+     *  and is required — there is no such thing as an unlabelled example here. */
+    worked: z.object({
+      title: z.string(),
+      lead: z.string(),
+      note: z.string(),
+      /** Filled header values, paired with `header` by position. */
+      header: z.array(z.string()).default([]),
+    }),
+    /** Guide slugs under /resources/guides that carry the reasoning. */
+    related: z.array(z.string()).default([]),
+  }),
+});
+
+export const collections = { sessions, guides, templates };

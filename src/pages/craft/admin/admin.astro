@@ -1,0 +1,1437 @@
+---
+// Administration — the machine, not the pipeline.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// FIVE SECTIONS, FIVE CAPABILITIES, AND NO ROLE HOLDS ALL FIVE.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Staff and roles (`admin.staff`), cohorts (`write.cohort`), integration health
+// (`admin.integration`), retention (`admin.retention`) and the audit trail
+// (`read.audit`). Look those up in src/lib/pipeline/roles.ts and you find that
+// no single role holds the set: a maintainer has the three machine ones and
+// neither of the other two; Sunil has cohorts and the audit and none of the
+// machine ones. That is not an oversight to be tidied up by giving somebody
+// everything — it is the brief's role table working. So this page is composed
+// of five independently gated sections, each of which either renders its
+// content or says, in the console's own three-state grammar, that it is not
+// this person's to see and who it belongs to.
+//
+// READS ARE GATED TOO, not just the buttons. The brief asks for authorisation
+// "on reads, exports and writes", and this page lists every account there is
+// and exactly what each one can do — which is the most useful single page on
+// the site to somebody who should not have it.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// UNKNOWN IS NEVER ZERO — AND NEITHER `listStaff()` NOR THE HEALTH PROBE CAN
+// TELL YOU WHICH IT IS
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `listStaff()` degrades to `[]` on error, like every other query outside
+// pipeline-queries.ts. On this page that is a lie with consequences: "no
+// accounts yet" and "the staff table does not exist" render identically, and
+// the correct response to each is the opposite of the other.
+//
+// THE FIRST VERSION OF THIS PAGE FIXED THAT BY GATING THE ROSTER ON THE HEALTH
+// PROBE, AND THE FIX DID NOT HOLD. `dbHealth()` asks each table for a head-only
+// exact count, which postgrest-js sends as a bare HTTP HEAD. A HEAD response
+// never carries a body, so PostgREST's `42P01 relation … does not exist`
+// arrives as a 404 with nothing in it — and postgrest-js (2.112.3,
+// `processResponse`) turns exactly that shape into `204 No Content` with
+// `error: null`. A missing table therefore probes GREEN, with `rows` falling
+// back to 0. Verified against the real client: every one of the thirty-seven
+// tables reports "responding · 0" on a database where none of them exist, and
+// only the four rollups — RPCs, which POST a body — come back broken.
+//
+// So this page does not ask a proxy whether the table is there. It reads the
+// roster itself, with the error in hand: a GET returns PostgREST's error body,
+// which is the difference between "answered, and holds nobody" and "there is no
+// such table". The five columns are restated here rather than borrowed from
+// `listStaff()` on purpose — a probe-then-list pair has the same hole in the
+// middle, because the list call would still swallow its own error and render
+// the empty state. One read, one answer.
+//
+// (The probe's blind spot belongs to src/lib/admin/health.ts and is reported,
+// not patched from here. Until it is fixed, the Integration health section
+// below shows table counts that cannot be trusted on an unmigrated database —
+// the roster, the cohort and the audit trail on this page each read their own
+// source and can be.)
+//
+// The same rule applies to the cohort (`resolveCohort()` already returns three
+// states) and to the audit read below (which returns an `Answer`).
+//
+// ───────────────────────────────────────────────────────────────────────────
+// WHY THIS FILE READS `db()` DIRECTLY
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Two reads. The audit trail has no library module to live in: nothing else in
+// the console reads `audit_log`, and stage 5's file ownership did not put a lib
+// module in scope. The roster is here for the reason above — the module that
+// owns it cannot report its own failure. Both are done in frontmatter, on a
+// page that is `prerender = false` and behind the middleware gate, so the
+// service-role client never enters a client bundle (the module `<script>` at
+// the foot of this file has its own import graph and imports none of this). If
+// a second reader of either ever appears, move it into `src/lib/admin/` and
+// give it an `Answer` signature there instead.
+//
+// NEITHER READ PUTS A POSTGRES MESSAGE ON THE SCREEN. `sourceFailed()` names
+// the source and logs the code, because a PostgREST error quotes the offending
+// literal and a filter value travels in the URL — and a console error string is
+// the most-copied text in the building. Same rule as pipeline-queries.ts.
+//
+// ELEMENT IDS ARE PAGE-SHARED and everything scripted here is prefixed `adm`,
+// for the reason two "Run now" buttons once both wrote to `#runStatus`.
+
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PipelinePanel from '../../../components/admin/PipelinePanel.astro';
+import { db } from '../../../lib/admin/supabase';
+import { dbHealth } from '../../../lib/admin/health';
+import type { Staff } from '../../../lib/admin/staff';
+import { resolveCohort, routeIsOpen, type CohortLookup } from '../../../lib/pipeline/cohorts';
+import {
+  can,
+  capabilitiesOf,
+  isRole,
+  ROLES,
+  ROLE_LABEL,
+  type Capability,
+} from '../../../lib/pipeline/roles';
+import { sourceFailed, type Answer } from '../../../lib/admin/pipeline-queries';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+const isBootstrap = admin?.kind === 'bootstrap';
+
+// `health.configured` is the same fact as capabilities().data and is already on
+// the page, so it is the one source used for "is Supabase wired at all".
+const held = (c: Capability): boolean => can(roles, c);
+
+/** Which roles hold a capability, by label. Derived from the matrix, never listed by hand. */
+const holders = (c: Capability): string[] => ROLES.filter((r) => can([r], c)).map((r) => ROLE_LABEL[r]);
+
+const denied = <T,>(reason: string): Answer<T> => ({ state: 'denied', reason });
+const unavailable = <T,>(reason: string): Answer<T> => ({ state: 'unavailable', reason });
+
+// ---------------------------------------------------------------------------
+// Integration health
+// ---------------------------------------------------------------------------
+// Forcing a re-probe is itself an `admin.integration` act — it is cheap, but a
+// diagnostic control is still a control. The layout calls dbHealth() after this
+// frontmatter runs, so a forced check here is the one the banner uses too.
+const recheck = Astro.url.searchParams.get('recheck') === '1' && held('admin.integration');
+const health = await dbHealth(recheck);
+
+// ---------------------------------------------------------------------------
+// The roster
+// ---------------------------------------------------------------------------
+// Read with the error in hand. `listStaff()` returns the same five columns and
+// is still the right call everywhere that only needs the rows — but it cannot
+// say why it returned none, and on this screen that is the whole question.
+async function readStaff(): Promise<Answer<Staff[]>> {
+  if (!held('admin.staff')) return denied('Your roles do not include managing console accounts.');
+
+  const client = db();
+  if (!client) {
+    return unavailable(
+      'Supabase is not configured for this deployment, so there is no staff table to read.',
+    );
+  }
+
+  try {
+    const { data, error } = await client
+      .from('staff')
+      // `password_hash` is not selected, here or anywhere outside
+      // authenticate(). There is no path from this page to a stored hash.
+      .select('staff_id, name, email, roles, active')
+      .order('name');
+    if (error) return unavailable(sourceFailed('staff table', error));
+    const rows = (data ?? []) as { staff_id: string; name: string; email: string; roles: string[]; active: boolean }[];
+    return {
+      state: 'ok',
+      // Built field by field rather than spread. The select above asks for five
+      // columns, so nothing else should arrive — and if something ever does,
+      // this is the line that keeps it out of the page's render scope. An
+      // unrecognised role name is dropped for display, exactly as `can()` drops
+      // it for authorisation: the screen must not show a power the matrix would
+      // refuse.
+      value: rows.map((s) => ({
+        staff_id: s.staff_id,
+        name: s.name,
+        email: s.email,
+        roles: (s.roles ?? []).filter(isRole),
+        active: s.active,
+      })),
+      at: new Date().toISOString(),
+    };
+  } catch (err) {
+    return unavailable(sourceFailed('staff table', err));
+  }
+}
+
+const staffAnswer = await readStaff();
+
+const staffRows = staffAnswer.state === 'ok' ? staffAnswer.value : [];
+
+// ---------------------------------------------------------------------------
+// The cohort
+// ---------------------------------------------------------------------------
+// resolveCohort() is the same read the public form gates on, and routeIsOpen()
+// is the same function that writes the refusal a visitor sees. Both are used
+// here rather than restated, so "truthful wording" is checked against the real
+// sentence instead of against a copy of it that can drift.
+const cohortLookup: CohortLookup | null = held('write.cohort') ? await resolveCohort() : null;
+
+// Computed for `ok` AND for `none`, because a reachable table with no member
+// cohort in it still refuses the application route, and the screen should print
+// the sentence the visitor gets rather than paraphrasing it. `unavailable` is
+// excluded on purpose: we do not know what the form is doing, so we do not say.
+const askable = cohortLookup && cohortLookup.state !== 'unavailable' ? cohortLookup : null;
+const applicationVerdict = askable ? routeIsOpen('application', askable) : null;
+const enquiryVerdict = askable ? routeIsOpen('enquiry', askable) : null;
+
+// ---------------------------------------------------------------------------
+// The audit trail
+// ---------------------------------------------------------------------------
+interface AuditRow {
+  audit_id: string;
+  record_type: string;
+  record_id: string | null;
+  actor: string;
+  previous_value: unknown;
+  new_value: unknown;
+  occurred_at: string;
+  reason: string | null;
+}
+
+const AUDIT_LIMIT = 50;
+
+async function readAudit(): Promise<Answer<AuditRow[]>> {
+  if (!held('read.audit')) return denied('Your roles do not include reading the audit trail.');
+
+  const client = db();
+  if (!client) return unavailable('Supabase is not configured for this deployment.');
+
+  try {
+    const { data, error } = await client
+      .from('audit_log')
+      .select('audit_id, record_type, record_id, actor, previous_value, new_value, occurred_at, reason')
+      .order('occurred_at', { ascending: false })
+      .limit(AUDIT_LIMIT);
+    if (error) return unavailable(sourceFailed('audit trail', error));
+    return { state: 'ok', value: (data ?? []) as AuditRow[], at: new Date().toISOString() };
+  } catch (err) {
+    return unavailable(sourceFailed('audit trail', err));
+  }
+}
+
+const auditAnswer = await readAudit();
+
+// ---------------------------------------------------------------------------
+// Presentation
+// ---------------------------------------------------------------------------
+const IST = 'Asia/Kolkata';
+
+const when = (iso: string | null | undefined): string =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: IST,
+      })
+    : '—';
+
+const shortId = (id: string | null): string => (id ? `${id.slice(0, 8)}…` : '—');
+
+const json = (v: unknown): string => {
+  if (v === null || v === undefined) return '—';
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return '—';
+  }
+};
+
+const SECTIONS: { id: string; title: string; cap: Capability }[] = [
+  { id: 'staff', title: 'Staff and roles', cap: 'admin.staff' },
+  { id: 'cohorts', title: 'Cohorts', cap: 'write.cohort' },
+  { id: 'health', title: 'Integration health', cap: 'admin.integration' },
+  { id: 'retention', title: 'Retention', cap: 'admin.retention' },
+  { id: 'audit', title: 'Audit', cap: 'read.audit' },
+];
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+
+const here = Astro.url.pathname + Astro.url.search;
+---
+
+<AdminLayout title="Administration" active="admin">
+  <div class="page-head">
+    <div>
+      <span class="label">{whoLine}</span>
+      <h1>Administration</h1>
+      <p>
+        Accounts, the cohort's application switch, what the storage is actually doing, retention
+        and the audit trail. Times are Asia/Kolkata. Every section below is gated separately —
+        <strong>no single role holds all five</strong>, which is the role table working rather
+        than something to fix.
+      </p>
+    </div>
+    <nav class="jump" aria-label="On this page">
+      {SECTIONS.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
+    </nav>
+  </div>
+
+  <!-- What this person may do here, said once and derived from the matrix. -->
+  <div class="card who-card">
+    <span class="label">Your access on this page</span>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Capability</th>
+            <th>Held by</th>
+            <th>Yours</th>
+          </tr>
+        </thead>
+        <tbody>
+          {SECTIONS.map((s) => (
+            <tr>
+              <td><a href={`#${s.id}`}>{s.title}</a></td>
+              <td class="mono">{s.cap}</td>
+              <td class="faint">{holders(s.cap).join(', ')}</td>
+              <td>
+                {held(s.cap) ? (
+                  <span class="pill good">yes</span>
+                ) : (
+                  <span class="pill">no</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="faint hint">
+      Drawn from the same matrix the servers check. Hiding a control is not authorisation — every
+      button on this page is refused again at the endpoint, on the roles in the signed cookie.
+    </p>
+  </div>
+
+  <!-- ==================== Staff and roles ==================== -->
+  <section class="admin-section" id="staff" aria-labelledby="admStaffHead">
+    <div class="section-head">
+      <div>
+        <h2 id="admStaffHead">Staff and roles</h2>
+        <p>
+          Who can sign in to this console and what that lets them do. This screen is the successor
+          to <code class="mono">npm run staff</code> for everything except the first account —
+          the console cannot create its own first maintainer, and a "create an administrator"
+          endpoint would exist forever afterwards.
+        </p>
+      </div>
+    </div>
+
+    {
+      isBootstrap && (
+        <div class="notice">
+          <h3>You are signed in with the shared password</h3>
+          <p class="muted">
+            That session has no identity, so it cannot create or change accounts here however its
+            roles are configured — an account it created would be indistinguishable from one a
+            maintainer created, and the audit trail would say <code>bootstrap</code> against the
+            creation of the account that owns the console. Create the first account with
+            <code>npm run staff</code>, sign in as that account, and manage the rest from here.
+          </p>
+        </div>
+      )
+    }
+
+    {
+      staffAnswer.state !== 'ok' ? (
+        <PipelinePanel
+          state={staffAnswer.state}
+          reason={staffAnswer.reason}
+          label="The staff roster"
+          capability="admin.staff"
+          retry={staffAnswer.state === 'unavailable' ? here : undefined}
+        />
+      ) : (
+        <>
+          <div class="table-scroll">
+            {staffRows.length === 0 ? (
+              <p class="empty">
+                The staff table answered and holds no accounts. Create the first one with
+                <code class="mono"> npm run staff -- --email … --name … --roles maintainer</code>.
+              </p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th>What that allows</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffRows.map((s) => {
+                    const self = Boolean(admin?.id) && s.staff_id === admin?.id;
+                    const allows = capabilitiesOf(s.roles);
+                    return (
+                      <>
+                        <tr>
+                          <td>
+                            {s.name}
+                            {self && <span class="pill self">you</span>}
+                          </td>
+                          <td class="faint">{s.email}</td>
+                          <td>
+                            {s.roles.length === 0 ? (
+                              <span class="faint">none</span>
+                            ) : (
+                              s.roles.map((r) => <span class="pill">{ROLE_LABEL[r]}</span>)
+                            )}
+                          </td>
+                          <td>
+                            <details class="caps">
+                              <summary>{allows.length} capabilities</summary>
+                              <ul>
+                                {allows.map((c) => (
+                                  <li class="mono">{c}</li>
+                                ))}
+                              </ul>
+                            </details>
+                          </td>
+                          <td>
+                            <span class={s.active ? 'pill good' : 'pill warn'}>
+                              {s.active ? 'active' : 'deactivated'}
+                            </span>
+                          </td>
+                          <td class="act">
+                            <button class="btn small" type="button" data-adm-manage={s.staff_id}>
+                              Manage
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="manage-row" data-adm-panel={s.staff_id} hidden>
+                          <td colspan="6">
+                            <div class="manage">
+                              <div class="manage-roles">
+                                <span class="label">Roles</span>
+                                <div class="checks" data-adm-roles={s.staff_id}>
+                                  {ROLES.map((r) => (
+                                    <label class="check">
+                                      <input
+                                        type="checkbox"
+                                        value={r}
+                                        checked={s.roles.includes(r)}
+                                        disabled={self}
+                                      />
+                                      <span>{ROLE_LABEL[r]}</span>
+                                      <span class="faint mono">{r}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                <button
+                                  class="btn small"
+                                  type="button"
+                                  data-adm-save-roles={s.staff_id}
+                                  disabled={self}
+                                >
+                                  Save roles
+                                </button>
+                              </div>
+
+                              <div class="manage-acts">
+                                <button
+                                  class={s.active ? 'btn small danger' : 'btn small'}
+                                  type="button"
+                                  data-adm-active={s.staff_id}
+                                  data-adm-to={s.active ? 'false' : 'true'}
+                                  data-adm-who={s.email}
+                                  disabled={self}
+                                >
+                                  {s.active ? 'Deactivate' : 'Reactivate'}
+                                </button>
+                                <button
+                                  class="btn small"
+                                  type="button"
+                                  data-adm-rotate={s.staff_id}
+                                  data-adm-who={s.email}
+                                >
+                                  Rotate password
+                                </button>
+                              </div>
+
+                              {self && (
+                                <p class="faint note">
+                                  This is your own account. You cannot change your own roles or your
+                                  own access from here — a maintainer editing their own row could
+                                  grant themselves people and finance in one click, and switching
+                                  yourself off is how a console ends up with no way back in. Another
+                                  maintainer does either. Rotating your own password is allowed; it
+                                  grants nothing.
+                                </p>
+                              )}
+
+                              <p class="status-line" data-adm-status={s.staff_id}></p>
+                              {/* Revealed after a revocation, so the twelve-hour sentence in the
+                                  status line above survives long enough to be read. Same reason
+                                  the generated-password box has one. */}
+                              <button class="btn small" type="button" data-adm-reload={s.staff_id} hidden>
+                                Done — refresh the list
+                              </button>
+                              <div class="secret" data-adm-secret={s.staff_id} hidden>
+                                <span class="label">New password for <span data-adm-secret-who></span></span>
+                                <p class="code" data-adm-secret-value></p>
+                                <p class="faint">
+                                  Shown once. It is stored only as a PBKDF2 hash, so nobody —
+                                  including you — can read it back. If it is lost, rotate it again.
+                                  Send it over something that is not email.
+                                </p>
+                                <button class="btn small" type="button" data-adm-secret-done>
+                                  I have copied it — reload
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <p class="faint hint">
+            <strong>Deactivate, never delete.</strong> A deleted row turns every action that person
+            ever took into "unknown actor", which is worse evidence than the row costs to keep.
+            Deactivation takes effect at their next sign-in: <strong>a session they already hold
+            survives until its cookie expires — at most twelve hours</strong>, because the roles are
+            trusted from the signed cookie rather than re-read on every request. If that window
+            matters, rotate the password as well and treat the twelve hours as the real number.
+          </p>
+
+          <div class="card">
+            <span class="label">Create an account</span>
+            <p class="faint" style="margin-top:6px">
+              The password is generated here and shown once, in the response to this request. There
+              is no "show password" path anywhere in this console, deliberately — if it is lost,
+              rotate it.
+            </p>
+            <form class="create" id="admCreateForm">
+              <label>
+                <span class="label">Name</span>
+                <input type="text" name="name" required maxlength="120" autocomplete="off" />
+              </label>
+              <label>
+                <span class="label">Email</span>
+                <input type="email" name="email" required maxlength="200" autocomplete="off" />
+              </label>
+              <div class="wide">
+                <span class="label">Roles</span>
+                <div class="checks" id="admCreateRoles">
+                  {ROLES.map((r) => (
+                    <label class="check">
+                      <input type="checkbox" name="roles" value={r} />
+                      <span>{ROLE_LABEL[r]}</span>
+                      <span class="faint mono">{r}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button class="btn primary" type="submit" id="admCreateSubmit">Create account</button>
+            </form>
+            <p class="status-line" id="admCreateStatus"></p>
+            <div class="secret" id="admCreateSecret" hidden>
+              <span class="label">Password for <span id="admCreateSecretWho"></span></span>
+              <p class="code" id="admCreateSecretValue"></p>
+              <p class="faint">
+                Shown once and never retrievable. Send it over something that is not email, and have
+                them sign in at <code class="mono">/craft/admin/login</code> with their address.
+              </p>
+              <button class="btn small" type="button" id="admCreateSecretDone">
+                I have copied it — reload
+              </button>
+            </div>
+          </div>
+
+          <details class="card roles-ref">
+            <summary><span class="label">What each role allows</span></summary>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Name</th>
+                    <th>Capabilities</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ROLES.map((r) => (
+                    <tr>
+                      <td>{ROLE_LABEL[r]}</td>
+                      <td class="mono faint">{r}</td>
+                      <td class="mono caps-cell">{capabilitiesOf([r]).join(' · ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p class="faint hint">
+              Straight out of <code class="mono">src/lib/pipeline/roles.ts</code>. Somebody can hold
+              more than one; the grant is the union. An unrecognised role name grants nothing, so a
+              typo fails closed.
+            </p>
+          </details>
+        </>
+      )
+    }
+  </section>
+
+  <!-- ==================== Cohorts ==================== -->
+  <section class="admin-section" id="cohorts" aria-labelledby="admCohortHead">
+    <div class="section-head">
+      <div>
+        <h2 id="admCohortHead">Cohorts</h2>
+        <p>
+          Which cohort the public application form files against, and whether it is taking any.
+          Closing applications closes <strong>one route</strong> — the enquiry route stays open, so
+          somebody arriving the week after can still ask about the next one.
+        </p>
+      </div>
+    </div>
+
+    {
+      !held('write.cohort') || !cohortLookup ? (
+        <PipelinePanel
+          state="denied"
+          reason="Your roles do not include changing cohort availability."
+          label="The cohort switch"
+          capability="write.cohort"
+        />
+      ) : cohortLookup.state === 'unavailable' ? (
+        <PipelinePanel
+          state="unavailable"
+          reason="The cohorts table did not answer, so the console cannot say whether applications are open."
+          label="The cohort"
+          retry={here}
+        />
+      ) : cohortLookup.state === 'none' ? (
+        <div class="notice">
+          <h3>The cohorts table is reachable and holds no member cohort</h3>
+          <p class="muted">
+            That is a real, observed answer rather than a failure — which is why it is not the red
+            panel. Nothing can be opened or closed until a cohort exists, and the application route
+            is already refusing every submission with:
+          </p>
+          <p class="quoted">"{applicationVerdict?.open ? '' : applicationVerdict?.reason}"</p>
+          <p class="muted">
+            Run <code>supabase/schema.sql</code> — it seeds exactly one cohort, and only into an
+            empty table, so re-running never adds a second.
+          </p>
+        </div>
+      ) : (
+        <div class="card cohort-card" data-adm-cohort-open={String(cohortLookup.cohort.application_open)}>
+          <div class="cohort-head">
+            <div>
+              <span class="label">Active member cohort</span>
+              <h3>{cohortLookup.cohort.public_label}</h3>
+              <p class="faint mono">{cohortLookup.cohort.cohort_id}</p>
+            </div>
+            <span class={cohortLookup.cohort.application_open ? 'pill good' : 'pill warn'}>
+              {cohortLookup.cohort.application_open ? 'applications open' : 'applications closed'}
+            </span>
+          </div>
+
+          <dl class="facts">
+            <div>
+              <dt class="label">Schedule reference</dt>
+              <dd>
+                {cohortLookup.cohort.schedule_reference ?? (
+                  <span class="faint">not set — no date is ever inferred from an internal id</span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt class="label">Application route</dt>
+              <dd>
+                {applicationVerdict?.open ? (
+                  <span class="pill good">accepted</span>
+                ) : (
+                  <>
+                    <span class="pill warn">refused · {applicationVerdict?.status}</span>
+                    <p class="quoted">"{applicationVerdict?.reason}"</p>
+                  </>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt class="label">Enquiry route</dt>
+              <dd>
+                {enquiryVerdict?.open ? (
+                  <span class="pill good">accepted</span>
+                ) : (
+                  <span class="pill warn">refused</span>
+                )}
+                <p class="faint">
+                  An enquiry never depends on a cohort — not even on one being readable. It stays
+                  open through a closure and through an outage.
+                </p>
+              </dd>
+            </div>
+          </dl>
+
+          <div class="cohort-act">
+            <label class="wide">
+              <span class="label">Reason (optional, recorded in the audit trail)</span>
+              <input type="text" id="admCohortReason" maxlength="500" autocomplete="off" />
+            </label>
+            <button
+              class={cohortLookup.cohort.application_open ? 'btn danger' : 'btn primary'}
+              type="button"
+              id="admCohortToggle"
+              data-adm-to={cohortLookup.cohort.application_open ? 'false' : 'true'}
+            >
+              {cohortLookup.cohort.application_open ? 'Close applications' : 'Reopen applications'}
+            </button>
+          </div>
+          <p class="status-line" id="admCohortStatus"></p>
+
+          <p class="faint hint">
+            The wording above is read back out of <code class="mono">routeIsOpen()</code>, the same
+            function that answers the public form — not a copy of it, so the two cannot drift.
+            <strong> The third clause of E18 — stopping queued promotional invitations — has
+            nothing to stop yet:</strong> no sender is wired (decision D2), so there is no queue.
+            This screen does not claim a send was cancelled.
+          </p>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Integration health ==================== -->
+  <section class="admin-section" id="health" aria-labelledby="admHealthHead">
+    <div class="section-head">
+      <div>
+        <h2 id="admHealthHead">Integration health</h2>
+        <p>
+          Every table and rollup the console depends on, probed directly. A count of
+          <code class="mono">0</code> here means the table answered and is empty — a different thing
+          from a table that is not there, and the two used to look identical.
+        </p>
+      </div>
+      {held('admin.integration') && health.configured && (
+        <a class="btn small" href="?recheck=1#health">Re-check now</a>
+      )}
+    </div>
+
+    {
+      !held('admin.integration') ? (
+        <PipelinePanel
+          state="denied"
+          reason="Your roles do not include integration health."
+          label="Storage health"
+          capability="admin.integration"
+        />
+      ) : !health.configured ? (
+        <div class="notice">
+          <h3>Supabase is not configured for this deployment</h3>
+          <p class="muted">
+            There is nothing to probe. That is a different problem from a probe that failed, and it
+            has a different fix: set <code>SUPABASE_URL</code> and
+            <code>SUPABASE_SERVICE_ROLE_KEY</code>, then run <code>supabase/schema.sql</code>.
+          </p>
+        </div>
+      ) : (
+        <div class="card">
+          <div class="counts">
+            <span class={health.ok ? 'pill good' : 'pill warn'}>
+              {health.probes.length - health.broken.length} of {health.probes.length} responding
+            </span>
+            <span class="faint mono">checked {when(new Date(health.checkedAt).toISOString())}</span>
+            <span class="faint">cached for a minute</span>
+          </div>
+
+          {health.broken.length > 0 && (
+            <ul class="broken">
+              {health.broken.map((b) => (
+                <li>
+                  <code class="mono">{b.name}</code> <span class="faint">({b.kind})</span> —
+                  {' '}{b.error}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div class="health">
+            {health.probes.map((p) => (
+              <span class={p.ok ? 'obj' : 'obj bad'} title={p.error ?? ''}>
+                <span class="dot" />
+                {p.name}
+                {p.kind === 'table' && p.ok && <span class="n">{p.rows}</span>}
+              </span>
+            ))}
+          </div>
+
+          <p class="faint hint">
+            <code class="mono">pipeline_submit</code> is deliberately not probed: every entry here
+            is a read, and that one writes a person, a submission, an opportunity and a task. Its
+            ten tables are all above, which is the useful half. Add a new table or rollup to the
+            lists in <code class="mono">src/lib/admin/health.ts</code> or it stays invisible until
+            it breaks.
+          </p>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Retention ==================== -->
+  <section class="admin-section" id="retention" aria-labelledby="admRetentionHead">
+    <div class="section-head">
+      <div>
+        <h2 id="admRetentionHead">Retention</h2>
+        <p>
+          Analytics events are kept 180 days and visitor questions 365, then deleted. Leads,
+          learners and the pipeline's own records are <strong>never</strong> purged on a timer — a
+          real enquiry must not be lost to a cron job, so those are erased one person at a time,
+          deliberately, from their own pages.
+        </p>
+      </div>
+    </div>
+
+    {
+      !held('admin.retention') ? (
+        <PipelinePanel
+          state="denied"
+          reason="Your roles do not include running the retention policy."
+          label="Retention"
+          capability="admin.retention"
+        />
+      ) : (
+        <div class="card">
+          <p class="muted">
+            Check first — the count tells you whether this is a routine tidy or something worth
+            pausing over. The preview is read-only and the delete button only appears once you have
+            seen it.
+          </p>
+          <div class="retention-act">
+            <button class="btn" id="admRetentionCheck" disabled={!health.configured}>
+              Check what is stale
+            </button>
+            <button class="btn primary" id="admRetentionApply" disabled hidden>Delete them</button>
+          </div>
+          <p class="status-line" id="admRetentionStatus"></p>
+          <p class="faint hint">
+            The windows are function defaults in <code class="mono">supabase/schema.sql</code>, so
+            shortening them is a SQL change with no deploy. <strong>There is a 30-day floor that
+            raises rather than clamps</strong> — a 0 passed by a bug would otherwise empty the table
+            while looking like policy, so the function refuses and names the values it refused. Do
+            not work around it. To run this unattended, enable pg_cron; the schedule is written out,
+            commented, at the foot of that file. Until then the policy is only real if somebody
+            presses this.
+          </p>
+          <p class="faint hint">
+            <strong>Retention and erasure are separate mechanisms.</strong> This is a timer over two
+            tables. A deletion request is the Erase button on
+            <a href="/craft/admin/leads">Leads</a> or <a href="/craft/admin/learners">Learners</a> —
+            a hard delete of one person, never a soft flag, and neither reaches the Web3Forms inbox
+            copy. Unsubscribing is a third thing again and is not a deletion.
+          </p>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Audit ==================== -->
+  <section class="admin-section" id="audit" aria-labelledby="admAuditHead">
+    <div class="section-head">
+      <div>
+        <h2 id="admAuditHead">Audit</h2>
+        <p>
+          Who changed what, when, and why — newest {AUDIT_LIMIT} first. Nothing personal is in this
+          table by design: it has to outlive erasure, so it carries record ids as the join and no
+          names, addresses, answers or credentials. When somebody is erased the ids dangle, which is
+          the correct outcome — the history says a decision was made and no longer says about whom.
+        </p>
+      </div>
+    </div>
+
+    {
+      auditAnswer.state !== 'ok' ? (
+        <PipelinePanel
+          state={auditAnswer.state}
+          reason={auditAnswer.reason}
+          label="The audit trail"
+          capability="read.audit"
+          retry={auditAnswer.state === 'unavailable' ? here : undefined}
+        />
+      ) : auditAnswer.value.length === 0 ? (
+        <p class="empty">
+          The audit table answered and holds no entries yet. Nothing that writes to it has run.
+        </p>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Record</th>
+                <th>Actor</th>
+                <th>Reason</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditAnswer.value.map((row) => (
+                <tr>
+                  <td class="faint mono nowrap">{when(row.occurred_at)}</td>
+                  <td>
+                    <span class="pill">{row.record_type}</span>
+                    <span class="faint mono" title={row.record_id ?? ''}>{shortId(row.record_id)}</span>
+                  </td>
+                  <td>{row.actor}</td>
+                  <td>{row.reason ?? <span class="faint">—</span>}</td>
+                  <td class="mono change">
+                    <span class="faint">{json(row.previous_value)}</span>
+                    {' → '}
+                    {json(row.new_value)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+</AdminLayout>
+
+<script>
+  // A module script, not `is:inline` — Vite bundles it, which puts it under
+  // `astro check`, and an inline script cannot import anyway. It imports
+  // nothing from the frontmatter above: everything it needs travels on
+  // `data-` attributes, so the service-role client on this page's server side
+  // has no path into a browser bundle.
+  //
+  // Every id and data attribute here is prefixed `adm`. Ids on a console page
+  // are page-shared, and two panels writing to one status line has already
+  // happened once in this console.
+
+  interface ApiResult {
+    ok: boolean;
+    error?: string;
+    password?: string;
+    staffId?: string;
+    active?: boolean;
+    note?: string;
+    changed?: boolean;
+    message?: string;
+    open?: boolean;
+  }
+
+  async function post(url: string, body: unknown): Promise<{ status: number; data: ApiResult }> {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    let data: ApiResult = { ok: false };
+    try {
+      data = (await res.json()) as ApiResult;
+    } catch {
+      data = { ok: false, error: 'The server did not return a readable answer.' };
+    }
+    return { status: res.status, data };
+  }
+
+  function say(el: Element | null, message: string, kind: '' | 'ok' | 'err' = '') {
+    if (!(el instanceof HTMLElement)) return;
+    el.className = `status-line${kind ? ` ${kind}` : ''}`;
+    el.textContent = message;
+  }
+
+  function checkedValues(scope: Element | null): string[] {
+    if (!scope) return [];
+    return Array.from(scope.querySelectorAll('input[type="checkbox"]'))
+      .filter((i): i is HTMLInputElement => i instanceof HTMLInputElement && i.checked)
+      .map((i) => i.value);
+  }
+
+  // -------------------------------------------------------------------------
+  // Staff
+  // -------------------------------------------------------------------------
+
+  function wireStaff() {
+    document.querySelectorAll('[data-adm-manage]').forEach((btn) => {
+      if (!(btn instanceof HTMLElement)) return;
+      const id = btn.dataset.admManage;
+      btn.addEventListener('click', () => {
+        const panel = document.querySelector(`[data-adm-panel="${id}"]`);
+        if (!(panel instanceof HTMLElement)) return;
+        panel.hidden = !panel.hidden;
+        btn.textContent = panel.hidden ? 'Manage' : 'Close';
+      });
+    });
+
+    document.querySelectorAll('[data-adm-save-roles]').forEach((btn) => {
+      if (!(btn instanceof HTMLButtonElement)) return;
+      const id = btn.dataset.admSaveRoles ?? '';
+      btn.addEventListener('click', async () => {
+        const status = document.querySelector(`[data-adm-status="${id}"]`);
+        const roles = checkedValues(document.querySelector(`[data-adm-roles="${id}"]`));
+        if (roles.length === 0) {
+          say(status, 'At least one role is needed. An account with no roles can see nothing.', 'err');
+          return;
+        }
+        btn.disabled = true;
+        say(status, 'Saving…');
+        const { data } = await post('/api/craft/admin/staff', { action: 'roles', staffId: id, roles });
+        if (!data.ok) {
+          btn.disabled = false;
+          say(status, data.error ?? 'That did not save.', 'err');
+          return;
+        }
+        say(status, 'Roles saved. Reloading…', 'ok');
+        window.location.reload();
+      });
+    });
+
+    document.querySelectorAll('[data-adm-active]').forEach((btn) => {
+      if (!(btn instanceof HTMLButtonElement)) return;
+      const id = btn.dataset.admActive ?? '';
+      const to = btn.dataset.admTo === 'true';
+      const email = btn.dataset.admWho ?? 'this account';
+      btn.addEventListener('click', async () => {
+        const status = document.querySelector(`[data-adm-status="${id}"]`);
+        if (!to) {
+          const go = window.confirm(
+            `Deactivate ${email}?\n\n` +
+              'They cannot sign in again, and the row and its audit trail stay — a deleted row ' +
+              'would turn every action they ever took into "unknown actor".\n\n' +
+              'A session they already hold survives until its cookie expires: AT MOST TWELVE ' +
+              'HOURS. If that matters, rotate the password as well.',
+          );
+          if (!go) return;
+        }
+        btn.disabled = true;
+        say(status, to ? 'Restoring…' : 'Revoking…');
+        const { data } = await post('/api/craft/admin/staff', {
+          action: 'active',
+          staffId: id,
+          active: to,
+        });
+        if (!data.ok) {
+          btn.disabled = false;
+          say(status, data.error ?? 'That did not change.', 'err');
+          return;
+        }
+
+        // A REVOCATION DOES NOT RELOAD ON ITS OWN. The note it returns is the
+        // twelve-hour window, which is the one fact somebody cutting off access
+        // in a hurry has to act on — and a reload a tenth of a second later
+        // wipes it off the screen unread. Same reason the generated-password box
+        // waits to be dismissed. Reactivating carries nothing time-critical, so
+        // it refreshes straight away.
+        say(status, data.note ?? '', 'ok');
+        if (to) {
+          window.location.reload();
+          return;
+        }
+        const refresh = document.querySelector(`[data-adm-reload="${id}"]`);
+        if (refresh instanceof HTMLElement) refresh.hidden = false;
+      });
+    });
+
+    document.querySelectorAll('[data-adm-reload]').forEach((btn) => {
+      btn.addEventListener('click', () => window.location.reload());
+    });
+
+    document.querySelectorAll('[data-adm-rotate]').forEach((btn) => {
+      if (!(btn instanceof HTMLButtonElement)) return;
+      const id = btn.dataset.admRotate ?? '';
+      const email = btn.dataset.admWho ?? 'this account';
+      btn.addEventListener('click', async () => {
+        const status = document.querySelector(`[data-adm-status="${id}"]`);
+        const go = window.confirm(
+          `Rotate the password for ${email}?\n\n` +
+            'The current one stops working immediately and cannot be recovered. The new one is ' +
+            'shown once, here, and never again.',
+        );
+        if (!go) return;
+        btn.disabled = true;
+        say(status, 'Rotating…');
+        const { data } = await post('/api/craft/admin/staff', { action: 'rotate', staffId: id });
+        btn.disabled = false;
+        if (!data.ok || !data.password) {
+          say(status, data.error ?? 'That did not rotate.', 'err');
+          return;
+        }
+        say(status, 'Rotated. The new password is below and will not be shown again.', 'ok');
+        const box = document.querySelector(`[data-adm-secret="${id}"]`);
+        if (box instanceof HTMLElement) {
+          const who = box.querySelector('[data-adm-secret-who]');
+          const value = box.querySelector('[data-adm-secret-value]');
+          if (who instanceof HTMLElement) who.textContent = email;
+          if (value instanceof HTMLElement) value.textContent = data.password;
+          box.hidden = false;
+        }
+      });
+    });
+
+    // Reloading is the visitor's choice, not automatic: a reload before the
+    // password is copied loses it for good, and rotating again is the only fix.
+    document.querySelectorAll('[data-adm-secret-done]').forEach((btn) => {
+      btn.addEventListener('click', () => window.location.reload());
+    });
+  }
+
+  function wireCreate() {
+    const form = document.getElementById('admCreateForm');
+    const status = document.getElementById('admCreateStatus');
+    const submit = document.getElementById('admCreateSubmit');
+    if (!(form instanceof HTMLFormElement) || !(submit instanceof HTMLButtonElement)) return;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fd = new FormData(form);
+      const name = String(fd.get('name') ?? '').trim();
+      const email = String(fd.get('email') ?? '').trim();
+      const roles = checkedValues(document.getElementById('admCreateRoles'));
+
+      if (roles.length === 0) {
+        say(status, 'Pick at least one role. An account with no roles can see nothing.', 'err');
+        return;
+      }
+
+      submit.disabled = true;
+      say(status, 'Creating…');
+
+      const { data } = await post('/api/craft/admin/staff', {
+        action: 'create',
+        name,
+        email,
+        roles,
+      });
+
+      if (!data.ok || !data.password) {
+        submit.disabled = false;
+        say(status, data.error ?? 'The account was not created.', 'err');
+        return;
+      }
+
+      say(status, 'Created. The password below is shown once and is not stored anywhere.', 'ok');
+      form.reset();
+      const box = document.getElementById('admCreateSecret');
+      const who = document.getElementById('admCreateSecretWho');
+      const value = document.getElementById('admCreateSecretValue');
+      if (who) who.textContent = email;
+      if (value) value.textContent = data.password;
+      if (box instanceof HTMLElement) box.hidden = false;
+    });
+
+    const done = document.getElementById('admCreateSecretDone');
+    if (done) done.addEventListener('click', () => window.location.reload());
+  }
+
+  // -------------------------------------------------------------------------
+  // Cohort
+  // -------------------------------------------------------------------------
+
+  function wireCohort() {
+    const btn = document.getElementById('admCohortToggle');
+    const status = document.getElementById('admCohortStatus');
+    const reason = document.getElementById('admCohortReason');
+    if (!(btn instanceof HTMLButtonElement)) return;
+
+    const to = btn.dataset.admTo === 'true';
+
+    btn.addEventListener('click', async () => {
+      if (!to) {
+        const go = window.confirm(
+          'Close applications for the open cohort?\n\n' +
+            'The application form will refuse with wording that says what is true and points at ' +
+            'the enquiry route. Enquiries stay open. This is reversible from this screen.',
+        );
+        if (!go) return;
+      }
+      btn.disabled = true;
+      say(status, to ? 'Reopening…' : 'Closing…');
+
+      const { data } = await post('/api/craft/admin/cohort', {
+        action: 'applications',
+        open: to,
+        reason: reason instanceof HTMLInputElement ? reason.value : undefined,
+      });
+
+      if (!data.ok) {
+        btn.disabled = false;
+        say(status, data.error ?? 'That did not change.', 'err');
+        return;
+      }
+
+      // A no-op is reported and NOT reloaded. The endpoint writes nothing when
+      // the cohort is already in the asked-for state, and reloading would
+      // replace that sentence with a screen identical to the one before the
+      // click — which reads as "the button did nothing" rather than "it was
+      // already like that".
+      if (data.changed === false) {
+        btn.disabled = false;
+        say(status, data.message ?? 'Nothing changed.', 'ok');
+        return;
+      }
+
+      say(status, 'Saved. Reloading…', 'ok');
+      window.location.reload();
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Retention — two steps, the same endpoint the overview uses
+  // -------------------------------------------------------------------------
+
+  interface PurgeResult {
+    ok?: boolean;
+    error?: string;
+    events?: number;
+    questions?: number;
+  }
+
+  function wireRetention() {
+    const check = document.getElementById('admRetentionCheck');
+    const apply = document.getElementById('admRetentionApply');
+    const status = document.getElementById('admRetentionStatus');
+    if (!(check instanceof HTMLButtonElement) || !(apply instanceof HTMLButtonElement)) return;
+
+    const call = async (body: unknown): Promise<{ ok: boolean; data: PurgeResult }> => {
+      const res = await fetch('/api/craft/admin/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      let data: PurgeResult = {};
+      try {
+        data = (await res.json()) as PurgeResult;
+      } catch {
+        data = { error: 'The server did not return a readable answer.' };
+      }
+      return { ok: res.ok, data };
+    };
+
+    check.addEventListener('click', async () => {
+      check.disabled = true;
+      say(status, 'Counting…');
+      try {
+        const { ok, data } = await call({});
+        check.disabled = false;
+        if (!ok) {
+          say(status, data.error ?? 'Could not check.', 'err');
+          return;
+        }
+        const events = Number(data.events ?? 0);
+        const questions = Number(data.questions ?? 0);
+        if (events + questions === 0) {
+          say(status, 'Nothing is past its window.');
+          apply.hidden = true;
+          return;
+        }
+        say(status, `${events} event(s) and ${questions} question(s) are past their window.`);
+        apply.hidden = false;
+        apply.disabled = false;
+      } catch {
+        check.disabled = false;
+        say(status, 'Network error. Nothing was deleted.', 'err');
+      }
+    });
+
+    apply.addEventListener('click', async () => {
+      const go = window.confirm(
+        'Delete everything past its retention window?\n\n' +
+          'This cannot be undone. Leads, learners and the pipeline records are not affected — ' +
+          'they are never purged on a timer.',
+      );
+      if (!go) return;
+      apply.disabled = true;
+      say(status, 'Deleting…');
+      try {
+        const { ok, data } = await call({ apply: true });
+        if (!ok) {
+          apply.disabled = false;
+          say(status, data.error ?? 'Could not purge.', 'err');
+          return;
+        }
+        say(
+          status,
+          `Deleted ${Number(data.events ?? 0)} event(s) and ${Number(data.questions ?? 0)} question(s).`,
+          'ok',
+        );
+        apply.hidden = true;
+      } catch {
+        apply.disabled = false;
+        say(status, 'Network error.', 'err');
+      }
+    });
+  }
+
+  wireStaff();
+  wireCreate();
+  wireCohort();
+  wireRetention();
+</script>
+
+<style>
+  .who-card { margin-bottom: var(--space-5); }
+  .who-card table { font-size: var(--size-2); }
+  .hint { font-size: var(--size-2); margin-top: var(--space-3); line-height: var(--lh-snug); max-width: 92ch; }
+
+  .nowrap { white-space: nowrap; }
+
+  .pill + .pill { margin-left: var(--space-1); }
+  .pill.self {
+    border-color: var(--accent-ink);
+    color: var(--accent-ink);
+    margin-left: var(--space-2);
+  }
+
+  /* Capabilities are long lists. A details keeps the row scannable and still
+     puts the consequence of a role one click away rather than in a doc. */
+  .caps summary {
+    cursor: pointer;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .caps ul {
+    margin-top: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+  }
+  .caps li { font-size: var(--size-1); color: var(--text-body); }
+
+  .manage-row > td { background: var(--surface-sunken); }
+  .manage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+  }
+  .manage-acts { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .manage .note { font-size: var(--size-2); max-width: var(--measure-prose); line-height: var(--lh-snug); }
+
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-2) 0 var(--space-3);
+  }
+  .check {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--size-2);
+  }
+  .check input { width: auto; height: auto; }
+  .check .mono { font-size: var(--size-1); }
+
+  .create {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    align-items: end;
+    margin-top: var(--space-3);
+  }
+  .create label { display: flex; flex-direction: column; gap: var(--space-1); }
+  .create .wide, .create button { grid-column: 1 / -1; }
+  .create button { justify-self: start; }
+
+  /* A credential on screen. Selectable in one go, and never styled as a field
+     that could be mistaken for something the page will remember. */
+  .secret {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-left: var(--agent-rule) solid var(--accent-ink);
+    border-radius: var(--radius-inner);
+    background: var(--surface-panel);
+  }
+  .secret .code {
+    font-family: var(--font-mono);
+    font-size: var(--size-5);
+    letter-spacing: 0.04em;
+    margin: var(--space-2) 0;
+    user-select: all;
+    word-break: break-all;
+  }
+  .secret .faint { font-size: var(--size-2); line-height: var(--lh-snug); max-width: var(--measure-prose); }
+  .secret .btn { margin-top: var(--space-3); }
+
+  .roles-ref { margin-top: var(--space-4); }
+  .roles-ref summary { cursor: pointer; }
+  .caps-cell { font-size: var(--size-1); line-height: var(--lh-snug); }
+
+  .cohort-head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .cohort-head h3 { font-size: var(--size-5); margin-top: var(--space-1); }
+  .cohort-head p { font-size: var(--size-1); margin-top: var(--space-1); }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+  .facts dd { margin-top: var(--space-2); font-size: var(--size-2); }
+  .facts dd p { margin-top: var(--space-2); line-height: var(--lh-snug); }
+  .quoted {
+    font-style: italic;
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+
+  .cohort-act {
+    display: flex;
+    gap: var(--space-3);
+    align-items: end;
+    flex-wrap: wrap;
+    margin-top: var(--space-4);
+  }
+  .cohort-act label { display: flex; flex-direction: column; gap: var(--space-1); flex: 1 1 320px; }
+
+  .counts { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-3); }
+  .counts .mono, .counts .faint { font-size: var(--size-1); }
+
+  .broken {
+    margin: 0 0 var(--space-4) var(--space-5);
+    list-style: revert;
+    font-size: var(--size-2);
+    color: var(--danger);
+    line-height: var(--lh-snug);
+  }
+  .broken li { margin-bottom: var(--space-1); }
+
+  .retention-act { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; margin-top: var(--space-3); }
+
+  .change { font-size: var(--size-1); line-height: var(--lh-snug); max-width: 44ch; word-break: break-word; }
+
+  @media (max-width: 860px) {
+    .facts { grid-template-columns: 1fr; }
+    .create { grid-template-columns: 1fr; }
+  }
+</style>
