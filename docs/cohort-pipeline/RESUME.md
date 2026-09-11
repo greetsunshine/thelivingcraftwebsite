@@ -57,6 +57,24 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## In flight right now — check before you rebuild any of it
+
+Five agents were working when this was last written, 11 September. **Each stopped run leaves
+real files on disk**, so the first move on picking this up is `git status` and a route check,
+not a rebuild. Every previous interruption left most of the work done.
+
+| Owner | Files | What it was doing |
+|---|---|---|
+| Administration | `craft/admin/admin.astro`, `api/craft/admin/{staff,cohort}.ts` | Verifying that an operator session is refused 403 on every write, and that nothing renders a password hash |
+| Security audit | `lib/admin/{export,import,pipeline-queries,env}.ts`, `craft/admin/{records,pipeline*}.astro` | Authorisation bypasses, personal data in errors, unknown-as-zero. Also fixing the hard-coded `d:	helivingcraftwebsite\.env.local` path in `env.ts`, which does nothing on Vercel |
+| Communications | `supabase/schema.sql` (append), `lib/comms/**`, `api/{craft/admin/comms,unsubscribe}.ts`, `craft/admin/comms.astro` | Stage 4 with **dispatch off** — outbox, twelve versioned templates, double eligibility check, signed unsubscribe, failure queue |
+| Synthetic data | `scripts/seed.ts`, `scripts/acceptance.ts` (E14 only) | A seed that refuses to run against production, and the E14 reconciliation check |
+| Templates | `pages/resources/templates/**`, `content/templates/**`, `content.config.ts` (templates collection only) | The last `pending` item in the navigation |
+
+If one did not finish, its brief is recoverable from this table plus the build plan. Nothing
+in that list touches `src/lib/pipeline/**`, `src/lib/admin/{auth,staff,csv}.ts` or
+`src/middleware.ts` — those are settled.
+
 ## Where the six stages stand
 
 | Stage | State | Next action |
