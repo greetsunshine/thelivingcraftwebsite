@@ -41,7 +41,7 @@ const year = new Date().getFullYear();
           {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
           <a href="/caio">Fractional CAIO</a>
           <a href="/assessment">AI Readiness</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow">→</span></a>
+          <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         </nav>
       </div>
     </header>
@@ -58,18 +58,18 @@ const year = new Date().getFullYear();
             <p class="muted">What is actually changing in agentic AI — gathered from primary sources, read before it is published.</p>
           </div>
           <div class="foot-col">
-            <h5>Field notes</h5>
+            <h2>Field notes</h2>
             {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
             <a href="#method">How these are gathered</a>
           </div>
           <div class="foot-col">
-            <h5>The practice</h5>
-            <a href="/">The Living Craft — cohort →</a>
-            <a href="/caio">Fractional CAIO retainer →</a>
-            <a href="/assessment">AI Readiness Assessment →</a>
+            <h2>The practice</h2>
+            <a href="/">The Living Craft — cohort <span aria-hidden="true">→</span></a>
+            <a href="/caio">Fractional CAIO retainer <span aria-hidden="true">→</span></a>
+            <a href="/assessment">AI Readiness Assessment <span aria-hidden="true">→</span></a>
           </div>
           <div class="foot-col">
-            <h5>Connect</h5>
+            <h2>Connect</h2>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>

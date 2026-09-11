@@ -10,7 +10,7 @@
 // Static: latest.json is a committed file, so the page is baked at build and
 // refreshes when the retriever's PR is merged and deployed.
 import NotesLayout from '../layouts/NotesLayout.astro';
-import { SITE_ORIGIN, cohort } from '../data/facts';
+import { SITE_ORIGIN } from '../data/facts';
 import { publishedNotes, longDate } from '../lib/notes';
 
 export const prerender = true;
@@ -72,7 +72,7 @@ const schema = [
         and a vendor's research is labelled a vendor's.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="/">See how this feeds the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-primary" href="/">See how this feeds the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="#method">How these are gathered</a>
       </div>
       <p class="hero-note">
@@ -108,7 +108,7 @@ const schema = [
               <p>{n.body}</p>
               <div class="note-meta">
                 <a class="src" href={n.source} target="_blank" rel="noopener">
-                  {n.sourceHost} <span class="arrow">↗</span>
+                  {n.sourceHost} <span class="arrow" aria-hidden="true">↗</span>
                 </a>
                 <time class="when" datetime={n.gatheredAt}>Gathered {longDate(n.gatheredAt)}</time>
                 <span class="tags">{n.tags.map((t) => <span class="tag">{t}</span>)}</span>
@@ -137,7 +137,7 @@ const schema = [
         <li>
           <span class="n">01</span>
           <div>
-            <h4>One research pass per topic, on a schedule</h4>
+            <h3>One research pass per topic, on a schedule</h3>
             <p>
               The retriever runs weekly across a fixed set of topics — architecture patterns,
               evaluation and reliability, agent security, and releases that change how systems
@@ -150,7 +150,7 @@ const schema = [
         <li>
           <span class="n">02</span>
           <div>
-            <h4>Nothing publishes itself</h4>
+            <h3>Nothing publishes itself</h3>
             <p>
               The scheduled run opens a pull request rather than committing. Sunil reads what
               the agent gathered before a prospect does, and every item carries a private note
@@ -163,7 +163,7 @@ const schema = [
         <li>
           <span class="n">03</span>
           <div>
-            <h4>The agent cannot write our own numbers</h4>
+            <h3>The agent cannot write our own numbers</h3>
             <p>
               Prices, dates, and seat counts are deliberately out of scope for the retriever and
               never appear on this page. They live in one place and are published from there, so
@@ -174,7 +174,7 @@ const schema = [
         <li>
           <span class="n">04</span>
           <div>
-            <h4>Findings expire</h4>
+            <h3>Findings expire</h3>
             <p>
               Anything older than 90 days drops off automatically. A "latest" page quietly
               serving year-old news is worse than no page at all.
@@ -188,14 +188,14 @@ const schema = [
   <!-- Close -->
   <section class="final">
     <div class="wrap">
-      <h2>This is the <em>reading</em>. The program is the judgment.</h2>
+      <h2>This is the <em>reading</em>. The programme is the judgement.</h2>
       <p class="lead">
         Findings like these are raw material — knowing that context compaction is a reliability
         problem is not the same as knowing what to do about it in a system you are accountable
-        for. That is what the {cohort.weeks} weeks are for.
+        for. That is what the programme is for.
       </p>
       <div class="hero-cta" style="justify-content:center">
-        <a class="btn btn-primary" href="/">The Living Craft — the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-primary" href="/">The Living Craft — the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/assessment">AI Readiness Assessment</a>
       </div>
       <p class="hero-note" style="text-align:center">
@@ -287,7 +287,7 @@ const schema = [
   .method {
     background: var(--paper-2);
   }
-  .method-list h4 {
+  .method-list h3 {
     margin-bottom: 6px;
   }
   .method-list p {

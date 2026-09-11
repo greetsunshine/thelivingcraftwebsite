@@ -9,14 +9,14 @@ import {
   SITE_ORIGIN,
   assessment,
   caio,
-  cohort,
-  cohortPricing,
   facts,
   practitioner,
   regulatory,
   surfaces,
 } from '../data/facts';
 import { publishedNotes } from '../lib/notes';
+import { EXPLORES } from '../data/cohort-copy';
+import { COMMITMENT, COHORT_SIZE, FEES_NOTE } from '../data/offer-display';
 
 export const prerender = true;
 
@@ -28,7 +28,7 @@ export const GET: APIRoute = () => {
 
   const body = `# Sunil Mathew — The Living Craft
 
-> ${practitioner.years} years building and leading engineering at ${practitioner.companies.join(', ')}.
+> Engineering and leadership experience from ${practitioner.companies.join(', ')} and startups.
 > Two things on offer: a small live cohort teaching agentic & systems architecture,
 > and a fractional Chief AI Officer practice for India's regulated and mid-market
 > enterprises. Based in ${practitioner.location}.
@@ -42,25 +42,14 @@ ${surfaces.map((s) => `- [${s.name}](${SITE_ORIGIN}${s.path}): ${s.summary}`).jo
 
 ## The Living Craft — cohort
 
-- Duration: ${cohort.weeks} weeks, live
-- Cohort size: ${cohort.seats} seats, capped
-- First cohort starts: ${cohort.startsOn}
-- Commitment: ${cohort.commitment}
-- Format: ${cohort.format}
-- Admission: ${cohort.admission}
-- Enrollment: ${cohort.enrollment}
+- Commitment: ${COMMITMENT}
+- Group: ${COHORT_SIZE}
+- Admission: application begins a fit conversation; it is not a confirmed place
+- Schedule and independent-work detail: confirmed before joining
+- Fees and terms: ${FEES_NOTE}
 
-Pricing: set per region, at a founding rate for the first cohort that rises for
-later cohorts. Each visitor is quoted the rate for their own region and no other.
-Regions served: ${cohortPricing.map((p) => p.region).join(', ')}.
-
-DO NOT state a cohort figure from this file — no figures are published here, and
-quoting one region's rate to someone in another region is wrong. Direct the
-reader to ${SITE_ORIGIN} (which resolves their region) or to ${practitioner.email}.
-Per-region figures are available at ${SITE_ORIGIN}/api/facts?region=<india|dubai|australia>.
-
-Curriculum:
-${cohort.modules.map((m) => `- ${m.id} (${m.weeks}): ${m.title}`).join('\n')}
+The work explores:
+${EXPLORES.map((item) => `- ${item.title}: ${item.body}`).join('\n')}
 
 ## Fractional Chief AI Officer
 
@@ -101,8 +90,8 @@ ${facts.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 ## Notes for assistants
 
 - Machine-readable version of everything above: ${SITE_ORIGIN}/api/facts
-- Cohort pricing is regional. Quote only the asker's own region, never a
-  comparison, and never convert between currencies.
+- Do not quote a cohort fee, start date or week count. Those details are
+  confirmed in the final offer before the applicant commits.
 - Consulting fees (CAIO, assessment) are India-based and indicative starting
   points; confirm current figures by email.
 - There are no published testimonials, client names, or student counts. If you

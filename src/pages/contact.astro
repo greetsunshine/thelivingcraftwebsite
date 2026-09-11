@@ -1,0 +1,252 @@
+---
+/**
+ * /contact/ — for a visitor with one specific question who does not want to
+ * explain their situation twice.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Visitor has a specific unresolved question. Needs the right person
+ *    without repeating context. Evidence: enquiry receipt and route ownership.
+ *    Next step: human response."
+ *
+ * "Without repeating context" is the whole design brief for this page. A
+ * contact page that offers one undifferentiated box guarantees the repetition,
+ * because the first reply has to ask which of five things you meant. So the
+ * page is a routing table: every row names a situation and points at the place
+ * that already asks the right questions.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * NO NEW FORM ON THIS PAGE. NOT NOW, NOT LATER.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The three routes — application, cohort enquiry, enterprise enquiry — are
+ * defined once in src/lib/pipeline/forms.ts and rendered once on the cohort
+ * page. Each carries its own record, its own attribution capture and its own
+ * idempotency key. A fourth form here would either duplicate a definition that
+ * must stay in step, or post nowhere. A form that posts nowhere is worse than
+ * a mailto: it collects a person's problem and drops it.
+ *
+ * WHAT MUST NOT BE ADDED
+ *
+ *   * A response-time guarantee. The operating guide: "The existing proposed
+ *     service targets of one business day for acknowledgement and two for
+ *     technical response remain subject to capacity agreement. Do not place
+ *     them in public copy as guarantees." The page says instead that none is
+ *     published, which is both true and more reassuring than a number nobody
+ *     has committed to.
+ *   * A phone number, postal address or registered entity. None is settled —
+ *     they are the same facts /privacy is waiting on, and they are named as
+ *     outstanding rather than filled in.
+ *   * A promise about who reads a message. Who owns which route is an
+ *     operational matter that changes; the page describes the ROUTE, not the
+ *     person.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+
+const title = 'Contact — The Living Craft';
+const description =
+  'Where each enquiry goes: the open cohort, employer funding, a team programme, advisory, the fractional CAIO retainer and the readiness assessment. One mailbox behind all of them.';
+---
+
+<PracticeLayout title={title} description={description} canonical="/contact/">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Contact</p>
+      <h1>One mailbox, and <em>where each route goes</em></h1>
+      <p class="credential">
+        Everything reaches
+        <strong>apply@thelivingcraft.ai</strong>. The routes below exist so your first
+        message already contains what the reply needs — and so nobody has to ask you to
+        explain your situation a second time.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="mailto:apply@thelivingcraft.ai">Write to us&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/#ask">Ask about the cohort</a>
+      </div>
+      <p class="hero-note">No response-time commitment is published, because none has been agreed.</p>
+    </div>
+  </section>
+
+  {/* ── the routing table ────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Where to start</p>
+      <h2>Pick the row that <em>matches your situation</em></h2>
+    </div>
+
+    <div class="panel routes">
+      <div class="detail-row">
+        <span class="dk">You want a place on the open cohort</span>
+        <span class="dv"><a class="textlink" href="/#apply">The application form</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You have a question before applying</span>
+        <span class="dv"><a class="textlink" href="/#ask">The cohort enquiry form</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Your employer might fund your place</span>
+        <span class="dv"><a class="textlink" href="/#apply">Apply and choose “employer support”</a>, then ask for the funding summary</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You are exploring learning for a team</span>
+        <span class="dv"><a class="textlink" href="/#team">The enterprise enquiry form</a> · <a class="textlink" href="/programmes/enterprise/">what it covers</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You have a design decision and want a review</span>
+        <span class="dv"><a class="textlink" href="/advisory/">Advisory</a>, then a scope call</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You are considering a fractional CAIO retainer</span>
+        <span class="dv"><a class="textlink" href="/caio">The CAIO page</a> — book a discovery call</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">You want a fixed-scope readiness diagnostic</span>
+        <span class="dv"><a class="textlink" href="/assessment">The AI readiness assessment</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Something else entirely</span>
+        <span class="dv"><a class="textlink" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a></span>
+      </div>
+    </div>
+  </section>
+
+  {/* ── what to include ──────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What to include</p>
+      <h2>Three lines are usually <em>enough</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        <strong>What you are responsible for.</strong> Not a job title — the systems and
+        the decisions that land on your desk. A title starts an introduction; a decision
+        starts a conversation.
+      </p>
+      <p>
+        <strong>The decision or question in front of you.</strong> One concrete thing.
+        “Whether to give our assistant a tool that can act” is a better opening than
+        “interested in AI”.
+      </p>
+      <p>
+        <strong>What you have already tried or ruled out.</strong> This is the part that
+        stops the reply asking you something you have already answered.
+      </p>
+      <p class="warn">
+        Please do not send confidential company material, architecture documents or
+        customer data in a first message. Industry context is enough, and what may be
+        shared later is something a scoping conversation settles first.
+      </p>
+    </div>
+  </section>
+
+  {/* ── what happens next ────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What happens next</p>
+      <h2>Honestly, <em>this much</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        A message sent through one of the forms is delivered to the mailbox and recorded
+        against the route you chose, so the reply picks up from what you wrote. What you
+        write is used to reply to you and to prepare the fit conversation. Nothing else.
+        <a class="textlink" href="/privacy">How your details are handled</a> describes
+        what is known today and what is still outstanding.
+      </p>
+      <p>
+        <strong>You will not receive an automated acknowledgement email yet.</strong>
+        Automated email is not in service, so nothing is sent by machine — including
+        anything marketing-shaped. The form tells you on screen whether your submission
+        was saved, and that message is the confirmation.
+      </p>
+      <p>
+        <strong>Marketing permission is separate and unticked.</strong> The words beside
+        the box are: “{MARKETING_CONSENT.wording}” Refusing it costs nothing and does not
+        affect an application.
+        <a class="textlink" href="/communication-preferences">Changing what you receive</a>
+        explains how to change your mind today.
+      </p>
+      <p>
+        <strong>No service target is published.</strong> One is under discussion; until
+        it has been agreed it would be a promise nobody has made.
+      </p>
+    </div>
+
+    <aside class="pending">
+      <h3>Contact details this page cannot publish yet</h3>
+      <ul>
+        <li>
+          The registered entity behind the practice, and its address.
+          <span class="who">The owner — the same facts <a href="/privacy">privacy</a> and <a href="/terms">terms</a> are waiting on</span>
+        </li>
+        <li>
+          A telephone route, if there is to be one.
+          <span class="who">The owner to decide</span>
+        </li>
+        <li>
+          An agreed acknowledgement and technical-response target.
+          <span class="who">Sunil and Alchemy — a capacity agreement, not a copy decision</span>
+        </li>
+      </ul>
+    </aside>
+    <p class="revised">
+      Written <time datetime="2026-09-11">11 September 2026</time>.
+    </p>
+  </section>
+</PracticeLayout>
+
+<style>
+  /* The routing table is a card of rows rather than a <table>: eight rows of
+     two cells is a horizontal scroller at 390px, and these stack cleanly. */
+  .routes .detail-row:first-child {
+    padding-top: 0;
+  }
+  .routes .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .routes .dk {
+    max-width: 40ch;
+    /* The situation is the thing being scanned, so it takes body ink rather
+       than the quiet label colour a detail-row key normally gets. */
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+  }
+  .routes .dv {
+    max-width: 34ch;
+    font-weight: var(--weight-normal);
+  }
+
+  .warn {
+    color: var(--text-quiet);
+  }
+
+  .pending {
+    margin-top: var(--space-6);
+  }
+  .pending a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 720px) {
+    .routes .detail-row {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .routes .dv {
+      text-align: left;
+      max-width: none;
+    }
+  }
+</style>

@@ -74,7 +74,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  if (await verifySession(context.cookies.get(COOKIE_NAME)?.value)) {
+  // The session now carries WHO, not just "someone knew the password". It is
+  // put on locals so every console page and API can ask what this person may
+  // do without re-verifying the cookie — and so that no page is tempted to
+  // read roles from anywhere unsigned.
+  const identity = await verifySession(context.cookies.get(COOKIE_NAME)?.value);
+  if (identity) {
+    context.locals.admin = identity;
     return seal(await next());
   }
 

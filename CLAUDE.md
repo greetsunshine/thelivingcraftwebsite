@@ -6,11 +6,37 @@ practice. It started as marketing assets for a cohort landing page destined for 
 it has since become the production site itself. Three cross-linked surfaces, one design
 system. The Kajabi hand-off is **no longer the plan** — build directly in this repo.
 
+## ⚠ Checkpoint — read this before doing anything else
+**[docs/cohort-pipeline/RESUME.md](docs/cohort-pipeline/RESUME.md) is the checkpoint, and
+it is the FIRST thing to read in any session that continues this work** — including a
+session that was simply told "continue" with no other context, and including a subagent
+picking up one piece of it.
+
+It says where the work actually stands, which routes render today, what is in flight, what
+is blocked and on whom, and the handful of things that will otherwise cost an hour to
+rediscover. It is deliberately short; the detail is in `build-status.md` and in the code.
+
+**Update it in the same commit as the code**, the same rule the two status docs already
+carry. A checkpoint that was true yesterday and is wrong today is worse than none, because
+the next session will trust it. If you finish a stage, land a route, unblock a decision, or
+lose an hour to something surprising, that is a line in RESUME.md before you commit.
+
 ## Surfaces (Astro routes)
-- **`/`** — *The Living Craft* cohort. Application-only program in agentic & systems
-  architecture. Single page; region (India/Dubai/Australia) only changes the pricing
-  block via `?region=` param or Vercel geo header. SSR (`prerender = false`).
-  Files: [src/pages/index.astro](src/pages/index.astro), [src/components/ProgramPage.astro](src/components/ProgramPage.astro), [src/data/regions.ts](src/data/regions.ts).
+- **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
+  Single page, still SSR (`prerender = false`). Files:
+  [src/pages/index.astro](src/pages/index.astro),
+  [src/components/cohort/CohortPage.astro](src/components/cohort/CohortPage.astro),
+  [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
+  [src/data/cohort-copy.ts](src/data/cohort-copy.ts),
+  [src/data/offer-display.ts](src/data/offer-display.ts).
+  - **The site does not publish a cohort fee, start date or week count.** The page,
+    structured data, `/llms.txt`, `/api/facts`, latest feed and Ask widget all use the same
+    final-offer answer from `offer-display.ts`. Region context never changes that policy.
+    `/india|/dubai|/australia` remain compatibility redirects only.
+  - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
+    application, cohort enquiry, enterprise enquiry. The page renders from it and the API
+    validates against it, so a field cannot be required in the browser and optional on the
+    server. An enterprise enquiry is never counted as an application.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
@@ -241,12 +267,40 @@ system. The Kajabi hand-off is **no longer the plan** — build directly in this
   A checkpoint sorts BEFORE anything else at the same offset — week 1's 01:10 is a
   checkpoint and a stand-up, and the words are "read these before you stand up".
 
+## The cohort rebuild — read the status doc before building
+**[docs/cohort-pipeline/build-status.md](docs/cohort-pipeline/build-status.md) is required
+reading before any work on the public cohort page, the three application/enquiry forms, or
+the pipeline screens in the console.** The plan it is built against is
+[docs/cohort-pipeline/build-plan.md](docs/cohort-pipeline/build-plan.md); the source of
+record is the Cohort Handoff Package in
+[docs/Website Rebuild 10-09-2026/](docs/Website%20Rebuild%2010-09-2026/) (Team Alchemy,
+10 September 2026, handoff `LC-LAUNCH-2026-09-10`).
+
+Same two rules as the learning agent's status doc: **read it first**, and **update it in
+the same commit as the code**. Move the checkbox, adjust the counts, add a changelog row.
+
+Three things about that package are worth knowing before you open it:
+- **It specifies behaviour, not a stack.** Endpoint names, providers and hosting are ours
+  to choose; the eighteen acceptance cases are what it actually holds us to.
+- **The cohort page stays at `/`.** Every campaign post links to
+  `learning.thelivingcraft.ai/` with `utm_content=lc-oct-dNN`. The roadmap's
+  `/programmes/agentic-systems/` is a design target, and the current address keeps working
+  until redirects are approved and tested.
+- **One external decision remains** — how email is actually delivered. Receipt queueing,
+  templates, suppression and callbacks are built; provider selection, verified domain,
+  monitored reply mailbox and approval remain external. The public offer policy is settled
+  in code: do not publish a fee, start date, week count or regional rate.
+
+`/caio`, `/assessment`, `/latest` and everything under `/craft` are out of scope: the brief
+says no LMS, checkout, payment collection or new chatbot is required in this release.
+
 ## The learning agent — read the status doc before building
 **[docs/learning-agent/build-status.md](docs/learning-agent/build-status.md) is required
 reading before any further work on `/craft` or its admin pages.** It is the audit of what
 is built, what contradicts the spec, and what is left, against
-[docs/learning-agent-specs-02-09-2026.md](docs/learning-agent-specs-02-09-2026.md) — which
-is the design of record and supersedes the 28 August PoC write-up.
+[docs/learning-agent/learning-agent-specs-02-09-2026.md](docs/learning-agent/learning-agent-specs-02-09-2026.md) —
+which is the design of record and supersedes the 28 August PoC write-up. (Both spec files
+moved under `docs/learning-agent/` alongside the status doc; the old paths are gone.)
 
 Two rules, and they are the reason the file is worth having:
 - **Read it first.** It exists so nobody re-audits the branch or rebuilds something that
@@ -279,11 +333,17 @@ but cross-linked surface. Open decision (flag to Sunil): umbrella vs personal br
 practice name — copy is written brand-neutral so the wordmark can be swapped.
 
 ## The facts module — read this before editing any offer
-[src/data/facts.ts](src/data/facts.ts) is the **single source of truth** for every offer fact.
-Four consumers read it and nothing else: JSON-LD structured data, `/llms.txt`,
-`/api/facts`, and the visitor Q&A agent's grounding. Change a price, date, or seat
-count there and all four move together. Cohort pricing lives in
-[src/data/regions.ts](src/data/regions.ts) and is imported, not restated.
+[src/data/facts.ts](src/data/facts.ts), [src/data/cohort-copy.ts](src/data/cohort-copy.ts)
+and [src/data/offer-display.ts](src/data/offer-display.ts) are the shared source for public
+offer facts and approved cohort copy. JSON-LD, `/llms.txt`, `/api/facts`, the visible page
+and visitor Q&A grounding consume those modules. The retired regional prices are not a
+public source and must not be reintroduced from old marketing material.
+
+The gated `/craft` learner area is the one exception, and it is a separate file:
+[src/data/learner-cohort.ts](src/data/learner-cohort.ts) holds the internal teaching
+schedule (six weeks, eight seats, a September start) that the public offer withholds. Only
+the learner pages read it, and they alias it as `cohort`. **It must never be imported by a
+public surface** — that would republish the withheld figures through a side door.
 
 Never state an offer fact directly in a page, a schema block, or an agent prompt —
 route it through `facts.ts`. The failure this prevents is subtle and bad: a stale
@@ -296,9 +356,10 @@ asked the Q&A agent, content review, and **teaching the cohort** — `/craft/adm
 `/craft/admin/sessions`, `/craft/admin/work`, `/craft/admin/baseline` and `/craft/admin/feedback`,
 all described under *The learning agent*.
 
-**Ten destinations, in two groups, and three of them are composed pages.** The bar carried
-fifteen in one undifferentiated row, and several were the same job filed twice. What merged,
-and the argument for each:
+**Fourteen destinations, in two groups, and three of them are composed pages.** The bar
+carried fifteen in one undifferentiated row and several were the same job filed twice; the
+merges below took it to ten, and the cohort pipeline has since added four — **pipeline**,
+**comms**, **records** and **admin**. What merged, and the argument for each:
 - **Work** = the week's check + the decision records + the comparison. The third page was
   *derived entirely from the other two* — a panel that had been filed as a destination. They
   are also one question asked three ways (did the idea land?), and disagreement between the
@@ -333,11 +394,32 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — nineteen tables, schema in
+- **Storage is Supabase** — forty-three tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
   - *The practice:* `events`, `leads`, `questions`, `radar_findings`, `radar_runs`.
+  - *The pipeline* (new, and the cohort rebuild's own store): `organisations`, `people`,
+    `cohorts`, `form_submissions`, `opportunities`, `attributions`, `consents`,
+    `activities`, `tasks`, `audit_log`, `staff`. **`form_submissions`, not `submissions`** —
+    that name was already taken by the learners' decision records and the collision would
+    have been silent. The save is one plpgsql function, `pipeline_submit()`, because six
+    sequential supabase-js calls have no transaction around them and a function killed
+    between two awaits leaves a person with no submission. `consents` has an UPDATE trigger
+    that refuses: a withdrawal is a new row, never an edit of the row that granted it.
+  - *Communications* (stage 4, dispatch off): `message_templates`, `comms_sequences`,
+    `comms_messages`, `comms_suppressions`, `comms_events`. And `resource_requests` — the
+    V4 addendum's fourth record type, which **an anonymous download never reaches**: only
+    somebody who typed an address is a person, so a count there is people rather than
+    downloads.
+  - *The evidence behind a stage*: `meetings`, `offers`, `payments`, `admissions`,
+    `attendance`, `nominations`, `stage_history`. **There is no `enrolled` column
+    anywhere** — enrolment is derived by `enrolment_blockers()`, which returns one row per
+    missing piece. `admissions` and `payments` are separate tables with separate authors
+    because enrolment needs two facts from two people who cannot act for each other; two
+    booleans on `opportunities` could both be set by whoever had the row open. Amounts are
+    minor units. A refund is a row plus a review task and changes no stage. A nomination is
+    **not** a person and **not** an applicant.
   - *The cohort:* `learners`, `intake_responses`, `familiarity_responses`,
     `submissions`, `quiz_responses`, `session_prompts`, `outcome_ratings`,
     `checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `doubts`,
@@ -696,21 +778,22 @@ systems. Position *above* the commoditizing "how to use AI tools" market.
 
 ## Offer facts (single source of truth)
 ### Cohort (`/`)
-- **6-week** program · live online (Bangalore: hybrid) · **8 seats, capped** · ~5 hrs/week
-- Pricing per region (founding rate): India **₹1,20,000** (standard ₹1,50,000) ·
-  Dubai **AED 8,000** · Australia **AUD 3,000**. Edit in [src/data/regions.ts](src/data/regions.ts).
-- Starts **September 2026**; enrollment rolling until all 8 seats are filled. Admission
-  by application. These numbers live in `cohort` in [src/data/facts.ts](src/data/facts.ts) — this list
-  restates them for a reader, it does not define them.
+- Live programme for experienced engineers, architects and engineering leaders.
+- **30 live hours plus independent work.** The open cohort **targets eight members**;
+  this is not a capacity or scarcity claim.
+- Admission starts with an application and fit conversation. Applying is not payment or a
+  confirmed place.
+- Fees, schedule, payment, refund and access terms are confirmed in the final offer before
+  commitment. Do not publish a fee, start date, week count or regional rate.
 
 ### Consulting (`/caio`, `/assessment`) — pricing all placeholder
 - CAIO tiers: Advisory ~2 d/mo · Embedded ~1 d/wk · Transformation 2–3 d/wk. 90-day min.
 - Assessment: fixed-fee, fixed-scope, 2–3 weeks, board-ready roadmap.
 
 ### Instructor
-~26 yrs, director/L7-level at Google, Amazon, Walmart; Bangalore-based; building a personal
-agentic-AI product + a live enterprise AI-adoption engagement. 100M+ users served; 150
-engineers led across US/UK/China/India.
+Publicly state engineering and leadership experience from Google, Amazon, Walmart and
+startups, based in Bengaluru. Do not infer or publish user counts, team counts, product-scale
+metrics, testimonials or employer endorsement without a dated approval record.
 
 ## Design tokens
 - **Palette** (warm "craft", one accent): paper `#F4EEE2` · surface `#FBF7EE` ·

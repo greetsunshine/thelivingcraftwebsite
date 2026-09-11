@@ -1,0 +1,350 @@
+---
+/**
+ * /terms — and the reason it is not a set of terms.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DO NOT WRITE TERMS HERE. NOBODY IN THIS REPOSITORY KNOWS THEM.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The contracting entity, what is payable and when, whether a place can be
+ * cancelled and on what basis, how long access to the material lasts, and which
+ * country's law governs a disagreement — five facts, none of them settled, and
+ * every one of them a commitment somebody would be entitled to hold this
+ * practice to.
+ *
+ * The failure mode is the same as the one /privacy is written against and
+ * slightly worse in one respect. A wrong privacy notice misdescribes what
+ * already happens. Invented terms describe an agreement that does not exist,
+ * and they read as settled precisely because terms pages all read alike — a
+ * reader cannot tell a considered refund policy from a paragraph pasted out of
+ * a template. So the page names what is outstanding and who owes it, and states
+ * only what can be checked against the code and the approved copy.
+ *
+ * WHAT CAN BE STATED, AND WHY EACH ONE IS SAFE
+ *
+ *   * Applying costs nothing and collects no card details — src/lib/pipeline/
+ *     forms.ts defines all three forms and none of them has a payment field;
+ *     nothing on this site takes money.
+ *   * An application is not a confirmed place, and admission, payment and
+ *     attendance confirmation are separate steps — the delivered cohort copy,
+ *     rendered on the cohort page and /programmes/ in those words.
+ *   * The terms arrive in the final offer — the approved FAQ answer, imported
+ *     rather than retyped so this page cannot drift from the cohort page.
+ *
+ * WHY IT IS noindex
+ *
+ * A terms page is quoted back at you. An unfinished one, indexed and cited by
+ * an assistant, becomes a commitment nobody made. It comes out of noindex on
+ * the day the owner supplies the facts, in the same change that replaces it.
+ *
+ * WHY IT EXISTS AT ALL BEFORE THEN
+ *
+ * The footer links here, and /contact names this page as one of the two
+ * waiting on the same entity facts. A 404 under "Terms" on a site inviting
+ * applications is the worst of the options. This is the second worst, and it
+ * says so.
+ *
+ * WHAT MUST NOT BE ADDED
+ *
+ *   * A fee, a date, a week count or a seat count. The offer figures are held
+ *     behind src/data/offer-display.ts while that decision is open, and a
+ *     terms page is the last place a number should appear first.
+ *   * A response-time or resolution commitment. None has been agreed.
+ *   * A liability, warranty or intellectual-property clause. Those are the
+ *     outstanding facts, not the easy half of them.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { FEES_NOTE } from '../data/offer-display';
+import { QUESTIONS } from '../data/cohort-copy';
+
+const title = 'Terms — The Living Craft';
+const description =
+  'What is settled today about applying to The Living Craft, and which contractual facts — the entity, payment, cancellation, access and governing law — are still to be published.';
+
+/**
+ * The approved FAQ answer, verbatim, looked up rather than retyped.
+ *
+ * Same argument as /privacy rendering the form fields from forms.ts: a
+ * hand-copied sentence goes stale silently the first time the answer is
+ * reworded, and this is the one sentence on the page that a reader is entitled
+ * to treat as the practice's position. The fallback is the page-facing form of
+ * the same commitment, so neither branch can produce a sentence nobody approved.
+ */
+const FEES_Q = 'What are the dates and fees?';
+const feesAnswer = QUESTIONS.find((q) => q.q === FEES_Q)?.a ?? FEES_NOTE;
+
+/** Each row names the fact and who owes it. Nothing here is guessed. */
+const outstanding = [
+  {
+    fact: 'The contracting entity',
+    detail:
+      'Which legal entity an agreement would be with, and its registered address. The same fact the privacy notice is waiting on, and the one every other row depends on.',
+    owner: 'The owner',
+  },
+  {
+    fact: 'Payment terms',
+    detail:
+      'What is payable, when it falls due, in which currency and by what method. Nothing on this site takes payment today, so there is no arrangement to describe yet.',
+    owner: 'The owner',
+  },
+  {
+    fact: 'Cancellation and refunds',
+    detail:
+      'Whether a place can be cancelled, by whom, by when, and what happens to anything already paid — including if a session moves.',
+    owner: 'The owner',
+  },
+  {
+    fact: 'Access to the material',
+    detail:
+      'How long access to the session material lasts after the programme, and what may be done with it afterwards.',
+    owner: 'The owner',
+  },
+  {
+    fact: 'Governing law and jurisdiction',
+    detail:
+      'Which country’s law applies and where a disagreement would be settled. Members join from more than one country, so this is not a formality.',
+    owner: 'The owner',
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical="/terms" noindex>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Terms</p>
+      <h1>What is settled, and <em>what is not</em></h1>
+      <p class="credential">
+        This page is not a set of terms, and it does not pretend to be one. It states
+        what can be checked — applying is free, an application is not a place, and the
+        terms you would be bound by arrive in the offer — and it names the five facts
+        that are still to be published.
+      </p>
+    </div>
+  </section>
+
+  {/* First, for the same reason /privacy leads with it: a reader needs to know
+      how much of this page to rely on before reading the rest of it. */}
+  <section class="wrap band">
+    <div class="pending-block">
+      <p class="pending-label">Not yet published</p>
+      <p>
+        Five facts belong in a set of terms and are not settled — the contracting
+        entity, payment, cancellation and refunds, access to the material, and
+        governing law. They are listed at the foot of this page with who is
+        responsible for each. Nothing on this page is a contract, and nothing here
+        creates one.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What is true today</p>
+      <h2>Applying is <em>free, and it is not a place</em></h2>
+    </div>
+
+    <ul class="fact-list">
+      <li>
+        <b>Applying costs nothing.</b> There is no application fee and no deposit. No
+        card, bank or payment details are collected anywhere on this site — there is
+        nothing on it that takes money. What each form asks for is listed in full on
+        <a class="textlink" href="/privacy">how your details are handled</a>.
+      </li>
+      <li>
+        <b>An application is not a confirmed place.</b> Applying starts a discussion;
+        admission, payment and attendance confirmation are separate steps, and each one
+        involves a different person saying yes. Nothing you do on this site commits you
+        to anything.
+      </li>
+      <li>
+        <b>You are told on screen whether your application was saved.</b> That message,
+        and the reference it shows you, is the confirmation. No automated email is sent
+        — see <a class="textlink" href="/communication-preferences">changing what you receive</a>.
+      </li>
+      <li>
+        <b>No service or response target is published.</b> One is under discussion.
+        Until it has been agreed it would be a promise nobody has made.
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Where the terms come from</p>
+      <h2>The offer, before <em>you commit</em></h2>
+    </div>
+
+    <p class="body-copy">
+      The programme's own answer to the question, in the words it is published in:
+    </p>
+
+    <blockquote class="quote">{feesAnswer}</blockquote>
+
+    <p class="body-copy">
+      That is the mechanism, not a holding line. The schedule, the fee, how and when it
+      is paid, what happens if you or we cancel, and what access you have to the
+      material are settled in writing in the offer — which arrives after a conversation
+      about fit, and before there is anything to agree to. If any of it is unclear when
+      you read it, the right moment to say so is then.
+    </p>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Still to be published</p>
+      <h2>Five facts, and <em>who owes each</em></h2>
+    </div>
+
+    <p class="body-copy">
+      These are named rather than guessed. A page of plausible terms is worse than a
+      page that is plainly unfinished, because terms pages all read alike — nobody can
+      tell a considered refund policy from a pasted one, and the reader would be relying
+      on the difference.
+    </p>
+
+    <div class="scroll">
+      <table class="owes">
+        <thead>
+          <tr><th>Fact</th><th>What is missing</th><th>Owner</th></tr>
+        </thead>
+        <tbody>
+          {
+            outstanding.map((row) => (
+              <tr>
+                <td>{row.fact}</td>
+                <td>{row.detail}</td>
+                <td>{row.owner}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body-copy">
+      Until they are published, a question about any of them is answered by a person
+      rather than by this page. Write to
+      <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>, or use
+      <a class="textlink" href="/contact/">the route that matches your situation</a>.
+    </p>
+
+    <p class="revised">Written <time datetime="2026-09-11">11 September 2026</time>.</p>
+  </section>
+</PracticeLayout>
+
+<style>
+  .band { padding-block: var(--space-8); }
+
+  .body-copy {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+  .body-copy + .body-copy { margin-top: var(--space-4); }
+
+  /* The unwritten state in the system's own language — a dashed edge that reads
+     as a space held open rather than as a broken component. Same treatment as
+     /privacy, deliberately: a reader arriving from that page should recognise
+     the mark rather than have to work out what it means twice. */
+  .pending-block {
+    background: var(--state-unwritten-bg);
+    border: var(--border-w-hair) dashed var(--border-field);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5) var(--space-6);
+    max-width: var(--measure-prose);
+  }
+  .pending-label {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-2);
+  }
+  .pending-block p:last-child {
+    font-size: var(--size-3);
+    color: var(--text-body);
+    line-height: var(--lh-normal);
+  }
+
+  .fact-list {
+    list-style: none;
+    max-width: var(--measure-prose);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .fact-list li {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--border-hair);
+  }
+  .fact-list b {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    display: block;
+  }
+  .fact-list a {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.2em;
+  }
+  .fact-list a:hover { color: var(--link-hover); }
+
+  /* Sunken ground rather than a card: this is the offer's own sentence quoted
+     inside the page, not a panel of its own. */
+  .quote {
+    margin: var(--space-5) 0;
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-loud);
+    max-width: var(--measure-prose);
+  }
+
+  .scroll { overflow-x: auto; }
+  .owes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--size-3);
+    margin-top: var(--space-5);
+  }
+  .owes th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--text-quiet);
+    padding: 0 var(--space-4) var(--space-2) 0;
+    border-bottom: var(--border-w-rule) solid var(--border-field);
+    white-space: nowrap;
+  }
+  .owes td {
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    vertical-align: top;
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+  .owes td:first-child {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .owes td:last-child { white-space: nowrap; }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 900px) {
+    .band { padding-block: var(--space-7); }
+  }
+</style>

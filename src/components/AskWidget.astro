@@ -312,9 +312,26 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   .ask-foot a { color: var(--clay); text-decoration: underline; text-underline-offset: .2em; }
 
   @media (max-width: 520px) {
-    .ask { right: 12px; bottom: 12px; left: 12px; }
-    .ask-toggle { width: 100%; justify-content: center; }
+    /* Full width on a phone, which turns the toggle into a bar pinned across
+       the bottom of the viewport — and it is fixed, so it sits ON TOP of
+       whatever is underneath for the whole scroll.
+       The brief names this failure directly: "Any sticky action must not cover
+       form fields or the keyboard focus." Every page this widget renders on
+       carries a form with a full-width submit button, so the thing it covered
+       was the button somebody was reaching for.
+       The bar's height is its own; the padding below is what keeps the page
+       able to scroll past it. Both come from one custom property so they
+       cannot drift apart. */
+    .ask { right: 12px; bottom: 12px; left: 12px; --ask-bar: 52px; }
+    .ask-toggle { width: 100%; justify-content: center; height: var(--ask-bar); }
     .ask-panel { width: 100%; height: min(70vh, 520px); }
+  }
+
+  /* Reserve the strip the bar occupies. `:global(body)` because the widget is
+     scoped and the space it needs belongs to the page, not to the widget —
+     without this the last element on every page is unreachable behind it. */
+  @media (max-width: 520px) {
+    :global(body) { padding-bottom: calc(52px + 24px); }
   }
 
   @media (prefers-reduced-motion: reduce) {

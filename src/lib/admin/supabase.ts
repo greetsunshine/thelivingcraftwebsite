@@ -53,8 +53,11 @@ export async function record(
 
   try {
     const { error } = await client.from(table).insert(row);
-    if (error) console.error(`record(${table}) failed:`, error.message);
+    // Code, not message. `leads` holds a name, an address and free text, and a
+    // Postgres error quotes the value it rejected. Same rule as
+    // src/lib/pipeline/errors.ts, which is where the helper lives.
+    if (error) console.error(`record(${table}) failed:`, error.code ?? 'unknown');
   } catch (err) {
-    console.error(`record(${table}) threw:`, err instanceof Error ? err.message : err);
+    console.error(`record(${table}) threw:`, err instanceof Error ? err.name : 'unknown');
   }
 }

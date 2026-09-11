@@ -1,0 +1,188 @@
+---
+/**
+ * The wider site's footer.
+ *
+ * Grouped as the roadmap asks — "programmes, resources, company/contact and
+ * privacy/terms" — and it follows the same rule as the nav above it: a
+ * destination that does not exist yet is shown as plain text, never as a link.
+ * A footer full of links to pages that are being written is how a small
+ * practice looks bigger than it is, and this audience notices.
+ *
+ * The only live destinations today are the ones that genuinely exist: the
+ * cohort page, the two consulting surfaces, field notes, and the contact
+ * routes. Everything else is marked pending and turns into a link in the same
+ * commit that creates its page.
+ */
+const year = new Date().getFullYear();
+
+interface Item {
+  href: string;
+  label: string;
+  built: boolean;
+}
+
+const PROGRAMMES: Item[] = [
+  { href: '/', label: 'Agentic systems cohort', built: true },
+  { href: '/programmes/enterprise/', label: 'Learning for a team', built: true },
+  { href: '/caio', label: 'Fractional CAIO retainer', built: true },
+  { href: '/assessment', label: 'AI readiness assessment', built: true },
+];
+
+const RESOURCES: Item[] = [
+  { href: '/resources/guides/', label: 'Guides', built: true },
+  { href: '/latest', label: 'Field notes', built: true },
+  { href: '/resources/templates/', label: 'Templates', built: true },
+  // The three open resources from the 11 September addendum. `built: true`
+  // because all four routes were curled and returned 200 before this line was
+  // written — which is the whole of what the flag asserts.
+  //
+  // Footer only, deliberately. The header's order is the roadmap's — "Programmes,
+  // Advisory, Resources, Tools, About" — and a sixth destination there would be a
+  // change to that plan rather than a page going live. /toolkit is reached from
+  // the Resources hub, from each resource page and from the sitemap.
+  { href: '/toolkit/', label: 'Toolkit', built: true },
+  { href: '/tools/agent-design-check/', label: 'Agent design check', built: true },
+];
+
+const PRACTICE: Item[] = [
+  { href: '/about/', label: 'About Sunil', built: true },
+  { href: '/advisory/', label: 'Advisory', built: true },
+  { href: '/contact/', label: 'Contact', built: true },
+];
+---
+
+<footer class="sitefooter">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="wordmark"><span class="dot"></span> the living craft</div>
+        <p class="muted">
+          Build a working agentic system, and develop the ability to explain its design,
+          examine its behaviour and guide the decisions behind it.
+        </p>
+      </div>
+
+      <div class="foot-col">
+        <h2>Programmes</h2>
+        {
+          PROGRAMMES.map((i) =>
+            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
+          )
+        }
+      </div>
+
+      <div class="foot-col">
+        <h2>Resources</h2>
+        {
+          RESOURCES.map((i) =>
+            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
+          )
+        }
+      </div>
+
+      <div class="foot-col">
+        <h2>Practice</h2>
+        {
+          PRACTICE.map((i) =>
+            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
+          )
+        }
+        <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+      </div>
+    </div>
+
+    <div class="foot-bottom">
+      <span>© {year} The Living Craft · Sunil Mathew</span>
+      <span class="foot-legal">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/communication-preferences">Email preferences</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .sitefooter {
+    border-top: var(--border-w-hair) solid var(--border-hair);
+    padding: var(--space-7) 0 var(--space-6);
+    font-size: var(--size-3);
+    margin-top: var(--space-8);
+  }
+  .foot-grid {
+    display: grid;
+    grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+  .foot-brand .wordmark {
+    margin-bottom: var(--space-4);
+  }
+  .foot-brand .muted {
+    color: var(--text-quiet);
+    max-width: 34ch;
+    line-height: var(--lh-snug);
+  }
+
+  .foot-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .foot-col h2 {
+    font-family: var(--font-marginal);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-3);
+    font-weight: var(--weight-medium);
+  }
+  .foot-col a {
+    color: var(--text-body);
+    padding: var(--space-1) 0;
+    font-size: var(--size-3);
+  }
+  .foot-col a:hover {
+    color: var(--accent-ink);
+  }
+  .foot-col .pending {
+    color: var(--text-quiet);
+    padding: var(--space-1) 0;
+    font-size: var(--size-3);
+  }
+
+  .foot-bottom {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    color: var(--text-quiet);
+    font-size: var(--size-2);
+  }
+  .foot-legal {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .foot-legal a {
+    color: var(--text-quiet);
+  }
+  .foot-legal a:hover {
+    color: var(--accent-ink);
+  }
+
+  @media (max-width: 900px) {
+    .foot-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .foot-brand {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 560px) {
+    .foot-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+</style>

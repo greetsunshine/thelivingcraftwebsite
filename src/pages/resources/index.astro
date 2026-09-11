@@ -1,0 +1,321 @@
+---
+/**
+ * /resources — the hub, organised by the problem rather than by the format.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Practitioner trying to solve a design question. Overwhelmed by tool
+ *    lists; organise by problem and task. Evidence: authored guides and worked
+ *    examples. Next step: relevant tool or deeper guide."
+ *
+ * "Organise by problem and task" is the whole instruction, and it is a
+ * corrective: the default resources page is a list of formats — guides,
+ * articles, templates, tools — which asks a reader who arrived with a question
+ * to first guess which shelf the answer is on. So the first thing on this page
+ * is the questions themselves, each pointing at the one page that answers it.
+ * Formats come second, as a way of browsing rather than as the way in.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * IT LISTS WHAT EXISTS. NOTHING ELSE. EVER.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The roadmap: "Do not publish empty hubs merely to fill the navigation", and
+ * separately, the sixteen planned pieces "are editorial briefs, not claims of
+ * existing articles". A hub is the single easiest place on a site to turn a
+ * plan into an implied promise — a greyed-out row with a real title reads as
+ * "coming soon", and a reader remembers the title, not the grey.
+ *
+ * So: the questions and their answers are READ FROM THE COLLECTION, never
+ * hand-listed. A guide that is not written does not appear, because it is not
+ * in the collection; a guide that is written cannot be missing from this page,
+ * for the same reason. The note at the foot says what is planned WITHOUT NAMING
+ * A SINGLE UNWRITTEN TITLE OR A DATE, which is the whole of what may be said.
+ *
+ * WHAT IS LINKED, AND WHY EACH ONE IS ALLOWED
+ *
+ *   * The guides — the collection, filtered to status 'ready', the same
+ *     predicate the cluster index and the article route use.
+ *   * Field notes at /latest — a live page, refreshed by the retriever.
+ *   * The Agent Design Check at /tools/agent-design-check — the first of the
+ *     roadmap's two tools. Described in the plainest terms the brief supports
+ *     (a question-by-question check, no sign-up) and nothing more: the tool's
+ *     own page owns its rubric, and a hub that describes a tool's behaviour in
+ *     its own words is a second source for it.
+ *   * /toolkit — the three open resources from the 11 September campaign
+ *     addendum (LC-R01/R02/R03: the cost-ceiling worksheet, the evaluation-gates
+ *     worksheet and the deployment checklist). That index lists RELEASED
+ *     resources only, from src/data/resources.ts, and names no download that
+ *     does not exist — the same rule this page follows, written into the
+ *     addendum as an instruction of its own.
+ *   * /resources/templates/ DOES exist now — four templates, each a blank paired
+ *     with a completed illustrative example. The paragraph below used to say there
+ *     were none; it was true when written and false a day later, which is exactly
+ *     the failure mode a hub page has. If you retire a template, change that
+ *     paragraph in the same commit.
+ *   * The rule it replaced still stands for everything else here: nothing
+ *     unwritten is listed as a row waiting to become one.
+ *
+ * Top-level pages in this section carry no breadcrumbs and no JSON-LD — see
+ * /about, /programmes/ and /contact. The cluster index below emits its own,
+ * because it is depth two and its visible content supports it.
+ */
+import { getCollection } from 'astro:content';
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { releasedResources } from '../../data/resources';
+
+export const prerender = true;
+
+const published = await getCollection('guides', (g) => g.data.status === 'ready');
+
+// Same rule as the guides above: the COUNT is read, never typed. A sentence
+// that says "three" while the module holds two is the failure a hub page has,
+// and it is invisible until somebody counts the cards.
+const kit = releasedResources();
+
+const pillars = published.filter((g) => g.data.kind === 'pillar');
+const supporting = published.filter((g) => g.data.kind === 'supporting');
+
+/**
+ * The questions, in the pillar's reading order.
+ *
+ * `question` is the roadmap's visibility-sample wording, copied verbatim into
+ * the guide's frontmatter — so these rows are the reader's problem stated in
+ * the same words the practice measures itself against. A piece with no
+ * question is not dropped; it is simply not a row here, and it stays reachable
+ * from the cluster index.
+ */
+const order = new Map<string, number>();
+pillars.forEach((p) => p.data.related.forEach((slug, i) => order.set(slug, i)));
+
+const answered = supporting
+  .filter((g) => Boolean(g.data.question))
+  .sort((a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99));
+
+const count = published.length;
+const guidesNote =
+  count === 1 ? 'One guide is published.' : `${count} guides are published.`;
+
+const title = 'Resources — The Living Craft';
+const description =
+  'Start from the design question in front of you: agent or workflow, what a tool may do, what to do with uncertain evidence. Written guides, field notes and a question-by-question design check.';
+---
+
+<PracticeLayout title={title} description={description} canonical="/resources/">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Resources</p>
+      <h1>Start from the question <em>in front of you</em></h1>
+      <p class="credential">
+        Most of these questions arrive at the same moment — when a language model stops
+        recommending and starts doing. Each one below has one page that answers it, and
+        only pages that have actually been written appear here.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/resources/guides/"
+          >Browse the guides&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+        >
+        <a class="btn btn-ghost" href="/latest">Field notes</a>
+      </div>
+      <p class="hero-note">{guidesNote} Nothing is listed here before it is written.</p>
+    </div>
+  </section>
+
+  {/* ── by problem, which is the roadmap's instruction for this page ─────── */}
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">By the decision you are making</p>
+      <h2>One question, <em>one page</em></h2>
+    </div>
+
+    <div class="panel routes">
+      {
+        answered.map((g) => (
+          <div class="detail-row">
+            <span class="dk">{g.data.question}</span>
+            <span class="dv">
+              <a class="textlink" href={`/resources/guides/${g.id}`}>
+                {g.data.title}
+              </a>
+            </span>
+          </div>
+        ))
+      }
+      {
+        pillars.length > 0 && (
+          <div class="detail-row">
+            <span class="dk">You want the whole picture rather than one decision</span>
+            <span class="dv">
+              {pillars.map((p, i) => (
+                <>
+                  {i > 0 && <span class="sep"> · </span>}
+                  <a class="textlink" href={`/resources/guides/${p.id}`}>
+                    {p.data.title}
+                  </a>
+                </>
+              ))}
+            </span>
+          </div>
+        )
+      }
+    </div>
+
+    <p class="body-copy">
+      Every guide opens with the answer, says who it is for and when it applies, works
+      through one example, is explicit about what the argument rests on, and ends with
+      what it does not cover. Each carries the name of whoever wrote it and the date its
+      content was last reviewed.
+    </p>
+  </section>
+
+  {/* ── by form, second: a way to browse, not the way in ─────────────────── */}
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Where to start</p>
+      <h2>Four ways in, and <em>they are all free</em></h2>
+    </div>
+
+    <div class="cards3 cards-4">
+      <a class="card" href="/resources/guides/">
+        <span class="k">Written</span>
+        <h3>Guides</h3>
+        <p>
+          The long answers, grouped into clusters. A pillar sets out the decisions a
+          design is made of; the pieces around it take one of those decisions and go
+          further into it than a section allows.
+        </p>
+        <span class="go">Browse the guides <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card" href="/toolkit/">
+        <span class="k">Fill in</span>
+        <h3>Toolkit</h3>
+        <p>
+          {kit.length === 1 ? 'One worksheet' : `${kit.length} worksheets`} for the decisions
+          that come with letting a system act: what one workflow may spend, what evidence
+          releases it, and what has to be true before it is deployed. Each is complete on the
+          page, with the table as a spreadsheet if you want it.
+        </p>
+        <span class="go">Open the toolkit <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card" href="/latest">
+        <span class="k">Weekly</span>
+        <h3>Field notes</h3>
+        <p>
+          Dated findings on what is changing in agentic AI — patterns, evaluation,
+          security and the releases that change how systems get built. Gathered from
+          primary sources and read before they are published.
+        </p>
+        <span class="go">Read the field notes <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card" href="/tools/agent-design-check">
+        <span class="k">In the browser</span>
+        <h3>Agent design check</h3>
+        <p>
+          A question-by-question check for a design you already have, with a worked
+          example beside it so no company material is needed to answer. It shows you
+          which questions you have not answered yet. No sign-up.
+        </p>
+        <span class="go">Open the check <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  {/* ── what is not here, said once and without a title or a date ────────── */}
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">Also published, and what is not</p>
+      <h2>Templates, and <em>what is still unwritten</em></h2>
+    </div>
+
+    <div class="prose stack">
+      <p>
+        <strong>Four templates are written</strong> — an
+        <a class="textlink" href="/resources/templates/agent-design-canvas">agent design canvas</a>,
+        a <a class="textlink" href="/resources/templates/design-review-agenda">design review agenda</a>,
+        an <a class="textlink" href="/resources/templates/decision-record">architecture decision record</a>
+        and an <a class="textlink" href="/resources/templates/employer-funding-summary">employer funding summary</a>.
+        Each is a blank you can fill in and a completed illustrative example of the same
+        thing, because a blank on its own is a stationery cupboard and an example on its
+        own is a case study. Nothing asks for an email address.
+        <a class="textlink" href="/resources/templates/">All four</a>.
+      </p>
+      <p>
+        Three further clusters of guides are planned — evaluating agent behaviour, then
+        reliability and cost, then guiding a team through a design review. They are
+        editorial briefs at this stage, not written articles, so there is nothing to
+        link and no date to give. They will appear here when they have been written,
+        and not before.
+      </p>
+      <p>
+        If the question you arrived with is not answered above,
+        <a class="textlink" href="/contact/">say so</a> — an unanswered question is the
+        most useful thing anybody sends, and it is how the next piece gets chosen.
+      </p>
+    </div>
+  </section>
+</PracticeLayout>
+
+<style>
+  .band {
+    padding-block: var(--space-8);
+  }
+
+  /* Four cards in a grid built for three. Two-up rather than three-and-one,
+     which reads as a card that failed to load. */
+  @media (min-width: 901px) {
+    .cards-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .body-copy {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-top: var(--space-6);
+  }
+
+  /* Question on the left, the page that answers it on the right. The same
+     routing-table shape /contact uses, and for the same reason: a two-column
+     table of long questions scrolls sideways on a phone, and these stack. */
+  .routes .detail-row:first-child {
+    padding-top: 0;
+  }
+  .routes .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .routes .dk {
+    max-width: 46ch;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+  }
+  .routes .dv {
+    max-width: 32ch;
+    font-weight: var(--weight-normal);
+  }
+  .routes .sep {
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 900px) {
+    .band {
+      padding-block: var(--space-7);
+    }
+  }
+  @media (max-width: 720px) {
+    .routes .detail-row {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .routes .dv {
+      text-align: left;
+      max-width: none;
+    }
+  }
+</style>

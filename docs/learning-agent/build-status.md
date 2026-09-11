@@ -1,6 +1,6 @@
 # Learning agent — build status
 
-**Audited against:** [`docs/learning-agent-specs-02-09-2026.md`](../learning-agent-specs-02-09-2026.md)
+**Audited against:** [`docs/learning-agent/learning-agent-specs-02-09-2026.md`](learning-agent-specs-02-09-2026.md)
 **Branch:** `feat/learner-dashboard-poc`
 **Last updated:** 10 September 2026
 

@@ -1,0 +1,1697 @@
+---
+/**
+ * /tools/agent-design-check — the ungated browser checklist.
+ *
+ * THE SPECIFICATION
+ *
+ * docs/Website Rebuild 10-09-2026/Website_Growth_Roadmap.html, "Agent Design
+ * Check functional scope". Every requirement in it, and where it lives:
+ *
+ *   structured yes/no/not-yet-defined over seven areas ... the form below,
+ *     built from AREAS and QUESTIONS in src/data/agent-design-check.ts
+ *   a built-in illustrative example ....................... EXAMPLE, plus a
+ *     per-question `example` continuing the same scenario — the returns
+ *     assistant from the VSL script, never a new scenario per question
+ *   which questions remain unanswered, why they matter, and a prioritised
+ *     set of next steps with guide links ................. the result panel
+ *   distinguish a reported gap from a missing answer ..... three standings,
+ *     three destinations in the output — see the block comment below
+ *   transparent rules, not a model-generated score ....... RULES, printed
+ *     before the form and again inside the result
+ *   all-unknown returns a starting checklist ............. verdict 'starting'
+ *   every box addressed still requests evidence .......... verdict 'evidence'
+ *   processed in the browser ............................. no fetch on this
+ *     page at all; see THE PRIVACY PROPERTY below
+ *   downloadable text / print summary without login ...... Blob download,
+ *     window.print() with a print stylesheet, clipboard as a fallback
+ *   optional email signup AFTER the result, separate ..... one secondary
+ *     link at the foot of the result. No inline capture, no gate
+ *   no lead record from anonymous use .................... nothing posts
+ *   track starts/completions only with analytics permission ... NOTHING IS
+ *     WIRED. There is no consent mechanism on this site, so the honest
+ *     implementation of "only with permission" is to instrument none of it
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE PRIVACY PROPERTY, AND THE TWO THINGS THAT WOULD BREAK IT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Nothing typed here about an architecture may reach a server. Two structural
+ * choices hold that up, and both look like details:
+ *
+ * 1. THE ANSWERS ARE NOT IN A <form>. They are radios in a plain <div>. A form
+ *    element can be submitted — by a stray Enter keypress, by a button that
+ *    forgot type="button" — and a GET submission puts nineteen answers in the
+ *    query string, which then travels in a Referer header to the first guide
+ *    the visitor clicks. No form element, no such path. Do not "tidy" this into
+ *    a <form>.
+ *
+ * 2. NO STORAGE, AND THE STATE IS A CLOSURE. CLAUDE.md forbids localStorage and
+ *    sessionStorage site-wide; here that prohibition and the roadmap's "retain
+ *    no architecture answers" happen to be the same sentence. The `answers`
+ *    object lives inside the module script and dies with the tab.
+ *
+ * The analytics beacon in the layout still records a pageview, exactly as it
+ * does on every other page — a path and a referrer, nothing from this form. It
+ * captures form starts only for `form.apply-form`, which this is not, and CTA
+ * clicks only by href. Adding a start/completion event here needs a consent
+ * mechanism the site does not have.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THREE STANDINGS, THREE DESTINATIONS IN THE OUTPUT
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The roadmap says to distinguish a reported gap from a missing answer, and
+ * this page has three states rather than two because "not yet defined" is
+ * neither:
+ *
+ *   no ............ a REPORTED GAP. Somebody looked and the answer was no.
+ *                   Appears in "next steps" with the question's `onGap` — a
+ *                   design change — and takes the danger colours.
+ *   not-yet-defined  NOBODY HAS DECIDED. Appears in "next steps" too, but with
+ *                   `onUnwritten` — a way to find out, not a way to build — and
+ *                   takes the unwritten colours. Never ranked against a gap:
+ *                   they are different kinds of work, not degrees of one.
+ *   (left alone) .. NOT ANSWERED HERE. Never appears as a step, never counted
+ *                   toward anything, and reported in its own section as still
+ *                   open. Treating a skipped question as a gap would be the
+ *                   tool inventing a finding about a design it was told nothing
+ *                   about.
+ *
+ * NO SCORE. Not a percentage, not a count out of nineteen, not a band. The
+ * counts are printed as four separate numbers precisely so that no one of them
+ * reads as a result. If a number ever appears here that combines them, this has
+ * become the thing the roadmap said not to build.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * USEFUL AT REST
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Everything above the toolbar is server-rendered and complete before anybody
+ * answers anything: the worked example, all nineteen questions, why each one
+ * matters, what it looks like in the example, its guide, and the rules the
+ * checker uses. That is the content. The script adds the result; it is not what
+ * makes the page worth opening, and the <noscript> note says so plainly rather
+ * than apologising.
+ */
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import {
+  AREAS,
+  QUESTIONS,
+  EXAMPLE,
+  RULES,
+  STANDINGS,
+  type Answer,
+} from '../../data/agent-design-check';
+
+export const prerender = true;
+
+const path = '/tools/agent-design-check';
+const url = `${SITE_ORIGIN}${path}`;
+
+/** Radio order. Absence of an answer is not a fourth radio — see the rubric. */
+const CHOICES: Answer[] = ['yes', 'no', 'not-yet-defined'];
+
+const grouped = AREAS.map((area) => ({
+  area,
+  questions: QUESTIONS.filter((q) => q.area === area.id),
+}));
+
+const title = 'Agent design check — a browser checklist · Sunil Mathew';
+const description = `${QUESTIONS.length} questions across ${AREAS.length} areas of an agentic design — purpose, evidence, tool permissions, external actions, evaluation, uncertainty and ownership. Answered in your browser, with no score and no sign-in.`;
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Tools', item: `${SITE_ORIGIN}/tools` },
+      { '@type': 'ListItem', position: 3, name: 'Agent design check' },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+  <div class="adc" id="adc" data-state="rest">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/tools/">Tools</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">Agent design check</li>
+      </ol>
+    </nav>
+
+    <section class="hero adc-hero">
+      <div class="wrap">
+        <p class="eyebrow">Tools · browser checklist</p>
+        <h1>Agent <em>design check</em></h1>
+        <p class="credential">
+          {QUESTIONS.length} questions about a system that acts. Answer the ones you can,
+          leave the rest, and get back <strong>what is still open and what to do about it</strong>
+          — in the order the decisions are worth making.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#questions"
+            >Go to the questions&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+          >
+          <a class="btn btn-ghost" href="#example">Read the example first</a>
+        </div>
+        <p class="hero-note">
+          Worked out in this page. No sign-in, no score, and nothing you type is sent
+          anywhere.
+        </p>
+      </div>
+    </section>
+
+    {/* ── the rules, before the form ───────────────────────────────────────── */}
+    <section class="wrap" aria-labelledby="rules-h">
+      <div class="sec-head">
+        <p class="eyebrow">Before you start</p>
+        <h2 id="rules-h">What this does, <em>and what it will not do</em></h2>
+      </div>
+      <ol class="rules">
+        {
+          RULES.map((r, i) => (
+            <li>
+              <span class="rule-n">{String(i + 1).padStart(2, '0')}</span>
+              <span class="rule-t">{r}</span>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="privacy-note">
+        Your answers are held in this page and nowhere else. They are not saved to your
+        browser, not sent to a server, and not recoverable by anybody — including us — once
+        you close the tab. That is also why there is nothing to sign in to.
+      </p>
+    </section>
+
+    {/* ── the worked example ───────────────────────────────────────────────── */}
+    <section class="wrap" id="example" aria-labelledby="example-h">
+      <div class="sec-head">
+        <p class="eyebrow">The example throughout</p>
+        <h2 id="example-h">{EXAMPLE.title}</h2>
+      </div>
+      <div class="example-card">
+        {EXAMPLE.paragraphs.map((p) => <p>{p}</p>)}
+        <p class="disclaimer">{EXAMPLE.disclaimer}</p>
+      </div>
+    </section>
+
+    {/* ── what the three answers mean ──────────────────────────────────────── */}
+    <section class="wrap" aria-labelledby="answers-h">
+      <div class="sec-head">
+        <p class="eyebrow">The three answers</p>
+        <h2 id="answers-h">“No” and “not yet defined” are <em>different facts</em></h2>
+      </div>
+      <dl class="meanings">
+        {
+          (['yes', 'no', 'not-yet-defined'] as Answer[]).map((s) => (
+            <div class="meaning" data-standing={s}>
+              <dt>{STANDINGS[s].short}</dt>
+              <dd>{STANDINGS[s].meaning}</dd>
+            </div>
+          ))
+        }
+        <div class="meaning" data-standing="unanswered">
+          <dt>{STANDINGS.unanswered.short}</dt>
+          <dd>{STANDINGS.unanswered.meaning}</dd>
+        </div>
+      </dl>
+    </section>
+
+    {/* ── contents ─────────────────────────────────────────────────────────── */}
+    <section class="wrap adc-contents" aria-labelledby="contents-h">
+      <h2 class="contents-h" id="contents-h">The {AREAS.length} areas</h2>
+      <ol class="contents-list">
+        {
+          grouped.map(({ area, questions }, i) => (
+            <li>
+              <a href={`#${area.id}`}>
+                <span class="c-n">{String(i + 1).padStart(2, '0')}</span>
+                <span class="c-t">{area.title}</span>
+                <span class="c-q">
+                  {questions.length} {questions.length === 1 ? 'question' : 'questions'}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    {/*
+      ── the questions ──────────────────────────────────────────────────────
+      A <div>, not a <form>. See note 1 in the header comment: a form element
+      can be submitted, and a submitted GET carries every answer in the URL.
+    */}
+    <div class="wrap adc-questions" id="questions">
+      <div id="adc-form">
+        {
+          grouped.map(({ area, questions }, ai) => (
+            <section class="area" id={area.id} aria-labelledby={`h-${area.id}`}>
+              <div class="area-head">
+                <p class="eyebrow">
+                  <span class="num">{String(ai + 1).padStart(2, '0')}</span> Area
+                </p>
+                <h2 id={`h-${area.id}`}>{area.title}</h2>
+                <p class="area-blurb">{area.blurb}</p>
+              </div>
+
+              {questions.map((q) => (
+                <div class="q" data-question={q.id}>
+                  <h3 class="q-label">{q.label}</h3>
+
+                  <fieldset class="q-set">
+                    <legend class="q-ask">{q.ask}</legend>
+
+                    <div class="q-notes">
+                      <p class="q-why">
+                        <span class="k">Why it matters</span>
+                        {q.why}
+                      </p>
+                      <p class="q-eg">
+                        <span class="k">In the example</span>
+                        {q.example}
+                      </p>
+                    </div>
+
+                    <div class="choices">
+                      {CHOICES.map((c) => (
+                        <label class="choice" data-standing={c}>
+                          <input type="radio" name={q.id} value={c} id={`${q.id}--${c}`} />
+                          <span class="choice-t">{STANDINGS[c].choice}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div class="q-foot">
+                      <a class="q-guide" href={q.guide.href}>
+                        {q.guide.title}
+                        <span class="arrow" aria-hidden="true">
+                          →
+                        </span>
+                      </a>
+                      <button
+                        type="button"
+                        class="clear-one"
+                        data-clear={q.id}
+                        disabled
+                        aria-label={`Clear the answer to: ${q.label}`}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </fieldset>
+                </div>
+              ))}
+            </section>
+          ))
+        }
+      </div>
+    </div>
+
+    {/* ── the toolbar ──────────────────────────────────────────────────────── */}
+    <div class="wrap">
+      <div class="adc-toolbar panel">
+        <div class="tool-copy">
+          <h2>Work out what to do next</h2>
+          <p>
+            Leaving questions alone is fine. They come back as still open, never as a gap.
+          </p>
+        </div>
+        <div class="tool-actions">
+          <button type="button" class="btn btn-primary" id="adc-show">
+            Show what to do next
+          </button>
+          <button type="button" class="btn btn-ghost" id="adc-clear">Clear all answers</button>
+        </div>
+        <p class="tool-count" id="adc-count">
+          Answered 0 of {QUESTIONS.length} questions.
+        </p>
+      </div>
+
+      <noscript>
+        <p class="noscript-note">
+          The result is worked out in your browser, so this last part needs JavaScript. The
+          {' '}{QUESTIONS.length} questions above, why each one matters, and the guide behind
+          each are the whole of what it would use — nothing is fetched, and there is nothing
+          more to see.
+        </p>
+      </noscript>
+    </div>
+
+    {/*
+      The result lands here. `role="status"` beside it announces that it has,
+      and focus moves into the panel itself — a screen reader user should not
+      have to go looking for output that appeared four screens down.
+    */}
+    <div class="wrap">
+      <p class="sr-only" id="adc-live" role="status" aria-live="polite"></p>
+      <div id="adc-result"></div>
+
+      {/*
+        Clipboard fallback. Revealed only when the clipboard API refuses or is
+        unavailable (an insecure context, a permissions policy). It is a real
+        fallback, not decoration: the text is there to be selected by hand.
+      */}
+      <div class="copy-fallback" id="adc-fallback" hidden>
+        <label for="adc-fallback-text">
+          Copying was not permitted by your browser. The summary is here — select it all and
+          copy.
+        </label>
+        <textarea id="adc-fallback-text" rows="12" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  {/*
+    Where to go next, and it is a LIST OF LINKS rather than a form.
+
+    The roadmap's row for this page reads "Wants value without a sales form",
+    and then names the next step as "optional resources/cohort/advisory". Both
+    halves matter. Omitting the onward routes entirely leaves somebody who has
+    just worked through nineteen questions with nowhere to go; putting an email
+    field here would be exactly the sales form the row rules out, and would sit
+    on a page whose whole claim is that nothing you type is sent anywhere.
+
+    So: three links, no field, no capture, and deliberately after everything
+    else on the page. Using the tool creates no lead record, which is the
+    roadmap's requirement and is true by construction — there is no endpoint to
+    create one with.
+  */}
+  <section class="wrap adc-after" aria-labelledby="after-h">
+    <h2 id="after-h">If a question here landed</h2>
+    <p>
+      Nothing you answered was sent anywhere, and no record of you exists. The page
+      view itself is counted, as it is on every page here, and that count cannot be
+      joined to a person or to anything above. If you want to take one of these
+      questions further, these are the routes that exist.
+    </p>
+    <ul class="adc-routes">
+      <li>
+        <a href="/resources/guides/">The guides</a> — the reasoning behind these
+        questions, in longer form. Free, and no sign-up.
+      </li>
+      <li>
+        <a href="/">The open cohort</a> — building a working agentic system and
+        practising the argument for its design, with feedback. Applying starts a
+        conversation about fit.
+      </li>
+      <li>
+        <a href="/advisory/">Advisory</a> — if the decision in front of your team is
+        the immediate problem rather than the practice of making them.
+      </li>
+    </ul>
+  </section>
+</PracticeLayout>
+
+<script>
+  /**
+   * The checker. Reads the rubric, holds the answers in a closure, renders the
+   * result, and hands the visitor a file.
+   *
+   * A MODULE SCRIPT, NOT `is:inline`. An inline script cannot import — this
+   * repo has been bitten by exactly that (see CLAUDE.md on pair.astro importing
+   * buildAdr and never being able to call it). A module script is bundled by
+   * Vite and type-checked by `astro check`, which is the point: the summary
+   * format has ONE owner in the rubric module, and both the download and the
+   * copy button call it rather than assembling their own.
+   *
+   * NOTHING HERE TOUCHES THE NETWORK OR ANY STORAGE. `answers` is the whole of
+   * the state and it dies with the tab.
+   */
+  import {
+    QUESTIONS,
+    STANDINGS,
+    RULES,
+    VERDICT_COPY,
+    areaOf,
+    nextSteps,
+    evidenceRequests,
+    stillOpen,
+    tally,
+    verdict,
+    summaryText,
+    type Answer,
+    type Answers,
+    type Standing,
+  } from '../../data/agent-design-check';
+
+  const form = document.getElementById('adc-form');
+  const root = document.getElementById('adc');
+  const host = document.getElementById('adc-result');
+  const live = document.getElementById('adc-live');
+  const countLine = document.getElementById('adc-count');
+  const showBtn = document.getElementById('adc-show');
+  const clearBtn = document.getElementById('adc-clear');
+  const fallback = document.getElementById('adc-fallback');
+  const fallbackText = document.getElementById('adc-fallback-text');
+
+  /**
+   * The six elements are checked once and passed in, rather than asserted at
+   * every use. Narrowing from an `if` does not survive into a hoisted function
+   * declaration, and this body is almost nothing but function declarations —
+   * so the alternative is a scattering of `!`, which is how a guarded DOM query
+   * quietly becomes an unguarded one.
+   */
+  function boot(
+    form: HTMLElement,
+    root: HTMLElement,
+    host: HTMLElement,
+    live: HTMLElement,
+    showBtn: HTMLElement,
+    clearBtn: HTMLElement,
+  ): void {
+    /** The only state. No storage, no server, no history entry. */
+    const answers: Answers = {};
+
+    // ── small DOM helpers ───────────────────────────────────────────────────
+    // Built with createElement and textContent rather than innerHTML. The
+    // rubric strings are ours, but a page that assembles markup from strings
+    // teaches the next person to do it with a string that is not.
+
+    function el<K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      cls?: string,
+      text?: string,
+    ): HTMLElementTagNameMap[K] {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text) node.textContent = text;
+      return node;
+    }
+
+    function kicker(label: string, body: string, cls: string): HTMLParagraphElement {
+      const p = el('p', cls);
+      p.append(el('span', 'k', label));
+      p.append(document.createTextNode(body));
+      return p;
+    }
+
+    function say(message: string): void {
+      // Cleared first so an identical message announces twice when it happens
+      // twice — two downloads should not be silent the second time.
+      live.textContent = '';
+      window.setTimeout(() => {
+        live.textContent = message;
+      }, 60);
+    }
+
+    // ── answering ───────────────────────────────────────────────────────────
+
+    function radiosFor(id: string): HTMLInputElement[] {
+      return Array.from(
+        form.querySelectorAll<HTMLInputElement>('input[type="radio"][name="' + id + '"]'),
+      );
+    }
+
+    function syncQuestion(id: string): void {
+      const box = form.querySelector<HTMLElement>('[data-question="' + id + '"]');
+      if (!box) return;
+      const standing = answers[id];
+      if (standing) box.dataset.standing = standing;
+      else box.removeAttribute('data-standing');
+
+      const clear = box.querySelector<HTMLButtonElement>('[data-clear]');
+      if (clear) clear.disabled = !standing;
+    }
+
+    function syncCount(): void {
+      if (!countLine) return;
+      const n = Object.keys(answers).length;
+      // A count of how much of the form is filled in. NOT a score, not a
+      // percentage, and deliberately not a bar — see the rubric's first rule.
+      countLine.textContent =
+        'Answered ' + n + ' of ' + QUESTIONS.length + ' question' + (n === 1 ? '' : 's') + '.';
+    }
+
+    form.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== 'radio') return;
+      answers[target.name] = target.value as Answer;
+      syncQuestion(target.name);
+      syncCount();
+    });
+
+    form.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLButtonElement>('[data-clear]');
+      if (!button) return;
+      const id = button.getAttribute('data-clear');
+      if (!id) return;
+      delete answers[id];
+      radiosFor(id).forEach((r) => {
+        r.checked = false;
+      });
+      syncQuestion(id);
+      syncCount();
+      say('Answer cleared.');
+    });
+
+    // ── the result ──────────────────────────────────────────────────────────
+
+    function standingBadge(standing: Standing): HTMLElement {
+      const badge = el('span', 'badge', STANDINGS[standing].short);
+      badge.dataset.standing = standing;
+      return badge;
+    }
+
+    function guideLink(href: string, title: string): HTMLAnchorElement {
+      const a = el('a', 'step-guide');
+      a.href = href;
+      a.textContent = title;
+      const arrow = el('span', 'arrow', '→');
+      arrow.setAttribute('aria-hidden', 'true');
+      a.append(arrow);
+      return a;
+    }
+
+    function buildResult(): HTMLElement {
+      const v = verdict(answers);
+      const counts = tally(answers);
+      const steps = nextSteps(answers);
+      const evidence = evidenceRequests(answers);
+      const open = stillOpen(answers);
+      const copy = VERDICT_COPY[v];
+
+      const panel = el('section', 'result panel');
+      panel.id = 'adc-result-panel';
+      panel.tabIndex = -1;
+      panel.setAttribute('aria-labelledby', 'adc-result-h');
+
+      const heading = el('h2', 'result-h', copy.heading);
+      heading.id = 'adc-result-h';
+      panel.append(heading);
+      panel.append(el('p', 'result-lede', copy.body));
+
+      // Four separate numbers. Never combined — a single figure would be the
+      // readiness score the roadmap rules out.
+      const dl = el('dl', 'counts');
+      const orderedCounts: Standing[] = ['yes', 'no', 'not-yet-defined', 'unanswered'];
+      orderedCounts.forEach((s) => {
+        const cell = el('div', 'count');
+        cell.dataset.standing = s;
+        cell.append(el('dt', 'count-k', STANDINGS[s].short));
+        cell.append(el('dd', 'count-v', String(counts[s])));
+        dl.append(cell);
+      });
+      panel.append(dl);
+      panel.append(
+        el(
+          'p',
+          'counts-note',
+          'Four counts of ' +
+            QUESTIONS.length +
+            ' questions. They are not added together, and there is no score here to improve.',
+        ),
+      );
+
+      // Export sits at the top of the result rather than the bottom: it is the
+      // thing somebody wants once they have read a step and want to take the
+      // rest to a colleague, not after scrolling past everything twice.
+      const exportRow = el('div', 'export');
+      const downloadBtn = el('button', 'btn btn-primary', 'Download as a text file');
+      downloadBtn.type = 'button';
+      downloadBtn.addEventListener('click', download);
+      const copyBtn = el('button', 'btn btn-ghost', 'Copy the summary');
+      copyBtn.type = 'button';
+      copyBtn.addEventListener('click', () => {
+        void copyToClipboard();
+      });
+      const printBtn = el('button', 'btn btn-ghost', 'Print or save as PDF');
+      printBtn.type = 'button';
+      printBtn.addEventListener('click', () => window.print());
+      exportRow.append(downloadBtn, copyBtn, printBtn);
+      panel.append(exportRow);
+      panel.append(
+        el(
+          'p',
+          'export-note',
+          'The file is built here and handed straight to you. It is not uploaded, and no copy of it exists anywhere else.',
+        ),
+      );
+
+      // The distinction the roadmap asks for, stated in the output itself and
+      // only for the standings that actually occur.
+      const present = orderedCounts.filter((s) => counts[s] > 0);
+      if (present.length > 1) {
+        panel.append(el('h3', 'result-sub', 'What these mean'));
+        const legend = el('dl', 'legend');
+        present.forEach((s) => {
+          const cell = el('div', 'legend-row');
+          cell.dataset.standing = s;
+          cell.append(el('dt', '', STANDINGS[s].short));
+          cell.append(el('dd', '', STANDINGS[s].meaning));
+          legend.append(cell);
+        });
+        panel.append(legend);
+      }
+
+      if (steps.length) {
+        panel.append(el('h3', 'result-sub', 'Next steps, in order'));
+        panel.append(
+          el(
+            'p',
+            'sub-note',
+            'Ordered by whether the question is about an action that leaves the system, then by the order the decisions are worth making. A reported gap and a not-yet-defined answer are not ranked against each other.',
+          ),
+        );
+        const list = el('ol', 'steps');
+        steps.forEach((step) => {
+          const q = step.question;
+          const item = el('li', 'step');
+          item.dataset.standing = step.standing;
+
+          const head = el('div', 'step-head');
+          head.append(standingBadge(step.standing));
+          head.append(el('span', 'step-area', areaOf(q.area).title));
+          item.append(head);
+
+          item.append(el('h4', 'step-label', q.label));
+          item.append(el('p', 'step-ask', q.ask));
+          item.append(kicker('Why it matters', q.why, 'step-why'));
+          item.append(
+            kicker(
+              step.kind === 'design' ? 'Design change' : 'Decision to make',
+              step.action,
+              'step-do',
+            ),
+          );
+          item.append(guideLink(q.guide.href, q.guide.title));
+          list.append(item);
+        });
+        panel.append(list);
+      }
+
+      if (evidence.length) {
+        panel.append(el('h3', 'result-sub', 'Marked addressed — what to bring'));
+        panel.append(
+          el(
+            'p',
+            'sub-note',
+            'Answering yes closes nothing. Each one below is the artefact that would show the claim, which is what a review will ask for.',
+          ),
+        );
+        const list = el('ul', 'brings');
+        evidence.forEach((q) => {
+          const item = el('li', 'bring');
+          item.dataset.standing = 'yes';
+          const head = el('div', 'step-head');
+          head.append(el('span', 'step-area', areaOf(q.area).title));
+          item.append(head);
+          item.append(el('h4', 'step-label', q.label));
+          item.append(kicker('Bring', q.onYes, 'step-do'));
+          list.append(item);
+        });
+        panel.append(list);
+      }
+
+      // Suppressed in the starting case, where every question is already a step
+      // above. Same rule as `summaryText`, and it lives in the rubric.
+      if (open.length && v !== 'starting') {
+        panel.append(el('h3', 'result-sub', 'Not answered here — still open'));
+        panel.append(
+          el(
+            'p',
+            'sub-note',
+            'You left these alone. Nothing has been assumed about them and none of them is reported as a gap — they are listed because they are still worth answering.',
+          ),
+        );
+        const list = el('ul', 'brings');
+        open.forEach((q) => {
+          const item = el('li', 'bring');
+          item.dataset.standing = 'unanswered';
+          const head = el('div', 'step-head');
+          head.append(el('span', 'step-area', areaOf(q.area).title));
+          item.append(head);
+          item.append(el('h4', 'step-label', q.label));
+          item.append(el('p', 'step-ask', q.ask));
+          item.append(kicker('Why it matters', q.why, 'step-why'));
+          item.append(guideLink(q.guide.href, q.guide.title));
+          list.append(item);
+        });
+        panel.append(list);
+      }
+
+      panel.append(el('h3', 'result-sub', 'The rules this used'));
+      const rules = el('ol', 'result-rules');
+      RULES.forEach((r) => rules.append(el('li', '', r)));
+      panel.append(rules);
+
+      // The optional signup the roadmap asks for: AFTER the result, separate
+      // from using the tool, and a link rather than a field. An inline capture
+      // form here would gate the output on an email address, which is the one
+      // thing "ungated" rules out.
+      const after = el('p', 'result-after');
+      after.append(
+        document.createTextNode(
+          'Nothing above was recorded and no one has been notified. If you want these questions asked against your own system, ',
+        ),
+      );
+      const ask = el('a', '', 'send a note about what you are building');
+      ask.href = '/#ask';
+      after.append(ask);
+      after.append(document.createTextNode(' — that is a separate thing you choose to do.'));
+      panel.append(after);
+
+      return panel;
+    }
+
+    function render(): void {
+      const panel = buildResult();
+      host.replaceChildren(panel);
+      root.dataset.state = 'result';
+      if (fallback) fallback.hidden = true;
+
+      const counts = tally(answers);
+      say(
+        'Result ready below. ' +
+          counts.no +
+          ' reported as a gap, ' +
+          counts['not-yet-defined'] +
+          ' not yet defined, ' +
+          counts.yes +
+          ' marked addressed, ' +
+          counts.unanswered +
+          ' not answered.',
+      );
+      panel.focus();
+    }
+
+    // ── export ──────────────────────────────────────────────────────────────
+    // One owner for the format: `summaryText` in the rubric. The download and
+    // the copy both call it, so the two can never disagree.
+
+    function summary(): string {
+      return summaryText(answers, { origin: window.location.origin, now: new Date() });
+    }
+
+    function download(): void {
+      const blob = new Blob([summary()], { type: 'text/plain;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = 'agent-design-check.txt';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      say('Summary downloaded as agent-design-check.txt');
+    }
+
+    async function copyToClipboard(): Promise<void> {
+      const text = summary();
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          if (fallback) fallback.hidden = true;
+          say('Summary copied to the clipboard.');
+          return;
+        }
+      } catch {
+        /* falls through to the visible fallback below */
+      }
+      if (fallback && fallbackText instanceof HTMLTextAreaElement) {
+        fallbackText.value = text;
+        fallback.hidden = false;
+        fallbackText.focus();
+        fallbackText.select();
+        say('Copying was not permitted. The summary is in a box below, ready to select.');
+      } else {
+        say('Copying was not permitted. Use the download button instead.');
+      }
+    }
+
+    // ── the toolbar ─────────────────────────────────────────────────────────
+
+    showBtn.addEventListener('click', render);
+
+    clearBtn.addEventListener('click', () => {
+      Object.keys(answers).forEach((id) => {
+        delete answers[id];
+        radiosFor(id).forEach((r) => {
+          r.checked = false;
+        });
+        syncQuestion(id);
+      });
+      host.replaceChildren();
+      root.dataset.state = 'rest';
+      if (fallback) fallback.hidden = true;
+      syncCount();
+      say('All answers cleared. The questions are as they were.');
+    });
+
+    syncCount();
+  }
+
+  if (form && root && host && live && showBtn && clearBtn) {
+    boot(form, root, host, live, showBtn, clearBtn);
+  }
+</script>
+
+<style>
+  /* The onward routes. Quiet by construction — this is the least important
+     thing on the page and must not compete with the result above it. */
+  .adc-after { padding-block: var(--space-8) var(--space-7); }
+  .adc-after h2 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin-bottom: var(--space-3);
+  }
+  .adc-after > p {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+    max-width: var(--measure-prose);
+  }
+  .adc-routes {
+    list-style: none;
+    margin-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--measure-prose);
+  }
+  .adc-routes li {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+  }
+  .adc-routes a {
+    color: var(--accent-ink);
+    font-weight: var(--weight-medium);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* ── the rules list ──────────────────────────────────────────────────────── */
+  .rules {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: var(--measure-prose);
+  }
+  .rules li {
+    display: grid;
+    grid-template-columns: 3ch 1fr;
+    gap: var(--space-4);
+    align-items: start;
+  }
+  .rule-n {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    color: var(--accent-ink);
+    padding-top: 3px;
+  }
+  .rule-t {
+    font-size: var(--size-3);
+    color: var(--text-body);
+    line-height: var(--lh-normal);
+  }
+  .privacy-note {
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+
+  /* ── the worked example ──────────────────────────────────────────────────
+     Ember is the secondary feature surface and it carries INK text, never
+     white. This is the page's one warm card; the hero is its one black area. */
+  .example-card {
+    background: var(--surface-ember);
+    color: var(--ink-1);
+    border-radius: var(--radius-card);
+    padding: var(--space-7);
+    max-width: var(--measure-prose);
+  }
+  .example-card p {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--ink-1);
+  }
+  .example-card p + p {
+    margin-top: var(--space-4);
+  }
+  .example-card .disclaimer {
+    margin-top: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    line-height: var(--lh-snug);
+    /* Ink at 85% still clears 4.5:1 on ember; it is a marginal note, not body. */
+    color: rgba(22, 33, 46, 0.85);
+  }
+
+  /* ── what the three answers mean ─────────────────────────────────────────
+     COLOUR IS LANGUAGE HERE. Each standing takes the same treatment
+     everywhere it appears — this block, the chosen radio, the result badge —
+     so the reader learns it once.
+
+     ONE CORRECTION TO THE TOKENS: --state-unwritten-ink is --ink-3, which is
+     2.29:1 on white and is documented as not a text colour. The unwritten
+     surface and its dashed line are used as designed; its ink is not, and the
+     text takes --text-quiet instead. */
+  .meanings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    max-width: 62rem;
+  }
+  .meaning {
+    border-radius: var(--radius-panel);
+    padding: var(--space-5);
+    background: var(--surface-panel);
+    box-shadow: var(--shadow-raise);
+  }
+  .meaning dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    font-weight: var(--weight-medium);
+    margin-bottom: var(--space-2);
+  }
+  .meaning dd {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+  }
+  .meaning[data-standing='yes'] dt {
+    color: var(--text-loud);
+  }
+  .meaning[data-standing='no'] {
+    background: var(--agent-refused-bg);
+    box-shadow: none;
+  }
+  .meaning[data-standing='no'] dt {
+    color: var(--danger);
+  }
+  .meaning[data-standing='not-yet-defined'] {
+    background: var(--state-unwritten-bg);
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .meaning[data-standing='not-yet-defined']::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--state-unwritten-line);
+  }
+  .meaning[data-standing='not-yet-defined'] dt {
+    color: var(--text-quiet);
+  }
+  .meaning[data-standing='unanswered'] {
+    background: var(--surface-sunken);
+    box-shadow: none;
+  }
+  .meaning[data-standing='unanswered'] dt {
+    color: var(--text-quiet);
+  }
+
+  /* ── contents ────────────────────────────────────────────────────────────── */
+  .contents-h {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    font-weight: var(--weight-medium);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-4);
+  }
+  .contents-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+  }
+  .contents-list a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-4);
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    text-decoration: none;
+  }
+  .contents-list a:hover {
+    box-shadow: var(--shadow-lift);
+    color: inherit;
+  }
+  .c-n {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+  }
+  .c-t {
+    font-size: var(--size-3);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+  .c-q {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  /* ── the questions ───────────────────────────────────────────────────────── */
+  .area {
+    padding-top: var(--space-8);
+    scroll-margin-top: var(--space-6);
+  }
+  .area-head {
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+  }
+  .area-head h2 {
+    font-size: clamp(var(--size-6), 3vw, var(--size-7));
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-3);
+  }
+  .area-blurb {
+    font-size: var(--size-4);
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+
+  .q {
+    margin-bottom: var(--space-4);
+  }
+  .q-label {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-2);
+    padding-left: var(--space-5);
+  }
+  /* Never a border and a shadow on one element: the standing is carried by the
+     background and, for the unwritten, by the dashed edge — not by an outline
+     added on top of the shadow. */
+  .q-set {
+    background: var(--surface-panel);
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    margin: 0;
+    min-width: 0;
+    transition: box-shadow var(--motion-base) var(--ease-out);
+  }
+  .q-ask {
+    font-size: var(--size-4);
+    font-weight: var(--weight-medium);
+    line-height: var(--lh-snug);
+    color: var(--text-loud);
+    max-width: var(--measure-prose);
+    padding: 0;
+    /* A legend is display:table-cell by default in some engines; block keeps
+       it in normal flow so the notes below sit where they are written. */
+    display: block;
+    margin-bottom: var(--space-4);
+  }
+
+  .q-notes {
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .q-why,
+  .q-eg {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+  .q-eg {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+  }
+  .q-notes .k,
+  .step-why .k,
+  .step-do .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-1);
+  }
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-field);
+    background: var(--surface-sunken);
+    cursor: pointer;
+    min-height: var(--control-h);
+  }
+  .choice:hover {
+    background: var(--surface-active);
+  }
+  .choice input {
+    /* The native control, kept. It reads its own focus and checked state to
+       assistive technology, and the ring in reset.css lands on it.
+       Ink, not berry: berry is refusal, and a "yes" radio filled with the
+       error colour would say the opposite of the answer beside it. The chip
+       behind the label is what carries the standing. */
+    margin: 2px 0 0;
+    accent-color: var(--ink-1);
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+  .choice-t {
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+  }
+  .choice:has(input:checked) {
+    background: var(--accent-quiet);
+  }
+  .choice[data-standing='no']:has(input:checked) {
+    background: var(--agent-refused-bg);
+  }
+  .choice[data-standing='not-yet-defined']:has(input:checked) {
+    background: var(--state-unwritten-bg);
+  }
+  .choice:has(input:checked) .choice-t {
+    font-weight: var(--weight-medium);
+    color: var(--text-loud);
+  }
+
+  .q-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .q-guide {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.25em;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .q-guide:hover {
+    color: var(--accent-ink-strong);
+  }
+  .clear-one {
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    cursor: pointer;
+  }
+  .clear-one:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-loud);
+  }
+  .clear-one:disabled {
+    /* Faint is legitimate here: it is an inert control, not text to read, and
+       its name is on the button for anyone browsing the page. */
+    color: var(--text-faint);
+    cursor: default;
+  }
+
+  /* The answered state, on the card. The unwritten gets its dashed edge — the
+     design system's own mark for something nobody has decided. */
+  .q[data-standing='yes'] .q-set {
+    box-shadow: var(--shadow-lift);
+  }
+  /* A ring INSTEAD of the elevation shadow, never both on one element. Berry
+     is legitimate as a mark at 3:1 — it is a fill here, carrying no text. */
+  .q[data-standing='no'] .q-set {
+    box-shadow: 0 0 0 var(--border-w-rule) var(--danger-mark);
+  }
+  /* And the unwritten takes the design system's own mark for it: a dashed edge
+     and the sunken paper, with no elevation at all. */
+  .q[data-standing='not-yet-defined'] .q-set {
+    box-shadow: none;
+    background: var(--state-unwritten-bg);
+    outline: 2px dashed var(--border-field);
+    outline-offset: -2px;
+  }
+
+  /* ── toolbar ─────────────────────────────────────────────────────────────── */
+  .adc-toolbar {
+    margin-top: var(--space-8);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-5);
+    align-items: center;
+  }
+  .tool-copy h2 {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+  .tool-copy p {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    margin-top: var(--space-2);
+    max-width: 48ch;
+  }
+  .tool-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .tool-count {
+    grid-column: 1 / -1;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .noscript-note {
+    margin-top: var(--space-4);
+    padding: var(--space-5);
+    background: var(--agent-uncertain-bg);
+    color: var(--agent-uncertain);
+    border-radius: var(--radius-panel);
+    font-size: var(--size-3);
+    max-width: var(--measure-prose);
+  }
+
+  /* ── the result ──────────────────────────────────────────────────────────── */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #adc-result:empty {
+    display: none;
+  }
+
+  .adc :global(.result) {
+    margin-top: var(--space-7);
+    scroll-margin-top: var(--space-5);
+  }
+  .adc :global(.result:focus-visible) {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .adc :global(.result-h) {
+    font-size: clamp(var(--size-6), 3vw, var(--size-7));
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+  .adc :global(.result-lede) {
+    margin-top: var(--space-4);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+
+  .adc :global(.counts) {
+    margin-top: var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .adc :global(.count) {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+  }
+  .adc :global(.count-k) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .adc :global(.count-v) {
+    font-size: var(--size-7);
+    font-weight: var(--weight-heavy);
+    line-height: var(--lh-tight);
+    color: var(--text-loud);
+    margin-top: var(--space-2);
+  }
+  .adc :global(.count[data-standing='no']) {
+    background: var(--agent-refused-bg);
+  }
+  .adc :global(.count[data-standing='no'] .count-v) {
+    color: var(--danger);
+  }
+  .adc :global(.count[data-standing='not-yet-defined']) {
+    background: var(--state-unwritten-bg);
+  }
+  .adc :global(.counts-note),
+  .adc :global(.export-note),
+  .adc :global(.sub-note) {
+    margin-top: var(--space-3);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+
+  .adc :global(.export) {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .adc :global(.result-sub) {
+    margin-top: var(--space-7);
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+
+  .adc :global(.steps),
+  .adc :global(.brings) {
+    margin-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    counter-reset: step;
+  }
+  .adc :global(.step),
+  .adc :global(.bring) {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5);
+  }
+  .adc :global(.step[data-standing='no']) {
+    background: var(--agent-refused-bg);
+  }
+  .adc :global(.step[data-standing='not-yet-defined']) {
+    background: var(--state-unwritten-bg);
+  }
+  .adc :global(.step-head) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .adc :global(.badge) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    border-radius: var(--radius-control);
+    padding: 3px var(--space-3);
+    background: var(--surface-panel);
+    color: var(--text-quiet);
+  }
+  /* The danger family is split in two on purpose: --danger-mark is a 3:1 fill
+     and cannot carry text, --danger is the 5.5:1 ink. So the badge is ink on
+     the quiet tint, never white on berry. */
+  .adc :global(.badge[data-standing='no']) {
+    background: var(--surface-panel);
+    color: var(--danger);
+  }
+  .adc :global(.badge[data-standing='not-yet-defined']) {
+    background: var(--surface-panel);
+    color: var(--text-quiet);
+    outline: 1px dashed var(--border-field);
+  }
+  .adc :global(.step-area) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .adc :global(.step-label) {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    line-height: var(--lh-snug);
+  }
+  .adc :global(.step-ask) {
+    margin-top: var(--space-2);
+    font-size: var(--size-4);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+  .adc :global(.step-why),
+  .adc :global(.step-do) {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+  .adc :global(.step-do) {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+  }
+  .adc :global(.step-guide) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+  .adc :global(.step-guide:hover) {
+    color: var(--accent-ink-strong);
+  }
+
+  .adc :global(.legend) {
+    margin-top: var(--space-4);
+    display: grid;
+    gap: var(--space-3);
+  }
+  .adc :global(.legend-row) {
+    display: grid;
+    grid-template-columns: 16ch 1fr;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-inner);
+    background: var(--surface-sunken);
+  }
+  .adc :global(.legend-row[data-standing='no']) {
+    background: var(--agent-refused-bg);
+  }
+  .adc :global(.legend-row[data-standing='not-yet-defined']) {
+    background: var(--state-unwritten-bg);
+  }
+  .adc :global(.legend-row dt) {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    color: var(--text-loud);
+  }
+  .adc :global(.legend-row dd) {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+  }
+
+  .adc :global(.result-rules) {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--measure-prose);
+    list-style: decimal;
+    padding-left: var(--space-5);
+  }
+  .adc :global(.result-rules li) {
+    list-style: decimal;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+  }
+
+  .adc :global(.result-after) {
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    background: var(--state-unwritten-line) no-repeat top left / 100% 2px;
+  }
+  .adc :global(.result-after a) {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .copy-fallback {
+    margin-top: var(--space-5);
+  }
+  .copy-fallback label {
+    display: block;
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-3);
+  }
+  .copy-fallback textarea {
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-field);
+    background: var(--surface-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    line-height: var(--lh-normal);
+    resize: vertical;
+  }
+
+  /* ── narrow, and 200% zoom ───────────────────────────────────────────────
+     Everything below is one-column-or-wrap. Nothing has a min-width wider than
+     a 390px screen, and the three choices stack rather than becoming three
+     two-word columns. */
+  @media (max-width: 900px) {
+    .meanings {
+      grid-template-columns: 1fr;
+    }
+    .adc :global(.counts) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .adc :global(.legend-row) {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+  }
+  @media (max-width: 720px) {
+    .choices {
+      grid-template-columns: 1fr;
+    }
+    .adc-toolbar {
+      grid-template-columns: 1fr;
+    }
+    .tool-actions .btn {
+      width: 100%;
+    }
+    .example-card {
+      padding: var(--space-5);
+    }
+    .q-set {
+      padding: var(--space-4);
+    }
+    .adc :global(.export) .btn {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .q-set {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  /*
+    PRINT — the roadmap's "downloadable text/print summary without login".
+    Two shapes, and the rule between them is honest: with a result, print the
+    result; without one, print the checklist, which is a usable blank form to
+    take into a review.
+
+    Scoped by hand to this page's own chrome plus the two layout landmarks,
+    because a scoped block cannot reach a component it does not own. This CSS
+    ships only in this page's bundle.
+  */
+  @media print {
+    .sitenav,
+    .sitefooter,
+    .skip,
+    .adc .crumbs,
+    .adc .hero-cta,
+    .adc .adc-contents,
+    .adc .adc-toolbar,
+    .adc .copy-fallback,
+    .adc .export,
+    .adc .export-note,
+    .adc .clear-one {
+      display: none !important;
+    }
+
+    /* The radios stay in the no-result printout. That version of this page is
+       a blank checklist somebody carries into a review, and a checklist you
+       cannot tick is a handout. */
+
+    /* The noir shell is one black area on screen and a wasted cartridge on
+       paper. Everything prints as ink on white. */
+    .adc .hero > .wrap {
+      background: #fff !important;
+      color: #000 !important;
+      padding: 0 !important;
+      width: auto !important;
+      max-width: none !important;
+    }
+    .adc .hero h1,
+    .adc .hero .credential,
+    .adc .hero .credential strong {
+      color: #000 !important;
+    }
+    .adc .hero h1 em {
+      color: #000 !important;
+    }
+    .adc .hero .eyebrow,
+    .adc .hero-note {
+      color: #444 !important;
+    }
+    .adc .example-card {
+      background: #fff !important;
+      outline: 1px solid #999;
+    }
+
+    .adc .panel,
+    .adc .q-set,
+    .adc .step,
+    .adc .bring,
+    .adc .count,
+    .adc .meaning {
+      box-shadow: none !important;
+      outline: 1px solid #bbb;
+      break-inside: avoid;
+    }
+
+    /* With a result, the result IS the printout. */
+    .adc[data-state='result'] .adc-questions,
+    .adc[data-state='result'] .example-card,
+    .adc[data-state='result'] .meanings,
+    .adc[data-state='result'] .rules,
+    .adc[data-state='result'] .privacy-note {
+      display: none !important;
+    }
+    .adc[data-state='result'] .sec-head {
+      display: none !important;
+    }
+
+    .adc .result-sub,
+    .adc .area-head h2,
+    .adc .q-label {
+      break-after: avoid;
+    }
+  }
+</style>

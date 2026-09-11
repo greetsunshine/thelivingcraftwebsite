@@ -42,12 +42,24 @@ const next = requested.startsWith('/craft/admin') && !requested.startsWith('//')
 
         <input type="hidden" name="next" value={next} />
 
+        {/* Email is OPTIONAL, and that is the whole of the routing rule: give an
+            address and you sign in as yourself with your own roles; leave it
+            blank and the shared password gets you in as the bootstrap, which
+            can work the pipeline but cannot approve an offer or confirm a
+            payment. Named accounts are the intended state; see the note at the
+            head of src/lib/admin/staff.ts. */}
         <label>
-          <span class="label">Password</span>
-          <input type="password" name="password" required autofocus autocomplete="current-password" />
+          <span class="label">Email</span>
+          <input type="email" name="email" autofocus autocomplete="username" inputmode="email" />
+          <span class="hint">Leave blank to use the shared password.</span>
         </label>
 
-        {failed && <p class="status-line err">That password is not right.</p>}
+        <label>
+          <span class="label">Password</span>
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+
+        {failed && <p class="status-line err">Those details are not right.</p>}
         {
           throttled && (
             <p class="status-line err">

@@ -10,6 +10,9 @@
 //   /api/ask     a POST endpoint that costs money per call, nothing to index
 //   /api/track   the analytics beacon — indexing it would pollute its own data
 //   /api/lead    the lead ledger, POST only
+//   /api/pipeline the application/enquiry save, POST only. Same reasoning as
+//                the other two: nothing to index, and a crawler hitting it
+//                would be rate-limiting real applicants for no gain.
 //   /craft       the cohort's course area AND, under /craft/admin, the operator
 //                console. One line covers both now. robots.txt is a request, not
 //                a control, so this is politeness on top of the real defence:
@@ -41,7 +44,18 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
-const DISALLOW = ['/craft', '/api/ask', '/api/track', '/api/lead'];
+const DISALLOW = [
+  '/craft',
+  '/api/ask',
+  '/api/track',
+  '/api/lead',
+  '/api/pipeline',
+  // The one-click unsubscribe. It only exists inside an email, so a crawler
+  // should never meet it — but a link that acts on arrival is exactly the kind
+  // a prefetcher or a link-scanner follows on somebody's behalf, and the action
+  // is not one we want taken by a machine that has not read it.
+  '/api/unsubscribe',
+];
 
 export const GET: APIRoute = () => {
   const body = [

@@ -1,0 +1,35 @@
+﻿Metric,Unit and calculation,Date basis and source
+Measured visitors,"Distinct consent-appropriate analytics visitor IDs; estimate, not people database",Analytics observation in selected window
+Sessions,Analytics sessions under the selected provider’s documented definition,Session start; analytics
+Source sessions,Sessions grouped by captured source/medium/campaign; direct/unknown retained,Session start; analytics
+Landing pages,Sessions grouped by first viewed page,Session start; analytics
+Device category,Sessions grouped by coarse desktop/mobile/tablet category,Session start; analytics
+VSL starts,Distinct tracked session/video pairs with player start,Start callback time; analytics
+VSL completion,Distinct tracked session/video pairs reaching player completion,Completion time; analytics; unavailable if callbacks unsupported
+VSL completion rate,"Completed pairs among pairs started in the selected session cohort, divided by started pairs",Sessions starting in window; observation through report cutoff
+CTA clicks,Distinct tracked sessions clicking each named CTA,Click event time; analytics
+Form starts,Distinct tracked session/form pairs with meaningful interaction,Start time; analytics
+Form errors,Failed attempts grouped by error category; no entered values,Error time; analytics/backend operational logs
+Applications saved,Distinct application submissions excluding retries and flagged tests/spam,First committed submit time; backend
+Unique applicants,Distinct person/cohort pairs with a valid application,First application time; backend
+Enquiries,"Distinct enquiry submissions, separate from applications",Saved time; backend
+Form completion rate,"Tracked session/form pairs with successful save among those with a form start, divided by tracked starts",Sessions starting in window; exclude unmatched saves from this rate but retain in backend totals
+Qualified applications,Distinct person/cohort pairs with Alchemy qualification recorded,Qualification event time; backend
+Applicant qualification rate,Qualified applicants from applications first submitted in window divided by those unique applicants,Application cohort followed through stated report cutoff; mark recent cohorts immature
+Current pipeline,Distinct opportunities grouped by present stage,"Current snapshot, explicitly labelled; backend"
+Stage entries,Distinct opportunity/stage entries with correction history available,Transition occurrence time; backend; not summed as unique people
+Meetings scheduled,"Unique meetings scheduled to occur in window, including status",Scheduled occurrence time; backend
+Meetings held,Unique meetings with held evidence,Actual held time; backend
+Offers,Unique approved offer IDs; revisions linked and not new prospects,Approval time; backend
+Paid members,Unique person/cohort pairs meeting finance-confirmed payment requirements of accepted offer,First qualifying payment date; backend and finance; not raw transaction count
+Attendance confirmed,Unique person/cohort confirmations for actual schedule,Confirmation time; programme owner
+Actual attendance,Unique person/session attendance evidence; first session shown separately,Session date; roster
+Enterprise orders,Distinct organisation order IDs,Order-agreed time; backend; participant totals separate
+Unassigned leads,Open opportunities without a named owner,Current snapshot; backend
+Overdue tasks,Open tasks with due_at earlier than report time,Current snapshot; backend
+Human response time,Median elapsed time from saved request to first staff response; receipts excluded,Requests created in window; show responded count and unanswered separately
+Failed notifications,Unresolved notification/email failures,Current snapshot with failure occurrence dates; outbox
+Email sent and delivered,Distinct message IDs by provider-confirmed state,Corresponding state time; provider events
+Email clicks and replies,Distinct messages clicked/replied; retain bot-filter status where available,Event time; provider/inbox; clicks alone are not intent
+Bounce and unsubscribe,Distinct affected messages for bounce; people for unsubscribe,Event time; provider/preferences
+Receipts and refunds,Sum confirmed receipt amounts and refund amounts separately; net is receipts minus refunds,"Actual transaction date, by currency and programme; finance"

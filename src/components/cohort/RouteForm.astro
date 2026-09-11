@@ -1,0 +1,581 @@
+---
+/**
+ * One of the three public routes into the practice, rendered from its
+ * definition in src/lib/pipeline/forms.ts.
+ *
+ * WHY THIS IS ONE COMPONENT AND NOT THREE FORMS
+ *
+ * The brief asks for three routes with overlapping fields and identical
+ * failure behaviour. Written out three times, the second one drifts: a
+ * maxlength that does not match the server, an error that appears in a
+ * different place, a success message that forgets to say an application is not
+ * a confirmed place. Rendering all three from one definition means a change to
+ * how a field behaves is a change to how every field behaves.
+ *
+ * THE FOUR BEHAVIOURS THIS EXISTS TO GET RIGHT
+ *
+ * 1. **Success is only ever reported by the server, after a commit.** The
+ *    browser never congratulates anybody on its own. Acceptance case E03: a
+ *    database failure must not produce a thank-you page.
+ *
+ * 2. **A failed submit keeps everything typed.** The form is never cleared,
+ *    reset or re-rendered on error — the values are already in the DOM and
+ *    they stay there. Somebody who wrote four paragraphs about their
+ *    architecture and hit a 503 must not lose them.
+ *
+ * 3. **One request key per form instance, generated once.** A double-click, a
+ *    refresh-and-resubmit, or a retry after a network drop all carry the same
+ *    key, and the server returns the reference it already issued. Acceptance
+ *    case E02. The key is deliberately NOT regenerated between attempts —
+ *    that would be the bug this prevents, wearing a fix's clothing.
+ *
+ * 4. **Errors are announced, not just coloured.** Each message is tied to its
+ *    field with aria-describedby and aria-invalid, and the status line is a
+ *    live region. Acceptance case E15 tests exactly this with a screen reader.
+ *
+ * WHAT IS DELIBERATELY NOT HERE
+ *
+ *   * No client storage. Nothing is written to localStorage or sessionStorage
+ *     — CLAUDE.md forbids both, and a half-typed application left in a shared
+ *     browser is a good reason for the rule rather than an exception to it.
+ *   * No CAPTCHA. The brief wants a bot check "that does not obstruct keyboard
+ *     users"; the honeypot below is invisible to people and free to everyone.
+ *   * No file upload. The brief forbids requesting confidential documents and
+ *     the copy says so twice.
+ *   * No hidden cohort id. The server resolves it from its own configuration.
+ */
+import { FORMS, type Route } from '../../lib/pipeline/forms';
+import { MARKETING_CONSENT } from '../../lib/pipeline/consent';
+import { APPLY_ACCESS_KEY, isApplyConfigured } from '../../data/site';
+
+export interface Props {
+  route: Route;
+  /** DOM id, so a CTA elsewhere on the page can jump to this form. */
+  id: string;
+  /** Rendered as the section heading. Falls back to the definition's title. */
+  heading?: string;
+  /**
+   * The application is the page's primary action and gets the filled button;
+   * the two enquiry routes get the outline one, so a secondary action is
+   * available "without competing visually" as the wireframe puts it.
+   */
+  emphasis?: 'primary' | 'secondary';
+  /** Whether to offer the marketing permission tick. */
+  consent?: boolean;
+}
+
+const {
+  route,
+  id,
+  heading,
+  emphasis = 'secondary',
+  consent = true,
+} = Astro.props;
+
+const form = FORMS[route];
+
+/**
+ * Fields that take the full width. A textarea always does; so does the funding
+ * choice, whose three options need room to be read rather than guessed at.
+ */
+const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
+---
+
+<form
+  class="apply-form route-form"
+  id={id}
+  data-route={route}
+  data-notify={isApplyConfigured ? APPLY_ACCESS_KEY : undefined}
+  novalidate
+>
+  <div class="rf-head">
+    <h3>{heading ?? form.title}</h3>
+    <p class="rf-intro">{form.intro}</p>
+  </div>
+
+  {/* Honeypot. Off-screen rather than display:none, because some bots skip
+      what is hidden and fill what is merely positioned away. Real people never
+      reach it: it is not in the tab order and it carries no label a screen
+      reader would announce as a question. */}
+  <input
+    class="hp"
+    type="text"
+    name="botcheck"
+    tabindex="-1"
+    autocomplete="off"
+    aria-hidden="true"
+  />
+
+  <div class="form-grid">
+    {
+      form.fields.map((field) => {
+        const fieldId = `${id}-${field.name}`;
+        const hintId = field.hint ? `${fieldId}-hint` : undefined;
+        const errId = `${fieldId}-err`;
+        const describedBy = [hintId, errId].filter(Boolean).join(' ');
+
+        return (
+          <label class={isFullWidth(field.kind) ? 'full' : undefined} for={fieldId}>
+            <span class="rf-label">
+              {field.label}
+              {!field.required && <span class="rf-opt"> (optional)</span>}
+            </span>
+
+            {field.kind === 'textarea' ? (
+              <textarea
+                id={fieldId}
+                name={field.name}
+                rows={field.rows ?? 4}
+                maxlength={field.max}
+                required={field.required}
+                aria-describedby={describedBy || undefined}
+              />
+            ) : field.kind === 'choice' ? (
+              <select
+                id={fieldId}
+                name={field.name}
+                required={field.required}
+                aria-describedby={describedBy || undefined}
+              >
+                <option value="">Choose one</option>
+                {field.options?.map((o) => <option value={o.value}>{o.label}</option>)}
+              </select>
+            ) : (
+              <input
+                id={fieldId}
+                name={field.name}
+                type={
+                  field.kind === 'email'
+                    ? 'email'
+                    : field.kind === 'tel'
+                      ? 'tel'
+                      : field.kind === 'number'
+                        ? 'text'
+                        : 'text'
+                }
+                inputmode={field.kind === 'number' ? 'numeric' : undefined}
+                maxlength={field.max}
+                required={field.required}
+                autocomplete={field.autocomplete}
+                aria-describedby={describedBy || undefined}
+              />
+            )}
+
+            {field.hint && (
+              <span class="rf-hint" id={hintId}>
+                {field.hint}
+              </span>
+            )}
+            <span class="rf-err" id={errId} hidden />
+          </label>
+        );
+      })
+    }
+  </div>
+
+  {
+    consent && (
+      /* Separate, unticked, and in its own approved words.
+
+         It is not in `fields` and it is not styled like the rest of the form,
+         because it is not part of the request — it is a second, optional thing
+         somebody agrees to while they are here. The wording and its version
+         come from consent.ts so the record can say what they actually saw. */
+      <div class="rf-consent">
+        <label class="rf-tick" for={`${id}-consent`}>
+          <input type="checkbox" id={`${id}-consent`} name="marketing_consent" value="yes" />
+          <span>{MARKETING_CONSENT.wording}</span>
+        </label>
+      </div>
+    )
+  }
+
+  <button
+    type="submit"
+    class={emphasis === 'primary' ? 'btn btn-primary' : 'btn btn-ghost'}
+  >
+    {form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+  </button>
+
+  {/* Live region. Assertive because a failed submit is the one moment where
+      interrupting is correct — the person is waiting on this answer. */}
+  <p class="form-status" data-status role="status" aria-live="polite"></p>
+
+  <p class="rf-privacy">
+    We use what you write here to reply to you and to prepare the fit
+    conversation. Nothing else.
+    <a href="/privacy">How your details are handled</a>.
+  </p>
+</form>
+
+<style>
+  .route-form { max-width: 620px; }
+  .rf-head { margin-bottom: var(--space-5); }
+  .rf-head h3 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+    letter-spacing: var(--tracking-display);
+  }
+  .rf-intro {
+    margin-top: var(--space-2);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+  }
+
+  .rf-label { color: var(--text-quiet); }
+  .rf-opt { color: var(--text-quiet); font-weight: var(--weight-normal); }
+
+  .rf-hint {
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+    margin-top: var(--space-1);
+  }
+
+  /* Error text is the danger INK, never the mark colour — --berry is 3:1 and
+     is for fills and the focus ring. See the split in ds/theme.css. */
+  .rf-err {
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--danger);
+    line-height: var(--lh-snug);
+    margin-top: var(--space-1);
+  }
+
+  .route-form :global(input[aria-invalid='true']),
+  .route-form :global(select[aria-invalid='true']),
+  .route-form :global(textarea[aria-invalid='true']) {
+    border-color: var(--danger);
+  }
+
+  .rf-consent {
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+  }
+  .rf-tick {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-body);
+    line-height: var(--lh-snug);
+    cursor: pointer;
+  }
+  .rf-tick input {
+    width: 20px;
+    height: 20px;
+    min-height: 0;
+    padding: 0;
+    margin-top: 2px;
+    border-radius: var(--radius-tick);
+    accent-color: var(--ink-1);
+    flex: none;
+  }
+
+  .rf-privacy {
+    margin-top: var(--space-4);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+  .rf-privacy a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* The saved state replaces the form rather than sitting under it. Leaving a
+     filled-in form on screen beside "we have received this" invites a second
+     submit, and the reference is the thing they need to be able to see. */
+  .rf-saved {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    max-width: 620px;
+  }
+  .rf-saved h3 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+    letter-spacing: var(--tracking-display);
+    margin-bottom: var(--space-3);
+  }
+  .rf-saved p {
+    font-size: var(--size-4);
+    color: var(--text-body);
+    line-height: var(--lh-normal);
+    max-width: var(--measure-prose);
+  }
+  .rf-ref {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+    font-family: var(--font-mono);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .rf-ref b {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-mono);
+  }
+</style>
+
+<script>
+  /**
+   * One script for every instance of the form on the page. Astro hoists a
+   * component's script once no matter how many times the component is used, so
+   * this must query all of them rather than assume there is one.
+   */
+  import { FORMS, validate, type Route } from '../../lib/pipeline/forms';
+
+  const forms = document.querySelectorAll<HTMLFormElement>('form.route-form');
+
+  forms.forEach((form) => {
+    const route = form.dataset.route as Route;
+    const definition = FORMS[route];
+    if (!definition) return;
+
+    const status = form.querySelector<HTMLElement>('[data-status]');
+
+    /**
+     * Generated once, here, and never again for the life of this form.
+     *
+     * This single line is acceptance case E02. If it moved inside the submit
+     * handler, every retry would become a new application and the person who
+     * clicked twice because the first click seemed to do nothing would be in
+     * the pipeline twice.
+     *
+     * randomUUID needs a secure context; localhost and https both qualify. The
+     * fallback is only reached on plain http, where it is still unique enough
+     * to deduplicate one person's retries, which is all it has to do.
+     */
+    const requestKey =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `k-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+    let inFlight = false;
+
+    const fieldEl = (name: string) =>
+      form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+        `[name="${name}"]`,
+      );
+
+    const errEl = (name: string) =>
+      form.querySelector<HTMLElement>(`#${CSS.escape(form.id)}-${CSS.escape(name)}-err`);
+
+    const clearErrors = () => {
+      definition.fields.forEach((f) => {
+        const el = fieldEl(f.name);
+        const err = errEl(f.name);
+        if (el) el.removeAttribute('aria-invalid');
+        if (err) {
+          err.textContent = '';
+          err.hidden = true;
+        }
+      });
+    };
+
+    const showErrors = (errors: { field: string; message: string; code: string }[]) => {
+      errors.forEach((e) => {
+        const el = fieldEl(e.field);
+        const err = errEl(e.field);
+        if (el) el.setAttribute('aria-invalid', 'true');
+        if (err) {
+          err.textContent = e.message;
+          err.hidden = false;
+        }
+      });
+
+      // Move focus to the first problem. Without this a keyboard or screen
+      // reader user is told something is wrong and left at the bottom of the
+      // form with no way to find out what.
+      const first = errors[0] && fieldEl(errors[0].field);
+      if (first) first.focus();
+
+      if (status) {
+        status.className = 'form-status err';
+        status.textContent =
+          errors.length === 1
+            ? 'One answer needs a change before this can be sent.'
+            : `${errors.length} answers need a change before this can be sent.`;
+      }
+
+      // Category and field name only. Never what was typed — the analytics
+      // contract in the brief is explicit, and this is the one event most
+      // likely to carry someone's free text if nobody is paying attention.
+      errors.forEach((e) => report('form_error', { form: route, field: e.field, code: e.code }));
+    };
+
+    const report = (type: string, meta: Record<string, unknown>) => {
+      try {
+        const body = JSON.stringify({ type, path: location.pathname, meta });
+        navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' }));
+      } catch {
+        /* Instrumentation never affects the person filling the form in. */
+      }
+    };
+
+    /**
+     * Tell the inbox. Never blocks, never fails loudly, never retried.
+     *
+     * A retry here would send a second email for one application, and the
+     * console is the backstop: a submission with no `owner_notified` activity
+     * is visible there. Between the two, the failure mode is "somebody has to
+     * look at the console", not "an application is lost".
+     */
+    const notifyInbox = async (answers: Record<string, unknown>, reference: string) => {
+      const key = form.dataset.notify;
+      if (!key) return;
+
+      const label = { application: 'application', enquiry: 'enquiry', enterprise: 'team enquiry' }[
+        route
+      ];
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            access_key: key,
+            subject: `New ${label} — ${reference}`,
+            from_name: 'The Living Craft',
+            // The reference first, so the inbox copy and the console row can be
+            // matched by eye without a lookup.
+            reference,
+            route,
+            ...answers,
+          }),
+        });
+        report('owner_notified', { form: route, delivered: res.ok });
+      } catch {
+        report('owner_notified', { form: route, delivered: false });
+      }
+    };
+
+    const saved = (reference: string, confirmation: string) => {
+      const panel = document.createElement('div');
+      panel.className = 'rf-saved';
+      panel.setAttribute('role', 'status');
+      panel.innerHTML = `
+        <h3>Received</h3>
+        <p></p>
+        <p class="rf-ref">Your reference: <b></b></p>`;
+      panel.querySelector('p')!.textContent = confirmation;
+      panel.querySelector('.rf-ref b')!.textContent = reference;
+
+      form.replaceWith(panel);
+      (panel as HTMLElement).setAttribute('tabindex', '-1');
+      (panel as HTMLElement).focus();
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (inFlight) return;
+
+      clearErrors();
+
+      const data = new FormData(form);
+      const input: Record<string, unknown> = {};
+      definition.fields.forEach((f) => {
+        input[f.name] = data.get(f.name) ?? '';
+      });
+
+      // The same rules the server runs, run here first — so an obvious typo
+      // costs no round trip. The server is still the one that decides; this is
+      // a convenience, never the validation.
+      const { errors } = validate(route, input);
+      if (errors.length) {
+        showErrors(errors);
+        return;
+      }
+
+      inFlight = true;
+      const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (button) button.disabled = true;
+      if (status) {
+        status.className = 'form-status';
+        status.textContent = 'Sending…';
+      }
+
+      try {
+        const response = await fetch('/api/pipeline/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            route,
+            requestKey,
+            marketingConsent: data.get('marketing_consent') === 'yes',
+            botcheck: data.get('botcheck') ?? '',
+            entryPath: location.pathname,
+            search: location.search,
+            referrer: document.referrer,
+            answers: input,
+          }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as
+          | { ok: true; reference: string; confirmation: string }
+          | { ok: false; errors?: typeof errors; error?: string }
+          | null;
+
+        if (response.ok && payload && payload.ok) {
+          // The database is now the record. The inbox is the NOTIFICATION, and
+          // until D2 lands there is no other one — an application that saves
+          // and tells nobody sits in a table until somebody thinks to look.
+          //
+          // Deliberately AFTER the commit and deliberately not awaited into the
+          // person's experience: they are already told they succeeded, because
+          // they did. A failed notification is an operational problem, not
+          // theirs, so it is reported to the beacon rather than to them.
+          //
+          // Still posted from the BROWSER. Web3Forms refuses a server-side call
+          // on the free plan and CLAUDE.md is explicit that moving it is what
+          // broke the agent's lead capture once already.
+          void notifyInbox(input, payload.reference);
+          saved(payload.reference, payload.confirmation);
+          return;
+        }
+
+        if (payload && !payload.ok && payload.errors?.length) {
+          showErrors(payload.errors);
+          return;
+        }
+
+        // Everything else is our fault, and the person keeps what they wrote.
+        // The message says what to do next rather than apologising: nothing
+        // they can change in the form will fix a database that is down.
+        if (status) {
+          status.className = 'form-status err';
+          status.textContent =
+            (payload && !payload.ok && payload.error) ||
+            'We could not save this just now. Your answers are still here — try again in a moment, or email apply@thelivingcraft.ai.';
+        }
+      } catch {
+        if (status) {
+          status.className = 'form-status err';
+          status.textContent =
+            'That did not reach us — check your connection and try again. Your answers are still here.';
+        }
+      } finally {
+        inFlight = false;
+        if (button) button.disabled = false;
+      }
+    });
+  });
+</script>
