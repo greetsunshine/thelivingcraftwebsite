@@ -59,21 +59,19 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ## In flight right now — check before you rebuild any of it
 
-Five agents were working when this was last written, 11 September. **Each stopped run leaves
-real files on disk**, so the first move on picking this up is `git status` and a route check,
-not a rebuild. Every previous interruption left most of the work done.
+Three agents were working when this was last written, 11 September. **Each stopped run
+leaves real files on disk**, so the first move on picking this up is `git status` and a
+route check, not a rebuild. Every interruption so far has left most of the work done.
 
-| Owner | Files | What it was doing |
+| Owner | Files | State when last seen |
 |---|---|---|
-| Administration | `craft/admin/admin.astro`, `api/craft/admin/{staff,cohort}.ts` | Verifying that an operator session is refused 403 on every write, and that nothing renders a password hash |
-| Security audit | `lib/admin/{export,import,pipeline-queries,env}.ts`, `craft/admin/{records,pipeline*}.astro` | Authorisation bypasses, personal data in errors, unknown-as-zero. Also fixing the hard-coded absolute `.env.local` path in `env.ts`, which does nothing on Vercel |
-| Communications | `supabase/schema.sql` (append), `lib/comms/**`, `api/{craft/admin/comms,unsubscribe}.ts`, `craft/admin/comms.astro` | Stage 4 with **dispatch off** — outbox, twelve versioned templates, double eligibility check, signed unsubscribe, failure queue |
-| Synthetic data | `scripts/seed.ts`, `scripts/acceptance.ts` (E14 only) | A seed that refuses to run against production, and the E14 reconciliation check |
-| Templates | `pages/resources/templates/**`, `content/templates/**`, `content.config.ts` (templates collection only) | The last `pending` item in the navigation |
+| Stage 4 TypeScript | `lib/comms/**`, `api/craft/admin/comms.ts`, `api/unsubscribe.ts`, `craft/admin/comms.astro` | Schema already committed (five tables). Building the outbox, eligibility, signed unsubscribe. **Dispatch stays off** |
+| Templates routing | `pages/resources/templates/**`, `content/templates/*.md`, `content.config.ts` (templates only) | Four templates written and committed; **nothing renders them, `/resources/templates/` is 404** |
+| Seed and E14 | `scripts/seed.ts`, `scripts/acceptance.ts` (E14 only) | ~1,500 lines written and **never executed once**. Expect it not to run |
 
-If one did not finish, its brief is recoverable from this table plus the build plan. Nothing
-in that list touches `src/lib/pipeline/**`, `src/lib/admin/{auth,staff,csv}.ts` or
-`src/middleware.ts` — those are settled.
+Nothing in that list touches `src/lib/pipeline/**`, `src/lib/admin/{auth,staff,csv,health}.ts`
+or `src/middleware.ts` — those are settled.
+
 
 ## Where the six stages stand
 
@@ -82,9 +80,9 @@ in that list touches `src/lib/pipeline/**`, `src/lib/admin/{auth,staff,csv}.ts` 
 | 1 · Page and three forms that save | **built, verified** | Run the schema, then `npm run acceptance` |
 | 2 · Staff screens and named accounts | **built and audited** (read-only) | Nothing, until stage 3 adds writes |
 | 3 · Pipeline and evidence | **built** — schema, write API, lead-detail UI | First real render once the schema is applied (see below) |
-| 4 · Communications | not started | Blocked on D2 |
+| 4 · Communications | schema **built** (5 tables); TypeScript in flight | Dispatch stays off until D2 |
 | 5 · Administration | **built** — staff, cohorts, health, retention, import/export | Verify against an applied schema |
-| 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap | Later clusters are editorial briefs, not code |
+| 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap. Templates written, **not routed** | Route the templates; later clusters are editorial briefs, not code |
 
 ---
 
