@@ -167,3 +167,31 @@ Before anything is published, per the brief's closing paragraph:
 | 10 Sep 2026 | Package read end to end; plan and status written. Scope agreed as the whole package. Console extends `/craft/admin` rather than forking a second staff area. D1 and D2 referred to Sunil. Nothing built yet. |
 | 11 Sep 2026 | **Checkpoint added.** `RESUME.md` is now the first read for any session continuing this work, and CLAUDE.md points at it from the top. Console session carries a signed identity and role list; verified by attack — a payload edited to grant extra roles and re-presented with the original signature is rejected. Shared password grants `operator` alone. `npm run staff` creates the first account; `npm run acceptance` runs the register (E03 and E17 pass, the rest report *not run* with reasons). `/privacy` published as an honest placeholder. Form accessibility markup verified: ten controls, ten labels, error slot on every field that can fail. |
 | 10 Sep 2026 | **Stage 1 save path built.** Cohort page rebuilt against the delivered copy; three routes rendered from one definition in `lib/pipeline/forms.ts`; ten tables and `pipeline_submit()` added to the schema; `/api/pipeline/submit` returns success only after a commit. D1 held behind `PUBLISH_OFFER_FIGURES` — no price, date, week count or seat cap reaches the page or its JSON-LD. `resolveCohort()` returns three states, not two, so a database that cannot answer is a 503 and a retry while a cohort that is genuinely closed is a 409 — those were one refusal and the brief forbids presenting an unavailable source as a known state. `astro check` 0 errors. |
+
+---
+
+## V4 addendum — five more acceptance cases
+
+`LC-STRATEGY-V4.0.0`, 11 September. Mirrors `Live_Acceptance_Register.csv` in the addendum
+folder. See the V4 section at the foot of [`build-plan.md`](build-plan.md).
+
+| ID | Scenario | Status |
+|---|---|---|
+| V4-E01 | Post IDs and UTMs survive resource → cohort navigation without overwriting first source; no contact details enter analytics | not run |
+| V4-E02 | Anonymous download creates no person; optional email request deduplicates and creates the correct request type; repeated submit sends no duplicate receipt | not run |
+| V4-E03 | Database failure shows no success and sends no unrecorded delivery; email failure retains the saved request and alerts staff | not run |
+| V4-E04 | All three released pages and downloads match the approved resource version, work on mobile and keyboard, and link to the tested cohort/enquiry route | not run |
+| V4-E05 | Resource request does not become an application or start marketing without its own permission; reply/unsubscribe suppression remains effective | not run |
+
+### V4 stage additions
+
+- [x] Cohort page copy updated — *See what a review can change*, plus the added sentence in Sunil's section
+- [ ] LC-R01 cost-ceiling worksheet live and tested (**required before post D10**)
+- [ ] LC-R02 evaluation-gates worksheet live and tested (**before D16**)
+- [ ] LC-R03 deployment checklist live and tested (**before D20**)
+- [ ] `/toolkit` index listing released resources only
+- [ ] Resource-request record, distinct from enquiry and application
+- [ ] `resource_id` as a permitted non-personal analytics dimension
+- [ ] V4 UTM contract — `lc_v4_cohort`, lowercase post id in `utm_content`
+- [ ] Resource-delivery template, separate from cohort nurture
+- [ ] `npm run check:campaign` — no post scheduled against an unbuilt destination

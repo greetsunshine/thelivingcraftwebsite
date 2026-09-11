@@ -277,3 +277,66 @@ delivering the inbox copy exactly as it does today, so no lead is lost.
   are proposals. **They do not go on the public page as guarantees.**
 - **Reconciliation of the four reported enrolments and two positive responses** person by
   person before any appear in a live total.
+
+---
+
+## The V4 addendum, 11 September
+
+`LC-STRATEGY-V4.0.0` arrived a day after the original handoff, in
+[`docs/Website Rebuild 10-09-2026/website_addendum_11-09-2026/`](../Website%20Rebuild%2010-09-2026/website_addendum_11-09-2026/).
+
+**It changes campaign references and phased resources. It does not change the database,
+consent or delivery safeguards** — its own first paragraph says so, and the 10 September
+functional specification, data dictionary, twelve templates and E01–E18 all remain in
+force. So nothing already built is invalidated; this is additive.
+
+### What it actually asks for
+
+1. **Two copy changes to the cohort page.** A new section, *See what a review can change*,
+   between the returns example and the outcomes; and one sentence added to Sunil's. The
+   new section matters more than its length: the page previously demonstrated the design
+   QUESTIONS and never the consequence of asking one, which is the thing being sold.
+2. **Three open resources**, on the critical path with dates — the cost-ceiling worksheet
+   before post D10, the evaluation-gates worksheet before D16, the deployment checklist
+   before D20. Thirteen more are backlog and explicitly not launch dependencies.
+3. **A fourth record type: the resource request.** Distinct from enquiry and application.
+4. **Five more acceptance cases**, V4-E01 to V4-E05.
+
+### The rules that are new, and each is a trap
+
+- **An anonymous resource view or download is an EVENT, NOT A PERSON.** Only an optional
+  email request creates one, by the same deduplication rules. This is the single easiest
+  way to inflate a pipeline: a worksheet gets two hundred downloads and the dashboard
+  reports two hundred leads.
+- **Never infer marketing permission from downloading.** Said twice in the addendum and
+  again in the release controls: *"Do not send a resource requester the cohort nurture
+  solely because an email address exists."* A resource-delivery email needs its own
+  reviewed template; the cohort nurture must not start from a request by default.
+- **Attribution must survive resource → cohort navigation without overwriting first
+  source.** Somebody arrives on a worksheet from a post, then navigates to the cohort page
+  and applies. The first source is still the post. An internal referral must never replace
+  an external one — which `attribution.ts` already refuses to do, by dropping a same-host
+  referrer.
+- **`/toolkit` lists released resources only.** *"Do not display unavailable downloads as
+  available."*
+- **The UTM contract changed**: campaign `lc_v4_cohort`, source `linkedin`, medium
+  `organic_social`, **lowercase** post id in `utm_content`, plus `resource_id` as a
+  permitted non-personal dimension. **Do not reuse the LC-OCT ids for V4 attribution** —
+  they are a different campaign and joining them would merge two things nobody merged.
+
+### One thing it says about our own previous work
+
+> "The PDF's Web3Forms and `/api/lead` descriptions are **unverified implementation
+> claims, not a requirement to copy them**. Inspect the actual current stack and providers
+> before choosing implementation."
+
+And: *"Do not rely on a browser email send followed by an unrelated database write as
+proof of a saved lead."* What is built already satisfies this — the database is the record
+and the inbox is a notification after the commit — but it is worth knowing that the
+addendum explicitly declines to mandate the old arrangement.
+
+### Release controls worth honouring in code
+
+*"Resource-led D10/D16/D20 cannot be scheduled until their approved resource is hosted and
+downloads work. The ready written copy is not evidence that these dependencies are
+satisfied."* That is a mechanical check, and `npm run check:campaign` is it.
