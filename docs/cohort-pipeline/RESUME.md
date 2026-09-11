@@ -146,10 +146,11 @@ exists to prevent** — do not "fix" them into passes.
   (2.29:1). Figtree, not Fraunces. Sentence-case labels.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
-- **A bash heredoc will eat a `\u0000` escape in a Python one-liner**, so a string you
-  meant as six literal characters arrives as a control byte and a "replacement" silently
-  matches itself. Use a raw string (`r"…"`). This cost twenty minutes and looked like a
-  file that would not write.
+- **A bash heredoc eats backslash escapes in a Python one-liner**, even a quoted one. A
+  `\t` in a Windows path becomes a tab; a `\u0000` meant as six characters becomes a
+  control byte, so a 'replacement' silently matches what it was replacing. Use a raw
+  string (`r"…"`), or keep backslashes out of the text. This has now cost time three
+  separate times — in a TypeScript regex, in a test fixture, and in this document.
 - **`src/lib/admin/csv.ts` must import NOTHING.** The acceptance harness runs under
   `--experimental-strip-types`, whose resolver will not guess a missing file extension, so
   one import there means E13 tests a copy of the escaping rule instead of the shipped one.
