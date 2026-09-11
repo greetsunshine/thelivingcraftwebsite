@@ -446,8 +446,8 @@ it twice about two different things is what makes it stick.
 
 **If a pair pushes for keeping it:** take it seriously and ask what they would
 have to add to make it safe. The honest answer is a trust boundary that survives
-the model quoting itself, which is week 5 — so it is a good instinct arriving
-four weeks early, not a wrong one.
+the model quoting itself, which is week 4 — so it is a good instinct arriving
+three weeks early, not a wrong one.
 
 Then the levers-versus-controls split, which is the block's payoff: everything in
 `llm.py` moves a probability, and only `MAX_STEPS` and the `TOOLS` dictionary
@@ -554,9 +554,18 @@ questions, and keep your own close written because guests cancel.
 
 ## Clock
 
-45 + 60 + [break 15] + 60 + 50 + 20 = **250 minutes**, up from 135. The session
-grew on 2026-09-02 from one failure to four, and from three drills to four, plus
-the decision-record write-up inside block 4.
+15 + 55 + [5] + 50 + [break 15] + 60 + [5] + 50 + [5 + 10] + 20 + 10 =
+**300 minutes, five hours**. The session grew on 2026-09-02 from one failure to
+four, and from three drills to four, plus the decision-record write-up inside
+block 4. The opening, the quiz and the close were added after that, which is what
+took it from 250 to 300, and `week-1-script.md` was reshifted to match on
+2026-09-11.
+
+**One change of shape in that reshift, not just of times.** The ₹3,600 moved from
+block 2 into block 1, where the session file already had it. The room needs one
+failure before the harness has a name, so that naming it lands as an explanation
+rather than as a diagram. Block 2 now opens on the ₹5,000 and holds three
+failures, not four.
 
 The break sits at the end of block 2, immediately after the ₹2,50,000 run and the
 pattern table. That placement is deliberate: they walk out mid-argument and the

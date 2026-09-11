@@ -426,7 +426,7 @@ same authority. Nothing in the system has ever marked which text is allowed to
 give instructions.
 
 We name the missing piece, then we leave it. The missing piece is a boundary
-between text that is data and text that is authority. This is week 5's material
+between text that is data and text that is authority. This is week 4's material
 and it does not fit into a smaller space. What you should take today is that the
 gap exists, that no prompt wording closes it, and that you watched it happen.
 
@@ -781,8 +781,8 @@ did not.
 
 ### Write the boundary down
 
-_03:50 to 04:15, in the same pairs. Fifteen minutes to write, then ten to review
-somebody else's._
+_03:50 to 04:15, in the same pairs. Twelve minutes to write, eight to review
+somebody else's, and the last five for the framing below._
 
 Pick the one question you argued hardest about. Write it up as a one-page
 decision record, in the shape you would put in front of an architecture review.
@@ -816,7 +816,7 @@ document, so write it for the person who has to build it. Next week, that is you
 
 ### Closing the loop — the leader's framing
 
-_04:09, the last few minutes of the block._
+_04:10 to 04:15, the last five minutes of the block._
 
 One trade-off runs under all five questions. It is **autonomy against
 reversibility**, and it is a business decision dressed as an engineering one.
