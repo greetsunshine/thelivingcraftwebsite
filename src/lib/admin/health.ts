@@ -54,6 +54,17 @@ const TABLES = [
   'activities',
   'tasks',
   'audit_log',
+  'staff',
+  // Stage 3's evidence. `payments` and `admissions` are the two halves of the
+  // enrolment gate, so a missing one here does not merely hide a table — it
+  // makes every enrolment unprovable, which is worth a loud banner.
+  'meetings',
+  'offers',
+  'payments',
+  'admissions',
+  'attendance',
+  'nominations',
+  'stage_history',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */

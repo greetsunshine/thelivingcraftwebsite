@@ -18,9 +18,12 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 
 > ### ⚠ `supabase/schema.sql` has NOT been run against the Supabase project
 >
-> Eleven new tables (`organisations`, `people`, `cohorts`, `form_submissions`,
-> `opportunities`, `attributions`, `consents`, `activities`, `tasks`, `audit_log`,
-> `staff`) plus `pipeline_submit()` and the append-only trigger on `consents`.
+> Eighteen new tables — the eleven from stages 1 and 2 (`organisations`, `people`,
+> `cohorts`, `form_submissions`, `opportunities`, `attributions`, `consents`,
+> `activities`, `tasks`, `audit_log`, `staff`) plus stage 3's seven (`meetings`,
+> `offers`, `payments`, `admissions`, `attendance`, `nominations`, `stage_history`).
+> Also `pipeline_submit()`, `enrolment_blockers()`, and the append-only trigger on
+> `consents`.
 >
 > **This cannot be done from a session here** — it is DDL, and the service-role key cannot
 > issue DDL over PostgREST. It is a paste into the Supabase SQL editor. The file is
@@ -60,7 +63,7 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 |---|---|---|
 | 1 · Page and three forms that save | **built, verified** | Run the schema, then `npm run acceptance` |
 | 2 · Staff screens and named accounts | **built and audited** (read-only) | Nothing, until stage 3 adds writes |
-| 3 · Pipeline and evidence | schema only | Stage writes, meetings, offers, finance, attendance |
+| 3 · Pipeline and evidence | schema + write API **built**; console UI in flight | Verify the enrolment gate renders before it is hit |
 | 4 · Communications | not started | Blocked on D2 |
 | 5 · Administration | not started | Import/export, retention, staff screen |
 | 6 · Wider site | **built**: IA, 9 pages, 4 guides, the design-check tool, sitemap | Later clusters are editorial briefs, not code |
@@ -122,6 +125,13 @@ exists to prevent** — do not "fix" them into passes.
   (2.29:1). Figtree, not Fraunces. Sentence-case labels.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
+- **A bash heredoc will eat a `\u0000` escape in a Python one-liner**, so a string you
+  meant as six literal characters arrives as a control byte and a "replacement" silently
+  matches itself. Use a raw string (`r"…"`). This cost twenty minutes and looked like a
+  file that would not write.
+- **Money is stored in MINOR UNITS** everywhere — `amount_minor`, a whole number. A float
+  that has to be reconciled against a bank statement is how a rounding difference becomes
+  an argument.
 - **An `is:inline` script cannot import.** Use a module `<script>`; Vite bundles it and
   `astro check` then sees it.
 - **Node 20 is the nvm default and Astro refuses it.** Export the path above first.

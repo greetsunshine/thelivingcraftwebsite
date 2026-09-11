@@ -1838,3 +1838,274 @@ create trigger staff_touch before update on public.staff
   for each row execute function public.touch_updated_at();
 
 alter table public.staff enable row level security;
+
+-- ===========================================================================
+-- Stage 3 -- the evidence behind a stage, and the gate on enrolment
+-- ===========================================================================
+-- A stage is a claim. These tables are what makes the claim checkable.
+--
+-- THE ONE INVARIANT THIS WHOLE SECTION EXISTS FOR
+--
+--   "Enrolment requires Sunil's recorded acceptance/admission decision and
+--    finance-confirmed payment under the approved offer."
+--
+-- Two facts, recorded by two people who cannot act for each other. That is why
+-- `admissions` and `payments` are separate tables with separate authors rather
+-- than two booleans on `opportunities` -- a boolean can be set by whoever has
+-- the row open, and a row with an actor and a time cannot.
+--
+-- WHAT MUST NEVER HAPPEN HERE
+--   * No column that says "enrolled" as a fact of its own. Enrolment is
+--     DERIVED from the evidence (see enrolment_blockers below). A cached flag
+--     is a fifth definition of "did they join", and the learning agent already
+--     carries a scar from having five definitions of "did the session happen".
+--   * A refund does not delete anything. It is a second payment row with its
+--     own meaning, plus a review task. History survives corrections.
+--   * Attendance is never evidence of payment, and payment is never evidence
+--     of attendance. Two different owners, two different tables, and no join
+--     that implies one from the other.
+
+-- ---------------------------------------------------------------------------
+-- Meetings -- scheduled and held are two different facts
+-- ---------------------------------------------------------------------------
+-- The operating guide asks for them separately: "Record scheduled and held
+-- meetings separately." A meeting that was booked and missed is signal; a
+-- table that only knows about the ones that happened cannot tell you that
+-- three people booked and none arrived.
+
+create table if not exists public.meetings (
+  meeting_id     uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  scheduled_at   timestamptz,
+  status         text        not null default 'scheduled'
+                             check (status in ('scheduled', 'held', 'cancelled', 'no_show')),
+  -- When it ACTUALLY happened. Deliberately not defaulted from scheduled_at:
+  -- a meeting that ran late or moved is a different fact from the one booked,
+  -- and "held_at = scheduled_at because nobody edited it" is a fabricated time.
+  held_at        timestamptz,
+  outcome        text,
+  next_action    text,
+  recorded_by    text,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists meetings_opp_idx on public.meetings (opportunity_id, scheduled_at desc);
+create index if not exists meetings_held_idx on public.meetings (held_at desc) where held_at is not null;
+
+-- ---------------------------------------------------------------------------
+-- Offers -- approved by one person, and versioned
+-- ---------------------------------------------------------------------------
+-- "Only Sunil or an explicitly delegated approver can approve." The column is
+-- `approved_by` rather than `created_by` because who WROTE it is not the
+-- interesting fact; who stood behind it is.
+--
+-- A revision is a NEW ROW pointing at the one it replaces. The data dictionary:
+-- "revisions linked and not new prospects". Editing an approved offer in place
+-- would let the terms somebody accepted change after they accepted them.
+
+create table if not exists public.offers (
+  offer_id       uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  version        int         not null default 1,
+  supersedes     uuid        references public.offers(offer_id) on delete set null,
+  approved_by    text        not null,
+  approved_at    timestamptz not null default now(),
+  currency       text        not null,
+  -- MINOR UNITS, always. Storing 1200.00 as a float and reconciling it against
+  -- finance later is how a rounding difference becomes an argument. The data
+  -- dictionary says minor units and means it.
+  amount_minor   bigint      not null check (amount_minor >= 0),
+  term_reference text,
+  accepted       boolean     not null default false,
+  accepted_at    timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists offers_opp_idx on public.offers (opportunity_id, approved_at desc);
+create index if not exists offers_accepted_idx on public.offers (accepted, accepted_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Payments -- finance evidence, and nothing infers it
+-- ---------------------------------------------------------------------------
+-- "Do not infer payment from an offer or receipt email." So this table is
+-- written by finance and by nobody else, and no other table implies it.
+--
+-- A refund is a row of type 'refund' with its own amount. Net is receipts
+-- minus refunds, computed at read time, per currency. The operating guide is
+-- explicit that cross-currency amounts are never added.
+
+create table if not exists public.payments (
+  payment_id         uuid        primary key default gen_random_uuid(),
+  opportunity_id     uuid        references public.opportunities(opportunity_id) on delete set null,
+  person_id          uuid        references public.people(person_id) on delete set null,
+  offer_id           uuid        references public.offers(offer_id) on delete set null,
+  type               text        not null check (type in ('receipt', 'refund')),
+  currency           text        not null,
+  amount_minor       bigint      not null check (amount_minor > 0),
+  invoice_reference  text,
+  evidence_reference text,
+  -- Who in finance confirmed it. Not the operator who typed it in, and not
+  -- "system": an unattributed payment is not evidence of anything.
+  confirmed_by       text        not null,
+  -- The transaction date, which is not the day somebody entered it. "Keep
+  -- evidence dates separate from entry dates."
+  received_at        timestamptz not null,
+  created_at         timestamptz not null default now()
+);
+
+create index if not exists payments_opp_idx on public.payments (opportunity_id, received_at desc);
+create index if not exists payments_person_idx on public.payments (person_id);
+create index if not exists payments_type_idx on public.payments (type, received_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Admissions -- the other half of the gate
+-- ---------------------------------------------------------------------------
+-- Sunil's decision, recorded as evidence with an author and a time. A decline
+-- is recorded too: "we decided not to" is a fact worth keeping, and its
+-- absence is what makes a pipeline look stalled when it is not.
+
+create table if not exists public.admissions (
+  admission_id   uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  decision       text        not null check (decision in ('admitted', 'declined')),
+  decided_by     text        not null,
+  decided_at     timestamptz not null default now(),
+  note           text,
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists admissions_opp_idx on public.admissions (opportunity_id, decided_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Attendance -- the programme owner's record, independent of both
+-- ---------------------------------------------------------------------------
+-- "Attendance remains independent." Confirming you will come, and coming, are
+-- two facts; so are coming and having paid. The programme owner records this
+-- and cannot infer payment from it, which roles.ts enforces.
+
+create table if not exists public.attendance (
+  attendance_id         uuid        primary key default gen_random_uuid(),
+  person_id             uuid        not null references public.people(person_id) on delete cascade,
+  cohort_id             uuid        references public.cohorts(cohort_id) on delete set null,
+  -- Null for the cohort-level confirmation; set for a specific session.
+  session_id            text,
+  confirmation_response text        check (confirmation_response in ('yes', 'no', 'unknown')),
+  confirmed_at          timestamptz,
+  attended              boolean,
+  recorded_by           text,
+  occurred_on           date,
+  created_at            timestamptz not null default now()
+);
+
+create unique index if not exists attendance_person_session
+  on public.attendance (person_id, coalesce(cohort_id, '00000000-0000-0000-0000-000000000000'::uuid),
+                        coalesce(session_id, ''));
+
+-- ---------------------------------------------------------------------------
+-- Nominations -- an enterprise order is not eight applications
+-- ---------------------------------------------------------------------------
+-- "Store participant nominations separately. An organisation order is not
+-- eight or ten individual cohort applications."
+--
+-- A nominated participant is NOT a `people` row and NOT an applicant. They
+-- become a person when they themselves do something. Counting nominations as
+-- applicants is the easiest way to overstate this pipeline, and keeping them
+-- in their own table makes that mistake require effort.
+
+create table if not exists public.nominations (
+  nomination_id   uuid        primary key default gen_random_uuid(),
+  opportunity_id  uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  organisation_id uuid        references public.organisations(organisation_id) on delete set null,
+  name            text,
+  email           text,
+  role            text,
+  note            text,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists nominations_opp_idx on public.nominations (opportunity_id);
+
+-- ---------------------------------------------------------------------------
+-- Stage history -- every move, with who and why
+-- ---------------------------------------------------------------------------
+-- `audit_log` records changes generically. This is the typed version for the
+-- one change that gets reported on: "Distinct opportunity/stage entries with
+-- correction history available", and "not summed as unique people".
+--
+-- A correction is a row like any other, flagged. Nothing is deleted, so a
+-- reversal leaves both the move and the unmove visible -- which is the point,
+-- because a pipeline that quietly loses its reversals reports better than it is.
+
+create table if not exists public.stage_history (
+  entry_id       uuid        primary key default gen_random_uuid(),
+  opportunity_id uuid        not null references public.opportunities(opportunity_id) on delete cascade,
+  from_stage     text,
+  to_stage       text        not null,
+  actor          text        not null,
+  -- Required by the console when closing or reversing. Null is legitimate for
+  -- an ordinary forward move; a close or a reversal without one is refused
+  -- before it reaches here.
+  reason         text,
+  is_reversal    boolean     not null default false,
+  occurred_at    timestamptz not null default now()
+);
+
+create index if not exists stage_history_opp_idx on public.stage_history (opportunity_id, occurred_at desc);
+create index if not exists stage_history_stage_idx on public.stage_history (to_stage, occurred_at desc);
+
+-- ---------------------------------------------------------------------------
+-- enrolment_blockers -- what is still missing before somebody can be enrolled
+-- ---------------------------------------------------------------------------
+-- One row per missing piece; no rows when nothing is missing. The console
+-- prints them, and the write path refuses the transition while any remain.
+--
+-- A FUNCTION rather than a flag on the row, for the reason at the top of this
+-- section: enrolment is derived from evidence. Ask the question at the moment
+-- it matters and the answer cannot go stale, cannot be set by hand, and cannot
+-- disagree with the tables it is drawn from.
+
+create or replace function public.enrolment_blockers(p_opportunity_id uuid)
+returns table (code text, detail text)
+language sql stable as $fn$
+  select 'no_offer'::text, 'No approved offer.'::text
+  where not exists (
+    select 1 from public.offers o where o.opportunity_id = p_opportunity_id
+  )
+  union all
+  select 'offer_not_accepted'::text, 'The approved offer has not been marked accepted.'::text
+  where exists (select 1 from public.offers o where o.opportunity_id = p_opportunity_id)
+    and not exists (
+      select 1 from public.offers o
+       where o.opportunity_id = p_opportunity_id and o.accepted
+    )
+  union all
+  select 'no_admission'::text, 'No admission decision recorded. Only Sunil can record one.'::text
+  where not exists (
+    select 1 from public.admissions a
+     where a.opportunity_id = p_opportunity_id and a.decision = 'admitted'
+  )
+  union all
+  select 'no_payment'::text, 'No finance-confirmed payment. Only finance can record one.'::text
+  where not exists (
+    select 1 from public.payments p
+     where p.opportunity_id = p_opportunity_id and p.type = 'receipt'
+  );
+$fn$;
+
+alter table public.meetings      enable row level security;
+alter table public.offers        enable row level security;
+alter table public.payments      enable row level security;
+alter table public.admissions    enable row level security;
+alter table public.attendance    enable row level security;
+alter table public.nominations   enable row level security;
+alter table public.stage_history enable row level security;
+
+drop trigger if exists meetings_touch on public.meetings;
+create trigger meetings_touch before update on public.meetings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists offers_touch on public.offers;
+create trigger offers_touch before update on public.offers
+  for each row execute function public.touch_updated_at();
