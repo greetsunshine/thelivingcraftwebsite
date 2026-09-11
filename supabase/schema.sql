@@ -2559,3 +2559,346 @@ create trigger comms_sequences_touch before update on public.comms_sequences
 drop trigger if exists comms_messages_touch on public.comms_messages;
 create trigger comms_messages_touch before update on public.comms_messages
   for each row execute function public.touch_updated_at();
+
+-- ===========================================================================
+-- ===========================================================================
+-- V4 ADDENDUM (LC-STRATEGY-V4.0.0, 11 September 2026) -- THE RESOURCE REQUEST
+-- ===========================================================================
+-- ===========================================================================
+--
+-- APPENDED SECTION. Nothing above this line was changed, and nothing above it
+-- needs to be for the three forms to keep working exactly as they did. One new
+-- table, one new function, and one widened CHECK -- called out below because it
+-- is the only statement in this section that touches an object created earlier.
+--
+-- ---------------------------------------------------------------------------
+-- WHAT A RESOURCE REQUEST IS, AND THE THREE THINGS IT IS NOT
+-- ---------------------------------------------------------------------------
+--
+-- The addendum, verbatim: "Anonymous resource views/downloads are events, not
+-- people. An optional email request creates a resource request attached to an
+-- existing or new person using the retained deduplication rules. Keep it
+-- distinct from enquiry and application. Never infer marketing permission from
+-- downloading."
+--
+-- So this is a FOURTH RECORD TYPE, and the discipline is entirely in what it
+-- does NOT do:
+--
+--   * IT IS NOT AN APPLICATION AND NOT AN ENQUIRY. It creates no opportunity,
+--     moves no stage, opens no task and writes no activity. form_submissions is
+--     untouched by this path, so nothing a resource requester does can appear
+--     in an application count. That separation is acceptance case V4-E05, and
+--     it is structural here rather than a rule somebody follows.
+--   * IT IS NOT PERMISSION. No row is written to consents by this path, ever.
+--     A person asking for a worksheet has asked for a worksheet. "Do not send a
+--     resource requester the cohort nurture solely because an email address
+--     exists" is the release controls' own sentence, and the way to guarantee
+--     it is to have no code here that could.
+--   * IT IS NOT A DOWNLOAD COUNT. A view or a download by somebody who never
+--     typed an address is a row in events and nothing else -- no person, no row
+--     here. V4-E02. The endpoint that writes this table is its only writer and
+--     it requires an address, so an anonymous visitor cannot reach it.
+--
+-- ---------------------------------------------------------------------------
+-- WHY THE ATTRIBUTION COLUMNS ARE ON THIS TABLE AND NOT IN attributions
+-- ---------------------------------------------------------------------------
+--
+-- public.attributions is keyed one-row-per-submission: submission_id is its
+-- PRIMARY KEY and a foreign key to form_submissions. Putting a resource request
+-- in there would mean making that column nullable, dropping the primary key it
+-- is, and adding a second nullable foreign key beside it -- a rewrite of a
+-- shipped table, and a table that afterwards cannot say what a row is about
+-- without reading two columns.
+--
+-- The columns below are therefore the SAME COLUMNS BY THE SAME NAMES, held on
+-- the row they describe. A union view over the two is three lines whenever
+-- somebody wants one, and the two halves stay separate for the same reason they
+-- do in attributions itself: first_* is the first touch we were permitted to
+-- remember, session_* is the visit that made the request, self_reported is what
+-- they said themselves, and none of the three corrects another.
+--
+-- tracking_permission is false on every row and first_* is therefore null on
+-- every row, exactly as for submissions. That is the honest state with no
+-- consent surface built (E07), not a gap to fill in -- and it is why acceptance
+-- case V4-E01 is answered by keeping a resource request and a later application
+-- as two rows with two session sources, rather than by copying one onto the
+-- other.
+
+-- ---------------------------------------------------------------------------
+-- message_templates.route -- widened to admit 'resource'
+-- ---------------------------------------------------------------------------
+-- THE ONE STATEMENT IN THIS SECTION THAT ALTERS SOMETHING CREATED ABOVE, and it
+-- only ever adds a permitted value. Without it a reviewed resource-delivery
+-- wording could never be stored, which would leave every resource delivery
+-- permanently unsendable for a reason that has nothing to do with approval.
+--
+-- Filing that wording under 'enquiry' instead would have needed no DDL and is
+-- the thing the addendum forbids in so many words: "Keep it distinct from
+-- enquiry and application."
+--
+-- Drop-then-add rather than a guarded add, so re-running this file is a no-op
+-- either way. The constraint name is the one Postgres generates for the inline
+-- column check declared above.
+alter table public.message_templates
+  drop constraint if exists message_templates_route_check;
+alter table public.message_templates
+  add constraint message_templates_route_check
+  check (route in ('application', 'enquiry', 'enterprise', 'resource'));
+
+-- ---------------------------------------------------------------------------
+-- resource_requests -- one row per saved request, keyed by its idempotency key
+-- ---------------------------------------------------------------------------
+-- "The backend remains the record of successful submissions. Persist the
+-- request and idempotency key before displaying success; use a durable delivery
+-- job/outbox and expose email failures to staff."
+--
+-- The delivery is NOT a second mechanism. delivery_message_id points at a row
+-- in comms_messages -- stage 4's outbox, with its double eligibility check, its
+-- suppression list, its one-way state machine and its failure queue. The four
+-- delivery columns here are this request's own view of that: what we tried to
+-- do about delivery and what happened when we tried. The message's own state
+-- lives on the message.
+
+create table if not exists public.resource_requests (
+  request_id       uuid        primary key default gen_random_uuid(),
+  -- Same mechanism as form_submissions.request_key: the browser sends one key
+  -- per attempt, a retry carries the same key, and the unique index is what
+  -- makes a double-click one request rather than two. V4-E02's "repeated submit
+  -- sends no duplicate receipt" is this column plus the outbox's own
+  -- idempotency key, which is derived from request_id.
+  request_key      text        not null unique,
+  -- Cascades with the person, like every other record about them. Erasing
+  -- somebody from the console really erases what they asked for.
+  person_id        uuid        not null references public.people(person_id) on delete cascade,
+  -- The register's identifier in lower case: 'lc-r01', 'lc-r02', 'lc-r03'.
+  -- DELIBERATELY NOT A CHECK CONSTRAINT AGAINST A LIST OF THREE. The released
+  -- set is owned by src/data/resources.ts and validated by
+  -- src/lib/pipeline/resources.ts before anything reaches here; a fourth
+  -- worksheet must not need a migration, and a list of ids in two places is the
+  -- four-copies-of-TBD mistake this repo has already paid for once.
+  resource_id      text        not null check (btrim(resource_id) <> ''),
+  -- Which version of the worksheet the request was made against, so V4-E04's
+  -- "downloads match the approved resource version" is answerable a month
+  -- later. It is the resource's own revision date, copied at request time.
+  resource_version text,
+  -- Delivery, as this row sees it.
+  --   pending  nothing has been attempted yet
+  --   queued   a comms_messages row exists; the outbox owns it from here
+  --   blocked  eligibility refused to create one (suppression, a withdrawn or
+  --            missing wording), which is a decision and not a fault
+  --   failed   the attempt errored. THE REQUEST STILL STANDS. This is the
+  --            "expose email failures to staff" half of V4-E03: a saved request
+  --            whose delivery did not queue must be visible, not lost.
+  delivery_state   text        not null default 'pending'
+                               check (delivery_state in ('pending', 'queued', 'blocked', 'failed')),
+  -- One staff-facing sentence saying why. NEVER an error object and never an
+  -- address: this column is read in the console, and a caught exception can
+  -- carry the whole request body.
+  delivery_note    text,
+  delivery_message_id uuid     references public.comms_messages(message_id) on delete set null,
+  delivery_at      timestamptz,
+  -- Test traffic, excluded from every count, exactly as form_submissions.is_test.
+  is_test          boolean     not null default false,
+  requested_at     timestamptz not null default now(),
+
+  -- ---- Attribution. Same names as public.attributions; see the note above. --
+  --
+  -- resource_id_dimension is the analytics dimension the addendum asks for --
+  -- "Add resource_id for the resource interaction" -- captured in the
+  -- attribution payload beside the UTMs. It normally equals resource_id above
+  -- and is kept separately because they answer different questions: one is what
+  -- this record IS, the other is what the measurement was tagged with, and a
+  -- disagreement between them is a bug worth being able to see.
+  resource_id_dimension text,
+  first_source        text,
+  first_medium        text,
+  first_campaign      text,
+  first_content       text,
+  first_term          text,
+  session_source      text,
+  session_medium      text,
+  session_campaign    text,
+  session_content     text,
+  session_term        text,
+  entry_path          text,
+  -- Bare host, never a full URL, and NULL FOR OUR OWN HOST. That null is what
+  -- stops a worksheet read on the way to the cohort page from becoming the
+  -- source of the application that follows it (V4-E01).
+  referrer_host       text,
+  self_reported       text,
+  tracking_permission boolean     not null default false,
+  first_captured_at   timestamptz,
+  session_captured_at timestamptz not null default now(),
+
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists resource_requests_person_idx
+  on public.resource_requests (person_id, requested_at desc);
+-- Reporting counts "saved database request IDs, excluding retries" by resource.
+create index if not exists resource_requests_resource_idx
+  on public.resource_requests (resource_id, requested_at desc);
+-- The staff view of the failure queue: everything that is not safely queued.
+create index if not exists resource_requests_delivery_idx
+  on public.resource_requests (delivery_state, requested_at desc)
+  where delivery_state <> 'queued';
+create index if not exists resource_requests_campaign_idx
+  on public.resource_requests (session_campaign, session_content);
+
+alter table public.resource_requests enable row level security;
+
+drop trigger if exists resource_requests_touch on public.resource_requests;
+create trigger resource_requests_touch before update on public.resource_requests
+  for each row execute function public.touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- resource_request_submit() -- the save, in one transaction
+-- ---------------------------------------------------------------------------
+-- The same argument as pipeline_submit(), for the same reason: supabase-js
+-- speaks PostgREST and PostgREST gives one statement per request, so a person
+-- insert followed by a request insert is two transactions with a gap in the
+-- middle that a killed function can land in. "Persist the request and
+-- idempotency key before displaying success" is only true if the person and the
+-- request commit together.
+--
+-- IT IS DELIBERATELY MUCH SMALLER THAN pipeline_submit(). No organisation, no
+-- opportunity, no stage, no task, no activity, no consent. Every one of those
+-- would be this record type quietly becoming an application, which is exactly
+-- what V4-E05 tests. If a future edit adds one of them here, read the head of
+-- this section again first.
+--
+-- THE DEDUPLICATION RULE IS THE RETAINED ONE and is not restated: the caller
+-- passes p_normalised_email, produced by normaliseEmail() in
+-- src/lib/pipeline/forms.ts -- trimmed, lower-cased, plus-tags NOT stripped --
+-- and the unique index on people.normalised_email does the rest. A second
+-- implementation of that rule in SQL is how a+cohort@x.com becomes two people
+-- on one path and one person on another.
+
+create or replace function public.resource_request_submit(
+  p_request_key      text,
+  p_resource_id      text,
+  p_name             text,
+  p_normalised_email text,
+  p_original_email   text,
+  p_resource_version text        default null,
+  p_attribution      jsonb       default '{}'::jsonb,
+  p_is_test          boolean     default false,
+  p_actor            text        default 'public_form'
+)
+returns table (
+  request_id      uuid,
+  already_existed boolean,
+  person_id       uuid
+)
+language plpgsql
+as $fn$
+#variable_conflict use_column
+declare
+  v_request_id uuid;
+  v_person_id  uuid;
+begin
+  if p_normalised_email is null or btrim(p_normalised_email) = '' then
+    raise exception 'resource_request_submit: an address is required; an anonymous download is an event, not a person';
+  end if;
+  if p_resource_id is null or btrim(p_resource_id) = '' then
+    raise exception 'resource_request_submit: a resource id is required';
+  end if;
+
+  -- 1 -- The request key. A hit returns the original row and writes nothing.
+  select r.request_id, r.person_id
+    into v_request_id, v_person_id
+    from public.resource_requests r
+   where r.request_key = p_request_key;
+
+  if v_request_id is not null then
+    return query select v_request_id, true, v_person_id;
+    return;
+  end if;
+
+  -- 2 -- Person, by normalised email and nothing else.
+  insert into public.people (name, normalised_email, original_email)
+  values (p_name, p_normalised_email, p_original_email)
+  on conflict (normalised_email) do nothing
+  returning people.person_id into v_person_id;
+
+  if v_person_id is null then
+    -- Already known, and NOTHING IS OVERWRITTEN -- not even a blank filled in.
+    -- pipeline_submit() fills blanks because an application carries answers an
+    -- operator wants. A worksheet request carries a name and an address and is
+    -- the weakest evidence in the system; it must never edit a person record
+    -- that an application or an operator wrote.
+    select p.person_id into v_person_id
+      from public.people p
+     where p.normalised_email = p_normalised_email;
+  end if;
+
+  -- 3 -- The request. Claims the key; a concurrent twin loses here and reads
+  --      the winner's row back rather than raising.
+  begin
+    insert into public.resource_requests (
+      request_key, person_id, resource_id, resource_version, is_test,
+      resource_id_dimension,
+      first_source, first_medium, first_campaign, first_content, first_term,
+      session_source, session_medium, session_campaign, session_content, session_term,
+      entry_path, referrer_host, self_reported, tracking_permission,
+      first_captured_at, session_captured_at
+    ) values (
+      p_request_key,
+      v_person_id,
+      p_resource_id,
+      nullif(btrim(coalesce(p_resource_version, '')), ''),
+      coalesce(p_is_test, false),
+      nullif(p_attribution ->> 'resource_id', ''),
+      nullif(p_attribution ->> 'first_source', ''),
+      nullif(p_attribution ->> 'first_medium', ''),
+      nullif(p_attribution ->> 'first_campaign', ''),
+      nullif(p_attribution ->> 'first_content', ''),
+      nullif(p_attribution ->> 'first_term', ''),
+      nullif(p_attribution ->> 'session_source', ''),
+      nullif(p_attribution ->> 'session_medium', ''),
+      nullif(p_attribution ->> 'session_campaign', ''),
+      nullif(p_attribution ->> 'session_content', ''),
+      nullif(p_attribution ->> 'session_term', ''),
+      nullif(p_attribution ->> 'entry_path', ''),
+      nullif(p_attribution ->> 'referrer_host', ''),
+      nullif(p_attribution ->> 'self_reported', ''),
+      coalesce((p_attribution ->> 'tracking_permission')::boolean, false),
+      nullif(p_attribution ->> 'first_captured_at', '')::timestamptz,
+      coalesce(nullif(p_attribution ->> 'session_captured_at', '')::timestamptz, now())
+    )
+    returning resource_requests.request_id into v_request_id;
+  exception when unique_violation then
+    select r.request_id, r.person_id
+      into v_request_id, v_person_id
+      from public.resource_requests r
+     where r.request_key = p_request_key;
+
+    if v_request_id is null then raise; end if;
+
+    return query select v_request_id, true, v_person_id;
+    return;
+  end;
+
+  -- 4 -- Audit. Ids and decisions only -- no name, no address, no free text.
+  --      record_type is 'resource_request' and never 'form_submission': a
+  --      reader counting submissions in this log must not pick these up.
+  insert into public.audit_log (record_type, record_id, actor, previous_value, new_value, reason)
+  values (
+    'resource_request', v_request_id, p_actor, null,
+    jsonb_build_object(
+      'resource_id',      p_resource_id,
+      'resource_version', p_resource_version,
+      'person_id',        v_person_id,
+      'is_test',          coalesce(p_is_test, false)
+    ),
+    'Resource request committed. No opportunity, no stage and no consent were created.'
+  );
+
+  return query select v_request_id, false, v_person_id;
+end;
+$fn$;
+
+-- Writes, so no public execute grant -- same rule as pipeline_submit().
+revoke all on function public.resource_request_submit from public;
+grant execute on function public.resource_request_submit to service_role;

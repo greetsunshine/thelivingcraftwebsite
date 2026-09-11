@@ -186,12 +186,12 @@ folder. See the V4 section at the foot of [`build-plan.md`](build-plan.md).
 ### V4 stage additions
 
 - [x] Cohort page copy updated — *See what a review can change*, plus the added sentence in Sunil's section
-- [ ] LC-R01 cost-ceiling worksheet live and tested (**required before post D10**)
-- [ ] LC-R02 evaluation-gates worksheet live and tested (**before D16**)
-- [ ] LC-R03 deployment checklist live and tested (**before D20**)
-- [ ] `/toolkit` index listing released resources only
-- [ ] Resource-request record, distinct from enquiry and application
-- [ ] `resource_id` as a permitted non-personal analytics dimension
-- [ ] V4 UTM contract — `lc_v4_cohort`, lowercase post id in `utm_content`
-- [ ] Resource-delivery template, separate from cohort nurture
-- [ ] `npm run check:campaign` — no post scheduled against an unbuilt destination
+- [x] LC-R01 cost-ceiling worksheet live and tested (**required before post D10**)
+- [x] LC-R02 evaluation-gates worksheet live and tested (**before D16**)
+- [x] LC-R03 deployment checklist live and tested (**before D20**)
+- [x] `/toolkit` index listing released resources only
+- [x] Resource-request record, distinct from enquiry and application
+- [x] `resource_id` as a permitted non-personal analytics dimension
+- [x] V4 UTM contract — `lc_v4_cohort`, lowercase post id in `utm_content`
+- [x] Resource-delivery template, separate from cohort nurture
+- [x] `npm run check:campaign` — no post scheduled against an unbuilt destination

@@ -56,6 +56,20 @@ const EXTRA = [
   { path: '/resources/templates/decision-record', priority: '0.7' },
   { path: '/resources/templates/employer-funding-summary', priority: '0.6' },
 
+  // The V4 addendum's three open resources (LC-R01/R02/R03) and their index.
+  // Listed at the templates' priority and for the same reason: for a searcher
+  // these ARE the answer to "give me the thing", and each one is a complete
+  // document on its own page rather than a teaser for a download. The index
+  // carries the lower figure because it only routes to them.
+  //
+  // The other thirteen rows of the resource roadmap are a backlog and have no
+  // routes, so there is nothing here to add for them. When one is written it
+  // joins src/data/resources.ts, /toolkit, and this list, in that commit.
+  { path: '/toolkit', priority: '0.6' },
+  { path: '/resources/cost-ceiling-worksheet', priority: '0.7' },
+  { path: '/resources/evaluation-gates-worksheet', priority: '0.7' },
+  { path: '/resources/deployment-checklist', priority: '0.7' },
+
   { path: '/resources/', priority: '0.6' },
   { path: '/tools/', priority: '0.6' },
   { path: '/tools/agent-design-check', priority: '0.7' },
@@ -66,7 +80,6 @@ const EXTRA = [
 
   // STILL NOT LISTED, and correctly so:
   //   /privacy and /terms   — noindex until the owner supplies their facts
-  //   /resources/templates/ — does not exist; the one `pending` left on the site
   //   anything under /craft — closed by middleware and disallowed in robots
 ];
 

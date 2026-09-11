@@ -32,6 +32,15 @@ const RESOURCES: Item[] = [
   { href: '/resources/guides/', label: 'Guides', built: true },
   { href: '/latest', label: 'Field notes', built: true },
   { href: '/resources/templates/', label: 'Templates', built: true },
+  // The three open resources from the 11 September addendum. `built: true`
+  // because all four routes were curled and returned 200 before this line was
+  // written — which is the whole of what the flag asserts.
+  //
+  // Footer only, deliberately. The header's order is the roadmap's — "Programmes,
+  // Advisory, Resources, Tools, About" — and a sixth destination there would be a
+  // change to that plan rather than a page going live. /toolkit is reached from
+  // the Resources hub, from each resource page and from the sitemap.
+  { href: '/toolkit/', label: 'Toolkit', built: true },
   { href: '/tools/agent-design-check/', label: 'Agent design check', built: true },
 ];
 

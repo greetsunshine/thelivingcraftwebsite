@@ -41,6 +41,12 @@
  *     (a question-by-question check, no sign-up) and nothing more: the tool's
  *     own page owns its rubric, and a hub that describes a tool's behaviour in
  *     its own words is a second source for it.
+ *   * /toolkit — the three open resources from the 11 September campaign
+ *     addendum (LC-R01/R02/R03: the cost-ceiling worksheet, the evaluation-gates
+ *     worksheet and the deployment checklist). That index lists RELEASED
+ *     resources only, from src/data/resources.ts, and names no download that
+ *     does not exist — the same rule this page follows, written into the
+ *     addendum as an instruction of its own.
  *   * /resources/templates/ DOES exist now — four templates, each a blank paired
  *     with a completed illustrative example. The paragraph below used to say there
  *     were none; it was true when written and false a day later, which is exactly
@@ -55,10 +61,16 @@
  */
 import { getCollection } from 'astro:content';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { releasedResources } from '../../data/resources';
 
 export const prerender = true;
 
 const published = await getCollection('guides', (g) => g.data.status === 'ready');
+
+// Same rule as the guides above: the COUNT is read, never typed. A sentence
+// that says "three" while the module holds two is the failure a hub page has,
+// and it is invisible until somebody counts the cards.
+const kit = releasedResources();
 
 const pillars = published.filter((g) => g.data.kind === 'pillar');
 const supporting = published.filter((g) => g.data.kind === 'supporting');
@@ -159,10 +171,10 @@ const description =
   <section class="wrap band">
     <div class="sec-head">
       <p class="eyebrow">What is published</p>
-      <h2>Three things, and <em>they are all free</em></h2>
+      <h2>Four things, and <em>they are all free</em></h2>
     </div>
 
-    <div class="cards3">
+    <div class="cards3 cards-4">
       <a class="card" href="/resources/guides/">
         <span class="k">Written</span>
         <h3>Guides</h3>
@@ -172,6 +184,18 @@ const description =
           further into it than a section allows.
         </p>
         <span class="go">Browse the guides <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card" href="/toolkit/">
+        <span class="k">Fill in</span>
+        <h3>Toolkit</h3>
+        <p>
+          {kit.length === 1 ? 'One worksheet' : `${kit.length} worksheets`} for the decisions
+          that come with letting a system act: what one workflow may spend, what evidence
+          releases it, and what has to be true before it is deployed. Each is complete on the
+          page, with the table as a spreadsheet if you want it.
+        </p>
+        <span class="go">Open the toolkit <span class="arrow">→</span></span>
       </a>
 
       <a class="card" href="/latest">
@@ -236,6 +260,14 @@ const description =
 <style>
   .band {
     padding-block: var(--space-8);
+  }
+
+  /* Four cards in a grid built for three. Two-up rather than three-and-one,
+     which reads as a card that failed to load. */
+  @media (min-width: 901px) {
+    .cards-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   .body-copy {

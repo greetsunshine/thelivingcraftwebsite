@@ -1,0 +1,782 @@
+---
+// /resources/evaluation-gates-worksheet — LC-R02.
+//
+// ═══════════════════════════════════════════════════════════════════════════
+// THIS FILE IS ONE OF THREE IDENTICAL COPIES. ONLY THE id BELOW DIFFERS.
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Its siblings are cost-ceiling-worksheet.astro (LC-R01) and
+// deployment-checklist.astro (LC-R03). Everything a reader sees comes from
+// src/data/resources.ts; the only page-specific thing in this file is the
+// string passed to `resourceById()`. That is deliberate and it is also a debt:
+//
+//   IF A FOURTH RESOURCE LANDS, THE CHANGE IS ONE `[resource].astro` WITH A
+//   getStaticPaths, NOT A FOURTH COPY OF THIS FILE.
+//
+// Three copies is the most a duplicated renderer earns, and it is stated here
+// so the next person does not have to discover it by diffing. The FORMAT is
+// not duplicated — the CSV columns, the serialisation and the download name
+// all live in the data module, which is the half that would actually hurt if
+// it drifted (CLAUDE.md, "Two places that own a format").
+//
+// WHAT MUST NOT HAPPEN TO THIS PAGE
+//
+// 1. NO EMAIL GATE, NO FORM, NO SIGN-UP. The addendum: "HTML stays open;
+//    optional download email requires a separate communication preference."
+//    The whole worksheet is on the page — explanation, worked case, both
+//    tables, the fillable grid, the limits and the next-step question — and it
+//    is readable, printable and fillable without downloading anything and
+//    without leaving an address. A page that withholds the substance until you
+//    identify yourself is not open. The optional email delivery is a different
+//    path with its own permission and it is not built here.
+//
+// 2. NO SCORE, NO GRADE, NO CERTIFICATE. Nothing on this page reads a cell,
+//    counts one, or turns a set of answers into a number. See NO_SCORE and
+//    rule 1 in src/data/resources.ts.
+//
+// 3. NO OFFER FACTS. Decision D1 is open (src/data/offer-display.ts): no fee,
+//    no dates, no week count, no seat count anywhere on this route. The onward
+//    links below name the cohort and the contact page and say nothing about
+//    either one's terms.
+//
+// 4. THE DOWNLOAD STAYS SCRIPT-FREE. It is an `<a download>` with a
+//    build-time data: URL, the same mechanism the templates route uses. The
+//    only script on this page is the print button, and the page is complete
+//    without it — a reader can print from their own browser menu.
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN, practitioner } from '../../data/facts';
+import {
+  NO_GATE,
+  NO_SCORE,
+  csvFilename,
+  csvHref,
+  releasedResources,
+  resourceById,
+} from '../../data/resources';
+
+export const prerender = true;
+
+const d = resourceById('evaluation-gates-worksheet')!;
+
+const url = `${SITE_ORIGIN}${d.path}`;
+const file = csvFilename(d);
+const href = csvHref(d);
+
+// The other released resources, for the foot of the page. Read through the
+// same predicate /toolkit uses, so a resource that is not published cannot be
+// linked from here either.
+const others = releasedResources().filter((r) => r.id !== d.id);
+
+// A revision date is a DATE, not an instant. new Date('2026-09-11') is midnight
+// UTC and prints the 10th on a build machine behind it — same formatter, and
+// the same reason, as the guides and templates routes.
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const readableDate = (iso: string): string => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : iso;
+};
+
+// Section anchors. Derived from position rather than from the heading text, so
+// editing a heading cannot silently break a link to it from elsewhere.
+const sections = d.sections.map((s, i) => ({ ...s, id: `s${i + 1}` }));
+
+const columns = d.csv.columns;
+const rows = d.csv.rows.map((cells) => columns.map((_, i) => cells[i] ?? ''));
+
+const pageTitle = `${d.title} — open resource · ${practitioner.name}`;
+
+// Sunil is the Person node SeoHead already emits; reference it by @id rather
+// than describing him twice. These three are authored by the practice rather
+// than by a named person, so the author node is the Organization-less string
+// the collection carries.
+const schema: unknown[] = [
+  {
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: d.title,
+    description: d.summary,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'en-GB',
+    author: { '@type': 'Organization', name: d.author },
+    // dateModified only. There is no record of a first-published date and
+    // guessing one would be inventing a fact a crawler treats as ours.
+    dateModified: d.revisedOn,
+  },
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources` },
+      { '@type': 'ListItem', position: 3, name: d.title },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={pageTitle} description={d.summary} canonical={d.path} schema={schema}>
+  <article class="res wrap">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources/">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">{d.title}</li>
+      </ol>
+    </nav>
+
+    <header class="r-head">
+      <p class="eyebrow">Open resource <span class="num">{d.code}</span></p>
+      <h1>{d.title}</h1>
+      <p class="artifact">{d.artifact}</p>
+      <p class="lede">{d.summary}</p>
+
+      <p class="when">
+        <span class="k">Reach for it when</span>
+        {d.useWhen}
+      </p>
+
+      <p class="no-gate">{NO_GATE}</p>
+
+      <dl class="byline">
+        <div>
+          <dt>Written by</dt>
+          <dd>{d.author}</dd>
+        </div>
+        <div>
+          <dt>Reviewed by</dt>
+          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
+        </div>
+        <div>
+          <dt>Last revised</dt>
+          <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
+        </div>
+      </dl>
+
+      <nav class="jump" aria-label="On this page">
+        {
+          sections.map((s, i) => (
+            <>
+              {i > 0 && <span class="sep" aria-hidden="true">·</span>}
+              <a href={`#${s.id}`}>{s.heading}</a>
+            </>
+          ))
+        }
+      </nav>
+    </header>
+
+    {/* The live region the print button announces into. */}
+    <p class="sr-only" id="res-live" role="status" aria-live="polite"></p>
+
+    {
+      sections.map((s) => (
+        <section class:list={['block', s.kind === 'worked' && 'worked']} id={s.id}>
+          <h2>{s.heading}</h2>
+
+          {/* ── a worked illustrative case ──────────────────────────────────
+              The label is rendered ABOVE the example and never beside it, so
+              nobody reads a figure before reading what it is not. */}
+          {s.kind === 'worked' && (
+            <p class="illus">
+              <span class="k">Illustrative</span>
+              {s.label}
+            </p>
+          )}
+
+          {'intro' in s && s.intro && (
+            <div class="prose stack lead-in">
+              {s.intro.map((p) => (
+                <p>{p}</p>
+              ))}
+            </div>
+          )}
+
+          {'paragraphs' in s && s.paragraphs && (
+            <div class="prose stack">
+              {s.paragraphs.map((p) => (
+                <p>{p}</p>
+              ))}
+            </div>
+          )}
+
+          {'emphasis' in s && s.emphasis && <p class="emph">{s.emphasis}</p>}
+
+          {/* ── one of the document's own two-column tables ───────────────── */}
+          {s.kind === 'table' && (
+            <div class="table-scroll">
+              <table class="qtable">
+                <thead>
+                  <tr>
+                    <th scope="col">{s.columns[0]}</th>
+                    <th scope="col">{s.columns[1]}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.rows.map((row) => (
+                    <tr>
+                      <th scope="row">{row[0]}</th>
+                      <td>{row[1]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* ── the fillable table, and the file that is the same thing ───── */}
+          {s.kind === 'sheet' && (
+            <>
+              <p class="noscore">{NO_SCORE}</p>
+
+              {/* Focusable, so the one wide table on this page can be scrolled
+                  from the keyboard as well as by dragging. */}
+              <div
+                class="table-scroll sheet-scroll"
+                role="region"
+                tabindex="0"
+                aria-label={`${d.title} — fillable table`}
+              >
+                <table class="sheet">
+                  <caption>{d.artifact} Empty cells are yours to fill in.</caption>
+                  <thead>
+                    <tr>
+                      {columns.map((c) => (
+                        <th scope="col">{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((cells) => (
+                      <tr>
+                        {cells.map((cell, i) =>
+                          i === 0 && cell !== '' ? (
+                            <th scope="row">{cell}</th>
+                          ) : (
+                            <td class:list={[cell === '' && 'empty']}>{cell}</td>
+                          ),
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {s.note && <p class="sheet-note">{s.note}</p>}
+
+              <div class="toolbar">
+                <a class="btn btn-primary" href={href} download={file}>
+                  Download {file}
+                </a>
+                <button class="btn btn-ghost" type="button" data-print>Print this page</button>
+              </div>
+              <p class="dl-note">
+                The file is the table above, with the same column names. There is no PDF to
+                download — printing this page, or saving it as a PDF from the print dialogue,
+                gives you the whole of it as a form.
+              </p>
+            </>
+          )}
+
+          {/* ── limits, then the document's own next-step question ────────── */}
+          {s.kind === 'limits' && (
+            <>
+              <div class="nextstep">
+                <p class="k">Next step</p>
+                <p class="q">{s.nextStep}</p>
+              </div>
+              {s.reference && (
+                <p class="ref">
+                  Reference: {s.reference.label} —{' '}
+                  <a class="textlink" href={s.reference.url} rel="noopener">
+                    {s.reference.url}
+                  </a>
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      ))
+    }
+
+    {
+      others.length > 0 && (
+        <aside class="after" aria-labelledby="others-h">
+          <h2 id="others-h">The other open resources</h2>
+          <ul class="others">
+            {others.map((r) => (
+              <li>
+                <a href={`${r.path}/`}>{r.title}</a>
+                <span class="what">{r.artifact}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="all">
+            <a class="textlink" href="/toolkit/">Everything that is published</a>
+          </p>
+        </aside>
+      )
+    }
+
+    {/* Two links onward, no pitch. This reader arrived for a worksheet and has
+        one; neither link asks for anything. */}
+    <aside class="after onward" aria-labelledby="onward-h">
+      <h2 id="onward-h">If you would rather work through it with someone</h2>
+      <p>
+        The <a class="textlink" href="/programmes/">open cohort</a> is where decisions like
+        these are practised on a system you build, with the reviews run in the room.
+      </p>
+      <p>
+        If it does not fit the system in front of you,
+        <a class="textlink" href="/contact/"> say so</a> — an awkward case is the most useful
+        thing anybody sends.
+      </p>
+    </aside>
+  </article>
+</PracticeLayout>
+
+<style>
+  .res {
+    padding-bottom: var(--space-9);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── head ───────────────────────────────────────────────────────────────── */
+
+  .r-head {
+    max-width: var(--measure-prose);
+    padding: var(--space-6) 0 var(--space-7);
+  }
+  .r-head h1 {
+    font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-3);
+  }
+  .artifact {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-4);
+  }
+
+  .when {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+  }
+  .when .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  /* Said in the first screen, because it is the thing this reader is bracing
+     for. Quiet, not a banner: it is a statement of fact, not a promotion. */
+  .no-gate {
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+  }
+  .byline dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+  .byline dd {
+    font-size: var(--size-3);
+    color: var(--text-body);
+  }
+  .byline .unset {
+    color: var(--text-quiet);
+  }
+
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    font-size: var(--size-3);
+  }
+  .jump a {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.2em;
+  }
+  .jump a:hover {
+    color: var(--link-hover);
+  }
+  .jump .sep {
+    color: var(--text-quiet);
+  }
+
+  /* ── a section ──────────────────────────────────────────────────────────── */
+
+  .block {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-7);
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+    scroll-margin-top: var(--space-6);
+  }
+  .block + .block,
+  .after {
+    margin-top: var(--space-6);
+  }
+  .block h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-4);
+  }
+
+  /* The worked case sits on the sunken ground so it is never mistaken at a
+     glance for the instructions around it — the one confusion on this page
+     that would matter. Shadow or border, never both. */
+  .worked {
+    background: var(--surface-sunken);
+    box-shadow: none;
+  }
+
+  .lead-in {
+    margin-bottom: var(--space-5);
+  }
+
+  /* One sentence the document itself sets apart — the distinction between an
+     estimate and an enforced ceiling, and its equivalents. */
+  .emph {
+    margin-top: var(--space-5);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--accent-ink);
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-loud);
+    max-width: var(--measure-prose);
+  }
+
+  /* The illustrative label. It takes the design system's "uncertain" colours
+     rather than the error or promo ones: this is not a failure and not a
+     promotion, it is a sentence that is not a claim about the world. */
+  .illus {
+    background: var(--agent-uncertain-bg);
+    color: var(--agent-uncertain);
+    border-radius: var(--radius-panel);
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+  }
+  .illus .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    margin-bottom: var(--space-1);
+  }
+
+  /* ── tables ─────────────────────────────────────────────────────────────── */
+
+  .table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+    margin-top: var(--space-5);
+  }
+  .sheet-scroll {
+    border-radius: var(--radius-panel);
+  }
+  .sheet-scroll:focus-visible {
+    outline: var(--border-w-rule) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--size-3);
+    text-align: left;
+  }
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    padding-bottom: var(--space-3);
+  }
+  th,
+  td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    vertical-align: top;
+    line-height: var(--lh-snug);
+  }
+  thead th {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    border-bottom: var(--border-w-rule) solid var(--border-field);
+  }
+  tbody th {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+  }
+  tbody td {
+    color: var(--text-body);
+  }
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* The two-column tables wrap rather than scroll; they fit a phone. */
+  .qtable th[scope='row'] {
+    width: 38%;
+    min-width: 16ch;
+  }
+
+  /* The fillable grid does not fit a phone and is not asked to. Column names
+     are the CSV's, in mono, because they are identifiers rather than prose. */
+  .sheet {
+    min-width: 100%;
+    width: max-content;
+  }
+  .sheet thead th {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+  .sheet tbody th,
+  .sheet tbody td {
+    white-space: nowrap;
+  }
+  /* A cell you write in. The rule under it is the one every cell already has —
+     a second gradient in the same place was two lines drawn on top of each
+     other. What an empty cell needs is ROOM, on screen and on paper. */
+  .sheet td.empty {
+    min-width: 15ch;
+    height: var(--space-7);
+  }
+
+  .noscore {
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  .sheet-note,
+  .dl-note {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  /* ── the next-step question ─────────────────────────────────────────────── */
+
+  .nextstep {
+    margin-top: var(--space-6);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5) var(--space-6);
+    max-width: var(--measure-prose);
+  }
+  .nextstep .k {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-2);
+  }
+  .nextstep .q {
+    font-size: var(--size-5);
+    line-height: var(--lh-snug);
+    color: var(--text-loud);
+  }
+
+  .ref {
+    margin-top: var(--space-5);
+    font-size: var(--size-2);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    overflow-wrap: anywhere;
+  }
+
+  /* ── after ──────────────────────────────────────────────────────────────── */
+
+  .after {
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+    margin-top: var(--space-8);
+  }
+  .after h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-5);
+  }
+
+  .others {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .others li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+  }
+  .others a {
+    font-size: var(--size-4);
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.2em;
+  }
+  .others a:hover {
+    color: var(--link-hover);
+  }
+  .others .what {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+  }
+  .all {
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+  }
+
+  .onward p {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  .onward p + p {
+    margin-top: var(--space-3);
+  }
+
+  @media (max-width: 620px) {
+    .block {
+      padding: var(--space-5);
+      border-radius: var(--radius-panel);
+    }
+    .r-head {
+      padding-top: var(--space-5);
+    }
+    .qtable th[scope='row'] {
+      width: auto;
+      min-width: 11ch;
+    }
+  }
+
+  /* ── print ────────────────────────────────────────────────────────────────
+     There is no PDF file to download, and the page says so. What there is, is
+     a printed form: the tables keep their rules, the chrome comes off, and
+     "save as PDF" in the print dialogue produces the whole worksheet.
+
+     Scoped by hand to this page's chrome plus the two layout landmarks,
+     because a scoped block cannot reach a component it does not own. */
+  @media print {
+    :global(.sitenav),
+    :global(.sitefooter),
+    :global(.skip),
+    .crumbs,
+    .jump,
+    .toolbar,
+    .dl-note,
+    .after {
+      display: none !important;
+    }
+
+    .block {
+      box-shadow: none !important;
+      background: #fff !important;
+      padding: 0 0 var(--space-6) !important;
+      max-width: none !important;
+      break-inside: avoid;
+    }
+    .illus,
+    .nextstep {
+      background: #fff !important;
+      color: #000 !important;
+      outline: 1px solid #999;
+    }
+    .table-scroll {
+      overflow: visible !important;
+    }
+    .sheet {
+      width: 100% !important;
+      min-width: 0 !important;
+      font-size: 9pt;
+    }
+    .sheet thead th,
+    .sheet tbody th,
+    .sheet tbody td {
+      white-space: normal !important;
+    }
+    .sheet td.empty {
+      min-width: 0 !important;
+      height: 34px;
+    }
+    th,
+    td {
+      border-bottom: 1px solid #b4b4b4 !important;
+    }
+  }
+</style>
+
+<script>
+  // The ONLY script on this page, and the page is complete without it: the
+  // download is a plain <a download> with a build-time data: URL, and printing
+  // is in every browser's own menu. All this adds is the button.
+  //
+  // A module script, not is:inline, so Vite bundles it and astro check sees it.
+  const live = document.getElementById('res-live');
+
+  document.querySelectorAll<HTMLButtonElement>('button[data-print]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (live) live.textContent = 'Opening the print dialogue.';
+      window.print();
+    });
+  });
+</script>

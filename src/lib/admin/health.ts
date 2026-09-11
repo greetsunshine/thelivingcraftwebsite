@@ -73,6 +73,10 @@ const TABLES = [
   'comms_messages',
   'comms_suppressions',
   'comms_events',
+  // V4's fourth record type. An anonymous download never reaches this table —
+  // only somebody who typed an address does — so a count here is people, and a
+  // missing table must not read as "nobody asked".
+  'resource_requests',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */

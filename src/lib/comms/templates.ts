@@ -64,7 +64,19 @@
 // line break in a plain-text message is a line break, not a paragraph the
 // renderer may reflow.
 
-export type TemplateRoute = 'application' | 'enquiry' | 'enterprise';
+/**
+ * The three form routes, plus the V4 addendum's fourth record type.
+ *
+ * 'resource' is NOT a fourth form route. It is here because a message has to
+ * declare which kind of record it belongs to, and a resource-delivery email
+ * belongs to a resource request -- which the addendum is explicit is neither an
+ * enquiry nor an application: "Keep it distinct from enquiry and application."
+ *
+ * Filing it under 'enquiry' to avoid widening this union is the exact collapse
+ * that sentence forbids, and it would also put a resource delivery inside
+ * `nurtureFor('enquiry')`'s reach the first time somebody changed a filter.
+ */
+export type TemplateRoute = 'application' | 'enquiry' | 'enterprise' | 'resource';
 export type TemplatePurpose = 'transactional' | 'marketing';
 
 export interface PackageTemplate {
@@ -244,8 +256,21 @@ export const DAY_OFFSETS = [0, 2, 5, 9] as const;
 /** The three nurture offsets. Calendar days -- see `nurtureSlot()` in outbox.ts. */
 export const NURTURE_OFFSETS = [2, 5, 9] as const;
 
+/**
+ * Any wording this build knows, by key -- the twelve AND the resource three.
+ *
+ * IT HAS TO SEARCH BOTH, and this is not a convenience. `verifyStored()` calls
+ * this to decide whether a stored row is a wording we recognise, and a row it
+ * does not recognise is refused with effect 'cancel'. If this only searched the
+ * twelve, the moment a resource wording was loaded into `message_templates` its
+ * queued deliveries would be CANCELLED rather than held -- silently, and only
+ * once somebody had done the right thing.
+ *
+ * Keys are distinct across the two arrays (the resource ones are all prefixed
+ * `resource-`), so there is nothing to disambiguate.
+ */
 export const templateFor = (key: string): PackageTemplate | undefined =>
-  TEMPLATES.find((t) => t.key === key);
+  TEMPLATES.find((t) => t.key === key) ?? RESOURCE_TEMPLATES.find((t) => t.key === key);
 
 /** The templates for one route, receipt first, then the nurture steps in order. */
 export const templatesForRoute = (route: TemplateRoute): PackageTemplate[] =>
@@ -256,6 +281,117 @@ export const receiptFor = (route: TemplateRoute): PackageTemplate | undefined =>
 
 export const nurtureFor = (route: TemplateRoute): PackageTemplate[] =>
   templatesForRoute(route).filter((t) => t.dayOffset > 0);
+
+// ===========================================================================
+// The resource-delivery wordings -- the V4 addendum's fourth record type
+// ===========================================================================
+//
+// ---------------------------------------------------------------------------
+// THESE ARE NOT PART OF "THE TWELVE" AND MUST NOT BE ADDED TO `TEMPLATES`.
+// ---------------------------------------------------------------------------
+//
+// Three separate reasons, and each on its own is enough:
+//
+//   * DIFFERENT PACKAGE, DIFFERENT VERSION. The twelve are a character-for-
+//     character transcription of LC-LAUNCH-2026-09-10. These come from the V4
+//     addendum (LC-STRATEGY-V4.0.0) and were DRAFTED HERE, not transcribed from
+//     anywhere -- the addendum asks for the template and does not supply one.
+//   * THREE SURFACES COUNT `TEMPLATES.length`. The comms console prints "the
+//     twelve wordings", `launchState()` reports approved-of-total against it,
+//     and the 'templates' precondition in eligibility.ts is written as "all
+//     twelve wordings approved at the exact package version". A thirteenth
+//     entry silently changes what three already-shipped screens claim.
+//   * `loadPackageTemplates()` INSERTS EVERY ENTRY AT ITS OWN VERSION but
+//     `templateStatuses()` only ever reads rows at `PACKAGE_VERSION`. A V4-
+//     versioned row in that array would load and then report as missing
+//     forever, which is a worse lie than not being there.
+//
+// ---------------------------------------------------------------------------
+// AND THEY ARE NOT APPROVED. THEY CANNOT BE SENT.
+// ---------------------------------------------------------------------------
+//
+// The addendum: "New resource-delivery emails need their own reviewed exact
+// template." Nobody has reviewed these. They travel the same road as the
+// twelve -- a row in `message_templates` with `approved_at is null`, which
+// every eligibility check reads as "hold" -- so a resource request queues a
+// delivery and the delivery does not go. That is the designed state today and
+// it is also what decision D2 requires: there is no sending provider at all.
+//
+// ---------------------------------------------------------------------------
+// ONE WORDING PER RESOURCE, WRITTEN OUT, NEVER ASSEMBLED
+// ---------------------------------------------------------------------------
+//
+// It would be shorter to hold one body and interpolate the worksheet's name and
+// path out of `src/data/resources.ts`. It would also be wrong twice over:
+// `renderMessage()` interpolates nothing by design, and `content_hash` is
+// computed over the body -- so a title edit on a page would silently invalidate
+// an approval that had already been given to words nobody changed on purpose.
+// A literal body is a body somebody can approve and have stay approved.
+//
+// The last line of each is load-bearing and is not decoration: "Nothing else
+// was started." The addendum says twice that a download is not permission, and
+// the person reading this asked for a worksheet, not a relationship.
+
+/** The addendum's own version marker, from LC-STRATEGY-V4.0.0. */
+export const RESOURCE_PACKAGE_VERSION = 'LC-STRATEGY-V4.0.0';
+
+/**
+ * The template key for a resource, derived from the register's identifier.
+ *
+ * ONE OWNER FOR THIS JOIN. `src/lib/pipeline/resources.ts` canonicalises a
+ * resource id to the register's code in lower case ('lc-r01'); this turns that
+ * into a template key. Nothing else may build this string -- a second copy of
+ * the rule is the `'TBD'` mistake CLAUDE.md keeps a paragraph about.
+ */
+export const resourceTemplateKey = (resourceId: string): string => `resource-${resourceId}`;
+
+export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
+  {
+    key: 'resource-lc-r01',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The cost-ceiling worksheet',
+    body:
+      'Here is the cost-ceiling worksheet you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/cost-ceiling-worksheet\n\nIt helps you define what one workflow is allowed to spend or repeat, what happens at the boundary and who reviews the result. The page is the resource: read it, fill it in or print it, and take the companion CSV if the table is easier to keep in a spreadsheet.\n\nNothing in it is scored. The columns exist so that a decision can be read and challenged by somebody else.\n\nYou asked for this worksheet and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-lc-r02',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The evaluation-gates worksheet',
+    body:
+      'Here is the evaluation-gates worksheet you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/evaluation-gates-worksheet\n\nIt connects a requirement to the evidence for it and to a release decision. Begin with one behaviour the system must demonstrate, and name the unacceptable outcomes before the review meeting rather than during it.\n\nNothing in it is scored. The columns exist so that a decision can be read and challenged by somebody else.\n\nYou asked for this worksheet and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-lc-r03',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The deployment checklist',
+    body:
+      'Here is the deployment checklist you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/deployment-checklist\n\nIt makes a release operable by naming the action, the owner, the evidence and the recovery path for each item. Adapt it to your own risks; a long checklist is not a substitute for effective controls.\n\nNothing in it is scored. The columns exist so that a decision can be read and challenged by somebody else.\n\nYou asked for this checklist and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+];
+
+/**
+ * The wording for one resource, or undefined when there is none.
+ *
+ * UNDEFINED IS A REAL ANSWER AND THE CALLER MUST SURFACE IT. A fourth resource
+ * published without a reviewed wording must not silently fall back to one of
+ * these three -- it would send somebody the wrong worksheet's email. The
+ * request still saves; the delivery is recorded as blocked and a person writes
+ * the wording. See `queueResourceDelivery()` in lib/pipeline/resources.ts.
+ */
+export const resourceTemplateFor = (resourceId: string): PackageTemplate | undefined =>
+  RESOURCE_TEMPLATES.find((t) => t.key === resourceTemplateKey(resourceId));
 
 /**
  * The digest a stored row is checked against.
