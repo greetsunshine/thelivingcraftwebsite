@@ -35,76 +35,60 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 
 ---
 
-## ⚠ QA finding, 11 September — facts.ts contradicts itself, and crawlers get both halves
+## ✅ QA finding resolved, 11 September — unsupported public claims removed
 
-`src/data/facts.ts:352` answers *"Do you have testimonials, client names, or student
-outcomes?"* with:
+**The finding, for the record.** The social-proof answer in `src/data/facts.ts` used to
+answer *"Do you have testimonials, client names, or student outcomes?"* with:
 
 > "**None are published.** … 26 years at Google, Amazon, and Walmart, **100+ senior engineers
 > mentored, ~100 senior leaders and directors trained**, and a live enterprise AI-adoption
 > engagement in progress."
 
-Those are student counts, which CLAUDE.md's hard rules forbid **by name**, sitting in the
-same sentence that says none are published. `/llms.txt` renders them immediately above the
+Those were student counts, which CLAUDE.md's hard rules forbid **by name**, sitting in the
+same sentence that said none are published. `/llms.txt` rendered them immediately above the
 line "There are no published testimonials, client names, or student counts."
 
-**Neither figure has any provenance in this repository.** CLAUDE.md's own Instructor section
-lists "100M+ users served; 150 engineers led" — it does not mention mentoring or training
-counts. They appear only here.
+**Neither figure had any provenance in this repository.** CLAUDE.md's own Instructor section
+listed "100M+ users served; 150 engineers led" — it did not mention mentoring or training
+counts. They appeared only here.
 
 And the V4 factual review is explicit on this class: *"never infer or publish user counts"*,
 and every product or programme claim needs a dated record and an approver before it may be
 used.
 
-**Not fixed, deliberately, and it should travel with D1.** Both findings are the same file
-and the same blast radius: `facts.ts` feeds JSON-LD, `/llms.txt`, `/api/facts` and the Q&A
-agent's grounding, and any edit means re-running `npm run eval`. Doing it once, with Sunil,
-is right; doing it twice is how the grounding and the eval baseline drift apart.
+Fixed across the shared fact base and every public consumer. Unsupported counts and product
+metrics were removed from the public biography and social-proof answers; the approved
+employment context remains without implying employer endorsement.
 
-The wider biography cluster is the same question — `/caio` and `/assessment` carry a stat
-band (26+ years, 3 Fortune-100s, 100M+ users, 150 engineers) plus "31 billion executions a
-week", "re-architected Prime's membership core", "modernised 300+ products". All predate
-this work, all are richer than the permitted claim, and all belong in that one review.
+The same cleanup was applied to `/caio` and `/assessment`: the unapproved stat band and
+product-scale claims were removed rather than inferred from older material.
 
 ---
 
-## ⚠ QA finding, 11 September — D1 is leaking further than documented
+## ✅ QA finding resolved, 11 September — one offer policy on every surface
 
 Every public **page** is clean: no price, no week count, no seat cap, no start-date claim,
 verified by fetching all sixteen and grepping the rendered HTML.
 
-**`/llms.txt` and `/api/facts` are not.** Both are public, both are generated from
-`facts.ts`, and both currently publish the six-week shape, the eight-seat cap, the September
-2026 start and `₹1,50,000`. And `robots.txt` deliberately allows AI crawlers — which is a
-sound decision on its own terms and is exactly what makes this sharp. The site is not merely
-willing to answer a question about price; it is **syndicating the withheld figures to every
-crawler, in a file built to be consumed.**
-
-The live state is therefore not D1 option A and not option B. It is option C arriving by
-accident rather than by decision, and broader than option C was ever described.
-
-**Not fixed, deliberately** — changing what the site tells the world about pricing is D1 and
-D1 is Sunil's. Whoever resolves it must move `facts.ts`, `/llms.txt`, `/api/facts` and
-`PUBLISH_OFFER_FIGURES` together, then re-run `npm run eval`, because the agent's grounding
-moves with them. The full note is at the head of `src/data/offer-display.ts`.
+`/llms.txt`, `/api/facts`, structured data, the latest feed and the assistant grounding now
+match the visible page: no fee, start date or week count is quoted; those details are
+confirmed in the final offer. The old regional path is no longer a public-content toggle.
 
 
-## Two decisions belong to Sunil, and both ship behind a flag
+## One external decision remains
 
-Neither blocks any other work. **Do not resolve either by inference.**
+It does not block saved applications or the durable outbox, but it does block actual email
+delivery. **Do not resolve it by inference.**
 
-**D1 — do we still publish price, dates and the six-week shape?**
-Held by `PUBLISH_OFFER_FIGURES` in [`src/data/offer-display.ts`](../../src/data/offer-display.ts),
-currently `false`. The page, its JSON-LD and every new page withhold all of it.
-**The live edge:** `facts.ts` still holds the figures and still grounds the Ask widget, so
-the assistant will quote a rate the page does not show. `facts.ts` also describes a
-different syllabus from the delivered copy. Both are documented at the head of
-[`src/data/cohort-copy.ts`](../../src/data/cohort-copy.ts).
+**D1 — public offer policy:** implemented with the safe V4 default. Fees, dates and the
+week count are withheld everywhere; the target group size and 30 live hours remain because
+the delivered copy states them. This is no longer a runtime flag.
 
 **D2 — how does an email actually get sent?**
-Nothing is wired. Needs a provider, a verified sending domain and a monitored reply
-mailbox. Until then the browser notifies `apply@thelivingcraft.ai` through Web3Forms after
-a committed save, so an application still reaches a human.
+Committed submissions now idempotently queue their receipt; the initial pipeline task is
+the durable owner notification. Actual delivery still needs a provider, a verified sending
+domain and a monitored reply mailbox. Until then the browser also notifies
+`apply@thelivingcraft.ai` through Web3Forms after a committed save.
 
 Plain-language explainer for Sunil:
 https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
@@ -236,6 +220,12 @@ and every reader who checked it was misled.
   (2.29:1). Figtree, not Fraunces. Sentence-case labels.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
+- **Two cohort descriptions exist now, and only one is public.** `src/data/facts.ts` holds
+  the public V4 offer and publishes no fee, start date or week count. The six-week, eight-
+  seat, September-2026 schedule still exists in `src/data/learner-cohort.ts` and is read
+  ONLY by the gated `/craft` learner pages, which import it as `cohort`. That alias is why
+  a grep for `cohort.weeks` still finds hits. **Never import `learner-cohort.ts` into a
+  public surface** — that is the withheld figures coming back through a side door.
 - **A bash heredoc eats backslash escapes in a Python one-liner**, even a quoted one. A
   `\t` in a Windows path becomes a tab; a `\u0000` meant as six characters becomes a
   control byte, so a 'replacement' silently matches what it was replacing. Use a raw

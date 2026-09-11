@@ -10,10 +10,11 @@
 // current on the page and stale in the answer an AI assistant gives about us.
 // Edit an offer here and every surface moves together.
 //
-// Cohort pricing/logistics live in regions.ts (per-region) and are imported
-// rather than restated. Consulting pricing is PLACEHOLDER — see CLAUDE.md.
+// Public cohort logistics follow the V4 copy: no fee, start date or week count
+// is published. Consulting pricing is PLACEHOLDER — see CLAUDE.md.
 
-import { regions, type Region } from './regions';
+import { EXPLORES } from './cohort-copy';
+import { COMMITMENT, FEES_NOTE } from './offer-display';
 import { CONTACT_EMAIL } from './site';
 
 /** Canonical host. The apex + www are unattached today; learning. is what serves. */
@@ -28,12 +29,6 @@ export interface Fact {
   surface: '/' | '/caio' | '/assessment' | 'practice';
   q: string;
   a: string;
-  /**
-   * Answer varies by the visitor's region; `a` is a placeholder that retrieval
-   * replaces. Set this and handle the id in knowledge.ts — a regional fact
-   * whose answer is served raw would leak every region's figures at once.
-   */
-  regional?: boolean;
   /** Extra retrieval terms that don't appear in `q` or `a`. */
   tags?: string[];
 }
@@ -46,79 +41,20 @@ export const practitioner = {
   name: 'Sunil Mathew',
   role: 'Fractional Chief AI Officer · Agentic & systems architecture instructor',
   location: 'Bengaluru, India',
-  years: 26,
   companies: ['Google', 'Amazon', 'Walmart'],
   email: CONTACT_EMAIL,
   linkedin: 'https://linkedin.com/in/sunil-mathew-466615a',
   sameAs: ['https://linkedin.com/in/sunil-mathew-466615a'],
 };
 
-// ---------------------------------------------------------------------------
-// Cohort — The Living Craft (/)
-// ---------------------------------------------------------------------------
-
-export const cohort = {
+/** Public cohort facts that are safe to render or syndicate. */
+export const publicCohort = {
   name: 'The Living Craft',
-  weeks: 6,
-  seats: 8,
-  startsOn: 'September 2026',
-  commitment: '~5 hrs / week',
-  format: 'Live online (Bangalore: hybrid — in person or online)',
-  admission: 'By application; every application read personally',
-  enrollment: 'Rolling until all 8 seats are filled',
-  modules: [
-    { id: 'M1', weeks: 'Week 1', title: 'Foundations of durable architecture' },
-    { id: 'M2', weeks: 'Weeks 2–4', title: "Agentic systems you'd put your name on" },
-    { id: 'M3', weeks: 'Week 5', title: 'Scale, consistency & the irreversible trade-offs' },
-    { id: 'M4', weeks: 'Week 6', title: 'Your system, reviewed in the room' },
-  ],
-  outcomes: [
-    'Design agentic systems with bounded failure, observability, and defensible cost',
-    'Build the evaluation harnesses and quality gates that prove a system works',
-    'Engineer reliability for models that are probabilistic by nature',
-    'Threat-model and red-team your own system for prompt injection and exfiltration',
-    'Govern an AI-native team — risk-tiered review and accountability for AI-written code',
-  ],
-};
-
-/** Region pricing, read straight off the region config so it can't drift. */
-export const cohortPricing = (Object.values(regions) as Region[]).map((r) => ({
-  region: r.label,
-  founding: r.price,
-  standard: r.standardPrice ?? null,
-  unit: r.priceUnit,
-}));
-
-/**
- * Cohort price for ONE region — never the full list.
- *
- * The page has always shown a single region's rate (regions.ts + ?region=), but
- * the agent was quoting all three at once, so an Indian visitor heard about AED
- * and AUD they'll never pay. Pricing is answered through this function so the
- * conversation matches the page the visitor is looking at.
- *
- * With no region resolved, the honest move is to ask rather than list — hence
- * no fallback that dumps every rate.
- */
-export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
-  if (!key || !regions[key]) {
-    return [
-      'Cohort pricing is set per region, and each region sees only its own rate.',
-      "You do not know which region this visitor is in, so DO NOT quote a figure and DO NOT list the regions' rates.",
-      'Ask which region they would be joining from (India, Dubai, or Australia), then call this tool again mentioning that region.',
-    ].join(' ');
-  }
-
-  const r = regions[key];
-  const lines = [
-    `${r.label}: ${r.price} ${r.priceUnit}.`,
-    r.standardPrice
-      ? `That is the founding rate for the first cohort; it rises to ${r.standardPrice} for the cohorts that follow.`
-      : 'That is the founding rate for the first cohort; it rises for the cohorts that follow.',
-    'Payment plans are available. Many participants expense the program through their employer; an ROI letter and itemised outline are provided.',
-    `ONLY quote the ${r.label} figure. Do not mention what other regions pay, even if asked to compare — say pricing is set per region and Sunil can discuss another region directly.`,
-  ];
-  return lines.join(' ');
+  commitment: COMMITMENT,
+  size: 'Targets eight members',
+  admission: 'By application, after a fit conversation',
+  scheduleAndFees: FEES_NOTE,
+  learningAreas: EXPLORES,
 };
 
 // ---------------------------------------------------------------------------
@@ -166,7 +102,7 @@ export const surfaces = [
     path: '/',
     name: 'The Living Craft — cohort',
     summary:
-      'Application-only 6-week program in agentic & systems architecture. 8 seats, first cohort September 2026.',
+      'A live programme for experienced engineers and leaders who want to build an agentic system, examine its behaviour and guide the decisions behind it.',
   },
   {
     path: '/caio',
@@ -196,38 +132,35 @@ export const facts: Fact[] = [
     id: 'cohort-what',
     surface: '/',
     q: 'What is The Living Craft?',
-    a: `The Living Craft is an application-only, ${cohort.weeks}-week program in agentic and systems architecture, taught live by Sunil Mathew. It teaches engineering judgment — the calls that only come from having shipped hard systems and lived with the consequences — rather than tools. The positioning spine is "AI builds, the human judges and directs."`,
+    a: `The Living Craft is a live programme for experienced engineers, architects and engineering leaders. Members build a working agentic system with Sunil Mathew, explain its design, examine its behaviour and revise it through feedback. ${COMMITMENT}`,
     tags: ['course', 'program', 'cohort', 'training', 'bootcamp'],
   },
   {
     id: 'cohort-dates',
     surface: '/',
     q: 'When does the first cohort start?',
-    a: `The first cohort starts ${cohort.startsOn}. Enrollment is rolling until all ${cohort.seats} seats are filled. Admission is by application and every application is read personally.`,
+    a: 'The final session schedule is confirmed before joining. Apply or send an enquiry to discuss current availability; do not infer a start date from older material.',
     tags: ['start date', 'when', 'schedule', 'september', '2026', 'deadline'],
   },
   {
     id: 'cohort-size',
     surface: '/',
     q: 'How many people are in a cohort?',
-    a: `${cohort.seats} seats, capped. The cohort is kept deliberately small so every participant's architecture gets the room's full attention.`,
+    a: 'The open cohort targets eight members. Current availability is discussed during the fit conversation; this is a target, not a published capacity or scarcity claim.',
     tags: ['seats', 'size', 'class size', 'how many', 'capacity'],
   },
   {
     id: 'cohort-length',
     surface: '/',
     q: 'How long is the program and what is the time commitment?',
-    a: `${cohort.weeks} weeks, live. The commitment is ${cohort.commitment}. Format is ${cohort.format}.`,
+    a: `${COMMITMENT} The session schedule and the amount and interval of independent work are confirmed before joining.`,
     tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time'],
   },
   {
     id: 'cohort-price',
     surface: '/',
     q: 'How much does the cohort cost?',
-    // Placeholder only — retrieval swaps this for cohortPriceAnswer(region) so
-    // a visitor is never quoted a rate that isn't theirs. See knowledge.ts.
-    a: 'Cohort pricing is regional and resolved per visitor.',
-    regional: true,
+    a: FEES_NOTE,
     tags: [
       'price', 'cost', 'fee', 'fees', 'tuition', 'how much', 'payment',
       'discount', 'rupees', 'dirhams', 'dollars', 'afford', 'expensive',
@@ -238,35 +171,35 @@ export const facts: Fact[] = [
     id: 'cohort-curriculum',
     surface: '/',
     q: 'What does the curriculum cover?',
-    a: cohort.modules.map((m) => `${m.id} (${m.weeks}): ${m.title}`).join('\n'),
+    a: EXPLORES.map((item) => `${item.title}: ${item.body}`).join('\n'),
     tags: ['curriculum', 'syllabus', 'modules', 'weeks', 'topics', 'what will I learn'],
   },
   {
     id: 'cohort-outcomes',
     surface: '/',
     q: 'What will I be able to do afterwards?',
-    a: cohort.outcomes.map((o) => `- ${o}`).join('\n'),
+    a: 'Build a working agentic system and connect its behaviour to the architecture behind it. Practise explaining why a boundary exists, what evidence supports a decision, what you would change next, and how to review and guide a team\'s proposal.',
     tags: ['outcomes', 'learn', 'skills', 'takeaway', 'benefit'],
   },
   {
     id: 'cohort-who',
     surface: '/',
     q: 'Who is the cohort for?',
-    a: "Tech leads and staff engineers, senior engineering managers and architects, and senior engineering leaders and directors — people who make architectural calls their teams build on. Seniority on paper matters less than whether you've shipped something you had to live with.",
+    a: 'Experienced engineers, architects and engineering leaders with prior system-design exposure, a learning goal, and the willingness to build, explain decisions and revise their work through feedback.',
     tags: ['who', 'audience', 'fit', 'prerequisites', 'eligibility', 'staff engineer'],
   },
   {
     id: 'cohort-apply',
     surface: '/',
     q: 'How do I apply?',
-    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Sunil reads every application himself and replies by email. Admission is by application because the room only works if everyone in it can keep up and contribute.`,
+    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Applying begins a fit conversation; it is not admission, payment or a confirmed place.`,
     tags: ['apply', 'application', 'enroll', 'sign up', 'register', 'join'],
   },
   {
     id: 'cohort-vs-course',
     surface: '/',
     q: 'Why this over a recorded course?',
-    a: "Recorded courses teach patterns, which are cheap and everywhere now. This is for the judgment that sits on top of the patterns — live, on your real systems, from someone who has been accountable for the outcome at scale. You're buying attention and 26 years of hard-won judgment, not videos.",
+    a: 'The programme uses a working system as the concrete object of discussion. Members build an approach, examine what happens, receive feedback and revise; the focus is practical design judgment rather than video consumption.',
     tags: ['why', 'worth it', 'versus', 'compare', 'alternative', 'udemy', 'coursera'],
   },
 
@@ -339,7 +272,7 @@ export const facts: Fact[] = [
     id: 'about-sunil',
     surface: 'practice',
     q: 'Who is Sunil Mathew?',
-    a: `${practitioner.years} years building and leading engineering at ${practitioner.companies.join(', ')}, on systems serving up to 100M+ users. Director/L7-level; led 150 engineers across the US, UK, China, and India. Based in ${practitioner.location}. Shipped a Generative-AI video editor and a Workspace platform running ~31 billion executions a week at Google, re-architected Amazon Prime's membership core, and modernised 300+ products at Walmart. Currently building an agentic-AI product and running a live enterprise AI-adoption engagement.`,
+    a: `Sunil Mathew brings engineering and leadership experience from ${practitioner.companies.join(', ')} and startups. His focus is the reasoning behind a system's design and the evidence that helps a team make its next decision. Based in ${practitioner.location}.`,
     tags: ['who', 'about', 'background', 'experience', 'bio', 'instructor', 'teacher', 'sunil'],
   },
   {
@@ -349,7 +282,7 @@ export const facts: Fact[] = [
     id: 'about-social-proof',
     surface: 'practice',
     q: 'Do you have testimonials, client names, or student outcomes?',
-    a: 'None are published. The cohort has not run yet — the first one starts September 2026 — and client engagements are not named publicly. What stands in for social proof is the track record: 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.',
+    a: 'No testimonials, client names or student outcome counts are published. Sunil’s employment context involving Google, Amazon, Walmart and startups is published without implying employer endorsement. Ask Sunil directly if you need references.',
     tags: [
       'testimonials',
       'reviews',

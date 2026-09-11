@@ -41,6 +41,7 @@ import { confirmationFor, saveSubmission } from '../../../lib/pipeline/submit';
 import { checkRate } from '../../../lib/agent/ratelimit';
 import { record } from '../../../lib/admin/supabase';
 import { deviceOf } from '../../../lib/admin/visitor';
+import { queueForSubmission } from '../../../lib/comms/outbox';
 
 export const prerender = false;
 
@@ -168,6 +169,33 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies, url }) =
       httpOnly: true,
       secure: url.protocol === 'https:',
     });
+  }
+
+  // Queue the acknowledgement only after the application transaction commits.
+  // Message keys are derived from the submission id, so sending the same
+  // request key again repairs an interrupted queue attempt without creating a
+  // duplicate receipt. Dispatch remains independently gated by the comms
+  // service switch, approvals, suppression and consent rules.
+  try {
+    const queued = await queueForSubmission({
+      submissionId: result.submissionId,
+      personId: result.personId,
+      opportunityId: result.opportunityId,
+      cohortId: cohort?.cohort_id ?? null,
+      route,
+      recipient: values.email ?? '',
+      anchorAt: new Date().toISOString(),
+    });
+    if (!queued.ok) {
+      console.error(`queueForSubmission failed [${route}]: outcome_not_ok`);
+    }
+  } catch (err) {
+    // The committed application remains the source of truth. A retry with the
+    // same request key safely re-attempts this idempotent queue operation.
+    console.error(
+      `queueForSubmission threw [${route}]:`,
+      err instanceof Error ? err.name : 'unknown',
+    );
   }
 
   // The authoritative saved event. Two properties the brief asks for by name:

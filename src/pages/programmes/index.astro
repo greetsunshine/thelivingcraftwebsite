@@ -27,7 +27,7 @@
  *
  * WHAT MUST NOT BE ADDED
  *
- *   * Fees, dates, week counts or seat counts. Decision D1 is open; every
+ *   * Fees, dates or week counts. The V4 public copy withholds them; every
  *     offer sentence on this page comes from src/data/offer-display.ts, and
  *     the five learning areas come from src/data/cohort-copy.ts so this page
  *     and the cohort page cannot drift apart. Never restate either inline.
@@ -45,7 +45,6 @@ import {
   COMMITMENT,
   COMMITMENT_CELL,
   FEES_NOTE,
-  PUBLISH_OFFER_FIGURES,
 } from '../../data/offer-display';
 import { EXPLORES } from '../../data/cohort-copy';
 
@@ -202,26 +201,12 @@ const description =
         about scope and permission.
       </p>
       <p><strong>There is no certificate.</strong> The focus is the capability you develop through the work.</p>
-      {
-        PUBLISH_OFFER_FIGURES ? (
-          <p>
-            Fees and dates for the open cohort are published on{' '}
-            <a class="textlink" href="/">the cohort page</a>.
-          </p>
-        ) : (
-          <p>{FEES_NOTE}</p>
-        )
-      }
+      <p>{FEES_NOTE}</p>
     </div>
 
     <aside class="pending">
       <h3>Facts this page is waiting on</h3>
       <ul>
-        <li>
-          Whether fees, dates and the programme’s shape are published at all, or
-          confirmed only in the final offer.
-          <span class="who">Sunil — decision D1</span>
-        </li>
         <li>
           The enterprise programme’s hours, delivery format and commercial terms.
           <span class="who">Sunil for scope, finance for terms</span>

@@ -3,7 +3,7 @@
 **Built against:** [`build-plan.md`](build-plan.md), from the Cohort Handoff Package
 (`LC-LAUNCH-2026-09-10`) in [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/).
 **Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6).
-**Last updated:** 10 September 2026
+**Last updated:** 11 September 2026
 
 > **Start at [`RESUME.md`](RESUME.md)** if you are continuing this work — it is the
 > operational checkpoint. This file is the detail behind it.
@@ -14,11 +14,11 @@
 > reason: a status line that was right the day it was written and wrong a week later is worse
 > than none. Move the checkbox, adjust the counts, add a changelog row.
 
-> ### ⚠ Two answers are outstanding from Sunil
-> **D1 — do we still publish price, dates and the six-week shape?** and **D2 — how does an
-> email actually get sent?** Both are written up in full at the foot of
-> [`build-plan.md`](build-plan.md). Until they land, the price region of the page is a flagged
-> placeholder and email dispatch is built but switched off. Neither blocks any other stage.
+> ### ⚠ One external answer is outstanding
+> **D2 — how does an email actually get sent?** needs a provider, verified domain and monitored
+> reply mailbox. The safe D1 implementation default is now complete: public pages, structured
+> data, `/llms.txt`, `/api/facts`, latest updates and the visitor assistant all withhold fees,
+> dates and week counts consistently.
 
 > ### ⚠ Run `supabase/schema.sql` before the next deploy
 > Ten new tables (`organisations`, `people`, `cohorts`, `form_submissions`,
@@ -43,7 +43,7 @@
 | Stages complete | **6** | of 6 — dispatch off, pending D2 |
 | Acceptance cases passed | **4** | of 18 — against dev, not staging |
 | Records implemented | **14** | of 14 |
-| Decisions outstanding | **2** | D1, D2 |
+| Decisions outstanding | **1** | D2 |
 
 ---
 
@@ -62,14 +62,14 @@
 - [x] Success returned only after commit; DB failure preserves entered values
 - [x] First-touch and submission-session attribution captured separately
 - [x] 390px / keyboard / 200% zoom / screen-reader labels — markup verified; a real screen-reader pass is still owed (E15)
-- [x] Price and schedule region behind a flag, marked placeholder **(blocked: D1)**
+- [x] Fees, dates and week count withheld consistently across every public and machine-readable surface
 
 ### 2 · Staff screens and named accounts
 
 - [x] Named staff accounts with the five roles, enforced server-side
 - [x] Overview — filters, totals, pipeline snapshot, needs-attention, last refresh
 - [x] Leads — search, filters, explicit empty and failed-load states
-- [ ] Lead detail — contact, preferences, attribution, activity, tasks, tabs
+- [x] Lead detail — contact, preferences, attribution, activity, tasks, tabs
 - [x] Loading / empty / error / permission-denied states on every data screen
 - [x] New tables added to the `lib/admin/health.ts` probe lists
 
@@ -164,6 +164,7 @@ Before anything is published, per the brief's closing paragraph:
 
 | Date | Change |
 |---|---|
+| 11 Sep 2026 | **Public-offer consistency and durable acknowledgement queue.** Retired the regional price/start/week publication path from visible copy, structured data, `/api/facts`, `/llms.txt`, the latest feed and assistant grounding; removed unsupported biography metrics from public pages. A committed form submission now idempotently queues its receipt, while the initial task remains the durable owner notification. Dispatch stays safely off pending D2. `astro check` and production build pass; local campaign routing is 17/17 ready; acceptance remains 4/18 because the schema is not applied and external mail/accessibility/restore tests need their real environments. |
 | 10 Sep 2026 | Package read end to end; plan and status written. Scope agreed as the whole package. Console extends `/craft/admin` rather than forking a second staff area. D1 and D2 referred to Sunil. Nothing built yet. |
 | 11 Sep 2026 | **Checkpoint added.** `RESUME.md` is now the first read for any session continuing this work, and CLAUDE.md points at it from the top. Console session carries a signed identity and role list; verified by attack — a payload edited to grant extra roles and re-presented with the original signature is rejected. Shared password grants `operator` alone. `npm run staff` creates the first account; `npm run acceptance` runs the register (E03 and E17 pass, the rest report *not run* with reasons). `/privacy` published as an honest placeholder. Form accessibility markup verified: ten controls, ten labels, error slot on every field that can fail. |
 | 10 Sep 2026 | **Stage 1 save path built.** Cohort page rebuilt against the delivered copy; three routes rendered from one definition in `lib/pipeline/forms.ts`; ten tables and `pipeline_submit()` added to the schema; `/api/pipeline/submit` returns success only after a commit. D1 held behind `PUBLISH_OFFER_FIGURES` — no price, date, week count or seat cap reaches the page or its JSON-LD. `resolveCohort()` returns three states, not two, so a database that cannot answer is a 503 and a retry while a cohort that is genuinely closed is a 409 — those were one refusal and the brief forbids presenting an unavailable source as a known state. `astro check` 0 errors. |

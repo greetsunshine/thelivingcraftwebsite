@@ -29,18 +29,14 @@ lose an hour to something surprising, that is a line in RESUME.md before you com
   [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
   [src/data/cohort-copy.ts](src/data/cohort-copy.ts),
   [src/data/offer-display.ts](src/data/offer-display.ts).
-  - **The page no longer shows a price, and the region switch changes nothing on it.**
-    That is decision D1 held behind `PUBLISH_OFFER_FIGURES`. The region is still resolved
-    and still reaches the Ask widget, whose grounding is `facts.ts` and does still hold
-    the figures — so **the assistant will quote a rate the page withholds until D1 lands**.
-    Known, documented at the head of `offer-display.ts`, and not to be resolved by
-    inference. `regions.ts` and the `/india|/dubai|/australia` redirects are untouched.
+  - **The site does not publish a cohort fee, start date or week count.** The page,
+    structured data, `/llms.txt`, `/api/facts`, latest feed and Ask widget all use the same
+    final-offer answer from `offer-display.ts`. Region context never changes that policy.
+    `/india|/dubai|/australia` remain compatibility redirects only.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
     server. An enterprise enquiry is never counted as an application.
-  - `ProgramPage.astro` is the previous page and is no longer rendered by any route. It is
-    kept until D1 settles, because option A restores most of it.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
@@ -290,10 +286,10 @@ Three things about that package are worth knowing before you open it:
   `learning.thelivingcraft.ai/` with `utm_content=lc-oct-dNN`. The roadmap's
   `/programmes/agentic-systems/` is a design target, and the current address keeps working
   until redirects are approved and tested.
-- **Two decisions are outstanding from Sunil and both ship behind a flag** — whether we
-  still publish price, dates and the six-week shape (which changes `facts.ts`, `/llms.txt`
-  and what the Q&A agent may say about cost), and how an email actually gets sent. Neither
-  blocks any other stage. Don't resolve either one by inference.
+- **One external decision remains** — how email is actually delivered. Receipt queueing,
+  templates, suppression and callbacks are built; provider selection, verified domain,
+  monitored reply mailbox and approval remain external. The public offer policy is settled
+  in code: do not publish a fee, start date, week count or regional rate.
 
 `/caio`, `/assessment`, `/latest` and everything under `/craft` are out of scope: the brief
 says no LMS, checkout, payment collection or new chatbot is required in this release.
@@ -337,11 +333,17 @@ but cross-linked surface. Open decision (flag to Sunil): umbrella vs personal br
 practice name — copy is written brand-neutral so the wordmark can be swapped.
 
 ## The facts module — read this before editing any offer
-[src/data/facts.ts](src/data/facts.ts) is the **single source of truth** for every offer fact.
-Four consumers read it and nothing else: JSON-LD structured data, `/llms.txt`,
-`/api/facts`, and the visitor Q&A agent's grounding. Change a price, date, or seat
-count there and all four move together. Cohort pricing lives in
-[src/data/regions.ts](src/data/regions.ts) and is imported, not restated.
+[src/data/facts.ts](src/data/facts.ts), [src/data/cohort-copy.ts](src/data/cohort-copy.ts)
+and [src/data/offer-display.ts](src/data/offer-display.ts) are the shared source for public
+offer facts and approved cohort copy. JSON-LD, `/llms.txt`, `/api/facts`, the visible page
+and visitor Q&A grounding consume those modules. The retired regional prices are not a
+public source and must not be reintroduced from old marketing material.
+
+The gated `/craft` learner area is the one exception, and it is a separate file:
+[src/data/learner-cohort.ts](src/data/learner-cohort.ts) holds the internal teaching
+schedule (six weeks, eight seats, a September start) that the public offer withholds. Only
+the learner pages read it, and they alias it as `cohort`. **It must never be imported by a
+public surface** — that would republish the withheld figures through a side door.
 
 Never state an offer fact directly in a page, a schema block, or an agent prompt —
 route it through `facts.ts`. The failure this prevents is subtle and bad: a stale
@@ -776,21 +778,22 @@ systems. Position *above* the commoditizing "how to use AI tools" market.
 
 ## Offer facts (single source of truth)
 ### Cohort (`/`)
-- **6-week** program · live online (Bangalore: hybrid) · **8 seats, capped** · ~5 hrs/week
-- Pricing per region (founding rate): India **₹1,20,000** (standard ₹1,50,000) ·
-  Dubai **AED 8,000** · Australia **AUD 3,000**. Edit in [src/data/regions.ts](src/data/regions.ts).
-- Starts **September 2026**; enrollment rolling until all 8 seats are filled. Admission
-  by application. These numbers live in `cohort` in [src/data/facts.ts](src/data/facts.ts) — this list
-  restates them for a reader, it does not define them.
+- Live programme for experienced engineers, architects and engineering leaders.
+- **30 live hours plus independent work.** The open cohort **targets eight members**;
+  this is not a capacity or scarcity claim.
+- Admission starts with an application and fit conversation. Applying is not payment or a
+  confirmed place.
+- Fees, schedule, payment, refund and access terms are confirmed in the final offer before
+  commitment. Do not publish a fee, start date, week count or regional rate.
 
 ### Consulting (`/caio`, `/assessment`) — pricing all placeholder
 - CAIO tiers: Advisory ~2 d/mo · Embedded ~1 d/wk · Transformation 2–3 d/wk. 90-day min.
 - Assessment: fixed-fee, fixed-scope, 2–3 weeks, board-ready roadmap.
 
 ### Instructor
-~26 yrs, director/L7-level at Google, Amazon, Walmart; Bangalore-based; building a personal
-agentic-AI product + a live enterprise AI-adoption engagement. 100M+ users served; 150
-engineers led across US/UK/China/India.
+Publicly state engineering and leadership experience from Google, Amazon, Walmart and
+startups, based in Bengaluru. Do not infer or publish user counts, team counts, product-scale
+metrics, testimonials or employer endorsement without a dated approval record.
 
 ## Design tokens
 - **Palette** (warm "craft", one accent): paper `#F4EEE2` · surface `#FBF7EE` ·

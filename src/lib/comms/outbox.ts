@@ -352,13 +352,10 @@ export interface QueueOutcome {
  * Queue everything a saved submission is entitled to: the receipt now, and the
  * three nurture steps if — and only if — marketing is permitted.
  *
- * THIS IS NOT CALLED FROM THE PUBLIC SUBMIT PATH YET, AND THAT IS DELIBERATE.
- * `src/lib/pipeline/submit.ts` is outside this stage's remit and the send seam
- * is off, so wiring it now would queue rows nothing can dispatch. The call site
- * is one line inside `saveSubmission()`, after a committed save, fire-and-
- * forget — an email outage must never roll back a saved application. Until
- * then the console can queue for a submission by hand, which is also how a
- * route test is run against a controlled mailbox.
+ * The public submit endpoint calls this only after the application transaction
+ * commits. Queue keys are deterministic, so a retry repairs an interrupted
+ * attempt without duplicating a receipt. Queued rows remain held until the
+ * separate dispatch service, approval and safety gates allow delivery.
  */
 export async function queueForSubmission(req: QueueRequest): Promise<QueueOutcome> {
   const client = db();

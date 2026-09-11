@@ -1,7 +1,7 @@
 ---
 import ConsoleActions from '../../components/admin/ConsoleActions.astro';
 import FindingActions from '../../components/admin/FindingActions.astro';
-import { assessment, caio, cohort, cohortPricing, facts, surfaces } from '../../data/facts';
+import { assessment, caio, facts, publicCohort, surfaces } from '../../data/facts';
 import { getLatest } from '../../lib/agent/latest';
 import { capabilities } from '../../lib/admin/env';
 import { latestRun, openPullRequests } from '../../lib/admin/github';
@@ -125,21 +125,10 @@ const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
     <div class="card">
       <span class="label">Cohort</span>
       <div style="margin-top:12px">
-        <div class="bar-row"><span class="bl">Length</span><span class="bv">{cohort.weeks} weeks</span></div>
-        <div class="bar-row"><span class="bl">Seats</span><span class="bv">{cohort.seats}</span></div>
-        <div class="bar-row"><span class="bl">Starts</span><span class="bv">{cohort.startsOn}</span></div>
-        <div class="bar-row"><span class="bl">Commitment</span><span class="bv">{cohort.commitment}</span></div>
-        {
-          cohortPricing.map((p) => (
-            <div class="bar-row">
-              <span class="bl">{p.region}</span>
-              <span class="bv">
-                {p.founding} {p.unit}
-                {p.standard && <span class="faint"> · was {p.standard}</span>}
-              </span>
-            </div>
-          ))
-        }
+        <div class="bar-row"><span class="bl">Commitment</span><span class="bv">{publicCohort.commitment}</span></div>
+        <div class="bar-row"><span class="bl">Group size</span><span class="bv">{publicCohort.size}</span></div>
+        <div class="bar-row"><span class="bl">Admission</span><span class="bv">{publicCohort.admission}</span></div>
+        <div class="bar-row"><span class="bl">Schedule and fees</span><span class="bv">Confirmed in final offer</span></div>
       </div>
     </div>
 
@@ -180,7 +169,7 @@ const runLabel = (run: Awaited<ReturnType<typeof latestRun>>) => {
                 <td class="mono" style="font-size:12px">{f.surface}</td>
                 <td style="font-size:13.5px;min-width:200px">{f.q}</td>
                 <td class="muted" style="font-size:13px">
-                  {f.regional ? <span class="pill">resolved per region at query time</span> : f.a}
+                  {f.a}
                 </td>
               </tr>
             ))

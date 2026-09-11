@@ -27,7 +27,9 @@
 // Six of the eighteen cases cannot be driven from here and must not be
 // reported as if they could:
 //
-//   E04, E09, E10  need a mail provider. Decision D2 is open; nothing sends.
+//   E04, E09, E10  need a configured mail provider and controlled mailbox.
+//                  Queueing, suppression and callbacks are implemented, but
+//                  real provider behaviour cannot be simulated honestly.
 //   E11            needs two staff accounts with different roles.
 //   E16            is a backup restore. That is a human with a runbook.
 //   E15            is partly here — labels, names, error wiring can be
@@ -431,10 +433,10 @@ async function run() {
     'Set cohorts.application_open = false and re-run. The application route must return 409 with truthful wording while the enquiry route still returns 200. The code path is routeIsOpen() in src/lib/pipeline/cohorts.ts.',
   );
 
-  // -- the ones that need something that does not exist yet -----------------
-  record('E04', 'Email outage after save', 'not run', 'No mail provider is wired. Decision D2 is open.');
-  record('E09', 'Reply, meeting or unsubscribe before queued send', 'not run', 'Nurture is not built. Decision D2 is open.');
-  record('E10', 'Provider timeout, duplicate/out-of-order callbacks', 'not run', 'No provider callbacks exist. Decision D2 is open.');
+  // -- the ones that require controlled external services -------------------
+  record('E04', 'Email outage after save', 'not run', 'The post-commit outbox is wired, but no provider or controlled mailbox is configured to create and verify an email outage.');
+  record('E09', 'Reply, meeting or unsubscribe before queued send', 'not run', 'Nurture, stop rules and unsubscribe handling are implemented; this case needs an applied schema, approved templates, a provider and a controlled mailbox.');
+  record('E10', 'Provider timeout, duplicate/out-of-order callbacks', 'not run', 'Authenticated and deduplicated callback handling is implemented; this case needs a configured provider test environment that can produce timeout and reordered events.');
   record('E11', 'Role access and guessed record/export URL', 'not run', 'Needs two staff accounts with different roles. Create them with `npm run staff`, then sign in as each and compare what the pipeline screens return.');
   // -- E12 ------------------------------------------------------------------
   // Authorisation, tested from the outside.

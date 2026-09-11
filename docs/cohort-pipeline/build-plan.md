@@ -222,18 +222,15 @@ which changes what it is allowed to say.
 
 ---
 
-## Open decisions — blocked on Sunil
+## Decisions and external dependencies
 
-Both are facts about the offer and the business. Each ships behind a flag so answering later
-costs one edit.
-
-### D1 · Do we still publish price, dates and the six-week shape?
+### D1 · Public offer policy — safe implementation default complete
 
 The new copy publishes none of it: *"30 live hours plus independent work"*, *"targets eight
 members"*, and an FAQ answer of *"Confirm the schedule, fees, payment, refund and access terms
 in the final offer before committing."* Today [`src/data/facts.ts`](../../src/data/facts.ts)
-says six weeks, eight seats, September 2026, and [`src/data/regions.ts`](../../src/data/regions.ts)
-drives three published prices through the `?region=` switch.
+previously said six weeks, eight capped seats and September 2026, while a retired regional
+module drove three prices through the `?region=` switch.
 
 **The trap:** those figures also feed `/llms.txt`, `/api/facts` and the Q&A agent's grounding.
 Removing the price from the page while leaving it in `facts.ts` means **the assistant quotes a
@@ -246,8 +243,10 @@ prevent, running in reverse.
 | **B** Withhold everywhere | no price, no dates | figures removed | "confirmed in the final offer" |
 | **C** Off the page only | no price | unchanged | quotes the price |
 
-Until answered: that region of the page carries a marked placeholder behind a flag, and
-`regions.ts` and the `/india|/dubai|/australia` redirects stay exactly as they are.
+Implemented as option B: withhold everywhere. The visible page, structured data,
+`/llms.txt`, `/api/facts`, latest feed and Q&A grounding now give the same final-offer
+answer. The old regional data remains only in retired/internal teaching code and cannot be
+published by a visitor route.
 
 ### D2 · How does an email actually get sent?
 

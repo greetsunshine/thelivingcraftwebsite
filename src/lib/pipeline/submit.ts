@@ -56,7 +56,14 @@ export interface SubmitInput {
 }
 
 export type SubmitResult =
-  | { ok: true; reference: string; alreadyExisted: boolean; submissionId: string }
+  | {
+      ok: true;
+      reference: string;
+      alreadyExisted: boolean;
+      submissionId: string;
+      personId: string;
+      opportunityId: string | null;
+    }
   | { ok: false; kind: 'unconfigured' | 'unavailable' | 'rejected'; message: string };
 
 /**
@@ -153,7 +160,7 @@ export async function saveSubmission(input: SubmitInput): Promise<SubmitResult> 
 
     // plpgsql `returns table` arrives as an array of one row.
     const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.submission_id || !row?.reference) {
+    if (!row?.submission_id || !row?.reference || !row?.person_id) {
       // The call succeeded and returned nothing usable. Treating that as a save
       // would be the exact false success E03 exists to catch.
       console.error(`pipeline_submit returned no row [${route}]`);
@@ -165,6 +172,8 @@ export async function saveSubmission(input: SubmitInput): Promise<SubmitResult> 
       reference: String(row.reference),
       alreadyExisted: row.already_existed === true,
       submissionId: String(row.submission_id),
+      personId: String(row.person_id),
+      opportunityId: row.opportunity_id ? String(row.opportunity_id) : null,
     };
   } catch (err) {
     // Network, timeout, or a client that threw. Note what is NOT logged: the

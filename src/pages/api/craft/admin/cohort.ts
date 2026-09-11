@@ -19,10 +19,10 @@
 // refusal is written here, so the console and the public form cannot drift into
 // telling people different things.
 //
-// (The third clause — stopping queued promotional invitations — belongs to
-// stage 4, which is shut until D2 is answered. There is no sender wired, so
-// there is no queue to stop; this file does not pretend otherwise, and the
-// screen says so rather than implying a send was cancelled.)
+// The third clause is enforced even while dispatch is off: closing applications
+// stops every active or paused sequence linked to this cohort and cancels its
+// queued marketing messages. That prevents a queue built before launch from
+// becoming a burst when D2 is eventually enabled.
 //
 // ───────────────────────────────────────────────────────────────────────────
 // THE COHORT IS RESOLVED, NEVER ACCEPTED FROM THE REQUEST
@@ -59,6 +59,7 @@ import { db } from '../../../../lib/admin/supabase';
 import { can, refusal } from '../../../../lib/pipeline/roles';
 import { resolveCohort, routeIsOpen } from '../../../../lib/pipeline/cohorts';
 import type { Identity } from '../../../../lib/admin/staff';
+import { stopSequence } from '../../../../lib/comms/outbox';
 
 export const prerender = false;
 
@@ -76,6 +77,45 @@ const clean = (v: unknown, max: number): string | null => {
   const t = v.trim().replace(/[\u0000-\u001f\u007f]/g, '');
   return t ? t.slice(0, max) : null;
 };
+
+async function stopCohortSequences(
+  client: NonNullable<ReturnType<typeof db>>,
+  cohortId: string,
+): Promise<{ ok: boolean; stopped: number; detail: string }> {
+  const { data, error } = await client
+    .from('comms_sequences')
+    .select('sequence_id')
+    .eq('cohort_id', cohortId)
+    .in('state', ['active', 'paused']);
+
+  if (error) {
+    console.error('cohort sequence lookup failed:', error.code ?? 'unknown');
+    return { ok: false, stopped: 0, detail: 'The communication queue could not be checked.' };
+  }
+
+  let stopped = 0;
+  for (const row of data ?? []) {
+    const outcome = await stopSequence(
+      String(row.sequence_id),
+      'applications closed for this cohort',
+      client,
+    );
+    if (!outcome.ok) {
+      return {
+        ok: false,
+        stopped,
+        detail: 'Applications are closed, but at least one queued sequence still needs review.',
+      };
+    }
+    stopped += 1;
+  }
+
+  return {
+    ok: true,
+    stopped,
+    detail: `${stopped} active or paused sequence${stopped === 1 ? '' : 's'} stopped.`,
+  };
+}
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const who = locals.admin;
@@ -144,17 +184,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
   // applications that were already closed is noise in the one table that has to
   // stay readable.
   if (cohort.application_open === open) {
+    const communications = open
+      ? null
+      : await stopCohortSequences(client, cohort.cohort_id);
     return json(
       {
-        ok: true,
+        ok: communications?.ok ?? true,
         changed: false,
         open,
         label: cohort.public_label,
+        communications,
         message: open
           ? 'Applications were already open. Nothing changed.'
-          : 'Applications were already closed. Nothing changed.',
+          : communications?.ok
+            ? 'Applications were already closed. The communication queue is stopped.'
+            : 'Applications were already closed, but the communication queue still needs review.',
       },
-      200,
+      communications && !communications.ok ? 503 : 200,
     );
   }
 
@@ -188,16 +234,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const after = { state: 'ok' as const, cohort: { ...cohort, application_open: open } };
   const application = routeIsOpen('application', after);
   const enquiry = routeIsOpen('enquiry', after);
+  const communications = open
+    ? null
+    : await stopCohortSequences(client, cohort.cohort_id);
 
   return json(
     {
-      ok: true,
+      ok: communications?.ok ?? true,
       changed: true,
       open,
       label: cohort.public_label,
       application: application.open ? null : application.reason,
       enquiryOpen: enquiry.open,
+      communications,
     },
-    200,
+    communications && !communications.ok ? 503 : 200,
   );
 };

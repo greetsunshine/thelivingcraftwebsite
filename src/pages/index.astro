@@ -12,20 +12,16 @@
  *
  * WHY THIS IS STILL SERVER-RENDERED
  *
- * It used to be, so the price block could follow the visitor's region. With
- * decision D1 outstanding the page shows no price at all, so the RENDERED PAGE
- * no longer varies by region — but the region still reaches the Ask widget,
- * which is grounded on facts.ts and will quote a rate if somebody asks it.
- * Until D1 settles what the agent may say, that plumbing stays intact and the
- * no-store header with it: a shared cache serving one visitor's region to
- * another is the failure this header exists to prevent, and it is cheaper to
- * keep than to reason about re-introducing.
+ * It used to be, so the price block could follow the visitor's region. The
+ * approved public offer now withholds fees and dates everywhere. Region still
+ * reaches the Ask widget as useful enquiry context, but never changes what the
+ * site or assistant says about the offer. The no-store header remains while
+ * that request-specific context is passed through.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CohortPage from '../components/cohort/CohortPage.astro';
 import { EXPLORES, QUESTIONS, STANDFIRST } from '../data/cohort-copy';
-import { PUBLISH_OFFER_FIGURES } from '../data/offer-display';
-import { SITE_ORIGIN, cohort } from '../data/facts';
+import { SITE_ORIGIN, publicCohort } from '../data/facts';
 
 export const prerender = false;
 
@@ -59,10 +55,7 @@ const description = STANDFIRST;
  *   * `syllabusSections` with `timeRequired: 'PT5H'` — that was six weeks at
  *     five hours, and the brief forbids invented module durations by name.
  *
- * `teaches` comes from the five areas the page actually renders, not from
- * `cohort.outcomes` in facts.ts, which still describes the previous programme.
- * That divergence is real and is documented at the head of data/cohort-copy.ts;
- * it travels with D1 rather than being quietly resolved in a schema block.
+ * `teaches` comes from the five areas the page actually renders.
  *
  * The FAQPage node is built from the same array the page renders, for the same
  * reason. Note the roadmap's own caution: do not expect FAQ markup to secure a
@@ -72,7 +65,7 @@ const schema = [
   {
     '@type': 'Course',
     '@id': `${SITE_ORIGIN}/#course`,
-    name: cohort.name,
+    name: publicCohort.name,
     description,
     url: SITE_ORIGIN,
     provider: { '@id': `${SITE_ORIGIN}/#person` },
@@ -86,9 +79,6 @@ const schema = [
         // The one commitment figure the delivered copy does state.
         courseWorkload: 'PT30H',
         instructor: { '@id': `${SITE_ORIGIN}/#person` },
-        ...(PUBLISH_OFFER_FIGURES
-          ? { startDate: '2026-09', maximumAttendeeCapacity: cohort.seats }
-          : {}),
       },
     ],
   },

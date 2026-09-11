@@ -710,9 +710,9 @@ const here = Astro.url.pathname + Astro.url.search;
           <p class="faint hint">
             The wording above is read back out of <code class="mono">routeIsOpen()</code>, the same
             function that answers the public form — not a copy of it, so the two cannot drift.
-            <strong> The third clause of E18 — stopping queued promotional invitations — has
-            nothing to stop yet:</strong> no sender is wired (decision D2), so there is no queue.
-            This screen does not claim a send was cancelled.
+            <strong> The third clause of E18 is enforced too:</strong> closing applications stops
+            active or paused sequences for this cohort and cancels their queued marketing messages,
+            even while provider dispatch is off.
           </p>
         </div>
       )

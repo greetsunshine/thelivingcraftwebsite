@@ -28,7 +28,7 @@ const sessions = defineCollection({
     week: z.number().int().min(0).max(6),
     title: z.string(),
     /**
-     * Module id from cohort.modules in src/data/facts.ts — M1..M4.
+     * Module id from learnerCohort.modules in src/data/learner-cohort.ts — M1..M4.
      * Absent on week 0, which belongs to no module.
      */
     module: z.enum(['M1', 'M2', 'M3', 'M4']).optional(),

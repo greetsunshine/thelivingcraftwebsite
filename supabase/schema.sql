@@ -1419,10 +1419,11 @@ create trigger tasks_touch before update on public.tasks
 -- statement to PostgREST and one transaction to Postgres: it all lands or none
 -- of it does, and only then does the API say the word "received".
 --
--- WHAT IT DELIBERATELY DOES NOT DO: send anything. Queuing the acknowledgement
--- is stage 4 and is switched off until there is a verified sender (decision D2).
--- The task row is the durable "somebody owes this person a reply" in the
--- meantime, and Web3Forms still delivers the inbox copy from the browser.
+-- WHAT IT DELIBERATELY DOES NOT DO: send anything. After this transaction
+-- commits, the API writes an idempotent receipt row to the stage-4 outbox. A
+-- retry under the same request key safely repairs a missed queue step. The
+-- initial task is the durable owner notification; provider dispatch remains
+-- switched off until D2's sender, mailbox and approval gates are satisfied.
 --
 -- IDEMPOTENCY, which is the single most important behaviour here (E02): the
 -- first thing the function does is look for the request key, and a hit returns

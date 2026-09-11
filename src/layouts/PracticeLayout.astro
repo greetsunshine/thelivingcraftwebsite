@@ -11,13 +11,9 @@
 //
 // Three decisions worth knowing before editing:
 //
-// 1. NO AskWidget. The visitor Q&A agent is grounded in facts.ts, which still
-//    holds the price, the start date and the six-week shape. These pages
-//    deliberately withhold all of that while decision D1 is open
-//    (docs/cohort-pipeline/build-plan.md). Hanging a widget that quotes those
-//    figures off a page written not to state them reproduces exactly the
-//    stale-fact failure facts.ts exists to prevent, in reverse. When D1 lands,
-//    add the widget here in one line — not before.
+// 1. NO AskWidget. These pages are intentionally focused reading surfaces.
+//    The public fact base now follows the same V4 offer policy as the pages, so
+//    a future widget can be added without exposing the retired regional offer.
 //
 // 2. `noindex` emits a SECOND robots meta after SeoHead's. SeoHead hardcodes
 //    `index, follow` and is not ours to change in this stage; where two robots

@@ -1301,7 +1301,7 @@ async function create(client: SupabaseClient, allTest: boolean, dryRun: boolean)
 
   // -- offers ---------------------------------------------------------------
   // Amounts are minor units and are deliberately NOT the real figures: the
-  // fee lives in facts.ts and regions.ts, and a screenshot of this dataset
+  // fee is intentionally absent from the V4 public fact base, and a screenshot of this dataset
   // must not be mistakable for a price list.
 
   const { data: echoV1 } = await client

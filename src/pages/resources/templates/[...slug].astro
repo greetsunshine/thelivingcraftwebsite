@@ -28,14 +28,13 @@
 //    learners' records. If the seven ever change there, they change here too,
 //    by hand, and on purpose.
 //
-// 3. NO OFFER FACTS, EVER, AND CERTAINLY NOT RESTATED. Decision D1 is open
-//    (src/data/offer-display.ts): the site publishes no fee, no dates, no week
+// 3. NO OFFER FACTS, EVER, AND CERTAINLY NOT RESTATED. The V4 public policy
+//    publishes no fee, no dates, no week
 //    count and no seat count. The employer-funding template needs the
 //    commitment wording and the fees note, so the markdown carries
 //    {{COMMITMENT}} and {{FEES_NOTE}} and `resolve()` below substitutes them
 //    from the module that owns them. Writing either string into the markdown
-//    would be the failure offer-display.ts opens by naming: somebody flips the
-//    flag and a file nobody thought to check goes on publishing the old line.
+//    would create a second source that can drift from the public offer policy.
 //
 // 4. IT IS USABLE WITHOUT JAVASCRIPT AND WITHOUT AN ADDRESS. The downloads are
 //    `<a download>` with a build-time data: URL — no script in the path at all.

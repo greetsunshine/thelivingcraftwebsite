@@ -27,9 +27,9 @@
  *
  * WHAT IS NOT ON THIS PAGE, AND WHY
  *
- *   * No price, no dates, no week count, no "seats remaining". See
- *     src/data/offer-display.ts — that is decision D1, referred to Sunil, and
- *     the flag holds the truthful default until he answers.
+ *   * No price, no dates, no week count, no "seats remaining". The delivered
+ *     V4 copy confirms these only in the final offer; offer-display.ts keeps
+ *     that answer consistent across public surfaces.
  *   * No testimonials, logos, student counts or result claims. There are none
  *     to show and CLAUDE.md is absolute about inventing them.
  *   * No countdown, no scarcity device. "The open cohort targets eight
@@ -40,7 +40,7 @@
  *     says in terms: do not place it in public copy as a guarantee.
  */
 import RouteForm from './RouteForm.astro';
-import { COHORT_SIZE, COMMITMENT, FEES_NOTE, PUBLISH_OFFER_FIGURES } from '../../data/offer-display';
+import { COHORT_SIZE, COMMITMENT, FEES_NOTE } from '../../data/offer-display';
 import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
 
 
@@ -293,19 +293,13 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
       <div class="detail-row"><span class="dk">Certificate</span><span class="dv">None</span></div>
       <div class="detail-row">
         <span class="dk">Schedule and fees</span>
-        <span class="dv">{PUBLISH_OFFER_FIGURES ? 'See below' : 'Confirmed in the final offer'}</span>
+        <span class="dv">Confirmed in the final offer</span>
       </div>
     </div>
   </div>
 
-  {
-    !PUBLISH_OFFER_FIGURES && (
-      /* Not a price card, and deliberately not shaped like one. It answers the
-         question rather than dodging it — a page that goes silent about cost
-         reads as evasive to exactly the audience this is written for. */
-      <p class="fees-note">{FEES_NOTE}</p>
-    )
-  }
+  {/* Not a price card, and deliberately not shaped like one. */}
+  <p class="fees-note">{FEES_NOTE}</p>
 </section>
 
 {/* ── 8 · FAQs ──────────────────────────────────────────────────────────── */}

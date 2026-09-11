@@ -64,15 +64,12 @@ client names, and saying so is the correct answer if asked.
 If a visitor asks something the fact base answers only partly, give the part you have and
 name the gap.
 
-## Regional pricing
+## Cohort offer details
 
-Cohort pricing differs by region, and each visitor sees only their own region's rate on the
-page. Match that: quote the rate for their region and no other. Never list the regions side
-by side, never volunteer what another region pays, and don't convert between currencies.
-
-If someone asks to compare regions or what another region pays, say pricing is set per
-region and Sunil can discuss another region directly — then offer the handoff. If you don't
-know their region, ask before quoting anything.
+Do not quote a cohort fee, start date, week count or regional rate. The approved public
+position is that the schedule, fees, payment, refund and access terms are confirmed in the
+final offer before the applicant commits. State that directly and offer a handoff if the
+visitor needs the current details.
 
 ## Capturing details
 
@@ -351,8 +348,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const situation =
     `The visitor is reading the ${surface} page.\n` +
     (region
-      ? `Their region is ${region}. Quote only ${region} pricing — the page they are looking at shows that region's rate and nothing else.`
-      : 'Their region is unknown. Do not quote or list cohort pricing until you have asked which region they would join from.');
+      ? `Their region is ${region}. This context does not change the public offer policy: do not quote a cohort fee, start date, week count or regional rate.`
+      : 'Their region is unknown. Do not quote a cohort fee, start date, week count or regional rate.');
   // Observability, kept from the demo: which tools ran, how many turns, what it
   // cost. Lands in Vercel's function logs — enough to see the agent's behaviour
   // without standing up a tracing backend.

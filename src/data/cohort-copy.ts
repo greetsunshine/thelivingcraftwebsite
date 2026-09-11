@@ -1,37 +1,6 @@
-// The delivered cohort copy, in the parts that more than one surface needs.
-//
-// ───────────────────────────────────────────────────────────────────────────
-// THIS IS APPROVED COPY. facts.ts IS STILL THE SOURCE OF TRUTH FOR OFFER FACTS.
-// ───────────────────────────────────────────────────────────────────────────
-//
-// Two different things live in two different files and it is worth being clear
-// about which is which:
-//
-//   facts.ts       — what is TRUE about the offer. Price, dates, seats,
-//                    commitment. Read by JSON-LD, /llms.txt, /api/facts and
-//                    the visitor Q&A agent's grounding.
-//   this file      — what the page SAYS, in the words Team Alchemy delivered
-//                    on 10 September and Sunil approves. Read by the page and
-//                    by the page's structured data.
-//
-// The reason the second one exists at all is that the page and its schema must
-// not disagree. The roadmap: structured data "may describe the organisation,
-// person, article, breadcrumbs, course or video only when the visible content
-// supports it". An FAQPage node built from a different list of questions than
-// the page renders is a crawler being told something no visitor is shown.
-// One array, both consumers.
-//
-// ⚠ KNOWN DIVERGENCE, PART OF DECISION D1
-//
-// `cohort.outcomes` in facts.ts still describes the previous programme —
-// bounded failure, evaluation harnesses, red-teaming, governing an AI-native
-// team — and the agent is grounded on it. The delivered copy describes five
-// different areas, below. Those are not two phrasings of one syllabus; they
-// are two syllabi. Reconciling them is Sunil's call and travels with D1, so
-// nothing here edits facts.ts. Until it is answered, the page and the
-// assistant describe the programme differently, and that is a real
-// inconsistency being held visibly rather than papered over.
-// See docs/cohort-pipeline/build-plan.md.
+// The delivered cohort copy, shared by the visible page, structured data,
+// public facts endpoint, /llms.txt and the visitor Q&A assistant. Keeping one
+// array for every consumer prevents the programme description from drifting.
 
 export interface Explores {
   title: string;
@@ -78,9 +47,7 @@ export interface Question {
  * The six questions, verbatim.
  *
  * Note what the last two do NOT do: neither invents a figure, and the fees
- * answer is the copy's own. If D1 resolves to publishing figures, that answer
- * is the one to REWRITE — not supplement. A page that both publishes a price
- * and says the price comes later is worse than either choice made cleanly.
+ * answer is the delivered copy's own.
  */
 export const QUESTIONS: Question[] = [
   {
