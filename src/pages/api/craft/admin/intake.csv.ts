@@ -12,16 +12,12 @@ import { LEADERSHIP, QUICK_CHECK, REALITY, TECHNICAL, listIntake } from '../../.
 
 export const prerender = false;
 
+import { csvCell } from '../../../../lib/admin/csv';
+
 /**
- * Quote everything, and neutralise formula injection — same reasoning as the
- * leads export. These cells are prose typed by a person and opened in Excel or
- * Sheets, and a cell starting =, +, - or @ is executed there as a formula.
+ * Cells come from csvCell() in src/lib/admin/csv.ts — the one owner of this
+ * format. See the note in leads.csv.ts; there were three copies of this rule.
  */
-const cell = (value: unknown): string => {
-  let text = value === null || value === undefined ? '' : String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-  return `"${text.replace(/"/g, '""')}"`;
-};
 
 export const GET: APIRoute = async () => {
   const rows = await listIntake();
@@ -43,16 +39,16 @@ export const GET: APIRoute = async () => {
     header.join(','),
     ...rows.map((r) =>
       [
-        cell(r.submitted_at ?? ''),
-        cell(r.updated_at),
-        cell(r.name ?? ''),
-        cell(r.email),
-        cell(r.cohort),
-        cell(r.submitted_at ? 'submitted' : 'in progress'),
-        ...QUICK_CHECK.map((q) => cell(r.quick_check?.[q.id] ?? '')),
-        ...TECHNICAL.map((q) => cell(r.technical?.[q.id] ?? '')),
-        ...LEADERSHIP.map((q) => cell(r.leadership?.[q.id] ?? '')),
-        ...REALITY.map((q) => cell(r.reality?.[q.id] ?? '')),
+        csvCell(r.submitted_at ?? ''),
+        csvCell(r.updated_at),
+        csvCell(r.name ?? ''),
+        csvCell(r.email),
+        csvCell(r.cohort),
+        csvCell(r.submitted_at ? 'submitted' : 'in progress'),
+        ...QUICK_CHECK.map((q) => csvCell(r.quick_check?.[q.id] ?? '')),
+        ...TECHNICAL.map((q) => csvCell(r.technical?.[q.id] ?? '')),
+        ...LEADERSHIP.map((q) => csvCell(r.leadership?.[q.id] ?? '')),
+        ...REALITY.map((q) => csvCell(r.reality?.[q.id] ?? '')),
       ].join(','),
     ),
   ].join('\n');
