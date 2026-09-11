@@ -1,6 +1,6 @@
 ---
 week: 6
-title: "Your system, reviewed in the room"
+title: "The review"
 module: M4
 summary: "Your own system, read by the room against the same five questions all cohort."
 status: draft

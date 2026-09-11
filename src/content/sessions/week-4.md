@@ -1,8 +1,8 @@
 ---
 week: 4
-title: "Agentic systems you'd put your name on — part 3"
+title: "Attack your own system"
 module: M2
-summary: "Attack your own system before somebody else does. What an attacker writes, and what it costs you."
+summary: "Before somebody else does. What an attacker writes into a field you read, and what it costs you."
 status: draft
 ---
 

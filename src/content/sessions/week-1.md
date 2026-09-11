@@ -1,6 +1,6 @@
 ---
 week: 1
-title: 'Foundations of durable architecture'
+title: "The harness"
 module: M1
 summary: 'Draw the map: what an agent actually is as a system, and where it breaks before you have written a line of it.'
 status: draft
