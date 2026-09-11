@@ -1,18 +1,34 @@
 ---
 week: 2
-title: "Agentic systems you'd put your name on — part 1"
+title: "Guardrails"
 module: M2
-summary: "Put a check in front of the money, then find out what that check costs you."
+summary: "Four of the six guardrails, built in one afternoon. Then what each one costs you."
 status: draft
 ---
 
 Last week you watched a tool that pays out money with nothing in front of it.
-Today you put something in front of it. A check that runs before the money moves.
+Today you put things in front of it.
 
-Then you spend most of the day on what that check costs. It refuses an honest
-customer who is owed ₹8,400. A second piece of code walks past it without
-calling it. And the fix that shows one payment on your screen still pays twice
-when you run it from a second terminal.
+**A guardrail is anything that stands between what your agent decides to do and
+what actually happens.** There are six kinds. You build four of them today.
+
+| The guardrail | It stands between | What it stops | When |
+|---|---|---|---|
+| **Input** | the world and the model | Text somebody else wrote, arriving as if it were your instructions | Week 4 |
+| **The limit** | the decision and the action | An action that goes further than you allow | **Drill 1** |
+| **The human gate** | the decision and the action | An action nobody agreed to | **Drill 2** |
+| **State** | the action and the record | The same action happening twice | **Drill 3** |
+| **Resource** | the loop and your money | A run that costs more than it is worth | **Drill 4** |
+| **Output** | the model and the customer | What the agent says on your behalf | Week 4 |
+
+Then you spend most of the day on what each one costs. The limit refuses an
+honest customer who is owed ₹8,400. A second piece of code walks past it without
+calling it. The human gate only works while somebody is still reading it. And the
+fix that shows one payment on your screen still pays twice when you run it from a
+second terminal.
+
+**Every guardrail you add moves a failure. It does not delete one.** That sentence
+is the week, and by the break you will have watched it happen four times.
 
 **By the end of this session you will be able to:**
 
