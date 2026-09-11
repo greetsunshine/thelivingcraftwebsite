@@ -42,7 +42,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../../../lib/admin/supabase';
 import { can, refusal, type Capability } from '../../../../lib/pipeline/roles';
-import { checkMove, type Route } from '../../../../lib/pipeline/stages';
+import { capabilityFor, checkMove, type Route } from '../../../../lib/pipeline/stages';
 import type { Identity } from '../../../../lib/admin/staff';
 
 export const prerender = false;
@@ -63,6 +63,33 @@ const json = (body: unknown, status: number) =>
  */
 const actorOf = (who: Identity): string =>
   who.kind === 'staff' ? `${who.name} <${who.id}>` : 'bootstrap (shared password)';
+
+/**
+ * Which capability each action needs, in one table.
+ *
+ * A table rather than a check inside each branch, because the check now has to
+ * happen BEFORE the switch — and because a reader auditing this file should be
+ * able to answer "what can an operator do here?" by reading eleven lines
+ * rather than by tracing eleven branches.
+ *
+ * An action missing from this table is refused as unknown. That is the correct
+ * default: a new action added to the switch without an entry here cannot be
+ * called at all, rather than being callable by anybody.
+ */
+const CAPABILITY_FOR_ACTION: Record<string, Capability> = {
+  'meeting.schedule': 'write.meeting',
+  'meeting.outcome': 'write.meeting',
+  'offer.approve': 'approve.offer',
+  'offer.accepted': 'approve.offer',
+  admission: 'approve.admission',
+  payment: 'confirm.payment',
+  attendance: 'confirm.attendance',
+  note: 'write.note',
+  task: 'write.task',
+  'task.complete': 'write.task',
+  assign: 'write.contact',
+  nomination: 'write.contact',
+};
 
 const clean = (v: unknown, max: number): string | null => {
   if (typeof v !== 'string') return null;
@@ -88,11 +115,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const who = locals.admin;
   if (!who) return json({ ok: false, error: 'Not signed in.' }, 401);
 
-  const client = db();
-  if (!client) {
-    return json({ ok: false, error: 'The database is not configured for this deployment.' }, 503);
-  }
-
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
@@ -104,11 +126,38 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const opportunityId = clean(body.opportunityId, 60);
   if (!opportunityId) return json({ ok: false, error: 'Which lead?' }, 400);
 
+  // ── AUTHORISATION RUNS BEFORE THE DATABASE IS EVEN ASKED FOR ─────────────
+  //
+  // It used to run after, and the difference is not cosmetic. With the check
+  // second, a database outage turned every refusal into a 503: an operator
+  // attempting to approve an offer got "the database is not configured", which
+  // is both the wrong answer and an unfalsifiable one. Whether somebody is
+  // ALLOWED to do a thing has nothing to do with whether the store is up, and
+  // a permission system that stops answering when the database does is a
+  // permission system nobody can test.
+  //
+  // The acceptance harness found this: it expected 403 on two actions an
+  // operator must not hold and got 503 on all three, which reads as a passing
+  // system failing safe when it is really an untested one.
+  //
+  // `stage` is the one action whose capability depends on the TARGET, so it is
+  // resolved from the request here and re-checked in full (with the evidence)
+  // once the record has been read.
+  const required: Capability =
+    action === 'stage' ? capabilityFor(clean(body.stage, 40) ?? '') : CAPABILITY_FOR_ACTION[action];
+
+  if (!required) return json({ ok: false, error: 'Unknown action.' }, 400);
+  if (!can(who.roles, required)) {
+    return json({ ok: false, error: refusal(required) }, 403);
+  }
+
+  const client = db();
+  if (!client) {
+    return json({ ok: false, error: 'The database is not configured for this deployment.' }, 503);
+  }
+
   const actor = actorOf(who);
 
-  /** One gate, used by every branch that is not the stage move. */
-  const allow = (capability: Capability): Response | null =>
-    can(who.roles, capability) ? null : json({ ok: false, error: refusal(capability) }, 403);
 
   /**
    * Best-effort activity + audit. Never fails the write it describes.
@@ -213,8 +262,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- meetings --------------------------------------------------------
       case 'meeting.schedule': {
-        const stop = allow('write.meeting');
-        if (stop) return stop;
 
         const scheduledAt = isoOrNull(body.scheduledAt);
         if (!scheduledAt) return json({ ok: false, error: 'A meeting needs a date and time.' }, 400);
@@ -232,8 +279,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
 
       case 'meeting.outcome': {
-        const stop = allow('write.meeting');
-        if (stop) return stop;
 
         const meetingId = clean(body.meetingId, 60);
         const status = clean(body.status, 20);
@@ -266,8 +311,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       case 'offer.approve': {
         // Sunil's alone. An operator working a queue must not be able to put a
         // number in front of somebody on the practice's behalf.
-        const stop = allow('approve.offer');
-        if (stop) return stop;
 
         const currency = clean(body.currency, 8)?.toUpperCase();
         const amount = minorUnits(body.amountMinor);
@@ -305,8 +348,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
 
       case 'offer.accepted': {
-        const stop = allow('approve.offer');
-        if (stop) return stop;
 
         const offerId = clean(body.offerId, 60);
         if (!offerId) return json({ ok: false, error: 'Which offer?' }, 400);
@@ -327,8 +368,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- admission -------------------------------------------------------
       case 'admission': {
-        const stop = allow('approve.admission');
-        if (stop) return stop;
 
         const decision = clean(body.decision, 20);
         if (decision !== 'admitted' && decision !== 'declined') {
@@ -351,8 +390,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       case 'payment': {
         // Finance and nobody else — not Sunil, and not the operator. This is
         // the separation that makes an enrolment mean something.
-        const stop = allow('confirm.payment');
-        if (stop) return stop;
 
         const type = clean(body.type, 20);
         const currency = clean(body.currency, 8)?.toUpperCase();
@@ -408,8 +445,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- attendance ------------------------------------------------------
       case 'attendance': {
-        const stop = allow('confirm.attendance');
-        if (stop) return stop;
 
         const { data: opp } = await client
           .from('opportunities')
@@ -440,8 +475,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- notes and tasks -------------------------------------------------
       case 'note': {
-        const stop = allow('write.note');
-        if (stop) return stop;
 
         const text = clean(body.text, 8000);
         if (!text) return json({ ok: false, error: 'An empty note records nothing.' }, 400);
@@ -458,8 +491,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
 
       case 'task': {
-        const stop = allow('write.task');
-        if (stop) return stop;
 
         const description = clean(body.description, 2000);
         if (!description) return json({ ok: false, error: 'A task needs to say what to do.' }, 400);
@@ -483,8 +514,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
 
       case 'task.complete': {
-        const stop = allow('write.task');
-        if (stop) return stop;
 
         const taskId = clean(body.taskId, 60);
         if (!taskId) return json({ ok: false, error: 'Which task?' }, 400);
@@ -500,8 +529,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- assignment ------------------------------------------------------
       case 'assign': {
-        const stop = allow('write.contact');
-        if (stop) return stop;
 
         const owner = clean(body.owner, 120);
         const { error } = await client
@@ -516,8 +543,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       // ---- enterprise participants ----------------------------------------
       case 'nomination': {
-        const stop = allow('write.contact');
-        if (stop) return stop;
 
         const name = clean(body.name, 200);
         if (!name) return json({ ok: false, error: 'A nomination needs a name.' }, 400);

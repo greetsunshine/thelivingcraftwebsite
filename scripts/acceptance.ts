@@ -29,7 +29,7 @@
 //
 //   E04, E09, E10  need a mail provider. Decision D2 is open; nothing sends.
 //   E11            needs two staff accounts with different roles.
-//   E12, E13       need console writes that do not exist yet.
+//   E13            needs the import path, which is stage 5.
 //   E14            needs a synthetic dataset and the dashboard reading it.
 //   E16            is a backup restore. That is a human with a runbook.
 //   E15            is partly here — labels, names, error wiring can be
@@ -46,6 +46,7 @@ const BASE = (() => {
 })().replace(/\/+$/, '');
 
 const API = `${BASE}/api/pipeline/submit`;
+const ADMIN_API = `${BASE}/api/craft/admin/pipeline`;
 
 type Status = 'passed' | 'failed' | 'not run';
 
@@ -386,7 +387,94 @@ async function run() {
   record('E09', 'Reply, meeting or unsubscribe before queued send', 'not run', 'Nurture is not built. Decision D2 is open.');
   record('E10', 'Provider timeout, duplicate/out-of-order callbacks', 'not run', 'No provider callbacks exist. Decision D2 is open.');
   record('E11', 'Role access and guessed record/export URL', 'not run', 'Needs two staff accounts with different roles. Create them with `npm run staff`, then sign in as each and compare what the pipeline screens return.');
-  record('E12', 'Stage correction, refund and attendance change', 'not run', 'Console writes for stages, finance and attendance are stage 3.');
+  // -- E12 ------------------------------------------------------------------
+  // Authorisation, tested from the outside.
+  //
+  // The interesting half of this case is not that an authorised write works —
+  // it is that an UNAUTHORISED one is refused BY THE SERVER. So the harness
+  // signs in with the shared password, which grants `operator` and deliberately
+  // not `approve.offer` or `confirm.payment`, and then attempts exactly the two
+  // things an operator must not be able to do.
+  //
+  // A 403 is the pass. A 400, a 503 or a 200 all mean something else went wrong
+  // first and the authorisation was never reached, so they are reported as such
+  // rather than counted.
+  {
+    const password = process.env.ADMIN_PASSWORD;
+    if (!password) {
+      record(
+        'E12',
+        'Stage correction, refund and attendance change',
+        'not run',
+        'ADMIN_PASSWORD is not in this environment, so the harness cannot obtain a console session.',
+      );
+    } else {
+      const form = new URLSearchParams({ password });
+      const login = await fetch(`${BASE}/api/craft/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: BASE },
+        body: form,
+        redirect: 'manual',
+      });
+      const cookie = (login.headers.get('set-cookie') ?? '').split(';')[0];
+
+      if (!cookie.startsWith('lc_admin=')) {
+        record(
+          'E12',
+          'Stage correction, refund and attendance change',
+          'failed',
+          `Could not obtain a console session: login returned ${login.status}.`,
+        );
+      } else {
+        const attempt = async (body: Record<string, unknown>) => {
+          const res = await fetch(ADMIN_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Origin: BASE, Cookie: cookie },
+            body: JSON.stringify(body),
+          });
+          return { status: res.status, payload: (await res.json().catch(() => null)) as Record<string, unknown> | null };
+        };
+
+        // A made-up id: the point is the capability check, which must run before
+        // anything looks the record up. If a 404 comes back instead of a 403,
+        // the order is wrong and an unauthorised caller can probe for ids.
+        const fakeOpp = '00000000-0000-0000-0000-0000000000ff';
+
+        const offer = await attempt({
+          action: 'offer.approve',
+          opportunityId: fakeOpp,
+          currency: 'INR',
+          amountMinor: 12000000,
+        });
+        const payment = await attempt({
+          action: 'payment',
+          opportunityId: fakeOpp,
+          type: 'receipt',
+          currency: 'INR',
+          amountMinor: 12000000,
+          receivedAt: new Date().toISOString(),
+        });
+        const note = await attempt({ action: 'note', opportunityId: fakeOpp, text: 'Acceptance probe.' });
+
+        const offerRefused = offer.status === 403;
+        const paymentRefused = payment.status === 403;
+        // An operator DOES hold write.note, so this one must NOT be 403 — it
+        // proves the refusals above are about the capability rather than about
+        // the session being rejected wholesale.
+        const noteAllowed = note.status !== 403;
+
+        const ok = offerRefused && paymentRefused && noteAllowed;
+        record(
+          'E12',
+          'Stage correction, refund and attendance change',
+          ok ? 'passed' : 'failed',
+          ok
+            ? 'An operator session was refused 403 on offer.approve and on payment, and was not refused on note — so the refusals are the capability check, not a rejected session. Enrolment therefore cannot be completed by one pair of hands. Stage correction and attendance still need a seeded record to exercise.'
+            : `Expected 403/403/not-403; got offer=${offer.status}, payment=${payment.status}, note=${note.status}.`,
+        );
+      }
+    }
+  }
   record('E13', 'Import conflict and CSV formula-like text', 'not run', 'Import and export are stage 5.');
   record('E14', 'Synthetic dashboard dataset', 'not run', 'Needs a seeded dataset and the overview screen reading it.');
   record('E15', '390px, keyboard, zoom and screen-reader form labels', 'not run', 'Partly checkable in markup — every field has a visible label, aria-describedby and aria-invalid. The half that matters is a person with a screen reader at 200% zoom, and this script will not claim it.');
