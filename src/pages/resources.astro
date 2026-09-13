@@ -128,7 +128,11 @@ const schema = [
               </ul>
 
               <div class="resource-foot">
-                <a class="btn btn-primary" href={r.url} target="_blank" rel="noopener">
+                <a
+                  class="btn btn-primary"
+                  href={r.url}
+                  {...(r.url.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' })}
+                >
                   Open {r.title}&nbsp;<span class="arrow">→</span>
                 </a>
                 <span class="mono faint">{r.format}</span>

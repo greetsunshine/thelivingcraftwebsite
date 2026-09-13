@@ -2,6 +2,7 @@
 // @astrojs/sitemap — three routes, and the region params are the same page.
 import type { APIRoute } from 'astro';
 import { SITE_ORIGIN, surfaces } from '../data/facts';
+import { publishedResources } from '../data/resources';
 
 export const prerender = true;
 
@@ -12,6 +13,11 @@ export const prerender = true;
 const EXTRA = [
   { path: '/latest', priority: '0.6' },
   { path: '/resources', priority: '0.6' },
+  // Resource pages are listed individually: each one is the destination a search
+  // or an assistant should land on, not the index that links to it.
+  ...publishedResources
+    .filter((r) => r.url.startsWith('/'))
+    .map((r) => ({ path: r.url, priority: '0.7' })),
 ];
 
 // Build date, not request time — a lastmod that moves on every request tells

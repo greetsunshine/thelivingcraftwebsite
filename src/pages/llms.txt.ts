@@ -106,7 +106,7 @@ Last updated: ${newestResourceDate()}.
 ${publishedResources
   .map(
     (r) =>
-      `### ${r.title} (${r.series} ${r.number})\n${r.kind}. ${r.summary}\nOpen: ${r.url}\nOn this site: ${SITE_ORIGIN}/resources#${r.id}`,
+      `### ${r.title} (${r.series} ${r.number})\n${r.kind}. ${r.summary}\nOpen: ${r.url.startsWith('/') ? SITE_ORIGIN + r.url : r.url}`,
   )
   .join('\n\n')}
 

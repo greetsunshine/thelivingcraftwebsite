@@ -1,0 +1,645 @@
+---
+// /resources/poc-screen — The POC Screen, self-hosted.
+//
+// This was a published Artifact. It now lives here because an Artifact is
+// private until it is shared, and a resource on a public page whose link only
+// opens for its author is worse than no resource. Self-hosting also makes the
+// twelve questions crawlable, which is the point of publishing them at all.
+//
+// State is a closure and dies with the tab. No localStorage, no sessionStorage,
+// nothing posted anywhere — the same rule the rest of the public site holds, and
+// here it is also the honest answer to "where does my score go?". Nowhere.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  SECTIONS,
+  EXAMPLE,
+  MAX_SCORE,
+  QUESTION_COUNT,
+  HOW_TO_RUN,
+  CUT_LINES,
+  MOVES,
+} from '../../data/poc-screen';
+
+export const prerender = true;
+
+const meta = publishedResources.find((r) => r.id === 'poc-screen')!;
+
+const title = 'The POC Screen — can this agentic proof of concept reach production? · The Living Craft';
+const description =
+  'A scored checklist for deciding which agentic proof of concept can reach production, asked before you build. Twelve questions across four sections, each with the definition of what earns a 0, a 1 and a 2. One hard gate on blast radius.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/poc-screen#howto`,
+    name: 'The POC Screen',
+    description,
+    url: `${SITE_ORIGIN}/resources/poc-screen`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    step: SECTIONS.map((s, i) => ({
+      '@type': 'HowToSection',
+      position: i + 1,
+      name: `${s.letter} — ${s.name}`,
+      description: s.blurb,
+      itemListElement: s.items.map((it, j) => ({
+        '@type': 'HowToStep',
+        position: j + 1,
+        name: it.short,
+        text: it.q,
+      })),
+    })),
+  },
+];
+
+// Flat index per item, computed here so the markup does not have to count.
+let n = 0;
+const rows = SECTIONS.map((s) => ({
+  ...s,
+  items: s.items.map((it) => ({ ...it, i: n++ })),
+}));
+---
+
+<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 01</span>
+      </div>
+      <h1>Can this proof of concept <em>reach production</em>?</h1>
+      <p class="lead">
+        Most agentic proofs of concept get judged after the demo goes well, which is the one moment
+        nobody is able to judge them. Twelve questions, scored before you build. Each one says what
+        earns a 0, a 1 and a 2, so two people scoring the same thing land in the same place.
+      </p>
+      <p class="hero-note mono">
+        {QUESTION_COUNT} questions · {SECTIONS.length} sections · max {MAX_SCORE} · one hard gate
+      </p>
+    </div>
+  </section>
+
+  <!-- Controls + verdict -->
+  <section id="score">
+    <div class="wrap">
+      <div class="controls" role="group" aria-label="Scorecard controls">
+        <button class="btn btn-ghost" id="blank" type="button">Start blank</button>
+        <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
+        <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
+        <button class="btn btn-ghost" id="print" type="button">Print</button>
+        <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+      </div>
+
+      {/* The worked example, handed to the script as data rather than inlined
+          into it — keeps the scores in the data module as the single source. */}
+      <script type="application/json" id="example-data" set:html={JSON.stringify(EXAMPLE)} />
+
+      <div class="verdict" id="verdict" data-b="stop">
+        <div class="vscore">
+          <span id="total">0</span><span class="of">/{MAX_SCORE}</span>
+        </div>
+        <div class="vtext">
+          <span class="band" id="band">Incomplete</span>
+          <span class="vnote" id="note">{QUESTION_COUNT} questions unscored. A blank is a 0.</span>
+        </div>
+        <div class="vprog mono" id="progress">0/{QUESTION_COUNT} scored</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How to run it -->
+  <section id="howto">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">00</span> How to run it</span>
+        <h2>The rules that decide whether this is useful or <em>theatre</em>.</h2>
+      </div>
+      <ol class="howto">
+        {HOW_TO_RUN.map((h) => (
+          <li>
+            <strong>{h.lead}</strong> {h.rest}
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- The twelve -->
+  {rows.map((s, si) => (
+    <section id={`section-${s.letter.toLowerCase()}`} class="qsection">
+      <div class="wrap">
+        <div class="shead">
+          <span class="sletter">{s.letter}</span>
+          <h2 class="sname">{s.name}</h2>
+          {s.gate && <span class="sgate">Hard gate</span>}
+        </div>
+        <p class="sblurb">{s.blurb}</p>
+
+        {s.items.map((it) => (
+          <div class={`item${s.gate ? ' gate' : ''}`} id={`row-${it.i}`} data-i={it.i}>
+            <div class="qhead">
+              <span class="qn mono">{String(it.i + 1).padStart(2, '0')}</span>
+              <span class="q">{it.q}</span>
+            </div>
+            <p class="why">{it.why}</p>
+            <div class="anchors" role="group" aria-label={`Score for question ${it.i + 1}: ${it.short}`}>
+              {it.a.map((text, v) => (
+                <button
+                  type="button"
+                  class="anchor"
+                  id={`q${it.i}v${v}`}
+                  data-q={it.i}
+                  data-v={v}
+                  aria-pressed="false"
+                >
+                  <span class="av mono">{v}</span>
+                  <span class="at">{text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  ))}
+
+  <!-- Cut lines -->
+  <section id="cuts">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> The cut-lines</span>
+        <h2>Agree these <em>before</em> you score, not after.</h2>
+      </div>
+      <p class="prose-lead">
+        A total that lands one point above a line is a narrow, not a yes.
+      </p>
+      {CUT_LINES.map((c) => (
+        <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
+          <div class="cutscore mono">{c.score}</div>
+          <div class="cutname">{c.name}</div>
+          <div class="cutwhat">{c.what}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- The four moves -->
+  <section id="moves">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> Before you build</span>
+        <h2>Four ways to answer most of these <em>without</em> the agent existing.</h2>
+      </div>
+      <p class="prose-lead">
+        In ascending order of cost. Every one of them is cheaper than a pilot that fails in front of
+        a customer.
+      </p>
+      {MOVES.map((m) => (
+        <div class="move">
+          <div class="mnum mono">{m.num}</div>
+          <div class="mbody">
+            <h3 class="mname">{m.name}</h3>
+            <p>{m.body}</p>
+            <div class="mmeta mono">
+              <span>{m.cost}</span>
+              <span class="ans">{m.answers}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> Where this comes from</span>
+        <h2>The screen is the easy half. The <em>argument</em> is the other one.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          A blank scorecard is genuinely useful and costs nothing to give away. What it cannot do on
+          its own is settle the rows where two people scored two points apart, which is where the
+          real disagreement about the system lives. That part takes a room.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* ── controls ─────────────────────────────────────────────────────────── */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+    margin-bottom: var(--space-5);
+  }
+  .copied {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  /* ── verdict ──────────────────────────────────────────────────────────── */
+  .verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+    position: sticky;
+    top: 76px;
+    z-index: 5;
+  }
+  .vscore {
+    font-family: var(--font-mono);
+    font-size: var(--size-8);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .vscore .of {
+    font-size: var(--size-5);
+    color: var(--text-quiet);
+  }
+  .vtext {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 260px;
+  }
+  .band {
+    font-size: var(--size-5);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-display);
+  }
+  .vnote {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .vprog {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    white-space: nowrap;
+  }
+  /* Bands read through colour on the word, not a yellow chip — sun is reserved
+     for things you can click, so it cannot carry a status. */
+  .verdict[data-b='stop'] .band { color: var(--danger); }
+  .verdict[data-b='narrow'] .band { color: var(--accent-ink); }
+  .verdict[data-b='go'] .band { color: var(--text-loud); }
+  .verdict[data-b='none'] .band { color: var(--text-quiet); }
+
+  /* ── how to run ───────────────────────────────────────────────────────── */
+  ol.howto {
+    list-style: none;
+    counter-reset: h;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: var(--measure-prose);
+  }
+  ol.howto li {
+    counter-increment: h;
+    position: relative;
+    padding-left: var(--space-7);
+  }
+  ol.howto li::before {
+    content: counter(h);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  ol.howto strong { font-weight: var(--weight-strong); }
+
+  /* ── question sections ────────────────────────────────────────────────── */
+  .qsection { padding-top: var(--space-7); padding-bottom: 0; }
+  .shead {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .sletter {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    color: var(--text-on-invert);
+    background: var(--noir);
+    border-radius: var(--radius-pill);
+    width: 26px;
+    height: 26px;
+    display: inline-grid;
+    place-items: center;
+  }
+  .sname { font-size: var(--size-6); }
+  .sgate {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--danger);
+    background: var(--danger-quiet);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+  }
+  .sblurb {
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+  }
+
+  .item {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  /* A zeroed gate row is the one thing on the page that must not be missable. */
+  .item.gate.zeroed {
+    box-shadow: none;
+    outline: var(--border-w-rule) solid var(--danger-mark);
+    outline-offset: 0;
+  }
+  .qhead { display: flex; gap: var(--space-3); align-items: baseline; }
+  .qn { font-size: var(--size-1); color: var(--text-quiet); flex: 0 0 auto; }
+  .q {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-snug);
+  }
+  .why {
+    margin: var(--space-3) 0 var(--space-4) calc(var(--space-3) + 2ch);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: 64ch;
+  }
+
+  .anchors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    margin-left: calc(var(--space-3) + 2ch);
+  }
+  .anchor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    text-align: left;
+    background: var(--surface-sunken);
+    border: 0;
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+    cursor: pointer;
+    font: inherit;
+    color: var(--text-body);
+    transition: background var(--motion-fast, 90ms) ease, color var(--motion-fast, 90ms) ease;
+  }
+  .anchor:hover { background: var(--surface-active); }
+  .anchor:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .anchor .av {
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .anchor .at { font-size: var(--size-2); line-height: var(--lh-snug); }
+  /* Selected is sun: these are buttons, so yellow still means clickable. */
+  .anchor[aria-pressed='true'] {
+    background: var(--surface-sun);
+    color: var(--text-on-accent);
+  }
+  .anchor[aria-pressed='true'] .av { color: var(--text-on-accent); }
+
+  /* ── cut lines ────────────────────────────────────────────────────────── */
+  .prose-lead {
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+  }
+  .cutrow {
+    display: grid;
+    grid-template-columns: 130px 220px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-inner);
+    margin-bottom: var(--space-3);
+    background: var(--surface-panel);
+    opacity: 0.55;
+    transition: opacity var(--motion-base, 160ms) ease;
+  }
+  .cutrow.active { opacity: 1; box-shadow: var(--shadow-raise); }
+  .cutscore { font-size: var(--size-2); font-weight: var(--weight-strong); }
+  .cutname { font-weight: var(--weight-strong); }
+  .cutwhat { font-size: var(--size-2); color: var(--text-quiet); }
+  .cutrow[data-b='gate'].active .cutscore,
+  .cutrow[data-b='stop'].active .cutscore { color: var(--danger); }
+  .cutrow[data-b='narrow'].active .cutscore { color: var(--accent-ink); }
+
+  /* ── the four moves ───────────────────────────────────────────────────── */
+  .move {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--border-hair);
+  }
+  .move:last-of-type { border-bottom: 1px solid var(--border-hair); }
+  .mnum { font-size: var(--size-2); color: var(--text-quiet); padding-top: 4px; }
+  .mname { font-size: var(--size-5); margin-bottom: var(--space-2); }
+  .mbody p { max-width: var(--measure-prose); }
+  .mmeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin-top: var(--space-3);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .mmeta .ans { color: var(--accent-ink); }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+
+  @media (max-width: 860px) {
+    .anchors { grid-template-columns: 1fr; }
+    .why, .anchors { margin-left: 0; }
+    .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
+    .verdict { position: static; }
+  }
+
+  /* ── print: this is a scorecard people print ──────────────────────────── */
+  @media print {
+    .verdict { position: static; box-shadow: none; border: 1px solid var(--border-hair); }
+    .controls, .hero-cta { display: none !important; }
+    .item { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    .cutrow { opacity: 1 !important; break-inside: avoid; }
+    .move, .anchor { break-inside: avoid; }
+    .anchor { border: 1px solid var(--border-hair); }
+    .anchor[aria-pressed='true'] { outline: 2px solid var(--ink-1); }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // State is a plain array in this closure. It is never written to
+  // localStorage, never posted, and dies with the tab — the site's no-client-
+  // storage rule, and also the honest answer to "where does my score go?".
+  const COUNT = Number(document.querySelectorAll('.item').length);
+  const GATE = [...document.querySelectorAll('.item.gate')].map((el) =>
+    Number((el as HTMLElement).dataset.i),
+  );
+  const MAX = COUNT * 2;
+  const EXAMPLE_SCORES = JSON.parse(document.getElementById('example-data')?.textContent || 'null');
+
+  let state: (number | null)[] = new Array(COUNT).fill(null);
+
+  const $ = (id: string) => document.getElementById(id)!;
+
+  function verdict() {
+    const answered = state.filter((v) => v !== null).length;
+    const total = state.reduce<number>((a, v) => a + (v ?? 0), 0);
+    const gateZero = GATE.some((i) => state[i] === 0);
+    if (gateZero)
+      return {
+        answered,
+        total,
+        gateZero,
+        band: 'This is a demo, not a pilot',
+        note: 'Hard stop: a zero in section B. Fix the blast radius before the total matters.',
+        key: 'stop',
+      };
+    if (answered < COUNT)
+      return {
+        answered,
+        total,
+        gateZero,
+        band: 'Incomplete',
+        note: `${COUNT - answered} ${COUNT - answered === 1 ? 'question' : 'questions'} unscored. A blank is a 0.`,
+        key: 'none',
+      };
+    if (total >= 20)
+      return {
+        answered,
+        total,
+        gateZero,
+        band: 'Pilot candidate',
+        note: 'Write the boundary down, then run a limited trial against it.',
+        key: 'go',
+      };
+    if (total >= 14)
+      return {
+        answered,
+        total,
+        gateZero,
+        band: 'Narrow it, then re-score',
+        note: 'Cut the action list until the low-scoring rows move.',
+        key: 'narrow',
+      };
+    return {
+      answered,
+      total,
+      gateZero,
+      band: 'This is a demo, not a pilot',
+      note: 'Not a bad idea — a bad first idea. Pick a different one to start with.',
+      key: 'stop',
+    };
+  }
+
+  function update() {
+    state.forEach((v, i) => {
+      for (let k = 0; k < 3; k++) {
+        const b = document.getElementById(`q${i}v${k}`);
+        if (b) b.setAttribute('aria-pressed', String(v === k));
+      }
+      const row = document.getElementById(`row-${i}`);
+      if (row) row.classList.toggle('zeroed', v === 0 && GATE.includes(i));
+    });
+
+    const r = verdict();
+    $('total').textContent = String(r.total);
+    $('band').textContent = r.band;
+    $('note').textContent = r.note;
+    $('progress').textContent = `${r.answered}/${COUNT} scored`;
+    $('verdict').dataset.b = r.key;
+
+    const done = r.answered === COUNT;
+    const active: Record<string, boolean> = {
+      gate: r.gateZero,
+      go: !r.gateZero && done && r.total >= 20,
+      narrow: !r.gateZero && done && r.total >= 14 && r.total < 20,
+      stop: !r.gateZero && done && r.total < 14,
+    };
+    for (const k of Object.keys(active)) {
+      document.getElementById(`cut-${k}`)?.classList.toggle('active', active[k]);
+    }
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.anchor').forEach((b) => {
+    b.addEventListener('click', () => {
+      const q = Number(b.dataset.q);
+      const v = Number(b.dataset.v);
+      // Clicking the selected anchor again clears it, so a mis-click is undoable.
+      state[q] = state[q] === v ? null : v;
+      update();
+    });
+  });
+
+  $('blank').addEventListener('click', () => {
+    state = new Array(COUNT).fill(null);
+    update();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  $('example').addEventListener('click', () => {
+    state = Array.isArray(EXAMPLE_SCORES) ? EXAMPLE_SCORES.slice() : new Array(COUNT).fill(null);
+    update();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  $('print').addEventListener('click', () => window.print());
+
+  $('copy').addEventListener('click', async () => {
+    const r = verdict();
+    const lines: string[] = ['The POC Screen — learning.thelivingcraft.ai/resources/poc-screen', ''];
+    document.querySelectorAll<HTMLElement>('.qsection').forEach((sec) => {
+      const letter = sec.querySelector('.sletter')?.textContent ?? '';
+      const name = sec.querySelector('.sname')?.textContent ?? '';
+      lines.push(`${letter} — ${name}`);
+      sec.querySelectorAll<HTMLElement>('.item').forEach((item) => {
+        const i = Number(item.dataset.i);
+        const nLabel = item.querySelector('.qn')?.textContent ?? '';
+        const q = item.querySelector('.q')?.textContent ?? '';
+        const v = state[i];
+        lines.push(`  ${nLabel}  [${v === null ? '-' : v}]  ${q}`);
+      });
+      lines.push('');
+    });
+    lines.push(`Total ${r.total}/${MAX} — ${r.band}`);
+    lines.push(r.note);
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      $('copied').textContent = 'Scorecard copied';
+    } catch {
+      $('copied').textContent = 'Copy blocked by the browser — use Print instead';
+    }
+    setTimeout(() => ($('copied').textContent = ''), 4000);
+  });
+
+  update();
+</script>

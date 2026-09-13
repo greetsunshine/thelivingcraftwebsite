@@ -9,11 +9,16 @@
 // They are evidence that the practice publishes working material — the same
 // distinction the sitemap already draws for /latest.
 //
-// Every item here is hosted as a published Artifact. An Artifact is private
-// until it is shared from its own share menu, so ADDING A ROW HERE DOES NOT MAKE
-// IT READABLE. Share the artifact first, open the URL in a logged-out window,
-// and only then add it. A resources page that lists things a visitor cannot open
-// is worse than no resources page.
+// `url` should be a path on this site wherever the resource can be hosted here.
+// The POC Screen began life as a published Artifact and moved: an Artifact is
+// private until it is shared from its own share menu, so a link to one is broken
+// for every visitor until somebody remembers that step. Self-hosting removes the
+// failure mode, and it makes the content crawlable, which is most of the reason
+// to publish a tool at all.
+//
+// If a future row must point at an external URL, share it first and open it in a
+// logged-out window before committing. A resources page listing things a visitor
+// cannot open is worse than no resources page.
 
 export interface Resource {
   /** Slug. The anchor on /resources and the id in structured data. */
@@ -33,6 +38,7 @@ export interface Resource {
   useFor: string[];
   /** How it behaves when opened, so nobody expects a PDF and gets an app. */
   format: string;
+  /** Path on this site, or an absolute URL if it genuinely cannot be hosted here. */
   url: string;
   /** ISO date. Shown on the card and used as dateModified in structured data. */
   publishedAt: string;
@@ -56,8 +62,8 @@ export const resources: Resource[] = [
       'Answer most of the screen without building anything, using an evaluation set, a human behind the curtain, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive. Scores in the page, with a worked example to load, a copyable scorecard and a print view.',
-    url: 'https://claude.ai/code/artifact/1588505a-eabe-477d-9f0e-84d2dd08676b',
+      'Interactive. Scores in the page and nothing is stored or sent — a worked example to load, a copyable scorecard, and a print view.',
+    url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },
 ];
