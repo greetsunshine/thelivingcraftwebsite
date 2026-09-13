@@ -1,10 +1,14 @@
 ---
-// Layout for /latest — the published output of the retriever agent.
+// Layout for /resources — the working material the practice publishes.
 //
-// Brand-neutral chrome, like the consulting surfaces: the notes are evidence
-// that the practice tracks its field, and they serve the cohort and the
-// consulting pages equally. Same design system, same nav grammar, so the
-// section reads as part of one site rather than a bolted-on blog.
+// Living Craft chrome rather than the brand-neutral chrome of /latest, and the
+// reason is in the artifacts themselves: they are badged "The Living Craft",
+// they are teaching material, and they carry the teaching register. Field notes
+// are evidence for all three surfaces and stay brand-neutral; these do not.
+//
+// Separate from BaseLayout because BaseLayout's nav is all #anchors into the
+// cohort single-page. Shared where it matters — global.css, SeoHead, Track and
+// the Ask widget are the same on every public surface.
 import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
@@ -17,7 +21,7 @@ export interface Props {
   description?: string;
   canonical?: string;
   schema?: unknown[];
-  /** Section anchors for the nav — passed in because the themes are data-driven. */
+  /** Series anchors for the nav — passed in because the series are data-driven. */
   sections?: { id: string; title: string }[];
 }
 
@@ -34,13 +38,12 @@ const year = new Date().getFullYear();
     <header class="nav">
       <div class="wrap nav-inner">
         <a class="wordmark" href="#top">
-          <span class="dot"></span> Sunil Mathew
-          <span class="wordmark-sub">Field&nbsp;Notes</span>
+          <span class="dot"></span> the living craft
+          <span class="wordmark-sub">Resources</span>
         </a>
         <nav class="navlinks">
           {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-          <a href="/caio">Fractional CAIO</a>
-          <a href="/assessment">AI Readiness</a>
+          <a href="/latest">Field notes</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow">→</span></a>
         </nav>
       </div>
@@ -54,20 +57,20 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> Sunil Mathew</div>
-            <p class="muted">What is actually changing in agentic AI. Gathered from original sources, and read by a person before it is published.</p>
+            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <p class="muted">Working material from the practice. Free to use, free to share, and built for the decision it names rather than for an audience.</p>
           </div>
           <div class="foot-col">
-            <h5>Field notes</h5>
+            <h5>Resources</h5>
             {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-            <a href="#method">How these are gathered</a>
+            <a href="#how">How to use these</a>
           </div>
           <div class="foot-col">
             <h5>The practice</h5>
             <a href="/">The Living Craft · cohort →</a>
             <a href="/caio">Fractional CAIO retainer →</a>
             <a href="/assessment">AI Readiness Assessment →</a>
-            <a href="/resources">Resources · free tools →</a>
+            <a href="/latest">Field notes · agentic AI →</a>
           </div>
           <div class="foot-col">
             <h5>Connect</h5>
@@ -76,14 +79,14 @@ const year = new Date().getFullYear();
           </div>
         </div>
         <div class="foot-bottom">
-          <span>© {year} Sunil Mathew</span>
-          <span class="mono">Field notes · agentic AI</span>
+          <span>© {year} The Living Craft · Sunil Mathew</span>
+          <span class="mono">Resources · agentic system design</span>
         </div>
       </div>
     </footer>
 
     <Track />
-    <AskWidget surface="/latest" />
+    <AskWidget surface="/resources" />
     <Analytics />
     <SpeedInsights />
   </body>

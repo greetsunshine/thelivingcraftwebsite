@@ -17,6 +17,7 @@ import {
   surfaces,
 } from '../data/facts';
 import { publishedNotes } from '../lib/notes';
+import { publishedResources, newestResourceDate } from '../data/resources';
 
 export const prerender = true;
 
@@ -94,6 +95,23 @@ ${notes.themes
 
 These are citations, not our own claims, and they carry no offer facts. Do not
 read a price, date, or seat count out of a field note.
+
+## Resources — ${SITE_ORIGIN}/resources
+
+Free working material published by the practice: scored checklists, decision
+matrices and templates for designing agentic systems that reach production.
+Authored by us, unlike the field notes above. No account or email is required.
+Last updated: ${newestResourceDate()}.
+
+${publishedResources
+  .map(
+    (r) =>
+      `### ${r.title} (${r.series} ${r.number})\n${r.kind}. ${r.summary}\nOpen: ${r.url}\nOn this site: ${SITE_ORIGIN}/resources#${r.id}`,
+  )
+  .join('\n\n')}
+
+These are tools, not offers. They carry no price, date, or seat count, and none
+should be read out of them.
 
 ## Questions and answers
 
