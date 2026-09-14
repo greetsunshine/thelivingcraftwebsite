@@ -266,7 +266,7 @@ export const facts: Fact[] = [
     surface: '/',
     q: 'How long is the program and what is the time commitment?',
     a: `${cohort.weeks} weeks, live. The commitment is ${cohort.commitment}. Format is ${cohort.format}.`,
-    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time'],
+    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time', 'long', 'how long', 'programme', 'program', 'length'],
   },
   {
     id: 'cohort-price',
