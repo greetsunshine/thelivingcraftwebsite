@@ -11,6 +11,8 @@ import {
   resourceSeries,
   newestResourceDate,
   longDate,
+  isDownload,
+  SERIES_BLURBS,
 } from '../data/resources';
 
 export const prerender = true;
@@ -67,7 +69,7 @@ const schema = [
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
-      <div class="eyebrow">Resources <span class="num">/ agentic system design</span></div>
+      <div class="eyebrow">Resources <span class="num">/ {series.length === 1 ? sections[0].title.toLowerCase() : `${series.length} series`}</span></div>
       <h1>The tools, not the <em>talk</em>.</h1>
       <p class="lead">
         Working material from the practice, free to use and free to pass on. Each one exists for a
@@ -108,7 +110,7 @@ const schema = [
       <div class="wrap">
         <div class="sec-head">
           <span class="eyebrow"><span class="num">{String(gi + 1).padStart(2, '0')}</span> {group.name}</span>
-          <h2>{group.items.length === 1 ? 'One tool, so far.' : `${group.items.length} tools.`}</h2>
+          <h2>{SERIES_BLURBS[group.name] ?? group.name}</h2>
         </div>
 
         {group.items.map((r) => (
@@ -131,9 +133,12 @@ const schema = [
                 <a
                   class="btn btn-primary"
                   href={r.url}
+                  {...(isDownload(r.url) ? { download: '' } : {})}
                   {...(r.url.startsWith('/') ? {} : { target: '_blank', rel: 'noopener' })}
                 >
-                  Open {r.title}&nbsp;<span class="arrow">→</span>
+                  {isDownload(r.url) ? 'Download' : 'Open'} {r.title}
+                  {r.fileSize && <span class="fsize">&nbsp;· {r.fileSize}</span>}
+                  &nbsp;<span class="arrow">→</span>
                 </a>
                 <span class="mono faint">{r.format}</span>
               </div>
@@ -229,6 +234,7 @@ const schema = [
     max-width: 44ch;
     line-height: 1.5;
   }
+  .fsize { opacity: 0.7; font-weight: var(--weight-normal); }
   .resource-date {
     margin-top: var(--space-4);
     font-size: var(--size-1);

@@ -40,11 +40,35 @@ export interface Resource {
   format: string;
   /** Path on this site, or an absolute URL if it genuinely cannot be hosted here. */
   url: string;
+  /** Bytes, for a file download. Omitted for a page — nobody needs the weight of HTML. */
+  fileSize?: string;
   /** ISO date. Shown on the card and used as dateModified in structured data. */
   publishedAt: string;
 }
 
 export const resources: Resource[] = [
+  {
+    id: 'run-cost-model',
+    number: '01',
+    series: 'Agent business case',
+    title: 'The Run-Cost Model',
+    kind: 'Spreadsheet · 3 tabs',
+    summary:
+      'A twelve-month cost comparison of four ways to do the same job, with the operating lines most business cases leave out.',
+    description:
+      'Almost every agent business case models the model bill and stops there. This one puts four arms side by side over twelve months — a rules workflow, the same workflow rebuilt on the decision rules an agent build forces you to write down, a model-assisted draft with human approval, and a full agent with tools — and separates what you pay once from what you pay every month. The lines it makes you fill in are the ones that get forgotten: retries and failed tool calls, review minutes per reviewed case, engineer minutes per escalation, evaluation maintenance, re-qualifying against a new model version, prompt and regression testing, incident and on-call load, and the cases the system declines that a person finishes by hand. Quality sits next to cost throughout, because cost per case is the wrong number to argue about on its own. The number to argue about is cost per acceptable outcome. The worked example is an ordering agent across forty sites, priced at Indian rates in rupees, and it is deliberately a case where the full agent never breaks even — and where building it was still worth doing, because it produced the written specification that made the cheap option good.',
+    useFor: [
+      'Price an agent proposal across build and run, not just the model bill',
+      'Compare a full agent against a rules workflow and a model-assisted draft on the same cases and one definition of an acceptable outcome',
+      'Put a break-even month in front of a budget holder, including when the answer is never',
+      'Show a team which of their operating assumptions — escalation rate, review minutes, upkeep — are doing the real work in the number',
+    ],
+    format:
+      'Excel workbook. Read Me, the model, and a filled worked example. Fill in the blue cells; the yellow ones set everything else.',
+    url: '/downloads/agent-run-cost-model.xlsx',
+    fileSize: '17 KB',
+    publishedAt: '2026-09-14',
+  },
   {
     id: 'poc-screen',
     number: '01',
@@ -67,6 +91,18 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-13',
   },
 ];
+
+/**
+ * One line per series, used as the section heading on /resources. A count
+ * ("two tools") is not a heading — it tells a reader nothing they cannot see.
+ */
+export const SERIES_BLURBS: Record<string, string> = {
+  'Agent business case': 'What it costs to run, before anyone commits to building it.',
+  'Agentic system design': 'What to decide before the build, and how to tell a pilot from a demo.',
+};
+
+/** True when the url points at a file to download rather than a page to open. */
+export const isDownload = (url: string): boolean => /\.[a-z0-9]{2,5}$/i.test(url);
 
 /** Newest first. The page and the structured data both read this, not `resources`. */
 export const publishedResources = [...resources].sort((a, b) =>
