@@ -46,8 +46,8 @@ import { THREADS, threadLabel, WEIGHT_MARK } from '../../lib/craft/threads';
 export const prerender = false;
 const learner = Astro.locals.learner!;
 
-const { refreshedAt, themes } = publishedNotes();
-const total = themes.reduce((n, t) => n + t.notes.length, 0);
+const { refreshedAt, themes, count: total, newest } = publishedNotes();
+const updated = newest ?? refreshedAt;
 
 // Which week builds which thread, straight from each session's frontmatter —
 // which is itself the machine-readable half of docs/teaching/threads.md.
@@ -79,7 +79,7 @@ const threadRows = THREADS.map((t) => t.id)
       for them.
     </p>
     <p class="mono faint" style="font-size:12.5px;margin-bottom:44px">
-      {total} {total === 1 ? 'item' : 'items'} · last refreshed {longDate(refreshedAt)}
+      {total} {total === 1 ? 'item' : 'items'} · last updated {longDate(updated)}
     </p>
 
     {total === 0 ? (

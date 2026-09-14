@@ -119,8 +119,14 @@ Rules:
   from a separate source of truth and are not yours to restate.
 - No testimonials, client names, or metrics attributed to Sunil.
 - The body is read to prospective clients. Write it for them: what changed, and what a
-  senior engineer should do or think differently as a result. Anything addressed to Sunil —
-  doubts, verification steps, source-quality concerns — goes in reviewNote, never the body.`;
+  senior engineer should do or think differently as a result. Anything addressed to Sunil
+  goes in reviewNote and never in the body. That means doubts, verification steps, and
+  source-quality concerns.
+- Write the body in plain English. Many readers read English as a second or third language.
+  One idea per sentence, aiming for under 25 words. At most one em dash in a body. No idioms
+  and no figures of speech. Active voice, present tense, subject and verb first. Keep the
+  technical term when it is the right one, and gloss it in ordinary words the first time.
+  Plain words, never simplified engineering.`;
 
 const researchPrompt = (topic: string, today: string, searches: number) =>
   `Search for material developments in the last 90 days on this one topic:
@@ -137,11 +143,11 @@ A finding you cannot attach a URL to is not a finding — leave it out rather th
 up unsourced. Do not group several findings under one shared source; if two findings come
 from one page, repeat the URL on both.
 
-For each finding give a short title, two to four sentences written for that
-engineer, the Source line, and — separately — anything Sunil should know before trusting it
-(secondhand source, vendor claiming things about their own product, single unreplicated
-result). If nothing material turned up, say so plainly; an empty topic is expected some
-weeks and is better than padding.
+For each finding give a short title, then two to four sentences written for that engineer,
+then the Source line. Separately from those, give anything Sunil should know before trusting
+it: a secondhand source, a vendor claiming things about their own product, or a single
+unreplicated result. If nothing material turned up, say so plainly. An empty topic is
+expected some weeks, and it is better than padding.
 
 You have ${searches} searches for this topic alone, so search properly before
 concluding it is empty. If you run out, say the topic is under-searched rather than empty.`;

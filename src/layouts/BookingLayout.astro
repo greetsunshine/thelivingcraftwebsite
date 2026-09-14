@@ -1,0 +1,57 @@
+---
+// Chrome for /book/[id] — the page reached from a calendar invite.
+//
+// Public in the sense that it needs no sign-in, private in every way that
+// matters: it is opened by one person, holding one link, to move or cancel one
+// call. So it does not use BaseLayout. Someone cancelling a call must not be
+// shown a navigation bar and an APPLY button on the way out — the same mistake
+// /craft/notes made when its nav pointed at the marketing site.
+//
+// No SeoHead, and noindex both here and in robots.txt. There is nothing to
+// index, and a booking URL in a search result would be a leaked credential.
+import '../styles/global.css';
+import '../styles/craft.css';
+
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{title} · The Living Craft</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <span class="wordmark"><span class="dot"></span> the living craft</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap" style="max-width:760px;padding-top:var(--space-7);padding-bottom:var(--space-8)">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <p class="muted" style="font-size:var(--size-2)">© {year} Sunil Mathew</p>
+      </div>
+    </footer>
+  </body>
+</html>

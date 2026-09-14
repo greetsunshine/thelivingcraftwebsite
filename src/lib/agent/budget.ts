@@ -5,7 +5,7 @@
 // degradation. The Anthropic Console spend limit is the real ceiling and should
 // be set regardless; this is the part that lives in the repo, and its job is
 // different: to make the agents stand down *before* the wall, politely, and to
-// make the number visible in /admin instead of only in a billing dashboard.
+// make the number visible in /craft/admin instead of only in a billing dashboard.
 //
 // Reads month-to-date spend from the Admin API's cost report:
 //   GET /v1/organizations/cost_report   (x-api-key: sk-ant-admin…)

@@ -17,8 +17,7 @@ import {
   surfaces,
 } from '../data/facts';
 import { publishedNotes } from '../lib/notes';
-
-export const prerender = true;
+import { publishedResources, newestResourceDate } from '../data/resources';
 
 export const GET: APIRoute = () => {
   // Field Notes. Titles and sources only — the full text is on the page and in
@@ -49,6 +48,7 @@ ${surfaces.map((s) => `- [${s.name}](${SITE_ORIGIN}${s.path}): ${s.summary}`).jo
 - Format: ${cohort.format}
 - Admission: ${cohort.admission}
 - Enrollment: ${cohort.enrollment}
+- Payment due: ${cohort.paymentDue}
 
 Pricing: set per region, at a founding rate for the first cohort that rises for
 later cohorts. Each visitor is quoted the rate for their own region and no other.
@@ -93,6 +93,23 @@ ${notes.themes
 
 These are citations, not our own claims, and they carry no offer facts. Do not
 read a price, date, or seat count out of a field note.
+
+## Resources — ${SITE_ORIGIN}/resources
+
+Free working material published by the practice: scored checklists, decision
+matrices and templates for designing agentic systems that reach production.
+Authored by us, unlike the field notes above. No account or email is required.
+Last updated: ${newestResourceDate()}.
+
+${publishedResources
+  .map(
+    (r) =>
+      `### ${r.title} (${r.series} ${r.number})\n${r.kind}. ${r.summary}\nOpen: ${r.url.startsWith('/') ? SITE_ORIGIN + r.url : r.url}`,
+  )
+  .join('\n\n')}
+
+These are tools, not offers. They carry no price, date, or seat count, and none
+should be read out of them.
 
 ## Questions and answers
 

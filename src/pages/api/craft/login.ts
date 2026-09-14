@@ -12,7 +12,8 @@ export const prerender = false;
 /** Never send anyone anywhere but back into the course area. */
 const safeNext = (raw: unknown): string => {
   const value = typeof raw === 'string' ? raw : '';
-  return value.startsWith('/craft') && !value.startsWith('//') ? value : '/craft';
+  const ok = value.startsWith('/craft') && !value.startsWith('//') && !value.startsWith('/craft/admin');
+  return ok ? value : '/craft';
 };
 
 export const POST: APIRoute = async ({ request, cookies, redirect, clientAddress }) => {

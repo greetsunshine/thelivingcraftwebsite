@@ -11,7 +11,7 @@
 
 export interface RadarCategory {
   key: string;
-  /** Shown as the tab/section heading in /admin/radar. */
+  /** Shown as the tab/section heading in /craft/admin/radar. */
   label: string;
   /** One line under the heading — what this category is for. */
   brief: string;

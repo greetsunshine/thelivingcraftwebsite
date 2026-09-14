@@ -14,7 +14,10 @@ export interface Props {
   image?: string;
 }
 
-const { title, description, canonical, schema = [], image = '/sunil-profile.jpg' } = Astro.props;
+// The social card is its own file, not the hero portrait. The hero photo is a 4:5
+// portrait, and a summary_large_image card crops that to a wide band across the
+// chest. /og-card.jpg is the same photograph, cropped to 1200x630.
+const { title, description, canonical, schema = [], image = '/og-card.jpg' } = Astro.props;
 
 const href = canonical
   ? new URL(canonical, SITE_ORIGIN).href

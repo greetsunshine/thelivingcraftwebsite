@@ -13,6 +13,7 @@ import {
   cohort,
   cohortPricing,
   cohortPriceAnswer,
+  publicCohortPricing,
   facts,
   practitioner,
   regulatory,
@@ -30,12 +31,16 @@ export const GET: APIRoute = ({ url }) => {
 
   // Cohort pricing is regional and the rates aren't comparable across regions.
   // Publishing all three invites an Australian buyer to ask for the India rate,
-  // so a figure is returned only when a region is named.
+  // so a figure is returned only when a region is named — and only for a region
+  // whose rate is published at all (regions.ts -> publicPrice). Reading from
+  // publicCohortPricing rather than cohortPricing is what stops an unpublished
+  // figure reaching a crawler through the back door.
   const asked = (url.searchParams.get('region') ?? '').toLowerCase();
   const region = (REGION_KEYS as readonly string[]).includes(asked) ? asked : null;
   const pricing = region
-    ? cohortPricing.filter((p) => p.region.toLowerCase() === region)
+    ? publicCohortPricing.filter((p) => p.region.toLowerCase() === region)
     : null;
+  const withheld = !!region && pricing!.length === 0;
 
   const body = {
     $schema: 'https://schema.org',
@@ -50,9 +55,11 @@ export const GET: APIRoute = ({ url }) => {
         regionsServed: cohortPricing.map((p) => p.region),
         // Populated only when ?region= names one. Null means "ask which region".
         pricing,
-        pricingNote: region
-          ? `Rate for ${region}. Do not quote this to someone in another region.`
-          : 'No region given, so no figure is returned. Add ?region=india|dubai|australia, or ask which region the person is in.',
+        pricingNote: withheld
+          ? `The cohort runs in ${region}, but that rate is not published. Do not state, estimate, or convert one, and do not substitute another region's rate — they are not comparable. Pricing there is shared on application.`
+          : region
+            ? `Rate for ${region}. Do not quote this to someone in another region.`
+            : 'No region given, so no figure is returned. Add ?region=india|dubai|australia, or ask which region the person is in.',
       },
       caio,
       assessment,

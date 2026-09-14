@@ -1,0 +1,506 @@
+---
+export const prerender = false;
+
+// Calls, and the availability they come from.
+//
+// Two jobs on one page because they are the same job: when a booking needs
+// moving, the next question is always "what else is open", and that is a
+// property of the rules. Splitting them across two nav items meant reading one
+// and editing the other in separate tabs.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { HOST_TIMEZONE, MEETING_TYPES, WEEKDAYS, meetingType } from '../../../data/meetings';
+import { calendarConfigured } from '../../../lib/booking/google';
+import { allBlocks, allRules, availableSlots, listBookings } from '../../../lib/booking/store';
+
+const [{ upcoming, past }, rules, blocks] = await Promise.all([listBookings(), allRules(), allBlocks()]);
+
+// Computed once per call type, not once per booking. The endpoint re-checks
+// availability before it moves anything, so this list only has to be good
+// enough to choose from.
+const openByType = new Map<string, string[]>();
+for (const meeting of MEETING_TYPES) {
+  openByType.set(meeting.key, (await availableSlots(meeting)).slice(0, 12));
+}
+
+const googleOn = calendarConfigured();
+// Only calls that are still going ahead. A cancelled booking has no calendar
+// event by definition, and counting those as "no invite" cried wolf every time
+// somebody cancelled.
+const live = upcoming.filter((b) => b.status === 'confirmed' || b.status === 'reschedule_requested');
+const unsynced = live.filter((b) => b.google_error || !b.google_event_id);
+
+const when = (iso: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    timeZone: HOST_TIMEZONE,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+
+const clock = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+---
+
+<AdminLayout title="Calls" active="bookings">
+  <div class="page-head">
+    <div>
+      <span class="label">{live.length} upcoming · {rules.filter((r) => r.active).length} active rules</span>
+      <h1>Calls</h1>
+      <p>
+        Availability is this site's, not Google's. Nothing here reads your calendar, so an event you
+        add to it yourself does not close a slot. To keep time, block it below.
+      </p>
+    </div>
+  </div>
+
+  {
+    !googleOn && (
+      <div class="notice">
+        <h3>Google Calendar is not connected</h3>
+        <p class="muted">
+          Bookings still work and are still recorded here. Nobody gets an invite, so you would have
+          to contact each person yourself. Set <code>GOOGLE_CLIENT_ID</code>,{' '}
+          <code>GOOGLE_CLIENT_SECRET</code> and <code>GOOGLE_REFRESH_TOKEN</code> in Vercel, then
+          redeploy.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    googleOn && unsynced.length > 0 && (
+      <div class="notice danger">
+        <h3>{unsynced.length} upcoming call{unsynced.length === 1 ? ' has' : 's have'} no calendar invite</h3>
+        <p class="muted">
+          These people booked a time and were never sent an invite. They are expecting the call.
+          Contact them directly.
+        </p>
+      </div>
+    )
+  }
+
+  <h2 class="sec-title">Upcoming</h2>
+  <div class="table-scroll">
+    {
+      upcoming.length === 0 ? (
+        <p class="empty">Nothing booked. Check the rules below are active and cover a day that is still ahead.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>When (IST)</th>
+              <th>Who</th>
+              <th>What they said</th>
+              <th>Move or cancel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {upcoming.map((booking) => (
+              <tr data-booking={booking.id}>
+                <td class="faint mono" style="font-size:12px;white-space:nowrap">
+                  {when(booking.starts_at)}
+                  <div style="margin-top:6px">
+                    <span class="pill">{meetingType(booking.meeting_type)?.label ?? booking.meeting_type}</span>
+                  </div>
+                  {booking.status !== 'confirmed' && (
+                    <div style="margin-top:6px">
+                      <span class={booking.status === 'cancelled' ? 'pill' : 'pill warn'}>
+                        {booking.status === 'reschedule_requested' ? 'move requested' : booking.status}
+                      </span>
+                    </div>
+                  )}
+                  {booking.google_error && (
+                    <div style="margin-top:6px"><span class="pill warn">no invite</span></div>
+                  )}
+                </td>
+
+                <td style="min-width:200px">
+                  <div style="font-weight:500">{booking.name ?? '—'}</div>
+                  <div style="font-size:13px">
+                    <a href={`mailto:${booking.email}`} style="color:var(--clay)">{booking.email}</a>
+                  </div>
+                  <div class="faint" style="font-size:12.5px;margin-top:3px">
+                    {[booking.role, booking.company].filter(Boolean).join(' · ') || '—'}
+                  </div>
+                  {booking.timezone && <div class="faint" style="font-size:12px">{booking.timezone}</div>}
+                  {booking.learner_id && <div style="margin-top:6px"><span class="pill">seat holder</span></div>}
+                </td>
+
+                <td style="max-width:380px">
+                  {booking.notes ? <p style="font-size:13.5px">{booking.notes}</p> : <span class="faint">—</span>}
+                  {booking.google_error && (
+                    <p class="faint" style="font-size:12.5px;margin-top:6px">{booking.google_error}</p>
+                  )}
+                  <textarea class="booking-note" rows="1" placeholder="Private note…" style="margin-top:10px;font-size:13px">{booking.admin_note ?? ''}</textarea>
+                </td>
+
+                <td style="min-width:260px">
+                  <details>
+                    <summary class="label" style="cursor:pointer">Ask them to move</summary>
+                    <p class="faint" style="font-size:12px;margin:8px 0">
+                      Pick up to five. They are emailed through the calendar invite, and this time
+                      stays held until they choose.
+                    </p>
+                    <div class="propose-slots">
+                      {(openByType.get(booking.meeting_type) ?? []).map((slot) => (
+                        <label class="propose-slot">
+                          <input type="checkbox" value={slot} /> {when(slot)}
+                        </label>
+                      ))}
+                    </div>
+                    <input class="propose-note" type="text" placeholder="A line of explanation (optional)" style="margin:8px 0;font-size:13px" />
+                    <button class="btn small propose-go" type="button">Send the request</button>
+                  </details>
+
+                  <details style="margin-top:8px">
+                    <summary class="label" style="cursor:pointer">Move it yourself</summary>
+                    <p class="faint" style="font-size:12px;margin:8px 0">
+                      Changes the time now. They are emailed the update, and are not asked first.
+                    </p>
+                    <select class="move-to" style="width:100%;font-size:13px">
+                      {(openByType.get(booking.meeting_type) ?? []).map((slot) => (
+                        <option value={slot}>{when(slot)}</option>
+                      ))}
+                    </select>
+                    <button class="btn small move-go" type="button" style="margin-top:8px">Move it</button>
+                  </details>
+
+                  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn small" data-act="complete" type="button">Mark done</button>
+                    <button class="btn small danger" data-act="cancel" type="button">Cancel</button>
+                    <button class="btn small danger" data-act="erase" data-email={booking.email} type="button">Erase</button>
+                  </div>
+                  <p class="status-line"></p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+
+  <h2 class="sec-title">When you are available</h2>
+  <p class="muted" style="font-size:13.5px;max-width:64ch;margin-bottom:14px">
+    Written in your own time ({HOST_TIMEZONE.replace('_', ' ')}). Each band is cut into slots the
+    length of that call type, so 16:00 to 18:00 gives four 30-minute discovery calls.
+  </p>
+
+  <div class="table-scroll">
+    {
+      rules.length === 0 ? (
+        <p class="empty">No rules yet, so nothing is bookable anywhere on the site.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Call</th>
+              <th>Day</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Slots</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rules.map((rule) => {
+              const meeting = meetingType(rule.meeting_type);
+              const count = meeting ? Math.floor((rule.end_min - rule.start_min) / meeting.durationMin) : 0;
+              return (
+                <tr data-rule={rule.id}>
+                  <td>{meeting?.label ?? rule.meeting_type}</td>
+                  <td>{WEEKDAYS[rule.weekday]}</td>
+                  <td class="mono">{clock(rule.start_min)}</td>
+                  <td class="mono">{clock(rule.end_min)}</td>
+                  <td class="faint">{count} per week</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn small" data-rule-act="toggle" data-active={String(!rule.active)} type="button">
+                      {rule.active ? 'Pause' : 'Resume'}
+                    </button>
+                    <button class="btn small danger" data-rule-act="delete" type="button">Delete</button>
+                    <p class="status-line"></p>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <span class="label">Add a band</span>
+    <div class="toolbar" style="margin-top:10px;margin-bottom:0">
+      <select id="rule-type">
+        {MEETING_TYPES.map((m) => <option value={m.key}>{m.label} ({m.durationMin} min)</option>)}
+      </select>
+      <select id="rule-day">
+        {WEEKDAYS.map((day, i) => <option value={i} selected={i === 2}>{day}</option>)}
+      </select>
+      <input id="rule-start" type="time" value="16:00" step="900" />
+      <input id="rule-end" type="time" value="18:00" step="900" />
+      <button class="btn primary" id="rule-add" type="button">Add</button>
+      <span class="status-line" id="rule-status"></span>
+    </div>
+  </div>
+
+  <h2 class="sec-title">Time you are keeping</h2>
+  <p class="muted" style="font-size:13.5px;max-width:64ch;margin-bottom:14px">
+    Leave, travel, a conference, one busy afternoon. This is the only thing that takes time out of
+    the rules above, because your Google Calendar is never read.
+  </p>
+
+  <div class="table-scroll">
+    {
+      blocks.length === 0 ? (
+        <p class="empty">Nothing blocked ahead.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr><th>From (IST)</th><th>To (IST)</th><th>Why</th><th></th></tr>
+          </thead>
+          <tbody>
+            {blocks.map((block) => (
+              <tr data-block={block.id}>
+                <td class="mono" style="font-size:12.5px">{when(block.starts_at)}</td>
+                <td class="mono" style="font-size:12.5px">{when(block.ends_at)}</td>
+                <td>{block.reason ?? <span class="faint">—</span>}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn small danger" data-block-act="delete" type="button">Remove</button>
+                  <p class="status-line"></p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <span class="label">Block time</span>
+    <div class="toolbar" style="margin-top:10px;margin-bottom:0">
+      <input id="block-from" type="date" />
+      <input id="block-to" type="date" />
+      <label class="faint" style="font-size:13px;display:inline-flex;align-items:center;gap:6px">
+        <input id="block-allday" type="checkbox" checked /> whole days
+      </label>
+      <input id="block-from-time" type="time" value="09:00" step="900" disabled />
+      <input id="block-to-time" type="time" value="18:00" step="900" disabled />
+      <input id="block-reason" type="text" placeholder="Why (optional)" style="max-width:220px" />
+      <button class="btn primary" id="block-add" type="button">Block it</button>
+      <span class="status-line" id="block-status"></span>
+    </div>
+  </div>
+
+  {
+    past.length > 0 && (
+      <>
+        <h2 class="sec-title">Last sixty days</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>When (IST)</th><th>Who</th><th>Call</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {past.map((booking) => (
+                <tr>
+                  <td class="faint mono" style="font-size:12px;white-space:nowrap">{when(booking.starts_at)}</td>
+                  <td>
+                    <div>{booking.name ?? '—'}</div>
+                    <div class="faint" style="font-size:12.5px">{booking.email}</div>
+                  </td>
+                  <td class="faint">{meetingType(booking.meeting_type)?.label ?? booking.meeting_type}</td>
+                  <td><span class="pill">{booking.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    )
+  }
+
+  <style>
+    .sec-title {
+      font-size: var(--size-4);
+      color: var(--text-loud);
+      margin: var(--space-7) 0 var(--space-2);
+      font-weight: var(--weight-strong);
+    }
+    .propose-slots { display: grid; gap: 4px; max-height: 190px; overflow-y: auto; margin-bottom: 6px; }
+    .propose-slot { font-size: 12.5px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  </style>
+
+  <script is:inline>
+    (function () {
+      function post(endpoint, payload, out, onDone) {
+        if (out) { out.textContent = 'Working…'; out.className = 'status-line'; }
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (res) {
+            if (!out) return;
+            if (res.ok && res.j.ok) {
+              // A warning means the database changed and Google did not. Said
+              // rather than hidden: the other person has not been told.
+              out.textContent = res.j.warning ? res.j.message + ' ' + res.j.warning : res.j.message;
+              out.className = res.j.warning ? 'status-line err' : 'status-line ok';
+              if (onDone) onDone();
+            } else {
+              out.textContent = res.j.error || 'That did not work';
+              out.className = 'status-line err';
+            }
+          })
+          .catch(function () {
+            if (out) { out.textContent = 'Network error'; out.className = 'status-line err'; }
+          });
+      }
+
+      var BOOKING = '/api/craft/admin/booking';
+      var AVAIL = '/api/craft/admin/availability';
+
+      document.addEventListener('click', function (e) {
+        var button = e.target.closest ? e.target.closest('button') : null;
+        if (!button) return;
+
+        var bookingRow = button.closest('tr[data-booking]');
+        if (bookingRow) {
+          var id = bookingRow.getAttribute('data-booking');
+          var out = bookingRow.querySelector('.status-line');
+          var act = button.getAttribute('data-act');
+
+          if (button.classList.contains('propose-go')) {
+            var picked = [].slice
+              .call(bookingRow.querySelectorAll('.propose-slot input:checked'))
+              .map(function (i) { return i.value; });
+            var noteEl = bookingRow.querySelector('.propose-note');
+            post(BOOKING, { id: id, action: 'propose', slots: picked, note: noteEl ? noteEl.value : '' }, out);
+            return;
+          }
+
+          if (button.classList.contains('move-go')) {
+            var picker = bookingRow.querySelector('.move-to');
+            if (!picker || !picker.value) {
+              out.textContent = 'Nothing else is open for that call type';
+              out.className = 'status-line err';
+              return;
+            }
+            if (!confirm('Move this call without asking them first? They get the change by email.')) return;
+            post(BOOKING, { id: id, action: 'move', start: picker.value }, out, function () {
+              location.reload();
+            });
+            return;
+          }
+
+          if (act === 'complete') { post(BOOKING, { id: id, action: 'complete' }, out); return; }
+
+          if (act === 'cancel') {
+            if (!confirm('Cancel this call? They are emailed the cancellation through the calendar invite.')) return;
+            post(BOOKING, { id: id, action: 'cancel' }, out, function () {
+              bookingRow.style.opacity = '0.45';
+            });
+            return;
+          }
+
+          if (act === 'erase') {
+            var who = button.getAttribute('data-email') || 'this person';
+            if (!confirm('Permanently erase the booking for ' + who + '?\n\nThe calendar event is cancelled first. This cannot be undone, and the invite in your own email is separate.')) return;
+            post(BOOKING, { id: id, action: 'erase' }, out, function () {
+              bookingRow.style.opacity = '0.4';
+              bookingRow.style.textDecoration = 'line-through';
+            });
+            return;
+          }
+        }
+
+        var ruleRow = button.closest('tr[data-rule]');
+        if (ruleRow) {
+          var ruleAct = button.getAttribute('data-rule-act');
+          var ruleOut = ruleRow.querySelector('.status-line');
+          if (ruleAct === 'toggle') {
+            post(AVAIL, { action: 'rule-toggle', id: ruleRow.getAttribute('data-rule'), active: button.getAttribute('data-active') === 'true' }, ruleOut, function () {
+              location.reload();
+            });
+          }
+          if (ruleAct === 'delete') {
+            if (!confirm('Delete this band? Calls already booked from it are not affected.')) return;
+            post(AVAIL, { action: 'rule-delete', id: ruleRow.getAttribute('data-rule') }, ruleOut, function () {
+              ruleRow.style.opacity = '0.4';
+            });
+          }
+          return;
+        }
+
+        var blockRow = button.closest('tr[data-block]');
+        if (blockRow && button.getAttribute('data-block-act') === 'delete') {
+          post(AVAIL, { action: 'block-delete', id: blockRow.getAttribute('data-block') }, blockRow.querySelector('.status-line'), function () {
+            blockRow.style.opacity = '0.4';
+          });
+          return;
+        }
+
+        if (button.id === 'rule-add') {
+          post(
+            AVAIL,
+            {
+              action: 'rule-add',
+              meeting_type: document.getElementById('rule-type').value,
+              weekday: Number(document.getElementById('rule-day').value),
+              start: document.getElementById('rule-start').value,
+              end: document.getElementById('rule-end').value,
+            },
+            document.getElementById('rule-status'),
+            function () { location.reload(); },
+          );
+          return;
+        }
+
+        if (button.id === 'block-add') {
+          var allDay = document.getElementById('block-allday').checked;
+          post(
+            AVAIL,
+            {
+              action: 'block-add',
+              allDay: allDay,
+              from: document.getElementById('block-from').value,
+              to: document.getElementById('block-to').value || document.getElementById('block-from').value,
+              fromTime: document.getElementById('block-from-time').value,
+              toTime: document.getElementById('block-to-time').value,
+              reason: document.getElementById('block-reason').value,
+            },
+            document.getElementById('block-status'),
+            function () { location.reload(); },
+          );
+        }
+      });
+
+      // The two time fields only mean anything for a part-day block.
+      var allDayBox = document.getElementById('block-allday');
+      if (allDayBox) {
+        allDayBox.addEventListener('change', function () {
+          document.getElementById('block-from-time').disabled = allDayBox.checked;
+          document.getElementById('block-to-time').disabled = allDayBox.checked;
+        });
+      }
+
+      document.addEventListener('change', function (e) {
+        var el = e.target;
+        if (el.classList && el.classList.contains('booking-note')) {
+          var row = el.closest('tr[data-booking]');
+          if (row) {
+            post(BOOKING, { id: row.getAttribute('data-booking'), action: 'note', note: el.value }, row.querySelector('.status-line'));
+          }
+        }
+      });
+    })();
+  </script>
+</AdminLayout>
