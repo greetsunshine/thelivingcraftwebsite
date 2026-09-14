@@ -171,8 +171,8 @@ Do not inline either one here.
   pre-work and has no module); the pre-cohort questionnaire is
   [src/pages/craft/intake.astro](src/pages/craft/intake.astro), with its questions, validation and queries in
   [src/lib/craft/intake.ts](src/lib/craft/intake.ts). Read the answers at `/craft/admin/intake`.
-  Five pages — sign-in, the index, a session, the intake, and field notes — and **all
-  five go through [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro)**, including sign-in. Its `learner`
+  Six pages — sign-in, the index, a session, the intake, field notes, and office hours
+  — and **all six go through [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro)**, including sign-in. Its `learner`
   prop is optional and that is the whole mechanism: no learner renders the bare shell
   (wordmark, no nav, no footer identity). Sign-in used to hand-roll its own `<head>`,
   and the fonts, favicon and noindex tag then drifted from the layout's.
@@ -294,6 +294,71 @@ did before it existed.
 - Reading `/craft/admin` needs Supabase; the write-back buttons need `GITHUB_TOKEN` +
   `GITHUB_REPO` and disable themselves with an explanation when absent. Every panel
   degrades on its own — a missing var greys out one thing, not the page.
+
+## Booking (`/book`, the widget, `/craft/admin/bookings`)
+**This site owns the calendar. Google is a notification channel, not a source of
+truth.** Availability is computed from rules in our own database
+([supabase/schema.sql](supabase/schema.sql): `booking_rules`, `booking_blocks`), never from a Google
+free/busy query. Say the cost out loud, because it will surprise someone:
+**an event Sunil puts in his own Google Calendar does not close a slot here.**
+Keeping time is a block in the console, and nothing else.
+
+What Google *is* for is the invite. On a booking the site creates the event with
+the booker as an attendee and `sendUpdates=all`, so Google emails both people,
+puts it in both calendars, attaches a Meet link, and emails both again when the
+call moves or is called off. That is a transactional email system we do not have
+to build, run, or get past a spam filter — and it is why there is no Resend or
+Postmark here.
+
+- **Call types are code, availability is data.** "A discovery call is 30 minutes"
+  is an offer fact and lives in [src/data/meetings.ts](src/data/meetings.ts), beside the page copy.
+  "I am free on Tuesdays" changes weekly and lives in the database. When adding
+  something, that is the question to ask.
+- **Three surfaces, one engine.** `discovery` on `/caio` and `scope` on
+  `/assessment` are public; `office-hours` is learner-only and sits inside the
+  gate at [/craft/office-hours](src/pages/craft/office-hours.astro). [BookingWidget.astro](src/components/BookingWidget.astro) serves both
+  through a `mode` prop and **refuses at build time** if a learner type is put on
+  a public page, or a public type inside the gate.
+- **The learner path is gated by its path alone.** [/api/craft/booking](src/pages/api/craft/booking.ts) is under
+  `/api/craft`, so `middleware.ts` closes it and hands it a verified learner. A
+  learner never sends their own name or email — those come from the seat row, so
+  nobody books as somebody else. Do not add a learner branch to `/api/booking/*`;
+  reusing the gate is the whole reason that file is where it is.
+- **Double booking is refused by Postgres, not by TypeScript.** A `gist`
+  exclusion constraint on `tstzrange(starts_at, ends_at)` rejects the second of
+  two simultaneous inserts. A "is this free?" SELECT cannot close that window; a
+  constraint can. `'reschedule_requested'` is inside the constraint's predicate
+  on purpose — asking someone to move does not release their slot until they do.
+- **The posted time is never trusted.** `bookSlot()` re-derives availability
+  server-side and rejects anything not on the list. Without it a crafted request
+  books 3am on a Sunday, and the constraint would not object, because nothing
+  else is booked at 3am on a Sunday.
+- **The row is written before Google hears about it.** A Google outage then costs
+  an invite, not a booking. The reverse order loses the call and leaves an orphan
+  event. A booking that saved but did not sync is flagged red in the console —
+  that person is expecting a call and has no invite.
+- **Reschedule links are credentials.** The token lives in the URL in the
+  calendar invite; the database holds only an HMAC of it
+  ([src/lib/booking/tokens.ts](src/lib/booking/tokens.ts)), same reasoning as `learners.code_hash`. A wrong
+  token gets the same 404 as an unknown booking, so the page cannot be used to
+  confirm that a booking exists. `/book` is disallowed in robots.txt for the
+  same reason.
+- **"Suggest alternatives" travels through the calendar invite.** The console
+  records the proposed times, reads the event description back from Google, adds
+  a line above it, and patches it with `sendUpdates=all`. The reschedule link is
+  already in that description, which is why the existing text is read rather than
+  replaced — we cannot rebuild it, because we do not keep the token.
+- **A booking writes a `leads` row but posts nothing to Web3Forms.** The invite
+  is the notification, and it lands in the calendar Sunil runs his day from. The
+  no-server-side-Web3Forms rule is untouched. A learner booking writes no lead
+  row at all — a participant does not belong in the list of people to follow up.
+- **Without `GOOGLE_*` set, booking still works and nobody gets an invite.** The
+  console says so in a banner. Same degradation rule as every other panel.
+- Timezone maths is in [src/lib/booking/slots.ts](src/lib/booking/slots.ts) and is pure, so it can be tested
+  without a database. Rules are wall-clock times in `HOST_TIMEZONE`; slots come
+  out as instants; the browser formats them in the visitor's own zone. The
+  two-pass `zonedToInstant` is correct across daylight-saving changes — India has
+  no DST, but the host zone is a constant someone can change.
 
 ## Agents
 Three agents now — two retrievers and the visitor Q&A agent. The two retrievers

@@ -37,7 +37,11 @@ const AI_AGENTS = [
   'meta-externalagent',
 ];
 
-const DISALLOW = ['/craft', '/api/ask', '/api/track', '/api/lead'];
+// '/book' holds one person's booking behind a token in the URL. A booking page
+// in a search result would be a leaked credential, and there is nothing on it
+// worth indexing either. The pages carry noindex headers and tags as well —
+// robots.txt is a request, not a control.
+const DISALLOW = ['/craft', '/book', '/api/ask', '/api/track', '/api/lead', '/api/booking'];
 
 export const GET: APIRoute = () => {
   const body = [

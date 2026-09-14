@@ -275,6 +275,132 @@ create table if not exists public.radar_runs (
 create index if not exists radar_runs_started_idx on public.radar_runs (started_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Booking — availability rules, blocked time, and booked calls
+-- ---------------------------------------------------------------------------
+-- The site owns the calendar, not Google. Availability is computed from the
+-- rules below, never read back from a Google Calendar free/busy query. That is
+-- a deliberate choice with a real consequence: an event Sunil puts directly in
+-- his own calendar does NOT close the slot here. Blocking time is an entry in
+-- `booking_blocks`, and nothing else.
+--
+-- Google still receives every booking, because a call nobody gets an invite for
+-- is a call nobody attends. The flow is one-way: this table is the truth, and
+-- `google_event_id` is the receipt for what was pushed out.
+--
+-- Meeting TYPES (name, duration, which page shows them) are not here. They live
+-- in src/data/meetings.ts, next to the page copy they belong to, because a
+-- 30-minute discovery call is an offer fact and offer facts are code here.
+
+-- Weekly availability. One row per band of time on one weekday, in the host's
+-- own timezone. "Tuesdays, 16:00 to 18:00" is a single row, and the slot
+-- generator cuts it into bookable times using the meeting's duration.
+--
+-- Minutes from midnight rather than a `time` column: the arithmetic that turns
+-- a band into slots is integer arithmetic, and pulling `time` values into JS
+-- only to parse them back into minutes was a conversion with nothing to gain.
+create table if not exists public.booking_rules (
+  id           uuid        primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  -- Matches a `key` in src/data/meetings.ts. Unvalidated on purpose: a rule for
+  -- a type that no longer exists generates nothing, which is the safe failure.
+  meeting_type text        not null,
+  -- 0 = Sunday, to match JavaScript's getDay(). The generator reads the weekday
+  -- in the HOST timezone, so this never drifts against the visitor's Monday.
+  weekday      int         not null check (weekday between 0 and 6),
+  start_min    int         not null check (start_min between 0 and 1439),
+  end_min      int         not null check (end_min between 1 and 1440),
+  active       boolean     not null default true,
+  updated_at   timestamptz not null default now(),
+  -- A band that ends before it starts silently produces no slots, and looks
+  -- like a rule that is working. Rejected at the door instead.
+  constraint booking_rules_band check (end_min > start_min)
+);
+
+create index if not exists booking_rules_type_idx on public.booking_rules (meeting_type, weekday);
+
+-- Time taken out of the rules: leave, travel, a conference, a single afternoon.
+-- Stored as an instant range rather than a date so a half-day works without a
+-- second shape. An all-day block is midnight to midnight in the host timezone,
+-- and the console writes it that way.
+create table if not exists public.booking_blocks (
+  id          uuid        primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  starts_at   timestamptz not null,
+  ends_at     timestamptz not null,
+  reason      text,
+  constraint booking_blocks_range check (ends_at > starts_at)
+);
+
+create index if not exists booking_blocks_range_idx on public.booking_blocks (starts_at, ends_at);
+
+-- One row per booked call.
+--
+-- `manage_token_hash` is an HMAC of the token in the reschedule link, so the
+-- database never holds a credential that opens anything — the same reasoning as
+-- `learners.code_hash`. Losing this table to a leak does not let anyone move
+-- somebody else's call.
+create table if not exists public.bookings (
+  id                uuid        primary key default gen_random_uuid(),
+  created_at        timestamptz not null default now(),
+  meeting_type      text        not null,
+  starts_at         timestamptz not null,
+  ends_at           timestamptz not null,
+  name              text,
+  email             text        not null,
+  company           text,
+  role              text,
+  notes             text,
+  -- The IANA zone the booker was in when they chose. Kept so a confirmation or
+  -- a proposed alternative is shown back in their own time, not in ours.
+  timezone          text,
+  status            text        not null default 'confirmed',
+  -- Set for a booking made inside /craft. Null for a public enquiry. ON DELETE
+  -- SET NULL rather than CASCADE: erasing a learner must not silently delete
+  -- the record of a call that happened.
+  learner_id        uuid        references public.learners (id) on delete set null,
+  manage_token_hash text        not null,
+  google_event_id   text,
+  google_meet_url   text,
+  -- Why the calendar push failed, if it did. A booking with a sync error is
+  -- confirmed on this site and invisible in Google, which is the one state that
+  -- needs to be loud in the console.
+  google_error      text,
+  -- Alternatives offered when Sunil asks to move a call. Array of ISO instants.
+  proposed_slots    jsonb,
+  cancelled_reason  text,
+  admin_note        text,
+  updated_at        timestamptz not null default now()
+);
+
+create index if not exists bookings_starts_idx on public.bookings (starts_at desc);
+create index if not exists bookings_status_idx on public.bookings (status, starts_at desc);
+create index if not exists bookings_email_idx on public.bookings (lower(email));
+
+-- THE DOUBLE-BOOKING GUARD, and the reason it is in Postgres rather than in the
+-- API route. Two people pressing Confirm on the same slot in the same second
+-- both pass a "is this slot free?" SELECT, and both then INSERT. Checking in
+-- TypeScript cannot close that window; a constraint can, because the second
+-- INSERT is refused by the database itself.
+--
+-- 'reschedule_requested' still holds its time: asking someone to move a call
+-- does not release the original slot until they actually move.
+--
+-- No btree_gist extension needed: the constraint compares one range against one
+-- range, and gist handles tstzrange out of the box. It would only be required
+-- to add a scalar column to the key, and there is deliberately no such column —
+-- two calls of different types at the same hour are still one person.
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'bookings_no_overlap') then
+    alter table public.bookings
+      add constraint bookings_no_overlap
+      exclude using gist (tstzrange(starts_at, ends_at) with &&)
+      where (status in ('confirmed', 'reschedule_requested'));
+  end if;
+end
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Lock everything down
 -- ---------------------------------------------------------------------------
 -- RLS enabled + zero policies = the anon and authenticated keys can do nothing.
@@ -287,6 +413,9 @@ alter table public.learners  enable row level security;
 alter table public.intake_responses enable row level security;
 alter table public.radar_findings enable row level security;
 alter table public.radar_runs     enable row level security;
+alter table public.booking_rules  enable row level security;
+alter table public.booking_blocks enable row level security;
+alter table public.bookings       enable row level security;
 
 revoke all on public.events    from anon, authenticated;
 revoke all on public.leads     from anon, authenticated;
@@ -295,6 +424,9 @@ revoke all on public.learners  from anon, authenticated;
 revoke all on public.intake_responses from anon, authenticated;
 revoke all on public.radar_findings from anon, authenticated;
 revoke all on public.radar_runs     from anon, authenticated;
+revoke all on public.booking_rules  from anon, authenticated;
+revoke all on public.booking_blocks from anon, authenticated;
+revoke all on public.bookings       from anon, authenticated;
 
 -- Keep updated_at honest so "last touched" in the console means something.
 create or replace function public.touch_updated_at() returns trigger
@@ -319,6 +451,17 @@ create trigger intake_touch before update on public.intake_responses
 
 drop trigger if exists radar_touch on public.radar_findings;
 create trigger radar_touch before update on public.radar_findings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists booking_rules_touch on public.booking_rules;
+create trigger booking_rules_touch before update on public.booking_rules
+  for each row execute function public.touch_updated_at();
+
+-- Bookings are never purged on a timer, for the same reason leads are not: a
+-- call that happened is a record of the practice, and a cron job must not be
+-- able to delete one. Erasure is per person and deliberate, from the console.
+drop trigger if exists bookings_touch on public.bookings;
+create trigger bookings_touch before update on public.bookings
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------------

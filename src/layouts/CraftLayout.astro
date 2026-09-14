@@ -39,6 +39,7 @@ const firstName = learner ? (learner.name ?? learner.email).split(/[\s@]/)[0] : 
 const NAV = [
   { href: '/craft', label: 'Sessions' },
   { href: '/craft/notes', label: 'Field notes' },
+  { href: '/craft/office-hours', label: 'Office hours' },
   { href: '/craft/intake', label: 'Intake' },
 ];
 const here = Astro.url.pathname.replace(/\/+$/, '') || '/craft';

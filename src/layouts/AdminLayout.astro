@@ -18,7 +18,16 @@ import { dbHealth, looksUnmigrated } from '../lib/admin/health';
 export interface Props {
   title: string;
   /** Which nav item is current. */
-  active?: 'overview' | 'traffic' | 'leads' | 'questions' | 'radar' | 'content' | 'learners' | 'intake';
+  active?:
+    | 'overview'
+    | 'traffic'
+    | 'leads'
+    | 'bookings'
+    | 'questions'
+    | 'radar'
+    | 'content'
+    | 'learners'
+    | 'intake';
 }
 
 const { title, active } = Astro.props;
@@ -35,6 +44,7 @@ const NAV = [
   { key: 'overview', href: '/craft/admin', label: 'Overview' },
   { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic' },
   { key: 'leads', href: '/craft/admin/leads', label: 'Leads' },
+  { key: 'bookings', href: '/craft/admin/bookings', label: 'Calls' },
   { key: 'questions', href: '/craft/admin/questions', label: 'Questions' },
   { key: 'radar', href: '/craft/admin/radar', label: 'Radar' },
   { key: 'content', href: '/craft/admin/content', label: 'Content' },

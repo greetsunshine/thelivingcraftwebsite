@@ -1,6 +1,7 @@
 ---
 import AssessmentLayout from '../layouts/AssessmentLayout.astro';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
+import BookingWidget from '../components/BookingWidget.astro';
 import { SITE_ORIGIN, assessment, faqFor, regulatory } from '../data/facts';
 
 // Static, board-facing landing page for the AI Readiness Assessment.
@@ -287,6 +288,10 @@ const schema = [
       <span class="eyebrow" style="justify-content:center"><span class="num">09</span> The first step</span>
       <h2>Three weeks from now you could <em>stop guessing.</em></h2>
       <p class="lead">Request a scope call. I read every enquiry myself and reply by email.</p>
+
+      <BookingWidget type="scope" />
+
+      <p class="booker-or">Would rather write first? Use the form.</p>
 
       <form id="contactForm" class="apply-form">
         <input type="hidden" name="access_key" value={APPLY_ACCESS_KEY} />

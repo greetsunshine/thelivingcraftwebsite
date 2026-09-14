@@ -1,6 +1,7 @@
 ---
 import CaioLayout from '../layouts/CaioLayout.astro';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
+import BookingWidget from '../components/BookingWidget.astro';
 import { SITE_ORIGIN, caio, faqFor, regulatory } from '../data/facts';
 
 // Static, board-facing landing page for the Fractional Chief AI Officer practice.
@@ -270,6 +271,10 @@ const schema = [
       <span class="eyebrow" style="justify-content:center"><span class="num">07</span> The first step</span>
       <h2>Start with a <em>diagnosis</em>, not a contract.</h2>
       <p class="lead">The simplest way to start is the <a href="/assessment" class="ftext-link">AI Readiness Assessment</a>. It takes two to three weeks, for a fixed fee. You get a board-ready roadmap that you own, whatever you decide to do next. If you bring me on to drive it, the fee is credited toward your first month.</p>
+
+      <BookingWidget type="discovery" />
+
+      <p class="booker-or">Would rather write first? Use the form.</p>
 
       <form id="contactForm" class="apply-form">
         <input type="hidden" name="access_key" value={APPLY_ACCESS_KEY} />

@@ -26,6 +26,9 @@ const TABLES = [
   'intake_responses',
   'radar_findings',
   'radar_runs',
+  'booking_rules',
+  'booking_blocks',
+  'bookings',
 ] as const;
 
 /** Every rollup. A renamed argument breaks these while the tables stay fine. */

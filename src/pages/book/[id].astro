@@ -1,0 +1,281 @@
+---
+// Move or cancel one booking, from the link in its calendar invite.
+//
+// Server-rendered and works without JavaScript, because it is opened from an
+// email client on a phone and has to survive that. The inline script at the
+// foot only relabels times into the reader's own timezone; with it blocked,
+// every time on the page still reads correctly in the zone the booking was
+// made in, which is named next to them.
+import BookingLayout from '../../layouts/BookingLayout.astro';
+import { HOST_NAME, HOST_TIMEZONE, meetingType } from '../../data/meetings';
+import { availableSlots, bookingById } from '../../lib/booking/store';
+import { manageTokenMatches } from '../../lib/booking/tokens';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const token = Astro.url.searchParams.get('t') ?? '';
+const done = Astro.url.searchParams.get('m');
+const problem = Astro.url.searchParams.get('e');
+
+const booking = id ? await bookingById(id) : null;
+
+// One check, and the same answer for a wrong token as for an unknown booking.
+// Distinguishing them would turn this page into a way to confirm that a given
+// id exists.
+const allowed = booking ? await manageTokenMatches(token, booking.manage_token_hash) : false;
+const found = booking && allowed ? booking : null;
+
+if (!found) Astro.response.status = 404;
+
+const meeting = found ? meetingType(found.meeting_type) : null;
+const startsAt = found ? Date.parse(found.starts_at) : 0;
+const isPast = found ? startsAt < Date.now() : false;
+const isCancelled = found?.status === 'cancelled';
+const wasAskedToMove = found?.status === 'reschedule_requested';
+
+// Times render in the zone the booker chose in, so the page is right before any
+// script runs. The script then moves them to whatever zone they are in now,
+// which matters for exactly the person who books from Dubai and reads the email
+// in Bangalore.
+const zone = found?.timezone || HOST_TIMEZONE;
+
+const fmt = (iso: string, tz: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+
+// Capped because a generous set of rules over four weeks is a very long radio
+// list, and nobody scrolls past the first screen of times anyway.
+const MAX_SHOWN = 60;
+const canChange = Boolean(found && meeting && !isPast && !isCancelled);
+const open = canChange && meeting && found ? (await availableSlots(meeting, new Date(), found.id)).slice(0, MAX_SHOWN) : [];
+
+const proposed = (found?.proposed_slots ?? []).filter((s) => open.includes(s));
+const title = found ? `Your ${meeting?.label.toLowerCase() ?? 'call'}` : 'Booking not found';
+---
+
+<BookingLayout title={title}>
+  {
+    !found && (
+      <div class="page-head">
+        <h1>That link did not work</h1>
+        <p class="lead">
+          It may have been changed in the copying, or the booking may have been removed. Email{' '}
+          <a class="ftext-link" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a> and I will
+          sort it out.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    found && (
+      <>
+        <div class="page-head">
+          <span class="klabel accent">{meeting?.label ?? 'Call'}</span>
+          <h1>{isCancelled ? 'This call is cancelled' : 'Your call with ' + HOST_NAME}</h1>
+        </div>
+
+        {done === 'moved' && (
+          <div class="panel marked notice">
+            <p><strong>Moved.</strong> Your calendar invite has been updated with the new time.</p>
+          </div>
+        )}
+
+        {done === 'cancelled' && (
+          <div class="panel marked quiet notice">
+            <p><strong>Cancelled.</strong> The invite has been removed from both calendars.</p>
+          </div>
+        )}
+
+        {problem && (
+          <div class="panel marked bad notice">
+            <p>{problem}</p>
+          </div>
+        )}
+
+        <div class="panel">
+          <span class="klabel">When</span>
+          <p style="font-size:var(--size-5);margin-top:var(--space-2)">
+            <span data-iso={found.starts_at}>{fmt(found.starts_at, zone)}</span>
+          </p>
+          <p class="muted" style="font-size:var(--size-2)">
+            {meeting?.durationMin ?? 30} minutes · times shown in <span data-zone>{zone.replace(/_/g, ' ')}</span>
+          </p>
+
+          {found.google_meet_url && !isCancelled && (
+            <p style="margin-top:var(--space-4)">
+              <a class="ftext-link" href={found.google_meet_url}>Join with Google Meet →</a>
+            </p>
+          )}
+
+          {found.google_error && !isCancelled && (
+            <p class="muted" style="margin-top:var(--space-4);font-size:var(--size-2)">
+              A calendar invite could not be sent for this booking. The time is held, and you will hear
+              from {HOST_NAME} directly.
+            </p>
+          )}
+        </div>
+
+        {wasAskedToMove && proposed.length > 0 && (
+          <div class="panel marked" style="margin-top:var(--space-5)">
+            <span class="klabel accent">A new time is needed</span>
+            <p style="margin-top:var(--space-3)">
+              {HOST_NAME} has asked to move this call. These times are open, and the one you are
+              holding stays yours until you pick.
+            </p>
+            <form method="POST" action="/api/booking/manage" class="slot-form">
+              <input type="hidden" name="id" value={found.id} />
+              <input type="hidden" name="t" value={token} />
+              <input type="hidden" name="action" value="reschedule" />
+              <div class="slot-grid">
+                {proposed.map((slot, i) => (
+                  <label class="slot">
+                    <input type="radio" name="start" value={slot} required checked={i === 0} />
+                    <span data-iso={slot}>{fmt(slot, zone)}</span>
+                  </label>
+                ))}
+              </div>
+              <button class="btn btn-primary" type="submit">Take this time <span class="arrow">→</span></button>
+            </form>
+          </div>
+        )}
+
+        {isPast && !isCancelled && (
+          <p class="muted" style="margin-top:var(--space-5)">
+            This call has already happened, so it cannot be changed here.
+          </p>
+        )}
+
+        {canChange && (
+          <>
+            <div class="panel" style="margin-top:var(--space-5)">
+              <span class="klabel">Move it</span>
+              {open.length === 0 ? (
+                <p class="muted" style="margin-top:var(--space-3)">
+                  There is nothing else open at the moment. Email{' '}
+                  <a class="ftext-link" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a> and
+                  we will find a time.
+                </p>
+              ) : (
+                <form method="POST" action="/api/booking/manage" class="slot-form">
+                  <input type="hidden" name="id" value={found.id} />
+                  <input type="hidden" name="t" value={token} />
+                  <input type="hidden" name="action" value="reschedule" />
+                  <div class="slot-grid">
+                    {open.map((slot) => (
+                      <label class="slot">
+                        <input type="radio" name="start" value={slot} required />
+                        <span data-iso={slot}>{fmt(slot, zone)}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <button class="btn btn-primary" type="submit">Move my call <span class="arrow">→</span></button>
+                </form>
+              )}
+            </div>
+
+            <div class="panel" style="margin-top:var(--space-5)">
+              <span class="klabel">Cancel it</span>
+              <p class="muted" style="margin-top:var(--space-3)">
+                The invite is removed from both calendars. You can book again whenever you like.
+              </p>
+              <form method="POST" action="/api/booking/manage" data-confirm>
+                <input type="hidden" name="id" value={found.id} />
+                <input type="hidden" name="t" value={token} />
+                <input type="hidden" name="action" value="cancel" />
+                <button class="btn btn-ghost" type="submit" style="margin-top:var(--space-4)">
+                  Cancel this call
+                </button>
+              </form>
+            </div>
+          </>
+        )}
+      </>
+    )
+  }
+</BookingLayout>
+
+<style>
+  .slot-form { margin-top: var(--space-4); }
+
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  /* A panel gets a shadow or a border, never both — these sit inside a panel,
+     so they carry the hairline and no shadow of their own. */
+  .slot {
+    display: block;
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-inner);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--size-3);
+    cursor: pointer;
+  }
+
+  .slot:hover { background: var(--surface-hover); }
+
+  .slot input { margin-right: var(--space-2); accent-color: var(--clay); }
+
+  /* :has is how a whole tile shows selection without a line of JavaScript. */
+  .slot:has(input:checked) {
+    border-color: var(--clay);
+    background: var(--accent-quiet);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Relabel every time into the reader's own timezone. The page is already
+    // correct without this — it renders in the zone the booking was made in,
+    // named on screen — so a failure here changes nothing.
+    try {
+      var zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!zone) return;
+
+      var fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: zone,
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      });
+
+      document.querySelectorAll('[data-iso]').forEach(function (el) {
+        var at = new Date(el.getAttribute('data-iso'));
+        if (!isNaN(at.getTime())) el.textContent = fmt.format(at);
+      });
+
+      document.querySelectorAll('[data-zone]').forEach(function (el) {
+        el.textContent = zone.replace(/_/g, ' ');
+      });
+    } catch (e) {
+      /* the server-rendered times stand */
+    }
+
+    // One confirm, on the only irreversible button on the page.
+    var form = document.querySelector('form[data-confirm]');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        if (!window.confirm('Cancel this call? The invite will be removed from both calendars.')) {
+          e.preventDefault();
+        }
+      });
+    }
+  })();
+</script>

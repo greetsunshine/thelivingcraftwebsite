@@ -487,3 +487,16 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
   .hero-cta { width: 100%; }
   .hero-cta .btn { width: 100%; }
 }
+
+/* The line between booking a time and writing an enquiry. Both paths sit in the
+   same section on /caio and /assessment, and without something between them the
+   form reads as part of the booking flow rather than as an alternative to it. */
+.booker-or {
+  max-width: 640px;
+  margin: var(--space-6) auto var(--space-5);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--size-1);
+  letter-spacing: var(--tracking-label);
+  color: var(--text-quiet);
+}
