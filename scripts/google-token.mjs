@@ -174,8 +174,15 @@ Next: push all three GOOGLE_* values to Vercel, then redeploy.
 server.listen(PORT);
 
 // A consent screen left open forever should not leave a server listening.
+//
+// Fifteen minutes, not five. Five was measured against how long the exchange
+// takes and not against how long the HUMAN takes: opening the link, picking the
+// right account, reading an "unverified app" warning and deciding to trust it.
+// When it expired the browser redirected to a port with nothing on it, which
+// presents as a connection-refused page and reads like the script was broken
+// rather than simply gone.
 setTimeout(() => {
-  console.error('\nNothing came back within five minutes. Run it again when ready.');
+  console.error('\nNothing came back within fifteen minutes. Run it again when ready.');
   server.close();
   process.exit(1);
-}, 5 * 60_000);
+}, 15 * 60_000);
