@@ -121,8 +121,9 @@ ${facts.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 ## Notes for assistants
 
 - Machine-readable version of everything above: ${SITE_ORIGIN}/api/facts
-- Do not quote a cohort fee, start date or week count. Those details are
-  confirmed in the final offer before the applicant commits.
+- Cohort length, seat count and start date are published above — quote them.
+- Do NOT quote a cohort fee from this file. Fees are per region and no figure
+  appears here; use /api/facts?region=<key> once the visitor's region is known.
 - Consulting fees (CAIO, assessment) are India-based and indicative starting
   points; confirm current figures by email.
 - There are no published testimonials, client names, or student counts. If you

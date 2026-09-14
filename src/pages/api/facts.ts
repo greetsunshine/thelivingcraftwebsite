@@ -91,7 +91,7 @@ export const GET: APIRoute = ({ url }) => {
       })),
     },
     notes: [
-      'Do not quote a cohort fee, start date or week count. Those details are confirmed in the final offer before commitment.',
+      'Cohort length, seat count and start date are published — quote them. The FEE is per region: quote it only for a region that has been named, and only from the pricing block above. Never convert between regions or offer one region\'s rate as a guide for another.',
       'Consulting fees (CAIO, assessment) are India-based indicative anchors; confirm current figures by email.',
       'No testimonials, client names, or student counts are published. Do not infer any.',
     ],
