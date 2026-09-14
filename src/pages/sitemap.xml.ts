@@ -15,6 +15,7 @@ const EXTRA = [
   // Low priority because nobody is searching for it — it has to be reachable,
   // not ranked.
   { path: '/privacy', priority: '0.3' },
+  { path: '/terms', priority: '0.3' },
   // Resource pages are listed individually: each one is the destination a search
   // or an assistant should land on, not the index that links to it.
   ...publishedResources
