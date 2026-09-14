@@ -120,8 +120,12 @@ export function pairOne(
   const quizCorrect = isCorrect(item, response.answer);
 
   let verdict: Verdict = 'unclear';
-  if (leansTo !== null && quizCorrect !== null) {
-    const adrRight = leansTo === item.answer.toLowerCase().trim();
+  // `quizCorrect !== null` already implies a key exists — isCorrect returns null
+  // without one — but the compiler cannot see that through the call, and an
+  // assertion here would be a claim rather than a check.
+  const key = item.answer?.toLowerCase().trim();
+  if (leansTo !== null && quizCorrect !== null && key) {
+    const adrRight = leansTo === key;
     if (quizCorrect && adrRight) verdict = 'aligned-correct';
     else if (!quizCorrect && !adrRight) verdict = leansTo === response.answer.toLowerCase().trim() ? 'aligned-wrong' : 'unclear';
     else if (quizCorrect && !adrRight) verdict = 'knew-not-applied';

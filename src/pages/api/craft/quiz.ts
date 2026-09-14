@@ -100,13 +100,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   // The key goes out only after the answer is committed AND frozen. Both halves
   // matter: committing alone still allows a second POST with what was revealed.
+  //
+  // `teaching` is deliberately NOT here. In the authored bank that field is the
+  // distractor analysis and the facilitation notes, addressed to whoever is
+  // running the room — "push back if they propose the tool silently re-reads".
+  // It is a different kind of leak from the answer key and gets the same
+  // treatment: one module decides, and the learner surface never sees it.
   return json(
     {
       success: true,
       correct: isCorrect(item, answer),
       correctAnswer: item.answer,
-      rationale: item.rationale,
-      difficulty: item.difficulty,
     },
     200,
   );

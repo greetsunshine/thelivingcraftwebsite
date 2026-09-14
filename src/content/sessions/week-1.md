@@ -32,6 +32,21 @@ threads:
   - { id: state, weight: named }
   - { id: multi-agent, weight: named }
 
+# The items this week's check asks, in order.
+#
+# Four, not the whole bank of fifteen. These are the ones that can stand on a
+# page with a Submit button and no instructor: multiple choice, with a key.
+# The other eleven are prose — "sort these six into four buckets", "give three
+# reasons this does not hold" — and they are answered in the room or in the
+# decision record, which is where docs/teaching/quiz/week-1.md says to use them.
+#
+# Reorder or extend this freely; the ids are stable and the bank is the source.
+quiz:
+  - w1-q1
+  - w1-q9
+  - w1-q11
+  - w1-q13
+
 # Offsets from startsAt, never wall-clock. The first `block` is 00:15, which is
 # what closes the before-rating — not 00:00, when the session opens.
 runOfShow:
