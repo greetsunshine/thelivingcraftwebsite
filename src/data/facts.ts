@@ -251,14 +251,14 @@ export const facts: Fact[] = [
     id: 'cohort-dates',
     surface: '/',
     q: 'When does the first cohort start?',
-    a: 'The final session schedule is confirmed before joining. Apply or send an enquiry to discuss current availability; do not infer a start date from older material.',
+    a: `The first cohort starts ${cohort.startsOn}. Enrollment is rolling until all ${cohort.seats} seats are filled. Admission is by application and every application is read personally.`,
     tags: ['start date', 'when', 'schedule', 'september', '2026', 'deadline'],
   },
   {
     id: 'cohort-size',
     surface: '/',
     q: 'How many people are in a cohort?',
-    a: 'The open cohort targets eight members. Current availability is discussed during the fit conversation; this is a target, not a published capacity or scarcity claim.',
+    a: `${cohort.seats} seats, capped. The cohort is kept deliberately small so every participant's architecture gets the room's full attention.`,
     tags: ['seats', 'size', 'class size', 'how many', 'capacity'],
   },
   {
