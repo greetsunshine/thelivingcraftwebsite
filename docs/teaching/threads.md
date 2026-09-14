@@ -1,9 +1,9 @@
-# The five threads
+# The seven threads
 
 *Not learner-facing. This is the contract between the six sessions.*
 
-Five areas an architect or a leader has to be sound on for agentic systems. No
-single week teaches all five. Each week builds one or two and touches the rest,
+Seven areas an architect or a leader has to be sound on for agentic systems. No
+single week teaches all seven. Each week builds one or two and touches the rest,
 so the arc only works if every week honours what it owes the others. That is
 what this file is for: when a session is being written, read the row for that
 week before starting.
@@ -13,9 +13,17 @@ week before starting.
     3  Trace and bill    observability, cost per run, the audit answer later
     4  Untrusted input   it reads text an attacker can write
     5  State             the same request arrives twice; memory outlives a process
+    6  Retrieval         what gets fetched into the context, and on whose say-so
+    7  Multi-agent       what happens when one loop is no longer enough
+
+**Six and seven arrived later, and the file said five for a while after they
+did.** Bridge 5 added them on 8 September, because the public module copy sells
+both and no week owned either. They were in the matrix below from that day; the
+title, this list and the count in three other places were not updated with them,
+which is the kind of drift this file exists to stop happening to the sessions.
 
 **Not on the list, deliberately:** frameworks, model choice, prompt technique.
-Those turn over every few months. The five above are twenty-year-old distributed
+Those turn over every few months. The first five are twenty-year-old distributed
 systems problems that agents made urgent for a wider group of people.
 
 ## Who builds what
@@ -26,21 +34,27 @@ systems problems that agents made urgent for a wider group of people.
 |---|---|---|---|---|---|---|
 | 1 Boundaries | ○ | ● | | | ◐ | ◐ |
 | 2 Evidence | ○ | ○ | ● | ◐ | ◐ | ◐ |
-| Retrieval | | | ● | | | ◐ |
-| Multi-agent | ○ | | | | ● | ◐ |
 | 3 Trace and bill | ● | ◐ | ◐ | | ◐ | ◐ |
 | 4 Untrusted input | ○ | | ◐ | ● | | ◐ |
 | 5 State | ○ | ● | | | ● | ◐ |
+| 6 Retrieval | | | ● | | | ◐ |
+| 7 Multi-agent | ○ | | | | ● | ◐ |
 
 Every `◐` and `○` in that table is an obligation on a week that has not been
-written yet. The four sections below are the ones that were missing entirely
+written yet. The five sections below are the ones that were missing entirely
 when the arc was first drawn, and what each week now owes to close them.
+
+Row order here is the order the matrix prints on screen, which is
+`THREADS` in [src/lib/craft/threads.ts](../../src/lib/craft/threads.ts). The two
+had drifted apart — retrieval and multi-agent sat third and fourth here and
+sixth and seventh there — so the same seven rows came out in two different
+orders depending on whether you were reading this file or the site.
 
 ---
 
 ## Bridge 1 · Evidence was taught once and never practised
 
-Evaluation is the hardest of the five for senior engineers, because it is the
+Evaluation is the hardest thread for senior engineers, because it is the
 one where their existing habits actively mislead them. It had a single week,
 almost nothing before it and nothing after. Cost, by comparison, appears in four
 weeks. Fixed by seeding it a week early as an experience, then making three
@@ -89,7 +103,7 @@ Do not try to stop them. Use it.
 
 Week 1 names it — *context is state, and state has a lifetime* — and carries the
 compression-cliff finding in its reading. Then nothing, for five weeks. For an
-architect it is a top-five area; the only reason it is not in the five above is
+architect it is a top-five area; the only reason it is not in the seven above is
 that it does not belong to a leader in the same way.
 
 It belongs to **week 3**, and the reason is exact: what the model is shown each

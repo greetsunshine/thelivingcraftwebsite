@@ -1,0 +1,52 @@
+---
+// The briefing will eventually be populated from session feedback synthesis.
+// For now, it's a static welcome.
+---
+
+<div class="briefing-card">
+  <div class="b-header">
+    <span class="mono date">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+  </div>
+  <p class="b-body">
+    Welcome to the cohort. As we progress, this space will highlight synthesis from the
+    room's session feedback and key patterns from the week's work.
+  </p>
+</div>
+
+<style>
+  .briefing-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+  .briefing-card.urgent {
+    border-left: 3px solid var(--clay);
+  }
+  .b-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .date {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: var(--tracking-label);
+  }
+  .badge {
+    font-size: 11px;
+    color: var(--clay);
+    background: var(--agent-machine-bg);
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    letter-spacing: var(--tracking-label);
+  }
+  .b-body {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 70ch;
+  }
+</style>

@@ -6,10 +6,13 @@
 // costs more than the scraping does. /llms.txt and /api/facts exist so the
 // answer they get is the one we wrote.
 //
-// Four paths are disallowed, for two different reasons:
+// Six paths are disallowed, for three different reasons:
 //   /api/ask     a POST endpoint that costs money per call, nothing to index
 //   /api/track   the analytics beacon — indexing it would pollute its own data
 //   /api/lead    the lead ledger, POST only
+//   /book        a booking's manage page. Its URL carries the reschedule
+//                token, so an indexed one is a leaked credential.
+//   /api/booking POST only, and it writes rows
 //   /craft       the cohort's course area AND, under /craft/admin, the operator
 //                console — one prefix now covers both. robots.txt is a request,
 //                not a control, so this is politeness on top of the real

@@ -4,6 +4,8 @@ title: "Guardrails"
 module: M2
 summary: "Four of the six guardrails, built in one afternoon. Then what each one costs you."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 Last week you watched a tool that pays out money with nothing in front of it.

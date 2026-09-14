@@ -4,6 +4,8 @@ title: "The second loop"
 module: M3
 summary: "One loop is no longer enough. The decisions you cannot take back, and how to spot them first."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline for Sunil to write. Everything below is

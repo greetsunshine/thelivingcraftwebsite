@@ -1,0 +1,98 @@
+# Reads back the questions the visitor agent could not answer, and opens a PR
+# listing what nobody has written down yet.
+#
+# The other direction from gather-latest.yml. That workflow asks the world what
+# changed; this one asks our own traffic what we are missing — the `answered`
+# flag on the questions table is prospects telling us, for free, where the fact
+# base stops.
+#
+# A PR rather than a direct commit for the usual reason, and one more: the report
+# is a work list addressed to a person. Landing it as a PR puts it in front of
+# Sunil instead of into a file he would have to remember to open.
+#
+# The script never drafts an answer — see the header of scripts/gather-gaps.ts.
+# Every entry in the report has a deliberate blank in it.
+#
+# Needs ANTHROPIC_API_KEY, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY as
+# repository secrets. The Supabase pair is the same one gather-radar.yml needs,
+# and is separate from the Vercel environment.
+
+name: Gather fact gaps
+
+on:
+  schedule:
+    # 07:00 UTC Mondays — an hour after the retriever, so the two PRs arrive
+    # together at the start of the week rather than a day apart.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'How many days of questions to group (default 90)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  gaps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Group the unanswered questions
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # A manual run is a deliberate decision, so it overrides the cooldown —
+        # otherwise the button would silently do nothing after a recent run.
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.days }}" ]; then
+              npm run gaps -- --force "--days=${{ inputs.days }}"
+            else
+              npm run gaps -- --force
+            fi
+          else
+            npm run gaps
+          fi
+
+      - name: Open a PR if the list changed
+        id: pr
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'Gaps: refresh what the fact base cannot answer'
+          branch: agent/fact-gaps
+          delete-branch: true
+          title: 'Gaps: questions prospects asked that we cannot answer'
+          body: |
+            Grouped from the `questions` table — every row where the visitor Q&A
+            agent came back with no grounded answer.
+
+            **Nothing here is drafted.** The grouping is automated; each entry has
+            a blank where the answer goes. Merging this changes nothing a visitor
+            sees — it lands a work list.
+
+            Acting on it means writing the answer into `src/data/facts.ts`
+            yourself, which is what makes that file worth trusting.
+          add-paths: docs/fact-gaps.md
+
+      - name: Say where the branch is if the PR could not be opened
+        if: steps.pr.outcome == 'failure'
+        run: |
+          echo "### Gap reader ran, PR not opened" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The report was pushed to a branch instead. Open the PR here:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "<${{ github.server_url }}/${{ github.repository }}/compare/main...agent/fact-gaps?expand=1>" >> "$GITHUB_STEP_SUMMARY"

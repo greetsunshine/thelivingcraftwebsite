@@ -158,6 +158,30 @@ create table if not exists public.learners (
 create unique index if not exists learners_email_key on public.learners (email);
 create index if not exists learners_status_idx on public.learners (status, created_at desc);
 
+-- The guided walkthrough, in three additive columns.
+--
+-- On `learners` rather than in a table of their own: they are three scalars
+-- about one person, and putting them here means the hard delete on
+-- /craft/admin/learners erases them with no new work. Nothing here is personal
+-- data beyond "did this person read the intro", but it goes when they go.
+--
+-- `tour_completed_at` is set when the spine is FINISHED OR EXPLICITLY SKIPPED.
+-- Null means still eligible to be offered.
+--
+-- `tour_offers` counts how many times it has been put in front of them: 1 is
+-- the auto-start on first sign-in, 2 to 4 are the dashboard cards. At 4 it is
+-- never offered again.
+--
+-- `tour_offered_at` is when it was last offered, so a nudge cannot fire twice
+-- in one calendar day.
+--
+-- WHY NOT REUSE last_seen_at. It looks like a first-login flag and is not one —
+-- it is stamped on every authenticated request, so it is non-null before the
+-- learner has read step 1.
+alter table public.learners add column if not exists tour_completed_at timestamptz;
+alter table public.learners add column if not exists tour_offers int not null default 0;
+alter table public.learners add column if not exists tour_offered_at timestamptz;
+
 -- ---------------------------------------------------------------------------
 -- Intake — the pre-cohort self-assessment
 -- ---------------------------------------------------------------------------
@@ -205,6 +229,21 @@ create table if not exists public.intake_responses (
 -- it cannot be worked around, and it is the conflict target the upsert needs.
 create unique index if not exists intake_learner_key on public.intake_responses (learner_id);
 create index if not exists intake_submitted_idx on public.intake_responses (submitted_at desc nulls last);
+
+-- ---------------------------------------------------------------------------
+-- Familiarity — the week-6 re-ask of the technical and leadership questions
+-- ---------------------------------------------------------------------------
+create table if not exists public.familiarity_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  technical    jsonb       not null default '{}'::jsonb,
+  leadership   jsonb       not null default '{}'::jsonb,
+  submitted_at timestamptz
+);
+create unique index if not exists familiarity_learner_key on public.familiarity_responses (learner_id);
+create index if not exists familiarity_submitted_idx on public.familiarity_responses (submitted_at desc nulls last);
 
 -- ---------------------------------------------------------------------------
 -- Radar — market intelligence, for Sunil only
@@ -275,6 +314,380 @@ create table if not exists public.radar_runs (
 create index if not exists radar_runs_started_idx on public.radar_runs (started_at desc);
 
 -- ---------------------------------------------------------------------------
+-- Submissions — ADR decision records, one per learner per week
+-- ---------------------------------------------------------------------------
+create table if not exists public.submissions (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  adr_markdown text        not null,
+  repo_url     text,
+  submitted_at timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists submissions_learner_week on public.submissions (learner_id, week);
+
+-- A submitted ADR is a snapshot, not a live document: Sunil reads eight of these
+-- a week and must not be reading against a moving target (spec §5.5). Drafts stay
+-- editable; submitting freezes the text. Additive so an existing deployment
+-- picks it up without dropping the table.
+alter table public.submissions add column if not exists status text not null default 'submitted';
+alter table public.submissions alter column submitted_at drop not null;
+do $$ begin
+  alter table public.submissions add constraint submissions_status_check
+    check (status in ('draft', 'submitted'));
+exception when duplicate_object then null; end $$;
+
+-- ---------------------------------------------------------------------------
+-- Quiz responses — one row per learner per item
+-- ---------------------------------------------------------------------------
+create table if not exists public.quiz_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  item_id      text        not null,
+  answer       text        not null,
+  confidence   int         not null check (confidence between 1 and 5),
+  answered_at  timestamptz not null default now()
+);
+create unique index if not exists quiz_learner_item on public.quiz_responses (learner_id, item_id);
+
+-- ---------------------------------------------------------------------------
+-- Session prompts — "I have seen what this week's session opened"
+-- ---------------------------------------------------------------------------
+-- One row per learner per week, written when they dismiss the post-session
+-- prompt. Its only job is to stop that prompt coming back.
+--
+-- ONE ROW FOR THE WHOLE PROMPT, NOT ONE PER TASK. A session ending opens two
+-- things at the same instant — the feedback form and the knowledge check — and
+-- two modals racing each other onto one dashboard is not twice the prompt, it
+-- is a dialog people click past without reading. So there is a single prompt
+-- naming both, and a single dismissal.
+--
+-- WHY A TABLE FOR A DISMISSAL. The repo forbids localStorage and
+-- sessionStorage outright, so "they have already seen this" has nowhere else to
+-- live. Without the row the modal would reappear on every navigation, which is
+-- the nagging §10 rules out — so this small table is what keeps the feature on
+-- the right side of that rule rather than an optimisation.
+--
+-- WHAT IT IS NOT is a record of who ignored what. Nothing counts these, nothing
+-- reports on them, and there is no second prompt to schedule. A row means
+-- "shown once, done"; absence means "not shown yet". What survives a dismissal
+-- is the to-do panel on the dashboard, which the learner opens themselves —
+-- a list they choose to look at, not something that chases them.
+-- Anything that reads this table as compliance data is a change of purpose.
+--
+-- (Briefly called `quiz_prompts`, before the feedback form joined it in the
+-- same prompt. That name never reached production; if a dev database has one,
+-- it is an unused leftover and can be dropped.)
+-- `phase` distinguishes the two moments a week has: the run-up to the session
+-- and the hours after it. They are different prompts about different things, so
+-- dismissing one must not silence the other.
+create table if not exists public.session_prompts (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  phase        text        not null default 'after' check (phase in ('before', 'after')),
+  dismissed_at timestamptz not null default now()
+);
+alter table public.session_prompts add column if not exists phase text not null default 'after';
+do $$ begin
+  alter table public.session_prompts add constraint session_prompts_phase_check
+    check (phase in ('before', 'after'));
+exception when duplicate_object then null; end $$;
+create unique index if not exists session_prompts_learner_week_phase
+  on public.session_prompts (learner_id, week, phase);
+
+-- ---------------------------------------------------------------------------
+-- Outcome ratings — the same five statements either side of one session
+-- ---------------------------------------------------------------------------
+-- Two ratings a session: one before the teaching starts, one near the end. Both
+-- cover THE SAME FIVE STATEMENTS, written for that session, in that session's
+-- own words — "so that the two sets of numbers mean the same thing".
+--
+-- WAS `capability_pulses`, KEYED BY CAPABILITY ID. That version asked about
+-- three of the thirteen intake capabilities, named by a `topics` array on the
+-- session. Week 1, once written, turned out not to work that way: it rates five
+-- bespoke outcomes at 00:05 and again at 04:52, and nothing in the teaching
+-- material ever maps a week to A1–A3. Renamed rather than migrated because this
+-- table had not been applied to production yet — if it ever was, this is a
+-- rename plus a rewrite of every `ratings` key, not a drop.
+--
+-- WHY FIVE AND NOT THIRTEEN, which is unchanged and still the binding reason.
+-- Asking all thirteen twice a week is twelve surveys across six weeks, and a
+-- room of director-level engineers stops answering by week two — at which point
+-- the data is biased toward the compliant rather than merely sparse. Five takes
+-- half a minute, and the delta is ATTRIBUTABLE: movement on a statement either
+-- side of the session that taught it says something about that session. The same
+-- movement measured six weeks apart says only that time passed.
+--
+-- This does NOT replace §5.6's week-0 intake and week-6 re-ask. Those are the
+-- cohort-level before/after over all thirteen capabilities and remain the
+-- evidence for the programme's outcome claims. Two instruments, two jobs; see
+-- src/lib/craft/pulses.ts for why merging them again breaks both.
+create table if not exists public.outcome_ratings (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  phase        text        not null check (phase in ('before', 'after')),
+  -- { "harness": 3, "trace": 2, "failures": 1 } — keyed by the session's own
+  -- outcome ids, values 1-5. The ids live in the session's frontmatter.
+  ratings      jsonb       not null default '{}'::jsonb,
+  created_at   timestamptz not null default now()
+);
+create unique index if not exists outcome_ratings_learner_week_phase
+  on public.outcome_ratings (learner_id, week, phase);
+create index if not exists outcome_ratings_week_idx on public.outcome_ratings (week, phase);
+
+-- ---------------------------------------------------------------------------
+-- Checkpoint ratings — one number, four times a session, while it can still help
+-- ---------------------------------------------------------------------------
+-- Every other instrument here reports after the fact. This one fires inside the
+-- session, on one named item per block, and its entire value is that Sunil can
+-- act on it before the next block starts: "the drill block is where it is
+-- easiest to get quietly stuck and say nothing about it."
+--
+-- A 2 means GO SLOWER. It is not a measure of the learner, nothing aggregates it
+-- into one, and §10's cut of levels and ranks holds — Sunil's read is a count of
+-- how many people are below 3 right now, never a mean and never a name in a
+-- ranked list.
+--
+-- Keyed by the checkpoint's OFFSET into the day ('01:10'), not an index. Offsets
+-- are stable, readable, and survive somebody inserting a checkpoint earlier in
+-- the session; indices do not.
+create table if not exists public.checkpoint_ratings (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  -- HH:MM from the session start, matching the session file's `checkpoints`.
+  at           text        not null check (at ~ '^[0-9]{2}:[0-9]{2}$'),
+  rating       int         not null check (rating between 1 and 5),
+  created_at   timestamptz not null default now()
+);
+create unique index if not exists checkpoint_ratings_learner_week_at
+  on public.checkpoint_ratings (learner_id, week, at);
+create index if not exists checkpoint_ratings_week_idx on public.checkpoint_ratings (week, at);
+
+-- ---------------------------------------------------------------------------
+-- Pair drafts — the decision record written in the room, by two people
+-- ---------------------------------------------------------------------------
+-- A DIFFERENT OBJECT FROM `submissions`, on purpose. Week 1 writes this in pairs
+-- in fifteen minutes at 03:50, has another pair review it ten minutes later, and
+-- then each person finishes THEIR OWN record at home. Folding the two together
+-- would make two learners' submitted records start identical, which ruins both
+-- Sunil's read of eight and the claim that the record is the artefact of the
+-- cohort.
+--
+-- So this is short-lived and shared; `submissions` is considered and individual.
+--
+-- `author_id` is whoever typed. `partner_id` is the other half of the pair, and
+-- is nullable because somebody's partner can be absent and a draft with one name
+-- on it is still worth reviewing. Both cascade with the learner.
+create table if not exists public.pair_drafts (
+  id           uuid        primary key default gen_random_uuid(),
+  week         int         not null check (week between 1 and 6),
+  author_id    uuid        not null references public.learners(id) on delete cascade,
+  partner_id   uuid        references public.learners(id) on delete set null,
+  -- Same seven sections as a submitted record, assembled as markdown by
+  -- src/lib/craft/adr.ts. One template, so week 6 reads against week 1.
+  body         text        not null default '',
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+-- One draft per pair per week, keyed on whoever typed it.
+create unique index if not exists pair_drafts_author_week on public.pair_drafts (author_id, week);
+create index if not exists pair_drafts_week_idx on public.pair_drafts (week, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Pair reviews — ten minutes, four questions, 0/1/2 and a comment
+-- ---------------------------------------------------------------------------
+-- THE ONLY PLACE IN THE PROGRAMME A NUMBER IS PUT ON SOMEBODY'S WORK, and it is
+-- put there by a peer, in the room, over ten minutes. It does not break §10's cut
+-- of learner-facing levels: nothing sums these, nothing averages them, and no
+-- name ever appears in a ranked list. Week 1 is explicit — "the written comment
+-- matters more than the number, and there is no assessment behind this. It exists
+-- to make ten minutes of review structured enough to finish."
+--
+-- If anything ever aggregates this column, that is the cut feature coming back.
+create table if not exists public.pair_reviews (
+  id           uuid        primary key default gen_random_uuid(),
+  draft_id     uuid        not null references public.pair_drafts(id) on delete cascade,
+  reviewer_id  uuid        not null references public.learners(id) on delete cascade,
+  -- { "goals-testable": { "score": 1, "comment": "…" }, … } keyed by the
+  -- question ids in src/lib/craft/adr.ts.
+  answers      jsonb       not null default '{}'::jsonb,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists pair_reviews_draft_reviewer
+  on public.pair_reviews (draft_id, reviewer_id);
+create index if not exists pair_reviews_draft_idx on public.pair_reviews (draft_id);
+
+-- ---------------------------------------------------------------------------
+-- Doubts — learner questions, classified and clustered
+-- ---------------------------------------------------------------------------
+create table if not exists public.doubts (
+  id            uuid        primary key default gen_random_uuid(),
+  learner_id    uuid        not null references public.learners(id) on delete cascade,
+  body          text        not null,
+  kind          text        not null check (kind in ('course', 'content')),
+  capability_id text,
+  cluster_id    text,
+  answer        text,
+  -- Where the answer came from. 'facts'/'session' are code-grounded relays of
+  -- the syllabus; 'sunil' is his own words, and is the ONLY source eligible to
+  -- be relayed to the next person who asks the same thing; 'relay' is that
+  -- repeat. Nothing here is ever a model's own opinion — see src/lib/craft/doubts.ts.
+  answer_source text        check (answer_source in ('facts', 'session', 'relay', 'sunil')),
+  status        text        not null default 'new',
+  created_at    timestamptz not null default now()
+);
+-- Additive, so an existing deployment picks it up without dropping the table.
+alter table public.doubts add column if not exists answer_source text;
+do $$ begin
+  alter table public.doubts add constraint doubts_answer_source_check
+    check (answer_source in ('facts', 'session', 'relay', 'sunil'));
+exception when duplicate_object then null; end $$;
+
+create index if not exists doubts_learner_idx on public.doubts (learner_id, created_at desc);
+create index if not exists doubts_status_idx on public.doubts (status, created_at desc);
+-- Relay reads "what has Sunil already answered", so it filters on both.
+create index if not exists doubts_source_idx on public.doubts (answer_source, created_at desc);
+
+-- --- The discussion forum -------------------------------------------------
+--
+-- This table started life as a private learner→Sunil inbox and is now the
+-- THREAD table behind /craft/discussion. The name stayed: renaming a live table
+-- is a migration with real downside and no user-visible gain, and every row
+-- already here is a thread with no replies. The product noun is "discussion";
+-- the storage noun is still `doubts`. Nowhere else in the codebase says
+-- "doubt" any more — src/lib/craft/discussion.ts is the only file that has to
+-- know about the mismatch, and it says so at the top.
+--
+-- WHY A THREAD IS COHORT-VISIBLE BY DEFAULT. Eight people, six weeks, and the
+-- questions that stall someone on a Tuesday are usually stalling two others.
+-- Making them private by default meant Sunil answered the same thing three
+-- times and nobody learned from anybody.
+--
+-- WHY 'private' SURVIVES. "I don't understand any of this and I don't want to
+-- say so in front of the room" is a real question that only ever gets asked in
+-- private. Removing the private path to build the public one would have traded
+-- one capability for another rather than adding one.
+alter table public.doubts add column if not exists visibility text not null default 'cohort';
+do $$ begin
+  alter table public.doubts add constraint doubts_visibility_check
+    check (visibility in ('cohort', 'private'));
+exception when duplicate_object then null; end $$;
+
+-- Optional. A thread reads better with a subject line, but forcing one on a
+-- half-formed question is how you get "Question" fourteen times.
+alter table public.doubts add column if not exists title text;
+
+-- Sunil's pin. Ordering is otherwise purely chronological — see listThreads().
+alter table public.doubts add column if not exists pinned boolean not null default false;
+
+-- TWO MARKS, TWO MEANINGS, AND THEY ARE NOT INTERCHANGEABLE.
+--   resolved_reply_id  — the ASKER says this unblocked them. It is a report
+--                        about one person's Tuesday, not a claim of correctness.
+--   endorsed_reply_id  — SUNIL says this is right. That is the claim of
+--                        correctness, and only he can make it.
+-- Collapsing these into one "accepted answer" is the failure this whole
+-- surface is shaped to avoid: a confident peer answer wearing the authority of
+-- the course. See src/lib/craft/discussion.ts.
+alter table public.doubts add column if not exists resolved_reply_id uuid;
+alter table public.doubts add column if not exists endorsed_reply_id uuid;
+
+create index if not exists doubts_visibility_idx on public.doubts (visibility, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Discussion replies — peers, Sunil, and the syllabus
+-- ---------------------------------------------------------------------------
+-- author_role is the load-bearing column. A reply is read very differently
+-- depending on who wrote it, and the difference must be in the data rather
+-- than inferred from whether learner_id happens to be null:
+--
+--   'learner'    — a peer. Helpful, and possibly wrong. Shown with their name.
+--   'instructor' — Sunil. The only role whose words carry the course's
+--                  authority, and (see discussion.ts) the ONLY role whose text
+--                  is ever eligible to be relayed verbatim to a later asker.
+--   'system'     — a grounded answer from facts.ts or session frontmatter,
+--                  written by code, never by a model. Labelled as not-a-person
+--                  on screen.
+--
+-- ON §7's CASCADE RULE. learner_id cascades, so erasing someone really removes
+-- their replies — their words are their personal data. It is null for the other
+-- two roles, which the cascade simply does not touch, so Sunil's answers and
+-- the syllabus relays survive a learner leaving. Erasing a thread's AUTHOR
+-- takes the thread and therefore this table's rows on it, including other
+-- people's replies. That is deliberate: a DPDP deletion is not answered by
+-- keeping the conversation and removing the name from the top of it.
+create table if not exists public.discussion_replies (
+  id           uuid        primary key default gen_random_uuid(),
+  doubt_id     uuid        not null references public.doubts(id) on delete cascade,
+  learner_id   uuid        references public.learners(id) on delete cascade,
+  author_role  text        not null check (author_role in ('learner', 'instructor', 'system')),
+  body         text        not null,
+  created_at   timestamptz not null default now()
+);
+create index if not exists discussion_replies_thread on public.discussion_replies (doubt_id, created_at);
+create index if not exists discussion_replies_learner on public.discussion_replies (learner_id, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- Feedback — post-session responses, two questions per session
+-- ---------------------------------------------------------------------------
+-- FOUR QUESTIONS, TWO JOBS. `landed` and `pacing` are about the SESSION and are
+-- what makes "what to change before Thursday" possible. `changing` and `unsure`
+-- are the two lines the room actually answers at the close, and they are about
+-- the LEARNER: a commitment and a doubt.
+--
+-- `unsure` is nullable and usually stays null here, because it does not belong
+-- in this table. The close's second line — "the thing I am still unsure about" —
+-- opens a thread in the forum instead, where another learner can answer it
+-- before Sunil gets there. The column exists so the text is not lost if the
+-- forum write fails; a row with `unsure` set and no thread is a delivery
+-- failure, not a design.
+create table if not exists public.feedback (
+  id           uuid        primary key default gen_random_uuid(),
+  learner_id   uuid        not null references public.learners(id) on delete cascade,
+  week         int         not null check (week between 1 and 6),
+  landed       text        not null,
+  pacing       text        not null,
+  changing     text,
+  unsure       text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+-- Additive, for a table that may already exist in production.
+alter table public.feedback add column if not exists changing text;
+alter table public.feedback add column if not exists unsure text;
+create unique index if not exists feedback_learner_week on public.feedback (learner_id, week);
+
+-- ---------------------------------------------------------------------------
+-- Feedback responses — what changed because of what they said
+-- ---------------------------------------------------------------------------
+-- "You said the drill was rushed — week 4 gives it twenty more minutes." Spec
+-- §5.3 says that line IS the feature: without a visible loop, response rates
+-- collapse by week 3 and the feedback form becomes theatre.
+--
+-- NOTE ON §7's CASCADE RULE. Every other learner table is keyed to learner_id
+-- with ON DELETE CASCADE, because it holds one person's data. This one is not
+-- keyed to anyone: it is Sunil's note to the room, one row per week, and it
+-- holds no personal data to erase. Erasing a learner must not delete the note
+-- the whole cohort can see.
+--
+-- It is teaching-adjacent, so §6 deserves an answer too: this lives in Postgres
+-- rather than in src/content/ because it is per-cohort operational writing that
+-- is thrown away between cohorts, not session material that is revised and
+-- reviewed as a diff.
+create table if not exists public.feedback_responses (
+  id           uuid        primary key default gen_random_uuid(),
+  week         int         not null check (week between 1 and 6),
+  body         text        not null,
+  -- Null while Sunil is drafting. Learners only ever read published rows.
+  published_at timestamptz,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create unique index if not exists feedback_response_week on public.feedback_responses (week);
 -- Booking — availability rules, blocked time, and booked calls
 -- ---------------------------------------------------------------------------
 -- The site owns the calendar, not Google. Availability is computed from the
@@ -411,8 +824,20 @@ alter table public.leads     enable row level security;
 alter table public.questions enable row level security;
 alter table public.learners  enable row level security;
 alter table public.intake_responses enable row level security;
+alter table public.familiarity_responses enable row level security;
 alter table public.radar_findings enable row level security;
 alter table public.radar_runs     enable row level security;
+alter table public.submissions    enable row level security;
+alter table public.quiz_responses enable row level security;
+alter table public.session_prompts enable row level security;
+alter table public.outcome_ratings enable row level security;
+alter table public.checkpoint_ratings enable row level security;
+alter table public.pair_drafts enable row level security;
+alter table public.pair_reviews enable row level security;
+alter table public.doubts         enable row level security;
+alter table public.discussion_replies enable row level security;
+alter table public.feedback       enable row level security;
+alter table public.feedback_responses enable row level security;
 alter table public.booking_rules  enable row level security;
 alter table public.booking_blocks enable row level security;
 alter table public.bookings       enable row level security;
@@ -422,8 +847,20 @@ revoke all on public.leads     from anon, authenticated;
 revoke all on public.questions from anon, authenticated;
 revoke all on public.learners  from anon, authenticated;
 revoke all on public.intake_responses from anon, authenticated;
+revoke all on public.familiarity_responses from anon, authenticated;
 revoke all on public.radar_findings from anon, authenticated;
 revoke all on public.radar_runs     from anon, authenticated;
+revoke all on public.submissions    from anon, authenticated;
+revoke all on public.quiz_responses from anon, authenticated;
+revoke all on public.session_prompts from anon, authenticated;
+revoke all on public.outcome_ratings from anon, authenticated;
+revoke all on public.checkpoint_ratings from anon, authenticated;
+revoke all on public.pair_drafts from anon, authenticated;
+revoke all on public.pair_reviews from anon, authenticated;
+revoke all on public.doubts         from anon, authenticated;
+revoke all on public.discussion_replies from anon, authenticated;
+revoke all on public.feedback       from anon, authenticated;
+revoke all on public.feedback_responses from anon, authenticated;
 revoke all on public.booking_rules  from anon, authenticated;
 revoke all on public.booking_blocks from anon, authenticated;
 revoke all on public.bookings       from anon, authenticated;
@@ -449,8 +886,24 @@ drop trigger if exists intake_touch on public.intake_responses;
 create trigger intake_touch before update on public.intake_responses
   for each row execute function public.touch_updated_at();
 
+drop trigger if exists familiarity_touch on public.familiarity_responses;
+create trigger familiarity_touch before update on public.familiarity_responses
+  for each row execute function public.touch_updated_at();
+
 drop trigger if exists radar_touch on public.radar_findings;
 create trigger radar_touch before update on public.radar_findings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists submissions_touch on public.submissions;
+create trigger submissions_touch before update on public.submissions
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists feedback_touch on public.feedback;
+create trigger feedback_touch before update on public.feedback
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists feedback_response_touch on public.feedback_responses;
+create trigger feedback_response_touch before update on public.feedback_responses
   for each row execute function public.touch_updated_at();
 
 drop trigger if exists booking_rules_touch on public.booking_rules;

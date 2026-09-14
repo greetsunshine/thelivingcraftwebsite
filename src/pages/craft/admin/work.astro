@@ -1,0 +1,46 @@
+---
+export const prerender = false;
+
+// The written work, in one place.
+//
+// Three pages until 10 September — ADRs, Quiz, and Quiz vs ADR — and the third
+// one gave the game away: it exists only to hold the other two side by side.
+// A page whose entire content is derived from two other pages is a panel that
+// was filed as a destination.
+//
+// They are also one question asked three ways. *Did the idea land?* The check
+// asks it with eight fixed questions and a confidence rating. The decision
+// record asks it in prose, against a real system. The comparison asks whether
+// those two agree — and disagreement is the finding, which is only visible when
+// the two are on one screen.
+//
+// Nothing here computes a grade. §10 cuts levels, scores and ranks, and the
+// comparison deliberately returns `unclear` rather than a coin-flip verdict.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdrsPanel from '../../../components/admin/AdrsPanel.astro';
+import QuizPanel from '../../../components/admin/QuizPanel.astro';
+import QuizAdrPanel from '../../../components/admin/QuizAdrPanel.astro';
+---
+
+<AdminLayout title="Work" active="work">
+  <div class="page-head">
+    <div>
+      <span class="label">what came in, and whether it agrees with itself</span>
+      <h1>Work</h1>
+      <p>
+        The week's check, the decision records, and the one reading that needs both — where a
+        learner's answers and their written reasoning disagree.
+      </p>
+    </div>
+    <nav class="jump">
+      <a href="#quiz">The check</a>
+      <a href="#adrs">Decision records</a>
+      <a href="#quiz-adr">Where they disagree</a>
+    </nav>
+  </div>
+
+  <QuizPanel />
+  <AdrsPanel />
+  <QuizAdrPanel />
+</AdminLayout>

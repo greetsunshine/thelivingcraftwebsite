@@ -4,6 +4,8 @@ title: "The review"
 module: M4
 summary: "Your own system, read by the room against the same five questions all cohort."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline for Sunil to write. Everything below is

@@ -14,6 +14,13 @@
 // filter in code rather than in the prompt (asked politely, a run emitted 22
 // items of which 16 had no source at all).
 //
+// Two later additions, both aimed at the same weakness — that a snippet is not
+// a source. The research pass can now OPEN the pages it reports on
+// (FETCHES_PER_TOPIC), and it runs the topics CONCURRENTLY (RESEARCH_CONCURRENCY)
+// so paying for that extra reading does not turn a weekly sweep into a
+// quarter-hour job. Concurrency is only safe because the budgets were already
+// per topic; if that ever changes, this does too.
+//
 // That list is why this is a shared module rather than a copy-paste. A second
 // agent with a hand-copied version of these guards is a second agent that will
 // drift out of having them.
@@ -37,6 +44,80 @@ export const TRANSCRIBE_MODEL = 'claude-opus-5';
 
 /** Searches per topic — per topic, never shared across the run. */
 export const SEARCHES_PER_TOPIC = 6;
+
+/**
+ * Pages the research pass may actually open, per topic.
+ *
+ * Both agents are told to prefer the primary artefact over somebody's summary
+ * of it, and the radar is asked to grade every source as primary, press, vendor
+ * or secondhand. Until this existed they did both from a search snippet — which
+ * is a title, a URL and two lines of context written by whoever wanted the
+ * click. That is enough to guess a grading and not enough to earn one.
+ *
+ * Smaller than the search budget on purpose. Searching is how you find the
+ * candidates; fetching is what you spend on the two or three you mean to
+ * report, and an agent that opens everything it finds is an agent whose context
+ * is full of pages it did not use.
+ */
+export const FETCHES_PER_TOPIC = 4;
+
+/**
+ * How many topics research at once.
+ *
+ * They were serial, which made a six-category radar sweep six web-searching
+ * Opus calls end to end — about eleven minutes of a GitHub Action doing one
+ * thing at a time, for calls that share nothing. The per-topic budgets are what
+ * make this safe: no topic can spend another's searches, so running them
+ * together cannot change what any one of them returns.
+ *
+ * Bounded rather than unlimited because the ceiling here is tokens per minute,
+ * not politeness. Six concurrent Opus calls each pulling in fetched pages is a
+ * rate-limit reply, and a 429 mid-sweep costs the research already paid for.
+ */
+export const RESEARCH_CONCURRENCY = 3;
+
+/**
+ * Run `work` over `items` with at most `limit` in flight, preserving order.
+ *
+ * Results are written back by index, so the notes reach the transcription pass
+ * in the order the topics were listed no matter what order they finish in.
+ */
+async function mapWithLimit<A, B>(
+  items: A[],
+  limit: number,
+  work: (item: A, index: number) => Promise<B>,
+): Promise<B[]> {
+  const out = new Array<B>(items.length);
+  let next = 0;
+
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      out[i] = await work(items[i], i);
+    }
+  });
+
+  await Promise.all(runners);
+  return out;
+}
+
+/**
+ * Appended to every per-topic prompt, because the tool it describes is granted
+ * here rather than by the calling script. Keeping the two together is what stops
+ * a future agent being handed the tool and never told to use it.
+ */
+const FETCH_GUIDANCE = `
+
+You can open pages, not only read search results. Use web_fetch on the artefact itself before you
+report or grade it — the paper, the filing, the release notes, the post-mortem, the announcement.
+A search snippet tells you a page exists and is written by whoever wanted the click; it does not
+tell you whether the source says what the headline says, and a judgement about how solid a source
+is has to be a judgement about the source.
+
+You have ${FETCHES_PER_TOPIC} fetches for this topic. Spend them on the things you intend to
+report, not on browsing. If you could not open something, say so rather than grading it as if you
+had.`;
 
 const SOURCE_URL = /^https?:\/\/\S+$/i;
 
@@ -166,36 +247,87 @@ export async function sweep<T extends { id: string; source: string }>(spec: Swee
   // Pass 1 — research, ONE CALL PER TOPIC. A single call covering every topic
   // spent a shared budget on the first one and reported the rest from whatever
   // it already had. Per-topic calls mean an empty topic is genuinely empty
-  // rather than unsearched.
-  const notes: string[] = [];
-  for (const [i, topic] of spec.topics.entries()) {
-    console.log(`  [${i + 1}/${spec.topics.length}] ${topic.slice(0, 68)}…`);
+  // rather than unsearched — and, because nothing is shared between them, mean
+  // the topics can run concurrently without changing any one result.
+  //
+  // Progress lines therefore arrive out of order. Each carries its own index so
+  // the log still reads.
+  const failures: string[] = [];
 
-    const research = await client.messages.create({
-      model: RESEARCH_MODEL,
-      max_tokens: 6000,
-      thinking: { type: 'adaptive' },
-      output_config: { effort: 'medium' },
-      system: spec.system,
-      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES_PER_TOPIC }],
-      messages: [{ role: 'user', content: spec.researchPrompt(topic, today, SEARCHES_PER_TOPIC) }],
-    });
+  const perTopic = await mapWithLimit(spec.topics, RESEARCH_CONCURRENCY, async (topic, i) => {
+    const label = `[${i + 1}/${spec.topics.length}] ${topic.slice(0, 58)}…`;
+    console.log(`  ${label}  started`);
 
-    if (research.stop_reason === 'refusal') {
-      console.warn(`      refused: ${research.stop_details?.explanation ?? 'no explanation'} — skipping`);
-      continue;
+    try {
+      // Streamed for the same reason the transcription pass is: the SDK refuses
+      // a non-streaming request whose estimated duration passes ten minutes, and
+      // a topic that searches six times and then opens four pages is no longer
+      // obviously under that. finalMessage() returns the same Message the
+      // non-streaming call did, so every check below is unchanged.
+      const research = await client.messages
+        .stream({
+          model: RESEARCH_MODEL,
+          max_tokens: 6000,
+          thinking: { type: 'adaptive' },
+          output_config: { effort: 'medium' },
+          system: spec.system,
+          tools: [
+            { type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES_PER_TOPIC },
+            {
+              type: 'web_fetch_20260209',
+              name: 'web_fetch',
+              max_uses: FETCHES_PER_TOPIC,
+              // A cap per page, so one long document cannot fill the context
+              // that the other three fetches and the write-up still need.
+              max_content_tokens: 12000,
+            },
+          ],
+          messages: [
+            { role: 'user', content: spec.researchPrompt(topic, today, SEARCHES_PER_TOPIC) + FETCH_GUIDANCE },
+          ],
+        })
+        .finalMessage();
+
+      if (research.stop_reason === 'refusal') {
+        console.warn(`  ${label}  refused: ${research.stop_details?.explanation ?? 'no explanation'} — skipping`);
+        return '';
+      }
+
+      const text = research.content
+        .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+        .map((b) => b.text)
+        .join('\n')
+        .trim();
+
+      console.log(`  ${label}  ${text ? 'done' : 'nothing found'}`);
+      return text ? `## Topic: ${topic}\n\n${text}` : '';
+    } catch (err) {
+      // One topic dying must not lose the five that already succeeded and were
+      // already paid for. It is recorded and the sweep carries on with the rest.
+      const msg = err instanceof Error ? err.message : String(err);
+      failures.push(`${topic.slice(0, 58)}: ${msg}`);
+      console.warn(`  ${label}  FAILED: ${msg}`);
+      return '';
     }
+  });
 
-    const text = research.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n')
-      .trim();
+  const notes = perTopic.filter((n) => n !== '');
 
-    if (text) notes.push(`## Topic: ${topic}\n\n${text}`);
+  if (notes.length === 0) {
+    // Nothing at all, with failures behind it, is an outage rather than a quiet
+    // week — and returning [] here would file it as "found nothing", which is
+    // exactly the confusion the run record exists to prevent.
+    if (failures.length > 0) {
+      throw new Error(
+        `All ${spec.topics.length} research call(s) failed. First: ${failures[0]}`,
+      );
+    }
+    return [];
   }
 
-  if (notes.length === 0) return [];
+  if (failures.length > 0) {
+    console.warn(`  ${failures.length} topic(s) failed and were skipped; transcribing the rest.`);
+  }
 
   // Pass 2 — transcribe. No tools, so no citations, so structured output is
   // allowed. It sees only pass 1's notes and therefore cannot introduce a

@@ -1,0 +1,329 @@
+---
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { listLearnerFeedback, listPublishedResponses } from '../../lib/craft/feedback';
+import { sessionEnded } from '../../lib/craft/checks';
+
+export const prerender = false;
+const learner = Astro.locals.learner!;
+const [feedbacks, changes] = await Promise.all([
+  listLearnerFeedback(learner.id),
+  // The loop, closed. Spec §5.3: without this the form is theatre and the
+  // response rate collapses by week 3.
+  listPublishedResponses(),
+]);
+
+// Only sessions that have actually ENDED, on the same clock as the prompt that
+// invites people here and the to-do that reminds them. This tested `taughtOn`,
+// which was a fifth definition of "the session happened" — and the one that
+// would have made the prompt link to an empty page.
+const sessions = (await getCollection('sessions'))
+  .filter((s) => s.data.week >= 1 && sessionEnded(s.data.endsAt))
+  .sort((a, b) => b.data.week - a.data.week); // Newest first
+
+const submittedWeeks = new Set(feedbacks.map(f => f.week));
+const allPending = sessions.filter(s => !submittedWeeks.has(s.data.week));
+
+// `?week=N` narrows to one form — the prompt and the to-do both link that way,
+// and landing on a stack of three when you were asked about one is disorienting.
+// An unknown or already-submitted week falls back to the full list rather than
+// rendering an empty page.
+const weekParam = Astro.url.searchParams.get('week');
+const requested = weekParam !== null && /^\d+$/.test(weekParam) ? Number(weekParam) : null;
+const focused = requested !== null && allPending.some((s) => s.data.week === requested);
+const pendingSessions = focused
+  ? allPending.filter((s) => s.data.week === requested)
+  : allPending;
+const hiddenCount = allPending.length - pendingSessions.length;
+---
+
+<CraftLayout title="Session Feedback" learner={learner}>
+  <div class="wrap page-narrow" style="max-width: 640px; margin: 0 auto;">
+    <h1 style="font-size:clamp(30px,4.4vw,46px);margin:0 0 16px">Session Feedback</h1>
+    <p class="lead" style="margin-bottom: 48px;">
+      Four questions per session — two about the session, two about you. What you say
+      changes the next one, and what changed is listed below so you can see it.
+    </p>
+
+    {changes.length > 0 && (
+      <section class="changes" data-tour="feedback-changes">
+        <h2>What changed</h2>
+        <ul>
+          {changes.map((c) => (
+            <li>
+              <span class="label">After week {c.week}</span>
+              <p>{c.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {hiddenCount > 0 && (
+      <p class="other-weeks">
+        <a href="/craft/feedback">
+          {hiddenCount} other session{hiddenCount === 1 ? '' : 's'} still {hiddenCount === 1 ? 'wants' : 'want'} feedback →
+        </a>
+      </p>
+    )}
+
+    {pendingSessions.length > 0 ? (
+      <div class="feedback-forms">
+        {pendingSessions.map(s => (
+          <div class="feedback-card">
+            <div class="f-header">
+              <h2 style="font-size:20px;margin:0">Week {s.data.week}</h2>
+              <span class="mono faint">{s.data.title}</span>
+            </div>
+            
+            <form class="feedback-form" data-tour="feedback-form" method="POST" action="/api/craft/feedback">
+              <input type="hidden" name="week" value={s.data.week} />
+              
+              <div class="field">
+                <label for={`landed-${s.data.week}`}>What landed well, or shifted your thinking?</label>
+                <textarea id={`landed-${s.data.week}`} name="landed" required rows="3"></textarea>
+              </div>
+
+              <div class="field" style="margin-top:24px">
+                <label for={`pacing-${s.data.week}`}>What felt too fast, too slow, or unclear?</label>
+                <textarea id={`pacing-${s.data.week}`} name="pacing" required rows="3"></textarea>
+              </div>
+
+              {/* The two the room answers in chat at the close. Different job
+                  from the two above: those are about the session, these are
+                  about you. Neither is required — somebody who genuinely
+                  settled everything should not have to invent a doubt to get
+                  past a form at the end of five hours. */}
+              <div class="close-pair">
+                <p class="mono close-eyebrow">And two about you</p>
+
+                <div class="field">
+                  <label for={`changing-${s.data.week}`}>
+                    The one thing I will change in my own build this week is…
+                  </label>
+                  <textarea id={`changing-${s.data.week}`} name="changing" rows="2"></textarea>
+                </div>
+
+                <div class="field" style="margin-top:20px">
+                  <label for={`unsure-${s.data.week}`}>The thing I am still unsure about is…</label>
+                  <p class="hint">
+                    This one <strong>opens a thread in Discussion</strong> rather than coming to
+                    Sunil alone. Somebody in the room has usually hit the same thing, and they can
+                    answer it before he gets there.
+                  </p>
+                  <textarea id={`unsure-${s.data.week}`} name="unsure" rows="2"></textarea>
+                </div>
+              </div>
+
+              <div class="actions" style="margin-top:24px">
+                <button type="submit" class="btn btn-primary submit-btn">Submit Feedback</button>
+                <span class="mono msg" style="display:none;"></span>
+              </div>
+            </form>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="feedback-done">
+        <h2>{sessions.length === 0 ? 'No session has run yet' : 'All caught up.'}</h2>
+        <p class="muted">
+          {sessions.length === 0
+            ? 'The form for a week opens when that session ends. Nothing to say about a session that has not happened.'
+            : "You've given feedback on every session that has run."}
+        </p>
+        <a href="/craft" class="btn" style="margin-top:24px">Back to cohort</a>
+      </div>
+    )}
+  </div>
+</CraftLayout>
+
+<script>
+  document.querySelectorAll('.feedback-form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.submit-btn') as HTMLButtonElement;
+      const msg = form.querySelector('.msg') as HTMLSpanElement;
+      
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+      msg.style.display = 'none';
+
+      const formData = new FormData(form as HTMLFormElement);
+      const data = {
+        week: parseInt(formData.get('week') as string, 10),
+        landed: formData.get('landed'),
+        pacing: formData.get('pacing'),
+        changing: formData.get('changing'),
+        unsure: formData.get('unsure'),
+      };
+
+      try {
+        const res = await fetch((form as HTMLFormElement).action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          // Say where the doubt went. "Submitted" would hide the fact that a
+          // thread now exists with their name on it in front of the room.
+          msg.textContent = data.threadId
+            ? 'Submitted — your question is now open in Discussion.'
+            : data.keptLocally
+              ? 'Submitted. Your question could not reach Discussion, so Sunil has it directly.'
+              : 'Submitted.';
+          msg.style.color = 'var(--clay)';
+          msg.style.display = 'inline-block';
+          setTimeout(() => {
+            window.location.href = data.threadId
+              ? `/craft/discussion/${data.threadId}`
+              : window.location.pathname;
+          }, 1200);
+        } else {
+          throw new Error('Failed to submit');
+        }
+      } catch (err) {
+        msg.textContent = 'Something went wrong.';
+        msg.style.display = 'inline-block';
+        msg.style.color = 'var(--danger)';
+        btn.disabled = false;
+        btn.textContent = 'Submit Feedback';
+      }
+    });
+  });
+</script>
+
+<style>
+  /* The two about you, set apart from the two about the session. */
+  .close-pair {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  .close-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 16px;
+  }
+  .close-pair .hint {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 4px 0 8px;
+    max-width: 54ch;
+  }
+
+  .other-weeks {
+    margin: -24px 0 28px;
+    font-size: 13.5px;
+  }
+  .other-weeks a { color: var(--clay); }
+</style>
+
+<style>
+  .changes {
+    margin-bottom: 48px;
+    padding: 24px 26px;
+    background: var(--surface);
+    border-left: 3px solid var(--clay);
+  }
+  .changes h2 {
+    font-size: 20px;
+    margin: 0 0 16px;
+  }
+  .changes ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .changes .label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .changes p {
+    margin: 0;
+    max-width: 62ch;
+    white-space: pre-wrap;
+  }
+
+  .feedback-forms {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .feedback-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 32px 40px;
+  }
+  
+  .f-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-weight: 500;
+  }
+  textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: var(--paper-1);
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+  }
+  
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .msg {
+    font-size: 12px;
+  }
+  
+  .feedback-done {
+    text-align: center;
+    padding: 64px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+  }
+  .feedback-done h2 {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  
+  @media (max-width: 600px) {
+    .feedback-card {
+      padding: 24px;
+    }
+  }
+
+  .page-narrow { padding-top: 40px; padding-bottom: 56px; }
+
+  @media (max-width: 780px) {
+    /* 40px under a fixed bar on a phone is a lot of nothing; the room is
+       better spent between the blocks below. */
+    .page-narrow { padding-top: 24px; padding-bottom: 40px; }
+  }
+</style>

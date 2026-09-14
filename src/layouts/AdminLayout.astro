@@ -17,17 +17,11 @@ import { dbHealth, looksUnmigrated } from '../lib/admin/health';
 
 export interface Props {
   title: string;
-  /** Which nav item is current. */
-  active?:
-    | 'overview'
-    | 'traffic'
-    | 'leads'
-    | 'bookings'
-    | 'questions'
-    | 'radar'
-    | 'content'
-    | 'learners'
-    | 'intake';
+  /**
+   * Which nav item is current. Derived from NAV, so adding a console page means
+   * one edit (the nav entry) rather than two that can drift apart.
+   */
+  active?: (typeof NAV)[number]['key'];
 }
 
 const { title, active } = Astro.props;
@@ -40,17 +34,36 @@ const caps = capabilities();
 const health = caps.data ? await dbHealth() : null;
 const unmigrated = health ? looksUnmigrated(health) : false;
 
+// Fifteen destinations in one row was unreadable, and several of them were the
+// same job filed twice. Ten now, in two groups, because the console really does
+// serve two different mornings: the practice (who came, who asked, what the
+// agents found) and the cohort (who is in it, what they did, what moved).
+//
+// The merges, and why each one holds:
+//   quiz + adrs + quiz-adr  -> work      the third was derived from the first two
+//   intake + familiarity    -> baseline  one instrument, asked at week 0 and week 6
+//   radar + content + questions -> agents  three review queues for machine output
+//
+// Adding a page means one entry here — `active` is typed off this array, so a
+// page naming a key that does not exist fails the build rather than rendering
+// with no nav item lit.
 const NAV = [
-  { key: 'overview', href: '/craft/admin', label: 'Overview' },
-  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic' },
-  { key: 'leads', href: '/craft/admin/leads', label: 'Leads' },
-  { key: 'bookings', href: '/craft/admin/bookings', label: 'Calls' },
-  { key: 'questions', href: '/craft/admin/questions', label: 'Questions' },
-  { key: 'radar', href: '/craft/admin/radar', label: 'Radar' },
-  { key: 'content', href: '/craft/admin/content', label: 'Content' },
-  { key: 'learners', href: '/craft/admin/learners', label: 'Learners' },
-  { key: 'intake', href: '/craft/admin/intake', label: 'Intake' },
+  { key: 'overview', href: '/craft/admin', label: 'Overview', group: 'practice' },
+  { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic', group: 'practice' },
+  { key: 'leads', href: '/craft/admin/leads', label: 'Leads', group: 'practice' },
+  { key: 'bookings', href: '/craft/admin/bookings', label: 'Calls', group: 'practice' },
+  { key: 'agents', href: '/craft/admin/agents', label: 'Agents', group: 'practice' },
+
+  { key: 'learners', href: '/craft/admin/learners', label: 'Learners', group: 'cohort' },
+  { key: 'sessions', href: '/craft/admin/sessions', label: 'Sessions', group: 'cohort' },
+  { key: 'discussion', href: '/craft/admin/discussion', label: 'Discussion', group: 'cohort' },
+  { key: 'work', href: '/craft/admin/work', label: 'Work', group: 'cohort' },
+  { key: 'baseline', href: '/craft/admin/baseline', label: 'Baseline', group: 'cohort' },
+  { key: 'feedback', href: '/craft/admin/feedback', label: 'Feedback', group: 'cohort' },
 ] as const;
+
+const practice = NAV.filter((n) => n.group === 'practice');
+const cohort = NAV.filter((n) => n.group === 'cohort');
 ---
 
 <!DOCTYPE html>
@@ -76,21 +89,50 @@ const NAV = [
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
         <a class="admin-mark" href="/craft/admin"><span class="dot"></span> Console</a>
-        <nav class="admin-links">
-          {
-            NAV.map((item) => (
-              <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
-                {item.label}
-              </a>
-            ))
-          }
-        </nav>
-        <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
-        <form method="POST" action="/api/craft/admin/logout">
-          <button class="btn small" type="submit">Sign out</button>
-        </form>
+        <button
+          type="button"
+          class="admin-burger"
+          id="adminNavToggle"
+          aria-expanded="false"
+          aria-controls="adminLinks"
+          aria-label="Menu"
+        >
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+        {/* One wrapper so the phone sheet can hold the destinations AND the two
+            actions, the way the course area does. On desktop it is
+            display:contents, so these lay out on the bar exactly as before. */}
+        <div class="admin-sheet" id="adminLinks">
+          <nav class="admin-links">
+            <span class="nav-group">
+              <span class="nav-group-label mono">Practice</span>
+              {practice.map((item) => (
+                <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))}
+            </span>
+            <span class="nav-rule" aria-hidden="true"></span>
+            <span class="nav-group">
+              <span class="nav-group-label mono">Cohort</span>
+              {cohort.map((item) => (
+                <a href={item.href} aria-current={active === item.key ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))}
+            </span>
+          </nav>
+          <div class="admin-sheet-tail">
+            <a class="faint" style="font-size:13px" href="/" target="_blank" rel="noopener">View site ↗</a>
+            <form method="POST" action="/api/craft/admin/logout">
+              <button class="btn small" type="submit">Sign out</button>
+            </form>
+          </div>
+        </div>
       </div>
     </header>
+
+    <div class="nav-scrim" id="adminNavScrim" hidden></div>
 
     <main>
       <div class="wrap">
@@ -155,3 +197,48 @@ const NAV = [
     </main>
   </body>
 </html>
+
+<script>
+  // Phone nav sheet for the console. Fourteen destinations do not fit a phone
+  // row; the burger opens them as full-width rows instead.
+  function initAdminNav() {
+    const toggle = document.getElementById('adminNavToggle');
+    const links = document.getElementById('adminLinks');
+    const scrim = document.getElementById('adminNavScrim');
+    if (!toggle || !links || !scrim) return;
+
+    const setOpen = (open: boolean) => {
+      links.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      scrim.hidden = !open;
+      // the scrim fades, so it needs a frame between unhide and the class
+      if (open) requestAnimationFrame(() => scrim.classList.add('is-open'));
+      else scrim.classList.remove('is-open');
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+
+    const close = () => setOpen(false);
+
+    toggle.addEventListener('click', () =>
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+
+    scrim.addEventListener('click', close);
+    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        close();
+        (toggle as HTMLElement).focus();
+      }
+    });
+
+    // Dragging back to desktop width must not leave a hidden sheet holding the
+    // body scroll lock.
+    window.matchMedia('(min-width: 721px)')
+      .addEventListener('change', (e) => { if (e.matches) close(); });
+
+    close();
+  }
+
+  initAdminNav();
+</script>

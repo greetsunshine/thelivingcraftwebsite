@@ -110,6 +110,30 @@ main { padding: var(--space-6) 0 var(--space-9); }
 .page-head h1 { font-size: var(--size-7); color: var(--text-loud); }
 .page-head p { color: var(--text-quiet); font-size: var(--size-3); max-width: var(--measure-prose); margin-top: var(--space-1); line-height: var(--lh-snug); }
 
+/* --- the nav, in two groups ---------------------------------------------
+   The bar carries two different jobs and used to run them together as one
+   undifferentiated row of fifteen. A label and a rule cost almost nothing
+   and turn scanning it into picking a side first. */
+.nav-group { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.nav-group-label { font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-faint); }
+.nav-rule { width: 1px; align-self: stretch; background: var(--border-hair); margin: 0 var(--space-2); }
+
+/* --- a page made of panels ---------------------------------------------
+   Three console pages are now composed of what used to be separate pages.
+   A rule between them, not a card around each: they are already full of
+   cards, and boxing a box is how a dense surface stops being readable. */
+.admin-section { margin-top: var(--space-7); padding-top: var(--space-6); border-top: var(--border-w-hair) solid var(--border-hair); }
+.admin-section:first-of-type { margin-top: var(--space-5); padding-top: 0; border-top: 0; }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-5); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.section-head h2 { font-size: var(--size-6); color: var(--text-loud); }
+.section-head p { color: var(--text-quiet); font-size: var(--size-3); max-width: var(--measure-prose); margin-top: var(--space-1); line-height: var(--lh-snug); }
+
+/* In-page nav for a composed page. Plain links to anchors — no JS, no tab
+   state to get out of step with the scroll position. */
+.jump { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+.jump a { font-size: var(--size-2); color: var(--text-quiet); border-bottom: var(--border-w-hair) solid var(--border-hair); padding-bottom: 2px; }
+.jump a:hover { color: var(--accent-ink); border-bottom-color: var(--accent-ink); }
+
 section.panel { margin-top: var(--space-6); }
 section.panel > h2 { font-size: var(--size-5); margin-bottom: var(--space-1); color: var(--text-loud); }
 section.panel > .sub { color: var(--text-quiet); font-size: var(--size-2); margin-bottom: var(--space-4); }
@@ -320,3 +344,253 @@ details.raw pre { margin-top: var(--space-2); padding: var(--space-3); backgroun
 .login-card label { display: block; margin-bottom: var(--space-4); }
 .login-card label .label { display: block; margin-bottom: var(--space-1); }
 .login-card button { width: 100%; }
+
+/* ===========================================================================
+   Phone rhythm. The console runs at compact density, which is right for a
+   laptop and reads as cramped on a phone: 40px rows and 8px cell padding
+   assume a pointer and a wide viewport. These loosen the OUTER rhythm — the
+   gaps between blocks — without touching the density INSIDE a table, which is
+   what makes it scannable in the first place.
+   =========================================================================== */
+
+@media (max-width: 900px) {
+  .wrap { padding: 0 20px; }
+
+  .page-head { align-items: flex-start; margin-bottom: var(--space-6); }
+  .page-head h1 { font-size: var(--size-6); margin-top: var(--space-1); }
+  .page-head p { margin-top: var(--space-2); line-height: var(--lh-normal); }
+
+  main { padding-top: var(--space-5); padding-bottom: var(--space-8); }
+
+  section.panel { margin-top: var(--space-7); }
+  .tiles { gap: var(--space-3); }
+  .notice { padding: var(--space-4) var(--space-5); }
+}
+
+/* The burger and the scrim only exist on a phone. */
+.admin-burger { display: none; }
+.nav-scrim { display: none; }
+
+/* On desktop the wrapper is transparent to layout, so the nav and the two
+   actions sit on the bar exactly as they always have. It only becomes a real
+   box on a phone, where it is the sheet. */
+.admin-sheet { display: contents; }
+
+/* Matches the course area's bar exactly — same token, same number. */
+:root { --mobile-bar-h: 60px; }
+
+@media (max-width: 720px) {
+  /* --- nav becomes a sheet behind a burger --------------------------------
+     Identical to the course area's, deliberately: same bar height, same scrim,
+     same sheet geometry, same rows, same burger. One gesture across both
+     areas. The only difference is what is inside it. */
+  .admin-nav-inner {
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+    min-height: var(--mobile-bar-h);
+    justify-content: space-between;
+  }
+
+  .admin-burger {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    color: var(--text-loud);
+    cursor: pointer;
+  }
+  .admin-burger:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* Three lines from one element: the middle is the span, the outer two are
+     its pseudo-elements. Open, the middle fades and the outer two cross. */
+  .burger, .burger::before, .burger::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.22s ease, opacity 0.14s ease;
+  }
+  .burger { position: relative; }
+  .burger::before, .burger::after { content: ''; position: absolute; left: 0; }
+  .burger::before { top: -6px; }
+  .burger::after { top: 6px; }
+
+  .admin-burger[aria-expanded='true'] .burger { opacity: 0; transform: scaleX(0.4); }
+  .admin-burger[aria-expanded='true'] .burger::before { transform: translateY(6px) rotate(45deg); opacity: 1; }
+  .admin-burger[aria-expanded='true'] .burger::after { transform: translateY(-6px) rotate(-45deg); opacity: 1; }
+
+  /* --- the scrim --- */
+  .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: var(--mobile-bar-h) 0 0 0;
+    z-index: 65;
+    background: rgba(22, 33, 46, 0.28);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+  .nav-scrim[hidden] { display: none; }
+  .nav-scrim.is-open { opacity: 1; }
+
+  /* --- the sheet --- */
+  .admin-sheet {
+    display: flex;
+    position: fixed;
+    inset: var(--mobile-bar-h) 0 auto 0;
+    z-index: 68;
+    width: 100%;
+    max-height: calc(100vh - var(--mobile-bar-h));
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 0 12px;
+    background: var(--surface);
+    /* a shadow, not a border — §9 */
+    box-shadow: var(--shadow-overlay);
+    border-bottom-left-radius: var(--radius-card);
+    border-bottom-right-radius: var(--radius-card);
+    transform: translateY(-8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.22s ease, opacity 0.18s ease, visibility 0.22s;
+  }
+  .admin-sheet.is-open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .admin-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .admin-links a {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 0;
+    color: var(--text-body);
+    font-size: var(--size-4);
+    position: relative;
+  }
+  .admin-links a:hover { background: var(--paper-2); }
+  .admin-links a[aria-current='page'] {
+    color: var(--text-loud);
+    font-weight: var(--weight-medium);
+    border-bottom-color: transparent;
+  }
+  /* the desktop underline becomes a left bar on a full-width row */
+  .admin-links a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--sun);
+  }
+
+  /* The two actions live at the foot of the sheet, behind a rule — the same
+     place the course area keeps Sign out. */
+  .admin-sheet-tail {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+  .admin-sheet-tail > a.faint {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: var(--size-4) !important;
+    color: var(--text-quiet);
+  }
+  .admin-sheet-tail > a.faint:hover { background: var(--paper-2); }
+  .admin-sheet-tail form { display: block; }
+  .admin-sheet-tail .btn {
+    width: 100%;
+    min-height: 52px;
+    justify-content: flex-start;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--size-4);
+    color: var(--text-body);
+  }
+  .admin-sheet-tail .btn:hover { background: var(--paper-2); }
+
+  /* --- tables become stacked cards ----------------------------------------
+     A three-column table cannot fit 390px. Scrolling it sideways hides the
+     column being scanned for, which is the whole reason the page was opened.
+     Each row becomes its own block, with the header text restated per cell
+     from data-label so a value is never orphaned from its column name. */
+  .table-scroll {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .table-scroll table,
+  .table-scroll tbody,
+  .table-scroll tr,
+  .table-scroll td { display: block; width: 100%; }
+
+  .table-scroll thead { display: none; }
+
+  .table-scroll tr {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .table-scroll td {
+    border-bottom: 0;
+    height: auto;
+    padding: 7px 0;
+  }
+  .table-scroll td:first-child { padding-top: 0; }
+  .table-scroll td:last-child { padding-bottom: 0; }
+
+  .table-scroll td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-marginal);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    margin-bottom: 2px;
+  }
+
+  /* --- grids collapse ------------------------------------------------------ */
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2, .grid-2-wide { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .tiles { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burger, .burger::before, .burger::after { transition: none; }
+}

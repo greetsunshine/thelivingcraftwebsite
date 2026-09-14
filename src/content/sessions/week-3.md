@@ -4,6 +4,8 @@ title: "Evidence"
 module: M2
 summary: "Your fix passed and proved nothing. How to test a system that answers differently every time."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline for Sunil to write. Everything below is

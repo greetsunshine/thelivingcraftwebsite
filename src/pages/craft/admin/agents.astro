@@ -1,0 +1,53 @@
+---
+export const prerender = false;
+
+// Everything the agents gathered, and everything they could not answer.
+//
+// Three pages until 10 September, all doing one job — reviewing machine output
+// before a human stands behind it:
+//
+//   Radar     what the second retriever found, for you. Straight to the
+//             database, reviewed here rather than in a pull request.
+//   Content   what the first retriever found, for VISITORS. Reviewed as a
+//             pull request, because a chatbot repeats it verbatim.
+//   Questions what visitors asked and the agent could not answer. The other
+//             direction: not "what changed in the world" but "what our own
+//             facts do not cover".
+//
+// THE TWO STORES STAY SEPARATE, AND THIS PAGE DOES NOT CHANGE THAT. `radar_findings`
+// is read only by the radar panel and is off the visitor agent's tool surface
+// entirely — `/api/ask` must never import lib/agent/radar.ts. Putting the two
+// review surfaces on one screen is a fact about where Sunil looks, not about
+// what the agent can reach.
+//
+// The Questions panel earns its place beside them: a question the agent could
+// not answer is the cheapest possible instruction about what to gather next.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import RadarPanel from '../../../components/admin/RadarPanel.astro';
+import ContentPanel from '../../../components/admin/ContentPanel.astro';
+import QuestionsPanel from '../../../components/admin/QuestionsPanel.astro';
+---
+
+<AdminLayout title="Agents" active="agents">
+  <div class="page-head">
+    <div>
+      <span class="label">what they gathered, and what they could not answer</span>
+      <h1>Agents</h1>
+      <p>
+        Three feeds, one job: nothing a machine wrote reaches a visitor until a person has read it.
+        The radar is your notebook and lands straight in the database; visitor-facing content lands
+        as a pull request instead.
+      </p>
+    </div>
+    <nav class="jump">
+      <a href="#radar">Radar</a>
+      <a href="#content">Visitor content</a>
+      <a href="#questions">Unanswered questions</a>
+    </nav>
+  </div>
+
+  <RadarPanel />
+  <ContentPanel />
+  <QuestionsPanel />
+</AdminLayout>

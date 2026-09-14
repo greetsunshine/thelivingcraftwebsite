@@ -1,0 +1,83 @@
+# Scores the visitor Q&A agent against a committed baseline.
+#
+# The failure this guards is the only one on the site that is silent. A bad
+# deploy 500s and a missing key 503s, but an agent that has quietly started
+# answering from what it knows rather than from what a tool returned produces a
+# well-written paragraph with a wrong number in it. Nothing notices unless
+# something asks.
+#
+# PATH-FILTERED ON PURPOSE. A full pass is fifteen live Opus calls, so this runs
+# when the things that can cause that drift change — the fact base, the latest
+# feed, the system prompt, the retrieval code — and not on every push. Everything
+# else is covered by `astro check`, which is free.
+#
+# Needs ANTHROPIC_API_KEY as a repository secret. It needs nothing else: the
+# questions log no-ops without Supabase, and the budget guard reports "unknown"
+# without an admin key and lets traffic through.
+
+name: Eval the visitor agent
+
+on:
+  pull_request:
+    paths:
+      - 'src/data/facts.ts'
+      - 'src/data/latest.json'
+      - 'src/data/regions.ts'
+      - 'src/pages/api/ask.ts'
+      - 'src/lib/agent/**'
+      - 'scripts/eval-agent.ts'
+      - 'scripts/eval-baseline.json'
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Start the dev server
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npm run dev > /tmp/astro-dev.log 2>&1 &
+          echo $! > /tmp/astro-dev.pid
+
+      - name: Wait for it to answer
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:4321/; then
+              echo "up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "The dev server never came up. Its log:"
+          cat /tmp/astro-dev.log
+          exit 1
+
+      - name: Score the agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run eval
+
+      # A failing eval is the interesting case, so the log has to survive it.
+      - name: Server log
+        if: always()
+        run: |
+          echo '### Dev server log' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -40 /tmp/astro-dev.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop the dev server
+        if: always()
+        run: kill "$(cat /tmp/astro-dev.pid)" || true

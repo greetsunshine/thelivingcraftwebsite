@@ -3,6 +3,7 @@ week: 0
 title: "Before we begin"
 summary: "Get the reference agent running, then tell Sunil where you are starting from."
 status: ready
+topics: []
 ---
 
 Welcome aboard. There is about 45 minutes of prep to do on your own, then we meet

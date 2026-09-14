@@ -4,6 +4,129 @@ title: "The harness"
 module: M1
 summary: 'Draw the map: what an agent actually is as a system, and where it breaks before you have written a line of it.'
 status: draft
+assignment: "One boundary you drew, and the alternative you rejected"
+
+# The five, word for word. Rated at 00:05 and again at 04:52 — "the same five
+# statements, in the same words, so that the two sets of numbers mean the same
+# thing". Each completes "Right now, I could…".
+outcomes:
+  - id: harness
+    text: draw the four parts of an agent harness and say which part a given failure lives in
+  - id: trace
+    text: read an agent's trace and say where the money went, which step spent it, and which line I would put on a dashboard
+  - id: failures
+    text: name four failures that a better model would not fix, and the boundary that stops each
+    movesMost: true
+  - id: direct
+    text: direct a coding assistant against a decision I made first, and review what it wrote against that decision
+    movesMost: true
+  - id: record
+    text: "write a decision record: the boundary I drew, the alternative I rejected, and what would change my mind"
+
+# Week 1's row from docs/teaching/threads.md.
+threads:
+  - { id: trace-and-bill, weight: builds }
+  - { id: boundaries, weight: named }
+  - { id: evidence, weight: named }
+  - { id: untrusted-input, weight: named }
+  - { id: state, weight: named }
+  - { id: multi-agent, weight: named }
+
+# The items this week's check asks, in order.
+#
+# Four, not the whole bank of fifteen. These are the ones that can stand on a
+# page with a Submit button and no instructor: multiple choice, with a key.
+# The other eleven are prose — "sort these six into four buckets", "give three
+# reasons this does not hold" — and they are answered in the room or in the
+# decision record, which is where docs/teaching/quiz/week-1.md says to use them.
+#
+# Reorder or extend this freely; the ids are stable and the bank is the source.
+quiz:
+  - w1-q1
+  - w1-q9
+  - w1-q11
+  - w1-q13
+
+# Offsets from startsAt, never wall-clock. The first `block` is 00:15, which is
+# what closes the before-rating — not 00:00, when the session opens.
+runOfShow:
+  - { at: "00:00", kind: opening, label: Opening, detail: the five outcomes, your first confidence rating, four questions from the pre-work }
+  - { at: "00:15", kind: block, label: 1 · The Concept, detail: it works, you draw it, then it loses ₹3,600 and what you drew gets its name }
+  - { at: "01:10", kind: standup, label: Stand up, detail: five minutes, cameras off }
+  - { at: "01:15", kind: block, label: 2 · The Problem, detail: three more failures, then the pattern under all four }
+  - { at: "02:05", kind: break, label: Break, detail: fifteen minutes }
+  - { at: "02:20", kind: block, label: 3 · The Drill, detail: three drills in the room, hands on keyboards }
+  - { at: "03:20", kind: standup, label: Stand up, detail: five minutes again }
+  - { at: "03:25", kind: block, label: 4 · The Teardown, detail: the same agent at enterprise scale, then write a boundary down }
+  - { at: "04:20", kind: quiz, label: Quiz, detail: eight questions in chat, deliberately mixed up }
+  - { at: "04:30", kind: block, label: 5 · The Horizon, detail: which half of your work survives the next capability jump }
+  - { at: "04:50", kind: close, label: Close, detail: the assignment, the same rating again, two lines in chat }
+
+# Printed in place by the session page, and asked in the room by /craft/live.
+# The number is always on the LAST item — "put one number in chat on the last
+# one only". The 04:15 checkpoint asks for no number at all, on purpose.
+checkpoints:
+  - at: "01:10"
+    items:
+      - Draw the ReAct loop and name its three phases
+      - Name the four parts of the harness and point at the file each one lives in
+      - Say how many calls to the model one ticket takes, and why you do not control that number
+      - Explain the difference between something that changes the odds and something that changes what is possible
+  - at: "02:05"
+    items:
+      - Name four ways this agent loses money, with the amount for each
+      - Say which part of the harness each of those four failures lives in
+      - Explain why a better model does not fix any of them
+      - Read a trace and say what it is not telling you
+  - at: "03:20"
+    items:
+      - Make a silent failure announce itself to a machine, not just to a person reading a terminal
+      - Grade a tool by its consequence rather than by its name
+      - Write a contract for a tool and refuse a call that does not match it
+      - Give a coding assistant a decision instead of a task, and review what it returns against that decision
+  - at: "04:15"
+    rated: false
+    items:
+      - Take a failure you watched at one-agent scale and say what changes at forty processes
+      - Say what an audit trail has to contain beyond a stored prompt and completion
+      - Write a boundary down in a form somebody else could actually implement
+
+# Inside the teardown block, not entries in the run of show.
+pair:
+  draftAt: "03:50"
+  reviewAt: "04:05"
+
+prework:
+  minutes: 45
+  items:
+    - Run `make run`. Confirm you get a clean trace without the grey `no LLM_API_KEY found` notice above it. Mock mode is fine for setup, but block 3 puts two models side by side and mock mode ignores the model flag completely. Today is the day the key has to work.
+    - Have a second model name ready that your key can reach. Any two will do, as long as one config change swaps between them.
+    - Run `make retry`, `make weird-mock` and `make injected` — the three from week 0. Do not fix anything. Write down what each one paid out. You will be asked for the three numbers in the first ten minutes.
+    - Note your daily quota before you arrive. On the Google AI Studio free tier it is 20 requests per day, per model, and one agent run is about three requests. That is roughly six runs a day. If you use them up the night before, you will be borrowing a neighbour's key by block 3.
+    - Be ready to say, in one sentence, what in this codebase would have stopped each of the three. A half-formed answer is the right answer to arrive with — you have not read the code yet, and you are not meant to have.
+
+after:
+  hours: 2
+  items:
+    - Drill 4 on the reference agent. Put cost on every step. It is the fiddliest of the four, and the one that does not need the room.
+    - The same changes applied to your own system, or to the piece of it you can reach. Drills 1 and 2 transfer almost directly.
+    - Finish your decision record from block 4. Week 2 opens by building it.
+    - "Answer one question about a system your team owns: where is the limit written down, and who agreed to it? If the answer is a number inside a function, you have found your week 2 work."
+  note: Post what you find for the room to read before next session.
+
+reading:
+  - title: Timeouts, retries and backoff with jitter
+    url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
+    note: AWS Builders' Library. Old, unglamorous, and directly under teardown question 1.
+  - title: Idempotent requests
+    url: https://stripe.com/docs/api/idempotent_requests
+    note: Stripe API docs. Idempotent means running it twice has the same effect as running it once — the shape of the answer to "did the customer get paid twice?"
+  - title: Compressing system-side control context has a sharp, non-linear reliability cliff
+    url: /latest#control-context-compression-cliff
+    note: Trimming your tool and policy prompts is a runtime-reliability decision. There is a safe-looking zone, and it ends abruptly. Directly relevant to context is state.
+  - title: MCP went stateless
+    url: /latest#mcp-2026-07-28-stateless-spec
+    note: An example of a tool interface changing under you. That is the argument for owning the boundary rather than inheriting it.
 ---
 
 We start with an agent that works. We break it in front of you four different

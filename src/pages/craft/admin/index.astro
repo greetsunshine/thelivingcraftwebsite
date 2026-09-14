@@ -3,8 +3,7 @@ export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import LineChart from '../../../components/admin/LineChart.astro';
-import Bars from '../../../components/admin/Bars.astro';
-import { funnel, leadCounts, leads, questionStats, questions, trafficDaily, trafficPaths } from '../../../lib/admin/queries';
+import { leadCounts, leads, questionStats, questions, trafficDaily } from '../../../lib/admin/queries';
 import { getRadar } from '../../../lib/agent/radar';
 import { getLatest } from '../../../lib/agent/latest';
 import { getBudget, formatUsd, WARN_FRACTION } from '../../../lib/agent/budget';
@@ -23,10 +22,8 @@ const health = await dbHealth();
 // One round trip's worth of latency instead of eight. Every one of these
 // degrades to an empty result on its own, so a single slow rollup cannot take
 // the page down with it.
-const [daily, paths, steps, counts, recent, qStats, gaps] = await Promise.all([
+const [daily, counts, recent, qStats, gaps] = await Promise.all([
   trafficDaily(DAYS),
-  trafficPaths(DAYS),
-  funnel(DAYS),
   leadCounts(),
   leads({ limit: 6 }),
   questionStats(DAYS),
@@ -35,19 +32,6 @@ const [daily, paths, steps, counts, recent, qStats, gaps] = await Promise.all([
 
 const views = daily.reduce((n, d) => n + Number(d.views), 0);
 const visitors = daily.reduce((n, d) => n + Number(d.visitors), 0);
-
-const stepOf = (type: string) => steps.find((s) => s.type === type)?.visitors ?? 0;
-
-// The spine the practice is built on, read as people rather than events: how
-// many landed, how many showed intent, how many actually handed over contact.
-const FUNNEL = [
-  { label: 'Landed on a page', value: stepOf('pageview') },
-  { label: 'Followed a cross-page CTA', value: stepOf('cta_click') },
-  { label: 'Opened the assistant', value: stepOf('ask_open') },
-  { label: 'Asked it something', value: stepOf('ask_question') },
-  { label: 'Started an application form', value: stepOf('apply_start') },
-  { label: 'Submitted it', value: stepOf('apply_submit') },
-];
 
 const radar = await getRadar();
 const latest = getLatest();
@@ -119,33 +103,15 @@ const when = (iso: string) =>
 
   <section class="panel">
     <h2>Traffic</h2>
-    <p class="sub">First-party, bots excluded. Unique visitors reset daily by design.</p>
+    <p class="sub">
+      First-party, bots excluded. Unique visitors reset daily by design.
+      <a href="/craft/admin/traffic" style="color:var(--clay)">Pages, funnel, referrers and device →</a>
+    </p>
     <div class="card">
       <LineChart points={daily} />
     </div>
   </section>
 
-  <section class="panel">
-    <div class="grid-2">
-      <div>
-        <h2>Pages</h2>
-        <p class="sub">Views over {DAYS} days.</p>
-        <div class="card">
-          <Bars
-            rows={paths.map((p) => ({ label: p.path, value: Number(p.views), note: `${p.visitors} uniq` }))}
-            empty="No page views recorded yet."
-          />
-        </div>
-      </div>
-      <div>
-        <h2>Funnel</h2>
-        <p class="sub">Distinct visitors reaching each step.</p>
-        <div class="card">
-          <Bars rows={FUNNEL} limit={6} empty="No events recorded yet." />
-        </div>
-      </div>
-    </div>
-  </section>
 
   <section class="panel">
     <div class="grid-2">
@@ -191,7 +157,7 @@ const when = (iso: string) =>
         <h2>Questions it could not answer</h2>
         <p class="sub">
           Each one is a gap in <code class="mono">facts.ts</code>.
-          <a href="/craft/admin/questions" style="color:var(--clay)">All questions →</a>
+          <a href="/craft/admin/agents#questions" style="color:var(--clay)">All questions →</a>
         </p>
         <div class="table-scroll">
           {
@@ -277,7 +243,7 @@ const when = (iso: string) =>
           <strong>{radar.items.length}</strong> findings on the board,
           {radarAge === null ? ' never run' : ` refreshed ${radarAge} day${radarAge === 1 ? '' : 's'} ago`}.
         </p>
-        <p style="margin-top:10px"><a href="/craft/admin/radar" style="color:var(--clay)">Open the radar →</a></p>
+        <p style="margin-top:10px"><a href="/craft/admin/agents#radar" style="color:var(--clay)">Open the radar →</a></p>
       </div>
       <div class="card">
         <span class="label">Latest · read by the visitor agent</span>
@@ -285,7 +251,7 @@ const when = (iso: string) =>
           <strong>{latest.items.length}</strong> items live,
           {latestAge === null ? ' never run' : ` refreshed ${latestAge} day${latestAge === 1 ? '' : 's'} ago`}.
         </p>
-        <p style="margin-top:10px"><a href="/craft/admin/content" style="color:var(--clay)">Review content →</a></p>
+        <p style="margin-top:10px"><a href="/craft/admin/agents#content" style="color:var(--clay)">Review content →</a></p>
       </div>
     </div>
   </section>

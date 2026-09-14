@@ -1,0 +1,47 @@
+---
+export const prerender = false;
+
+// The thirteen capabilities, asked twice.
+//
+// Intake and familiarity were two pages and are one instrument: the same
+// thirteen questions, in the same words, at week 0 and again at week 6. Spec
+// §5.6 treats them as one thing and the code already did — the familiarity page
+// could not render at all without reading the intake responses, because the
+// whole point is the pair.
+//
+// Two separate pages made you hold the before-numbers in your head while
+// looking at the after-numbers on another URL, which is precisely the
+// comparison the instrument exists to make.
+//
+// What each SESSION moved lives here too, and that is a deliberate call rather
+// than an obvious one. The five per-session outcomes are a different vocabulary
+// from the thirteen (see §0A of the spec — do not merge them again). But both
+// answer "did anything move", both are read as a before/after pair, and both
+// are meaningless as a single number. The teaching plan is next door on
+// Sessions; this is where movement is read.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import IntakePanel from '../../../components/admin/IntakePanel.astro';
+import FamiliarityPanel from '../../../components/admin/FamiliarityPanel.astro';
+---
+
+<AdminLayout title="Baseline" active="baseline">
+  <div class="page-head">
+    <div>
+      <span class="label">the same thirteen questions, week 0 and week 6</span>
+      <h1>Baseline</h1>
+      <p>
+        Where the room said it was starting from, where it says it got to, and what each session
+        moved. Every figure is a count of what people said about themselves — nothing here assigns
+        anyone a level.
+      </p>
+    </div>
+    <nav class="jump">
+      <a href="#intake">Week 0</a>
+      <a href="#familiarity">The re-ask, and what moved</a>
+    </nav>
+  </div>
+
+  <IntakePanel />
+  <FamiliarityPanel />
+</AdminLayout>

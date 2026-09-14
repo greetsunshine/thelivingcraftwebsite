@@ -4,6 +4,8 @@ title: "Attack your own system"
 module: M2
 summary: "Before somebody else does. What an attacker writes into a field you read, and what it costs you."
 status: draft
+topics: []
+assignment: "TBD"
 ---
 
 [PLACEHOLDER: session outline for Sunil to write. Everything below is

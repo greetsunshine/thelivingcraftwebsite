@@ -33,3 +33,6 @@ pnpm-debug.log*
 # stray API responses from local testing
 cap.json
 r[0-9].json
+
+# Design canvases are working files for mockups, not part of the build.
+design/*.html

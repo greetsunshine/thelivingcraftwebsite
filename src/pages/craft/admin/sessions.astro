@@ -1,0 +1,611 @@
+---
+export const prerender = false;
+
+// The teaching plan, and what the room said inside it.
+//
+// ---------------------------------------------------------------------------
+// WHY THIS PAGE EXISTS
+// ---------------------------------------------------------------------------
+// Two gaps, and they were the same gap.
+//
+// A session file describes its own session — outcomes, run of show, checkpoints,
+// pair offsets, pre-work, reading. Every one of those is read by a LEARNER
+// surface. None of it was readable by the person who wrote it. So the only way
+// to see what week 1 actually does was to open the Markdown.
+//
+// And `roomAtCheckpoints()` in src/lib/craft/checkpoints.ts was written, tested
+// and wired to nothing. Four numbers a session, captured in the room while the
+// session can still change, and no page displayed them. A checkpoint that nobody
+// reads is worse than no checkpoint: it costs the room the interruption and
+// returns nothing.
+//
+// ---------------------------------------------------------------------------
+// COUNTS, NOT MEANS — AND THE PREDICTION SITS HERE, NOT ON THE LEARNER PAGE
+// ---------------------------------------------------------------------------
+// The checkpoint read is "how many are below 3", never an average: a 3.4 hides
+// the two people at 2, and the question being asked is whether the next block
+// lands on anybody.
+//
+// `movesMost` — "expect low numbers on 3 and 4" — is rendered HERE and
+// deliberately not on /craft/week-N. It is a fair claim to check a delta
+// against, and it is exactly the wrong thing to put in front of somebody in the
+// ninety seconds before they rate themselves against those same five statements.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getCollection } from 'astro:content';
+import { dayPlan } from '../../../lib/craft/schedule';
+import {
+  checkpointWindows,
+  listAllCheckpoints,
+  roomAtCheckpoints,
+} from '../../../lib/craft/checkpoints';
+import { allDrafts, allReviews } from '../../../lib/craft/pairs';
+import { listLearners } from '../../../lib/craft/learners';
+import { getLearnerItems } from '../../../lib/craft/quiz';
+import { itemsForCheck } from '../../../lib/craft/checks';
+import { threadLabel, WEIGHT_LABEL } from '../../../lib/craft/threads';
+import { inlineCode } from '../../../lib/craft/text';
+
+const [sessions, checkpointRatings, drafts, reviews, learners, quizItems] = await Promise.all([
+  getCollection('sessions'),
+  listAllCheckpoints(),
+  allDrafts(),
+  allReviews(),
+  listLearners(),
+  getLearnerItems(),
+]);
+
+const active = learners.filter((l) => l.status === 'active').length;
+
+const ordered = sessions.sort((a, b) => a.data.week - b.data.week);
+
+/**
+ * What is not set, and what each omission actually stops.
+ *
+ * Every one of these is a deliberate refusal to guess rather than a bug — an
+ * unset `endsAt` opens nothing instead of guessing a time — but a refusal that
+ * is invisible looks exactly like a broken feature. This is the page that says
+ * which it is.
+ */
+function gapsFor(d: (typeof ordered)[number]['data']) {
+  const gaps: { what: string; stops: string }[] = [];
+
+  if (d.week === 0) return gaps; // pre-work: no session, no clock, nothing to open
+
+  if (!d.startsAt) {
+    gaps.push({
+      what: 'startsAt',
+      stops:
+        'nothing in the day resolves to a clock. No rating window opens, no checkpoint fires, and session mode never appears on anyone’s dashboard.',
+    });
+  }
+  if (!d.endsAt) {
+    gaps.push({
+      what: 'endsAt',
+      stops:
+        'nothing closes. The week’s check never opens, feedback is never due, the ADR stays locked, and checkpoints never shut.',
+    });
+  }
+  if ((d.runOfShow ?? []).length === 0) {
+    gaps.push({
+      what: 'runOfShow',
+      stops:
+        'the before-rating closes at the start of the session rather than at first teaching — which is the old behaviour, and refuses a rating taken in the opening.',
+    });
+  }
+  if ((d.quiz ?? []).length === 0) {
+    gaps.push({
+      what: 'quiz',
+      stops:
+        'the week’s check opens nothing. Pick the item ids from this week’s bank, in the order you want them asked.',
+    });
+  }
+  if (d.status !== 'ready') {
+    gaps.push({
+      what: 'status: draft',
+      stops: 'learners see a “still being written” note instead of the session body.',
+    });
+  }
+  return gaps;
+}
+
+// Rows for each week, computed once so the markup below only lays out.
+const weeks = ordered.map((s) => {
+  const d = s.data;
+
+  const windows = checkpointWindows(
+    { week: d.week, checkpoints: d.checkpoints, startsAt: d.startsAt, endsAt: d.endsAt },
+    checkpointRatings,
+  );
+  const room = roomAtCheckpoints(windows, checkpointRatings);
+  const roomAt = new Map(room.map((r) => [r.at, r]));
+
+  // itemsForCheck drops an id the bank does not have, silently and correctly —
+  // one unknown id must not take the whole check down. Silently is right at
+  // runtime and wrong here, so the difference is counted and shown.
+  const picked = (d.quiz ?? []).length;
+  const resolved = itemsForCheck(
+    { week: d.week, title: d.title, quiz: d.quiz, runOfShow: d.runOfShow, startsAt: d.startsAt, endsAt: d.endsAt },
+    quizItems,
+  ).length;
+
+  return {
+    id: s.id,
+    data: d,
+    gaps: gapsFor(d),
+    day: dayPlan(d),
+    roomAt,
+    answeredAny: room.some((r) => r.n > 0),
+    picked,
+    missingIds: picked - resolved,
+    drafts: drafts.filter((x) => x.week === d.week),
+    reviews: reviews.length,
+    bankSize: quizItems.filter((i) => i.week === d.week).length,
+  };
+});
+
+const anyTimetable = ordered.some((s) => s.data.startsAt || s.data.endsAt);
+---
+
+<AdminLayout title="Sessions" active="sessions">
+  <div class="page-head">
+    <h1>Sessions</h1>
+    <span class="label">the day you wrote, and what the room said inside it</span>
+  </div>
+
+  <p class="intro">
+    Every session file describes its own day — the five outcomes, the run of show, the
+    checkpoints, the two pair offsets, the pre-work and the reading. Learners read all of it.
+    This is the same material from your side, with the room's answers against it and a list of
+    what is not set yet.
+  </p>
+
+  {!anyTimetable && (
+    <div class="notice">
+      <h3>No session has a timetable</h3>
+      <p>
+        Every <code>startsAt</code> and <code>endsAt</code> is unset, so nothing opens and
+        nobody is prompted — deliberately, because guessing when a session ran is inventing a
+        fact. Until they are set, the counts below stay at zero whatever the room does, and
+        session mode never appears. Both are ISO 8601 <strong>with an offset</strong>: the
+        cohort sits in three time zones and a bare date opens the check on the wrong day for
+        somebody.
+      </p>
+    </div>
+  )}
+
+  {weeks.map((w) => (
+    <section class="wk card">
+      <header class="wk-head">
+        <span class="wk-n mono">{w.data.week === 0 ? 'Pre-work' : `Week ${w.data.week}`}</span>
+        <h2>{w.data.title}</h2>
+        <span class={`pill ${w.data.status === 'ready' ? 'ok' : 'draft'}`}>{w.data.status}</span>
+        <a class="view mono" href={`/craft/${w.id}`} target="_blank" rel="noopener">
+          the learner's copy ↗
+        </a>
+      </header>
+
+      <p class="muted summary">{w.data.summary}</p>
+
+      {w.gaps.length > 0 && (
+        <div class="gaps">
+          <span class="label">Not set yet</span>
+          <ul>
+            {w.gaps.map((g) => (
+              <li>
+                <code>{g.what}</code> — {g.stops}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {(w.data.outcomes ?? []).length > 0 && (
+        <div class="block">
+          <span class="label">The five, rated twice</span>
+          <ol class="outcomes">
+            {(w.data.outcomes ?? []).map((o) => (
+              <li>
+                <span class="mono oid">{o.id}</span> {o.text}
+                {o.movesMost && <span class="pill predict">you expect this to move most</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {w.day.length > 0 && (
+        <div class="block">
+          <span class="label">The day</span>
+          {w.answeredAny ? (
+            <p class="hint">
+              Checkpoint numbers are counts, never a mean — a 3.4 hides the two people at 2. The
+              question is whether the next block lands on anybody.
+            </p>
+          ) : (
+            <p class="hint faint">
+              No checkpoint has been answered yet. {active > 0 ? `${active} active seats.` : ''}
+            </p>
+          )}
+          <ol class="day">
+            {w.day.map((m) => {
+              const r = m.kind === 'checkpoint' ? w.roomAt.get(m.at) : undefined;
+              return (
+                <li class={`m m-${m.kind}`}>
+                  <span class="m-at mono">{m.at}</span>
+                  <div class="m-body">
+                    <span class="m-label">{m.label}</span>
+                    {m.detail && <span class="m-detail">{m.detail}</span>}
+
+                    {m.items && (
+                      <ul class="cp">
+                        {m.items.map((item, i) => (
+                          <li
+                            class={m.question !== null && i === m.items!.length - 1 ? 'asked' : undefined}
+                            set:html={inlineCode(item)}
+                          />
+                        ))}
+                      </ul>
+                    )}
+
+                    {m.kind === 'checkpoint' && m.question === null && (
+                      <span class="cp-note mono">unrated — read only, by design</span>
+                    )}
+
+                    {r && (
+                      <div class="counts">
+                        <span class="c-n mono">
+                          {r.n} of {active || '—'} answered
+                        </span>
+                        {r.n > 0 && (
+                          <>
+                            <span class={`c-stuck mono ${r.stuck > 0 ? 'warn' : ''}`}>
+                              {r.stuck} said 2 or less
+                            </span>
+                            <span class="spread">
+                              {r.spread.map((s) => (
+                                <span class={`sp ${s.count > 0 ? 'has' : ''}`} title={`${s.count} at ${s.rating}`}>
+                                  <span class="sp-n mono">{s.rating}</span>
+                                  <span class="sp-c mono">{s.count}</span>
+                                </span>
+                              ))}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
+      <div class="block strip">
+        <div class="s-item">
+          <span class="label">The check</span>
+          {w.picked === 0 ? (
+            <p class="s-val faint">
+              none picked · {w.bankSize} in the bank
+            </p>
+          ) : (
+            <p class="s-val">
+              {w.picked} picked
+              {w.missingIds > 0 && (
+                <span class="warn"> · {w.missingIds} not in this week's bank, and dropped</span>
+              )}
+              <span class="faint"> · {w.bankSize} in the bank</span>
+            </p>
+          )}
+        </div>
+
+        {w.data.pair && (
+          <div class="s-item">
+            <span class="label">The pair draft</span>
+            <p class="s-val">
+              {w.drafts.length} {w.drafts.length === 1 ? 'draft' : 'drafts'} in
+              <span class="faint"> · written {w.data.pair.draftAt}, reviewed {w.data.pair.reviewAt}</span>
+            </p>
+            {w.drafts.length > 0 && (
+              <ul class="pairs">
+                {w.drafts.map((d) => (
+                  <li>
+                    {d.author_name ?? 'unnamed'}
+                    {d.partner_name && <span class="faint"> with {d.partner_name}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {(w.data.threads ?? []).length > 0 && (
+          <div class="s-item">
+            <span class="label">Threads</span>
+            <ul class="threads">
+              {(w.data.threads ?? []).map((t) => (
+                <li>
+                  {threadLabel(t.id)} <span class="faint mono">{WEIGHT_LABEL[t.weight]}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+  ))}
+</AdminLayout>
+
+<style>
+  .intro {
+    color: var(--ink-soft);
+    max-width: 76ch;
+    margin: 0 0 22px;
+  }
+
+  .wk {
+    margin-bottom: 20px;
+  }
+  .wk-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .wk-head h2 {
+    font-size: 18px;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+  .wk-n {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .pill.ok {
+    color: var(--clay);
+  }
+  .pill.draft {
+    color: var(--ochre);
+  }
+  .view {
+    font-size: 11.5px;
+    color: var(--clay);
+  }
+  .summary {
+    margin: 0 0 16px;
+    font-size: 14px;
+  }
+
+  .block {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .hint {
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 0 0 12px;
+    max-width: 72ch;
+  }
+
+  /* --- what is not set ---------------------------------------------------- */
+  .gaps {
+    background: var(--paper-2);
+    border-left: 2px solid var(--ochre);
+    border-radius: var(--radius-inner);
+    padding: 12px 16px;
+    margin-bottom: 4px;
+  }
+  .gaps ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+  }
+  .gaps li {
+    margin-bottom: 6px;
+    max-width: 84ch;
+  }
+  .gaps li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* --- outcomes ----------------------------------------------------------- */
+  .outcomes {
+    list-style: decimal;
+    margin: 0 0 0 20px;
+    padding: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .outcomes li {
+    margin-bottom: 7px;
+  }
+  .oid {
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .pill.predict {
+    margin-left: 6px;
+    color: var(--ochre);
+  }
+
+  /* --- the day ------------------------------------------------------------ */
+  .day {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .m {
+    display: flex;
+    gap: 14px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line-hair);
+  }
+  .m:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .m-at {
+    flex: 0 0 44px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .m-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .m-label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .m-detail {
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .m-break .m-label,
+  .m-standup .m-label {
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+  .m-checkpoint {
+    border-left: 2px solid var(--ochre);
+    padding-left: 12px;
+    margin-left: -14px;
+  }
+  .m-checkpoint .m-label {
+    color: var(--ochre);
+    font-size: 12.5px;
+  }
+  .m-pair-draft .m-label,
+  .m-pair-review .m-label {
+    color: var(--clay);
+  }
+  .cp {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .cp li {
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 3px;
+  }
+  .cp li::before {
+    content: '·';
+    position: absolute;
+    left: 2px;
+    color: var(--ink-faint);
+  }
+  .cp li.asked {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .cp-note {
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  /* --- the room's answer -------------------------------------------------- */
+  .counts {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 7px;
+  }
+  .c-n,
+  .c-stuck {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+  .c-stuck.warn {
+    color: var(--ochre);
+    font-weight: 500;
+  }
+  .spread {
+    display: flex;
+    gap: 3px;
+  }
+  .sp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 2px 0;
+    opacity: 0.45;
+  }
+  .sp.has {
+    opacity: 1;
+    border-color: var(--ink-faint);
+  }
+  .sp-n {
+    font-size: 9px;
+    color: var(--ink-faint);
+  }
+  .sp-c {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- the strip along the bottom ----------------------------------------- */
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+  }
+  .s-item {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+  .s-val {
+    margin: 0;
+    font-size: 13.5px;
+  }
+  .warn {
+    color: var(--ochre);
+  }
+  .pairs,
+  .threads {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .pairs li,
+  .threads li {
+    margin-bottom: 3px;
+  }
+
+  @media (max-width: 640px) {
+    .m-checkpoint {
+      margin-left: -10px;
+      padding-left: 9px;
+    }
+    .strip {
+      gap: 18px;
+    }
+  }
+</style>

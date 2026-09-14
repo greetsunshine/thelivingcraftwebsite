@@ -9,6 +9,21 @@ import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
 import { cohort, practitioner } from '../../data/facts';
 import { getIntake } from '../../lib/craft/intake';
+import { suggestionsFor } from '../../lib/craft/reading';
+import { listThreads, isUnanswered } from '../../lib/craft/discussion';
+import { getLearnerItems, getQuizResponses } from '../../lib/craft/quiz';
+import { listLearnerSubmissions } from '../../lib/craft/submissions';
+import { listLearnerFeedback } from '../../lib/craft/feedback';
+import { getFamiliarity } from '../../lib/craft/familiarity';
+import { weeklyChecks, sessionEnded } from '../../lib/craft/checks';
+import { sessionPrompt, feedbackWeeksDue, dismissedPrompts } from '../../lib/craft/prompts';
+import { pulseWindows, pulsesDue, listLearnerPulses } from '../../lib/craft/pulses';
+import { givenAssignments } from '../../lib/craft/assignments';
+import Briefing from '../../components/craft/Briefing.astro';
+import SessionPrompt from '../../components/craft/SessionPrompt.astro';
+import { liveSession } from '../../lib/craft/live';
+import { blockAt } from '../../lib/craft/schedule';
+import { offerKind } from '../../lib/craft/tour';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -23,132 +38,1002 @@ const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - 
 // it should not be two clicks deep.
 const intake = await getIntake(learner.id);
 const intakeState = intake?.submitted_at ? 'submitted' : intake ? 'draft' : 'todo';
+const reading = intakeState === 'submitted' ? suggestionsFor({ ...intake!.technical, ...intake!.leadership }) : [];
+
+const [threads, quizItems, quizResponses, adrs, feedbacks, dismissed, pulses] = await Promise.all([
+  listThreads(learner.id),
+  getLearnerItems(),
+  getQuizResponses(learner.id),
+  listLearnerSubmissions(learner.id),
+  listLearnerFeedback(learner.id),
+  dismissedPrompts(learner.id),
+  listLearnerPulses(learner.id),
+]);
+
+// The post-session prompt — ONE card naming whatever the session that just
+// ended opened: the feedback form, the week's check, or both. Null unless a
+// session has actually ended (`endsAt` in its frontmatter, in the past),
+// something is genuinely outstanding, and this learner has not already closed
+// it once. Every session file is unset today, so this is null everywhere until
+// the real timetable lands — see src/lib/craft/checks.ts for why there is no
+// fallback guess at when a session finished.
+const promptSessions = sessions.map((s) => ({
+  week: s.data.week,
+  title: s.data.title,
+  quiz: s.data.quiz,
+  runOfShow: s.data.runOfShow,
+  startsAt: s.data.startsAt,
+  endsAt: s.data.endsAt,
+}));
+const checks = weeklyChecks(promptSessions, quizItems, quizResponses);
+
+// Is a session on right now? Drives the banner at the top — the only way anybody
+// finds session mode, since nothing redirects them into it.
+const liveNow = liveSession(
+  sessions.map((s) => ({
+    week: s.data.week,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+    runOfShow: s.data.runOfShow,
+  })),
+);
+const liveBlock = liveNow
+  ? blockAt(liveNow.startsAt, liveNow.endsAt, liveNow.runOfShow)?.entry ?? null
+  : null;
+const windows = pulseWindows(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    outcomes: s.data.outcomes,
+    runOfShow: s.data.runOfShow,
+    startsAt: s.data.startsAt,
+    endsAt: s.data.endsAt,
+  })),
+  pulses,
+);
+const pulseTodo = pulsesDue(windows);
+const prompt = sessionPrompt(promptSessions, checks, feedbacks, windows, dismissed);
+
+// The guided walkthrough, offered at most four times and never after the
+// learner's first fortnight — see offerKind() for the gates and why the window
+// counts from when the seat was issued rather than from the cohort start.
+//
+// `auto` opens the spine by itself. `nudge` and `last` render a dismissible
+// card instead: being grabbed by an overlay you already escaped once is worse
+// than being asked.
+const offer = offerKind(learner);
+//
+// AND NEVER ON TOP OF THE SESSION PROMPT. SessionPrompt is a modal at
+// z-index 200; the walkthrough opens at 90. Firing both puts two dialogs on
+// one screen, which is the exact thing the one-prompt rule exists to stop —
+// "two stacked dialogs are not twice the prompt, they are a thing people
+// click past". The prompt wins because it decays: the check and the rating
+// close, the walkthrough is still there tomorrow. Suppressing it here also
+// means no offer is recorded, so it is genuinely offered again rather than
+// silently spent.
+const tourAutoStart = offer === 'auto' && !prompt;
+
+// Cohort-wide, not just theirs. When this was a private inbox the useful number
+// was "your questions still waiting"; in a forum the useful number is "things
+// the room has not answered", because that one is an invitation to go and help.
+const openThreads = threads.filter(isUnanswered).length;
+const quizCompleted = new Set(quizResponses.map(r => r.item_id)).size;
+const quizTotal = quizItems.length;
+// Drafts are not submissions — the dashboard counts what is actually in.
+const adrCount = adrs.filter((a) => a.status === 'submitted').length;
+// Sessions that have ended with no feedback in. Same `sessionEnded()` clock as
+// the prompt that invited them — this used to test `taughtOn`, a fourth
+// definition of "the session happened" which could disagree with the modal that
+// had just asked for it.
+const feedbackDue = feedbackWeeksDue(promptSessions, feedbacks);
+const pendingFeedback = feedbackDue.length;
+
 // Undefined on week 0, which is pre-work and belongs to no module.
 const moduleOf = (id?: string) => (id ? cohort.modules.find((m) => m.id === id) : undefined);
 const ready = sessions.filter((s) => s.data.status === 'ready').length;
 
-const INTAKE_COPY = {
-  submitted: {
-    state: 'Done',
-    line: 'Submitted — open it again to change any answer before we meet.',
-  },
-  draft: {
-    state: 'In progress',
-    line: 'You have a saved draft. Finish it and submit before Class 1.',
-  },
-  todo: {
-    state: 'To do',
-    line: 'Your baseline, before Class 1. About 20 minutes.',
-  },
-} as const;
-const intakeCopy = INTAKE_COPY[intakeState];
+// ---------------------------------------------------------------------------
+// What is actually outstanding
+// ---------------------------------------------------------------------------
+// Built from the same reads the counters above use, so the panel can never
+// disagree with the numbers on the page. Nothing here is invented: an item
+// appears only because a row is missing from a table.
+const familiarity = await getFamiliarity(learner.id);
+const week6 = sessions.find((s) => s.data.week === 6);
+
+interface Todo {
+  id: string;
+  label: string;
+  detail: string;
+  href: string;
+  /** Shown as the count chip. Absent when the item is simply one thing to do. */
+  count?: number;
+}
+
+const todos: Todo[] = [];
+
+if (intakeState !== 'submitted') {
+  todos.push({
+    id: 'intake',
+    label: intakeState === 'draft' ? 'Finish your intake' : 'Your intake',
+    detail:
+      intakeState === 'draft'
+        ? 'You have a saved draft. It is the baseline everything else is measured against.'
+        : 'Thirteen questions before Class 1. About 20 minutes.',
+    href: '/craft/intake',
+  });
+}
+
+// The pulses, first in the list: a "before" one closes when the teaching starts
+// and is the only item here that can expire unfilled.
+if (pulseTodo.length > 0) {
+  const closing = pulseTodo.filter((w) => w.phase === 'before').length;
+  todos.push({
+    id: 'pulse',
+    label: pulseTodo.length === 1
+      ? `Rate where you are — week ${pulseTodo[0].week}, ${pulseTodo[0].phase === 'before' ? 'before' : 'after'}`
+      : 'Rate where you are',
+    detail: closing > 0
+      ? 'Half a minute each. The "before" one closes when the teaching starts — after that there is no baseline left to take.'
+      : 'Half a minute each, on just what that session covered.',
+    href: pulseTodo.length === 1
+      ? `/craft/familiarity?week=${pulseTodo[0].week}&phase=${pulseTodo[0].phase}`
+      : '/craft/familiarity',
+    count: pulseTodo.length,
+  });
+}
+
+// Only checks that are actually OPEN. Counting the whole bank would put week
+// 4's questions on the to-do list in week 2, for a check that cannot be taken.
+const checksDue = checks.filter((c) => c.isOpen && !c.isComplete);
+if (checksDue.length > 0) {
+  const weeks = checksDue.map((c) => c.week);
+  const left = checksDue.reduce((n, c) => n + (c.itemCount - c.answered), 0);
+  todos.push({
+    id: 'quiz',
+    label: weeks.length === 1 ? `Take the week ${weeks[0]} knowledge check` : 'Take your knowledge checks',
+    detail: `${left} question${left === 1 ? '' : 's'} open across week${weeks.length > 1 ? 's' : ''} ${weeks.join(', ')}. One at a time, with a confidence rating — calibration, not examination.`,
+    href: checksDue.length === 1 ? `/craft/quiz?week=${weeks[0]}` : '/craft/quiz',
+    count: left,
+  });
+}
+
+// A week is outstanding when its assignment has actually been GIVEN and there
+// is no SUBMITTED record. A saved draft still counts as outstanding — it is not
+// in until it is in.
+//
+// "Given" comes from src/lib/craft/assignments.ts rather than being re-tested
+// here. This used to read `assignment !== 'TBD' && taughtOn`, which was a third
+// definition of the same idea and disagreed with the ADR page itself.
+const adrWeeksDue = givenAssignments(
+  sessions.map((s) => ({
+    week: s.data.week,
+    title: s.data.title,
+    assignment: s.data.assignment,
+    endsAt: s.data.endsAt,
+  })),
+)
+  .filter((a) => !adrs.some((sub) => sub.week === a.week && sub.status === 'submitted'))
+  .map((a) => a.week);
+
+if (adrWeeksDue.length > 0) {
+  todos.push({
+    id: 'adr',
+    label: adrWeeksDue.length === 1 ? `Write your week ${adrWeeksDue[0]} record` : 'Write your decision records',
+    detail: `Outstanding for week${adrWeeksDue.length > 1 ? 's' : ''} ${adrWeeksDue.join(', ')}. One page, and submitting freezes it.`,
+    href: '/craft/adr',
+    count: adrWeeksDue.length,
+  });
+}
+
+// The reminder that outlives a dismissed prompt. A learner who closed the modal
+// after week 3's session still sees this until they fill it in — but it sits in
+// a list they open themselves, and nothing ever escalates it (§10).
+if (pendingFeedback > 0) {
+  todos.push({
+    id: 'feedback',
+    label: pendingFeedback === 1 ? `Give feedback on week ${feedbackDue[0]}` : 'Leave session feedback',
+    detail: `Outstanding for week${pendingFeedback > 1 ? 's' : ''} ${feedbackDue.join(', ')}. Two questions, about a minute — it changes the next session, not the next cohort.`,
+    href: pendingFeedback === 1 ? `/craft/feedback?week=${feedbackDue[0]}` : '/craft/feedback',
+    count: pendingFeedback,
+  });
+}
+
+// Only once week 6 has actually been taught — before that the page is a form
+// about a week that has not happened. Same clock as everything else on this
+// page: sessionEnded(), never `taughtOn`.
+const week6Done = sessionEnded(week6?.data.endsAt);
+const familiarityDue = week6Done && !familiarity?.submitted_at;
+
+if (familiarityDue) {
+  todos.push({
+    id: 'familiarity',
+    label: 'Re-rate the thirteen capabilities',
+    detail: 'The same questions as week 0, against your own answers. This is the before/after.',
+    href: '/craft/familiarity',
+  });
+}
 ---
 
-<CraftLayout title="Your cohort" learner={learner}>
-  <section class="hero craft-hero">
-    <div class="wrap">
-      <div class="eyebrow">The Living Craft <span class="num">/ cohort 1</span></div>
-      <h1>Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.</h1>
-      <p class="lead">
-        This is where the material lives. You will find the session outlines, what to do before
-        each one, and what to bring to the room. It fills in as we go. Nothing here is a recording
-        of a course that already exists.
-      </p>
-    </div>
-  </section>
+<CraftLayout title="Your cohort" learner={learner} tourAutoStart={tourAutoStart}>
+  {prompt && <SessionPrompt prompt={prompt} />}
 
-  <section style="padding-top:0">
-    <div class="wrap">
-      <div class="facts">
-        <div><span class="klabel">Starts</span><span class="v">{cohort.startsOn}</span></div>
-        <div><span class="klabel">Length</span><span class="v">{cohort.weeks} weeks</span></div>
-        <div><span class="klabel">Commitment</span><span class="v">{cohort.commitment}</span></div>
-        <div><span class="klabel">Format</span><span class="v">{cohort.format}</span></div>
-      </div>
-
-      <a
-        class={`panel marked task ${intakeState === 'submitted' ? 'quiet' : ''}`}
-        style="margin-top:var(--space-5)"
-        href="/craft/intake"
-      >
-        <span class={`pill ${intakeState === 'submitted' ? 'done' : 'live'}`}>{intakeCopy.state}</span>
-        <span class="body">
-          <span class="t">Your intake</span>
-          <span class="s">{intakeCopy.line}</span>
+  {/* A session is running. A banner rather than a redirect, deliberately:
+      somebody who opened the dashboard during a call may have opened it on
+      purpose, and hijacking that is the kind of thing you cannot undo from a
+      phone with a room waiting. It disappears the moment the session ends. */}
+  {(offer === 'nudge' || offer === 'last') && (
+    <div class="tour-nudge" id="tourNudge">
+      <span class="tn-body">
+        <strong>There is a ninety-second tour of this place.</strong>
+        <span>
+          {
+            offer === 'last'
+              ? 'Last time we\u2019ll ask \u2014 the \u24D8 at the foot of the rail opens it whenever you want.'
+              : 'It names what each part is for, and nothing else.'
+          }
         </span>
-        <span class="arrow">→</span>
-      </a>
-
-      <div class="craft-sec">
-        <h2>Sessions</h2>
-        <p class="muted">
-          {ready} of {sessions.length} written. Each one opens up as it is finished. You are not
-          missing anything that already exists.
-        </p>
-
-        <div class="stack">
-          {
-            sessions.map((s) => (
-              <a class="row hoverable srow" href={`/craft/week-${s.data.week}`}>
-                <span class="klabel accent sess-wk">Week {s.data.week}</span>
-                <span class="body">
-                  <span class="t">{s.data.title}</span>
-                  <span class="s">{s.data.summary}</span>
-                  <span class="klabel sess-mod">
-                    {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
-                  </span>
-                </span>
-                <span class={`pill state ${s.data.status === 'ready' ? 'live' : ''}`}>
-                  {s.data.status === 'ready' ? 'Ready' : 'In progress'}
-                </span>
-              </a>
-            ))
-          }
-        </div>
-      </div>
-
-      <div class="craft-sec">
-        <h2>What you are expected to bring</h2>
-        <p class="muted">
-          Bring a real system you are accountable for. Every session works on yours, not on a toy
-          problem. That is why the room is capped at {cohort.seats} seats.
-        </p>
-
-        <ul class="tlist">
-          {
-            cohort.outcomes.map((o, i) => (
-              <li>
-                <span class="n">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <p>{o}</p>
-                </div>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <div class="craft-sec">
-        <h2>Getting hold of Sunil</h2>
-        <p class="muted">
-          Email <a href={`mailto:${practitioner.email}`} class="inline-link">{practitioner.email}</a>.
-          Write between sessions, not only during them. Bring the system, the constraint, and what
-          you have already tried.
-        </p>
-      </div>
+      </span>
+      <span class="tn-actions">
+        <a class="tn-go" href="/craft?tour=spine">Take it</a>
+        <button type="button" class="tn-close" id="tourNudgeClose" aria-label="Dismiss">×</button>
+      </span>
     </div>
-  </section>
+  )}
+
+  {liveNow && (
+    <a data-tour="live-banner" class="live-banner" href="/craft/live">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="lb-main">
+        <strong>Week {liveNow.week} is running now</strong>
+        <span class="lb-sub">
+          {liveBlock ? liveBlock.label : 'In session'} · the room may be asking you for something
+        </span>
+      </span>
+      <span class="lb-go mono">Open →</span>
+    </a>
+  )}
+
+  <div class="content-card">
+    <section class="hero-black">
+      <div class="wrap">
+        <div class="eyebrow" style="color: var(--sun);">The Living Craft <span class="num" style="color: var(--ink-faint);">/ cohort 1</span></div>
+        <h1 style="font-size:clamp(34px,5vw,56px);margin:20px 0 18px; color: var(--paper-1);">
+          Welcome{learner.name ? `, ${learner.name.split(' ')[0]}` : ''}.
+        </h1>
+        <p class="lead" style="max-width:60ch; color: var(--ink-faint);">
+          This is where the material lives — the session outlines, what to do before each one,
+          and what to bring to the room. It fills in as we go; nothing here is a recording of a
+          course that already exists.
+        </p>
+      </div>
+    </section>
+
+    <div class="card-body">
+      <section style="padding-top:0;border-top:0">
+        <div class="wrap">
+          <button
+            type="button"
+            data-tour="todo"
+            class="todo-tab"
+            id="todoTab"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            aria-controls="todoPanel"
+          >
+            <span class="tt-label">To do</span>
+            <span class={`tt-count ${todos.length === 0 ? 'clear' : ''}`}>
+              {todos.length === 0 ? 'All clear' : todos.length}
+            </span>
+            <svg class="tt-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <div class="factbar">
+            <div><span class="k">Starts</span><span class="v">{cohort.startsOn}</span></div>
+            <div><span class="k">Length</span><span class="v">{cohort.weeks} weeks</span></div>
+            <div><span class="k">Commitment</span><span class="v">{cohort.commitment}</span></div>
+            <div><span class="k">Format</span><span class="v">{cohort.format}</span></div>
+          </div>
+
+          <a data-tour="intake-card" class={`intake-card ${intakeState}`} href="/craft/intake">
+            <span class="ic-state mono">
+              {intakeState === 'submitted' ? 'Done' : intakeState === 'draft' ? 'In progress' : 'To do'}
+            </span>
+            <span class="ic-body">
+              <span class="ic-t">Your intake</span>
+              <span class="ic-s">
+                {
+                  intakeState === 'submitted'
+                    ? 'Submitted — open it again to change any answer before we meet.'
+                    : intakeState === 'draft'
+                      ? 'You have a saved draft. Finish it and submit before Class 1.'
+                      : 'Your baseline, before Class 1. About 20 minutes.'
+                }
+              </span>
+            </span>
+            <span class="arrow">→</span>
+          </a>
+
+          {familiarityDue && (
+            <a class="intake-card todo" href="/craft/familiarity">
+              <span class="ic-state mono">To do</span>
+              <span class="ic-body">
+                <span class="ic-t">The week 6 re-ask</span>
+                <span class="ic-s">
+                  The same thirteen questions as your intake, in the same words. The pair is
+                  the point — nobody is ranked against anybody.
+                </span>
+              </span>
+              <span class="arrow">→</span>
+            </a>
+          )}
+
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Your Briefing</h2>
+            <Briefing />
+          </div>
+
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Activity</h2>
+            <div class="activity-grid">
+              <a href="/craft/discussion" class="activity-card">
+                <div class="a-val mono">{openThreads}</div>
+                <div class="a-label">Unanswered in the room</div>
+              </a>
+              <a href="/craft/quiz" class="activity-card">
+                <div class="a-val mono">{quizCompleted}/{quizTotal}</div>
+                <div class="a-label">Quiz items completed</div>
+              </a>
+              <a href="/craft/adr" class="activity-card">
+                <div class="a-val mono">{adrCount}</div>
+                <div class="a-label">ADRs submitted</div>
+              </a>
+              <a href="/craft/feedback" class="activity-card">
+                <div class="a-val mono">{pendingFeedback}</div>
+                <div class="a-label">Feedback pending</div>
+              </a>
+            </div>
+          </div>
+
+          <div style="margin-top: 48px;">
+            <h2 style="font-size:28px;margin:0 0 20px">Suggested Reading</h2>
+            {reading.length > 0 ? (
+              <div class="reading-grid">
+                {reading.map((r) => (
+                  <a href={r.item.source} target="_blank" rel="noopener noreferrer" class="reading-card">
+                    <div class="r-reason mono">{r.reason}</div>
+                    <div class="r-title">{r.item.title}</div>
+                    <div class="r-meta mono">{r.item.sourceHost}</div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p class="muted">Complete your intake to get personalised reading based on your baseline.</p>
+            )}
+          </div>
+
+          <h2 style="font-size:28px;margin:56px 0 8px">Sessions</h2>
+          <p class="muted" style="margin-bottom:26px">
+            {ready} of {sessions.length} written. Each one unlocks its detail as it is finished —
+            you are not missing anything that exists.
+          </p>
+
+          <div class="sessions">
+            {
+              sessions.map((s) => (
+                <a class="row hoverable srow" href={`/craft/week-${s.data.week}`}>
+                  <span class="klabel accent sess-wk">Week {s.data.week}</span>
+                  <span class="body">
+                    <span class="t">{s.data.title}</span>
+                    <span class="s">{s.data.summary}</span>
+                    <span class="klabel sess-mod">
+                      {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
+                    </span>
+                  </span>
+                  <span class={`pill state ${s.data.status === 'ready' ? 'live' : ''}`}>
+                    {s.data.status === 'ready' ? 'Ready' : 'In progress'}
+                  </span>
+                </a>
+              ))
+            }
+          </div>
+
+          <h2 style="font-size:28px;margin:64px 0 8px">What you are expected to bring</h2>
+          <p class="muted" style="max-width:70ch;margin-bottom:22px">
+            A real system you are accountable for. Every session works on yours, not on a toy —
+            which is why the room is capped at {cohort.seats} seats.
+          </p>
+
+          <ul class="tlist">
+            {
+              cohort.outcomes.map((o, i) => (
+                <li>
+                  <span class="n" style="color: var(--sun);">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <p style="font-size:16px">{o}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+
+          <h2 style="font-size:28px;margin:64px 0 8px">Getting hold of Sunil</h2>
+          <p class="muted" style="max-width:70ch">
+            Email <a href={`mailto:${practitioner.email}`} style="color:var(--ink);">{practitioner.email}</a>
+            — between sessions, not only during them. Bring the system, the constraint, and what you
+            have already tried.
+          </p>
+        </div>
+      </section>
+      
+      <footer class="card-footer">
+        <div class="wrap">
+          <div class="foot-grid" style="display:flex; justify-content:space-between; margin-bottom:32px;">
+            <div>
+              <div class="wordmark" style="margin-bottom:14px">
+                <span class="dot" style="color:var(--sun);"></span> the living craft
+              </div>
+              <p class="muted" style="max-width:32ch">
+                Your cohort area. Sessions, pre-work, and what to bring to the room.
+              </p>
+            </div>
+            <div class="foot-col">
+              <h5 style="font-size:11px; color:var(--ink-faint); margin-bottom:8px;" class="mono">Reach out</h5>
+              <a href="mailto:apply@thelivingcraft.ai" style="font-weight:var(--weight-strong); font-size:16px;">apply@thelivingcraft.ai</a>
+              <p class="muted" style="margin-top:8px;max-width:26ch">
+                Email Sunil directly — there is no support queue, and there does not need to be
+                one for eight people.
+              </p>
+            </div>
+          </div>
+          <div class="foot-bottom" style="display:flex; justify-content:space-between; padding-top:24px; border-top:1px solid var(--line-hair); color:var(--ink-faint); font-size:12px;">
+            <span>© {new Date().getFullYear()} The Living Craft · Sunil Mathew</span>
+            <span class="mono">Signed in as {learner.email}</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- The to-do panel. Translucent ground so the dashboard stays legible
+       behind it — this is a layer over your week, not a separate page. -->
+  <div class="todo-scrim" id="todoScrim" hidden>
+    <div
+      class="todo-panel"
+      id="todoPanel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="todoHeading"
+    >
+      <header class="tp-head">
+        <div>
+          <h2 id="todoHeading">To do</h2>
+          <p class="tp-sub">
+            {todos.length === 0
+              ? 'Nothing outstanding.'
+              : `${todos.length} thing${todos.length > 1 ? 's' : ''} waiting on you.`}
+          </p>
+        </div>
+        <button type="button" class="tp-close" id="todoClose" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      {todos.length === 0 ? (
+        <p class="tp-empty">
+          Everything that was due is in. New items appear here as sessions are taught.
+        </p>
+      ) : (
+        <ul class="tp-list">
+          {todos.map((t) => (
+            <li>
+              <a href={t.href} class="tp-item">
+                <span class="tp-body">
+                  <span class="tp-label">{t.label}</span>
+                  <span class="tp-detail">{t.detail}</span>
+                </span>
+                {t.count !== undefined && <span class="tp-count">{t.count}</span>}
+                <svg class="tp-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
 </CraftLayout>
 
+<script>
+  // The walkthrough nudge. Rendered by the server when the ladder allows it;
+  // this only records that it was actually SEEN and lets it be waved away.
+  function initTourNudge() {
+    const card = document.getElementById('tourNudge');
+    if (!card) return;
+
+    void fetch('/api/craft/tour', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'offered' }),
+    }).catch(() => {});
+
+    document.getElementById('tourNudgeClose')?.addEventListener('click', () => {
+      card.remove();
+    });
+  }
+
+  document.addEventListener('astro:page-load', initTourNudge);
+  // The to-do panel. No stored state: it opens on tap and closes on Escape,
+  // on the scrim, on the close button, or on following an item.
+  function initTodo() {
+    const tab = document.getElementById('todoTab');
+    const scrim = document.getElementById('todoScrim');
+    const panel = document.getElementById('todoPanel');
+    const close = document.getElementById('todoClose');
+    if (!tab || !scrim || !panel || !close) return;
+
+    const setOpen = (open: boolean) => {
+      scrim.hidden = !open;
+      tab.setAttribute('aria-expanded', String(open));
+      // the scrim fades, so it needs a frame between unhide and the class
+      if (open) requestAnimationFrame(() => scrim.classList.add('is-open'));
+      else scrim.classList.remove('is-open');
+      document.body.style.overflow = open ? 'hidden' : '';
+      // focus lands inside the dialog, and returns to the tab on close
+      if (open) (panel.querySelector('a, button') as HTMLElement | null)?.focus();
+      else (tab as HTMLElement).focus();
+    };
+
+    tab.addEventListener('click', () => setOpen(true));
+    close.addEventListener('click', () => setOpen(false));
+
+    // only the ground, never a click inside the panel
+    scrim.addEventListener('click', (e) => {
+      if (e.target === scrim) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !scrim.hidden) setOpen(false);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initTodo);
+</script>
+
+
 <style>
-  /* Everything this page draws now comes from craft.css. What is left is the
-     one link that is prose rather than a control. */
-  .inline-link {
+  /* A session is on. Sun means clickable, per the design system. */
+  /* The walkthrough nudge. Quiet: it is an offer, not an alert, and the one
+     yellow thing on it is the control you are meant to press. */
+  .tour-nudge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .tn-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tn-body span { color: var(--ink-soft); font-size: 14px; }
+  .tn-actions { display: flex; align-items: center; gap: 8px; }
+  .tn-go {
+    background: var(--sun);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: var(--radius-control);
+    padding: 7px 16px;
+  }
+  .tn-close {
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-faint);
+    padding: 6px 8px;
+    border-radius: var(--radius-control);
+  }
+  .tn-close:hover { color: var(--ink); }
+
+  .live-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 20px;
+    padding: 14px 20px;
+    background: var(--sun);
+    color: var(--noir);
+    border-radius: var(--radius-panel);
+    text-decoration: none;
+  }
+  .live-banner .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--noir); flex: none;
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { .live-banner .dot { animation: none; } }
+  .lb-main { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .lb-sub { font-size: 13px; opacity: 0.78; }
+  .lb-go { font-size: 12.5px; white-space: nowrap; }
+
+  .content-card {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    margin-bottom: 48px;
+    overflow: hidden;
+  }
+  .hero-black {
+    background: var(--noir);
+    padding: 64px 0 44px;
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: var(--radius-card);
+  }
+  .card-body {
+    padding-bottom: 24px;
+  }
+  .card-footer {
+    background: var(--paper-2);
+    padding: 48px 0 24px;
+    border-top: 1px solid var(--line-hair);
+  }
+  .factbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .factbar > div {
+    padding: 20px 22px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .factbar > div:last-child {
+    border-right: 0;
+  }
+  .factbar .k {
+    font-family:var(--font-mono);
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
+    color: var(--ink-faint);
+  }
+  .factbar .v {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .intake-card {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+    margin-top: 28px;
+    padding: 22px 26px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--clay);
+    border-radius: var(--radius-inner);
+    transition: 0.18s;
+  }
+  .intake-card:hover {
+    background: var(--surface-hover);
+  }
+  .intake-card.submitted {
+    border-left-color: var(--line-strong, var(--line));
+  }
+  .ic-state {
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: none;
     color: var(--clay);
     text-decoration: underline;
     text-underline-offset: 0.2em;
   }
-  .inline-link:hover {
-    color: var(--clay-deep);
+  .intake-card.submitted .ic-state {
+    color: var(--ink-faint);
+  }
+  .ic-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ic-t {
+    font-family:var(--font-display);
+    font-size: 20px;
+    font-weight:var(--weight-strong);
+  }
+  .ic-s {
+    font-size: 15px;
+    color: var(--ink-soft);
+    max-width: 66ch;
+  }
+
+  .activity-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .activity-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: 0.18s;
+  }
+  .activity-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+  }
+  .a-val {
+    font-size: 24px;
+    color: var(--clay);
+  }
+  .a-label {
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .reading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .reading-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: 0.18s;
+  }
+  .reading-card:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+  }
+  .r-reason {
+    font-size: 11px;
+    color: var(--clay);
+    letter-spacing: var(--tracking-label);
+  }
+  .r-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1.3;
+    font-weight: var(--weight-medium);
+    color: var(--ink);
+  }
+  .r-meta {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: auto;
+  }
+
+  .sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-inner);
+    overflow: hidden;
+  }
+  .review-row:hover {
+    background: var(--surface-hover);
+  }
+
+  @media (max-width: 780px) {
+    .factbar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .factbar > div:nth-child(2) {
+      border-right: 0;
+    }
+    .intake-card {
+      grid-template-columns: 1fr auto;
+      gap: 10px 14px;
+    }
+    .intake-card .ic-state {
+      grid-column: 1 / -1;
+    }
+    .activity-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* --- the to-do tab ----------------------------------------------------- */
+  .todo-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: var(--control-h);
+    padding: 0 8px 0 20px;
+    margin-bottom: 24px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+    cursor: pointer;
+  }
+  .todo-tab:hover { background: var(--accent-hover); }
+  .todo-tab:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .tt-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--ink-invert);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+  }
+  /* nothing outstanding is a sentence, not a zero */
+  .tt-count.clear {
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    padding: 0 4px;
+  }
+  .tt-chev { margin-right: 8px; }
+
+  /* --- the translucent ground -------------------------------------------- */
+  .todo-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 72px 20px 20px;
+    /* translucent, so the week stays readable behind it */
+    background: rgba(22, 33, 46, 0.32);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    overflow-y: auto;
+  }
+  .todo-scrim[hidden] { display: none; }
+  .todo-scrim.is-open { opacity: 1; }
+
+  .todo-panel {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-overlay);
+    padding: 26px 28px 22px;
+    transform: translateY(-6px);
+    transition: transform 0.2s ease;
+  }
+  .todo-scrim.is-open .todo-panel { transform: translateY(0); }
+
+  .tp-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .tp-head h2 {
+    font-size: var(--size-6);
+    letter-spacing: var(--tracking-display);
+    margin: 0;
+  }
+  .tp-sub { margin: 4px 0 0; color: var(--ink-soft); font-size: var(--size-3); }
+
+  .tp-close {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .tp-close:hover { color: var(--ink); }
+  .tp-close:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .tp-empty {
+    margin: 0;
+    padding: 8px 0 12px;
+    color: var(--ink-soft);
+    max-width: 52ch;
+  }
+
+  .tp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+
+  .tp-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 4px;
+    border-top: 1px solid var(--line);
+    color: inherit;
+  }
+  .tp-list li:last-child .tp-item { border-bottom: 1px solid var(--line); }
+  .tp-item:hover { background: var(--paper-2); }
+  .tp-item:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .tp-body { display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0; }
+  .tp-label { font-size: var(--size-4); font-weight: var(--weight-medium); }
+  .tp-detail { font-size: var(--size-2); color: var(--ink-soft); line-height: var(--lh-snug); }
+
+  .tp-count {
+    flex: none;
+    min-width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+  }
+  .tp-arrow { flex: none; color: var(--ink-faint); }
+  .tp-item:hover .tp-arrow { color: var(--ink); }
+
+  @media (max-width: 780px) {
+    .todo-scrim { padding: 20px 14px; align-items: stretch; }
+    .todo-panel { padding: 20px 18px 16px; align-self: flex-start; }
+    .tp-head h2 { font-size: var(--size-5); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .todo-scrim, .todo-panel { transition: none; }
+  }
+
+  /* --- phone breathing room ------------------------------------------------
+     The dashboard is a stack of dense blocks; on a narrow screen the default
+     desktop rhythm reads as one continuous wall. Sections get real air, and
+     the card's inner padding stops fighting its own 28px radius. */
+  @media (max-width: 780px) {
+    .hero-black { padding: 34px 22px 30px; }
+    .card-body { padding: 26px 0 34px; }
+    .card-body .wrap { padding: 0 20px; }
+
+    /* every "next block" gets the same gap rather than ad-hoc inline margins */
+    .card-body > section > .wrap > div[style*="margin-top"] { margin-top: 40px !important; }
+
+    .factbar { gap: 18px 16px; padding-bottom: 22px; }
+    .activity-grid { gap: 12px; }
+    .reading-grid { gap: 12px; }
+    .todo-tab { margin-bottom: 22px; }
   }
 </style>
