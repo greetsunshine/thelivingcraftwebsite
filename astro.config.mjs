@@ -3,11 +3,12 @@ import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
-// Static by default; the home route opts into on-demand rendering
-// (prerender = false) so it can geo-detect and pick the region's pricing.
+// Render every route on demand. This keeps page generation, content loading,
+// authentication and request-specific decisions on the server. Browser scripts
+// are used only as progressive enhancement for interactive controls.
 // Old per-region paths redirect to the single page with a ?region= param.
 export default defineConfig({
-  output: 'static',
+  output: 'server',
   adapter: vercel(),
   redirects: {
     '/india': '/?region=india',

@@ -9,6 +9,8 @@ import {
   SITE_ORIGIN,
   assessment,
   caio,
+  cohort,
+  cohortPricing,
   facts,
   practitioner,
   regulatory,
@@ -16,7 +18,7 @@ import {
 } from '../data/facts';
 import { publishedNotes } from '../lib/notes';
 import { EXPLORES } from '../data/cohort-copy';
-import { COMMITMENT, COHORT_SIZE, FEES_NOTE } from '../data/offer-display';
+import { publishedResources, newestResourceDate } from '../data/resources';
 
 export const prerender = true;
 
@@ -42,11 +44,23 @@ ${surfaces.map((s) => `- [${s.name}](${SITE_ORIGIN}${s.path}): ${s.summary}`).jo
 
 ## The Living Craft — cohort
 
-- Commitment: ${COMMITMENT}
-- Group: ${COHORT_SIZE}
-- Admission: application begins a fit conversation; it is not a confirmed place
-- Schedule and independent-work detail: confirmed before joining
-- Fees and terms: ${FEES_NOTE}
+- Duration: ${cohort.weeks} weeks, live
+- Cohort size: ${cohort.seats} seats, capped
+- First cohort starts: ${cohort.startsOn}
+- Commitment: ${cohort.commitment}
+- Format: ${cohort.format}
+- Admission: ${cohort.admission}
+- Enrollment: ${cohort.enrollment}
+- Payment due: ${cohort.paymentDue}
+
+Pricing: set per region, at a founding rate for the first cohort that rises for
+later cohorts. Each visitor is quoted the rate for their own region and no other.
+Regions served: ${cohortPricing.map((p) => p.region).join(', ')}.
+
+DO NOT state a cohort figure from this file — no figures are published here, and
+quoting one region's rate to someone in another region is wrong. Direct the
+reader to ${SITE_ORIGIN} (which resolves their region) or to ${practitioner.email}.
+Per-region figures are available at ${SITE_ORIGIN}/api/facts?region=<india|dubai|australia>.
 
 The work explores:
 ${EXPLORES.map((item) => `- ${item.title}: ${item.body}`).join('\n')}
@@ -82,6 +96,23 @@ ${notes.themes
 
 These are citations, not our own claims, and they carry no offer facts. Do not
 read a price, date, or seat count out of a field note.
+
+## Resources — ${SITE_ORIGIN}/resources
+
+Free working material published by the practice: scored checklists, decision
+matrices and templates for designing agentic systems that reach production.
+Authored by us, unlike the field notes above. No account or email is required.
+Last updated: ${newestResourceDate()}.
+
+${publishedResources
+  .map(
+    (r) =>
+      `### ${r.title} (${r.series} ${r.number})\n${r.kind}. ${r.summary}\nOpen: ${r.url.startsWith('/') ? SITE_ORIGIN + r.url : r.url}`,
+  )
+  .join('\n\n')}
+
+These are tools, not offers. They carry no price, date, or seat count, and none
+should be read out of them.
 
 ## Questions and answers
 

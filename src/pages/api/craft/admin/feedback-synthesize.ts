@@ -1,34 +1,41 @@
+// What to change before Thursday.
+//
+// The sibling of adr-synthesize.ts, and everything they had in common now
+// lives in src/lib/admin/synthesis.ts — including the fencing that stops a
+// line typed into the feedback form from acting as an instruction to the model.
+
 import type { APIRoute } from 'astro';
 import { db } from '../../../../lib/admin/supabase';
-import Anthropic from '@anthropic-ai/sdk';
+import { synthesise } from '../../../../lib/admin/synthesis';
 
 export const prerender = false;
 
-// Reads eight ADRs or eight feedback rows and summarises them — spec §4, one of
-// the four things a model is allowed to do here. POST, not GET: this spends
-// money per call, and a browser prefetch or a refresh must not bill.
-const SUMMARY_MODEL = 'claude-haiku-4-5-20251001';
+const json = (body: unknown, status: number) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-// Was 400. See the note in adr-synthesize.ts — same bug, same fix. Here the
-// truncated section is "specific pacing adjustments", which is the only part of
-// the summary that changes what Sunil does before the next session.
-const MAX_SUMMARY_TOKENS = 2000;
+const TASK = [
+  'Summarise this into a concise, actionable answer to "what to change before Thursday",',
+  'as markdown, under three headings:',
+  '1. Where the room is confused.',
+  '2. What landed well and should be reinforced.',
+  '3. Specific pacing adjustments needed.',
+  '',
+  'Do not invent or assume anything that is not in the feedback.',
+].join('\n');
 
 export const POST: APIRoute = async ({ request }) => {
   let week: number;
   try {
     week = Number((await request.json()).week);
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid request' }), { status: 400 });
+    return json({ error: 'Invalid request' }, 400);
   }
   if (!Number.isInteger(week) || week < 1 || week > 6) {
-    return new Response(JSON.stringify({ error: 'Invalid week' }), { status: 400 });
+    return json({ error: 'Invalid week' }, 400);
   }
 
   const client = db();
-  if (!client) {
-    return new Response(JSON.stringify({ error: 'DB connection failed' }), { status: 500 });
-  }
+  if (!client) return json({ error: 'DB connection failed' }, 500);
 
   const { data, error } = await client
     .from('feedback')
@@ -36,76 +43,29 @@ export const POST: APIRoute = async ({ request }) => {
     .eq('week', week);
 
   if (error || !data || data.length === 0) {
-    return new Response(JSON.stringify({ error: 'No feedback found for this week' }), { status: 404 });
+    return json({ error: 'No feedback found for this week' }, 404);
   }
 
-  // @ts-ignore
-  const apiKey = (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.ANTHROPIC_API_KEY : undefined) ?? process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), { status: 500 });
-  }
+  const result = await synthesise(
+    'feedback responses',
+    week,
+    data.map((f: any) => ({
+      name: f.learners?.name ?? 'Anonymous',
+      fields: { 'What landed well': f.landed, 'What was too fast or too slow': f.pacing },
+    })),
+    TASK,
+  );
 
-  const anthropic = new Anthropic({ apiKey });
-  
-  const feedbackList = data.map(f => {
-    const name = (f.learners as any)?.name ?? 'Anonymous';
-    return `Learner: ${name}\nWhat landed well: ${f.landed}\nWhat was too fast/slow: ${f.pacing}`;
-  }).join('\n\n---\n\n');
+  if (!result.ok) return json({ error: result.error }, result.status);
 
-  const prompt = `You are helping an instructor synthesize post-session feedback from an advanced technical cohort.
-Here is the feedback from ${data.length} learners for week ${week}:
-
-${feedbackList}
-
-Your task is to synthesize this feedback into a concise, actionable summary of "What to change before Thursday".
-Do not invent or assume things not in the feedback.
-Format your output as markdown. Focus on:
-1. Where the room is confused.
-2. What landed well and should be reinforced.
-3. Specific pacing adjustments needed.`;
-
-  try {
-    const response = await anthropic.messages.create({
-      model: SUMMARY_MODEL,
-      max_tokens: MAX_SUMMARY_TOKENS,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    if (response.stop_reason === 'refusal') {
-      return new Response(JSON.stringify({ error: 'The model declined to summarise these.' }), { status: 502 });
-    }
-
-    const summary = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('')
-      .trim();
-
-    if (!summary) {
-      return new Response(JSON.stringify({ error: 'Failed to generate summary' }), { status: 500 });
-    }
-
-    if (response.stop_reason === 'max_tokens') {
-      console.error(
-        `Feedback synthesis for week ${week} hit max_tokens (${MAX_SUMMARY_TOKENS}) over ` +
-          `${data.length} responses — the summary is cut off. Raise MAX_SUMMARY_TOKENS.`,
-      );
-      return new Response(
-        JSON.stringify({
-          summary,
+  return json(
+    result.truncated
+      ? {
+          summary: result.summary,
           truncated: true,
-          error: 'This summary was cut off before it finished. Re-run it, or read the responses directly.',
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      );
-    }
-
-    return new Response(JSON.stringify({ summary }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  } catch (err) {
-    console.error('Feedback synthesis failed:', err);
-    return new Response(JSON.stringify({ error: 'Synthesis failed' }), { status: 500 });
-  }
+          error: 'This summary was cut off before it finished. Re-run it, or read the feedback directly.',
+        }
+      : { summary: result.summary },
+    200,
+  );
 };

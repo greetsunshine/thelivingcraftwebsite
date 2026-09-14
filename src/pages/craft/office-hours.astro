@@ -1,0 +1,77 @@
+---
+// Office hours, for people who hold a seat.
+//
+// Server-rendered like every page in here, and never prerendered: a static file
+// under dist/ is served without the middleware, which is the gate gone.
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import BookingWidget from '../../components/BookingWidget.astro';
+import { HOST_TIMEZONE, meetingType } from '../../data/meetings';
+import { bookingsForLearner } from '../../lib/booking/store';
+
+export const prerender = false;
+
+const learner = Astro.locals.learner;
+const meeting = meetingType('office-hours');
+const held = learner ? await bookingsForLearner(learner.id) : [];
+
+const fmt = (iso: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    timeZone: HOST_TIMEZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+---
+
+<CraftLayout title="Office hours" learner={learner} back={{ href: '/craft', label: 'Sessions' }}>
+  <div class="wrap">
+    <div class="page-head">
+      <span class="klabel accent">One to one</span>
+      <h1>Office hours</h1>
+      <p class="lead">
+        {meeting?.durationMin} minutes with me, on whatever you are stuck on. Bring a design you want
+        argued with, an eval that will not settle, or a decision you have to defend on Monday.
+      </p>
+      <p class="muted">
+        One booking at a time, so the eight of you share them evenly. Move or cancel from the link in
+        your calendar invite, and the slot goes back to the group straight away.
+      </p>
+    </div>
+
+    {
+      held.length > 0 && (
+        <div class="craft-sec">
+          <h2>You have a session booked</h2>
+          <div class="stack">
+            {held.map((booking) => (
+              <div class="row">
+                <span class="klabel">{fmt(booking.starts_at)} IST</span>
+                {booking.status === 'reschedule_requested' && (
+                  <p class="muted" style="margin-top:var(--space-2)">
+                    I have asked to move this one. The alternatives are in your calendar invite.
+                  </p>
+                )}
+                {booking.google_meet_url && (
+                  <p style="margin-top:var(--space-2)">
+                    <a class="ftext-link" href={booking.google_meet_url}>Join with Google Meet →</a>
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    {
+      held.length === 0 && (
+        <div class="craft-sec">
+          <BookingWidget type="office-hours" mode="learner" heading="Pick a time" />
+        </div>
+      )
+    }
+  </div>
+</CraftLayout>

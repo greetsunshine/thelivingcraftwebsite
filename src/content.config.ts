@@ -82,9 +82,11 @@ const sessions = defineCollection({
      * sessions" and holds the matrix; this is the machine-readable half of the
      * row for this week.
      *
-     * Five are numbered threads; retrieval and multi-agent are two further axes
-     * the same matrix tracks. Listed here exactly as the matrix has them rather
-     * than tidied into five, because the matrix is the source.
+     * Seven, numbered 1-7 in that file and in this enum's order. Retrieval and
+     * multi-agent were added by its Bridge 5 on 8 September and read for a
+     * while as two unnumbered extras beside five "real" threads; they are
+     * neither more nor less than the other five, and a week owes them the same
+     * way.
      */
     threads: z
       .array(
@@ -92,11 +94,11 @@ const sessions = defineCollection({
           id: z.enum([
             'boundaries',
             'evidence',
-            'retrieval',
-            'multi-agent',
             'trace-and-bill',
             'untrusted-input',
             'state',
+            'retrieval',
+            'multi-agent',
           ]),
           /** ● builds it · ◐ the week's second thread · ○ shown or named only. */
           weight: z.enum(['builds', 'second', 'named']),

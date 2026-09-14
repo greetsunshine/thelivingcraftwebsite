@@ -12,16 +12,19 @@
  *
  * WHY THIS IS STILL SERVER-RENDERED
  *
- * It used to be, so the price block could follow the visitor's region. The
- * approved public offer now withholds fees and dates everywhere. Region still
- * reaches the Ask widget as useful enquiry context, but never changes what the
- * site or assistant says about the offer. The no-store header remains while
- * that request-specific context is passed through.
+ * The price block follows the visitor's region, so the rendered page depends on
+ * the request. Region also reaches the Ask widget as enquiry context, and the
+ * no-store header keeps that request-specific output out of any shared cache.
+ *
+ * Only a region whose rate is published shows a figure — see `publicPrice` in
+ * regions.ts. Dubai and Australia are served and fall back to "shared on
+ * application" on every surface at once.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CohortPage from '../components/cohort/CohortPage.astro';
 import { EXPLORES, QUESTIONS, STANDFIRST } from '../data/cohort-copy';
 import { SITE_ORIGIN, publicCohort } from '../data/facts';
+import { regions } from '../data/regions';
 
 export const prerender = false;
 
@@ -32,6 +35,7 @@ const param = Astro.url.searchParams.get('region')?.toLowerCase();
 const geoMap: Record<string, Key> = { IN: 'india', AE: 'dubai', AU: 'australia' };
 const geo = Astro.request.headers.get('x-vercel-ip-country')?.toUpperCase() ?? '';
 const key: Key | undefined = VALID.includes(param as Key) ? (param as Key) : geoMap[geo];
+const region = key ? regions[key] : null;
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -81,6 +85,21 @@ const schema = [
         instructor: { '@id': `${SITE_ORIGIN}/#person` },
       },
     ],
+    // Only a region whose rate is published gets an Offer node — a figure in
+    // structured data is a figure, whether or not the page renders it.
+    offers: region?.publicPrice
+      ? [
+          {
+            '@type': 'Offer',
+            price: region.price.replace(/[^\d]/g, ''),
+            priceCurrency:
+              region.key === 'india' ? 'INR' : region.key === 'dubai' ? 'AED' : 'AUD',
+            availability: 'https://schema.org/LimitedAvailability',
+            url: SITE_ORIGIN,
+            category: 'Founding rate',
+          },
+        ]
+      : undefined,
   },
   {
     '@type': 'FAQPage',
@@ -95,5 +114,5 @@ const schema = [
 ---
 
 <BaseLayout title={title} description={description} canonical="/" schema={schema} region={key ?? null}>
-  <CohortPage />
+  <CohortPage region={region} />
 </BaseLayout>

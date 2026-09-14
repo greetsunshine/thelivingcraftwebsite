@@ -61,7 +61,14 @@
  */
 import { getCollection } from 'astro:content';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
-import { releasedResources } from '../../data/resources';
+import {
+  releasedResources,
+  publishedResources,
+  resourceSeries,
+  newestResourceDate,
+  longDate,
+} from '../../data/resources';
+import { SITE_ORIGIN } from '../../data/facts';
 
 export const prerender = true;
 
@@ -95,12 +102,56 @@ const count = published.length;
 const guidesNote =
   count === 1 ? 'One guide is published.' : `${count} guides are published.`;
 
+// The practice's own published pieces — the POC Screen, the Agent Authority
+// Review, the run-cost workbook. They used to live on a second /resources page
+// built on another branch; two pages cannot hold one address, so they are a
+// section here instead. Dropping either page would have taken real, indexed
+// content off the site.
+const series = resourceSeries();
+const publishedCount = publishedResources.length;
+const updated = longDate(newestResourceDate());
+
+// CollectionPage + ItemList. These are pieces we authored, so the author claim
+// is legitimate here in a way it is not on /latest.
+const schema = [
+  {
+    '@type': 'CollectionPage',
+    '@id': `${SITE_ORIGIN}/resources#page`,
+    name: 'Resources — agentic system design',
+    url: `${SITE_ORIGIN}/resources`,
+    isPartOf: { '@id': `${SITE_ORIGIN}/#person` },
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    dateModified: newestResourceDate(),
+    about: ['Agentic AI architecture', 'AI proof of concept evaluation', 'LLM reliability'],
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListOrder: 'https://schema.org/ItemListUnordered',
+      numberOfItems: publishedCount,
+      itemListElement: publishedResources.map((r, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        item: {
+          '@type': 'CreativeWork',
+          '@id': `${SITE_ORIGIN}/resources#${r.id}`,
+          name: r.title,
+          description: r.summary,
+          url: r.url,
+          datePublished: r.publishedAt,
+          author: { '@id': `${SITE_ORIGIN}/#person` },
+          isAccessibleForFree: true,
+          learningResourceType: r.kind,
+        },
+      })),
+    },
+  },
+];
+
 const title = 'Resources — The Living Craft';
 const description =
   'Start from the design question in front of you: agent or workflow, what a tool may do, what to do with uncertain evidence. Written guides, field notes and a question-by-question design check.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/resources/">
+<PracticeLayout title={title} description={description} canonical="/resources/" schema={schema}>
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Resources</p>
@@ -253,6 +304,37 @@ const description =
         <a class="textlink" href="/contact/">say so</a> — an unanswered question is the
         most useful thing anybody sends, and it is how the next piece gets chosen.
       </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">From the practice</p>
+      <h2>Working material, <em>used in a room</em></h2>
+    </div>
+
+    <div class="prose stack">
+      <p>
+        {publishedCount === 1 ? 'One piece' : `${publishedCount} pieces`} of working
+        material, last updated {updated}. These are the screens and worksheets used in
+        real reviews, published as they are rather than rewritten for an audience.
+        Nothing asks for an email address.
+      </p>
+      {
+        series.map((group) => (
+          <div class="series">
+            <h3>{group.name}</h3>
+            <ul class="tlist">
+              {group.items.map((r) => (
+                <li>
+                  <a class="textlink" href={r.url}>{r.title}</a>
+                  <span class="quiet"> — {r.summary}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
     </div>
   </section>
 </PracticeLayout>

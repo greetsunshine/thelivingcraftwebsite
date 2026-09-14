@@ -1,0 +1,499 @@
+---
+// The booking section: pick a day, pick a time, leave your details.
+//
+// The three-step shape is the one every booking site uses, and it is not
+// decoration. Showing four weeks of times at once is a wall of numbers; a day
+// first, then that day's times, is two easy choices instead of one hard one.
+//
+// WHY IT IS CLIENT-SIDE, now that the whole site is server-rendered. Rendering
+// the times into the page would put three database queries on every request to
+// /caio and /assessment, including every crawler that never scrolls this far —
+// to produce a list that starts going stale the moment it is sent. Fetching on
+// load means the database is touched when somebody actually wants a time, and
+// the same call reloads the list after a lost race, which server-rendered
+// markup could not do without a page refresh. So the markup ships empty and
+// fills itself from /api/booking/slots, exactly as the Ask widget does.
+//
+// State lives in a closure and dies with the tab. No localStorage, no cookie,
+// nothing written to the client — the site-wide rule holds here too.
+import { meetingType } from '../data/meetings';
+
+export interface Props {
+  /** A key from src/data/meetings.ts. */
+  type: string;
+  /** Section heading. The meeting's own label is the fallback. */
+  heading?: string;
+  /**
+   * Which front door this is.
+   *
+   * 'public' asks for a name and an email, and posts to the open endpoint.
+   * 'learner' asks for neither, because the seat gate already knows who this
+   * is, and posts behind that gate. One component rather than two, so the step
+   * logic, the timezone handling and the lost-race recovery cannot drift apart
+   * between the two surfaces.
+   */
+  mode?: 'public' | 'learner';
+}
+
+const { type, heading, mode = 'public' } = Astro.props;
+const meeting = meetingType(type);
+
+// The script finds its own markup by id rather than by walking the DOM, so two
+// widgets on one page cannot capture each other's elements. Same approach as
+// Track.astro, which reads its props off `document.currentScript`.
+const uid = `booker-${crypto.randomUUID().slice(0, 8)}`;
+
+if (!meeting) throw new Error(`BookingWidget: no meeting type "${type}" in src/data/meetings.ts`);
+
+// Checked at build time rather than at request time. A learner-only type
+// rendered on a public page would offer office hours to the whole internet, and
+// a public type inside the gate would quietly bypass the seat check.
+const wanted = mode === 'learner' ? 'learner' : 'public';
+if (meeting.audience !== wanted) {
+  throw new Error(`BookingWidget: "${type}" is a ${meeting.audience} meeting type, and mode is "${mode}"`);
+}
+
+const endpoint = mode === 'learner' ? '/api/craft/booking' : '/api/booking/create';
+const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/slots'}?type=${meeting.key}`;
+---
+
+<div class="booker" id={uid} data-type={meeting.key} data-endpoint={endpoint} data-slots={slotsUrl} data-mode={mode}>
+  <h3 class="booker-head">{heading ?? `Book a ${meeting.label.toLowerCase()}`}</h3>
+  <p class="booker-lead">{meeting.blurb}</p>
+
+  <div class="booker-panel">
+    <p class="booker-status" data-status>Loading times…</p>
+
+    <noscript>
+      <p class="booker-status">
+        Choosing a time needs JavaScript. Use the enquiry form below instead, and I will reply with
+        times by email.
+      </p>
+    </noscript>
+
+    <!-- Step 1 and 2 share a surface: the day strip stays on screen while the
+         times change, so changing your mind about the day is one click. -->
+    <div data-step="when" hidden>
+      <p class="booker-zone">Times shown in <span data-zone>your local time</span></p>
+      <div class="booker-days" data-days role="group" aria-label="Choose a day"></div>
+      <div class="booker-times" data-times role="group" aria-label="Choose a time"></div>
+    </div>
+
+    <form data-step="who" hidden novalidate>
+      <p class="booker-chosen">
+        <strong data-chosen></strong>
+        <button type="button" class="booker-back" data-back>Change</button>
+      </p>
+
+      <!-- Honeypot, same field name as the site's other forms. -->
+      <input type="checkbox" name="botcheck" class="booker-hp" tabindex="-1" autocomplete="off" />
+
+      <div class="booker-grid">
+        {
+          mode === 'public' && (
+            <>
+              <label>Name<input name="name" type="text" required autocomplete="name" /></label>
+              <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
+              <label>Company<input name="company" type="text" autocomplete="organization" /></label>
+              <label>Title<input name="role" type="text" placeholder="e.g. CTO, Head of Data" /></label>
+            </>
+          )
+        }
+        <label class="booker-full">
+          What do you want to cover?
+          <textarea name="notes" rows="3" placeholder="A few sentences. It is what I prepare from."></textarea>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" type="submit" data-submit>
+        Confirm this time <span class="arrow">→</span>
+      </button>
+      <p class="booker-error" data-error aria-live="polite"></p>
+    </form>
+
+    <div data-step="done" hidden>
+      <p class="booker-tick">Booked.</p>
+      <p class="booker-confirmed" data-confirmed></p>
+      <p class="booker-detail" data-detail></p>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Namespaced: global.css owns short names like .card and .row, and a bare
+     .day or .times here would inherit something meant for another page. */
+  .booker { max-width: 640px; margin: var(--space-6) auto 0; text-align: left; }
+
+  .booker-head {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin: 0 0 var(--space-2);
+  }
+
+  .booker-lead {
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-quiet);
+    margin: 0 0 var(--space-4);
+  }
+
+  /* Shadow, no border — the panel law in craft.css, which this follows even
+     though it is a public page, because they are the same design system. */
+  .booker-panel {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+
+  .booker-status { font-size: var(--size-3); color: var(--text-quiet); margin: 0; }
+
+  .booker-zone {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--text-quiet);
+    margin: 0 0 var(--space-4);
+  }
+
+  .booker-days {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+  }
+
+  .booker-day {
+    flex: none;
+    min-width: 84px;
+    text-align: center;
+    padding: var(--space-3) var(--space-3);
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-inner);
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: var(--text-body);
+    line-height: 1.3;
+  }
+
+  .booker-day .dow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  .booker-day .dom { display: block; font-size: var(--size-4); font-weight: var(--weight-strong); }
+
+  .booker-day[aria-pressed='true'] {
+    border-color: var(--clay);
+    background: var(--accent-quiet);
+    color: var(--accent-ink);
+  }
+
+  .booker-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: var(--space-2); }
+
+  .booker-time {
+    padding: var(--space-3);
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-inner);
+    background: transparent;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-body);
+    cursor: pointer;
+  }
+
+  .booker-time:hover { background: var(--surface-hover); border-color: var(--clay); }
+
+  .booker-chosen {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    font-size: var(--size-4);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+  }
+
+  .booker-back {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: var(--size-2);
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .booker-hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+  .booker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
+  .booker-full { grid-column: 1 / -1; }
+
+  .booker-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--text-quiet);
+  }
+
+  .booker-grid input,
+  .booker-grid textarea {
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .booker-grid input:focus-visible,
+  .booker-grid textarea:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .booker-error { font-size: var(--size-2); color: var(--danger-mark); margin: var(--space-3) 0 0; min-height: 1em; }
+
+  .booker-tick {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--clay);
+    margin: 0 0 var(--space-2);
+  }
+
+  .booker-confirmed { font-size: var(--size-5); color: var(--text-loud); margin: 0 0 var(--space-3); }
+  .booker-detail { font-size: var(--size-3); color: var(--text-quiet); margin: 0; line-height: var(--lh-snug); }
+
+  @media (max-width: 560px) {
+    .booker-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script is:inline data-root={uid}>
+  (function () {
+    var root = document.getElementById(document.currentScript.getAttribute('data-root'));
+    if (!root) return;
+
+    var type = root.getAttribute('data-type');
+    var mode = root.getAttribute('data-mode');
+    var endpoint = root.getAttribute('data-endpoint');
+    var slotsUrl = root.getAttribute('data-slots');
+
+    var el = function (sel) { return root.querySelector(sel); };
+    var statusEl = el('[data-status]');
+    var whenStep = el('[data-step="when"]');
+    var whoStep = el('[data-step="who"]');
+    var doneStep = el('[data-step="done"]');
+    var daysEl = el('[data-days]');
+    var timesEl = el('[data-times]');
+    var errorEl = el('[data-error]');
+
+    // All of it. Nothing is written anywhere the tab does not own.
+    var slots = [];
+    var byDay = {};
+    var dayOrder = [];
+    var chosenDay = null;
+    var chosenSlot = null;
+    var sending = false;
+
+    var zone = 'your local time';
+    try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || zone; } catch (e) {}
+
+    var dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
+    var domFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+    var timeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    var longFmt = new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    });
+
+    function show(step) {
+      [whenStep, whoStep, doneStep].forEach(function (s) { s.hidden = s !== step; });
+      statusEl.hidden = true;
+    }
+
+    function say(message) {
+      statusEl.textContent = message;
+      statusEl.hidden = false;
+      whenStep.hidden = true;
+      whoStep.hidden = true;
+      doneStep.hidden = true;
+    }
+
+    /** Group by the DAY THE VISITOR IS IN, not the day we are in. */
+    function group() {
+      byDay = {};
+      dayOrder = [];
+      slots.forEach(function (iso) {
+        var at = new Date(iso);
+        var key = at.toDateString();
+        if (!byDay[key]) { byDay[key] = []; dayOrder.push(key); }
+        byDay[key].push(iso);
+      });
+    }
+
+    function renderDays() {
+      daysEl.innerHTML = '';
+      dayOrder.forEach(function (key) {
+        var first = new Date(byDay[key][0]);
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'booker-day';
+        button.setAttribute('aria-pressed', String(key === chosenDay));
+        button.innerHTML =
+          '<span class="dow"></span><span class="dom"></span>';
+        button.querySelector('.dow').textContent = dayFmt.format(first);
+        button.querySelector('.dom').textContent = domFmt.format(first);
+        button.addEventListener('click', function () { chosenDay = key; renderDays(); renderTimes(); });
+        daysEl.appendChild(button);
+      });
+    }
+
+    function renderTimes() {
+      timesEl.innerHTML = '';
+      (byDay[chosenDay] || []).forEach(function (iso) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'booker-time';
+        button.textContent = timeFmt.format(new Date(iso));
+        button.addEventListener('click', function () {
+          chosenSlot = iso;
+          el('[data-chosen]').textContent = longFmt.format(new Date(iso));
+          errorEl.textContent = '';
+          show(whoStep);
+          var name = whoStep.querySelector('input[name="name"]');
+          if (name) name.focus();
+        });
+        timesEl.appendChild(button);
+      });
+    }
+
+    function load() {
+      say('Loading times…');
+      return fetch(slotsUrl, { headers: { Accept: 'application/json' } })
+        .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+        .then(function (result) {
+          if (!result.res.ok || !result.body.ok) {
+            // Deliberately not an apology. The enquiry form is directly below,
+            // and pointing at it is more use than explaining an outage.
+            say('Online booking is unavailable right now. Use the form below and I will reply with times.');
+            return;
+          }
+
+          slots = result.body.slots || [];
+          if (slots.length === 0) {
+            say('There is nothing open at the moment. Use the form below and I will come back with times.');
+            return;
+          }
+
+          group();
+          chosenDay = dayOrder[0];
+          el('[data-zone]').textContent = zone.replace(/_/g, ' ');
+          renderDays();
+          renderTimes();
+          show(whenStep);
+        })
+        .catch(function () {
+          say('Online booking is unavailable right now. Use the form below and I will reply with times.');
+        });
+    }
+
+    el('[data-back]').addEventListener('click', function () {
+      chosenSlot = null;
+      errorEl.textContent = '';
+      show(whenStep);
+    });
+
+    whoStep.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (sending || !chosenSlot) return;
+
+      var field = function (sel) {
+        var input = whoStep.querySelector(sel);
+        return input ? input.value.trim() : '';
+      };
+
+      // Only asked for on the public widget. Inside the gate the seat already
+      // says who this is, so there is nothing here to validate.
+      var name = field('input[name="name"]');
+      var email = field('input[name="email"]');
+      if (mode === 'public' && (!name || !email)) {
+        errorEl.textContent = 'A name and an email address, and the time is yours.';
+        return;
+      }
+
+      sending = true;
+      var button = el('[data-submit]');
+      button.disabled = true;
+      button.textContent = 'Booking…';
+      errorEl.textContent = '';
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: type,
+          start: chosenSlot,
+          name: name,
+          email: email,
+          company: field('input[name="company"]'),
+          role: field('input[name="role"]'),
+          notes: field('textarea[name="notes"]'),
+          timezone: zone,
+          botcheck: whoStep.querySelector('input[name="botcheck"]').checked,
+        }),
+      })
+        .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
+        .then(function (result) {
+          sending = false;
+          button.disabled = false;
+          button.innerHTML = 'Confirm this time <span class="arrow">→</span>';
+
+          if (!result.res.ok || !result.body.ok) {
+            errorEl.textContent = result.body.error || 'That did not go through. Please try again.';
+            // Losing the race is the one error worth acting on for them: the
+            // times are reloaded so the gone slot is not still on screen.
+            if (result.body.retry) { chosenSlot = null; load(); }
+            return;
+          }
+
+          var at = new Date(result.body.booking.start);
+          el('[data-confirmed]').textContent = longFmt.format(at) + ', ' + zone.replace(/_/g, ' ');
+
+          var lines = [];
+          if (result.body.inviteSent) {
+            lines.push('A calendar invite is on its way' + (email ? ' to ' + email : '') + ', with a Google Meet link.');
+          } else if (result.body.note) {
+            lines.push(result.body.note);
+          }
+          lines.push('Need to move it? The invite has a link that does that.');
+          el('[data-detail]').textContent = lines.join(' ');
+
+          show(doneStep);
+          if (window.lcTrack) window.lcTrack('cta_click', { to: 'booking' });
+        })
+        .catch(function () {
+          sending = false;
+          button.disabled = false;
+          button.innerHTML = 'Confirm this time <span class="arrow">→</span>';
+          errorEl.textContent = 'That did not go through. Please try again, or use the form below.';
+        });
+    });
+
+    load();
+  })();
+</script>

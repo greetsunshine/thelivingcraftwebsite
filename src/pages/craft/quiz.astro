@@ -280,14 +280,20 @@ const opensLabel = (c: WeeklyCheck) =>
           );
           btn.style.display = 'none';
 
-          if (result.difficulty === 'judge') {
-            msg.innerHTML = `<strong>Response recorded.</strong><br/><em>Note: Judgement items are not auto-scored.</em><br/>Rationale: ${result.rationale || ''}`;
-            msg.style.color = 'var(--ink)';
-          } else if (result.correct) {
-            msg.innerHTML = `<strong>Correct!</strong> The answer is <strong>${result.correctAnswer.toUpperCase()}</strong>.<br/>${result.rationale || ''}`;
+          // The reveal is the key and nothing else. The bank's prose around a
+          // question is written TO THE INSTRUCTOR — "push back if they propose
+          // X", "put src/llm.py on screen" — so it belongs on the console and
+          // not here. The question gets taken up in the room; that is what the
+          // ten minutes after the quiz block are for.
+          //
+          // textContent, not innerHTML: nothing here needs markup, and this ran
+          // a template string through innerHTML for no gain.
+          const key = String(result.correctAnswer ?? '').toUpperCase();
+          if (result.correct) {
+            msg.textContent = `Correct. The answer is ${key}.`;
             msg.style.color = 'var(--clay)';
           } else {
-            msg.innerHTML = `<strong>Incorrect.</strong> The correct answer is <strong>${result.correctAnswer.toUpperCase()}</strong>.<br/>${result.rationale || ''}`;
+            msg.textContent = `Not quite. The answer is ${key}.`;
             msg.style.color = 'var(--danger)';
           }
           msg.style.display = 'block';

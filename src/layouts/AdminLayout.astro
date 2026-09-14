@@ -21,14 +21,14 @@ export interface Props {
    * Which nav item is current. Derived from NAV, so adding a console page means
    * one edit (the nav entry) rather than two that can drift apart.
    */
-  active?: string;
+  active?: (typeof NAV)[number]['key'];
 }
 
 const { title, active } = Astro.props;
 const caps = capabilities();
 
 // Checked on every admin page, cached for a minute, because a broken table has
-// to be visible from wherever you happen to be standing. Reading /admin/radar
+// to be visible from wherever you happen to be standing. Reading /craft/admin/radar
 // and seeing "never run" is exactly the moment you need to be told that the
 // table behind it does not exist.
 const health = caps.data ? await dbHealth() : null;
@@ -47,11 +47,12 @@ const unmigrated = health ? looksUnmigrated(health) : false;
 // Adding a page means one entry here — `active` is typed off this array, so a
 // page naming a key that does not exist fails the build rather than rendering
 // with no nav item lit.
-const NAV: readonly { key: string; href: string; label: string; group: 'practice' | 'cohort' }[] = [
+const NAV = [
   { key: 'overview', href: '/craft/admin', label: 'Overview', group: 'practice' },
   { key: 'traffic', href: '/craft/admin/traffic', label: 'Traffic', group: 'practice' },
   { key: 'leads', href: '/craft/admin/leads', label: 'Leads', group: 'practice' },
   { key: 'pipeline', href: '/craft/admin/pipeline', label: 'Pipeline', group: 'practice' },
+  { key: 'bookings', href: '/craft/admin/bookings', label: 'Calls', group: 'practice' },
   { key: 'agents', href: '/craft/admin/agents', label: 'Agents', group: 'practice' },
   { key: 'comms', href: '/craft/admin/comms', label: 'Communications', group: 'practice' },
   { key: 'records', href: '/craft/admin/records', label: 'Records', group: 'practice' },
@@ -86,6 +87,8 @@ const cohort = NAV.filter((n) => n.group === 'cohort');
       rel="stylesheet"
     />
   </head>
+  <!-- readme §9 lists compact density as untested; this is the surface it was
+       built for. Every token name below is unchanged — only the values retune. -->
   <body data-density="compact">
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
@@ -147,7 +150,7 @@ const cohort = NAV.filter((n) => n.group === 'cohort');
               <h3>Supabase is not connected</h3>
               <p class="muted">
                 Traffic, leads, and questions are all empty until it is. Nothing on the public
-                site is affected — this is the console's storage only.
+                site is affected. This is the console's storage only.
               </p>
               <ol>
                 <li>Create a Supabase project, then run <code>supabase/schema.sql</code> in its SQL editor.</li>
@@ -174,7 +177,7 @@ const cohort = NAV.filter((n) => n.group === 'cohort');
                 <p class="muted">
                   Postgres reports these as missing, which almost always means{' '}
                   <code>supabase/schema.sql</code> has not been run since the schema last grew. It
-                  is idempotent — re-run the whole file in the Supabase SQL editor.
+                  is idempotent, so re-run the whole file in the Supabase SQL editor.
                 </p>
               ) : (
                 <p class="muted">

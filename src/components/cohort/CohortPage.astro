@@ -41,8 +41,23 @@
  */
 import RouteForm from './RouteForm.astro';
 import GoogleCalendarBooking from './GoogleCalendarBooking.astro';
-import { COHORT_SIZE, COMMITMENT, FEES_NOTE } from '../../data/offer-display';
+import { cohort } from '../../data/facts';
+import type { Region } from '../../data/regions';
 import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
+
+/**
+ * D1 was answered on 14 September 2026: the figures are published. A region is
+ * passed in because the rate is per region and only some are published — see
+ * `publicPrice` in regions.ts. The page and the JSON-LD Offer node in
+ * index.astro read the same region, so a visitor and a crawler cannot be shown
+ * different numbers.
+ */
+interface Props {
+  region?: Region | null;
+}
+
+const { region = null } = Astro.props;
+const hasPrice = Boolean(region?.publicPrice);
 import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
 
@@ -59,7 +74,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         ability to explain its design, examine its behaviour and guide the decisions
         behind it.
       </p>
-      <p class="hero-commit">{COMMITMENT}</p>
+      <p class="hero-commit">{cohort.weeks} weeks, live · {cohort.commitment} · {cohort.seats} seats</p>
 
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
@@ -284,7 +299,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         and access arrangements before joining.
       </p>
       <p class="body-copy">
-        {COHORT_SIZE} Discuss current availability during the fit conversation.
+        The cohort is capped at {cohort.seats} seats. {cohort.enrollment}.
         Applying starts a discussion; admission, payment and attendance confirmation
         are separate steps.
       </p>
@@ -293,18 +308,44 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     <div class="commit-facts">
       <div class="detail-row"><span class="dk">Live hours</span><span class="dv">30, with Sunil</span></div>
       <div class="detail-row"><span class="dk">Independent work</span><span class="dv">Additional; confirmed before joining</span></div>
-      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">Targets eight members</span></div>
-      <div class="detail-row"><span class="dk">Admission</span><span class="dv">By application, after a fit conversation</span></div>
+      <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">{cohort.seats} seats, capped</span></div>
+      <div class="detail-row"><span class="dk">Length</span><span class="dv">{cohort.weeks} weeks, live</span></div>
+      <div class="detail-row"><span class="dk">Starts</span><span class="dv">{cohort.startsOn}</span></div>
+      <div class="detail-row"><span class="dk">Admission</span><span class="dv">{cohort.admission}</span></div>
       <div class="detail-row"><span class="dk">Certificate</span><span class="dv">None</span></div>
       <div class="detail-row">
-        <span class="dk">Schedule and fees</span>
-        <span class="dv">Confirmed in the final offer</span>
+        <span class="dk">Payment due</span>
+        <span class="dv">{cohort.paymentDue}</span>
       </div>
     </div>
   </div>
 
-  {/* Not a price card, and deliberately not shaped like one. */}
-  <p class="fees-note">{FEES_NOTE}</p>
+  <div class="price-card">
+    <div class="seat">Founding seats</div>
+    {hasPrice ? (
+      <Fragment>
+        <div class="amt">
+          {region!.standardPrice && <span class="was">{region!.standardPrice}</span>}
+          {region!.price} <small>{region!.priceUnit}</small>
+        </div>
+        <div class="terms">
+          {region!.standardPrice
+            ? `Founding rate for the first cohort. It rises to ${region!.standardPrice} for the cohorts that follow. Payment is due ${cohort.paymentDue}. Payment plans are available.`
+            : `Founding rate for the first cohort. It rises for the cohorts that follow. Payment is due ${cohort.paymentDue}. Payment plans are available.`}
+        </div>
+      </Fragment>
+    ) : (
+      <Fragment>
+        <div class="amt" style="font-size:36px">Shared on application</div>
+        <div class="terms">
+          The fee is set per region and is shared on application. The first
+          cohort enrols at a founding rate, which rises for the cohorts that
+          follow. Payment is due {cohort.paymentDue}. Applying commits you to
+          nothing.
+        </div>
+      </Fragment>
+    )}
+  </div>
 </section>
 
 {/* ── 8 · FAQs ──────────────────────────────────────────────────────────── */}
@@ -517,16 +558,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     box-shadow: var(--shadow-raise);
     padding: var(--space-2) var(--space-6);
   }
-  .fees-note {
-    margin-top: var(--space-6);
-    max-width: var(--measure-prose);
-    font-size: var(--size-4);
-    line-height: var(--lh-normal);
-    color: var(--text-body);
-    background: var(--surface-sunken);
-    border-radius: var(--radius-panel);
-    padding: var(--space-5) var(--space-6);
-  }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
   .forms :global(.apply-form) { margin-inline: 0; }
@@ -571,6 +602,5 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   @media (max-width: 560px) {
     .alt-route { padding: var(--space-5); }
     .commit-facts { padding-inline: var(--space-5); }
-    .fees-note { padding: var(--space-5); }
   }
 </style>

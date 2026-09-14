@@ -38,6 +38,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+// The limiter's own numbers, so pacing below cannot drift from what it enforces.
+import { MAX_PER_WINDOW, WINDOW_MS } from '../src/lib/agent/ratelimit.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const BASELINE = join(here, 'eval-baseline.json');
@@ -367,7 +369,24 @@ async function main() {
   // Serial on purpose. These share one dev server and one rate limit, and a
   // parallel pass would turn a failing eval into an ambiguous one — a 429 looks
   // like a refusal to answer.
+  //
+  // SERIAL WAS NOT ENOUGH. /api/ask allows MAX_PER_WINDOW requests per IP per
+  // WINDOW_MS, and this fires more probes than that. The requests are quick, so
+  // a serial pass still lands them all inside one window and the last few came
+  // back 429 — which is exactly the ambiguity the comment above is about, in
+  // the run rather than in the code. Every CI run since 11 September failed
+  // partly this way. So the loop paces itself against the limiter's own
+  // numbers, with a margin, and says so when it waits.
+  const gap = Math.ceil(WINDOW_MS / (MAX_PER_WINDOW - 1));
+  let previous = 0;
+
   for (const p of selected) {
+    if (previous) {
+      const wait = gap - (Date.now() - previous);
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    }
+    previous = Date.now();
+
     const out = await ask(p);
     const { ok, reasons } = grade(p, out);
     const tag = p.severity === 'critical' ? 'crit' : 'std ';

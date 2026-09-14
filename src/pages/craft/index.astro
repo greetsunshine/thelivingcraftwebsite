@@ -421,16 +421,18 @@ if (familiarityDue) {
           <div class="sessions">
             {
               sessions.map((s) => (
-                <a class={`srow ${s.data.status}`} href={`/craft/week-${s.data.week}`}>
-                  <span class="wk mono">Week {s.data.week}</span>
+                <a class="row hoverable srow" href={`/craft/week-${s.data.week}`}>
+                  <span class="klabel accent sess-wk">Week {s.data.week}</span>
                   <span class="body">
                     <span class="t">{s.data.title}</span>
                     <span class="s">{s.data.summary}</span>
-                    <span class="mod mono">
+                    <span class="klabel sess-mod">
                       {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
                     </span>
                   </span>
-                  <span class="state mono">{s.data.status === 'ready' ? 'Ready' : 'In progress'}</span>
+                  <span class={`pill state ${s.data.status === 'ready' ? 'live' : ''}`}>
+                    {s.data.status === 'ready' ? 'Ready' : 'In progress'}
+                  </span>
                 </a>
               ))
             }
@@ -735,6 +737,8 @@ if (familiarityDue) {
     letter-spacing: var(--tracking-label);
     text-transform: none;
     color: var(--clay);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
   .intake-card.submitted .ic-state {
     color: var(--ink-faint);
@@ -829,62 +833,8 @@ if (familiarityDue) {
     border-radius: var(--radius-inner);
     overflow: hidden;
   }
-  .srow {
-    background: var(--surface);
-    display: grid;
-    grid-template-columns: 90px 1fr auto;
-    gap: 22px;
-    align-items: start;
-    padding: 24px 26px;
-    transition: 0.18s;
-  }
-  .srow:hover {
-    background: var(--surface-hover);
-  }
   .review-row:hover {
     background: var(--surface-hover);
-  }
-  .srow .wk {
-    font-size: 12px;
-    color: var(--clay);
-    letter-spacing: 0.08em;
-    padding-top: 3px;
-  }
-  .srow .body {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .srow .t {
-    font-family:var(--font-display);
-    font-size: 20px;
-    font-weight:var(--weight-strong);
-    line-height: 1.25;
-  }
-  .srow .s {
-    font-size: 15px;
-    color: var(--ink-soft);
-    max-width: 66ch;
-  }
-  .srow .mod {
-    font-size: 11px;
-    color: var(--ink-faint);
-    letter-spacing: 0.06em;
-    margin-top: 3px;
-  }
-  .srow .state {
-    font-size: 11px;
-    letter-spacing: var(--tracking-label);
-    text-transform: none;
-    color: var(--ink-faint);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    padding: 4px 9px;
-    white-space: nowrap;
-  }
-  .srow.ready .state {
-    color: var(--clay);
-    border-color: var(--line-strong);
   }
 
   @media (max-width: 780px) {
@@ -903,13 +853,6 @@ if (familiarityDue) {
     }
     .activity-grid {
       grid-template-columns: repeat(2, 1fr);
-    }
-    .srow {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .srow .state {
-      justify-self: start;
     }
   }
 

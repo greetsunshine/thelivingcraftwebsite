@@ -1,14 +1,24 @@
 ---
-// Chrome for the course area.
+// Chrome for the course area — every page under /craft, including sign-in.
 //
 // The same design system as the public site, deliberately: a learner who
 // applied on the strength of that page should not land somewhere that looks
 // like a different product. What changes is what the chrome is FOR — no CTAs,
-// no pricing, no application form. They already bought.
+// no pricing, no application form. They already bought. The course area's own
+// components live in craft.css, which is additive to global.css and never a
+// replacement for it.
+//
+// `learner` is optional, and that is what folds /craft/login in here. Sign-in
+// is reached without a session, so it cannot show a nav that says "sign out" or
+// a footer that names who you are — but it is the same site, and duplicating
+// the whole <head> to say so meant the fonts, the favicon and the noindex tag
+// were maintained in two places and had already drifted. No learner renders the
+// bare shell: wordmark, no links, no footer identity.
 //
 // No SeoHead here. This area is noindex by middleware header and by robots.txt,
 // and a canonical tag or OG image on a page no crawler may fetch is noise.
 import '../styles/global.css';
+import '../styles/craft.css';
 import { ClientRouter } from 'astro:transitions';
 import type { Learner } from '../lib/craft/learners';
 import AgentDock from '../components/craft/AgentDock.astro';
@@ -16,8 +26,9 @@ import TourOverlay from '../components/craft/TourOverlay.astro';
 
 export interface Props {
   title: string;
-  learner: Learner;
-  /** Shown as a back-link when the page is a session rather than the index. */
+  /** Absent only on sign-in, which has no session yet. */
+  learner?: Learner;
+  /** Shown as a back-link when the page is not the index. */
   back?: { href: string; label: string };
   /**
    * Session mode: drop the nav rail and the agent dock.
@@ -41,11 +52,21 @@ export interface Props {
   tourAutoStart?: boolean;
 }
 
-// `learner` is required and deliberately NOT read here. It is a type-level
-// assertion rather than display data: you cannot render this shell without a
-// Learner in hand, which means you cannot render it from outside the gate. The
-// layout stopped displaying a name when the footer moved out of it.
-const { title, back, bare = false, tourAutoStart = false } = Astro.props;
+const { title, learner, back, bare = false, tourAutoStart = false } = Astro.props;
+
+// Two different reasons to drop the rail and the dock, and they are not the
+// same reason:
+//
+//   no learner   sign-in. There is no nav to show someone without a session,
+//                and nothing for an agent dock to answer as.
+//   bare         session mode. A signed-in learner with ninety seconds inside a
+//                live call. The rail invites them somewhere else at the one
+//                moment the page has a single job.
+//
+// Both land on the same shell, so they are folded into one flag here rather
+// than tested separately at each of the four places it is used.
+const chrome = !bare && !!learner;
+const year = new Date().getFullYear();
 
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const isActive = (p: string) => path === p ? 'active' : '';
@@ -82,7 +103,7 @@ const isDiscussion =
           <span class="mb-dot" aria-hidden="true"></span>
           <span>the living craft</span>
         </a>
-        {!bare && (
+        {chrome && (
         <button
           type="button"
           class="mb-burger"
@@ -98,7 +119,7 @@ const isDiscussion =
 
       <div class="nav-scrim" id="navScrim" hidden></div>
 
-      {!bare && (
+      {chrome && (
       <nav class="app-sidebar" id="appSidebar">
         <div class="sidebar-top">
           <a href="/craft" class={`sidebar-icon ${isActive('/craft')}`} title="Dashboard">
@@ -170,17 +191,28 @@ const isDiscussion =
         </div>
       </main>
 
+        <!-- The footer identity moved out of this layout with the rail
+             redesign, and it stays out. This one line is back because the
+             privacy policy and the terms have to be reachable from inside the
+             gate too: the learner area is where the most personal data is, and
+             a policy the people it describes cannot find is not published.
+             Quiet, and not a nav. -->
+        <footer class="craft-foot">
+          <span>© {year} The Living Craft · Sunil Mathew</span>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+        </footer>
     </div>
 
     <!-- Docked to the bottom of the viewport, on every /craft page, rather than
          a 380px column stolen from the content. Collapsed it is one bar; the
          arrow expands it to half the screen. -->
-    {!bare && <AgentDock />}
+    {chrome && <AgentDock />}
 
     <!-- Not in session mode. A walkthrough is the wrong thing to hand somebody
          who has ninety seconds inside a live call, and the rail it points at is
          not rendered there anyway. -->
-    {!bare && <TourOverlay autoStart={tourAutoStart} />}
+    {chrome && <TourOverlay autoStart={tourAutoStart} />}
   </body>
 </html>
 
@@ -607,4 +639,19 @@ const isDiscussion =
       transition: none;
     }
   }
+
+  /* Sits under the content, not pinned. Padding-bottom clears the collapsed
+     agent dock so the last line is never behind it. */
+  .craft-foot {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-top: 64px;
+    padding: 20px 0 96px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .craft-foot a { color: var(--clay); }
 </style>

@@ -67,16 +67,30 @@ export async function getFamiliarity(learnerId: string): Promise<FamiliarityResp
   }
 }
 
+/**
+ * Save the re-ask, and freeze it on submit.
+ *
+ * SUBMITTING LOCKS THE ANSWERS, the same way `saveAdr` does. This is half of a
+ * paired instrument: the same thirteen statements at week 0 and again at week
+ * 6, and the only thing either number is good for is the delta between them.
+ * Answers that stay editable after submission make that delta a moving figure,
+ * and it moves in one direction — nobody revises a self-rating downward after
+ * seeing what they put six weeks ago.
+ *
+ * Drafts stay editable, which is the point of having a draft.
+ */
 export async function saveFamiliarity(input: {
   learnerId: string;
   answers: FamiliarityAnswers;
   submit: boolean;
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: boolean; reason?: 'locked' }> {
   const client = db();
   if (!client) return { ok: false };
 
   const existing = await getFamiliarity(input.learnerId);
-  const submittedAt = input.submit ? (existing?.submitted_at ?? new Date().toISOString()) : (existing?.submitted_at ?? null);
+  if (existing?.submitted_at) return { ok: false, reason: 'locked' };
+
+  const submittedAt = input.submit ? new Date().toISOString() : null;
 
   try {
     const { error } = await client.from('familiarity_responses').upsert(

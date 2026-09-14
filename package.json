@@ -17,6 +17,7 @@
     "smoke": "npm run eval --",
     "gaps": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-gaps.ts",
     "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs",
+    "google-token": "node --env-file-if-exists=.env.local scripts/google-token.mjs",
     "check:tour": "node scripts/check-tour.mjs",
     "check:campaign": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/check-campaign.ts",
     "staff": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/add-staff.ts",

@@ -82,11 +82,11 @@ const flagged = distribution.reduce((n, d) => n + d.confidentlyWrong.length, 0);
           ))}
         </ul>
 
-        {d.item.rationale && (
-          <p class="rationale">
-            <span class="label">Why</span>
-            {d.item.rationale}
-          </p>
+        {d.item.teaching && (
+          <details class="rationale">
+            <summary><span class="label">How to run this one</span></summary>
+            <p>{d.item.teaching}</p>
+          </details>
         )}
       </section>
     ))}

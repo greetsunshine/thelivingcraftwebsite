@@ -14,7 +14,7 @@
 // is published. Consulting pricing is PLACEHOLDER — see CLAUDE.md.
 
 import { EXPLORES } from './cohort-copy';
-import { COMMITMENT, FEES_NOTE } from './offer-display';
+import { regions, type Region } from './regions';
 import { CONTACT_EMAIL } from './site';
 
 /** Canonical host. The apex + www are unattached today; learning. is what serves. */
@@ -29,6 +29,12 @@ export interface Fact {
   surface: '/' | '/caio' | '/assessment' | 'practice';
   q: string;
   a: string;
+  /**
+   * Answer varies by the visitor's region; `a` is a placeholder that retrieval
+   * replaces. Set this and handle the id in knowledge.ts — a regional fact
+   * whose answer is served raw would leak every region's figures at once.
+   */
+  regional?: boolean;
   /** Extra retrieval terms that don't appear in `q` or `a`. */
   tags?: string[];
 }
@@ -47,13 +53,118 @@ export const practitioner = {
   sameAs: ['https://linkedin.com/in/sunil-mathew-466615a'],
 };
 
-/** Public cohort facts that are safe to render or syndicate. */
-export const publicCohort = {
+/**
+ * Cohort facts. D1 was answered on 14 September 2026: the fee, the start date
+ * and the week count ARE published. Keep that decision here rather than in a
+ * page — the JSON-LD Offer node, /llms.txt, /api/facts and the Q&A agent all
+ * read this module, and they have to give one answer.
+ */
+export const cohort = {
   name: 'The Living Craft',
-  commitment: COMMITMENT,
-  size: 'Targets eight members',
-  admission: 'By application, after a fit conversation',
-  scheduleAndFees: FEES_NOTE,
+  weeks: 6,
+  seats: 8,
+  startsOn: 'September 2026',
+  commitment: '~5 hrs / week',
+  format: 'Live online (Bangalore: hybrid — in person or online)',
+  admission: 'By application; every application read personally',
+  enrollment: 'Rolling until all 8 seats are filled',
+  /**
+   * When the fee is due. Applying is free and being offered a seat is free —
+   * this is the only date money is attached to, which is why it is stated on
+   * the page, in the form, in the FAQ and in the agent's answer rather than
+   * left to the acceptance email.
+   */
+  paymentDue: 'one week before the cohort starts',
+  modules: [
+    { id: 'M1', weeks: 'Week 1', title: 'Foundations of durable architecture' },
+    { id: 'M2', weeks: 'Weeks 2–4', title: "Agentic systems you'd put your name on" },
+    { id: 'M3', weeks: 'Week 5', title: 'Scale, consistency & the irreversible trade-offs' },
+    { id: 'M4', weeks: 'Week 6', title: 'Your system, reviewed in the room' },
+  ],
+  outcomes: [
+    'Design agentic systems with bounded failure, observability, and defensible cost',
+    'Build the evaluation harnesses and quality gates that prove a system works',
+    'Engineer reliability for models that are probabilistic by nature',
+    'Threat-model and red-team your own system for prompt injection and exfiltration',
+    'Govern an AI-native team — risk-tiered review and accountability for AI-written code',
+  ],
+};
+
+/** Region pricing, read straight off the region config so it can't drift. */
+export const cohortPricing = (Object.values(regions) as Region[]).map((r) => ({
+  region: r.label,
+  founding: r.price,
+  standard: r.standardPrice ?? null,
+  unit: r.priceUnit,
+  /** Whether this figure may be stated publicly — regions.ts → publicPrice. */
+  published: r.publicPrice,
+}));
+
+/**
+ * The rates that may leave the building. Public consumers (/api/facts) read
+ * this; the admin console reads `cohortPricing` and sees all three, because a
+ * working number Sunil can't see in his own console is a number he'll restate
+ * from memory somewhere else.
+ */
+export const publicCohortPricing = cohortPricing.filter((p) => p.published);
+
+/**
+ * Cohort price for ONE region — never the full list.
+ *
+ * The page has always shown a single region's rate (regions.ts + ?region=), but
+ * the agent was quoting all three at once, so an Indian visitor heard about AED
+ * and AUD they'll never pay. Pricing is answered through this function so the
+ * conversation matches the page the visitor is looking at.
+ *
+ * With no region resolved, the honest move is to ask rather than list — hence
+ * no fallback that dumps every rate.
+ */
+export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
+  if (!key || !regions[key]) {
+    return [
+      'Cohort pricing is set per region, and each region sees only its own rate.',
+      "You do not know which region this visitor is in, so DO NOT quote a figure and DO NOT list the regions' rates.",
+      'Ask which region they would be joining from (India, Dubai, or Australia), then call this tool again mentioning that region.',
+    ].join(' ');
+  }
+
+  const r = regions[key];
+
+  // Served, but the rate is not published (regions.ts → publicPrice). The agent
+  // is the easiest surface on this site to state a number on, so it withholds
+  // exactly as the page and the schema do — and is told not to reach for
+  // another region's figure as a substitute.
+  if (!r.publicPrice) {
+    return [
+      `The cohort runs in ${r.label}, but the ${r.label} rate is not published.`,
+      'DO NOT state, estimate, or convert a figure, and DO NOT offer another region rate as a guide — the rates are not comparable.',
+      `Say that pricing for ${r.label} is shared on application and that Sunil discusses it directly, then offer to take their details so he can follow up.`,
+      `You MAY say when it is due: payment is due ${cohort.paymentDue}, and applying commits them to nothing.`,
+    ].join(' ');
+  }
+
+  const lines = [
+    `${r.label}: ${r.price} ${r.priceUnit}.`,
+    r.standardPrice
+      ? `That is the founding rate for the first cohort; it rises to ${r.standardPrice} for the cohorts that follow.`
+      : 'That is the founding rate for the first cohort; it rises for the cohorts that follow.',
+    `Payment is due ${cohort.paymentDue}. Payment plans are available, and many participants expense the program through their employer; an ROI letter and itemised outline are provided.`,
+    `ONLY quote the ${r.label} figure. Do not mention what other regions pay, even if asked to compare. Say that pricing is set per region, and that Sunil can discuss another region directly.`,
+  ];
+  return lines.join(' ');
+};
+
+/**
+ * The narrower shape the V4 cohort page, /about, /programmes and the console's
+ * content panel render. It is a VIEW of `cohort` above, never a second set of
+ * figures — two sources could disagree and nothing would say which was true.
+ */
+export const publicCohort = {
+  name: cohort.name,
+  commitment: cohort.commitment,
+  size: `${cohort.seats} seats, capped`,
+  admission: cohort.admission,
+  scheduleAndFees: `Starts ${cohort.startsOn}. Payment is due ${cohort.paymentDue}.`,
   learningAreas: EXPLORES,
 };
 
@@ -114,7 +225,7 @@ export const surfaces = [
     path: '/assessment',
     name: 'AI Readiness Assessment',
     summary:
-      'Fixed-fee, fixed-scope diagnostic producing a board-ready roadmap in 2–3 weeks. The front door.',
+      'Fixed-fee, fixed-scope diagnostic producing a board-ready roadmap in 2–3 weeks. This is the first step into the practice.',
   },
 ];
 
@@ -132,7 +243,7 @@ export const facts: Fact[] = [
     id: 'cohort-what',
     surface: '/',
     q: 'What is The Living Craft?',
-    a: `The Living Craft is a live programme for experienced engineers, architects and engineering leaders. Members build a working agentic system with Sunil Mathew, explain its design, examine its behaviour and revise it through feedback. ${COMMITMENT}`,
+    a: `The Living Craft is an application-only, ${cohort.weeks}-week program in agentic and systems architecture, taught live by Sunil Mathew. It teaches engineering judgment rather than tools. That judgment comes from having shipped hard systems and lived with the consequences. The positioning spine is "AI builds, the human judges and directs."`,
     tags: ['course', 'program', 'cohort', 'training', 'bootcamp'],
   },
   {
@@ -153,14 +264,17 @@ export const facts: Fact[] = [
     id: 'cohort-length',
     surface: '/',
     q: 'How long is the program and what is the time commitment?',
-    a: `${COMMITMENT} The session schedule and the amount and interval of independent work are confirmed before joining.`,
+    a: `${cohort.weeks} weeks, live. The commitment is ${cohort.commitment}. Format is ${cohort.format}.`,
     tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time'],
   },
   {
     id: 'cohort-price',
     surface: '/',
     q: 'How much does the cohort cost?',
-    a: FEES_NOTE,
+    // Placeholder only — retrieval swaps this for cohortPriceAnswer(region) so
+    // a visitor is never quoted a rate that isn't theirs. See knowledge.ts.
+    a: 'Cohort pricing is regional and resolved per visitor.',
+    regional: true,
     tags: [
       'price', 'cost', 'fee', 'fees', 'tuition', 'how much', 'payment',
       'discount', 'rupees', 'dirhams', 'dollars', 'afford', 'expensive',
@@ -185,21 +299,21 @@ export const facts: Fact[] = [
     id: 'cohort-who',
     surface: '/',
     q: 'Who is the cohort for?',
-    a: 'Experienced engineers, architects and engineering leaders with prior system-design exposure, a learning goal, and the willingness to build, explain decisions and revise their work through feedback.',
+    a: "It is for tech leads and staff engineers, senior engineering managers and architects, and senior engineering leaders and directors. These are people who make architectural calls their teams build on. Seniority on paper matters less than whether you have shipped something you then had to live with.",
     tags: ['who', 'audience', 'fit', 'prerequisites', 'eligibility', 'staff engineer'],
   },
   {
     id: 'cohort-apply',
     surface: '/',
     q: 'How do I apply?',
-    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Applying begins a fit conversation; it is not admission, payment or a confirmed place.`,
-    tags: ['apply', 'application', 'enroll', 'sign up', 'register', 'join'],
+    a: `Submit the application form on the cohort page, or email ${practitioner.email}. Sunil reads every application himself and replies by email. Admission is by application because the room only works if everyone in it can keep up and contribute. Applying costs nothing and commits you to nothing. The fee only matters once a seat is offered and accepted.`,
+    tags: ['apply', 'application', 'enroll', 'sign up', 'register', 'join', 'commit', 'obligation'],
   },
   {
     id: 'cohort-vs-course',
     surface: '/',
     q: 'Why this over a recorded course?',
-    a: 'The programme uses a working system as the concrete object of discussion. Members build an approach, examine what happens, receive feedback and revise; the focus is practical design judgment rather than video consumption.',
+    a: "Recorded courses teach patterns, which are cheap and everywhere now. This is for the judgment that sits on top of the patterns. It is live, on your real systems, from someone who has been accountable for the outcome at scale. You are buying attention and 26 years of hard-won judgment, not videos.",
     tags: ['why', 'worth it', 'versus', 'compare', 'alternative', 'udemy', 'coursera'],
   },
 
@@ -208,7 +322,7 @@ export const facts: Fact[] = [
     id: 'caio-what',
     surface: '/caio',
     q: 'What is the fractional CAIO engagement?',
-    a: 'An embedded AI executive, part-time and accountable for outcomes — owning the whole AI agenda rather than a corner of it: strategy, governance, and getting the first use cases into production. Aimed at India\'s regulated and mid-market enterprises.',
+    a: 'An embedded AI executive, part-time and accountable for outcomes. The role owns the whole AI agenda rather than a corner of it. That means strategy, governance, and getting the first use cases into production. It is aimed at India\'s regulated and mid-market enterprises.',
     tags: ['caio', 'consulting', 'fractional', 'chief ai officer', 'retainer', 'advisory'],
   },
   {
@@ -225,7 +339,7 @@ export const facts: Fact[] = [
     id: 'caio-regulated',
     surface: '/caio',
     q: 'Do you work with regulated industries?',
-    a: `Yes — regulated-industry depth is a core part of the practice. Working knowledge across ${regulatory.join(', ')}.`,
+    a: `Yes. Regulated-industry depth is a core part of the practice. There is working knowledge across ${regulatory.join(', ')}.`,
     tags: [
       'regulated',
       'compliance',
@@ -249,7 +363,7 @@ export const facts: Fact[] = [
     id: 'assessment-what',
     surface: '/assessment',
     q: 'What is the AI Readiness Assessment?',
-    a: `A fixed-fee, fixed-scope diagnostic of your specific systems, data, and ambitions, delivered in ${assessment.duration}. It produces a board-ready roadmap: where you're ready, where you're exposed, and the shortest credible path to AI that ships and holds up. It is the front door to the practice.`,
+    a: `A fixed-fee, fixed-scope diagnostic of your specific systems, data, and ambitions, delivered in ${assessment.duration}. It produces a board-ready roadmap. That roadmap says where you are ready, where you are exposed, and the shortest credible path to AI that ships and holds up. It is the first step into the practice.`,
     tags: ['assessment', 'diagnostic', 'readiness', 'audit', 'roadmap', 'evaluation'],
   },
   {
@@ -282,7 +396,7 @@ export const facts: Fact[] = [
     id: 'about-social-proof',
     surface: 'practice',
     q: 'Do you have testimonials, client names, or student outcomes?',
-    a: 'No testimonials, client names or student outcome counts are published. Sunil’s employment context involving Google, Amazon, Walmart and startups is published without implying employer endorsement. Ask Sunil directly if you need references.',
+    a: 'None are published. The cohort has not run yet, because the first one starts September 2026, and client engagements are not named publicly. What stands in place of social proof is the track record. That is 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.',
     tags: [
       'testimonials',
       'reviews',

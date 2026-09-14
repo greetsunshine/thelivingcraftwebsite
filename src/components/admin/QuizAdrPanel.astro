@@ -99,7 +99,7 @@ const unbanked = assignments(
                     <p class="v-detail mono faint">
                       quiz: picked {p.response.answer.toUpperCase()}
                       {p.quizCorrect === true ? ' ✓' : p.quizCorrect === false ? ' ✗' : ''}
-                      , key {p.item.answer.toUpperCase()}, confidence {p.response.confidence}/5
+                      , key {p.item.answer?.toUpperCase() ?? '—'}, confidence {p.response.confidence}/5
                       {' · '}
                       record leans {p.leansTo ? p.leansTo.toUpperCase() : '—'}
                       {p.leansTo && ` (margin ${p.margin})`}

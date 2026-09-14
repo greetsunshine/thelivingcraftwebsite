@@ -1,350 +1,324 @@
 ---
-/**
- * /terms — and the reason it is not a set of terms.
- *
- * ═══════════════════════════════════════════════════════════════════════════
- * DO NOT WRITE TERMS HERE. NOBODY IN THIS REPOSITORY KNOWS THEM.
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * The contracting entity, what is payable and when, whether a place can be
- * cancelled and on what basis, how long access to the material lasts, and which
- * country's law governs a disagreement — five facts, none of them settled, and
- * every one of them a commitment somebody would be entitled to hold this
- * practice to.
- *
- * The failure mode is the same as the one /privacy is written against and
- * slightly worse in one respect. A wrong privacy notice misdescribes what
- * already happens. Invented terms describe an agreement that does not exist,
- * and they read as settled precisely because terms pages all read alike — a
- * reader cannot tell a considered refund policy from a paragraph pasted out of
- * a template. So the page names what is outstanding and who owes it, and states
- * only what can be checked against the code and the approved copy.
- *
- * WHAT CAN BE STATED, AND WHY EACH ONE IS SAFE
- *
- *   * Applying costs nothing and collects no card details — src/lib/pipeline/
- *     forms.ts defines all three forms and none of them has a payment field;
- *     nothing on this site takes money.
- *   * An application is not a confirmed place, and admission, payment and
- *     attendance confirmation are separate steps — the delivered cohort copy,
- *     rendered on the cohort page and /programmes/ in those words.
- *   * The terms arrive in the final offer — the approved FAQ answer, imported
- *     rather than retyped so this page cannot drift from the cohort page.
- *
- * WHY IT IS noindex
- *
- * A terms page is quoted back at you. An unfinished one, indexed and cited by
- * an assistant, becomes a commitment nobody made. It comes out of noindex on
- * the day the owner supplies the facts, in the same change that replaces it.
- *
- * WHY IT EXISTS AT ALL BEFORE THEN
- *
- * The footer links here, and /contact names this page as one of the two
- * waiting on the same entity facts. A 404 under "Terms" on a site inviting
- * applications is the worst of the options. This is the second worst, and it
- * says so.
- *
- * WHAT MUST NOT BE ADDED
- *
- *   * A fee, a date, a week count or a seat count. The offer figures are held
- *     behind src/data/offer-display.ts while that decision is open, and a
- *     terms page is the last place a number should appear first.
- *   * A response-time or resolution commitment. None has been agreed.
- *   * A liability, warranty or intellectual-property clause. Those are the
- *     outstanding facts, not the easy half of them.
- */
-import PracticeLayout from '../layouts/PracticeLayout.astro';
-import { FEES_NOTE } from '../data/offer-display';
-import { QUESTIONS } from '../data/cohort-copy';
+// Terms of service.
+//
+// SCOPE IS THE WHOLE DESIGN OF THIS PAGE. It governs use of the WEBSITE and the
+// things the website does — reading it, asking the assistant, booking a call,
+// submitting an application, taking the published resources. It deliberately
+// does NOT set the commercial terms of the cohort or of a consulting
+// engagement. Those are agreed in writing at the time, and this page says so
+// and stops.
+//
+// WHY THAT LINE IS WHERE IT IS, AND DO NOT MOVE IT WITHOUT ASKING SUNIL.
+// On 2026-08-28 he decided not to publish withdrawal or refund terms for the
+// first cohort. Payment timing is public (`cohort.paymentDue` in facts.ts);
+// what happens if someone pulls out is not, and that silence is deliberate
+// rather than an oversight. A terms page is the obvious place for that silence
+// to get filled in by habit, because every template has a refunds clause. This
+// one does not. The single sentence below saying those terms arrive with a seat
+// offer was written to answer "where do I find this" without publishing the
+// policy or inviting the question.
+//
+// Facts restated here come from src/data/facts.ts and must not drift from it:
+// applying costs nothing and commits you to nothing; the assessment fee is
+// credited toward the first month of a retainer begun within 60 days; the
+// published resources need no account, licence or email address.
+import PolicyLayout from '../layouts/PolicyLayout.astro';
+import { CONTACT_EMAIL } from '../data/site';
+import { canonical } from '../data/facts';
 
-const title = 'Terms — The Living Craft';
+export const prerender = false;
+
+const title = 'Terms of service — The Living Craft';
 const description =
-  'What is settled today about applying to The Living Craft, and which contractual facts — the entity, payment, cancellation, access and governing law — are still to be published.';
+  'The terms for using this website, its assistant, its booking and its published resources. The commercial terms of a programme or an engagement are agreed separately, in writing.';
 
-/**
- * The approved FAQ answer, verbatim, looked up rather than retyped.
- *
- * Same argument as /privacy rendering the form fields from forms.ts: a
- * hand-copied sentence goes stale silently the first time the answer is
- * reworded, and this is the one sentence on the page that a reader is entitled
- * to treat as the practice's position. The fallback is the page-facing form of
- * the same commitment, so neither branch can produce a sentence nobody approved.
- */
-const FEES_Q = 'What are the dates and fees?';
-const feesAnswer = QUESTIONS.find((q) => q.q === FEES_Q)?.a ?? FEES_NOTE;
-
-/** Each row names the fact and who owes it. Nothing here is guessed. */
-const outstanding = [
-  {
-    fact: 'The contracting entity',
-    detail:
-      'Which legal entity an agreement would be with, and its registered address. The same fact the privacy notice is waiting on, and the one every other row depends on.',
-    owner: 'The owner',
-  },
-  {
-    fact: 'Payment terms',
-    detail:
-      'What is payable, when it falls due, in which currency and by what method. Nothing on this site takes payment today, so there is no arrangement to describe yet.',
-    owner: 'The owner',
-  },
-  {
-    fact: 'Cancellation and refunds',
-    detail:
-      'Whether a place can be cancelled, by whom, by when, and what happens to anything already paid — including if a session moves.',
-    owner: 'The owner',
-  },
-  {
-    fact: 'Access to the material',
-    detail:
-      'How long access to the session material lasts after the programme, and what may be done with it afterwards.',
-    owner: 'The owner',
-  },
-  {
-    fact: 'Governing law and jurisdiction',
-    detail:
-      'Which country’s law applies and where a disagreement would be settled. Members join from more than one country, so this is not a formality.',
-    owner: 'The owner',
-  },
-];
+const UPDATED = '14 September 2026';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/terms" noindex>
-  <section class="hero">
+<PolicyLayout title={title} description={description} canonical={canonical('/terms')} label="Terms">
+  <section class="policy-head">
     <div class="wrap">
-      <p class="eyebrow">Terms</p>
-      <h1>What is settled, and <em>what is not</em></h1>
-      <p class="credential">
-        This page is not a set of terms, and it does not pretend to be one. It states
-        what can be checked — applying is free, an application is not a place, and the
-        terms you would be bound by arrive in the offer — and it names the five facts
-        that are still to be published.
+      <span class="eyebrow"><span class="num">02</span> Terms</span>
+      <h1>Terms for using this site</h1>
+      <p class="lead">
+        These cover the website and what it does: reading it, asking the assistant, booking a call,
+        applying for a seat, and taking the material published here. They do not set the price or
+        the conditions of any programme or engagement. Those are agreed with you directly, in
+        writing.
       </p>
+      <p class="stamp">Last updated {UPDATED}</p>
     </div>
   </section>
 
-  {/* First, for the same reason /privacy leads with it: a reader needs to know
-      how much of this page to rely on before reading the rest of it. */}
-  <section class="wrap band">
-    <div class="pending-block">
-      <p class="pending-label">Not yet published</p>
+  <section class="policy">
+    <div class="wrap">
+      <div class="summary">
+        <h2>The short version</h2>
+        <ul>
+          <li>Use the site sensibly and it is yours to use, free, with no account.</li>
+          <li>The assistant can be wrong. Nothing it says is advice, and nothing it says is an offer.</li>
+          <li>Applying costs nothing and commits you to nothing. A seat exists only once I offer one and you accept it.</li>
+          <li>Booking a call is a diary entry, not a contract. Either of us can move or cancel it.</li>
+          <li>The published resources are free to use and to pass on, including at work.</li>
+          <li>What a programme or an engagement costs, and the terms attached to it, come to you in writing. They are not on this page.</li>
+        </ul>
+      </div>
+
+      <h2>Who you are dealing with</h2>
       <p>
-        Five facts belong in a set of terms and are not settled — the contracting
-        entity, payment, cancellation and refunds, access to the material, and
-        governing law. They are listed at the foot of this page with who is
-        responsible for each. Nothing on this page is a contract, and nothing here
-        creates one.
+        This site is run by Sunil Mathew, operating as The Living Craft, from Bangalore, India.
+        There is no company behind it and no team. Write to
+        <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and I answer it
+        myself.
       </p>
+      <p>
+        Using this site means you accept what is on this page. If you do not, the remedy is simple
+        and costs you nothing: stop using it.
+      </p>
+
+      <h2>What these terms do not cover</h2>
+      <p>
+        <strong>The commercial terms of the cohort and of consulting work are not set here.</strong>
+        They are agreed with you directly, at the point there is something to agree. For the cohort
+        that means the offer you receive if you are given a seat. For consulting it means a written
+        scope and engagement agreement signed by both of us.
+      </p>
+      <p>
+        Where those documents and this page ever disagree about a programme or an engagement, those
+        documents govern. This page governs the website.
+      </p>
+
+      <h2>Using the site</h2>
+      <p>
+        You may read everything here, quote it with attribution, and share the links. You do not
+        need an account, and there is nothing to sign up for.
+      </p>
+      <p>Please do not:</p>
+      <ul>
+        <li>submit somebody else's details, or book a call in somebody else's name</li>
+        <li>attempt to reach the sign-in areas, the operator console, or any data that is not yours</li>
+        <li>scrape the site at a rate that costs me money, or run automated load against the assistant</li>
+        <li>use the assistant to generate content unrelated to this practice, which is what the rate limits are for</li>
+        <li>republish the teaching material as your own, or resell it</li>
+      </ul>
+      <p>
+        I may block access that does any of these. There is no appeals process, because there is one
+        of me — but if you think a block is wrong, write and I will look at it.
+      </p>
+
+      <h2>The assistant</h2>
+      <p>
+        The question-and-answer assistant is built on a large language model. It is given a fixed
+        set of facts about this practice and instructed to say it does not know rather than guess.
+        That instruction usually holds. It is not a guarantee.
+      </p>
+      <p>
+        <strong>Nothing the assistant says is professional advice, and nothing it says is a binding
+        offer.</strong> If it states a price, a date or a seat count that turns out to differ from
+        what is on the relevant page, the page is correct and the assistant is wrong. Please tell me
+        when that happens.
+      </p>
+      <p>
+        Do not type anything confidential into it. Your question is sent to a model provider in
+        order to answer it, and it is stored here so I can see what my pages failed to explain. The
+        <a class="ftext-link" href="/privacy">privacy page</a> sets out exactly what that means.
+      </p>
+
+      <h2>Booking a call</h2>
+      <p>
+        A booked call is a diary entry. It is not a contract, it costs nothing, and it obliges
+        neither of us to go further.
+      </p>
+      <p>
+        Your invitation carries a link that moves or cancels the call. Please use it rather than
+        letting a slot go empty, because the slots are finite and someone else could have taken it.
+        I may also move or cancel a call, in which case you are told through the same calendar
+        invitation. If I cancel and you still want the conversation, write to me and we will find
+        another time.
+      </p>
+      <p>
+        The link in that invitation is personal to your booking and lets whoever holds it change the
+        call. Do not forward it.
+      </p>
+
+      <h2>Applying for a seat</h2>
+      <p>
+        Admission to the cohort is by application, and I read every one myself.
+        <strong>Applying costs nothing and commits you to nothing.</strong> Submitting an
+        application is not a purchase, and it does not reserve a seat.
+      </p>
+      <p>
+        A seat exists only when I offer you one and you accept it. The fee, when it is payable, and
+        the terms that go with it are set out in that offer. Admission is at my discretion, and most
+        applications get a no.
+      </p>
+      <p>
+        No card, bank or payment details are collected anywhere on this site. There is nothing on
+        it that takes money. What each form asks for is listed in full on the
+        <a href="/privacy">privacy page</a>.
+      </p>
+      <p>
+        You are told on screen whether your application was saved, and shown a reference. That
+        message is the confirmation. No automated email is sent, so do not wait for one.
+      </p>
+      <p>
+        No response time is published. I have not agreed one, and publishing a target nobody has
+        committed to would be a promise rather than a term.
+      </p>
+
+      <h2>Consulting work</h2>
+      <p>
+        The pages describing the Fractional Chief AI Officer retainer and the AI Readiness
+        Assessment are descriptions of what I do, not offers capable of acceptance. Any engagement
+        starts with a written scope agreed by both of us, which is where the fee, the duration, the
+        deliverables and everything else are fixed.
+      </p>
+      <p>
+        One published commitment does carry over, because it is stated on both pages: if you
+        commission an AI Readiness Assessment and begin a fractional CAIO engagement within 60 days
+        of it, the full assessment fee is credited toward your first month.
+      </p>
+      <p>
+        Prices shown on this site are indicative and are confirmed on a scope call before anything
+        is agreed.
+      </p>
+
+      <h2>The material published here</h2>
+      <p>
+        The writing, the teaching material and the site itself are mine, and copyright stays with
+        me. The published resources are a deliberate exception, and the permission is broad: they
+        are free to use and free to pass on, including inside your own organisation and in your own
+        work. Nothing there needs an account, a licence or an email address.
+      </p>
+      <p>
+        What that permission does not include is republishing the material as your own, or selling
+        it. Attribution is appreciated and not demanded.
+      </p>
+      <p>
+        If you are a cohort participant, what you write and build during the programme is yours. I
+        do not claim ownership of your work, and I do not publish it without asking you first.
+      </p>
+
+      <h2>Links to other sites</h2>
+      <p>
+        Some pages cite or link to other people's work. Those sites are not mine, I do not control
+        what they publish, and a link is not an endorsement of everything on the other end of it.
+      </p>
+
+      <h2>Availability</h2>
+      <p>
+        This is a small site run by one person. It may be unavailable for maintenance, because a
+        service it depends on is down, or because I broke something. <strong>There is no uptime
+        commitment</strong>, and features may change or be removed.
+      </p>
+      <p>
+        Where a part of the site fails, the rest is designed to keep working — a booking still saves
+        when the calendar service is unreachable, and the assistant points you at a form when it
+        cannot answer. That is the intent rather than a promise.
+      </p>
+
+      <h2>Liability</h2>
+      <p>
+        The site and its material are provided as they are. I have taken care to make them accurate
+        and useful, and I do not warrant that they are free of errors or suitable for any particular
+        purpose of yours.
+      </p>
+      <p>
+        Nothing here is professional, legal, financial or regulatory advice. The material discusses
+        regulated-industry obligations because that is the subject matter, and reading it is not a
+        substitute for advice about your own situation.
+      </p>
+      <p>
+        To the extent the law allows, I am not liable for indirect or consequential loss arising
+        from your use of this site, including lost profit, lost data or business interruption.
+        Nothing in these terms limits liability that cannot lawfully be limited, including for
+        fraud, or for death or personal injury caused by negligence.
+      </p>
+
+      <h2>Your personal data</h2>
+      <p>
+        Set out in full on the <a class="ftext-link" href="/privacy">privacy page</a>, which names
+        every field collected, every company that processes it, how long it is kept, and how to have
+        it deleted.
+      </p>
+
+      <h2>Governing law</h2>
+      <p>
+        These terms are governed by the laws of India, and the courts at Bengaluru have exclusive
+        jurisdiction over any dispute arising from them.
+      </p>
+      <p>
+        Before that becomes relevant, write to me. Most things are a misunderstanding and are
+        cheaper to fix in an email.
+      </p>
+
+      <h2>Changes to this page</h2>
+      <p>
+        These terms change as the site does, and the date at the top is the date they last changed.
+        Continuing to use the site after a change means the current version applies. There is no
+        archive of earlier versions and no mailing list to announce changes on.
+      </p>
+
+      <div class="closing">
+        <p>
+          <strong>Last updated {UPDATED}.</strong> Questions about any of this go to
+          <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, and I answer
+          them myself.
+        </p>
+      </div>
     </div>
   </section>
-
-  <section class="wrap band">
-    <div class="sec-head">
-      <p class="eyebrow">What is true today</p>
-      <h2>Applying is <em>free, and it is not a place</em></h2>
-    </div>
-
-    <ul class="fact-list">
-      <li>
-        <b>Applying costs nothing.</b> There is no application fee and no deposit. No
-        card, bank or payment details are collected anywhere on this site — there is
-        nothing on it that takes money. What each form asks for is listed in full on
-        <a class="textlink" href="/privacy">how your details are handled</a>.
-      </li>
-      <li>
-        <b>An application is not a confirmed place.</b> Applying starts a discussion;
-        admission, payment and attendance confirmation are separate steps, and each one
-        involves a different person saying yes. Nothing you do on this site commits you
-        to anything.
-      </li>
-      <li>
-        <b>You are told on screen whether your application was saved.</b> That message,
-        and the reference it shows you, is the confirmation. No automated email is sent
-        — see <a class="textlink" href="/communication-preferences">changing what you receive</a>.
-      </li>
-      <li>
-        <b>No service or response target is published.</b> One is under discussion.
-        Until it has been agreed it would be a promise nobody has made.
-      </li>
-    </ul>
-  </section>
-
-  <section class="wrap band">
-    <div class="sec-head">
-      <p class="eyebrow">Where the terms come from</p>
-      <h2>The offer, before <em>you commit</em></h2>
-    </div>
-
-    <p class="body-copy">
-      The programme's own answer to the question, in the words it is published in:
-    </p>
-
-    <blockquote class="quote">{feesAnswer}</blockquote>
-
-    <p class="body-copy">
-      That is the mechanism, not a holding line. The schedule, the fee, how and when it
-      is paid, what happens if you or we cancel, and what access you have to the
-      material are settled in writing in the offer — which arrives after a conversation
-      about fit, and before there is anything to agree to. If any of it is unclear when
-      you read it, the right moment to say so is then.
-    </p>
-  </section>
-
-  <section class="wrap band">
-    <div class="sec-head">
-      <p class="eyebrow">Still to be published</p>
-      <h2>Five facts, and <em>who owes each</em></h2>
-    </div>
-
-    <p class="body-copy">
-      These are named rather than guessed. A page of plausible terms is worse than a
-      page that is plainly unfinished, because terms pages all read alike — nobody can
-      tell a considered refund policy from a pasted one, and the reader would be relying
-      on the difference.
-    </p>
-
-    <div class="scroll">
-      <table class="owes">
-        <thead>
-          <tr><th>Fact</th><th>What is missing</th><th>Owner</th></tr>
-        </thead>
-        <tbody>
-          {
-            outstanding.map((row) => (
-              <tr>
-                <td>{row.fact}</td>
-                <td>{row.detail}</td>
-                <td>{row.owner}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <p class="body-copy">
-      Until they are published, a question about any of them is answered by a person
-      rather than by this page. Write to
-      <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>, or use
-      <a class="textlink" href="/contact/">the route that matches your situation</a>.
-    </p>
-
-    <p class="revised">Written <time datetime="2026-09-11">11 September 2026</time>.</p>
-  </section>
-</PracticeLayout>
+</PolicyLayout>
 
 <style>
-  .band { padding-block: var(--space-8); }
+  /* Same prose system as the privacy page. Duplicated rather than shared
+     because two policy pages do not justify a stylesheet, and the day one of
+     them needs to look different this is where that happens. */
+  .policy-head { padding: var(--space-8) 0 var(--space-6); }
+  .policy-head h1 { margin: var(--space-3) 0 var(--space-4); max-width: 18ch; }
+  .policy-head .lead { max-width: var(--measure-prose); }
 
-  .body-copy {
-    font-size: var(--size-4);
-    line-height: var(--lh-normal);
-    color: var(--text-body);
-    max-width: var(--measure-prose);
-  }
-  .body-copy + .body-copy { margin-top: var(--space-4); }
-
-  /* The unwritten state in the system's own language — a dashed edge that reads
-     as a space held open rather than as a broken component. Same treatment as
-     /privacy, deliberately: a reader arriving from that page should recognise
-     the mark rather than have to work out what it means twice. */
-  .pending-block {
-    background: var(--state-unwritten-bg);
-    border: var(--border-w-hair) dashed var(--border-field);
-    border-radius: var(--radius-panel);
-    padding: var(--space-5) var(--space-6);
-    max-width: var(--measure-prose);
-  }
-  .pending-label {
+  .stamp {
     font-family: var(--font-mono);
     font-size: var(--size-1);
-    color: var(--accent-ink);
-    margin-bottom: var(--space-2);
-  }
-  .pending-block p:last-child {
-    font-size: var(--size-3);
-    color: var(--text-body);
-    line-height: var(--lh-normal);
-  }
-
-  .fact-list {
-    list-style: none;
-    max-width: var(--measure-prose);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-  .fact-list li {
-    font-size: var(--size-3);
-    line-height: var(--lh-normal);
+    letter-spacing: var(--tracking-label);
     color: var(--text-quiet);
-    padding-left: var(--space-4);
-    border-left: var(--border-w-heavy) solid var(--border-hair);
-  }
-  .fact-list b {
-    color: var(--text-loud);
-    font-weight: var(--weight-strong);
-    display: block;
-  }
-  .fact-list a {
-    color: var(--text-loud);
-    text-decoration: underline;
-    text-decoration-color: var(--border-field);
-    text-underline-offset: 0.2em;
-  }
-  .fact-list a:hover { color: var(--link-hover); }
-
-  /* Sunken ground rather than a card: this is the offer's own sentence quoted
-     inside the page, not a panel of its own. */
-  .quote {
-    margin: var(--space-5) 0;
-    padding: var(--space-5) var(--space-6);
-    background: var(--surface-sunken);
-    border-radius: var(--radius-panel);
-    font-size: var(--size-4);
-    line-height: var(--lh-normal);
-    color: var(--text-loud);
-    max-width: var(--measure-prose);
-  }
-
-  .scroll { overflow-x: auto; }
-  .owes {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--size-3);
     margin-top: var(--space-5);
   }
-  .owes th {
-    text-align: left;
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    font-weight: var(--weight-medium);
-    color: var(--text-quiet);
-    padding: 0 var(--space-4) var(--space-2) 0;
-    border-bottom: var(--border-w-rule) solid var(--border-field);
-    white-space: nowrap;
-  }
-  .owes td {
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-    border-bottom: var(--border-w-hair) solid var(--border-hair);
-    vertical-align: top;
-    color: var(--text-quiet);
-    line-height: var(--lh-snug);
-  }
-  .owes td:first-child {
+
+  .policy { padding-bottom: var(--space-8); }
+  .policy .wrap > * { max-width: var(--measure-prose); }
+
+  .policy h2 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
     color: var(--text-loud);
-    font-weight: var(--weight-medium);
-    white-space: nowrap;
+    margin: var(--space-8) 0 var(--space-4);
+    letter-spacing: var(--tracking-display);
   }
-  .owes td:last-child { white-space: nowrap; }
 
-  .revised {
+  .policy p { margin-bottom: var(--space-4); line-height: var(--lh-normal); }
+
+  .policy ul { margin: 0 0 var(--space-4) var(--space-5); }
+  .policy li { margin-bottom: var(--space-2); line-height: var(--lh-snug); }
+
+  /* Panel law: a shadow or a border, never both. */
+  .summary {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .summary h2 { margin: 0 0 var(--space-4); font-size: var(--size-5); }
+  .summary ul { margin-bottom: 0; }
+
+  .closing {
     margin-top: var(--space-7);
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
+    padding-top: var(--space-5);
+    border-top: var(--border-w-hair) solid var(--border-hair);
   }
 
-  @media (max-width: 900px) {
-    .band { padding-block: var(--space-7); }
-  }
+  .closing p { margin: 0; color: var(--text-quiet); }
 </style>

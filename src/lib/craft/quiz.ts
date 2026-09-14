@@ -34,14 +34,31 @@ export interface QuizItem {
   week: number;
   capability: string;
   difficulty: Difficulty;
+  /** The heading's own words, after the `·`. Shown above the stem. */
+  title?: string;
+  /** The stem only. Never the distractor analysis — see parseWeekFile. */
   body: string;
   options?: { key: string; text: string }[];
 }
 
 /** The teaching-side view: the same item plus everything withheld above. */
 export interface QuizItemWithAnswer extends QuizItem {
-  answer: string;
-  rationale?: string;
+  /**
+   * The key, when there is one to check against.
+   *
+   * OPTIONAL, and that is the format being honest rather than a gap. Most of
+   * the bank is prose: "sort these six into four buckets", "name both", "give
+   * three reasons". Those have a model answer a person reads, not a string a
+   * function compares. Only an option marked with a tick produces an `answer`,
+   * and only an item with one is ever auto-scored.
+   */
+  answer?: string;
+  /**
+   * Everything around the stem: why each distractor is attractive, what to push
+   * back on, the model answer, the follow-up worth asking. `toLearnerItem` does
+   * not copy this field, and that is the whole of the answer-key split.
+   */
+  teaching?: string;
 }
 
 export interface QuizResponse {
@@ -55,81 +72,170 @@ export interface QuizResponse {
 
 const QUIZ_DIR = path.join(process.cwd(), 'docs', 'teaching', 'quiz');
 
-const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
-const WEEK_LINE = /^week:\s*(\d+)\s*$/m;
-const ITEM_HEADING = /^##[ \t]+/m;
-const META_LINE = /^([a-z_]+):\s*(.*)$/i;
-const OPTION_LINE = /^([A-D])\)\s+(.*)$/i;
 const WEEK_FILE = /^week-(\d+)\.md$/;
 
-// Parsed by hand because gray-matter is not a dependency and the format is a
-// handful of flat keys per item. One file per week; each `##` heading starts an
-// item and its text is the id, metadata runs until the first blank line, and
-// everything after that is the question.
-function parseWeekFile(input: string, fallbackWeek: number): QuizItemWithAnswer[] {
-  // Normalise line endings FIRST. This repo is developed on Windows with
-  // git's autocrlf on, so the same file is LF in the repository and CRLF in a
-  // checkout. Every per-line regex below ends in `$`, which in JavaScript
-  // (without the m flag) matches only at end-of-string, never before a
-  // trailing carriage return. Left unnormalised, a metadata line fails to
-  // match, the parse bails, and the item is dropped WITHOUT ERROR: the bank
-  // reads as empty and the quiz surface renders nothing.
-  const raw = input.replace(new RegExp(String.fromCharCode(13), 'g'), '');
+/** `## Context and state` — the topic a run of items sits under. */
+const SECTION = /^##[ \t]+(.+?)\s*$/;
+/** `### Q9 · Which boundary saves the most money` — one item. */
+const ITEM = /^###[ \t]+Q(\d+)[ \t]*(?:·[ \t]*(.*))?$/;
+/** The line under a heading: `apply` · put src/llm.py on screen */
+const DIFFICULTY = /^`(recall|apply|judge)`/;
+/** `- **B.** Re-read the balance inside issue_credit ✅` */
+const OPTION = /^-[ \t]+\*\*([A-Z])\.\*\*[ \t]+(.*)$/;
+/** The tick that marks the key. Never reaches a learner. */
+const KEY_MARK = '✅';
+/** Sections that hold facilitation prose rather than items. */
+const NOT_ITEMS = /^notes on running/i;
 
-  const fm = raw.match(FRONTMATTER);
-  const head = fm ? fm[1] : '';
-  const rest = fm ? fm[2] : raw;
-
-  const weekMatch = head.match(WEEK_LINE);
-  const week = weekMatch ? Number(weekMatch[1]) : fallbackWeek;
+/**
+ * Parse a week's bank.
+ *
+ * ---------------------------------------------------------------------------
+ * THE FORMAT IS THE ONE THE QUESTIONS ARE WRITTEN IN
+ * ---------------------------------------------------------------------------
+ * This used to expect `## item-01` with `capability:` / `answer:` metadata
+ * lines, which nothing in docs/teaching/quiz actually used. The real bank is
+ * written as prose with a heading per question, a difficulty tag, the stem as a
+ * blockquote, options as a bullet list, and the key marked with a tick — and
+ * around each one, the part that makes the bank worth having: why every
+ * distractor is attractive, what to push back on, what a good answer notices.
+ *
+ * A format that cannot hold that prose would push it into a second file, and
+ * two files describing one question drift. So the parser reads the authored
+ * shape rather than the other way round.
+ *
+ * ---------------------------------------------------------------------------
+ * WHAT A LEARNER MAY SEE, AND WHERE THE LINE IS
+ * ---------------------------------------------------------------------------
+ * `body` gets the stem and nothing else: the blockquote, plus any fenced code
+ * the question puts on screen. Every other paragraph — the distractor
+ * analysis, the follow-up, the model answer — goes to `teaching`, which
+ * `toLearnerItem` does not copy. The tick is stripped from the option it marks
+ * before the option is stored, so the key cannot ride out inside the text a
+ * learner is shown.
+ *
+ * Ids are `w<week>-q<n>`, not the bare `Q9` in the heading. Responses are keyed
+ * on the id, and every week's file numbers from Q1.
+ */
+function parseWeekFile(input: string, week: number): QuizItemWithAnswer[] {
+  // Normalise line endings FIRST. This repo is edited on Windows with git's
+  // autocrlf on, so the same file is LF in the repository and CRLF in a
+  // checkout, and every per-line regex below ends in `$`. Left unnormalised, a
+  // heading fails to match, the item is dropped WITHOUT ERROR, and the bank
+  // reads as empty.
+  const lines = input.replace(/\r/g, '').split('\n');
 
   const items: QuizItemWithAnswer[] = [];
+  let section = '';
+  let current: QuizItemWithAnswer | null = null;
 
-  for (const chunk of rest.split(ITEM_HEADING).slice(1)) {
-    const lines = chunk.split('\n');
-    const id = (lines.shift() ?? '').trim();
-    if (!id) continue;
+  // Buffers for the item being read.
+  let stem: string[] = [];
+  let teaching: string[] = [];
+  let inFence = false;
 
-    const meta: Record<string, string> = {};
-    while (lines.length > 0) {
-      const line = lines[0];
-      if (line.trim() === '') {
-        lines.shift();
-        break;
+  const flush = () => {
+    if (!current) return;
+    current.body = stem.join('\n').trim();
+    current.teaching = teaching.join('\n').trim() || undefined;
+
+    // Some questions ARE their heading: Q11 is "Which of these is not a
+    // durability boundary" followed straight by four options, with no
+    // blockquote at all. Dropping those for having no stem would silently lose
+    // a recall item with a key — exactly the kind the quiz surface exists to
+    // serve — so the title stands in as the stem.
+    if (!current.body && current.options?.length && current.title) {
+      current.body = current.title;
+    }
+
+    // What is left is a heading with nothing under it yet.
+    if (current.body) items.push(current);
+    current = null;
+    stem = [];
+    teaching = [];
+  };
+
+  for (const line of lines) {
+    // A fence can contain anything, including something that looks like a
+    // heading, so track it before any other test.
+    if (/^```/.test(line)) {
+      inFence = !inFence;
+      if (current) stem.push(line);
+      continue;
+    }
+    if (inFence) {
+      if (current) stem.push(line);
+      continue;
+    }
+
+    const item = line.match(ITEM);
+    if (item) {
+      flush();
+      section = section || 'General';
+      current = {
+        id: `w${week}-q${item[1]}`,
+        week,
+        capability: section,
+        title: (item[2] ?? '').trim() || undefined,
+        difficulty: 'recall',
+        body: '',
+        options: undefined,
+        answer: undefined,
+      };
+      continue;
+    }
+
+    const heading = line.match(SECTION);
+    if (heading) {
+      flush();
+      section = heading[1].trim();
+      // "Notes on running these" is facilitation prose, not a run of items.
+      if (NOT_ITEMS.test(section)) section = '';
+      continue;
+    }
+
+    if (!current) continue;
+    if (line.trim() === '---') continue;
+
+    const diff = line.match(DIFFICULTY);
+    if (diff && !current.body && stem.length === 0 && !current.options) {
+      current.difficulty = diff[1] as Difficulty;
+      // The rest of that line is a facilitation note ("the one to spend time
+      // on"), which is for the instructor.
+      teaching.push(line);
+      continue;
+    }
+
+    const opt = line.match(OPTION);
+    if (opt) {
+      const key = opt[1].toLowerCase();
+      let text = opt[2];
+      if (text.includes(KEY_MARK)) {
+        current.answer = key;
+        text = text.split(KEY_MARK).join('').trim();
       }
-      const kv = line.match(META_LINE);
-      if (!kv) break;
-      meta[kv[1].toLowerCase()] = kv[2].replace(/^['"]|['"]$/g, '').trim();
-      lines.shift();
+      (current.options ??= []).push({ key, text: text.trim() });
+      continue;
     }
 
-    const capability = meta.capability;
-    const answer = meta.answer;
-    if (!capability || !answer) continue;
-
-    const bodyLines: string[] = [];
-    const options: { key: string; text: string }[] = [];
-
-    for (const line of lines) {
-      // An HTML comment in the bank is an author's note, never a learner's.
-      if (/^\s*<!--/.test(line)) continue;
-      const m = line.match(OPTION_LINE);
-      if (m) options.push({ key: m[1].toLowerCase(), text: m[2].trim() });
-      else bodyLines.push(line);
+    // The stem is the blockquote. Everything else under the heading is the
+    // teaching half and is withheld.
+    if (/^>/.test(line)) {
+      stem.push(line.replace(/^>[ \t]?/, ''));
+      continue;
     }
 
-    items.push({
-      id,
-      week,
-      capability,
-      difficulty: (meta.difficulty as Difficulty) || 'recall',
-      answer,
-      rationale: meta.rationale || undefined,
-      body: bodyLines.join('\n').trim(),
-      options: options.length > 0 ? options : undefined,
-    });
+    // A blank line inside the stem keeps its shape; a blank line once the
+    // teaching prose has started belongs to that.
+    if (line.trim() === '' && teaching.length === 0 && stem.length > 0) {
+      stem.push('');
+      continue;
+    }
+
+    teaching.push(line);
   }
 
+  flush();
   return items;
 }
 
@@ -177,6 +283,7 @@ export const toLearnerItem = (i: QuizItemWithAnswer): QuizItem => ({
   week: i.week,
   capability: i.capability,
   difficulty: i.difficulty,
+  title: i.title,
   body: i.body,
   options: i.options,
 });
@@ -190,8 +297,27 @@ export const toLearnerItem = (i: QuizItemWithAnswer): QuizItem => ({
  */
 export async function getLearnerItems(): Promise<QuizItem[]> {
   const all = await getQuizItems();
-  return all.filter((i) => i.difficulty !== 'judge').map(toLearnerItem);
+  return all.filter(isSelfServable).map(toLearnerItem);
 }
+
+/**
+ * Can this item stand on a page with a Submit button and no instructor?
+ *
+ * Two conditions, and the second is new with the authored format:
+ *
+ *   not `judge`   no model answer, scored on the defence. §5.4 routes these to
+ *                 the room or to an ADR prompt.
+ *   has a key     an item with no ticked option has a model answer written as
+ *                 prose for a person to read. Putting it behind a text box
+ *                 would collect answers nothing can score and show the learner
+ *                 a "correct answer" that is three paragraphs of facilitation
+ *                 notes.
+ *
+ * Both kinds stay in the bank and stay on the console, which is where they are
+ * used. This only decides what the quiz surface serves.
+ */
+export const isSelfServable = (i: QuizItemWithAnswer): boolean =>
+  i.difficulty !== 'judge' && Boolean(i.answer) && Boolean(i.options?.length);
 
 // ---------------------------------------------------------------------------
 // Responses
@@ -239,30 +365,48 @@ export async function listAllResponsesWithLearner(): Promise<
   }
 }
 
-export async function submitQuizResponse(
+/**
+ * Record an answer, once.
+ *
+ * AN INSERT, NOT AN UPSERT, and that is the whole design of this function.
+ * The route hands back the correct answer and the rationale as soon as this
+ * succeeds. An upsert on (learner_id, item_id) meant a learner could answer,
+ * read the key, and send the right answer back over the top of the first
+ * attempt — which does not merely flatter a score (there is no score) but
+ * erases `confidentlyWrong`, the one reading the console sorts the room by and
+ * the line a session is meant to open on.
+ *
+ * The refusal comes from the `quiz_learner_item` unique index rather than from
+ * a SELECT first, for the same reason double booking is refused by a
+ * constraint: two requests in flight can both pass a check, and only one of
+ * them can win against an index. 23505 is Postgres's unique_violation.
+ */
+export async function recordFirstAnswer(
   learnerId: string,
   itemId: string,
   answer: string,
   confidence: number,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; reason?: 'already-answered' }> {
   const client = db();
   if (!client) return { ok: false };
 
   try {
-    const { error } = await client.from('quiz_responses').upsert(
-      {
-        learner_id: learnerId,
-        item_id: itemId,
-        answer: answer.trim(),
-        confidence,
-        answered_at: new Date().toISOString(),
-      },
-      { onConflict: 'learner_id, item_id' },
-    );
-    if (error) throw error;
+    const { error } = await client.from('quiz_responses').insert({
+      learner_id: learnerId,
+      item_id: itemId,
+      answer: answer.trim(),
+      confidence,
+      answered_at: new Date().toISOString(),
+    });
+    if (error) {
+      if ((error as { code?: string }).code === '23505') {
+        return { ok: false, reason: 'already-answered' };
+      }
+      throw error;
+    }
     return { ok: true };
   } catch (err) {
-    console.error('submitQuizResponse failed:', err);
+    console.error('recordFirstAnswer failed:', err);
     return { ok: false };
   }
 }
@@ -271,9 +415,13 @@ export async function submitQuizResponse(
 // Grading — code, always
 // ---------------------------------------------------------------------------
 
-/** Null for `judge` items, which are never auto-scored. */
+/**
+ * Null when nothing can honestly be checked: a `judge` item, or any item whose
+ * model answer is prose rather than a ticked option. Null is not "wrong" and
+ * every caller has to treat it as a third state.
+ */
 export const isCorrect = (item: QuizItemWithAnswer, answer: string): boolean | null =>
-  item.difficulty === 'judge'
+  item.difficulty === 'judge' || !item.answer
     ? null
     : item.answer.toLowerCase().trim() === answer.toLowerCase().trim();
 
@@ -333,7 +481,7 @@ export function itemDistribution(
         return {
           key: o.key,
           text: o.text,
-          correct: item.answer.toLowerCase().trim() === o.key,
+          correct: item.answer?.toLowerCase().trim() === o.key,
           count: picked.length,
           confident: picked.filter((r) => r.confidence >= CONFIDENT).length,
           learners: picked.map(named),

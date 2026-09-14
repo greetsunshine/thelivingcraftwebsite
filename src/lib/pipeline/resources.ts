@@ -81,7 +81,7 @@ import { sqlstate } from './errors';
 import { checkEligibility, type Eligibility } from '../comms/eligibility';
 import { idempotencyKey } from '../comms/outbox';
 import { renderMessage, resourceTemplateFor } from '../comms/templates';
-import { RESOURCES, type Resource } from '../../data/resources';
+import { RESOURCES, type LongformResource } from '../../data/resources';
 import type { Attribution } from './attribution';
 import { canonicalResourceId } from './attribution';
 import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './forms';
@@ -100,13 +100,13 @@ import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './f
  * everything that leaves this module — the stored `resource_id`, the analytics
  * payload, the template key — is built from this one function.
  */
-export const resourceIdOf = (resource: Resource): string =>
+export const resourceIdOf = (resource: LongformResource): string =>
   canonicalResourceId(resource.code) ?? resource.id;
 
 export type ResourceLookup =
-  | { state: 'ok'; resource: Resource }
+  | { state: 'ok'; resource: LongformResource }
   | { state: 'unknown' }
-  | { state: 'unreleased'; resource: Resource };
+  | { state: 'unreleased'; resource: LongformResource };
 
 /**
  * Resolve whatever the browser sent to one released resource.
@@ -223,7 +223,7 @@ export function validateResourceRequest(input: Record<string, unknown>): {
 
 export interface ResourceRequestInput {
   requestKey: string;
-  resource: Resource;
+  resource: LongformResource;
   values: Record<string, string>;
   attribution: Attribution;
   isTest?: boolean;
@@ -333,7 +333,7 @@ export interface DeliveryRequest {
   personId: string;
   /** The address as it stands now. Snapshotted onto the message, like every other. */
   recipient: string;
-  resource: Resource;
+  resource: LongformResource;
   isTest?: boolean;
 }
 

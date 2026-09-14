@@ -1,4 +1,4 @@
-// The five threads — the contract between the six sessions.
+// The seven threads — the contract between the six sessions.
 //
 // The third of the three vocabularies (spec §0A). The thirteen capabilities are
 // the week-0 intake and the week-6 re-ask; each session's five outcomes are its
@@ -24,7 +24,13 @@ export type ThreadId =
   | 'retrieval'
   | 'multi-agent';
 
-/** Order matters: it is the order the matrix prints in, everywhere. */
+/**
+ * Order matters: it is the order the matrix prints in, everywhere, and it has
+ * to stay in step with the table under "Who builds what" in
+ * docs/teaching/threads.md. Those two had drifted — retrieval and multi-agent
+ * were third and fourth there and sixth and seventh here — so one set of seven
+ * rows came out in two orders depending on which you were reading.
+ */
 export const THREADS: { id: ThreadId; label: string; blurb: string }[] = [
   {
     id: 'boundaries',

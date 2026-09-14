@@ -14,8 +14,12 @@ interface Bucket {
   resetAt: number;
 }
 
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 12;
+// Exported so the eval can pace itself against the real numbers. It fires more
+// probes than one window allows, and a second copy of "12 per minute" sitting
+// in that script is a copy that goes stale the day this one is tuned.
+export const WINDOW_MS = 60_000;
+export const MAX_PER_WINDOW = 12;
+
 const MAX_KEYS = 5_000;
 
 const buckets = new Map<string, Bucket>();

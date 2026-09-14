@@ -21,6 +21,149 @@ carry. A checkpoint that was true yesterday and is wrong today is worse than non
 the next session will trust it. If you finish a stage, land a route, unblock a decision, or
 lose an hour to something surprising, that is a line in RESUME.md before you commit.
 
+## Communication style — read this before writing any text
+This section governs **everything Claude writes here**: chat replies, commit messages,
+session content in [src/content/sessions/](src/content/sessions/), page copy, code comments,
+and agent prompts. Where it conflicts with a voice note elsewhere in this file, this
+section wins on *sentences*; the other note still wins on *register*.
+
+### The default
+- **Act as a patient coding mentor.** Assume the reader is a capable engineer who is
+  new to this particular thing. Never assume they already hold the context.
+- **Use plain, beginner-friendly English.** Prefer the ordinary word. If a plain word
+  exists, use it: "make an object" over "instantiate", "run it again" over "re-invoke",
+  "spread out" over "fan out".
+- **Define jargon the first time it appears, in the same sentence.** Keep the real
+  term — the cohort needs the vocabulary — but attach a plain-words gloss:
+  "idempotent (running it twice does the same thing as running it once)".
+- **Explain WHAT and WHY before a command or an edit.** One or two lines: what this
+  does, and why it is needed here. Then run it. Never paste a command with no gloss.
+- **Structure with bullets.** Short bullets, one idea each. Use a short paragraph only
+  when the ideas genuinely connect; use a table when comparing more than two things.
+
+### Sentence rules (this is where the writing actually goes wrong here)
+- **One idea per sentence.** Aim for under 25 words. If a sentence needs a comma to
+  hold a second thought, it is usually two sentences.
+- **At most one em dash per paragraph, and none inside a bullet.** Stacked em-dash
+  asides are the main reason the existing content is hard to read. Split them into
+  separate sentences instead.
+- **No idioms, no figures of speech, no wordplay.** Say the literal thing. Not "goes
+  green", "blast radius", "load-bearing", "the point is the movement" — say what
+  happens.
+- **Front-load the sentence.** Put the subject and the verb first. Save the condition
+  for the end: "Run the schema first, because the code expects the new tables."
+- **Concrete over abstract.** Name the real file, the real number, the real ticket.
+  "₹1,200 charged three times" beats "a duplicate side effect".
+- **Active voice, present tense.** "The middleware checks the cookie", not "the cookie
+  is checked by the middleware".
+
+### What this does NOT mean
+- **Simple words, not simple engineering.** Never drop a constraint, a trade-off or a
+  failure mode to make a paragraph shorter. If it is hard, say it is hard and then
+  explain it in ordinary words. Shortening by deleting the difficulty is the failure
+  this rule is trying to prevent.
+- **The public pages keep their register.** `/`, `/caio` and `/assessment` still read
+  as a senior practitioner, not as a bootcamp. Plain English makes those sentences
+  shorter and clearer; it does not make them chatty, hyped or padded with exclamation
+  marks. Restraint and plainness are the same goal, not opposite ones.
+- **No filler.** Do not open a reply with praise ("Great question"). Do not restate
+  the request before answering it. Do not add a summary that repeats what is already
+  on screen.
+
+### Why this exists
+Most of the cohort is India-based. The learners are working engineers, many of them
+senior, but English is a second or third language for most. The sessions are live and
+five hours long. A sentence a reader has to read twice is a sentence lost in the room.
+Dense compression costs comprehension and buys nothing.
+
+## Teaching standard — read this before writing any session, note, drill or slide
+This section governs **structure**: what a teaching artifact has to contain and in
+what order. **Communication style** above still governs the sentences. Scope is
+[src/content/sessions/](src/content/sessions/), everything under [docs/teaching/](docs/teaching/), the quiz banks, and
+the published teaching Artifacts built from them. It does not touch `/`, `/caio`
+or `/assessment`.
+
+### Who the room is
+Eight senior engineers — Staff+, engineering managers, architects, directors. They
+have shipped systems and they are past tutorials. They are peers, not students.
+Write for someone who will notice a step you skipped.
+
+### What counts as finished
+A participant can do something afterwards that they could not do before, and it is
+visible when they do it. An artifact that only conveys information has not met the
+bar yet. That is the test to apply before calling any of this done.
+
+### Rules for anything you produce
+- **Capability language.** Outcomes are things people do: predict, defend,
+  diagnose, prescribe, ship, measure. Never "understand", "learn about", "be
+  introduced to", "gain familiarity with". If you cannot test an outcome by
+  watching someone, rewrite it.
+- **Never answer first.** Introduce a concept as a question the learner commits to
+  before seeing the answer. Prediction, then reveal, then discussion. On a slide or
+  in an Artifact the prediction and the reveal sit on separate surfaces, never both
+  on screen at once. In prose, pose the problem before the resolution.
+- **Retrieval over restatement.** A recap is a set of questions, not a summary.
+  Review sections interleave topics instead of walking them in order. Mixing is
+  what makes them stick.
+- **Diagnosis before explanation.** Every failure case is a puzzle first. Show the
+  setup and withhold the cause and the fix. Two questions each time: what went
+  wrong, and which single control would have prevented it.
+- **One anchor artifact.** Abstract ideas land on the shared reference system, not
+  on a fresh example each time. The room's own agent, its tokens, its failure, its
+  model swap. Do not introduce a second system to illustrate a second idea.
+- **Concrete numbers.** ₹4L refunded, 40,000 tickets a day, 200,000 invoices, a
+  31-second call against a 30-second limit. Never "a large volume" or "significant
+  cost". This is the *Concrete over abstract* sentence rule applied to magnitudes,
+  and it matters more here: senior engineers reason from the number.
+  - Invented numbers **inside a teaching case are fine and are the point**. The
+    ban under *Hard rules* is about our own practice: client names, student
+    counts, our metrics, salary figures we cannot source. A case study's ₹4L
+    refund is fiction the room knows is fiction. A claim about the agentic job
+    market is not. Keep the two apart.
+- **Visible timing and named roles.** An activity states its own duration and says
+  who does it: "Pairs, 5 minutes". Assign specific people or specific pairs. An
+  unassigned prompt to a room of eight produces silence.
+- **Cut, do not compress.** If material will not fit, remove a topic. Never shrink
+  the type, delete the practice, or speed up delivery to make room. Half a skill
+  taught properly beats a whole one rushed.
+- **Facilitation notes are a contract.** Every activity and every failure artifact
+  carries six things: the run time, the facilitation sequence, the full answer key,
+  the expected wrong answer and what is right about it, one extension probe, and
+  the single line the block exists to land. Notes are never duplicated across
+  artifacts. If two carry the same text, one of them is wrong.
+- **Anti-hype voice.** Workbench, not showroom. No glowing brains, no humanoid
+  robots, no career-outcome promises, no framework tours. State the trade-off, name
+  the failure mode, give the number. If a sentence would survive in a vendor deck,
+  cut it. This is the same restraint the public pages hold, applied inside the gate.
+
+### How Sunil wants this worked
+- Produce the full draft, not a list of clarifying questions. He reacts to
+  artifacts, not to scoping.
+- When there is a real tension, name it and recommend a position with the trade-off
+  stated. Do not hand over balanced options with no lean.
+- Say out loud when you drop a mechanic, and say why. A prediction cycle, an answer
+  key or a checkpoint that quietly goes missing is the failure mode he cares about
+  most.
+
+### Report before you finish
+Check each of these and state which ones you could not satisfy. Do not drop one
+quietly.
+- Outcomes are verb-led and observable.
+- A prediction precedes every reveal, on a separate surface.
+- Every failure case is posed as a puzzle.
+- A "✅ You can now…" checkpoint closes each teaching block.
+- Activities show their own timing and name their participants.
+- The notes contract is satisfied, and no two artifacts share notes.
+- Numbers are concrete, not qualitative.
+- No placeholders, brackets, TODOs or leftover generation prompts anywhere,
+  including image alt text.
+
+### Reference
+The per-session build contract is [docs/teaching/threads.md](docs/teaching/threads.md) — read the week's
+row before writing any block of that week. [docs/teaching/README.md](docs/teaching/README.md) says which
+kind of note belongs in which file. Read them when building or revising a session.
+Do not inline either one here.
+
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
   Single page, still SSR (`prerender = false`). Files:
@@ -54,8 +197,10 @@ lose an hour to something surprising, that is a line in RESUME.md before you com
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
   Static. Files: [src/pages/assessment.astro](src/pages/assessment.astro), [src/layouts/AssessmentLayout.astro](src/layouts/AssessmentLayout.astro).
 - **`/craft/admin/*`** — the operator console. **Not a public surface**: password-gated,
-  `noindex`, its own layout and stylesheet, and no SEO/JSON-LD of any kind. See
-  *The admin console* below.
+  `noindex`, its own layout and stylesheet, and no SEO/JSON-LD of any kind. It sits
+  *inside* the course area's URL space but shares none of its auth: a seat code does
+  not open it. That nesting is the one thing to be careful about here — see *Auth*
+  under *The admin console* below.
 - **`/craft/*`** — the cohort's course area, for people who hold a seat. **Not a public
   surface**: gated per learner by an issued code (not a password), `noindex`, and never
   prerendered — a static file under `dist/` would be served without the middleware, which
@@ -333,6 +478,16 @@ idempotent. Shipping code ahead of its schema shows up as the console's "table i
 answering" banner rather than a crash, which is survivable and confusing. Clear this
 paragraph once it has been run.
 
+  Every page under `/craft` goes through
+  [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro), **including sign-in and office hours**.
+  Two props drop the rail and the agent dock, for two different reasons: `learner` is
+  optional and its absence means sign-in, which has no session and so no nav and no
+  footer identity; `bare` is session mode for a learner who has ninety seconds inside a
+  live call. Sign-in used to hand-roll its own `<head>`, and the fonts, favicon and
+  noindex tag then drifted from the layout's. Do not make `learner` required again —
+  that is what forced the duplicate `<head>` back the first time.
+
+
 **Cross-link spine:** assessment ⇄ CAIO ⇄ cohort. Assessment is the front door, the CAIO
 retainer is the expansion, the cohort is capability-transfer / lead-gen. The fee-credit
 mechanic (assessment fee → first month of the CAIO retainer) must stay consistent on both
@@ -356,6 +511,17 @@ The gated `/craft` learner area is the one exception, and it is a separate file:
 schedule (six weeks, eight seats, a September start) that the public offer withholds. Only
 the learner pages read it, and they alias it as `cohort`. **It must never be imported by a
 public surface** — that would republish the withheld figures through a side door.
+
+**A region can be served without its price being published.** `Region.publicPrice`
+in [src/data/regions.ts](src/data/regions.ts) gates the figure on every public surface at once — the
+pricing block, the JSON-LD `Offer`, `/api/facts`, and the Q&A agent — and all four
+fall back to "shared on application". It is off for Dubai and Australia, whose rates
+are uncalibrated and carry no struck-through `standardPrice` telling a reader the
+price will rise; India is on. Public consumers must read `publicCohortPricing`, not
+`cohortPricing` — the console reads the full list on purpose, because a working number
+Sunil cannot see in his own console is one he restates from memory somewhere else.
+Turning a region on is one boolean; adding a fifth public consumer that reads
+`cohortPricing` is how the figure gets out anyway.
 
 Never state an offer fact directly in a page, a schema block, or an agent prompt —
 route it through `facts.ts`. The failure this prevents is subtle and bad: a stale
@@ -406,7 +572,17 @@ did before it existed.
   [src/middleware.ts](src/middleware.ts) over the whole `/craft/admin` + `/api/craft/admin/*`
   prefix, **not per page** — so a new admin page is protected by default. An
   unconfigured console is closed (503), never open.
-- **Storage is Supabase** — forty-three tables, schema in
+  - **The console's prefix is a subset of the course area's, and the order of the
+    two checks in `middleware.ts` is therefore load-bearing.** `/craft/admin/leads`
+    matches `isAdminPath` *and* `isCraftPath`. The admin check runs first and the
+    learner gate only ever sees what it declined; swap them and a seat code — which
+    every participant holds — opens the leads ledger, the questions log, and every
+    other learner's intake answers. Don't reorder them, and don't let a `/craft`
+    allowlist entry (`CRAFT_OPEN`) grow a prefix that swallows a console path.
+  - The learner login's `?next=` excludes `/craft/admin` for the same reason: it
+    starts with `/craft`, and there is nothing in the console for a learner to
+    return to.
+- **Storage is Supabase** — forty-six tables, schema in
   [supabase/schema.sql](supabase/schema.sql), reached only with the service-role key,
   RLS on with zero policies so no other key can touch it. Rollups are SQL functions,
   because aggregating in TypeScript means a row cap that silently truncates.
@@ -498,6 +674,71 @@ did before it existed.
 - Reading the console needs Supabase; the write-back buttons need `GITHUB_TOKEN` +
   `GITHUB_REPO` and disable themselves with an explanation when absent. Every panel
   degrades on its own — a missing var greys out one thing, not the page.
+
+## Booking (`/book`, the widget, `/craft/admin/bookings`)
+**This site owns the calendar. Google is a notification channel, not a source of
+truth.** Availability is computed from rules in our own database
+([supabase/schema.sql](supabase/schema.sql): `booking_rules`, `booking_blocks`), never from a Google
+free/busy query. Say the cost out loud, because it will surprise someone:
+**an event Sunil puts in his own Google Calendar does not close a slot here.**
+Keeping time is a block in the console, and nothing else.
+
+What Google *is* for is the invite. On a booking the site creates the event with
+the booker as an attendee and `sendUpdates=all`, so Google emails both people,
+puts it in both calendars, attaches a Meet link, and emails both again when the
+call moves or is called off. That is a transactional email system we do not have
+to build, run, or get past a spam filter — and it is why there is no Resend or
+Postmark here.
+
+- **Call types are code, availability is data.** "A discovery call is 30 minutes"
+  is an offer fact and lives in [src/data/meetings.ts](src/data/meetings.ts), beside the page copy.
+  "I am free on Tuesdays" changes weekly and lives in the database. When adding
+  something, that is the question to ask.
+- **Three surfaces, one engine.** `discovery` on `/caio` and `scope` on
+  `/assessment` are public; `office-hours` is learner-only and sits inside the
+  gate at [/craft/office-hours](src/pages/craft/office-hours.astro). [BookingWidget.astro](src/components/BookingWidget.astro) serves both
+  through a `mode` prop and **refuses at build time** if a learner type is put on
+  a public page, or a public type inside the gate.
+- **The learner path is gated by its path alone.** [/api/craft/booking](src/pages/api/craft/booking.ts) is under
+  `/api/craft`, so `middleware.ts` closes it and hands it a verified learner. A
+  learner never sends their own name or email — those come from the seat row, so
+  nobody books as somebody else. Do not add a learner branch to `/api/booking/*`;
+  reusing the gate is the whole reason that file is where it is.
+- **Double booking is refused by Postgres, not by TypeScript.** A `gist`
+  exclusion constraint on `tstzrange(starts_at, ends_at)` rejects the second of
+  two simultaneous inserts. A "is this free?" SELECT cannot close that window; a
+  constraint can. `'reschedule_requested'` is inside the constraint's predicate
+  on purpose — asking someone to move does not release their slot until they do.
+- **The posted time is never trusted.** `bookSlot()` re-derives availability
+  server-side and rejects anything not on the list. Without it a crafted request
+  books 3am on a Sunday, and the constraint would not object, because nothing
+  else is booked at 3am on a Sunday.
+- **The row is written before Google hears about it.** A Google outage then costs
+  an invite, not a booking. The reverse order loses the call and leaves an orphan
+  event. A booking that saved but did not sync is flagged red in the console —
+  that person is expecting a call and has no invite.
+- **Reschedule links are credentials.** The token lives in the URL in the
+  calendar invite; the database holds only an HMAC of it
+  ([src/lib/booking/tokens.ts](src/lib/booking/tokens.ts)), same reasoning as `learners.code_hash`. A wrong
+  token gets the same 404 as an unknown booking, so the page cannot be used to
+  confirm that a booking exists. `/book` is disallowed in robots.txt for the
+  same reason.
+- **"Suggest alternatives" travels through the calendar invite.** The console
+  records the proposed times, reads the event description back from Google, adds
+  a line above it, and patches it with `sendUpdates=all`. The reschedule link is
+  already in that description, which is why the existing text is read rather than
+  replaced — we cannot rebuild it, because we do not keep the token.
+- **A booking writes a `leads` row but posts nothing to Web3Forms.** The invite
+  is the notification, and it lands in the calendar Sunil runs his day from. The
+  no-server-side-Web3Forms rule is untouched. A learner booking writes no lead
+  row at all — a participant does not belong in the list of people to follow up.
+- **Without `GOOGLE_*` set, booking still works and nobody gets an invite.** The
+  console says so in a banner. Same degradation rule as every other panel.
+- Timezone maths is in [src/lib/booking/slots.ts](src/lib/booking/slots.ts) and is pure, so it can be tested
+  without a database. Rules are wall-clock times in `HOST_TIMEZONE`; slots come
+  out as instants; the browser formats them in the visitor's own zone. The
+  two-pass `zonedToInstant` is correct across daylight-saving changes — India has
+  no DST, but the host zone is a constant someone can change.
 
 ## Agents
 Three agents now — two retrievers and the visitor Q&A agent. The two retrievers
@@ -652,8 +893,9 @@ prospect.
   assistant before a search engine, and `/llms.txt` + `/api/facts` exist so the
   answer they get is the one we wrote. Disallowed: `/api/ask` (POST, costs money per
   call), `/api/track` and `/api/lead` (POST-only; indexing the beacon would pollute
-  its own data), and the console — politeness only, since robots.txt is a request and
-  the real defence is the session check in `middleware.ts`.
+  its own data), and `/craft` — which now covers the console at `/craft/admin` with
+  the same one line. Politeness only, since robots.txt is a request and the real
+  defence is the session checks in `middleware.ts`.
 - `SeoHead.astro` is for public surfaces only. **`/craft/admin` must never use it** — a
   JSON-LD `@graph` describing the cohort, emitted from a page listing leads, is
   exactly the wrong artefact. `AdminLayout.astro` has its own minimal head.
@@ -666,13 +908,29 @@ prospect.
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
   Page-specific components (tiers, comparison rows, phase arc, fit/not-fit) live in scoped
   `<style>` blocks in the page files.
-  The console has its own [src/styles/admin.css](src/styles/admin.css) — the SAME design
-  system at a working density (tables and hairlines, not 104px sections). It imports
-  `ds/contract.css` and `ds/theme.css` — the TOKENS — and sets `data-density="compact"`
-  on `<body>`, which is the surface those compact values were written for. It still does
-  **not** import `global.css`: the console has no hero, no proofbar, no price card, and
-  pulling in 400 lines to use four of them would mean every change to the public design
-  silently reflows this one.
+  The console has its own [src/styles/admin.css](src/styles/admin.css) — same tokens and typefaces at a
+  working density (tables and hairlines, not 104px sections). It deliberately does
+  **not** import `global.css`: it uses four of those 220 lines, and sharing them
+  would mean every change to the public design reflows the console.
+  The course area has [src/styles/craft.css](src/styles/craft.css), which — unlike `admin.css` — is **additive to
+  `global.css`, never a replacement**: a learner who applied on the strength of the public
+  pages should not land somewhere that looks like a different product, so the noir hero,
+  the sun button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all still come from
+  `global.css`. `craft.css` holds only what the marketing pages have no use for —
+  `panel`/`stack`/`row`, the state `pill`, `klabel`, `facts`, `page-head`, the intake's
+  scale cells, the pager, the sign-in card. It exists because those pieces had been
+  written four times in four page-scoped `<style>` blocks and had drifted: sign-in was on
+  the illustration-led system while the three pages behind the gate were the old
+  warm-craft structure with new tokens poured into it. Two laws it holds and page-scoped
+  CSS kept breaking: **a panel gets a shadow or a border, never both** (hairlines are
+  legal *inside* a panel, as row dividers), and **if it is yellow it is clickable** —
+  `--sun` is a fill and cannot carry text, `--clay` is the accent as ink. A status pill is
+  therefore never sun. One trap: `global.css` already owns short names like `.mod` (the
+  public module card), so a bare `.mod` in a session row renders inside a phantom nested
+  card. Namespace anything generic.
+  `admin.css` imports `ds/contract.css` and `ds/theme.css` — the tokens — and the
+  console sets `data-density="compact"` on `<body>`, which is the surface those
+  compact values were written for.
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.
@@ -684,14 +942,19 @@ prospect.
   browser, same as the forms. **Don't move any Web3Forms call server-side.** The
   admin lead ledger does not change this: the browser posts to Web3Forms exactly as
   before, then reports the outcome to `/api/lead`.
-- **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
-  (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
-  paths redirect to `/?region=`.
-  - **A full server-rendering conversion (`output: 'server'`) was built and then split into
-    its own PR** so this branch could ship without it. See that PR before touching
-    `astro.config.mjs`, the guide/template draft-gate routes, or the several
-    `export const prerender = true` lines this repo still carries — a second, uncoordinated
-    attempt at the same change is exactly the kind of drift that PR exists to avoid.
+- **Deploy:** `@astrojs/vercel` adapter, `output: 'server'` — every route renders on
+  request, none is emitted as static HTML at build time. It was `output: 'static'` with a
+  per-route `prerender = false` opt-out on most routes already — `/craft`, `/craft/admin`,
+  every `/api/*` route and the home page all needed one. Only seven routes were still
+  genuinely static: `/latest`, `/llms.txt`, `/robots.txt`, `/sitemap.xml`, `/resources` and
+  its two self-hosted long-form pages. None of the seven has per-request state — they are
+  pure functions of `facts.ts` and the resources data modules — so a server default costs
+  nothing there and removes the last reason to keep `prerender = false` on every other
+  route by hand, which is exactly the kind of flag that rots the first time someone adds a
+  route and forgets it. **The real trade: those seven pages were static files served at the
+  CDN edge, and are now a Vercel function invocation on every request.** `npm run dev` to
+  preview (`astro preview` is unsupported with the Vercel adapter). Old
+  `/india|/dubai|/australia` paths redirect to `/?region=`.
   - The Vercel project is **connected to the GitHub repo** (production branch `main`),
     so **a push to `main` deploys production**. Before that connection existed, every
     deploy was a hand-run CLI command, and production silently drifted commits behind
@@ -705,6 +968,24 @@ prospect.
     survivable but confusing.
   - A hand-run `vercel --prod` is blocked by a global guard hook and should stay that way;
     `pnpm promote` is the guarded path ([scripts/promote.mjs](scripts/promote.mjs)).
+  - **Check for parallel work before you commit and before you push. Sunil edits this
+    repo directly and from other sessions, so the tree and the remote both move under
+    you.** Two checks, and both have already failed once:
+    - **`git status` before staging, and stage explicit paths — never `git add -A`.**
+      Uncommitted files you did not write are normal here, not leftovers. `git add -A`
+      once swept a 313-line teaching note Sunil had written into a commit whose message
+      claimed authorship of it, and pushed it unread. If a file you did not write is in
+      the way, read it and say so; do not commit it silently, and never assume it is
+      stale. The same sweep once caught `walkthrough/` — personal notes destined for a
+      learner-visible repo.
+    - **`git fetch && git log HEAD..origin/main` before pushing**, and re-read anything
+      you are about to edit that came back changed. Because a push deploys production,
+      a stale picture of `main` is not a merge conflict you notice — it is work built on
+      content that has already been replaced.
+  - **Before writing a new file under `docs/teaching/`, list the directory.** The answer
+    to "does a note for this already exist?" is a `ls`, not a memory of the last time you
+    looked. Two notes answering the same question is the duplication the rest of this file
+    exists to prevent, and it is how the two drift.
 - **Building locally needs Node ≥ 22.12.** The nvm default here is 20.20.1, which Astro
   refuses outright (`Node.js v20.20.1 is not supported`) — that error is the toolchain, not
   the code. The system install at `/c/Program Files/nodejs` is 24.x and works:
@@ -820,5 +1101,7 @@ metrics, testimonials or employer endorsement without a dated approval record.
 - **Scale**: body 17px/1.65; H1 clamp(40–72px); H2 clamp(30–46px); display weight ~360.
 - **Spacing**: section padding ~104px; max width 1180px; radius 2–3px; hairline borders.
 - **Voice**: respected practitioner. Restrained, senior-technical, high whitespace.
+  This is the *register*. The *sentences* follow **Communication style** at the top of
+  this file — plain words, one idea each. Restrained and plain are the same goal.
   Consulting register a notch more executive (board-facing). Not SaaS-templated, not
   bootcamp-hype.

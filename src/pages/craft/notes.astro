@@ -32,7 +32,7 @@
 // THE THREADS ARE SHOWN, NOT JOINED
 // ---------------------------------------------------------------------------
 // Week 1 promises this is "refreshed weekly". What it does not promise is that
-// every finding maps onto one of the five threads, and it does not: the themes
+// every finding maps onto one of the seven threads, and it does not: the themes
 // below predate the threads, nothing has landed under trace-and-bill, and
 // "reliability & evaluation" straddles evidence and state. So the matrix is
 // printed beside the notes rather than used to file them. Inventing that join
@@ -46,8 +46,8 @@ import { THREADS, threadLabel, WEIGHT_MARK } from '../../lib/craft/threads';
 export const prerender = false;
 const learner = Astro.locals.learner!;
 
-const { refreshedAt, themes } = publishedNotes();
-const total = themes.reduce((n, t) => n + t.notes.length, 0);
+const { refreshedAt, themes, count: total, newest } = publishedNotes();
+const updated = newest ?? refreshedAt;
 
 // Which week builds which thread, straight from each session's frontmatter —
 // which is itself the machine-readable half of docs/teaching/threads.md.
@@ -79,7 +79,7 @@ const threadRows = THREADS.map((t) => t.id)
       for them.
     </p>
     <p class="mono faint" style="font-size:12.5px;margin-bottom:44px">
-      {total} {total === 1 ? 'item' : 'items'} · last refreshed {longDate(refreshedAt)}
+      {total} {total === 1 ? 'item' : 'items'} · last updated {longDate(updated)}
     </p>
 
     {total === 0 ? (
@@ -118,7 +118,7 @@ const threadRows = THREADS.map((t) => t.id)
     {/* Printed beside the notes, deliberately not used to file them. */}
     {threadRows.length > 0 && (
       <section class="threads">
-        <h2>The five threads, and which week builds them</h2>
+        <h2>The seven threads, and which week builds them</h2>
         <p class="theme-blurb">
           The arc the six sessions run on. Nothing above is filed against these — a finding is
           about the world, a thread is about the course, and pretending one maps onto the other

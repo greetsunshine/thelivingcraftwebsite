@@ -1,0 +1,89 @@
+---
+// Shell for the policy pages — /privacy and /terms.
+//
+// Separate from BaseLayout because that nav is all #anchors into the cohort
+// single-page, and a policy page is reached from a footer link, a Google
+// consent screen, or a search result. Those anchors would all be dead.
+//
+// THIS SHELL CARRIES NO ANALYTICS, AND THAT IS THE POINT. No Track beacon, no
+// Vercel Analytics, no Speed Insights, no Ask widget. A page whose job is to
+// tell someone what is collected about them should not be collecting anything
+// while they read it — and it means the sentence saying so in privacy.astro is
+// true rather than aspirational. /api/track would drop the pageview anyway; its
+// path allowlist is the three marketing surfaces only. This makes that
+// deliberate instead of incidental.
+//
+// Indexed, unlike the gated shells: a privacy policy that a crawler or a
+// consent screen cannot fetch does not do its job.
+import '../styles/global.css';
+import SeoHead from '../components/SeoHead.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  /** Which policy this is. Shown beside the wordmark and in the footer rule. */
+  label: string;
+}
+
+const { title, description, canonical, label } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <SeoHead title={title} description={description} canonical={canonical} />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="wordmark" href="/">
+          <span class="dot"></span> the living craft
+          <span class="wordmark-sub">{label}</span>
+        </a>
+        <nav class="navlinks">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/">Cohort</a>
+          <a href="/caio">Fractional CAIO</a>
+          <a href="/assessment">AI Readiness</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div>
+            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <p class="muted">
+              A teaching and consulting practice in agentic systems architecture, run by one person
+              from Bangalore.
+            </p>
+          </div>
+          <div class="foot-col">
+            <h5>The practice</h5>
+            <a href="/">The Living Craft · cohort →</a>
+            <a href="/caio">Fractional CAIO retainer →</a>
+            <a href="/assessment">AI Readiness Assessment →</a>
+            <a href="/latest">Field notes · agentic AI →</a>
+          </div>
+          <div class="foot-col">
+            <h5>Connect</h5>
+            <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
+            <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <span>© {year} The Living Craft · Sunil Mathew</span>
+          <span class="mono">{label}</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

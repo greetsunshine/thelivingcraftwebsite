@@ -21,53 +21,67 @@ answer key eventually reaches a learner.
 
 ## Format
 
-A week's file opens with frontmatter naming the week:
+Write the questions the way you already write them. The parser was changed to
+read the authored shape rather than the other way round, because the half of a
+bank that is worth having — why each distractor is attractive, what to push back
+on, what a good answer notices — has nowhere to live in a `key: value` format,
+and splitting it into a second file gives you two files that drift.
 
-```yaml
----
-week: 1
----
-```
+A file opens with a `#` title and whatever prose you want. Nothing above the
+first `##` is parsed.
 
-Then one `##` heading per item. The heading is the item's id — it must be unique
-across the whole bank, because responses are stored against it. Metadata follows as
-`key: value` lines, then a blank line, then the question.
+`##` is a topic. It becomes the item's `capability`, so it is the words that
+appear beside a question on the console. A section called **Notes on running
+these** is treated as facilitation prose and is not scanned for items.
+
+`###` is one question, written `### Q9 · A short title`.
 
 ```markdown
-## item-01
-capability: A1
-difficulty: recall
-answer: b
-rationale: Why the key is the key, and what each distractor gets wrong.
+## Durability
 
-The question, in as many paragraphs as it needs.
+### Q9 · Which boundary saves the most money
+`apply` · the anchor question
 
-A) First option
-B) Second option
-C) Third option
-D) Fourth option
+> One boundary, added before that night. Which one prevents the most loss?
+
+- **A.** A 5-second timeout on the payments call
+- **B.** An idempotency key on the refund ✅
+- **C.** A named outcome on step-budget exhaustion
+- **D.** A nightly spend cap of ₹300,000
+
+**Why the others are attractive and wrong.** A is the popular answer and it is
+the first boundary chronologically, but a fast failure still gets redelivered…
 ```
 
-| Key | Required | Notes |
+| Part | Required | What it does |
 |---|---|---|
-| `capability` | yes | One of `A1`–`A7` or `B1`–`B6`, from the intake's thirteen. This is what ties an item to a session's `topics`, to reading, and to the doubts inbox. |
-| `answer` | yes | The option letter (`b`), or a short literal for a free-text item. Case-insensitive. |
-| `difficulty` | no | `recall`, `apply` or `judge`. Defaults to `recall`. |
-| `rationale` | no | Shown to the learner *after* they answer, and to Sunil on `/admin/quiz`. |
+| `### Q<n> · <title>` | yes | `<n>` becomes the id, as `w<week>-q<n>`. Responses are stored against that, so it has to stay put once a cohort has answered. The title is shown above the stem. |
+| `` `recall` ``/`` `apply` ``/`` `judge` `` | no | First line under the heading. Defaults to `recall`. Anything after the tag on that line is a note to you. |
+| `> the stem` | yes* | The blockquote is the question, and the **only** thing a learner is shown besides the options. A fenced code block above it is part of the stem. |
+| `- **A.** …` | no | Options. `✅` marks the key and is stripped before the option is stored. |
+| everything else | no | Distractor analysis, model answer, follow-ups, what to push back on. Withheld from learners. Shown on the console. |
 
-Options are lines matching `A)`–`D)`. Omit them for a free-text item.
+\* Unless the heading *is* the question, as in Q11 — an item with options and no
+blockquote uses its title as the stem.
 
-## The three difficulties decide where an item is used
+## What reaches the quiz surface, and what does not
 
-| Difficulty | Where it goes | Scored by |
-|---|---|---|
-| `recall` | The quiz surface | Code, against the key |
-| `apply` | The quiz surface | Code, against the key |
-| `judge` | **The room, or the ADR prompt** | Nothing. Never auto-scored. |
+An item is served on `/craft/quiz` only if it is **not `judge`** and **has a
+ticked option**. Everything else stays in the bank and on the console, and is
+used in the room or as an ADR prompt.
 
-`judge` items are filtered out of `getLearnerItems()` entirely. They have no model
-answer and are scored on the defence, so a screen with a Submit button is the wrong
-place for them.
+That second condition is most of the bank, by design. "Sort these six into four
+buckets", "name both", "give three reasons this does not hold" have a model
+answer written for a person to read, not a string a function can compare. Put one
+behind a Submit button and you collect answers nothing can score, then show the
+learner a "correct answer" that is three paragraphs of notes addressed to the
+instructor.
+
+Week 1: fifteen items, four of them self-servable (Q1, Q9, Q11, Q13). The
+session's `quiz:` frontmatter names those four, in order.
+
+**A session serves only the ids its `quiz:` list names.** Adding a question to a
+bank does not put it in front of anybody until that list says so.
 
 ## Writing the items
 
@@ -77,6 +91,6 @@ the drill forces is the ADR prompt. These are extractions from a session you are
 writing anyway, not three new things per week.
 
 Every item carries a confidence rating when a learner answers it. **Confident and
-wrong is the only dangerous state**, and it is what `/admin/quiz` sorts by — so
+wrong is the only dangerous state**, and it is what `/craft/admin/work` sorts by — so
 write distractors that a knowledgeable person might genuinely pick, not obviously
 wrong ones. A distractor nobody chooses tells you nothing.
