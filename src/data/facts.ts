@@ -10,8 +10,9 @@
 // current on the page and stale in the answer an AI assistant gives about us.
 // Edit an offer here and every surface moves together.
 //
-// Public cohort logistics follow the V4 copy: no fee, start date or week count
-// is published. Consulting pricing is PLACEHOLDER — see CLAUDE.md.
+// Cohort logistics ARE published (D1, 14 September 2026): fee, start date and
+// week count. The fee is per region and gated by `publicPrice` in regions.ts.
+// Consulting pricing is PLACEHOLDER — see CLAUDE.md.
 
 import { EXPLORES } from './cohort-copy';
 import { regions, type Region } from './regions';

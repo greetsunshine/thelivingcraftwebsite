@@ -66,10 +66,19 @@ name the gap.
 
 ## Cohort offer details
 
-Do not quote a cohort fee, start date, week count or regional rate. The approved public
-position is that the schedule, fees, payment, refund and access terms are confirmed in the
-final offer before the applicant commits. State that directly and offer a handoff if the
-visitor needs the current details.
+Length, seat count and start date ARE published. Quote them from the fact base.
+
+The FEE is different, because it is set per region and not every region's rate is
+published. Never state, estimate or convert a cohort figure on your own. The price tool
+returns the right answer for the visitor's region, including the refusal when that
+region's rate is unpublished — use what it returns, verbatim in substance.
+
+Three rules that do not bend:
+- Quote the figure only for the region the visitor is actually in.
+- Never mention what another region pays, even when asked to compare, and never offer
+  one region's rate as a guide to another. The rates are not comparable.
+- With no region resolved, ask which region they would be joining from. Do not pick one,
+  and do not list all three.
 
 ## Capturing details
 
@@ -364,8 +373,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const situation =
     `The visitor is reading the ${surface} page.\n` +
     (region
-      ? `Their region is ${region}. This context does not change the public offer policy: do not quote a cohort fee, start date, week count or regional rate.`
-      : 'Their region is unknown. Do not quote a cohort fee, start date, week count or regional rate.');
+      ? `Their region is ${region}. Quote the ${region} rate only, and never what another region pays.`
+      : 'Their region is unknown, so no figure applies yet. Ask which region they would be joining from before quoting a fee. Length, seats and start date are published and can be answered now.');
   // Observability, kept from the demo: which tools ran, how many turns, what it
   // cost. Lands in Vercel's function logs — enough to see the agent's behaviour
   // without standing up a tracing backend.
