@@ -1,5 +1,5 @@
 ---
-// Shell for the policy pages — /privacy now, terms if one is ever written.
+// Shell for the policy pages — /privacy and /terms.
 //
 // Separate from BaseLayout because that nav is all #anchors into the cohort
 // single-page, and a policy page is reached from a footer link, a Google
@@ -22,9 +22,11 @@ export interface Props {
   title: string;
   description?: string;
   canonical?: string;
+  /** Which policy this is. Shown beside the wordmark and in the footer rule. */
+  label: string;
 }
 
-const { title, description, canonical } = Astro.props;
+const { title, description, canonical, label } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -38,9 +40,11 @@ const year = new Date().getFullYear();
       <div class="wrap nav-inner">
         <a class="wordmark" href="/">
           <span class="dot"></span> the living craft
-          <span class="wordmark-sub">Privacy</span>
+          <span class="wordmark-sub">{label}</span>
         </a>
         <nav class="navlinks">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
           <a href="/">Cohort</a>
           <a href="/caio">Fractional CAIO</a>
           <a href="/assessment">AI Readiness</a>
@@ -77,7 +81,7 @@ const year = new Date().getFullYear();
         </div>
         <div class="foot-bottom">
           <span>© {year} The Living Craft · Sunil Mathew</span>
-          <span class="mono">Privacy</span>
+          <span class="mono">{label}</span>
         </div>
       </div>
     </footer>
