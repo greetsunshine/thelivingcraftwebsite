@@ -14,7 +14,8 @@
     "radar": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-radar.ts",
     "check": "astro check",
     "smoke": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/smoke-agent.ts",
-    "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs"
+    "promote": "node --env-file-if-exists=.env.local scripts/promote.mjs",
+    "google-token": "node --env-file-if-exists=.env.local scripts/google-token.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
