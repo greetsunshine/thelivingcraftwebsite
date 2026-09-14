@@ -37,7 +37,7 @@
 //    would create a second source that can drift from the public offer policy.
 //
 // 4. IT IS USABLE WITHOUT JAVASCRIPT AND WITHOUT AN ADDRESS. The downloads are
-//    `<a download>` with a server-rendered data: URL — no script in the path at all.
+//    `<a download>` with a build-time data: URL — no script in the path at all.
 //    The plain-text block is a <details> that is in the DOM whether or not
 //    script runs, so "copy to clipboard" degrades to a selectable block rather
 //    than to nothing. There is no email gate on this route and there must not
@@ -57,23 +57,42 @@ import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 import { COMMITMENT, FEES_NOTE } from '../../../data/offer-display';
 import { renderMarkdown } from '../../../lib/craft/markdown';
 
+export const prerender = true;
+
+type Template = CollectionEntry<'templates'>;
 type Guide = CollectionEntry<'guides'>;
 
-// Resolve public content on each request. Drafts deliberately resolve as 404s.
-const published = await getCollection('templates', (t) => t.data.status === 'ready');
-const entry = published.find((t) => t.id === (Astro.params.slug ?? ''));
-if (!entry) return Astro.rewrite('/404');
+export async function getStaticPaths() {
+  // The draft gate. Same predicate as the index, and the same reasoning as the
+  // guides: a draft gets NO ROUTE, not a published page with a note on it.
+  // This is a public surface — a half-written artefact here is something a
+  // crawler indexes and an assistant hands to a prospect.
+  const published = await getCollection('templates', (t) => t.data.status === 'ready');
+  const guides = await getCollection('guides', (g) => g.data.status === 'ready');
+  const guideBySlug = new Map(guides.map((g) => [g.id, g]));
 
-const guides = await getCollection('guides', (g) => g.data.status === 'ready');
-const guideBySlug = new Map(guides.map((g) => [g.id, g]));
-const related = [...new Set(entry.data.related)]
-  .map((s) => guideBySlug.get(s))
-  .filter((g): g is Guide => Boolean(g));
+  return published.map((entry) => {
+    // Only published guides. A card pointing at a draft is a 404 with a nice
+    // shadow on it.
+    const related = [...new Set(entry.data.related)]
+      .map((s) => guideBySlug.get(s))
+      .filter((g): g is Guide => Boolean(g));
 
-const others = published
-  .filter((t) => t.id !== entry.id)
-  .sort((a, b) => a.data.order - b.data.order);
+    const others = published
+      .filter((t) => t.id !== entry.id)
+      .sort((a, b) => a.data.order - b.data.order);
 
+    return { params: { slug: entry.id }, props: { entry, related, others } };
+  });
+}
+
+interface Props {
+  entry: Template;
+  related: Guide[];
+  others: Template[];
+}
+
+const { entry, related, others } = Astro.props;
 const d = entry.data;
 const { Content } = await render(entry);
 
@@ -183,7 +202,7 @@ workedLines.push(
 
 const workedText = `${workedLines.join('\n').trimEnd()}\n`;
 
-// Server-rendered data: URLs, so a download needs no script and no round trip.
+// Build-time data: URLs, so a download needs no script and no round trip.
 // These files are a few kilobytes; a Blob would be the right call at a
 // megabyte and is the wrong call here, because it would put JavaScript back in
 // the one path that currently does not need it.
@@ -1040,7 +1059,7 @@ const schema: unknown[] = [
 
 <script>
   // The ONLY script on this page, and nothing here is required for the page to
-  // work. The downloads are plain <a download> anchors with server-rendered data:
+  // work. The downloads are plain <a download> anchors with build-time data:
   // URLs; the plain-text blocks are <details> elements that are in the DOM
   // whether or not this file runs. All this adds is one-click copying, and
   // when the clipboard refuses it opens the block and selects it — which is

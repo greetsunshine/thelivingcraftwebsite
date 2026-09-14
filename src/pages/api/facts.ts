@@ -19,6 +19,8 @@ import { getLatest } from '../../lib/agent/latest';
 import { EXPLORES } from '../../data/cohort-copy';
 import { COMMITMENT, COHORT_SIZE, FEES_NOTE } from '../../data/offer-display';
 
+export const prerender = true;
+
 export const GET: APIRoute = () => {
   const latest = getLatest();
 

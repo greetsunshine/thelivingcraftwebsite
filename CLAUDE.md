@@ -23,7 +23,7 @@ lose an hour to something surprising, that is a line in RESUME.md before you com
 
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
-  Single page, rendered on request like every other route now. Files:
+  Single page, still SSR (`prerender = false`). Files:
   [src/pages/index.astro](src/pages/index.astro),
   [src/components/cohort/CohortPage.astro](src/components/cohort/CohortPage.astro),
   [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
@@ -684,21 +684,14 @@ prospect.
   browser, same as the forms. **Don't move any Web3Forms call server-side.** The
   admin lead ledger does not change this: the browser posts to Web3Forms exactly as
   before, then reports the outcome to `/api/lead`.
-- **Deploy:** `@astrojs/vercel` adapter, `output: 'server'` — every route renders on
-  request, none is emitted as static HTML at build time. It was `output: 'static'` with
-  per-route `prerender = false` opt-outs (the home page for region context, `/craft` and
-  `/craft/admin` for their session gates, the API routes). That model stopped fitting once
-  several public content routes ([src/pages/resources/guides/[...slug].astro](src/pages/resources/guides/%5B...slug%5D.astro)
-  and [src/pages/resources/templates/[...slug].astro](src/pages/resources/templates/%5B...slug%5D.astro))
-  needed a request-time draft gate rather than a `getStaticPaths()` filter computed once at
-  build. Every remaining `export const prerender = true` was a route that happened to have
-  no per-request state, not a route that needed to be static — so on a server default they
-  were removed rather than kept as manual opt-ins that would silently rot the next time
-  someone added one. **This trades some CDN-edge latency and adds a Vercel function
-  invocation to every request, including the ones that used to be free static files** — worth
-  knowing before treating page-load performance as unrelated to a content change on this
-  branch. `npm run dev` to preview (`astro preview` is unsupported with the Vercel adapter).
-  Old `/india|/dubai|/australia` paths redirect to `/?region=`.
+- **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
+  (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
+  paths redirect to `/?region=`.
+  - **A full server-rendering conversion (`output: 'server'`) was built and then split into
+    its own PR** so this branch could ship without it. See that PR before touching
+    `astro.config.mjs`, the guide/template draft-gate routes, or the several
+    `export const prerender = true` lines this repo still carries — a second, uncoordinated
+    attempt at the same change is exactly the kind of drift that PR exists to avoid.
   - The Vercel project is **connected to the GitHub repo** (production branch `main`),
     so **a push to `main` deploys production**. Before that connection existed, every
     deploy was a hand-run CLI command, and production silently drifted commits behind

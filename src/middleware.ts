@@ -21,8 +21,9 @@
 // reorder these, and do not let the console prefix become a subset of an
 // allowlist entry.
 //
-// This runs for every request. The cheap string comparison happens before
-// anything touches env or crypto.
+// Note this runs at build time too, for prerendered routes. That is harmless —
+// no public path matches the prefixes — but it is why the check is a cheap
+// string comparison before anything touches env or crypto.
 
 import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';

@@ -25,6 +25,8 @@
 import type { APIRoute } from 'astro';
 import { SITE_ORIGIN } from '../data/facts';
 
+export const prerender = true;
+
 const AI_AGENTS = [
   'GPTBot',
   'OAI-SearchBot',

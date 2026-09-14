@@ -4,8 +4,8 @@
 //
 // WHY THIS FILE EXISTS AND WHAT MUST NEVER HAPPEN TO IT
 //
-// 1. DRAFTS GET NO ROUTE. The request-time lookup filters on status === 'ready',
-//    so a draft is not linked and returns 404 — not "published with a
+// 1. DRAFTS GET NO ROUTE. getStaticPaths() filters on status === 'ready', so a
+//    draft is not built, not linked and not reachable — not "published with a
 //    note on it". This is a public surface: a half-written page here is
 //    something a crawler indexes and an assistant quotes back to a prospect,
 //    which is the opposite failure from a draft session under /craft (private,
@@ -42,22 +42,41 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 
+export const prerender = true;
+
 type Guide = CollectionEntry<'guides'>;
 
-// Resolve public content on each request. Drafts deliberately resolve as 404s.
-const published = await getCollection('guides', (g) => g.data.status === 'ready');
-const bySlug = new Map(published.map((g) => [g.id, g]));
-const entry = bySlug.get(Astro.params.slug ?? '');
-if (!entry) return Astro.rewrite('/404');
+export async function getStaticPaths() {
+  // The draft gate. Also applied on the cluster index — the two are deliberate
+  // copies of one predicate rather than a shared helper, because a helper would
+  // have to live in src/lib and this is the whole of it. If a third surface ever
+  // needs the same filter, that is the moment it moves.
+  const published = await getCollection('guides', (g) => g.data.status === 'ready');
+  const bySlug = new Map(published.map((g) => [g.id, g]));
 
-// Cluster links come from frontmatter and only point to published neighbours.
-const slugs = [entry.data.pillar, ...entry.data.related].filter(
-  (s): s is string => typeof s === 'string' && s !== entry.id,
-);
-const related = [...new Set(slugs)]
-  .map((s) => bySlug.get(s))
-  .filter((g): g is Guide => Boolean(g));
+  return published.map((entry) => {
+    // Cluster links, from the frontmatter rather than from the prose: the pillar
+    // first (so a supporting piece always offers the way up), then the declared
+    // neighbours in the order the author listed them. Anything not published is
+    // simply absent — a card pointing at a draft would be a 404 with a nice
+    // shadow on it.
+    const slugs = [entry.data.pillar, ...entry.data.related].filter(
+      (s): s is string => typeof s === 'string' && s !== entry.id,
+    );
+    const related = [...new Set(slugs)]
+      .map((s) => bySlug.get(s))
+      .filter((g): g is Guide => Boolean(g));
 
+    return { params: { slug: entry.id }, props: { entry, related } };
+  });
+}
+
+interface Props {
+  entry: Guide;
+  related: Guide[];
+}
+
+const { entry, related } = Astro.props;
 const d = entry.data;
 const { Content } = await render(entry);
 
