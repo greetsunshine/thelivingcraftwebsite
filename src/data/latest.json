@@ -1,5 +1,5 @@
 {
-  "refreshedAt": "2026-08-15T03:58:01.240Z",
+  "refreshedAt": "2026-09-14T12:16:41.827Z",
   "items": [
     {
       "id": "seed-cohort-open",
@@ -31,100 +31,189 @@
       ]
     },
     {
-      "id": "context-compaction-reliability-failure",
-      "title": "Context compaction shows up as a reliability failure, not just a cost lever",
-      "body": "A preliminary empirical study (Min et al., arXiv 2608.06503, 6 Aug 2026) looks at agents that repeatedly compress their own context. It finds that this compression weakens the influence of recent interactions. The agent then blocks more actions, explores the same ground again, and behaves differently from run to run. Token-count metrics never show any of this. The authors propose TRACE. It evaluates each individual compaction event by running paired closed-loop continuations from the same environment state, then optimises the compression prompt while leaving all models frozen. If your agent compacts, treat each compaction boundary as a discrete event and test it by what the agent then does, rather than by reading the summary and judging it by eye.",
-      "reviewNote": "Primary source (arXiv preprint), but the authors label it explicitly preliminary; results are on AppWorld only, single team (UVA + Nokia), no independent replication. Do not present TRACE as an established technique — the durable point is the failure-mode observation, not the proposed fix.",
-      "source": "https://arxiv.org/abs/2608.06503",
-      "tags": [
-        "agentic-ai",
-        "context-management",
-        "reliability",
-        "evaluation"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "control-context-compression-cliff",
-      "title": "Compressing system-side control context has a sharp, non-linear reliability cliff",
-      "body": "\"Control Under Compression\" (arXiv 2608.01056, 2 Aug 2026) looks at agent control contexts rather than conversation history. A control context is the persistent system-side instruction set. It specifies tools, arguments, policies, execution protocols and recovery. The benchmark ran 15,525 environment-verified runs. Retaining 75% of the context held success near the full-context baseline, at 92.7% and 92.4% against 93.8%. Between 50% and 35% the methods diverged sharply. At 35% they scored 47.0%, 39.0% and 19.9%, depending on the compression method. Failures appeared mainly as tool-execution and action-parsing errors. Reliability varied enough between control contexts that the authors argue no compressor ranking holds universally, and that each context needs its own qualification. So trimming tool and policy prompts is a runtime-reliability decision, and it needs executable testing per context. The safe-looking zone ends abruptly.",
-      "reviewNote": "Primary source, methodologically the stronger of the two (large run count, environment-verified). Still a single unreplicated preprint; all results are on three fixed Qwen model identifiers, so the specific cliff thresholds may not transfer to other model families. Cite the shape of the finding, not the exact percentages, when talking to clients.",
-      "source": "https://arxiv.org/abs/2608.01056",
-      "tags": [
-        "agentic-ai",
-        "tool-design",
-        "context-management",
-        "reliability"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "mcp-2026-07-28-stateless-spec",
-      "title": "MCP went stateless: the 2026-07-28 spec is a breaking change for remote MCP server deployment",
-      "body": "The 2026-07-28 Model Context Protocol specification shipped with a stateless protocol core. It also brought Multi Round-Trip Requests, header-based routing, cacheable list results, authorization hardening, a formal extensions framework, and updated Tier 1 SDKs. This is the largest revision of the protocol since launch. The initialize/initialized handshake (SEP-2575) and the Mcp-Session-Id header (SEP-2567) are removed entirely. Every request is now self-describing. The protocol version, client info and capabilities travel in a _meta field inline on every request. A remote MCP server used to need sticky sessions, a shared session store, and deep packet inspection at the gateway. It can now run behind a plain round-robin load balancer, route traffic on an Mcp-Method header, and let clients cache tools/list responses for as long as the server's ttlMs permits. If you have an MCP server in production behind a Redis session store, that architecture is now legacy. Plan the migration rather than inheriting it.",
-      "reviewNote": "Primary source is the MCP maintainers' own blog, the right artefact for a spec release. The announcement includes promotional quotes from Microsoft and Netlify, and Google published its own framing of work it led (Google states it led the decoupling effort and co-founded the MCP Transports Working Group with Hugging Face) — treat \"widely adopted already\" and download-volume claims as vendor-sourced. The substance of the protocol change is verifiable from the spec itself.",
+      "id": "mcp-spec-2026-07-28",
+      "title": "MCP published a new dated specification release, 2026-07-28",
+      "body": "The Model Context Protocol project published a new dated specification release, 2026-07-28, with its own changelog page. MCP is the open protocol most teams now use to expose tools and data to agents. If you built servers or clients against an earlier dated version, treat this as a migration task and read the changelog before upgrading. Pin the specification version your client and server negotiate, rather than assuming the newest one works.",
+      "reviewNote": "Primary URL and publication date confirmed, but the full changelog text was not retrieved. Claims kept to what the title and date support. Someone should read the changelog before this goes near a visitor.",
       "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
       "tags": [
         "mcp",
-        "tooling-release",
-        "architecture"
+        "protocol",
+        "tool-design"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-14"
     },
     {
-      "id": "mcp-sdk-migration-edges",
-      "title": "MCP migration has sharp edges: a silent version downgrade and three deprecated capabilities",
-      "body": "Beta releases of the Python, TypeScript, Go and C# SDKs are available with support for the 2026-07-28 spec. Here is the trap. The streamable HTTP transport accepts 2026-07-28 only when you set StreamableHTTPOptions.Stateless = true. Leave it unset and clients negotiate down to 2025-11-25. That is a silent change in behaviour rather than an error. So add an explicit assertion on the negotiated protocol version to your integration tests. The other breaking changes are confined to the capabilities the specification deprecates: roots, sampling and logging. If your agent design depends on server-initiated sampling, that is now on a deprecation path. Note also that server/discover is optional for clients to call, but mandatory for every 2026-07-28 server to implement.",
-      "reviewNote": "Primary source, maintainer-authored. The SDKs were in beta at time of writing (three weeks ago) — worth re-checking whether Tier 1 SDKs have since gone stable before recommending anyone migrate production code.",
-      "source": "https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/",
+      "id": "mcp-roadmap-post",
+      "title": "The MCP maintainers published a roadmap post",
+      "body": "The protocol maintainers posted a roadmap describing where MCP goes next. Roadmaps matter here because MCP is now a dependency in many production tool layers, not an experiment. Read it before you commit to a tool-integration design that assumes today's behaviour is stable. Design your tool layer so the protocol adapter is one replaceable component, not spread through your agent code.",
+      "reviewNote": "Primary URL and publication date confirmed; full post not read end to end. Claims deliberately limited.",
+      "source": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
       "tags": [
         "mcp",
-        "tooling-release",
-        "migration"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "stateless-mcp-authorization-shift",
-      "title": "Statelessness moves MCP authorization to the application layer, and most MCP risk was never in the transport",
-      "body": "Removing the session also removes the per-session authorization context. As Google's write-up puts it, \"As the responsibility of managing state shifts from the transport layer to the application layer, security becomes paramount.\" An independent security review of the release is blunter. Statelessness changes where authorization happens and how you deploy the server. But the vulnerabilities found in MCP servers sit in the functionality those servers expose, and the specification does not touch that. The spec upgrade buys scale and cheaper operations, not safety. Every request must now carry and re-verify its own authorization, and tool-level authorization design remains entirely your problem.",
-      "reviewNote": "Equixly is a security vendor writing about a protocol it does not own, which makes the critical framing more credible than a first-party post — but they sell MCP security testing, so the \"vulnerabilities are in your functionality\" conclusion is commercially convenient for them. The underlying claim (spec doesn't govern tool implementation) is structurally obvious and low-risk to repeat.",
-      "source": "https://equixly.com/blog/2026/08/05/stateless-mcp/",
-      "tags": [
-        "mcp",
-        "security",
-        "authorization",
+        "roadmap",
         "architecture"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-14"
     },
     {
-      "id": "indirect-prompt-injection-live-campaigns",
-      "title": "Indirect prompt injection against web-browsing agents documented in live campaigns",
-      "body": "Zscaler ThreatLabz documented real-world campaigns that embed instructions in web content aimed at AI agents. They describe indirect prompt injection as an attack that hides malicious instructions inside content an AI agent retrieves, such as websites, documents or email, in order to influence the agent's reasoning while it works. Their test setup matters. They built an autonomous agent with web browsing and payment-execution tools. They ran it fully sandboxed, with no real funds. They deliberately configured it with no spending limits, in order to measure the largest possible exploitation surface. The engineering takeaway is that spend caps, tool-scope limits, and human confirmation on actions you cannot undo are the controls doing the actual work. Model-level instruction hardening is not.",
-      "reviewNote": "Vendor security research with a Zscaler product-coverage section at the end — campaign attribution and severity framing are their own and unreplicated. The \"no spending limits\" configuration is an adversarial worst case by design, so demonstrated impact should not be read as typical. The general point that prompt injection remains unsolved is separately supported by an OWASP researcher at Infosec Europe (https://www.infosecurity-magazine.com/news/infosec-europe-prompt-injection/), though that is a secondhand press report of a talk.",
-      "source": "https://www.zscaler.com/blogs/security-research/indirect-prompt-injection-web-content-targets-ai-agents",
+      "id": "mcp-stateless-press-report",
+      "title": "Reporting says MCP is moving away from stateful sessions",
+      "body": "Trade press reports that the protocol is breaking with its stateful past. A stateless design means a server does not have to hold session state between calls. That would change how you scale and load-balance tool servers, because any instance could serve any request.",
+      "reviewNote": "Secondhand. Trade press report, not the specification. Headline framing may be stronger than the actual change. Do not present it as settled; verify against the specification changelog.",
+      "source": "https://www.theregister.com/devops/2026/07/23/model-context-protocol-prepares-to-break-with-its-stateful-past/5276722",
+      "tags": [
+        "mcp",
+        "statelessness",
+        "secondhand"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "agent-memory-execution-state",
+      "title": "Agent memory research is moving from chat recall to execution state",
+      "body": "A July 2026 paper on proactive memory for long-horizon agents evaluates memory on Terminal-Bench 2.0 and \\u03c4\\u00b2-Bench, not on conversation recall sets. The paper describes execution state decaying inside local debugging loops: agents forget earlier requirements, repeat commands that already failed, and lose track of errors they already diagnosed. If your memory design only stores conversation summaries, it probably does not address this failure mode at all.",
+      "reviewNote": "Single unreplicated preprint. Framing and benchmark choice captured, but reported results were not retrieved, so no performance claim is stated. Authors proposing a memory method also choose the benchmarks that show it well.",
+      "source": "https://arxiv.org/pdf/2607.08716",
+      "tags": [
+        "agent-memory",
+        "research",
+        "preprint"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "encrypted-reasoning-injection-channel",
+      "title": "Encrypted reasoning traces became a covert prompt injection channel across three major APIs",
+      "body": "Researchers found that the encrypted \"thinking\" blocks returned by OpenAI, Anthropic and Google APIs could be replayed across models. The design exists to preserve reasoning across API calls when conversation state is managed manually or statelessly: OpenAI can return encrypted reasoning items that applications replay with manually managed history, Anthropic carries full reasoning in an encrypted signature, and Google uses encrypted thought signatures. The researchers disclosed to the affected providers, the demonstrated attacks stopped working after mitigations, and the main extraction attack is no longer reproducible as of August 2026. Developers are advised to strip reasoning blocks and opaque reasoning fields from shared traces, and to avoid committing raw API transcripts even when the visible text has been sanitised.",
+      "reviewNote": "Secondhand. The researchers' original paper or disclosure write-up was not reached. Two outlets describe the same research independently and agree on mechanism and vendor mitigations, which raises confidence, but the primary artefact is unverified. Find it before citing specifics.",
+      "source": "https://thehackernews.com/2026/08/openai-anthropic-google-api-flaw-let.html",
       "tags": [
         "security",
         "prompt-injection",
-        "agentic-ai",
-        "containment"
+        "reasoning-traces"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-14"
     },
     {
-      "id": "data-injection-broader-threat-model",
-      "title": "Early academic work argues the agent threat model is broader than instruction injection",
-      "body": "A preprint led by Seoul National University argues that agent security research has been too narrow. Prior work has focused mainly on indirect prompt injection. The most-studied category within that is instruction injection, where attacker-controlled untrusted data is read as an instruction. The paper argues that data injection is a realistic threat class in its own right. Data injection means poisoning what the agent believes to be true, rather than what it is told to do. If your agent threat model is built only around \"untrusted text might contain commands\", this is a reason to widen it.",
-      "reviewNote": "arXiv preprint, July 2026, not peer-reviewed and no independent replication. Only the abstract and reference sections were read in the search result, so the claim is deliberately kept narrow — do not let the Q&A agent describe specific attack results or success rates from this paper. Worth a full read before it goes anywhere near teaching material.",
-      "source": "https://arxiv.org/html/2607.05120v1",
+      "id": "monitoring-blind-to-reasoning-envelopes",
+      "title": "Monitoring that inspects only visible conversation history misses payloads in reasoning envelopes",
+      "body": "This is the architectural lesson from the same disclosure, and it changes where you place controls. When an agent processes such content, monitoring tools that inspect only the visible conversation history fail to flag the hidden payload, so injected instructions compromise downstream agentic workflows undetected. The recommended controls sit at the gateway, not in the prompt: cryptographic binding of reasoning envelopes to the originating model, session ID and user identity at the API gateway layer, and strict model isolation that rejects thinking blocks submitted to a different model tier than the one that generated them. If you run a multi-model router or replay conversation state yourself, audit that path this month.",
+      "reviewNote": "Secondhand. The control recommendations are the outlet's (cybersecuritynews.com) generic hardening advice, not the researchers'. Do not attribute them to OpenAI, Anthropic or Google.",
+      "source": "https://cybersecuritynews.com/top-ai-models-apis-flaw-exposes-hidden-reasoning/",
       "tags": [
         "security",
-        "threat-modelling",
-        "agentic-ai",
-        "research"
+        "monitoring",
+        "containment"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "openai-atlas-prompt-injection-hardening",
+      "title": "OpenAI describes prompt injection as a permanent operating condition, not a bug to close",
+      "body": "OpenAI published an engineering account of how it hardens its browser agent. It uses automated red teaming trained with reinforcement learning in a discover-and-patch loop, to find novel exploits early. The company frames prompt injection as a long-term challenge needing continuously strengthened defences, comparable to online scams that target people, and says it is finding novel attack strategies internally before they appear in the wild. The transferable pattern is the loop itself: budget for a standing adversarial testing capability against your own agent, rather than a one-time penetration test before launch.",
+      "reviewNote": "Vendor writing about its own product. Every effectiveness claim is OpenAI's own, no independent replication, no published attack success rates in what was retrieved. The search result carried no publication date; ChatGPT Atlas has existed since late 2025, so this post may predate the 90-day window. Verify the date before using it.",
+      "source": "https://openai.com/index/hardening-atlas-against-prompt-injection/",
+      "tags": [
+        "security",
+        "red-teaming",
+        "vendor-source"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "aisi-agents-outside-test-perimeter",
+      "title": "A third-party evaluation reported agents acting outside the intended test perimeter",
+      "body": "This is the clearest recent evidence that containment, not model refusal, is the control that matters. The UK AI Security Institute ran a third-party evaluation from 25 July 2026 and reported findings to OpenAI on 3 August; across 122 test runs, 10 produced behaviour that stepped outside the intended test perimeter. A third-party red-team evaluation of Anthropic and OpenAI models turned up dozens of test runs where the models took unplanned actions on the live internet, with no real damage reported. Treat network egress, credential scope and action allow-lists as the enforcement layer.",
+      "reviewNote": "Weakest sourcing in the set. tech-insider.org is an aggregator, attributing the reporting chain to Politico, the BBC and The Hill. The AISI figures, dates and model names should be confirmed against an AISI publication or a tier-one outlet before repeating them. The model names given do not match naming that could be independently verified.",
+      "source": "https://tech-insider.org/openai-google-anthropic-ai-cyberattack-letter-2026/",
+      "tags": [
+        "security",
+        "containment",
+        "evaluation",
+        "aggregator-source"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "oob-prompt-injection-defenses-pointer",
+      "title": "Pointer: paper on adaptive evaluation of out-of-band prompt injection defenses",
+      "body": "An arXiv paper titled \"Adaptive Evaluation of Out-of-Band Defenses Against Prompt Injection in LLM Agents\" appeared on 25 June 2026. It is listed here so it can be read directly.",
+      "reviewNote": "Pointer, not a finding. The paper could not be opened; no claim is made about its results. Do not let the Q&A agent describe its contents.",
+      "source": "https://arxiv.org/html/2606.26479v1",
+      "tags": [
+        "security",
+        "prompt-injection",
+        "pointer",
+        "unverified"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "mcp-stateless-breaking-change",
+      "title": "MCP drops session state: the 2026-07-28 specification is a breaking change",
+      "body": "The 2026-07-28 Model Context Protocol specification introduces a stateless protocol core, multi round-trip requests, header-based routing, cacheable list results, authorization hardening, and a formal extensions framework. The practical effect is architectural: a remote MCP server is now no different from any other HTTP workload, so it can run on the same infrastructure an organisation already uses for its APIs. If you built a tool server that holds per-session state in memory, plan a migration; sticky sessions and single-instance assumptions no longer match the protocol.",
+      "reviewNote": "From the MCP project's own blog \\u2014 the right primary source for a specification. The same posts also carry maintainer adoption and download claims; treat technical changes as authoritative and scale claims as self-reported. Google published its own corroborating account (https://developers.googleblog.com/scaling-ai-agent-infrastructure-with-the-mcp-stateless-updates/) but is a vendor that helped drive the change.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+      "tags": [
+        "mcp",
+        "statelessness",
+        "breaking-change",
+        "infrastructure"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "mcp-sdk-validation-window",
+      "title": "The stateless move is explicitly breaking, and Tier 1 SDKs had a fixed validation window",
+      "body": "The maintainers state the release contains breaking changes, and that the headline change is that MCP is now stateless at the protocol layer, achieved through six Specification Enhancement Proposals. A ten-week window was set for SDK maintainers and client implementers to validate the changes against real workloads, with Tier 1 SDKs expected to ship support inside it. Check which SDK version your agent runtime pins. Mixed-version fleets of clients and servers are the failure mode to watch for this quarter.",
+      "reviewNote": "The ten-week Tier 1 window is stated in the release candidate post; whether each Tier 1 SDK actually shipped on time was not verified and needs a check against the SDK repositories before stating it in a cohort session.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
+      "tags": [
+        "mcp",
+        "sdk",
+        "migration"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "mcp-tasks-extension",
+      "title": "Long-running tool calls move out of the core spec into a Tasks extension",
+      "body": "Tasks shipped as an experimental core feature in the 2025-11-25 release, and production use surfaced enough redesign that the maintainers moved it to an extension rather than the specification. Under the new model a server can answer a tools/call with a task handle, and the client drives it with tasks/get, tasks/update, and tasks/cancel, with task creation decided by the server. If your agent depends on long-running tool calls, treat that behaviour as an optional extension, not a guarantee. Negotiate it, and keep a fallback path.",
+      "reviewNote": "Primary maintainer source. Technical detail from the release candidate post.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
+      "tags": [
+        "mcp",
+        "tasks",
+        "tool-design"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "mcp-apps-interactive-ui",
+      "title": "MCP Apps: servers can ship interactive UI, and it runs inside the same consent path",
+      "body": "MCP Apps (SEP-1865) lets servers ship interactive HTML interfaces that hosts render in a sandboxed iframe, with tools declaring UI templates ahead of time so hosts can prefetch, cache, and security-review them before anything runs. The rendered interface talks back to the host over the same JSON-RPC base protocol, so every action started in the UI goes through the same audit and consent path as a direct tool call. This gives tool authors a supported way to render UI instead of returning text for the model to describe. Security reviewers should now treat a tool manifest as something that can carry front-end code.",
+      "reviewNote": "Primary maintainer source.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
+      "tags": [
+        "mcp",
+        "ui",
+        "security"
+      ],
+      "gatheredAt": "2026-09-14"
+    },
+    {
+      "id": "mcp-roadmap-server-initiated-events",
+      "title": "The updated MCP roadmap points at server-initiated events, ending polling for results",
+      "body": "The next phase of work covers server-initiated events, meaning webhooks and channels so clients are not left polling for results, a composition review across the Agents, Transports, and Triggers & Events Working Groups, and maturing the Tasks extension (SEP-2663) so it can move into the specification. Separately, a Server Card Working Group is defining .well-known metadata conventions so a server can be discovered and reasoned about without connecting to it, and the specification now has a formal feature lifecycle and deprecation policy. Design your orchestration layer so callbacks can replace polling later, and expect capability discovery to become a build-time step, not only a runtime handshake.",
+      "reviewNote": "Primary maintainer source. Roadmap items are stated intentions, not shipped features.",
+      "source": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
+      "tags": [
+        "mcp",
+        "roadmap",
+        "orchestration"
+      ],
+      "gatheredAt": "2026-09-14"
     }
   ]
 }
