@@ -70,6 +70,27 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-14',
   },
   {
+    id: 'agent-authority-review',
+    number: '02',
+    series: 'Agentic system design',
+    title: 'The Agent Authority Review',
+    kind: 'Worksheet · 3 worked examples',
+    summary:
+      'A way to decide which steps in a workflow should get an agent, and which should not — yet.',
+    description:
+      'Most agent design reviews ask one question: can the model do this step? That is the wrong question, and the demo hides it by doing the thinking and the acting in one go. There are two separate limits. How good the model is decides how much thinking you hand over; how hard an action is to undo decides how much authority you hand over. This sets out a four-level undo-cost scale from "undo in seconds, nobody notices" to "cannot be undone", five questions to ask of every step rather than of the workflow, a blank worksheet, and the rules for reading it once it is full. Then three worked examples with every row already decided — incident triage, refunds and goodwill credit, and automatic pull request merge — each one closing on the rows the author would not hand to an agent yet, and why. There is a forty-minute protocol at the end for running it against a workflow you already own.',
+    useFor: [
+      'Assign an undo cost to every action in a workflow before anyone argues about who owns the step',
+      'Separate the steps that need a rule in code from the ones that genuinely need judgment',
+      'Decide where an agent acts, where it only suggests, and where a human approves',
+      'Find the action in your own system that cannot be undone and has never had a named owner',
+    ],
+    format:
+      'Page, with a blank worksheet and three filled examples. Prints cleanly if you want the table on paper.',
+    url: '/resources/agent-authority-review',
+    publishedAt: '2026-09-14',
+  },
+  {
     id: 'poc-screen',
     number: '01',
     series: 'Agentic system design',
@@ -117,7 +138,12 @@ export const resourceSeries = (): { name: string; items: Resource[] }[] => {
     if (list) list.push(r);
     else groups.set(r.series, [r]);
   }
-  return [...groups].map(([name, items]) => ({ name, items }));
+  // Series appear newest-first; items inside a series read in series order, so
+  // 01 sits above 02 rather than the publication order flipping them.
+  return [...groups].map(([name, items]) => ({
+    name,
+    items: [...items].sort((a, b) => a.number.localeCompare(b.number)),
+  }));
 };
 
 export const newestResourceDate = (): string =>

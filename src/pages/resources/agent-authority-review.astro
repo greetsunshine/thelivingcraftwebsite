@@ -1,0 +1,415 @@
+---
+// /resources/agent-authority-review — the field note, self-hosted.
+//
+// Published as a page rather than the source PDF for two reasons. The closing
+// call to action in the PDF says "five-week cohort"; facts.ts says six. Routing
+// the offer through facts.ts means this page cannot drift from the rest of the
+// site the way a checked-in PDF silently would. And the worksheet is meant to be
+// printed, which a print stylesheet does without shipping a second artifact.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN, cohort } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  UNDO_SCALE,
+  FIVE_QUESTIONS,
+  WORKSHEET_COLUMNS,
+  READING_RULES,
+  EXAMPLES,
+  PROTOCOL,
+  PROTOCOL_FINDING,
+} from '../../data/authority-review';
+
+export const prerender = true;
+
+const meta = publishedResources.find((r) => r.id === 'agent-authority-review')!;
+
+const title =
+  'The Agent Authority Review — which steps should get an agent, and which should not · The Living Craft';
+const description =
+  'A worksheet for deciding which steps in a workflow should get an agent. The four-level undo-cost scale, five questions to ask per step, reading rules, and three worked examples: incident triage, refunds, and automatic pull request merge.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/agent-authority-review#howto`,
+    name: 'The Agent Authority Review',
+    description,
+    url: `${SITE_ORIGIN}/resources/agent-authority-review`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    totalTime: 'PT40M',
+    step: PROTOCOL.map((p, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: p.name,
+      text: p.body,
+    })),
+  },
+];
+
+// Blank worksheet rows. Eight, as in the source — enough for a real runbook and
+// few enough to print on one page.
+const BLANK_ROWS = 8;
+---
+
+<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 02</span>
+      </div>
+      <h1>Which steps should get an agent, and which <em>should not</em> — yet.</h1>
+      <p class="lead">
+        Most agent design reviews ask one question: can the model do this step? That is the wrong
+        question. How good the model is decides how much <em>thinking</em> you hand over. How hard an
+        action is to undo decides how much <em>authority</em> you hand over. They are two separate
+        limits and you have to set both.
+      </p>
+      <p class="hero-note mono">
+        4 undo levels · 5 questions per step · 3 worked examples · 40 minutes
+      </p>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> Why most reviews miss the point</span>
+        <h2>The demo did both in one go. That is where the mistake <em>hides</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Say an agent finds the cause of an outage in ninety seconds. That proves it is good at one
+          thing: understanding the problem. It says nothing about whether it should be allowed to act
+          on it.
+        </p>
+        <p>
+          Teams mix up the two because the demo did both at once. The mistake stays hidden until the
+          first action that cannot be undone.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Undo scale -->
+  <section id="undo-scale">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> The undo cost scale</span>
+        <h2>Give every action a level <em>before</em> you decide who owns the step.</h2>
+      </div>
+      <div class="bands">
+        {UNDO_SCALE.map((b) => (
+          <div class="band" data-lvl={b.level}>
+            <span class="blvl mono">{b.level}</span>
+            <div class="bbody">
+              <strong>{b.headline}</strong>
+              <p>{b.examples}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="callout">
+        The line you are drawing is almost always between <strong>R1 and R2</strong>. Above that
+        line, the agent only suggests. Below it, the agent can act.
+      </p>
+    </div>
+  </section>
+
+  <!-- Five questions -->
+  <section id="questions">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> Five questions to ask</span>
+        <h2>For every single step. Not for the workflow <em>as a whole</em>.</h2>
+      </div>
+      <div class="qgrid">
+        {FIVE_QUESTIONS.map((q) => (
+          <div class="qcard">
+            <span class="qnum mono">{q.n}</span>
+            <h3>{q.name}</h3>
+            <p>{q.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Worksheet -->
+  <section id="worksheet">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> The worksheet</span>
+        <h2>One row per step. Fill Evidence and Undo cost <em>first</em>.</h2>
+      </div>
+      <p class="prose-lead">
+        Before you form any opinion about owners. Print this page to take the blank table into a
+        room.
+      </p>
+      <div class="scroll">
+        <table class="sheet">
+          <thead>
+            <tr>{WORKSHEET_COLUMNS.map((c) => <th>{c}</th>)}</tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: BLANK_ROWS }).map(() => (
+              <tr>{WORKSHEET_COLUMNS.map(() => <td>&nbsp;</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reading rules -->
+  <section id="reading">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> How to read the finished table</span>
+        <h2>Only after the table is full, <em>never</em> while you are filling it.</h2>
+      </div>
+      {READING_RULES.map((r) => (
+        <div class={`rule-row${r.stop ? ' stop' : ''}`}>
+          <div class="rwhen">
+            <span class="rcond">{r.when}</span>
+            <span class="rarrow mono">→</span>
+            <span class="rthen">{r.then}</span>
+          </div>
+          <p>{r.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Examples -->
+  {EXAMPLES.map((ex, i) => (
+    <section id={`example-${ex.id}`} class="example">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{String(6 + i).padStart(2, '0')}</span> Example {ex.letter}</span>
+          <h2>{ex.title}</h2>
+        </div>
+        <div class="scroll">
+          <table class="exsheet">
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>Evidence needed</th>
+                <th>Who decides</th>
+                <th>What it may do</th>
+                <th>If evidence is missing</th>
+                <th>Undo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ex.rows.map((r) => (
+                <tr>
+                  <td class="cstep">{r.step}</td>
+                  <td>{r.evidence}</td>
+                  <td class="cdecides">{r.decides}</td>
+                  <td>{r.may}</td>
+                  <td>{r.missing}</td>
+                  <td class="cundo mono" data-lvl={r.undo}>{r.undo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <h3 class="notyet-head">Where I would say no agent, not yet — and why</h3>
+        {ex.notYet.map((n) => (
+          <p class="notyet"><strong>{n.name}.</strong> {n.body}</p>
+        ))}
+      </div>
+    </section>
+  ))}
+
+  <!-- 40 minutes -->
+  <section id="protocol">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">09</span> Do this in 40 minutes</span>
+        <h2>Pick the workflow you are most <em>tired of</em>.</h2>
+      </div>
+      <p class="prose-lead">One workflow or runbook that you own. Not the most interesting one.</p>
+      <ol class="protocol">
+        {PROTOCOL.map((p) => (
+          <li>
+            <div class="pmeta"><span class="pn mono">{p.n}</span><span class="pmin mono">{p.minutes}</span></div>
+            <div class="pbody">
+              <strong>{p.name}</strong>
+              <p>{p.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{PROTOCOL_FINDING}</p>
+      <p class="prose-lead">That last one is worth the forty minutes on its own.</p>
+    </div>
+  </section>
+
+  <!-- What comes next -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> What comes next</span>
+        <h2>This tells you where an agent belongs. Not whether <em>yours works</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          For every row where two engineers could disagree, you now need an eval set. Writing evals
+          for those cases is a different skill from the assertion tests you already know, and it is
+          the skill that separates a demo from something you can leave running.
+        </p>
+        <p>
+          The Living Craft runs a {cohort.weeks}-week cohort on exactly this: building agents for
+          decisions where the right answer is genuinely debatable, and building the evals that show
+          they hold up. {cohort.seats} seats, by application only, for Staff+ engineers, engineering
+          managers and architects who ship to production.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other resource pages — /caio carries
+     the same defect and fixing it centrally would reflow three live surfaces. */
+  .prose p + p { margin-top: var(--space-4); }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+
+  /* ── undo bands ───────────────────────────────────────────────────────── */
+  .bands { display: flex; flex-direction: column; gap: var(--space-3); }
+  .band {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .blvl { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  /* R3 is the only level that can never be walked back — it reads as a refusal. */
+  .band[data-lvl='R2'] .blvl { color: var(--accent-ink); }
+  .band[data-lvl='R3'] .blvl { color: var(--danger); }
+  .bbody strong { display: block; margin-bottom: 2px; }
+  .bbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: 70ch; }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+
+  /* ── five questions ───────────────────────────────────────────────────── */
+  .qgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
+  .qcard {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .qnum { font-size: var(--size-1); color: var(--text-quiet); }
+  .qcard h3 { font-size: var(--size-5); margin: var(--space-2) 0 var(--space-2); }
+  .qcard p { font-size: var(--size-2); color: var(--text-quiet); }
+
+  /* ── tables ───────────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .sheet { min-width: 900px; }
+  .exsheet { min-width: 1000px; }
+  thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  .sheet tbody td { height: 46px; }
+  .cstep { color: var(--text-body); font-weight: var(--weight-medium); min-width: 180px; }
+  .cdecides { color: var(--text-body); white-space: nowrap; }
+  .cundo { font-weight: var(--weight-strong); color: var(--text-body); white-space: nowrap; }
+  .cundo[data-lvl='R2'] { color: var(--accent-ink); }
+  .cundo[data-lvl='R3'], .cundo[data-lvl='R2–R3'] { color: var(--danger); }
+
+  /* ── reading rules ────────────────────────────────────────────────────── */
+  .rule-row {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+  .rule-row.stop { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
+  .rwhen { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .rcond { font-weight: var(--weight-strong); }
+  .rarrow { color: var(--text-quiet); }
+  .rthen { font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .rule-row.stop .rthen { color: var(--danger); }
+  .rule-row p { font-size: var(--size-2); color: var(--text-quiet); max-width: 78ch; }
+
+  /* ── examples ─────────────────────────────────────────────────────────── */
+  .example { padding-top: var(--space-7); }
+  .notyet-head {
+    margin: var(--space-6) 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--accent-ink);
+  }
+  .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; margin-bottom: var(--space-3); }
+  .notyet strong { color: var(--text-body); }
+
+  /* ── protocol ─────────────────────────────────────────────────────────── */
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  ol.protocol li { display: grid; grid-template-columns: 76px 1fr; gap: var(--space-4); align-items: start; }
+  .pmeta { display: flex; flex-direction: column; gap: 2px; }
+  .pn { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .pmin { font-size: var(--size-1); color: var(--text-quiet); }
+  .pbody strong { display: block; margin-bottom: 2px; }
+  .pbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  @media (max-width: 720px) {
+    .band, ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+
+  /* ── print: the worksheet is meant to go into a room on paper ─────────── */
+  @media print {
+    .hero-cta, .final .btn { display: none !important; }
+    .band, .qcard, .rule-row { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    table, .scroll { overflow: visible !important; }
+    .sheet, .exsheet { min-width: 0 !important; font-size: 10px; }
+    .sheet tbody td { height: 34px; }
+    thead { display: table-header-group; }
+    tr, .notyet, ol.protocol li { break-inside: avoid; }
+    #worksheet { break-before: page; }
+    .example { break-before: page; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
