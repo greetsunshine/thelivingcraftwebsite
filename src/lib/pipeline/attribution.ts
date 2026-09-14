@@ -1,0 +1,391 @@
+// Where somebody came from — and the two answers that are not the same answer.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// FIRST TOUCH AND THIS VISIT ARE DIFFERENT FACTS. NEITHER CORRECTS THE OTHER.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// The operating guide's example is the whole design: somebody meets Sunil on
+// LinkedIn in March and types the URL directly in September. First touch is
+// LinkedIn. This visit is direct. Both are true. Collapsing them into one
+// "source" column means picking which truth to destroy, and every attribution
+// model that does it is picking on your behalf, silently, by a rule nobody in
+// the room agreed.
+//
+// So there are two sets of five columns, and a third field — what the person
+// said themselves — which is EVIDENCE, NEVER AN OVERRIDE. Three imperfect
+// accounts of one thing, kept apart, is more useful to Sunil than one confident
+// number that is wrong in a way nobody can see.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// FIRST TOUCH NEEDS MEMORY, AND THIS SITE DELIBERATELY HAS ALMOST NONE.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// CLAUDE.md: "No localStorage/sessionStorage." That rule is not incidental —
+// it is stated as a hard rule and it has survived the console, the Ask widget
+// and the analytics beacon. Remembering March in September requires persisting
+// something across visits, which is exactly what the rule forbids.
+//
+// The narrow widening, and it is narrow:
+//
+//   * A first-party cookie, not localStorage. Same-site, HttpOnly-irrelevant
+//     (the server writes and reads it), 400 days, holding five short strings
+//     and a date. No identifier, no hash of anything, nothing that survives
+//     clearing site data.
+//   * WRITTEN ONLY WITH TRACKING PERMISSION. There is no consent mechanism on
+//     this site yet, so `permitted` is false at every call site today and this
+//     cookie is never written. First touch stays unknown.
+//
+// That is not a stub. It is the correct behaviour and it satisfies acceptance
+// case E07 — "no invented person or hidden tracking linkage" — by construction
+// rather than by promise. When a consent control exists, one flag turns this
+// on and the mechanism is already the shape the brief asked for.
+//
+// UNKNOWN STAYS UNKNOWN. The brief says it twice. A visitor with no referrer
+// and no campaign tags is `direct`; a visitor whose referrer we could not parse
+// is `unknown`; neither is ever upgraded to a guess, and there is no
+// last-non-direct rule anywhere in this file.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// RESOURCE → COHORT IS THE SAME RULE, NOT A NEW ONE (V4-E01)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Somebody opens a worksheet from a post, reads it, clicks through to the
+// cohort page and applies. The addendum: post ids and UTMs must "survive
+// resource → cohort navigation without overwriting first source", and
+// "Retain inbound attribution when moving from resource to cohort; do not
+// overwrite it with self-referrals."
+//
+// Nothing was added for that case, because two rules already in this file are
+// the whole of it, and the temptation is to weaken one of them to make the case
+// LOOK like it passes:
+//
+//   * `referrerHost()` RETURNS NULL FOR OUR OWN HOST. The second page's
+//     referrer is the worksheet, on our domain, so it never becomes a source.
+//     Without that, an applicant who arrived from LinkedIn would be filed as
+//     having come from us.
+//   * FIRST TOUCH IS WRITTEN ONCE OR NEVER, and today it is never, because
+//     `permitted` is false at every call site. So the honest record of that
+//     journey is TWO rows, each carrying the session that produced it: the
+//     resource request holds the post's UTMs, the application holds whatever
+//     the application's own visit carried, and neither claims to be the other.
+//
+// COPYING THE RESOURCE REQUEST'S SOURCE ONTO A LATER APPLICATION WOULD BE THE
+// FAILURE, not the fix. It requires joining the two by email address, which
+// means reading a person's records to decide a measurement, and it would write
+// a first touch that no permitted mechanism ever captured. The case passes when
+// consent exists and the cookie is switched on; until then the truthful answer
+// is that first touch is unknown and the two session sources are both recorded.
+
+/** The five fields we are allowed to keep, and nothing else from the query. */
+export interface Source {
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  content: string | null;
+  term: string | null;
+}
+
+export interface Attribution {
+  /**
+   * Which resource this interaction was about, or null for everything else.
+   *
+   * The V4 addendum: "Add `resource_id` for the resource interaction." It is a
+   * PERMITTED NON-PERSONAL DIMENSION and it is the only thing on this row that
+   * says what somebody was looking at -- which is exactly why the sentence
+   * before it in the addendum matters more than this one: "No personal details
+   * in analytics URLs or payloads." A register code ('lc-r01') is a fact about
+   * a document. An email address is a fact about a person. Only the first may
+   * travel with a measurement.
+   *
+   * Null on every submission from the three forms. `pipeline_submit()` does not
+   * read this key and `attributions` has no column for it; the resource request
+   * stores it on its own row.
+   */
+  resource_id: string | null;
+  first_source: string | null;
+  first_medium: string | null;
+  first_campaign: string | null;
+  first_content: string | null;
+  first_term: string | null;
+  session_source: string | null;
+  session_medium: string | null;
+  session_campaign: string | null;
+  session_content: string | null;
+  session_term: string | null;
+  entry_path: string | null;
+  referrer_host: string | null;
+  self_reported: string | null;
+  tracking_permission: boolean;
+  first_captured_at: string | null;
+  session_captured_at: string;
+}
+
+/**
+ * The only query parameters that reach the database.
+ *
+ * An allowlist, not a denylist. The brief: "Strip sensitive query values and
+ * store only allowed UTM fields and sanitised paths." A denylist means every
+ * marketing tool that invents a new parameter next quarter writes it into our
+ * table, and some of those carry email addresses in plain text — `?email=`
+ * appended by a mail provider's click tracker is not a hypothetical.
+ */
+const ALLOWED = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
+
+/** Long enough for a real campaign name, short enough to bound a hostile one. */
+const MAX = 200;
+
+const clip = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim().replace(/[\u0000-\u001f\u007f]/g, '');
+  if (!trimmed) return null;
+  return trimmed.slice(0, MAX);
+};
+
+/**
+ * Pull the five allowed fields out of a query string.
+ *
+ * Takes the RAW string from the browser and does its own parsing, because the
+ * browser is not trusted to have filtered anything — and if it were, we would
+ * have to trust it again the first time somebody posted to this endpoint by
+ * hand.
+ */
+export function sourceFromQuery(search: string): Source {
+  let params: URLSearchParams;
+  try {
+    params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  } catch {
+    return emptySource();
+  }
+
+  const [source, medium, campaign, content, term] = ALLOWED.map((k) => clip(params.get(k)));
+  // The one normalisation, and it only ever touches one of our own post ids.
+  // See the V4 section below.
+  return { source, medium, campaign, content: normalisePostId(content), term };
+}
+
+const emptySource = (): Source => ({
+  source: null,
+  medium: null,
+  campaign: null,
+  content: null,
+  term: null,
+});
+
+/**
+ * A referrer reduced to its bare host.
+ *
+ * The path and query go, both because they are none of our business and
+ * because they leak: a referrer from a webmail client or an internal wiki can
+ * carry a session token, a search phrase, or a document title in its URL.
+ *
+ * Returns null for a same-host referrer. The brief is specific about this —
+ * "prevent internal referrers from replacing the external source" — and the
+ * failure is quiet: somebody arrives from LinkedIn, clicks through to the FAQ
+ * and back, and their source becomes our own domain.
+ */
+export function referrerHost(referrer: string, selfHost: string): string | null {
+  if (!referrer) return null;
+  try {
+    const host = new URL(referrer).hostname.toLowerCase().replace(/^www\./, '');
+    const self = selfHost.toLowerCase().replace(/^www\./, '');
+    if (!host || host === self) return null;
+    return host.slice(0, MAX);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A path with nothing but a path in it.
+ *
+ * Query and fragment are dropped, and the result is capped. An entry path is
+ * for answering "which page did they land on" and needs no more than that.
+ */
+export function entryPath(path: string): string | null {
+  if (!path) return null;
+  const clean = path.split('?')[0].split('#')[0].trim();
+  if (!clean.startsWith('/')) return null;
+  return clean.slice(0, MAX);
+}
+
+/**
+ * Derive `source` and `medium` when no campaign tags are present.
+ *
+ * Two rules and no third:
+ *   * A known referrer host becomes the source, with medium 'referral'.
+ *   * No referrer at all becomes 'direct'.
+ *
+ * There is deliberately no search-engine list, no social-network list, and no
+ * classification of a host into 'organic' or 'social'. Those lists go stale,
+ * they encode a judgement, and the operating guide asks for the captured facts
+ * rather than a model built on them. A host is a host; Sunil can see it.
+ */
+export function derive(tagged: Source, host: string | null): Source {
+  if (tagged.source || tagged.medium || tagged.campaign) return tagged;
+  if (host) return { ...tagged, source: host, medium: 'referral' };
+  return { ...tagged, source: 'direct', medium: 'none' };
+}
+
+// ---------------------------------------------------------------------------
+// The V4 campaign, and the two identifiers it is counted by
+// ---------------------------------------------------------------------------
+//
+// The addendum fixes three of the five UTM values for every V4 post: "Use
+// campaign lc_v4_cohort, source linkedin, medium organic_social and lowercase
+// post ID in utm_content."
+//
+// THESE CONSTANTS ARE NOT A FILTER AND NOTHING HERE REJECTS ANYTHING. A link
+// somebody typed by hand with a mangled campaign tag still stores what it
+// actually said -- the captured value is evidence about a visit, and correcting
+// it on the way in would mean the table reads as if the link had been right.
+// They exist so that reporting and the campaign brief cannot drift apart, and
+// so that `isV4Post()` can answer "was this one of the thirty-two" without
+// anybody re-typing the string.
+//
+// THE ONE NORMALISATION, AND WHY IT IS SAFE. `utm_content` carries the post id,
+// and the addendum says lower case. LinkedIn's composer, a phone keyboard and a
+// person retyping a link all produce LC-V4-D07 as readily as lc-v4-d07, and two
+// spellings of one post is two rows in every count of it. So a value that
+// matches OUR OWN post-id shape is lower-cased and everything else is stored
+// byte for byte -- the narrowest rule that fixes the thing the addendum asks
+// for, and one that cannot touch a campaign tag belonging to anybody else.
+
+/** utm_campaign for the V4 cohort campaign. */
+export const V4_CAMPAIGN = 'lc_v4_cohort';
+/** utm_source. The campaign is posted from LinkedIn accounts. */
+export const V4_SOURCE = 'linkedin';
+/** utm_medium. Organic posts, never paid placement -- no spend is activated. */
+export const V4_MEDIUM = 'organic_social';
+
+/**
+ * A Living Craft post id: LC-V4-D01 .. LC-V4-D32, and the retired LC-OCT ids.
+ *
+ * Both shapes match on purpose. The addendum says "Do not reuse LC-OCT IDs for
+ * V4 attribution", and the way to see that it happened is for an LC-OCT id to
+ * still be recognisable in the data rather than stored in a second spelling.
+ */
+export const POST_ID_RE = /^lc-[a-z0-9]{1,8}-d\d{1,3}$/i;
+
+/** True when `content` is one of our post ids tagged against the V4 campaign. */
+export const isV4Post = (source: Source): boolean =>
+  source.campaign === V4_CAMPAIGN && !!source.content && POST_ID_RE.test(source.content);
+
+/** Lower-cases one of our own post ids; leaves every other value untouched. */
+export const normalisePostId = (value: string | null): string | null =>
+  value && POST_ID_RE.test(value) ? value.toLowerCase() : value;
+
+/**
+ * A resource identifier reduced to the one form it is stored and counted in.
+ *
+ * The register writes LC-R01; the campaign writes its ids in lower case; a page
+ * knows itself by a slug. All three reach this and leave as one lower-case
+ * token, because a dimension with two spellings is two rows in every count.
+ *
+ * Anything that is not a plain identifier becomes NULL rather than being
+ * cleaned up into one. This value is written into an analytics event, and the
+ * addendum's rule for those has no exceptions: "No personal details in
+ * analytics URLs or payloads." A null dimension is a measurement we did not
+ * take; a salvaged one could be anything a caller put in the field.
+ */
+export const canonicalResourceId = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const id = value.trim().toLowerCase();
+  return /^[a-z0-9][a-z0-9-]{1,39}$/.test(id) ? id : null;
+};
+
+// ---------------------------------------------------------------------------
+// The first-touch cookie
+// ---------------------------------------------------------------------------
+
+export const FIRST_TOUCH_COOKIE = 'lc_first';
+
+/** 400 days — the ceiling browsers cap a Set-Cookie max-age at anyway. */
+export const FIRST_TOUCH_MAX_AGE = 400 * 24 * 60 * 60;
+
+interface FirstTouch extends Source {
+  at: string;
+}
+
+/**
+ * Read the cookie, and refuse to be surprised by it.
+ *
+ * Everything in here arrives from the visitor's own browser and may have been
+ * edited by hand. So each field is re-clipped on the way out: this is a value
+ * we are about to write into our own table beside real evidence, and the fact
+ * that we wrote it originally is not a reason to trust it now.
+ */
+export function readFirstTouch(raw: string | undefined): FirstTouch | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw)) as Partial<FirstTouch>;
+    const at = clip(parsed.at);
+    if (!at || Number.isNaN(Date.parse(at))) return null;
+    return {
+      source: clip(parsed.source),
+      medium: clip(parsed.medium),
+      campaign: clip(parsed.campaign),
+      content: clip(parsed.content),
+      term: clip(parsed.term),
+      at,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export const serialiseFirstTouch = (source: Source, at: string): string =>
+  encodeURIComponent(JSON.stringify({ ...source, at }));
+
+/**
+ * Assemble the row.
+ *
+ * `permitted` gates only the FIRST-TOUCH half. This visit's source is derived
+ * from the request that is already in front of us — a query string and a
+ * referrer header the browser sent unprompted — and recording it stores nothing
+ * on the visitor's machine and follows them nowhere. It is the persistence that
+ * needs permission, not the observation.
+ */
+export function buildAttribution(input: {
+  search: string;
+  referrer: string;
+  path: string;
+  selfHost: string;
+  selfReported?: string | null;
+  permitted: boolean;
+  storedFirstTouch?: string;
+  /** The register code of the resource this interaction is about. See `resource_id`. */
+  resourceId?: string | null;
+}): { row: Attribution; writeFirstTouch: Source | null } {
+  const host = referrerHost(input.referrer, input.selfHost);
+  const session = derive(sourceFromQuery(input.search), host);
+
+  const stored = input.permitted ? readFirstTouch(input.storedFirstTouch) : null;
+
+  // Only worth persisting once. A second write would overwrite March with
+  // September and turn a first touch into a most-recent touch, which is the
+  // one thing this column must never become.
+  const writeFirstTouch = input.permitted && !stored ? session : null;
+
+  return {
+    row: {
+      resource_id: canonicalResourceId(input.resourceId),
+      first_source: stored?.source ?? writeFirstTouch?.source ?? null,
+      first_medium: stored?.medium ?? writeFirstTouch?.medium ?? null,
+      first_campaign: stored?.campaign ?? writeFirstTouch?.campaign ?? null,
+      first_content: stored?.content ?? writeFirstTouch?.content ?? null,
+      first_term: stored?.term ?? writeFirstTouch?.term ?? null,
+      session_source: session.source,
+      session_medium: session.medium,
+      session_campaign: session.campaign,
+      session_content: session.content,
+      session_term: session.term,
+      entry_path: entryPath(input.path),
+      referrer_host: host,
+      self_reported: clip(input.selfReported),
+      tracking_permission: input.permitted,
+      first_captured_at: stored?.at ?? (writeFirstTouch ? new Date().toISOString() : null),
+      session_captured_at: new Date().toISOString(),
+    },
+    writeFirstTouch,
+  };
+}

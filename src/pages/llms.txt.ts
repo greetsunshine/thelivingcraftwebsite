@@ -17,7 +17,10 @@ import {
   surfaces,
 } from '../data/facts';
 import { publishedNotes } from '../lib/notes';
+import { EXPLORES } from '../data/cohort-copy';
 import { publishedResources, newestResourceDate } from '../data/resources';
+
+export const prerender = true;
 
 export const GET: APIRoute = () => {
   // Field Notes. Titles and sources only — the full text is on the page and in
@@ -27,7 +30,7 @@ export const GET: APIRoute = () => {
 
   const body = `# Sunil Mathew — The Living Craft
 
-> ${practitioner.years} years building and leading engineering at ${practitioner.companies.join(', ')}.
+> Engineering and leadership experience from ${practitioner.companies.join(', ')} and startups.
 > Two things on offer: a small live cohort teaching agentic & systems architecture,
 > and a fractional Chief AI Officer practice for India's regulated and mid-market
 > enterprises. Based in ${practitioner.location}.
@@ -59,8 +62,8 @@ quoting one region's rate to someone in another region is wrong. Direct the
 reader to ${SITE_ORIGIN} (which resolves their region) or to ${practitioner.email}.
 Per-region figures are available at ${SITE_ORIGIN}/api/facts?region=<india|dubai|australia>.
 
-Curriculum:
-${cohort.modules.map((m) => `- ${m.id} (${m.weeks}): ${m.title}`).join('\n')}
+The work explores:
+${EXPLORES.map((item) => `- ${item.title}: ${item.body}`).join('\n')}
 
 ## Fractional Chief AI Officer
 
@@ -118,8 +121,9 @@ ${facts.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 ## Notes for assistants
 
 - Machine-readable version of everything above: ${SITE_ORIGIN}/api/facts
-- Cohort pricing is regional. Quote only the asker's own region, never a
-  comparison, and never convert between currencies.
+- Cohort length, seat count and start date are published above — quote them.
+- Do NOT quote a cohort fee from this file. Fees are per region and no figure
+  appears here; use /api/facts?region=<key> once the visitor's region is known.
 - Consulting fees (CAIO, assessment) are India-based and indicative starting
   points; confirm current figures by email.
 - There are no published testimonials, client names, or student counts. If you

@@ -1,0 +1,17 @@
+﻿topic,resource_id,title,state,publish_before_post,owner,proposed_path
+1,LC-B01,Agentic system strategy and roadmap template,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+2,LC-B02,Agentic ROI evaluation worksheet,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+3,LC-B03,LLM evaluation framework,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+4,LC-B04,Agentic loop and architecture reference,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+5,LC-R01,Cost-ceiling worksheet,Complete draft; technical approval and hosted delivery pending,LC-V4-D10,Alchemy authors; Sunil technical review; Ein delivery,/resources/cost-ceiling-worksheet/
+6,LC-B06,Learning design pattern for agentic systems,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+7,LC-B07,Patterns to review incorrect output,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+8,LC-R02,Evaluation-gates worksheet,Complete draft; technical approval and hosted delivery pending,LC-V4-D16,Alchemy authors; Sunil technical review; Ein delivery,/resources/evaluation-gates-worksheet/
+9,LC-B09,User and tenant isolation patterns,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+10,LC-R03,Deployment checklist,Complete draft; technical approval and hosted delivery pending,LC-V4-D20,Alchemy authors; Sunil technical review; Ein delivery,/resources/deployment-checklist/
+11,LC-B11,Metrics that carry information,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+12,LC-B12,Delivery channel decision matrix,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+13,LC-B13,Dry-run comparison protocol for model changes,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+14,LC-B14,Monitoring and heartbeat checklist,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+15,LC-B15,Security consent and access checklist,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,
+16,LC-B16,Choosing specialist models,Backlog; not a launch dependency,,Alchemy authors; Sunil technical review; Ein delivery,

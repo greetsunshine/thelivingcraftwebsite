@@ -108,6 +108,17 @@ const { region = null } = Astro.props;
     // application form. This is the funnel the practice is built around, and
     // nothing else on the page reports it.
     document.addEventListener('click', function (e) {
+      var booking =
+        e.target && e.target.closest ? e.target.closest('[data-booking-trigger]') : null;
+      if (booking) {
+        send('cta_click', {
+          to: 'appointment',
+          state: 'intent',
+          placement: booking.getAttribute('data-booking-placement') || 'unknown',
+        });
+        return;
+      }
+
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
       if (!a) return;
 

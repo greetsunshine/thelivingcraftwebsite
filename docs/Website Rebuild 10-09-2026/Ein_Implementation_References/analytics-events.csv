@@ -1,0 +1,9 @@
+﻿Event,Trigger,Deduplication and permissible dimensions
+page_view / session_start,Consent-appropriate page/session observation,"Analytics provider session rules; page path, coarse device, source dimensions"
+vsl_start / vsl_progress / vsl_complete,Actual supported player callbacks,Once per session/video/milestone; 25/50/75/complete; no guessed completion
+cta_click,Named application/enquiry action,Event ID; CTA and page identifiers
+form_start,First meaningful interaction,Once per session/form; no field values
+form_error,Validation or submit failure,"Error category and field name, never the rejected content"
+application_saved / enquiry_saved,Committed backend record,Once per submission; backend totals remain available without analytics consent
+stage_changed / meeting_held,Authorised business event,Audit event ID; backend reporting only
+payment_confirmed / attendance_recorded,Owner-entered evidence,Evidence ID; backend reporting only

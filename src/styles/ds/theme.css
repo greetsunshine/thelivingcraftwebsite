@@ -29,7 +29,16 @@
   /* Accent as INK. Sun is a fill colour and cannot carry text (1.6:1 on white),
      but the warm accent is used as text all over this site — eyebrows, list
      markers, link hovers. This is the ember family at a text-safe weight. */
-  --accent-ink: #c4561c;          /* 5.9:1 on white */
+  /* MEASURED 11 September, and the number that was here was wrong.
+     This said 5.9:1. It is 4.47:1 on white and 4.02:1 on --mist — and `body`
+     sits on mist, not white, so the ground that matters is the lower one.
+     Both are below the 4.5 AA needs for normal text; it clears AA only at
+     large sizes (18.66px, or 14px bold).
+     --accent-ink-strong is 6.66 / 5.99 and passes on both.
+     Swapping them is a whole-site visual change and an owner's call, so the
+     numbers are recorded here rather than acted on. Do not restate a contrast
+     figure from memory — compute it. */
+  --accent-ink: #c4561c;          /* 4.47:1 white · 4.02:1 mist */
   --accent-ink-strong: #9d3f12;   /* 8.2:1 — hover / pressed */
 
   /* danger is split: ink bar vs mark bar. sun cannot carry error. */
@@ -41,7 +50,10 @@
   /* --- semantic: text --- */
   --text-loud: var(--ink-1);
   --text-body: var(--ink-1);
-  --text-quiet: var(--ink-2);     /* 4.49:1 — every real label takes this */
+  /* 4.49:1 on white — but 4.04:1 on --mist, which is what `body` actually
+     uses, so secondary text sitting on the page ground is just under AA.
+     On a white card it passes. Same owner's decision as --accent-ink. */
+  --text-quiet: var(--ink-2);     /* 4.49:1 white · 4.04:1 mist */
   --text-faint: var(--ink-3);     /* 2.29:1 — NOT a text colour on white */
   --text-on-accent: var(--ink-1);
   --text-on-invert: var(--ink-invert);

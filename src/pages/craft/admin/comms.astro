@@ -1,0 +1,830 @@
+---
+// Communications — everything up to the moment of sending, and not the send.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// THE FIRST THING THIS SCREEN HAS TO SAY IS THAT NOTHING IS BEING SENT.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// A screen with an outbox on it, a list of approved-looking wordings and a
+// "run" button reads as a working mail system. It is not one: decision D2 is
+// open, there is no provider, no verified sending domain and no monitored
+// reply mailbox, and the package itself ships the twelve templates marked
+// "disabled_pending_exact_version_approval_and_route_tests".
+//
+// So the state of the switch is the first block on the page, it is stated in
+// words rather than implied by a grey button, and it carries the full list of
+// what must be true before it moves. An operator who reads this page and comes
+// away thinking a receipt went out would be making a reasonable inference from
+// a badly built screen.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// FIVE SECTIONS, AND WHY THE INBOX IS FIRST AMONG THEM
+// ───────────────────────────────────────────────────────────────────────────
+//
+//   Inbox      — replies. A reply is the first item on the stop list, and with
+//                no monitored mailbox the count is UNKNOWN, never 0. That
+//                distinction is the whole reason this section is on the screen
+//                rather than being left out until it works.
+//   Outbox     — what is queued, held, cancelled or done, with a full preview.
+//   Templates  — the twelve, their approval state, and whether the stored words
+//                still match the package.
+//   Sequences  — who is in one, what state it is in, and why.
+//   Failures   — unknown outcomes and give-ups. The queue that needs a person.
+//
+// UNKNOWN IS NEVER ZERO, and this page has three separate chances to get that
+// wrong: the reply count, the state counts, and the approved-wordings count.
+// All three come back as an Answer or as null, and all three render through
+// PipelinePanel or an explicit dash. None of them may be written as a numeral
+// derived from a failed read.
+//
+// ELEMENT IDS ARE PAGE-SHARED. Everything scripted here is prefixed `comms`,
+// and each section owns its own `.act-status` line rather than sharing one —
+// the console has already had two "Run now" buttons reporting into a single
+// status element, and the symptom was one panel narrating another's work.
+
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PipelinePanel from '../../../components/admin/PipelinePanel.astro';
+import { can, ROLE_LABEL } from '../../../lib/pipeline/roles';
+import { preconditions } from '../../../lib/comms/eligibility';
+import {
+  inboxState,
+  launchState,
+  outboxCounts,
+  outboxRows,
+  sequenceRows,
+  templateStatuses,
+  MAX_ATTEMPTS,
+} from '../../../lib/comms/outbox';
+import { PACKAGE_ACTIVATION, PACKAGE_VERSION } from '../../../lib/comms/templates';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+
+const mayApprove = can(roles, 'approve.template');
+const mayManage = can(roles, 'manage.sequence');
+const maySweep = can(roles, 'send.approved');
+
+const [launch, inbox, counts, templates, outbox, sequences, failures] = await Promise.all([
+  launchState(admin),
+  inboxState(admin),
+  outboxCounts(admin),
+  templateStatuses(admin),
+  outboxRows(admin, { states: ['queued', 'sending', 'sent', 'delivered', 'cancelled'], limit: 200 }),
+  sequenceRows(admin, 100),
+  outboxRows(admin, { states: ['unknown', 'failed', 'bounced', 'complained'], limit: 100 }),
+]);
+
+const checks = preconditions();
+const here = Astro.url.pathname;
+
+const IST = 'Asia/Kolkata';
+
+const when = (iso: string | null | undefined): string =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: IST,
+      })
+    : '—';
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+
+// The switch view, whatever the read did. `launch` can be denied; the banner
+// must still say that dispatch is off, because that fact does not depend on
+// anybody's permission to read a count.
+const dispatchOn = launch.state === 'ok' ? launch.value.dispatch.enabled : false;
+const dispatchReason =
+  launch.state === 'ok'
+    ? launch.value.dispatch.reason
+    : 'Dispatch is off. (The count of approved wordings could not be read, but the switch does not depend on it.)';
+
+const STATE_NOTE: Record<string, string> = {
+  queued: 'Due and waiting. Re-checked immediately before any dispatch.',
+  cancelled: 'Will never be sent. Cancelling is one-way.',
+  sending: 'Claimed by a sweep.',
+  unknown: 'Outcome unknown. Reconcile against the provider reference before any retry.',
+  sent: 'Handed to a provider.',
+  delivered: 'The provider reported delivery.',
+  replied: 'This person replied.',
+  failed: 'Gave up or is waiting on a bounded retry.',
+  bounced: 'Hard bounce. The address is suppressed for everything.',
+  complained: 'Reported as spam. The address is suppressed for everything.',
+};
+---
+
+<AdminLayout title="Communications" active="comms">
+  <div class="page-head">
+    <div>
+      <span class="label">{whoLine}</span>
+      <h1>Communications</h1>
+      <p>
+        The twelve wordings from the handoff package, the outbox that would carry them, and the
+        checks that decide whether any of it may go. Times are Asia/Kolkata.
+      </p>
+    </div>
+    <nav class="jump" aria-label="On this page">
+      <a href="#commsInbox">Inbox</a>
+      <a href="#commsOutbox">Outbox</a>
+      <a href="#commsTemplates">Templates</a>
+      <a href="#commsSequences">Sequences</a>
+      <a href="#commsFailures">Failures</a>
+    </nav>
+  </div>
+
+  <!-- ==================== The switch ==================== -->
+  <div class={`notice ${dispatchOn ? '' : 'danger'}`} id="commsSwitch">
+    <h3>{dispatchOn ? 'Dispatch is ON' : 'Dispatch is OFF. Nothing on this page reaches anybody.'}</h3>
+    <p>{dispatchReason}</p>
+    {
+      !dispatchOn && (
+        <p>
+          This is the design, not a gap. Everything up to the moment of sending is built and runs:
+          messages are composed, scheduled on calendar days, checked at queue time and checked again
+          immediately before dispatch, and the verdict is acted on. The send itself is one function,
+          <code>deliver()</code> in <code>src/lib/comms/outbox.ts</code>, which returns
+          <code>disabled</code> before it reads, builds or signs anything.
+        </p>
+      )
+    }
+    <p class="mono src">package {PACKAGE_VERSION} · {PACKAGE_ACTIVATION}</p>
+  </div>
+
+  <section class="admin-section" aria-labelledby="commsReadyHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsReadyHead">What must be true before dispatch is enabled</h2>
+        <p>
+          Six of these are checked by the code and will not let the switch move while they are false.
+          Two can only be asserted by a person — and setting <code>COMMS_DISPATCH=on</code> is that
+          assertion, which is why the last gate is a deliberate variable rather than something
+          inferred from "a provider looks configured".
+        </p>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">State</th>
+            <th scope="col">What must be true</th>
+            <th scope="col">Why nothing may be sent until it is</th>
+            <th scope="col">Now</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            checks.map((c) => (
+              <tr>
+                <td>
+                  <span class={`pill ${c.ready === true ? 'good' : c.ready === false ? 'warn' : ''}`}>
+                    {c.ready === true ? 'ready' : c.ready === false ? 'not set' : 'by a person'}
+                  </span>
+                </td>
+                <td>{c.what}</td>
+                <td class="quiet">{c.why}</td>
+                <td class="quiet">{c.detail}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="tile-foot muted">
+      Approved wordings: {
+        launch.state === 'ok'
+          ? launch.value.approved === null
+            ? '— (the template store did not answer, so this is unknown rather than none)'
+            : `${launch.value.approved} of ${launch.value.ofTotal}`
+          : '— (not read)'
+      }. A wording with no approval recorded is never sent, and approval is checked again on every
+      message at both eligibility checks.
+    </p>
+  </section>
+
+  <!-- ==================== Inbox ==================== -->
+  <section class="admin-section" id="commsInbox" aria-labelledby="commsInboxHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsInboxHead">Inbox</h2>
+        <p>
+          Eight of the twelve messages ask the reader to reply, and a reply is the first item on the
+          stop list. This section exists to say whether anybody is listening.
+        </p>
+      </div>
+    </div>
+
+    {
+      inbox.state !== 'ok' ? (
+        <PipelinePanel
+          state={inbox.state}
+          reason={inbox.reason}
+          label="The inbox"
+          capability="read.dashboard"
+          retry={here}
+        />
+      ) : inbox.value.detection === false ? (
+        <PipelinePanel
+          variant="tile"
+          state="pending"
+          label="Replies"
+          reason={inbox.value.note}
+        />
+      ) : (
+        <div class="tiles">
+          <div class="tile">
+            <div class="n">{inbox.value.replies}</div>
+            <div class="k"><span class="label">Replies recorded</span></div>
+            <p class="note">{inbox.value.note}</p>
+          </div>
+        </div>
+      )
+    }
+
+    <p class="tile-foot muted">
+      A reply stops a sequence. While reply detection is unavailable, nurture is disabled entirely
+      rather than run in a reduced mode — a person who answers must not keep receiving the sequence
+      they answered.
+    </p>
+  </section>
+
+  <!-- ==================== Outbox ==================== -->
+  <section class="admin-section" id="commsOutbox" aria-labelledby="commsOutboxHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsOutboxHead">Outbox</h2>
+        <p>
+          Every message that would go, held at the last step. Open one to see exactly what a person
+          would receive: the recipient, the purpose, the approved wording and version, the subject
+          and the full body.
+        </p>
+      </div>
+      {
+        maySweep && (
+          <div class="toolbar">
+            <button class="btn" type="button" data-comms="dispatch.run">Run the sweep</button>
+          </div>
+        )
+      }
+    </div>
+
+    {
+      maySweep && (
+        <p class="muted small">
+          With dispatch off the sweep is a rehearsal that still does real work: it runs the second
+          eligibility check on everything due, cancels what is no longer eligible, stops or pauses
+          the sequences that ask for it, and reports what would have gone. Nothing is handed to a
+          provider.
+        </p>
+      )
+    }
+    <p class="act-status mono" role="status" aria-live="polite"></p>
+
+    {
+      counts.state === 'ok' && counts.value.length > 0 && (
+        <div class="chips">
+          {counts.value.map((c) => (
+            <span class="pill">{c.state} · {c.count}</span>
+          ))}
+        </div>
+      )
+    }
+    {
+      counts.state !== 'ok' && (
+        <PipelinePanel
+          state={counts.state}
+          reason={counts.reason}
+          label="The message counts"
+          capability="read.dashboard"
+          retry={here}
+        />
+      )
+    }
+
+    {
+      outbox.state !== 'ok' ? (
+        <PipelinePanel
+          state={outbox.state}
+          reason={outbox.reason}
+          label="The outbox"
+          capability="read.people"
+          retry={here}
+        />
+      ) : outbox.value.length === 0 ? (
+        <div class="card empty">
+          Nothing is queued. No submission has been queued for messages yet — the public form does
+          not call the outbox while dispatch is off, and the call site is one line in
+          <code>saveSubmission()</code> when it does.
+        </div>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Due</th>
+                <th scope="col">State</th>
+                <th scope="col">Wording</th>
+                <th scope="col">Purpose</th>
+                <th scope="col">Recipient</th>
+                <th scope="col">Preview</th>
+              </tr>
+            </thead>
+            <tbody>
+              {outbox.value.map((m) => (
+                <tr>
+                  <td class="mono nowrap">{when(m.scheduled_for)}</td>
+                  <td>
+                    <span class={`pill ${m.state === 'cancelled' ? 'warn' : ''}`}>{m.state}</span>
+                  </td>
+                  <td>
+                    {m.template_key}
+                    <br />
+                    <span class="mono small quiet">{m.template_version}{m.sequence_step !== null ? ` · day ${m.sequence_step}` : ''}</span>
+                  </td>
+                  <td>{m.purpose}</td>
+                  <td class="mono small">{m.recipient}</td>
+                  <td>
+                    <details class="preview">
+                      <summary>Open</summary>
+                      <dl class="meta">
+                        <dt>Recipient</dt><dd class="mono">{m.recipient}</dd>
+                        <dt>Purpose</dt><dd>{m.purpose}</dd>
+                        <dt>Wording</dt><dd class="mono">{m.template_key} · {m.template_version}</dd>
+                        <dt>Subject</dt><dd>{m.subject}</dd>
+                        <dt>State</dt><dd>{m.state} — {STATE_NOTE[m.state] ?? ''}</dd>
+                        {m.cancel_reason && (<><dt>Cancelled because</dt><dd>{m.cancel_reason}</dd></>)}
+                      </dl>
+                      {/* Plain text, rendered as plain text. A template body is
+                          never put through a Markdown renderer: a line break in
+                          a message is a line break, not a paragraph somebody
+                          else's renderer may reflow. */}
+                      <pre class="bodytext">{m.body}</pre>
+                      {mayManage && m.state === 'queued' && (
+                        <button class="btn small danger" type="button" data-comms="message.cancel" data-id={m.message_id}>
+                          Cancel this message
+                        </button>
+                      )}
+                    </details>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Templates ==================== -->
+  <section class="admin-section" id="commsTemplates" aria-labelledby="commsTemplatesHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsTemplatesHead">Templates</h2>
+        <p>
+          The twelve wordings from <code>{PACKAGE_VERSION}</code>, reproduced character for
+          character. A wording is approved <em>by version</em> and is never edited in place: the
+          content columns are frozen by a database trigger, and a new form of words is a new row.
+        </p>
+      </div>
+      {
+        mayApprove && (
+          <div class="toolbar">
+            <button class="btn" type="button" data-comms="templates.load">Load the twelve into the store</button>
+          </div>
+        )
+      }
+    </div>
+    <p class="act-status mono" role="status" aria-live="polite"></p>
+
+    {
+      templates.state !== 'ok' ? (
+        <PipelinePanel
+          state={templates.state}
+          reason={templates.reason}
+          label="The template store"
+          capability="read.dashboard"
+          retry={here}
+        />
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Approval</th>
+                <th scope="col">Wording</th>
+                <th scope="col">Route</th>
+                <th scope="col">Day</th>
+                <th scope="col">Purpose</th>
+                <th scope="col">Preview</th>
+              </tr>
+            </thead>
+            <tbody>
+              {templates.value.map((t) => (
+                <tr>
+                  <td>
+                    <span class={`pill ${t.approved ? 'good' : 'warn'}`}>
+                      {t.approved ? 'approved' : t.stored ? 'not approved' : 'not loaded'}
+                    </span>
+                  </td>
+                  <td class="mono small">{t.key}</td>
+                  <td>{t.route}</td>
+                  <td class="mono">{t.dayOffset === 0 ? 'receipt' : `+${t.dayOffset}`}</td>
+                  <td>{t.purpose}</td>
+                  <td>
+                    <details class="preview">
+                      <summary>Open</summary>
+                      <dl class="meta">
+                        <dt>Recipient</dt>
+                        <dd class="quiet">None. This is the wording, not a message — a recipient appears when it is queued for somebody.</dd>
+                        <dt>Purpose</dt><dd>{t.purpose}</dd>
+                        <dt>Version</dt><dd class="mono">{t.version}</dd>
+                        <dt>Approved</dt>
+                        <dd>
+                          {t.stored?.approved_at
+                            ? `${when(t.stored.approved_at)} by ${t.stored.approved_by ?? 'unknown'}`
+                            : 'Not approved.'}
+                          {t.stored?.revoked_at && ` · approval withdrawn ${when(t.stored.revoked_at)}`}
+                        </dd>
+                        <dt>Subject</dt><dd>{t.subject}</dd>
+                        <dt>Store</dt><dd class="quiet">{t.note}</dd>
+                      </dl>
+                      <pre class="bodytext">{t.body}</pre>
+                      {mayApprove && t.stored && !t.approved && t.matches && (
+                        <button class="btn small primary" type="button" data-comms="template.approve" data-key={t.key} data-version={t.version}>
+                          Approve this exact version
+                        </button>
+                      )}
+                      {mayApprove && t.approved && (
+                        <button class="btn small danger" type="button" data-comms="template.revoke" data-key={t.key} data-version={t.version}>
+                          Withdraw approval
+                        </button>
+                      )}
+                    </details>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    <p class="tile-foot muted">
+      <code>{'{{action:unsubscribe}}'}</code> stays a placeholder all the way into the outbox. The
+      signed one-action link is minted by the provider adapter at the moment of dispatch, so no
+      literal token is ever written to a table, and rotating the signing secret invalidates every
+      outstanding link without rewriting a single queued row.
+    </p>
+  </section>
+
+  <!-- ==================== Sequences ==================== -->
+  <section class="admin-section" id="commsSequences" aria-labelledby="commsSequencesHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsSequencesHead">Sequence history</h2>
+        <p>
+          One active sequence per person, enforced by a partial unique index rather than by a check
+          in the code. <strong>Stopped is terminal</strong> — nothing restarts it. A paused sequence
+          can be resumed by hand after review, and the resume cancels every message whose moment has
+          passed rather than sending them in a burst.
+        </p>
+      </div>
+    </div>
+    <p class="act-status mono" role="status" aria-live="polite"></p>
+
+    {
+      sequences.state !== 'ok' ? (
+        <PipelinePanel
+          state={sequences.state}
+          reason={sequences.reason}
+          label="The sequence records"
+          capability="read.people"
+          retry={here}
+        />
+      ) : sequences.value.length === 0 ? (
+        <div class="card empty">No sequence has been opened.</div>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Started</th>
+                <th scope="col">State</th>
+                <th scope="col">Route</th>
+                <th scope="col">Anchor</th>
+                <th scope="col">Why</th>
+                <th scope="col" />
+              </tr>
+            </thead>
+            <tbody>
+              {sequences.value.map((s) => (
+                <tr>
+                  <td class="mono nowrap">{when(s.started_at)}</td>
+                  <td><span class={`pill ${s.state === 'stopped' ? 'warn' : ''}`}>{s.state}</span></td>
+                  <td>{s.route}</td>
+                  <td class="mono nowrap">{when(s.anchor_at)}</td>
+                  <td class="quiet">
+                    {s.stopped_reason ?? s.paused_reason ?? '—'}
+                    {s.resumed_at && ` · resumed ${when(s.resumed_at)} by ${s.resumed_by ?? 'unknown'}`}
+                  </td>
+                  <td class="nowrap">
+                    {mayManage && s.state === 'active' && (
+                      <>
+                        <button class="btn small" type="button" data-comms="sequence.pause" data-id={s.sequence_id}>Pause</button>
+                        <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={s.sequence_id}>Stop</button>
+                      </>
+                    )}
+                    {mayManage && s.state === 'paused' && (
+                      <>
+                        <button class="btn small" type="button" data-comms="sequence.resume" data-id={s.sequence_id}>Resume</button>
+                        <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={s.sequence_id}>Stop</button>
+                      </>
+                    )}
+                    {s.state === 'stopped' && <span class="quiet small">Terminal.</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Failures ==================== -->
+  <section class="admin-section" id="commsFailures" aria-labelledby="commsFailuresHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsFailuresHead">Failures</h2>
+        <p>
+          Unknown outcomes and give-ups. <strong>An unknown outcome is never blind-retried</strong> —
+          the message may have landed, so it is reconciled against the provider reference first. A
+          message carrying a reference cannot be returned to the queue at all; the database refuses
+          it.
+        </p>
+      </div>
+    </div>
+    <p class="act-status mono" role="status" aria-live="polite"></p>
+
+    {
+      failures.state !== 'ok' ? (
+        <PipelinePanel
+          state={failures.state}
+          reason={failures.reason}
+          label="The failure queue"
+          capability="read.people"
+          retry={here}
+        />
+      ) : failures.value.length === 0 ? (
+        <div class="card empty">
+          Nothing has failed. Nothing has been sent either — see the switch at the top of this page.
+        </div>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">When</th>
+                <th scope="col">State</th>
+                <th scope="col">Wording</th>
+                <th scope="col">Attempts</th>
+                <th scope="col">Provider reference</th>
+                <th scope="col">What happened</th>
+                <th scope="col" />
+              </tr>
+            </thead>
+            <tbody>
+              {failures.value.map((m) => (
+                <tr>
+                  <td class="mono nowrap">{when(m.failed_at ?? m.updated_at)}</td>
+                  <td><span class="pill warn">{m.state}</span></td>
+                  <td class="mono small">{m.template_key}</td>
+                  <td class="mono">{m.attempts} / {MAX_ATTEMPTS}</td>
+                  <td class="mono small">{m.provider_message_id ?? '—'}</td>
+                  <td class="quiet">
+                    {m.last_error ?? STATE_NOTE[m.state] ?? '—'}
+                    {m.reconciled_note && <><br /><span class="small">{m.reconciled_note}</span></>}
+                  </td>
+                  <td class="nowrap">
+                    {mayManage && m.state === 'unknown' && (
+                      <button class="btn small" type="button" data-comms="message.reconcile" data-id={m.message_id}>
+                        Reconcile
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    {
+      mayManage && (
+        <div class="card suppress">
+          <h3>Add a suppression by hand</h3>
+          <p class="muted small">
+            One-way. The table refuses UPDATE and DELETE, and there is deliberately no control here
+            that lifts one — neither a race, a stale provider callback nor a mis-click can put an
+            address back on a list it came off. <strong>marketing</strong> is an unsubscribe;
+            <strong>all</strong> is a dead address or a spam complaint and withholds receipts too.
+          </p>
+          <div class="toolbar">
+            <label class="label" for="commsSuppressEmail">Address</label>
+            <input id="commsSuppressEmail" type="email" autocomplete="off" placeholder="name@example.com" />
+            <label class="label" for="commsSuppressReason">Reason</label>
+            <select id="commsSuppressReason">
+              <option value="manual">manual</option>
+              <option value="unsubscribe">unsubscribe</option>
+              <option value="hard_bounce">hard bounce</option>
+              <option value="complaint">complaint</option>
+            </select>
+            <label class="label" for="commsSuppressScope">Scope</label>
+            <select id="commsSuppressScope">
+              <option value="marketing">marketing</option>
+              <option value="all">all</option>
+            </select>
+            <button class="btn danger" type="button" data-comms="suppression.add">Suppress</button>
+          </div>
+        </div>
+      )
+    }
+  </section>
+
+  <style>
+    .src { font-size: var(--size-1); color: var(--text-quiet); margin-top: var(--space-2); }
+    .small { font-size: var(--size-1); }
+    .quiet { color: var(--text-quiet); }
+    .nowrap { white-space: nowrap; }
+    .muted.small { max-width: var(--measure-prose); line-height: var(--lh-snug); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+    .act-status { font-size: var(--size-1); color: var(--text-quiet); min-height: 1.4em; margin-bottom: var(--space-3); }
+    .act-status[data-tone='bad'] { color: var(--danger); }
+
+    .tile-foot { font-size: var(--size-2); margin-top: var(--space-4); max-width: var(--measure-prose); line-height: var(--lh-snug); }
+
+    /* The preview. A disclosure rather than a modal: a row is scanned, and the
+       body is read only when somebody asks for it. */
+    .preview summary { cursor: pointer; font-size: var(--size-2); color: var(--accent-ink); }
+    .preview[open] { min-width: 22rem; }
+
+    .meta { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: var(--space-3) 0; font-size: var(--size-2); }
+    .meta dt { color: var(--text-quiet); font-family: var(--font-marginal); font-size: var(--size-1); }
+    .meta dd { margin: 0; }
+
+    /* PLAIN TEXT, RENDERED AS PLAIN TEXT. Never marked, never renderMarkdown(). */
+    .bodytext {
+      white-space: pre-wrap;
+      font-family: var(--font-body);
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      background: var(--surface-sunken);
+      border-radius: var(--radius-inner);
+      padding: var(--space-4);
+      margin: 0 0 var(--space-3);
+      max-width: var(--measure-prose);
+    }
+
+    .btn.small { height: auto; padding: 4px 10px; font-size: var(--size-1); margin-right: var(--space-2); }
+
+    .suppress { margin-top: var(--space-5); }
+    .suppress h3 { font-size: var(--size-4); margin-bottom: var(--space-1); }
+    .suppress input, .suppress select {
+      height: var(--control-h); padding: 0 var(--space-3);
+      border: var(--border-w-hair) solid var(--border-field);
+      border-radius: var(--radius-field);
+      background: var(--surface-panel); color: var(--text-body);
+      font-family: var(--font-body); font-size: var(--size-2);
+    }
+
+    @media (max-width: 700px) {
+      .meta { grid-template-columns: minmax(0, 1fr); }
+      .preview[open] { min-width: 0; }
+    }
+  </style>
+
+  <script>
+    // Every write on this page, in one delegated handler.
+    //
+    // A MODULE SCRIPT, NOT `is:inline`. An inline script cannot import, and a
+    // module script goes through `astro check`, so a typo in an action name is a
+    // build-time finding rather than a silent 400.
+    //
+    // WHAT THIS SCRIPT DOES NOT DECIDE. It does not decide whether you may do a
+    // thing — /api/craft/admin/comms does, against the roles on your signed
+    // session, before it asks for the database. A button existing in the DOM is
+    // not permission, and a hand-rolled fetch is refused identically.
+    //
+    // It also does not decide whether a message may go: every eligibility rule
+    // lives server-side in lib/comms/eligibility.ts and runs twice. Nothing here
+    // can skip it.
+    //
+    // Each section writes to ITS OWN status line. The console has already had
+    // two buttons reporting into one shared status element, and the symptom was
+    // one panel narrating another panel's work.
+
+    const say = (from: Element, text: string, bad = false) => {
+      const line = from.closest('section')?.querySelector<HTMLElement>('.act-status');
+      if (!line) return;
+      line.textContent = text;
+      line.dataset.tone = bad ? 'bad' : 'ok';
+    };
+
+    async function post(body: Record<string, unknown>): Promise<{ ok: boolean; detail?: string; error?: string; result?: { note?: string; dueConsidered?: number; wouldSend?: number; cancelled?: number; held?: number } }> {
+      const res = await fetch('/api/craft/admin/comms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      try {
+        return (await res.json()) as { ok: boolean; detail?: string; error?: string };
+      } catch {
+        return { ok: false, error: `The server answered ${res.status} with something unreadable.` };
+      }
+    }
+
+    document.addEventListener('click', async (event) => {
+      const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-comms]');
+      if (!button) return;
+
+      const action = button.dataset.comms ?? '';
+      const body: Record<string, unknown> = { action };
+
+      // A reason is required by the server for the three irreversible or
+      // reviewable actions. Asked for here too, so the refusal is not the first
+      // time somebody hears about it.
+      if (action === 'sequence.pause' || action === 'sequence.stop' || action === 'template.revoke') {
+        const reason = window.prompt(
+          action === 'template.revoke'
+            ? 'Why is this approval being withdrawn? The wording itself is not changed.'
+            : action === 'sequence.stop'
+              ? 'Why is this sequence being stopped? Stopping is permanent — it does not restart.'
+              : 'Why is this sequence being paused? This is what the resume will be reviewed against.',
+        );
+        if (!reason?.trim()) return;
+        body.reason = reason.trim();
+      }
+
+      if (action === 'sequence.stop' && !window.confirm('Stopped sequences never restart automatically. Continue?')) return;
+
+      if (button.dataset.id) {
+        body[action.startsWith('sequence.') ? 'sequenceId' : 'messageId'] = button.dataset.id;
+      }
+      if (button.dataset.key) body.templateKey = button.dataset.key;
+      if (button.dataset.version) body.version = button.dataset.version;
+
+      if (action === 'suppression.add') {
+        const email = document.querySelector<HTMLInputElement>('#commsSuppressEmail')?.value.trim() ?? '';
+        if (!email) {
+          say(button, 'An address is needed.', true);
+          return;
+        }
+        body.email = email;
+        body.reason = document.querySelector<HTMLSelectElement>('#commsSuppressReason')?.value ?? 'manual';
+        body.scope = document.querySelector<HTMLSelectElement>('#commsSuppressScope')?.value ?? 'marketing';
+        if (!window.confirm('Suppression is one-way. This application has no way to lift it. Continue?')) return;
+      }
+
+      button.disabled = true;
+      say(button, 'Working…');
+
+      try {
+        const out = await post(body);
+        if (!out.ok) {
+          say(button, out.error ?? out.detail ?? 'That did not complete.', true);
+          button.disabled = false;
+          return;
+        }
+
+        if (action === 'dispatch.run' && out.result) {
+          const r = out.result;
+          say(
+            button,
+            `${r.dueConsidered ?? 0} due · ${r.wouldSend ?? 0} would send · ${r.cancelled ?? 0} cancelled · ${r.held ?? 0} held. ${r.note ?? ''}`,
+          );
+        } else {
+          say(button, out.detail ?? 'Done.');
+        }
+
+        // Reload rather than patch. A sweep touches messages, sequences and the
+        // failure queue at once, and a partial update that looked right while
+        // being stale is the thing this console cannot afford.
+        window.setTimeout(() => window.location.reload(), 1400);
+      } catch {
+        say(button, 'That did not reach the server. Nothing was changed.', true);
+        button.disabled = false;
+      }
+    });
+  </script>
+</AdminLayout>

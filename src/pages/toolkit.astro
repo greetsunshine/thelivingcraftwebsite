@@ -1,0 +1,396 @@
+---
+/**
+ * /toolkit — the index of the open resources.
+ *
+ * THE INSTRUCTION THIS PAGE ANSWERS TO, IN FULL
+ *
+ *   "A /toolkit index can list released resources only; do not display
+ *    unavailable downloads as available."
+ *     — Ein_Addendum.md, "Resource routes", 11 September 2026
+ *
+ * Two rules in one sentence, and they fail in two different ways, so both are
+ * enforced separately below.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 1. IT LISTS WHAT IS RELEASED. THE BACKLOG IS NOT A ROADMAP ON THIS PAGE.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The resource roadmap has sixteen rows. Three are written; the other thirteen
+ * carry the words "Backlog; not a launch dependency" and the roadmap adds, in
+ * its own voice, "Do not put the full library on the critical path to the
+ * cohort page." A toolkit page listing sixteen titles with three of them
+ * clickable is that library on the critical path — it makes a promise in
+ * thirteen places and keeps it in three.
+ *
+ * So the cards are READ FROM `releasedResources()`, never hand-listed. A
+ * resource that is not written is not in `src/data/resources.ts`, so it cannot
+ * appear here; a resource that is written cannot be missing, for the same
+ * reason. The note at the foot says more are planned WITHOUT NAMING ONE and
+ * WITHOUT A DATE — same rule, and the same reasoning, as the note at the foot
+ * of /resources and the unbuilt second tool on /tools. A greyed row with a real
+ * title reads as "coming soon", and a reader remembers the title, not the grey.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 2. IT NAMES THE DOWNLOAD THAT EXISTS AND NO OTHER.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The addendum offers "optional downloadable PDF and CSV". What is built is
+ * the CSV, generated at build time from the same column list the page renders,
+ * as a direct `<a download>` — so every download named here is a file that
+ * exists and is attached to the link naming it. There is NO PDF file, and this
+ * page therefore does not offer one: it says the page prints, which is true and
+ * is a different sentence.
+ *
+ * The second half of that rule is the email delivery. The addendum makes it
+ * "optional" and gates it: "optional download email requires a separate
+ * communication preference", and separately, "Never infer marketing permission
+ * from downloading." It is another agent's path, it is not wired, and so it is
+ * not mentioned here as an option — an offer to email you something, on a page
+ * that cannot email you anything, is the same defect as a dead download link
+ * with better manners.
+ *
+ * NO STRUCTURED DATA BEYOND BREADCRUMBS. This index authored nothing. A
+ * DataCatalog or an ItemList of downloads is the manufactured markup the
+ * roadmap's structured-data list rules out; each resource page emits its own
+ * Article node and that is where authorship lives.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../data/facts';
+import { NO_GATE, NO_SCORE, csvFilename, csvHref, releasedResources } from '../data/resources';
+
+export const prerender = true;
+
+const resources = releasedResources();
+const count = resources.length;
+
+// Rendered once per card, from the same functions the resource page uses. If a
+// resource ever ships without a companion file, the card would have no link
+// rather than a broken one — hence the map rather than an assumed href.
+const cards = resources.map((r) => ({
+  resource: r,
+  file: csvFilename(r),
+  href: csvHref(r),
+}));
+
+const path = '/toolkit';
+const url = `${SITE_ORIGIN}${path}`;
+
+const title = 'Toolkit — open worksheets for agentic systems · The Living Craft';
+const description =
+  'Open worksheets and checklists for teams building systems that act: a cost-ceiling worksheet, an evaluation-gates worksheet and a deployment checklist. Readable in full on the page, with a companion spreadsheet. No sign-up, no score.';
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Toolkit' },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Toolkit</p>
+      <h1>Everything is <em>on the page</em></h1>
+      <p class="credential">
+        Each one is a short explanation, a worked illustrative case, a table you can fill in,
+        what it does not cover, and one question to take into your next review. All of it is
+        on the page.
+      </p>
+      <div class="hero-cta">
+        {
+          cards.length > 0 && (
+            <a class="btn btn-primary" href={`${cards[0].resource.path}/`}>
+              Start with the {cards[0].resource.title.toLowerCase()}&nbsp;
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          )
+        }
+        <a class="btn btn-ghost" href="/resources/">All resources</a>
+      </div>
+      <p class="hero-note">
+        {count === 1 ? 'One resource is published.' : `${count} resources are published.`} Nothing
+        is listed here before it is written.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What is published</p>
+      <h2>Open worksheets and <em>checklists</em></h2>
+    </div>
+
+    <p class="no-gate">{NO_GATE}</p>
+
+    <div class="kit">
+      {
+        cards.map(({ resource: r, file, href }) => (
+          <article class="item">
+            <div class="i-head">
+              <span class="code">{r.code}</span>
+              <h3>
+                <a href={`${r.path}/`}>{r.title}</a>
+              </h3>
+              <p class="artifact">{r.artifact}</p>
+            </div>
+
+            <p class="summary">{r.summary}</p>
+
+            <p class="when">
+              <span class="k">Reach for it when</span>
+              {r.useWhen}
+            </p>
+
+            <dl class="meta">
+              <div>
+                <dt>Reviewed by</dt>
+                <dd>{r.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
+              </div>
+              <div>
+                <dt>Companion file</dt>
+                {/* The only download this page names, and the anchor naming it
+                    carries the file. There is nothing here to click that does
+                    not resolve to bytes. */}
+                <dd>
+                  <code>{file}</code>
+                </dd>
+              </div>
+            </dl>
+
+            <div class="actions">
+              <a class="btn btn-primary" href={`${r.path}/`}>
+                Read it&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </a>
+              <a class="btn btn-ghost" href={href} download={file}>
+                Download the spreadsheet
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">How to use them</p>
+      <h2>Read it here, or <em>take the table away</em></h2>
+    </div>
+
+    <div class="panel notes">
+      <div class="detail-row">
+        <span class="dk">On the page</span>
+        <span class="dv">
+          The whole resource — explanation, worked case, the tables and the limits. Nothing is
+          held back for a download.
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">As a spreadsheet</span>
+        <span class="dv">
+          A comma-separated file whose columns are the table you just read, ready for Excel,
+          Sheets or anything else. It downloads straight from this page.
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">On paper</span>
+        <span class="dv">
+          Each resource prints as a form, rules and all. There is no PDF file to download —
+          your browser's own print dialogue will save one if you want it.
+        </span>
+      </div>
+    </div>
+
+    <p class="noscore">{NO_SCORE}</p>
+  </section>
+
+  <section class="wrap band">
+    <div class="sec-head">
+      <p class="eyebrow">What is not here</p>
+      <h2>Planned, and <em>not written</em></h2>
+    </div>
+
+    <div class="prose stack">
+      <p>
+        More worksheets are planned, on the questions these three keep running into: what to do
+        with an uncertain result, how to decide where work should run, what to measure once a
+        system is live. They are briefs at this stage rather than written documents, so there is
+        nothing to link and no date to give. They will appear here when they are written, and
+        not before.
+      </p>
+      <p>
+        The <a class="textlink" href="/resources/templates/">templates</a> and the
+        <a class="textlink" href="/resources/guides/">guides</a> are the same idea in two other
+        shapes — a blank artefact with a worked example beside it, and the long-form reasoning
+        behind the decisions these tables ask you to record. The
+        <a class="textlink" href="/tools/agent-design-check/">agent design check</a> asks a
+        related set of questions one at a time, in the browser.
+      </p>
+      <p>
+        If the resource you needed is not here,
+        <a class="textlink" href="/contact/">say so</a> — an unanswered question is how the next
+        one gets chosen.
+      </p>
+    </div>
+  </section>
+</PracticeLayout>
+
+<style>
+  .band {
+    padding-block: var(--space-8);
+  }
+
+  .no-gate,
+  .noscore {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-6);
+  }
+  .noscore {
+    margin-top: var(--space-6);
+    margin-bottom: 0;
+  }
+
+  /* ── the released resources ─────────────────────────────────────────────── */
+
+  .kit {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .item {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .code {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+  }
+  .i-head h3 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin: var(--space-2) 0 var(--space-2);
+  }
+  .i-head h3 a {
+    color: inherit;
+  }
+  .i-head h3 a:hover {
+    color: var(--link-hover);
+  }
+  .artifact {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+  }
+
+  .summary {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: var(--measure-prose);
+  }
+
+  .when {
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  .when .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+  }
+  .meta dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+  .meta dd {
+    font-size: var(--size-3);
+    color: var(--text-body);
+  }
+  .meta .unset {
+    color: var(--text-quiet);
+  }
+  .meta code {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-tick);
+    padding: 0.15em 0.4em;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-2);
+  }
+
+  /* ── how to use them ────────────────────────────────────────────────────── */
+
+  .notes .detail-row:first-child {
+    padding-top: 0;
+  }
+  .notes .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .notes .dk {
+    min-width: 14ch;
+  }
+  .notes .dv {
+    max-width: 58ch;
+    text-align: left;
+    font-weight: var(--weight-normal);
+    color: var(--text-body);
+    line-height: var(--lh-snug);
+  }
+
+  @media (min-width: 900px) {
+    .kit {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .band {
+      padding-block: var(--space-7);
+    }
+  }
+  @media (max-width: 720px) {
+    .notes .detail-row {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+  }
+</style>

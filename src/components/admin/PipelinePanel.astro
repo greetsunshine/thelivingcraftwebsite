@@ -1,0 +1,180 @@
+---
+// The three ways a pipeline screen is allowed to say "there is no number here".
+//
+// ───────────────────────────────────────────────────────────────────────────
+// A DASH IS NOT A ZERO, AND THE THREE DASHES ARE NOT EACH OTHER.
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `lib/admin/pipeline-queries.ts` refuses to return a bare number: every read
+// comes back as an `Answer`, which is either a value or a reason there isn't
+// one. That is only half the guarantee. The other half is here, because a
+// query that honestly says "I could not reach the table" and a screen that
+// prints `0` next to it have between them told the operator a lie.
+//
+// So this renders the failure half, and it renders the three cases DIFFERENTLY
+// on purpose:
+//
+//   unavailable — a source that may answer in a minute. Red, and the only one
+//                 that offers a retry, because retrying is the correct next
+//                 move and nothing else here responds to it.
+//   denied      — a permission the signed-in person does not hold and will not
+//                 hold by waiting. Amber, no retry, and it names WHO CAN via
+//                 refusal(). Sending somebody to check the database when the
+//                 answer is "ask Sunil" is the failure this prevents.
+//   pending     — the record exists in the brief and not yet in this build.
+//                 Grey, no retry, no alarm: nothing is broken and nobody is
+//                 locked out. The wireframe asks for the metric, so the metric
+//                 is on the screen saying it has no source, rather than absent
+//                 (which reads as "we forgot") or zero (which is a false fact).
+//
+// Colour is never the only signal — each carries a mono state word, so the
+// three stay distinguishable in greyscale and to a screen reader.
+//
+// NEVER give `denied` a retry button, and never let any of the three render a
+// numeral. Both are the same mistake in different clothes: pretending the
+// console knows something it does not.
+
+import { refusal, type Capability } from '../../lib/pipeline/roles';
+
+export interface Props {
+  state: 'unavailable' | 'denied' | 'pending';
+  /** The reason, verbatim from the Answer where there is one. */
+  reason: string;
+  /** What did not answer, in sentence case. Used in the heading. */
+  label?: string;
+  /** Only meaningful with `denied` — its refusal() names the roles that hold it. */
+  capability?: Capability;
+  /** Where "try again" goes. Ignored unless the state is `unavailable`. */
+  retry?: string;
+  /** `tile` sits in a metric grid; `block` fills a section. */
+  variant?: 'tile' | 'block';
+}
+
+const { state, reason, label, capability, retry, variant = 'block' } = Astro.props;
+
+const MARK: Record<Props['state'], string> = {
+  unavailable: 'not available',
+  denied: 'not permitted',
+  pending: 'no source yet',
+};
+
+const subject = label ?? 'This';
+
+const HEADING: Record<Props['state'], string> = {
+  unavailable: `${subject} did not load`,
+  denied: `${subject} is not available to your roles`,
+  pending: `${subject} is not recorded yet`,
+};
+---
+
+{
+  variant === 'tile' ? (
+    <div class="ans ans-tile" data-state={state}>
+      <div class="n" aria-hidden="true">—</div>
+      {label && (
+        <div class="k">
+          <span class="label">{label}</span>
+        </div>
+      )}
+      <p class="mark mono">{MARK[state]}</p>
+      <p class="why">{reason}</p>
+      {state === 'denied' && capability && <p class="who">{refusal(capability)}</p>}
+      {state === 'unavailable' && retry && (
+        <a class="btn small" href={retry}>Try again</a>
+      )}
+    </div>
+  ) : (
+    <div class="ans ans-block" data-state={state}>
+      <h3>{HEADING[state]}</h3>
+      <p class="mark mono">{MARK[state]}</p>
+      <p class="why">{reason}</p>
+      {state === 'denied' && capability && <p class="who">{refusal(capability)}</p>}
+      {state === 'unavailable' && retry && (
+        <p class="act">
+          <a class="btn small" href={retry}>Try again</a>
+        </p>
+      )}
+    </div>
+  )
+}
+
+<style>
+  /* A rule on the left, no shadow — same grammar as .notice in admin.css.
+     A raised card would say "here is a figure"; these are the absence of one. */
+  .ans {
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    border-left: var(--agent-rule) solid var(--border-field);
+    background: var(--surface-panel);
+  }
+
+  .ans-tile {
+    padding: var(--pad-panel);
+    border-radius: var(--radius-card);
+  }
+
+  .ans .n {
+    font-family: var(--font-mono);
+    font-size: var(--size-7);
+    line-height: var(--lh-flat);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+  }
+
+  .ans .k { margin-top: var(--space-2); }
+
+  .ans h3 {
+    font-family: var(--font-body);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-normal);
+    font-size: var(--size-4);
+  }
+
+  .ans .mark {
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    margin-top: var(--space-1);
+  }
+
+  .ans .why,
+  .ans .who {
+    font-size: var(--size-2);
+    line-height: var(--lh-snug);
+    max-width: var(--measure-prose);
+    margin-top: var(--space-2);
+    color: var(--text-quiet);
+  }
+
+  .ans .who { color: var(--text-body); font-weight: var(--weight-medium); }
+  .ans .act { margin-top: var(--space-3); }
+  .ans-tile .btn { margin-top: var(--space-3); }
+
+  /* Something is broken and may not be tomorrow. */
+  [data-state='unavailable'] {
+    border-left-color: var(--danger);
+    background: var(--danger-quiet);
+  }
+  [data-state='unavailable'] h3,
+  [data-state='unavailable'] .mark { color: var(--danger); }
+
+  /* A permission, not a fault. Distinct hue, and no retry is offered anywhere
+     in this branch — see the header comment. */
+  [data-state='denied'] {
+    border-left-color: var(--agent-uncertain);
+    background: var(--agent-uncertain-bg);
+  }
+  [data-state='denied'] h3,
+  [data-state='denied'] .mark { color: var(--agent-uncertain); }
+
+  /* Not built yet. Quiet on purpose: nothing is wrong. */
+  [data-state='pending'] {
+    border-left-style: dashed;
+    border-left-color: var(--state-unwritten-line);
+    background: var(--state-unwritten-bg);
+  }
+  /* Not --state-unwritten-ink: it resolves to --ink-3, which is 2.29:1 and is
+     not a text colour anywhere in this system. */
+  [data-state='pending'] h3 { color: var(--text-body); }
+  [data-state='pending'] .mark { color: var(--text-quiet); }
+</style>

@@ -21,10 +21,14 @@ import {
 } from '../../data/facts';
 import { getLatest } from '../../lib/agent/latest';
 
-// On-demand: the response varies by ?region=, so it can't be baked at build.
-export const prerender = false;
-
 const REGION_KEYS = ['india', 'dubai', 'australia'] as const;
+import { EXPLORES } from '../../data/cohort-copy';
+
+// NOT prerendered: the response depends on ?region=. PR7 set this to true when
+// the endpoint withheld every figure and so had no per-request state. It reads
+// the region again now, and a prerendered copy would answer "no region given"
+// to every caller while looking like it worked.
+export const prerender = false;
 
 export const GET: APIRoute = ({ url }) => {
   const latest = getLatest();
@@ -65,15 +69,11 @@ export const GET: APIRoute = ({ url }) => {
       assessment,
     },
     regulatory,
-    // Regional facts carry a placeholder answer; resolve it for the asked
-    // region, or drop it entirely when no region is known.
-    faq: facts
-      .filter((f) => !f.regional || region)
-      .map((f) => ({
+    faq: facts.map((f) => ({
         id: f.id,
         surface: f.surface,
         question: f.q,
-        answer: f.regional ? cohortPriceAnswer(region as never) : f.a,
+        answer: f.a,
       })),
     latest: {
       refreshedAt: latest.refreshedAt,
@@ -91,7 +91,7 @@ export const GET: APIRoute = ({ url }) => {
       })),
     },
     notes: [
-      'Cohort pricing is regional. Quote only the asker\'s own region, never a comparison, and never convert currencies.',
+      'Cohort length, seat count and start date are published — quote them. The FEE is per region: quote it only for a region that has been named, and only from the pricing block above. Never convert between regions or offer one region\'s rate as a guide for another.',
       'Consulting fees (CAIO, assessment) are India-based indicative anchors; confirm current figures by email.',
       'No testimonials, client names, or student counts are published. Do not infer any.',
     ],

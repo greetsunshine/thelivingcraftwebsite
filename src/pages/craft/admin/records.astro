@@ -1,0 +1,792 @@
+---
+// Records — taking data out, and putting data in.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// TWO JOBS ON ONE SCREEN, AND THEY ARE THE SAME JOB SEEN FROM EITHER SIDE
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Export is how a client's reporting keeps working after the pipeline moved
+// here; import is how the tracker they already have gets into it. They share a
+// file format, a set of ids and exactly one failure mode worth losing sleep
+// over — a record quietly becoming somebody else's. Putting them on one page
+// means the person doing either can see the other, which is the whole reason
+// an import preview names the same columns an export writes.
+//
+// WHAT THIS SCREEN IS CAREFUL ABOUT
+//
+//   * The export form is a PLAIN GET FORM. No JavaScript in the download path:
+//     the browser saves the file, and a person with scripting off still has a
+//     working console. Six small forms, one per record set, rather than one
+//     form with filters that only apply to some of them.
+//
+//   * A refusal names who CAN. `export.records` is the operator's and Sunil's;
+//     importing contacts is the operator's alone. Somebody who holds neither
+//     sees a sentence telling them who to ask, not a greyed-out button that
+//     teaches them the console is broken.
+//
+//   * COMMIT IS UNREACHABLE WITHOUT A CLEAN PREVIEW — in this page, and again
+//     in the endpoint, which re-reads the file and re-runs every check. The
+//     button state is a courtesy. The server is the check.
+//
+//   * "NOT CHECKED" IS NOT "NO CONFLICTS". An unavailable answer renders in its
+//     own colour, with its own word, and leaves commit disabled. A file that
+//     was never inspected must never read as a file that came back clean.
+//
+// Element ids are prefixed `rec` — ids are page-shared in this console, and two
+// panels once wrote their progress into each other's status line.
+
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { SCOPES, DAY_WINDOWS } from '../../../lib/admin/export';
+import { IMPORT_KINDS, IMPORT_CAPABILITY, MAX_IMPORT_ROWS, recentBatches } from '../../../lib/admin/import';
+import { can, ROLES, ROLE_LABEL } from '../../../lib/pipeline/roles';
+import { ROUTES, FORMS } from '../../../lib/pipeline/forms';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+
+const mayExport = can(roles, 'export.records');
+const mayImport = can(roles, IMPORT_CAPABILITY);
+
+const holdersOf = (capability: Parameters<typeof can>[1]): string =>
+  ROLES.filter((r) => can([r], capability))
+    .map((r) => ROLE_LABEL[r])
+    .join(' or ');
+
+// Only read when it is theirs to read. The query gates itself as well; this
+// just avoids asking a question whose answer is already "no".
+const batches = mayImport ? await recentBatches(admin, 8) : null;
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+
+const IST = 'Asia/Kolkata';
+const when = (iso: string): string =>
+  new Date(iso).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: IST,
+  });
+
+const windowLabel = (d: number) => (d === 0 ? 'Everything' : `Last ${d} days`);
+---
+
+<AdminLayout title="Records" active="records">
+  <div class="page-head">
+    <div>
+      <span class="label">{whoLine}</span>
+      <h1>Records</h1>
+      <p>
+        Scoped CSV out, and an existing tracker in. Both keep the field names from the data
+        dictionary so client reporting still joins. Times are Asia/Kolkata.
+      </p>
+    </div>
+    <nav class="jump" aria-label="On this page">
+      <a href="#rec-export">Export</a>
+      <a href="#rec-import">Import</a>
+      <a href="#rec-log">Batch log</a>
+    </nav>
+  </div>
+
+  <!-- ==================== Export ==================== -->
+  <section class="admin-section" id="rec-export">
+    <div class="section-head">
+      <div>
+        <h2>Export</h2>
+        <p>
+          One file per record set, never one flattened everything-file. Free text is written so a
+          spreadsheet cannot execute it — see the note below, which is there because the fix looks
+          like a defect.
+        </p>
+      </div>
+    </div>
+
+    {
+      !mayExport ? (
+        <div class="notice">
+          <h3>Exporting records is not one of your roles</h3>
+          <p class="muted">
+            {holdersOf('export.records')} can. This is checked on the server as well as here — an
+            export carries every other protection in this console out of the building in one file,
+            so hiding the form would not be enough.
+          </p>
+        </div>
+      ) : (
+        <div class="card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Record set</th>
+                  <th scope="col">What is in it</th>
+                  <th scope="col">Window</th>
+                  <th scope="col" class="num">
+                    Download
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCOPES.map((s) => (
+                  <tr>
+                    <td>
+                      <strong>{s.label}</strong>
+                      <div class="faint mono tiny">{s.table}</div>
+                    </td>
+                    <td class="muted wrap">
+                      {s.description}
+                      {s.personal && (
+                        <div class="tiny">
+                          <span class="pill warn">contact details</span>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <form method="GET" action="/api/craft/admin/export" class="scope-form">
+                        <input type="hidden" name="scope" value={s.id} />
+                        <label class="sr-only" for={`rec-days-${s.id}`}>
+                          Date window for {s.label}
+                        </label>
+                        <select id={`rec-days-${s.id}`} name="days">
+                          {DAY_WINDOWS.map((d) => (
+                            <option value={d} selected={d === 30}>
+                              {windowLabel(d)}
+                            </option>
+                          ))}
+                        </select>
+                        {s.filter === 'type' && (
+                          <>
+                            <label class="sr-only" for={`rec-type-${s.id}`}>
+                              Submission type
+                            </label>
+                            <select id={`rec-type-${s.id}`} name="type">
+                              <option value="">All three forms</option>
+                              {ROUTES.map((r) => (
+                                <option value={r}>{FORMS[r].title}</option>
+                              ))}
+                            </select>
+                          </>
+                        )}
+                        {s.filter === 'route' && (
+                          <>
+                            <label class="sr-only" for={`rec-route-${s.id}`}>
+                              Route
+                            </label>
+                            <select id={`rec-route-${s.id}`} name="route">
+                              <option value="">Both routes</option>
+                              <option value="member">Member</option>
+                              <option value="enterprise">Enterprise</option>
+                            </select>
+                          </>
+                        )}
+                        <button class="btn small" type="submit">
+                          Export CSV
+                        </button>
+                      </form>
+                    </td>
+                    <td class="num faint tiny">.csv</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )
+    }
+
+    <div class="notice">
+      <h3>The apostrophe in front of some cells is deliberate</h3>
+      <p class="muted">
+        Excel, Sheets and LibreOffice run a cell starting <code>=</code>, <code>+</code>,
+        <code>-</code> or <code>@</code> as a formula the moment the file opens. These cells hold
+        text a stranger typed into a public form, so without a defusal an answer beginning
+        <code>=HYPERLINK(…)</code> becomes a live link built out of the names and addresses beside
+        it. A leading apostrophe makes the cell text; it does not display and it does not print,
+        and re-importing the file here strips it again. <strong>It is not a stray character in the
+        data.</strong>
+      </p>
+      <p class="muted">
+        An export over 10,000 rows is refused rather than trimmed — a file cut off at a cap looks
+        complete and is not.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== Import ==================== -->
+  <section class="admin-section" id="rec-import">
+    <div class="section-head">
+      <div>
+        <h2>Import</h2>
+        <p>
+          Check the file first, then apply it. Supplied ids are kept; a conflicting one stops the
+          whole import rather than replacing a record.
+        </p>
+      </div>
+    </div>
+
+    {
+      !mayImport ? (
+        <div class="notice">
+          <h3>Importing contacts is not one of your roles</h3>
+          <p class="muted">
+            {holdersOf(IMPORT_CAPABILITY)} can. Contacts belong to the operator in the permissions
+            table, and a bulk write of several hundred people is the largest version of that job.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div class="card">
+            <div class="toolbar">
+              <label for="recKind">File contains</label>
+              <select id="recKind">
+                {IMPORT_KINDS.map((k) => (
+                  <option value={k.id}>{k.label}</option>
+                ))}
+              </select>
+
+              <label class="sr-only" for="recFile">
+                CSV file
+              </label>
+              <input id="recFile" type="file" accept=".csv,text/csv,text/plain" />
+
+              <button class="btn" id="recPreview" type="button">
+                Check this file
+              </button>
+              <button class="btn primary" id="recCommit" type="button" disabled>
+                Import
+              </button>
+            </div>
+
+            <p class="status-line" id="recStatus" role="status" aria-live="polite"></p>
+
+            <div id="recReport" hidden></div>
+          </div>
+
+          <div class="grid-2">
+            {IMPORT_KINDS.map((k) => (
+              <div class="card">
+                <h3 class="col-head">{k.label}</h3>
+                <p class="muted tiny">
+                  Required:{' '}
+                  {k.required.map((c, i) => (
+                    <>
+                      {i > 0 && ', '}
+                      <code>{c}</code>
+                    </>
+                  ))}
+                </p>
+                <p class="muted tiny">
+                  Optional:{' '}
+                  {k.optional.map((c, i) => (
+                    <>
+                      {i > 0 && ', '}
+                      <code>{c}</code>
+                    </>
+                  ))}
+                </p>
+                <p class="muted tiny">
+                  Column names from our own export are understood, and so are the usual spellings
+                  (<code>company</code>, <code>mobile</code>, <code>job_title</code>). Anything
+                  unrecognised is reported rather than dropped quietly.
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div class="notice">
+            <h3>An import subscribes nobody</h3>
+            <p class="muted">
+              A contact arriving in a file has agreed to nothing. A permission is recorded only
+              when the row carries a state, a source and a wording version whose words can be
+              produced — and it is stored with the batch id in its provenance. A row saying
+              <code>consent_state=granted</code> and nothing else is counted as ignored and sends
+              no one anything. "They were in our previous list" is not consent.
+            </p>
+            <p class="muted">
+              A matched row fills in <strong>blank</strong> columns only. A value that disagrees
+              with one already stored is reported and left alone: settling that needs an author, a
+              date and a reason, and a file has none of the three. At most {MAX_IMPORT_ROWS} rows
+              at a time.
+            </p>
+          </div>
+        </>
+      )
+    }
+  </section>
+
+  <!-- ==================== Batch log ==================== -->
+  <section class="admin-section" id="rec-log">
+    <div class="section-head">
+      <div>
+        <h2>Import batch log</h2>
+        <p>
+          Who ran what, when, and what it touched — so an import can be explained months later.
+          Counts only: the audit log holds nothing personal, which is why it survives an erasure.
+        </p>
+      </div>
+    </div>
+
+    {
+      !batches ? (
+        <div class="card">
+          <p class="empty">The batch log is the operator's to read.</p>
+        </div>
+      ) : batches.state === 'denied' ? (
+        <div class="card">
+          <p class="empty">{batches.reason}</p>
+        </div>
+      ) : batches.state === 'unavailable' ? (
+        <div class="notice danger">
+          <h3>The batch log did not answer</h3>
+          <p class="muted">
+            {batches.reason} This is <strong>not</strong> the same as "no imports have been run" —
+            treat it as unknown until the table responds.
+          </p>
+        </div>
+      ) : batches.value.length === 0 ? (
+        <div class="card">
+          <p class="empty">No imports have been run. The table answered — this is a real zero.</p>
+        </div>
+      ) : (
+        <div class="card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">When</th>
+                  <th scope="col">Who</th>
+                  <th scope="col">What</th>
+                  <th scope="col">Batch</th>
+                </tr>
+              </thead>
+              <tbody>
+                {batches.value.map((b) => (
+                  <tr>
+                    <td class="mono tiny">{when(b.at)}</td>
+                    <td>{b.actor}</td>
+                    <td class="wrap">{b.reason ?? '—'}</td>
+                    <td class="mono tiny faint">{b.batchId ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )
+    }
+  </section>
+</AdminLayout>
+
+<script>
+  // A module script, not is:inline — an inline script cannot import, and this
+  // one is under `astro check` because it is bundled.
+  interface RowIssue {
+    line: number;
+    field: string;
+    code: string;
+    message: string;
+  }
+
+  interface ImportReport {
+    kind: string;
+    rows: number;
+    create: number;
+    match: number;
+    conflicts: RowIssue[];
+    errors: RowIssue[];
+    differences: RowIssue[];
+    fills: number;
+    consentsGranted: number;
+    consentsIgnored: RowIssue[];
+    unusedColumns: string[];
+    unlinkedOrganisations: number;
+    batchId: string | null;
+    applied?: { created: number; updated: number; consents: number };
+  }
+
+  const kindEl = document.getElementById('recKind') as HTMLSelectElement | null;
+  const fileEl = document.getElementById('recFile') as HTMLInputElement | null;
+  const previewBtn = document.getElementById('recPreview') as HTMLButtonElement | null;
+  const commitBtn = document.getElementById('recCommit') as HTMLButtonElement | null;
+  const statusEl = document.getElementById('recStatus') as HTMLElement | null;
+  const reportEl = document.getElementById('recReport') as HTMLElement | null;
+
+  // Everything below is optional on the page: a reader without the capability
+  // gets the explanation and none of these nodes.
+  if (kindEl && fileEl && previewBtn && commitBtn && statusEl && reportEl) {
+    /** The exact text and kind the last clean preview was taken against. */
+    let checked: { kind: string; csv: string } | null = null;
+
+    const say = (text: string, tone: 'ok' | 'bad' | 'plain' = 'plain') => {
+      statusEl.textContent = text;
+      statusEl.className = `status-line${tone === 'ok' ? ' ok' : ''}`;
+      statusEl.style.color = tone === 'bad' ? 'var(--danger)' : '';
+    };
+
+    /**
+     * Any change to the file or the kind invalidates the check.
+     *
+     * The server re-checks anyway, so this cannot be the whole defence — but a
+     * button that stays lit after the file underneath it changed is a button
+     * that teaches somebody the check was about them rather than the file.
+     */
+    const invalidate = () => {
+      checked = null;
+      commitBtn.disabled = true;
+      reportEl.hidden = true;
+      reportEl.replaceChildren();
+      say('');
+    };
+
+    kindEl.addEventListener('change', invalidate);
+    fileEl.addEventListener('change', invalidate);
+
+    const el = (tag: string, className?: string, text?: string): HTMLElement => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+
+    const issueList = (title: string, issues: RowIssue[], tone: string): HTMLElement | null => {
+      if (!issues.length) return null;
+      const box = el('div', `issues ${tone}`);
+      box.appendChild(el('h4', undefined, `${title} (${issues.length})`));
+      const list = el('ul');
+      // Capped in the DOM, not in the data: a four-hundred-line list is not a
+      // report anybody reads, and the count above it is the honest total.
+      issues.slice(0, 25).forEach((i) => list.appendChild(el('li', undefined, i.message)));
+      if (issues.length > 25) {
+        list.appendChild(el('li', 'faint', `…and ${issues.length - 25} more.`));
+      }
+      box.appendChild(list);
+      return box;
+    };
+
+    const tile = (n: number | string, label: string, note?: string): HTMLElement => {
+      const box = el('div', 'tile');
+      box.appendChild(el('div', 'n', String(n)));
+      box.appendChild(el('div', 'k label', label));
+      if (note) box.appendChild(el('div', 'note', note));
+      return box;
+    };
+
+    const render = (report: ImportReport, committed: boolean) => {
+      reportEl.replaceChildren();
+      reportEl.hidden = false;
+
+      // ── A CHECK THAT DID NOT RUN IS NOT A CHECK THAT PASSED ────────────────
+      //
+      // `planPeople`/`planOrganisations` return BEFORE they query the database
+      // when the file has row errors in it — sensibly, since there is no point
+      // comparing rows that cannot be read. But `create`, `match`, `fills` and
+      // the database half of `conflicts` are all set by the loop AFTER that
+      // return, so on an errored file they come back as 0 — and this panel drew
+      // "Conflicts 0 · Ids agree with what is stored" over a file whose ids had
+      // never been compared with anything.
+      //
+      // That is unknown-as-zero (E14) in the one place where the zero is a
+      // claim about the safety of a bulk write. So when the comparison did not
+      // run, those four read as an em dash and say why. The conflicts the file
+      // DID disagree with itself about are still listed in full below — nothing
+      // is hidden, only the counts that were never taken.
+      const compared = report.errors.length === 0;
+      const notCompared = 'Not compared with the database — the rows below have to be readable first';
+
+      const tiles = el('div', 'tiles');
+      tiles.appendChild(tile(report.rows, 'Rows read'));
+      tiles.appendChild(
+        tile(
+          committed ? (report.applied?.created ?? 0) : compared ? report.create : '—',
+          committed ? 'Created' : 'Would create',
+          committed || compared ? undefined : notCompared,
+        ),
+      );
+      tiles.appendChild(
+        tile(
+          compared ? report.match : '—',
+          'Already here',
+          compared ? `${report.fills} blank fields would be filled` : notCompared,
+        ),
+      );
+      tiles.appendChild(
+        tile(
+          compared ? report.conflicts.length : '—',
+          'Conflicts',
+          compared
+            ? report.conflicts.length
+              ? 'Nothing is applied while any remain'
+              : 'Ids agree with what is stored'
+            : notCompared,
+        ),
+      );
+      reportEl.appendChild(tiles);
+
+      if (report.consentsGranted || report.consentsIgnored.length) {
+        const line = el(
+          'p',
+          'muted',
+          committed
+            ? `${report.applied?.consents ?? 0} consent records written, with this batch in their provenance. ${report.consentsIgnored.length} rows claimed a permission the file could not evidence and subscribed nobody.`
+            : `${report.consentsGranted} rows carry a full permission with a source and a wording version. ${report.consentsIgnored.length} claim one the file cannot evidence — those subscribe nobody.`,
+        );
+        reportEl.appendChild(line);
+      }
+
+      if (report.unlinkedOrganisations) {
+        reportEl.appendChild(
+          el(
+            'p',
+            'muted',
+            `${report.unlinkedOrganisations} rows name an organisation without an id. They are not linked and not merged by name — a same-named organisation is a review candidate, not the same company.`,
+          ),
+        );
+      }
+
+      if (report.unusedColumns.length) {
+        reportEl.appendChild(
+          el('p', 'muted', `Columns not used by this import: ${report.unusedColumns.join(', ')}.`),
+        );
+      }
+
+      const conflicts = issueList('Conflicting ids — refused, never replaced', report.conflicts, 'bad');
+      if (conflicts) reportEl.appendChild(conflicts);
+
+      const errors = issueList('Rows that could not be read', report.errors, 'bad');
+      if (errors) reportEl.appendChild(errors);
+
+      const differences = issueList(
+        'Values that disagree with what is stored — kept as they are',
+        report.differences,
+        'warn',
+      );
+      if (differences) reportEl.appendChild(differences);
+
+      const ignored = issueList('Permissions not recorded', report.consentsIgnored, 'warn');
+      if (ignored) reportEl.appendChild(ignored);
+
+      if (committed && report.batchId) {
+        reportEl.appendChild(el('p', 'mono tiny faint', `Batch ${report.batchId}`));
+      }
+    };
+
+    const send = async (action: 'preview' | 'commit', kind: string, csv: string) => {
+      const res = await fetch('/api/craft/admin/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, kind, csv }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        state?: string;
+        error?: string;
+        report?: ImportReport;
+      };
+      return { res, json };
+    };
+
+    const readFile = async (): Promise<string | null> => {
+      const file = fileEl.files?.[0];
+      if (!file) {
+        say('Choose a CSV file first.', 'bad');
+        return null;
+      }
+      return file.text();
+    };
+
+    previewBtn.addEventListener('click', async () => {
+      const csv = await readFile();
+      if (csv === null) return;
+
+      const kind = kindEl.value;
+      previewBtn.disabled = true;
+      commitBtn.disabled = true;
+      say('Checking…');
+
+      try {
+        const { json } = await send('preview', kind, csv);
+
+        // 'unavailable' is a distinct outcome and must not read as a clean
+        // check. No report, no commit, and a sentence saying it was not
+        // inspected rather than a zero saying it was.
+        if (json.state === 'unavailable' || json.state === 'denied') {
+          reportEl.hidden = true;
+          say(json.error ?? 'That file was not checked.', 'bad');
+          return;
+        }
+        if (!json.report) {
+          say(json.error ?? 'That file was not checked.', 'bad');
+          return;
+        }
+
+        render(json.report, false);
+
+        const clean = !json.report.conflicts.length && !json.report.errors.length;
+        if (clean && json.report.rows > 0) {
+          checked = { kind, csv };
+          commitBtn.disabled = false;
+          say(
+            `Checked. ${json.report.create} to create, ${json.report.match} already here. Nothing has been written yet.`,
+            'ok',
+          );
+        } else if (!json.report.rows) {
+          say('That file has no rows in it.', 'bad');
+        } else {
+          say('Not importable as it stands. Nothing has been written.', 'bad');
+        }
+      } catch {
+        say('The check did not complete, so nothing about this file has been confirmed.', 'bad');
+      } finally {
+        previewBtn.disabled = false;
+      }
+    });
+
+    commitBtn.addEventListener('click', async () => {
+      if (!checked) return;
+
+      // Re-read from the input rather than trusting the copy in hand: if the
+      // person swapped the file after the check, this is the moment it must
+      // stop. The server re-checks regardless.
+      const csv = await readFile();
+      if (csv === null) return;
+      if (csv !== checked.csv || kindEl.value !== checked.kind) {
+        invalidate();
+        say('That file changed after it was checked. Check it again.', 'bad');
+        return;
+      }
+
+      commitBtn.disabled = true;
+      previewBtn.disabled = true;
+      say('Importing…');
+
+      try {
+        const { json } = await send('commit', checked.kind, checked.csv);
+
+        if (json.report) render(json.report, json.state !== 'blocked');
+
+        if (json.state === 'blocked') {
+          say(json.error ?? 'Nothing was imported.', 'bad');
+        } else if (json.ok && json.report) {
+          const a = json.report.applied;
+          say(
+            `Imported. ${a?.created ?? 0} created, ${a?.updated ?? 0} updated, ${a?.consents ?? 0} consent records.`,
+            'ok',
+          );
+          checked = null;
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          say(json.error ?? 'That did not complete.', 'bad');
+        }
+      } catch {
+        say('That did not complete. Check the records before running it again.', 'bad');
+      } finally {
+        previewBtn.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Scoped to this page, like every other panel in the console. */
+  .scope-form {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .scope-form select {
+    width: auto;
+    min-width: 9rem;
+  }
+
+  .tiny {
+    font-size: var(--size-1);
+  }
+  td.wrap {
+    white-space: normal;
+    max-width: 44ch;
+    line-height: var(--lh-snug);
+  }
+  .col-head {
+    font-size: var(--size-4);
+    color: var(--text-loud);
+    margin-bottom: var(--space-1);
+  }
+
+  #recReport {
+    margin-top: var(--space-4);
+  }
+  #recReport .tiles {
+    margin-bottom: var(--space-3);
+  }
+  #recReport p {
+    max-width: var(--measure-prose);
+    font-size: var(--size-2);
+    margin-top: var(--space-2);
+    line-height: var(--lh-snug);
+  }
+
+  .issues {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-inner);
+    background: var(--surface-sunken);
+    border-left: 3px solid var(--border-hair);
+  }
+  /* --danger is the INK. --danger-mark is the fill; it cannot carry text. */
+  .issues.bad {
+    border-left-color: var(--danger);
+    background: var(--danger-quiet);
+  }
+  .issues.bad h4 {
+    color: var(--danger);
+  }
+  .issues.warn {
+    border-left-color: var(--ochre);
+  }
+  .issues h4 {
+    font-size: var(--size-3);
+    margin-bottom: var(--space-2);
+    color: var(--text-loud);
+  }
+  .issues ul {
+    margin: 0 0 0 var(--space-5);
+    list-style: disc;
+  }
+  .issues li {
+    font-size: var(--size-2);
+    line-height: var(--lh-snug);
+    margin-bottom: 2px;
+    color: var(--text-body);
+  }
+
+  input[type='file'] {
+    font-size: var(--size-2);
+    max-width: 100%;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 720px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+    #recReport .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

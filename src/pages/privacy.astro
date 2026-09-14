@@ -20,6 +20,18 @@
 import PolicyLayout from '../layouts/PolicyLayout.astro';
 import { CONTACT_EMAIL } from '../data/site';
 import { canonical } from '../data/facts';
+import { FORMS } from '../lib/pipeline/forms';
+import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+
+// The field lists are read from the form definitions rather than retyped. A
+// field added to a form then appears here on the next deploy, which is the only
+// way this section stays true.
+const routes = (['application', 'enquiry', 'enterprise'] as const).map((key) => ({
+  key,
+  title: FORMS[key].title,
+  required: FORMS[key].fields.filter((f) => f.required).map((f) => f.label),
+  optional: FORMS[key].fields.filter((f) => !f.required).map((f) => f.label),
+}));
 
 export const prerender = false;
 
@@ -116,6 +128,49 @@ const UPDATED = '14 September 2026';
         own database so that I have a searchable history. That second copy also records whether the
         email actually went through, because a failed delivery used to be invisible and meant
         someone believed they had applied when I had never seen it.
+      </p>
+
+      <p>
+        The three routes into the programme ask for these fields, and nothing else on those
+        pages collects personal details. No file upload is offered anywhere on this site,
+        and you are asked more than once not to send confidential company material.
+      </p>
+      {
+        routes.map((route) => (
+          <div class="route-fields">
+            <h4>{route.title}</h4>
+            <p><strong>Required:</strong> {route.required.join(', ')}</p>
+            {route.optional.length > 0 && (
+              <p><strong>Optional:</strong> {route.optional.join(', ')}</p>
+            )}
+          </div>
+        ))
+      }
+      <p>
+        You are shown a reference when a submission is saved. Nothing on this site looks a
+        record up by that reference, so it cannot be used to reach anybody's details,
+        including yours. No card details are collected anywhere on this site, and there is
+        nothing to pay to apply.
+      </p>
+
+      <h3>When you tick the marketing box</h3>
+      <p>The forms carry one optional tick box, in these words:</p>
+      <blockquote><p>{MARKETING_CONSENT.wording}</p></blockquote>
+      <p>
+        It starts unticked and nothing depends on it. Your application is treated exactly the
+        same either way. A receipt confirming that your request was saved is not marketing,
+        and it is never treated as permission to send you anything else.
+      </p>
+      <p>
+        What you agreed to is stored with the words you were shown, under a version label. If
+        that sentence is ever reworded it becomes a new version, and your record keeps
+        pointing at the wording above. So the answer to "what did I agree to" is always the
+        sentence that was actually on your screen.
+      </p>
+      <p>
+        No follow-up email is being sent today. The sequence is built and switched off,
+        pending a verified sending domain and a monitored reply mailbox. If you tick the box
+        now, the permission is recorded and nothing is sent until that is in place.
       </p>
 
       <h3>When you talk to the assistant</h3>
@@ -357,6 +412,30 @@ const UPDATED = '14 September 2026';
   }
 
   .policy p { margin-bottom: var(--space-4); line-height: var(--lh-normal); }
+
+  /* The per-route field lists and the consent wording. A panel gets a shadow or
+     a border, never both — this is the border. */
+  .route-fields {
+    border: 1px solid var(--line);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .route-fields h4 {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin: 0 0 var(--space-3);
+  }
+  .route-fields p:last-child { margin-bottom: 0; }
+
+  .policy blockquote {
+    border-left: 2px solid var(--clay);
+    padding-left: var(--space-5);
+    margin: 0 0 var(--space-4);
+  }
+  .policy blockquote p { margin-bottom: 0; color: var(--text-loud); }
 
   .policy ul { margin: 0 0 var(--space-4) var(--space-5); }
   .policy li { margin-bottom: var(--space-2); line-height: var(--lh-snug); }

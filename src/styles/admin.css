@@ -339,6 +339,17 @@ details.raw pre { margin-top: var(--space-2); padding: var(--space-3); backgroun
   border-radius: var(--radius-card); box-shadow: var(--shadow-raise);
   padding: var(--space-7) var(--space-6) var(--space-6);
 }
+
+/* The optional-email hint under the login field. Quiet, and not --ink-3, which
+   is 2.29:1 on white and not a text colour anywhere in this system. */
+.login-card .hint {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  color: var(--text-quiet);
+  text-transform: none;
+  letter-spacing: normal;
+  margin-top: var(--space-1);
+}
 .login-card h1 { font-size: var(--size-6); margin: var(--space-3) 0 var(--space-1); color: var(--text-loud); }
 .login-card p { color: var(--text-quiet); font-size: var(--size-3); margin-bottom: var(--space-5); line-height: var(--lh-snug); }
 .login-card label { display: block; margin-bottom: var(--space-4); }

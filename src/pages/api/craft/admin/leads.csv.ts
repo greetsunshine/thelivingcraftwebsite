@@ -9,6 +9,8 @@ import { leads } from '../../../../lib/admin/queries';
 
 export const prerender = false;
 
+import { csvCell } from '../../../../lib/admin/csv';
+
 const COLUMNS = [
   'created_at',
   'source',
@@ -29,19 +31,18 @@ const COLUMNS = [
 ] as const;
 
 /**
- * Quote everything, and neutralise formula injection.
+ * Cells come from csvCell() in src/lib/admin/csv.ts, which is the ONE owner
+ * of this format.
  *
- * A cell beginning =, +, - or @ is executed as a formula when the file is
- * opened in Excel or Sheets. These cells contain text a stranger typed into a
- * public form, so that is a live path from the internet to code running on the
- * machine of the person reading their leads. Prefixing with an apostrophe is
- * the standard defusal and is invisible in the sheet.
+ * It used to be a local `csvCell()` here, and an identical one in intake.csv.ts,
+ * and a third in the scoped exporter. Three copies of the rule that stops a
+ * spreadsheet executing what a stranger typed into a public form — which is
+ * precisely the failure CLAUDE.md names twice, under "Two places that own a
+ * format": the copies agree until the day somebody hardens one of them.
+ *
+ * The attack, in full, is documented where the function lives. Do not
+ * reintroduce a local copy to avoid an import.
  */
-const cell = (value: unknown): string => {
-  let text = value === null || value === undefined ? '' : String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-  return `"${text.replace(/"/g, '""')}"`;
-};
 
 export const GET: APIRoute = async ({ url }) => {
   const status = url.searchParams.get('status') ?? 'all';
@@ -49,7 +50,7 @@ export const GET: APIRoute = async ({ url }) => {
 
   const body = [
     COLUMNS.join(','),
-    ...rows.map((row) => COLUMNS.map((c) => cell((row as unknown as Record<string, unknown>)[c])).join(',')),
+    ...rows.map((row) => COLUMNS.map((c) => csvCell((row as unknown as Record<string, unknown>)[c])).join(',')),
   ].join('\n');
 
   const stamp = new Date().toISOString().slice(0, 10);

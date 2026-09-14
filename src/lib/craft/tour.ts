@@ -357,8 +357,8 @@ export function tourById(id: string): Tour | null {
 // opens the dashboard six times on Tuesday is asked once.
 //
 // FOURTEEN DAYS FROM `created_at`, not from the cohort start, because there is
-// no machine-readable cohort start date — `cohort.startsOn` in facts.ts is the
-// display string 'September 2026'. Seats are issued on a rolling basis anyway,
+// no public machine-readable cohort start date. The private learner schedule
+// remains separate from the public V4 offer. Seats are issued on a rolling basis anyway,
 // so "their first week" and "the cohort's first week" are different things, and
 // the learner's own is the one that matters here.
 

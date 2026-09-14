@@ -1,0 +1,338 @@
+---
+/**
+ * /tools — the tools hub.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Tools. Practitioner wants to try the method. Wants value without a sales
+ *    form. Evidence: transparent rubric and sample output; optional
+ *    resources/cohort/advisory."
+ *
+ * "Value without a sales form" is the whole brief. So the page's first job is
+ * to say, before anything else, what it does not ask for: no sign-in, no email,
+ * no lead record, and nothing typed about an architecture leaving the browser.
+ * Everything else here is a route to the one tool that exists.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * IT LISTS WHAT EXISTS. THE SECOND TOOL IS NOT A LINK.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The roadmap names two: "Tools → Agent Design Check /tools/agent-design-check/;
+ * Architecture Review Skill /tools/architecture-review-skill/." One is built.
+ * The other is sequenced behind rubric approval in the roadmap's own words —
+ * "After rubric approval, package the same method as Claude and Codex
+ * architecture-review skills" — so it appears as inert text with the condition
+ * named, exactly as SiteNav renders an unbuilt destination. Two rules meet here
+ * and agree: "do not publish empty hubs merely to fill the navigation", and the
+ * house rule against inventing anything. No date, no waitlist, no "coming soon".
+ *
+ * NO STRUCTURED DATA BEYOND BREADCRUMBS. The roadmap's list of what structured
+ * data may describe is organisation, person, article, breadcrumbs, course and
+ * video, "only when the visible content supports it". A SoftwareApplication
+ * node is not on that list, and this index authored nothing, so it emits one
+ * BreadcrumbList and stops. Same decision as /resources/guides.
+ */
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { AREAS, QUESTIONS } from '../../data/agent-design-check';
+
+export const prerender = true;
+
+const path = '/tools';
+const url = `${SITE_ORIGIN}${path}`;
+
+const title = 'Tools — try the method before you talk to anybody · Sunil Mathew';
+const description =
+  'Ungated tools for engineers designing systems that act. The agent design check is a browser checklist over seven areas of an agentic design — no sign-in, no score, and nothing you type leaves your browser.';
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Tools' },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+  <div class="tools">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">Tools</li>
+      </ol>
+    </nav>
+
+    <section class="hero">
+      <div class="wrap">
+        <p class="eyebrow">Tools</p>
+        <h1>Try the method <em>before</em> you talk to anybody</h1>
+        <p class="credential">
+          The same questions a design review would ask, in a form you can work through on
+          your own. <strong>No sign-in, no email, no score</strong> — and nothing you type
+          about your architecture leaves your browser.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="/tools/agent-design-check/"
+            >Open the agent design check&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+          >
+          <a class="btn btn-ghost" href="/resources/guides">Read the guides</a>
+        </div>
+        <p class="hero-note">
+          Ungated. There is no lead record created by using anything on this page.
+        </p>
+      </div>
+    </section>
+
+    {/* ── the one that exists ──────────────────────────────────────────────── */}
+    <section class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Available now</p>
+        <h2>The <em>agent design check</em></h2>
+      </div>
+
+      <div class="cards2">
+        <a class="card lead-card" href="/tools/agent-design-check/">
+          <span class="k">Browser checklist</span>
+          <h3>Agent design check</h3>
+          <p>
+            {QUESTIONS.length} questions across {AREAS.length} areas of an agentic design.
+            Answer yes, no, or not yet defined — and get back what is still open, why it
+            matters, and what to do about each one in order.
+          </p>
+          <span class="go">Open it<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <div class="card areas-card">
+          <span class="k">What it asks about</span>
+          <ul class="area-list">
+            {
+              AREAS.map((a) => (
+                <li>
+                  <span class="a-title">{a.title}</span>
+                  <span class="a-blurb">{a.blurb}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel promises">
+        <div class="detail-row">
+          <span class="dk">What it costs</span>
+          <span class="dv">Nothing, and it does not ask who you are</span>
+        </div>
+        <div class="detail-row">
+          <span class="dk">Where your answers go</span>
+          <span class="dv"
+            >Nowhere. They are held in the page and disappear when you close the tab</span
+          >
+        </div>
+        <div class="detail-row">
+          <span class="dk">What you get back</span>
+          <span class="dv"
+            >Next steps in priority order, each one written beside its question in the
+            rubric — plus a text file or a printout to take away</span
+          >
+        </div>
+        <div class="detail-row">
+          <span class="dk">What it will not do</span>
+          <span class="dv"
+            >Score you, grade you, or tell you a system is ready for production</span
+          >
+        </div>
+      </div>
+    </section>
+
+    {/* ── why there is no score ────────────────────────────────────────────── */}
+    <section class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">How to read the output</p>
+        <h2>A checklist, <em>not an assessment</em></h2>
+      </div>
+      <div class="prose stack">
+        <p>
+          There is no number at the end. A readiness percentage would invite you to improve
+          the percentage, and the questions worth answering here are not the ones that move
+          a figure — they are the ones nobody on the team can currently answer.
+        </p>
+        <p>
+          <strong>Every sentence the checker can say is written down in advance</strong>,
+          next to the question it belongs to. No model reads your answers, ranks them or
+          writes advice about a system it has never seen. You can read the whole rubric
+          before you answer anything, which is the only reason its output is worth trusting.
+        </p>
+        <p>
+          Marking every box addressed does not produce a pass. It produces a request for the
+          artefact that would show each claim — the tool list with its scopes, one run's
+          evidence references, the case that came from a real failure. That is what a review
+          asks for, so it is what this asks for.
+        </p>
+      </div>
+    </section>
+
+    {/* ── the one that is not built ────────────────────────────────────────── */}
+    <section class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Not published</p>
+        <h2>Architecture review <em>skill</em></h2>
+      </div>
+      <div class="prose stack">
+        <p>
+          The roadmap plans a second tool: the same method packaged as an architecture-review
+          skill for Claude and for Codex, reviewing only material you select and returning
+          referenced observations, questions, limitations and next actions — never executing
+          or modifying your code.
+        </p>
+        <p>
+          <strong>It is not built, and this is not a link.</strong> It is sequenced behind
+          approval of the rubric the checker above uses, because the skill would package that
+          same rubric and there is no point versioning a method twice. Each host also has to
+          be verified on its own; no compatibility claim will be made across the two before
+          it has been tested on both.
+        </p>
+      </div>
+      <aside class="pending">
+        <h3>What has to happen first</h3>
+        <ul>
+          <li>
+            Rubric approval — the {QUESTIONS.length} questions, their explanations and every
+            next step read and signed off.
+            <span class="who">Sunil</span>
+          </li>
+          <li>
+            A sample input and its report, plus usage guidance and a version on the rubric.
+            <span class="who">Part of the package, not a follow-up</span>
+          </li>
+          <li>
+            Independent verification on each host.
+            <span class="who">No cross-host claim before both are tested</span>
+          </li>
+        </ul>
+      </aside>
+    </section>
+
+    {/* ── where to go next ─────────────────────────────────────────────────── */}
+    <section class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Related</p>
+        <h2>If a question here <em>lands</em></h2>
+      </div>
+      <div class="cards3">
+        <a class="card" href="/resources/guides/agentic-system-design">
+          <span class="k">Pillar guide</span>
+          <h3>Designing agentic systems</h3>
+          <p>The decisions behind the checklist, in the order they are worth making.</p>
+          <span class="go">Read it<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+        <a class="card" href="/resources/guides">
+          <span class="k">Guides</span>
+          <h3>All the written answers</h3>
+          <p>
+            Workflow or agent, tool permissions, uncertain evidence — each one worked through
+            an example.
+          </p>
+          <span class="go">Browse<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+        <a class="card" href="/advisory/">
+          <span class="k">Advisory</span>
+          <h3>A review of a real design</h3>
+          <p>
+            When the answer is that the questions need asking against your actual system,
+            with the people who built it.
+          </p>
+          <span class="go">Advisory<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+      </div>
+      <p class="revised">
+        Written <time datetime="2026-09-11">11 September 2026</time>.
+      </p>
+    </section>
+  </div>
+</PracticeLayout>
+
+<style>
+  /* The lead card is the page's one action. It gets the extra weight; the
+     areas card beside it is a list, not a destination, so it is a plain card
+     with no `.go`. Shadow only — never a border and a shadow together. */
+  .lead-card h3 {
+    font-size: var(--size-6);
+  }
+  .lead-card p {
+    font-size: var(--size-4);
+    color: var(--text-body);
+    line-height: var(--lh-normal);
+  }
+
+  .areas-card {
+    background: var(--surface-sunken);
+    box-shadow: none;
+  }
+  .area-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .area-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .a-title {
+    font-size: var(--size-3);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+  .a-blurb {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+
+  .promises {
+    margin-top: var(--space-5);
+  }
+  .promises .detail-row:first-child {
+    padding-top: 0;
+  }
+  .promises .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .promises .dk {
+    max-width: 24ch;
+  }
+  .promises .dv {
+    max-width: 46ch;
+    font-weight: var(--weight-normal);
+  }
+
+  .pending {
+    margin-top: var(--space-6);
+  }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  /* 390px: the two-cell rows stack rather than squeezing to four words a line. */
+  @media (max-width: 720px) {
+    .promises .detail-row {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .promises .dv {
+      text-align: left;
+      max-width: none;
+    }
+  }
+</style>

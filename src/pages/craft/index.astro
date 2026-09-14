@@ -1,13 +1,13 @@
 ---
 // The course area's front page — what a learner sees on signing in.
 //
-// Everything factual on this page (weeks, seats, commitment, format, start)
-// comes from facts.ts, for the same reason the public pages do: a learner
-// reading "6 weeks" here and "5 weeks" on the site they applied through is a
-// small thing that costs a lot of trust.
+// Internal schedule facts (weeks, seats, commitment, format, start) come from
+// learner-cohort.ts. They are deliberately separate from the public V4 offer,
+// which publishes 30 live hours but no start date or week count.
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
-import { cohort, practitioner } from '../../data/facts';
+import { practitioner } from '../../data/facts';
+import { learnerCohort as cohort } from '../../data/learner-cohort';
 import { getIntake } from '../../lib/craft/intake';
 import { suggestionsFor } from '../../lib/craft/reading';
 import { listThreads, isUnanswered } from '../../lib/craft/discussion';

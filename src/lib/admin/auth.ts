@@ -1,19 +1,38 @@
-// Admin session — a signed cookie, no user table.
+// Admin session — a signed cookie that now says WHO.
 //
-// There is one admin. A password plus an HMAC-signed cookie is the honest size
-// of that problem; anything more (an auth provider, a users table, OAuth) adds
-// an account to rotate and a dependency to keep alive for a single person.
+// It used to carry an expiry and a signature over it, and nothing else: "someone
+// knew the password before this timestamp", which was the whole truth while
+// there was one admin and one password.
 //
-// The cookie carries an expiry and a signature over it, and nothing else. It is
-// not a bearer of identity or claims — it says "someone knew the password
-// before this timestamp", which is all there is to say. HttpOnly so script
-// cannot read it, Secure in production, SameSite=Lax so a form POST from
-// another origin cannot ride it.
+// The cohort pipeline made that insufficient. The brief requires that an
+// operator cannot approve an offer and that only finance confirms a payment,
+// and a session with no identity cannot express either — so the cookie now
+// carries an identity and a role list, and the signature covers both.
+//
+// WHAT THE SIGNATURE BUYS, AND WHAT IT DOES NOT
+//
+// The payload is signed, not encrypted. Anyone holding the cookie can read
+// their own name and roles out of it, which is fine — they already know both.
+// What they cannot do is CHANGE either without the secret, and that is the
+// property every capability check downstream depends on.
+//
+// The roles are therefore trusted from the cookie rather than re-read from the
+// database on each request. The trade is deliberate: a role revoked mid-session
+// stays live until the session expires, at most twelve hours. Deactivating an
+// account is the immediate lever, and it takes effect at the next sign-in. If
+// that window ever matters more than the per-request read costs, move the
+// lookup into middleware — but do not read roles from an unsigned source.
+//
+// FORMAT CHANGED, AND OLD COOKIES FAIL CLOSED. Everyone signs in again once.
+// HttpOnly so script cannot read it, Secure in production, SameSite=Lax so a
+// form POST from another origin cannot ride it.
 //
 // This is also why the no-localStorage rule survives: the session lives in a
 // cookie the page cannot see, not in storage the page can.
 
 import { env } from './env';
+import { isRole, type Role } from '../pipeline/roles';
+import type { Identity } from './staff';
 
 const COOKIE = 'lc_admin';
 const TTL_MS = 12 * 60 * 60 * 1000; // 12h — a working day, then log in again.
@@ -51,27 +70,80 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export async function issueSession(): Promise<{ value: string; maxAge: number }> {
-  const expires = String(Date.now() + TTL_MS);
-  return { value: `${expires}.${await sign(expires)}`, maxAge: Math.floor(TTL_MS / 1000) };
+/**
+ * Compact on purpose. This travels on every request to the console, so the
+ * field names are one character each and the payload holds only what a
+ * capability check needs: who, what they are called, and what they may do.
+ * Nothing else about a person belongs in a cookie.
+ */
+interface Payload {
+  /** staff_id, or null for the shared-password bootstrap. */
+  s: string | null;
+  /** Display name, so the console can say who is signed in without a read. */
+  n: string;
+  /** Role names. Anything unrecognised is dropped on the way out. */
+  r: string[];
 }
 
-export async function verifySession(token: string | undefined): Promise<boolean> {
-  if (!token || !env('ADMIN_SESSION_SECRET')) return false;
+const encodePayload = (identity: Identity): string =>
+  b64urlText(JSON.stringify({ s: identity.id, n: identity.name, r: identity.roles } satisfies Payload));
 
-  const dot = token.indexOf('.');
-  if (dot < 1) return false;
+const b64urlText = (text: string): string =>
+  btoa(String.fromCharCode(...enc.encode(text)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 
-  const expires = token.slice(0, dot);
-  const mac = token.slice(dot + 1);
+const fromB64urlText = (value: string): string => {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
+  return new TextDecoder().decode(
+    Uint8Array.from(atob(padded + '='.repeat((4 - (padded.length % 4)) % 4)), (c) => c.charCodeAt(0)),
+  );
+};
 
-  // Signature first, then expiry. Reading the timestamp of an unverified token
-  // is fine, but deciding anything on it before checking the MAC is how you end
-  // up trusting attacker-chosen input.
-  if (!safeEqual(mac, await sign(expires))) return false;
+export async function issueSession(identity: Identity): Promise<{ value: string; maxAge: number }> {
+  const expires = String(Date.now() + TTL_MS);
+  const payload = encodePayload(identity);
+  const body = `${expires}.${payload}`;
+  return { value: `${body}.${await sign(body)}`, maxAge: Math.floor(TTL_MS / 1000) };
+}
+
+/**
+ * Returns the identity, or null.
+ *
+ * It used to return a boolean. Middleware still only asks whether this is
+ * truthy; everything downstream of middleware asks who it is.
+ */
+export async function verifySession(token: string | undefined): Promise<Identity | null> {
+  if (!token || !env('ADMIN_SESSION_SECRET')) return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const [expires, payload, mac] = parts;
+
+  // Signature first, then expiry, then contents. Reading an unverified token is
+  // fine; DECIDING anything on it before the MAC checks out is how you end up
+  // trusting attacker-chosen input — and this payload now names a role list.
+  if (!safeEqual(mac, await sign(`${expires}.${payload}`))) return null;
 
   const at = Number(expires);
-  return Number.isFinite(at) && at > Date.now();
+  if (!Number.isFinite(at) || at <= Date.now()) return null;
+
+  try {
+    const parsed = JSON.parse(fromB64urlText(payload)) as Partial<Payload>;
+    const roles: Role[] = Array.isArray(parsed.r) ? parsed.r.filter(isRole) : [];
+    const name = typeof parsed.n === 'string' && parsed.n ? parsed.n.slice(0, 120) : 'Signed in';
+
+    return typeof parsed.s === 'string' && parsed.s
+      ? { kind: 'staff', id: parsed.s, name, roles }
+      : { kind: 'bootstrap', id: null, name, roles };
+  } catch {
+    // Signed but unreadable. Refuse rather than fall back to an empty identity:
+    // a session with no roles would silently deny everything and look like a
+    // permissions bug rather than a corrupt cookie.
+    return null;
+  }
 }
 
 export async function checkPassword(candidate: string): Promise<boolean> {

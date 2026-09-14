@@ -7,7 +7,8 @@
 // is worse than showing them nothing — same reasoning as reviewNote on /latest.
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection, render } from 'astro:content';
-import { cohort, practitioner } from '../../data/facts';
+import { practitioner } from '../../data/facts';
+import { learnerCohort as cohort } from '../../data/learner-cohort';
 import { dayPlan } from '../../lib/craft/schedule';
 import { inlineCode } from '../../lib/craft/text';
 import { threadLabel, WEIGHT_LABEL } from '../../lib/craft/threads';

@@ -1,0 +1,15 @@
+﻿Record,Minimum fields and meaning
+Person,"person_id; name; normalised_email; original_email; optional phone; role; organisation link; contact preferences. Matching uses trimmed, case-normalised email; do not strip plus tags or merge different addresses by name."
+Organisation,"organisation_id; organisation name; optional domain; industry; sponsor, L&D and budget contact links. Name-only matches are review candidates, not automatic merges."
+Cohort,cohort_id; public label; route; application_open; approved schedule reference; offer version references. No date inferred from an internal ID.
+Submission,submission_id; request_key; type application/enquiry; person_id; organisation_id if relevant; cohort_id; experience; goal/question; funding route; optional group size; submitted_at; privacy notice version.
+Opportunity,opportunity_id; person_id or organisation_id; route; cohort_id; stage; owner; stage_entered_at; closure reason; next_action and due_at. Applications and enquiries link to this record.
+Attribution,"submission_id; first captured source/medium/campaign/content/term; submission-session equivalents; sanitised entry path and referrer host; self-reported source; tracking permission and capture dates. Missing referrers remain direct/unknown, never guessed."
+Consent,person_id; purpose; state; wording/version; obtained_at; source; withdrawn_at. Preserve changes; import provenance instead of treating old relationships as opt-in.
+Activity and task,activity_id; opportunity_id; type; actor; occurrence time; notes; task owner/due/completed times. Record manual contact here before further nurture.
+Meeting,meeting_id; opportunity_id; scheduled time; status scheduled/held/cancelled/no-show; held_at; outcome and next action.
+Offer,offer_id; opportunity_id; approved_by; approved_at; version; currency; amount and term reference; accepted status. Only Sunil or an explicitly delegated approver can approve.
+Finance evidence,payment_id; invoice/reference; person/order link; type receipt/refund; amount in currency minor units; currency; finance confirmer; received_at and evidence reference. Do not infer payment from an offer or receipt email.
+Attendance,person_id; cohort_id; confirmation response/time; session_id; attended status; recorder and occurrence date. Enterprise participants link to their order.
+Communication,message_id; person/opportunity link; purpose; template/version; sequence step; recipient; queued/sent/delivered/replied/bounced states and timestamps; provider ID; failure reason.
+Audit history,record/type/ID; actor; previous and new value; event time; reason. Restricted access; no raw credentials.

@@ -64,15 +64,21 @@ client names, and saying so is the correct answer if asked.
 If a visitor asks something the fact base answers only partly, give the part you have and
 name the gap.
 
-## Regional pricing
+## Cohort offer details
 
-Cohort pricing differs by region, and each visitor sees only their own region's rate on the
-page. Match that: quote the rate for their region and no other. Never list the regions side
-by side, never volunteer what another region pays, and don't convert between currencies.
+Length, seat count and start date ARE published. Quote them from the fact base.
 
-If someone asks to compare regions or what another region pays, say pricing is set per
-region and Sunil can discuss another region directly — then offer the handoff. If you don't
-know their region, ask before quoting anything.
+The FEE is different, because it is set per region and not every region's rate is
+published. Never state, estimate or convert a cohort figure on your own. The price tool
+returns the right answer for the visitor's region, including the refusal when that
+region's rate is unpublished — use what it returns, verbatim in substance.
+
+Three rules that do not bend:
+- Quote the figure only for the region the visitor is actually in.
+- Never mention what another region pays, even when asked to compare, and never offer
+  one region's rate as a guide to another. The rates are not comparable.
+- With no region resolved, ask which region they would be joining from. Do not pick one,
+  and do not list all three.
 
 ## Capturing details
 
@@ -367,8 +373,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const situation =
     `The visitor is reading the ${surface} page.\n` +
     (region
-      ? `Their region is ${region}. Quote only ${region} pricing — the page they are looking at shows that region's rate and nothing else.`
-      : 'Their region is unknown. Do not quote or list cohort pricing until you have asked which region they would join from.');
+      ? `Their region is ${region}. Quote the ${region} rate only, and never what another region pays.`
+      : 'Their region is unknown, so no figure applies yet. Ask which region they would be joining from before quoting a fee. Length, seats and start date are published and can be answered now.');
   // Observability, kept from the demo: which tools ran, how many turns, what it
   // cost. Lands in Vercel's function logs — enough to see the agent's behaviour
   // without standing up a tracing backend.

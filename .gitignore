@@ -36,3 +36,6 @@ r[0-9].json
 
 # Design canvases are working files for mockups, not part of the build.
 design/*.html
+
+# handoff packages ship as a folder plus a zip of the same files
+docs/**/*.zip

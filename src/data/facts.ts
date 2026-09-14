@@ -10,9 +10,11 @@
 // current on the page and stale in the answer an AI assistant gives about us.
 // Edit an offer here and every surface moves together.
 //
-// Cohort pricing/logistics live in regions.ts (per-region) and are imported
-// rather than restated. Consulting pricing is PLACEHOLDER — see CLAUDE.md.
+// Cohort logistics ARE published (D1, 14 September 2026): fee, start date and
+// week count. The fee is per region and gated by `publicPrice` in regions.ts.
+// Consulting pricing is PLACEHOLDER — see CLAUDE.md.
 
+import { EXPLORES } from './cohort-copy';
 import { regions, type Region } from './regions';
 import { CONTACT_EMAIL } from './site';
 
@@ -46,17 +48,18 @@ export const practitioner = {
   name: 'Sunil Mathew',
   role: 'Fractional Chief AI Officer · Agentic & systems architecture instructor',
   location: 'Bengaluru, India',
-  years: 26,
   companies: ['Google', 'Amazon', 'Walmart'],
   email: CONTACT_EMAIL,
   linkedin: 'https://linkedin.com/in/sunil-mathew-466615a',
   sameAs: ['https://linkedin.com/in/sunil-mathew-466615a'],
 };
 
-// ---------------------------------------------------------------------------
-// Cohort — The Living Craft (/)
-// ---------------------------------------------------------------------------
-
+/**
+ * Cohort facts. D1 was answered on 14 September 2026: the fee, the start date
+ * and the week count ARE published. Keep that decision here rather than in a
+ * page — the JSON-LD Offer node, /llms.txt, /api/facts and the Q&A agent all
+ * read this module, and they have to give one answer.
+ */
 export const cohort = {
   name: 'The Living Craft',
   weeks: 6,
@@ -152,6 +155,20 @@ export const cohortPriceAnswer = (key?: Region['key'] | null): string => {
   return lines.join(' ');
 };
 
+/**
+ * The narrower shape the V4 cohort page, /about, /programmes and the console's
+ * content panel render. It is a VIEW of `cohort` above, never a second set of
+ * figures — two sources could disagree and nothing would say which was true.
+ */
+export const publicCohort = {
+  name: cohort.name,
+  commitment: cohort.commitment,
+  size: `${cohort.seats} seats, capped`,
+  admission: cohort.admission,
+  scheduleAndFees: `Starts ${cohort.startsOn}. Payment is due ${cohort.paymentDue}.`,
+  learningAreas: EXPLORES,
+};
+
 // ---------------------------------------------------------------------------
 // Consulting — Fractional CAIO (/caio) and Assessment (/assessment)
 // ---------------------------------------------------------------------------
@@ -197,7 +214,7 @@ export const surfaces = [
     path: '/',
     name: 'The Living Craft — cohort',
     summary:
-      'Application-only 6-week program in agentic & systems architecture. 8 seats, first cohort September 2026.',
+      'A live programme for experienced engineers and leaders who want to build an agentic system, examine its behaviour and guide the decisions behind it.',
   },
   {
     path: '/caio',
@@ -249,7 +266,7 @@ export const facts: Fact[] = [
     surface: '/',
     q: 'How long is the program and what is the time commitment?',
     a: `${cohort.weeks} weeks, live. The commitment is ${cohort.commitment}. Format is ${cohort.format}.`,
-    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time'],
+    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time', 'long', 'how long', 'programme', 'program', 'length'],
   },
   {
     id: 'cohort-price',
@@ -269,14 +286,14 @@ export const facts: Fact[] = [
     id: 'cohort-curriculum',
     surface: '/',
     q: 'What does the curriculum cover?',
-    a: cohort.modules.map((m) => `${m.id} (${m.weeks}): ${m.title}`).join('\n'),
+    a: EXPLORES.map((item) => `${item.title}: ${item.body}`).join('\n'),
     tags: ['curriculum', 'syllabus', 'modules', 'weeks', 'topics', 'what will I learn'],
   },
   {
     id: 'cohort-outcomes',
     surface: '/',
     q: 'What will I be able to do afterwards?',
-    a: cohort.outcomes.map((o) => `- ${o}`).join('\n'),
+    a: 'Build a working agentic system and connect its behaviour to the architecture behind it. Practise explaining why a boundary exists, what evidence supports a decision, what you would change next, and how to review and guide a team\'s proposal.',
     tags: ['outcomes', 'learn', 'skills', 'takeaway', 'benefit'],
   },
   {
@@ -370,7 +387,7 @@ export const facts: Fact[] = [
     id: 'about-sunil',
     surface: 'practice',
     q: 'Who is Sunil Mathew?',
-    a: `${practitioner.years} years building and leading engineering at ${practitioner.companies.join(', ')}, on systems serving up to 100M+ users. Director/L7-level; led 150 engineers across the US, UK, China, and India. Based in ${practitioner.location}. Shipped a Generative-AI video editor and a Workspace platform running ~31 billion executions a week at Google, re-architected Amazon Prime's membership core, and modernised 300+ products at Walmart. Currently building an agentic-AI product and running a live enterprise AI-adoption engagement.`,
+    a: `Sunil Mathew brings engineering and leadership experience from ${practitioner.companies.join(', ')} and startups. His focus is the reasoning behind a system's design and the evidence that helps a team make its next decision. Based in ${practitioner.location}.`,
     tags: ['who', 'about', 'background', 'experience', 'bio', 'instructor', 'teacher', 'sunil'],
   },
   {

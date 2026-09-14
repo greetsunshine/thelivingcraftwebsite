@@ -1,0 +1,256 @@
+---
+// /resources/templates — the artefact index.
+//
+// WHY THIS FILE EXISTS AND WHAT MUST NEVER HAPPEN TO IT
+//
+// 1. THE ROW THIS PAGE ANSWERS TO IS ONE SENTENCE, AND BOTH HALVES ARE
+//    LOAD-BEARING. The roadmap's Templates row reads: "Engineer needs to run a
+//    review or request funding. Wants something usable immediately. Evidence:
+//    completed example and blank usable artifact; browser checker or
+//    programme." A blank on its own is a stationery cupboard; a completed
+//    example on its own is a case study. So every card here promises the PAIR,
+//    and the detail route renders both from one array — see the note at the
+//    head of the `templates` collection in src/content.config.ts.
+//
+// 2. IT LISTS WHAT EXISTS, AND NOTHING ELSE. Same rule as the guides index:
+//    the page renders the collection, filtered to status 'ready'. Never a
+//    hand-written list of titles, never a greyed row for something unwritten.
+//    The note at the foot may say that more are planned; it may not name one.
+//
+// 3. NOTHING HERE IS GATED, AND THE PAGE SAYS SO. "Wants value without a sales
+//    form" is the roadmap's own reading of this visitor. There is no email
+//    capture on this route or the ones below it, and adding one would not be a
+//    growth experiment — it would be the failure this row was written against.
+//
+// 4. STRUCTURED DATA: BREADCRUMBS ONLY. This page authored nothing. An index
+//    that claims authorship of the artefacts it links is the manufactured
+//    markup the roadmap's structured-data list rules out.
+import { getCollection } from 'astro:content';
+import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../../data/facts';
+
+export const prerender = true;
+
+// The draft gate, identical to the one in [...slug].astro and to the pair the
+// guides use. Two deliberate copies of one predicate rather than a helper in
+// src/lib, because this is the whole of it.
+const published = await getCollection('templates', (t) => t.data.status === 'ready');
+
+// Editorial order, not alphabetical: the canvas comes before the review that
+// reads it, which comes before the record the review asks for.
+const templates = published.sort((a, b) => a.data.order - b.data.order);
+
+const count = templates.length;
+
+const path = '/resources/templates';
+const url = `${SITE_ORIGIN}${path}`;
+
+const title = 'Templates — artefacts for a design review · Sunil Mathew';
+const description =
+  'Blank artefacts with a worked example beside each one: an agent design canvas, a design review agenda, an architecture decision record, and a summary to send a manager. Nothing to sign up for.';
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources` },
+      { '@type': 'ListItem', position: 3, name: 'Templates' },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+  <div class="tpl-index wrap">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">Templates</li>
+      </ol>
+    </nav>
+
+    <header class="i-head">
+      <p class="eyebrow">Resources</p>
+      <h1>Templates</h1>
+      <p class="lede">
+        Four artefacts for the week you have to run a design review, write down a decision, or
+        ask your employer to fund a place. Each one is a blank you can take into the next
+        meeting, with a completed example beside it so you are not guessing what belongs under
+        a heading.
+      </p>
+      <p class="no-gate">
+        Copy them, download them, print them. There is nothing to sign up for and no address
+        to leave.
+      </p>
+    </header>
+
+    <div class="cards2">
+      {
+        templates.map((t) => (
+          <a class="card" href={`/resources/templates/${t.id}`}>
+            <span class="k">{t.data.artifact}</span>
+            <h2>{t.data.title}</h2>
+            <p>{t.data.summary}</p>
+            <p class="when">
+              <span class="k">Reach for it when</span>
+              {t.data.useWhen}
+            </p>
+            <span class="go">
+              Open the template<span class="arrow" aria-hidden="true">→</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <section class="pairing panel" aria-labelledby="pairing-h">
+      <h2 id="pairing-h">Why each one comes in two halves</h2>
+      <div class="prose stack">
+        <p>
+          A blank template on its own is a stationery cupboard. The headings are the easy part;
+          knowing what belongs underneath them is the work, and a form cannot teach it. A worked
+          example on its own has the opposite problem — it is admirable and you cannot take it
+          into your own review.
+        </p>
+        <p>
+          So each page here carries both, generated from one list of sections in one order, and
+          they cannot drift apart into two documents organised differently. <strong
+            >Every completed example is illustrative</strong
+          > — it continues the same returns assistant used across this site, and where a real record
+          would carry a measurement it carries angle brackets showing you where yours goes, rather
+          than a plausible-looking number nobody measured.
+        </p>
+      </div>
+    </section>
+
+    <section class="onward" aria-labelledby="onward-h">
+      <h2 id="onward-h">If you would rather be asked the questions</h2>
+      <div class="cards2">
+        <a class="card" href="/tools/agent-design-check/">
+          <span class="k">In the browser</span>
+          <h3>Agent design check</h3>
+          <p>
+            The same questions as a run-through you answer one at a time, scored against rules you
+            can read in full. No sign-up, and the summary downloads or prints.
+          </p>
+          <span class="go">Open the check<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+        <a class="card" href="/resources/guides/">
+          <span class="k">The reasoning</span>
+          <h3>Guides</h3>
+          <p>
+            Why the boundary sits where it does, who may call a tool, and what to do when the
+            evidence is not there. Each template links the guides behind it.
+          </p>
+          <span class="go">Read the guides<span class="arrow" aria-hidden="true">→</span></span>
+        </a>
+      </div>
+    </section>
+
+    <p class="note">
+      {count === 1 ? 'One template is published.' : `${count} templates are published.`} More may
+      follow as the guides they rest on get written. Nothing appears on this page until it exists,
+      has a completed example, and is ready to be used.
+    </p>
+  </div>
+</PracticeLayout>
+
+<style>
+  .tpl-index {
+    padding-bottom: var(--space-9);
+  }
+
+  .i-head {
+    max-width: var(--measure-prose);
+    padding: var(--space-6) 0 var(--space-7);
+  }
+  .i-head h1 {
+    font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-4);
+  }
+  /* The one promise this section makes about itself. Quiet, and directly under
+     the lede where somebody scanning for a catch will look. */
+  .no-gate {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+
+  /* The mono line above each title is `artifact` — what the thing IS, in a
+     noun phrase, so a reader can tell a one-pager from a ten-item agenda
+     before opening it. */
+  .cards2 a.card .k {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+  }
+  .cards2 a.card h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin: 0;
+  }
+  .cards2 a.card h3 {
+    font-size: var(--size-5);
+    color: var(--text-loud);
+    margin: 0;
+  }
+  .cards2 a.card p {
+    margin: 0;
+  }
+
+  .when {
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+  }
+  .when .k {
+    display: block;
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  .pairing {
+    margin-top: var(--space-8);
+    max-width: calc(var(--measure-prose) + var(--space-6) * 2);
+  }
+  .pairing h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-4);
+  }
+
+  .onward {
+    margin-top: var(--space-8);
+  }
+  .onward h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-5);
+  }
+
+  .note {
+    margin-top: var(--space-8);
+    max-width: var(--measure-prose);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 620px) {
+    .i-head {
+      padding-top: var(--space-5);
+    }
+    .pairing {
+      padding: var(--space-5);
+      border-radius: var(--radius-panel);
+    }
+  }
+</style>

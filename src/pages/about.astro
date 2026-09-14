@@ -1,0 +1,316 @@
+---
+/**
+ * /about — the page a sceptical reader opens before deciding whether to spend
+ * thirty live hours with somebody, or to put an outside reviewer in front of a
+ * design their team already argued about.
+ *
+ * THE ROADMAP ROW THIS PAGE IS WRITTEN AGAINST
+ *
+ *   "Reader checking who is teaching/advising. Sceptical of vague authority;
+ *    connect verified experience to current approach. Evidence: source-backed
+ *    roles and approved current work. Next step: programme or advisory."
+ *
+ * The whole difficulty of an About page is that the reader's scepticism is
+ * correct, and the ordinary cure — more biography — makes it worse. So the
+ * page spends most of its length on HOW A DESIGN QUESTION GETS ANSWERED,
+ * because that is the thing a reader can actually evaluate, and it keeps the
+ * biography to the single sentence that can be sourced.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * WHAT MUST NEVER BE ADDED HERE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   * Job titles, levels, tenure, team sizes, user counts, revenue figures,
+ *     named clients, employer endorsements, awards or press mentions. The
+ *     verified claim is exactly: "engineering and leadership experience from
+ *     Google, Amazon, Walmart and startups". Everything past that full stop is
+ *     unsourced until Sunil confirms it, and an About page is the single
+ *     easiest place on a website to launder an unchecked number into a fact.
+ *   * A first-person workplace anecdote written on his behalf. The review
+ *     notes on his own campaign posts say it twice — "illustrative scenario,
+ *     no personal incident asserted". Inventing a story he then has to live
+ *     with is worse than inventing a statistic, because he cannot correct it
+ *     without contradicting his own page.
+ *   * A quotation attributed to him. The VSL script is approved COPY, not
+ *     approved SPEECH: its own review note says "Sunil to confirm natural
+ *     phrasing". Nothing on this site puts words in quotation marks next to
+ *     his name until he has said them.
+ *
+ * The worked example below is the site's house example — the returns assistant
+ * from the VSL script and the cohort page — carried through in the same
+ * neutral register the cohort page uses. Reusing it is deliberate: a reader
+ * moving between pages should meet one system being examined from different
+ * angles, not four unrelated illustrations.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { COMMITMENT } from '../data/offer-display';
+
+const title = 'About Sunil Mathew — The Living Craft';
+const description =
+  'Sunil Mathew teaches the design of agentic systems and advises engineering teams on those decisions. Engineering and leadership experience from Google, Amazon, Walmart and startups.';
+---
+
+<PracticeLayout title={title} description={description} canonical="/about/">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">About</p>
+      <h1>About <em>Sunil Mathew</em></h1>
+      <p class="credential">
+        Sunil Mathew teaches the design of agentic systems and advises engineering teams
+        making those decisions. He brings engineering and leadership experience from
+        <strong>Google, Amazon, Walmart and startups</strong>. His focus is the reasoning
+        behind a system’s design and the evidence that helps a team make its next
+        decision.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/programmes/">See the programmes&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/advisory/">Advisory</a>
+      </div>
+      <p class="hero-note">
+        This page states what can be sourced. Where a fact is outstanding it is named
+        rather than filled in.
+      </p>
+    </div>
+  </section>
+
+  {/* ── who this is for ──────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Who this page is for</p>
+      <h2>You are deciding whether this <em>transfers</em></h2>
+    </div>
+    <div class="prose stack">
+      <p>
+        Two readers arrive here. One is weighing thirty live hours against everything
+        else that could fill them. The other has a design decision in front of a team
+        and is deciding whether an outside reviewer would help or merely add an
+        opinion.
+      </p>
+      <p>
+        Both are asking the same question, and it is not about credentials. It is
+        whether the way this person reasons about a system transfers to the system you
+        are responsible for. That question is answerable, so the rest of this page
+        answers it rather than listing achievements.
+      </p>
+    </div>
+  </section>
+
+  {/* ── the worked example ───────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">An illustrative example</p>
+      <h2>How a design question <em>gets answered</em></h2>
+    </div>
+    <div class="prose intro">
+      <p>
+        A returns assistant reads a policy, checks a request and recommends a refund.
+        Someone asks whether it can issue the refund as well. On a diagram that is one
+        more connection. In production the system can now move money.
+      </p>
+      <p>
+        The example is illustrative and no customer incident is claimed. What follows
+        is the order the questions get asked in — the same order the programme and an
+        advisory review both use.
+      </p>
+    </div>
+
+    <ol class="tlist">
+      <li>
+        <span class="n">01</span>
+        <div>
+          <h3>Separate the recommendation from the action</h3>
+          <p>
+            Gathering policy evidence and preparing an answer is one responsibility.
+            Moving money is another. They look like one box and they need different
+            controls.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">02</span>
+        <div>
+          <h3>Ask what evidence permits the action</h3>
+          <p>
+            Not what the prompt says is permitted. What the tool itself will refuse to
+            do when the evidence it was handed does not hold up.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">03</span>
+        <div>
+          <h3>Decide what happens when the answer is uncertain</h3>
+          <p>
+            A request outside the policy needs a clear next step. A tool that times out
+            needs a way to examine the state of the action before repeating it.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="n">04</span>
+        <div>
+          <h3>Ask what you can see afterwards</h3>
+          <p>
+            Which evidence was used, what the tool did, whether the workflow stayed
+            inside its boundaries. Without that, evaluation cannot tell you which
+            decision to change.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <p class="aside">
+      Each of those four is worked through in full in the
+      <a class="textlink" href="/resources/">published guides</a>, which is the most
+      direct evidence available of how the reasoning actually runs.
+    </p>
+  </section>
+
+  {/* ── evidence ─────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What is verified</p>
+      <h2>The claims on this site, and <em>their source</em></h2>
+    </div>
+    <div class="panel facts">
+      <div class="detail-row">
+        <span class="dk">Experience</span>
+        <span class="dv">Engineering and leadership at Google, Amazon, Walmart and startups</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Based</span>
+        <span class="dv">Bengaluru, India</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Focus</span>
+        <span class="dv">The reasoning behind a system’s design, and the evidence behind a team’s next decision</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Teaching</span>
+        <span class="dv">{COMMITMENT} Live, with a working build</span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Published method</span>
+        <span class="dv"><a class="textlink" href="/resources/">Guides on agentic system design</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Elsewhere</span>
+        <span class="dv">
+          <a class="textlink" href="https://linkedin.com/in/sunil-mathew-466615a" rel="me">LinkedIn</a>
+        </span>
+      </div>
+    </div>
+
+    <aside class="pending">
+      <h3>Not stated on this page, and why</h3>
+      <ul>
+        <li>
+          Job titles, levels, tenure and team scope at each employer.
+          <span class="who">Sunil to confirm what may be stated publicly</span>
+        </li>
+        <li>
+          Current work — the products and engagements he is building now.
+          <span class="who">Sunil to approve a description before it is published</span>
+        </li>
+        <li>
+          Client names, project outcomes, learner counts and any numeric result.
+          <span class="who">None are claimed; none will be added without a source</span>
+        </li>
+      </ul>
+    </aside>
+  </section>
+
+  {/* ── next step ────────────────────────────────────────────────────────── */}
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Next step</p>
+      <h2>Two ways to <em>work together</em></h2>
+    </div>
+    <div class="cards2">
+      <a class="card" href="/programmes/">
+        <span class="k">Learning</span>
+        <h3>Programmes</h3>
+        <p>
+          The open cohort for an individual, employer-funded places, and a group
+          programme for a team. Build a working agentic system and practise explaining
+          the decisions behind it.
+        </p>
+        <span class="go">Compare the routes <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+      <a class="card" href="/advisory/">
+        <span class="k">Guidance</span>
+        <h3>Advisory</h3>
+        <p>
+          Framing a use case, reviewing an architecture and agreeing the next useful
+          piece of work. Deliberately bounded, and not a delivery engagement.
+        </p>
+        <span class="go">What it covers <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
+    </div>
+    <p class="aside">
+      A specific question that fits neither?
+      <a class="textlink" href="/contact/">Contact</a> lists which route goes where.
+    </p>
+    <p class="revised">
+      Written <time datetime="2026-09-11">11 September 2026</time>. Pending Sunil’s
+      factual approval.
+    </p>
+  </section>
+</PracticeLayout>
+
+<style>
+  /* The hero's own lede is .credential, which global.css already sizes and
+     colours for the noir shell. Everything below is page-local. */
+  .hero .credential strong {
+    color: var(--text-on-invert);
+  }
+
+  .intro {
+    margin-bottom: var(--space-6);
+  }
+
+  .aside {
+    max-width: var(--measure-prose);
+    margin-top: var(--space-5);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    line-height: var(--lh-normal);
+  }
+
+  /* A white card holding the detail rows. .panel supplies the surface and the
+     shadow; the rows supply their own hairlines, so the last one drops its
+     border rather than doubling up against the card edge. */
+  .facts .detail-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .facts .detail-row:first-child {
+    padding-top: 0;
+  }
+  .facts .dv {
+    max-width: 46ch;
+  }
+
+  .pending {
+    margin-top: var(--space-6);
+  }
+
+  .revised {
+    margin-top: var(--space-7);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  /* 390px: a label and its value stop sharing a line long before this, so the
+     row becomes two stacked lines with the value left-aligned. */
+  @media (max-width: 640px) {
+    .facts .detail-row {
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .facts .dv {
+      text-align: left;
+    }
+  }
+</style>

@@ -1,0 +1,2335 @@
+---
+// One lead, end to end: who they are, what they sent, where it came from,
+// everything that has happened since — and, since stage 3, the evidence behind
+// the stage and the controls that write it.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// SECTIONS, NOT TABS
+// ───────────────────────────────────────────────────────────────────────────
+//
+// The wireframe draws tabs — Application / Attribution / Activity / Meetings /
+// Offer / Finance / Attendance. This renders them as sections behind an anchor
+// nav instead, and the reason is the job the screen does: somebody reading a
+// lead before a call wants the application AND the attribution AND the last
+// three activities, and tabs make that three clicks and a lost place. It also
+// removes a piece of client state that can disagree with the URL, and it means
+// ctrl-F finds everything on the record.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// WHAT MUST NOT HAPPEN HERE
+// ───────────────────────────────────────────────────────────────────────────
+//
+// * NOTHING IS INVENTED. Every field on this page came out of the record. A
+//   missing name renders as a missing name, never as a guess from the email
+//   address, and a missing referrer is left as the record has it — the brief
+//   keeps unknown attribution as `direct/unknown` rather than attributing it.
+//
+// * UNKNOWN IS NEVER ZERO, AND `denied` IS NOT `unavailable`. Every read on
+//   this page is an `Answer`, and every failure goes through PipelinePanel,
+//   which keeps the three cases apart. The one that matters most is Finance:
+//   `offers` and `payments` need `read.finance`, which the OPERATOR does not
+//   hold, so an operator must see "not permitted, finance can" and never an
+//   empty table — an empty payments table reads as "nobody has paid".
+//
+// * THE ENROLMENT GATE IS VISIBLE BEFORE IT IS HIT. `enrolment_blockers()` is
+//   printed as a list of what is still missing, next to the stage control,
+//   rather than left for somebody to discover by pressing a button and being
+//   refused. Enrolment needs Sunil's admission AND a finance-confirmed
+//   payment: two people who cannot act for each other.
+//
+// * THE THREE EVIDENCE FIELDS STAY APART. First-touch, submission-session and
+//   the self-reported "how did you hear about us" are three separate facts and
+//   the third is never an override for the first two.
+//
+// * SCHEDULED AND HELD ARE DIFFERENT FACTS, and so are confirmed and attended,
+//   and so are a pair draft and — no. Here: a meeting that was booked and
+//   missed is signal, and neither time is ever defaulted from the other.
+//
+// * A GUESSED ID GETS "NOT FOUND", NEVER ANOTHER PERSON'S RECORD. Enforced in
+//   `leadDetail`, which authorises `read.people` before it reads anything and
+//   looks the id up inside the authorised list.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// HIDING A CONTROL IS NOT AUTHORISATION
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `/api/craft/admin/pipeline` checks the capability for every action against
+// the roles on the signed session, before it touches anything. `can()` is used
+// here ONLY to decide what to draw, and where something is withheld the screen
+// prints `refusal(capability)` — which names the role that does hold it, and
+// that is the useful half. "You cannot approve an offer" leaves somebody
+// stuck; "offers are approved by Sunil" tells them what to do next.
+//
+// Nothing about stage legality is re-derived here either. `checkMove`,
+// `needsReason`, `isReversal` and `capabilityFor` live in lib/pipeline/stages
+// and this page calls them — including for the per-option `data-needs-reason`
+// flags the script reads, which are computed server-side by the same function
+// the API enforces with. A second copy of that rule in a client script is how
+// the console and the server start disagreeing about what needs a reason.
+//
+// ELEMENT IDS ARE PAGE-SHARED and everything here is prefixed `lead`. Status
+// lines are addressed by `[data-status]` within their own form rather than by
+// id at all — the console has been bitten twice by two buttons writing into one
+// status element.
+
+export const prerender = false;
+
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import PipelinePanel from '../../../../components/admin/PipelinePanel.astro';
+import {
+  admissions,
+  attendance,
+  enrolmentBlockers,
+  formatMinor,
+  leadDetail,
+  meetings,
+  netByCurrency,
+  nominations,
+  offers,
+  payments,
+  stageHistory,
+  type Answer,
+  type AdmissionRow,
+  type AttendanceRow,
+  type MeetingRow,
+  type NominationRow,
+  type OfferRow,
+  type PaymentRow,
+  type StageHistoryRow,
+} from '../../../../lib/admin/pipeline-queries';
+import { can, refusal, ROLE_LABEL, type Capability } from '../../../../lib/pipeline/roles';
+import {
+  capabilityFor,
+  isReversal,
+  needsReason,
+  stageLabel,
+  stagesFor,
+  REFUND_NOTE,
+  SIDE_STATES,
+  type Blocker,
+  type Route,
+} from '../../../../lib/pipeline/stages';
+import { FORMS, isRoute } from '../../../../lib/pipeline/forms';
+
+const admin = Astro.locals.admin;
+const roles = admin?.roles ?? [];
+
+const id = Astro.params.id ?? '';
+const answer = await leadDetail(admin, id);
+
+const here = Astro.url.pathname + Astro.url.search;
+
+const IST = 'Asia/Kolkata';
+
+const when = (iso: string | null | undefined): string =>
+  iso
+    ? new Date(iso).toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: IST,
+      })
+    : '—';
+
+/** A bare date column (`occurred_on`) is a date, and printing a time beside it would invent one. */
+const onDay = (value: string | null | undefined): string =>
+  value
+    ? new Date(`${value}T00:00:00Z`).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
+    : '—';
+
+const now = Date.now();
+
+// ---------------------------------------------------------------------------
+// Answers are rendered in the form's own field order, with the form's own words
+// ---------------------------------------------------------------------------
+// `lib/pipeline/forms.ts` already holds the question wording and the option
+// labels, so the console shows the person the question they actually answered
+// rather than a column name with the underscores taken out. A key the form
+// definition does not know about is still shown — under "Also recorded" — for
+// the same reason the ADR parser shows back an unrecognised heading instead of
+// dropping it: a field the reader does not recognise is not a field the record
+// does not have.
+
+const fieldsFor = (type: string) => (isRoute(type) ? FORMS[type].fields : []);
+
+const optionLabel = (type: string, name: string, value: string): string => {
+  const field = fieldsFor(type).find((f) => f.name === name);
+  return field?.options?.find((o) => o.value === value)?.label ?? value;
+};
+
+const titleCase = (key: string): string =>
+  key.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+const whoLine = admin
+  ? `${admin.name} · ${roles.map((r) => ROLE_LABEL[r]).join(', ') || 'no roles'}`
+  : 'Not signed in';
+
+const detail = answer.state === 'ok' ? answer.value : null;
+const lead = detail?.lead ?? null;
+
+const openTasks = (detail?.tasks ?? []).filter((t) => !t.completed_at);
+const doneTasks = (detail?.tasks ?? []).filter((t) => t.completed_at);
+
+// ---------------------------------------------------------------------------
+// The evidence reads
+// ---------------------------------------------------------------------------
+// Only run when the lead itself resolved. A guessed id should cost one refused
+// lookup, not nine — and none of these sections renders without `detail`.
+
+const idle = <T,>(): Answer<T> => ({
+  state: 'unavailable',
+  reason: 'The lead record did not load, so nothing was read against it.',
+});
+
+let meetingsAnswer: Answer<MeetingRow[]> = idle();
+let offersAnswer: Answer<OfferRow[]> = idle();
+let paymentsAnswer: Answer<PaymentRow[]> = idle();
+let admissionsAnswer: Answer<AdmissionRow[]> = idle();
+let attendanceAnswer: Answer<AttendanceRow[]> = idle();
+let nominationsAnswer: Answer<NominationRow[]> = idle();
+let historyAnswer: Answer<StageHistoryRow[]> = idle();
+let blockersAnswer: Answer<Blocker[]> = idle();
+
+if (detail && lead) {
+  [
+    meetingsAnswer,
+    offersAnswer,
+    paymentsAnswer,
+    admissionsAnswer,
+    attendanceAnswer,
+    nominationsAnswer,
+    historyAnswer,
+    blockersAnswer,
+  ] = await Promise.all([
+    meetings(admin, id),
+    offers(admin, id),
+    payments(admin, id),
+    admissions(admin, id),
+    attendance(admin, lead.person_id),
+    nominations(admin, id),
+    stageHistory(admin, id),
+    enrolmentBlockers(admin, id),
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// What this person may move this lead to
+// ---------------------------------------------------------------------------
+// Computed with stages.ts, not beside it. Every flag the client script reads —
+// whether a reason is required, whether the move is backwards — is stamped onto
+// the <option> here by the same function the API enforces with, so the two
+// cannot drift.
+//
+// `closed` is on the enterprise line AND in the side states; a Set keeps it
+// from appearing twice.
+
+const route: Route = lead?.route === 'enterprise' ? 'enterprise' : 'member';
+const from = lead?.stage ?? null;
+
+interface MoveOption {
+  to: string;
+  label: string;
+  cap: Capability;
+  allowed: boolean;
+  reasonRequired: boolean;
+  reversal: boolean;
+}
+
+const moveOptions: MoveOption[] = lead
+  ? [...new Set([...stagesFor(route), ...SIDE_STATES])]
+      .filter((s) => s !== from)
+      .map((to) => {
+        const cap = capabilityFor(to);
+        return {
+          to,
+          label: stageLabel(to),
+          cap,
+          allowed: can(roles, cap),
+          reasonRequired: needsReason(route, from, to),
+          reversal: isReversal(route, from, to),
+        };
+      })
+  : [];
+
+const movable = moveOptions.filter((o) => o.allowed);
+
+/** The withheld moves, grouped so `refusal()` is printed once per capability. */
+const withheldMoves = [...new Set(moveOptions.filter((o) => !o.allowed).map((o) => o.cap))].map(
+  (cap) => ({
+    cap,
+    stages: moveOptions.filter((o) => !o.allowed && o.cap === cap).map((o) => o.label),
+  }),
+);
+
+// The enrolment gate is a member-route fact. The enterprise line ends at
+// `closed`, which has no evidence behind it, and printing an enrolment gate on
+// an organisation order would be inventing a rule the brief does not have.
+const showGate = route === 'member';
+
+const paymentNets = paymentsAnswer.state === 'ok' ? netByCurrency(paymentsAnswer.value) : [];
+
+const showNominations =
+  route === 'enterprise' || (nominationsAnswer.state === 'ok' && nominationsAnswer.value.length > 0);
+
+// ---------------------------------------------------------------------------
+// What your roles allow on this record
+// ---------------------------------------------------------------------------
+// Kept from the read-only version of this page, because the list is the one
+// place a reader can see the whole separation at once. `built: false` marks the
+// two that are stage 4 — a control that does nothing teaches somebody the
+// console is broken, so they stay as text.
+
+const RECORD_ACTIONS: { cap: Capability; what: string; note: string; built: boolean }[] = [
+  {
+    cap: 'write.contact',
+    what: 'Assign an owner, record a nomination',
+    note: 'On this page.',
+    built: true,
+  },
+  { cap: 'write.note', what: 'Add a note', note: 'On this page.', built: true },
+  { cap: 'write.task', what: 'Raise or complete a task', note: 'On this page.', built: true },
+  {
+    cap: 'write.meeting',
+    what: 'Schedule a meeting, record what happened',
+    note: 'Scheduled and held stay two facts; neither is defaulted from the other.',
+    built: true,
+  },
+  {
+    cap: 'write.stage',
+    what: 'Move the stage',
+    note: 'Closing or reversing needs a reason. Every move writes a history row, reversals included.',
+    built: true,
+  },
+  {
+    cap: 'approve.fit',
+    what: 'Mark somebody unsuitable',
+    note: 'A technical-fit judgement, which is why it is not on the stage list for most roles.',
+    built: true,
+  },
+  {
+    cap: 'approve.offer',
+    what: 'Approve an offer, mark one accepted',
+    note: 'A revision is a new version pointing at the old one, never an edit to the terms somebody accepted.',
+    built: true,
+  },
+  {
+    cap: 'approve.admission',
+    what: 'Record an admission decision, and move to enrolled',
+    note: 'Half of the enrolment gate.',
+    built: true,
+  },
+  {
+    cap: 'confirm.payment',
+    what: 'Confirm a payment or record a refund',
+    note: 'The other half. No role holds both, which is what makes an enrolment mean something.',
+    built: true,
+  },
+  {
+    cap: 'confirm.attendance',
+    what: 'Record attendance',
+    note: 'Independent of payment in both directions.',
+    built: true,
+  },
+  {
+    cap: 'read.finance',
+    what: 'Read offer and payment figures',
+    note: 'The operator deliberately does not hold this — they see the lead and not the money.',
+    built: true,
+  },
+  {
+    cap: 'send.approved',
+    what: 'Preview or send an approved message',
+    note: 'Stage 4, and dispatch stays off until the sending service and reply mailbox are settled.',
+    built: false,
+  },
+  { cap: 'manage.sequence', what: 'Pause or resume nurture', note: 'Stage 4.', built: false },
+];
+---
+
+<AdminLayout title="Lead" active="pipeline">
+  <div class="page-head" data-opportunity={lead?.opportunity_id ?? ''}>
+    <div>
+      <span class="label">
+        <a href="/craft/admin/pipeline#leads">← All leads</a> · {whoLine}
+      </span>
+      <h1>{lead ? (lead.name ?? lead.email ?? 'Lead record') : 'Lead'}</h1>
+      {
+        lead && (
+          <p>
+            <span class="pill">{lead.route === 'enterprise' ? 'Enterprise' : 'Member'}</span>{' '}
+            <span class="pill on">{stageLabel(lead.stage)}</span>{' '}
+            <span class="faint">in stage since {when(lead.stage_entered_at)}</span>
+          </p>
+        )
+      }
+    </div>
+    {
+      detail && (
+        <nav class="jump" aria-label="On this record">
+          <a href="#contact">Contact</a>
+          <a href="#next">Next action</a>
+          <a href="#stage">Stage</a>
+          <a href="#application">Application</a>
+          <a href="#attribution">Attribution</a>
+          <a href="#activity">Activity</a>
+          <a href="#meetings">Meetings</a>
+          <a href="#offer">Offer</a>
+          <a href="#finance">Finance</a>
+          <a href="#attendance">Attendance</a>
+          {showNominations && <a href="#nominations">Nominations</a>}
+        </nav>
+      )
+    }
+  </div>
+
+  {
+    answer.state !== 'ok' && (
+      <>
+        <PipelinePanel
+          state={answer.state}
+          reason={answer.reason}
+          label="This lead"
+          capability="read.people"
+          retry={here}
+        />
+        <p class="back-note muted">
+          A record id that does not resolve gets this same answer as one that is genuinely
+          unreachable, deliberately: guessing an id must never confirm that somebody exists.
+          <a href="/craft/admin/pipeline#leads">Back to the lead list</a>.
+        </p>
+      </>
+    )
+  }
+
+  {
+    detail && lead && (
+      <>
+        {/* ============ Contact and preferences ============ */}
+        <section class="admin-section" id="contact" aria-labelledby="pipelineContactHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineContactHead">Contact and preferences</h2>
+              <p>Times are Asia/Kolkata. Contact details are visible because your roles hold read.people.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Who</h3>
+              <dl class="facts">
+                <dt>Name</dt>
+                <dd>{lead.name ?? <span class="none">Not given</span>}</dd>
+                <dt>Email</dt>
+                <dd>
+                  {lead.email ? (
+                    <a class="mail" href={`mailto:${lead.email}`}>{lead.email}</a>
+                  ) : (
+                    <span class="none">Not given</span>
+                  )}
+                </dd>
+                <dt>Organisation</dt>
+                <dd>{lead.organisation ?? <span class="none">Not given</span>}</dd>
+                <dt>Route</dt>
+                <dd>{lead.route === 'enterprise' ? 'Enterprise' : 'Member'}</dd>
+                <dt>Stage</dt>
+                <dd>{stageLabel(lead.stage)}</dd>
+                <dt>Owner</dt>
+                <dd>{lead.owner ?? <span class="unowned">Unassigned</span>}</dd>
+                <dt>Last touch</dt>
+                <dd>{when(lead.updated_at)}</dd>
+              </dl>
+            </div>
+
+            <div class="card">
+              <h3>Permissions</h3>
+              <p class="sub muted">
+                Recorded consent, in the wording and version the person was shown. A receipt is not
+                consent, and marketing permission is a separate, unticked choice on the form.
+              </p>
+              {detail.consents.length === 0 ? (
+                <p class="none-block">
+                  No consent record. That is not a "no" — it means nothing has been recorded
+                  against this person, so nothing may be sent on the strength of it.
+                </p>
+              ) : (
+                <ul class="consents">
+                  {detail.consents.map((c) => (
+                    <li>
+                      <div class="head">
+                        <span class="purpose">{titleCase(c.purpose)}</span>
+                        <span class={`pill ${c.state === 'granted' ? 'good' : ''}`}>{c.state}</span>
+                      </div>
+                      <p class="wording">“{c.wording}”</p>
+                      <p class="src mono">
+                        version {c.wording_version} · recorded {when(c.obtained_at)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <PipelinePanel
+                state="pending"
+                label="Sequence status"
+                reason="Nurture sequences are stage 4 and dispatch is off until the sending service and reply mailbox are settled. Nothing has been queued for this person."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ============ Next action ============ */}
+        <section class="admin-section" id="next" aria-labelledby="pipelineNextHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineNextHead">Next action</h2>
+              <p>What this record is waiting on, and who it is waiting on.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Owner and due date</h3>
+              <dl class="facts">
+                <dt>Next action</dt>
+                <dd>{lead.next_action ?? <span class="none">Not set</span>}</dd>
+                <dt>Due</dt>
+                <dd>
+                  {lead.due_at ? (
+                    <>
+                      {when(lead.due_at)}
+                      {Date.parse(lead.due_at) < now && <span class="pill warn overdue">overdue</span>}
+                    </>
+                  ) : (
+                    <span class="none">No due date</span>
+                  )}
+                </dd>
+                <dt>Owner</dt>
+                <dd>{lead.owner ?? <span class="unowned">Unassigned</span>}</dd>
+              </dl>
+
+              <h4 class="sub-head">Assign</h4>
+              {can(roles, 'write.contact') ? (
+                <form class="wr" data-pipeline="assign">
+                  <div class="fields">
+                    <label for="leadOwner">
+                      <span class="label">Owner</span>
+                      <input
+                        type="text"
+                        id="leadOwner"
+                        name="owner"
+                        maxlength="120"
+                        value={lead.owner ?? ''}
+                        placeholder="A name, or leave blank to clear"
+                      />
+                    </label>
+                  </div>
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Save owner</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              ) : (
+                <p class="withheld">{refusal('write.contact')}</p>
+              )}
+            </div>
+
+            <div class="card">
+              <h3>Tasks</h3>
+              {detail.tasks.length === 0 ? (
+                <p class="none-block">No tasks on this record.</p>
+              ) : (
+                <ul class="tasks">
+                  {openTasks.map((t) => (
+                    <li>
+                      <span class="what">{t.description ?? 'No description'}</span>
+                      <span class="meta faint">
+                        {t.owner ?? 'Unassigned'} · due {when(t.due_at)}
+                        {t.due_at && Date.parse(t.due_at) < now && (
+                          <span class="pill warn overdue">overdue</span>
+                        )}
+                      </span>
+                      {can(roles, 'write.task') && (
+                        <form class="wr inline" data-pipeline="task.complete" data-task-id={t.task_id}>
+                          <button class="btn small" type="submit">Mark done</button>
+                          <p class="status-line" data-status></p>
+                        </form>
+                      )}
+                    </li>
+                  ))}
+                  {doneTasks.map((t) => (
+                    <li class="done">
+                      <span class="what">{t.description ?? 'No description'}</span>
+                      <span class="meta faint">
+                        {t.owner ?? 'Unassigned'} · completed {when(t.completed_at)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h4 class="sub-head">Raise a task</h4>
+              {can(roles, 'write.task') ? (
+                <form class="wr" data-pipeline="task">
+                  <div class="fields">
+                    <label for="leadTaskWhat">
+                      <span class="label">What to do</span>
+                      <input type="text" id="leadTaskWhat" name="description" maxlength="2000" required />
+                    </label>
+                    <label for="leadTaskOwner">
+                      <span class="label">Owner</span>
+                      <input type="text" id="leadTaskOwner" name="owner" maxlength="120" />
+                    </label>
+                    <label for="leadTaskDue">
+                      <span class="label">Due (Asia/Kolkata)</span>
+                      <input type="datetime-local" id="leadTaskDue" name="dueAt" />
+                    </label>
+                  </div>
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Raise task</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              ) : (
+                <p class="withheld">{refusal('write.task')}</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ Stage ============ */}
+        <section class="admin-section" id="stage" aria-labelledby="pipelineStageHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineStageHead">Stage, and what is still missing</h2>
+              <p>
+                A stage is a claim about evidence. Skipping forward is allowed on purpose — a fit
+                conversation that goes well can jump straight to offer — but closing and reversing
+                need a reason, and enrolment needs two people.
+              </p>
+            </div>
+          </div>
+
+          {/* One column on the enterprise route, where there is no gate to sit beside. */}
+          <div class={showGate ? 'grid-2' : ''}>
+            {showGate && (
+              <div class="card gate">
+                <h3>Before anyone can be enrolled</h3>
+                <p class="sub muted">
+                  From <code>enrolment_blockers()</code> in the database, which is the authority —
+                  asked now rather than cached, so it cannot go stale or be set by hand. It reports
+                  whether evidence exists and never what it says; the figures stay behind
+                  read.finance.
+                </p>
+
+                {blockersAnswer.state !== 'ok' ? (
+                  <PipelinePanel
+                    state={blockersAnswer.state}
+                    reason={blockersAnswer.reason}
+                    label="The enrolment gate"
+                    capability="read.people"
+                    retry={blockersAnswer.state === 'unavailable' ? here : undefined}
+                  />
+                ) : blockersAnswer.value.length === 0 ? (
+                  <>
+                    <p class="gate-clear">Nothing is missing.</p>
+                    <p class="none-block">
+                      Both halves of the evidence are on the record. That is not the same as being
+                      enrolled — the move is still a deliberate act, and only Sunil can make it.
+                    </p>
+                  </>
+                ) : (
+                  <ul class="blockers">
+                    {blockersAnswer.value.map((b) => (
+                      <li>
+                        <span class="code mono">{b.code}</span>
+                        <span class="what">{b.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <div class="card">
+              <h3>Move this lead</h3>
+              <p class="sub muted">
+                Currently <b>{stageLabel(lead.stage)}</b> on the {route} route, since{' '}
+                {when(lead.stage_entered_at)}.
+              </p>
+
+              {movable.length === 0 ? (
+                <PipelinePanel
+                  state="denied"
+                  reason="None of the stages on this route are yours to move a lead to."
+                  label="Stage movement"
+                  capability="write.stage"
+                />
+              ) : (
+                <form
+                  class="wr"
+                  data-pipeline="stage"
+                  data-route={route}
+                  data-from={lead.stage}
+                >
+                  <div class="fields">
+                    <label for="leadStageTo">
+                      <span class="label">Move to</span>
+                      <select id="leadStageTo" name="stage" required>
+                        <option value="">Choose a stage…</option>
+                        {movable.map((o) => (
+                          <option
+                            value={o.to}
+                            data-label={o.label}
+                            data-needs-reason={o.reasonRequired ? '1' : ''}
+                            data-reversal={o.reversal ? '1' : ''}
+                          >
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  {/* Shown only when stages.ts says the move needs one. A reason
+                      demanded on every move becomes "moving on" typed nine times,
+                      which records nothing and buries the reasons that mattered. */}
+                  <div class="reason-field" data-reason-field hidden>
+                    <label for="leadStageReason">
+                      <span class="label">Reason</span>
+                      <textarea
+                        id="leadStageReason"
+                        name="reason"
+                        rows="3"
+                        maxlength="2000"
+                        placeholder="What happened. This is the thing somebody will want explained later."
+                      ></textarea>
+                    </label>
+                    <p class="hint" data-reason-hint></p>
+                  </div>
+
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Move stage</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              )}
+
+              {withheldMoves.length > 0 && (
+                <ul class="withheld-list">
+                  {withheldMoves.map((w) => (
+                    <li>
+                      <span class="what">{w.stages.join(', ')}</span>
+                      <span class="withheld">{refusal(w.cap)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:var(--space-4)">
+            <h3>Stage history</h3>
+            <p class="sub muted">
+              Every move, with who made it and why. Nothing is deleted, so a reversal leaves both the
+              move and the unmove visible — a pipeline that quietly loses its reversals reports
+              better than it is.
+            </p>
+            {historyAnswer.state !== 'ok' ? (
+              <PipelinePanel
+                state={historyAnswer.state}
+                reason={historyAnswer.reason}
+                label="Stage history"
+                capability="read.people"
+                retry={historyAnswer.state === 'unavailable' ? here : undefined}
+              />
+            ) : historyAnswer.value.length === 0 ? (
+              <p class="none-block">
+                No stage move has been recorded against this lead. The opportunity was created at its
+                current stage and has not been moved since.
+              </p>
+            ) : (
+              <ol class="history">
+                {historyAnswer.value.map((h) => (
+                  <li>
+                    <span class="stamp mono">{when(h.occurred_at)}</span>
+                    <span class="kind">
+                      {h.from_stage ? stageLabel(h.from_stage) : 'Created'} → {stageLabel(h.to_stage)}
+                      {h.is_reversal && <span class="pill warn">reversal</span>}
+                    </span>
+                    <span class="actor faint">{h.actor}</span>
+                    {h.reason ? (
+                      <p class="notes">{h.reason}</p>
+                    ) : (
+                      <p class="notes none">No reason recorded. Forward moves do not require one.</p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </section>
+
+        {/* ============ Application ============ */}
+        <section class="admin-section" id="application" aria-labelledby="pipelineAppHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineAppHead">What they sent</h2>
+              <p>
+                Every submission from this person, newest first, in the words the form asked them.
+                An enquiry and a later application are two records and one person — neither
+                replaces the other.
+              </p>
+            </div>
+          </div>
+
+          {detail.submissions.length === 0 ? (
+            <div class="card">
+              <p class="none-block">
+                No submission is joined to this record. The opportunity exists, so it was created
+                some other way — worth a look before you rely on the stage.
+              </p>
+            </div>
+          ) : (
+            detail.submissions.map((s) => {
+              const answers = s.answers ?? {};
+              const ordered = fieldsFor(s.type).filter((f) => answers[f.name]);
+              const extraKeys = Object.keys(answers).filter(
+                (k) => !fieldsFor(s.type).some((f) => f.name === k),
+              );
+              return (
+                <div class="card submission">
+                  <div class="sub-head-row">
+                    <h3>
+                      {s.type === 'application'
+                        ? 'Application'
+                        : s.type === 'enterprise'
+                          ? 'Enterprise enquiry'
+                          : 'Cohort enquiry'}
+                    </h3>
+                    <span class="src mono">
+                      {s.reference ? `ref ${s.reference} · ` : ''}
+                      {when(s.submitted_at)}
+                    </span>
+                  </div>
+
+                  {(s.funding_route || s.group_size !== null) && (
+                    <p class="meta-row">
+                      {s.funding_route && (
+                        <span class="pill">
+                          Funding: {optionLabel(s.type, 'funding', s.funding_route)}
+                        </span>
+                      )}
+                      {s.group_size !== null && (
+                        <span class="pill">Group size: {s.group_size}</span>
+                      )}
+                    </p>
+                  )}
+
+                  {ordered.length === 0 && extraKeys.length === 0 ? (
+                    <p class="none-block">No answers stored against this submission.</p>
+                  ) : (
+                    <dl class="facts wide">
+                      {ordered.map((f) => (
+                        <>
+                          <dt>{f.label}</dt>
+                          <dd class="answer">
+                            {f.options
+                              ? optionLabel(s.type, f.name, answers[f.name])
+                              : answers[f.name]}
+                          </dd>
+                        </>
+                      ))}
+                      {extraKeys.map((k) => (
+                        <>
+                          <dt>{titleCase(k)}</dt>
+                          <dd class="answer">{answers[k]}</dd>
+                        </>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </section>
+
+        {/* ============ Attribution ============ */}
+        <section class="admin-section" id="attribution" aria-labelledby="pipelineAttrHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineAttrHead">Where it came from</h2>
+              <p>
+                Three separate pieces of evidence about one arrival, shown apart rather than
+                reconciled into a single "source". They disagree often and legitimately.
+              </p>
+            </div>
+          </div>
+
+          {detail.attribution === null ? (
+            <PipelinePanel
+              state="pending"
+              label="Attribution"
+              reason="No attribution row is stored against this person's most recent submission. That is not 'direct' — it is nothing recorded, and reading it as direct would invent a source."
+            />
+          ) : (
+            <div class="grid-2">
+              <div class="card">
+                <h3>First touch</h3>
+                <p class="sub muted">The first arrival we saw, kept for the life of the person.</p>
+                <dl class="facts">
+                  <dt>Source</dt>
+                  <dd>{detail.attribution.first_source ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Medium</dt>
+                  <dd>{detail.attribution.first_medium ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Campaign</dt>
+                  <dd>{detail.attribution.first_campaign ?? <span class="none">Not recorded</span>}</dd>
+                </dl>
+              </div>
+
+              <div class="card">
+                <h3>This submission</h3>
+                <p class="sub muted">The visit the form was actually sent from.</p>
+                <dl class="facts">
+                  <dt>Source</dt>
+                  <dd>{detail.attribution.session_source ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Medium</dt>
+                  <dd>{detail.attribution.session_medium ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Campaign</dt>
+                  <dd>{detail.attribution.session_campaign ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Content</dt>
+                  <dd>{detail.attribution.session_content ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Entry path</dt>
+                  <dd class="mono">{detail.attribution.entry_path ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Referrer host</dt>
+                  <dd class="mono">{detail.attribution.referrer_host ?? <span class="none">Not recorded</span>}</dd>
+                </dl>
+              </div>
+
+              <div class="card span-2">
+                <h3>What they said themselves</h3>
+                <p class="sub muted">
+                  The discovery answer from the form. A third piece of evidence and never an
+                  override for the two above — somebody who says "LinkedIn" may have arrived from a
+                  search that day.
+                </p>
+                <p class="self-reported">
+                  {detail.attribution.self_reported ?? <span class="none">Not answered</span>}
+                </p>
+                <p class="src mono">
+                  tracking permission:{' '}
+                  {detail.attribution.tracking_permission ? 'given' : 'not given'} — backend counts
+                  can legitimately exceed measured sessions where it was declined or blocked
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ============ Activity ============ */}
+        <section class="admin-section" id="activity" aria-labelledby="pipelineActivityHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineActivityHead">Chronological history</h2>
+              <p>Each entry keeps its occurrence time and the actor who recorded it.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Add a note</h3>
+            {can(roles, 'write.note') ? (
+              <form class="wr" data-pipeline="note">
+                <div class="fields one">
+                  <label for="leadNoteText">
+                    <span class="label">Note</span>
+                    <textarea
+                      id="leadNoteText"
+                      name="text"
+                      rows="3"
+                      maxlength="8000"
+                      required
+                      placeholder="What happened, in your own words. Attributed to you and kept."
+                    ></textarea>
+                  </label>
+                </div>
+                <div class="act">
+                  <button class="btn small primary" type="submit">Save note</button>
+                  <p class="status-line" data-status></p>
+                </div>
+              </form>
+            ) : (
+              <p class="withheld">{refusal('write.note')}</p>
+            )}
+
+            <h4 class="sub-head">Everything recorded</h4>
+            {detail.activities.length === 0 ? (
+              <p class="none-block">
+                Nothing recorded against this lead yet. Activity is written by every action on this
+                page — a note, a stage move, a meeting, a payment.
+              </p>
+            ) : (
+              <ol class="history">
+                {detail.activities.map((a) => (
+                  <li>
+                    <span class="stamp mono">{when(a.occurred_at)}</span>
+                    <span class="kind">{titleCase(a.type)}</span>
+                    <span class="actor faint">{a.actor ?? 'actor not recorded'}</span>
+                    {a.notes && <p class="notes">{a.notes}</p>}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </section>
+
+        {/* ============ Meetings ============ */}
+        <section class="admin-section" id="meetings" aria-labelledby="pipelineMeetingsHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineMeetingsHead">Meetings</h2>
+              <p>
+                Scheduled and held are two different facts and this screen never fills one in from
+                the other. A meeting that was booked and missed is signal; a record that only knows
+                about the ones that happened cannot tell you three people booked and none arrived.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            {meetingsAnswer.state !== 'ok' ? (
+              <PipelinePanel
+                state={meetingsAnswer.state}
+                reason={meetingsAnswer.reason}
+                label="Meetings"
+                capability="read.people"
+                retry={meetingsAnswer.state === 'unavailable' ? here : undefined}
+              />
+            ) : meetingsAnswer.value.length === 0 ? (
+              <p class="none-block">No meeting has been recorded against this lead.</p>
+            ) : (
+              <ul class="records">
+                {meetingsAnswer.value.map((m) => (
+                  <li>
+                    <div class="rec-head">
+                      <span class={`pill ${m.status === 'held' ? 'good' : m.status === 'scheduled' ? 'on' : 'warn'}`}>
+                        {titleCase(m.status)}
+                      </span>
+                      <span class="src mono">{m.recorded_by ?? 'recorder not named'}</span>
+                    </div>
+                    <dl class="facts">
+                      <dt>Scheduled for</dt>
+                      <dd>{m.scheduled_at ? when(m.scheduled_at) : <span class="none">Not recorded</span>}</dd>
+                      <dt>Actually held</dt>
+                      <dd>
+                        {m.held_at ? (
+                          when(m.held_at)
+                        ) : (
+                          <span class="none">Not recorded — which is not the same as the scheduled time</span>
+                        )}
+                      </dd>
+                      <dt>Outcome</dt>
+                      <dd class="answer">{m.outcome ?? <span class="none">Not recorded</span>}</dd>
+                      <dt>Next action</dt>
+                      <dd>{m.next_action ?? <span class="none">Not recorded</span>}</dd>
+                    </dl>
+
+                    {can(roles, 'write.meeting') && m.status === 'scheduled' && (
+                      <form class="wr" data-pipeline="meeting.outcome" data-meeting-id={m.meeting_id}>
+                        <div class="fields">
+                          <label>
+                            <span class="label">What happened</span>
+                            <select name="status" required>
+                              <option value="">Choose…</option>
+                              <option value="held">Held</option>
+                              <option value="cancelled">Cancelled</option>
+                              <option value="no_show">No show</option>
+                            </select>
+                          </label>
+                          <label>
+                            <span class="label">Held at (Asia/Kolkata)</span>
+                            <input type="datetime-local" name="heldAt" />
+                          </label>
+                          <label>
+                            <span class="label">Next action</span>
+                            <input type="text" name="nextAction" maxlength="500" />
+                          </label>
+                        </div>
+                        <div class="fields one">
+                          <label>
+                            <span class="label">Outcome</span>
+                            <textarea name="outcome" rows="2" maxlength="4000"></textarea>
+                          </label>
+                        </div>
+                        <p class="hint">
+                          Leave "held at" blank and the server records now. It is only ever set when
+                          the meeting was actually held — a cancelled meeting has no held time and
+                          must not acquire one.
+                        </p>
+                        <div class="act">
+                          <button class="btn small" type="submit">Record outcome</button>
+                          <p class="status-line" data-status></p>
+                        </div>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <h4 class="sub-head">Schedule a meeting</h4>
+            {can(roles, 'write.meeting') ? (
+              <form class="wr" data-pipeline="meeting.schedule">
+                <div class="fields">
+                  <label for="leadMeetWhen">
+                    <span class="label">Scheduled for (Asia/Kolkata)</span>
+                    <input type="datetime-local" id="leadMeetWhen" name="scheduledAt" required />
+                  </label>
+                </div>
+                <div class="act">
+                  <button class="btn small primary" type="submit">Schedule</button>
+                  <p class="status-line" data-status></p>
+                </div>
+              </form>
+            ) : (
+              <p class="withheld">{refusal('write.meeting')}</p>
+            )}
+          </div>
+        </section>
+
+        {/* ============ Offer and admission ============ */}
+        <section class="admin-section" id="offer" aria-labelledby="pipelineOfferHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineOfferHead">Offer, and the admission decision</h2>
+              <p>
+                Two facts in one place and never one fact. An accepted offer says what was agreed;
+                an admission decision says Sunil has taken the seat. Enrolment needs both, plus
+                money, and no role holds every part.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Offers</h3>
+              <p class="sub muted">
+                Amounts are stored in minor units. A revision is a new version pointing at the one it
+                replaces, never an edit — otherwise the terms somebody accepted can change after
+                they accepted them.
+              </p>
+
+              {offersAnswer.state !== 'ok' ? (
+                <PipelinePanel
+                  state={offersAnswer.state}
+                  reason={offersAnswer.reason}
+                  label="Offers"
+                  capability="read.finance"
+                  retry={offersAnswer.state === 'unavailable' ? here : undefined}
+                />
+              ) : offersAnswer.value.length === 0 ? (
+                <p class="none-block">No offer has been approved for this lead.</p>
+              ) : (
+                <ul class="records">
+                  {offersAnswer.value.map((o) => (
+                    <li>
+                      <div class="rec-head">
+                        <span class="pill">Version {o.version}</span>
+                        {o.accepted ? (
+                          <span class="pill good">Accepted {when(o.accepted_at)}</span>
+                        ) : (
+                          <span class="pill">Not accepted</span>
+                        )}
+                      </div>
+                      <p class="amount">{formatMinor(o.currency, o.amount_minor)}</p>
+                      <p class="src mono">
+                        {o.amount_minor} minor units · {o.currency}
+                      </p>
+                      <dl class="facts">
+                        <dt>Approved by</dt>
+                        <dd>{o.approved_by}</dd>
+                        <dt>Approved</dt>
+                        <dd>{when(o.approved_at)}</dd>
+                        <dt>Terms</dt>
+                        <dd class="answer">{o.term_reference ?? <span class="none">Not recorded</span>}</dd>
+                        <dt>Supersedes</dt>
+                        <dd class="mono">{o.supersedes ?? <span class="none">Nothing</span>}</dd>
+                      </dl>
+                      {can(roles, 'approve.offer') && !o.accepted && (
+                        <form class="wr inline" data-pipeline="offer.accepted" data-offer-id={o.offer_id}>
+                          <button class="btn small" type="submit">Mark accepted</button>
+                          <p class="status-line" data-status></p>
+                        </form>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h4 class="sub-head">Approve an offer</h4>
+              {can(roles, 'approve.offer') ? (
+                <form class="wr" data-pipeline="offer.approve">
+                  <div class="fields">
+                    <label for="leadOfferCurrency">
+                      <span class="label">Currency</span>
+                      <input
+                        type="text"
+                        id="leadOfferCurrency"
+                        name="currency"
+                        maxlength="3"
+                        pattern="[A-Za-z]{3}"
+                        placeholder="INR"
+                        required
+                      />
+                    </label>
+                    <label for="leadOfferAmount">
+                      <span class="label">Amount in MINOR units</span>
+                      <input
+                        type="number"
+                        id="leadOfferAmount"
+                        name="amountMinor"
+                        min="0"
+                        step="1"
+                        required
+                        data-minor-echo
+                        aria-describedby="leadOfferAmountHint"
+                      />
+                    </label>
+                    <label for="leadOfferSupersedes">
+                      <span class="label">Supersedes</span>
+                      <select id="leadOfferSupersedes" name="supersedes">
+                        <option value="">Nothing — this is a new offer</option>
+                        {offersAnswer.state === 'ok' &&
+                          offersAnswer.value.map((o) => (
+                            <option value={o.offer_id}>
+                              Version {o.version} · {formatMinor(o.currency, o.amount_minor)}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div class="fields one">
+                    <label for="leadOfferTerm">
+                      <span class="label">Term reference</span>
+                      <input type="text" id="leadOfferTerm" name="termReference" maxlength="500" />
+                    </label>
+                  </div>
+                  <p class="hint" id="leadOfferAmountHint">
+                    <b>Whole minor units, not major.</b> 120000 is one hundred and twenty thousand
+                    minor units — that is ₹1,200.00, not ₹1,20,000. Type it and the line below
+                    shows what it comes to.
+                  </p>
+                  <p class="echo mono" data-minor-preview>—</p>
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Approve offer</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              ) : (
+                <p class="withheld">{refusal('approve.offer')}</p>
+              )}
+            </div>
+
+            <div class="card">
+              <h3>Admission decision</h3>
+              <p class="sub muted">
+                Sunil's, and recorded as evidence with an author and a time. A decline is recorded
+                too — "we decided not to" is a fact worth keeping, and its absence is what makes a
+                pipeline look stalled when it is not.
+              </p>
+
+              {admissionsAnswer.state !== 'ok' ? (
+                <PipelinePanel
+                  state={admissionsAnswer.state}
+                  reason={admissionsAnswer.reason}
+                  label="Admission decisions"
+                  capability="read.people"
+                  retry={admissionsAnswer.state === 'unavailable' ? here : undefined}
+                />
+              ) : admissionsAnswer.value.length === 0 ? (
+                <p class="none-block">
+                  No admission decision has been recorded. That is not a decline — it means nobody
+                  has decided yet.
+                </p>
+              ) : (
+                <ul class="records">
+                  {admissionsAnswer.value.map((a) => (
+                    <li>
+                      <div class="rec-head">
+                        <span class={`pill ${a.decision === 'admitted' ? 'good' : 'warn'}`}>
+                          {titleCase(a.decision)}
+                        </span>
+                        <span class="src mono">{when(a.decided_at)}</span>
+                      </div>
+                      <dl class="facts">
+                        <dt>Decided by</dt>
+                        <dd>{a.decided_by}</dd>
+                        <dt>Note</dt>
+                        <dd class="answer">{a.note ?? <span class="none">Not recorded</span>}</dd>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h4 class="sub-head">Record a decision</h4>
+              {can(roles, 'approve.admission') ? (
+                <form class="wr" data-pipeline="admission">
+                  <div class="fields">
+                    <label for="leadAdmitDecision">
+                      <span class="label">Decision</span>
+                      <select id="leadAdmitDecision" name="decision" required>
+                        <option value="">Choose…</option>
+                        <option value="admitted">Admitted</option>
+                        <option value="declined">Declined</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="fields one">
+                    <label for="leadAdmitNote">
+                      <span class="label">Note</span>
+                      <textarea id="leadAdmitNote" name="note" rows="2" maxlength="4000"></textarea>
+                    </label>
+                  </div>
+                  <p class="hint">
+                    Recording this does not enrol anybody and does not move the stage. It is one of
+                    the things enrolment needs.
+                  </p>
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Record decision</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              ) : (
+                <p class="withheld">{refusal('approve.admission')}</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ Finance ============ */}
+        <section class="admin-section" id="finance" aria-labelledby="pipelineFinanceHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineFinanceHead">Finance</h2>
+              <p>
+                Payment evidence, written by finance and by nobody else. Nothing on this page infers
+                it: not an offer, not a receipt email, not attendance. Amounts are never added
+                across currencies, so there is no grand total here to reach for.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            {paymentsAnswer.state !== 'ok' ? (
+              <PipelinePanel
+                state={paymentsAnswer.state}
+                reason={paymentsAnswer.reason}
+                label="Payments"
+                capability="read.finance"
+                retry={paymentsAnswer.state === 'unavailable' ? here : undefined}
+              />
+            ) : paymentsAnswer.value.length === 0 ? (
+              <p class="none-block">No payment has been confirmed against this lead.</p>
+            ) : (
+              <>
+                <h4 class="sub-head">Net, per currency</h4>
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Currency</th>
+                        <th>Receipts</th>
+                        <th>Refunds</th>
+                        <th>Net</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paymentNets.map((n) => (
+                        <tr>
+                          <td data-label="Currency" class="mono">{n.currency}</td>
+                          <td data-label="Receipts">
+                            {formatMinor(n.currency, n.receiptsMinor)}
+                            <span class="src mono"> {n.receiptsMinor} minor</span>
+                          </td>
+                          <td data-label="Refunds">
+                            {formatMinor(n.currency, n.refundsMinor)}
+                            <span class="src mono"> {n.refundsMinor} minor</span>
+                          </td>
+                          <td data-label="Net">
+                            {formatMinor(n.currency, n.netMinor)}
+                            <span class="src mono"> {n.netMinor} minor</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <h4 class="sub-head">Every entry</h4>
+                <ul class="records">
+                  {paymentsAnswer.value.map((p) => (
+                    <li>
+                      <div class="rec-head">
+                        <span class={`pill ${p.type === 'refund' ? 'warn' : 'good'}`}>
+                          {titleCase(p.type)}
+                        </span>
+                        <span class="src mono">confirmed by {p.confirmed_by}</span>
+                      </div>
+                      <p class="amount">{formatMinor(p.currency, p.amount_minor)}</p>
+                      <p class="src mono">
+                        {p.amount_minor} minor units · {p.currency}
+                      </p>
+                      <dl class="facts">
+                        <dt>Money moved</dt>
+                        <dd>{when(p.received_at)}</dd>
+                        <dt>Entered</dt>
+                        <dd>{when(p.created_at)}</dd>
+                        <dt>Invoice</dt>
+                        <dd class="mono">{p.invoice_reference ?? <span class="none">Not recorded</span>}</dd>
+                        <dt>Evidence</dt>
+                        <dd class="answer">{p.evidence_reference ?? <span class="none">Not recorded</span>}</dd>
+                        <dt>Against offer</dt>
+                        <dd class="mono">{p.offer_id ?? <span class="none">Not linked</span>}</dd>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <h4 class="sub-head">Confirm a payment</h4>
+            {can(roles, 'confirm.payment') ? (
+              <form class="wr" data-pipeline="payment">
+                <div class="fields">
+                  <label for="leadPayType">
+                    <span class="label">Type</span>
+                    <select id="leadPayType" name="type" required>
+                      <option value="receipt">Receipt — money arrived</option>
+                      <option value="refund">Refund — money went back</option>
+                    </select>
+                  </label>
+                  <label for="leadPayCurrency">
+                    <span class="label">Currency</span>
+                    <input
+                      type="text"
+                      id="leadPayCurrency"
+                      name="currency"
+                      maxlength="3"
+                      pattern="[A-Za-z]{3}"
+                      placeholder="INR"
+                      required
+                    />
+                  </label>
+                  <label for="leadPayAmount">
+                    <span class="label">Amount in MINOR units</span>
+                    <input
+                      type="number"
+                      id="leadPayAmount"
+                      name="amountMinor"
+                      min="1"
+                      step="1"
+                      required
+                      data-minor-echo
+                      aria-describedby="leadPayAmountHint"
+                    />
+                  </label>
+                  <label for="leadPayReceived">
+                    <span class="label">Date the money moved</span>
+                    <input type="date" id="leadPayReceived" name="receivedAt" required />
+                  </label>
+                  <label for="leadPayInvoice">
+                    <span class="label">Invoice reference</span>
+                    <input type="text" id="leadPayInvoice" name="invoiceReference" maxlength="200" />
+                  </label>
+                  <label for="leadPayOffer">
+                    <span class="label">Against offer</span>
+                    <select id="leadPayOffer" name="offerId">
+                      <option value="">Not linked to an offer</option>
+                      {offersAnswer.state === 'ok' &&
+                        offersAnswer.value.map((o) => (
+                          <option value={o.offer_id}>
+                            Version {o.version} · {formatMinor(o.currency, o.amount_minor)}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </div>
+                <div class="fields one">
+                  <label for="leadPayEvidence">
+                    <span class="label">Evidence reference</span>
+                    <input type="text" id="leadPayEvidence" name="evidenceReference" maxlength="500" />
+                  </label>
+                </div>
+
+                <p class="hint" id="leadPayAmountHint">
+                  <b>Whole minor units, not major.</b> 120000 is ₹1,200.00, not ₹1,20,000. The
+                  transaction date is the day the money actually moved, which is not today — it is
+                  the field finance reconciles against a bank statement, so it is never defaulted.
+                </p>
+                <p class="echo mono" data-minor-preview>—</p>
+
+                <p class="refund-note">
+                  <b>About refunds.</b> {REFUND_NOTE}
+                </p>
+
+                <div class="act">
+                  <button class="btn small primary" type="submit">Confirm payment</button>
+                  <p class="status-line" data-status></p>
+                </div>
+              </form>
+            ) : (
+              <>
+                <p class="withheld">{refusal('confirm.payment')}</p>
+                <p class="none-block">
+                  <b>About refunds.</b> {REFUND_NOTE}
+                </p>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* ============ Attendance ============ */}
+        <section class="admin-section" id="attendance" aria-labelledby="pipelineAttendHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineAttendHead">Attendance</h2>
+              <p>
+                The programme owner's record, independent of payment in both directions. Turning up
+                is not evidence of having paid, and having paid is not evidence of turning up.
+                Confirming you will come and coming are also two facts.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            {attendanceAnswer.state !== 'ok' ? (
+              <PipelinePanel
+                state={attendanceAnswer.state}
+                reason={attendanceAnswer.reason}
+                label="Attendance"
+                capability="read.people"
+                retry={attendanceAnswer.state === 'unavailable' ? here : undefined}
+              />
+            ) : attendanceAnswer.value.length === 0 ? (
+              <p class="none-block">No attendance has been recorded for this person.</p>
+            ) : (
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Session</th>
+                      <th>Day</th>
+                      <th>Said they would come</th>
+                      <th>Came</th>
+                      <th>Recorded by</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceAnswer.value.map((a) => (
+                      <tr>
+                        <td data-label="Session" class="mono">
+                          {a.session_id ?? <span class="none">Cohort-level</span>}
+                        </td>
+                        <td data-label="Day">{onDay(a.occurred_on)}</td>
+                        <td data-label="Said they would come">
+                          {a.confirmation_response ? (
+                            titleCase(a.confirmation_response)
+                          ) : (
+                            <span class="none">Not asked</span>
+                          )}
+                        </td>
+                        <td data-label="Came">
+                          {a.attended === true ? (
+                            'Attended'
+                          ) : a.attended === false ? (
+                            'Did not attend'
+                          ) : (
+                            <span class="none">Not recorded</span>
+                          )}
+                        </td>
+                        <td data-label="Recorded by" class="src mono">
+                          {a.recorded_by ?? '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <h4 class="sub-head">Record attendance</h4>
+            {can(roles, 'confirm.attendance') ? (
+              <form class="wr" data-pipeline="attendance">
+                <div class="fields">
+                  <label for="leadAttSession">
+                    <span class="label">Session</span>
+                    <input
+                      type="text"
+                      id="leadAttSession"
+                      name="sessionId"
+                      maxlength="40"
+                      placeholder="Blank for the cohort-level confirmation"
+                    />
+                  </label>
+                  <label for="leadAttDay">
+                    <span class="label">Day</span>
+                    <input type="date" id="leadAttDay" name="occurredOn" />
+                  </label>
+                  <label for="leadAttConfirm">
+                    <span class="label">Said they would come</span>
+                    <select id="leadAttConfirm" name="confirmation">
+                      <option value="">Not asked</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                      <option value="unknown">Unknown</option>
+                    </select>
+                  </label>
+                  <label for="leadAttCame">
+                    <span class="label">Came</span>
+                    <select id="leadAttCame" name="attended">
+                      <option value="">Not recorded</option>
+                      <option value="yes">Attended</option>
+                      <option value="no">Did not attend</option>
+                    </select>
+                  </label>
+                </div>
+                <p class="hint">
+                  "Not recorded" is a real answer and the default. Leaving it there is honest;
+                  choosing "did not attend" is a claim. Nothing here is evidence of payment.
+                </p>
+                <div class="act">
+                  <button class="btn small primary" type="submit">Record</button>
+                  <p class="status-line" data-status></p>
+                </div>
+              </form>
+            ) : (
+              <p class="withheld">{refusal('confirm.attendance')}</p>
+            )}
+          </div>
+        </section>
+
+        {/* ============ Nominations ============ */}
+        {showNominations && (
+          <section class="admin-section" id="nominations" aria-labelledby="pipelineNomHead">
+            <div class="section-head">
+              <div>
+                <h2 id="pipelineNomHead">Nominated participants</h2>
+                <p>
+                  <b>Not applicants, and not counted as any.</b> An organisation order is one lead,
+                  not eight or ten individual cohort applications. A nominated participant becomes a
+                  person in their own right when they themselves do something.
+                </p>
+              </div>
+            </div>
+
+            <div class="card">
+              {nominationsAnswer.state !== 'ok' ? (
+                <PipelinePanel
+                  state={nominationsAnswer.state}
+                  reason={nominationsAnswer.reason}
+                  label="Nominations"
+                  capability="read.people"
+                  retry={nominationsAnswer.state === 'unavailable' ? here : undefined}
+                />
+              ) : nominationsAnswer.value.length === 0 ? (
+                <p class="none-block">Nobody has been nominated against this order yet.</p>
+              ) : (
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Note</th>
+                        <th>Added</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nominationsAnswer.value.map((n) => (
+                        <tr>
+                          <td data-label="Name">{n.name ?? <span class="none">Not given</span>}</td>
+                          <td data-label="Role">{n.role ?? <span class="none">Not given</span>}</td>
+                          <td data-label="Email" class="mono">
+                            {n.email ?? <span class="none">Not given</span>}
+                          </td>
+                          <td data-label="Note">{n.note ?? <span class="none">—</span>}</td>
+                          <td data-label="Added" class="src mono">{when(n.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <h4 class="sub-head">Add a nomination</h4>
+              {can(roles, 'write.contact') ? (
+                <form class="wr" data-pipeline="nomination">
+                  <div class="fields">
+                    <label for="leadNomName">
+                      <span class="label">Name</span>
+                      <input type="text" id="leadNomName" name="name" maxlength="200" required />
+                    </label>
+                    <label for="leadNomRole">
+                      <span class="label">Role</span>
+                      <input type="text" id="leadNomRole" name="role" maxlength="200" />
+                    </label>
+                    <label for="leadNomEmail">
+                      <span class="label">Email</span>
+                      <input type="email" id="leadNomEmail" name="email" maxlength="200" />
+                    </label>
+                  </div>
+                  <div class="fields one">
+                    <label for="leadNomNote">
+                      <span class="label">Note</span>
+                      <input type="text" id="leadNomNote" name="note" maxlength="2000" />
+                    </label>
+                  </div>
+                  <p class="hint">
+                    This records a participant against the order. It does not create a person and it
+                    does not add anybody to the applicant count.
+                  </p>
+                  <div class="act">
+                    <button class="btn small primary" type="submit">Add nomination</button>
+                    <p class="status-line" data-status></p>
+                  </div>
+                </form>
+              ) : (
+                <p class="withheld">{refusal('write.contact')}</p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ============ Actions ============ */}
+        <section class="admin-section" aria-labelledby="pipelineActionsHead">
+          <div class="section-head">
+            <div>
+              <h2 id="pipelineActionsHead">Actions on this record</h2>
+              <p>
+                Everything this screen can do, with whether your roles hold it. A refusal names who
+                does, which is the half that tells you what to do next. The server checks every one
+                of these again when the write arrives — what you see here is only what gets drawn.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <ul class="caps">
+              {RECORD_ACTIONS.map((a) => (
+                <li>
+                  <span class="what">
+                    {a.what}
+                    {!a.built && <span class="pill">not built</span>}
+                  </span>
+                  <span class="note muted">{a.note}</span>
+                  {can(roles, a.cap) ? (
+                    <span class="held mono">your roles hold this</span>
+                  ) : (
+                    <span class="not-held">{refusal(a.cap)}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p class="foot muted">
+              Enrolment deliberately cannot be completed by one person: Sunil records the admission
+              decision and finance confirms the payment, and no role holds both.
+            </p>
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  <script>
+    // Every write on this page, in one delegated handler.
+    //
+    // A MODULE SCRIPT, NOT `is:inline`. Two reasons: an inline script cannot
+    // import, and a module script goes through `astro check`, so a typo in a
+    // field name is a build-time finding rather than a silent 400.
+    //
+    // WHAT THIS SCRIPT DOES NOT DECIDE. It does not decide whether a move needs
+    // a reason — lib/pipeline/stages does, server-side, and stamps the answer
+    // onto each <option> as `data-needs-reason`. It does not decide whether you
+    // may do a thing — the API does, against the roles on your signed session.
+    // A control existing in the DOM is not permission and this script would be
+    // refused exactly like a hand-rolled fetch.
+    //
+    // On success the page RELOADS rather than patching the DOM. The record has
+    // changed in ways that reach four other sections — a stage move writes
+    // history and re-runs the enrolment gate — and a partial update that looked
+    // right while being stale is the thing this console cannot afford.
+
+    const root = document.querySelector<HTMLElement>('[data-opportunity]');
+    const opportunityId = root?.dataset.opportunity ?? '';
+
+    const IST = 'Asia/Kolkata';
+
+    /**
+     * A naive `datetime-local` value, read as Asia/Kolkata, returned as a real
+     * instant.
+     *
+     * `new Date('2026-09-11T14:30')` is parsed in the runtime's OWN zone — the
+     * browser's here, and UTC on the server if the raw string were posted. The
+     * whole console displays Asia/Kolkata, so a field labelled Asia/Kolkata has
+     * to be sent as one, with an explicit offset, or a meeting booked at 14:30
+     * is stored at 20:00.
+     *
+     * The offset is asked of Intl for the date in question rather than being
+     * written down, so this stays correct for a zone with daylight saving even
+     * though the one we use does not have any.
+     */
+    function offsetFor(at: Date): string {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: IST,
+        timeZoneName: 'longOffset',
+      }).formatToParts(at);
+      const name = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+00:00';
+      const offset = name.replace('GMT', '');
+      return offset || '+00:00';
+    }
+
+    function isoInIst(localValue: string): string | null {
+      if (!localValue) return null;
+      const approx = new Date(`${localValue}Z`);
+      if (Number.isNaN(approx.getTime())) return null;
+      const exact = new Date(`${localValue}${offsetFor(approx)}`);
+      return Number.isNaN(exact.getTime()) ? null : exact.toISOString();
+    }
+
+    /**
+     * The live echo beside a minor-units field.
+     *
+     * A deliberate second copy of `formatMinor` from lib/admin/pipeline-queries,
+     * which must NOT be imported here: that module reaches the Supabase client
+     * and the service-role key, and nothing on this side of the wire may pull
+     * that into a bundle. The record itself is always rendered server-side from
+     * the real function; this only tells somebody what they are typing.
+     */
+    function echoMinor(currency: string, minor: number): string {
+      if (!currency || !Number.isFinite(minor)) return '—';
+      try {
+        const fmt = new Intl.NumberFormat('en-GB', { style: 'currency', currency });
+        const digits = fmt.resolvedOptions().maximumFractionDigits ?? 2;
+        return `${minor} minor units = ${fmt.format(minor / 10 ** digits)}`;
+      } catch {
+        return `${minor} minor units — ${currency} is not a currency code this browser knows`;
+      }
+    }
+
+    // ---- reading a form ----------------------------------------------------
+    //
+    // Field names match the API's request shape exactly, so the payload is the
+    // form. Three transforms, and each exists for a stated reason:
+    //
+    //   dueAt/scheduledAt/heldAt  a naive local value is not an instant
+    //   amountMinor               the API wants a whole number, not a string
+    //   attended                  THREE states, and "not recorded" is one of
+    //                             them. An empty select must never become false.
+
+    const DATETIME_FIELDS = new Set(['scheduledAt', 'heldAt', 'dueAt']);
+
+    function payloadOf(form: HTMLFormElement): Record<string, unknown> {
+      const out: Record<string, unknown> = {
+        action: form.dataset.pipeline,
+        opportunityId,
+      };
+
+      // Ids that identify the row being completed travel on the element, not in
+      // a field, because they are not something anybody types.
+      if (form.dataset.meetingId) out.meetingId = form.dataset.meetingId;
+      if (form.dataset.offerId) out.offerId = form.dataset.offerId;
+      if (form.dataset.taskId) out.taskId = form.dataset.taskId;
+
+      new FormData(form).forEach((raw, key) => {
+        const value = typeof raw === 'string' ? raw.trim() : '';
+
+        if (DATETIME_FIELDS.has(key)) {
+          out[key] = isoInIst(value);
+          return;
+        }
+        if (key === 'attended') {
+          out[key] = value === 'yes' ? true : value === 'no' ? false : null;
+          return;
+        }
+        if (key === 'amountMinor') {
+          out[key] = value ? Number(value) : null;
+          return;
+        }
+        if (key === 'currency') {
+          out[key] = value.toUpperCase();
+          return;
+        }
+        out[key] = value || null;
+      });
+
+      return out;
+    }
+
+    // ---- the confirmations -------------------------------------------------
+    //
+    // Not every action, because a console that asks "are you sure?" nine times
+    // an hour teaches people to click through the tenth. These four are the ones
+    // that are irreversible from the screen, or that assert somebody else's
+    // fact: money, an admission, and a stage move that closes or reverses.
+
+    function confirmationFor(
+      action: string,
+      payload: Record<string, unknown>,
+      form: HTMLFormElement,
+    ): string | null {
+      if (action === 'payment') {
+        const type = String(payload.type ?? '');
+        const money = echoMinor(String(payload.currency ?? ''), Number(payload.amountMinor));
+        return type === 'refund'
+          ? `Record a REFUND of ${money}?\n\nThis adds finance evidence and raises a review task. It does not change the stage and does not remove any attendance.`
+          : `Confirm a receipt of ${money}?\n\nThis is finance evidence and one of the two things enrolment needs. It cannot be edited afterwards — a correction is another row.`;
+      }
+
+      if (action === 'admission') {
+        return `Record an admission decision of "${String(payload.decision ?? '')}"?\n\nIt is kept with your name and the time, and it cannot be edited afterwards.`;
+      }
+
+      if (action === 'offer.approve') {
+        const money = echoMinor(String(payload.currency ?? ''), Number(payload.amountMinor));
+        return `Approve an offer of ${money}?\n\nApproved offers are never edited. A change is a new version pointing at this one.`;
+      }
+
+      if (action === 'stage') {
+        const select = form.querySelector<HTMLSelectElement>('select[name="stage"]');
+        const option = select?.selectedOptions[0];
+        if (!option) return null;
+        const label = option.dataset.label ?? option.value;
+
+        if (option.value === 'enrolled') {
+          return `Move this lead to ${label}?\n\nThis records an admission — the act of declaring somebody enrolled. The server checks the evidence again and refuses if anything is missing.`;
+        }
+        if (option.dataset.reversal) {
+          return `Move this lead backwards to ${label}?\n\nBoth the original move and this one stay visible in the history, with your reason.`;
+        }
+        if (option.dataset.needsReason) {
+          return `Close this lead as ${label}?\n\nYour reason is kept on the record and on the opportunity.`;
+        }
+        return null;
+      }
+
+      return null;
+    }
+
+    // ---- submit ------------------------------------------------------------
+
+    document.addEventListener('submit', (event) => {
+      const form = (event.target as HTMLElement | null)?.closest?.(
+        'form[data-pipeline]',
+      ) as HTMLFormElement | null;
+      if (!form) return;
+
+      event.preventDefault();
+
+      const action = form.dataset.pipeline ?? '';
+      const payload = payloadOf(form);
+
+      const ask = confirmationFor(action, payload, form);
+      if (ask && !confirm(ask)) return;
+
+      const out = form.querySelector<HTMLElement>('[data-status]');
+      const buttons = Array.from(form.querySelectorAll<HTMLButtonElement>('button'));
+
+      if (out) {
+        out.textContent = 'Saving…';
+        out.className = 'status-line';
+      }
+      buttons.forEach((b) => (b.disabled = true));
+
+      fetch('/api/craft/admin/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+        // A body that is not JSON is a session that expired into a redirect, not
+        // a network failure — it must not be reported as one, because "network
+        // error" reads as "try again" and the answer is "sign in again".
+        .then((res) =>
+          res
+            .json()
+            .catch(() => ({ ok: false, error: 'The console did not answer in a form this page understands. Your session may have expired — reload and sign in.' }))
+            .then((body) => ({ ok: res.ok, body })),
+        )
+        .then(({ ok, body }) => {
+          if (ok && body?.ok) {
+            if (out) {
+              out.textContent = 'Saved. Reloading the record…';
+              out.className = 'status-line ok';
+            }
+            // The whole record is re-read rather than patched: a stage move
+            // changes the history, the gate and the activity list at once.
+            window.location.reload();
+            return;
+          }
+          if (out) {
+            // Blockers come back as a list. Printing them is the point — the
+            // refusal is only useful if it says what is missing.
+            const blockers = Array.isArray(body?.blockers)
+              ? body.blockers.map((b: { detail?: string }) => b.detail).join(' ')
+              : '';
+            out.textContent = [body?.error ?? 'That did not save.', blockers]
+              .filter(Boolean)
+              .join(' ');
+            out.className = 'status-line err';
+          }
+          buttons.forEach((b) => (b.disabled = false));
+        })
+        .catch(() => {
+          if (out) {
+            out.textContent = 'Network error. Nothing was changed.';
+            out.className = 'status-line err';
+          }
+          buttons.forEach((b) => (b.disabled = false));
+        });
+    });
+
+    // ---- the reason field --------------------------------------------------
+    //
+    // Revealed by the flag stages.ts stamped on the option, never by a rule
+    // written again here. `required` is toggled with `hidden` in the same
+    // breath: a hidden required field blocks a submit with no visible cause.
+
+    document.addEventListener('change', (event) => {
+      const select = event.target as HTMLSelectElement | null;
+      if (!select || select.name !== 'stage') return;
+
+      const form = select.closest<HTMLFormElement>('form[data-pipeline="stage"]');
+      if (!form) return;
+
+      const wrap = form.querySelector<HTMLElement>('[data-reason-field]');
+      const field = form.querySelector<HTMLTextAreaElement>('textarea[name="reason"]');
+      const hint = form.querySelector<HTMLElement>('[data-reason-hint]');
+      if (!wrap || !field) return;
+
+      const option = select.selectedOptions[0];
+      const needed = Boolean(option?.dataset.needsReason);
+
+      wrap.hidden = !needed;
+      field.required = needed;
+      if (hint) {
+        hint.textContent = !needed
+          ? ''
+          : option?.dataset.reversal
+            ? 'This move is backwards along the line. A reason is required — it is the thing somebody will want explained later.'
+            : 'Closing a lead requires a reason. "Closed" on its own tells the next person nothing.';
+      }
+    });
+
+    // ---- the minor-units echo ----------------------------------------------
+
+    document.addEventListener('input', (event) => {
+      const el = event.target as HTMLElement | null;
+      if (!el?.closest) return;
+
+      const form = el.closest<HTMLFormElement>('form[data-pipeline]');
+      if (!form) return;
+      if (!form.querySelector('[data-minor-echo]')) return;
+
+      const amount = form.querySelector<HTMLInputElement>('[data-minor-echo]');
+      const currency = form.querySelector<HTMLInputElement>('input[name="currency"]');
+      const preview = form.querySelector<HTMLElement>('[data-minor-preview]');
+      if (!amount || !preview) return;
+
+      preview.textContent = amount.value
+        ? echoMinor((currency?.value ?? '').trim().toUpperCase(), Number(amount.value))
+        : '—';
+    });
+  </script>
+
+  <style>
+    .page-head .label a { color: var(--accent-ink); }
+    .page-head .pill { vertical-align: middle; }
+    .back-note {
+      font-size: var(--size-2);
+      margin-top: var(--space-4);
+      max-width: var(--measure-prose);
+      line-height: var(--lh-snug);
+    }
+    .back-note a { color: var(--accent-ink); }
+
+    .card h3 { font-size: var(--size-5); color: var(--text-loud); }
+    .card h4 { font-size: var(--size-4); color: var(--text-loud); }
+    .card .sub {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin: var(--space-1) 0 var(--space-4);
+    }
+    .card .sub code {
+      font-family: var(--font-mono);
+      font-size: var(--size-1);
+      background: var(--surface-sunken);
+      padding: 1px 5px;
+      border-radius: var(--radius-tick);
+    }
+    .card .foot {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-4);
+    }
+    .span-2 { grid-column: 1 / -1; }
+
+    /* A record's fields read as label/value pairs, not as a table with one row. */
+    .facts {
+      display: grid;
+      grid-template-columns: minmax(120px, max-content) 1fr;
+      gap: var(--space-2) var(--space-4);
+      margin-top: var(--space-3);
+      font-size: var(--size-3);
+    }
+    .facts.wide { grid-template-columns: minmax(160px, 30%) 1fr; }
+    .facts dt {
+      font-family: var(--font-marginal);
+      font-size: var(--size-1);
+      letter-spacing: var(--tracking-label);
+      color: var(--text-quiet);
+      padding-top: 2px;
+    }
+    .facts dd { color: var(--text-body); overflow-wrap: anywhere; }
+    .facts dd.answer { white-space: pre-wrap; line-height: var(--lh-snug); }
+    .facts .mail { color: var(--accent-ink); }
+    @media (max-width: 560px) {
+      .facts, .facts.wide { grid-template-columns: 1fr; gap: var(--space-1); }
+      .facts dd { margin-bottom: var(--space-3); }
+    }
+
+    /* Absence has one look and it is never a zero or a blank cell. */
+    .none { color: var(--text-quiet); font-style: italic; }
+    .unowned { color: var(--danger); font-weight: var(--weight-medium); }
+    .none-block {
+      font-size: var(--size-2);
+      color: var(--text-quiet);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-2);
+    }
+    .overdue { margin-left: var(--space-2); }
+
+    .sub-head { margin-top: var(--space-5); margin-bottom: var(--space-2); }
+    .sub-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .src {
+      font-family: var(--font-mono);
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-label);
+    }
+
+    .submission { margin-bottom: var(--space-3); }
+    .meta-row { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
+
+    .consents { list-style: none; display: grid; gap: var(--space-4); margin-top: var(--space-2); }
+    .consents .head { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+    .consents .purpose { font-weight: var(--weight-medium); }
+    .consents .wording {
+      font-size: var(--size-2);
+      color: var(--text-quiet);
+      line-height: var(--lh-snug);
+      margin-top: var(--space-2);
+      max-width: var(--measure-prose);
+    }
+    .consents .src { display: block; margin-top: var(--space-1); }
+
+    .tasks { list-style: none; display: grid; gap: var(--space-3); margin-top: var(--space-2); }
+    .tasks li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .tasks li.done { opacity: 0.6; }
+    .tasks .what { font-size: var(--size-3); }
+    .tasks .meta { font-size: var(--size-2); }
+
+    .history { list-style: none; display: grid; gap: var(--space-4); }
+    .history li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-4);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .history .stamp {
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .history .kind { font-weight: var(--weight-medium); }
+    .history .kind .pill { margin-left: var(--space-2); }
+    .history .actor { font-size: var(--size-2); }
+    .history .notes {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      margin-top: var(--space-2);
+      max-width: var(--measure-prose);
+      white-space: pre-wrap;
+    }
+    .history .notes.none { font-style: italic; color: var(--text-quiet); }
+
+    .self-reported {
+      font-size: var(--size-3);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-bottom: var(--space-3);
+    }
+
+    /* ---- evidence records: meetings, offers, admissions, payments ---- */
+    .records { list-style: none; display: grid; gap: var(--space-4); margin-top: var(--space-2); }
+    .records > li {
+      padding-left: var(--space-4);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .rec-head { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+    .amount {
+      font-family: var(--font-mono);
+      font-size: var(--size-6);
+      line-height: var(--lh-flat);
+      letter-spacing: var(--tracking-mono);
+      color: var(--text-loud);
+      margin-top: var(--space-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- the enrolment gate ---- */
+    .gate .gate-clear {
+      font-size: var(--size-4);
+      font-weight: var(--weight-medium);
+      color: var(--text-loud);
+      margin-top: var(--space-2);
+    }
+    .blockers { list-style: none; display: grid; gap: var(--space-3); margin-top: var(--space-2); }
+    .blockers li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--agent-rule) solid var(--danger);
+    }
+    .blockers .code {
+      font-size: var(--size-1);
+      letter-spacing: var(--tracking-label);
+      color: var(--danger);
+    }
+    .blockers .what { font-size: var(--size-3); color: var(--text-body); }
+
+    /* ---- write controls ---- */
+    /* admin.css styles text, search, email, select and textarea. These three
+       types are not in that list and would otherwise render as the browser's
+       defaults in the middle of a console that has none. */
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'] {
+      font-family: var(--font-body);
+      font-size: var(--size-3);
+      color: var(--text-body);
+      background: var(--surface-panel);
+      border: var(--border-w-rule) solid var(--border-field);
+      border-radius: var(--radius-field);
+      height: var(--control-h);
+      padding: 0 var(--space-3);
+      width: 100%;
+    }
+    input[type='number'] { font-variant-numeric: tabular-nums; }
+
+    .wr { margin-top: var(--space-3); }
+    .wr.inline { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-top: var(--space-2); }
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: var(--space-3);
+    }
+    .fields.one { grid-template-columns: 1fr; margin-top: var(--space-3); }
+    .fields label { display: block; }
+    .fields label .label { display: block; margin-bottom: var(--space-1); }
+    .reason-field { margin-top: var(--space-3); max-width: var(--measure-prose); }
+    .reason-field label .label { display: block; margin-bottom: var(--space-1); }
+
+    .act { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-top: var(--space-3); }
+    .act .status-line { margin: 0; }
+
+    .hint {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      color: var(--text-quiet);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-3);
+    }
+    .hint b { color: var(--text-body); font-weight: var(--weight-strong); }
+    .echo {
+      font-size: var(--size-2);
+      color: var(--text-loud);
+      margin-top: var(--space-2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The one paragraph that corrects the expectation people arrive with. */
+    .refund-note {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: var(--surface-sunken);
+      border-left: var(--agent-rule) solid var(--ochre);
+      border-radius: var(--radius-inner);
+      color: var(--text-body);
+    }
+
+    /* A withheld control is never a greyed-out button: it is a sentence that
+       names who can. --agent-uncertain, the same hue PipelinePanel gives a
+       denial, so the two read as one idea. */
+    .withheld {
+      font-size: var(--size-2);
+      line-height: var(--lh-snug);
+      color: var(--agent-uncertain);
+      font-weight: var(--weight-medium);
+      max-width: var(--measure-prose);
+      margin-top: var(--space-3);
+    }
+    .withheld-list { list-style: none; display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+    .withheld-list li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .withheld-list .what { font-size: var(--size-2); color: var(--text-body); }
+    .withheld-list .withheld { margin-top: 0; }
+
+    .caps { list-style: none; display: grid; gap: var(--space-3); }
+    .caps li {
+      display: grid;
+      gap: 2px;
+      padding-left: var(--space-3);
+      border-left: var(--border-w-rule) solid var(--border-hair);
+    }
+    .caps .what { font-weight: var(--weight-medium); }
+    .caps .what .pill { margin-left: var(--space-2); }
+    .caps .note { font-size: var(--size-2); line-height: var(--lh-snug); }
+    .caps .held {
+      font-size: var(--size-1);
+      color: var(--text-quiet);
+      letter-spacing: var(--tracking-label);
+    }
+    .caps .not-held {
+      font-size: var(--size-2);
+      color: var(--agent-uncertain);
+      font-weight: var(--weight-medium);
+    }
+  </style>
+</AdminLayout>

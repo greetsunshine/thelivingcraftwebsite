@@ -1,7 +1,7 @@
 ---
 import CraftLayout from '../../layouts/CraftLayout.astro';
 import { getCollection } from 'astro:content';
-import { cohort } from '../../data/facts';
+import { learnerCohort as cohort } from '../../data/learner-cohort';
 import { sessionEnded } from '../../lib/craft/checks';
 export const prerender = false;
 const learner = Astro.locals.learner!;

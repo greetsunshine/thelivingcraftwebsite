@@ -1,0 +1,1115 @@
+---
+// /resources/templates/<slug> — one artefact, rendered from
+// src/content/templates/<slug>.md.
+//
+// WHY THIS FILE EXISTS AND WHAT MUST NEVER HAPPEN TO IT
+//
+// 1. THE PAIR IS THE DELIVERABLE. The roadmap asks for "completed example and
+//    blank usable artifact" and means both. This page renders the blank, the
+//    worked example and the two plain-text downloads FROM ONE ARRAY, in one
+//    order — `sections` in the frontmatter. That is the property the collection
+//    note in src/content.config.ts is protecting: four artefacts generated from
+//    one list cannot drift into four documents with different headings, which
+//    is exactly how pairing.ts came to read `## Decision` out of records
+//    written under seven other names and return the empty string in silence.
+//
+//    So: THIS FILE IS THE ONE OWNER OF THE .md SERIALISATION. If a second
+//    surface ever needs the download text, it moves to a module — it is not
+//    re-implemented here and there.
+//
+// 2. THE DECISION RECORD'S SEVEN HEADINGS ARE NOT OURS TO INVENT. They are
+//    Context · Goals · Non-goals · The design · What can go wrong ·
+//    Alternatives · Open questions, and the reasoning is written out at the
+//    head of src/lib/craft/adr.ts — Goals must be testable, What can go wrong
+//    is one row per case, and Alternatives is where judgement is visible.
+//    src/content/templates/decision-record.md carries exactly that list. That
+//    module is course-internal and is deliberately NOT imported here: this is
+//    the public blank of the same shape, not a second renderer for the
+//    learners' records. If the seven ever change there, they change here too,
+//    by hand, and on purpose.
+//
+// 3. NO OFFER FACTS, EVER, AND CERTAINLY NOT RESTATED. The V4 public policy
+//    publishes no fee, no dates, no week
+//    count and no seat count. The employer-funding template needs the
+//    commitment wording and the fees note, so the markdown carries
+//    {{COMMITMENT}} and {{FEES_NOTE}} and `resolve()` below substitutes them
+//    from the module that owns them. Writing either string into the markdown
+//    would create a second source that can drift from the public offer policy.
+//
+// 4. IT IS USABLE WITHOUT JAVASCRIPT AND WITHOUT AN ADDRESS. The downloads are
+//    `<a download>` with a build-time data: URL — no script in the path at all.
+//    The plain-text block is a <details> that is in the DOM whether or not
+//    script runs, so "copy to clipboard" degrades to a selectable block rather
+//    than to nothing. There is no email gate on this route and there must not
+//    be one: "wants value without a sales form" is the roadmap's own reading of
+//    this visitor.
+//
+// 5. FRONTMATTER MARKDOWN GOES THROUGH renderMarkdown(), THE BODY GOES THROUGH
+//    <Content />. <Content /> renders the body and only the body; the prompts,
+//    notes and worked answers are strings, and src/lib/craft/markdown.ts is the
+//    only module in this repo allowed to import `marked`. Using it here is not
+//    a claim that this content is untrusted — it is, it reaches the repo as a
+//    reviewed diff — it is that there is one renderer and this is it. These
+//    files contain no raw HTML, so nothing is lost by the dropped html token.
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN, practitioner } from '../../../data/facts';
+import { COMMITMENT, FEES_NOTE } from '../../../data/offer-display';
+import { renderMarkdown } from '../../../lib/craft/markdown';
+
+export const prerender = true;
+
+type Template = CollectionEntry<'templates'>;
+type Guide = CollectionEntry<'guides'>;
+
+export async function getStaticPaths() {
+  // The draft gate. Same predicate as the index, and the same reasoning as the
+  // guides: a draft gets NO ROUTE, not a published page with a note on it.
+  // This is a public surface — a half-written artefact here is something a
+  // crawler indexes and an assistant hands to a prospect.
+  const published = await getCollection('templates', (t) => t.data.status === 'ready');
+  const guides = await getCollection('guides', (g) => g.data.status === 'ready');
+  const guideBySlug = new Map(guides.map((g) => [g.id, g]));
+
+  return published.map((entry) => {
+    // Only published guides. A card pointing at a draft is a 404 with a nice
+    // shadow on it.
+    const related = [...new Set(entry.data.related)]
+      .map((s) => guideBySlug.get(s))
+      .filter((g): g is Guide => Boolean(g));
+
+    const others = published
+      .filter((t) => t.id !== entry.id)
+      .sort((a, b) => a.data.order - b.data.order);
+
+    return { params: { slug: entry.id }, props: { entry, related, others } };
+  });
+}
+
+interface Props {
+  entry: Template;
+  related: Guide[];
+  others: Template[];
+}
+
+const { entry, related, others } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const path = `/resources/templates/${entry.id}`;
+const url = `${SITE_ORIGIN}${path}`;
+
+// ── the two strings this site may not restate ────────────────────────────────
+// See note 3. An unknown token is left visible rather than blanked: a
+// {{TYPO}} on the page is a bug somebody reports in an hour, and a silently
+// empty sentence is one nobody ever notices.
+const TOKENS: Record<string, string> = { COMMITMENT, FEES_NOTE };
+const resolve = (s: string): string =>
+  s.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key: string) => TOKENS[key] ?? whole);
+
+// A revision date is a DATE, not an instant — same reasoning, and the same
+// formatter, as the guides route. new Date('2026-09-11') is midnight UTC and
+// prints the 10th on a build machine behind it.
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const readableDate = (iso: string): string => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : iso;
+};
+
+// ── the sections, rendered once ──────────────────────────────────────────────
+// One pass over `sections`, feeding the blank on the page, the example on the
+// page, and both downloads. See note 1.
+const sections = d.sections.map((s, i) => ({
+  n: i + 1,
+  heading: s.heading,
+  minutes: s.minutes,
+  promptText: resolve(s.prompt),
+  noteText: s.note ? resolve(s.note) : null,
+  exampleText: resolve(s.example).trimEnd(),
+  promptHtml: renderMarkdown(resolve(s.prompt)),
+  noteHtml: s.note ? renderMarkdown(resolve(s.note)) : null,
+  exampleHtml: renderMarkdown(resolve(s.example)),
+}));
+
+const totalMinutes = d.sections.reduce((sum, s) => sum + (s.minutes ?? 0), 0);
+
+// ── the .md serialisation ────────────────────────────────────────────────────
+// THIS BLOCK IS THE FORMAT'S ONE OWNER (note 1). Prompts become `>` lines so
+// that clearing them out of your own copy is one keystroke per block, which is
+// the whole reason they are carried into the download at all rather than left
+// behind on the page.
+
+const quote = (lines: string[]): string[] =>
+  lines.flatMap((line, i) => (i === 0 ? [`> ${line}`] : ['>', `> ${line}`]));
+
+const blankLines: string[] = [
+  `# ${d.title}`,
+  '',
+  d.artifact,
+  '',
+  `Blank template · ${url}`,
+  '',
+  ...(d.header.length > 0 ? [...d.header.map((h) => `${h}:`), ''] : []),
+  '---',
+  '',
+];
+
+for (const s of sections) {
+  blankLines.push(`## ${s.heading}`, '');
+  blankLines.push(
+    ...quote([
+      ...(s.minutes ? [`${s.minutes} minutes`] : []),
+      s.promptText,
+      ...(s.noteText ? [s.noteText] : []),
+    ]),
+  );
+  // Room to write, and a blank line either side of it.
+  blankLines.push('', '', '');
+}
+
+const blankText = `${blankLines.join('\n').trimEnd()}\n`;
+
+const workedLines: string[] = [
+  `# ${d.title} — worked example`,
+  '',
+  d.worked.title,
+  '',
+  // The illustrative label travels with the file. A worked example that leaves
+  // the site without it is a claim about a customer somebody did not make.
+  d.worked.note,
+  '',
+  resolve(d.worked.lead),
+  '',
+  ...(d.worked.header.length > 0
+    ? [...d.header.map((h, i) => `${h}: ${d.worked.header[i] ?? ''}`.trimEnd()), '']
+    : []),
+  '---',
+  '',
+];
+
+for (const s of sections) {
+  workedLines.push(`## ${s.heading}`, '', s.exampleText, '');
+}
+
+workedLines.push(
+  '---',
+  '',
+  `Blank version of this template · ${url}`,
+);
+
+const workedText = `${workedLines.join('\n').trimEnd()}\n`;
+
+// Build-time data: URLs, so a download needs no script and no round trip.
+// These files are a few kilobytes; a Blob would be the right call at a
+// megabyte and is the wrong call here, because it would put JavaScript back in
+// the one path that currently does not need it.
+const asDownload = (text: string): string =>
+  `data:text/markdown;charset=utf-8,${encodeURIComponent(text)}`;
+
+const blankFile = `${d.fileBase}.md`;
+const workedFile = `${d.fileBase}-example.md`;
+
+// ── head ─────────────────────────────────────────────────────────────────────
+
+const pageTitle = `${d.title} — template · ${practitioner.name}`;
+
+// Same rule as the guides: Sunil is the Person node SeoHead already emits, so
+// reference it by @id rather than describing him twice and risking two
+// descriptions that disagree.
+const authorNode =
+  d.author === practitioner.name
+    ? { '@id': `${SITE_ORIGIN}/#person` }
+    : { '@type': 'Person', name: d.author };
+
+const schema: unknown[] = [
+  {
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: d.title,
+    description: d.summary,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'en-GB',
+    author: authorNode,
+    // dateModified only — there is no datePublished in the collection and no
+    // record of a first-published date to read. Guessing one would be inventing
+    // a fact a crawler treats as ours.
+    dateModified: d.revisedOn,
+  },
+  ...(d.reviewedBy
+    ? [
+        {
+          '@type': 'WebPage',
+          '@id': `${url}#webpage`,
+          url,
+          reviewedBy: { '@type': 'Person', name: d.reviewedBy },
+          mainEntity: { '@id': `${url}#article` },
+        },
+      ]
+    : []),
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources` },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: 'Templates',
+        item: `${SITE_ORIGIN}/resources/templates`,
+      },
+      { '@type': 'ListItem', position: 4, name: d.title },
+    ],
+  },
+];
+---
+
+<PracticeLayout title={pageTitle} description={d.summary} canonical={path} schema={schema}>
+  <article class="tpl wrap">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources/templates">Templates</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">{d.title}</li>
+      </ol>
+    </nav>
+
+    <header class="t-head">
+      <p class="eyebrow">Template</p>
+      <h1>{d.title}</h1>
+      <p class="artifact">{d.artifact}</p>
+      <p class="lede">{d.summary}</p>
+
+      <p class="when">
+        <span class="k">Reach for it when</span>
+        {d.useWhen}
+      </p>
+
+      <dl class="byline">
+        <div>
+          <dt>Written by</dt>
+          <dd>{d.author}</dd>
+        </div>
+        <div>
+          <dt>Reviewed by</dt>
+          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
+        </div>
+        <div>
+          <dt>Last revised</dt>
+          <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
+        </div>
+        {
+          totalMinutes > 0 && (
+            <div>
+              <dt>Runs to</dt>
+              <dd>{totalMinutes} minutes</dd>
+            </div>
+          )
+        }
+      </dl>
+
+      <p class="jump">
+        <a href="#blank">The blank</a>
+        <span class="sep" aria-hidden="true">·</span>
+        <a href="#example">A completed example</a>
+        <span class="sep" aria-hidden="true">·</span>
+        <a href="#using">How to use it</a>
+      </p>
+    </header>
+
+    {/* The live region every copy button announces into. */}
+    <p class="sr-only" id="tpl-live" role="status" aria-live="polite"></p>
+
+    {/* ── the blank ──────────────────────────────────────────────────────── */}
+    <section class="sheet" id="blank" aria-labelledby="blank-h">
+      <div class="sheet-head">
+        <h2 id="blank-h">The blank</h2>
+        <p class="sheet-note">
+          The prompts are what a colleague would ask. Delete them as you answer them — in the
+          downloaded file each one is a quoted block, so it goes in a keystroke.
+        </p>
+        <div class="toolbar">
+          <a class="btn btn-primary" href={asDownload(blankText)} download={blankFile}>
+            Download {blankFile}
+          </a>
+          <button class="btn btn-ghost" type="button" data-copy="blank">Copy the blank</button>
+          <button class="btn btn-ghost" type="button" data-print>Print this page</button>
+        </div>
+      </div>
+
+      {
+        d.header.length > 0 && (
+          <dl class="fill">
+            {d.header.map((h) => (
+              <div>
+                <dt>{h}</dt>
+                <dd aria-hidden="true" />
+              </div>
+            ))}
+          </dl>
+        )
+      }
+
+      <ol class="blocks">
+        {
+          sections.map((s) => (
+            <li class="block">
+              <div class="b-head">
+                <span class="n" aria-hidden="true">
+                  {String(s.n).padStart(2, '0')}
+                </span>
+                <h3>{s.heading}</h3>
+                {s.minutes && <span class="mins">{s.minutes} min</span>}
+              </div>
+              <div class="prompt prose" set:html={s.promptHtml} />
+              {s.noteHtml && <div class="rule-note prose" set:html={s.noteHtml} />}
+              {/* Somewhere to write, on screen and on paper. Decorative. */}
+              <div class="write" aria-hidden="true" />
+            </li>
+          ))
+        }
+      </ol>
+
+      {/* The clipboard's fallback, and a usable thing in its own right: it is in
+          the DOM whether or not script runs, and it is selectable by hand. */}
+      <details class="plain" id="plain-blank">
+        <summary>Show the blank as plain text</summary>
+        <pre id="text-blank">{blankText}</pre>
+      </details>
+    </section>
+
+    {/* ── the worked example ─────────────────────────────────────────────── */}
+    <section class="sheet worked" id="example" aria-labelledby="example-h">
+      <div class="sheet-head">
+        <h2 id="example-h">A completed example</h2>
+        <p class="illus">
+          <span class="k">Illustrative</span>
+          {d.worked.note} It continues the returns assistant used across this site: a system that
+          reads a policy and recommends a refund, and is then given a tool that issues one. Where
+          a real record would carry a measurement this one carries ⟨angle brackets⟩, because an
+          illustration may not smuggle in a statistic.
+        </p>
+        <div class="toolbar">
+          <a class="btn btn-ghost" href={asDownload(workedText)} download={workedFile}>
+            Download {workedFile}
+          </a>
+          <button class="btn btn-ghost" type="button" data-copy="worked">Copy the example</button>
+        </div>
+      </div>
+
+      <h3 class="worked-title">{d.worked.title}</h3>
+      <div class="worked-lead prose" set:html={renderMarkdown(resolve(d.worked.lead))} />
+
+      {
+        d.worked.header.length > 0 && (
+          <dl class="fill filled">
+            {d.header.map((h, i) => (
+              <div>
+                <dt>{h}</dt>
+                <dd>{d.worked.header[i] ?? ''}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+
+      <ol class="blocks">
+        {
+          sections.map((s) => (
+            <li class="block">
+              <div class="b-head">
+                <span class="n" aria-hidden="true">
+                  {String(s.n).padStart(2, '0')}
+                </span>
+                <h3>{s.heading}</h3>
+              </div>
+              <div class="answer prose" set:html={s.exampleHtml} />
+            </li>
+          ))
+        }
+      </ol>
+
+      <details class="plain" id="plain-worked">
+        <summary>Show the example as plain text</summary>
+        <pre id="text-worked">{workedText}</pre>
+      </details>
+    </section>
+
+    {/* ── the author's own notes on it ───────────────────────────────────── */}
+    {/* The body's own `## How to use it` is this section's heading — there is no
+        second one here, because a hidden duplicate is still a duplicate to a
+        screen reader running the heading list. */}
+    <section class="sheet using" id="using">
+      {/* .prose is load-bearing: ds/reset.css strips list markers globally and
+          global.css restores them only under this class. These templates are
+          almost entirely lists. */}
+      <div class="prose">
+        <Content />
+      </div>
+    </section>
+
+    {
+      related.length > 0 && (
+        <aside class="after" aria-labelledby="guides-h">
+          <h2 id="guides-h">The reasoning behind it</h2>
+          <div class="cards2">
+            {related.map((g) => (
+              <a class="card" href={`/resources/guides/${g.id}`}>
+                <span class="k">Guide</span>
+                <h3>{g.data.title}</h3>
+                <p>{g.data.summary}</p>
+                <span class="go">
+                  Read this<span class="arrow" aria-hidden="true">→</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </aside>
+      )
+    }
+
+    {
+      others.length > 0 && (
+        <aside class="after" aria-labelledby="others-h">
+          <h2 id="others-h">The other templates</h2>
+          <ul class="others">
+            {others.map((t) => (
+              <li>
+                <a href={`/resources/templates/${t.id}`}>{t.data.title}</a>
+                <span class="what">{t.data.artifact}</span>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+
+    {/* The roadmap's onward step for this row: "browser checker or programme".
+        Two links, no pitch — this visitor arrived for an artefact and has one. */}
+    <aside class="after onward" aria-labelledby="onward-h">
+      <h2 id="onward-h">If you would rather be asked the questions</h2>
+      <p>
+        <a class="textlink" href="/tools/agent-design-check/">The agent design check</a> runs the
+        same questions one at a time in your browser, against rules you can read in full. Nothing
+        to sign up for there either.
+      </p>
+      <p>
+        The <a class="textlink" href="/programmes/">open cohort</a> is where this is practised on
+        a system you build, with the reviews run in the room.
+      </p>
+    </aside>
+  </article>
+</PracticeLayout>
+
+<style>
+  .tpl {
+    padding-bottom: var(--space-9);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── head ───────────────────────────────────────────────────────────────── */
+
+  .t-head {
+    max-width: var(--measure-prose);
+    padding: var(--space-6) 0 var(--space-7);
+  }
+  .t-head h1 {
+    font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
+    color: var(--text-loud);
+    margin: var(--space-3) 0 var(--space-3);
+  }
+  /* What the artefact IS, as a noun phrase. Mono, because it is a label. */
+  .artifact {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-4);
+  }
+
+  .when {
+    margin-top: var(--space-4);
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+  }
+  .when .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+  }
+  .byline dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+  .byline dd {
+    font-size: var(--size-3);
+    color: var(--text-body);
+  }
+  .byline .unset {
+    color: var(--text-quiet);
+  }
+
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    font-size: var(--size-3);
+  }
+  .jump a {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.2em;
+  }
+  .jump a:hover {
+    color: var(--link-hover);
+  }
+  .jump .sep {
+    color: var(--text-quiet);
+  }
+
+  /* ── the two sheets ─────────────────────────────────────────────────────── */
+
+  .sheet {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-7);
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+    scroll-margin-top: var(--space-6);
+  }
+  .sheet + .sheet,
+  .after {
+    margin-top: var(--space-6);
+  }
+
+  /* The worked example sits on the sunken ground so the two are never mistaken
+     for one another at a glance — the one thing on this page it would be bad to
+     confuse. Shadow, not a border: never both on one element. */
+  .worked {
+    background: var(--surface-sunken);
+    box-shadow: none;
+  }
+
+  .sheet-head h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-3);
+  }
+  .sheet-note {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+
+  /* The illustrative label. It takes the design system's "uncertain" colours
+     rather than the error or promo ones, for the same reason the pending block
+     does: this is not a failure and not a promotion, it is a sentence that is
+     not a claim about the world. */
+  .illus {
+    background: var(--agent-uncertain-bg);
+    color: var(--agent-uncertain);
+    border-radius: var(--radius-panel);
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    max-width: var(--measure-prose);
+  }
+  .illus .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    margin-bottom: var(--space-1);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  /* ── the fill-in header ─────────────────────────────────────────────────── */
+
+  .fill {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .fill dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-2);
+  }
+  .fill dd {
+    min-height: var(--space-5);
+    border-bottom: 1px solid var(--border-field);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    padding-bottom: var(--space-1);
+  }
+
+  /* ── a block: heading, prompt, room to write ────────────────────────────── */
+
+  .blocks {
+    margin-top: var(--space-7);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+  }
+
+  .b-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  /* The index is on the page and NOT in the downloaded headings. The agenda's
+     own prose refers to "item eight" and the canvas to "box three", so a reader
+     needs the number — but the decision record's `## Context` must stay exactly
+     that, because it is the public blank of the shape the cohort writes records
+     in, and a numbered heading would no longer match. */
+  .b-head .n {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    letter-spacing: var(--tracking-mono);
+    color: var(--accent-ink);
+  }
+  .b-head h3 {
+    font-size: var(--size-5);
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+  .b-head .mins {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    margin-left: auto;
+  }
+
+  .prompt {
+    margin-top: var(--space-3);
+  }
+  /* The rule under the question — a section that carries a constraint rather
+     than a prompt. Quieter, and marked by a rule down the side so it reads as a
+     different kind of sentence. */
+  .rule-note {
+    margin-top: var(--space-3);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--border-field);
+  }
+
+  /* Somewhere to write. Four ruled lines, which is what makes the printed blank
+     a usable form rather than a handout. */
+  .write {
+    margin-top: var(--space-4);
+    height: 128px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 31px,
+      var(--border-hair) 31px 32px
+    );
+  }
+  .answer {
+    margin-top: var(--space-3);
+  }
+
+  .worked-title {
+    font-size: var(--size-5);
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    margin-top: var(--space-6);
+  }
+  .worked-lead {
+    margin-top: var(--space-3);
+  }
+
+  /* ── the plain-text fallback ────────────────────────────────────────────── */
+
+  .plain {
+    margin-top: var(--space-7);
+  }
+  .plain summary {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-normal);
+    color: var(--text-quiet);
+    padding: var(--space-3) 0;
+    display: block;
+    cursor: pointer;
+  }
+  .plain summary:hover {
+    color: var(--text-loud);
+  }
+  .plain pre {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-4);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    white-space: pre-wrap;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .worked .plain pre {
+    background: var(--surface-panel);
+  }
+
+  /* ── after ──────────────────────────────────────────────────────────────── */
+
+  .after {
+    max-width: calc(var(--measure-prose) + var(--space-7) * 2);
+    margin-top: var(--space-8);
+  }
+  .after h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin-bottom: var(--space-5);
+  }
+  .after a.card h3,
+  .after a.card p {
+    margin: 0;
+  }
+
+  .others {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .others li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+  }
+  .others a {
+    font-size: var(--size-4);
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 0.2em;
+  }
+  .others a:hover {
+    color: var(--link-hover);
+  }
+  .others .what {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+  }
+
+  .onward p {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  .onward p + p {
+    margin-top: var(--space-3);
+  }
+
+  @media (max-width: 620px) {
+    .sheet {
+      padding: var(--space-5);
+      border-radius: var(--radius-panel);
+    }
+    .t-head {
+      padding-top: var(--space-5);
+    }
+    .fill {
+      grid-template-columns: 1fr;
+    }
+    .b-head .mins {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<style is:global>
+  /* ── section prose ────────────────────────────────────────────────────────
+     GLOBAL ON PURPOSE, NAMESPACED UNDER .tpl. Astro's scoped styles are applied
+     by the compiler to elements it can see in the template; the HTML that
+     <Content /> and set:html produce carries no scope attribute, so a scoped
+     block reaches none of it. Every selector here starts at .tpl. */
+
+  .tpl .prose p {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    margin-bottom: var(--space-4);
+  }
+  .tpl .prose p:last-child {
+    margin-bottom: 0;
+  }
+  .tpl .prompt p {
+    color: var(--text-loud);
+  }
+  .tpl .rule-note p,
+  .tpl .worked-lead p {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: var(--text-quiet);
+  }
+
+  .tpl .using .prose h2 {
+    font-size: var(--size-6);
+    color: var(--text-loud);
+    margin: var(--space-7) 0 var(--space-4);
+  }
+  .tpl .using .prose > h2:first-child {
+    margin-top: 0;
+  }
+  .tpl .using .prose h3 {
+    font-size: var(--size-5);
+    color: var(--text-loud);
+    margin: var(--space-6) 0 var(--space-3);
+  }
+
+  .tpl .prose ul,
+  .tpl .prose ol {
+    /* reset.css zeroes padding for UI lists; a marker with no inset hangs off
+       the edge of the sheet. */
+    padding-left: var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .tpl .prose li {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    margin-bottom: var(--space-2);
+  }
+  .tpl .prose li::marker {
+    color: var(--text-quiet);
+  }
+  .tpl .prose li:last-child {
+    margin-bottom: 0;
+  }
+
+  .tpl .prose strong {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+  .tpl .prose em {
+    font-style: italic;
+  }
+  .tpl .prose a {
+    color: var(--text-loud);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .tpl .prose a:hover {
+    color: var(--link-hover);
+    text-decoration-color: var(--link-hover);
+  }
+
+  .tpl .prose code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-tick);
+    padding: 0.1em 0.35em;
+  }
+  .tpl .worked .prose code {
+    background: var(--surface-panel);
+  }
+  .tpl .prose pre {
+    overflow-x: auto;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-panel);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .tpl .prose pre code {
+    background: none;
+    padding: 0;
+    font-size: var(--size-2);
+  }
+
+  /* A worked answer's table — "one row per case" is a table on three of the
+     four. It scrolls in its own container rather than widening the page. */
+  .tpl .prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    border-collapse: collapse;
+    font-size: var(--size-3);
+    margin-bottom: var(--space-4);
+  }
+  .tpl .prose th,
+  .tpl .prose td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    text-align: left;
+    vertical-align: top;
+  }
+  .tpl .prose th {
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+    white-space: nowrap;
+  }
+
+  .tpl .prose blockquote {
+    margin: var(--space-4) 0;
+    padding-left: var(--space-5);
+    border-left: 2px solid var(--border-field);
+    color: var(--text-quiet);
+  }
+  .tpl .prose hr {
+    border: 0;
+    border-top: 1px solid var(--border-hair);
+    margin: var(--space-6) 0;
+  }
+
+  /* ── print ────────────────────────────────────────────────────────────────
+     The roadmap wants something "usable immediately", and for a review agenda
+     or a funding case that often means on paper. The blank prints as a form
+     with room to write; the example follows on a fresh page so it can be read
+     beside it or thrown away.
+
+     Scoped by hand to this page's chrome plus the two layout landmarks, because
+     a scoped block cannot reach a component it does not own. This CSS ships
+     only in this page's bundle. */
+  @media print {
+    .sitenav,
+    .sitefooter,
+    .skip,
+    .tpl .crumbs,
+    .tpl .jump,
+    .tpl .toolbar,
+    .tpl .plain,
+    .tpl .after {
+      display: none !important;
+    }
+
+    .tpl .sheet {
+      box-shadow: none !important;
+      background: #fff !important;
+      padding: 0 !important;
+      max-width: none !important;
+    }
+    .tpl .worked {
+      break-before: page;
+    }
+    .tpl .block {
+      break-inside: avoid;
+    }
+    .tpl .illus {
+      background: #fff !important;
+      color: #000 !important;
+      outline: 1px solid #999;
+    }
+    /* The ruled lines are the point of a printed blank; keep them dark enough
+       to survive a laser printer. */
+    .tpl .write {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0 31px,
+        #b4b4b4 31px 32px
+      ) !important;
+    }
+  }
+</style>
+
+<script>
+  // The ONLY script on this page, and nothing here is required for the page to
+  // work. The downloads are plain <a download> anchors with build-time data:
+  // URLs; the plain-text blocks are <details> elements that are in the DOM
+  // whether or not this file runs. All this adds is one-click copying, and
+  // when the clipboard refuses it opens the block and selects it — which is
+  // the same outcome, two seconds slower.
+  //
+  // A module script, not is:inline, so Vite bundles it and astro check sees it.
+
+  const live = document.getElementById('tpl-live');
+
+  function say(message: string): void {
+    if (live) live.textContent = message;
+  }
+
+  function selectBlock(pre: HTMLElement): void {
+    const details = pre.closest('details');
+    if (details instanceof HTMLDetailsElement) details.open = true;
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    pre.scrollIntoView({ block: 'nearest' });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('button[data-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const which = button.dataset.copy;
+      const pre = document.getElementById(`text-${which}`);
+      if (!pre) return;
+      const text = pre.textContent ?? '';
+      const what = which === 'worked' ? 'example' : 'blank';
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          say(`The ${what} has been copied to the clipboard.`);
+          return;
+        }
+      } catch {
+        /* falls through to the visible block below */
+      }
+
+      selectBlock(pre);
+      say(
+        `Copying was not permitted by your browser. The ${what} is open below, selected and ready to copy.`,
+      );
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('button[data-print]').forEach((button) => {
+    button.addEventListener('click', () => window.print());
+  });
+</script>

@@ -10,6 +10,9 @@
 //   /api/ask     a POST endpoint that costs money per call, nothing to index
 //   /api/track   the analytics beacon — indexing it would pollute its own data
 //   /api/lead    the lead ledger, POST only
+//   /api/pipeline the application/enquiry save, POST only. Same reasoning as
+//                the other two: nothing to index, and a crawler hitting it
+//                would be rate-limiting real applicants for no gain.
 //   /book        a booking's manage page. Its URL carries the reschedule
 //                token, so an indexed one is a leaked credential.
 //   /api/booking POST only, and it writes rows
@@ -44,7 +47,20 @@ const AI_AGENTS = [
 // in a search result would be a leaked credential, and there is nothing on it
 // worth indexing either. The pages carry noindex headers and tags as well —
 // robots.txt is a request, not a control.
-const DISALLOW = ['/craft', '/book', '/api/ask', '/api/track', '/api/lead', '/api/booking'];
+const DISALLOW = [
+  '/craft',
+  '/book',
+  '/api/ask',
+  '/api/track',
+  '/api/lead',
+  '/api/booking',
+  '/api/pipeline',
+  // The one-click unsubscribe. It only exists inside an email, so a crawler
+  // should never meet it — but a link that acts on arrival is exactly the kind
+  // a prefetcher or a link-scanner follows on somebody's behalf, and the action
+  // is not one we want taken by a machine that has not read it.
+  '/api/unsubscribe',
+];
 
 export const GET: APIRoute = () => {
   const body = [
