@@ -10,7 +10,7 @@ worst possible thing to show someone who paid for the course. Same reasoning as
 
 Nothing in this directory is imported, rendered, or deployed.
 
-    threads.md         the contract between the six sessions: the five areas
+    threads.md         the contract between the six sessions: the seven areas
                        every week owes something to, and what each week owes.
                        Read the week's row before writing any block of it
     week-N.md          how to run session N — staging, open items, the clock
