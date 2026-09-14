@@ -11,6 +11,10 @@ import { publishedResources, isDownload } from '../data/resources';
 const EXTRA = [
   { path: '/latest', priority: '0.6' },
   { path: '/resources', priority: '0.6' },
+  // Listed so a crawler and a Google OAuth consent screen can both fetch it.
+  // Low priority because nobody is searching for it — it has to be reachable,
+  // not ranked.
+  { path: '/privacy', priority: '0.3' },
   // Resource pages are listed individually: each one is the destination a search
   // or an assistant should land on, not the index that links to it.
   ...publishedResources

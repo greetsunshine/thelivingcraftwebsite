@@ -1,0 +1,442 @@
+---
+// The privacy policy.
+//
+// Written from the code rather than from a template, and that is the only
+// reason it is worth publishing. Every claim below names the file that makes it
+// true, so the next person to change a data path can find the sentence that has
+// to change with it:
+//
+//   visitor identification      src/lib/admin/visitor.ts
+//   what a visit records        src/pages/api/track.ts
+//   enquiries                   src/pages/api/lead.ts
+//   assistant transcripts       src/pages/api/ask.ts
+//   seats and intake            src/lib/craft/learners.ts, src/lib/craft/intake.ts
+//   bookings and invites        src/lib/booking/store.ts, src/lib/booking/google.ts
+//   retention and erasure       supabase/schema.sql (admin_purge)
+//
+// IF YOU CHANGE WHAT IS COLLECTED, CHANGE THIS PAGE IN THE SAME COMMIT. A
+// privacy policy that has drifted from the system is worse than none, and this
+// practice sells the discipline it would be failing.
+import PolicyLayout from '../layouts/PolicyLayout.astro';
+import { CONTACT_EMAIL } from '../data/site';
+import { canonical } from '../data/facts';
+
+export const prerender = false;
+
+const title = 'Privacy — The Living Craft';
+const description =
+  'What this site collects, why, who else processes it, how long it is kept, and how to have it deleted. Written from the code, not from a template.';
+
+// One date, one place. Shown in the header and in the closing section.
+const UPDATED = '14 September 2026';
+---
+
+<PolicyLayout title={title} description={description} canonical={canonical('/privacy')}>
+  <section class="policy-head">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">01</span> Privacy</span>
+      <h1>What this site knows about you</h1>
+      <p class="lead">
+        This practice sells judgement about how AI systems handle data. A vague privacy policy
+        would be an argument against hiring me. So this one names the fields, the retention
+        windows and every company involved, and it is written from the code rather than from a
+        template.
+      </p>
+      <p class="stamp">Last updated {UPDATED}</p>
+    </div>
+  </section>
+
+  <section class="policy">
+    <div class="wrap">
+      <div class="summary">
+        <h2>The short version</h2>
+        <ul>
+          <li>I never sell or share your details, and there is no advertising or cross-site tracking anywhere on this site.</li>
+          <li>Visitor counts are measured with an identifier that is rebuilt from scratch every midnight, so nobody can be followed from one day to the next.</li>
+          <li>Your raw IP address is never written down.</li>
+          <li>If you fill in a form, book a call, or talk to the assistant, I keep what you typed, because that is the enquiry.</li>
+          <li>Ask me to delete it and it is deleted, not archived or flagged.</li>
+          <li>This page measures nothing at all. No counter, no analytics, nothing.</li>
+        </ul>
+      </div>
+
+      <h2>Who is responsible</h2>
+      <p>
+        Sunil Mathew, operating as The Living Craft, from Bangalore, India. Under India's Digital
+        Personal Data Protection Act that makes me the Data Fiduciary for everything described
+        here, and you the Data Principal. There is no team. The person who answers a deletion
+        request is the person who wrote this page.
+      </p>
+      <p>
+        Reach me at <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+      </p>
+
+      <h2>What is collected, and when</h2>
+
+      <h3>When you read a page</h3>
+      <p>
+        Three pages keep a first-party record of visits: the cohort page, the Fractional CAIO page,
+        and the AI Readiness Assessment page. The field notes and resources pages send the same
+        signal, but the server accepts only those three addresses and discards the rest, so nothing
+        is stored for them.
+      </p>
+      <p>
+        Nothing at all is recorded on this page, or on any page behind a sign-in. The course area
+        carries no counter of any kind.
+      </p>
+      <p>Each recorded visit holds:</p>
+      <ul>
+        <li>which of the three pages, and what happened on it — a view, opening the assistant, starting a form, following a link between the pages</li>
+        <li>the <em>host</em> you arrived from, such as <code>linkedin.com</code>, never the full link and never its query string</li>
+        <li>your country, taken from the hosting layer, and your region only if it is in the page address</li>
+        <li>whether the device is a phone or a computer</li>
+        <li>a visitor identifier, described next</li>
+      </ul>
+      <p>
+        <strong>The visitor identifier is deliberately short-lived.</strong> It is a cryptographic
+        hash of your IP address, your browser's user-agent string, a secret held on the server, and
+        <em>today's date</em>. Because the date is part of it, the identifier changes at midnight
+        UTC and the same person returning next week is an unrelated row. This is not a limitation I
+        have chosen not to lift. It means following someone across days is not reconstructible from
+        what is stored, by me or by anyone who obtained the database.
+      </p>
+      <p>
+        The raw IP address is used to compute that hash and is never written to storage. Automated
+        crawlers are identified and dropped before anything is recorded.
+      </p>
+
+      <h3>When you submit an enquiry or application</h3>
+      <p>
+        The forms on the cohort, CAIO and assessment pages collect your name, work email, job title,
+        company, and whatever you write in the message field. Applications also carry the region you
+        were shown pricing for.
+      </p>
+      <p>
+        Submissions are emailed to me through a form-delivery service, and separately written to my
+        own database so that I have a searchable history. That second copy also records whether the
+        email actually went through, because a failed delivery used to be invisible and meant
+        someone believed they had applied when I had never seen it.
+      </p>
+
+      <h3>When you talk to the assistant</h3>
+      <p>
+        The question-and-answer assistant on the public pages is built on a Claude model from
+        Anthropic. Your question and its answer are sent to Anthropic in order to produce a reply,
+        and both are stored here along with which page you asked from, your country, and some
+        counters about how the answer was produced.
+      </p>
+      <p>
+        A short session identifier ties the messages of one conversation together. It lives in the
+        browser tab's memory, is never written to your device, and is gone when you close the tab.
+      </p>
+      <p>
+        I read these. They are the most useful thing on this site, because they are people telling
+        me unprompted what my own pages failed to explain. Please do not type anything confidential
+        into a chat box on a stranger's website, here or anywhere.
+      </p>
+
+      <h3>When you book a call</h3>
+      <p>
+        Booking a discovery or scope call records your name, email address, company, job title,
+        anything you write in the notes field, your timezone, and the time you chose.
+      </p>
+      <p>
+        The booking is then created as an event in my Google Calendar with you as an invited guest,
+        which is what sends you the invitation and the video link. That means your name, your email
+        address and your notes are passed to Google as part of the event. Moving or cancelling the
+        call updates that same event. Cancelling removes it from both calendars.
+      </p>
+      <p>
+        The link in your invitation that lets you reschedule carries a secret. Only a cryptographic
+        hash of it is stored here, so the database never holds anything that could open somebody
+        else's booking. Please do not forward that invitation.
+      </p>
+
+      <h3>If you join the cohort</h3>
+      <p>
+        Participants get an access code for the course area. I store your name, email, which cohort
+        you are in, and a cryptographic hash of that code. <strong>The code itself is never
+        stored</strong>, so a copy of the database does not let anyone sign in as you.
+      </p>
+      <p>
+        The pre-cohort questionnaire stores your answers against your seat. Those answers are read
+        by me and used to plan the sessions. They are not shared with the other participants.
+      </p>
+
+      <h2>Cookies and what is stored in your browser</h2>
+      <p>
+        There are no advertising cookies, no analytics cookies and no third-party trackers on this
+        site. Nothing is written to local storage or session storage anywhere, on any page.
+      </p>
+      <p>Two cookies exist, and only after a deliberate sign-in:</p>
+      <ul>
+        <li>one that keeps you signed in to the course area, if you hold a seat</li>
+        <li>one that keeps me signed in to my own operator console</li>
+      </ul>
+      <p>
+        Both are signed, both are marked HttpOnly so that no script on the page can read them, both
+        are sent only over HTTPS, and both are restricted to this site. Neither one identifies you
+        to anybody else.
+      </p>
+
+      <h2>Who else processes it</h2>
+      <p>
+        A one-person practice runs on other people's infrastructure. This is the complete list, and
+        each entry says what actually reaches them.
+      </p>
+      <dl class="parties">
+        <div>
+          <dt>Vercel</dt>
+          <dd>Hosts the site and runs its server code. Sees every request, and supplies the country your visit is recorded with. Vercel also provides its own aggregate traffic and performance counters, which run on the five public pages — the three above plus the field notes and the resources pages — and on neither this page nor anything behind a sign-in.</dd>
+        </div>
+        <div>
+          <dt>Supabase</dt>
+          <dd>The database behind everything described above. Reachable only with a server-side key that never reaches a browser.</dd>
+        </div>
+        <div>
+          <dt>Web3Forms</dt>
+          <dd>Delivers form submissions to my inbox. Receives whatever you typed into the form.</dd>
+        </div>
+        <div>
+          <dt>Anthropic</dt>
+          <dd>Provides the Claude model behind the assistant. Receives your question and the context needed to answer it.</dd>
+        </div>
+        <div>
+          <dt>Google</dt>
+          <dd>Calendar only, and only when you book a call. Receives the event, your name, your email address and your notes, and sends you the invitation.</dd>
+        </div>
+        <div>
+          <dt>GitHub</dt>
+          <dd>Holds the site's source and the drafts of published research. No personal data from this site is sent there.</dd>
+        </div>
+      </dl>
+      <p>
+        These are service providers, not partners with a commercial interest in you. Nothing here is
+        an advertising network, a data broker, or an enrichment service, and your details are never
+        sold, rented or traded.
+      </p>
+
+      <h2>How long it is kept</h2>
+      <table class="retention">
+        <thead>
+          <tr><th>What</th><th>Kept for</th><th>Why that long</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Page visits</td>
+            <td>180 days</td>
+            <td>The identifier has already rotated daily, so an old row answers no question worth keeping it for.</td>
+          </tr>
+          <tr>
+            <td>Assistant conversations</td>
+            <td>365 days</td>
+            <td>These carry text you typed. A year is long enough to see what my pages keep failing to explain, and not longer.</td>
+          </tr>
+          <tr>
+            <td>Enquiries and applications</td>
+            <td>Until you ask me to delete it</td>
+            <td>A real enquiry must not be lost to an automated job. There is a copy in my inbox either way.</td>
+          </tr>
+          <tr>
+            <td>Booked calls</td>
+            <td>Until you ask me to delete it</td>
+            <td>A record of a conversation that happened. Cancelled bookings are kept as cancelled rather than erased.</td>
+          </tr>
+          <tr>
+            <td>Seats and questionnaire answers</td>
+            <td>Until you ask me to delete it</td>
+            <td>A participant record outlasts the six weeks. Withdrawn seats are kept deliberately.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The first two windows are enforced by the database itself, with a floor that refuses a
+        window shorter than thirty days rather than silently accepting one. That guard exists so a
+        mistyped number cannot empty a table while looking like a policy.
+      </p>
+
+      <h2>Your rights, and what happens when you use them</h2>
+      <p>
+        Under the Digital Personal Data Protection Act you can ask for a copy of what I hold about
+        you, ask me to correct it, ask me to delete it, and nominate someone to act for you.
+        Email <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and say
+        which. I reply myself, and I aim to do it within thirty days.
+      </p>
+      <p>
+        <strong>Deletion means deletion.</strong> The row is removed from the database, not flagged
+        as hidden or moved to an archive. Deleting a participant also deletes their questionnaire
+        answers. Deleting a booking cancels the calendar event first, so it disappears from your
+        calendar as well as mine.
+      </p>
+      <p>
+        Two honest limits. Emails you sent me, and the email copy of any form you submitted, live in
+        my ordinary mail account and have to be deleted there as a separate step. And the page-visit
+        counter holds nothing that can be linked back to you by design, so there is no way for me to
+        find <em>your</em> rows in it, and nothing there to return or delete.
+      </p>
+
+      <h2>What this site does not do</h2>
+      <ul>
+        <li>No advertising, no advertising cookies, no remarketing, no conversion pixels.</li>
+        <li>No selling, renting or sharing of your details with anyone outside the list above.</li>
+        <li>No profiling, scoring or automated decisions about you. Applications are read by me.</li>
+        <li>No tracking across other websites, and no attempt to recognise you across days.</li>
+        <li>No email newsletter, so there is no list to be added to without asking.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>
+        This is a professional programme for practising senior engineers, and it is not intended for
+        anyone under 18. I do not knowingly collect anything from a child. If you believe a child
+        has sent me something, write to me and I will delete it.
+      </p>
+
+      <h2>Security</h2>
+      <p>
+        Everything is served over HTTPS. The database refuses every key except one held on the
+        server, which is never sent to a browser. Access codes and reschedule links are stored only
+        as cryptographic hashes, so the stored form cannot be used to sign in or to open a booking.
+        The operator console is password-gated and excluded from search engines.
+      </p>
+      <p>
+        No system is perfectly secure, and a practice that claimed otherwise would be telling you
+        something false on its privacy page. If you find a problem here, write to me and I will fix
+        it and tell you what happened.
+      </p>
+
+      <h2>Changes to this page</h2>
+      <p>
+        This page is versioned alongside the code it describes, and it is expected to change when
+        the site does. The date at the top is the date it last changed. There is no archive of
+        earlier versions, and material changes will be noted here rather than announced by email,
+        because there is no mailing list to announce them on.
+      </p>
+
+      <div class="closing">
+        <p>
+          <strong>Last updated {UPDATED}.</strong> Questions about any of this, or a request to see
+          or delete what I hold, go to
+          <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+</PolicyLayout>
+
+<style>
+  /* Namespaced where it could collide. global.css owns short names, and the
+     policy prose needs measures and rhythm the marketing sections do not. */
+  .policy-head { padding: var(--space-8) 0 var(--space-6); }
+  .policy-head h1 { margin: var(--space-3) 0 var(--space-4); max-width: 18ch; }
+  .policy-head .lead { max-width: var(--measure-prose); }
+
+  .stamp {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--text-quiet);
+    margin-top: var(--space-5);
+  }
+
+  .policy { padding-bottom: var(--space-8); }
+  .policy .wrap > * { max-width: var(--measure-prose); }
+
+  .policy h2 {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+    margin: var(--space-8) 0 var(--space-4);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .policy h3 {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+    margin: var(--space-6) 0 var(--space-3);
+  }
+
+  .policy p { margin-bottom: var(--space-4); line-height: var(--lh-normal); }
+
+  .policy ul { margin: 0 0 var(--space-4) var(--space-5); }
+  .policy li { margin-bottom: var(--space-2); line-height: var(--lh-snug); }
+
+  .policy code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--accent-ink);
+  }
+
+  /* Panel law: a shadow or a border, never both. */
+  .summary {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .summary h2 { margin: 0 0 var(--space-4); font-size: var(--size-5); }
+  .summary ul { margin-bottom: 0; }
+
+  .parties { margin: 0 0 var(--space-4); }
+
+  .parties > div {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+
+  .parties dt {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    letter-spacing: var(--tracking-label);
+    color: var(--accent-ink);
+  }
+
+  .parties dd { margin: 0; font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
+
+  .retention {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--space-4);
+    font-size: var(--size-3);
+  }
+
+  .retention th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--text-quiet);
+    font-weight: var(--weight-medium);
+    padding: 0 var(--space-4) var(--space-3) 0;
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+  }
+
+  .retention td {
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    vertical-align: top;
+    color: var(--text-quiet);
+    line-height: var(--lh-snug);
+  }
+
+  .retention td:first-child { color: var(--text-loud); white-space: nowrap; }
+  .retention td:nth-child(2) { font-family: var(--font-mono); font-size: var(--size-2); white-space: nowrap; }
+
+  .closing {
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+
+  .closing p { margin: 0; color: var(--text-quiet); }
+
+  @media (max-width: 620px) {
+    .parties > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+    .retention td:first-child, .retention td:nth-child(2) { white-space: normal; }
+  }
+</style>
