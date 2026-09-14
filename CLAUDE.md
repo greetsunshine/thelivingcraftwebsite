@@ -416,9 +416,19 @@ none of their audience; that separation is load-bearing, see the radar entry.
   browser, same as the forms. **Don't move any Web3Forms call server-side.** The
   admin lead ledger does not change this: the browser posts to Web3Forms exactly as
   before, then reports the outcome to `/api/lead`.
-- **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
-  (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
-  paths redirect to `/?region=`.
+- **Deploy:** `@astrojs/vercel` adapter, `output: 'server'` — every route renders on
+  request, none is emitted as static HTML at build time. It was `output: 'static'` with a
+  per-route `prerender = false` opt-out on most routes already — `/craft`, `/craft/admin`,
+  every `/api/*` route and the home page all needed one. Only seven routes were still
+  genuinely static: `/latest`, `/llms.txt`, `/robots.txt`, `/sitemap.xml`, `/resources` and
+  its two self-hosted long-form pages. None of the seven has per-request state — they are
+  pure functions of `facts.ts` and the resources data modules — so a server default costs
+  nothing there and removes the last reason to keep `prerender = false` on every other
+  route by hand, which is exactly the kind of flag that rots the first time someone adds a
+  route and forgets it. **The real trade: those seven pages were static files served at the
+  CDN edge, and are now a Vercel function invocation on every request.** `npm run dev` to
+  preview (`astro preview` is unsupported with the Vercel adapter). Old
+  `/india|/dubai|/australia` paths redirect to `/?region=`.
   - The Vercel project is **connected to the GitHub repo** (production branch `main`),
     so **a push to `main` deploys production**. Before that connection existed, every
     deploy was a hand-run CLI command, and production silently drifted commits behind

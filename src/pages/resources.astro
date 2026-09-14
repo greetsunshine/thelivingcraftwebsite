@@ -15,8 +15,6 @@ import {
   SERIES_BLURBS,
 } from '../data/resources';
 
-export const prerender = true;
-
 const series = resourceSeries();
 const sections = series.map((s) => ({
   id: s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),

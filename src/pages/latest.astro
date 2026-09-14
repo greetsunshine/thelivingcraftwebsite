@@ -13,8 +13,6 @@ import NotesLayout from '../layouts/NotesLayout.astro';
 import { SITE_ORIGIN, cohort } from '../data/facts';
 import { publishedNotes, longDate } from '../lib/notes';
 
-export const prerender = true;
-
 const { refreshedAt, themes, count, newest } = publishedNotes();
 const sections = themes.map((t) => ({ id: t.id, title: t.title }));
 
