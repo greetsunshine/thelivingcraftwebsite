@@ -239,30 +239,48 @@ export async function listAllResponsesWithLearner(): Promise<
   }
 }
 
-export async function submitQuizResponse(
+/**
+ * Record an answer, once.
+ *
+ * AN INSERT, NOT AN UPSERT, and that is the whole design of this function.
+ * The route hands back the correct answer and the rationale as soon as this
+ * succeeds. An upsert on (learner_id, item_id) meant a learner could answer,
+ * read the key, and send the right answer back over the top of the first
+ * attempt — which does not merely flatter a score (there is no score) but
+ * erases `confidentlyWrong`, the one reading the console sorts the room by and
+ * the line a session is meant to open on.
+ *
+ * The refusal comes from the `quiz_learner_item` unique index rather than from
+ * a SELECT first, for the same reason double booking is refused by a
+ * constraint: two requests in flight can both pass a check, and only one of
+ * them can win against an index. 23505 is Postgres's unique_violation.
+ */
+export async function recordFirstAnswer(
   learnerId: string,
   itemId: string,
   answer: string,
   confidence: number,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; reason?: 'already-answered' }> {
   const client = db();
   if (!client) return { ok: false };
 
   try {
-    const { error } = await client.from('quiz_responses').upsert(
-      {
-        learner_id: learnerId,
-        item_id: itemId,
-        answer: answer.trim(),
-        confidence,
-        answered_at: new Date().toISOString(),
-      },
-      { onConflict: 'learner_id, item_id' },
-    );
-    if (error) throw error;
+    const { error } = await client.from('quiz_responses').insert({
+      learner_id: learnerId,
+      item_id: itemId,
+      answer: answer.trim(),
+      confidence,
+      answered_at: new Date().toISOString(),
+    });
+    if (error) {
+      if ((error as { code?: string }).code === '23505') {
+        return { ok: false, reason: 'already-answered' };
+      }
+      throw error;
+    }
     return { ok: true };
   } catch (err) {
-    console.error('submitQuizResponse failed:', err);
+    console.error('recordFirstAnswer failed:', err);
     return { ok: false };
   }
 }

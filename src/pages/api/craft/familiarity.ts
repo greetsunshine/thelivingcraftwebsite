@@ -12,11 +12,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const answers = parseFamiliarityAnswers(body.answers);
     const submit = Boolean(body.submit);
 
-    const { ok } = await saveFamiliarity({
+    const { ok, reason } = await saveFamiliarity({
       learnerId: learner.id,
       answers,
       submit
     });
+
+    if (reason === 'locked') {
+      return new Response(
+        JSON.stringify({
+          error: 'This one is already submitted. Ask Sunil if you need it reopened.',
+        }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
 
     if (!ok) {
       return new Response(JSON.stringify({ error: 'Failed to save' }), {
