@@ -19,8 +19,6 @@ import {
 import { publishedNotes } from '../lib/notes';
 import { publishedResources, newestResourceDate } from '../data/resources';
 
-export const prerender = true;
-
 export const GET: APIRoute = () => {
   // Field Notes. Titles and sources only — the full text is on the page and in
   // /api/facts, and repeating it here would bury the offer facts this file
