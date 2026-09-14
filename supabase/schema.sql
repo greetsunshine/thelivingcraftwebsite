@@ -1059,16 +1059,53 @@ language sql stable as $$
       where created_at < now() - make_interval(days => question_days));
 $$;
 
--- Running it on a schedule, once you are happy with the windows. Left commented
--- because pg_cron needs enabling per project (Database -> Extensions) and an
--- unattended DELETE should be a decision someone made on purpose, not a line
--- that arrived with the schema:
+-- ---------------------------------------------------------------------------
+-- Running the purge on a schedule
+-- ---------------------------------------------------------------------------
+-- This was commented out until 2026-09-14, on the reasoning that an unattended
+-- DELETE should be a decision someone made on purpose rather than a line that
+-- arrived with the schema. The decision has now been made, and what forced it
+-- is /privacy: that page publishes a 180-day window for events and a 365-day
+-- window for questions. A published retention window enforced by remembering to
+-- press a button is not a retention policy, and this practice sells the
+-- discipline it would be failing. So the schedule is part of the schema now.
 --
---   create extension if not exists pg_cron;
---   select cron.schedule('purge', '0 3 * * 0', $cron$ select public.admin_purge(); $cron$);
+-- 03:00 on Sundays, in the database's own timezone. The window arguments are
+-- deliberately not passed, so admin_purge() uses its defaults and the windows
+-- can be changed in one place — the function signature — without touching this.
 --
--- Until then it is the button on /craft/admin — which means the policy is only real
--- if someone presses it.
+-- WRAPPED SO IT CANNOT BREAK A RE-RUN. pg_cron has to be available on the
+-- project, and on a Supabase project it may need enabling under
+-- Database -> Extensions first. If it is not there, this reports what happened
+-- and the rest of the file still applies cleanly. The alternative — a bare
+-- CREATE EXTENSION — turns "pg_cron is not enabled yet" into "the whole schema
+-- failed halfway through", which is a much worse way to find out.
+--
+-- Re-running is safe: cron.schedule() upserts on the job name.
+do $$
+begin
+  execute 'create extension if not exists pg_cron';
+  execute format(
+    'select cron.schedule(%L, %L, %L)',
+    'admin-purge',
+    '0 3 * * 0',
+    'select public.admin_purge()'
+  );
+  raise notice 'Retention purge scheduled: admin-purge, Sundays at 03:00.';
+exception
+  when others then
+    raise notice 'Could not schedule the retention purge: %', sqlerrm;
+    raise notice 'Enable pg_cron under Database -> Extensions, then run this file again.';
+    raise notice 'Until it is scheduled, retention is the button on /craft/admin, and /privacy publishes windows nobody is enforcing.';
+end
+$$;
+
+-- To see it, change it, or stop it:
+--
+--   select jobid, jobname, schedule, active from cron.job;
+--   select * from cron.job_run_details order by start_time desc limit 10;
+--   select cron.unschedule('admin-purge');
+
 
 -- ===========================================================================
 -- THE COHORT PIPELINE
