@@ -33,9 +33,15 @@ export interface Props {
    * between the two surfaces.
    */
   mode?: 'public' | 'learner';
+  /**
+   * Set false when the page above has already described the call.
+   * /craft/office-hours does, and printing the same two sentences twice on one
+   * screen reads as a mistake rather than as emphasis.
+   */
+  showBlurb?: boolean;
 }
 
-const { type, heading, mode = 'public' } = Astro.props;
+const { type, heading, mode = 'public', showBlurb = true } = Astro.props;
 const meeting = meetingType(type);
 
 // The script finds its own markup by id rather than by walking the DOM, so two
@@ -55,19 +61,49 @@ if (meeting.audience !== wanted) {
 
 const endpoint = mode === 'learner' ? '/api/craft/booking' : '/api/booking/create';
 const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/slots'}?type=${meeting.key}`;
+
+// WHEN THERE IS NOTHING TO OFFER, SAY SOMETHING TRUE FOR THIS SURFACE.
+// The public pages carry an enquiry form directly under this widget, so
+// pointing at it is the most useful thing an empty state can do. Inside the
+// gate there is no form, and telling a participant to use one sends them
+// looking for something that does not exist. That shipped once.
+const emptyCopy =
+  mode === 'learner'
+    ? 'There is nothing open at the moment. I add new times each week, so it is worth looking again in a few days.'
+    : 'There is nothing open at the moment. Use the form below and I will come back with times.';
+
+const failCopy =
+  mode === 'learner'
+    ? 'Booking is not working right now. Email me and we will find a time between us.'
+    : 'Online booking is unavailable right now. Use the form below and I will reply with times.';
+
+const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Please try again, or use the form below.';
 ---
 
-<div class="booker" id={uid} data-type={meeting.key} data-endpoint={endpoint} data-slots={slotsUrl} data-mode={mode}>
+<div
+  class="booker"
+  id={uid}
+  data-type={meeting.key}
+  data-endpoint={endpoint}
+  data-slots={slotsUrl}
+  data-mode={mode}
+  data-empty={emptyCopy}
+  data-fail={failCopy}
+  data-retry={retryCopy}
+>
   <h3 class="booker-head">{heading ?? `Book a ${meeting.label.toLowerCase()}`}</h3>
-  <p class="booker-lead">{meeting.blurb}</p>
+  {showBlurb && <p class="booker-lead">{meeting.blurb}</p>}
 
   <div class="booker-panel">
     <p class="booker-status" data-status>Loading times…</p>
 
     <noscript>
       <p class="booker-status">
-        Choosing a time needs JavaScript. Use the enquiry form below instead, and I will reply with
-        times by email.
+        {
+          mode === 'learner'
+            ? 'Choosing a time needs JavaScript. Email me and we will find a time between us.'
+            : 'Choosing a time needs JavaScript. Use the enquiry form below instead, and I will reply with times by email.'
+        }
       </p>
     </noscript>
 
@@ -293,6 +329,9 @@ const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/sl
     var mode = root.getAttribute('data-mode');
     var endpoint = root.getAttribute('data-endpoint');
     var slotsUrl = root.getAttribute('data-slots');
+    var emptyCopy = root.getAttribute('data-empty');
+    var failCopy = root.getAttribute('data-fail');
+    var retryCopy = root.getAttribute('data-retry');
 
     var el = function (sel) { return root.querySelector(sel); };
     var statusEl = el('[data-status]');
@@ -388,15 +427,17 @@ const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/sl
         .then(function (res) { return res.json().then(function (body) { return { res: res, body: body }; }); })
         .then(function (result) {
           if (!result.res.ok || !result.body.ok) {
-            // Deliberately not an apology. The enquiry form is directly below,
-            // and pointing at it is more use than explaining an outage.
-            say('Online booking is unavailable right now. Use the form below and I will reply with times.');
+            // Deliberately not an apology. Naming the next thing to do is more
+            // use than explaining an outage — and what that next thing IS
+            // differs between the public pages and the course area, which is
+            // why the sentence comes from the server.
+            say(failCopy);
             return;
           }
 
           slots = result.body.slots || [];
           if (slots.length === 0) {
-            say('There is nothing open at the moment. Use the form below and I will come back with times.');
+            say(emptyCopy);
             return;
           }
 
@@ -408,7 +449,7 @@ const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/sl
           show(whenStep);
         })
         .catch(function () {
-          say('Online booking is unavailable right now. Use the form below and I will reply with times.');
+          say(failCopy);
         });
     }
 
@@ -490,7 +531,7 @@ const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/sl
           sending = false;
           button.disabled = false;
           button.innerHTML = 'Confirm this time <span class="arrow">→</span>';
-          errorEl.textContent = 'That did not go through. Please try again, or use the form below.';
+          errorEl.textContent = 'That did not go through. ' + retryCopy;
         });
     });
 
