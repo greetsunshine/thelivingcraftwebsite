@@ -3,7 +3,7 @@
 **Built against:** [`build-plan.md`](build-plan.md), from the Cohort Handoff Package
 (`LC-LAUNCH-2026-09-10`) in [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/).
 **Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6).
-**Last updated:** 11 September 2026
+**Last updated:** 14 September 2026
 
 > **Start at [`RESUME.md`](RESUME.md)** if you are continuing this work — it is the
 > operational checkpoint. This file is the detail behind it.
@@ -63,6 +63,8 @@
 - [x] First-touch and submission-session attribution captured separately
 - [x] 390px / keyboard / 200% zoom / screen-reader labels — markup verified; a real screen-reader pass is still owed (E15)
 - [x] Fees, dates and week count withheld consistently across every public and machine-readable surface
+- [x] Google Calendar appointment popup scaffolded behind a validated public schedule URL, with a direct-link fallback and separate intent tracking
+- [ ] Real appointment URL configured and popup, fallback, mobile and completed test booking verified in staging
 
 ### 2 · Staff screens and named accounts
 
@@ -154,6 +156,7 @@ Before anything is published, per the brief's closing paragraph:
 - [ ] Approved privacy facts published
 - [ ] Staff accounts created
 - [ ] Working route confirmed
+- [ ] Google Calendar appointment route and direct-link fallback tested in staging
 - [ ] Final public copy approved by Sunil
 - [ ] Rollback procedure recorded
 - [ ] Test records cleaned up before production opens
@@ -164,6 +167,7 @@ Before anything is published, per the brief's closing paragraph:
 
 | Date | Change |
 |---|---|
+| 14 Sep 2026 | **Google Calendar appointment route scaffolded.** Added configuration-gated scheduling CTAs in the cohort hero and closing next-step area, using Google's official popup script with a direct appointment-page fallback. Blank or invalid configuration renders no scheduling claim. Opening the route records intent only; it does not assert a confirmed booking or application. Local Astro validation and configured/unconfigured renders pass; the real URL and staging test booking remain outstanding. |
 | 11 Sep 2026 | **Public-offer consistency and durable acknowledgement queue.** Retired the regional price/start/week publication path from visible copy, structured data, `/api/facts`, `/llms.txt`, the latest feed and assistant grounding; removed unsupported biography metrics from public pages. A committed form submission now idempotently queues its receipt, while the initial task remains the durable owner notification. Dispatch stays safely off pending D2. `astro check` and production build pass; local campaign routing is 17/17 ready; acceptance remains 4/18 because the schema is not applied and external mail/accessibility/restore tests need their real environments. |
 | 10 Sep 2026 | Package read end to end; plan and status written. Scope agreed as the whole package. Console extends `/craft/admin` rather than forking a second staff area. D1 and D2 referred to Sunil. Nothing built yet. |
 | 11 Sep 2026 | **Checkpoint added.** `RESUME.md` is now the first read for any session continuing this work, and CLAUDE.md points at it from the top. Console session carries a signed identity and role list; verified by attack — a payload edited to grant extra roles and re-presented with the original signature is rejected. Shared password grants `operator` alone. `npm run staff` creates the first account; `npm run acceptance` runs the register (E03 and E17 pass, the rest report *not run* with reasons). `/privacy` published as an honest placeholder. Form accessibility markup verified: ten controls, ten labels, error slot on every field that can fail. |

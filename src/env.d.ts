@@ -5,6 +5,8 @@
 // billable API key, a database key that bypasses row-level security, or the
 // password to the admin console.
 interface ImportMetaEnv {
+  /** Public Google appointment schedule URL used by the booking CTA and direct-link fallback. */
+  readonly PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL?: string;
   readonly ANTHROPIC_API_KEY?: string;
   readonly ADMIN_PASSWORD?: string;
   readonly ADMIN_SESSION_SECRET?: string;

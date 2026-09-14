@@ -23,7 +23,7 @@ lose an hour to something surprising, that is a line in RESUME.md before you com
 
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.
-  Single page, still SSR (`prerender = false`). Files:
+  Single page, rendered on request like every other route now. Files:
   [src/pages/index.astro](src/pages/index.astro),
   [src/components/cohort/CohortPage.astro](src/components/cohort/CohortPage.astro),
   [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
@@ -37,6 +37,18 @@ lose an hour to something surprising, that is a line in RESUME.md before you com
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
     server. An enterprise enquiry is never counted as an application.
+  - **A fourth, optional route: scheduling an appointment.** [src/components/cohort/GoogleCalendarBooking.astro](src/components/cohort/GoogleCalendarBooking.astro)
+    renders a *Schedule an appointment* control beside Apply, gated entirely on
+    `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` ([src/lib/booking.ts](src/lib/booking.ts)) validating
+    as a real Google Calendar appointment-schedule URL. Blank or invalid, the control simply
+    does not render — no dead link, no scheduling claim. The visible control is always the
+    site-native link to that URL; Google's popup script is loaded as an enhancement that
+    replaces the click target when it loads, and the direct link is what a blocked or slow
+    script falls back to. **Apply remains the primary CTA everywhere this appears** — this is
+    additive, not a replacement, and it is not "Buy now": scheduling is explicitly separate
+    from applying, in the copy beside it. Opening the control is tracked as `cta_click` intent
+    only, never as a confirmed booking. Still owed: the real schedule URL, and a staging pass
+    on desktop and mobile popup, close, fallback and a completed test booking.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
@@ -672,9 +684,21 @@ prospect.
   browser, same as the forms. **Don't move any Web3Forms call server-side.** The
   admin lead ledger does not change this: the browser posts to Web3Forms exactly as
   before, then reports the outcome to `/api/lead`.
-- **Deploy:** `@astrojs/vercel` adapter, `output: 'static'`. `npm run dev` to preview
-  (`astro preview` is unsupported with the Vercel adapter). Old `/india|/dubai|/australia`
-  paths redirect to `/?region=`.
+- **Deploy:** `@astrojs/vercel` adapter, `output: 'server'` — every route renders on
+  request, none is emitted as static HTML at build time. It was `output: 'static'` with
+  per-route `prerender = false` opt-outs (the home page for region context, `/craft` and
+  `/craft/admin` for their session gates, the API routes). That model stopped fitting once
+  several public content routes ([src/pages/resources/guides/[...slug].astro](src/pages/resources/guides/%5B...slug%5D.astro)
+  and [src/pages/resources/templates/[...slug].astro](src/pages/resources/templates/%5B...slug%5D.astro))
+  needed a request-time draft gate rather than a `getStaticPaths()` filter computed once at
+  build. Every remaining `export const prerender = true` was a route that happened to have
+  no per-request state, not a route that needed to be static — so on a server default they
+  were removed rather than kept as manual opt-ins that would silently rot the next time
+  someone added one. **This trades some CDN-edge latency and adds a Vercel function
+  invocation to every request, including the ones that used to be free static files** — worth
+  knowing before treating page-load performance as unrelated to a content change on this
+  branch. `npm run dev` to preview (`astro preview` is unsupported with the Vercel adapter).
+  Old `/india|/dubai|/australia` paths redirect to `/?region=`.
   - The Vercel project is **connected to the GitHub repo** (production branch `main`),
     so **a push to `main` deploys production**. Before that connection existed, every
     deploy was a hand-run CLI command, and production silently drifted commits behind

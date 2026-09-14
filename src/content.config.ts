@@ -346,8 +346,8 @@ const guides = defineCollection({
     revisedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     /**
      * 'draft' means the writing is not finished. Drafts get NO ROUTE at all —
-     * getStaticPaths skips them — rather than a published page with a note on
-     * it, because this is a public surface and a half-written public page is
+     * the server-side route returns 404 — rather than a published page with a
+     * note on it, because this is a public surface and a half-written public page is
      * something a crawler indexes and an assistant quotes.
      *
      * Defaults to draft: a new file is unfinished until somebody says otherwise.

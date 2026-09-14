@@ -1,0 +1,159 @@
+---
+/**
+ * One site-native trigger for Google's official "Button with popup" embed.
+ *
+ * The visible control is an ordinary link to the appointment page. The Google
+ * script is an enhancement: when it loads, the link delegates to Google's
+ * generated popup button; if it is blocked, slow or unavailable, the same link
+ * opens the booking page directly in a new tab. A visitor is therefore never
+ * left with a dead scheduling control.
+ */
+export interface Props {
+  url: string;
+  placement: 'hero' | 'closing';
+}
+
+const { url, placement } = Astro.props;
+---
+
+<span class="booking-widget" data-google-calendar-booking data-booking-url={url}>
+  <a
+    class="btn btn-ghost booking-trigger"
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    data-booking-trigger
+    data-booking-placement={placement}
+  >
+    Schedule an appointment
+  </a>
+  <span class="booking-embed-host" data-booking-embed-host aria-hidden="true">
+    <span data-booking-embed-target></span>
+  </span>
+</span>
+
+<script>
+  type GoogleSchedulingButton = {
+    load: (options: {
+      url: string;
+      color: string;
+      label: string;
+      target: HTMLElement;
+    }) => void;
+  };
+
+  type BookingWindow = Window &
+    typeof globalThis & {
+      calendar?: { schedulingButton?: GoogleSchedulingButton };
+      __lcGoogleCalendarAssets?: Promise<boolean>;
+    };
+
+  const win = window as BookingWindow;
+  const scriptId = 'google-calendar-scheduling-script';
+  const stylesheetId = 'google-calendar-scheduling-stylesheet';
+
+  const schedulingApi = (): GoogleSchedulingButton | undefined =>
+    win.calendar?.schedulingButton;
+
+  const loadGoogleSchedulingAssets = (): Promise<boolean> => {
+    if (schedulingApi()) return Promise.resolve(true);
+    if (win.__lcGoogleCalendarAssets) return win.__lcGoogleCalendarAssets;
+
+    win.__lcGoogleCalendarAssets = new Promise((resolve) => {
+      if (!document.getElementById(stylesheetId)) {
+        const stylesheet = document.createElement('link');
+        stylesheet.id = stylesheetId;
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = 'https://calendar.google.com/calendar/scheduling-button-script.css';
+        document.head.appendChild(stylesheet);
+      }
+
+      const finish = () => resolve(Boolean(schedulingApi()));
+      const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+      if (existing) {
+        existing.addEventListener('load', finish, { once: true });
+        existing.addEventListener('error', () => resolve(false), { once: true });
+      } else {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://calendar.google.com/calendar/scheduling-button-script.js';
+        script.async = true;
+        script.addEventListener('load', finish, { once: true });
+        script.addEventListener('error', () => resolve(false), { once: true });
+        document.head.appendChild(script);
+      }
+
+      // The direct appointment link remains fully functional if a blocker or
+      // network policy prevents the third-party enhancement from answering.
+      window.setTimeout(() => resolve(false), 8000);
+    });
+
+    return win.__lcGoogleCalendarAssets;
+  };
+
+  const initialise = async () => {
+    const widgets = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-google-calendar-booking]'),
+    );
+    if (widgets.length === 0 || !(await loadGoogleSchedulingAssets())) return;
+
+    const api = schedulingApi();
+    if (!api) return;
+
+    widgets.forEach((widget) => {
+      if (widget.dataset.bookingReady === 'true') return;
+
+      const url = widget.dataset.bookingUrl ?? '';
+      const trigger = widget.querySelector<HTMLAnchorElement>('[data-booking-trigger]');
+      const host = widget.querySelector<HTMLElement>('[data-booking-embed-host]');
+      const target = widget.querySelector<HTMLElement>('[data-booking-embed-target]');
+      if (!url || !trigger || !host || !target) return;
+
+      try {
+        api.load({
+          url,
+          color: '#ffc123',
+          label: 'Schedule an appointment',
+          target,
+        });
+
+        // Google inserts the generated button immediately before `target`, as
+        // its stock snippet targets document.currentScript. The enclosing host
+        // keeps that controller off-screen while our own link remains visible.
+        const generated = host.querySelector<HTMLElement>('button, a');
+        if (!generated) return;
+
+        generated.tabIndex = -1;
+        trigger.addEventListener('click', (event) => {
+          event.preventDefault();
+          generated.click();
+        });
+        widget.dataset.bookingReady = 'true';
+      } catch {
+        // Keep the direct-link fallback. Booking must never depend on this script.
+      }
+    });
+  };
+
+  initialise();
+</script>
+
+<style>
+  .booking-widget {
+    display: contents;
+  }
+
+  /* Google's generated button is the popup controller, not a second visible
+     CTA. Keep it callable from the site-native link but out of layout and the
+     tab order. */
+  .booking-embed-host {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+</style>

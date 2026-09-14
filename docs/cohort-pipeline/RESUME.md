@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 11 September 2026
+**Last updated:** 14 September 2026
 **Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6). PR #7.
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
@@ -95,10 +95,25 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
-## Nothing is in flight
+## Appointment scheduling scaffold is ready
+
+The cohort page now has a configuration-gated Google Calendar appointment route. When
+`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` contains the appointment schedule URL from Google's
+"Button with popup" embed, **Schedule an appointment** appears beside the hero application CTA
+and in the closing next-step area. The site-native link opens Google's official popup when its
+script is available and remains a direct new-tab link when that script is blocked or unavailable.
+
+The URL is deliberately blank. While it is blank, no scheduling claim or dead control appears and
+the existing **Ask about the cohort** route remains the fallback. Opening the scheduling control is
+recorded only as `cta_click` intent; it is not a confirmed appointment, application or CRM event.
+
+**Still owed:** the actual Google appointment schedule URL/embed from the calendar owner, followed
+by desktop and mobile popup, close, direct-link and completed test-booking checks in staging.
+
+## Nothing else is in flight
 
 All six stages are built. The work that remains needs somebody who is not us — see
-*Waiting on somebody who is not us* below — or an applied schema.
+*Waiting on somebody who is not us* below — an applied schema or the real appointment URL.
 
 
 ## Where the six stages stand
@@ -247,6 +262,8 @@ and every reader who checked it was misled.
 
 ## Waiting on somebody who is not us
 
+- **The Google Calendar appointment schedule URL/embed.** The integration is scaffolded but stays
+  invisible until the real schedule is configured and ready for a staging test booking.
 - **The data controller, purposes, processors, retention and a contact point.** `/privacy`
   names all five as outstanding and is `noindex` until they arrive. The brief forbids
   publishing a generic invented policy, so do not write one.

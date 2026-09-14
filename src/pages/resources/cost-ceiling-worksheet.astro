@@ -10,8 +10,8 @@
 // src/data/resources.ts; the only page-specific thing in this file is the
 // string passed to `resourceById()`. That is deliberate and it is also a debt:
 //
-//   IF A FOURTH RESOURCE LANDS, THE CHANGE IS ONE `[resource].astro` WITH A
-//   getStaticPaths, NOT A FOURTH COPY OF THIS FILE.
+//   IF A FOURTH RESOURCE LANDS, THE CHANGE IS ONE SERVER-RENDERED
+//   `[resource].astro`, NOT A FOURTH COPY OF THIS FILE.
 //
 // Three copies is the most a duplicated renderer earns, and it is stated here
 // so the next person does not have to discover it by diffing. The FORMAT is
@@ -40,7 +40,7 @@
 //    either one's terms.
 //
 // 4. THE DOWNLOAD STAYS SCRIPT-FREE. It is an `<a download>` with a
-//    build-time data: URL, the same mechanism the templates route uses. The
+//    server-rendered data: URL, the same mechanism the templates route uses. The
 //    only script on this page is the print button, and the page is complete
 //    without it — a reader can print from their own browser menu.
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
@@ -53,8 +53,6 @@ import {
   releasedResources,
   resourceById,
 } from '../../data/resources';
-
-export const prerender = true;
 
 const d = resourceById('cost-ceiling-worksheet')!;
 
@@ -767,7 +765,7 @@ const schema: unknown[] = [
 
 <script>
   // The ONLY script on this page, and the page is complete without it: the
-  // download is a plain <a download> with a build-time data: URL, and printing
+  // download is a plain <a download> with a server-rendered data: URL, and printing
   // is in every browser's own menu. All this adds is the button.
   //
   // A module script, not is:inline, so Vite bundles it and astro check sees it.

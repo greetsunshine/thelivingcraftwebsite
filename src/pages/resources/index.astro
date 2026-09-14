@@ -63,8 +63,6 @@ import { getCollection } from 'astro:content';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import { releasedResources } from '../../data/resources';
 
-export const prerender = true;
-
 const published = await getCollection('guides', (g) => g.data.status === 'ready');
 
 // Same rule as the guides above: the COUNT is read, never typed. A sentence

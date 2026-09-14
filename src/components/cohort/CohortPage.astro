@@ -40,8 +40,10 @@
  *     says in terms: do not place it in public copy as a guarantee.
  */
 import RouteForm from './RouteForm.astro';
+import GoogleCalendarBooking from './GoogleCalendarBooking.astro';
 import { COHORT_SIZE, COMMITMENT, FEES_NOTE } from '../../data/offer-display';
 import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
+import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
 
 ---
@@ -61,6 +63,9 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
 
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        {googleCalendarAppointmentUrl && (
+          <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
+        )}
         <a class="btn btn-ghost" href="#ask">Ask about the cohort</a>
       </div>
 
@@ -332,6 +337,19 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
     <h2>Start with your experience and <em>a question</em></h2>
   </div>
 
+  {googleCalendarAppointmentUrl && (
+    <div class="closing-next-step">
+      <div class="closing-next-step-actions" aria-label="Programme next steps">
+        <a class="btn btn-primary" href="#apply-form">Apply for the open cohort</a>
+        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="closing" />
+      </div>
+      <p>
+        You can schedule an appointment without applying. A scheduling request remains separate
+        from an application and is confirmed in Google Calendar.
+      </p>
+    </div>
+  )}
+
   <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
 
   {/* The two secondary routes. Present and reachable, visually quieter — the
@@ -355,6 +373,32 @@ import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
 
 <style>
   .band { padding-block: var(--space-8); }
+
+  .closing-next-step {
+    max-width: 580px;
+    margin: 0 auto var(--space-6);
+    text-align: center;
+  }
+
+  .closing-next-step-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .closing-next-step p {
+    max-width: 52ch;
+    margin: var(--space-3) auto 0;
+    color: var(--text-quiet);
+    font-size: var(--size-2);
+  }
+
+  @media (max-width: 560px) {
+    .closing-next-step-actions .btn {
+      width: 100%;
+    }
+  }
 
   .hero-commit {
     font-family: var(--font-mono);
