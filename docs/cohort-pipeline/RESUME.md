@@ -262,6 +262,18 @@ and every reader who checked it was misled.
 
 ## Waiting on somebody who is not us
 
+- **The CI eval's Anthropic key has no credit.** `Eval the visitor agent` has failed on every PR
+  run for this branch (11 Sep and 14 Sep, identical shape both times) — every probe gets
+  `endpoint error: The assistant is briefly unavailable`, which is `/api/ask`'s own diagnostic for
+  `Anthropic.BadRequestError` matching `/credit balance/i` ([src/pages/api/ask.ts](../../src/pages/api/ask.ts)
+  around line 580). The repo secret `ANTHROPIC_API_KEY` **is set** — this is not the "key unset"
+  case CLAUDE.md documents elsewhere — its account has run out of credit. Fix is billing at
+  console.anthropic.com/settings/billing, not a code change; the code is already doing the right
+  thing by naming the cause in the job log rather than a bare failure. A secondary effect: 15
+  probes against a 12-per-60s per-IP limit ([src/lib/agent/ratelimit.ts](../../src/lib/agent/ratelimit.ts))
+  means the last 3 probes fail on rate-limit rather than credit once the real cause is fixed —
+  harmless today because it is masked by the credit failure, but worth knowing if this workflow
+  still fails once credit is restored.
 - **The Google Calendar appointment schedule URL/embed.** The integration is scaffolded but stays
   invisible until the real schedule is configured and ready for a staging test booking.
 - **The data controller, purposes, processors, retention and a contact point.** `/privacy`
