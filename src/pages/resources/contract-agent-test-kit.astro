@@ -1,0 +1,787 @@
+---
+// /resources/contract-agent-test-kit — the test kit, self-hosted.
+//
+// Same publishing decision as the other two pages in this series. The content
+// is HTML rather than a checked-in PDF, because a PDF drifts from facts.ts the
+// moment the cohort length or seat count changes and nobody notices. The PDF a
+// reader wants is produced by the browser's own print dialogue, which is what
+// the Save as PDF control opens and what the print stylesheet at the foot of
+// this file is written for.
+//
+// Nothing on this page stores, posts or scores anything. The weights in part
+// one are the kit's starting profiles, printed as inputs the reader replaces.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN, cohort } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  GATES,
+  GATE_CLOSER,
+  PROFILES,
+  CRITERIA,
+  WEIGHTS_NOTE,
+  SCORING_NOTE,
+  DISQUALIFIERS,
+  DISQUALIFIER_REASON,
+  CASES,
+  CASES_CLOSER,
+  AGREEMENT_TITLE,
+  AGREEMENT_PARTIES,
+  AGREEMENT_CLAUSES,
+  AGREEMENT_SCHEDULES,
+  ANSWER_KEY,
+  CASE_4_DATES,
+  CASE_4_NOTE,
+  PROMPT,
+  PROMPT_RULE,
+  METHOD,
+  METHOD_CLOSER,
+  FLOW,
+  FLOW_CLOSER,
+  INACTION_AUDIT,
+  INACTION_QUESTION,
+  INACTION_RULE,
+  RECORD,
+  RECORD_COLUMNS,
+  RECORD_ROWS,
+  RETEST_TRIGGERS,
+  RECORD_CLOSER,
+  AFTERNOON,
+  AFTERNOON_CLOSER,
+  DISCLAIMER,
+} from '../../data/contract-agent-test-kit';
+
+const meta = publishedResources.find((r) => r.id === 'contract-agent-test-kit')!;
+
+const title =
+  'The Contract Agent Test Kit — how to pick a model for a contract review agent · The Living Craft';
+const description =
+  'A test kit for choosing a model for a contract review agent. Ten pass-or-fail gates, twelve scored criteria with three weight profiles, four disqualifiers, four test cases with a planted clause, a fictional agreement to paste, and the decision record to write when you decide.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/contract-agent-test-kit#howto`,
+    name: 'The Contract Agent Test Kit',
+    description,
+    url: `${SITE_ORIGIN}/resources/contract-agent-test-kit`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    totalTime: 'PT3H55M',
+    step: AFTERNOON.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.body,
+      text: `${s.body} (${s.minutes})`,
+    })),
+  },
+];
+
+// The weighted rows print as a profile grid; the rest are scored with no
+// starting weight and say so rather than showing a zero.
+const weighted = CRITERIA.filter((c) => c.weights);
+const unweighted = CRITERIA.filter((c) => !c.weights);
+---
+
+<ResourcesLayout
+  title={title}
+  description={description}
+  canonical="/resources/contract-agent-test-kit"
+  schema={schema}
+>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 03</span>
+      </div>
+      <h1>How to pick a model for a contract review agent — and catch the mistake <em>no score will show you</em>.</h1>
+      <p class="lead">
+        Most model selection asks three questions. Which model scores highest, which is
+        cheapest, which is fastest. All three look at what the model wrote. In contract
+        review, the mistake that costs you is what the model left out.
+      </p>
+      <p class="hero-note mono">
+        10 gates · 12 scored criteria · 4 disqualifiers · 4 test cases · one afternoon
+      </p>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section id="use">
+    <div class="wrap">
+      <div class="controls" role="group" aria-label="Page controls">
+        <button class="btn btn-primary" id="pdf" type="button">
+          Download as PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </button>
+        <span class="ctrl-note mono">Opens your browser’s print dialogue. Choose “Save as PDF”.</span>
+      </div>
+      <p class="prose-lead">
+        The page is the resource. Everything here is free to read, fill in, print and pass
+        on, and nothing asks for an email address. Change the weights in part one and the
+        answer key in part three. They are meant to be replaced with yours.
+      </p>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> The problem this kit solves</span>
+        <h2>You cannot score your way out of a <em>missing item</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          A summary can be correct in every line and still say nothing about the clause that
+          renews your contract for another year. There is nothing on the page to mark wrong.
+        </p>
+        <p>
+          You can only catch it if you already know what should have been there. So this kit
+          gives you two things: a test set where you planted the answer yourself, and a
+          matrix that scores the things quality checks miss.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Layer 1 -->
+  <section id="gates">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> Layer 1 · gates</span>
+        <h2>Pass or fail. Checked <em>before</em> you test anything.</h2>
+      </div>
+      <p class="prose-lead">
+        Read the model card and the contract. No score can rescue a fail here. This usually
+        cuts your list in half in half an hour.
+      </p>
+      <div class="scroll">
+        <table class="grid gates">
+          <thead>
+            <tr>
+              <th>Gate</th>
+              <th>It passes if</th>
+              <th>Why a fail ends it</th>
+            </tr>
+          </thead>
+          <tbody>
+            {GATES.map((g) => (
+              <tr>
+                <td class="cname">{g.name}</td>
+                <td>{g.passes}</td>
+                <td>{g.why}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="callout">{GATE_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Layer 2 -->
+  <section id="scores">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> Layer 2 · what you score</span>
+        <h2>Two of these twelve rows are why the kit <em>exists</em>.</h2>
+      </div>
+      <p class="prose-lead">{SCORING_NOTE}</p>
+      <div class="scroll">
+        <table class="grid scores">
+          <thead>
+            <tr>
+              <th>What you score</th>
+              <th>What it means</th>
+              {PROFILES.map((p) => <th class="wcol">{p}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {weighted.map((c) => (
+              <tr class={c.key ? 'keyrow' : undefined}>
+                <td class="cname">{c.name}</td>
+                <td>{c.means}</td>
+                {c.weights!.map((w) => (
+                  <td class="wcell mono">{w}</td>
+                ))}
+              </tr>
+            ))}
+            {unweighted.map((c) => (
+              <tr>
+                <td class="cname">{c.name}</td>
+                <td>{c.means}</td>
+                {PROFILES.map(() => (
+                  <td class="wcell mono none">set it yourself</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">
+        The two rows marked in clay are missed items and letting a deadline pass. They are
+        marked because they are the two a quality review will not raise, not because they
+        outrank the others.
+      </p>
+      <p class="callout">{WEIGHTS_NOTE}</p>
+    </div>
+  </section>
+
+  <!-- Layer 3 -->
+  <section id="disqualifiers">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> Layer 3 · disqualifiers</span>
+        <h2>One strike and it is out, <em>whatever it scored</em>.</h2>
+      </div>
+      <ol class="dq">
+        {DISQUALIFIERS.map((d, i) => (
+          <li>
+            <span class="dqn mono">{String(i + 1).padStart(2, '0')}</span>
+            <span class="dqbody">{d}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="callout stop">{DISQUALIFIER_REASON}</p>
+    </div>
+  </section>
+
+  <!-- Cases -->
+  <section id="cases">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> The four test cases</span>
+        <h2>Same instructions and same permissions for <em>every candidate</em>.</h2>
+      </div>
+      <div class="cases">
+        {CASES.map((c) => (
+          <div class="case">
+            <div class="chead">
+              <span class="cn mono">Case {c.n}</span>
+              <h3>{c.name}</h3>
+            </div>
+            <p class="csetup">{c.setup}</p>
+            <p class="crow"><span class="clabel mono">Right answer</span> {c.right}</p>
+            <p class={`crow${c.failure ? ' watch' : ''}`}><span class="clabel mono">{c.watchLabel}</span> {c.watch}</p>
+          </div>
+        ))}
+      </div>
+      <p class="callout">{CASES_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- The agreement -->
+  <section id="agreement">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> A case you can run this afternoon</span>
+        <h2>Use your own agreement. If you have none, <em>paste this one</em>.</h2>
+      </div>
+      <p class="label-fiction">
+        Fictional. Northfield Retail and Arbor Logistics do not exist, and the rates below
+        are not a price for anything. The document exists to test model behaviour and
+        nothing else.
+      </p>
+      <article class="doc">
+        <h3 class="dtitle mono">{AGREEMENT_TITLE}</h3>
+        <p class="dparties">{AGREEMENT_PARTIES}</p>
+        {AGREEMENT_CLAUSES.map((c) => (
+          <p class="dclause">
+            <strong>{c.ref}. {c.heading}.</strong> {c.text}
+          </p>
+        ))}
+        {AGREEMENT_SCHEDULES.map((s) => {
+          // A schedule whose first line carries no C.1-style reference reads on
+          // the same line as its heading, which is how Schedules A and B are
+          // written. EVERY OTHER LINE IS RENDERED, referenced or not. Filtering
+          // to `l.ref` here would drop a second unreferenced line silently, and
+          // silently losing somebody's text is the failure this repo keeps
+          // paying for — see the ADR parser and its unknown headings.
+          const inline = s.lines[0] && !s.lines[0].ref ? s.lines[0] : null;
+          const rest = inline ? s.lines.slice(1) : s.lines;
+          return (
+            <div class="dsched">
+              <p class="dclause">
+                <strong>{s.ref} — {s.heading}.</strong>
+                {inline ? ` ${inline.text}` : ''}
+              </p>
+              {rest.map((l) => (
+                <p class={`dclause dsub${l.planted ? ' planted' : ''}`}>
+                  {l.ref ? <strong>{l.ref}</strong> : null} {l.text}
+                </p>
+              ))}
+            </div>
+          );
+        })}
+      </article>
+
+      <h3 class="sub">The answer key</h3>
+      <p class="prose-lead">Three obligations here create cost or risk if they are missed.</p>
+      <div class="scroll">
+        <table class="grid key">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Obligation</th>
+              <th>Where it sits</th>
+              <th>Commonly missed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ANSWER_KEY.map((k) => (
+              <tr class={k.planted ? 'keyrow' : undefined}>
+                <td class="mono">{k.n}</td>
+                <td class="cname">{k.obligation}</td>
+                <td class="mono">{k.where}</td>
+                <td class={k.planted ? 'cplanted' : undefined}>{k.missed}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Case 4 · the date arithmetic</h3>
+      <dl class="dates">
+        {CASE_4_DATES.map((d) => (
+          <div class="daterow">
+            <dt>{d.label}</dt>
+            <dd class="mono">{d.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p class="prose-note">{CASE_4_NOTE}</p>
+
+      <h3 class="sub">The prompt</h3>
+      <blockquote class="prompt">{PROMPT}</blockquote>
+      <p class="prose-note">{PROMPT_RULE}</p>
+
+      <h3 class="sub">How to score what is missing</h3>
+      <ol class="method">
+        {METHOD.map((m) => (
+          <li>
+            <span class="mn mono">{m.n}</span>
+            <span class="mbody">{m.body}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{METHOD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- The flow -->
+  <section id="flow">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> The flow, and where it leaks</span>
+        <h2>Missing data turns into confident prose at <em>four of five steps</em>.</h2>
+      </div>
+      <div class="steps">
+        {FLOW.map((f) => (
+          <div class="step">
+            <div class="smeta">
+              <span class="sn mono">{f.n}</span>
+              <strong>{f.name}</strong>
+              <span class="swhat">{f.what}</span>
+            </div>
+            <div class="sbody">
+              <p class="leak"><span class="slabel mono">Leak</span> {f.leak}</p>
+              <p class="fix"><span class="slabel mono">Fix</span> {f.fix}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="callout">{FLOW_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Inaction audit -->
+  <section id="inaction">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> The inaction audit</span>
+        <h2>Obligations an agent can trigger by <em>staying silent</em>.</h2>
+      </div>
+      <p class="prose-lead">Check each one against your own agreements.</p>
+      <ul class="silent">
+        {INACTION_AUDIT.map((s, i) => (
+          <li>
+            <span class="sil-n mono">{String(i + 1).padStart(2, '0')}</span>
+            <span class="sil-body">
+              <strong>{s.name}</strong>
+              <span class="sil-cost">{s.cost}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p class="callout">{INACTION_QUESTION}</p>
+      <p class="prose-note">{INACTION_RULE}</p>
+    </div>
+  </section>
+
+  <!-- Decision record -->
+  <section id="record">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">09</span> The decision record</span>
+        <h2>One page. Written when you decide, <em>not afterwards</em>.</h2>
+      </div>
+      <p class="prose-lead">Print this section to fill it in by hand, or copy the headings into your own record.</p>
+      <div class="rec">
+        {RECORD.map((g) => (
+          <div class="recgroup">
+            <h3 class="recheading mono">{g.heading}</h3>
+            {g.fields.map((f) => (
+              <p class="recfield"><span class="rlabel">{f}</span><span class="rline"></span></p>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <h3 class="sub">Results</h3>
+      <p class="prose-note">One row per candidate. Nothing on this page adds them up.</p>
+      <div class="scroll">
+        <table class="grid results">
+          <thead>
+            <tr>
+              <th></th>
+              {RECORD_COLUMNS.map((c) => <th>{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {RECORD_ROWS.map((r) => (
+              <tr>
+                <td class="cname mono">{r}</td>
+                {RECORD_COLUMNS.map(() => <td>&nbsp;</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Re-test if any of these happen</h3>
+      <ul class="retest">
+        {RETEST_TRIGGERS.map((t) => <li>{t}</li>)}
+      </ul>
+      <p class="recfield next"><span class="rlabel">Next re-test due</span><span class="rline"></span></p>
+      <p class="callout">{RECORD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- The afternoon -->
+  <section id="afternoon">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">10</span> Run the whole thing in an afternoon</span>
+        <h2>Three hours and fifty-five minutes, <em>in this order</em>.</h2>
+      </div>
+      <ol class="protocol">
+        {AFTERNOON.map((s) => (
+          <li>
+            <div class="pmeta"><span class="pn mono">{s.n}</span><span class="pmin mono">{s.minutes}</span></div>
+            <div class="pbody"><p>{s.body}</p></div>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{AFTERNOON_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- What comes next -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> What comes next</span>
+        <h2>This picks a model. It does not tell you the system <em>holds up</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Every row you scored is a claim about one step on one day. Keeping that claim true
+          means an eval set you run again when the version moves, and a register that catches
+          the obligations the agent never mentions.
+        </p>
+        <p>
+          The Living Craft runs a {cohort.weeks}-week cohort on exactly this: building agents
+          for decisions where the right answer is genuinely debatable, and building the evals
+          that show they hold up. {cohort.seats} seats, by application only, for Staff+
+          engineers, engineering managers and architects who ship to production.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="disclaimer">{DISCLAIMER}</p>
+      <p class="mono faint pubdate">
+        Published {longDate(meta.publishedAt)} · free to use, to change and to pass on
+      </p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other two resource pages. */
+  .prose p + p { margin-top: var(--space-4); }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .disclaimer { margin-top: var(--space-6); font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  /* ── controls ─────────────────────────────────────────────────────────── */
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-5); }
+  .ctrl-note { font-size: var(--size-1); color: var(--text-quiet); }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  .callout.stop { background: var(--danger-quiet); }
+
+  /* ── tables ───────────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .gates { min-width: 820px; }
+  .scores { min-width: 960px; }
+  .key { min-width: 760px; }
+  .results { min-width: 1000px; }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 170px; }
+  /* Marked, not ranked: these are the rows a quality review will not raise. */
+  .keyrow .cname { color: var(--accent-ink-strong); }
+  .cplanted { color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
+  .wcol { white-space: nowrap; }
+  .wcell { text-align: center; color: var(--text-body); font-weight: var(--weight-strong); white-space: nowrap; }
+  .wcell.none { color: var(--text-quiet); font-weight: var(--weight-normal); font-size: var(--size-1); }
+  .results tbody td { height: 44px; }
+
+  /* ── disqualifiers ────────────────────────────────────────────────────── */
+  ol.dq { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ol.dq li {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .dqn { color: var(--danger); font-weight: var(--weight-strong); }
+  .dqbody { color: var(--text-body); }
+
+  /* ── cases ────────────────────────────────────────────────────────────── */
+  /* Four cards, two-up. Three-and-one reads as a card that failed to load —
+     the same call /resources makes for its four entry cards. */
+  .cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .case {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .chead { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+  .cn { font-size: var(--size-1); color: var(--text-quiet); }
+  .case h3 { font-size: var(--size-5); }
+  .csetup { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-4); }
+  .crow { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-3); }
+  .crow:last-child { margin-bottom: 0; }
+  .clabel { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-bottom: 2px; }
+  .crow.watch .clabel { color: var(--danger); }
+
+  /* ── the fictional agreement ──────────────────────────────────────────── */
+  .label-fiction {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-4);
+  }
+  .doc {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+  .dtitle { font-size: var(--size-3); letter-spacing: .04em; margin-bottom: var(--space-2); }
+  .dparties { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-5); }
+  .dclause { font-size: var(--size-2); color: var(--text-quiet); max-width: 86ch; margin-bottom: var(--space-3); }
+  .dclause strong { color: var(--text-body); }
+  .dsched { margin-top: var(--space-5); }
+  .dsub { padding-left: var(--space-5); }
+  /* The buried clause. Marked here BECAUSE this copy is the answer key's twin —
+     a reader pasting the document into a model should paste it unmarked. */
+  .dsub.planted { background: var(--accent-quiet); border-radius: var(--radius-inner); padding: var(--space-3) var(--space-4) var(--space-3) var(--space-5); }
+  .dsub.planted strong { color: var(--accent-ink-strong); }
+
+  /* ── dates ────────────────────────────────────────────────────────────── */
+  .dates { display: flex; flex-direction: column; }
+  .daterow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-hair);
+    max-width: var(--measure-prose);
+  }
+  .daterow:last-child { border-bottom: 0; }
+  .daterow dt { font-size: var(--size-2); color: var(--text-quiet); }
+  .daterow dd { font-size: var(--size-2); color: var(--text-body); font-weight: var(--weight-medium); }
+
+  /* ── prompt ───────────────────────────────────────────────────────────── */
+  .prompt {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    max-width: 90ch;
+  }
+
+  /* ── method + afternoon ───────────────────────────────────────────────── */
+  ol.method { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ol.method li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: baseline; }
+  .mn { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
+  .mbody { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  ol.protocol li { display: grid; grid-template-columns: 76px 1fr; gap: var(--space-4); align-items: start; }
+  .pmeta { display: flex; flex-direction: column; gap: 2px; }
+  .pn { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .pmin { font-size: var(--size-1); color: var(--text-quiet); }
+  .pbody p { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  /* ── flow ─────────────────────────────────────────────────────────────── */
+  .steps { display: flex; flex-direction: column; gap: var(--space-3); }
+  .step {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .smeta { display: flex; flex-direction: column; gap: 2px; }
+  .sn { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .smeta strong { color: var(--text-body); }
+  .swhat { font-size: var(--size-2); color: var(--text-quiet); }
+  .sbody p { font-size: var(--size-2); max-width: 82ch; }
+  .sbody .leak { color: var(--text-quiet); margin-bottom: var(--space-3); }
+  .sbody .fix { color: var(--text-body); }
+  .slabel { display: block; font-size: var(--size-1); margin-bottom: 2px; }
+  .leak .slabel { color: var(--danger); }
+  .fix .slabel { color: var(--accent-ink-strong); }
+
+  /* ── inaction audit ───────────────────────────────────────────────────── */
+  ul.silent { list-style: none; display: flex; flex-direction: column; }
+  ul.silent li {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-hair);
+  }
+  ul.silent li:last-child { border-bottom: 0; }
+  .sil-n { color: var(--text-quiet); }
+  .sil-body { display: flex; flex-direction: column; gap: 2px; }
+  .sil-body strong { color: var(--text-body); }
+  .sil-cost { font-size: var(--size-2); color: var(--text-quiet); }
+
+  /* ── decision record ──────────────────────────────────────────────────── */
+  .rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
+  .recgroup {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .recheading { font-size: var(--size-1); color: var(--accent-ink-strong); margin-bottom: var(--space-4); }
+  .recfield { margin-bottom: var(--space-4); }
+  .recfield:last-child { margin-bottom: 0; }
+  .rlabel { display: block; font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-2); }
+  .rline { display: block; height: 1px; background: var(--border-field); }
+  .recfield.next { max-width: 420px; margin-top: var(--space-5); }
+
+  ul.retest { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+  ul.retest li {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    padding-left: var(--space-5);
+    position: relative;
+  }
+  ul.retest li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .55em;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--border-field);
+    border-radius: 2px;
+  }
+
+  @media (max-width: 900px) {
+    .step { grid-template-columns: 1fr; gap: var(--space-3); }
+    .cases { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    ol.protocol li, ol.dq li, ul.silent li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+
+  /* ── print: this is the PDF the Download control produces ─────────────── */
+  @media print {
+    .controls, .hero-cta, .final .btn { display: none !important; }
+    .case, .step, .recgroup, .doc, ol.dq li {
+      box-shadow: none;
+      border: 1px solid var(--border-hair);
+      break-inside: avoid;
+    }
+    table.grid, .scroll { overflow: visible !important; }
+    .gates, .scores, .key, .results { min-width: 0 !important; font-size: 10px; }
+    thead { display: table-header-group; }
+    tr, ul.silent li, ol.protocol li, ol.method li, .daterow { break-inside: avoid; }
+    #agreement, #record { break-before: page; }
+    .sub { break-after: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // The only script on the page. There is no PDF file to download: the browser
+  // makes one from the print stylesheet above, which is why the button says
+  // what it opens. Nothing is stored, and nothing is posted.
+  document.getElementById('pdf')?.addEventListener('click', () => window.print());
+</script>
