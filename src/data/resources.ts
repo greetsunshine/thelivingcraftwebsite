@@ -48,8 +48,8 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Screen" and "The Contract Agent Test Kit" are names, and a
-   * reader scanning the list is looking for their problem, not for a name.
+   * "The POC Screen" and "The Run-Cost Model" are names, and a reader
+   * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
   topic: string;
