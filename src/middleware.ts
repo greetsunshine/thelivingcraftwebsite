@@ -49,11 +49,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (isCraftPath(path)) return craftGate(context, next, path);
 
     // /craft and /craft/admin are noindexed unconditionally below, on every
-    // environment — they are gated surfaces, not staging leakage. Everything
-    // else (the public pages, /api/facts, /llms.txt, /sitemap.xml, …) is only
-    // noindexed here on a non-production deployment: a Vercel preview
-    // (staging) or a local build. See src/lib/env.ts for why this is safe
-    // across a Promote-to-Production click with no rebuild.
+    // environment. They are gated surfaces, not staging leakage. Everything
+    // else is noindexed here only on a non-production deployment: a Vercel
+    // preview or a local build.
+    //
+    // THIS HEADER DOES NOT REACH A PRERENDERED ROUTE. Astro runs middleware for
+    // those at build time, and Vercel then serves the built file with no
+    // function in front of it. So /toolkit and everything under /resources and
+    // /tools are covered by SeoHead's baked robots meta instead. /llms.txt and
+    // /sitemap.xml are covered by robots.txt alone, because they are
+    // prerendered AND carry no meta tag. See src/lib/env.ts.
     const response = await next();
     if (!isProduction()) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     return response;

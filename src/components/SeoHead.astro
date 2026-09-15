@@ -13,12 +13,27 @@ export interface Props {
   schema?: unknown[];
   /** OG image path, relative to the origin. */
   image?: string;
+  /**
+   * Keep this page out of the index whatever the environment. For a page that
+   * is deliberately not for search — an honest placeholder, a page the owner
+   * has not signed off. Staging is handled separately, below.
+   */
+  noindex?: boolean;
 }
 
 // The social card is its own file, not the hero portrait. The hero photo is a 4:5
 // portrait, and a summary_large_image card crops that to a wide band across the
 // chest. /og-card.jpg is the same photograph, cropped to 1200x630.
-const { title, description, canonical, schema = [], image = '/og-card.jpg' } = Astro.props;
+const { title, description, canonical, schema = [], image = '/og-card.jpg', noindex = false } = Astro.props;
+
+// Two separate reasons to stay out of the index, and they are not the same
+// thing. `noindex` is the page saying so about itself, on every environment.
+// isProduction() is the DEPLOYMENT saying so: a Vercel preview or a local build
+// must not be indexed whatever the page thinks. Either one is enough.
+//
+// On a prerendered route this is decided at build time, not per request. See
+// src/lib/env.ts for which routes those are and what it costs.
+const indexable = isProduction() && !noindex;
 
 const href = canonical
   ? new URL(canonical, SITE_ORIGIN).href
@@ -65,7 +80,7 @@ const graph = {
 <meta name="author" content={practitioner.name} />
 <meta
   name="robots"
-  content={isProduction() ? 'index, follow, max-image-preview:large, max-snippet:-1' : 'noindex, nofollow'}
+  content={indexable ? 'index, follow, max-image-preview:large, max-snippet:-1' : 'noindex, nofollow'}
 />
 
 <meta property="og:site_name" content="Sunil Mathew — The Living Craft" />

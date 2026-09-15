@@ -64,11 +64,23 @@ const DISALLOW = [
 ];
 
 export const GET: APIRoute = () => {
-  // Any deployment that is not the promoted production one — a Vercel preview
-  // (staging) or a local build — blocks everything. This is read at request
-  // time (see src/lib/env.ts), so promoting a staging build to production
-  // flips this without a rebuild. There is no permissive body to accidentally
-  // ship early and no staging body to accidentally leave behind.
+  // Any deployment that is not production blocks everything. That covers a
+  // Vercel preview and a local build.
+  //
+  // This route is rendered on demand, so the check runs per request and there
+  // is no permissive body baked into a file that could ship early. Promoting a
+  // preview to production rebuilds it anyway; see src/lib/env.ts for the paths
+  // that do not rebuild and why none of them strands a Disallow on the domain.
+  //
+  // This is also the ONLY cover /llms.txt and /sitemap.xml get off production.
+  // Both are prerendered, so the middleware header never runs for them, and
+  // plain text and XML carry no robots meta tag.
+  //
+  // One known cost, so nobody "fixes" it by accident: Disallow stops a crawler
+  // fetching the page, which means it never reads the noindex beside it. For a
+  // preview URL nothing links to that is the cheaper defence. For a URL already
+  // in the index it is the wrong one, and removing the Disallow is what lets
+  // the noindex be seen.
   if (!isProduction()) {
     return new Response(
       ['# Non-production deployment. Nothing here should be indexed.', '', 'User-agent: *', 'Disallow: /', ''].join(

@@ -15,11 +15,12 @@
 //    The public fact base now follows the same V4 offer policy as the pages, so
 //    a future widget can be added without exposing the retired regional offer.
 //
-// 2. `noindex` emits a SECOND robots meta after SeoHead's. SeoHead hardcodes
-//    `index, follow` and is not ours to change in this stage; where two robots
-//    meta tags conflict the more restrictive one applies, so noindex wins.
-//    It is a workaround, not a pattern: give SeoHead a `noindex` prop the next
-//    time that file is open, and delete this.
+// 2. `noindex` is passed straight through to SeoHead, which owns the robots
+//    meta tag. It used to emit a second, more restrictive meta after SeoHead's,
+//    because SeoHead hardcoded `index, follow`. SeoHead now takes the prop, so
+//    there is one tag again. Two robots meta tags do resolve to the stricter
+//    one, but only the tag that is actually there can be read, and a page with
+//    two of them is a page somebody will later "fix" the wrong way.
 //
 // 3. The <style is:global> block holds ONLY the primitives every page in this
 //    section shares — prose measure, the pending-facts block, breadcrumbs.
@@ -57,9 +58,7 @@ const { title, description, canonical, schema, noindex = false } = Astro.props;
 <html lang="en">
   <head>
     <GoogleTagManager />
-    <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
-    {/* See note 2 above. The restrictive directive wins over SeoHead's. */}
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
   <body>
     <GoogleTagManagerNoscript />

@@ -899,6 +899,26 @@ prospect.
 - `SeoHead.astro` is for public surfaces only. **`/craft/admin` must never use it** — a
   JSON-LD `@graph` describing the cohort, emitted from a page listing leads, is
   exactly the wrong artefact. `AdminLayout.astro` has its own minimal head.
+- **Only the production deployment may be indexed.** One check,
+  [src/lib/env.ts](src/lib/env.ts), reads Vercel's own `VERCEL_ENV` and drives three
+  layers: `robots.txt` serves `Disallow: /` off production, `SeoHead` emits
+  `noindex, nofollow`, and `middleware.ts` adds the same as an `X-Robots-Tag` header.
+  Read that file before changing any of the three. Two things in it are easy to get
+  wrong:
+  - **A prerendered route decides this at BUILD time.** Thirteen routes carry
+    `prerender = true`, including `/llms.txt`, `/sitemap.xml`, `/toolkit` and
+    everything under `/resources` and `/tools`. The middleware header never runs for
+    them, so `/llms.txt` and `/sitemap.xml` off production are covered by `robots.txt`
+    and nothing else.
+  - **A staged production build is a production build.** `VERCEL_ENV` is
+    `production` for a deployment that has no domain assigned yet, so the check calls
+    it production and the stage URL is indexable. If staging by that route is
+    adopted, this has to gate on the request host instead. Promoting a *preview* to
+    production is a different thing and rebuilds, so it is safe as it stands.
+- `SeoHead` owns the robots meta tag, and it is the only place that emits one on a
+  public page. A page that must stay out of the index whatever the environment passes
+  `noindex` (`PracticeLayout` forwards its own prop straight through). Never add a
+  second `<meta name="robots">` beside it.
 - Canonical host is `learning.thelivingcraft.ai`. The apex and `www` are
   unattached (404) — flagged to Sunil, not fixed here.
 
