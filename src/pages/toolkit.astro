@@ -58,6 +58,8 @@ import PracticeLayout from '../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../data/facts';
 import { NO_GATE, NO_SCORE, csvFilename, csvHref, releasedResources } from '../data/resources';
 
+export const prerender = true;
+
 const resources = releasedResources();
 const count = resources.length;
 

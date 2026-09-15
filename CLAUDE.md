@@ -905,19 +905,11 @@ prospect.
   `noindex, nofollow`, and `middleware.ts` adds the same as an `X-Robots-Tag` header.
   Read that file before changing any of the three. Two things in it are easy to get
   wrong:
-  - **A prerendered route decides this at BUILD time — which is why nothing on the
-    public site is prerendered any more.** Thirteen routes carried `prerender = true`
-    (`/llms.txt`, `/sitemap.xml`, `/toolkit` and everything under `/resources` and
-    `/tools`) until 15 September, when Sunil asked for the whole public site back on
-    request-time rendering. Eleven lost the flag outright; the two dynamic slug routes
-    (`/resources/guides/[...slug]`, `/resources/templates/[...slug]`) lost
-    `getStaticPaths()` too and now look their entry up from `Astro.params` at request
-    time, 404ing via `Astro.rewrite('/404')` on an unknown or draft slug — the same
-    draft gate `getStaticPaths()` used to enforce at build time. If a route here ever
-    grows a `prerender = true` back, remember what it costs: the middleware's
-    `X-Robots-Tag` header never runs for a prerendered route, only `robots.txt` covers
-    it off production, and it costs a fresh Vercel function invocation per request
-    instead of a CDN-edge file.
+  - **A prerendered route decides this at BUILD time.** Thirteen routes carry
+    `prerender = true`, including `/llms.txt`, `/sitemap.xml`, `/toolkit` and
+    everything under `/resources` and `/tools`. The middleware header never runs for
+    them, so `/llms.txt` and `/sitemap.xml` off production are covered by `robots.txt`
+    and nothing else.
   - **A staged production build is a production build.** `VERCEL_ENV` is
     `production` for a deployment that has no domain assigned yet, so the check calls
     it production and the stage URL is indexable. If staging by that route is

@@ -29,6 +29,8 @@ import { getCollection } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../../../data/facts';
 
+export const prerender = true;
+
 // The draft gate, identical to the one in [...slug].astro and to the pair the
 // guides use. Two deliberate copies of one predicate rather than a helper in
 // src/lib, because this is the whole of it.
