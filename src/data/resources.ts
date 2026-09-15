@@ -138,31 +138,8 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-13',
   },
   {
-    id: 'contract-agent-test-kit',
-    topic: 'Model Selection · Worked',
-    number: '03',
-    series: 'Agentic system design',
-    title: 'The Contract Agent Test Kit',
-    kind: 'Test kit · 4 cases, 1 sample agreement',
-    summary:
-      'How to pick a model for a contract review agent, and how to catch the mistake that no score will show you.',
-    description:
-      'Model selection usually asks which model scores highest, which is cheapest and which is fastest. All three look at what the model wrote. In contract review the mistake that costs money is what the model left out, and a summary can be correct in every line while never mentioning the clause that renews the agreement for another year. There is nothing on the page to mark wrong, so a score cannot find it. This kit gives you the two things that can: a test set where you planted the answer yourself, and a matrix that scores what quality checks miss. Ten pass-or-fail gates read off the model card before anything is run. Twelve scored criteria, eight of them carrying a starting weight for three different jobs — drafting for a human, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases, including a buried obligation and a notice window that has already closed. A fictional master services agreement to paste, with its answer key, the exact prompt, and the method for scoring what is missing. It closes with the five-step flow and where each step leaks, an audit of the obligations an agent triggers by staying silent, and the one-page decision record to write on the day you choose.',
-    useFor: [
-      'Cut a candidate list in half in half an hour, on gates a score cannot rescue',
-      'Weight the twelve criteria for the specific step you are staffing, rather than for the system as a whole',
-      'Measure the missed-item rate against an answer key you wrote before the first run',
-      'Find the obligations in your own agreements that an agent can trigger by doing nothing',
-      'Write the decision record that turns the next deprecation notice into a Tuesday',
-    ],
-    format:
-      'Page, with the sample agreement, the blank decision record and every table. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
-    url: '/resources/contract-agent-test-kit',
-    publishedAt: '2026-09-15',
-  },
-  {
     id: 'model-selection-checklist',
-    number: '04',
+    number: '03',
     topic: 'Model Selection',
     series: 'Agentic system design',
     title: 'The Model Selection Checklist',

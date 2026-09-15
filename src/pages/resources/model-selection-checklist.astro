@@ -1,10 +1,11 @@
 ---
-// /resources/model-selection-checklist — the generic checklist.
+// /resources/model-selection-checklist — the checklist.
 //
-// The contract kit at /resources/contract-agent-test-kit applies these same
-// three layers to one job in full, with a sample agreement and an answer key.
-// This page is the version you run against any step, and it links there for the
-// worked example rather than restating it. Two documents, one shape.
+// This REPLACED /resources/contract-agent-test-kit, which applied the same
+// three layers to contract review alone. That page was published and indexed,
+// so its address redirects here from astro.config.mjs rather than 404ing. Do
+// not re-add a link to it: the page is gone, and the redirect is the only thing
+// that should still know the old path.
 //
 // The boxes are real checkboxes so the page can be filled in on screen. They
 // are NOT persisted: no localStorage, no sessionStorage, nothing posted. The
@@ -41,7 +42,6 @@ import {
 } from '../../data/model-selection-checklist';
 
 const meta = publishedResources.find((r) => r.id === 'model-selection-checklist')!;
-const worked = publishedResources.find((r) => r.id === 'contract-agent-test-kit')!;
 
 const title =
   'The Model Selection Checklist — choosing a model for one step of your system · The Living Craft';
@@ -84,7 +84,8 @@ const unweighted = CRITERIA.filter((c) => !c.weights);
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
       <div class="eyebrow">
-        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 04</span>
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number}</span>
       </div>
       <h1>A checklist for choosing a model — for <em>one step</em>, not for the whole system.</h1>
       <p class="lead">
@@ -298,9 +299,8 @@ const unweighted = CRITERIA.filter((c) => !c.weights);
         </table>
       </div>
       <p class="prose-note">
-        Case 1 is not in the table because an ordinary case looks the same in every job. All four
-        are worked through in full, on one sample agreement with its answer key, in
-        <a class="textlink" href={worked.url}>{worked.title}</a>.
+        Case 1 is not in the table because an ordinary case looks the same in every job. Build it
+        anyway. It is the one that tells you a candidate has failed before you spend the afternoon.
       </p>
     </div>
   </section>
@@ -419,7 +419,7 @@ const unweighted = CRITERIA.filter((c) => !c.weights);
       </div>
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href={worked.url}>The worked example&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
       </p>
       <p class="mono faint pubdate">
         Published {longDate(meta.publishedAt)} · free to use, to change and to pass on

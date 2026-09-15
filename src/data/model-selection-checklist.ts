@@ -1,17 +1,17 @@
-// The Model Selection Checklist — the generic version of the same three layers
-// the contract kit applies to one job.
+// The Model Selection Checklist — gates, scored criteria, disqualifiers, four
+// test shapes, the method for scoring what is missing, and a decision record.
 //
 // Source of truth for /resources/model-selection-checklist.
 //
-// WHY THIS DOES NOT IMPORT FROM contract-agent-test-kit.ts. The two documents
-// carry the same SHAPE and deliberately different WORDS. "Fits the full
-// agreement plus every schedule" is the right sentence on a contract page and
-// the wrong one here, where the input might be a ticket thread, an invoice or a
-// pull request. Sharing the arrays would force one wording on both and the
-// generic one would win, which would quietly make the contract page vaguer.
-// These are two documents, not one format with two renderers, so the prose is
-// written twice on purpose. The rule about a format needing a single owner
-// applies to formats. It does not make two resources share a paragraph.
+// THIS REPLACED THE CONTRACT AGENT TEST KIT. That page ran the same three
+// layers against contract review alone, with a sample agreement and an answer
+// key. It was published and indexed, and /resources/contract-agent-test-kit now
+// redirects here from astro.config.mjs. The wording below is written for ANY
+// step on purpose: "fits the full agreement plus every schedule" became "fits
+// your longest real input, plus everything that input refers to", because the
+// input might be a ticket thread, an invoice or a pull request. If a
+// contract-specific version is ever wanted again, write it as its own document
+// rather than adding contract words back into these arrays.
 //
 // NOTHING HERE IS SUMMED, AVERAGED OR RANKED. The weights are inputs a reader
 // sets for the step they are staffing. There is no total, no grade and no
