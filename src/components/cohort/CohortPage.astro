@@ -588,20 +588,28 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     </div>
   )}
 
-  <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
-
-  {/* The two secondary routes. Present and reachable, visually quieter — the
-      wireframe asks for a secondary action "without competing visually", and
-      an enquiry is a smaller ask that should not be dressed as an equal one. */}
-  <div class="alt-routes">
-    <div id="ask" class="alt-route">
-      <RouteForm route="enquiry" id="enquiry-form" />
-    </div>
+  {/* Apply and the team route sit side by side — both are a full, committed
+      submission (an application, or an organisation opportunity), just two
+      different journeys. The enquiry route below is a smaller ask — "no
+      application milestone inferred", per forms.ts — so it is a dropdown
+      rather than a third equal column. */}
+  <div class="apply-split">
+    <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
 
     <div id="team" class="alt-route">
       <RouteForm route="enterprise" id="enterprise-form" />
     </div>
   </div>
+
+  <details class="ask-drop" id="ask">
+    <summary>
+      Ask about the cohort
+      <span class="plus" aria-hidden="true">+</span>
+    </summary>
+    <div class="alt-route">
+      <RouteForm route="enquiry" id="enquiry-form" />
+    </div>
+  </details>
 
   <p class="contact-line">
     Programme enquiries and employer-funding support, and enterprise enquiries:
@@ -764,8 +772,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
   /* ── forms ───────────────────────────────────────────────────────────── */
   .forms :global(.apply-form) { margin-inline: 0; }
-  .alt-routes {
-    margin-top: var(--space-8);
+
+  /* Apply and the team route, side by side — see the markup comment for why
+     the enquiry route is not a third column here. */
+  .apply-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
@@ -782,6 +792,24 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     padding: 0;
     max-width: none;
   }
+
+  /* The enquiry route, collapsed. Reuses the FAQ's bare details/summary
+     styling from global.css (the plus rotates on open) inside its own panel,
+     rather than the multi-item .faq wrapper, which assumes several stacked
+     rows with dividers between them. */
+  .ask-drop {
+    margin-top: var(--space-6);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-2) var(--space-6);
+    border-bottom: 0;
+  }
+  .ask-drop summary { padding: var(--space-5) 0; }
+  .ask-drop[open] summary { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+  .ask-drop .alt-route {
+    background: transparent;
+    padding: var(--space-5) 0;
+  }
   .contact-line {
     margin-top: var(--space-7);
     font-size: var(--size-3);
@@ -794,7 +822,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     .two-up,
     .example,
     .commit,
-    .alt-routes {
+    .apply-split {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
