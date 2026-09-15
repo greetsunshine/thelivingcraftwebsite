@@ -327,8 +327,11 @@ const description =
             <ul class="tlist">
               {group.items.map((r) => (
                 <li>
-                  <a class="textlink" href={r.url}>{r.title}</a>
-                  <span class="quiet"> — {r.summary}</span>
+                  <span class="n rtopic">{r.topic}</span>
+                  <span class="ritem">
+                    <a class="textlink" href={r.url}>{r.title}</a>
+                    <span class="quiet"> — {r.summary}</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -342,6 +345,28 @@ const description =
 <style>
   .band {
     padding-block: var(--space-8);
+  }
+
+  /* The topic leads the row, so the list can be read down the left edge: what
+     decision, then which piece. `.n` in global.css already owns the mono clay
+     marker; the width is set here so four labels line up as a column rather
+     than pushing each title to a different indent. */
+  .rtopic {
+    /* Wide enough for the longest label, so the titles line up at one indent
+       rather than at four. Measured against "Scope of Authority". */
+    min-width: 20ch;
+  }
+  .ritem {
+    flex: 1;
+  }
+  @media (max-width: 720px) {
+    .series .tlist li {
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .rtopic {
+      min-width: 0;
+    }
   }
 
   /* Four cards in a grid built for three. Two-up rather than three-and-one,
