@@ -291,21 +291,29 @@ const unweighted = CRITERIA.filter((c) => !c.weights);
             <strong>{c.ref}. {c.heading}.</strong> {c.text}
           </p>
         ))}
-        {AGREEMENT_SCHEDULES.map((s) => (
-          <div class="dsched">
-            <p class="dclause">
-              <strong>{s.ref} — {s.heading}.</strong>
-              {s.lines.length === 1 && !s.lines[0].ref ? ` ${s.lines[0].text}` : ''}
-            </p>
-            {s.lines
-              .filter((l) => l.ref)
-              .map((l) => (
+        {AGREEMENT_SCHEDULES.map((s) => {
+          // A schedule whose first line carries no C.1-style reference reads on
+          // the same line as its heading, which is how Schedules A and B are
+          // written. EVERY OTHER LINE IS RENDERED, referenced or not. Filtering
+          // to `l.ref` here would drop a second unreferenced line silently, and
+          // silently losing somebody's text is the failure this repo keeps
+          // paying for — see the ADR parser and its unknown headings.
+          const inline = s.lines[0] && !s.lines[0].ref ? s.lines[0] : null;
+          const rest = inline ? s.lines.slice(1) : s.lines;
+          return (
+            <div class="dsched">
+              <p class="dclause">
+                <strong>{s.ref} — {s.heading}.</strong>
+                {inline ? ` ${inline.text}` : ''}
+              </p>
+              {rest.map((l) => (
                 <p class={`dclause dsub${l.planted ? ' planted' : ''}`}>
-                  <strong>{l.ref}</strong> {l.text}
+                  {l.ref ? <strong>{l.ref}</strong> : null} {l.text}
                 </p>
               ))}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </article>
 
       <h3 class="sub">The answer key</h3>
