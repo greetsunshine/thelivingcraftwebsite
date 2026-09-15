@@ -1,0 +1,16 @@
+---
+// Body half of Google Tag Manager, placed immediately after the opening
+// <body> tag per Google's own instructions. Always paired with
+// GoogleTagManager.astro's <head> script — never render one without the other.
+import { GTM_CONTAINER_ID } from '../data/site';
+---
+
+<noscript>
+  <iframe
+    src={`https://www.googletagmanager.com/ns.html?id=${GTM_CONTAINER_ID}`}
+    height="0"
+    width="0"
+    style="display:none;visibility:hidden"
+    title="Google Tag Manager"
+  ></iframe>
+</noscript>

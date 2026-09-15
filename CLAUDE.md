@@ -1054,8 +1054,13 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
   admin session is an HttpOnly cookie the page cannot read; the analytics beacon
   writes no client state at all; the Ask widget's history and session id live in a
   closure and die with the tab. Minimal JS on public pages: the forms, the Ask
-  widget, and [src/components/Track.astro](src/components/Track.astro) (the third, and the only way the console
-  can see anything). Track captures most events by delegation, so adding a section
+  widget, [src/components/Track.astro](src/components/Track.astro) (the only way the console
+  can see anything), and Google Tag Manager
+  ([src/components/GoogleTagManager.astro](src/components/GoogleTagManager.astro) +
+  [src/components/GoogleTagManagerNoscript.astro](src/components/GoogleTagManagerNoscript.astro),
+  container id in [src/data/site.ts](src/data/site.ts)) — loaded on the five public layouts
+  only, never on `/craft/admin` or `/craft` (both are gated, `noindex`, and deliberately carry
+  no third-party analytics). Track captures most events by delegation, so adding a section
   or a link does not mean remembering to instrument it.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
