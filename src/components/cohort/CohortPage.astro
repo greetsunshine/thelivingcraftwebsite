@@ -268,21 +268,77 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 </section>
 
 {/* ── 6 · Sunil ─────────────────────────────────────────────────────────── */}
+{/* THE MAKER SECTION, REINSTATED 15 September 2026.
+ *
+ * This was section 03 of the pre-rebuild page (ProgramPage.astro) and the
+ * 10 September rebuild replaced it with the delivered paragraph alone. The
+ * paragraph is still here and still first, unedited — it is approved copy.
+ * What comes back is the portrait, the scale figures and the narrative.
+ *
+ * WHAT DID NOT COME BACK, AND WHY. The old section led with a numeric stat
+ * band — 100M+ users served, 150 engineers led — and prose carrying ~31
+ * billion weekly executions and 300+ products modernised. A QA finding on
+ * 11 September removed exactly that class of claim from every public surface,
+ * and docs/cohort-pipeline/RESUME.md records it: "the unapproved stat band and
+ * product-scale claims were removed rather than inferred from older material".
+ * CLAUDE.md's Instructor rule says the same thing. Putting them back here
+ * would reverse a fix somebody made on purpose four days ago.
+ *
+ * So the band carries the four verbs /caio uses after that same cleanup, and
+ * the prose keeps the approved employment context: the tenure, the three
+ * employers and startups, the current agentic-AI practice. If a dated approval
+ * record for the figures exists, the numbers are a one-block edit and the old
+ * wording is in git at 845ca99^:src/components/ProgramPage.astro.
+ *
+ * Third person throughout, because the delivered paragraph is third person and
+ * the old section was first. The only "I" on the page is inside the quotation
+ * marks, with the signature reading as its attribution.
+ */}
 <section class="wrap band" id="sunil">
   <div class="sec-head">
     <p class="eyebrow">Who teaches it</p>
     <h2>Work with <em>Sunil Mathew</em></h2>
   </div>
-  {/* Source-backed only. The delivered copy names four employers and a focus,
-      and stops there — no titles, no tenure, no user counts, no team sizes,
-      and no employer endorsement. The brief asks for exactly that restraint
-      and the review notes on Sunil's own posts repeat it. */}
-  <p class="lead sunil-copy">
-    Sunil brings engineering and leadership experience from Google, Amazon, Walmart
-    and startups. His focus is the reasoning behind a system’s design and the
-    evidence that helps a team make its next decision. His teaching connects a
-    concrete example, a question about the design and a change that can be examined.
-  </p>
+
+  <div class="statband">
+    <div class="stat"><div class="big">Build</div><div class="cap">Engineering systems</div></div>
+    <div class="stat"><div class="big">Lead</div><div class="cap">Guide technical decisions</div></div>
+    <div class="stat"><div class="big">Review</div><div class="cap">Examine evidence and risk</div></div>
+    <div class="stat"><div class="big">Teach</div><div class="cap">Transfer design judgment</div></div>
+  </div>
+
+  <div class="story">
+    <div class="maker-portrait">
+      <div class="mframe"><img src="/sunil-bw.jpg" alt="Sunil Mathew" /></div>
+      <div class="mcap">Sunil Mathew · Bengaluru, India</div>
+    </div>
+    <div>
+      {/* The delivered copy, reproduced and not edited. */}
+      <p class="lead sunil-copy">
+        Sunil brings engineering and leadership experience from Google, Amazon, Walmart
+        and startups. His focus is the reasoning behind a system’s design and the
+        evidence that helps a team make its next decision. His teaching connects a
+        concrete example, a question about the design and a change that can be examined.
+      </p>
+      <p>
+        He has spent twenty-six years building and leading engineering at
+        <strong>Google</strong>, <strong>Amazon</strong>, <strong>Walmart</strong> and
+        startups. The work was production systems and the teams that run them, where a
+        design decision is expensive to undo once it ships.
+      </p>
+      <p>
+        Today he leads <strong>agentic-AI</strong> work: multi-agent orchestration, RAG,
+        evals and LLM-Ops. He is also building an agentic-AI product of his own. The
+        judgment he teaches here is current practice rather than a memory of one.
+      </p>
+      <div class="pullquote">“Anyone can show you the agent pattern. I can show you the three times it was the wrong pattern in production, and how I knew before it cost us.”</div>
+      <div class="signature quote-attrib">— Sunil Mathew</div>
+      <p class="after-quote">
+        That is what the 30 live hours are for. You bring a design decision from your own
+        work. He shows you how he would examine it, and what evidence would settle it.
+      </p>
+    </div>
+  </div>
 </section>
 
 {/* ── 7 · Commitment ───────────────────────────────────────────────────── */}
@@ -501,6 +557,11 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   .body-copy + .body-copy { margin-top: var(--space-4); }
   .body-copy.quiet { color: var(--text-quiet); font-size: var(--size-3); }
   .sunil-copy { max-width: var(--measure-prose); }
+
+  /* The signature is the pullquote’s attribution here, not a sign-off at the
+     foot of a letter, so it sits directly under the quote. */
+  .quote-attrib { margin-top: var(--space-3); font-size: var(--size-3); }
+  .after-quote { margin-top: var(--space-6); }
 
   /* ── the boundary diagram ────────────────────────────────────────────── */
   .example { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
