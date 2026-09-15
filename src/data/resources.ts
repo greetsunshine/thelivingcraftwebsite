@@ -48,8 +48,8 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Screen" and "The Contract Agent Test Kit" are names, and a
-   * reader scanning the list is looking for their problem, not for a name.
+   * "The POC Screen" and "The Run-Cost Model" are names, and a reader
+   * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
   topic: string;
@@ -138,26 +138,26 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-13',
   },
   {
-    id: 'contract-agent-test-kit',
-    topic: 'Model Selection',
+    id: 'model-selection-checklist',
     number: '03',
+    topic: 'Model Selection',
     series: 'Agentic system design',
-    title: 'The Contract Agent Test Kit',
-    kind: 'Test kit · 4 cases, 1 sample agreement',
+    title: 'The Model Selection Checklist',
+    kind: 'Checklist · 26 checks',
     summary:
-      'How to pick a model for a contract review agent, and how to catch the mistake that no score will show you.',
+      'What to check before you choose a model for one step of your system, in the order to check it.',
     description:
-      'Model selection usually asks which model scores highest, which is cheapest and which is fastest. All three look at what the model wrote. In contract review the mistake that costs money is what the model left out, and a summary can be correct in every line while never mentioning the clause that renews the agreement for another year. There is nothing on the page to mark wrong, so a score cannot find it. This kit gives you the two things that can: a test set where you planted the answer yourself, and a matrix that scores what quality checks miss. Ten pass-or-fail gates read off the model card before anything is run. Twelve scored criteria, eight of them carrying a starting weight for three different jobs — drafting for a human, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases, including a buried obligation and a notice window that has already closed. A fictional master services agreement to paste, with its answer key, the exact prompt, and the method for scoring what is missing. It closes with the five-step flow and where each step leaks, an audit of the obligations an agent triggers by staying silent, and the one-page decision record to write on the day you choose.',
+      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This checklist is the generic version of the method: it works for support triage, invoice checks, code review, claim intake or anything else where a model reads something and produces a decision. Ten gates read off the model card in half an hour, each saying what a pass looks like and what a fail actually costs. Twelve things to score, each written as the single question you are answering, with starting weights for three kinds of step: drafting for a person, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases you build out of your own work, including one where you plant the answer yourself so you know what should have been there, and one where the cost of doing nothing is the whole point. Then the method for scoring what is missing, and a one-page decision record to write on the day you choose. The boxes tick in the browser and nothing is stored.',
     useFor: [
-      'Cut a candidate list in half in half an hour, on gates a score cannot rescue',
-      'Weight the twelve criteria for the specific step you are staffing, rather than for the system as a whole',
-      'Measure the missed-item rate against an answer key you wrote before the first run',
-      'Find the obligations in your own agreements that an agent can trigger by doing nothing',
-      'Write the decision record that turns the next deprecation notice into a Tuesday',
+      'Remove half a candidate list in half an hour, before running a single test',
+      'Weight the twelve criteria for the specific step you are staffing rather than for the system',
+      'Build four test cases out of your own work, with an answer key written before the first run',
+      'Measure what a model leaves out, which no benchmark and no quality review will show you',
+      'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Page, with the sample agreement, the blank decision record and every table. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
-    url: '/resources/contract-agent-test-kit',
+      'Page, with tickable checkboxes, blank tables and a decision record. A Download as PDF control opens the print dialogue. Nothing is stored or sent.',
+    url: '/resources/model-selection-checklist',
     publishedAt: '2026-09-15',
   },
 ];

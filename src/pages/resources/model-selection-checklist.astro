@@ -1,0 +1,637 @@
+---
+// /resources/model-selection-checklist — the checklist.
+//
+// This REPLACED /resources/contract-agent-test-kit, which applied the same
+// three layers to contract review alone. That page was published and indexed,
+// so its address redirects here from astro.config.mjs rather than 404ing. Do
+// not re-add a link to it: the page is gone, and the redirect is the only thing
+// that should still know the old path.
+//
+// The boxes are real checkboxes so the page can be filled in on screen. They
+// are NOT persisted: no localStorage, no sessionStorage, nothing posted. The
+// note beside them says so, because "where did my ticks go" is a fair question
+// and the honest answer is that they were never anywhere.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN, cohort } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  HOW_TO_USE,
+  STEP_FIELDS,
+  STEP_NOTE,
+  GATES,
+  GATES_CLOSER,
+  PROFILES,
+  CRITERIA,
+  WEIGHTS_NOTE,
+  KEY_ROWS_NOTE,
+  DISQUALIFIERS,
+  DISQUALIFIERS_CLOSER,
+  CASE_SHAPES,
+  CASES_CLOSER,
+  DOMAINS,
+  METHOD,
+  METHOD_CLOSER,
+  RECORD,
+  RECORD_COLUMNS,
+  RECORD_ROWS,
+  RETEST_TRIGGERS,
+  RECORD_CLOSER,
+  AFTERNOON,
+  AFTERNOON_CLOSER,
+  TICKS_NOTE,
+} from '../../data/model-selection-checklist';
+
+const meta = publishedResources.find((r) => r.id === 'model-selection-checklist')!;
+
+const title =
+  'The Model Selection Checklist — choosing a model for one step of your system · The Living Craft';
+const description =
+  'A checklist for choosing a model for any job: ten gates to check before you test, twelve things to score with weights for three kinds of step, four disqualifiers, and four test cases you build out of your own work. Plain descriptions, one afternoon, no sign-up.';
+
+const CHECK_COUNT = GATES.length + CRITERIA.length + DISQUALIFIERS.length;
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/model-selection-checklist#howto`,
+    name: 'The Model Selection Checklist',
+    description,
+    url: `${SITE_ORIGIN}/resources/model-selection-checklist`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    totalTime: 'PT4H5M',
+    step: AFTERNOON.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.body,
+      text: `${s.body} (${s.minutes})`,
+    })),
+  },
+];
+
+const weighted = CRITERIA.filter((c) => c.weights);
+const unweighted = CRITERIA.filter((c) => !c.weights);
+---
+
+<ResourcesLayout
+  title={title}
+  description={description}
+  canonical="/resources/model-selection-checklist"
+  schema={schema}
+>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number}</span>
+      </div>
+      <h1>A checklist for choosing a model — for <em>one step</em>, not for the whole system.</h1>
+      <p class="lead">
+        Most model choices are made on a benchmark, a price and a demo. None of those tell you
+        what a model leaves out, and what it leaves out is what costs you. This is what to check
+        instead, in the order to check it.
+      </p>
+      <p class="hero-note mono">
+        {CHECK_COUNT} checks · 4 test cases you build yourself · one afternoon
+      </p>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section id="use">
+    <div class="wrap">
+      <div class="controls" role="group" aria-label="Page controls">
+        <button class="btn btn-primary" id="pdf" type="button">
+          Download as PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </button>
+        <span class="ctrl-note mono">Opens your browser’s print dialogue. Choose “Save as PDF”.</span>
+      </div>
+      <p class="prose-lead">{TICKS_NOTE}</p>
+      <p class="prose-note">
+        Every item below says the same three things: what it is, what a pass looks like, and what
+        a fail costs you. The last one is why the item is on the list.
+      </p>
+    </div>
+  </section>
+
+  <!-- How to use it -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> How to use it</span>
+        <h2>Four rules. Break one and the rest <em>stops meaning much</em>.</h2>
+      </div>
+      <ol class="rules">
+        {HOW_TO_USE.map((r) => (
+          <li>
+            <span class="rn mono">{r.n}</span>
+            <div class="rbody">
+              <strong>{r.name}</strong>
+              <p>{r.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Part 0 -->
+  <section id="step">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> Start here</span>
+        <h2>Write down the step <em>before</em> you look at any model.</h2>
+      </div>
+      <p class="prose-lead">{STEP_NOTE}</p>
+      <div class="recgroup lone">
+        {STEP_FIELDS.map((f) => (
+          <p class="recfield"><span class="rlabel">{f}</span><span class="rline"></span></p>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Gates -->
+  <section id="gates">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> The gates · {GATES.length} checks</span>
+        <h2>Pass or fail, from the model card. <em>No score rescues a fail.</em></h2>
+      </div>
+      <p class="prose-lead">
+        Half an hour of reading, before you run a single test. It usually removes half the list.
+      </p>
+      <ul class="checks">
+        {GATES.map((g, i) => (
+          <li>
+            <input type="checkbox" id={`gate-${i}`} />
+            <label for={`gate-${i}`}>
+              <span class="cktitle">{g.name}</span>
+              <span class="ckpass"><span class="cklabel mono">Passes if</span> {g.passes}</span>
+              <span class="ckcost"><span class="cklabel mono">A fail costs you</span> {g.cost}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <p class="callout">{GATES_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Scored -->
+  <section id="score">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> What to score · {CRITERIA.length} rows</span>
+        <h2>Score each one 1 to 5, on the <em>same cases</em>, for every candidate.</h2>
+      </div>
+      <div class="scroll">
+        <table class="grid scores">
+          <thead>
+            <tr>
+              <th>What you score</th>
+              <th>The question you are answering</th>
+              {PROFILES.map((p) => <th class="wcol">{p}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {weighted.map((c) => (
+              <tr class={c.key ? 'keyrow' : undefined}>
+                <td class="cname">{c.name}</td>
+                <td>{c.means}</td>
+                {c.weights!.map((w) => (
+                  <td class="wcell mono">{w}</td>
+                ))}
+              </tr>
+            ))}
+            {unweighted.map((c) => (
+              <tr>
+                <td class="cname">{c.name}</td>
+                <td>{c.means}</td>
+                {PROFILES.map(() => (
+                  <td class="wcell mono none">set it yourself</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">{KEY_ROWS_NOTE}</p>
+      <p class="callout">{WEIGHTS_NOTE}</p>
+    </div>
+  </section>
+
+  <!-- Disqualifiers -->
+  <section id="disqualifiers">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> The disqualifiers · {DISQUALIFIERS.length} checks</span>
+        <h2>Any one of these ends a candidate, <em>whatever it scored</em>.</h2>
+      </div>
+      <ul class="checks dq">
+        {DISQUALIFIERS.map((d, i) => (
+          <li>
+            <input type="checkbox" id={`dq-${i}`} />
+            <label for={`dq-${i}`}>
+              <span class="cktitle">{d.body}</span>
+              <span class="ckcost"><span class="cklabel mono">Why it ends the run</span> {d.why}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <p class="callout stop">{DISQUALIFIERS_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Test set -->
+  <section id="cases">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> Build the test set</span>
+        <h2>Four cases, built out of <em>your own work</em>.</h2>
+      </div>
+      <p class="prose-lead">
+        Use real inputs with the names removed. A public benchmark cannot tell you how a model
+        behaves on the documents your team actually receives.
+      </p>
+      <div class="cases">
+        {CASE_SHAPES.map((c) => (
+          <div class="case">
+            <div class="chead">
+              <span class="cn mono">Case {c.n}</span>
+              <h3>{c.name}</h3>
+            </div>
+            <p class="crow"><span class="clabel mono">How to build it</span> {c.build}</p>
+            <p class="crow"><span class="clabel mono">Right answer</span> {c.right}</p>
+            <p class={`crow${c.failure ? ' watch' : ''}`}>
+              <span class="clabel mono">{c.watchLabel}</span> {c.watch}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p class="callout">{CASES_CLOSER}</p>
+
+      <h3 class="sub">The same three cases, in four different jobs</h3>
+      <p class="prose-note">
+        Illustrations of how to build a case. They describe no real team, product or system.
+      </p>
+      <div class="scroll">
+        <table class="grid domains">
+          <thead>
+            <tr>
+              <th>The job</th>
+              <th>Missing input</th>
+              <th>Planted item</th>
+              <th>Closing deadline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DOMAINS.map((d) => (
+              <tr>
+                <td class="cname">{d.job}</td>
+                <td>{d.missing}</td>
+                <td>{d.planted}</td>
+                <td>{d.deadline}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">
+        Case 1 is not in the table because an ordinary case looks the same in every job. Build it
+        anyway. It is the one that tells you a candidate has failed before you spend the afternoon.
+      </p>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section id="method">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> Score what is missing</span>
+        <h2>The step most teams skip, because <em>nothing is on the page</em> to mark wrong.</h2>
+      </div>
+      <ol class="method">
+        {METHOD.map((m) => (
+          <li>
+            <span class="mn mono">{m.n}</span>
+            <span class="mbody">{m.body}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{METHOD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Decision record -->
+  <section id="record">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> The decision record</span>
+        <h2>One page. Written when you decide, <em>not afterwards</em>.</h2>
+      </div>
+      <p class="prose-lead">Print this section to fill it in, or copy the headings into your own record.</p>
+      <div class="rec">
+        {RECORD.map((g) => (
+          <div class="recgroup">
+            <h3 class="recheading mono">{g.heading}</h3>
+            {g.fields.map((f) => (
+              <p class="recfield"><span class="rlabel">{f}</span><span class="rline"></span></p>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <h3 class="sub">Results</h3>
+      <p class="prose-note">One row per candidate. Nothing on this page adds them up.</p>
+      <div class="scroll">
+        <table class="grid results">
+          <thead>
+            <tr>
+              <th></th>
+              {RECORD_COLUMNS.map((c) => <th>{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {RECORD_ROWS.map((r) => (
+              <tr>
+                <td class="cname mono">{r}</td>
+                {RECORD_COLUMNS.map(() => <td>&nbsp;</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Re-test if any of these happen</h3>
+      <ul class="checks plain">
+        {RETEST_TRIGGERS.map((t, i) => (
+          <li>
+            <input type="checkbox" id={`retest-${i}`} />
+            <label for={`retest-${i}`}><span class="cktitle">{t}</span></label>
+          </li>
+        ))}
+      </ul>
+      <p class="recfield next"><span class="rlabel">Next re-test due</span><span class="rline"></span></p>
+      <p class="callout">{RECORD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Afternoon -->
+  <section id="afternoon">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">09</span> Run it in an afternoon</span>
+        <h2>Four hours and five minutes, <em>in this order</em>.</h2>
+      </div>
+      <ol class="protocol">
+        {AFTERNOON.map((s) => (
+          <li>
+            <div class="pmeta"><span class="pn mono">{s.n}</span><span class="pmin mono">{s.minutes}</span></div>
+            <div class="pbody"><p>{s.body}</p></div>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{AFTERNOON_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- What comes next -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> What comes next</span>
+        <h2>This picks a model. It does not tell you the system <em>holds up</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Everything you scored is a claim about one step on one day. Keeping that claim true
+          needs an eval set you run again when the version moves, and a register that catches the
+          work the model never mentions.
+        </p>
+        <p>
+          The Living Craft runs a {cohort.weeks}-week cohort on exactly this: building agents for
+          decisions where the right answer is genuinely debatable, and building the evals that
+          show they hold up. {cohort.seats} seats, by application only, for Staff+ engineers,
+          engineering managers and architects who ship to production.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="mono faint pubdate">
+        Published {longDate(meta.publishedAt)} · free to use, to change and to pass on
+      </p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other resource pages. */
+  .prose p + p { margin-top: var(--space-4); }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-5); }
+  .ctrl-note { font-size: var(--size-1); color: var(--text-quiet); }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  .callout.stop { background: var(--danger-quiet); }
+
+  /* ── the four rules ───────────────────────────────────────────────────── */
+  ol.rules { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  ol.rules li { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-4); align-items: start; }
+  .rn { font-size: var(--size-4); font-weight: var(--weight-strong); color: var(--accent-ink-strong); }
+  .rbody strong { display: block; margin-bottom: 2px; }
+  .rbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; }
+
+  /* ── the checklist itself ─────────────────────────────────────────────── */
+  ul.checks { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ul.checks li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  ul.checks input[type='checkbox'] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: 4px;
+    background: var(--surface-panel);
+    cursor: pointer;
+    flex: none;
+  }
+  ul.checks input[type='checkbox']:checked {
+    background: var(--sun);
+    border-color: var(--sun);
+  }
+  /* The tick is drawn rather than typed, so it cannot pick up a font that has
+     no glyph for it. Sun is a fill and cannot carry text — this is ink on sun. */
+  ul.checks input[type='checkbox']:checked::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 10px;
+    margin: 2px 0 0 6px;
+    border: solid var(--text-on-accent);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  ul.checks input[type='checkbox']:focus-visible {
+    outline: var(--border-w-rule) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  ul.checks label { display: flex; flex-direction: column; gap: var(--space-2); cursor: pointer; }
+  .cktitle { color: var(--text-body); font-weight: var(--weight-medium); }
+  .ckpass, .ckcost { font-size: var(--size-2); color: var(--text-quiet); max-width: 86ch; }
+  .cklabel { display: block; font-size: var(--size-1); margin-bottom: 2px; }
+  .ckpass .cklabel { color: var(--accent-ink-strong); }
+  .ckcost .cklabel { color: var(--danger); }
+  ul.checks li:has(input:checked) .cktitle { color: var(--text-quiet); }
+
+  /* The two short lists: no panel, just the box and one line. */
+  ul.checks.plain li,
+  ul.checks.dq li { align-items: center; }
+  ul.checks.plain li {
+    background: transparent;
+    box-shadow: none;
+    padding: var(--space-2) 0;
+  }
+  ul.checks.dq label { gap: var(--space-2); }
+  ul.checks.dq li { align-items: start; }
+
+  /* ── tables ───────────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .scores { min-width: 960px; }
+  .domains { min-width: 900px; }
+  .results { min-width: 1000px; }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 170px; }
+  .keyrow .cname { color: var(--accent-ink-strong); }
+  .wcol { white-space: nowrap; }
+  .wcell { text-align: center; color: var(--text-body); font-weight: var(--weight-strong); white-space: nowrap; }
+  .wcell.none { color: var(--text-quiet); font-weight: var(--weight-normal); font-size: var(--size-1); }
+  .results tbody td { height: 44px; }
+
+  /* ── cases ────────────────────────────────────────────────────────────── */
+  .cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .case {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .chead { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+  .cn { font-size: var(--size-1); color: var(--text-quiet); }
+  .case h3 { font-size: var(--size-5); }
+  .crow { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-3); }
+  .crow:last-child { margin-bottom: 0; }
+  .clabel { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-bottom: 2px; }
+  .crow.watch .clabel { color: var(--danger); }
+
+  /* ── method ───────────────────────────────────────────────────────────── */
+  ol.method { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ol.method li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: baseline; }
+  .mn { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
+  .mbody { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  /* ── afternoon ────────────────────────────────────────────────────────── */
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  ol.protocol li { display: grid; grid-template-columns: 76px 1fr; gap: var(--space-4); align-items: start; }
+  .pmeta { display: flex; flex-direction: column; gap: 2px; }
+  .pn { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .pmin { font-size: var(--size-1); color: var(--text-quiet); }
+  .pbody p { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  /* ── decision record ──────────────────────────────────────────────────── */
+  .rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
+  .recgroup {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .recgroup.lone { max-width: 560px; }
+  .recheading { font-size: var(--size-1); color: var(--accent-ink-strong); margin-bottom: var(--space-4); }
+  .recfield { margin-bottom: var(--space-4); }
+  .recfield:last-child { margin-bottom: 0; }
+  .rlabel { display: block; font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-2); }
+  .rline { display: block; height: 1px; background: var(--border-field); }
+  .recfield.next { max-width: 420px; margin-top: var(--space-5); }
+
+  @media (max-width: 900px) {
+    .cases { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    ol.protocol li, ol.rules li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+
+  /* ── print: this is the PDF the Download control produces ─────────────── */
+  @media print {
+    .controls, .hero-cta, .final .btn { display: none !important; }
+    ul.checks li, .case, .recgroup {
+      box-shadow: none;
+      border: 1px solid var(--border-hair);
+      break-inside: avoid;
+    }
+    ul.checks.plain li { border: 0; }
+    table.grid, .scroll { overflow: visible !important; }
+    .scores, .domains, .results { min-width: 0 !important; font-size: 10px; }
+    thead { display: table-header-group; }
+    tr, ol.method li, ol.protocol li, ol.rules li { break-inside: avoid; }
+    #cases, #record { break-before: page; }
+    .sub { break-after: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // The only script here. There is no PDF file to download: the browser makes
+  // one from the print stylesheet above. The checkboxes are plain DOM state and
+  // are never read, stored or sent.
+  document.getElementById('pdf')?.addEventListener('click', () => window.print());
+</script>
