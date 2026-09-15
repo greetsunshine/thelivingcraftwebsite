@@ -55,7 +55,7 @@ export const regions: Record<Region['key'], Region> = {
     priceUnit: 'per seat · founding rate',
     publicPrice: true,
     seats: '8 seats, capped',
-    nextDate: 'September 2026',
+    nextDate: 'October 2026',
     closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
@@ -75,7 +75,7 @@ export const regions: Record<Region['key'], Region> = {
     // Not published — see publicPrice on the Region interface.
     publicPrice: false,
     seats: '8 seats, capped',
-    nextDate: 'September 2026',
+    nextDate: 'October 2026',
     closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
@@ -93,7 +93,7 @@ export const regions: Record<Region['key'], Region> = {
     // Not published — see publicPrice on the Region interface.
     publicPrice: false,
     seats: '8 seats, capped',
-    nextDate: 'September 2026',
+    nextDate: 'October 2026',
     closes: 'Rolling — until all 8 seats are filled',
     commitment: '~5 hrs / week',
     format: 'Live online',
