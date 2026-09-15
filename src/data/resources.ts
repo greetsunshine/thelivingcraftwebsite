@@ -139,7 +139,7 @@ export const resources: Resource[] = [
   },
   {
     id: 'contract-agent-test-kit',
-    topic: 'Model Selection',
+    topic: 'Model Selection · Worked',
     number: '03',
     series: 'Agentic system design',
     title: 'The Contract Agent Test Kit',
@@ -158,6 +158,29 @@ export const resources: Resource[] = [
     format:
       'Page, with the sample agreement, the blank decision record and every table. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
     url: '/resources/contract-agent-test-kit',
+    publishedAt: '2026-09-15',
+  },
+  {
+    id: 'model-selection-checklist',
+    number: '04',
+    topic: 'Model Selection',
+    series: 'Agentic system design',
+    title: 'The Model Selection Checklist',
+    kind: 'Checklist · 26 checks',
+    summary:
+      'What to check before you choose a model for one step of your system, in the order to check it.',
+    description:
+      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This checklist is the generic version of the method: it works for support triage, invoice checks, code review, claim intake or anything else where a model reads something and produces a decision. Ten gates read off the model card in half an hour, each saying what a pass looks like and what a fail actually costs. Twelve things to score, each written as the single question you are answering, with starting weights for three kinds of step: drafting for a person, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases you build out of your own work, including one where you plant the answer yourself so you know what should have been there, and one where the cost of doing nothing is the whole point. Then the method for scoring what is missing, and a one-page decision record to write on the day you choose. The boxes tick in the browser and nothing is stored.',
+    useFor: [
+      'Remove half a candidate list in half an hour, before running a single test',
+      'Weight the twelve criteria for the specific step you are staffing rather than for the system',
+      'Build four test cases out of your own work, with an answer key written before the first run',
+      'Measure what a model leaves out, which no benchmark and no quality review will show you',
+      'Record the decision so the next deprecation notice is a Tuesday rather than a project',
+    ],
+    format:
+      'Page, with tickable checkboxes, blank tables and a decision record. A Download as PDF control opens the print dialogue. Nothing is stored or sent.',
+    url: '/resources/model-selection-checklist',
     publishedAt: '2026-09-15',
   },
 ];
