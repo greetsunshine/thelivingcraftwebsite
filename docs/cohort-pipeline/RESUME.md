@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 14 September 2026
+**Last updated:** 15 September 2026
 **Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6). PR #7.
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
@@ -62,6 +62,28 @@ employment context remains without implying employer endorsement.
 
 The same cleanup was applied to `/caio` and `/assessment`: the unapproved stat band and
 product-scale claims were removed rather than inferred from older material.
+
+---
+
+## The maker section is back on `/`, without the numbers — 15 September
+
+Section 6 of the cohort page was one approved paragraph. It is now the full maker
+section again: portrait, stat band, narrative, pull quote, signature, on the
+`.experience` / `.statband` / `.story` classes `global.css` already carried for `/caio`.
+The original is in git at `845ca99^:src/components/ProgramPage.astro`, section 03.
+
+**The metrics did not come back, and that was deliberate.** The old band read 100M+ users
+served and 150 engineers led, and the prose carried ~31 billion weekly executions and 300+
+products modernised. The 11 September finding below removed that class of claim from every
+public surface. The band now carries the same four verbs `/caio` uses after that cleanup,
+and the prose keeps the approved employment context only. Restoring the figures needs a
+dated approval record; it is then one block in `CohortPage.astro`.
+
+**Found while doing it, and NOT fixed:** `src/data/facts.ts` still answers the social-proof
+question with *"100+ senior engineers mentored, ~100 senior leaders and directors trained"*.
+The finding below says those were removed. They were not — the line is live on `HEAD` and
+feeds `/llms.txt`, `/api/facts` and the Q&A agent's grounding. Left alone pending Sunil's
+call, because the fix is a rewrite of an answer, not a deletion.
 
 ---
 
