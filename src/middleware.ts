@@ -30,6 +30,7 @@ import { COOKIE_NAME, verifySession } from './lib/admin/auth';
 import { capabilities } from './lib/admin/env';
 import { COOKIE_NAME as CRAFT_COOKIE, readSession } from './lib/craft/auth';
 import { activeLearner } from './lib/craft/learners';
+import { isProduction } from './lib/env';
 
 /** Reachable without a session, because they are how you get one. */
 const OPEN = new Set(['/craft/admin/login', '/api/craft/admin/login', '/api/craft/admin/logout']);
@@ -46,7 +47,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // /craft/admin/*; only the admin one may answer for it.
   if (!isAdminPath(path)) {
     if (isCraftPath(path)) return craftGate(context, next, path);
-    return next();
+
+    // /craft and /craft/admin are noindexed unconditionally below, on every
+    // environment — they are gated surfaces, not staging leakage. Everything
+    // else (the public pages, /api/facts, /llms.txt, /sitemap.xml, …) is only
+    // noindexed here on a non-production deployment: a Vercel preview
+    // (staging) or a local build. See src/lib/env.ts for why this is safe
+    // across a Promote-to-Production click with no rebuild.
+    const response = await next();
+    if (!isProduction()) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return response;
   }
 
   // Never index, never cache, never share. Set before the auth branch so it is

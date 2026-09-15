@@ -2,6 +2,7 @@
 // Shared <head>: meta, canonical, Open Graph, Twitter, JSON-LD, analytics.
 // Imported by all three layouts so the three surfaces can't drift apart.
 import { SITE_ORIGIN, practitioner } from '../data/facts';
+import { isProduction } from '../lib/env';
 
 export interface Props {
   title: string;
@@ -62,7 +63,10 @@ const graph = {
 <meta name="description" content={description} />
 <link rel="canonical" href={href} />
 <meta name="author" content={practitioner.name} />
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta
+  name="robots"
+  content={isProduction() ? 'index, follow, max-image-preview:large, max-snippet:-1' : 'noindex, nofollow'}
+/>
 
 <meta property="og:site_name" content="Sunil Mathew — The Living Craft" />
 <meta property="og:title" content={title} />

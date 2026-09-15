@@ -25,6 +25,7 @@
 //                password are the secrets, not the paths.
 import type { APIRoute } from 'astro';
 import { SITE_ORIGIN } from '../data/facts';
+import { isProduction } from '../lib/env';
 
 const AI_AGENTS = [
   'GPTBot',
@@ -63,6 +64,20 @@ const DISALLOW = [
 ];
 
 export const GET: APIRoute = () => {
+  // Any deployment that is not the promoted production one — a Vercel preview
+  // (staging) or a local build — blocks everything. This is read at request
+  // time (see src/lib/env.ts), so promoting a staging build to production
+  // flips this without a rebuild. There is no permissive body to accidentally
+  // ship early and no staging body to accidentally leave behind.
+  if (!isProduction()) {
+    return new Response(
+      ['# Non-production deployment. Nothing here should be indexed.', '', 'User-agent: *', 'Disallow: /', ''].join(
+        '\n',
+      ),
+      { headers: { 'Content-Type': 'text/plain; charset=utf-8' } },
+    );
+  }
+
   const body = [
     '# Search and AI crawlers are welcome here.',
     '# Grounded, machine-readable facts: /llms.txt and /api/facts',
