@@ -8,7 +8,7 @@ export const learnerCohort = {
   name: 'The Living Craft',
   weeks: 6,
   seats: 8,
-  startsOn: 'September 2026',
+  startsOn: 'October 2026',
   commitment: '~5 hrs / week',
   format: 'Live online (Bangalore: hybrid — in person or online)',
   admission: 'By application; every application read personally',

@@ -64,7 +64,7 @@ export const cohort = {
   name: 'The Living Craft',
   weeks: 6,
   seats: 8,
-  startsOn: 'September 2026',
+  startsOn: 'October 2026',
   commitment: '~5 hrs / week',
   format: 'Live online (Bangalore: hybrid — in person or online)',
   admission: 'By application; every application read personally',
@@ -397,7 +397,7 @@ export const facts: Fact[] = [
     id: 'about-social-proof',
     surface: 'practice',
     q: 'Do you have testimonials, client names, or student outcomes?',
-    a: 'None are published. The cohort has not run yet, because the first one starts September 2026, and client engagements are not named publicly. What stands in place of social proof is the track record. That is 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.',
+    a: 'None are published. The cohort has not run yet, because the first one starts October 2026, and client engagements are not named publicly. What stands in place of social proof is the track record. That is 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.',
     tags: [
       'testimonials',
       'reviews',

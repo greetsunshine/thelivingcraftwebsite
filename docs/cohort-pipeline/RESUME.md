@@ -87,6 +87,38 @@ call, because the fix is a rewrite of an answer, not a deletion.
 
 ---
 
+## The rest of the pre-rebuild page is back too, minus one class of claim — 15 September
+
+Sunil reviewed `845ca99^:src/components/ProgramPage.astro` directly and asked for the fuller
+design back, not just section 03. `CohortPage.astro` now also carries: the hero portrait
+(replacing the reserved VSL slot — the video still is not recorded, and there is no longer a
+slot reserved for it), the proof bar, three persona cards under "Who this is for", "The
+transformation" (six lettered outcomes), "Inside the program" (the four modules, with body
+copy), "What you leave with", and "Live experience". New data lives in `cohort-copy.ts`:
+`PERSONAS`, `TRANSFORMATION`, `MODULES`, `LEAVE_WITH`, `LIVE_EXPERIENCE`, plus three FAQ
+entries. The pending call above is resolved: **Sunil approved the mentoring/coaching/training
+counts for republication.** They appear in "Live experience".
+
+**What did NOT come back, on purpose:** the 100M+ users / 150 engineers led / 3 Fortune-100s
+stat band in section 03, and the ~31 billion weekly executions / 300+ products modernised
+prose — including the "100M+ users" clause that was also in the OLD hero's credential
+paragraph. That is a different class of claim from the mentoring counts (no provenance in
+this repository, per the 11 September finding above) and Sunil's approval did not extend to
+it. If it needs restoring later, section 03 and the hero credential are the two places, and
+both currently carry the deliberately-approved wording instead.
+
+**The cohort's public start date moved to October 2026**, at Sunil's instruction. Changed in
+`facts.ts` (`cohort.startsOn`, plus the hardcoded date in the social-proof fact),
+`regions.ts` (all three regions' `nextDate`), and `learner-cohort.ts` (the internal schedule,
+kept in step so the public and gated pages do not disagree). Grep `September 2026` before
+trusting any of it is gone — several hits are unrelated document-revision timestamps
+(`about.astro`, `terms.astro`, `privacy.astro` and others use it as a "last updated" date, not
+a cohort date) and must not be touched.
+
+`npx astro check`: 0 errors. Verified against a running `npm run dev`, not just the build.
+
+---
+
 ## ✅ QA finding resolved, 11 September — one offer policy on every surface
 
 Every public **page** is clean: no price, no week count, no seat cap, no start-date claim,
@@ -102,9 +134,11 @@ confirmed in the final offer. The old regional path is no longer a public-conten
 It does not block saved applications or the durable outbox, but it does block actual email
 delivery. **Do not resolve it by inference.**
 
-**D1 — public offer policy:** implemented with the safe V4 default. Fees, dates and the
-week count are withheld everywhere; the target group size and 30 live hours remain because
-the delivered copy states them. This is no longer a runtime flag.
+**D1 — public offer policy:** this line was stale. `facts.ts`'s own comment says D1 was
+reversed on 14 September: the fee (per region, gated by `publicPrice`), the start date and
+the week count **are** published, and the shipped page has stated `cohort.weeks` /
+`cohort.seats` / `cohort.startsOn` since. Corrected here 15 September so the next session
+does not read "withheld everywhere" and disbelieve the code.
 
 **D2 — how does an email actually get sent?**
 Committed submissions now idempotently queue their receipt; the initial pipeline task is
