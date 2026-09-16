@@ -1,0 +1,9 @@
+# Phase 1 and 2: the simulation, the twelve tests and the schemas.
+# Pinned to what this kit was built and verified against on Python 3.14.
+pytest==9.1.1
+jsonschema==4.26.0
+PyYAML==6.0.3
+
+# Phase 3: the PDF renderer. Not needed for `make test`, `make naive`,
+# `make fixed` or `make matrix`.
+weasyprint==66.0

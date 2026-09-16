@@ -1,0 +1,126 @@
+{
+  "summary": {
+    "naive_passed": 0,
+    "corrected_passed": 13,
+    "total": 13
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "test": "test_t01_read_times_out_and_the_document_is_there",
+      "inject": "the receipt lookup times out once. The receipt is in the store the whole time.",
+      "expect": "classified temporary_failure; the READ is retried; the model is not re-prompted; the requester is not asked for anything.",
+      "smell": "if the model was asked twice, the design is retrying the step that did not fail. If the requester was asked, the design has told somebody their document is missing on the strength of a timeout.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T02",
+      "test": "test_t02_receipt_is_genuinely_absent",
+      "inject": "the receipt is genuinely absent. The store answers, and the answer is that there is no such document.",
+      "expect": "classified missing_evidence; the requester is asked once; the model is never asked to regenerate around the gap.",
+      "smell": "if the read was retried, the design cannot tell a completed read from a failed one. If the model ran, the design is trying to reason its way past a missing fact.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T03",
+      "test": "test_t03_the_same_rejection_twice",
+      "inject": "the checker rejects every plan with the same reason code. The requester responds to the first ask, so a second attempt is genuinely justified.",
+      "expect": "the second attempt happens, is rejected identically, and there is no third. The task escalates with a rejection record.",
+      "smell": "a third attempt means the design counts attempts rather than checking that anything changed. Two identical rejections are proof that the last change did not address the objection.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T04",
+      "test": "test_t04_payment_times_out_after_it_commits",
+      "inject": "the refund call times out AFTER the provider commits the money.",
+      "expect": "classified uncertain_action; the status query by idempotency key shows it executed; nothing is re-issued; the ledger holds exactly one refund.",
+      "smell": "a second refund means the design read a timeout as a failure. That is the story, and it is the expensive mistake in the whole kit.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T05",
+      "test": "test_t05_payment_times_out_before_it_commits",
+      "inject": "the refund call times out BEFORE the provider commits.",
+      "expect": "reconciliation shows it did not execute; the call is re-issued under the SAME idempotency key; the ledger holds exactly one refund.",
+      "smell": "a new key on the re-issue is a new action. It would produce a second refund here the moment the first call turns out to have landed after all.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T06a",
+      "test": "test_t06_rate_limited_with_a_retry_after_inside_the_deadline",
+      "inject": "the provider rejects the refund with a rate limit and asks for 30 seconds. The task has 120 seconds left.",
+      "expect": "the design waits the 30 seconds it was asked for, then re-issues under the same key. One refund.",
+      "smell": "a shorter wait adds load to a service that has just asked for less. A guessed backoff means the Retry-After header is being ignored.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T06b",
+      "test": "test_t06b_rate_limited_with_a_retry_after_beyond_the_deadline",
+      "inject": "the same rate limit, but the provider asks for 300 seconds and the task has 120.",
+      "expect": "no wait, no re-issue, and an escalation. The deadline is a promise to the requester, and waiting past it quietly is breaking it.",
+      "smell": "sleeping 300 seconds inside a 120 second task is a design that treats the deadline as advice.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T07",
+      "test": "test_t07_document_store_down_beyond_the_budget",
+      "inject": "the document store refuses every connection, for longer than the retry budget allows.",
+      "expect": "retrying stops; the work lands in an escalation queue with a named owner and a full rejection record.",
+      "smell": "retrying forever, or stopping with nothing written down. An escalation with no record makes the person who picks it up start the diagnosis from zero.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T08",
+      "test": "test_t08_both_layers_retry",
+      "inject": "the payment provider refuses every call, and the retry lives in both the tool client and the orchestrator.",
+      "expect": "total attempts never exceed the task budget. Four means four, not three times three.",
+      "smell": "nine calls. Nobody wrote nine anywhere, which is exactly why it survives review: each layer's number looks reasonable on its own.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T09",
+      "test": "test_t09_checker_approves_something_that_already_happened",
+      "inject": "the refund is already in the provider's ledger under this task's idempotency key, and the checker approves the plan to issue it.",
+      "expect": "the external action is blocked. Confirmed state beats an approval.",
+      "smell": "a second refund. A checker is a second opinion about the PLAN. It has not read the world, and no amount of agreement between two models makes an external call safe.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T10",
+      "test": "test_t10_payment_times_out_and_state_cannot_be_read",
+      "inject": "the refund call times out after committing, AND the provider's status endpoint is unavailable.",
+      "expect": "the task stays uncertain_action. Nothing is re-issued, nothing is reported as failed, and it escalates carrying the idempotency key.",
+      "smell": "assuming failure. This is the worst case in the kit and the only honest answer is \"a person has to look\". A design that guesses here guesses in the direction that costs money.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T11",
+      "test": "test_t11_the_requester_uploads_the_receipt",
+      "inject": "the receipt is absent, the requester is asked, and this time they upload it.",
+      "expect": "the task resumes with the new evidence. The model runs once, on an input that genuinely differs from the one before the ask.",
+      "smell": "re-running the model on the pre-upload input, or counting the resumed attempt as a repeat of the failed one. The attempt counter has to reflect that the input changed, or the budget will stop a task that is making real progress.",
+      "naive": "fail",
+      "corrected": "pass"
+    },
+    {
+      "id": "T12",
+      "test": "test_t12_the_refund_lands_and_the_email_does_not",
+      "inject": "the refund executes cleanly. The mail relay refuses the first confirmation email.",
+      "expect": "only the email step is retried. The refund is never re-issued to fix an email.",
+      "smell": "a second refund. It happens when one retry wrapper sits around a whole multi-step task, so the cheapest failing step drags the most expensive completed one back through the loop.",
+      "naive": "fail",
+      "corrected": "pass"
+    }
+  ]
+}
