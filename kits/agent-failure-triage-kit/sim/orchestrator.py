@@ -25,6 +25,7 @@ import random
 
 from .budgets import TaskBudget
 from .clock import Clock
+from .policy import Policy, default_policy
 from .fakes import (
     Case,
     DocStoreFaults,
@@ -35,7 +36,7 @@ from .fakes import (
     FakePaymentProvider,
     ProviderFaults,
 )
-from .records import MissingItem, Outcome, SideEffect, build_record
+from .records import MissingItem, Outcome, SideEffect, build_record, timestamp_at
 from .triage import (
     FailureClass,
     NextStep,
@@ -54,15 +55,12 @@ from .tool_contracts import (
     describe,
 )
 
-#: Where unresolved refund work goes, and who answers for it. A queue with no
-#: named owner is a place work goes to stop, not to be resolved.
-DEFAULT_OWNER = "refunds-duty-officer"
-DEFAULT_QUEUE = "refunds-manual-review"
-
-#: Backoff for a temporary failure, in seconds, before jitter. Defaults to
-#: tune, not universal numbers - see policies/retry_budgets.yaml.
-BASE_BACKOFF = 2.0
-MAX_BACKOFF = 20.0
+#: Every number the orchestrator retries on comes from
+#: policies/retry_budgets.yaml, through sim/policy.py. These module-level names
+#: exist so tests and the run logs can refer to them; nothing is declared here.
+POLICY = default_policy()
+DEFAULT_OWNER = POLICY.owner
+DEFAULT_QUEUE = POLICY.queue
 
 
 class BudgetedToolClient:
@@ -74,10 +72,13 @@ class BudgetedToolClient:
     third inner attempt and the first outer attempt draw on the same counter.
     """
 
-    def __init__(self, budget: TaskBudget, clock: Clock, rng: random.Random) -> None:
+    def __init__(
+        self, budget: TaskBudget, clock: Clock, rng: random.Random, policy: Policy
+    ) -> None:
         self.budget = budget
         self.clock = clock
         self.rng = rng
+        self.policy = policy
         self.calls = 0
 
     def attempt(self, label: str, fn, *args, cost: int = 1, **kwargs):
@@ -96,9 +97,12 @@ class BudgetedToolClient:
         asking for less. Jitter matters because without it every caller that
         failed at the same moment retries at the same moment.
         """
-        if retry_after is not None:
+        if retry_after is not None and self.policy.honour_retry_after:
             return retry_after
-        ceiling = min(MAX_BACKOFF, BASE_BACKOFF * (2 ** (attempt_number - 1)))
+        ceiling = min(
+            self.policy.backoff_max,
+            self.policy.backoff_base * (2 ** (attempt_number - 1)),
+        )
         return self.rng.uniform(0, ceiling)
 
 
@@ -113,9 +117,10 @@ class Orchestrator:
         clock: Clock | None = None,
         budget: TaskBudget | None = None,
         *,
-        owner: str = DEFAULT_OWNER,
+        owner: str | None = None,
         on_ask=None,
         seed: int = 7,
+        policy: Policy | None = None,
     ) -> None:
         self.store = store
         self.provider = provider
@@ -123,15 +128,16 @@ class Orchestrator:
         self.model = model
         self.emailer = emailer or FakeEmailer()
         self.clock = clock or Clock()
-        self.budget = budget or TaskBudget()
-        self.owner = owner
+        self.policy = policy or POLICY
+        self.budget = budget or TaskBudget.from_policy(self.policy)
+        self.owner = owner or self.policy.owner
         #: Called when the design decides to ask the requester for something.
         #: Returns True when new evidence arrived. In production this is a
         #: message and a wait; here it is a function so a test can say what the
         #: customer did.
         self.on_ask = on_ask
         self.rng = random.Random(seed)
-        self.client = BudgetedToolClient(self.budget, self.clock, self.rng)
+        self.client = BudgetedToolClient(self.budget, self.clock, self.rng, self.policy)
         self._attempt = 0
         self._decision_attempt = 0
         self._asked = False
@@ -233,6 +239,10 @@ class Orchestrator:
                 budget_exhausted=self.budget.attempts_left() == 0,
                 missing=["receipt"],
             )
+            if tool_attempt >= self.policy.read_max_attempts:
+                # The read's own cap, from the policy. The task budget may have
+                # attempts left for other steps; this step has used its share.
+                signal.budget_exhausted = True
             triage = classify(signal)
             self._say(
                 outcome,
@@ -282,9 +292,9 @@ class Orchestrator:
         if self._asked:
             self._say(outcome, "  already asked once; not asking again")
             escalated = dict(
-                queue=DEFAULT_QUEUE,
+                queue=self.policy.queue,
                 reason="asked the requester once and the evidence did not arrive",
-                respond_by_hours=8,
+                respond_by_hours=self._hours(8),
             )
             self._reject(
                 outcome, case, stage="evidence.receipt", signal=signal,
@@ -322,6 +332,18 @@ class Orchestrator:
 
     def _propose(self, case: Case, evidence: dict, outcome: Outcome, input_changed: bool):
         """One generate-and-check cycle. Returns (approved|None, evidence, changed)."""
+        if self._decision_attempt > self.policy.model_max_attempts:
+            # The policy's cap on model generations, on top of the shared
+            # budget and on top of the "input must change" rule. Three guards
+            # for one step is not redundancy: each one catches a different way
+            # of asking the same question again.
+            self._say(
+                outcome,
+                f"  model generation cap of {self.policy.model_max_attempts} reached",
+            )
+            self._escalate(outcome, "model generation cap reached with no approval")
+            return False, evidence, False
+
         if not input_changed:
             # The guard that the naive version is missing. Asking the same
             # question again costs a model call and returns the same kind of
@@ -342,7 +364,8 @@ class Orchestrator:
             return False, evidence, False
 
         result, budget_verdict = self.client.attempt(
-            "model-generate", self.model.recommend, case, evidence, cost=5
+            "model-generate", self.model.recommend, case, evidence,
+            cost=self.policy.cost_model,
         )
         if result is None:
             self._say(outcome, f"  generation refused: {budget_verdict.reason}")
@@ -380,9 +403,9 @@ class Orchestrator:
                 outcome, case, stage="decision.check", signal=signal, triage=triage,
                 detected_by=("model", "refund-checker"),
                 escalation=dict(
-                    queue=DEFAULT_QUEUE,
+                    queue=self.policy.queue,
                     reason=f"rejected twice for {verdict.reason_code} with no new evidence",
-                    respond_by_hours=8,
+                    respond_by_hours=self._hours(8),
                 ),
             )
             self._finish(outcome, triage)
@@ -393,7 +416,11 @@ class Orchestrator:
             checker_rejection=verdict.reason_code,
             input_changed=False,
             owner=self.owner,
-            missing=["receipt"] if "receipt" in verdict.reason_code else [],
+            missing=(
+                [verdict.reason_code.split(".", 1)[1]]
+                if "." in verdict.reason_code
+                else []
+            ),
         )
         triage = classify(signal)
         self._say(
@@ -455,9 +482,9 @@ class Orchestrator:
                     SideEffect("refund", "payment-provider", key, "executed")
                 ],
                 escalation=dict(
-                    queue=DEFAULT_QUEUE,
+                    queue=self.policy.queue,
                     reason="the approved refund is already present in provider state",
-                    respond_by_hours=4,
+                    respond_by_hours=self._hours(4),
                 ),
             )
             self._finish(outcome, triage)
@@ -525,9 +552,9 @@ class Orchestrator:
                         SideEffect("refund", "payment-provider", key, "not_executed")
                     ],
                     escalation=dict(
-                        queue=DEFAULT_QUEUE,
+                        queue=self.policy.queue,
                         reason=result.reason,
-                        respond_by_hours=4,
+                        respond_by_hours=self._hours(4),
                     ),
                 )
                 self._finish(outcome, triage)
@@ -629,12 +656,12 @@ class Orchestrator:
             detected_by=("rule", "reconciliation"),
             side_effects=[SideEffect("refund", "payment-provider", key, "unknown")],
             escalation=dict(
-                queue=DEFAULT_QUEUE,
+                queue=self.policy.queue,
                 reason=(
                     "refund outcome unknown and the provider status endpoint is "
                     "unavailable; reconcile by idempotency key before any re-issue"
                 ),
-                respond_by_hours=1,
+                respond_by_hours=self._hours(1),
             ),
         )
         self._finish(outcome, blocked)
@@ -692,9 +719,9 @@ class Orchestrator:
                         SideEffect("confirmation-email", "mail-relay", key, "not_executed")
                     ],
                     escalation=dict(
-                        queue=DEFAULT_QUEUE,
+                        queue=self.policy.queue,
                         reason="refund issued; the customer has not been told",
-                        respond_by_hours=8,
+                        respond_by_hours=self._hours(8),
                     ),
                 )
                 self._say(
@@ -729,6 +756,27 @@ class Orchestrator:
         escalation: dict | None = None,
     ) -> None:
         triage = triage or classify(signal)
+
+        # Two things the schema refuses a record without, filled in here so
+        # no branch can forget them. An escalate with no queue is work sent
+        # nowhere. A missing_evidence record that names nothing is a rejection
+        # nobody can act on.
+        if triage.next_step is NextStep.ESCALATE and escalation is None:
+            escalation = self._escalation(
+                triage.reason, self._hours(4, str(triage.failure_class))
+            )
+        if triage.failure_class is FailureClass.MISSING_EVIDENCE and not missing:
+            missing = [self._missing_item(name) for name in signal.missing] or [
+                self._missing_item("receipt")
+            ]
+        if escalation is not None and "respond_by" not in escalation:
+            # The policy's per-class response time wins over whatever the
+            # call site suggested, so the YAML is the one place to tune it.
+            hours = self._hours(
+                escalation.pop("respond_by_hours", 4), str(triage.failure_class)
+            )
+            escalation["respond_by"] = timestamp_at(self.clock.now() + hours * 3600)
+
         record = build_record(
             task_id=outcome.task_id,
             attempt=len(outcome.records) + 1,
@@ -746,12 +794,35 @@ class Orchestrator:
         )
         outcome.records.append(record)
 
+    def _escalation(self, reason: str, respond_by_hours: float | None = None) -> dict:
+        """An escalation always names a queue and a time somebody must answer by."""
+        hours = respond_by_hours if respond_by_hours is not None else self._hours(4)
+        return {
+            "queue": self.policy.queue,
+            "reason": reason,
+            "respond_by": timestamp_at(self.clock.now() + hours * 3600),
+        }
+
+    def _hours(self, fallback: float, failure_class: str | None = None) -> float:
+        """Response time for an escalation, from the policy, by class."""
+        if failure_class and failure_class in self.policy.respond_by_hours:
+            return self.policy.respond_by_hours[failure_class]
+        return fallback
+
+    @staticmethod
+    def _missing_item(name: str) -> MissingItem:
+        return MissingItem(
+            name,
+            "refund.evidence-policy",
+            f"ask the requester to supply the {name} for this charge",
+        )
+
     def _finish(self, outcome: Outcome, triage) -> None:
         if triage.next_step is NextStep.ESCALATE:
             outcome.escalated = True
             outcome.escalation_queue.append(
                 {
-                    "queue": DEFAULT_QUEUE,
+                    "queue": self.policy.queue,
                     "owner": self.owner,
                     "reason": triage.reason,
                     "failure_class": str(triage.failure_class),
@@ -765,7 +836,7 @@ class Orchestrator:
         outcome.escalated = True
         outcome.escalation_queue.append(
             {
-                "queue": DEFAULT_QUEUE,
+                "queue": self.policy.queue,
                 "owner": self.owner,
                 "reason": reason,
                 "failure_class": str(FailureClass.TEMPORARY_FAILURE),

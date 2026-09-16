@@ -33,17 +33,17 @@ class BudgetVerdict:
 class TaskBudget:
     """Attempts, wall-clock time and cost for one task, shared by every layer.
 
-    Defaults here are starting points for the simulation, not universal
-    numbers. `policies/retry_budgets.yaml` carries the tuned-per-tool-type
-    version and says the same thing at more length.
+    The defaults here mirror `policies/retry_budgets.yaml` and a test checks
+    that they do. Build one with `from_policy()` to read the file directly.
+    Either way they are starting points to tune, not universal numbers.
     """
 
     #: Total attempts across every layer, not per layer.
-    max_attempts: int = 6
+    max_attempts: int = 8
     #: Wall-clock seconds from `started_at` before the task is out of time.
     deadline_seconds: float = 120.0
     #: An abstract unit. One model generation is expensive, one read is not.
-    max_cost_units: int = 20
+    max_cost_units: int = 30
 
     started_at: float = 0.0
     attempts_used: int = 0
@@ -51,6 +51,15 @@ class TaskBudget:
 
     #: Every spend, for the run log: (label, attempts_after, cost_after).
     spend_log: list[tuple[str, int, int]] = field(default_factory=list)
+
+    @classmethod
+    def from_policy(cls, policy) -> "TaskBudget":
+        """The per-task section of policies/retry_budgets.yaml."""
+        return cls(
+            max_attempts=policy.max_attempts,
+            deadline_seconds=policy.deadline_seconds,
+            max_cost_units=policy.max_cost_units,
+        )
 
     def start(self, clock: Clock) -> None:
         self.started_at = clock.now()

@@ -14,7 +14,7 @@ help:
 	@echo "make fixed    run the same faults against the corrected design"
 	@echo "make test     run the twelve failure-injection tests"
 	@echo "make matrix   run the tests against both designs, write the table"
-	@echo "make pdf      build dist/Agent-Failure-Triage-Kit.pdf"
+	@echo "make pdf      (not built yet; the kit is on the website)"
 	@echo "make clean    remove build output and caches"
 
 setup:
@@ -38,7 +38,9 @@ schemas:
 	@$(PY) tools/build_examples.py
 
 pdf:
-	$(PY) kit/build_pdf.py
+	@echo "The standalone PDF is not built yet. The written kit is at"
+	@echo "https://learning.thelivingcraft.ai/resources/agent-failure-triage-kit"
+	@echo "and has a Download as PDF control."
 
 clean:
 	rm -rf dist/*.pdf dist/pages .pytest_cache tests/.results-*.json

@@ -166,7 +166,7 @@ export const PLAYBOOK: PlaybookRow[] = [
   },
   {
     cls: 'temporary_failure',
-    signal: 'A timeout, a refused connection, a 429, a 503. No write was attempted or the write is confirmed not to have run.',
+    signal: 'On a read: a timeout, a refused connection, a 429, a 503. On a write: only a refusal the provider confirms never ran, such as a connection refused or a rate limit returned before processing. A timed-out write is never this.',
     tempting: 'Record the read as empty and carry on with what you have.',
     correct: 'Retry the same call, with backoff and jitter, honouring any Retry-After, inside the task budget.',
     owner: 'The task, while budget remains.',
@@ -258,7 +258,7 @@ export const RECORD_EXAMPLE = `{
   "escalation": {
     "queue": "refunds-manual-review",
     "reason": "refund outcome unknown and the provider status endpoint is unavailable; reconcile by idempotency key before any re-issue",
-    "respond_by_hours": 1
+    "respond_by": "2026-09-16T10:00:00+05:30"
   }
 }`;
 
@@ -335,7 +335,7 @@ export const RECONCILE: { step: string; why: string }[] = [
   },
   {
     step: 'Query provider state by idempotency key.',
-    why: 'Not by customer, not by amount, not by timestamp. The key is the only handle on the specific thing that might have run.',
+    why: 'Not by customer, not by amount, not by timestamp. The key is the only handle on the specific thing that might have run. Most providers expire keys after a day or so, so keep your own reference beside it for anything reconciled later than that.',
   },
   {
     step: 'Decide on the confirmed state, not on the timeout.',

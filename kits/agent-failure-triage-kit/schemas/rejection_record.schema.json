@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning.thelivingcraft.ai/resources/agent-failure-triage-kit/rejection_record.schema.json",
+  "title": "Rejection record",
+  "description": "What an agent writes down when a step is rejected or fails. A record that says only \"error\" tells the next reader nothing, and the next reader is usually a retry loop. Every field here exists so that the next decision, by a machine or a person, starts from what is already known.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "task_id",
+    "attempt",
+    "timestamp",
+    "stage",
+    "failure_class",
+    "detected_by",
+    "reason",
+    "missing_evidence",
+    "side_effects",
+    "permitted_next_actions",
+    "prohibited_actions",
+    "retry",
+    "next_step",
+    "owner"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique across the task. Two attempts never share one."
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which record this is for the task, counting from one. It counts records, not retries: a record is written on every rejection or failure, including the ones that end the task."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Where in the workflow it happened, in the workflow's own words. \"evidence.receipt\", \"action.refund\". Not which function threw."
+    },
+    "failure_class": {
+      "type": "string",
+      "enum": [
+        "missing_evidence",
+        "temporary_failure",
+        "uncertain_action",
+        "policy_conflict",
+        "unrecoverable"
+      ],
+      "description": "What happened. This is the field that decides the response. escalate and stop are not classes; they are next steps, and a task can escalate for any of the five reasons."
+    },
+    "detected_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["rule", "model", "tool", "human"]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One sentence a person can read. Never a stack trace and never the word error on its own."
+    },
+    "missing_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "required_by", "how_to_obtain"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "required_by": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The rule or step that needs it. So the reader can tell a hard requirement from a preference."
+          },
+          "how_to_obtain": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The concrete next action. \"Ask the requester to upload the receipt\", not \"obtain evidence\"."
+          }
+        }
+      }
+    },
+    "side_effects": {
+      "type": "array",
+      "description": "Every action this task may have taken outside itself. Empty is a claim that nothing outside the system was touched, and it is a claim the writer is responsible for.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "target", "idempotency_key", "state"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The only handle on the specific thing that might have run. Without it there is nothing to reconcile against."
+          },
+          "state": {
+            "type": "string",
+            "enum": ["executed", "not_executed", "unknown"],
+            "description": "Never a guess. A timeout is unknown until a status query says otherwise."
+          }
+        }
+      }
+    },
+    "permitted_next_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "prohibited_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempts_used", "max_attempts", "deadline"],
+      "properties": {
+        "attempts_used": { "type": "integer", "minimum": 0 },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The task's total, shared by every layer. Not this layer's own count."
+        },
+        "what_changes_next_attempt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required whenever another attempt is planned. A retry with nothing written here is a retry nobody can justify."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "An absolute instant, not a countdown. A record read an hour later should say when the task was due."
+        }
+      }
+    },
+    "next_step": {
+      "type": "string",
+      "enum": ["ask_user", "retry_tool", "reconcile", "escalate", "stop"]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Who is accountable for the next step. A queue is not an owner. A team name is not an owner. A role that a specific person holds today is."
+    },
+    "escalation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["queue", "reason", "respond_by"],
+      "properties": {
+        "queue": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "respond_by": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When somebody must have looked at this. Absolute, like deadline."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "An uncertain action must not be re-issued until reconciliation completes, and the record has to say so in words a retry loop cannot misread. It also has to name the action that may have run.",
+      "if": {
+        "properties": { "failure_class": { "const": "uncertain_action" } },
+        "required": ["failure_class"]
+      },
+      "then": {
+        "properties": {
+          "prohibited_actions": {
+            "contains": { "type": "string", "pattern": "[Rr]e-?issue" }
+          },
+          "side_effects": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "$comment": "If another attempt is planned, the record must say what will be different about it.",
+      "if": {
+        "properties": { "next_step": { "enum": ["retry_tool", "reconcile"] } },
+        "required": ["next_step"]
+      },
+      "then": {
+        "properties": {
+          "retry": { "required": ["what_changes_next_attempt"] }
+        }
+      }
+    },
+    {
+      "$comment": "An escalation with no queue and no response time is work sent nowhere.",
+      "if": {
+        "properties": { "next_step": { "const": "escalate" } },
+        "required": ["next_step"]
+      },
+      "then": {
+        "required": ["escalation"]
+      }
+    },
+    {
+      "$comment": "A missing_evidence record that names nothing missing cannot be acted on.",
+      "if": {
+        "properties": { "failure_class": { "const": "missing_evidence" } },
+        "required": ["failure_class"]
+      },
+      "then": {
+        "properties": { "missing_evidence": { "minItems": 1 } }
+      }
+    },
+    {
+      "$comment": "A policy conflict is a disagreement between the plan and confirmed state, so the state has to be in the record.",
+      "if": {
+        "properties": { "failure_class": { "const": "policy_conflict" } },
+        "required": ["failure_class"]
+      },
+      "then": {
+        "properties": { "side_effects": { "minItems": 1 } }
+      }
+    }
+  ]
+}

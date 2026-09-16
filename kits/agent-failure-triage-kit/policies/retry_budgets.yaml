@@ -1,0 +1,148 @@
+# Retry budgets by tool type.
+#
+# EVERY NUMBER IN THIS FILE IS A STARTING POINT, NOT A RECOMMENDATION.
+#
+# They are the values the simulation in sim/ was built and tested against.
+# They are not calibrated to your latency, your provider's rate limits, your
+# cost per model call or your customer's patience. A kit that handed you a
+# universal retry count would be lying about how much it knows about your
+# system. Tune each one against your own measurements and write down why.
+#
+# What is NOT a starting point, and does not change with tuning, is the shape:
+# which tool types may be retried automatically at all, and the rule that inner
+# layers spend the outer budget. Those are the design. The numbers are the
+# dials on it.
+
+version: 1
+
+# --------------------------------------------------------------------------
+# The per-task budget
+# --------------------------------------------------------------------------
+#
+# One budget per task, shared by every layer that can retry. A tool client's
+# third attempt and the orchestrator's first draw on the same counter. That
+# sharing is the whole mechanism behind test T08: without it, three retries
+# inside three retries is nine calls, and no file anywhere says nine.
+
+per_task:
+  # Total attempts across every layer, not per layer.
+  max_attempts: 8                  # tune: starting point
+  # Wall-clock seconds from the task opening. Outranks every retry count: a
+  # wait that would pass this is not a retry, it is an escalation.
+  deadline_seconds: 120            # tune: starting point
+  # An abstract unit. A model generation costs more than a read, and the
+  # budget is what stops five cheap retries paying for a sixth expensive one.
+  max_cost_units: 30               # tune: starting point
+  cost_per_call:
+    read: 1                        # tune: starting point
+    write: 1                       # tune: starting point
+    model_generation: 5            # tune: starting point
+  rule: >
+    Inner layers consume the outer budget. A retrying HTTP client, a retrying
+    tool wrapper and a retrying orchestrator hold ONE TaskBudget between them.
+    A layer that keeps its own private counter multiplies against every layer
+    above it.
+
+# --------------------------------------------------------------------------
+# Backoff, for the tool types that may retry at all
+# --------------------------------------------------------------------------
+
+backoff:
+  strategy: exponential_with_full_jitter
+  base_seconds: 2.0                # tune: starting point
+  max_seconds: 20.0                # tune: starting point
+  # A provider that sends Retry-After has said when it will answer. Honour it.
+  # Guessing a shorter interval adds load to a service already asking for less.
+  honour_retry_after: true
+  # ...unless honouring it would pass the task deadline, in which case the
+  # task escalates rather than waiting past its promise to the requester.
+  retry_after_bounded_by_deadline: true
+  note: >
+    Full jitter means the wait is drawn uniformly from [0, min(max, base * 2^n)].
+    Without jitter every caller that failed at the same moment retries at the
+    same moment, which is a second outage arriving on schedule.
+
+# --------------------------------------------------------------------------
+# By tool type
+# --------------------------------------------------------------------------
+#
+# "automatic" is whether the system may retry without a person. It is the
+# column that does not change with tuning.
+
+tool_types:
+
+  - type: read_idempotent
+    examples: [document lookup, balance query, status query, search]
+    automatic: yes
+    max_attempts: 3                # tune: starting point. Still spends per_task.
+    when: temporary_failure
+    notes: >
+      Bounded, with backoff and jitter. Honour Retry-After. Respect the task
+      deadline, which outranks this count. A read that completed and found
+      nothing is NOT a temporary failure and is NOT retried; it is missing
+      evidence, and the answer to that is to ask.
+
+  - type: write_with_idempotency_key
+    examples: [refund with key, ticket create with key, order submit with key]
+    automatic: only_under_the_same_key
+    max_attempts: 2                # tune: starting point. Still spends per_task.
+    when: not_executed_confirmed
+    notes: >
+      Re-issue only after the provider has confirmed the first attempt did not
+      run, and only under the SAME key. A new key is a new action. That single
+      line is the mechanism behind the third refund in the story. An
+      OutcomeUnknown on a keyed write is still uncertain_action and still
+      reconciles first; the key is what makes the re-issue safe afterwards,
+      not what makes the retry automatic.
+
+  - type: write_without_idempotency_key
+    examples: [legacy refund API, POST with no dedupe, fire-and-forget webhook]
+    automatic: no
+    max_attempts: 0
+    when: never
+    notes: >
+      Query state, then decide. There is no safe automatic retry of a write
+      you cannot identify afterwards. If you own the API, adding a key is a
+      smaller change than the incident it prevents.
+
+  - type: irreversible_or_external
+    examples: [payment capture, email send, SMS, ticket to a third party, ledger post]
+    automatic: no
+    max_attempts: 0
+    when: never
+    notes: >
+      Reconcile first, every time, even with a key. An email cannot be unsent.
+      The status query is not charged to the attempt budget: reconciliation is
+      what makes any later retry safe, and a design that makes it expensive
+      discourages it.
+
+  - type: model_generation
+    examples: [recommendation, draft, classification, plan]
+    automatic: only_when_input_changed
+    max_attempts: 2                # tune: starting point. Still spends per_task.
+    when: input_changed
+    notes: >
+      New evidence, or a new instruction. An identical input produces the same
+      kind of answer at extra cost, and usually at higher confidence, which is
+      worse than useless because confidence is read as evidence. Two identical
+      rejections in a row are proof that the last change did not address the
+      objection; a third attempt is the same attempt. That stop rule is this
+      kit's design choice, not an industry standard; the cap above is where
+      you tune it.
+
+# --------------------------------------------------------------------------
+# Owners
+# --------------------------------------------------------------------------
+#
+# A queue is not an owner. These are placeholders for a role a specific person
+# holds today, and the simulation uses them as such.
+
+escalation:
+  queue: refunds-manual-review     # placeholder: name yours
+  owner: refunds-duty-officer      # placeholder: a role somebody holds today
+  respond_by_hours:
+    uncertain_action: 1            # tune: starting point. Money may have moved.
+    policy_conflict: 4             # tune: starting point
+    missing_evidence: 8            # tune: starting point
+    temporary_failure: 4           # tune: starting point
+    unrecoverable: 8               # tune: starting point
