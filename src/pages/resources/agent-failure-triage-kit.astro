@@ -1,0 +1,741 @@
+---
+// /resources/agent-failure-triage-kit — the triage kit, self-hosted.
+//
+// Fourth in the agentic system design series, and the same publishing decision
+// as the other three: the page is the resource, and the PDF a reader wants is
+// made by their own print dialogue against the stylesheet at the foot of this
+// file. Nothing is stored, posted or scored.
+//
+// The one thing to be careful about here is the repo link. REPO_URL is blank
+// until the repository is public. While it is blank the page names the
+// repository in plain text and does not link it, because a resources page that
+// links somewhere a visitor cannot open is worse than one that does not link
+// there yet.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  REPO_URL,
+  STORY_FRAME,
+  STORY,
+  STORY_CLOSER,
+  STORY_CLOSER_BODY,
+  CLASSES,
+  TERMINALS,
+  ROOT_CAUSE,
+  TREE,
+  WHY_ORDER,
+  TREE_NOTE,
+  PLAYBOOK,
+  PLAYBOOK_CLOSER,
+  RECORD_WHY,
+  RECORD_FIELDS,
+  RECORD_EXAMPLE,
+  RECORD_ANNOTATIONS,
+  BUDGETS_CAVEAT,
+  BUDGETS,
+  AMPLIFICATION_TITLE,
+  AMPLIFICATION,
+  AMPLIFICATION_MEASURED,
+  RECONCILE_INTRO,
+  RECONCILE,
+  SECOND_OPINION_TITLE,
+  SECOND_OPINION,
+  INSPECT_INSTEAD,
+  SECOND_OPINION_CLOSER,
+  SECOND_OPINION_COST,
+  TESTS_INTRO,
+  TESTS,
+  TESTS_RESULT,
+  TESTS_SMELLS,
+  LEDGER_NOTE,
+  MONDAY_FRAME,
+  MONDAY,
+  MONDAY_CLOSER,
+  FINAL_TITLE,
+  FINAL_BODY,
+  DISCLAIMER,
+} from '../../data/agent-failure-triage-kit';
+
+const meta = publishedResources.find((r) => r.id === 'agent-failure-triage-kit')!;
+
+const title =
+  'The Agent Failure Triage Kit — what your agent should do after a checker says no · The Living Craft';
+const description =
+  'Three failure classes an agent must tell apart, in the order to ask about them: an uncertain action, missing evidence, a temporary failure. A triage tree, a response playbook, a rejection record schema, retry budgets by tool type, a reconciliation checklist, and twelve failure-injection tests with results.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/agent-failure-triage-kit#howto`,
+    name: 'The Agent Failure Triage Kit',
+    description,
+    url: `${SITE_ORIGIN}/resources/agent-failure-triage-kit`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    totalTime: 'PT45M',
+    step: MONDAY.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.step,
+      text: `${s.step} ${s.detail} (${s.minutes})`,
+    })),
+  },
+];
+---
+
+<ResourcesLayout
+  title={title}
+  description={description}
+  canonical="/resources/agent-failure-triage-kit"
+  schema={schema}
+>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design 04</span>
+      </div>
+      <h1>What your agent should do <em>after a checker says no</em>.</h1>
+      <p class="lead">
+        A refund agent retried three times, escalated, and then refunded one customer
+        three times over. No component had a bug. The system used one word, “error”, for
+        three situations that need different responses.
+      </p>
+      <p class="hero-note mono">
+        3 failure classes · 4 ordered questions · 12 failure-injection tests · 45 minutes
+      </p>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section id="use">
+    <div class="wrap">
+      <div class="controls" role="group" aria-label="Page controls">
+        <button class="btn btn-primary" id="pdf" type="button">
+          Download as PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </button>
+        <span class="ctrl-note mono">Opens your browser’s print dialogue. Choose “Save as PDF”.</span>
+      </div>
+      <p class="prose-lead">
+        The page is the resource. Free to read, print, and run against a system you already
+        own. There is a runnable simulation behind it: two orchestrators, the same injected
+        faults, and the twelve tests below.
+      </p>
+      <p class="pubdate mono">Published {longDate(meta.publishedAt)}</p>
+    </div>
+  </section>
+
+  <!-- 01 · the story -->
+  <section id="story">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> The story, in sixty seconds</span>
+        <h2>Six steps, and <em>not one of them is a bug</em>.</h2>
+      </div>
+      <p class="prose-lead">{STORY_FRAME}</p>
+      <ol class="beats">
+        {STORY.map((b) => (
+          <li>
+            <span class="beatbody">
+              {b.body}{b.mark && <> <em>{b.mark}</em></>}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div class="punch">
+        <p class="punchline">{STORY_CLOSER}</p>
+        <p class="punchbody">{STORY_CLOSER_BODY}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · the classes -->
+  <section id="classes">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> One word, three situations</span>
+        <h2>Three failures that need <em>opposite responses</em>.</h2>
+      </div>
+      <div class="classgrid">
+        {CLASSES.map((c) => (
+          <div class={c.costly ? 'cls costly' : 'cls'}>
+            <span class="clsname mono">{c.name}</span>
+            <p class="clsmeans">{c.means}</p>
+            <p class="clsresp">{c.response}</p>
+          </div>
+        ))}
+      </div>
+      <p class="prose-note">
+        Plus two terminal outcomes.
+        {TERMINALS.map((t, i) => (
+          <>
+            {i > 0 && ' '}
+            <b class="mono">{t.name}</b> — {t.means}.
+          </>
+        ))}
+      </p>
+      <p class="callout stop">{ROOT_CAUSE}</p>
+    </div>
+  </section>
+
+  <!-- 03 · the tree -->
+  <section id="tree">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> The triage tree</span>
+        <h2>The order is <em>the whole design</em>.</h2>
+      </div>
+      <ol class="tree">
+        {TREE.map((q) => (
+          <li class={q.n === '1' ? 'first' : ''}>
+            <span class="qn mono">Q{q.n}</span>
+            <div class="qbody">
+              <p class="qask">{q.ask}</p>
+              <p class="qyes">
+                <span class="yeslbl mono">yes →</span>
+                <b class="mono">{q.yes}</b>
+              </p>
+              <p class="qthen">{q.then}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="prose-note">{TREE_NOTE}</p>
+      <p class="callout">{WHY_ORDER}</p>
+    </div>
+  </section>
+
+  <!-- 04 · the playbook -->
+  <section id="playbook">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> The response playbook</span>
+        <h2>One row per class, including the <em>wrong answer that looks right</em>.</h2>
+      </div>
+      <div class="scroll">
+        <table class="grid play">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Signal</th>
+              <th>Tempting wrong response</th>
+              <th>Correct response</th>
+              <th>Owner</th>
+              <th>Stop condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {PLAYBOOK.map((r) => (
+              <tr>
+                <td class="cname mono">{r.cls}</td>
+                <td>{r.signal}</td>
+                <td class="wrong">{r.tempting}</td>
+                <td class="right">{r.correct}</td>
+                <td>{r.owner}</td>
+                <td>{r.stop}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">{PLAYBOOK_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- 05 · the record -->
+  <section id="record">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> The rejection record</span>
+        <h2>What a rejection has to carry to be <em>worth reading</em>.</h2>
+      </div>
+      <p class="prose-lead">{RECORD_WHY}</p>
+      <div class="scroll">
+        <table class="grid fields">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>What it holds</th>
+            </tr>
+          </thead>
+          <tbody>
+            {RECORD_FIELDS.map((f) => (
+              <tr>
+                <td class="cname mono">{f.field}</td>
+                <td>{f.holds}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3 class="sub">A record from the worst case in the kit</h3>
+      <p class="prose-lead">
+        The refund timed out after the money moved, and the provider’s status endpoint is
+        down. This is what the corrected design wrote.
+      </p>
+      <pre class="code"><code>{RECORD_EXAMPLE}</code></pre>
+      <ul class="annot">
+        {RECORD_ANNOTATIONS.map((a) => <li>{a}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06 · retry budgets -->
+  <section id="budgets">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> Retry budgets by tool type</span>
+        <h2>What may be retried automatically, and <em>what must not</em>.</h2>
+      </div>
+      <p class="callout">{BUDGETS_CAVEAT}</p>
+      <div class="scroll">
+        <table class="grid budgets">
+          <thead>
+            <tr>
+              <th>Tool type</th>
+              <th>Automatic retry</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {BUDGETS.map((b) => (
+              <tr>
+                <td class="cname">{b.tool}</td>
+                <td class={b.autoOk ? 'auto yes' : 'auto no'}>{b.auto}</td>
+                <td>{b.notes}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3 class="sub">{AMPLIFICATION_TITLE}</h3>
+      <div class="prose">
+        <p>{AMPLIFICATION}</p>
+        <p>{AMPLIFICATION_MEASURED}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 · reconciliation -->
+  <section id="reconcile">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> Reconciliation checklist</span>
+        <h2>For an action that <em>may or may not</em> have executed.</h2>
+      </div>
+      <p class="prose-lead">{RECONCILE_INTRO}</p>
+      <ol class="check">
+        {RECONCILE.map((r) => (
+          <li>
+            <span class="tick" aria-hidden="true"></span>
+            <div>
+              <p class="cstep">{r.step}</p>
+              <p class="cwhy">{r.why}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- 08 · second opinion -->
+  <section id="second-opinion">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> A second opinion is not proof</span>
+        <h2>{SECOND_OPINION_TITLE}</h2>
+      </div>
+      <div class="prose">
+        {SECOND_OPINION.map((p) => <p>{p}</p>)}
+      </div>
+      <h3 class="sub">Inspect this instead, before any external call</h3>
+      <ul class="tlist">
+        {INSPECT_INSTEAD.map((i) => <li>{i}</li>)}
+      </ul>
+      <p class="callout">{SECOND_OPINION_CLOSER}</p>
+      <p class="prose-note">{SECOND_OPINION_COST}</p>
+    </div>
+  </section>
+
+  <!-- 09 · the tests -->
+  <section id="tests">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">09</span> Twelve failure-injection tests</span>
+        <h2>Run against both designs, and <em>these are the real verdicts</em>.</h2>
+      </div>
+      <p class="prose-lead">{TESTS_INTRO}</p>
+      <div class="scroll">
+        <table class="grid tests">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>What is injected</th>
+              <th>Expected behaviour</th>
+              <th class="vcol">Naive</th>
+              <th class="vcol">Corrected</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TESTS.map((t) => (
+              <tr>
+                <td class="cname mono">{t.id}</td>
+                <td>{t.inject}</td>
+                <td>{t.expect}</td>
+                <td class="vcol"><span class={`mark ${t.naive}`}>{t.naive}</span></td>
+                <td class="vcol"><span class={`mark ${t.corrected}`}>{t.corrected}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">{TESTS_RESULT}</p>
+      <p class="prose-note">{TESTS_SMELLS}</p>
+      <p class="callout">{LEDGER_NOTE}</p>
+    </div>
+  </section>
+
+  <!-- 10 · Monday -->
+  <section id="monday">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">10</span> Your Monday exercise</span>
+        <h2>Forty-five minutes against <em>a system you already own</em>.</h2>
+      </div>
+      <p class="prose-lead">{MONDAY_FRAME}</p>
+      <ol class="protocol">
+        {MONDAY.map((m) => (
+          <li>
+            <span class="mins mono">{m.minutes}</span>
+            <div>
+              <p class="mstep">{m.step}</p>
+              <p class="mdetail">{m.detail}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{MONDAY_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- What comes next -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">11</span> What this does not cover</span>
+        <h2>{FINAL_TITLE}</h2>
+      </div>
+      <div class="prose">
+        <p>{FINAL_BODY}</p>
+      </div>
+      <div class="nextrow">
+        <a class="btn btn-primary" href="/resources/agent-authority-review">
+          The Agent Authority Review&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+      <p class="prose-note">
+        {REPO_URL ? (
+          <>
+            The simulation, the schemas and the twelve tests are in{' '}
+            <a href={REPO_URL} target="_blank" rel="noopener">the kit repository</a>.
+          </>
+        ) : (
+          <>
+            The simulation, the JSON Schema for the rejection record, the retry-budget
+            policy and the twelve tests ship as a repository alongside this page. It is
+            not public yet, and this line becomes a link when it is.
+          </>
+        )}
+      </p>
+      <p class="disclaimer">{DISCLAIMER}</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other three resource pages. It also
+     sets no measure, and the section wrap is 1180px wide — wide enough to run a
+     paragraph past 130 characters a line. */
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  /* The closing section centres its text against the full wrap, as the other
+     three resource pages do. A measure there left-shifts the block inside its
+     own centred column, which reads as a mistake. */
+  .final .prose { max-width: none; }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .disclaimer { margin-top: var(--space-6); font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-5); }
+  .ctrl-note { font-size: var(--size-1); color: var(--text-quiet); }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  .callout.stop { background: var(--danger-quiet); }
+
+  /* ── 01 the story ─────────────────────────────────────────────────────── */
+  ol.beats {
+    list-style: none;
+    counter-reset: beat;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-2) var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  ol.beats li {
+    counter-increment: beat;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-hair);
+  }
+  ol.beats li:last-child { border-bottom: 0; }
+  ol.beats li::before {
+    content: counter(beat, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-faint);
+  }
+  .beatbody { color: var(--text-body); }
+  .beatbody em { font-style: normal; color: var(--danger); font-weight: var(--weight-medium); }
+
+  .punch { margin-top: var(--space-6); max-width: var(--measure-prose); }
+  .punchline {
+    font-family: var(--font-display);
+    font-size: var(--size-7);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+  .punchbody { margin-top: var(--space-3); color: var(--text-quiet); }
+
+  /* ── 02 the classes ───────────────────────────────────────────────────── */
+  .classgrid { display: grid; gap: var(--space-4); }
+  @media (min-width: 860px) { .classgrid { grid-template-columns: repeat(3, 1fr); } }
+
+  .cls {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    border-left: 3px solid var(--border-rule);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  /* One stripe, not three. The expensive class is the one this kit is about,
+     and colour-coding all three would spend the accent on a legend. */
+  .cls.costly { border-left-color: var(--danger); }
+  .clsname { font-size: var(--size-2); font-weight: var(--weight-medium); color: var(--accent-ink-strong); }
+  .cls.costly .clsname { color: var(--danger); }
+  .clsmeans { color: var(--text-quiet); font-size: var(--size-2); }
+  .clsresp {
+    color: var(--text-body);
+    font-size: var(--size-2);
+    font-weight: var(--weight-medium);
+    border-top: 1px solid var(--border-hair);
+    padding-top: var(--space-3);
+    margin-top: auto;
+  }
+
+  /* ── 03 the tree ──────────────────────────────────────────────────────── */
+  ol.tree { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.tree li {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    position: relative;
+  }
+  /* The ordering is the lesson, so the first question is marked as the one
+     that runs before anything else rather than merely listed first. */
+  ol.tree li.first { border-left: 3px solid var(--danger); }
+  .qn { color: var(--text-faint); font-size: var(--size-2); font-weight: var(--weight-medium); padding-top: 2px; }
+  ol.tree li.first .qn { color: var(--danger); }
+  .qbody { display: flex; flex-direction: column; gap: var(--space-2); }
+  .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .qyes { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }
+  .yeslbl { font-size: var(--size-1); color: var(--text-faint); }
+  .qyes b { font-size: var(--size-2); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
+  ol.tree li.first .qyes b { color: var(--danger); }
+  .qthen { color: var(--text-quiet); font-size: var(--size-2); }
+
+  /* ── tables ───────────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .play { min-width: 1040px; }
+  .fields { min-width: 720px; }
+  .budgets { min-width: 860px; }
+  .tests { min-width: 980px; }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
+  .play .wrong { color: var(--text-faint); }
+  .play .right { color: var(--text-body); }
+  .budgets .auto { white-space: normal; min-width: 150px; font-weight: var(--weight-medium); }
+  .budgets .auto.yes { color: var(--text-body); }
+  .budgets .auto.no { color: var(--danger); }
+
+  .vcol { text-align: center; white-space: nowrap; }
+  /* There is no green in this palette, and inventing one for a results table
+     would be the wrong place to spend a new colour. So the fail is the marked
+     state and the pass is the quiet one — which is also the right emphasis,
+     because the failures are the column a reader is scanning for. */
+  .mark {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+  }
+  .mark.pass { color: var(--text-body); background: var(--surface-sunken); }
+  .mark.fail { color: var(--danger); background: var(--danger-quiet); border-color: currentColor; }
+
+  /* ── 05 the record ────────────────────────────────────────────────────── */
+  pre.code {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    border-radius: var(--radius-inner);
+    padding: var(--space-5);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    line-height: 1.7;
+    tab-size: 2;
+  }
+  ul.annot {
+    list-style: none;
+    margin-top: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--measure-prose);
+  }
+  ul.annot li {
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    gap: var(--space-4);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  ul.annot li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-ink-strong);
+    margin-top: 9px;
+  }
+
+  /* ── 07 the checklist ─────────────────────────────────────────────────── */
+  ol.check { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.check li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .tick {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-rule);
+    border-radius: var(--radius-tick);
+    margin-top: 3px;
+  }
+  .cstep { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .cwhy { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+
+  /* ── 10 the protocol ──────────────────────────────────────────────────── */
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.protocol li {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .mins { color: var(--accent-ink-strong); font-size: var(--size-1); font-weight: var(--weight-medium); white-space: nowrap; }
+  .mstep { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .mdetail { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+
+  ul.tlist { max-width: var(--measure-prose); }
+
+  .nextrow { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+
+  /* ── print ────────────────────────────────────────────────────────────── */
+  @media print {
+    .controls, .nextrow { display: none !important; }
+    .cls, ol.tree li, ol.check li, ol.protocol li, ol.beats {
+      box-shadow: none;
+      border: 1px solid var(--border-hair);
+      break-inside: avoid;
+    }
+    table.grid, .scroll { overflow: visible !important; }
+    .play, .fields, .budgets, .tests { min-width: 0 !important; font-size: 10px; }
+    pre.code { font-size: 9px; break-inside: avoid; }
+    thead { display: table-header-group; }
+    tr, ol.beats li, ul.annot li { break-inside: avoid; }
+    #record, #tests { break-before: page; }
+    .sub { break-after: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // The only script on the page. There is no PDF file to download: the browser
+  // makes one from the print stylesheet above, which is why the button says
+  // what it opens. Nothing is stored, and nothing is posted.
+  document.getElementById('pdf')?.addEventListener('click', () => window.print());
+</script>

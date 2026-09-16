@@ -160,6 +160,29 @@ export const resources: Resource[] = [
     url: '/resources/model-selection-checklist',
     publishedAt: '2026-09-15',
   },
+  {
+    id: 'agent-failure-triage-kit',
+    topic: 'Failure Handling',
+    number: '04',
+    series: 'Agentic system design',
+    title: 'The Agent Failure Triage Kit',
+    kind: 'Kit \u00b7 12 failure-injection tests, 1 runnable simulation',
+    summary:
+      'What an agent should do after a checker says no, and why retrying the wrong thing refunds one customer three times.',
+    description:
+      'A refund agent reads a receipt, the lookup times out, and the system records that there is no receipt. The checker rejects for missing evidence. The orchestrator retries the model three times, each attempt more confident than the last, and escalates. The lookup is never retried. Days later a human finds the receipt, approves, and the payment call times out; the same retry policy fires three times, every call reaches the provider, and the customer is refunded three times over. No component had a bug and the model never hallucinated. The system used one word, error, for three situations that need opposite responses. This kit separates them: evidence that is genuinely absent, a dependency that could not be reached, and an action with side effects that may or may not have executed. It gives you the four triage questions in the order to ask them, side effects first, because misclassifying an uncertain action as a temporary failure is the expensive mistake. Then a response playbook with the tempting wrong answer named beside the right one, the fields a rejection record has to carry, retry budgets by tool type with the amplification that happens when two layers each retry three times, a reconciliation checklist for actions whose outcome nobody established, and why a second model approving a plan does not make an external call safe. It closes with twelve failure injections run against two orchestrators, the results of both, and a forty-five minute exercise for a system you already own.',
+    useFor: [
+      'Tell a read that found nothing from a read that never completed, at the tool boundary',
+      'Decide what may be retried automatically and what has to be reconciled first',
+      'Write a rejection an on-call engineer can act on without re-deriving the diagnosis',
+      'Find the retry in your own stack that multiplies against another one nobody remembers writing',
+      'Run three failure injections against a production agent on a Monday morning',
+    ],
+    format:
+      'Page, with the triage tree, every table and a worked rejection record. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
+    url: '/resources/agent-failure-triage-kit',
+    publishedAt: '2026-09-16',
+  },
 ];
 
 /**

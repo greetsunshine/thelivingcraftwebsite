@@ -1,0 +1,7 @@
+# Built PDF. The published copy is committed at public/downloads/ in the site
+# repo; dist/ here is working output.
+dist/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
