@@ -663,11 +663,6 @@ const hasPrice = Boolean(region?.publicPrice);
     </button>
   </div>
 
-  <div class="route-choice-note">
-    <p>Prefer to talk it through first? Booking a call is separate from applying.</p>
-    <BookNowLink placement="closing" onCohortPage />
-  </div>
-
   <div id="apply-panel" class="route-panel" tabindex="-1">
     <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
   </div>
@@ -682,13 +677,25 @@ const hasPrice = Boolean(region?.publicPrice);
   </p>
 </section>
 
-{/* Switches which of the two forms above is visible. A button pair rather
-    than a <select> or radios, because there are only two and each needs room
-    for a description — the same reasoning RouteForm's own field choices
-    follow. Three links elsewhere on the site still point at #team (the
-    contact page, and the footer's "Learning for a team") and must land on
-    the enterprise branch already selected, not on a hidden panel — that is
-    what the hashchange listener is for. */}
+{/* Switches which of the two forms above is visible, and runs the arrival
+    cue.
+
+    A button pair rather than a <select> or radios, because there are only two
+    and each needs room for a description — the same reasoning RouteForm's own
+    field choices follow.
+
+    THE CUE. Arriving from any Apply CTA lights BOTH buttons for a moment and
+    only then opens the individual form beneath them. The point is that the
+    team route is seen at all: with the form already open on arrival, the
+    chooser was something a reader scrolled past on the way to the fields.
+    Anyone who scrolls here themselves, with no Apply click behind them, gets
+    the form open as before — the cue is for people who were sent here.
+
+    Three links elsewhere on the site point straight at a branch and must
+    skip the cue entirely: #team and #enterprise-form (the contact page, and
+    the footer's "Learning for a team") open the team form directly, and
+    #apply-form opens the individual one. Somebody who asked for one form
+    does not need to be shown that a choice exists. */}
 <script>
   (function () {
     const buttons = Array.from(
@@ -700,31 +707,86 @@ const hasPrice = Boolean(region?.publicPrice);
     };
     if (buttons.length === 0 || !panels.application || !panels.enterprise) return;
 
-    let current = 'application';
+    /* Long enough to read as a deliberate pointer at the two choices, short
+       enough that nobody waiting to type is kept waiting. Matches the two
+       450ms pulses in the stylesheet. */
+    const CUE_MS = 900;
+    let cueTimer = 0;
 
     const select = (branch: string, focus: boolean) => {
-      if (!panels[branch] || branch === current) {
-        if (focus) panels[branch]?.focus();
-        return;
-      }
-      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.routeChoice === branch)));
+      if (!panels[branch]) return;
+      buttons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.routeChoice === branch)),
+      );
       Object.entries(panels).forEach(([key, panel]) => {
         if (panel) panel.hidden = key !== branch;
       });
-      current = branch;
       if (focus) panels[branch]!.focus();
     };
 
+    const endCue = () => {
+      buttons.forEach((b) => b.classList.remove('is-cueing'));
+    };
+
+    /** Highlight both choices, then open the individual form under them. */
+    const cue = () => {
+      window.clearTimeout(cueTimer);
+      // Both panels closed for the length of the cue, so the two buttons are
+      // the only thing on screen to look at.
+      Object.values(panels).forEach((panel) => {
+        if (panel) panel.hidden = true;
+      });
+      buttons.forEach((b) => {
+        // Restart the animation on a second click, which it will not do on
+        // its own while the class is already there.
+        b.classList.remove('is-cueing');
+        void b.offsetWidth;
+        b.classList.add('is-cueing');
+      });
+      cueTimer = window.setTimeout(() => {
+        endCue();
+        select('application', false);
+      }, CUE_MS);
+    };
+
     buttons.forEach((b) => {
-      b.addEventListener('click', () => select(b.dataset.routeChoice ?? 'application', true));
+      b.addEventListener('click', () => {
+        // A real choice ends the cue early; nothing is being suggested any
+        // more once somebody has picked.
+        window.clearTimeout(cueTimer);
+        endCue();
+        select(b.dataset.routeChoice ?? 'application', true);
+      });
     });
 
     const fromHash = () => {
-      if (location.hash === '#team' || location.hash === '#enterprise-form') select('enterprise', false);
-      else if (location.hash === '#apply-form') select('application', false);
+      if (location.hash === '#team' || location.hash === '#enterprise-form') {
+        window.clearTimeout(cueTimer);
+        endCue();
+        select('enterprise', false);
+      } else if (location.hash === '#apply-form') {
+        window.clearTimeout(cueTimer);
+        endCue();
+        select('application', false);
+      } else if (location.hash === '#apply') {
+        cue();
+      }
     };
     fromHash();
     window.addEventListener('hashchange', fromHash);
+
+    /* A second click on an Apply CTA fires no hashchange, because the hash is
+       already #apply — so the cue would run once and never again. This
+       catches the click itself, on this page only; the browser still does the
+       scrolling. */
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link) return;
+      const url = new URL(link.href, location.href);
+      const samePage = url.pathname.replace(/\/+$/, '') === location.pathname.replace(/\/+$/, '');
+      if (samePage && url.hash === '#apply') cue();
+    });
   })();
 </script>
 
@@ -813,7 +875,11 @@ const hasPrice = Boolean(region?.publicPrice);
   .commit + .price-card { margin-top: var(--space-8); }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
-  .forms :global(.apply-form) { margin-inline: 0; }
+  /* Centred, not flush left: the form sits under a two-button chooser, and
+     hanging it off the left edge reads as belonging to the left-hand button
+     rather than to whichever one is selected. `auto` restores the centring
+     global.css already gives .apply-form. */
+  .forms :global(.apply-form) { margin-inline: auto; }
 
   /* The branch chooser. Two buttons, not a <select> — each needs room for a
      one-line description, and a visible pair is one fewer click than a
@@ -854,21 +920,34 @@ const hasPrice = Boolean(region?.publicPrice);
   }
   .rc-body { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-snug); }
 
-  .route-choice-note {
-    max-width: 580px;
-    margin: 0 0 var(--space-6);
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-  }
-  .route-choice-note p {
-    margin: 0;
-    color: var(--text-quiet);
-    font-size: var(--size-2);
-  }
-
   .route-panel:focus { outline: none; }
+
+  /* THE ARRIVAL CUE. Landing on #apply from an Apply CTA lights both choices
+     for a moment before the form opens underneath them. The form used to be
+     open on arrival, which meant the chooser was the thing a reader scrolled
+     past on their way to the fields — so the team route was invisible to
+     anyone who did not look up. Border and ink only: --sun is a fill for an
+     action, and a button that is merely being pointed at has not been
+     chosen. */
+  .route-choice-btn.is-cueing {
+    border-color: var(--text-loud);
+    box-shadow: var(--shadow-lift);
+    animation: rc-cue 450ms var(--ease-out) 2;
+  }
+  @keyframes rc-cue {
+    0%,
+    100% {
+      border-color: var(--text-loud);
+    }
+    50% {
+      border-color: var(--accent-ink);
+    }
+  }
+  /* The cue still happens for somebody who has asked for less motion — it
+     just holds the highlight instead of pulsing it. */
+  @media (prefers-reduced-motion: reduce) {
+    .route-choice-btn.is-cueing { animation: none; }
+  }
 
   .contact-line {
     margin-top: var(--space-7);
