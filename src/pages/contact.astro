@@ -44,14 +44,12 @@
  * The "question before applying" row used to point at a separate cohort
  * enquiry form on the cohort page. That form is gone — the CTA rework folded
  * it into one branching application flow and replaced the written-question
- * path with Book now, a real appointment. This row now offers whichever of
- * those is actually available: Book now when the appointment URL is
- * configured, the application itself otherwise. Never both claimed at once,
- * and never a link to a form that is no longer on the page.
+ * path with Book now, which opens the cohort page's own booking section. The
+ * row therefore still answers the same situation it always did, with a call
+ * instead of a second form, and never links to a form that is no longer there.
  */
 import PracticeLayout from '../layouts/PracticeLayout.astro';
-import GoogleCalendarBooking from '../components/cohort/GoogleCalendarBooking.astro';
-import { googleCalendarAppointmentUrl } from '../lib/booking';
+import BookNowLink from '../components/site/BookNowLink.astro';
 import { MARKETING_CONSENT } from '../lib/pipeline/consent';
 
 const title = 'Contact — The Living Craft';
@@ -72,9 +70,7 @@ const description =
       </p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="mailto:apply@thelivingcraft.ai">Write to us&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        {googleCalendarAppointmentUrl && (
-          <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="contact" />
-        )}
+        <BookNowLink placement="contact" />
       </div>
       <p class="hero-note">No response-time commitment is published, because none has been agreed.</p>
     </div>
@@ -95,14 +91,8 @@ const description =
       <div class="detail-row">
         <span class="dk">You have a question before applying</span>
         <span class="dv">
-          {googleCalendarAppointmentUrl ? (
-            <a class="textlink" href={googleCalendarAppointmentUrl} target="_blank" rel="noopener noreferrer" data-booking-trigger data-booking-placement="contact">
-              Book now
-            </a>
-          ) : (
-            <a class="textlink" href="/#apply">Apply</a>
-          )}
-          {' — it starts a discussion, not a commitment'}
+          <BookNowLink placement="contact" variant="textlink" />
+          {' — thirty minutes, and it is not an application'}
         </span>
       </div>
       <div class="detail-row">

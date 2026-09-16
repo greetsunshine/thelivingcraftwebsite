@@ -26,8 +26,7 @@
  * Not on /craft or /craft/admin either — both are gated, and a public
  * application prompt has no business inside either gate.
  */
-import GoogleCalendarBooking from '../cohort/GoogleCalendarBooking.astro';
-import { googleCalendarAppointmentUrl } from '../../lib/booking';
+import BookNowLink from './BookNowLink.astro';
 
 export interface Props {
   /** Where "Apply" points. Defaults to the cohort's apply anchor, on- or off-page as needed. */
@@ -45,9 +44,7 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       <a class="btn btn-primary" href={applyHref}>
         Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
-      {googleCalendarAppointmentUrl && (
-        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="sticky" />
-      )}
+      <BookNowLink placement="sticky" onCohortPage={onCohortPage} />
       <button type="button" class="sticky-apply-dismiss" data-sticky-dismiss aria-label="Dismiss">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
