@@ -309,7 +309,10 @@ header.nav {
 .card .k { font-family: var(--font-mono); font-size: var(--size-1); color: var(--clay); letter-spacing: var(--tracking-label); }
 .card h3 { font-size: var(--size-5); margin: var(--space-3) 0 var(--space-2); font-weight: var(--weight-strong); color: var(--text-loud); }
 .card p { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
-@media (max-width: 900px) { .cards3 { grid-template-columns: 1fr; } }
+/* .cards3 drops to two columns at 900px and one at 560px — both steps live in
+   the density block near the foot of this file, so the whole responsive
+   rhythm is readable in one place. This used to go straight to one column
+   here, which is why three short cards became three screens on a tablet. */
 
 /* region chooser */
 .region-choices { align-items: stretch; }
@@ -497,10 +500,31 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
 .backbar a { font-size: var(--size-2); color: var(--text-quiet); font-family: var(--font-mono); }
 .backbar a:hover { color: var(--text-loud); }
 
+/* ── density ──────────────────────────────────────────────────────────────
+   The rhythm is generous by design — high whitespace is part of this
+   register, not an accident — but the same 72px band that reads as
+   confidence on a 1440px screen is just distance on a 390px one. Every
+   section shrinks a step at 900px and another at 560px, so the page gets
+   shorter without any section getting cramped, and nothing is deleted to
+   make it happen. Section count is unchanged; only the air between them is.
+
+   Cut on the cohort page, which is the long one: roughly 40px of padding per
+   section at 900px and 80px at 560px, across sixteen sections. */
 @media (max-width: 900px) {
   .hero { padding: 0 0 var(--space-6); }
   .hero > .wrap { padding: var(--space-6); border-radius: var(--radius-card); }
   .wrap { padding: 0 var(--space-4); }
+
+  section { padding: var(--space-7) 0; }
+  .proofbar { padding-bottom: var(--space-6); }
+  .sec-head { margin-bottom: var(--space-5); }
+  .statband { margin: var(--space-6) 0; }
+  .price-card { padding: var(--space-6); }
+  footer.site { padding: var(--space-6) 0 var(--space-5); margin-top: var(--space-5); }
+
+  /* Two across rather than one. Three stacked cards is three screens on a
+     tablet, and these cards are short enough to pair. */
+  .cards3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Phones. This block must stay LAST: it shares specificity with the 900px block
@@ -519,6 +543,28 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
   }
   .hero-cta { width: 100%; }
   .hero-cta .btn { width: 100%; }
+
+  /* A second step down, and a density pass inside the panels themselves —
+     on a phone the padding inside a card costs as much scrolling as the gap
+     between two of them. */
+  section { padding: var(--space-6) 0; }
+  .cards3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .card { padding: var(--space-5); }
+  .mod { padding: var(--space-5); }
+  .stat { padding: var(--space-4); }
+  .statband { margin: var(--space-5) 0; gap: var(--space-3); }
+  .tlist { padding-inline: var(--space-5); }
+  .tlist li { padding: var(--space-4) 0; }
+  .price-card { padding: var(--space-5); }
+  .price-card ul { margin-bottom: var(--space-5); }
+  .faq { padding-inline: var(--space-5); }
+  summary { padding: var(--space-4) 0; }
+  details p { padding-bottom: var(--space-4); }
+  .apply-form { padding: var(--space-5); margin-top: var(--space-5); }
+  .credential { margin-bottom: var(--space-5); }
+  .proofbar .inner { padding: var(--space-4) var(--space-5); gap: var(--space-3) var(--space-5); }
+  footer.site { padding: var(--space-5) 0 var(--space-4); }
+  .foot-grid { gap: var(--space-5); }
 }
 
 /* The line between booking a time and writing an enquiry. Both paths sit in the

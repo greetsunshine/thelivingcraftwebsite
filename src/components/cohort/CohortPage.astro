@@ -790,7 +790,11 @@ const hasPrice = Boolean(region?.publicPrice);
 </script>
 
 <style>
-  .band { padding-block: var(--space-8); }
+  /* 56px rather than 72. This page is the long one — sixteen sections — and a
+     notch off each band takes ~500px out of the scroll without any section
+     reading as cramped. The two responsive steps are in global.css, with the
+     rest of the site's density pass. */
+  .band { padding-block: calc(var(--space-7) + var(--space-2)); }
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {
@@ -871,7 +875,7 @@ const hasPrice = Boolean(region?.publicPrice);
     box-shadow: var(--shadow-raise);
     padding: var(--space-2) var(--space-6);
   }
-  .commit + .price-card { margin-top: var(--space-8); }
+  .commit + .price-card { margin-top: var(--space-7); }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
   /* Centred, not flush left: the form sits under a two-button chooser, and
@@ -951,7 +955,7 @@ const hasPrice = Boolean(region?.publicPrice);
   }
 
   .contact-line {
-    margin-top: var(--space-7);
+    margin-top: var(--space-6);
     font-size: var(--size-3);
     color: var(--text-quiet);
   }
@@ -965,7 +969,7 @@ const hasPrice = Boolean(region?.publicPrice);
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
-    .band { padding-block: var(--space-7); }
+    .band { padding-block: var(--space-6); }
   }
 
   @media (max-width: 560px) {
@@ -973,7 +977,7 @@ const hasPrice = Boolean(region?.publicPrice);
     /* One less full section of vertical padding per screen on a phone, where
        the extra room this token gives on a desktop reading distance is just
        more scrolling. */
-    .band { padding-block: var(--space-6); }
+    .band { padding-block: var(--space-5); }
     .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
   }
 </style>
