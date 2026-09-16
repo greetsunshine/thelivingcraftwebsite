@@ -30,10 +30,34 @@ const TYPES = new Set([
   'apply_start', // first keystroke in an application form
   'apply_submit', // form submitted (successfully or not — see meta.ok)
   'cta_click', // a cross-surface link was followed
+
+  // The resource pages. Added for /resources/cost-ceiling-workbook, which is
+  // the first page here with a tool on it rather than only a document.
+  'resource_download', // a file was downloaded from a resource page
+  'calculator_interaction', // first input change on an on-page calculator
+  'cohort_apply_click', // the apply CTA at the foot of a resource page
 ]);
 
-/** Only our own routes. Keeps a spoofed path from inventing pages in the report. */
+/**
+ * Only our own routes. Keeps a spoofed path from inventing pages in the report.
+ *
+ * The three offer surfaces are named exactly. The resource pages are matched by
+ * PREFIX instead, because there are a dozen of them and a closed list here is a
+ * list somebody forgets to extend — the symptom being a page that silently
+ * reports nothing, which is the hardest kind of analytics bug to notice.
+ *
+ * The prefix is deliberately narrow. `/craft` must never match: the course area
+ * and the operator console both live under it, and a learner's movements are not
+ * traffic to be counted. `isTracked` below tests the exact strings first and
+ * then the one allowed prefix, and nothing else is accepted.
+ */
 const PATHS = new Set(['/', '/caio', '/assessment']);
+
+/** The one prefix that is allowed, alongside the exact paths above. */
+const TRACKED_PREFIX = '/resources/';
+
+const isTracked = (path: string): boolean =>
+  PATHS.has(path) || (path.startsWith(TRACKED_PREFIX) && !path.includes('..'));
 
 // 204 with no body: the browser sends this with sendBeacon or keepalive and
 // never reads a response. Returning JSON nobody parses is just bytes.
@@ -60,7 +84,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     if (!TYPES.has(type)) return noContent();
 
     const path = String(body.path ?? '');
-    if (!PATHS.has(path)) return noContent();
+    if (!isTracked(path)) return noContent();
 
     await record('events', {
       type,
