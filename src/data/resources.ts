@@ -183,6 +183,29 @@ export const resources: Resource[] = [
     url: '/resources/agent-failure-triage-kit',
     publishedAt: '2026-09-16',
   },
+  {
+    id: 'cost-ceiling-workbook',
+    topic: 'Cost Control',
+    number: '02',
+    series: 'Agent business case',
+    title: 'The Cost-Ceiling Workbook',
+    kind: 'Workbook · 7 tabs, with a calculator on the page',
+    summary:
+      'Estimate agent cost per attempt, per accepted result and per period, then price what happens when a shared ceiling stops the work.',
+    description:
+      'A cost ceiling is a business decision wearing an engineering costume, and the arithmetic that shows it is not hard \u2014 it is just never done before the ceiling is set. This workbook does it in four steps. What one attempt costs, once you count the context an agent re-sends on every turn, the reasoning tokens billed as output whether or not you display them, the cache reads and writes, and the tool calls. What a completed case costs and what a whole period costs, in a normal scenario and a stressed one side by side, ending on fully loaded cost per accepted result rather than on a rate card. How far a shared ceiling overshoots when several workers claim against it at once, why check-then-act breaches it by one full cap per worker, and what an atomic reservation locks up in headroom instead. And then the question nobody models: when the ceiling trips, is stopping actually cheaper than continuing? Three options are priced against each other \u2014 lift the ceiling and finish, freeze the cases, or route them to people \u2014 with a break-even business cost per frozen case. It closes with an eleven-field boundary register, one row filled in, and seven tests to run before trusting any boundary you write down. The calculator on the page runs the same model as the spreadsheet and stores nothing.',
+    useFor: [
+      'Price one agent attempt to the token, including the lines that are usually missed',
+      'Compare a normal period against a stressed one on cost per accepted result, not on price per token',
+      'Show how far a shared ceiling overshoots under concurrency, and what a reservation costs in locked headroom',
+      'Put a number on what freezing a case costs the business, and compare it with finishing the case',
+      'Write down every boundary with its enforcement point, its stop behaviour and its owner',
+    ],
+    format:
+      'Page with a live calculator, plus an Excel workbook to download. Nothing is stored, nothing is sent, and no email address is asked for.',
+    url: '/resources/cost-ceiling-workbook',
+    publishedAt: '2026-09-16',
+  },
 ];
 
 /**

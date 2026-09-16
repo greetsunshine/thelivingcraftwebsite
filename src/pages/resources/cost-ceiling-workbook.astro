@@ -1,0 +1,1486 @@
+---
+/**
+ * /resources/cost-ceiling-workbook — the workbook, its calculator and its register.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * THE NUMBERS ARE IN THE HTML BEFORE ANY SCRIPT RUNS.
+ * ───────────────────────────────────────────────────────────────────────────
+ *
+ * `computeWorkbook(exampleValues())` runs here, on the server, and every result
+ * span is rendered with its answer already in it. The browser script recomputes
+ * the same figures through the same functions and writes them into the same
+ * spans.
+ *
+ * Three things fall out of that, and all three were the point:
+ *
+ *   1. No layout shift. A span that already says "$0.1665" does not resize when
+ *      the first keystroke arrives.
+ *   2. The page is correct with JavaScript off, blocked or still loading. What
+ *      you lose is interactivity, not the worked example.
+ *   3. The expected values are verifiable in `curl` output, which is how the
+ *      defaults were checked against the specification's tables.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * WHAT THIS PAGE DOES NOT DO
+ * ───────────────────────────────────────────────────────────────────────────
+ *
+ * It stores nothing and sends nothing. No localStorage (CLAUDE.md forbids it
+ * site-wide, and the calculator's state is a closure that dies with the tab), no
+ * form, no email address, no gate on the download. Three analytics events go to
+ * the first-party beacon and carry no input values — see the script at the foot.
+ *
+ * The .xlsx is a static file under public/downloads. It is not generated here:
+ * a workbook built at request time would drift from the one the LinkedIn post
+ * points at, and nobody would notice which copy they had.
+ */
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN, cohort } from '../../data/facts';
+import { longDate } from '../../data/resources';
+import {
+  ANSWERS,
+  APPLY_URL,
+  ATTEMPT_FIELDS,
+  BLANK_BOUNDARIES,
+  BREAK_EVEN_NOTE,
+  CAVEATS,
+  CEILING_FIELDS,
+  COHORT_CTA,
+  COHORT_HEADING,
+  DOWNLOAD_PATH,
+  HEADING,
+  HEADLINE_VIEWS,
+  LEGEND,
+  LINKEDIN_EPISODE_5_URL,
+  META_DESCRIPTION,
+  META_TITLE,
+  NEIGHBOURS,
+  PERIOD_FIELDS,
+  PRIMARY_CTA,
+  REGISTER_EXAMPLE,
+  REGISTER_FIELDS,
+  SCENARIO,
+  SCENARIO_CLOSER,
+  SCENARIO_LABEL,
+  SECONDARY_CTA,
+  SEVEN_TESTS,
+  STOPPING_FIELDS,
+  STOPPING_OPTION_LABELS,
+  SUBHEADING,
+  SUPPORTING_LINE,
+  TABS,
+  TOKENOMICS,
+  VERIFICATION_NOTE,
+  cohortLine,
+  hasLinkedInPost,
+  type Field,
+} from '../../data/cost-ceiling-workbook';
+import {
+  PRICES_CHECKED_ON,
+  PRICE_CARD,
+  RESERVE_THEN_SETTLE,
+  computeWorkbook,
+  exampleValues,
+  outputs,
+} from '../../lib/costCeiling';
+
+const PATH = '/resources/cost-ceiling-workbook';
+const PUBLISHED_ON = '2026-09-16';
+
+// The example values, computed once, here. `out` is a flat map of formatted
+// strings keyed by dotted path — the same map the browser script writes from.
+const defaults = exampleValues();
+const out = outputs(computeWorkbook(defaults));
+
+/** The two columns of the Attempt and Period steps. */
+const SCENARIOS = [
+  { id: 'normal', label: 'Normal day', note: '24 hours, ordinary traffic.' },
+  { id: 'storm', label: 'Storm night', note: 'Six hours, the disruption.' },
+] as const;
+
+/**
+ * A stored value, as it should appear in its input.
+ *
+ * Percent fields are stored as fractions and shown as percentages, so 0.9
+ * renders as 90. The rounding is not cosmetic: 0.9 * 100 is 90.00000000000001
+ * in binary floating point, and that in a number input is the kind of detail
+ * that makes a reader distrust every other figure on the page.
+ */
+const shown = (f: Field, v: unknown): string => {
+  if (f.kind === 'bool') return String(Boolean(v));
+  if (f.kind === 'percent') return String(Math.round(Number(v) * 1000) / 10);
+  return String(Number(v));
+};
+
+/** Pull a field's default out of the example values, whichever step it belongs to. */
+const defaultFor = (scope: string, group: string, key: string): unknown => {
+  const bag =
+    group === 'attempt' || group === 'period'
+      ? (defaults as Record<string, any>)[scope][group]
+      : (defaults as Record<string, any>)[group];
+  return bag?.[key];
+};
+
+/**
+ * HowTo rather than SoftwareApplication.
+ *
+ * The page is a method with a tool in it, not an app with a description. The
+ * steps are the four questions the workbook answers, in its tab order, which is
+ * the same order a reader works through them.
+ */
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}${PATH}#howto`,
+    name: HEADING,
+    description: META_DESCRIPTION,
+    url: `${SITE_ORIGIN}${PATH}`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: PUBLISHED_ON,
+    isAccessibleForFree: true,
+    step: ANSWERS.map((a, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: ['Attempt', 'Period', 'Ceiling', 'Stopping'][i],
+      text: a,
+    })),
+  },
+];
+---
+
+<ResourcesLayout
+  title={META_TITLE}
+  description={META_DESCRIPTION}
+  canonical={PATH}
+  schema={schema}
+>
+  {/* ══ 1 · Header ═══════════════════════════════════════════════════════ */}
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agent business case 02</span>
+      </div>
+      <h1>{HEADING}</h1>
+      <p class="lead">{SUBHEADING}</p>
+      <p class="hero-cta">
+        <a
+          class="btn btn-primary"
+          href={DOWNLOAD_PATH}
+          download
+          data-download="cost-ceiling-workbook"
+        >
+          {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href="#calculator">{SECONDARY_CTA}</a>
+      </p>
+      <p class="hero-note mono">{SUPPORTING_LINE}</p>
+    </div>
+  </section>
+
+  {/* ══ 2 · The 01:52 problem ════════════════════════════════════════════ */}
+  <section id="problem">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> The 01:52 problem</span>
+        <h2>The control worked <em>perfectly</em>.</h2>
+      </div>
+
+      {/* The label sits ABOVE the story, not under it. A reader who has already
+          taken paragraph one for a real incident is not un-taken by a footnote. */}
+      <p class="label-fiction">{SCENARIO_LABEL}</p>
+
+      <div class="prose">
+        {SCENARIO.map((p) => <p>{p}</p>)}
+      </div>
+
+      <p class="callout"><strong>{SCENARIO_CLOSER}</strong></p>
+
+      {
+        hasLinkedInPost() && (
+          <p class="prose-note">
+            This page is the companion to{' '}
+            <a class="textlink" href={LINKEDIN_EPISODE_5_URL} target="_blank" rel="noopener">
+              Agentic system design, Episode 5
+            </a>
+            .
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* ══ 3 · What the workbook answers ════════════════════════════════════ */}
+  <section id="answers">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> What it answers</span>
+        <h2>Four questions, in the order the workbook <em>asks them</em>.</h2>
+      </div>
+      <ol class="answers">
+        {
+          ANSWERS.map((a, i) => (
+            <li>
+              <span class="an" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <span class="abody">{a}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ══ 4 · The calculator ═══════════════════════════════════════════════ */}
+  <section id="calculator">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> The calculator</span>
+        <h2>The same model as the workbook, <em>in the browser</em>.</h2>
+      </div>
+
+      <p class="prose-lead">
+        Every value below is an invented teaching value. Change any of them and every figure
+        recalculates as you type. Nothing is stored and nothing is sent anywhere, so a refresh
+        puts the example back.
+      </p>
+
+      <div class="calc" id="calc" data-checked={longDate(PRICES_CHECKED_ON)}>
+        <div class="calc-bar">
+          {/* Upgraded to a tablist by the script. Without JavaScript these are
+              plain in-page links and all four steps stay visible below. */}
+          <nav class="steps-nav" id="stepsNav" aria-label="Calculator steps">
+            <a href="#step-attempt" data-step-link="attempt">1 · Attempt</a>
+            <a href="#step-period" data-step-link="period">2 · Period</a>
+            <a href="#step-ceiling" data-step-link="ceiling">3 · Ceiling</a>
+            <a href="#step-stopping" data-step-link="stopping">4 · Stopping</a>
+          </nav>
+          <button class="btn btn-ghost btn-small" type="button" id="reset">
+            Reset to example values
+          </button>
+        </div>
+
+        {/* The headline three, above the steps, because they are what a reader
+            came for and what they will screenshot. */}
+        <div class="headline">
+          {
+            HEADLINE_VIEWS.map((v) => (
+              <div class="hv">
+                <span class="hv-k">{v.label}</span>
+                <span class="hv-v" data-out={`storm.${v.key}`}>{out[`storm.${v.key}`]}</span>
+                <span class="hv-note">{v.note}</span>
+              </div>
+            ))
+          }
+          <p class="hv-basis mono">Storm night. The normal day is in step 1 and step 2.</p>
+        </div>
+
+        {/* ── Step 1 · Attempt ──────────────────────────────────────────── */}
+        <div class="step" id="step-attempt" data-step="attempt">
+          <h3 class="step-h">1 · What one attempt costs</h3>
+
+          <div class="scen-toggle" role="group" aria-label="Choose a scenario">
+            <button type="button" data-scen="normal" aria-pressed="true">Normal day</button>
+            <button type="button" data-scen="storm" aria-pressed="false">Storm night</button>
+          </div>
+
+          <div class="cols" data-show="normal">
+            {
+              SCENARIOS.map((s) => (
+                <div class="col" data-col={s.id}>
+                  <h4 class="col-h">
+                    {s.label} <span class="col-note">{s.note}</span>
+                  </h4>
+
+                  <div class="f">
+                    <label for={`${s.id}-attempt-model`}>Model</label>
+                    <select id={`${s.id}-attempt-model`} data-scope={s.id} data-group="attempt" data-key="model" data-kind="text">
+                      {PRICE_CARD.map((m) => (
+                        <option value={m.id} selected={m.id === defaults[s.id].attempt.model}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p class="f-why" data-price-note={s.id}>
+                      {PRICE_CARD.find((m) => m.id === defaults[s.id].attempt.model)?.source} · checked{' '}
+                      {longDate(PRICES_CHECKED_ON)}
+                    </p>
+                  </div>
+
+                  {/* Shown only when the Custom row is selected. */}
+                  <div class="custom" data-custom={s.id} hidden>
+                    <p class="f-why">Enter your own rates in USD per million tokens. Leave a cache field empty to charge it at the input price.</p>
+                    <div class="custom-grid">
+                      {[
+                        { key: 'input', label: 'Input' },
+                        { key: 'output', label: 'Output' },
+                        { key: 'cacheRead', label: 'Cache read' },
+                        { key: 'cacheWrite', label: 'Cache write' },
+                      ].map((c) => (
+                        <div class="f">
+                          <label for={`${s.id}-custom-${c.key}`}>{c.label}</label>
+                          <input
+                            id={`${s.id}-custom-${c.key}`}
+                            type="number"
+                            inputmode="decimal"
+                            step="0.01"
+                            min="0"
+                            data-scope={s.id}
+                            data-group="custom"
+                            data-key={c.key}
+                          />
+                          <span class="f-unit">USD / MTok</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {ATTEMPT_FIELDS.map((f) => (
+                    <div class="f">
+                      <label for={`${s.id}-attempt-${f.key}`}>{f.label}</label>
+                      {f.kind === 'bool' ? (
+                        <span class="f-check">
+                          <input
+                            id={`${s.id}-attempt-${f.key}`}
+                            type="checkbox"
+                            data-scope={s.id}
+                            data-group="attempt"
+                            data-key={f.key}
+                            data-kind="bool"
+                            checked={Boolean(defaultFor(s.id, 'attempt', f.key))}
+                          />
+                          <span class="f-unit">{f.unit}</span>
+                        </span>
+                      ) : (
+                        <>
+                          <input
+                            id={`${s.id}-attempt-${f.key}`}
+                            type="number"
+                            inputmode="decimal"
+                            step={f.step}
+                            min={f.min}
+                            max={f.max}
+                            data-scope={s.id}
+                            data-group="attempt"
+                            data-key={f.key}
+                            data-kind={f.kind}
+                            value={shown(f, defaultFor(s.id, 'attempt', f.key))}
+                          />
+                          <span class="f-unit">{f.unit}</span>
+                        </>
+                      )}
+                      {f.why && <p class="f-why">{f.why}</p>}
+                    </div>
+                  ))}
+
+                  <dl class="res">
+                    <div><dt>Total input tokens</dt><dd data-out={`${s.id}.totalInput`}>{out[`${s.id}.totalInput`]}</dd></div>
+                    <div><dt>Cache read</dt><dd data-out={`${s.id}.cacheRead`}>{out[`${s.id}.cacheRead`]}</dd></div>
+                    <div><dt>Cache write</dt><dd data-out={`${s.id}.cacheWrite`}>{out[`${s.id}.cacheWrite`]}</dd></div>
+                    <div><dt>Uncached input</dt><dd data-out={`${s.id}.uncachedInput`}>{out[`${s.id}.uncachedInput`]}</dd></div>
+                    <div><dt>Output tokens</dt><dd data-out={`${s.id}.outputTokens`}>{out[`${s.id}.outputTokens`]}</dd></div>
+                    <div><dt>Last turn's input</dt><dd data-out={`${s.id}.finalTurnInput`}>{out[`${s.id}.finalTurnInput`]}</dd></div>
+                    <div class="hl"><dt>Last turn vs first</dt><dd data-out={`${s.id}.finalVsFirst`}>{out[`${s.id}.finalVsFirst`]}</dd></div>
+                    <div><dt>Cache read cost</dt><dd data-out={`${s.id}.line.cacheRead`}>{out[`${s.id}.line.cacheRead`]}</dd></div>
+                    <div><dt>Cache write cost</dt><dd data-out={`${s.id}.line.cacheWrite`}>{out[`${s.id}.line.cacheWrite`]}</dd></div>
+                    <div><dt>Uncached input cost</dt><dd data-out={`${s.id}.line.uncachedInput`}>{out[`${s.id}.line.uncachedInput`]}</dd></div>
+                    <div><dt>Output cost</dt><dd data-out={`${s.id}.line.output`}>{out[`${s.id}.line.output`]}</dd></div>
+                    <div><dt>Output's share of model cost</dt><dd data-out={`${s.id}.outputShare`}>{out[`${s.id}.outputShare`]}</dd></div>
+                    <div><dt>Reasoning's share of output</dt><dd data-out={`${s.id}.reasoningShare`}>{out[`${s.id}.reasoningShare`]}</dd></div>
+                    <div><dt>Model cost</dt><dd data-out={`${s.id}.modelCost`}>{out[`${s.id}.modelCost`]}</dd></div>
+                    <div class="hl"><dt>Cost per attempt</dt><dd data-out={`${s.id}.costPerAttempt`}>{out[`${s.id}.costPerAttempt`]}</dd></div>
+                  </dl>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* ── Step 2 · Period ───────────────────────────────────────────── */}
+        <div class="step" id="step-period" data-step="period">
+          <h3 class="step-h">2 · What the period costs</h3>
+
+          <div class="scen-toggle" role="group" aria-label="Choose a scenario">
+            <button type="button" data-scen="normal" aria-pressed="true">Normal day</button>
+            <button type="button" data-scen="storm" aria-pressed="false">Storm night</button>
+          </div>
+
+          <div class="cols" data-show="normal">
+            {
+              SCENARIOS.map((s) => (
+                <div class="col" data-col={s.id}>
+                  <h4 class="col-h">
+                    {s.label} <span class="col-note">{s.note}</span>
+                  </h4>
+
+                  {PERIOD_FIELDS.map((f) => (
+                    <div class="f">
+                      <label for={`${s.id}-period-${f.key}`}>{f.label}</label>
+                      {f.kind === 'bool' ? (
+                        <span class="f-check">
+                          <input
+                            id={`${s.id}-period-${f.key}`}
+                            type="checkbox"
+                            data-scope={s.id}
+                            data-group="period"
+                            data-key={f.key}
+                            data-kind="bool"
+                            checked={Boolean(defaultFor(s.id, 'period', f.key))}
+                          />
+                          <span class="f-unit">{f.unit}</span>
+                        </span>
+                      ) : (
+                        <>
+                          <input
+                            id={`${s.id}-period-${f.key}`}
+                            type="number"
+                            inputmode="decimal"
+                            step={f.step}
+                            min={f.min}
+                            max={f.max}
+                            data-scope={s.id}
+                            data-group="period"
+                            data-key={f.key}
+                            data-kind={f.kind}
+                            value={shown(f, defaultFor(s.id, 'period', f.key))}
+                          />
+                          <span class="f-unit">{f.unit}</span>
+                        </>
+                      )}
+                      {f.why && <p class="f-why">{f.why}</p>}
+                    </div>
+                  ))}
+                  <p class="f-why basis">
+                    Reporting basis: {defaults[s.id].period.fxBasis}. The rate multiplies the total
+                    and nothing else.
+                  </p>
+
+                  <dl class="res">
+                    <div><dt>Attempts</dt><dd data-out={`${s.id}.attempts`}>{out[`${s.id}.attempts`]}</dd></div>
+                    <div><dt>Agent cost</dt><dd data-out={`${s.id}.agentCost`}>{out[`${s.id}.agentCost`]}</dd></div>
+                    <div><dt>Background jobs</dt><dd data-out={`${s.id}.bgCost`}>{out[`${s.id}.bgCost`]}</dd></div>
+                    <div><dt>Human review</dt><dd data-out={`${s.id}.reviewCost`}>{out[`${s.id}.reviewCost`]}</dd></div>
+                    <div><dt>Fixed cost</dt><dd data-out={`${s.id}.fixedCost`}>{out[`${s.id}.fixedCost`]}</dd></div>
+                    <div class="hl"><dt>Total for the period</dt><dd data-out={`${s.id}.total`}>{out[`${s.id}.total`]}</dd></div>
+                    <div><dt>In reporting currency</dt><dd data-out={`${s.id}.totalReporting`}>{out[`${s.id}.totalReporting`]}</dd></div>
+                    <div><dt>Accepted results</dt><dd data-out={`${s.id}.accepted`}>{out[`${s.id}.accepted`]}</dd></div>
+                    <div class="hl"><dt>Agent cost per case</dt><dd data-out={`${s.id}.costPerCase`}>{out[`${s.id}.costPerCase`]}</dd></div>
+                    <div class="hl"><dt>Fully loaded cost per accepted result</dt><dd data-out={`${s.id}.costPerAccepted`}>{out[`${s.id}.costPerAccepted`]}</dd></div>
+                  </dl>
+                </div>
+              ))
+            }
+          </div>
+
+          <p class="callout">
+            The storm night costs <strong data-out="stormVsNormal">{out['stormVsNormal']}</strong> per
+            case what the normal day costs. The price per token never moved.
+          </p>
+        </div>
+
+        {/* ── Step 3 · Ceiling ──────────────────────────────────────────── */}
+        <div class="step" id="step-ceiling" data-step="ceiling">
+          <h3 class="step-h">3 · What a shared ceiling actually holds</h3>
+          <p class="prose-note">
+            This step and the next one run against the storm night. A ceiling that is never
+            approached on a normal day tells you nothing.
+          </p>
+
+          <div class="cols single">
+            <div class="col">
+              {CEILING_FIELDS.map((f) => (
+                <div class="f">
+                  <label for={`ceiling-${f.key}`}>{f.label}</label>
+                  <input
+                    id={`ceiling-${f.key}`}
+                    type="number"
+                    inputmode="decimal"
+                    step={f.step}
+                    min={f.min}
+                    max={f.max}
+                    data-scope="ceiling"
+                    data-group="ceiling"
+                    data-key={f.key}
+                    data-kind={f.kind}
+                    value={shown(f, defaultFor('ceiling', 'ceiling', f.key))}
+                  />
+                  <span class="f-unit">{f.unit}</span>
+                  {f.why && <p class="f-why">{f.why}</p>}
+                </div>
+              ))}
+            </div>
+
+            <div class="col">
+              <dl class="res">
+                <div><dt>Cases completed before the ceiling trips</dt><dd data-out="ceiling.completed">{out['ceiling.completed']}</dd></div>
+                <div class="hl"><dt>Cases stranded</dt><dd data-out="ceiling.stranded">{out['ceiling.stranded']}</dd></div>
+                <div><dt>Check-then-act overshoot</dt><dd data-out="ceiling.checkThenActOver">{out['ceiling.checkThenActOver']}</dd></div>
+                <div><dt>That overshoot, as a share of the ceiling</dt><dd data-out="ceiling.overShare">{out['ceiling.overShare']}</dd></div>
+                <div class="hl"><dt>Reserve-then-settle overshoot</dt><dd data-out="ceiling.reserveOver">{out['ceiling.reserveOver']}</dd></div>
+                <div><dt>Headroom locked by live claims</dt><dd data-out="ceiling.lockedHeadroom">{out['ceiling.lockedHeadroom']}</dd></div>
+                <div><dt>Spend per minute</dt><dd data-out="ceiling.spendPerMinute">{out['ceiling.spendPerMinute']}</dd></div>
+                <div class="hl"><dt>Spent but not yet billed</dt><dd data-out="ceiling.unseenSpend">{out['ceiling.unseenSpend']}</dd></div>
+              </dl>
+              <p class="f-why">
+                Check-then-act means every worker reads the balance and then writes. Between the
+                read and the write, every other worker sees the same balance, so the ceiling is
+                breached by one full cap for each of them.
+              </p>
+            </div>
+          </div>
+
+          <h4 class="sub-h">Reserve, then settle</h4>
+          <ol class="protocol">
+            {RESERVE_THEN_SETTLE.map((s, i) => (
+              <li>
+                <span class="pn" aria-hidden="true">{i + 1}</span>
+                <span class="pbody">{s}</span>
+              </li>
+            ))}
+          </ol>
+          <p class="f-why">
+            The overshoot above is zero only when the reservation is atomic and every retry
+            reserves again. A reservation that is not atomic is check-then-act under a better name.
+          </p>
+        </div>
+
+        {/* ── Step 4 · Stopping ─────────────────────────────────────────── */}
+        <div class="step" id="step-stopping" data-step="stopping">
+          <h3 class="step-h">4 · Whether stopping is cheaper than continuing</h3>
+
+          <div class="cols single">
+            <div class="col">
+              {STOPPING_FIELDS.map((f) => (
+                <div class="f">
+                  <label for={`stopping-${f.key}`}>{f.label}</label>
+                  <input
+                    id={`stopping-${f.key}`}
+                    type="number"
+                    inputmode="decimal"
+                    step={f.step}
+                    min={f.min}
+                    max={f.max}
+                    data-scope="stopping"
+                    data-group="stopping"
+                    data-key={f.key}
+                    data-kind={f.kind}
+                    value={shown(f, defaultFor('stopping', 'stopping', f.key))}
+                  />
+                  <span class="f-unit">{f.unit}</span>
+                  {f.why && <p class="f-why">{f.why}</p>}
+                </div>
+              ))}
+            </div>
+
+            <div class="col">
+              <dl class="res">
+                <div><dt>Token cost the ceiling avoided</dt><dd data-out="stopping.tokenCostAvoided">{out['stopping.tokenCostAvoided']}</dd></div>
+                <div class="hl"><dt>Business cost per dollar avoided</dt><dd data-out="stopping.freezePerDollar">{out['stopping.freezePerDollar']}</dd></div>
+                <div><dt>Break-even business cost per frozen case</dt><dd data-out="stopping.breakEven">{out['stopping.breakEven']}</dd></div>
+              </dl>
+              <p class="f-why">{BREAK_EVEN_NOTE}</p>
+            </div>
+          </div>
+
+          <div class="options">
+            {
+              STOPPING_OPTION_LABELS.map((o) => (
+                <div class="opt" data-opt={o.id}>
+                  <span class="opt-k">Option {o.id}</span>
+                  <h4>{o.name}</h4>
+                  <p class="opt-v" data-out={`stopping.option${o.id}`}>{out[`stopping.option${o.id}`]}</p>
+                  <p class="opt-b">{o.body}</p>
+                </div>
+              ))
+            }
+          </div>
+
+          <p class="callout">
+            On these numbers the lowest-cost option is{' '}
+            <strong data-out="stopping.lowest">{out['stopping.lowest']}</strong>. The ceiling saved{' '}
+            <strong data-out="stopping.tokenCostAvoided">{out['stopping.tokenCostAvoided']}</strong>{' '}
+            in tokens and cost{' '}
+            <strong data-out="stopping.optionB">{out['stopping.optionB']}</strong> in vouchers.
+          </p>
+        </div>
+
+        {/* One polite region, updated on a delay. The result cells themselves
+            are NOT live: announcing forty figures per keystroke is why people
+            turn screen readers off on pages like this. */}
+        <p class="sr-only" id="calcLive" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  {/* ══ 5 · Boundary register and tests ══════════════════════════════════ */}
+  <section id="register">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> The boundary register</span>
+        <h2>A limit nobody wrote down is a limit <em>nobody owns</em>.</h2>
+      </div>
+
+      <p class="prose-lead">
+        Eleven fields per boundary. One row is filled in below as an example; the editable version
+        is the Boundaries tab of the workbook.
+      </p>
+
+      <div class="scroll">
+        <table class="grid reg">
+          <caption class="sr-only">
+            The boundary register: eleven fields, with one example row filled in.
+          </caption>
+          <thead>
+            <tr>{REGISTER_FIELDS.map((f) => <th scope="col">{f}</th>)}</tr>
+          </thead>
+          <tbody>
+            <tr>{REGISTER_EXAMPLE.map((v, i) => (i === 0 ? <th scope="row">{v}</th> : <td>{v}</td>))}</tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Eight boundaries to fill in</h3>
+      <ul class="blanks">
+        {BLANK_BOUNDARIES.map((b) => <li>{b}</li>)}
+      </ul>
+
+      <h3 class="sub">Seven tests before trusting any boundary</h3>
+      <ol class="tests">
+        {
+          SEVEN_TESTS.map((t, i) => (
+            <li>
+              <span class="tn" aria-hidden="true">{i + 1}</span>
+              <span class="tbody">
+                <strong>{t.name}</strong>
+                <span>{t.body}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ══ 6 · How to use the .xlsx ═════════════════════════════════════════ */}
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">05</span> How to use the workbook</span>
+        <h2>Seven tabs, and <em>four colours</em>.</h2>
+      </div>
+
+      <dl class="tabs">
+        {TABS.map((t) => (
+          <div>
+            <dt>{t.name}</dt>
+            <dd>{t.body}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <h3 class="sub">The legend</h3>
+      <ul class="legend">
+        {
+          LEGEND.map((l) => (
+            <li>
+              <span class={`sw sw-${l.swatch}`} aria-hidden="true"></span>
+              <span>{l.body}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="hero-cta">
+        <a class="btn btn-primary" href={DOWNLOAD_PATH} download data-download="cost-ceiling-workbook">
+          {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* ══ 7 · Price card and tokenomics ════════════════════════════════════ */}
+  <section id="prices">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> Prices and tokenomics</span>
+        <h2>Model choice is usually <em>the largest lever</em>.</h2>
+      </div>
+
+      <div class="scroll">
+        <table class="grid prices">
+          <caption class="sr-only">
+            Model prices in USD per million tokens, checked on {longDate(PRICES_CHECKED_ON)}.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Input</th>
+              <th scope="col">Output</th>
+              <th scope="col">Cache read</th>
+              <th scope="col">Cache write (5 min)</th>
+              <th scope="col">Batch discount</th>
+              <th scope="col">Source</th>
+              <th scope="col">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              PRICE_CARD.map((m) => (
+                <tr>
+                  <th scope="row">{m.label}</th>
+                  <td>{m.custom ? 'yours' : m.input}</td>
+                  <td>{m.custom ? 'yours' : m.output}</td>
+                  <td>{m.custom ? 'yours' : (m.cacheRead ?? '—')}</td>
+                  <td>{m.custom ? 'yours' : (m.cacheWrite ?? '—')}</td>
+                  <td>{m.custom ? 'yours' : (m.batchDiscount === null ? '—' : `${m.batchDiscount * 100}%`)}</td>
+                  <td>{m.source || '—'}</td>
+                  <td>{m.note || '—'}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="f-why">
+        USD per million tokens. A dash means the term was not published. The calculator charges a
+        blank cache price at the input price and treats a blank batch discount as none, which is
+        the pessimistic reading and the only safe one.
+      </p>
+
+      <h3 class="sub">2026 tokenomics</h3>
+      <ul class="notes">
+        {TOKENOMICS.map((n) => <li>{n}</li>)}
+      </ul>
+
+      <p class="callout stop"><strong>{VERIFICATION_NOTE}</strong></p>
+    </div>
+  </section>
+
+  {/* ══ 8 · Caveats ══════════════════════════════════════════════════════ */}
+  <section id="caveats">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> Caveats</span>
+        <h2>What this <em>does not</em> give you.</h2>
+      </div>
+      <ul class="caveats">
+        {CAVEATS.map((c) => <li>{c}</li>)}
+      </ul>
+
+      <h3 class="sub">Two neighbours</h3>
+      <ul class="tlist">
+        {
+          NEIGHBOURS.map((n) => (
+            <li>
+              <span class="n">{n.title}</span>
+              <span>
+                <a class="textlink" href={n.url}>{n.title}</a>
+                <span class="quiet"> — {n.body}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ══ 9 · The cohort ═══════════════════════════════════════════════════ */}
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> What comes next</span>
+        <h2>{COHORT_HEADING}</h2>
+      </div>
+      <div class="prose">
+        <p>{cohortLine(cohort.startsOn)}</p>
+        <p>
+          The {cohort.weeks}-week programme covers exactly this material: agents with bounded
+          failure, defensible cost, and the evaluations that show they hold up. {cohort.seats}
+          {' '}seats, for Staff+ engineers, engineering managers and architects who ship to
+          production.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href={APPLY_URL} data-apply>
+          {COHORT_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </p>
+      <p class="mono faint pubdate">
+        Published {longDate(PUBLISHED_ON)} · free to use, to change and to pass on
+      </p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other resource pages. */
+  .prose p + p { margin-top: var(--space-4); }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-4);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+  .sub-h {
+    margin: var(--space-6) 0 var(--space-3);
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+
+  .label-fiction {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-4);
+  }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  .callout.stop { background: var(--danger-quiet); }
+
+  /* ── the four questions ─────────────────────────────────────────────── */
+  ol.answers { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  ol.answers li { display: grid; grid-template-columns: 44px 1fr; gap: var(--space-4); align-items: baseline; }
+  .an { font-family: var(--font-mono); font-size: var(--size-2); color: var(--accent-ink-strong); }
+  .abody { font-size: var(--size-3); color: var(--text-body); max-width: var(--measure-prose); }
+
+  /* ══ the calculator ═════════════════════════════════════════════════ */
+  .calc {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+
+  .calc-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-5);
+  }
+  .steps-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  /* The buttons are created by the script and so carry no Astro scope
+     attribute; :global() is what lets a scoped stylesheet reach them. */
+  .steps-nav a, .steps-nav :global(button) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-label);
+    color: var(--text-quiet);
+    background: var(--surface-sunken);
+    border: 0;
+    border-radius: var(--radius-inner);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .steps-nav :global([aria-selected='true']) {
+    background: var(--ink-1);
+    color: var(--text-on-invert);
+  }
+  .btn-small { padding: 8px 16px; font-size: var(--size-1); }
+
+  /* ── the headline three ─────────────────────────────────────────────── */
+  .headline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    margin-bottom: var(--space-6);
+  }
+  .hv { display: flex; flex-direction: column; gap: var(--space-1); }
+  .hv-k { font-family: var(--font-mono); font-size: var(--size-1); color: var(--accent-ink-strong); letter-spacing: var(--tracking-label); }
+  /* Tabular figures so a changing value does not reflow its neighbours. */
+  .hv-v {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+    font-variant-numeric: tabular-nums;
+  }
+  .hv-note { font-size: var(--size-1); color: var(--text-quiet); }
+  .hv-basis { grid-column: 1 / -1; font-size: var(--size-1); color: var(--text-quiet); margin: 0; }
+
+  /* ── steps ──────────────────────────────────────────────────────────── */
+  .step { padding-top: var(--space-6); border-top: 1px solid var(--border-hair); margin-top: var(--space-6); }
+  .step:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .step-h { font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-loud); margin-bottom: var(--space-4); }
+
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
+  .col-h { font-size: var(--size-3); font-weight: var(--weight-strong); color: var(--text-loud); margin-bottom: var(--space-4); }
+  .col-note { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); font-weight: var(--weight-normal); }
+
+  /* Above 720px both scenarios are on screen, so the toggle is meaningless. */
+  .scen-toggle { display: none; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .scen-toggle button {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    border: 0;
+    border-radius: var(--radius-inner);
+    background: var(--surface-sunken);
+    color: var(--text-quiet);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+  .scen-toggle button[aria-pressed='true'] { background: var(--ink-1); color: var(--text-on-invert); }
+
+  /* ── fields ─────────────────────────────────────────────────────────── */
+  .f { margin-bottom: var(--space-4); }
+  .f label {
+    display: block;
+    font-size: var(--size-2);
+    color: var(--text-body);
+    font-weight: var(--weight-medium);
+    margin-bottom: var(--space-2);
+  }
+  .f input[type='number'], .f select {
+    width: 100%;
+    max-width: 260px;
+    height: var(--control-h);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--border-field);
+    border-radius: var(--radius-field);
+    background: var(--surface-panel);
+    color: var(--text-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .f input[type='number']:focus-visible, .f select:focus-visible, .f input[type='checkbox']:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .f-check { display: flex; align-items: center; gap: var(--space-3); }
+  .f-check input { width: 20px; height: 20px; }
+  .f-unit { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); margin-left: var(--space-2); }
+  .f-why { font-size: var(--size-1); color: var(--text-quiet); margin-top: var(--space-2); max-width: 48ch; }
+  .f-why.basis { margin-top: var(--space-4); }
+
+  .custom { margin-bottom: var(--space-5); }
+  .custom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); margin-top: var(--space-3); }
+  .custom-grid .f { margin-bottom: 0; }
+  .custom-grid .f input { max-width: none; }
+
+  /* ── results ────────────────────────────────────────────────────────── */
+  .res { margin-top: var(--space-5); display: flex; flex-direction: column; }
+  .res > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: space-between;
+    align-items: baseline;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-hair);
+  }
+  .res > div:last-child { border-bottom: 0; }
+  .res dt { font-size: var(--size-2); color: var(--text-quiet); }
+  .res dd {
+    font-size: var(--size-3);
+    color: var(--text-body);
+    font-weight: var(--weight-medium);
+    /* Tabular figures and a minimum width: the row must not reflow when a
+       value goes from $984.85 to $1,234. */
+    font-variant-numeric: tabular-nums;
+    min-width: 9ch;
+    text-align: right;
+  }
+  .res .hl dt { color: var(--text-body); font-weight: var(--weight-medium); }
+  .res .hl dd { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
+
+  /* ── stopping options ───────────────────────────────────────────────── */
+  .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-4); margin-top: var(--space-6); }
+  .opt {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-5);
+  }
+  .opt-k { font-family: var(--font-mono); font-size: var(--size-1); color: var(--accent-ink-strong); letter-spacing: var(--tracking-label); }
+  .opt h4 { font-size: var(--size-4); font-weight: var(--weight-strong); color: var(--text-loud); margin: var(--space-2) 0; }
+  .opt-v { font-size: var(--size-5); font-weight: var(--weight-heavy); color: var(--text-loud); font-variant-numeric: tabular-nums; }
+  .opt-b { font-size: var(--size-1); color: var(--text-quiet); margin-top: var(--space-2); }
+  /* Set by the script on whichever option is cheapest. */
+  .opt[data-lowest] { background: var(--accent-quiet); }
+
+  /* ── protocol ───────────────────────────────────────────────────────── */
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ol.protocol li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: baseline; }
+  .pn { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
+  .pbody { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; }
+
+  /* ── tables ─────────────────────────────────────────────────────────── */
+  /* Same rules as the other resource pages. `.scroll` is the container that
+     scrolls; without it a 1400px table widens the whole page on a phone. */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); max-width: 100%; }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td, .grid tbody th {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    text-align: left;
+  }
+  .grid tbody th { color: var(--text-body); font-weight: var(--weight-medium); white-space: nowrap; }
+  .grid tbody tr:last-child td, .grid tbody tr:last-child th { border-bottom: 0; }
+  .quiet { color: var(--text-quiet); }
+
+  /* ── register ───────────────────────────────────────────────────────── */
+  table.reg { min-width: 1400px; }
+  table.reg td, table.reg th { vertical-align: top; }
+  table.prices { min-width: 900px; }
+  table.prices td { font-variant-numeric: tabular-nums; }
+
+  ul.blanks { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-2); }
+  ul.blanks li {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+  }
+
+  ol.tests { list-style: none; display: flex; flex-direction: column; }
+  ol.tests li {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-hair);
+  }
+  ol.tests li:last-child { border-bottom: 0; }
+  .tn { font-family: var(--font-mono); color: var(--accent-ink-strong); }
+  .tbody { display: flex; flex-direction: column; gap: 2px; max-width: 86ch; }
+  .tbody strong { color: var(--text-body); }
+  .tbody span { font-size: var(--size-2); color: var(--text-quiet); }
+
+  /* ── tabs and legend ────────────────────────────────────────────────── */
+  dl.tabs { display: flex; flex-direction: column; }
+  dl.tabs > div {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-hair);
+  }
+  dl.tabs > div:last-child { border-bottom: 0; }
+  dl.tabs dt { font-weight: var(--weight-strong); color: var(--text-body); }
+  dl.tabs dd { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; }
+
+  ul.legend { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ul.legend li { display: flex; align-items: baseline; gap: var(--space-3); font-size: var(--size-2); color: var(--text-quiet); }
+  .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid var(--border-field); }
+  .sw-input { background: #2f5fd0; }
+  .sw-assumption { background: #ffe08a; }
+  .sw-linked { background: #2f8a4f; }
+  .sw-formula { background: var(--ink-1); }
+
+  ul.notes, ul.caveats { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  ul.notes li, ul.caveats li {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    padding-left: var(--space-5);
+    position: relative;
+  }
+  ul.notes li::before, ul.caveats li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .6em;
+    width: 8px;
+    height: 1px;
+    background: var(--accent-ink);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── responsive: two columns collapse to a toggled one ──────────────── */
+  @media (max-width: 900px) {
+    .calc { padding: var(--space-5); }
+    .cols { gap: var(--space-5); }
+    dl.tabs > div { grid-template-columns: 1fr; gap: var(--space-1); }
+  }
+
+  @media (max-width: 720px) {
+    .cols { grid-template-columns: 1fr; }
+    .scen-toggle { display: flex; }
+    /* Only the chosen scenario is on screen. Both stay in the DOM, so both
+       still feed the calculation and the comparison below stays true. */
+    .cols[data-show='normal'] .col[data-col='storm'],
+    .cols[data-show='storm'] .col[data-col='normal'] { display: none; }
+    .cols.single { grid-template-columns: 1fr; }
+    .f input[type='number'], .f select { max-width: none; }
+    .res dd { min-width: 0; }
+    ol.answers li, ol.tests li { grid-template-columns: 28px 1fr; gap: var(--space-3); }
+  }
+
+  @media (max-width: 420px) {
+    .calc { padding: var(--space-4); border-radius: var(--radius-inner); }
+    .headline { padding: var(--space-4); }
+  }
+
+  /* ── print ──────────────────────────────────────────────────────────── */
+  @media print {
+    .calc-bar, .scen-toggle, .hero-cta, .final .btn { display: none !important; }
+    .calc, .opt, .headline { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    .scroll { overflow: visible !important; }
+    table.reg, table.prices { min-width: 0 !important; font-size: 9px; }
+    .cols { grid-template-columns: repeat(2, 1fr) !important; }
+    .cols .col { display: block !important; }
+    thead { display: table-header-group; }
+    tr, .step, ol.tests li, ol.protocol li { break-inside: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  /**
+   * The calculator.
+   *
+   * Everything numeric comes from src/lib/costCeiling.ts. This file reads the
+   * DOM into that module's input shape, asks it for an answer, and writes the
+   * formatted strings back. It contains no arithmetic of its own, deliberately:
+   * a second copy of a formula here is how the page and the workbook end up
+   * disagreeing about what an attempt costs.
+   *
+   * It is a MODULE script, not `is:inline`. Astro bundles it through Vite, so
+   * the import works and `astro check` type-checks it. An inline script cannot
+   * import, which is the trap pair.astro fell into.
+   */
+  import {
+    PRICE_CARD,
+    computeWorkbook,
+    exampleValues,
+    outputs,
+    type WorkbookInputs,
+  } from '../../lib/costCeiling';
+
+  const root = document.getElementById('calc');
+
+  if (root) {
+    /** The only state. A closure — no localStorage, no sessionStorage, nothing posted. */
+    let state: WorkbookInputs = exampleValues();
+
+    const live = document.getElementById('calcLive');
+
+    /** Formatted once on the server and handed over, so the two renders agree. */
+    const CHECKED = root.dataset.checked ?? '';
+    const inputs = Array.from(
+      root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-scope][data-key]'),
+    );
+
+    // ── reading the DOM ───────────────────────────────────────────────────
+
+    /** Where a control's value belongs on the state object. */
+    const bagFor = (scope: string, group: string): Record<string, unknown> | null => {
+      const s = state as unknown as Record<string, any>;
+      if (group === 'attempt' || group === 'period') return s[scope]?.[group] ?? null;
+      if (group === 'custom') {
+        const attempt = s[scope]?.attempt;
+        if (!attempt) return null;
+        attempt.customPrices = attempt.customPrices ?? {};
+        return attempt.customPrices;
+      }
+      return s[group] ?? null;
+    };
+
+    const read = (el: HTMLInputElement | HTMLSelectElement): void => {
+      const { scope, group, key, kind } = el.dataset;
+      if (!scope || !group || !key) return;
+      const bag = bagFor(scope, group);
+      if (!bag) return;
+
+      if (el instanceof HTMLInputElement && el.type === 'checkbox') {
+        bag[key] = el.checked;
+        return;
+      }
+
+      const raw = el.value;
+
+      if (kind === 'text') {
+        bag[key] = raw;
+        return;
+      }
+
+      // An empty custom price is a BLANK, not a zero. Deleting the key lets
+      // pricesFor() apply the same fallback a blank on the price card gets.
+      if (group === 'custom' && raw.trim() === '') {
+        delete bag[key];
+        return;
+      }
+
+      const n = Number(raw);
+      // A half-typed "-" or "1e" is not a number yet. Keep the last good value
+      // rather than flashing every figure to zero while somebody types.
+      if (!Number.isFinite(n)) return;
+
+      // Percent fields are shown as percentages and stored as fractions. This
+      // is the one place that conversion happens.
+      bag[key] = kind === 'percent' ? n / 100 : n;
+    };
+
+    const readAll = (): void => inputs.forEach(read);
+
+    // ── writing the answers back ──────────────────────────────────────────
+
+    const cells = Array.from(root.querySelectorAll<HTMLElement>('[data-out]'));
+
+    const render = (): void => {
+      const result = computeWorkbook(state);
+      const o = outputs(result);
+
+      for (const cell of cells) {
+        const key = cell.dataset.out;
+        if (!key) continue;
+        // Every [data-out] element holds the figure and nothing else — no
+        // surrounding spaces, no punctuation — so this is a plain replacement.
+        cell.textContent = o[key] ?? '—';
+      }
+
+      // Mark the cheapest option. An attribute, not a class, so the styling and
+      // the meaning stay in one place.
+      for (const opt of root.querySelectorAll<HTMLElement>('[data-opt]')) {
+        if (opt.dataset.opt === result.stopping.lowest) opt.setAttribute('data-lowest', '');
+        else opt.removeAttribute('data-lowest');
+      }
+
+      // The price source line beside each model select.
+      for (const note of root.querySelectorAll<HTMLElement>('[data-price-note]')) {
+        const scope = note.dataset.priceNote;
+        if (!scope) continue;
+        const id = (state as unknown as Record<string, any>)[scope]?.attempt?.model;
+        const model = PRICE_CARD.find((m) => m.id === id);
+        note.textContent = model?.source
+          ? `${model.source} · checked ${CHECKED}`
+          : 'Your own rate. Nothing was checked for you.';
+      }
+
+      // Custom price inputs appear only when the Custom row is chosen.
+      for (const box of root.querySelectorAll<HTMLElement>('[data-custom]')) {
+        const scope = box.dataset.custom;
+        if (!scope) continue;
+        const id = (state as unknown as Record<string, any>)[scope]?.attempt?.model;
+        box.hidden = id !== 'custom';
+      }
+
+      announce(o);
+    };
+
+    // ── announcing, without spamming ──────────────────────────────────────
+
+    let announceTimer = 0;
+
+    /**
+     * One short sentence, 900ms after the last keystroke.
+     *
+     * The result cells are not inside a live region on purpose. Forty figures
+     * announced on every keystroke is not accessibility; it is the reason
+     * people switch a screen reader off on a page like this.
+     */
+    const announce = (o: Record<string, string>): void => {
+      if (!live) return;
+      window.clearTimeout(announceTimer);
+      announceTimer = window.setTimeout(() => {
+        live.textContent =
+          `Storm night: cost per attempt ${o['storm.costPerAttempt']}, ` +
+          `agent cost per case ${o['storm.costPerCase']}, ` +
+          `fully loaded cost per accepted result ${o['storm.costPerAccepted']}. ` +
+          `Lowest-cost option when the ceiling trips: ${o['stopping.lowest']}.`;
+      }, 900);
+    };
+
+    // ── analytics: three events, none of them carrying an input value ─────
+
+    let interacted = false;
+    const track = (type: string, meta?: Record<string, unknown>): void => {
+      const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+      if (typeof fn === 'function') fn(type, meta ?? null);
+    };
+
+    // ── wiring ───────────────────────────────────────────────────────────
+
+    const onChange = (): void => {
+      if (!interacted) {
+        interacted = true;
+        track('calculator_interaction', { resource: 'cost-ceiling-workbook' });
+      }
+      readAll();
+      render();
+    };
+
+    for (const el of inputs) {
+      el.addEventListener('input', onChange);
+      el.addEventListener('change', onChange);
+    }
+
+    document.getElementById('reset')?.addEventListener('click', () => {
+      state = exampleValues();
+      for (const el of inputs) {
+        const { scope, group, key, kind } = el.dataset;
+        // `continue`, not `return`. An early return here would abandon the
+        // reset part-way through and leave half the fields on their old values.
+        if (!scope || !group || !key) continue;
+
+        if (group === 'custom') {
+          (el as HTMLInputElement).value = '';
+          continue;
+        }
+
+        const bag = bagFor(scope, group);
+        const value = bag?.[key];
+        if (value === undefined) continue;
+
+        if (el instanceof HTMLInputElement && el.type === 'checkbox') {
+          el.checked = Boolean(value);
+        } else if (kind === 'percent') {
+          el.value = String(Math.round(Number(value) * 1000) / 10);
+        } else {
+          el.value = String(value);
+        }
+      }
+      render();
+      live && (live.textContent = 'Reset to the example values.');
+    });
+
+    // ── the mobile scenario toggle ───────────────────────────────────────
+
+    for (const group of root.querySelectorAll<HTMLElement>('.scen-toggle')) {
+      const cols = group.parentElement?.querySelector<HTMLElement>('.cols');
+      group.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-scen]');
+        if (!btn || !cols) return;
+        cols.dataset.show = btn.dataset.scen ?? 'normal';
+        for (const b of group.querySelectorAll('button')) {
+          b.setAttribute('aria-pressed', String(b === btn));
+        }
+      });
+    }
+
+    // ── the step nav, upgraded from links to tabs ────────────────────────
+    //
+    // Without this script the four steps are all visible and the nav is four
+    // in-page links. With it, one step shows at a time. The upgrade happens
+    // here rather than in the markup so the no-script page is the readable one.
+
+    const nav = document.getElementById('stepsNav');
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
+
+    if (nav && steps.length) {
+      const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('[data-step-link]'));
+      const tabs: HTMLButtonElement[] = [];
+
+      nav.setAttribute('role', 'tablist');
+
+      links.forEach((link, i) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.textContent = link.textContent;
+        tab.id = `tab-${link.dataset.stepLink}`;
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-controls', `step-${link.dataset.stepLink}`);
+        tab.dataset.stepLink = link.dataset.stepLink ?? '';
+        tab.setAttribute('aria-selected', String(i === 0));
+        tab.tabIndex = i === 0 ? 0 : -1;
+        link.replaceWith(tab);
+        tabs.push(tab);
+      });
+
+      steps.forEach((step, i) => {
+        step.setAttribute('role', 'tabpanel');
+        step.setAttribute('aria-labelledby', `tab-${step.dataset.step}`);
+        step.tabIndex = 0;
+        step.hidden = i !== 0;
+      });
+
+      const select = (index: number, focus = true): void => {
+        tabs.forEach((t, i) => {
+          t.setAttribute('aria-selected', String(i === index));
+          t.tabIndex = i === index ? 0 : -1;
+        });
+        steps.forEach((s, i) => {
+          s.hidden = i !== index;
+        });
+        if (focus) tabs[index]?.focus();
+      };
+
+      nav.addEventListener('click', (e) => {
+        const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+        if (tab) select(tabs.indexOf(tab), false);
+      });
+
+      nav.addEventListener('keydown', (e) => {
+        const current = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+        if (current < 0) return;
+        if (e.key === 'ArrowRight') select((current + 1) % tabs.length);
+        else if (e.key === 'ArrowLeft') select((current - 1 + tabs.length) % tabs.length);
+        else if (e.key === 'Home') select(0);
+        else if (e.key === 'End') select(tabs.length - 1);
+        else return;
+        e.preventDefault();
+      });
+
+      // "Try the calculator" and any other in-page link to a step must open it.
+      for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href^="#step-"]')) {
+        link.addEventListener('click', () => {
+          const id = link.getAttribute('href')?.slice(1);
+          const index = steps.findIndex((s) => s.id === id);
+          if (index >= 0) select(index, false);
+        });
+      }
+    }
+
+    render();
+  }
+
+  // ── the two events that are not about the calculator ───────────────────
+  //
+  // Delegated at the document, so both download buttons and the apply link are
+  // covered without instrumenting each one.
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target?.closest) return;
+
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn !== 'function') return;
+
+    if (target.closest('[data-download]')) {
+      fn('resource_download', { resource: 'cost-ceiling-workbook' });
+    } else if (target.closest('[data-apply]')) {
+      fn('cohort_apply_click', { resource: 'cost-ceiling-workbook' });
+    }
+  });
+</script>
