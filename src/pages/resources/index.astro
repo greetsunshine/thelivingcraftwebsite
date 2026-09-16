@@ -70,8 +70,6 @@ import {
 } from '../../data/resources';
 import { SITE_ORIGIN } from '../../data/facts';
 
-export const prerender = true;
-
 const published = await getCollection('guides', (g) => g.data.status === 'ready');
 
 // Same rule as the guides above: the COUNT is read, never typed. A sentence
