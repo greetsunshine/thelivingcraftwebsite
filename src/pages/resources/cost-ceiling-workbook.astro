@@ -35,6 +35,7 @@
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
+import { longDate } from '../../data/resources';
 import {
   ANSWERS,
   APPLY_URL,
@@ -118,14 +119,6 @@ const defaultFor = (scope: string, group: string, key: string): unknown => {
       : (defaults as Record<string, any>)[group];
   return bag?.[key];
 };
-
-const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 
 /**
  * HowTo rather than SoftwareApplication.
