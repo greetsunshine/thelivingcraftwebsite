@@ -1,6 +1,12 @@
 // The delivered cohort copy, shared by the visible page, structured data,
 // public facts endpoint, /llms.txt and the visitor Q&A assistant. Keeping one
 // array for every consumer prevents the programme description from drifting.
+//
+// This file must NOT import facts.ts. facts.ts imports EXPLORES from here, so
+// the dependency runs one way only: copy is the lower layer, and facts.ts
+// builds the structured offer on top of it. An import back would be a cycle,
+// and an ESM cycle here fails at module-evaluation time with "cannot access
+// before initialization" rather than at type-check time.
 
 export interface Explores {
   title: string;
@@ -126,10 +132,18 @@ export interface ModuleDetail {
 }
 
 /**
- * "Inside the program" — the same four modules as `cohort.modules` in
- * facts.ts, with the body copy the pre-rebuild page carried and the current
- * page's brief chose to omit ("no invented module durations" — these are not
- * invented; they are the modules that already exist as structured data).
+ * "Inside the program" — the four modules, and THE ONLY DEFINITION OF THEM.
+ *
+ * `cohort.modules` in facts.ts is derived from this array, so the JSON-LD
+ * Course node, /api/facts, /llms.txt and the visible page all read one list.
+ * They were two lists until 16 September 2026: the same four ids, weeks and
+ * titles typed out in both files, which typechecks perfectly while the page
+ * goes stale the moment a title changes in facts.ts.
+ *
+ * The prose lives here and not in facts.ts on purpose. facts.ts is the
+ * structured offer — the fields a crawler and the assistant read. A paragraph
+ * of page copy is not one of those, which is why `cohortModules()` below hands
+ * facts.ts the three structured fields and drops `body`.
  */
 export const MODULES: ModuleDetail[] = [
   {
@@ -157,6 +171,10 @@ export const MODULES: ModuleDetail[] = [
     body: 'You bring a real architecture. We pressure-test it together as a cohort. We cover the design, the failure modes, the evaluation strategy, and the governance around it. That governance means review depth matched to risk, and accountability for the code the AI wrote. This is a senior review the way it should feel.',
   },
 ];
+
+/** The structured half of the module list, for `cohort.modules` in facts.ts. */
+export const cohortModules = (): Array<Pick<ModuleDetail, 'id' | 'weeks' | 'title'>> =>
+  MODULES.map(({ id, weeks, title }) => ({ id, weeks, title }));
 
 export interface Takeaway {
   k: string;
@@ -226,11 +244,21 @@ export const LIVE_EXPERIENCE: Experience[] = [
     title: 'Building an agentic-AI system, as a startup',
     body: 'He is also building an agentic-AI product of his own, so what you learn is current practice rather than a memory of one.',
   },
-  {
-    k: '// founding cohort',
-    title: 'A founding-cohort rate',
-    body: 'The first cohort enrols at a founding rate. That rate will not return once the program has a track record.',
-  },
+  /*
+   * NO founding-rate card here, removed 16 September 2026. Two reasons, and
+   * the second is the one that matters.
+   *
+   *   1. This section is Sunil's track record. A rate is not track record.
+   *   2. "That rate will not return" is a scarcity device, and the cohort
+   *      page's own header note (CohortPage.astro, WHAT IS NOT ON THIS PAGE)
+   *      says scarcity stays off. It also rendered for Dubai and Australia,
+   *      whose publicPrice is off, so those visitors read a claim about a
+   *      figure the same page refuses to show them.
+   *
+   * The price card already tells every region that the founding rate rises
+   * for the cohorts that follow, with no "will not return" clause. Nothing
+   * was lost by cutting this.
+   */
 ];
 
 export interface Question {

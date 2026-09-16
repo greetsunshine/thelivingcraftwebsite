@@ -48,8 +48,11 @@ export const regions: Record<Region['key'], Region> = {
     path: '/india',
     title: 'The Living Craft — India · Agentic & Systems Architecture by Sunil Mathew',
     description: `${sharedDescription} India cohort, with a hybrid option in Bangalore.`,
-    // PRICING — REVIEW BEFORE PUBLISH. Founding rate for the first (Sept 2026) cohort;
-    // standardPrice is the rate for successive cohorts.
+    // PRICING — REVIEW BEFORE PUBLISH. Founding rate for the first cohort;
+    // standardPrice is the rate for successive cohorts. The start date is
+    // `nextDate` below and nowhere else in this comment — it moved from
+    // September to October 2026 on 15 September, and a date restated in a
+    // comment is a second source that nobody updates.
     price: '₹1,20,000',
     standardPrice: '₹1,50,000',
     priceUnit: 'per seat · founding rate',

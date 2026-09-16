@@ -11,10 +11,19 @@
  * a page. If a line reads awkwardly, that is a note for the copy round, not an
  * edit to make in a component.
  *
- * The section order is the brief's own nine-module table, and it is not
- * arbitrary: outcome, fit, example, outcomes, curriculum, process, Sunil,
- * commitment, questions, application. Somebody arrives wondering whether this
- * is for them, and each section answers the next question they have.
+ * The section order is the brief's own module table, widened by the sections
+ * restored on 15 September. It is not arbitrary: outcome, fit, example, what a
+ * review changes, outcomes, the transformation, the work, the modules,
+ * process, Sunil, what you leave with, live experience, commitment, questions,
+ * application. Somebody arrives wondering whether this is for them, and each
+ * section answers the next question they have.
+ *
+ * THE PRINTED NUMBERS RUN 00 TO 14, IN DOCUMENT ORDER, WITH NO GAPS. They were
+ * 00, 01, 02, 04, 03, 05 with five sections unnumbered, because the restored
+ * sections kept the numbers they carried on the pre-rebuild page and were
+ * interleaved with rebuild sections that carried none. If you add or move a
+ * section, renumber the whole run. A reader uses these to tell how far through
+ * they are, and a sequence that skips or repeats tells them the wrong thing.
  *
  * THE HERO PORTRAIT, RESTORED 15 September 2026
  *
@@ -96,7 +105,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         {googleCalendarAppointmentUrl && (
           <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
         )}
-        <a class="btn btn-ghost" href="#ask">Ask about the cohort</a>
+        <a class="btn btn-ghost" href="#ask-drop">Ask about the cohort</a>
       </div>
 
       <p class="hero-note">
@@ -149,10 +158,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 3 · Practical example ─────────────────────────────────────────────── */}
+{/* ── 02 · Practical example ─────────────────────────────────────────────── */}
 <section class="wrap band" id="example">
   <div class="sec-head">
-    <p class="eyebrow">An illustrative example</p>
+    <p class="eyebrow"><span class="num">02</span> An illustrative example</p>
     <h2>Follow a decision <em>beyond the demo</em></h2>
   </div>
 
@@ -201,7 +210,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 3b · What a review changes ───────────────────────────────────────────
+{/* ── 03 · What a review changes ───────────────────────────────────────────
     Added by the V4 addendum, 11 September. It sits between the example and
     the outcomes deliberately: the returns assistant above shows a design
     QUESTION, and this shows what asking it produces. Without this section the
@@ -212,7 +221,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     words. Neither is a claimed incident. */}
 <section class="wrap band" id="review">
   <div class="sec-head">
-    <p class="eyebrow">A second illustrative example</p>
+    <p class="eyebrow"><span class="num">03</span> A second illustrative example</p>
     <h2>See what a review <em>can change</em></h2>
   </div>
   <div class="two-up">
@@ -229,10 +238,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 4 · Outcomes and curriculum ───────────────────────────────────────── */}
+{/* ── 04 · Outcomes and curriculum ───────────────────────────────────────── */}
 <section class="wrap band" id="outcomes">
   <div class="sec-head">
-    <p class="eyebrow">What you develop</p>
+    <p class="eyebrow"><span class="num">04</span> What you develop</p>
     <h2>Develop practical <em>design judgment</em></h2>
   </div>
   <div class="two-up">
@@ -248,14 +257,14 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 02 · The transformation ───────────────────────────────────────────────
+{/* ── 05 · The transformation ───────────────────────────────────────────────
     Restored 15 September 2026, from the pre-rebuild page. A–E are
     `cohort.outcomes` in facts.ts, already fed to JSON-LD and the Q&A agent;
     F is previously-published copy carried verbatim (see TRANSFORMATION in
     cohort-copy.ts for why it is not treated as an invented figure). */}
 <section class="wrap transform" id="transform">
   <div class="sec-head" style="margin-bottom:0">
-    <span class="eyebrow"><span class="num">02</span> The transformation</span>
+    <span class="eyebrow"><span class="num">05</span> The transformation</span>
     <h2>What you'll be able to do.</h2>
     <p class="lead">
       By the end, the work shows up in how you decide. Under real constraints, with
@@ -281,9 +290,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </p>
 </section>
 
+{/* ── 06 · What the work explores ─────────────────────────────────────── */}
 <section class="wrap band" id="curriculum">
   <div class="sec-head">
-    <p class="eyebrow">The work</p>
+    <p class="eyebrow"><span class="num">06</span> The work</p>
     <h2>What the work <em>explores</em></h2>
   </div>
   {/* Five areas, not five modules with durations. The brief: "Use validated
@@ -305,13 +315,13 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </ol>
 </section>
 
-{/* ── 04 · Inside the program ────────────────────────────────────────────
+{/* ── 07 · Inside the program ────────────────────────────────────────────
     Restored 15 September 2026. The four modules are `cohort.modules` in
     facts.ts; the body copy for each is not invented — it is the description
     the pre-rebuild page carried for the same four modules. */}
 <section class="wrap band" id="modules">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">04</span> Inside the program</span>
+    <span class="eyebrow"><span class="num">07</span> Inside the program</span>
     <h2>A small set of deep things, done <em>properly</em>.</h2>
     <p class="lead">
       Six weeks. Live, in a small cohort. Built around your real systems, not toy
@@ -331,10 +341,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 5 · Learning process ──────────────────────────────────────────────── */}
+{/* ── 08 · Learning process ──────────────────────────────────────────────── */}
 <section class="wrap band" id="process">
   <div class="sec-head">
-    <p class="eyebrow">How it runs</p>
+    <p class="eyebrow"><span class="num">08</span> How it runs</p>
     <h2>Build, examine and <em>revise</em></h2>
   </div>
   <div class="two-up">
@@ -350,7 +360,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 6 · Sunil ─────────────────────────────────────────────────────────── */}
+{/* ── 09 · Sunil ─────────────────────────────────────────────────────────── */}
 {/* THE MAKER SECTION, REINSTATED 15 September 2026.
  *
  * This was section 03 of the pre-rebuild page (ProgramPage.astro) and the
@@ -379,7 +389,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
  */}
 <section class="wrap band" id="sunil">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">03</span> Who teaches it</p>
+    <p class="eyebrow"><span class="num">09</span> Who teaches it</p>
     <h2>Work with <em>Sunil Mathew</em></h2>
   </div>
 
@@ -424,13 +434,13 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 05 · What you leave with ───────────────────────────────────────────
+{/* ── 10 · What you leave with ───────────────────────────────────────────
     Restored 15 September 2026, verbatim from the pre-rebuild page. No
     figures here — artifacts and access, not metrics — so nothing about it
     was in question. */}
 <section class="wrap band" id="takeaways">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">05</span> What you leave with</span>
+    <span class="eyebrow"><span class="num">10</span> What you leave with</span>
     <h2>What physically <em>leaves the room</em>.</h2>
     <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
   </div>
@@ -447,13 +457,13 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 06 · Live experience ───────────────────────────────────────────────
+{/* ── 11 · Live experience ───────────────────────────────────────────────
     Restored 15 September 2026, with one deliberate omission — see the
     LIVE_EXPERIENCE comment in cohort-copy.ts for exactly which figures did
     and did not come back, and why. */}
 <section class="wrap band inaugural" id="live-experience">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">06</span> Live experience</span>
+    <span class="eyebrow"><span class="num">11</span> Live experience</span>
     <h2>I've spent a career growing <em>people</em>, not just systems.</h2>
     <p class="lead">
       The craft only counts if it transfers, and it already has. This is the track
@@ -473,10 +483,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 7 · Commitment ───────────────────────────────────────────────────── */}
+{/* ── 12 · Commitment ───────────────────────────────────────────────────── */}
 <section class="wrap band" id="commitment">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">07</span> The commitment</p>
+    <p class="eyebrow"><span class="num">12</span> The commitment</p>
     <h2>Make room for <em>the work</em></h2>
   </div>
 
@@ -510,7 +520,11 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 
   <div class="price-card">
-    <div class="seat">{region ? `Inaugural ${region.label} cohort · ` : ''}founding seats</div>
+    {/* Sentence case, and it has to be built that way rather than left to CSS:
+        .price-card .seat is text-transform: none, so a visitor with no region
+        resolved read a lowercase "founding seats" where an India visitor read
+        "Inaugural India cohort · founding seats". */}
+    <div class="seat">{region ? `Inaugural ${region.label} cohort · founding seats` : 'Founding seats'}</div>
     {hasPrice ? (
       <Fragment>
         <div class="amt">
@@ -545,10 +559,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 8 · FAQs ──────────────────────────────────────────────────────────── */}
+{/* ── 13 · FAQs ──────────────────────────────────────────────────────────── */}
 <section class="wrap band" id="questions">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">08</span> Before you apply</p>
+    <p class="eyebrow"><span class="num">13</span> Before you apply</p>
     <h2>Questions before <em>joining</em></h2>
   </div>
   <div class="faq">
@@ -568,10 +582,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 9 · Application ──────────────────────────────────────────────────── */}
+{/* ── 14 · Application ──────────────────────────────────────────────────── */}
 <section class="wrap band forms" id="apply">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">09</span> Apply</p>
+    <p class="eyebrow"><span class="num">14</span> Apply</p>
     <h2>Start with your experience and <em>a question</em></h2>
   </div>
 
@@ -601,7 +615,11 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     </div>
   </div>
 
-  <details class="ask-drop" id="ask">
+  {/* NOT id="ask". AskWidget renders <div class="ask" id="ask"> on this same
+      page and finds its own root with getElementById('ask'); a second element
+      with that id wins on document order and the widget then binds to this
+      panel, losing its region attribute and every control inside it. */}
+  <details class="ask-drop" id="ask-drop">
     <summary>
       Ask about the cohort
       <span class="plus" aria-hidden="true">+</span>
@@ -616,6 +634,27 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
   </p>
 </section>
+
+{/* The enquiry route is a dropdown, but three links point straight at it: the
+    hero CTA above, both /contact links, and the agent-design-check handoff.
+    Without this, all of them scroll to a closed row and the visitor has to
+    work out that the form is behind it. Opening on the fragment is also what
+    keeps RESUME.md's documented fallback real: while the Google appointment
+    URL is blank, "Ask about the cohort" is the only alternative to applying.
+
+    A <details> is opened by an attribute, not by a style, so CSS :target
+    cannot do this. Six lines is the whole cost. */}
+<script>
+  (function () {
+    var drop = document.getElementById('ask-drop') as HTMLDetailsElement | null;
+    if (!drop) return;
+    var openOnTarget = function () {
+      if (location.hash === '#ask-drop') drop!.open = true;
+    };
+    openOnTarget();
+    window.addEventListener('hashchange', openOnTarget);
+  })();
+</script>
 
 <style>
   .band { padding-block: var(--space-8); }
@@ -644,49 +683,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     .closing-next-step-actions .btn {
       width: 100%;
     }
-  }
-
-  .hero-commit {
-    font-family: var(--font-mono);
-    font-size: var(--size-3);
-    color: var(--text-on-invert);
-    letter-spacing: var(--tracking-mono);
-    margin-bottom: var(--space-6);
-  }
-
-  /* ── the reserved video slot ─────────────────────────────────────────── */
-  .vsl { display: flex; flex-direction: column; gap: var(--space-3); }
-  .vsl-frame {
-    aspect-ratio: 16 / 9;
-    max-width: 100%;
-    border-radius: var(--radius-card);
-    background: rgba(255, 255, 255, 0.06);
-    /* A dashed edge, not a shadow: this is the system's "unwritten" state, and
-       it should read as a space held open rather than as a broken component. */
-    border: var(--border-w-hair) dashed rgba(255, 255, 255, 0.28);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: var(--space-2);
-    padding: var(--space-6);
-  }
-  .vsl-title {
-    font-size: var(--size-4);
-    font-weight: var(--weight-strong);
-    color: var(--text-on-invert);
-    line-height: var(--lh-snug);
-    max-width: 28ch;
-  }
-  .vsl-note {
-    font-size: var(--size-3);
-    color: rgba(255, 255, 255, 0.72);
-    line-height: var(--lh-snug);
-    max-width: 34ch;
-  }
-  .vsl-cap {
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    color: var(--text-faint);
   }
 
   /* ── prose ───────────────────────────────────────────────────────────── */
@@ -830,7 +826,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
       gap: var(--space-5);
     }
     .band { padding-block: var(--space-7); }
-    .hero-commit { margin-bottom: var(--space-5); }
   }
 
   @media (max-width: 560px) {
