@@ -184,6 +184,29 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-16',
   },
   {
+    id: 'agent-memory-audit-kit',
+    topic: 'Agent Memory',
+    number: '05',
+    series: 'Agentic system design',
+    title: 'Agent Memory Audit Kit',
+    kind: 'Kit \u00b7 schema, 12 questions, 7 runnable tests, decision table',
+    summary:
+      'A schema, 12 audit questions, 7 runnable failure tests and a decision table for designing agent memory that stays correct.',
+    description:
+      'An expense agent remembered a project code Priya typed once, for one trip, and reused it on the next trip. The team shipped a fix: learn from user corrections. Three weeks later the agent put her own team’s dinner on a client’s bill, because a correction is a memory too. This kit gives every fact an agent remembers three answers: where it came from, where it applies, and what happens when someone corrects it. A memory record schema with fields for source, evidence, scope, expiry and correction route, and seven invariants a store has to hold. Twelve audit questions to run against one remembered fact, each with the red flag that means a design task. Seven failure tests as a pytest harness, with a naive store that fails all seven on purpose and a reference store that passes them, and a six-method protocol for running the same seven against your own memory layer. And a one-page decision table with four outcomes: Remember, Revalidate, Ask, Forget. The page is the resource; the ZIP carries the PDF, the schema, four example records, the harness and both licences.',
+    useFor: [
+      'Name the evidence, the scope and the correction route for one fact your agent remembers today',
+      'Separate what a user stated, what a system record says and what the agent inferred, before any of it reaches a prompt',
+      'Run seven failure tests against your own memory layer and read each failure as one design task',
+      'Decide, for any remembered fact, whether the agent may apply it, must revalidate it, must ask, or must forget it',
+      'Find the correction in your system that changed more than the instance it was made on',
+    ],
+    format:
+      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Nothing is stored or sent.',
+    url: '/resources/agent-memory-audit-kit',
+    publishedAt: '2026-09-17',
+  },
+  {
     id: 'cost-ceiling-workbook',
     topic: 'Cost Control',
     number: '02',

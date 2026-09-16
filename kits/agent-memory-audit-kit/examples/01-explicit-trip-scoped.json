@@ -1,0 +1,30 @@
+{
+  "id": "mem_01",
+  "subject": { "type": "user", "id": "priya" },
+  "key": "expense.project_code",
+  "value": "ATL-2291",
+  "authority": "fact",
+  "source": {
+    "type": "user_stated",
+    "evidence": { "kind": "message", "ref": "msg_8812" },
+    "observations": 1,
+    "captured_at": "2026-03-04T09:12:00Z",
+    "captured_by": "expense-agent@1.4.0"
+  },
+  "scope": {
+    "level": "task",
+    "bindings": { "trip_id": "TRIP-PUNE-0304" },
+    "valid_from": "2026-03-04",
+    "valid_until": null,
+    "revalidate_on": ["trip_closed", "project_closed"]
+  },
+  "correction": {
+    "route": "inline_override_on_expense_form",
+    "supersedes": [],
+    "superseded_by": null,
+    "broadened": false
+  },
+  "lineage": { "derived_from": [] },
+  "lifecycle": { "status": "active", "sensitivity": "none", "retain_value_after_expiry": false },
+  "usage": { "last_used_at": null, "use_count": 0, "last_confirmed_at": "2026-03-04T09:12:00Z" }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "mem_04",
+  "subject": { "type": "user", "id": "priya" },
+  "key": "travel.home_address",
+  "value": null,
+  "authority": "fact",
+  "source": {
+    "type": "user_stated",
+    "evidence": { "kind": "message", "ref": "msg_7710" },
+    "observations": 1,
+    "captured_at": "2026-02-10T11:05:00Z",
+    "captured_by": "expense-agent@1.4.0"
+  },
+  "scope": {
+    "level": "user",
+    "bindings": { "user_id": "priya" },
+    "valid_from": "2026-02-10",
+    "valid_until": "2026-05-10",
+    "revalidate_on": ["user_profile_changed"]
+  },
+  "correction": {
+    "route": "profile_settings_page",
+    "supersedes": [],
+    "superseded_by": null,
+    "broadened": false
+  },
+  "lineage": { "derived_from": [] },
+  "lifecycle": {
+    "status": "deleted",
+    "sensitivity": "sensitive",
+    "retain_value_after_expiry": false,
+    "deleted_at": "2026-03-30T16:22:00Z",
+    "deleted_reason": "user_requested_deletion"
+  },
+  "usage": { "last_used_at": "2026-03-12T07:30:00Z", "use_count": 3, "last_confirmed_at": "2026-02-10T11:05:00Z" }
+}

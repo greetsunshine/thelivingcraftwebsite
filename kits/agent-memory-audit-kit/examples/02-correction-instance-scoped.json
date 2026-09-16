@@ -1,0 +1,30 @@
+{
+  "id": "mem_02",
+  "subject": { "type": "user", "id": "priya" },
+  "key": "expense.project_code",
+  "value": "MER-0417",
+  "authority": "fact",
+  "source": {
+    "type": "user_correction",
+    "evidence": { "kind": "message", "ref": "msg_9120" },
+    "observations": 1,
+    "captured_at": "2026-03-25T19:40:00Z",
+    "captured_by": "expense-agent@1.5.0"
+  },
+  "scope": {
+    "level": "instance",
+    "bindings": { "expense_id": "EXP-5521" },
+    "valid_from": "2026-03-25",
+    "valid_until": null,
+    "revalidate_on": ["expense_reopened"]
+  },
+  "correction": {
+    "route": "inline_override_on_expense_form",
+    "supersedes": [],
+    "superseded_by": null,
+    "broadened": false
+  },
+  "lineage": { "derived_from": [] },
+  "lifecycle": { "status": "active", "sensitivity": "none", "retain_value_after_expiry": false },
+  "usage": { "last_used_at": "2026-03-25T19:40:05Z", "use_count": 1, "last_confirmed_at": "2026-03-25T19:40:00Z" }
+}

@@ -1,0 +1,630 @@
+---
+// /resources/agent-memory-audit-kit — the memory audit kit, self-hosted.
+//
+// Fifth in the agentic system design series, and the first with real files
+// behind the download buttons. The other kit pages make a PDF in the reader's
+// own print dialogue; this one was promised as a download, so the PDF and the
+// ZIP are built by `npm run build:kit` and committed under public/downloads/.
+//
+// The PDF is printed FROM THIS PAGE by headless Chrome, using the print rules
+// at the foot of this file. That is what keeps the page and the PDF the same
+// document: there is no second template to drift. The `.cover` block below is
+// print-only and is the PDF's first page.
+//
+// Four numbers on this page were promised in public before it existed. The
+// data module asserts them, and the page prints the counts from the arrays
+// rather than from a literal, so a wrong count cannot survive a build.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  DOWNLOADS,
+  RESOURCE_ID,
+  TITLE,
+  SUBTITLE,
+  META_LINE,
+  WHY,
+  WHY_NOTE,
+  THREE,
+  SCHEMA_INTRO,
+  FIELDS,
+  INVARIANTS,
+  INVARIANTS_NOTE,
+  EXAMPLE_RECORD,
+  EXAMPLE_CAPTION,
+  SCHEMA_FIELD_COUNT,
+  AUDIT_INTRO,
+  AUDIT,
+  AUDIT_COUNT,
+  TESTS_INTRO,
+  TESTS,
+  PYTEST_COMMANDS,
+  TESTS_NOTE,
+  OUTCOMES,
+  CONSEQUENTIAL,
+  DECISIONS,
+  CLOSE_TITLE,
+  CLOSE_BODY,
+  CLOSE_CTA,
+  LICENCE_LINE,
+} from '../../data/agent-memory-audit-kit';
+
+const meta = publishedResources.find((r) => r.id === RESOURCE_ID)!;
+const canonical = `/resources/${RESOURCE_ID}`;
+
+// The promises. A wrong count fails the first render in dev, long before a deploy.
+const outcomeKinds = new Set(DECISIONS.map((d) => d.outcome));
+if (AUDIT_COUNT !== 12) throw new Error(`memory kit: ${AUDIT_COUNT} audit questions, promised 12`);
+if (TESTS.length !== 7) throw new Error(`memory kit: ${TESTS.length} failure tests, promised 7`);
+if (!TESTS.some((t) => t.title === 'Correction bleed')) throw new Error('memory kit: no test titled Correction bleed');
+if (outcomeKinds.size !== 4 || OUTCOMES.length !== 4) throw new Error('memory kit: decision table must have exactly four outcomes');
+
+const title = `${TITLE} — source, scope and correction for every fact an agent remembers · The Living Craft`;
+// Under 155 characters, as the meta description.
+const description =
+  'A memory record schema, 12 audit questions, 7 runnable failure tests and a one-page decision table for agent memory that stays correct. Free, no sign-up.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}${canonical}#howto`,
+    name: TITLE,
+    description,
+    url: `${SITE_ORIGIN}${canonical}`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Copy the memory record schema', text: SCHEMA_INTRO },
+      { '@type': 'HowToStep', position: 2, name: `Run the ${AUDIT_COUNT} audit questions`, text: AUDIT_INTRO },
+      { '@type': 'HowToStep', position: 3, name: `Run the ${TESTS.length} failure tests`, text: TESTS_INTRO },
+      { '@type': 'HowToStep', position: 4, name: 'Apply the decision table', text: OUTCOMES.map((o) => `${o.name}: ${o.means}`).join('. ') },
+    ],
+  },
+];
+
+const sections = [
+  { id: 'schema', title: 'Schema' },
+  { id: 'questions', title: `${AUDIT_COUNT} questions` },
+  { id: 'tests', title: `${TESTS.length} tests` },
+  { id: 'decide', title: 'Decision table' },
+];
+---
+
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
+  <!-- Print-only cover. The PDF's first page; never shown on screen. -->
+  <div class="cover" aria-hidden="true">
+    <p class="cover-eyebrow mono">The Living Craft · Resources · agentic system design 05</p>
+    <p class="cover-title">{TITLE}</p>
+    <p class="cover-sub">{SUBTITLE}</p>
+    <p class="cover-meta">Sunil Mathew · The Living Craft</p>
+    <p class="cover-meta mono">{SITE_ORIGIN}{canonical}</p>
+    <p class="cover-meta mono">Published {longDate(meta.publishedAt)} · {LICENCE_LINE}</p>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design 05</span>
+      </div>
+      <h1>{TITLE}</h1>
+      <p class="lead">{SUBTITLE}</p>
+      <p class="hero-cta controls">
+        <a class="btn btn-primary" href={DOWNLOADS.zip} download data-download="zip">
+          Download full kit (ZIP)&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href={DOWNLOADS.pdf} download data-download="pdf">
+          Download PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </p>
+      <p class="hero-note mono">{META_LINE}</p>
+    </div>
+  </section>
+
+  <!-- Why this exists -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why this exists</span>
+        <h2>The stale memory never reached the client. <em>The fix did.</em></h2>
+      </div>
+      <div class="prose">
+        {WHY.map((p) => <p>{p}</p>)}
+      </div>
+      <p class="prose-note"><i>{WHY_NOTE}</i></p>
+    </div>
+  </section>
+
+  <!-- The three questions -->
+  <section id="three">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The three questions</span>
+        <h2>Source, scope, <em>correction</em>.</h2>
+      </div>
+      <div class="threegrid">
+        {THREE.map((q) => (
+          <div class="three">
+            <span class="threename mono">{q.name}</span>
+            <p class="threeask">{q.ask}</p>
+            <p class="threebody">{q.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 · the schema -->
+  <section id="schema">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">01</span> The memory record schema</span>
+        <h2>Every field exists because <em>a real failure needed it</em>.</h2>
+      </div>
+      <p class="prose-lead">{SCHEMA_INTRO}</p>
+      <div class="scroll">
+        <table class="grid fields">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type or values</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            {FIELDS.map((f) => (
+              <tr>
+                <td class="cname mono">{f.field}</td>
+                <td class="ftype">{f.type}</td>
+                <td>
+                  {f.answers && <span class="tag">{f.answers}</span>}
+                  {f.purpose}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Seven invariants</h3>
+      <ol class="inv">
+        {INVARIANTS.map((i) => (
+          <li>
+            <span class="invid mono">{i.id}</span>
+            <span>{i.rule}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="prose-note">{INVARIANTS_NOTE}</p>
+
+      <h3 class="sub">The example record</h3>
+      <p class="prose-lead">{EXAMPLE_CAPTION}</p>
+      <div class="codeblock">
+        <button type="button" class="copy" data-copy="example-record" aria-label="Copy the example record">Copy</button>
+        <pre class="code" id="example-record"><code>{EXAMPLE_RECORD}</code></pre>
+      </div>
+      <p class="prose-note">
+        <a class="textlink" href={DOWNLOADS.schema} download data-download="schema">Download the full JSON Schema</a>
+        {' '}(draft 2020-12, {SCHEMA_FIELD_COUNT} top-level fields, invariants encoded with if/then). It is also in the ZIP, with four example records and the harness that validates them.
+      </p>
+    </div>
+  </section>
+
+  <!-- 02 · twelve audit questions -->
+  <section id="questions">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">02</span> {AUDIT_COUNT} audit questions</span>
+        <h2>Any red flag is <em>a design task</em>.</h2>
+      </div>
+      <p class="prose-lead">{AUDIT_INTRO}</p>
+      {AUDIT.map((g) => (
+        <div class="qgroup">
+          <h3 class="qgroupname">{g.name}</h3>
+          <ol class="qs" start={g.questions[0].n}>
+            {g.questions.map((q) => (
+              <li>
+                <span class="qn mono">{String(q.n).padStart(2, '0')}</span>
+                <div>
+                  <p class="qask">{q.ask}</p>
+                  <p class="qflag"><span class="flaglbl mono">Red flag</span> {q.redFlag}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- 03 · seven failure tests -->
+  <section id="tests">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">03</span> {TESTS.length} failure tests</span>
+        <h2>Each one is a way memory <em>hurts a real user</em>.</h2>
+      </div>
+      <p class="prose-lead">{TESTS_INTRO}</p>
+      <div class="scroll">
+        <table class="grid tests">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Test</th>
+              <th>Given</th>
+              <th>When</th>
+              <th>Then (pass criteria)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TESTS.map((t) => (
+              <tr>
+                <td class="tn mono">{t.n}</td>
+                <td class="cname">
+                  {t.title}
+                  <span class="tfn mono">{t.test}</span>
+                </td>
+                <td>{t.given}</td>
+                <td>{t.when}</td>
+                <td class="then">{t.then}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3 class="sub">Run them</h3>
+      <div class="codeblock">
+        <button type="button" class="copy" data-copy="pytest-commands" aria-label="Copy the commands">Copy</button>
+        <pre class="code" id="pytest-commands"><code>{PYTEST_COMMANDS}</code></pre>
+      </div>
+      <p class="prose-note">
+        {TESTS_NOTE}{' '}
+        <a class="textlink" href={DOWNLOADS.zip} download data-download="zip">Download the ZIP</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- 04 · the decision table -->
+  <section id="decide">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">04</span> Decision table</span>
+        <h2>Remember, Revalidate, <em>Ask, Forget</em>.</h2>
+      </div>
+      <dl class="outcomes">
+        {OUTCOMES.map((o) => (
+          <div class="outcome">
+            <dt><span class={`pill oc-${o.name.toLowerCase()}`}>{o.name}</span></dt>
+            <dd>{o.means}</dd>
+          </div>
+        ))}
+      </dl>
+      <p class="prose-note">{CONSEQUENTIAL}</p>
+      <div class="scroll">
+        <table class="grid decide">
+          <thead>
+            <tr>
+              <th>Situation</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DECISIONS.map((d) => (
+              <tr>
+                <td class="situation">{d.situation}</td>
+                <td class="oc">
+                  <span class={`pill oc-${d.outcome.toLowerCase()}`}>{d.outcome}</span>
+                  {d.note && <span class="ocnote">{d.note}</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing -->
+  <section class="final" id="close">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Closing</span>
+        <h2>{CLOSE_TITLE}</h2>
+      </div>
+      <div class="prose">
+        <p>{CLOSE_BODY}</p>
+        <p>{CLOSE_CTA}</p>
+      </div>
+      <p class="hero-cta nextrow">
+        <a class="btn btn-primary" href="/#apply" data-apply>Apply for a seat&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · {LICENCE_LINE}</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  /* Same reasons as the other kit pages: global.css has no .prose p rule and
+     no measure, so sibling paragraphs collide and lines run past 130
+     characters inside the 1180px wrap. */
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  .final .prose { max-width: none; }
+  .final .prose p + p { max-width: var(--measure-prose); margin-left: auto; margin-right: auto; }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .hero .controls { margin-top: var(--space-6); }
+  .nextrow { justify-content: center; margin-top: var(--space-5); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  /* ── the cover: print only ────────────────────────────────────────────── */
+  .cover { display: none; }
+
+  /* ── the three questions ──────────────────────────────────────────────── */
+  .threegrid { display: grid; gap: var(--space-4); }
+  @media (min-width: 860px) { .threegrid { grid-template-columns: repeat(3, 1fr); } }
+  .three {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .threename { font-size: var(--size-1); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
+  .threeask { font-family: var(--font-display); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .threebody { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+
+  /* ── tables ───────────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .fields { min-width: 760px; }
+  .tests { min-width: 980px; }
+  .decide { min-width: 0; }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
+  .fields .cname { font-size: var(--size-1); word-break: break-word; }
+  .ftype { color: var(--text-faint); font-size: var(--size-1); font-family: var(--font-mono); }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-ink-strong);
+    background: var(--accent-quiet);
+    border-radius: var(--radius-pill);
+    padding: 1px var(--space-2);
+    margin-right: var(--space-2);
+    vertical-align: 1px;
+  }
+  .tn { color: var(--text-faint); }
+  .tfn { display: block; font-size: 11px; color: var(--text-faint); font-weight: var(--weight-regular); margin-top: 2px; }
+  .tests .then { color: var(--text-body); }
+
+  /* ── invariants ───────────────────────────────────────────────────────── */
+  ol.inv {
+    list-style: none;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-2) var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  ol.inv li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-size: var(--size-2);
+  }
+  ol.inv li:last-child { border-bottom: 0; }
+  .invid { color: var(--accent-ink-strong); font-size: var(--size-1); font-weight: var(--weight-medium); padding-top: 2px; }
+
+  /* ── code, with a copy button ─────────────────────────────────────────── */
+  .codeblock { position: relative; max-width: 860px; }
+  pre.code {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    border-radius: var(--radius-inner);
+    padding: var(--space-5);
+    padding-top: calc(var(--space-5) + 18px);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    line-height: 1.7;
+    tab-size: 2;
+    margin: 0;
+  }
+  .copy {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-on-invert);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: var(--radius-pill);
+    padding: 4px var(--space-3);
+    cursor: pointer;
+  }
+  .copy:hover, .copy:focus-visible { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.6); outline: none; }
+  .copy:focus-visible { box-shadow: 0 0 0 2px var(--sun); }
+
+  /* ── the twelve questions ─────────────────────────────────────────────── */
+  .qgroup + .qgroup { margin-top: var(--space-6); }
+  .qgroupname { font-family: var(--font-mono); font-size: var(--size-2); color: var(--accent-ink-strong); font-weight: var(--weight-medium); margin-bottom: var(--space-3); }
+  ol.qs { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.qs li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .qn { color: var(--text-faint); font-size: var(--size-1); padding-top: 3px; }
+  .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .qflag { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+  .flaglbl { color: var(--danger); font-size: 11px; margin-right: var(--space-2); }
+
+  /* ── the decision table ───────────────────────────────────────────────── */
+  dl.outcomes { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); max-width: 860px; }
+  @media (min-width: 720px) { dl.outcomes { grid-template-columns: repeat(2, 1fr); } }
+  .outcome {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: var(--space-3);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .outcome dd { margin: 0; padding-top: 2px; }
+  .decide .situation { color: var(--text-body); }
+  .oc { white-space: normal; min-width: 150px; }
+  .ocnote { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-top: var(--space-2); }
+  /* Four outcomes, four marks. No green: the palette has none, and the two
+     outcomes that stop the agent are the ones a reader scans for. Namespaced
+     with oc- because the Ask widget in the layout already owns `.ask`. */
+  .pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .pill.oc-remember { color: var(--text-body); background: var(--surface-sunken); }
+  .pill.oc-revalidate { color: var(--accent-ink-strong); background: var(--accent-quiet); }
+  .pill.oc-ask { color: var(--accent-ink-strong); border-color: currentColor; }
+  .pill.oc-forget { color: var(--danger); background: var(--danger-quiet); border-color: currentColor; }
+
+  /* ── print ────────────────────────────────────────────────────────────── */
+  @page { size: A4; margin: 16mm 14mm 18mm; }
+  @media print {
+    :global(header.nav), :global(footer.site), :global(#ask), .hero, .controls, .nextrow, .copy { display: none !important; }
+    :global(body) { background: #fff; }
+    :global(main > section) { padding: 0; margin-bottom: 10mm; } /* a margin is truncated at a page break; padding spills into a blank page */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 240mm;
+      break-after: page;
+      gap: 6mm;
+    }
+    .cover-eyebrow { font-size: 10pt; color: var(--text-quiet); }
+    .cover-title { font-family: var(--font-display); font-size: 34pt; font-weight: var(--weight-heavy); color: var(--text-loud); line-height: 1.1; }
+    .cover-sub { font-size: 14pt; color: var(--text-quiet); max-width: 150mm; }
+    .cover-meta { font-size: 10pt; color: var(--text-quiet); }
+    .cover-meta + .cover-meta { margin-top: -4mm; }
+    .sec-head { margin-bottom: 6mm; }
+    .sec-head h2 { font-size: 18pt; }
+    .sub { break-after: avoid; font-size: 13pt; margin-top: 8mm; }
+    .three, ol.inv, ol.inv li, ol.qs li, .qgroup, .outcome, tr, .codeblock { break-inside: avoid; }
+    .three, ol.inv, ol.qs li, .outcome { box-shadow: none; border: 1px solid var(--border-hair); }
+    table.grid, .scroll { overflow: visible !important; }
+    .fields, .tests, .decide { min-width: 0 !important; font-size: 9pt; }
+    .grid tbody td { font-size: 9pt; padding: 2mm 3mm; }
+    .grid thead th { font-size: 8pt; }
+    thead { display: table-header-group; }
+    pre.code { font-size: 8pt; line-height: 1.5; padding-top: var(--space-4); break-inside: avoid; white-space: pre-wrap; }
+    ol.qs li { padding: 2.5mm 4mm; }
+    .qask, ol.inv li, .threebody, .outcome { font-size: 10pt; }
+    /* Section 4 is its own page: a break before and after, and a size that
+       leaves the eleven rows and four definitions with room to spare. */
+    #decide { break-before: page; break-after: page; }
+    dl.outcomes { grid-template-columns: repeat(2, 1fr); gap: 2mm; margin-bottom: 3mm; }
+    .outcome { padding: 2mm 3mm; grid-template-columns: 24mm 1fr; }
+    #decide .prose-note { margin-top: 2mm; }
+    #decide .grid tbody td { padding: 1.6mm 3mm; }
+    .ocnote { display: inline; margin-left: 2mm; }
+    .tests td, .tests .cname { font-size: 8.5pt; }
+    .tfn { font-size: 7pt; }
+    .pill { font-size: 8pt; }
+    .final { text-align: left; }
+    .final .prose { max-width: var(--measure-prose); }
+    .final .prose p + p { margin-left: 0; }
+    a { color: inherit; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // Two jobs, both delegated at the document so nothing here has to know how
+  // many buttons or links the page has.
+  //
+  // 1. Copy buttons. The text is read from the <pre> the button names, so the
+  //    copied bytes are the rendered bytes. Clipboard access can be refused
+  //    (insecure context, permissions), and the fallback is to say so.
+  // 2. The beacon. Downloads and the apply link report through window.lcTrack,
+  //    which Track.astro defines; if the beacon is absent nothing happens.
+  const RESOURCE = 'agent-memory-audit-kit';
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target?.closest) return;
+
+    const copy = target.closest<HTMLButtonElement>('button.copy');
+    if (copy) {
+      const id = copy.getAttribute('data-copy');
+      const pre = id ? document.getElementById(id) : null;
+      const text = pre?.textContent ?? '';
+      const label = copy.textContent;
+      navigator.clipboard
+        .writeText(text)
+        .then(() => (copy.textContent = 'Copied'))
+        .catch(() => (copy.textContent = 'Select the text and copy'))
+        .finally(() => setTimeout(() => (copy.textContent = label), 2500));
+      return;
+    }
+
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn !== 'function') return;
+    const dl = target.closest('[data-download]');
+    if (dl) {
+      fn('resource_download', { resource: RESOURCE, file: dl.getAttribute('data-download') });
+    } else if (target.closest('[data-apply]')) {
+      fn('cohort_apply_click', { resource: RESOURCE });
+    }
+  });
+</script>

@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learning.thelivingcraft.ai/resources/agent-memory-audit-kit/memory-record.schema.json",
+  "title": "Memory record",
+  "description": "One fact an agent remembers, with its source, its scope, its expiry and the route a human takes to correct it. Every field exists because a real failure needed it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject", "key", "value", "authority", "source", "scope", "correction", "lineage", "lifecycle", "usage"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable identifier. Never reused, even after deletion: the tombstone keeps it."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "description": "Who or what the fact is about.",
+      "properties": {
+        "type": { "enum": ["user", "project", "client", "org"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)*$",
+      "description": "What the fact is, as a dotted name. Example: expense.project_code."
+    },
+    "value": {
+      "description": "The remembered value. Null for policy pointers and tombstones."
+    },
+    "authority": {
+      "enum": ["preference", "fact", "policy"],
+      "description": "How much weight it carries. A preference is how the user likes things done. A fact is something true about the world. A policy is a rule owned elsewhere, and memory only points at it."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "evidence", "observations", "captured_at", "captured_by"],
+      "description": "Where the fact came from, and where you can check it.",
+      "properties": {
+        "type": { "enum": ["user_stated", "system_record", "agent_inferred", "user_correction"] },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": { "enum": ["message", "record", "trace"] },
+            "ref": { "type": "string", "minLength": 1 }
+          }
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many observations support it. One observation is not a pattern."
+        },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "captured_by": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$",
+          "description": "agent@version, so a bad batch of memories can be traced to the build that wrote it."
+        },
+        "source_of_truth": {
+          "type": "string",
+          "format": "uri",
+          "description": "Where the real value lives. Required when authority is policy."
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "bindings", "valid_from", "valid_until", "revalidate_on"],
+      "description": "How wide the fact applies, and when it stops applying.",
+      "properties": {
+        "level": { "enum": ["instance", "task", "session", "project", "client", "user", "org"] },
+        "bindings": {
+          "type": "object",
+          "description": "The concrete context the fact is bound to. Example: {\"trip_id\": \"TRIP-PUNE-0304\"}.",
+          "additionalProperties": { "type": ["string", "number", "boolean"] }
+        },
+        "valid_from": { "type": ["string", "null"], "format": "date" },
+        "valid_until": { "type": ["string", "null"], "format": "date" },
+        "revalidate_on": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "description": "Event types that force a fresh check. Example: project_closed."
+        }
+      }
+    },
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route", "supersedes", "superseded_by", "broadened"],
+      "description": "How a human fixes it, and the history of fixes.",
+      "properties": {
+        "route": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The named path a user takes to correct this fact. Not 'an engineer edits the database'."
+        },
+        "supersedes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "superseded_by": { "type": ["string", "null"] },
+        "broadened": {
+          "type": "boolean",
+          "description": "True only if the user explicitly confirmed a scope wider than the instance corrected."
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derived_from"],
+      "properties": {
+        "derived_from": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "Record ids this fact was inferred from. Deleting any of them invalidates this one."
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "sensitivity", "retain_value_after_expiry"],
+      "properties": {
+        "status": { "enum": ["active", "superseded", "expired", "deleted"] },
+        "sensitivity": { "enum": ["none", "personal", "sensitive"] },
+        "retain_value_after_expiry": { "type": "boolean", "default": false },
+        "deleted_at": { "type": ["string", "null"], "format": "date-time" },
+        "deleted_reason": { "type": ["string", "null"] }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["last_used_at", "use_count", "last_confirmed_at"],
+      "properties": {
+        "last_used_at": { "type": ["string", "null"], "format": "date-time" },
+        "use_count": { "type": "integer", "minimum": 0 },
+        "last_confirmed_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "I2. A policy record stores a pointer, never a value.",
+      "if": { "properties": { "authority": { "const": "policy" } } },
+      "then": {
+        "properties": {
+          "value": { "type": "null" },
+          "source": { "required": ["source_of_truth"] }
+        }
+      }
+    },
+    {
+      "$comment": "I6. A sensitive record must have an expiry date.",
+      "if": { "properties": { "lifecycle": { "properties": { "sensitivity": { "const": "sensitive" } }, "required": ["sensitivity"] } } },
+      "then": { "properties": { "scope": { "properties": { "valid_until": { "type": "string" } } } } }
+    },
+    {
+      "$comment": "I7. A tombstone keeps id, key, deletion time and reason. The value is removed.",
+      "if": { "properties": { "lifecycle": { "properties": { "status": { "const": "deleted" } }, "required": ["status"] } } },
+      "then": {
+        "properties": {
+          "value": { "type": "null" },
+          "lifecycle": {
+            "required": ["deleted_at", "deleted_reason"],
+            "properties": {
+              "deleted_at": { "type": "string" },
+              "deleted_reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "I4. A user correction is instance-scoped unless the user confirmed a wider scope.",
+      "if": {
+        "properties": {
+          "source": { "properties": { "type": { "const": "user_correction" } }, "required": ["type"] },
+          "correction": { "properties": { "broadened": { "const": false } }, "required": ["broadened"] }
+        }
+      },
+      "then": { "properties": { "scope": { "properties": { "level": { "const": "instance" } } } } }
+    }
+  ]
+}
