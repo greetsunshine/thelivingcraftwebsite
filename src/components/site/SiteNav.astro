@@ -26,15 +26,15 @@
  * the roadmap keeps that address working until redirects are approved and
  * tested. Changing this line without doing that work breaks fifteen live posts.
  *
- * BOOK NOW, BESIDE THE PRIMARY CTA
+ * ONE ACTION IN THE HEADER, AND IT IS ON THE RIGHT
  *
- * Every relevant page carries the same pair now: the primary way in (here,
- * "Explore the cohort") and Book now beside it. Gated on the same real
- * appointment URL every other Book now control checks — booking.ts — so it
- * renders here the moment that URL is configured and not a moment before.
+ * "Explore the cohort" is the last thing in the bar, and `.sitenav-inner` is
+ * `justify-content: space-between`, so it sits hard against the right edge.
+ * A secondary "Book now" link sat beside it for part of 16 September; Sunil
+ * asked the same day for the top-right secondary CTA to go. The conversation
+ * has not gone anywhere — "Talk with Sunil" is on the cohort hero and on
+ * /contact, and section 14 of the cohort page is where all of them land.
  */
-import BookNowLink from './BookNowLink.astro';
-
 interface Destination {
   href: string;
   label: string;
@@ -82,7 +82,6 @@ const isCurrent = (href: string) => {
       <a class="btn btn-primary sitenav-cta" href="/">
         Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
-      <BookNowLink placement="nav" />
     </nav>
   </div>
 </header>

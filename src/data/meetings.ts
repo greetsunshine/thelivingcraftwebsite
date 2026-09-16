@@ -72,7 +72,7 @@ export const MEETING_TYPES: MeetingType[] = [
   },
   {
     /**
-     * The cohort's "Book now" route.
+     * The cohort's "Talk with Sunil" route.
      *
      * A conversation, and deliberately NOT an application. forms.ts keeps the
      * two apart — "no application milestone inferred" — and the blurb says so

@@ -5,7 +5,6 @@ import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
-import BookNowLink from '../components/site/BookNowLink.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
@@ -46,11 +45,14 @@ const year = new Date().getFullYear();
           <a href="/#sunil">Sunil</a>
           <a href="/#commitment">Commitment</a>
           <a href="/#questions">Questions</a>
+          {/* Apply is the LAST thing in the bar, and the bar is
+              `justify-content: space-between`, so it sits hard against the
+              right edge of the header. Sunil, 16 September: "remove … top
+              right book now" and "apply on the right side". A secondary
+              "Talk with Sunil" link used to sit to the right of it; the top
+              of every page now carries one action only. The conversation is
+              still one scroll away, in the hero and in section 14. */}
           <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-          {/* Secondary, beside Apply. Points at the cohort page's own
-              booking section, so unlike the control it replaced it has no
-              configuration to wait on and always works. */}
-          <BookNowLink placement="nav" onCohortPage />
         </nav>
       </div>
     </header>

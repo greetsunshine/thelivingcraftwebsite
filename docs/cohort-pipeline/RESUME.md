@@ -223,17 +223,46 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## The secondary CTA is "Talk with Sunil", and there are three of them — 16 September, later
+
+Sunil's second pass on the same day. Five changes, and the first three are one idea: **the
+secondary CTA is quieter and there is less of it.**
+
+- **The floating "Book now" and the top-right "Book now" are both gone.** The nav in
+  `BaseLayout.astro` and the nav in `SiteNav.astro` each carry ONE action now, and it is the
+  primary one — Apply, and "Explore the cohort" respectively. Both navs are
+  `justify-content: space-between`, so with nothing after it the action sits hard against the
+  right edge. That is "apply on the right side".
+- **`BookNowLink.astro` is now `TalkToSunilLink.astro`**, and the label reads **Talk with
+  Sunil**. The destination did not change: `#book`, section 14 of the cohort page, this
+  site's own BookingWidget against the `cohort-call` type. Three placements remain — the
+  cohort hero, the `/contact` hero, and one row of the contact routing table. The data
+  attributes the traffic beacon groups by were renamed with it (`data-talk-cta`,
+  `data-talk-cta-placement`).
+- **The persistent prompt carries Apply alone.** `StickyApplyBar.astro` had both buttons; it
+  now has one. On a phone the draggable circle says **Apply** rather than Book now and still
+  opens mid-right. Its IntersectionObserver landmark list lost `#book` to match.
+- **Section 14's heading is "Talk with *Sunil*"**, so the link and the place it lands say the
+  same words. The widget heading under it still reads "Book a call about the cohort".
+- **The proof bar's fourth cell, "Consulting", is off the cohort page.** The other three name
+  places the twenty-six years were spent; `/caio` and `/assessment` have their own proof bars
+  and say "Agentic AI, now" in that slot, so no page names a second business beside the three
+  employers now.
+- **The Ask widget is a corner pill on phones, not a full-width bar.** `AskWidget.astro`'s
+  ≤520px block dropped `left: 12px` and `width: 100%`. **Read the comment there before
+  changing it back** — the full-width bar was itself a fix for covering the submit button,
+  and the body padding that made that fix work is still in place.
+
+**One thing to know if this is reverted:** `GoogleCalendarBooking.astro` and `lib/booking.ts`
+are still in the repo and still unimported. The secondary CTA has not depended on
+`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` since it started pointing at `#book`.
+
 ## CTAs and forms reworked — 16 September
 
-**"Ask about the cohort" is gone, as both a CTA label and a form.** The site's secondary CTA
-everywhere is now **Book now**, and it is the same configuration-gated Google Calendar
-control the scaffold below already describes — renamed, not rebuilt. It now renders in three
-more places it did not before: the cohort page's top nav (`BaseLayout.astro`), the wider
-site's nav (`SiteNav.astro`), and a new persistent sticky bar at the foot of every page
-(`StickyApplyBar.astro`, in both `BaseLayout` and `PracticeLayout`, deliberately excluded
-from `/caio` and `/assessment`, which keep their own CTAs). The gate is unchanged: with
-`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` blank, none of the five placements render a dead
-link — verified locally against both a blank and a (fake, valid-shaped) configured URL.
+**"Ask about the cohort" is gone, as both a CTA label and a form.** It became **Book now**
+here, and then **Talk with Sunil** later the same day — read the section above this one for
+where the label and its placements actually stand, because the paragraphs below describe the
+first pass only.
 
 **The separate "Ask about the cohort" enquiry FORM is removed from the page.** Applying for
 the open cohort and arranging learning for a team are now one branching flow in the Apply
@@ -257,18 +286,24 @@ already covers.
 
 ---
 
-## Appointment scheduling scaffold is ready
+## Appointment scheduling scaffold is built and NOT WIRED UP
 
-The cohort page has a configuration-gated Google Calendar appointment route. When
-`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` contains the appointment schedule URL from Google's
-"Button with popup" embed, **Book now** appears beside Apply in the top nav, the hero, the
-closing area, the wider site's nav, and the sticky bar (see "CTAs and forms reworked" above).
-The site-native link opens Google's official popup when its script is available and remains a
-direct new-tab link when that script is blocked or unavailable.
+**Nothing imports it.** `GoogleCalendarBooking.astro` and `lib/booking.ts` sit in the repo
+with no caller. That is deliberate and it is not a loose end from a refactor: the site's
+secondary CTA points at `#book`, which is our own BookingWidget reading our own
+`booking_rules`, so it always works and can never be a dead control. The Google route was the
+version that stayed invisible until somebody supplied a URL.
 
-The URL is deliberately blank. While it is blank, no scheduling claim or dead control appears
-anywhere it would otherwise render. Opening the scheduling control is recorded only as
-`cta_click` intent; it is not a confirmed appointment, application or CRM event.
+The component still does what it says: given a valid appointment schedule URL from Google's
+"Button with popup" embed, it renders a site-native link that opens Google's popup when the
+script is available and stays a direct new-tab link when that script is blocked. Opening it is
+recorded only as `cta_click` intent; it is never a confirmed appointment, application or CRM
+event. `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` is still read by `lib/booking.ts` and still
+blank.
+
+**Decide before reviving it** whether the cohort call should be booked through Google at all,
+given `#book` now does the job from our own database. If the answer is no, this component and
+`lib/booking.ts` can be deleted and the "still owed" line below goes with them.
 
 **Still owed:** the actual Google appointment schedule URL/embed from the calendar owner, followed
 by desktop and mobile popup, close, direct-link and completed test-booking checks in staging.

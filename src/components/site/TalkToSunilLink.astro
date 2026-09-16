@@ -1,0 +1,64 @@
+---
+/**
+ * The "Talk with Sunil" secondary CTA.
+ *
+ * WHAT IT OPENS
+ *
+ * The cohort page's own booking section (`#book`), which renders the site's
+ * BookingWidget against the `cohort-call` meeting type — the same three-step
+ * day / time / details widget `/caio` and `/assessment` already use, reading
+ * real availability from `booking_rules` in our own database.
+ *
+ * WHY THE LABEL IS NOT "BOOK NOW" ANY MORE
+ *
+ * It was, from 16 September, when it replaced "Ask about the cohort". Sunil
+ * changed it the same day: "Replace book now with Talk with Sunil." The
+ * destination did not change and neither did the meaning — this is still the
+ * thirty-minute conversation, and still not an application. What changed is
+ * that the label now names the thing on offer (a person) rather than the
+ * transaction (a booking), which is the register the public pages hold.
+ *
+ * This component is the ONLY place that label and that destination are
+ * written. Three surfaces render it — the cohort hero, the contact page's
+ * hero, and one row of the contact routing table. If it needs to say
+ * something else, it changes here and everywhere at once.
+ *
+ * IT IS A LINK, NOT A POPUP, AND IT HAS NO CONFIGURATION GATE.
+ *
+ * The Google Calendar control this replaced could not render until somebody
+ * supplied an appointment URL, so the secondary CTA was invisible everywhere
+ * while that stayed blank. This points at a section of our own site, so it
+ * always works and can never be a dead control. GoogleCalendarBooking.astro
+ * and lib/booking.ts are left in the repo, unimported — the scheduling
+ * scaffold RESUME.md lists as owed is a separate promise from this button.
+ *
+ * WHAT IT IS NOT. A call is not an application and must never be presented as
+ * one: Apply stays the primary CTA everywhere this appears, and the meeting
+ * type's own blurb says the call is not an application.
+ */
+export interface Props {
+  /**
+   * Named only so the traffic beacon can tell the placements apart.
+   * Track.astro reports any `a[href]` it does not recognise as a plain link,
+   * and `data-talk-cta-placement` is what a later report would group by.
+   */
+  placement: 'hero' | 'closing' | 'contact';
+  /** Same-document on the cohort page; cross-document everywhere else. */
+  onCohortPage?: boolean;
+  /** `textlink` is for a link inside running prose, not a button row. */
+  variant?: 'button' | 'textlink';
+}
+
+const { placement, onCohortPage = false, variant = 'button' } = Astro.props;
+
+const href = `${onCohortPage ? '' : '/'}#book`;
+---
+
+<a
+  class={variant === 'button' ? 'btn btn-ghost' : 'textlink'}
+  href={href}
+  data-talk-cta
+  data-talk-cta-placement={placement}
+>
+  Talk with Sunil
+</a>

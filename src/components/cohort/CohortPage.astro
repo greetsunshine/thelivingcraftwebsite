@@ -57,7 +57,7 @@
  *     says in terms: do not place it in public copy as a guarantee.
  */
 import RouteForm from './RouteForm.astro';
-import BookNowLink from '../site/BookNowLink.astro';
+import TalkToSunilLink from '../site/TalkToSunilLink.astro';
 import BookingWidget from '../BookingWidget.astro';
 import { cohort } from '../../data/facts';
 import type { Region } from '../../data/regions';
@@ -99,17 +99,19 @@ const hasPrice = Boolean(region?.publicPrice);
         Here I teach the craft of agentic and systems architecture, live, to a small cohort.
       </p>
 
-      {/* Apply is primary; Book now is the secondary path, right beside it —
-          the same pairing the top nav and the sticky bar carry on every other
-          page. Book now opens section 14 below, which is this site's own
-          booking widget reading real availability, so there is nothing to
-          configure and nothing that can render as a dead control. There is no
-          third "ask a question" link here any more — that was a separate
-          enquiry form, and it is now one branching application flow in
-          section 15. */}
+      {/* Apply is primary; "Talk with Sunil" is the secondary path, right
+          beside it. This pair is now the ONLY place on the page above the
+          fold that offers the conversation — the top nav and the persistent
+          prompt both carry Apply alone since 16 September.
+
+          It opens section 14 below, which is this site's own booking widget
+          reading real availability, so there is nothing to configure and
+          nothing that can render as a dead control. There is no third "ask a
+          question" link here any more — that was a separate enquiry form, and
+          it is now one branching application flow in section 15. */}
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        <BookNowLink placement="hero" onCohortPage />
+        <TalkToSunilLink placement="hero" onCohortPage />
       </div>
 
       <p class="hero-note">
@@ -127,14 +129,20 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── Proof bar ──────────────────────────────────────────────────────────── */}
+{/* ── Proof bar ──────────────────────────────────────────────────────────
+    Three employers, and nothing else. A fourth cell read "Consulting" until
+    16 September, when Sunil asked for it to come off. It was the odd one out
+    twice over: the other three are places the twenty-six years were spent,
+    and this page is the cohort, not the practice — /caio and /assessment are
+    where consulting is the offer, and each has its own proof bar saying
+    "Agentic AI, now" in that fourth cell rather than naming a second
+    business. */}
 <div class="proofbar">
   <div class="wrap inner">
     <span class="label">26 years, shipped at</span>
     <span class="logo">Google</span>
     <span class="logo">Amazon</span>
     <span class="logo">Walmart</span>
-    <span class="logo">Consulting</span>
   </div>
 </div>
 
@@ -592,8 +600,8 @@ const hasPrice = Boolean(region?.publicPrice);
     Until this rework, three separate forms sat here — the open-cohort
     application, a team/enterprise enquiry beside it, and a third "Ask about
     the cohort" panel folded under a dropdown. That third form is gone: the
-    site's secondary CTA is now Book now (a real appointment — see the hero
-    and the top nav), and a written question is one email away, in the
+    site's secondary CTA is now "Talk with Sunil" (a real appointment — see
+    the hero), and a written question is one email away, in the
     contact line below. What is left branches on one thing — applying for
     yourself, or arranging learning for a team — because those really are two
     different journeys (forms.ts: an application and an enterprise enquiry
@@ -606,8 +614,8 @@ const hasPrice = Boolean(region?.publicPrice);
     ones — the biggest single cut to how much scrolling the mobile flow
     needs. Each form itself is now progressive (see RouteForm.astro's
     `steps`), so nobody meets all seven-plus fields on one screen either. */}
-{/* ── 14 · Book a call ──────────────────────────────────────────────────
-    Where every "Book now" on the site lands.
+{/* ── 14 · Talk with Sunil ──────────────────────────────────────────────
+    Where every "Talk with Sunil" link on the site lands.
 
     It is THIS SITE'S booking widget, the same one /caio and /assessment use,
     against the `cohort-call` meeting type in meetings.ts. Availability is read
@@ -621,12 +629,14 @@ const hasPrice = Boolean(region?.publicPrice);
     below the form silently turns that copy into a lie.
 
     A call is NOT an application. The meeting type's blurb says so, and Apply
-    stays the primary CTA in the hero, the nav, the price card and the sticky
-    bar. */}
+    stays the primary CTA in the hero, the nav, the price card and the
+    persistent prompt. */}
 <section class="wrap band" id="book">
   <div class="sec-head">
     <p class="eyebrow"><span class="num">14</span> Talk first</p>
-    <h2>Book a call about <em>the cohort</em></h2>
+    {/* The heading repeats the label of the link that brought most people
+        here, so arriving reads as landing rather than as a redirect. */}
+    <h2>Talk with <em>Sunil</em></h2>
   </div>
 
   <BookingWidget type="cohort-call" heading="Book a call about the cohort" />

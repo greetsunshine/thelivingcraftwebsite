@@ -2,17 +2,24 @@
 /**
  * The persistent application prompt.
  *
+ * IT CARRIES ONE ACTION, AND THAT ACTION IS APPLY
+ *
+ * It carried two for part of 16 September — Apply and a "Book now" secondary
+ * — and Sunil asked the same day for the floating Book now to go and for
+ * Apply to take the right-hand side. So there is one action here now. The
+ * conversation has not been removed from the site: "Talk with Sunil" is in
+ * the cohort hero and on /contact, and section 14 of the cohort page is where
+ * both of those land.
+ *
+ * That also settles what this component is for, which two buttons had made
+ * fuzzy. It is the shortcut to the one thing the page is asking for.
+ *
  * TWO SHAPES, AND THEY DO DIFFERENT JOBS
  *
- * On a wide screen it is a bar across the foot of the page carrying both
- * actions, Apply and Book now. On a phone it is a small round Book now button
- * that can be dragged anywhere on screen and needs a single tap: no sheet to
- * open, no second step. Sunil, 16 September: "For mobile it just needs to be
- * book now with a single tap and it will redirect."
- *
- * Apply is not lost on a phone. The top nav carries it on every page, and the
- * hero and the price card carry it on the cohort page — so the corner is free
- * to be the one route that is otherwise three scrolls away.
+ * On a wide screen it is a bar across the foot of the page, with the copy on
+ * the left and Apply on the right. On a phone it is a small round Apply
+ * button against the right edge that can be dragged anywhere and needs a
+ * single tap: no sheet to open, no second step.
  *
  * IT IS AN ANCHOR, NOT A BUTTON. Dragging is a pointer-only enhancement laid
  * over an ordinary link, so the tap target still behaves like a link for
@@ -23,6 +30,10 @@
  * restraint — "respected practitioner… not SaaS-templated, not bootcamp-hype"
  * — and a dialog thrown over the page is exactly that hype. Neither shape
  * takes focus or blocks the page behind it.
+ *
+ * IT DOES NOT COLLIDE WITH THE ASK WIDGET. That one is pinned to the bottom
+ * right corner on a phone; this one opens at the vertical middle of the right
+ * edge. Somebody can drag this onto it, which is their choice to make.
  *
  * WHAT IS NOT REMEMBERED, AND WHY. Neither the dismissal nor the dragged
  * position survives a reload. CLAUDE.md's no-localStorage/sessionStorage rule
@@ -38,8 +49,6 @@
  * cross-linked-but-distinct spine in CLAUDE.md exists to prevent. Not inside
  * /craft or /craft/admin either — both are gated.
  */
-import BookNowLink from './BookNowLink.astro';
-
 export interface Props {
   /** Where "Apply" points. Defaults to the cohort's apply anchor, on- or off-page as needed. */
   applyHref?: string;
@@ -47,10 +56,6 @@ export interface Props {
 
 const onCohortPage = Astro.url.pathname.replace(/\/+$/, '') === '';
 const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
-
-/** The same target BookNowLink uses. Kept in step by the comment, not by a shared constant —
- *  see BookNowLink.astro, which owns the label and the destination for every other placement. */
-const bookHref = `${onCohortPage ? '' : '/'}#book`;
 ---
 
 <div
@@ -63,11 +68,14 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
   <div class="sa-inner">
     <p class="sa-copy">Build a working agentic system with Sunil Mathew.</p>
 
+    {/* Apply sits at the right-hand end of the bar, between the copy and the
+        dismiss control. `.sa-inner` is `justify-content: space-between`, so
+        the copy takes the left and this takes the right with nothing
+        specified about the middle. */}
     <div class="sa-actions">
       <a class="btn btn-primary" href={applyHref}>
         Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
-      <BookNowLink placement="sticky" onCohortPage={onCohortPage} />
     </div>
 
     <button type="button" class="sa-dismiss" data-sticky-dismiss aria-label="Dismiss">
@@ -77,19 +85,11 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
     </button>
   </div>
 
-  {/* The phone shape: one tap, straight to the booking section. Hidden above
-      the breakpoint, where the bar is the whole control. `touch-action: none`
-      in the stylesheet is what lets a drag start on it without the browser
+  {/* The phone shape: one tap, straight to the application. Hidden above the
+      breakpoint, where the bar is the whole control. `touch-action: none` in
+      the stylesheet is what lets a drag start on it without the browser
       claiming the gesture for scrolling. */}
-  <a
-    class="sa-fab"
-    href={bookHref}
-    data-sa-fab
-    data-book-now
-    data-book-now-placement="sticky"
-  >
-    Book now
-  </a>
+  <a class="sa-fab" href={applyHref} data-sa-fab>Apply</a>
 </div>
 
 <script>
@@ -102,8 +102,10 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
 
     // The sections this prompt is a shortcut to. While one of them is on
     // screen the shortcut has nothing to offer, so it gets out of the way.
+    // Only application landmarks now — the prompt stopped offering the
+    // booking section when it stopped carrying a second button.
     const landmarks = Array.from(
-      document.querySelectorAll<HTMLElement>('#book, #apply, #apply-panel, #apply-form'),
+      document.querySelectorAll<HTMLElement>('#apply, #apply-panel, #apply-form'),
     );
 
     let dismissed = false;
@@ -113,7 +115,7 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
     const isPhone = () => window.matchMedia('(max-width: 640px)').matches;
 
     // The bar spans the foot of the page, so the footer's last line needs
-    // clearing. The circle is a small corner overlay and needs none — and
+    // clearing. The circle is a small edge overlay and needs none — and
     // padding the body for it would leave a gap on every phone.
     const setBodyClearance = () => {
       document.body.style.paddingBottom = bar!.hidden || isPhone() ? '' : `${bar!.offsetHeight}px`;
@@ -309,11 +311,15 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
     flex: 1 1 240px;
   }
 
+  /* Pushed to the right end of the row. `space-between` already does this
+     while the copy is wide enough to fill the left; `margin-left: auto`
+     holds it there on a narrow viewport where the copy has wrapped short. */
   .sa-actions {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    flex-wrap: wrap;
+    margin-left: auto;
+    flex: none;
   }
 
   .sa-dismiss {
@@ -339,9 +345,9 @@ const bookHref = `${onCohortPage ? '' : '/'}#book`;
   .sa-fab { display: none; }
 
   /* ── the phone shape ──────────────────────────────────────────────────────
-     A small round Book now button, sitting against the right edge at the
+     A small round Apply button, sitting against the right edge at the
      vertical middle of the screen, draggable anywhere from there. One tap
-     goes to the booking section; there is no sheet and no second step. */
+     goes to the application; there is no sheet and no second step. */
   @media (max-width: 640px) {
     .sticky-apply {
       left: auto;
