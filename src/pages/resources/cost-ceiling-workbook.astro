@@ -45,7 +45,6 @@ import {
   CEILING_FIELDS,
   COHORT_CTA,
   COHORT_HEADING,
-  COHORT_LINE,
   DOWNLOAD_PATH,
   HEADING,
   HEADLINE_VIEWS,
@@ -70,6 +69,7 @@ import {
   TABS,
   TOKENOMICS,
   VERIFICATION_NOTE,
+  cohortLine,
   hasLinkedInPost,
   type Field,
 } from '../../data/cost-ceiling-workbook';
@@ -797,7 +797,7 @@ const schema = [
         <h2>{COHORT_HEADING}</h2>
       </div>
       <div class="prose">
-        <p>{COHORT_LINE}</p>
+        <p>{cohortLine(cohort.startsOn)}</p>
         <p>
           The {cohort.weeks}-week programme covers exactly this material: agents with bounded
           failure, defensible cost, and the evaluations that show they hold up. {cohort.seats}

@@ -492,16 +492,14 @@ export const CAVEATS: string[] = [
 export const COHORT_HEADING = 'Build agentic systems that hold up in production';
 
 /**
- * The brief's line named a start month. It is not printed here.
+ * The start month is READ from facts.ts, never typed here.
  *
- * The public offer surfaces read src/data/offer-display.ts, and a start date
- * stated on one resource page is a second source for a fact that already has
- * one. If this page said October while /api/facts said something else, the
- * assistant answering "when does it start" would have two answers and no way to
- * choose. Decided with Sunil, 16 September 2026.
+ * Decision D1 (14 September) made the start date public, and #14 set it to
+ * October 2026. This page prints whatever `cohort.startsOn` says, so if the
+ * date moves again the page moves with it and cannot become a second source.
  */
-export const COHORT_LINE =
-  'The Living Craft runs a live cohort for senior engineering leaders and architects. Admission is by application, and every application is read personally.';
+export const cohortLine = (startsOn: string): string =>
+  `The next Living Craft cohort for senior engineering leaders and architects starts in ${startsOn}.`;
 
 export const COHORT_CTA = 'Apply to the cohort';
 
