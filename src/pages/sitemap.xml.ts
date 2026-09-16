@@ -4,8 +4,6 @@ import type { APIRoute } from 'astro';
 import { SITE_ORIGIN, surfaces } from '../data/facts';
 import { publishedResources, isDownload } from '../data/resources';
 
-export const prerender = true;
-
 // Pages that aren't offers. /latest and /resources are listed here rather than
 // added to `surfaces` because that array is the offer list — it feeds llms.txt,
 // the agent's "what do you offer" answer, and /api/facts. Field Notes and the

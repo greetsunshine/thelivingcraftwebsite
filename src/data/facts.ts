@@ -14,7 +14,7 @@
 // week count. The fee is per region and gated by `publicPrice` in regions.ts.
 // Consulting pricing is PLACEHOLDER — see CLAUDE.md.
 
-import { EXPLORES } from './cohort-copy';
+import { EXPLORES, cohortModules } from './cohort-copy';
 import { regions, type Region } from './regions';
 import { CONTACT_EMAIL } from './site';
 
@@ -64,7 +64,7 @@ export const cohort = {
   name: 'The Living Craft',
   weeks: 6,
   seats: 8,
-  startsOn: 'September 2026',
+  startsOn: 'October 2026',
   commitment: '~5 hrs / week',
   format: 'Live online (Bangalore: hybrid — in person or online)',
   admission: 'By application; every application read personally',
@@ -76,12 +76,17 @@ export const cohort = {
    * left to the acceptance email.
    */
   paymentDue: 'one week before the cohort starts',
-  modules: [
-    { id: 'M1', weeks: 'Week 1', title: 'Foundations of durable architecture' },
-    { id: 'M2', weeks: 'Weeks 2–4', title: "Agentic systems you'd put your name on" },
-    { id: 'M3', weeks: 'Week 5', title: 'Scale, consistency & the irreversible trade-offs' },
-    { id: 'M4', weeks: 'Week 6', title: 'Your system, reviewed in the room' },
-  ],
+  /**
+   * Derived from MODULES in cohort-copy.ts, which is the only place the four
+   * ids, weeks and titles are written. They used to be typed out in both
+   * files. The page reads one copy and this reads the other, so a title
+   * changed here left the page stale and nothing failed.
+   *
+   * The body copy is deliberately not carried through: this is the structured
+   * offer a crawler and the assistant read, and a paragraph of page prose is
+   * not a structured fact.
+   */
+  modules: cohortModules(),
   outcomes: [
     'Design agentic systems with bounded failure, observability, and defensible cost',
     'Build the evaluation harnesses and quality gates that prove a system works',
@@ -394,10 +399,27 @@ export const facts: Fact[] = [
     // Retrieval must have a real answer here, not just silence. Without this
     // fact the query returns noise and the agent is one step from obliging
     // with something plausible — exactly the failure the hard rules forbid.
+    //
+    // THE THREE COUNTS BELOW ARE THE APPROVED SET, and this is the record of
+    // that approval: Sunil approved the mentoring, coaching and training
+    // counts for republication on 15 September 2026
+    // (docs/cohort-pipeline/RESUME.md). They are the same three the cohort
+    // page prints in "Live experience" (LIVE_EXPERIENCE in cohort-copy.ts),
+    // in the same words. Keep the two in step. The page and this answer are
+    // read by different people asking the same question, and a track record
+    // that differs between them is the failure this module exists to stop.
+    //
+    // The coaching count was missing here until 16 September 2026, so the
+    // page said three things and the assistant said two.
+    //
+    // NOT approved, and not to be added back from old marketing material:
+    // 100M+ users served, 150 engineers led, ~31 billion weekly executions,
+    // 300+ products modernised. Those have no provenance in this repository
+    // (11 September QA finding, same RESUME.md).
     id: 'about-social-proof',
     surface: 'practice',
     q: 'Do you have testimonials, client names, or student outcomes?',
-    a: 'None are published. The cohort has not run yet, because the first one starts September 2026, and client engagements are not named publicly. What stands in place of social proof is the track record. That is 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.',
+    a: `None are published. The cohort has not run yet, because the first one starts ${cohort.startsOn}, and client engagements are not named publicly. What stands in place of social proof is the track record. That is 26 years at Google, Amazon, and Walmart, 100+ senior engineers mentored, 100+ engineers coached one-on-one and in groups, ~100 senior leaders and directors trained, and a live enterprise AI-adoption engagement in progress. Ask Sunil directly if you want references.`,
     tags: [
       'testimonials',
       'reviews',

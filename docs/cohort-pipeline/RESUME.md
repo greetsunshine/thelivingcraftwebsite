@@ -8,8 +8,9 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 15 September 2026
-**Branch:** `feat/cohort-pipeline`, stacked on `feat/learner-dashboard-poc` (PR #6). PR #7.
+**Last updated:** 16 September 2026
+**Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
+`feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
 ---
@@ -79,11 +80,114 @@ public surface. The band now carries the same four verbs `/caio` uses after that
 and the prose keeps the approved employment context only. Restoring the figures needs a
 dated approval record; it is then one block in `CohortPage.astro`.
 
-**Found while doing it, and NOT fixed:** `src/data/facts.ts` still answers the social-proof
-question with *"100+ senior engineers mentored, ~100 senior leaders and directors trained"*.
-The finding below says those were removed. They were not — the line is live on `HEAD` and
-feeds `/llms.txt`, `/api/facts` and the Q&A agent's grounding. Left alone pending Sunil's
-call, because the fix is a rewrite of an answer, not a deletion.
+**Found while doing it, and RESOLVED on 16 September:** `src/data/facts.ts` still answered
+the social-proof question with *"100+ senior engineers mentored, ~100 senior leaders and
+directors trained"*, which the 11 September finding below claimed had been removed. They had
+not been. That is no longer a contradiction, because Sunil approved all three counts for
+republication on 15 September — so the answer is correct as it stands and the coaching count
+was added beside them to match the page. **The 11 September finding below is about a
+different class of claim** and still holds: the 100M+ users / 150 engineers led /
+~31 billion executions / 300+ products figures have no provenance here and stay off every
+public surface.
+
+---
+
+## PR #14 review findings, worked — 16 September
+
+The review on PR #14 raised four blocking findings and eight smaller ones. All are fixed on
+`cohort-page-restore`. `npx astro check`: 0 errors, 0 warnings. `npm run build`: clean.
+Verified against a running `npm run dev`, not just the build.
+
+**The two that were real bugs, not tidying:**
+
+- **`id="ask"` was on the page twice, and the Ask widget lost.** `AskWidget.astro` finds its
+  own root with `document.getElementById('ask')`. The new enquiry dropdown used the same id
+  and **came first in document order**, so the widget bound to the enquiry panel: every
+  `root.querySelector` inside it returned null and `data-region` was absent, which means an
+  India visitor got the generic fees answer. The dropdown is now `id="ask-drop"`.
+  **Confirmed by rendering, not by reading** — the widget is gated on `ANTHROPIC_API_KEY`,
+  so it does not appear locally unless you set one; `ANTHROPIC_API_KEY=dummy npm run dev`
+  is enough to make it render and see both ids.
+- **Four links pointed at a collapsed `<details>`.** The hero CTA, both `/contact` links and
+  the agent-design-check handoff all target the enquiry form. They landed on a closed
+  disclosure row with no form visible. That is also the fallback RESUME.md promises while
+  the Google appointment URL is blank. A `<details>` is opened by an attribute and not by a
+  style, so CSS `:target` cannot do it; there is now a six-line module script at the foot of
+  `CohortPage.astro` that opens it on load and on `hashchange`.
+
+**Two public claims, corrected:**
+
+- **The coaching count was on the page and not in `facts.ts`.** "100+ engineers coached" is
+  one of the three counts Sunil approved on 15 September, but only mentoring and training
+  reached the social-proof answer. So the page said three things and the assistant said two,
+  about the same track record. Added, with the approval record written into the comment
+  above it. The hardcoded "October 2026" in that same answer now reads `cohort.startsOn`.
+- **A founding-rate scarcity line was cut.** "That rate will not return once the program has
+  a track record" sat in *Live experience*, rendered for Dubai and Australia — whose
+  `publicPrice` is off, so they read a claim about a figure the same page refuses to show
+  them — and contradicted the page's own header note that scarcity stays off. **The section
+  is five cards now, not six**, so its `.cards3` grid runs 3 + 2 above 900px with the third
+  cell in the second row empty. That is the grid behaving normally, not breakage, but if
+  Sunil wants a balanced row it needs a sixth card that is track record rather than a rate.
+
+**One duplication removed.** `MODULES` in `cohort-copy.ts` and `cohort.modules` in `facts.ts`
+were two hand-typed copies of the same four ids, weeks and titles. `cohort-copy.ts` is now
+the only definition and `facts.ts` derives from it through `cohortModules()`. **The import
+runs one way only** — `facts.ts` already imported `EXPLORES` from `cohort-copy.ts`, so an
+import back would be an ESM cycle that fails at module-evaluation time with "cannot access
+'cohort' before initialization", which is a blank page rather than a type error. Deriving in
+the other direction was the first attempt here and it was wrong.
+
+**Also:** the printed section numbers ran `00, 01, 02, 04, 03, 05` with five sections
+unnumbered; they now run **00 to 14 in document order with no gaps**, and the marker comments
+in the file match. The price card said lowercase "founding seats" to any visitor with no
+region resolved (`.price-card .seat` is `text-transform: none`), now "Founding seats". Dead
+`.vsl*` and `.hero-commit` CSS removed. `env.ts` said thirteen routes are prerendered and
+told the reader to `grep` for them; **none is**, and the grep returns nothing. `regions.ts`
+had a stale `(Sept 2026)` beside a `nextDate` that now reads October.
+
+**Left as it is, deliberately:** the hero credential stays first person while the body copy
+stays third person. That mix is the pre-rebuild page's own convention — the hero and the
+*Live experience* heading are Sunil speaking, the descriptive copy is about the programme —
+and Sunil confirmed it on 16 September.
+
+**CLAUDE.md was corrected in the same commit.** Three places still said the site publishes no
+fee, start date or week count. D1 reversed that on 14 September and the shipped page has
+published all three since, so those lines were telling the next session the opposite of the
+truth. They now say what the code does, name `Region.publicPrice` as the one remaining gate,
+and say plainly that scarcity is the thing that stays off.
+
+---
+
+## The rest of the pre-rebuild page is back too, minus one class of claim — 15 September
+
+Sunil reviewed `845ca99^:src/components/ProgramPage.astro` directly and asked for the fuller
+design back, not just section 03. `CohortPage.astro` now also carries: the hero portrait
+(replacing the reserved VSL slot — the video still is not recorded, and there is no longer a
+slot reserved for it), the proof bar, three persona cards under "Who this is for", "The
+transformation" (six lettered outcomes), "Inside the program" (the four modules, with body
+copy), "What you leave with", and "Live experience". New data lives in `cohort-copy.ts`:
+`PERSONAS`, `TRANSFORMATION`, `MODULES`, `LEAVE_WITH`, `LIVE_EXPERIENCE`, plus three FAQ
+entries. The pending call above is resolved: **Sunil approved the mentoring/coaching/training
+counts for republication.** They appear in "Live experience".
+
+**What did NOT come back, on purpose:** the 100M+ users / 150 engineers led / 3 Fortune-100s
+stat band in section 03, and the ~31 billion weekly executions / 300+ products modernised
+prose — including the "100M+ users" clause that was also in the OLD hero's credential
+paragraph. That is a different class of claim from the mentoring counts (no provenance in
+this repository, per the 11 September finding above) and Sunil's approval did not extend to
+it. If it needs restoring later, section 03 and the hero credential are the two places, and
+both currently carry the deliberately-approved wording instead.
+
+**The cohort's public start date moved to October 2026**, at Sunil's instruction. Changed in
+`facts.ts` (`cohort.startsOn`, plus the hardcoded date in the social-proof fact),
+`regions.ts` (all three regions' `nextDate`), and `learner-cohort.ts` (the internal schedule,
+kept in step so the public and gated pages do not disagree). Grep `September 2026` before
+trusting any of it is gone — several hits are unrelated document-revision timestamps
+(`about.astro`, `terms.astro`, `privacy.astro` and others use it as a "last updated" date, not
+a cohort date) and must not be touched.
+
+`npx astro check`: 0 errors. Verified against a running `npm run dev`, not just the build.
 
 ---
 
@@ -102,9 +206,11 @@ confirmed in the final offer. The old regional path is no longer a public-conten
 It does not block saved applications or the durable outbox, but it does block actual email
 delivery. **Do not resolve it by inference.**
 
-**D1 — public offer policy:** implemented with the safe V4 default. Fees, dates and the
-week count are withheld everywhere; the target group size and 30 live hours remain because
-the delivered copy states them. This is no longer a runtime flag.
+**D1 — public offer policy:** this line was stale. `facts.ts`'s own comment says D1 was
+reversed on 14 September: the fee (per region, gated by `publicPrice`), the start date and
+the week count **are** published, and the shipped page has stated `cohort.weeks` /
+`cohort.seats` / `cohort.startsOn` since. Corrected here 15 September so the next session
+does not read "withheld everywhere" and disbelieve the code.
 
 **D2 — how does an email actually get sent?**
 Committed submissions now idempotently queue their receipt; the initial pipeline task is

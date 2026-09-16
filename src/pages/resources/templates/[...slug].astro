@@ -57,42 +57,34 @@ import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 import { COMMITMENT, FEES_NOTE } from '../../../data/offer-display';
 import { renderMarkdown } from '../../../lib/craft/markdown';
 
-export const prerender = true;
+export const prerender = false;
 
 type Template = CollectionEntry<'templates'>;
 type Guide = CollectionEntry<'guides'>;
 
-export async function getStaticPaths() {
-  // The draft gate. Same predicate as the index, and the same reasoning as the
-  // guides: a draft gets NO ROUTE, not a published page with a note on it.
-  // This is a public surface — a half-written artefact here is something a
-  // crawler indexes and an assistant hands to a prospect.
-  const published = await getCollection('templates', (t) => t.data.status === 'ready');
-  const guides = await getCollection('guides', (g) => g.data.status === 'ready');
-  const guideBySlug = new Map(guides.map((g) => [g.id, g]));
+// Rendered on demand now, not at build time — see the SSR-migration note in
+// CLAUDE.md. The draft gate below is the same predicate getStaticPaths() used
+// to run at build time: a draft gets NO ROUTE, not a published page with a
+// note on it. This is a public surface — a half-written artefact here is
+// something a crawler indexes and an assistant hands to a prospect.
+const { slug } = Astro.params;
+const published = await getCollection('templates', (t) => t.data.status === 'ready');
+const guides = await getCollection('guides', (g) => g.data.status === 'ready');
+const guideBySlug = new Map(guides.map((g) => [g.id, g]));
 
-  return published.map((entry) => {
-    // Only published guides. A card pointing at a draft is a 404 with a nice
-    // shadow on it.
-    const related = [...new Set(entry.data.related)]
-      .map((s) => guideBySlug.get(s))
-      .filter((g): g is Guide => Boolean(g));
+const entry: Template | undefined = slug ? published.find((t) => t.id === slug) : undefined;
+if (!entry) return Astro.rewrite('/404');
 
-    const others = published
-      .filter((t) => t.id !== entry.id)
-      .sort((a, b) => a.data.order - b.data.order);
+// Only published guides. A card pointing at a draft is a 404 with a nice
+// shadow on it.
+const related = [...new Set(entry.data.related)]
+  .map((s) => guideBySlug.get(s))
+  .filter((g): g is Guide => Boolean(g));
 
-    return { params: { slug: entry.id }, props: { entry, related, others } };
-  });
-}
+const others = published
+  .filter((t) => t.id !== entry.id)
+  .sort((a, b) => a.data.order - b.data.order);
 
-interface Props {
-  entry: Template;
-  related: Guide[];
-  others: Template[];
-}
-
-const { entry, related, others } = Astro.props;
 const d = entry.data;
 const { Content } = await render(entry);
 

@@ -18,10 +18,14 @@
 //   * On a route rendered on demand it runs per request. A deployment that
 //     becomes production starts indexing itself with no code change.
 //   * On a PRERENDERED route it runs once, at build time, and the answer is
-//     baked into the static HTML. Thirteen routes are prerendered today,
-//     including /llms.txt, /sitemap.xml, /toolkit and everything under
-//     /resources and /tools. List them with:
-//     `grep -rl 'prerender = true' src/pages`.
+//     baked into the static HTML. NO ROUTE IS PRERENDERED TODAY. Thirteen were
+//     until 15 September 2026 — /llms.txt, /sitemap.xml, /toolkit and
+//     everything under /resources and /tools — and the whole public site went
+//     back to request-time rendering at Sunil's instruction. Check with
+//     `grep -rl 'prerender = true' src/pages`, which returns nothing today.
+//     If a route grows the flag back, this paragraph applies to it again, and
+//     so does the gap two paragraphs down: the middleware's X-Robots-Tag
+//     header never runs for a prerendered route.
 //
 // WHAT PROMOTING ACTUALLY DOES. Promoting a preview deployment to production
 // triggers a complete rebuild with production variables. So the baked pages are

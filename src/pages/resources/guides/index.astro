@@ -30,8 +30,6 @@ import { getCollection } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../../../data/facts';
 
-export const prerender = true;
-
 const published = await getCollection('guides', (g) => g.data.status === 'ready');
 
 const pillars = published.filter((g) => g.data.kind === 'pillar');

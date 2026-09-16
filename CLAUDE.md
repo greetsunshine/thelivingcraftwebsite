@@ -172,10 +172,21 @@ Do not inline either one here.
   [src/components/cohort/RouteForm.astro](src/components/cohort/RouteForm.astro),
   [src/data/cohort-copy.ts](src/data/cohort-copy.ts),
   [src/data/offer-display.ts](src/data/offer-display.ts).
-  - **The site does not publish a cohort fee, start date or week count.** The page,
-    structured data, `/llms.txt`, `/api/facts`, latest feed and Ask widget all use the same
-    final-offer answer from `offer-display.ts`. Region context never changes that policy.
-    `/india|/dubai|/australia` remain compatibility redirects only.
+  - **The site DOES publish the fee, the start date and the week count** — decision D1
+    was reversed on 14 September 2026. The page, structured data, `/llms.txt`,
+    `/api/facts`, the latest feed and the Ask widget all read the same figures from
+    `facts.ts` through `offer-display.ts`, so a visitor and a crawler cannot be shown
+    different numbers. The indirection stayed when the policy flipped, and it is the
+    useful part: never state an offer fact directly in a page.
+    - **The fee is the one figure that is still per region and still gated.**
+      `Region.publicPrice` in `regions.ts` decides whether a rate appears at all. It is
+      on for India and off for Dubai and Australia, whose rates are uncalibrated; those
+      two fall back to "shared on application" on every surface at once.
+    - **Scarcity is what stays off.** Eight capped seats is a fact and is published.
+      "Only two left", a countdown, and "this rate will not return" are sales devices and
+      are not. A founding-rate scarcity line reached "Live experience" that way once and
+      was cut on 16 September 2026.
+    - `/india|/dubai|/australia` remain compatibility redirects only.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
@@ -446,7 +457,9 @@ Three things about that package are worth knowing before you open it:
 - **One external decision remains** — how email is actually delivered. Receipt queueing,
   templates, suppression and callbacks are built; provider selection, verified domain,
   monitored reply mailbox and approval remain external. The public offer policy is settled
-  in code: do not publish a fee, start date, week count or regional rate.
+  in code and it is the opposite of what this line said until 16 September 2026: the fee,
+  the start date and the week count ARE published, the fee per region and gated by
+  `Region.publicPrice`. See the `/` entry under *Surfaces* above.
 
 `/caio`, `/assessment`, `/latest` and everything under `/craft` are out of scope: the brief
 says no LMS, checkout, payment collection or new chatbot is required in this release.
@@ -905,11 +918,19 @@ prospect.
   `noindex, nofollow`, and `middleware.ts` adds the same as an `X-Robots-Tag` header.
   Read that file before changing any of the three. Two things in it are easy to get
   wrong:
-  - **A prerendered route decides this at BUILD time.** Thirteen routes carry
-    `prerender = true`, including `/llms.txt`, `/sitemap.xml`, `/toolkit` and
-    everything under `/resources` and `/tools`. The middleware header never runs for
-    them, so `/llms.txt` and `/sitemap.xml` off production are covered by `robots.txt`
-    and nothing else.
+  - **A prerendered route decides this at BUILD time — which is why nothing on the
+    public site is prerendered any more.** Thirteen routes carried `prerender = true`
+    (`/llms.txt`, `/sitemap.xml`, `/toolkit` and everything under `/resources` and
+    `/tools`) until 15 September, when Sunil asked for the whole public site back on
+    request-time rendering. Eleven lost the flag outright; the two dynamic slug routes
+    (`/resources/guides/[...slug]`, `/resources/templates/[...slug]`) lost
+    `getStaticPaths()` too and now look their entry up from `Astro.params` at request
+    time, 404ing via `Astro.rewrite('/404')` on an unknown or draft slug — the same
+    draft gate `getStaticPaths()` used to enforce at build time. If a route here ever
+    grows a `prerender = true` back, remember what it costs: the middleware's
+    `X-Robots-Tag` header never runs for a prerendered route, only `robots.txt` covers
+    it off production, and it costs a fresh Vercel function invocation per request
+    instead of a CDN-edge file.
   - **A staged production build is a production build.** `VERCEL_ENV` is
     `production` for a deployment that has no domain assigned yet, so the check calls
     it production and the stage URL is indexable. If staging by that route is
@@ -1106,8 +1127,13 @@ systems. Position *above* the commoditizing "how to use AI tools" market.
   this is not a capacity or scarcity claim.
 - Admission starts with an application and fit conversation. Applying is not payment or a
   confirmed place.
-- Fees, schedule, payment, refund and access terms are confirmed in the final offer before
-  commitment. Do not publish a fee, start date, week count or regional rate.
+- **The fee, the start date and the week count are published** (D1, reversed 14 September
+  2026), and every one of them comes from `facts.ts` — never typed into a page. The fee is
+  per region and appears only where `Region.publicPrice` is on: India today, not Dubai or
+  Australia, whose rates are uncalibrated and read "shared on application" instead.
+- Payment, refund and access terms are confirmed in the final offer before commitment.
+- **No scarcity, ever.** The seat cap is a fact and may be stated. A countdown, a
+  "seats remaining" figure, and a claim that a rate will not return are not.
 
 ### Consulting (`/caio`, `/assessment`) — pricing all placeholder
 - CAIO tiers: Advisory ~2 d/mo · Embedded ~1 d/wk · Transformation 2–3 d/wk. 90-day min.
