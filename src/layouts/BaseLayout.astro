@@ -5,6 +5,9 @@ import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
+import GoogleCalendarBooking from '../components/cohort/GoogleCalendarBooking.astro';
+import StickyApplyBar from '../components/site/StickyApplyBar.astro';
+import { googleCalendarAppointmentUrl } from '../lib/booking';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
@@ -45,6 +48,12 @@ const year = new Date().getFullYear();
           <a href="/#commitment">Commitment</a>
           <a href="/#questions">Questions</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+          {/* Secondary, beside Apply — gated on the same real appointment URL
+              as every other Book now control on the site, so it never renders
+              as a dead link while the URL is unconfigured. */}
+          {googleCalendarAppointmentUrl && (
+            <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="nav" />
+          )}
         </nav>
       </div>
     </header>
@@ -95,6 +104,7 @@ const year = new Date().getFullYear();
 
     <Track region={region} />
     <AskWidget surface="/" region={region} />
+    <StickyApplyBar applyHref="#apply" />
     <Analytics />
     <SpeedInsights />
   </body>

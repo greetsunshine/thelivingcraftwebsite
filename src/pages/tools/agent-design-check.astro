@@ -752,8 +752,13 @@ const schema: unknown[] = [
           'Nothing above was recorded and no one has been notified. If you want these questions asked against your own system, ',
         ),
       );
-      const ask = el('a', '', 'send a note about what you are building');
-      ask.href = '/#ask-drop';
+      // The cohort page's separate "Ask about the cohort" form is gone — its
+      // job was folded into the one branching application flow, and the
+      // secondary CTA everywhere else on the site is now Book now (a real
+      // appointment). Neither is the right size for "send a quick note", so
+      // this stays the one place that hands off by email directly.
+      const ask = el('a', '', 'email us about what you are building');
+      ask.href = 'mailto:apply@thelivingcraft.ai';
       after.append(ask);
       after.append(document.createTextNode(' — that is a separate thing you choose to do.'));
       panel.append(after);

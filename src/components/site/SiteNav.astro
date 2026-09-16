@@ -25,7 +25,17 @@
  * October campaign post links to the root with `utm_content=lc-oct-dNN`, and
  * the roadmap keeps that address working until redirects are approved and
  * tested. Changing this line without doing that work breaks fifteen live posts.
+ *
+ * BOOK NOW, BESIDE THE PRIMARY CTA
+ *
+ * Every relevant page carries the same pair now: the primary way in (here,
+ * "Explore the cohort") and Book now beside it. Gated on the same real
+ * appointment URL every other Book now control checks — booking.ts — so it
+ * renders here the moment that URL is configured and not a moment before.
  */
+import GoogleCalendarBooking from '../cohort/GoogleCalendarBooking.astro';
+import { googleCalendarAppointmentUrl } from '../../lib/booking';
+
 interface Destination {
   href: string;
   label: string;
@@ -73,6 +83,9 @@ const isCurrent = (href: string) => {
       <a class="btn btn-primary sitenav-cta" href="/">
         Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
+      {googleCalendarAppointmentUrl && (
+        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="nav" />
+      )}
     </nav>
   </div>
 </header>

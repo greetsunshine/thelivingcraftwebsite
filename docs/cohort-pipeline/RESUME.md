@@ -223,17 +223,52 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## CTAs and forms reworked — 16 September
+
+**"Ask about the cohort" is gone, as both a CTA label and a form.** The site's secondary CTA
+everywhere is now **Book now**, and it is the same configuration-gated Google Calendar
+control the scaffold below already describes — renamed, not rebuilt. It now renders in three
+more places it did not before: the cohort page's top nav (`BaseLayout.astro`), the wider
+site's nav (`SiteNav.astro`), and a new persistent sticky bar at the foot of every page
+(`StickyApplyBar.astro`, in both `BaseLayout` and `PracticeLayout`, deliberately excluded
+from `/caio` and `/assessment`, which keep their own CTAs). The gate is unchanged: with
+`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` blank, none of the five placements render a dead
+link — verified locally against both a blank and a (fake, valid-shaped) configured URL.
+
+**The separate "Ask about the cohort" enquiry FORM is removed from the page.** Applying for
+the open cohort and arranging learning for a team are now one branching flow in the Apply
+section — a two-button chooser, then one of the two forms (never both at once). The `enquiry`
+route in `forms.ts` still exists — the API still validates it, the console still reads its
+labels, the comms templates still reference it — only the page no longer renders a form for
+it. Three links that used to point at the old `#ask-drop` fragment (`/contact`, twice, and the
+agent-design-check handoff) now point at Book now, the application itself, or a plain mailto,
+whichever fits the context — see the comments at each site.
+
+**Each form is now progressive.** `forms.ts` gained an optional `steps` field per route;
+`RouteForm.astro` renders three short screens behind Continue/Back instead of one long one,
+with the same field names, the same server-side `validate()`, and the same idempotency key —
+nothing about the save path changed, only how many fields are on screen at once. A route with
+no `steps` (only `enquiry`, no longer linked) still renders flat, exactly as before.
+
+**Still owed, unchanged:** the actual Google appointment schedule URL/embed from the calendar
+owner, followed by desktop and mobile popup, close, direct-link and completed test-booking
+checks in staging — see "Appointment scheduling scaffold is ready" below for what that gate
+already covers.
+
+---
+
 ## Appointment scheduling scaffold is ready
 
-The cohort page now has a configuration-gated Google Calendar appointment route. When
+The cohort page has a configuration-gated Google Calendar appointment route. When
 `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` contains the appointment schedule URL from Google's
-"Button with popup" embed, **Schedule an appointment** appears beside the hero application CTA
-and in the closing next-step area. The site-native link opens Google's official popup when its
-script is available and remains a direct new-tab link when that script is blocked or unavailable.
+"Button with popup" embed, **Book now** appears beside Apply in the top nav, the hero, the
+closing area, the wider site's nav, and the sticky bar (see "CTAs and forms reworked" above).
+The site-native link opens Google's official popup when its script is available and remains a
+direct new-tab link when that script is blocked or unavailable.
 
-The URL is deliberately blank. While it is blank, no scheduling claim or dead control appears and
-the existing **Ask about the cohort** route remains the fallback. Opening the scheduling control is
-recorded only as `cta_click` intent; it is not a confirmed appointment, application or CRM event.
+The URL is deliberately blank. While it is blank, no scheduling claim or dead control appears
+anywhere it would otherwise render. Opening the scheduling control is recorded only as
+`cta_click` intent; it is not a confirmed appointment, application or CRM event.
 
 **Still owed:** the actual Google appointment schedule URL/embed from the calendar owner, followed
 by desktop and mobile popup, close, direct-link and completed test-booking checks in staging.

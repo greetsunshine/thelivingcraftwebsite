@@ -1,0 +1,196 @@
+---
+/**
+ * The persistent application prompt.
+ *
+ * A BAR, not a modal or a lightbox. The public pages' own voice rule is
+ * restraint — "respected practitioner… not SaaS-templated, not
+ * bootcamp-hype" — and a page-load popup demanding attention before anyone
+ * has read a sentence is exactly that hype. This instead appears once
+ * somebody has scrolled past the opening screen, low and out of the way,
+ * carrying the same Apply / Book now pair the top nav already offers, so the
+ * way in is never more than a scroll away without following them back up.
+ *
+ * "Persistent" means persistent WITHIN one page view, not across visits or
+ * reloads — CLAUDE.md's no-localStorage/sessionStorage rule is still in
+ * force everywhere on the public site, so a dismissal lives in a JS variable
+ * and is gone on the next load. That is the correct trade under that rule,
+ * not a shortcut around it: remembering a dismissal would mean writing
+ * something to the visitor's browser, which this site does not do.
+ *
+ * Included once, near the foot of BaseLayout and PracticeLayout — the cohort
+ * page and the wider practice pages. Deliberately NOT on /caio or
+ * /assessment: each already carries its own primary CTA ("Book a discovery
+ * call" / "Request a scope call") and its own brand register, and stacking a
+ * cohort-application prompt over a different offer is the kind of surface
+ * confusion the cross-linked-but-distinct spine in CLAUDE.md exists to avoid.
+ * Not on /craft or /craft/admin either — both are gated, and a public
+ * application prompt has no business inside either gate.
+ */
+import GoogleCalendarBooking from '../cohort/GoogleCalendarBooking.astro';
+import { googleCalendarAppointmentUrl } from '../../lib/booking';
+
+export interface Props {
+  /** Where "Apply" points. Defaults to the cohort's apply anchor, on- or off-page as needed. */
+  applyHref?: string;
+}
+
+const onCohortPage = Astro.url.pathname.replace(/\/+$/, '') === '';
+const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
+---
+
+<div class="sticky-apply" data-sticky-apply hidden role="complementary" aria-label="Apply for the cohort">
+  <div class="wrap sticky-apply-inner">
+    <p class="sticky-apply-copy">Build a working agentic system with Sunil Mathew.</p>
+    <div class="sticky-apply-actions">
+      <a class="btn btn-primary" href={applyHref}>
+        Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
+      </a>
+      {googleCalendarAppointmentUrl && (
+        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="sticky" />
+      )}
+      <button type="button" class="sticky-apply-dismiss" data-sticky-dismiss aria-label="Dismiss">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const bar = document.querySelector<HTMLElement>('[data-sticky-apply]');
+    if (!bar) return;
+
+    const dismiss = bar.querySelector<HTMLButtonElement>('[data-sticky-dismiss]');
+
+    // Whichever apply landmark this page has, if any — the cohort page's
+    // full section, or the branch panels within it. Hides the bar exactly
+    // when the real thing is already on screen, so nothing doubles up.
+    const landmark = document.querySelector<HTMLElement>('#apply, #apply-panel, #apply-form');
+
+    let dismissed = false;
+    let landmarkVisible = false;
+
+    // The bar is fixed to the viewport, so it sits on top of whatever the
+    // page would otherwise show at the bottom — the footer, on every page
+    // that has no #apply landmark to hide it against. Padding the body by
+    // the bar's own height keeps the footer's last line reachable instead of
+    // permanently covered on a short page.
+    const setBodyClearance = () => {
+      document.body.style.paddingBottom = bar!.hidden ? '' : `${bar!.offsetHeight}px`;
+    };
+
+    const evaluate = () => {
+      if (dismissed) {
+        bar!.hidden = true;
+        setBodyClearance();
+        return;
+      }
+      const scrolledPast = window.scrollY > 640;
+      bar!.hidden = !scrolledPast || landmarkVisible;
+      setBodyClearance();
+    };
+
+    if (landmark && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          landmarkVisible = entries.some((e) => e.isIntersecting);
+          evaluate();
+        },
+        { rootMargin: '0px 0px -20% 0px' },
+      );
+      observer.observe(landmark);
+    }
+
+    let ticking = false;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          evaluate();
+          ticking = false;
+        });
+      },
+      { passive: true },
+    );
+    window.addEventListener('resize', evaluate, { passive: true });
+    evaluate();
+
+    dismiss?.addEventListener('click', () => {
+      dismissed = true;
+      evaluate();
+    });
+
+    // Escape dismisses it the same way the button does, while focus is
+    // anywhere inside the bar — it is not a dialog and does not trap focus.
+    bar.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        dismissed = true;
+        evaluate();
+      }
+    });
+  })();
+</script>
+
+<style>
+  .sticky-apply {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    background: var(--surface-panel);
+    box-shadow: var(--shadow-overlay);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+  .sticky-apply[hidden] { display: none; }
+
+  .sticky-apply-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    padding-block: var(--space-3);
+  }
+
+  .sticky-apply-copy {
+    margin: 0;
+    font-size: var(--size-3);
+    color: var(--text-body);
+    flex: 1 1 240px;
+  }
+
+  .sticky-apply-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .sticky-apply-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-quiet);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+  }
+  .sticky-apply-dismiss:hover { background: var(--surface-hover); color: var(--text-loud); }
+  .sticky-apply-dismiss:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (max-width: 640px) {
+    .sticky-apply-copy { display: none; }
+    .sticky-apply-actions { width: 100%; justify-content: space-between; }
+  }
+</style>

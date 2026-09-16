@@ -100,12 +100,19 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         Here I teach the craft of agentic and systems architecture, live, to a small cohort.
       </p>
 
+      {/* Apply is primary; Book now is the secondary path, right beside it —
+          same pairing the top nav and the sticky bar carry everywhere else on
+          the site. It only renders once a real appointment URL is configured
+          (googleCalendarAppointmentUrl is '' otherwise): no dead link, no
+          scheduling claim, per the hard rule in booking.ts. There is no
+          third "ask a question" link here any more — that was a separate
+          enquiry form, and it has been folded into the one application flow
+          in the Apply section below. */}
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         {googleCalendarAppointmentUrl && (
           <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
         )}
-        <a class="btn btn-ghost" href="#ask-drop">Ask about the cohort</a>
       </div>
 
       <p class="hero-note">
@@ -583,51 +590,70 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 </section>
 
 {/* ── 14 · Application ──────────────────────────────────────────────────── */}
+{/* ONE APPLICATION FLOW, BRANCHING BY WHO IS APPLYING.
+
+    Until this rework, three separate forms sat here — the open-cohort
+    application, a team/enterprise enquiry beside it, and a third "Ask about
+    the cohort" panel folded under a dropdown. That third form is gone: the
+    site's secondary CTA is now Book now (a real appointment — see the hero
+    and the top nav), and a written question is one email away, in the
+    contact line below. What is left branches on one thing — applying for
+    yourself, or arranging learning for a team — because those really are two
+    different journeys (forms.ts: an application and an enterprise enquiry
+    are different record types, and an enterprise enquiry is never counted as
+    an application), while a plain question about fit was never a
+    commitment either form is built to capture.
+
+    Only one branch's form is visible at a time (route-choice.ts equivalent
+    is the inline script below), so a visitor sees ONE form, not two stacked
+    ones — the biggest single cut to how much scrolling the mobile flow
+    needs. Each form itself is now progressive (see RouteForm.astro's
+    `steps`), so nobody meets all seven-plus fields on one screen either. */}
 <section class="wrap band forms" id="apply">
   <div class="sec-head">
     <p class="eyebrow"><span class="num">14</span> Apply</p>
-    <h2>Start with your experience and <em>a question</em></h2>
+    <h2>Start <em>here</em></h2>
+    <p class="lead">
+      One flow, however you are arriving at it. Pick the one that matches you, then answer a
+      few questions at a time.
+    </p>
+  </div>
+
+  <div class="route-choice" role="group" aria-label="What brings you here?">
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="application"
+      aria-pressed="true"
+    >
+      <span class="rc-title">Apply for the open cohort</span>
+      <span class="rc-body">Joining as an individual — self-funded or exploring employer support.</span>
+    </button>
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="enterprise"
+      aria-pressed="false"
+    >
+      <span class="rc-title">Arrange learning for a team</span>
+      <span class="rc-body">Scoping an enterprise group programme for your organisation.</span>
+    </button>
   </div>
 
   {googleCalendarAppointmentUrl && (
-    <div class="closing-next-step">
-      <div class="closing-next-step-actions" aria-label="Programme next steps">
-        <a class="btn btn-primary" href="#apply-form">Apply for the open cohort</a>
-        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="closing" />
-      </div>
-      <p>
-        You can schedule an appointment without applying. A scheduling request remains separate
-        from an application and is confirmed in Google Calendar.
-      </p>
+    <div class="route-choice-note">
+      <p>Prefer to talk it through first? A scheduling request is separate from an application.</p>
+      <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="closing" />
     </div>
   )}
 
-  {/* Apply and the team route sit side by side — both are a full, committed
-      submission (an application, or an organisation opportunity), just two
-      different journeys. The enquiry route below is a smaller ask — "no
-      application milestone inferred", per forms.ts — so it is a dropdown
-      rather than a third equal column. */}
-  <div class="apply-split">
+  <div id="apply-panel" class="route-panel" tabindex="-1">
     <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
-
-    <div id="team" class="alt-route">
-      <RouteForm route="enterprise" id="enterprise-form" />
-    </div>
   </div>
 
-  {/* NOT id="ask". AskWidget renders <div class="ask" id="ask"> on this same
-      page and finds its own root with getElementById('ask'); a second element
-      with that id wins on document order and the widget then binds to this
-      panel, losing its region attribute and every control inside it. */}
-  <details class="ask-drop" id="ask-drop">
-    <summary>
-      Ask about the cohort
-      <span class="plus" aria-hidden="true">+</span>
-    </summary>
-    <div class="alt-route">
-      <RouteForm route="enquiry" id="enquiry-form" />
-    </div>
-  </details>
+  <div id="team" class="route-panel" tabindex="-1" hidden>
+    <RouteForm route="enterprise" id="enterprise-form" heading="Arrange learning for a team" />
+  </div>
 
   <p class="contact-line">
     Programme enquiries and employer-funding support, and enterprise enquiries:
@@ -635,55 +661,54 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </p>
 </section>
 
-{/* The enquiry route is a dropdown, but three links point straight at it: the
-    hero CTA above, both /contact links, and the agent-design-check handoff.
-    Without this, all of them scroll to a closed row and the visitor has to
-    work out that the form is behind it. Opening on the fragment is also what
-    keeps RESUME.md's documented fallback real: while the Google appointment
-    URL is blank, "Ask about the cohort" is the only alternative to applying.
-
-    A <details> is opened by an attribute, not by a style, so CSS :target
-    cannot do this. Six lines is the whole cost. */}
+{/* Switches which of the two forms above is visible. A button pair rather
+    than a <select> or radios, because there are only two and each needs room
+    for a description — the same reasoning RouteForm's own field choices
+    follow. Three links elsewhere on the site still point at #team (the
+    contact page, and the footer's "Learning for a team") and must land on
+    the enterprise branch already selected, not on a hidden panel — that is
+    what the hashchange listener is for. */}
 <script>
   (function () {
-    var drop = document.getElementById('ask-drop') as HTMLDetailsElement | null;
-    if (!drop) return;
-    var openOnTarget = function () {
-      if (location.hash === '#ask-drop') drop!.open = true;
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-route-choice]'),
+    );
+    const panels: Record<string, HTMLElement | null> = {
+      application: document.getElementById('apply-panel'),
+      enterprise: document.getElementById('team'),
     };
-    openOnTarget();
-    window.addEventListener('hashchange', openOnTarget);
+    if (buttons.length === 0 || !panels.application || !panels.enterprise) return;
+
+    let current = 'application';
+
+    const select = (branch: string, focus: boolean) => {
+      if (!panels[branch] || branch === current) {
+        if (focus) panels[branch]?.focus();
+        return;
+      }
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.routeChoice === branch)));
+      Object.entries(panels).forEach(([key, panel]) => {
+        if (panel) panel.hidden = key !== branch;
+      });
+      current = branch;
+      if (focus) panels[branch]!.focus();
+    };
+
+    buttons.forEach((b) => {
+      b.addEventListener('click', () => select(b.dataset.routeChoice ?? 'application', true));
+    });
+
+    const fromHash = () => {
+      if (location.hash === '#team' || location.hash === '#enterprise-form') select('enterprise', false);
+      else if (location.hash === '#apply-form') select('application', false);
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
   })();
 </script>
 
 <style>
   .band { padding-block: var(--space-8); }
-
-  .closing-next-step {
-    max-width: 580px;
-    margin: 0 auto var(--space-6);
-    text-align: center;
-  }
-
-  .closing-next-step-actions {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-
-  .closing-next-step p {
-    max-width: 52ch;
-    margin: var(--space-3) auto 0;
-    color: var(--text-quiet);
-    font-size: var(--size-2);
-  }
-
-  @media (max-width: 560px) {
-    .closing-next-step-actions .btn {
-      width: 100%;
-    }
-  }
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {
@@ -769,46 +794,61 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   /* ── forms ───────────────────────────────────────────────────────────── */
   .forms :global(.apply-form) { margin-inline: 0; }
 
-  /* Apply and the team route, side by side — see the markup comment for why
-     the enquiry route is not a third column here. */
-  .apply-split {
+  /* The branch chooser. Two buttons, not a <select> — each needs room for a
+     one-line description, and a visible pair is one fewer click than a
+     dropdown for a decision this page exists to help someone make quickly. */
+  .route-choice {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    align-items: start;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
   }
-  .alt-route {
+  .route-choice-btn {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
     background: var(--surface-panel);
+    border: var(--border-w-hair) solid transparent;
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
-    padding: var(--space-6);
+    padding: var(--space-5) var(--space-6);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
   }
-  .alt-route :global(.apply-form) {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    max-width: none;
+  .route-choice-btn:hover { box-shadow: var(--shadow-lift); }
+  .route-choice-btn:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  /* The selected branch is marked the same way the design system marks any
+     selected control — ink, never sun; sun is a fill for an action, not a
+     state, and this button is not "go", it is "chosen". */
+  .route-choice-btn[aria-pressed='true'] { border-color: var(--text-loud); }
+  .rc-title {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+  .rc-body { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-snug); }
+
+  .route-choice-note {
+    max-width: 580px;
+    margin: 0 0 var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .route-choice-note p {
+    margin: 0;
+    color: var(--text-quiet);
+    font-size: var(--size-2);
   }
 
-  /* The enquiry route, collapsed. Reuses the FAQ's bare details/summary
-     styling from global.css (the plus rotates on open) inside its own panel,
-     rather than the multi-item .faq wrapper, which assumes several stacked
-     rows with dividers between them. */
-  .ask-drop {
-    margin-top: var(--space-6);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-    border-bottom: 0;
-  }
-  .ask-drop summary { padding: var(--space-5) 0; }
-  .ask-drop[open] summary { border-bottom: var(--border-w-hair) solid var(--border-hair); }
-  .ask-drop .alt-route {
-    background: transparent;
-    box-shadow: none;
-    padding: var(--space-5) 0;
-  }
+  .route-panel:focus { outline: none; }
+
   .contact-line {
     margin-top: var(--space-7);
     font-size: var(--size-3);
@@ -820,8 +860,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   @media (max-width: 900px) {
     .two-up,
     .example,
-    .commit,
-    .apply-split {
+    .commit {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
@@ -829,7 +868,11 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   }
 
   @media (max-width: 560px) {
-    .alt-route { padding: var(--space-5); }
     .commit-facts { padding-inline: var(--space-5); }
+    /* One less full section of vertical padding per screen on a phone, where
+       the extra room this token gives on a desktop reading distance is just
+       more scrolling. */
+    .band { padding-block: var(--space-6); }
+    .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
   }
 </style>
