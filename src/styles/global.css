@@ -66,6 +66,23 @@
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* ANCHOR TARGETS CLEAR THE STICKY HEADER.
+
+   `header.nav` is sticky at the top of every page BaseLayout renders, so a
+   bare #fragment scrolls the target to y=0 and the header then covers its
+   first 76-odd pixels — the section heading lands behind the nav and the page
+   looks like it scrolled too far. scroll-margin-top reserves that space, and
+   it applies to programmatic scrolls (focus(), scrollIntoView()) as well as
+   to a clicked link.
+
+   The height is MEASURED, not guessed: --anchor-offset is set from the real
+   header in BaseLayout, because .nav-inner wraps and is not one fixed height
+   across viewports. Shells with no sticky header never set it, and the
+   fallback of 0 is then correct rather than a gap above every target. */
+:target {
+  scroll-margin-top: var(--anchor-offset, 0px);
+}
 body {
   background: var(--surface-sunken);
   color: var(--text-body);

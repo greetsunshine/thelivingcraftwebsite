@@ -2,24 +2,27 @@
 /**
  * The persistent application prompt.
  *
- * TWO SHAPES, ONE SET OF ACTIONS
+ * TWO SHAPES, AND THEY DO DIFFERENT JOBS
  *
- * On a wide screen it is a bar across the foot of the page. On a phone it is
- * a small round button in the bottom-right corner that can be dragged
- * anywhere on screen, and taps open to reveal the same two actions. Sunil
- * asked for the phone shape on 16 September: "a small round circle at the
- * bottom right, which can be moved around."
+ * On a wide screen it is a bar across the foot of the page carrying both
+ * actions, Apply and Book now. On a phone it is a small round Book now button
+ * that can be dragged anywhere on screen and needs a single tap: no sheet to
+ * open, no second step. Sunil, 16 September: "For mobile it just needs to be
+ * book now with a single tap and it will redirect."
  *
- * The Apply link and the Book now link are written ONCE, in `.sa-actions`,
- * and the two shapes are a CSS media query over the same markup — on a phone
- * that block becomes the sheet the circle opens. Writing the bar and the
- * dock as two blocks would mean two Apply links to keep in step.
+ * Apply is not lost on a phone. The top nav carries it on every page, and the
+ * hero and the price card carry it on the cohort page — so the corner is free
+ * to be the one route that is otherwise three scrolls away.
+ *
+ * IT IS AN ANCHOR, NOT A BUTTON. Dragging is a pointer-only enhancement laid
+ * over an ordinary link, so the tap target still behaves like a link for
+ * keyboard, long-press and middle-click, and still works if the script never
+ * runs.
  *
  * WHY A BAR AND NOT A MODAL, ON EITHER SHAPE. The public pages' voice rule is
  * restraint — "respected practitioner… not SaaS-templated, not bootcamp-hype"
- * — and a dialog thrown over the page before anyone has read a sentence is
- * exactly that hype. This appears only once somebody has scrolled past the
- * opening screen, and it never takes focus or blocks the page behind it.
+ * — and a dialog thrown over the page is exactly that hype. Neither shape
+ * takes focus or blocks the page behind it.
  *
  * WHAT IS NOT REMEMBERED, AND WHY. Neither the dismissal nor the dragged
  * position survives a reload. CLAUDE.md's no-localStorage/sessionStorage rule
@@ -44,6 +47,10 @@ export interface Props {
 
 const onCohortPage = Astro.url.pathname.replace(/\/+$/, '') === '';
 const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
+
+/** The same target BookNowLink uses. Kept in step by the comment, not by a shared constant —
+ *  see BookNowLink.astro, which owns the label and the destination for every other placement. */
+const bookHref = `${onCohortPage ? '' : '/'}#book`;
 ---
 
 <div
@@ -53,7 +60,7 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
   role="complementary"
   aria-label="Apply for the cohort"
 >
-  <div class="sa-inner" data-sa-sheet>
+  <div class="sa-inner">
     <p class="sa-copy">Build a working agentic system with Sunil Mathew.</p>
 
     <div class="sa-actions">
@@ -70,23 +77,19 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     </button>
   </div>
 
-  {/* The phone shape. Hidden above the breakpoint, where the bar is the whole
-      control. `touch-action: none` in the stylesheet is what lets a drag
-      start on it without scrolling the page underneath. */}
-  <button
-    type="button"
+  {/* The phone shape: one tap, straight to the booking section. Hidden above
+      the breakpoint, where the bar is the whole control. `touch-action: none`
+      in the stylesheet is what lets a drag start on it without the browser
+      claiming the gesture for scrolling. */}
+  <a
     class="sa-fab"
+    href={bookHref}
     data-sa-fab
-    aria-expanded="false"
-    aria-label="Apply for the cohort"
+    data-book-now
+    data-book-now-placement="sticky"
   >
-    <span class="sa-fab-open" aria-hidden="true">Apply</span>
-    <span class="sa-fab-close" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-        <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-      </svg>
-    </span>
-  </button>
+    Book now
+  </a>
 </div>
 
 <script>
@@ -95,13 +98,13 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     if (!bar) return;
 
     const dismissBtn = bar.querySelector<HTMLButtonElement>('[data-sticky-dismiss]');
-    const fab = bar.querySelector<HTMLButtonElement>('[data-sa-fab]');
-    const sheet = bar.querySelector<HTMLElement>('[data-sa-sheet]');
+    const fab = bar.querySelector<HTMLAnchorElement>('[data-sa-fab]');
 
-    // Whichever apply landmark this page has, if any — the cohort page's
-    // section, or the branch panels inside it. Hides the prompt exactly when
-    // the real thing is already on screen, so nothing doubles up.
-    const landmark = document.querySelector<HTMLElement>('#apply, #apply-panel, #apply-form');
+    // The sections this prompt is a shortcut to. While one of them is on
+    // screen the shortcut has nothing to offer, so it gets out of the way.
+    const landmarks = Array.from(
+      document.querySelectorAll<HTMLElement>('#book, #apply, #apply-panel, #apply-form'),
+    );
 
     let dismissed = false;
     let landmarkVisible = false;
@@ -122,20 +125,29 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
         setBodyClearance();
         return;
       }
-      const scrolledPast = window.scrollY > 640;
-      bar!.hidden = !scrolledPast || landmarkVisible;
+      // The circle is there from the moment the page loads — it is a
+      // shortcut, and one that only appears after 640px of scrolling is not
+      // much of one on a phone. The bar still waits, because a bar across
+      // the foot of an unread page is the intrusive version.
+      const ready = isPhone() || window.scrollY > 640;
+      bar!.hidden = !ready || landmarkVisible;
       setBodyClearance();
     };
 
-    if (landmark && 'IntersectionObserver' in window) {
+    if (landmarks.length && 'IntersectionObserver' in window) {
+      const seen = new Set<Element>();
       const observer = new IntersectionObserver(
         (entries) => {
-          landmarkVisible = entries.some((e) => e.isIntersecting);
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) seen.add(entry.target);
+            else seen.delete(entry.target);
+          });
+          landmarkVisible = seen.size > 0;
           evaluate();
         },
         { rootMargin: '0px 0px -20% 0px' },
       );
-      observer.observe(landmark);
+      landmarks.forEach((el) => observer.observe(el));
     }
 
     let ticking = false;
@@ -157,39 +169,15 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       evaluate();
     });
 
-    // ── the phone shape ───────────────────────────────────────────────────
-    /**
-     * The sheet sits above the circle, unless the circle has been dragged too
-     * near the top of the screen for it to fit — then it sits below. Anything
-     * cleverer than this needs a positioning library, and the sheet is two
-     * buttons.
-     */
-    const placeSheet = () => {
-      if (!sheet) return;
-      const room = bar!.getBoundingClientRect().top;
-      bar!.dataset.sheet = room < sheet.offsetHeight + 24 ? 'below' : 'above';
-    };
-
-    const setExpanded = (open: boolean) => {
-      if (!fab) return;
-      fab.setAttribute('aria-expanded', String(open));
-      bar!.dataset.open = String(open);
-      if (open) placeSheet();
-    };
-
-    // Escape closes the sheet first, and dismisses the whole prompt only when
-    // there is no sheet open to close. It is not a dialog and traps nothing.
+    // Escape dismisses it, from anywhere inside it. It is not a dialog and
+    // traps nothing.
     bar.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
-      if (fab && fab.getAttribute('aria-expanded') === 'true') {
-        setExpanded(false);
-        fab.focus();
-        return;
-      }
       dismissed = true;
       evaluate();
     });
 
+    // ── dragging the circle ───────────────────────────────────────────────
     if (fab) {
       let pointerId = -1;
       let dragged = false;
@@ -219,6 +207,15 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
         bar!.dataset.placed = 'true';
       };
 
+      /** A dragged position is meaningless once the bar is the shape again. */
+      const clearPlacement = () => {
+        bar!.style.left = '';
+        bar!.style.top = '';
+        bar!.style.right = '';
+        bar!.style.bottom = '';
+        delete bar!.dataset.placed;
+      };
+
       fab.addEventListener('pointerdown', (event) => {
         if (!isPhone()) return;
         pointerId = event.pointerId;
@@ -245,31 +242,17 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
         if (event.pointerId !== pointerId) return;
         pointerId = -1;
         if (fab.hasPointerCapture(event.pointerId)) fab.releasePointerCapture(event.pointerId);
-        if (dragged) {
-          placeSheet();
-          return;
-        }
-        setExpanded(fab.getAttribute('aria-expanded') !== 'true');
       };
 
       fab.addEventListener('pointerup', endDrag);
-      fab.addEventListener('pointercancel', (event) => {
-        if (event.pointerId !== pointerId) return;
-        pointerId = -1;
-      });
+      fab.addEventListener('pointercancel', endDrag);
 
-      // A keyboard press never goes through the pointer path, so it needs its
-      // own way in. `click` also fires after a tap, hence the drag guard.
+      // Moving it is not asking to follow it. Anything that was not a drag
+      // falls through as an ordinary link click.
       fab.addEventListener('click', (event) => {
-        if (dragged) {
-          event.preventDefault();
-          dragged = false;
-        }
-      });
-      fab.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
+        if (!dragged) return;
         event.preventDefault();
-        setExpanded(fab.getAttribute('aria-expanded') !== 'true');
+        dragged = false;
       });
 
       // A dragged position is in viewport pixels, so a rotation or a resize
@@ -278,12 +261,12 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       window.addEventListener(
         'resize',
         () => {
-          if (bar!.dataset.placed === 'true') {
+          if (!isPhone()) clearPlacement();
+          else if (bar!.dataset.placed === 'true') {
             const rect = bar!.getBoundingClientRect();
             place(rect.left, rect.top);
           }
           evaluate();
-          placeSheet();
         },
         { passive: true },
       );
@@ -356,56 +339,34 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
   .sa-fab { display: none; }
 
   /* ── the phone shape ──────────────────────────────────────────────────────
-     A small round button in the corner, draggable, that opens the same two
-     actions. The root stops being a full-width bar and becomes the dock the
-     circle and its sheet sit in, so there is no panel chrome behind them. */
+     A small round Book now button, sitting against the right edge at the
+     vertical middle of the screen, draggable anywhere from there. One tap
+     goes to the booking section; there is no sheet and no second step. */
   @media (max-width: 640px) {
     .sticky-apply {
       left: auto;
       right: var(--space-4);
-      bottom: var(--space-4);
+      /* Middle right on load. Half the circle's own height, so the middle of
+         the button is the middle of the screen rather than its top edge. */
+      top: calc(50% - 32px);
+      bottom: auto;
       background: transparent;
       box-shadow: none;
       border-top: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: var(--space-3);
     }
 
-    /* Closed, the sheet is not in the layout at all — the circle has to be
-       the only thing the page is covered by. */
-    .sa-inner {
-      display: none;
-      max-width: min(20rem, calc(100vw - var(--space-7)));
-      padding: var(--space-4);
-      background: var(--surface-panel);
-      border-radius: var(--radius-panel);
-      box-shadow: var(--shadow-overlay);
-      flex-direction: column;
-      align-items: stretch;
-      gap: var(--space-3);
-    }
-    .sticky-apply[data-open='true'] .sa-inner { display: flex; }
-
-    /* Dragged near the top, the sheet opens downward instead. */
-    .sticky-apply[data-sheet='below'] { flex-direction: column-reverse; }
-
-    .sa-copy { display: none; }
-    .sa-actions { flex-direction: column; align-items: stretch; }
-    .sa-actions :global(.btn) { width: 100%; }
-
-    .sa-dismiss {
-      align-self: flex-end;
-      order: -1;
-    }
+    /* The bar's contents have no phone shape — the circle replaces them
+       rather than folding them into a sheet. */
+    .sa-inner { display: none; }
 
     .sa-fab {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 60px;
-      height: 60px;
+      text-align: center;
+      width: 64px;
+      height: 64px;
+      padding: 0 var(--space-2);
       border-radius: var(--radius-pill);
       border: var(--border-w-hair) solid var(--control-primary-bg);
       background: var(--control-primary-bg);
@@ -418,17 +379,13 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       font-family: var(--font-body);
       font-size: var(--size-2);
       font-weight: var(--weight-medium);
-      flex: none;
+      line-height: var(--lh-snug);
     }
     .sa-fab:active { cursor: grabbing; }
+    .sa-fab:hover { color: var(--control-primary-fg); }
     .sa-fab:focus-visible {
       outline: var(--focus-w) solid var(--focus-ring);
       outline-offset: var(--focus-offset);
     }
-
-    /* One label at a time: "Apply" closed, a cross open. */
-    .sa-fab-close { display: none; }
-    .sa-fab[aria-expanded='true'] .sa-fab-open { display: none; }
-    .sa-fab[aria-expanded='true'] .sa-fab-close { display: inline-flex; }
   }
 </style>

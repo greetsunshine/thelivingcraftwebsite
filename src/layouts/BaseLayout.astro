@@ -102,6 +102,27 @@ const year = new Date().getFullYear();
     <Track region={region} />
     <AskWidget surface="/" region={region} />
     <StickyApplyBar applyHref="#apply" />
+
+    {/* Publishes the sticky header's real height as --anchor-offset, which
+        global.css spends as scroll-margin-top on :target. Every CTA on this
+        page is an in-page anchor and header.nav is sticky, so without this
+        each one lands with its heading hidden behind the nav. Measured
+        rather than hard-coded because .nav-inner wraps, so its height is not
+        one number across viewports. */}
+    <script>
+      (function () {
+        const nav = document.querySelector<HTMLElement>('header.nav');
+        if (!nav) return;
+        const publish = () => {
+          document.documentElement.style.setProperty(
+            '--anchor-offset',
+            `${nav.offsetHeight + 12}px`,
+          );
+        };
+        publish();
+        window.addEventListener('resize', publish, { passive: true });
+      })();
+    </script>
     <Analytics />
     <SpeedInsights />
   </body>
