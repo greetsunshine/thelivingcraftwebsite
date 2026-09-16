@@ -684,12 +684,15 @@ const hasPrice = Boolean(region?.publicPrice);
     and each needs room for a description — the same reasoning RouteForm's own
     field choices follow.
 
-    THE CUE. Arriving from any Apply CTA lights BOTH buttons for a moment and
-    only then opens the individual form beneath them. The point is that the
-    team route is seen at all: with the form already open on arrival, the
-    chooser was something a reader scrolled past on the way to the fields.
-    Anyone who scrolls here themselves, with no Apply click behind them, gets
-    the form open as before — the cue is for people who were sent here.
+    THE CUE. Arriving from any Apply CTA closes both forms, lights BOTH
+    buttons, and waits for a choice. It does not open a form by itself: an
+    earlier version did that after 900ms, which read as the form simply
+    opening on arrival, and picked the individual route on the reader's
+    behalf into the bargain. The point is that the team route is seen at all
+    — with a form already open, the chooser was something a reader scrolled
+    past on the way to the fields. Anyone who scrolls here themselves, with
+    no Apply click behind them, gets the individual form open as before; the
+    cue is only for people who were sent here by a CTA.
 
     Three links elsewhere on the site point straight at a branch and must
     skip the cue entirely: #team and #enterprise-form (the contact page, and
@@ -707,12 +710,6 @@ const hasPrice = Boolean(region?.publicPrice);
     };
     if (buttons.length === 0 || !panels.application || !panels.enterprise) return;
 
-    /* Long enough to read as a deliberate pointer at the two choices, short
-       enough that nobody waiting to type is kept waiting. Matches the two
-       450ms pulses in the stylesheet. */
-    const CUE_MS = 900;
-    let cueTimer = 0;
-
     const select = (branch: string, focus: boolean) => {
       if (!panels[branch]) return;
       buttons.forEach((b) =>
@@ -728,32 +725,36 @@ const hasPrice = Boolean(region?.publicPrice);
       buttons.forEach((b) => b.classList.remove('is-cueing'));
     };
 
-    /** Highlight both choices, then open the individual form under them. */
+    /**
+     * Highlight both choices and WAIT.
+     *
+     * There is no timer here on purpose. A previous version opened the
+     * individual form by itself after 900ms, which read as the form simply
+     * opening on arrival — the highlight was over before anybody registered
+     * it, and the choice had been made on the reader's behalf anyway. The
+     * highlight now holds until somebody picks, which is the whole point of
+     * showing them two things.
+     */
     const cue = () => {
-      window.clearTimeout(cueTimer);
-      // Both panels closed for the length of the cue, so the two buttons are
-      // the only thing on screen to look at.
+      // Both panels closed, so the two buttons are the only thing to look at.
       Object.values(panels).forEach((panel) => {
         if (panel) panel.hidden = true;
       });
+      // Nothing is selected while the question is open. Leaving the
+      // individual button pressed would answer it for them.
       buttons.forEach((b) => {
+        b.setAttribute('aria-pressed', 'false');
         // Restart the animation on a second click, which it will not do on
         // its own while the class is already there.
         b.classList.remove('is-cueing');
         void b.offsetWidth;
         b.classList.add('is-cueing');
       });
-      cueTimer = window.setTimeout(() => {
-        endCue();
-        select('application', false);
-      }, CUE_MS);
     };
 
     buttons.forEach((b) => {
       b.addEventListener('click', () => {
-        // A real choice ends the cue early; nothing is being suggested any
-        // more once somebody has picked.
-        window.clearTimeout(cueTimer);
+        // The choice answers the cue, so the cue stops being asked.
         endCue();
         select(b.dataset.routeChoice ?? 'application', true);
       });
@@ -761,11 +762,9 @@ const hasPrice = Boolean(region?.publicPrice);
 
     const fromHash = () => {
       if (location.hash === '#team' || location.hash === '#enterprise-form') {
-        window.clearTimeout(cueTimer);
         endCue();
         select('enterprise', false);
       } else if (location.hash === '#apply-form') {
-        window.clearTimeout(cueTimer);
         endCue();
         select('application', false);
       } else if (location.hash === '#apply') {
@@ -922,17 +921,19 @@ const hasPrice = Boolean(region?.publicPrice);
 
   .route-panel:focus { outline: none; }
 
-  /* THE ARRIVAL CUE. Landing on #apply from an Apply CTA lights both choices
-     for a moment before the form opens underneath them. The form used to be
-     open on arrival, which meant the chooser was the thing a reader scrolled
-     past on their way to the fields — so the team route was invisible to
-     anyone who did not look up. Border and ink only: --sun is a fill for an
-     action, and a button that is merely being pointed at has not been
-     chosen. */
+  /* THE ARRIVAL CUE. Landing on #apply from an Apply CTA closes both forms
+     and lights both choices, and the highlight HOLDS until somebody picks —
+     the class stays on, so these declarations outlast the pulse. The form
+     used to be open on arrival, which meant the chooser was the thing a
+     reader scrolled past on their way to the fields, and the team route was
+     invisible to anyone who did not look up. Border and ink only: --sun is a
+     fill for an action, and a button being pointed at has not been chosen —
+     which is also why this has to look different from the pressed state
+     above, and does, by the shadow. */
   .route-choice-btn.is-cueing {
     border-color: var(--text-loud);
     box-shadow: var(--shadow-lift);
-    animation: rc-cue 450ms var(--ease-out) 2;
+    animation: rc-cue 500ms var(--ease-out) 3;
   }
   @keyframes rc-cue {
     0%,
