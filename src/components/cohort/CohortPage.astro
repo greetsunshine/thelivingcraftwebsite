@@ -16,16 +16,14 @@
  * commitment, questions, application. Somebody arrives wondering whether this
  * is for them, and each section answers the next question they have.
  *
- * THE HERO PORTRAIT, RESTORED 15 September 2026
+ * THE VIDEO IS ABSENT ON PURPOSE
  *
- * The 10 September rebuild put a reserved video slot (VSL) here instead of a
- * portrait, because the brief's brief was "before footage is available, keep
- * the written page complete and omit the player." Sunil asked for the earlier
- * design back — portrait, proof bar, the fuller section set below — on
- * 15 September, after reviewing the pre-rebuild page directly
- * (git: 845ca99^:src/components/ProgramPage.astro). If the VSL is recorded
- * later, it is a slot to reintroduce beside this, not a reason to remove it
- * again; nothing here currently plays a video.
+ * The VSL has not been recorded. The brief: "Before footage is available, keep
+ * the written page complete and omit the player rather than presenting a
+ * broken video." So the slot holds its aspect ratio — reserving the space is
+ * what stops the layout jumping when it does arrive — and says plainly what
+ * goes there. A dead play button on a page asking for a serious commitment
+ * costs more than the empty space does.
  *
  * WHAT IS NOT ON THIS PAGE, AND WHY
  *
@@ -33,16 +31,11 @@
  *     week count ARE here (D1, 14 September 2026) and come from facts.ts and
  *     regions.ts; scarcity is the thing that stays off, because eight capped
  *     seats is a fact and "only two left" is a sales tactic.
- *   * No unsourced audience/product-scale claims. The pre-rebuild page's stat
- *     band and prose (100M+ users served, 150 engineers led, ~31 billion
- *     weekly executions, 300+ products modernised) had no provenance in this
- *     repository — an 11 September QA finding removed that class of claim
- *     from every public surface (docs/cohort-pipeline/RESUME.md) and it does
- *     NOT come back with the rest of the restored design.
- *   * The mentoring/coaching/training counts (100+ mentored, 100+ coached,
- *     ~100 trained) are a DIFFERENT claim — flagged in the same finding as
- *     awaiting a decision, not as unsourced — and were approved for
- *     republication on 15 September 2026. They appear in "Live experience".
+ *   * No testimonials, logos, student counts or result claims. There are none
+ *     to show and CLAUDE.md is absolute about inventing them.
+ *   * No countdown, no scarcity device. "The open cohort targets eight
+ *     members" is the delivered wording and it is deliberately softer than
+ *     the "8 seats, capped" this replaces.
  *   * No response-time promise. One business day to acknowledge is a proposal
  *     "subject to capacity agreement" in the operating guide, and the guide
  *     says in terms: do not place it in public copy as a guarantee.
@@ -51,15 +44,7 @@ import RouteForm from './RouteForm.astro';
 import GoogleCalendarBooking from './GoogleCalendarBooking.astro';
 import { cohort } from '../../data/facts';
 import type { Region } from '../../data/regions';
-import {
-  EXPLORES,
-  QUESTIONS,
-  PERSONAS,
-  TRANSFORMATION,
-  MODULES,
-  LEAVE_WITH,
-  LIVE_EXPERIENCE,
-} from '../../data/cohort-copy';
+import { EXPLORES, QUESTIONS } from '../../data/cohort-copy';
 
 /**
  * D1 was answered on 14 September 2026: the figures are published. A region is
@@ -79,73 +64,64 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
 ---
 
-{/* ── 00 · Hero ──────────────────────────────────────────────────────────── */}
-<section class="hero" id="top" style="border-top:0">
+{/* ── 1 · Outcome and VSL ───────────────────────────────────────────────── */}
+<section class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</span>
-      <h1>Build systems<br />that <em>outlive</em><br />their makers.</h1>
+      <p class="eyebrow">The Living Craft</p>
+      <h1>Design agentic systems.<br />Guide your <em>team</em>.</h1>
       <p class="credential">
-        I'm <strong>Sunil Mathew</strong>. I have spent 26 years building and leading
-        engineering at <strong>Google</strong>, <strong>Amazon</strong>, and <strong>Walmart</strong>.
-        Here I teach the craft of agentic and systems architecture, live, to a small cohort.
+        Build a working agentic system with <strong>Sunil Mathew</strong>. Develop the
+        ability to explain its design, examine its behaviour and guide the decisions
+        behind it.
       </p>
+      <p class="hero-commit">{cohort.weeks} weeks, live · {cohort.commitment} · {cohort.seats} seats</p>
 
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="#apply">Apply for the open cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         {googleCalendarAppointmentUrl && (
           <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
         )}
         <a class="btn btn-ghost" href="#ask">Ask about the cohort</a>
       </div>
 
-      <p class="hero-note">
-        {region ? `Inaugural ${region.label} cohort` : 'Inaugural cohort'} · starts {cohort.startsOn} · {cohort.seats} seats, capped · applications reviewed personally
-      </p>
+      <p class="hero-note">Applying starts a conversation about fit. It is not a payment and not a confirmed place.</p>
     </div>
 
-    <div class="portrait">
-      <div class="frame">
-        <img src="/sunil-profile.jpg" alt="Sunil Mathew" />
-        <div class="warm"></div>
+    {/* The reserved slot. Its aspect ratio is held so the page does not reflow
+        on the day the file lands, which is the brief's stated reason for
+        reserving it. */}
+    {/* No aria-label here: on a <div> with no role it is prohibited and is not
+        exposed by any screen reader, so it was a label nobody heard. The
+        visible .vsl-title below says what the slot is. */}
+    <div class="vsl">
+      <div class="vsl-frame">
+        <p class="vsl-title">Sunil on the design question behind a working agent</p>
+        <p class="vsl-note">
+          Being recorded. Captions and a full transcript will be published with it.
+        </p>
       </div>
-      <div class="tag"><b>Sunil Mathew</b>Engineering leader · Google, Amazon, Walmart</div>
+      <p class="vsl-cap">The written page below is complete. Nothing here needs the video.</p>
     </div>
   </div>
 </section>
 
-{/* ── Proof bar ──────────────────────────────────────────────────────────── */}
-<div class="proofbar">
-  <div class="wrap inner">
-    <span class="label">26 years, shipped at</span>
-    <span class="logo">Google</span>
-    <span class="logo">Amazon</span>
-    <span class="logo">Walmart</span>
-    <span class="logo">Consulting</span>
-  </div>
-</div>
-
-{/* ── 01 · Audience fit ─────────────────────────────────────────────────── */}
+{/* ── 2 · Audience fit ──────────────────────────────────────────────────── */}
 <section class="wrap band" id="fit">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">01</span> Who this is for</span>
-    <h2>For engineers who've hit the <em>ceiling</em> of what tutorials teach.</h2>
-    <p class="lead">
-      You can build. What you want now is judgment. That comes from shipping hard
-      things and living with the consequences. It is not in a course catalogue. It
-      transfers from one person to another.
-    </p>
+    <p class="eyebrow">Who this is for</p>
+    <h2>For people who already work with <em>system design</em></h2>
   </div>
-  <div class="cards3">
-    {
-      PERSONAS.map((p) => (
-        <div class="card">
-          <div class="k">{p.k}</div>
-          <h3>{p.title}</h3>
-          <p>{p.body}</p>
-        </div>
-      ))
-    }
+  <div class="two-up">
+    <p class="lead">
+      You may be an experienced engineer, architect or engineering leader. You
+      understand that a system’s design involves trade-offs, and you want to deepen
+      how you approach those choices in agentic systems.
+    </p>
+    <p class="body-copy">
+      Bring prior system-design exposure, a learning goal and the willingness to
+      build, explain your decisions and revise your work through feedback.
+    </p>
   </div>
 </section>
 
@@ -248,39 +224,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 02 · The transformation ───────────────────────────────────────────────
-    Restored 15 September 2026, from the pre-rebuild page. A–E are
-    `cohort.outcomes` in facts.ts, already fed to JSON-LD and the Q&A agent;
-    F is previously-published copy carried verbatim (see TRANSFORMATION in
-    cohort-copy.ts for why it is not treated as an invented figure). */}
-<section class="wrap transform" id="transform">
-  <div class="sec-head" style="margin-bottom:0">
-    <span class="eyebrow"><span class="num">02</span> The transformation</span>
-    <h2>What you'll be able to do.</h2>
-    <p class="lead">
-      By the end, the work shows up in how you decide. Under real constraints, with
-      real stakes.
-    </p>
-  </div>
-  <ol class="tlist">
-    {
-      TRANSFORMATION.map((item) => (
-        <li>
-          <span class="n">{item.letter}.</span>
-          <div>
-            <h4>{item.title}</h4>
-            <p>{item.body}</p>
-          </div>
-        </li>
-      ))
-    }
-  </ol>
-  <p class="lead" style="margin-top:32px">
-    Then carry it forward. The real measure of having learned the craft is being
-    able to hand it on.
-  </p>
-</section>
-
 <section class="wrap band" id="curriculum">
   <div class="sec-head">
     <p class="eyebrow">The work</p>
@@ -303,32 +246,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
       ))
     }
   </ol>
-</section>
-
-{/* ── 04 · Inside the program ────────────────────────────────────────────
-    Restored 15 September 2026. The four modules are `cohort.modules` in
-    facts.ts; the body copy for each is not invented — it is the description
-    the pre-rebuild page carried for the same four modules. */}
-<section class="wrap band" id="modules">
-  <div class="sec-head">
-    <span class="eyebrow"><span class="num">04</span> Inside the program</span>
-    <h2>A small set of deep things, done <em>properly</em>.</h2>
-    <p class="lead">
-      Six weeks. Live, in a small cohort. Built around your real systems, not toy
-      problems.
-    </p>
-  </div>
-  <div class="modules">
-    {
-      MODULES.map((m) => (
-        <div class="mod">
-          <div class="mk"><span class="num">{m.id}</span><span class="wk">{m.weeks}</span></div>
-          <h4>{m.title}</h4>
-          <p>{m.body}</p>
-        </div>
-      ))
-    }
-  </div>
 </section>
 
 {/* ── 5 · Learning process ──────────────────────────────────────────────── */}
@@ -379,7 +296,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
  */}
 <section class="wrap band" id="sunil">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">03</span> Who teaches it</p>
+    <p class="eyebrow">Who teaches it</p>
     <h2>Work with <em>Sunil Mathew</em></h2>
   </div>
 
@@ -424,59 +341,10 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 05 · What you leave with ───────────────────────────────────────────
-    Restored 15 September 2026, verbatim from the pre-rebuild page. No
-    figures here — artifacts and access, not metrics — so nothing about it
-    was in question. */}
-<section class="wrap band" id="takeaways">
-  <div class="sec-head">
-    <span class="eyebrow"><span class="num">05</span> What you leave with</span>
-    <h2>What physically <em>leaves the room</em>.</h2>
-    <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
-  </div>
-  <div class="cards3">
-    {
-      LEAVE_WITH.map((t) => (
-        <div class="card">
-          <div class="k">{t.k}</div>
-          <h3>{t.title}</h3>
-          <p>{t.body}</p>
-        </div>
-      ))
-    }
-  </div>
-</section>
-
-{/* ── 06 · Live experience ───────────────────────────────────────────────
-    Restored 15 September 2026, with one deliberate omission — see the
-    LIVE_EXPERIENCE comment in cohort-copy.ts for exactly which figures did
-    and did not come back, and why. */}
-<section class="wrap band inaugural" id="live-experience">
-  <div class="sec-head">
-    <span class="eyebrow"><span class="num">06</span> Live experience</span>
-    <h2>I've spent a career growing <em>people</em>, not just systems.</h2>
-    <p class="lead">
-      The craft only counts if it transfers, and it already has. This is the track
-      record I bring into the room.
-    </p>
-  </div>
-  <div class="cards3">
-    {
-      LIVE_EXPERIENCE.map((e) => (
-        <div class="card">
-          <div class="k">{e.k}</div>
-          <h3>{e.title}</h3>
-          <p>{e.body}</p>
-        </div>
-      ))
-    }
-  </div>
-</section>
-
 {/* ── 7 · Commitment ───────────────────────────────────────────────────── */}
 <section class="wrap band" id="commitment">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">07</span> The commitment</p>
+    <p class="eyebrow">The commitment</p>
     <h2>Make room for <em>the work</em></h2>
   </div>
 
@@ -510,7 +378,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 
   <div class="price-card">
-    <div class="seat">{region ? `Inaugural ${region.label} cohort · ` : ''}founding seats</div>
+    <div class="seat">Founding seats</div>
     {hasPrice ? (
       <Fragment>
         <div class="amt">
@@ -534,21 +402,13 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         </div>
       </Fragment>
     )}
-    <ul>
-      <li>Starts {cohort.startsOn} — {cohort.weeks} weeks live, in a founding cohort of {cohort.seats}</li>
-      <li>Your real architecture, pressure-tested live with the cohort</li>
-      <li>Direct access to Sunil throughout</li>
-      <li>Lifetime access to the cohort room</li>
-      {region?.hybrid && <li>Bangalore: attend in person or online</li>}
-    </ul>
-    <a class="btn btn-primary" href="#apply">Apply for a seat&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
   </div>
 </section>
 
 {/* ── 8 · FAQs ──────────────────────────────────────────────────────────── */}
 <section class="wrap band" id="questions">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">08</span> Before you apply</p>
+    <p class="eyebrow">Before you apply</p>
     <h2>Questions before <em>joining</em></h2>
   </div>
   <div class="faq">
@@ -571,7 +431,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 {/* ── 9 · Application ──────────────────────────────────────────────────── */}
 <section class="wrap band forms" id="apply">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">09</span> Apply</p>
+    <p class="eyebrow">Apply</p>
     <h2>Start with your experience and <em>a question</em></h2>
   </div>
 
@@ -588,28 +448,20 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     </div>
   )}
 
-  {/* Apply and the team route sit side by side — both are a full, committed
-      submission (an application, or an organisation opportunity), just two
-      different journeys. The enquiry route below is a smaller ask — "no
-      application milestone inferred", per forms.ts — so it is a dropdown
-      rather than a third equal column. */}
-  <div class="apply-split">
-    <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
+  <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
+
+  {/* The two secondary routes. Present and reachable, visually quieter — the
+      wireframe asks for a secondary action "without competing visually", and
+      an enquiry is a smaller ask that should not be dressed as an equal one. */}
+  <div class="alt-routes">
+    <div id="ask" class="alt-route">
+      <RouteForm route="enquiry" id="enquiry-form" />
+    </div>
 
     <div id="team" class="alt-route">
       <RouteForm route="enterprise" id="enterprise-form" />
     </div>
   </div>
-
-  <details class="ask-drop" id="ask">
-    <summary>
-      Ask about the cohort
-      <span class="plus" aria-hidden="true">+</span>
-    </summary>
-    <div class="alt-route">
-      <RouteForm route="enquiry" id="enquiry-form" />
-    </div>
-  </details>
 
   <p class="contact-line">
     Programme enquiries and employer-funding support, and enterprise enquiries:
@@ -772,19 +624,16 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
   /* ── forms ───────────────────────────────────────────────────────────── */
   .forms :global(.apply-form) { margin-inline: 0; }
-
-  /* Apply and the team route, side by side — see the markup comment for why
-     the enquiry route is not a third column here. */
-  .apply-split {
+  .alt-routes {
+    margin-top: var(--space-8);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
     align-items: start;
   }
   .alt-route {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-6);
   }
   .alt-route :global(.apply-form) {
@@ -792,26 +641,6 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     box-shadow: none;
     padding: 0;
     max-width: none;
-  }
-
-  /* The enquiry route, collapsed. Reuses the FAQ's bare details/summary
-     styling from global.css (the plus rotates on open) inside its own panel,
-     rather than the multi-item .faq wrapper, which assumes several stacked
-     rows with dividers between them. */
-  .ask-drop {
-    margin-top: var(--space-6);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-    border-bottom: 0;
-  }
-  .ask-drop summary { padding: var(--space-5) 0; }
-  .ask-drop[open] summary { border-bottom: var(--border-w-hair) solid var(--border-hair); }
-  .ask-drop .alt-route {
-    background: transparent;
-    box-shadow: none;
-    padding: var(--space-5) 0;
   }
   .contact-line {
     margin-top: var(--space-7);
@@ -825,7 +654,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     .two-up,
     .example,
     .commit,
-    .apply-split {
+    .alt-routes {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
