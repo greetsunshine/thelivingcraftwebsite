@@ -1,0 +1,39 @@
+{
+  "record_id": "task-CASE-7731-R01",
+  "task_id": "task-CASE-7731",
+  "attempt": 1,
+  "timestamp": "2026-09-16T09:00:00+05:30",
+  "stage": "action.refund",
+  "failure_class": "uncertain_action",
+  "detected_by": {
+    "type": "tool",
+    "name": "payment-provider"
+  },
+  "reason": "the action may have executed: gateway timed out after 30.0s",
+  "missing_evidence": [],
+  "side_effects": [
+    {
+      "action": "refund",
+      "target": "payment-provider",
+      "idempotency_key": "task-CASE-7731:refund",
+      "state": "unknown"
+    }
+  ],
+  "permitted_next_actions": [
+    "query provider state by idempotency key",
+    "escalate with the idempotency key if state cannot be read"
+  ],
+  "prohibited_actions": [
+    "re-issue the action",
+    "retry the action with a new idempotency key",
+    "report failure to the customer"
+  ],
+  "retry": {
+    "attempts_used": 1,
+    "max_attempts": 8,
+    "deadline": "2026-09-16T09:02:00+05:30",
+    "what_changes_next_attempt": "provider state is queried by idempotency key, so the next decision is made on a confirmed outcome rather than a guess"
+  },
+  "next_step": "reconcile",
+  "owner": "refunds-duty-officer"
+}

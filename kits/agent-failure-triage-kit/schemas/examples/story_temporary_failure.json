@@ -1,0 +1,31 @@
+{
+  "record_id": "task-CASE-7731-R01",
+  "task_id": "task-CASE-7731",
+  "attempt": 1,
+  "timestamp": "2026-09-16T09:00:00+05:30",
+  "stage": "evidence.receipt",
+  "failure_class": "temporary_failure",
+  "detected_by": {
+    "type": "tool",
+    "name": "document-store"
+  },
+  "reason": "dependency did not answer: read timed out after 5.0s",
+  "missing_evidence": [],
+  "side_effects": [],
+  "permitted_next_actions": [
+    "retry the same read within the task budget"
+  ],
+  "prohibited_actions": [
+    "record the read as empty",
+    "ask the user for something we have not established is missing",
+    "regenerate the recommendation"
+  ],
+  "retry": {
+    "attempts_used": 1,
+    "max_attempts": 8,
+    "deadline": "2026-09-16T09:02:00+05:30",
+    "what_changes_next_attempt": "the read is retried after 0.6s; the document store may answer. Nothing else about the task changes."
+  },
+  "next_step": "retry_tool",
+  "owner": "refunds-duty-officer"
+}
