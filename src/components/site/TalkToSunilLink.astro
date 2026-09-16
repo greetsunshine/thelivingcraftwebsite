@@ -19,8 +19,9 @@
  * transaction (a booking), which is the register the public pages hold.
  *
  * This component is the ONLY place that label and that destination are
- * written. Three surfaces render it — the cohort hero, the contact page's
- * hero, and one row of the contact routing table. If it needs to say
+ * written. It renders in the cohort hero, the contact page's hero, one row of
+ * the contact routing table, and the last row of the phone menu in both
+ * headers (MobileMenu.astro). If it needs to say
  * something else, it changes here and everywhere at once.
  *
  * IT IS A LINK, NOT A POPUP, AND IT HAS NO CONFIGURATION GATE.
@@ -42,7 +43,7 @@ export interface Props {
    * Track.astro reports any `a[href]` it does not recognise as a plain link,
    * and `data-talk-cta-placement` is what a later report would group by.
    */
-  placement: 'hero' | 'closing' | 'contact';
+  placement: 'hero' | 'closing' | 'contact' | 'menu';
   /** Same-document on the cohort page; cross-document everywhere else. */
   onCohortPage?: boolean;
   /** `textlink` is for a link inside running prose, not a button row. */

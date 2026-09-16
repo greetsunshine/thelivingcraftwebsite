@@ -196,7 +196,10 @@ header.nav {
 .navlinks { display: flex; gap: var(--space-3) var(--space-5); align-items: center; flex-wrap: wrap; font-size: var(--size-3); color: var(--text-quiet); }
 .navlinks a { white-space: nowrap; }
 .navlinks a:hover { color: var(--text-loud); }
-@media (max-width: 900px) { .navlinks a:not(.btn) { display: none; } }
+/* Direct children only (`>`). The phone menu (MobileMenu.astro) sits inside
+   .navlinks and holds these same links; a descendant selector hid those too,
+   leaving a menu that opened onto an empty panel. */
+@media (max-width: 900px) { .navlinks > a:not(.btn) { display: none; } }
 
 .region-switch {
   display: inline-flex; gap: 3px; align-items: center;

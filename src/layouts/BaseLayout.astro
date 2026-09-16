@@ -6,6 +6,8 @@ import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
+import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
@@ -53,6 +55,17 @@ const year = new Date().getFullYear();
               of every page now carries one action only. The conversation is
               still one scroll away, in the hero and in section 14. */}
           <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+          {/* Phones only: the links above are hidden below 900px, and this
+              is how a phone reaches them. It also carries Talk with Sunil,
+              which left the header on 16 September. */}
+          <MobileMenu>
+            <a href="/#fit">Who it is for</a>
+            <a href="/#curriculum">The work</a>
+            <a href="/#sunil">Sunil</a>
+            <a href="/#commitment">Commitment</a>
+            <a href="/#questions">Questions</a>
+            <TalkToSunilLink placement="menu" variant="textlink" onCohortPage />
+          </MobileMenu>
         </nav>
       </div>
     </header>

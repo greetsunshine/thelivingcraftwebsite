@@ -1,46 +1,35 @@
 ---
 /**
- * The persistent application prompt.
+ * The persistent application prompt. Wide screens only.
  *
- * IT CARRIES ONE ACTION, AND THAT ACTION IS APPLY
+ * WHAT IT IS
  *
- * It carried two for part of 16 September — Apply and a "Book now" secondary
- * — and Sunil asked the same day for the floating Book now to go and for
- * Apply to take the right-hand side. So there is one action here now. The
- * conversation has not been removed from the site: "Talk with Sunil" is in
- * the cohort hero and on /contact, and section 14 of the cohort page is where
- * both of those land.
+ * A bar across the foot of the page, with one line of copy on the left and
+ * Apply on the right. It appears after the first 640px of scrolling and gets
+ * out of the way while the application section itself is on screen.
  *
- * That also settles what this component is for, which two buttons had made
- * fuzzy. It is the shortcut to the one thing the page is asking for.
+ * WHY THERE IS NO PHONE SHAPE
  *
- * TWO SHAPES, AND THEY DO DIFFERENT JOBS
+ * There was one for most of 16 September: a small round button, draggable,
+ * opening at the middle of the right edge. It said Book now, then Apply. Sunil
+ * asked the same day for it to go: "remove the floating apply in mobile."
+ * So below 640px this component renders nothing visible and runs nothing
+ * beyond one media check. A phone reaches Apply from the header, which carries
+ * it on every page, and from the hero and the price card on the cohort page.
+ * The hamburger menu (MobileMenu.astro) reaches everything else.
  *
- * On a wide screen it is a bar across the foot of the page, with the copy on
- * the left and Apply on the right. On a phone it is a small round Apply
- * button against the right edge that can be dragged anywhere and needs a
- * single tap: no sheet to open, no second step.
+ * If a phone shape comes back, the drag code is in git at 5c20938. Read the
+ * comments there first: it is an anchor with a pointer enhancement laid over
+ * it, not a button, and that is what kept it working without the script.
  *
- * IT IS AN ANCHOR, NOT A BUTTON. Dragging is a pointer-only enhancement laid
- * over an ordinary link, so the tap target still behaves like a link for
- * keyboard, long-press and middle-click, and still works if the script never
- * runs.
+ * WHY A BAR AND NOT A MODAL. The public pages' voice rule is restraint —
+ * "respected practitioner… not SaaS-templated, not bootcamp-hype" — and a
+ * dialog thrown over the page is exactly that hype. It takes no focus and
+ * blocks nothing behind it.
  *
- * WHY A BAR AND NOT A MODAL, ON EITHER SHAPE. The public pages' voice rule is
- * restraint — "respected practitioner… not SaaS-templated, not bootcamp-hype"
- * — and a dialog thrown over the page is exactly that hype. Neither shape
- * takes focus or blocks the page behind it.
- *
- * IT DOES NOT COLLIDE WITH THE ASK WIDGET. That one is pinned to the bottom
- * right corner on a phone; this one opens at the vertical middle of the right
- * edge. Somebody can drag this onto it, which is their choice to make.
- *
- * WHAT IS NOT REMEMBERED, AND WHY. Neither the dismissal nor the dragged
- * position survives a reload. CLAUDE.md's no-localStorage/sessionStorage rule
- * is in force on every public surface, so both live in a JS variable and die
- * with the page. That is the correct trade under that rule rather than a
- * shortcut around it: remembering either would mean writing to the visitor's
- * browser, which this site does not do anywhere.
+ * WHAT IS NOT REMEMBERED, AND WHY. A dismissal does not survive a reload.
+ * CLAUDE.md's no-localStorage/sessionStorage rule is in force on every public
+ * surface, so it lives in a JS variable and dies with the page.
  *
  * Included once in BaseLayout and once in PracticeLayout — the cohort page
  * and the wider practice pages. Deliberately NOT on /caio or /assessment:
@@ -69,9 +58,7 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     <p class="sa-copy">Build a working agentic system with Sunil Mathew.</p>
 
     {/* Apply sits at the right-hand end of the bar, between the copy and the
-        dismiss control. `.sa-inner` is `justify-content: space-between`, so
-        the copy takes the left and this takes the right with nothing
-        specified about the middle. */}
+        dismiss control. */}
     <div class="sa-actions">
       <a class="btn btn-primary" href={applyHref}>
         Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
@@ -84,12 +71,6 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       </svg>
     </button>
   </div>
-
-  {/* The phone shape: one tap, straight to the application. Hidden above the
-      breakpoint, where the bar is the whole control. `touch-action: none` in
-      the stylesheet is what lets a drag start on it without the browser
-      claiming the gesture for scrolling. */}
-  <a class="sa-fab" href={applyHref} data-sa-fab>Apply</a>
 </div>
 
 <script>
@@ -98,12 +79,9 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     if (!bar) return;
 
     const dismissBtn = bar.querySelector<HTMLButtonElement>('[data-sticky-dismiss]');
-    const fab = bar.querySelector<HTMLAnchorElement>('[data-sa-fab]');
 
     // The sections this prompt is a shortcut to. While one of them is on
     // screen the shortcut has nothing to offer, so it gets out of the way.
-    // Only application landmarks now — the prompt stopped offering the
-    // booking section when it stopped carrying a second button.
     const landmarks = Array.from(
       document.querySelectorAll<HTMLElement>('#apply, #apply-panel, #apply-form'),
     );
@@ -111,28 +89,17 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     let dismissed = false;
     let landmarkVisible = false;
 
-    /** True while the phone shape is the one on screen. Matches the stylesheet. */
-    const isPhone = () => window.matchMedia('(max-width: 640px)').matches;
+    /** Matches the stylesheet's breakpoint. Below it, the prompt never shows. */
+    const phone = window.matchMedia('(max-width: 640px)');
 
     // The bar spans the foot of the page, so the footer's last line needs
-    // clearing. The circle is a small edge overlay and needs none — and
-    // padding the body for it would leave a gap on every phone.
+    // clearing — but only while the bar is actually there.
     const setBodyClearance = () => {
-      document.body.style.paddingBottom = bar!.hidden || isPhone() ? '' : `${bar!.offsetHeight}px`;
+      document.body.style.paddingBottom = bar.hidden ? '' : `${bar.offsetHeight}px`;
     };
 
     const evaluate = () => {
-      if (dismissed) {
-        bar!.hidden = true;
-        setBodyClearance();
-        return;
-      }
-      // The circle is there from the moment the page loads — it is a
-      // shortcut, and one that only appears after 640px of scrolling is not
-      // much of one on a phone. The bar still waits, because a bar across
-      // the foot of an unread page is the intrusive version.
-      const ready = isPhone() || window.scrollY > 640;
-      bar!.hidden = !ready || landmarkVisible;
+      bar.hidden = dismissed || phone.matches || landmarkVisible || window.scrollY <= 640;
       setBodyClearance();
     };
 
@@ -166,6 +133,9 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       { passive: true },
     );
 
+    phone.addEventListener('change', evaluate);
+    window.addEventListener('resize', evaluate, { passive: true });
+
     dismissBtn?.addEventListener('click', () => {
       dismissed = true;
       evaluate();
@@ -178,103 +148,6 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
       dismissed = true;
       evaluate();
     });
-
-    // ── dragging the circle ───────────────────────────────────────────────
-    if (fab) {
-      let pointerId = -1;
-      let dragged = false;
-      let startX = 0;
-      let startY = 0;
-      let originX = 0;
-      let originY = 0;
-
-      /** Keep the whole control on screen, whatever the drag or the rotation. */
-      const clamp = (left: number, top: number) => {
-        const rect = bar!.getBoundingClientRect();
-        const margin = 8;
-        const maxLeft = window.innerWidth - rect.width - margin;
-        const maxTop = window.innerHeight - rect.height - margin;
-        return {
-          left: Math.min(Math.max(left, margin), Math.max(margin, maxLeft)),
-          top: Math.min(Math.max(top, margin), Math.max(margin, maxTop)),
-        };
-      };
-
-      const place = (left: number, top: number) => {
-        const at = clamp(left, top);
-        bar!.style.left = `${at.left}px`;
-        bar!.style.top = `${at.top}px`;
-        bar!.style.right = 'auto';
-        bar!.style.bottom = 'auto';
-        bar!.dataset.placed = 'true';
-      };
-
-      /** A dragged position is meaningless once the bar is the shape again. */
-      const clearPlacement = () => {
-        bar!.style.left = '';
-        bar!.style.top = '';
-        bar!.style.right = '';
-        bar!.style.bottom = '';
-        delete bar!.dataset.placed;
-      };
-
-      fab.addEventListener('pointerdown', (event) => {
-        if (!isPhone()) return;
-        pointerId = event.pointerId;
-        dragged = false;
-        startX = event.clientX;
-        startY = event.clientY;
-        const rect = bar!.getBoundingClientRect();
-        originX = rect.left;
-        originY = rect.top;
-        fab.setPointerCapture(pointerId);
-      });
-
-      fab.addEventListener('pointermove', (event) => {
-        if (event.pointerId !== pointerId) return;
-        const dx = event.clientX - startX;
-        const dy = event.clientY - startY;
-        // A few pixels of travel is a tap with a shaky thumb, not a drag.
-        if (!dragged && Math.hypot(dx, dy) < 8) return;
-        dragged = true;
-        place(originX + dx, originY + dy);
-      });
-
-      const endDrag = (event: PointerEvent) => {
-        if (event.pointerId !== pointerId) return;
-        pointerId = -1;
-        if (fab.hasPointerCapture(event.pointerId)) fab.releasePointerCapture(event.pointerId);
-      };
-
-      fab.addEventListener('pointerup', endDrag);
-      fab.addEventListener('pointercancel', endDrag);
-
-      // Moving it is not asking to follow it. Anything that was not a drag
-      // falls through as an ordinary link click.
-      fab.addEventListener('click', (event) => {
-        if (!dragged) return;
-        event.preventDefault();
-        dragged = false;
-      });
-
-      // A dragged position is in viewport pixels, so a rotation or a resize
-      // can leave it off screen. Re-clamp rather than reset: somebody put it
-      // where they wanted it.
-      window.addEventListener(
-        'resize',
-        () => {
-          if (!isPhone()) clearPlacement();
-          else if (bar!.dataset.placed === 'true') {
-            const rect = bar!.getBoundingClientRect();
-            place(rect.left, rect.top);
-          }
-          evaluate();
-        },
-        { passive: true },
-      );
-    } else {
-      window.addEventListener('resize', evaluate, { passive: true });
-    }
 
     evaluate();
   })();
@@ -292,6 +165,13 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     border-top: var(--border-w-hair) solid var(--border-hair);
   }
   .sticky-apply[hidden] { display: none; }
+
+  /* Belt and braces with the script: if it never runs, the `hidden` attribute
+     in the markup already keeps this off screen; if it runs and a width change
+     races it, this keeps the bar off a phone regardless. */
+  @media (max-width: 640px) {
+    .sticky-apply { display: none; }
+  }
 
   .sa-inner {
     max-width: var(--maxw);
@@ -339,59 +219,5 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
   .sa-dismiss:focus-visible {
     outline: var(--focus-w) solid var(--focus-ring);
     outline-offset: var(--focus-offset);
-  }
-
-  /* The circle belongs to the phone shape only. */
-  .sa-fab { display: none; }
-
-  /* ── the phone shape ──────────────────────────────────────────────────────
-     A small round Apply button, sitting against the right edge at the
-     vertical middle of the screen, draggable anywhere from there. One tap
-     goes to the application; there is no sheet and no second step. */
-  @media (max-width: 640px) {
-    .sticky-apply {
-      left: auto;
-      right: var(--space-4);
-      /* Middle right on load. Half the circle's own height, so the middle of
-         the button is the middle of the screen rather than its top edge. */
-      top: calc(50% - 32px);
-      bottom: auto;
-      background: transparent;
-      box-shadow: none;
-      border-top: 0;
-    }
-
-    /* The bar's contents have no phone shape — the circle replaces them
-       rather than folding them into a sheet. */
-    .sa-inner { display: none; }
-
-    .sa-fab {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      width: 64px;
-      height: 64px;
-      padding: 0 var(--space-2);
-      border-radius: var(--radius-pill);
-      border: var(--border-w-hair) solid var(--control-primary-bg);
-      background: var(--control-primary-bg);
-      color: var(--control-primary-fg);
-      box-shadow: var(--shadow-overlay);
-      cursor: grab;
-      /* Without this the browser claims the gesture for scrolling and the
-         drag never gets a pointermove. */
-      touch-action: none;
-      font-family: var(--font-body);
-      font-size: var(--size-2);
-      font-weight: var(--weight-medium);
-      line-height: var(--lh-snug);
-    }
-    .sa-fab:active { cursor: grabbing; }
-    .sa-fab:hover { color: var(--control-primary-fg); }
-    .sa-fab:focus-visible {
-      outline: var(--focus-w) solid var(--focus-ring);
-      outline-offset: var(--focus-offset);
-    }
   }
 </style>

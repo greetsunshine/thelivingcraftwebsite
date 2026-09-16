@@ -223,6 +223,26 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## Phones: no floating button, and a hamburger menu — 16 September, last pass
+
+- **Nothing floats on a phone any more except the Ask pill.** `StickyApplyBar.astro` lost its
+  phone shape and its drag code. Below 640px it shows nothing; above, it is still the bar
+  with Apply on the right. The drag code is in git at `5c20938` if a phone shape returns.
+- **Both headers have a hamburger menu below 900px** (`MobileMenu.astro`), in the slot the
+  top-right Book now used to hold. Below 900px the text links were hidden with no other route
+  to them. The menu shows the same links plus **Talk with Sunil**. It is not a dialog: it
+  closes on a link tap, Escape, a tap outside, or widening past 900px.
+- **The rule that hides header links is now direct-children only** (`.navlinks > a` in
+  `global.css`, `.sitenav-links > a` in `SiteNav.astro`). The descendant form also hid the
+  menu's own links. Keep the `>` if you edit either.
+- On practice pages the header wraps to two rows on a phone, as it did before.
+  `.sitenav-links` now takes the whole second row and packs to the end, so the menu button
+  stays on the right edge.
+- **Tested in headless Chromium at 390×844**, not only by reading markup: the menu opens with 6
+  links on `/` and `/about/`. Escape closes it. Tapping "Questions" closes it and lands the
+  heading 160px from the top, clear of the 77px header. At 1280px the button is hidden and
+  the bar shows.
+
 ## The secondary CTA is "Talk with Sunil", and there are three of them — 16 September, later
 
 Sunil's second pass on the same day. Five changes, and the first three are one idea: **the
