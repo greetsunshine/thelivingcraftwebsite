@@ -35,6 +35,7 @@
 
 import type { APIRoute } from 'astro';
 import { handleResourceRequest } from '../../../lib/pipeline/resource-request';
+import { resolveResource } from '../../../lib/pipeline/resources';
 import { parseScores, renderPocScreenPdf } from '../../../lib/resources/poc-screen-pdf';
 
 export const prerender = false;
@@ -49,19 +50,29 @@ const REFUSED = 'We could not accept that request. The page is the resource eith
 
 /**
  * Which resources have a PDF, and how each one is built. One entry today. A
- * second resource gets a second renderer here, never a branch on the id
- * inside the handler.
+ * second resource gets a second entry here, never a branch on the id inside
+ * the handler.
+ *
+ * `parse` runs BEFORE the request is saved, and that order matters. The save
+ * writes a person, a request row, a queued email and an event. Refusing the
+ * payload after all of that is written leaves a record for a request that
+ * got nothing, and a retry under a fresh key writes a second one. So the
+ * payload is checked first, and only a request that will get its file is
+ * saved.
  */
-const RENDERERS: Record<
-  string,
-  (body: Record<string, unknown>, name: string) => Promise<{ bytes: Uint8Array; filename: string } | null>
-> = {
-  'poc-screen': async (body, name) => {
-    const scores = parseScores(body.scores);
-    if (!scores) return null;
-    const bytes = await renderPocScreenPdf({ scores, name, builtOn: new Date().toISOString() });
-    return { bytes, filename: 'poc-selection-tool-scored.pdf' };
-  },
+interface Renderer<T> {
+  parse: (body: Record<string, unknown>) => T | null;
+  render: (payload: T, name: string) => Promise<Uint8Array>;
+  filename: string;
+}
+
+const RENDERERS: Record<string, Renderer<any>> = {
+  'poc-screen': {
+    parse: (body) => parseScores(body.scores),
+    render: (scores: (number | null)[], name) =>
+      renderPocScreenPdf({ scores, name, builtOn: new Date().toISOString() }),
+    filename: 'poc-selection-tool-scored.pdf',
+  } satisfies Renderer<(number | null)[]>,
 };
 
 export const POST: APIRoute = async (ctx) => {
@@ -72,33 +83,43 @@ export const POST: APIRoute = async (ctx) => {
     return json({ ok: false, error: REFUSED }, 400);
   }
 
-  const outcome = await handleResourceRequest(ctx, body);
-  if (outcome.kind === 'refused') return json(outcome.body, outcome.status);
+  // Which resource, and does it have a PDF, and is the payload good: all
+  // answered before anything is written. `handleResourceRequest()` resolves
+  // the resource again with the same function, so the two cannot disagree.
+  const lookup = resolveResource(body.resource);
+  if (lookup.state !== 'ok') return json({ ok: false, error: REFUSED }, 400);
 
-  const render = RENDERERS[outcome.resource.id];
-  if (!render) {
+  const renderer = RENDERERS[lookup.resource.id];
+  if (!renderer) {
     // A real resource with no PDF. Refused rather than answered with an empty
-    // file, and refused AFTER the save on purpose: the request was valid and
-    // the person still gets their email copy.
+    // file, and refused BEFORE the save: the JSON route is the one for an
+    // email copy alone, and the page for that resource links to it.
     return json({ ok: false, error: 'That resource has no PDF. The page itself is the copy.' }, 400);
   }
+
+  const payload = renderer.parse(body);
+  if (payload === null) return json({ ok: false, error: REFUSED }, 400);
+
+  const outcome = await handleResourceRequest(ctx, body);
+  if (outcome.kind === 'refused') return json(outcome.body, outcome.status);
 
   const name =
     typeof (body.answers as Record<string, unknown> | undefined)?.name === 'string'
       ? String((body.answers as Record<string, unknown>).name).trim().slice(0, 200)
       : '';
 
-  let file: { bytes: Uint8Array; filename: string } | null;
+  let file: { bytes: Uint8Array; filename: string };
   try {
-    file = await render(body, name);
+    file = { bytes: await renderer.render(payload, name), filename: renderer.filename };
   } catch (err) {
+    // The request IS saved at this point, so the person still gets their
+    // email copy; only the file failed.
     console.error('resource pdf render threw:', err instanceof Error ? err.name : 'unknown');
     return json(
       { ok: false, error: 'We could not build the PDF just now. Use Print on the page instead.' },
       500,
     );
   }
-  if (!file) return json({ ok: false, error: REFUSED }, 400);
 
   // Base64 in JSON rather than a binary body, so the save outcome and the file
   // travel together and the browser branches on one shape. A scored copy is
