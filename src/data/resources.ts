@@ -58,7 +58,7 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Selection Tool" and "The Run-Cost Model" are names, and a reader
+   * "The POC Selection Tool" and "The Model Selection Tool" are names, and a reader
    * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
@@ -147,26 +147,26 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-13',
   },
   {
-    id: 'model-selection-checklist',
+    id: 'model-selection-tool',
     number: '03',
     topic: 'Model Selection',
     series: 'Agentic system design',
-    title: 'The Model Selection Checklist',
-    kind: 'Checklist · 26 checks',
+    title: 'The Model Selection Tool',
+    kind: 'Interactive tool \u00b7 27 answers \u00b7 2 reference candidates',
     summary:
-      'What to check before you choose a model for one step of your system, in the order to check it.',
+      'Score one candidate model for one step of your system, from the model card and your own test runs, and read whether it is fit.',
     description:
-      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This checklist is the generic version of the method: it works for support triage, invoice checks, code review, claim intake or anything else where a model reads something and produces a decision. Ten gates read off the model card in half an hour, each saying what a pass looks like and what a fail actually costs. Twelve things to score, each written as the single question you are answering, with starting weights for three kinds of step: drafting for a person, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases you build out of your own work, including one where you plant the answer yourself so you know what should have been there, and one where the cost of doing nothing is the whole point. Then the method for scoring what is missing, and a one-page decision record to write on the day you choose. The boxes tick in the browser and nothing is stored.',
+      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This tool scores one candidate for one step. First you choose the job the model is being staffed on: drafting for a person, flagging and routing, or acting on its own. That sets the weights. Then ten deployment gates, pass or fail from the model card, each saying what a pass looks like and what a fail costs. Then twelve behaviours scored 0, 1 or 2 from ten runs on four test cases you build out of your own work, each with a written threshold so two people land on the same number. Then four disqualifiers that end a candidate whatever it scored. The score bar stays on screen and the result reads the rubric: fit for this step, fit with covers, or not for this step, with the rows to cover before you choose and the test case that is the evidence for each one. Two reference candidates for the same step can be loaded into the tool: the higher-scoring one is out on a disqualifier, the lower-scoring one is the one to write the record for. The four test cases, the method for scoring what is missing and the one-page decision record follow.',
     useFor: [
       'Remove half a candidate list in half an hour, before running a single test',
-      'Weight the twelve criteria for the specific step you are staffing rather than for the system',
+      'Weight the twelve behaviours for the specific step you are staffing rather than for the system',
       'Build four test cases out of your own work, with an answer key written before the first run',
       'Measure what a model leaves out, which no benchmark and no quality review will show you',
       'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Page, with tickable checkboxes, blank tables and a decision record. A Download as PDF control opens the print dialogue. Nothing is stored or sent.',
-    url: '/resources/model-selection-checklist',
+      'Interactive. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go. Two reference candidates on their own tab can be loaded into the tool. Copy the scorecard or print it without giving anything. A PDF of your scored copy is built against a name and an email address.',
+    url: '/resources/model-selection-tool',
     publishedAt: '2026-09-15',
   },
   {

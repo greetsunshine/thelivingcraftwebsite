@@ -20,6 +20,9 @@ export default defineConfig({
     '/india': '/?region=india',
     '/dubai': '/?region=dubai',
     '/australia': '/?region=australia',
-    '/resources/contract-agent-test-kit': '/resources/model-selection-checklist',
+    // Two earlier addresses for the model selection tool. Both point at the
+    // current one directly, so nobody follows a chain of two redirects.
+    '/resources/contract-agent-test-kit': '/resources/model-selection-tool',
+    '/resources/model-selection-checklist': '/resources/model-selection-tool',
   },
 });

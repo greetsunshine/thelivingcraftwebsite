@@ -1,6 +1,6 @@
 // Content for /resources/agent-failure-triage-kit.
 //
-// Same split as model-selection-checklist.ts: the page is markup, this is the
+// Same split as model-selection-tool.ts: the page is markup, this is the
 // words and the tables. Two reasons it is worth the extra file. The tables are
 // long and a reader of the .astro file should be able to see the structure;
 // and a number that appears in two places should come from one constant.
