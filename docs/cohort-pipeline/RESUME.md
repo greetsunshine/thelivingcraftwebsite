@@ -66,7 +66,7 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
-## Two tools now have an email-gated PDF — 17 September
+## Three tools now have an email-gated PDF — 17 September
 
 `/resources/poc-screen` and `/resources/agent-authority-review` were both rebuilt on
 Sunil's twelve-point list (plain English, a purpose block, a bar that stays on screen, a
@@ -90,13 +90,28 @@ to know before touching it:
   response. The schema is not applied on production, so today every PDF request takes that
   path: the visitor gets the file, nothing is recorded, and the dialog says so in one
   sentence. Once the schema is run, the same request records a person, a resource request
-  and a queued (held) delivery with the `resource-poc-screen` or
-  `resource-agent-authority-review` wording.
+  and a queued (held) delivery with the `resource-poc-screen`,
+  `resource-agent-authority-review` or `resource-run-cost-model` wording.
 
-The scores, and the authority review's steps, travel to the server for the file and are
-not stored anywhere.
+The scores, the authority review's steps and the cost model's figures travel to the server
+for the file and are not stored anywhere.
+
+**The Run-Cost Model joined them last.** `/resources/run-cost-model` replaces the Excel
+download as the resource's address, built in the POC tool's shape with two tabs (*Your
+model*, *Reference example*). Three more things to know:
+
+- **`src/data/run-cost-model.ts` is the model.** The formulas are the workbook's, row for
+  row, and were checked against the sheet's computed values. If a formula changes there,
+  change `public/downloads/agent-run-cost-model.xlsx` in the same commit; the workbook is
+  still linked from the foot of the page.
+- **A blank is unknown, not zero.** The opposite of the POC tool. A total stays blank until
+  every line that feeds it is set, and the outcome reads only at 83/83. Do not add a
+  default or a fallback to 0: "this system never retries" is a claim the tool must not make.
+- **The three PDF renderers share `lib/resources/pdf-writer.ts`.** It was two identical
+  copies until today. A fourth renderer imports it; it does not copy it.
 
 ---
+
 ## The maker section is back on `/`, without the numbers — 15 September
 
 Section 6 of the cohort page was one approved paragraph. It is now the full maker

@@ -1,5 +1,6 @@
 // The PDF of a filled resource, handed over against an email address. Today
-// that is the POC Selection Tool and the Agent Authority Review.
+// that is the POC Selection Tool, the Agent Authority Review and the Run-Cost
+// Model Tool.
 //
 // Same request as /api/pipeline/resource — the same rate limit, honeypot,
 // key, fields, save and queued delivery, through the same function — plus a
@@ -39,7 +40,9 @@ import { handleResourceRequest } from '../../../lib/pipeline/resource-request';
 import { resolveResource } from '../../../lib/pipeline/resources';
 import { parseScores, renderPocScreenPdf } from '../../../lib/resources/poc-screen-pdf';
 import { parseSheet, renderAuthorityReviewPdf } from '../../../lib/resources/authority-review-pdf';
+import { parseInputs, renderRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
 import type { SheetRow } from '../../../data/authority-review';
+import type { ModelInputs } from '../../../data/run-cost-model';
 
 export const prerender = false;
 
@@ -81,6 +84,17 @@ const RENDERERS: Record<string, Renderer<any>> = {
       renderAuthorityReviewPdf({ rows, name, builtOn: new Date().toISOString() }),
     filename: 'agent-authority-review-assessment.pdf',
   } satisfies Renderer<SheetRow[]>,
+  'run-cost-model': {
+    // `isExample` only changes one line of the cover; a wrong value cannot
+    // change a number, so it is read leniently and the inputs strictly.
+    parse: (body) => {
+      const inputs = parseInputs(body.inputs);
+      return inputs ? { inputs, isExample: body.isExample === true } : null;
+    },
+    render: (payload: { inputs: ModelInputs; isExample: boolean }, name) =>
+      renderRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
+    filename: 'run-cost-model.pdf',
+  } satisfies Renderer<{ inputs: ModelInputs; isExample: boolean }>,
 };
 
 export const POST: APIRoute = async (ctx) => {

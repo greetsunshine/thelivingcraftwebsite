@@ -411,6 +411,21 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_PACKAGE_VERSION,
   },
 
+  // The Run-Cost Model Tool: the third tool with a PDF. The PDF carries the
+  // person's own rates and volumes, so the email points at the page and
+  // carries nothing.
+  {
+    key: 'resource-run-cost-model',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Run-Cost Model Tool',
+    body:
+      'Here is the Run-Cost Model Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/run-cost-model\n\nIt costs four ways of doing the same job over one period: a rules workflow, the same rules rebuilt on a written spec, a model that drafts while a person approves, and a full agent with tools. Build cost is kept apart from run cost, and the number it lands on is cost per acceptable outcome. The page works out every line as you type, names the leading option, and can build a PDF of your model whenever you want one. The reference example is on its own tab.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+
 ];
 
 /**
