@@ -66,13 +66,19 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
-## The POC Selection Tool has an email-gated PDF — 17 September
+## Two tools now have an email-gated PDF — 17 September
 
-`/resources/poc-screen` was rebuilt on Sunil's twelve-point list (plain English, a purpose
-block, a score bar that stays on screen, a result summary, *New assessment*, aligned
-layout). The one piece with a backend is the PDF: **Get the PDF** opens a name-and-email
-dialog, posts to `/api/pipeline/resource-pdf`, and the server builds the scored copy with
-`pdf-lib` and returns it in the JSON as base64. Three things to know before touching it:
+`/resources/poc-screen` and `/resources/agent-authority-review` were both rebuilt on
+Sunil's twelve-point list (plain English, a purpose block, a bar that stays on screen, a
+result summary, *New assessment*, reference examples, aligned layout). The authority
+review went further than a rewrite: it was a table to print and is now a sheet the
+visitor types into, with the reading rules as `readRow()` / `readSheet()` in
+`src/data/authority-review.ts`. The one piece with a backend on either page is the PDF:
+**Get the PDF** opens a name-and-email dialog, posts to `/api/pipeline/resource-pdf`, and
+the server builds the copy with `pdf-lib` and returns it in the JSON as base64. Each tool
+has its own renderer in that route's map (`lib/resources/poc-screen-pdf.ts`,
+`lib/resources/authority-review-pdf.ts`) and its own held delivery wording. Three things
+to know before touching it:
 
 - **The page stays open.** Score, copy, print: nothing asks for anything. Only the PDF does.
   That keeps it inside the V4 addendum's "optional email request" and off the "gated
@@ -84,9 +90,11 @@ dialog, posts to `/api/pipeline/resource-pdf`, and the server builds the scored 
   response. The schema is not applied on production, so today every PDF request takes that
   path: the visitor gets the file, nothing is recorded, and the dialog says so in one
   sentence. Once the schema is run, the same request records a person, a resource request
-  and a queued (held) delivery with the `resource-poc-screen` wording.
+  and a queued (held) delivery with the `resource-poc-screen` or
+  `resource-agent-authority-review` wording.
 
-The scores travel to the server for the file and are not stored anywhere.
+The scores, and the authority review's steps, travel to the server for the file and are
+not stored anywhere.
 
 ---
 ## The maker section is back on `/`, without the numbers — 15 September

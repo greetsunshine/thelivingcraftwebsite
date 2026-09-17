@@ -1,4 +1,5 @@
-// The PDF of a scored POC Selection Tool, handed over against an email address.
+// The PDF of a filled resource, handed over against an email address. Today
+// that is the POC Selection Tool and the Agent Authority Review.
 //
 // Same request as /api/pipeline/resource — the same rate limit, honeypot,
 // key, fields, save and queued delivery, through the same function — plus a
@@ -9,7 +10,7 @@
 // WHAT THE GATE IS, AND WHAT IT IS NOT
 // ───────────────────────────────────────────────────────────────────────────
 //
-// The PAGE is open. Anybody can score the twelve questions, read the result,
+// The PAGE is open. Anybody can fill the tool, read the result,
 // copy the scorecard and print it, and none of that asks for anything. The
 // PDF is the one artefact that asks for a name and an address first, and it is
 // the honest place for that ask: it is a copy to keep and to pass around, the
@@ -29,14 +30,16 @@
 // ───────────────────────────────────────────────────────────────────────────
 //
 // `resource_request_submit()` has no argument for them, and that is right: a
-// scored copy of somebody's proof of concept is their working document, not a
-// lead attribute. The scores go into the PDF and nowhere else. The page says
-// exactly this beside the form.
+// scored copy of somebody's proof of concept, or the steps of their own
+// workflow, is their working document, not a lead attribute. The answers go
+// into the PDF and nowhere else. Each page says exactly this beside the form.
 
 import type { APIRoute } from 'astro';
 import { handleResourceRequest } from '../../../lib/pipeline/resource-request';
 import { resolveResource } from '../../../lib/pipeline/resources';
 import { parseScores, renderPocScreenPdf } from '../../../lib/resources/poc-screen-pdf';
+import { parseSheet, renderAuthorityReviewPdf } from '../../../lib/resources/authority-review-pdf';
+import type { SheetRow } from '../../../data/authority-review';
 
 export const prerender = false;
 
@@ -49,9 +52,8 @@ const json = (body: unknown, status: number) =>
 const REFUSED = 'We could not accept that request. The page is the resource either way.';
 
 /**
- * Which resources have a PDF, and how each one is built. One entry today. A
- * second resource gets a second entry here, never a branch on the id inside
- * the handler.
+ * Which resources have a PDF, and how each one is built. Each resource gets
+ * its own entry here, never a branch on the id inside the handler.
  *
  * `parse` runs BEFORE the request is saved, and that order matters. The save
  * writes a person, a request row, a queued email and an event. Refusing the
@@ -73,6 +75,12 @@ const RENDERERS: Record<string, Renderer<any>> = {
       renderPocScreenPdf({ scores, name, builtOn: new Date().toISOString() }),
     filename: 'poc-selection-tool-scored.pdf',
   } satisfies Renderer<(number | null)[]>,
+  'agent-authority-review': {
+    parse: (body) => parseSheet(body.sheet),
+    render: (rows: SheetRow[], name) =>
+      renderAuthorityReviewPdf({ rows, name, builtOn: new Date().toISOString() }),
+    filename: 'agent-authority-review-assessment.pdf',
+  } satisfies Renderer<SheetRow[]>,
 };
 
 export const POST: APIRoute = async (ctx) => {

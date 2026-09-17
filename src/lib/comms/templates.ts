@@ -396,6 +396,20 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     actions: [],
     version: RESOURCE_PACKAGE_VERSION,
   },
+  // The Agent Authority Review: the second tool with a PDF, keyed by its page
+  // slug for the same reason. The PDF carries the person's own workflow steps,
+  // so, as above, the email carries no attachment and points at the page.
+  {
+    key: 'resource-agent-authority-review',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Agent Authority Review',
+    body:
+      'Here is the Agent Authority Review you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/agent-authority-review\n\nIt decides which steps of a workflow an AI agent may own, which it may only suggest on, and which stay as plain code. You type the steps, answer three questions for each one, and the rubric names the owner beside every step as you go. Three worked examples are on the page, and it can build a PDF of your assessment whenever you want one.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
 
 ];
 
