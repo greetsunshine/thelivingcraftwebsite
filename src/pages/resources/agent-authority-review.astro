@@ -187,6 +187,22 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             <span class="sb-sec" data-k="suggest">Human approves <b id="tally-suggest">0</b></span>
             <span class="sb-sec" data-k="stop">Stop <b id="tally-stop">0</b></span>
           </div>
+          {/* The legend, in short. It rides with the bar so the meaning of R0 to
+              R3 is on screen while the rows scroll. The full legend stays above
+              the rows. */}
+          <div class="sb-legend" aria-label="What each answer means, in short">
+            <span class="sb-lg-row">
+              {UNDO_SCALE.map((b) => (
+                <span class="sb-lg" data-lvl={b.level}><b class="mono">{b.level}</b> <span class="lg-long">{b.short}</span><span class="lg-terse">{b.terse}</span></span>
+              ))}
+            </span>
+            <span class="sb-lg-row sb-lg-more">
+              <span class="sb-lg"><b>Checked / Assumed</b> is the evidence confirmed, or taken on trust</span>
+              <span class="sb-lg"><b>One right answer</b> a rule, so code</span>
+              <span class="sb-lg"><b>Engineers can disagree</b> judgment, so an agent or a person</span>
+              <span class="sb-lg"><b>Cannot say</b> what a second run does: the row stops</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -661,6 +677,21 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   .sb-sec { background: var(--surface-sunken); border-radius: var(--radius-pill); padding: 3px 10px; white-space: nowrap; }
   .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
   .sb-sec[data-k='stop'] b { color: var(--danger); }
+  .sb-legend {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border-hair);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .sb-lg-row { display: flex; flex-wrap: wrap; gap: 2px var(--space-4); }
+  .sb-lg b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .sb-lg[data-lvl='R2'] b { color: var(--accent-ink); }
+  .sb-lg[data-lvl='R3'] b { color: var(--danger); }
+  .lg-terse { display: none; }
   /* Outcomes read through colour on the word, not a yellow chip: sun is
      reserved for things you can click, so it cannot carry a status. */
   [data-b='stop'] .band, [data-b='stop'] .r-band { color: var(--danger); }
@@ -777,8 +808,10 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   .choice[aria-pressed='true'] { background: var(--sun); border-color: var(--sun); color: var(--ink-1); }
   .choice[aria-pressed='true'][data-lvl='R3'] { background: var(--danger); border-color: var(--danger); color: var(--text-on-invert); }
   .rflags { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
-  .rflags li { font-size: var(--size-1); color: var(--accent-ink); padding-left: var(--space-4); position: relative; }
-  .rflags li::before { content: '!'; position: absolute; left: 0; font-family: var(--font-mono); font-weight: var(--weight-strong); }
+  /* The flag items are created by the script, so they never carry Astro's
+     scoping attribute. `:global()` is what lets these rules reach them. */
+  .rflags :global(li) { font-size: var(--size-1); color: var(--accent-ink); padding-left: var(--space-4); position: relative; }
+  .rflags :global(li)::before { content: '!'; position: absolute; left: 0; font-family: var(--font-mono); font-weight: var(--weight-strong); }
   .addrow { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
   .noscript { margin-top: var(--space-4); color: var(--text-quiet); max-width: var(--measure-prose); }
 
@@ -929,6 +962,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     .about { grid-template-columns: 1fr; }
     .scorebar { grid-template-columns: auto 1fr; }
     .sb-secs { grid-column: 1 / -1; }
+    .sb-lg-more, .sb-note, .lg-long { display: none; }
+    .lg-terse { display: inline; }
+    .sb-lg-row { gap: 2px var(--space-3); }
     .sb-score { font-size: var(--size-6); }
     .band { font-size: var(--size-3); }
     .lg-row { grid-template-columns: 1fr; gap: var(--space-1); }
