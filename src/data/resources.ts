@@ -23,7 +23,7 @@
 // distinction the sitemap already draws for /latest.
 //
 // `url` should be a path on this site wherever the resource can be hosted here.
-// The POC Screen began life as a published Artifact and moved: an Artifact is
+// The POC Selection Tool began life as a published Artifact and moved: an Artifact is
 // private until it is shared from its own share menu, so a link to one is broken
 // for every visitor until somebody remembers that step. Self-hosting removes the
 // failure mode, and it makes the content crawlable, which is most of the reason
@@ -48,7 +48,7 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Screen" and "The Run-Cost Model" are names, and a reader
+   * "The POC Selection Tool" and "The Run-Cost Model" are names, and a reader
    * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
@@ -120,20 +120,20 @@ export const resources: Resource[] = [
     topic: 'Pilot Readiness',
     number: '01',
     series: 'Agentic system design',
-    title: 'The POC Screen',
-    kind: 'Scored checklist',
+    title: 'The POC Selection Tool',
+    kind: 'Scored checklist · live score and result',
     summary:
-      'Twelve questions that decide whether an agentic proof of concept can reach production — asked before you build it.',
+      'Twelve questions that decide whether an agent proof of concept can reach production, scored before you build it.',
     description:
-      'Most agentic proofs of concept are judged after the demo goes well, which is the one moment nobody is able to judge them. This screen moves the decision earlier. Twelve questions across four sections, and each question defines what earns a 0, a 1 and a 2, so two people scoring the same proof of concept land in the same place instead of trading opinions. The maximum is 24. One section is a hard gate: any zero on blast radius stops the exercise whatever the total says, because a high score elsewhere does not buy back an action you cannot undo. Three cut-lines read the result — pilot candidate, narrow it and score again, or a demo rather than a pilot. It closes with four ways to answer most of the questions before the agent exists, in ascending order of cost, each one cheaper than a pilot that fails in front of a customer.',
+      'Most agent proofs of concept are judged after the demo goes well, which is the one moment nobody can judge them. This tool moves the decision earlier. Twelve questions in four sections: task fit, failure containment, evaluation evidence, and ownership and unit economics. Each question defines what earns a 0, a 1 and a 2, so two people scoring the same idea land on the same number instead of trading opinions. The maximum is 24. The score stays on screen and updates as you answer. One section is a hard gate: a 0 on failure containment stops the proof of concept whatever the total, because a high score elsewhere does not buy back an action you cannot undo. The result is read against a rubric with three outcomes: pilot candidate, narrow it and score again, or a demo rather than a pilot. A summary lists what to fix first and which of four pre-build moves answers each weak row. It closes with those four moves, cheapest first, each one cheaper than a pilot that fails in front of a customer.',
     useFor: [
       'Score a proposed agent against twelve criteria, and defend the number to someone who disagrees',
       'Find the rows where two people scored two points apart, which is where the team does not share a picture of the system',
       'Decide whether to narrow the scope of a proof of concept or stop it',
-      'Answer most of the screen without building anything, using an evaluation set, a human behind the curtain, deliberate tool failures, or a shadow run',
+      'Answer most of the questions without building anything, using an evaluation set, a person playing the agent, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive. Scores in the page and nothing is stored or sent — a worked example to load, a copyable scorecard, and a print view.',
+      'Interactive. Score in the page; the total, the section scores and the outcome update as you go. Copy the scorecard or print it without giving anything. A PDF of your scored copy is built against a name and an email address.',
     url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },

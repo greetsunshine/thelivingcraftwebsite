@@ -66,6 +66,29 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## The POC Selection Tool has an email-gated PDF — 17 September
+
+`/resources/poc-screen` was rebuilt on Sunil's twelve-point list (plain English, a purpose
+block, a score bar that stays on screen, a result summary, *New assessment*, aligned
+layout). The one piece with a backend is the PDF: **Get the PDF** opens a name-and-email
+dialog, posts to `/api/pipeline/resource-pdf`, and the server builds the scored copy with
+`pdf-lib` and returns it in the JSON as base64. Three things to know before touching it:
+
+- **The page stays open.** Score, copy, print: nothing asks for anything. Only the PDF does.
+  That keeps it inside the V4 addendum's "optional email request" and off the "gated
+  download" path the addendum forbids.
+- **The request is the same request.** `lib/pipeline/resource-request.ts` is the one
+  sequence both `/api/pipeline/resource` and `/api/pipeline/resource-pdf` run. Do not add a
+  check to one route and not the other; add it to the function.
+- **A failed save still hands over the PDF**, with `saved: false` and the reason in the
+  response. The schema is not applied on production, so today every PDF request takes that
+  path: the visitor gets the file, nothing is recorded, and the dialog says so in one
+  sentence. Once the schema is run, the same request records a person, a resource request
+  and a queued (held) delivery with the `resource-poc-screen` wording.
+
+The scores travel to the server for the file and are not stored anywhere.
+
+---
 ## The maker section is back on `/`, without the numbers — 15 September
 
 Section 6 of the cohort page was one approved paragraph. It is now the full maker

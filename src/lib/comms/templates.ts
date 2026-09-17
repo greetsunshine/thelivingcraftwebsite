@@ -257,7 +257,7 @@ export const DAY_OFFSETS = [0, 2, 5, 9] as const;
 export const NURTURE_OFFSETS = [2, 5, 9] as const;
 
 /**
- * Any wording this build knows, by key -- the twelve AND the resource three.
+ * Any wording this build knows, by key -- the twelve AND the resource wordings.
  *
  * IT HAS TO SEARCH BOTH, and this is not a convenience. `verifyStored()` calls
  * this to decide whether a stored row is a wording we recognise, and a row it
@@ -379,6 +379,24 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     actions: [],
     version: RESOURCE_PACKAGE_VERSION,
   },
+  // The POC Selection Tool is a published tool, not a V4 worksheet, and it is
+  // keyed by its page slug because it has no register code. It is the one
+  // resource with a PDF: /api/pipeline/resource-pdf builds the scored copy on
+  // request and hands it straight back to the browser, so this email does not
+  // carry an attachment. The outbox sends text and the page rebuilds the PDF
+  // from a fresh score, which is the better copy anyway.
+  {
+    key: 'resource-poc-screen',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The POC Selection Tool',
+    body:
+      'Here is the POC Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/poc-screen\n\nIt scores an agent proof of concept before anyone builds it. Twelve questions in four sections, each answered 0, 1 or 2, and one hard gate on whether you can survive the agent being wrong. The page shows the score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+
 ];
 
 /**
