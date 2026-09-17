@@ -81,7 +81,7 @@ import { sqlstate } from './errors';
 import { checkEligibility, type Eligibility } from '../comms/eligibility';
 import { idempotencyKey } from '../comms/outbox';
 import { renderMessage, resourceTemplateFor } from '../comms/templates';
-import { RESOURCES, type LongformResource } from '../../data/resources';
+import { RESOURCES, resources, type LongformResource, type Resource } from '../../data/resources';
 import type { Attribution } from './attribution';
 import { canonicalResourceId } from './attribution';
 import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './forms';
@@ -92,21 +92,50 @@ import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './f
 // ---------------------------------------------------------------------------
 
 /**
- * The register code, lower-cased: 'lc-r01'.
+ * What the request path needs to know about a resource, from either register.
  *
- * ONE SPELLING, EVERYWHERE. The register writes LC-R01, the campaign writes its
- * own ids lower-case, and `/resources/cost-ceiling-worksheet` knows itself by a
- * slug. A dimension with three spellings is three rows in every count of it, so
- * everything that leaves this module — the stored `resource_id`, the analytics
- * payload, the template key — is built from this one function.
+ * Two registers exist in `src/data/resources.ts`: the three V4 worksheets
+ * (`RESOURCES`, LC-R01 to LC-R03) and the published tools (`resources`, such as
+ * the POC Selection Tool). A person can ask for either by email, so both are
+ * flattened to this one shape here and nothing downstream knows which register
+ * a request came from.
  */
-export const resourceIdOf = (resource: LongformResource): string =>
-  canonicalResourceId(resource.code) ?? resource.id;
+export interface RequestableResource {
+  /**
+   * ONE SPELLING, EVERYWHERE. The register writes LC-R01, the campaign writes
+   * its own ids lower-case, and a tool page knows itself by a slug. A dimension
+   * with three spellings is three rows in every count of it, so the stored
+   * `resource_id`, the analytics payload and the template key are all this
+   * value: the register code lower-cased ('lc-r01') for a worksheet, the page
+   * slug ('poc-screen') for a tool.
+   */
+  id: string;
+  title: string;
+  path: string;
+  /** YYYY-MM-DD of the wording the person saw. Stored as `resource_version`. */
+  version: string;
+}
+
+export const resourceIdOf = (resource: RequestableResource): string => resource.id;
+
+const fromWorksheet = (r: LongformResource): RequestableResource => ({
+  id: canonicalResourceId(r.code) ?? r.id,
+  title: r.title,
+  path: r.path,
+  version: r.revisedOn,
+});
+
+const fromTool = (r: Resource): RequestableResource => ({
+  id: r.id,
+  title: r.title,
+  path: r.url,
+  version: r.publishedAt,
+});
 
 export type ResourceLookup =
-  | { state: 'ok'; resource: LongformResource }
+  | { state: 'ok'; resource: RequestableResource }
   | { state: 'unknown' }
-  | { state: 'unreleased'; resource: LongformResource };
+  | { state: 'unreleased'; resource: RequestableResource };
 
 /**
  * Resolve whatever the browser sent to one released resource.
@@ -115,22 +144,31 @@ export type ResourceLookup =
  * visible to a reader and either is a reasonable thing for a form to post. It
  * does NOT accept a title: a title is copy, and copy is edited.
  *
- * 'unreleased' is separate from 'unknown' on purpose. A draft resource is a
+ * 'unreleased' is separate from 'unknown' on purpose. A draft worksheet is a
  * real identifier for a page that does not exist yet, and the honest answer is
  * "not yet", not "no such thing" — the roadmap's own rule for the toolkit index
  * applies to the endpoint too: "do not display unavailable downloads as
  * available", and accepting a request for one is a stronger claim than
- * displaying it.
+ * displaying it. A published tool has no draft state: it is in `resources`
+ * only once its page is live.
  */
 export function resolveResource(value: unknown): ResourceLookup {
   const wanted = canonicalResourceId(typeof value === 'string' ? value : null);
   if (!wanted) return { state: 'unknown' };
 
-  const resource = RESOURCES.find(
-    (r) => resourceIdOf(r) === wanted || r.id.toLowerCase() === wanted,
+  const worksheet = RESOURCES.find(
+    (r) => canonicalResourceId(r.code) === wanted || r.id.toLowerCase() === wanted,
   );
-  if (!resource) return { state: 'unknown' };
-  return resource.status === 'ready' ? { state: 'ok', resource } : { state: 'unreleased', resource };
+  if (worksheet) {
+    return worksheet.status === 'ready'
+      ? { state: 'ok', resource: fromWorksheet(worksheet) }
+      : { state: 'unreleased', resource: fromWorksheet(worksheet) };
+  }
+
+  const tool = resources.find((r) => r.id.toLowerCase() === wanted);
+  if (tool) return { state: 'ok', resource: fromTool(tool) };
+
+  return { state: 'unknown' };
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +261,7 @@ export function validateResourceRequest(input: Record<string, unknown>): {
 
 export interface ResourceRequestInput {
   requestKey: string;
-  resource: LongformResource;
+  resource: RequestableResource;
   values: Record<string, string>;
   attribution: Attribution;
   isTest?: boolean;
@@ -242,7 +280,7 @@ export type ResourceSaveResult =
  * failed request costs them nothing at all.
  */
 const UNAVAILABLE =
-  'We could not save that just now. Nothing about the worksheet is behind this — it is on the page in front of you — so try again in a moment if you would still like it by email.';
+  'We could not save that just now. The page in front of you is the resource and is not behind this, so try again in a moment if you would still like a copy by email.';
 
 /** What a visitor reads when it worked. The delivery line is added beside it. */
 export const RESOURCE_SAVED = 'Your request is saved.';
@@ -279,7 +317,7 @@ export async function saveResourceRequest(
       p_name: input.values.name ?? null,
       p_normalised_email: normaliseEmail(original),
       p_original_email: original,
-      p_resource_version: input.resource.revisedOn,
+      p_resource_version: input.resource.version,
       p_attribution: input.attribution,
       p_is_test: input.isTest === true,
       p_actor: 'public_form',
@@ -333,7 +371,7 @@ export interface DeliveryRequest {
   personId: string;
   /** The address as it stands now. Snapshotted onto the message, like every other. */
   recipient: string;
-  resource: LongformResource;
+  resource: RequestableResource;
   isTest?: boolean;
 }
 
@@ -534,11 +572,11 @@ export async function recordDelivery(requestId: string, outcome: DeliveryOutcome
 export const deliveryLine = (state: DeliveryState): string => {
   switch (state) {
     case 'queued':
-      return 'The delivery email is queued. Email sending is not switched on yet, so it has not gone out — the worksheet itself is on this page and was never behind it.';
+      return 'The delivery email is queued. Email sending is not switched on yet, so it has not gone out. The page itself is open and was never behind it.';
     case 'blocked':
     case 'failed':
-      return 'We could not queue the delivery email and somebody will see that. The worksheet itself is on this page and was never behind it.';
+      return 'We could not queue the delivery email and somebody will see that. The page itself is open and was never behind it.';
     case 'pending':
-      return 'The worksheet itself is on this page and was never behind the email.';
+      return 'The page itself is open and was never behind the email.';
   }
 };
