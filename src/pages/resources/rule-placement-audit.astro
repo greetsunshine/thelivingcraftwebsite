@@ -1,0 +1,1169 @@
+---
+// /resources/rule-placement-audit — The Rule Placement Audit, a browser worksheet.
+//
+// Same shape as the POC Selection Tool and the Agent Authority Review: a hero
+// with the series eyebrow, numbered sections, a sticky tally bar over the
+// sheet, card rows with a head line and a field grid, a result card, the
+// rubric, a loadable worked example and the close. Every string comes from
+// src/data/rule-placement-audit.ts, which the script imports too, so the row
+// status, the bar, the map, the copied text and the CSV all read one rubric.
+//
+// ═══════════════════════════════════════════════════════════════════════════
+// ENTRIES NEVER LEAVE THE BROWSER
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// 1. NO <form>. The inputs sit in plain divs. A form can be submitted by a
+//    stray Enter key, and a GET submission puts every entry in the query
+//    string. No form, no path.
+// 2. NO fetch, no XMLHttpRequest, no sendBeacon in the script. The layout's
+//    pageview beacon sends a path and a referrer, never page content.
+// 3. NO email-gated PDF, unlike the two sibling tools. The brief for this one
+//    forbids capture. The print button opens the browser's own dialog and the
+//    CSV is a Blob; neither touches a server.
+// 4. ResourcesLayout carries no Google Tag Manager. Keep it that way here:
+//    the container loads a session recorder, and the rule map is page text.
+//
+// AUTOSAVE USES localStorage, BY REQUEST. CLAUDE.md records the exception and
+// its bound: one key, only what the reader typed, every read and write in
+// try/catch, and the page works with storage blocked.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  TOOL_NAME,
+  HEADLINE,
+  SUBTITLE,
+  BRING,
+  DO,
+  LEAVE,
+  CTA,
+  SETTERS,
+  REACH,
+  PLACEMENTS,
+  FIXES,
+  FIELD_MAX,
+  STATUSES,
+  MOVE_LINE,
+  RUBRIC,
+  WHY,
+  RUN_IT,
+  EXAMPLE_TITLE,
+  EXAMPLE_SETTING,
+  EXAMPLE_ROWS,
+  EXAMPLE_TAG,
+  statusOf,
+  flagsFor,
+  labelOfSetter,
+  labelOfReach,
+  labelOfFix,
+  labelOfPlacement,
+} from '../../data/rule-placement-audit';
+
+export const prerender = true;
+
+const meta = publishedResources.find((r) => r.id === 'rule-placement-audit')!;
+
+const title = `${HEADLINE} — ${SUBTITLE.replace(/\?$/, '')} · The Living Craft`;
+const description =
+  'A browser worksheet for the rules an agent must never break. One row per rule: who set it, how many agents can act on it, and where it is enforced — in code before the model, in the prompt, by a critic model, in code after the model, or at the tool boundary. The status and the rule map update as you tick, and the prompt-only and unenforced rules come first.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/rule-placement-audit#howto`,
+    name: TOOL_NAME,
+    description,
+    url: `${SITE_ORIGIN}/resources/rule-placement-audit`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    step: RUN_IT.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.lead,
+      text: s.rest,
+    })),
+  },
+];
+
+const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
+---
+
+<ResourcesLayout title={title} description={description} canonical="/resources/rule-placement-audit" schema={schema}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number} · {TOOL_NAME}</span>
+      </div>
+      <h1>{HEADLINE}</h1>
+      <p class="lead">{SUBTITLE}</p>
+      <p class="hero-note mono">
+        {PLACEMENTS.length} placements · {STATUSES.length} statuses · 1 worked example · entries stay in this browser
+      </p>
+    </div>
+  </section>
+
+  <!-- What to bring, what to do, what you leave with. Then the one button. -->
+  <section id="about">
+    <div class="wrap">
+      <div class="about about-3">
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">01</span> What to bring</span>
+          <p>{BRING}</p>
+        </div>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">02</span> What to do</span>
+          <p>{DO}</p>
+        </div>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">03</span> What you leave with</span>
+          <p>{LEAVE}</p>
+        </div>
+      </div>
+      <p class="hero-cta about-cta">
+        <a class="btn btn-primary" href="#sheet">{CTA}&nbsp;<span class="arrow">→</span></a>
+      </p>
+    </div>
+  </section>
+
+  {/* The tally bar stays above the sheet and the result. A sticky element
+      only sticks within its parent, so both sit inside this one wrapper. */}
+  <div class="scoring" id="scoring">
+    <div class="scorebar-wrap">
+      <div class="wrap">
+        <div class="scorebar" id="tally" data-b="none" role="status" aria-live="polite">
+          <div class="sb-score">
+            <span id="sb-code">0</span><span class="of">/<span id="sb-total">0</span> in code</span>
+          </div>
+          <div class="sb-text">
+            <span class="band" id="sb-band">Not started</span>
+            <span class="sb-note" id="sb-note">Add a rule, or load the worked example.</span>
+          </div>
+          <div class="sb-secs mono" aria-label="Rules by status">
+            {STATUSES.map((s) => (
+              <span class="sb-sec" data-k={s.key}>
+                {s.label} <b id={`sb-${s.key}`}>0</b>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The sheet -->
+    <section id="sheet">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">04</span> Your audit</span>
+          <h2>One row per rule. Tick only what you can <em>point at</em>.</h2>
+        </div>
+
+        <p class="privacy mono">Your entries stay in this browser. Nothing is sent to us.</p>
+        <p class="autosave mono" id="autosave" role="status"></p>
+
+        <div class="controls" role="group" aria-label="Audit controls">
+          <button class="btn btn-primary" id="add" type="button">Add a rule</button>
+          <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
+          <button class="btn btn-ghost" id="copy" type="button">Copy the map</button>
+          <button class="btn btn-ghost" id="print" type="button">Print or save as PDF</button>
+          <button class="btn btn-ghost" id="csv" type="button">Download CSV</button>
+          <button class="btn btn-ghost" id="clear" type="button">Clear all</button>
+          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+        </div>
+
+        <!-- Legend: always visible above the rows, so the buttons need no memory -->
+        <div class="legend" aria-label="What each answer means">
+          <div class="lg-row">
+            <span class="lg-k mono">Where it's enforced</span>
+            <div class="lg-v">
+              {PLACEMENTS.map((p) => (
+                <span class="lg-item" data-code={p.code}><b>{p.label}:</b> {p.means}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Status</span>
+            <div class="lg-v">
+              {STATUSES.map((s) => (
+                <span class="lg-item"><b>{s.glyph} {s.label}:</b> {s.means}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Agents that can act on it</span>
+            <div class="lg-v">
+              {REACH.map((r) => (
+                <span class="lg-item"><b>{r.label}:</b> {r.means}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Who set it</span>
+            <div class="lg-v">
+              {SETTERS.map((s) => (
+                <span class="lg-item"><b>{s.label}:</b> {s.means}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="rows" id="rows" aria-live="polite" aria-relevant="additions removals"></div>
+
+        <div class="addrow">
+          <button class="btn btn-ghost" id="add2" type="button">Add a rule</button>
+          <span class="mono faint" id="rowcount"></span>
+        </div>
+        <noscript>
+          <p class="noscript">The sheet needs JavaScript to work out a status as you tick. Without it, the
+            worked example below still shows every column filled in, and the rubric says how each
+            status was reached.</p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- The result -->
+    <section id="result">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">05</span> Your rule map</span>
+          <h2>Every rule, grouped by where it is <em>enforced</em>.</h2>
+        </div>
+        <div class="resultcard" id="resultcard" data-b="none">
+          <div class="r-head">
+            <span class="r-score mono"><b id="r-code">0</b>/<span id="r-total">0</span></span>
+            <span class="r-band" id="r-band">Not started</span>
+          </div>
+          <p class="r-what" id="r-what">Add a rule, or load the worked example.</p>
+          <div class="r-secs">
+            {STATUSES.map((s) => (
+              <div class="r-sec" data-k={s.key}>
+                <span class="k">{s.glyph} {s.label}</span>
+                <span class="v" id={`r-sec-${s.key}`}>0</span>
+              </div>
+            ))}
+          </div>
+          <div class="r-map" id="r-map">
+            {STATUSES.map((s) => (
+              <section class="r-group" data-k={s.key} aria-labelledby={`r-g-${s.key}`}>
+                <h3 id={`r-g-${s.key}`}>
+                  <span class="status" data-k={s.key}><span class="glyph" aria-hidden="true">{s.glyph}</span> {s.label}</span>
+                  <span class="count mono" id={`r-count-${s.key}`}>0 rules</span>
+                </h3>
+                {s.move && <p class="first" data-first hidden>{MOVE_LINE}</p>}
+                <ol class="glist" id={`r-list-${s.key}`}></ol>
+                <p class="none mono" id={`r-none-${s.key}`}>None.</p>
+              </section>
+            ))}
+          </div>
+          <div class="r-fix" id="r-fix" hidden>
+            <h3>Before you move on</h3>
+            <ol id="r-fixlist"></ol>
+          </div>
+          <div class="r-actions">
+            <button class="btn btn-primary" id="print2" type="button">Print or save as PDF</button>
+            <button class="btn btn-ghost" id="copy2" type="button">Copy the map</button>
+            <button class="btn btn-ghost" id="csv2" type="button">Download CSV</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- The rubric -->
+  <section id="rubric">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> The rubric</span>
+        <h2>How the ticks become <em>one status</em>.</h2>
+      </div>
+      {RUBRIC.map((r) => (
+        <div class={`rule-row${r.then === 'none' ? ' stop' : ''}`} data-k={r.then}>
+          <div class="rwhen">
+            <span class="rcond">{r.when}</span>
+            <span class="rarrow" aria-hidden="true">→</span>
+            <span class="rthen">{statusOfKey(r.then).glyph} {statusOfKey(r.then).label}</span>
+          </div>
+          <p>{r.may}</p>
+        </div>
+      ))}
+      <div class="explain">
+        <span class="eyebrow"><span class="num">Why</span> A prompt is something the model weighs</span>
+        {WHY.map((p) => <p>{p}</p>)}
+      </div>
+    </div>
+  </section>
+
+  <!-- The worked example -->
+  <section id="example-ref" class="example">
+    <div class="wrap">
+      <div class="exhead">
+        <div>
+          <span class="eyebrow"><span class="num">07</span> The worked example</span>
+          <h2 class="extitle">{EXAMPLE_TITLE}</h2>
+          <p class="exsetting">{EXAMPLE_SETTING}</p>
+        </div>
+        <button class="btn btn-ghost" type="button" id="example2">Load into the sheet</button>
+      </div>
+      <div class="scroll">
+        <table class="exsheet">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Rule</th>
+              <th>Who set it</th>
+              <th>Agents</th>
+              <th>Enforced</th>
+              <th>Status</th>
+              <th>If broken</th>
+              <th>Fix to add</th>
+              <th>Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            {EXAMPLE_ROWS.map((r, i) => (
+              <tr>
+                <td class="mono">{String(i + 1).padStart(2, '0')}</td>
+                <td class="cstep">{r.rule}</td>
+                <td>{labelOfSetter(r.setter)}</td>
+                <td>{labelOfReach(r.reach)}</td>
+                <td>{r.placements.length ? r.placements.map(labelOfPlacement).join('; ') : '—'}</td>
+                <td>
+                  <span class="status" data-k={statusOf(r.placements)}>
+                    <span class="glyph" aria-hidden="true">{statusOfKey(statusOf(r.placements)).glyph}</span> {statusOfKey(statusOf(r.placements)).label}
+                  </span>
+                </td>
+                <td>{r.broken}</td>
+                <td>{labelOfFix(r.fix)}</td>
+                <td>{r.owner || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ul class="exflags">
+        {EXAMPLE_ROWS.map((r, i) =>
+          flagsFor(r).map((f) => (
+            <li><span class="mono">{String(i + 1).padStart(2, '0')}</span> {f}</li>
+          )),
+        )}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Run it with the team -->
+  <section id="protocol">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> Run it with the team</span>
+        <h2>The rules only one person knew about are the <em>ones to worry about</em>.</h2>
+      </div>
+      <ol class="protocol">
+        {RUN_IT.map((s, i) => (
+          <li>
+            <span class="pn mono">{String(i + 1).padStart(2, '0')}</span>
+            <div class="pbody">
+              <strong>{s.lead}</strong>
+              <p>{s.rest}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> Where this comes from</span>
+        <h2>The model was not at fault. The rule was <em>in the wrong place</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          The map is the easy half. What it cannot do on its own is settle the row where one
+          person says the check is in code and another says it is in a prompt that a code path
+          reads. That row is the one to open the repository for.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
+    </div>
+  </section>
+
+  {/* One row, cloned by the script for each rule. Astro's scoping attribute
+      is on this markup, so the scoped styles reach the clones unaided. */}
+  <template id="row-tpl">
+    <div class="srow" data-k="none">
+      <div class="srow-head">
+        <span class="rn mono"></span>
+        <input class="f-rule" type="text" maxlength={FIELD_MAX.rule} placeholder="Rule, e.g. User's no-go restaurant list" aria-label="Rule" />
+        <span class="status" data-k="none"><span class="glyph" aria-hidden="true">×</span> <span class="st">Not enforced</span></span>
+        <span class="mv-group">
+          <button class="mv" type="button" data-a="up" aria-label="Move this rule up" title="Move up">↑</button>
+          <button class="mv" type="button" data-a="down" aria-label="Move this rule down" title="Move down">↓</button>
+        </span>
+        <button class="rm" type="button" aria-label="Remove this rule" title="Remove this rule">×</button>
+      </div>
+      <span class="extag mono" hidden>{EXAMPLE_TAG}</span>
+      <div class="srow-grid">
+        <div class="fld span6">
+          <span class="fl mono">Where it's enforced · tick every place that holds</span>
+          <div class="choices" data-f="placements" role="group" aria-label="Where the rule is enforced">
+            {PLACEMENTS.map((p) => (
+              <button type="button" class="choice" data-v={p.key} data-code={p.code} aria-pressed="false" title={p.means}>{p.label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">Who set it</span>
+          <div class="choices" data-f="setter" role="group" aria-label="Who set the rule">
+            {SETTERS.map((s) => (
+              <button type="button" class="choice" data-v={s.value} aria-pressed="false" title={s.means}>{s.label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">Agents that can act on it</span>
+          <div class="choices" data-f="reach" role="group" aria-label="How many agents can act on the rule">
+            {REACH.map((r) => (
+              <button type="button" class="choice" data-v={r.value} aria-pressed="false" title={r.means}>{r.label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">Fix to add</span>
+          <div class="choices" data-f="fix" role="group" aria-label="The fix to add">
+            {FIXES.map((f) => (
+              <button type="button" class="choice" data-v={f.value} aria-pressed="false" title={f.label}>{f.short}</button>
+            ))}
+          </div>
+        </div>
+        <label class="fld span4">
+          <span class="fl mono">What happens if it's broken</span>
+          <input class="f-broken" type="text" maxlength={FIELD_MAX.broken} placeholder="One sentence, with the cost in it" />
+        </label>
+        <label class="fld span2">
+          <span class="fl mono">Owner</span>
+          <input class="f-owner" type="text" maxlength={FIELD_MAX.owner} placeholder="Team or person" />
+        </label>
+      </div>
+      <ul class="rflags" hidden></ul>
+    </div>
+  </template>
+</ResourcesLayout>
+
+<style>
+  section { padding: var(--space-8) 0; }
+  #about { padding-top: var(--space-7); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .sec-head h2 { max-width: 22ch; }
+  .prose { max-width: var(--measure-prose); color: var(--text-quiet); }
+  .prose p + p { margin-top: var(--space-4); }
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .faint { color: var(--text-quiet); }
+  .hero .lead { max-width: var(--measure-prose); }
+
+  /* ── about: three blocks, then the button ─────────────────────────────── */
+  .about { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+  .about-3 { grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .about-col {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+  }
+  .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
+  .about-col p { font-size: var(--size-3); line-height: var(--lh-normal); color: var(--text-body); }
+  .about-cta { margin-top: var(--space-6); }
+
+  /* ── the tally bar ────────────────────────────────────────────────────── */
+  .scorebar-wrap {
+    position: sticky;
+    top: 76px;
+    z-index: var(--z-sticky);
+    padding: var(--space-3) 0;
+    background: var(--surface-sunken);
+  }
+  .scorebar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+  }
+  .sb-score {
+    font-family: var(--font-mono);
+    font-size: var(--size-7);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .sb-score .of { font-size: var(--size-3); color: var(--text-quiet); }
+  .sb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .band { font-size: var(--size-4); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); line-height: var(--lh-snug); }
+  .sb-note { font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-secs { display: flex; gap: var(--space-2); flex-wrap: wrap; font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-sec { background: var(--surface-sunken); border-radius: var(--radius-pill); padding: 3px 10px; white-space: nowrap; }
+  .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .sb-sec[data-k='none'] b { color: var(--danger); }
+  .sb-sec[data-k='prompt'] b, .sb-sec[data-k='model'] b { color: var(--accent-ink); }
+  /* Outcomes read through colour on the word, not a yellow chip: sun is
+     reserved for things you can click, so it cannot carry a status. */
+  [data-b='progress'] .band, [data-b='progress'] .r-band { color: var(--accent-ink); }
+  [data-b='done'] .band, [data-b='done'] .r-band { color: var(--text-loud); }
+  [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
+
+  /* ── controls, privacy, legend ────────────────────────────────────────── */
+  #sheet { padding-bottom: 0; }
+  .privacy { font-size: var(--size-2); color: var(--text-loud); margin-bottom: 2px; }
+  .autosave { font-size: var(--size-1); color: var(--text-quiet); min-height: 1.2em; margin-bottom: var(--space-4); }
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-5); }
+  .copied { font-size: var(--size-1); color: var(--text-quiet); }
+
+  .legend {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+  .lg-row { display: grid; grid-template-columns: 150px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border-hair); }
+  .lg-row:last-child { border-bottom: 0; }
+  .lg-k { font-size: var(--size-1); color: var(--text-quiet); padding-top: 2px; }
+  .lg-v { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); font-size: var(--size-1); color: var(--text-quiet); }
+  .lg-item b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .lg-item[data-code='false'] b { color: var(--accent-ink); }
+
+  /* ── the status label: glyph and word carry it, colour sits on top ────── */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    color: var(--text-quiet);
+  }
+  .status[data-k='none'] { color: var(--text-on-invert); background: var(--danger); }
+  .status[data-k='prompt'], .status[data-k='model'] { color: var(--accent-ink); background: var(--accent-quiet); }
+  .status[data-k='code'] { color: var(--text-body); background: var(--surface-sunken); }
+
+  /* ── the rows ─────────────────────────────────────────────────────────── */
+  .rows { display: flex; flex-direction: column; gap: var(--space-4); }
+  .srow {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+  .srow[data-k='none'] { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
+  .srow-head {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto 32px;
+    gap: var(--space-3);
+    align-items: center;
+    margin-bottom: var(--space-3);
+  }
+  .rn { font-size: var(--size-2); color: var(--text-quiet); font-weight: var(--weight-strong); }
+  .srow input {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 0 var(--space-3);
+    height: var(--control-h);
+    width: 100%;
+  }
+  .srow .f-rule { font-weight: var(--weight-medium); }
+  .srow input:focus { outline: none; border-color: var(--text-body); }
+  .srow input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .mv-group { display: inline-flex; gap: 4px; }
+  .mv, .rm {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-pill);
+    border: var(--border-w-rule) solid var(--border-field);
+    background: none;
+    color: var(--text-quiet);
+    font-size: var(--size-3);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .rm { font-size: var(--size-4); }
+  .mv:hover { color: var(--text-body); border-color: var(--text-body); }
+  .mv:disabled { opacity: 0.42; pointer-events: none; }
+  .rm:hover { color: var(--danger); border-color: var(--danger); }
+  .mv:focus-visible, .rm:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .extag {
+    display: inline-block;
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    background: var(--accent-quiet);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    margin-bottom: var(--space-3);
+  }
+  .extag[hidden] { display: none; }
+  /* Three lines per rule: the placements, the three short answers, then the
+     two free-text notes. Six columns so each line divides cleanly. */
+  .srow-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3) var(--space-4); }
+  .fld { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .fld.span2 { grid-column: span 2; }
+  .fld.span4 { grid-column: span 4; }
+  .fld.span6 { grid-column: span 6; }
+  .fl { font-size: var(--size-1); color: var(--text-quiet); }
+  .choices { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .choice {
+    font-family: var(--font-body);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .choice:hover { border-color: var(--text-body); }
+  .choice:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  /* The chosen answer is the one clickable-yellow thing on the row. */
+  .choice[aria-pressed='true'] { background: var(--sun); border-color: var(--sun); color: var(--ink-1); }
+  /* A weighed placement stays visibly different from a code one even when pressed. */
+  .choice[aria-pressed='true'][data-code='false'] { background: var(--accent-quiet); border-color: var(--accent-ink); color: var(--accent-ink-strong); }
+  .rflags { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .rflags li { font-size: var(--size-1); color: var(--accent-ink); padding-left: var(--space-4); position: relative; }
+  .rflags li::before { content: '!'; position: absolute; left: 0; font-family: var(--font-mono); font-weight: var(--weight-strong); }
+  .addrow { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+  .noscript { margin-top: var(--space-4); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  /* ── the result ───────────────────────────────────────────────────────── */
+  #result { padding-top: var(--space-7); }
+  .resultcard { background: var(--surface-panel); border-radius: var(--radius-card); box-shadow: var(--shadow-raise); padding: var(--space-6); }
+  .r-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-3); }
+  .r-score { font-size: var(--size-8); font-weight: var(--weight-strong); line-height: 1; letter-spacing: -0.02em; color: var(--text-quiet); }
+  .r-score b { color: var(--text-body); }
+  .r-band { font-size: var(--size-6); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); line-height: var(--lh-tight); }
+  .r-what { max-width: var(--measure-prose); margin: 0 0 var(--space-5); color: var(--text-quiet); }
+  .r-secs { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+  .r-sec { background: var(--surface-sunken); border-radius: var(--radius-inner); padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 2px; }
+  .r-sec .k { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); }
+  .r-sec .v { font-family: var(--font-mono); font-size: var(--size-6); font-weight: var(--weight-strong); line-height: 1; }
+  .r-sec[data-k='none'] .v { color: var(--danger); }
+  .r-sec[data-k='prompt'] .v, .r-sec[data-k='model'] .v { color: var(--accent-ink); }
+  .r-map { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-5); }
+  .r-group { padding: var(--space-3) 0 0; border-top: 1px solid var(--border-hair); }
+  .r-group h3 { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; font-size: var(--size-4); margin: 0 0 var(--space-2); }
+  .r-group .count { font-size: var(--size-1); font-weight: var(--weight-normal); color: var(--text-quiet); }
+  .r-group .first { font-size: var(--size-3); font-weight: var(--weight-medium); color: var(--text-loud); margin: 0 0 var(--space-2); }
+  .r-group .first[hidden] { display: none; }
+  .glist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+  /* The list items are made by the script and carry no scoping attribute. */
+  .glist :global(li) { display: grid; grid-template-columns: 32px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--border-hair); font-size: var(--size-2); }
+  .glist :global(.mn) { font-family: var(--font-mono); color: var(--text-quiet); }
+  .glist :global(.ms) { color: var(--text-body); font-weight: var(--weight-medium); display: block; }
+  .glist :global(.ms.untitled) { color: var(--text-quiet); font-style: italic; font-weight: var(--weight-normal); }
+  .glist :global(.meta), .glist :global(.broken) { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-top: 2px; }
+  .r-group .none { font-size: var(--size-1); color: var(--text-quiet); margin: 0; }
+  .r-group .none[hidden] { display: none; }
+  .r-fix h3 { font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-medium); color: var(--accent-ink); margin: 0 0 var(--space-3); }
+  .r-fix { margin-bottom: var(--space-5); }
+  .r-fix ol { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+  .r-fix :global(li) { display: grid; grid-template-columns: 32px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border-hair); font-size: var(--size-2); color: var(--text-quiet); }
+  .r-fix :global(li:last-child) { border-bottom: 0; }
+  .r-fix :global(.fn) { font-family: var(--font-mono); font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .r-fix :global(b) { color: var(--text-body); }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── rubric ───────────────────────────────────────────────────────────── */
+  .rule-row { background: var(--surface-panel); border-radius: var(--radius-inner); box-shadow: var(--shadow-raise); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); }
+  .rule-row.stop { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
+  .rwhen { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .rcond { font-weight: var(--weight-strong); }
+  .rarrow { color: var(--text-quiet); }
+  .rthen { font-family: var(--font-mono); font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .rule-row[data-k='none'] .rthen { color: var(--danger); }
+  .rule-row[data-k='code'] .rthen { color: var(--text-body); }
+  .rule-row p { font-size: var(--size-2); color: var(--text-quiet); max-width: 78ch; }
+  .explain { max-width: var(--measure-prose); margin-top: var(--space-6); }
+  .explain .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .explain p { color: var(--text-body); }
+  .explain p + p { margin-top: var(--space-4); }
+
+  /* ── the worked example ───────────────────────────────────────────────── */
+  .exhead { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .exhead .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .extitle { font-size: var(--size-6); margin: 0 0 var(--space-1); }
+  .exsetting { color: var(--text-quiet); max-width: 70ch; }
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .exsheet { min-width: 1120px; table-layout: fixed; }
+  thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  thead th:first-child { width: 40px; }
+  thead th:nth-child(6) { width: 168px; }
+  thead th:nth-child(5) { width: 150px; }
+  tbody td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-hair); vertical-align: top; font-size: var(--size-2); color: var(--text-quiet); }
+  tbody tr:last-child td { border-bottom: 0; }
+  .cstep { color: var(--text-body); font-weight: var(--weight-medium); }
+  .exflags { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .exflags li { font-size: var(--size-1); color: var(--text-quiet); display: grid; grid-template-columns: 24px 1fr; gap: var(--space-2); }
+  .exflags li .mono { color: var(--accent-ink); font-weight: var(--weight-strong); }
+
+  /* ── protocol ─────────────────────────────────────────────────────────── */
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); padding: 0; }
+  ol.protocol li { display: grid; grid-template-columns: 56px 1fr; gap: var(--space-4); align-items: start; }
+  .pn { font-size: var(--size-4); font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .pbody strong { display: block; margin-bottom: 2px; }
+  .pbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  @media (max-width: 960px) {
+    .about-3 { grid-template-columns: 1fr; }
+    .srow-grid { grid-template-columns: repeat(2, 1fr); }
+    .fld.span2 { grid-column: span 1; }
+    .fld.span4, .fld.span6 { grid-column: span 2; }
+  }
+  @media (max-width: 860px) {
+    .about { grid-template-columns: 1fr; }
+    .scorebar { grid-template-columns: auto 1fr; }
+    .sb-secs { grid-column: 1 / -1; }
+    .sb-score { font-size: var(--size-6); }
+    .band { font-size: var(--size-3); }
+    .lg-row { grid-template-columns: 1fr; gap: var(--space-1); }
+    .r-secs { grid-template-columns: 1fr 1fr; }
+    ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+  @media (max-width: 600px) {
+    .srow-grid { grid-template-columns: 1fr; }
+    .fld.span2, .fld.span4, .fld.span6 { grid-column: span 1; }
+    .srow-head { grid-template-columns: 32px 1fr 32px; }
+    .srow-head .status, .srow-head .mv-group { grid-column: 2; justify-self: start; }
+  }
+
+  /* ── print: the rule map on one page ──────────────────────────────────── */
+  @media print {
+    @page { margin: 14mm; }
+    /* Only the hero title and the result card print. The sheet is a working
+       surface; the map is the artefact. */
+    #about, .scorebar-wrap, #sheet, #rubric, .example, #protocol, .final { display: none !important; }
+    .hero { padding: 0 0 6mm; }
+    .hero .hero-note, .hero .eyebrow { display: none; }
+    /* The noir shell is a wasted cartridge on paper. Ink on white. */
+    .hero > .wrap { background: #fff !important; color: #000 !important; padding: 0 !important; width: auto !important; max-width: none !important; border-radius: 0; }
+    .hero h1, .hero .lead { color: #000 !important; }
+    .hero h1 { font-size: 20pt; margin: 0 0 2mm; }
+    .hero .lead { font-size: 11pt; margin: 0; }
+    #result { padding: 0; }
+    #result .sec-head { display: none; }
+    .resultcard { box-shadow: none; padding: 0; break-inside: avoid; }
+    .r-actions, .r-what { display: none !important; }
+    .r-head { margin-bottom: 2mm; }
+    .r-score { font-size: 16pt; }
+    .r-band { font-size: 12pt; }
+    .r-secs { gap: 2mm; margin-bottom: 3mm; }
+    .r-sec { padding: 2mm 3mm; border: 1px solid var(--border-hair); background: none; }
+    .r-sec .v { font-size: 12pt; }
+    .r-map { gap: 2mm; margin-bottom: 3mm; }
+    .r-group { break-inside: avoid; }
+    .r-group h3 { font-size: 10pt; margin-bottom: 1mm; }
+    .r-group .first { font-size: 9pt; margin-bottom: 1mm; }
+    .status { border: 1px solid #000; background: none !important; color: #000 !important; font-size: 8pt; padding: 1px 6px; }
+    .glist :global(li) { padding: 1mm 0; font-size: 8.5pt; grid-template-columns: 22px 1fr; }
+    .glist :global(.meta), .glist :global(.broken) { font-size: 7.5pt; }
+    .r-fix :global(li) { padding: 1mm 0; font-size: 8pt; grid-template-columns: 22px 1fr; }
+    .r-fix h3 { margin-bottom: 1mm; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<style is:global>
+  /* Print only, and only the layout's own chrome, which a scoped block cannot
+     reach: the nav and the footer are the layout's, not this page's. */
+  @media print {
+    header.nav, footer.site { display: none !important; }
+    html, body { background: #fff !important; }
+  }
+</style>
+
+<script>
+  // The sheet is a plain array in this closure, autosaved to one localStorage
+  // key, and never posted anywhere. This is a module script, so it imports the
+  // same data module the page rendered from: one rubric for the row status,
+  // the bar, the map, the copied text and the CSV.
+  //
+  // NOTHING HERE TOUCHES THE NETWORK. No fetch, no XMLHttpRequest, no
+  // sendBeacon. If you add one, you have broken the line printed above the
+  // sheet.
+  import {
+    EXAMPLE_ROWS,
+    MAX_ROWS,
+    PLACEMENTS,
+    STATUSES,
+    STATUS_LABEL,
+    STORAGE_KEY,
+    CSV_FILENAME,
+    blankRow,
+    csvOf,
+    flagsFor,
+    labelOfFix,
+    labelOfPlacement,
+    labelOfReach,
+    labelOfSetter,
+    mapText,
+    parseRows,
+    readSheet,
+    statusOf,
+    type Fix,
+    type Placement,
+    type Reach,
+    type Row,
+    type Setter,
+    type Status,
+  } from '../../data/rule-placement-audit';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const glyphOf = (s: Status) => STATUSES.find((x) => x.key === s)?.glyph ?? '';
+
+  const rowsEl = $('rows');
+  const tpl = document.getElementById('row-tpl') as HTMLTemplateElement;
+  const autosave = $('autosave');
+  const copied = $('copied');
+
+  let rows: Row[] = [];
+  let seq = 0;
+  const newId = (): string => `r${Date.now().toString(36)}${(seq++).toString(36)}`;
+
+  // ── storage, every touch wrapped ───────────────────────────────────────
+  /** null means nothing has been stored yet: a first visit. */
+  function load(): Row[] | null {
+    try {
+      const v = localStorage.getItem(STORAGE_KEY);
+      return v === null ? null : parseRows(v);
+    } catch {
+      return null;
+    }
+  }
+  function save(): void {
+    let ok = false;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+      ok = true;
+    } catch {
+      ok = false;
+    }
+    autosave.textContent = ok
+      ? 'Autosaved in this browser as you type.'
+      : 'Autosave is off: this browser does not allow storage. Download the CSV before you close the tab.';
+  }
+
+  function say(text: string): void {
+    copied.textContent = '';
+    window.setTimeout(() => {
+      copied.textContent = text;
+    }, 30);
+  }
+
+  // ── rows ───────────────────────────────────────────────────────────────
+  const indexOf = (card: HTMLElement): number =>
+    Array.prototype.indexOf.call(rowsEl.children, card);
+
+  function setStatus(el: HTMLElement, s: Status): void {
+    el.dataset.k = s;
+    const st = el.querySelector('.st');
+    const g = el.querySelector('.glyph');
+    if (st) st.textContent = STATUS_LABEL[s];
+    if (g) g.textContent = glyphOf(s);
+  }
+
+  function paintRow(card: HTMLElement, r: Row, i: number): void {
+    (card.querySelector('.rn') as HTMLElement).textContent = pad(i + 1);
+    const s = statusOf(r.placements);
+    card.dataset.k = s;
+    setStatus(card.querySelector('.status') as HTMLElement, s);
+    (card.querySelector('.extag') as HTMLElement).hidden = !r.example;
+    (card.querySelector('[data-a="up"]') as HTMLButtonElement).disabled = i === 0;
+    (card.querySelector('[data-a="down"]') as HTMLButtonElement).disabled = i === rows.length - 1;
+    const rm = card.querySelector('.rm') as HTMLButtonElement;
+    rm.setAttribute('aria-label', r.example ? 'Remove the example row' : `Remove rule ${i + 1}`);
+    rm.title = r.example ? 'Remove the example row' : 'Remove this rule';
+
+    for (const b of card.querySelectorAll<HTMLButtonElement>('[data-f="placements"] .choice')) {
+      b.setAttribute('aria-pressed', String(r.placements.includes(b.dataset.v as Placement)));
+    }
+    for (const [f, v] of [
+      ['setter', r.setter],
+      ['reach', r.reach],
+      ['fix', r.fix],
+    ] as const) {
+      for (const b of card.querySelectorAll<HTMLButtonElement>(`[data-f="${f}"] .choice`)) {
+        b.setAttribute('aria-pressed', String(b.dataset.v === v));
+      }
+    }
+    const flags = flagsFor(r);
+    const ul = card.querySelector('.rflags') as HTMLElement;
+    ul.textContent = '';
+    for (const f of flags) {
+      const li = document.createElement('li');
+      li.textContent = f;
+      ul.append(li);
+    }
+    ul.hidden = flags.length === 0;
+  }
+
+  function buildRow(i: number): HTMLElement {
+    const card = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const r = rows[i];
+
+    const bind = (cls: string, key: 'rule' | 'broken' | 'owner') => {
+      const input = card.querySelector(`.${cls}`) as HTMLInputElement;
+      input.value = r[key];
+      input.addEventListener('input', () => {
+        const idx = indexOf(card);
+        rows[idx][key] = input.value;
+        update(false);
+      });
+    };
+    bind('f-rule', 'rule');
+    bind('f-broken', 'broken');
+    bind('f-owner', 'owner');
+
+    for (const group of card.querySelectorAll<HTMLElement>('.choices')) {
+      const f = group.dataset.f as 'placements' | 'setter' | 'reach' | 'fix';
+      for (const b of group.querySelectorAll<HTMLButtonElement>('.choice')) {
+        b.addEventListener('click', () => {
+          const idx = indexOf(card);
+          const v = b.dataset.v as string;
+          const row = rows[idx];
+          if (f === 'placements') {
+            const p = v as Placement;
+            row.placements = row.placements.includes(p)
+              ? row.placements.filter((x) => x !== p)
+              : PLACEMENTS.map((x) => x.key).filter((k) => k === p || row.placements.includes(k));
+          } else if (f === 'setter') row.setter = v as Setter;
+          else if (f === 'reach') row.reach = v as Reach;
+          else row.fix = v as Fix;
+          paintRow(card, row, idx);
+          update(false);
+        });
+      }
+    }
+
+    (card.querySelector('.rm') as HTMLButtonElement).addEventListener('click', () => {
+      const idx = indexOf(card);
+      const wasExample = rows[idx].example;
+      rows.splice(idx, 1);
+      render();
+      const next = rowsEl.children[Math.min(idx, rows.length - 1)] as HTMLElement | undefined;
+      (next?.querySelector('.f-rule') as HTMLElement | undefined)?.focus();
+      if (!next) $('add').focus();
+      say(wasExample ? 'Example row removed.' : `Rule ${idx + 1} removed.`);
+    });
+    for (const dir of ['up', 'down'] as const) {
+      (card.querySelector(`[data-a="${dir}"]`) as HTMLButtonElement).addEventListener('click', () => {
+        const idx = indexOf(card);
+        const to = dir === 'up' ? idx - 1 : idx + 1;
+        if (to < 0 || to >= rows.length) return;
+        const [moved] = rows.splice(idx, 1);
+        rows.splice(to, 0, moved);
+        render();
+        ((rowsEl.children[to] as HTMLElement).querySelector(`[data-a="${dir}"]`) as HTMLElement).focus();
+        say(`Moved to row ${to + 1}.`);
+      });
+    }
+
+    paintRow(card, r, i);
+    return card;
+  }
+
+  /** Rebuild every card. For structural changes only, never per keystroke. */
+  function render(): void {
+    rowsEl.textContent = '';
+    rows.forEach((_, i) => rowsEl.append(buildRow(i)));
+    update(true);
+  }
+
+  // ── the bar, the map and the flags ─────────────────────────────────────
+  function update(structural: boolean): void {
+    if (!structural) {
+      // Per-row paint for the row that changed is done by the caller; the
+      // move buttons and numbers do not change on a keystroke.
+      rows.forEach((r, i) => {
+        const card = rowsEl.children[i] as HTMLElement | undefined;
+        if (card) paintRow(card, r, i);
+      });
+    }
+    save();
+    const read = readSheet(rows);
+    $('rowcount').textContent = rows.length
+      ? `${rows.length} of ${MAX_ROWS} rows`
+      : '';
+    ($('add') as HTMLButtonElement).disabled = rows.length >= MAX_ROWS;
+    ($('add2') as HTMLButtonElement).disabled = rows.length >= MAX_ROWS;
+
+    // The bar.
+    $('tally').dataset.b = read.band;
+    $('sb-code').textContent = String(read.counts.code);
+    $('sb-total').textContent = String(read.total);
+    $('sb-band').textContent = read.headline;
+    $('sb-note').textContent = read.note;
+    for (const s of STATUSES) $(`sb-${s.key}`).textContent = String(read.counts[s.key]);
+
+    // The result card.
+    $('resultcard').dataset.b = read.band;
+    $('r-code').textContent = String(read.counts.code);
+    $('r-total').textContent = String(read.total);
+    $('r-band').textContent = read.headline;
+    $('r-what').textContent = read.note;
+    for (const s of STATUSES) $(`r-sec-${s.key}`).textContent = String(read.counts[s.key]);
+
+    for (const s of STATUSES) {
+      const items = rows.map((r, i) => ({ r, i })).filter(({ r }) => statusOf(r.placements) === s.key);
+      $(`r-count-${s.key}`).textContent = `${items.length} ${items.length === 1 ? 'rule' : 'rules'}`;
+      const list = $(`r-list-${s.key}`);
+      list.textContent = '';
+      for (const { r, i } of items) {
+        const li = document.createElement('li');
+        const mn = document.createElement('span');
+        mn.className = 'mn';
+        mn.textContent = pad(i + 1);
+        const body = document.createElement('span');
+        const ms = document.createElement('span');
+        ms.className = r.rule.trim() ? 'ms' : 'ms untitled';
+        ms.textContent = r.rule.trim() || 'No rule text yet';
+        const meta = document.createElement('span');
+        meta.className = 'meta';
+        const parts = [`Set by: ${labelOfSetter(r.setter)}`, `Agents: ${labelOfReach(r.reach)}`, `Fix to add: ${labelOfFix(r.fix)}`];
+        if (r.owner.trim()) parts.push(`Owner: ${r.owner.trim()}`);
+        if (r.placements.length) parts.push(`Enforced: ${r.placements.map(labelOfPlacement).join('; ')}`);
+        meta.textContent = parts.join(' · ');
+        body.append(ms, meta);
+        if (r.broken.trim()) {
+          const b = document.createElement('span');
+          b.className = 'broken';
+          b.textContent = `If broken: ${r.broken.trim()}`;
+          body.append(b);
+        }
+        li.append(mn, body);
+        list.append(li);
+      }
+      $(`r-none-${s.key}`).hidden = items.length > 0;
+      const first = document.querySelector<HTMLElement>(`.r-group[data-k="${s.key}"] [data-first]`);
+      if (first) first.hidden = items.length === 0;
+    }
+
+    // The flags, in row order.
+    const fixlist = $('r-fixlist');
+    fixlist.textContent = '';
+    let n = 0;
+    rows.forEach((r, i) => {
+      for (const f of flagsFor(r)) {
+        n += 1;
+        const li = document.createElement('li');
+        const fn = document.createElement('span');
+        fn.className = 'fn';
+        fn.textContent = pad(i + 1);
+        const body = document.createElement('span');
+        const b = document.createElement('b');
+        b.textContent = r.rule.trim() || `Row ${i + 1}`;
+        body.append(b, ` — ${f}`);
+        li.append(fn, body);
+        fixlist.append(li);
+      }
+    });
+    $('r-fix').hidden = n === 0;
+  }
+
+  // ── the actions ────────────────────────────────────────────────────────
+  function addRule(): void {
+    if (rows.length >= MAX_ROWS) return;
+    rows.push(blankRow(newId()));
+    render();
+    ((rowsEl.lastElementChild as HTMLElement).querySelector('.f-rule') as HTMLElement).focus();
+    say(`Rule ${rows.length} added.`);
+  }
+  $('add').addEventListener('click', addRule);
+  $('add2').addEventListener('click', addRule);
+
+  function loadExample(): void {
+    if (rows.length && !window.confirm('Replace the rows in the sheet with the worked example?')) return;
+    rows = EXAMPLE_ROWS.map((r) => ({ ...r, placements: [...r.placements], id: newId() }));
+    render();
+    say('Worked example loaded.');
+    $('sheet').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('example').addEventListener('click', loadExample);
+  $('example2').addEventListener('click', loadExample);
+
+  $('clear').addEventListener('click', () => {
+    if (!window.confirm('Clear all rows? This cannot be undone.')) return;
+    rows = [];
+    render();
+    $('add').focus();
+    say('All rows cleared.');
+  });
+
+  const doPrint = () => window.print();
+  $('print').addEventListener('click', doPrint);
+  $('print2').addEventListener('click', doPrint);
+
+  function downloadCsv(): void {
+    const blob = new Blob([csvOf(rows)], { type: 'text/csv;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = CSV_FILENAME;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    say('CSV downloaded.');
+  }
+  $('csv').addEventListener('click', downloadCsv);
+  $('csv2').addEventListener('click', downloadCsv);
+
+  async function copyMap(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(mapText(rows));
+      say('Map copied.');
+    } catch {
+      say('Copying was not permitted. Use Download CSV instead.');
+    }
+  }
+  $('copy').addEventListener('click', copyMap);
+  $('copy2').addEventListener('click', copyMap);
+
+  // ── start ──────────────────────────────────────────────────────────────
+  // A first visit gets the worked example's first row, tagged, so the sheet
+  // is never an empty grid. A sheet the reader emptied on purpose stays empty:
+  // bringing the example back would undo their delete.
+  const stored = load();
+  rows = stored === null ? [{ ...EXAMPLE_ROWS[0], placements: [...EXAMPLE_ROWS[0].placements] }] : stored;
+  render();
+</script>
