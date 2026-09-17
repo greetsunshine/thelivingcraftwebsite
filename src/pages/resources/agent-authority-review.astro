@@ -1,36 +1,57 @@
 ---
-// /resources/agent-authority-review — the field note, self-hosted.
+// /resources/agent-authority-review — The Agent Authority Review, as a tool.
 //
-// Published as a page rather than the source PDF for two reasons. The closing
-// call to action in the PDF says "five-week cohort"; facts.ts says six. Routing
-// the offer through facts.ts means this page cannot drift from the rest of the
-// site the way a checked-in PDF silently would. And the worksheet is meant to be
-// printed, which a print stylesheet does without shipping a second artifact.
+// Until 17 September this page was the field note transcribed: a blank table
+// to print, three filled tables to read, and the reading rules as prose at the
+// foot. It is now interactive. A visitor types the steps of their own
+// workflow, answers three questions per step, and the rubric names the owner
+// of each step beside it as they go. The three worked examples stay, as
+// reference tables and as something the sheet can load.
+//
+// The sheet is a closure and dies with the tab. No localStorage, no
+// sessionStorage. The one thing that leaves the browser is the PDF request:
+// name, email and the rows go to /api/pipeline/resource-pdf, which records the
+// person (the V4 addendum's "optional email request"), builds the PDF from the
+// same data module this page renders from, and hands it back. The rows are
+// used for the file and not stored; the dialog says so.
+//
+// Every string here comes from src/data/authority-review.ts. The page's script
+// imports that module too (Vite bundles it), so the owner beside each step,
+// the tally in the bar, the result, the copied sheet and the PDF all read one
+// rubric: readRow() and readSheet().
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
+  TOOL_NAME,
+  HEADLINE,
+  PURPOSE,
+  HOW_TO_USE,
   UNDO_SCALE,
+  UNDO_EXPLAINED,
   FIVE_QUESTIONS,
-  WORKSHEET_COLUMNS,
-  READING_RULES,
+  EVIDENCE_CHOICES,
+  JUDGMENT_CHOICES,
+  REPEAT_CHOICES,
+  FIELD_MAX,
+  RUBRIC,
   EXAMPLES,
   PROTOCOL,
   PROTOCOL_FINDING,
 } from '../../data/authority-review';
+import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
 
 const meta = publishedResources.find((r) => r.id === 'agent-authority-review')!;
 
-const title =
-  'The Agent Authority Review — which steps should get an agent, and which should not · The Living Craft';
+const title = `${TOOL_NAME} — decide which steps of a workflow an agent may own · The Living Craft`;
 const description =
-  'A worksheet for deciding which steps in a workflow should get an agent. The four-level undo-cost scale, five questions to ask per step, reading rules, and three worked examples: incident triage, refunds, and automatic pull request merge.';
+  'An interactive sheet for deciding which steps in a workflow an AI agent may own, which it may only suggest on, and which stay as plain code. Type your steps, answer three questions per step, and the rubric names the owner beside each one. A four-level undo-cost scale, five questions per step, and three worked examples: incident triage, refunds, and automatic pull request merge.';
 
 const schema = [
   {
     '@type': 'HowTo',
     '@id': `${SITE_ORIGIN}/resources/agent-authority-review#howto`,
-    name: 'The Agent Authority Review',
+    name: TOOL_NAME,
     description,
     url: `${SITE_ORIGIN}/resources/agent-authority-review`,
     author: { '@id': `${SITE_ORIGIN}/#person` },
@@ -46,9 +67,12 @@ const schema = [
   },
 ];
 
-// Blank worksheet rows. Eight, as in the source — enough for a real runbook and
-// few enough to print on one page.
-const BLANK_ROWS = 8;
+const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
+const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
+
+// The rubric's four rules, without the ordering the reader does not need: the
+// stop rule is applied first by readRow() but reads best last on the page.
+const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((r) => r.key === 'stop')!];
 ---
 
 <ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema}>
@@ -56,52 +80,57 @@ const BLANK_ROWS = 8;
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
       <div class="eyebrow">
-        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 02</span>
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number} · {TOOL_NAME}</span>
       </div>
-      <h1>Which steps should get an agent, and which <em>should not</em> — yet.</h1>
+      <h1>{HEADLINE}</h1>
       <p class="lead">
-        Most agent design reviews ask one question: can the model do this step? That is the wrong
-        question. How good the model is decides how much <em>thinking</em> you hand over. How hard an
-        action is to undo decides how much <em>authority</em> you hand over. They are two separate
-        limits and you have to set both.
+        Type the steps of a workflow. For each one, say how hard a wrong action is to undo, whether
+        two good engineers could disagree, and what a second run does. The rubric then names who
+        owns the step: <em>code</em>, an <em>agent</em>, or an agent that suggests while a
+        <em>human</em> approves.
       </p>
       <p class="hero-note mono">
-        4 undo levels · 5 questions per step · 3 worked examples · 40 minutes
+        4 undo levels · 5 questions per step · 3 reference examples · 40 minutes
       </p>
     </div>
   </section>
 
-  <!-- Why -->
-  <section id="why">
+  <!-- Purpose and how to use -->
+  <section id="about">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">01</span> Why most reviews miss the point</span>
-        <h2>The demo did both in one go. That is where the mistake <em>hides</em>.</h2>
-      </div>
-      <div class="prose">
-        <p>
-          Say an agent finds the cause of an outage in ninety seconds. That proves it is good at one
-          thing: understanding the problem. It says nothing about whether it should be allowed to act
-          on it.
-        </p>
-        <p>
-          Teams mix up the two because the demo did both at once. The mistake stays hidden until the
-          first action that cannot be undone.
-        </p>
+      <div class="about">
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+          <ul class="plain">
+            {PURPOSE.map((p) => <li>{p}</li>)}
+          </ul>
+        </div>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">02</span> How to use it</span>
+          <ol class="steps">
+            {HOW_TO_USE.map((p) => <li>{p}</li>)}
+          </ol>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Undo scale -->
-  <section id="undo-scale">
+  <!-- Undo cost -->
+  <section id="undo-cost">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">02</span> The undo cost scale</span>
+        <span class="eyebrow"><span class="num">03</span> Undo cost: the score</span>
         <h2>Give every action a level <em>before</em> you decide who owns the step.</h2>
+      </div>
+      <div class="explain">
+        {UNDO_EXPLAINED.map((e) => (
+          <p><strong>{e.lead}</strong> {e.body}</p>
+        ))}
       </div>
       <div class="bands">
         {UNDO_SCALE.map((b) => (
-          <div class="band" data-lvl={b.level}>
+          <div class="ulevel" data-lvl={b.level}>
             <span class="blvl mono">{b.level}</span>
             <div class="bbody">
               <strong>{b.headline}</strong>
@@ -110,10 +139,6 @@ const BLANK_ROWS = 8;
           </div>
         ))}
       </div>
-      <p class="callout">
-        The line you are drawing is almost always between <strong>R1 and R2</strong>. Above that
-        line, the agent only suggests. Below it, the agent can act.
-      </p>
     </div>
   </section>
 
@@ -121,85 +146,228 @@ const BLANK_ROWS = 8;
   <section id="questions">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">03</span> Five questions to ask</span>
-        <h2>For every single step. Not for the workflow <em>as a whole</em>.</h2>
+        <span class="eyebrow"><span class="num">04</span> The five questions</span>
+        <h2>Ask them of every step. Never of the workflow <em>as a whole</em>.</h2>
       </div>
+      <p class="prose-lead">
+        Each question fills one column of the sheet. Three of them decide the owner: judgment,
+        undo cost and repeat. The other two, evidence and hard limit, are what you write down so
+        that the owner can be held to it.
+      </p>
       <div class="qgrid">
         {FIVE_QUESTIONS.map((q) => (
           <div class="qcard">
-            <span class="qnum mono">{q.n}</span>
+            <span class="qnum mono">{q.n} · {q.column}</span>
             <h3>{q.name}</h3>
-            <p>{q.body}</p>
+            <p class="qask">{q.ask}</p>
+            <p class="qwhy">{q.why}</p>
           </div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- Worksheet -->
-  <section id="worksheet">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">04</span> The worksheet</span>
-        <h2>One row per step. Fill Evidence and Undo cost <em>first</em>.</h2>
-      </div>
-      <p class="prose-lead">
-        Before you form any opinion about owners. Print this page to take the blank table into a
-        room.
-      </p>
-      <div class="scroll">
-        <table class="sheet">
-          <thead>
-            <tr>{WORKSHEET_COLUMNS.map((c) => <th>{c}</th>)}</tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: BLANK_ROWS }).map(() => (
-              <tr>{WORKSHEET_COLUMNS.map(() => <td>&nbsp;</td>)}</tr>
-            ))}
-          </tbody>
-        </table>
+  {/* Everything the tally bar has to stay above lives inside this one element.
+      A sticky element only sticks within its parent, so the bar's parent has
+      to be as tall as the sheet and the result together. */}
+  <div class="scoring" id="scoring">
+    <div class="scorebar-wrap">
+      <div class="wrap">
+        <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
+          <div class="sb-score">
+            <span id="decided">0</span><span class="of">/<span id="total">0</span></span>
+          </div>
+          <div class="sb-text">
+            <span class="band" id="band">Not started</span>
+            <span class="sb-note" id="note">Steps decided. A step is decided once undo cost, judgment and repeat are answered.</span>
+          </div>
+          <div class="sb-secs mono" aria-label="Owners so far">
+            <span class="sb-sec" data-k="code">Code <b id="tally-code">0</b></span>
+            <span class="sb-sec" data-k="agent">Agent <b id="tally-agent">0</b></span>
+            <span class="sb-sec" data-k="suggest">Human approves <b id="tally-suggest">0</b></span>
+            <span class="sb-sec" data-k="stop">Stop <b id="tally-stop">0</b></span>
+          </div>
+        </div>
       </div>
     </div>
-  </section>
 
-  <!-- Reading rules -->
-  <section id="reading">
+    <!-- The sheet -->
+    <section id="sheet">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">05</span> Your assessment</span>
+          <h2>One row per step. Fill Evidence and Undo cost <em>first</em>.</h2>
+        </div>
+
+        <div class="controls" role="group" aria-label="Assessment controls">
+          <button class="btn btn-primary" id="blank" type="button">New assessment</button>
+          <span class="ctl-group" role="group" aria-label="Reference examples">
+            <span class="ctl-label mono">Reference examples</span>
+            {EXAMPLES.map((ex) => (
+              <button class="btn btn-ghost" type="button" data-load={ex.id}>Load {ex.letter}</button>
+            ))}
+          </span>
+          <button class="btn btn-ghost" id="copy" type="button">Copy the sheet</button>
+          <button class="btn btn-ghost" id="print" type="button">Print</button>
+          <button class="btn btn-ghost" id="pdf" type="button">Get the PDF</button>
+          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+        </div>
+
+        <!-- Legend: always visible above the rows, so the buttons need no memory -->
+        <div class="legend" aria-label="What each answer means">
+          <div class="lg-row">
+            <span class="lg-k mono">Undo cost</span>
+            <div class="lg-v">
+              {UNDO_SCALE.map((b) => (
+                <span class="lg-item" data-lvl={b.level}><b class="mono">{b.level}</b> {b.short}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Evidence</span>
+            <div class="lg-v">
+              {EVIDENCE_CHOICES.map((c) => (
+                <span class="lg-item"><b>{c.label}:</b> {c.means}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Judgment</span>
+            <div class="lg-v">
+              {JUDGMENT_CHOICES.map((c) => (
+                <span class="lg-item"><b>{c.label}:</b> {c.means}</span>
+              ))}
+            </div>
+          </div>
+          <div class="lg-row">
+            <span class="lg-k mono">Repeat</span>
+            <div class="lg-v">
+              {REPEAT_CHOICES.map((c) => (
+                <span class="lg-item"><b>{c.label}:</b> {c.means}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="rows" id="rows" aria-live="polite" aria-relevant="additions removals"></div>
+
+        <div class="addrow">
+          <button class="btn btn-ghost" id="add" type="button">Add a step</button>
+          <span class="mono faint" id="rowcount"></span>
+        </div>
+        <noscript>
+          <p class="noscript">The sheet needs JavaScript to decide owners as you type. Without it, the
+            reference examples below still show every column filled in, and the rubric says how each
+            owner was reached.</p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- The result -->
+    <section id="result">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">06</span> Your result</span>
+          <h2>The authority map, read against the <em>rubric</em>.</h2>
+        </div>
+        <div class="resultcard" id="resultcard" data-b="none">
+          <div class="r-head">
+            <span class="r-score mono"><b id="r-decided">0</b>/<span id="r-total">0</span></span>
+            <span class="r-band" id="r-band">Not started</span>
+          </div>
+          <p class="r-what" id="r-what"></p>
+          <div class="r-secs" id="r-secs"></div>
+          <div class="r-map" id="r-map" hidden>
+            <h3>Who owns each step</h3>
+            <ol id="r-maplist"></ol>
+          </div>
+          <div class="r-fix" id="r-fix" hidden>
+            <h3>Before you hand anything over</h3>
+            <ol id="r-fixlist"></ol>
+          </div>
+          <div class="r-actions">
+            <button class="btn btn-primary" id="pdf2" type="button">Get the PDF</button>
+            <button class="btn btn-ghost" id="copy2" type="button">Copy the sheet</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- The rubric -->
+  <section id="rubric">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">05</span> How to read the finished table</span>
-        <h2>Only after the table is full, <em>never</em> while you are filling it.</h2>
+        <span class="eyebrow"><span class="num">07</span> The rubric</span>
+        <h2>How three answers become <em>one owner</em>.</h2>
       </div>
-      {READING_RULES.map((r) => (
-        <div class={`rule-row${r.stop ? ' stop' : ''}`}>
+      <p class="prose-lead">
+        Apply it only once a row is full, never while filling it. The count beside each rule is how
+        many of your steps it currently decides.
+      </p>
+      {RUBRIC_DISPLAY.map((r) => (
+        <div class={`rule-row${r.key === 'stop' ? ' stop' : ''}`} id={`rule-${r.key}`} data-k={r.key}>
           <div class="rwhen">
             <span class="rcond">{r.when}</span>
             <span class="rarrow mono">→</span>
-            <span class="rthen">{r.then}</span>
+            <span class="rthen">{r.owner}</span>
+            <span class="rcount mono" aria-label="Steps this rule decides"><b id={`rule-n-${r.key}`}>0</b> steps</span>
           </div>
+          <p class="rmay"><strong>May:</strong> {r.may}</p>
           <p>{r.body}</p>
         </div>
       ))}
     </div>
   </section>
 
-  <!-- Examples -->
-  {EXAMPLES.map((ex, i) => (
+  <!-- Reference examples -->
+  <section id="examples">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> Reference examples</span>
+        <h2>Three workflows with every row <em>already decided</em>.</h2>
+      </div>
+      <p class="prose-lead">
+        Each table shows the author's own call for every step. Load one into the sheet to see the
+        owner the rubric gives beside it, and change an answer to see the owner move.
+      </p>
+    </div>
+  </section>
+  {EXAMPLES.map((ex) => (
     <section id={`example-${ex.id}`} class="example">
       <div class="wrap">
-        <div class="sec-head">
-          <span class="eyebrow"><span class="num">{String(6 + i).padStart(2, '0')}</span> Example {ex.letter}</span>
-          <h2>{ex.title}</h2>
+        <div class="exhead">
+          <div>
+            <span class="eyebrow"><span class="num">Example {ex.letter}</span></span>
+            <h3 class="extitle">{ex.title}</h3>
+            <p class="exsetting">{ex.setting}</p>
+          </div>
+          <button class="btn btn-ghost" type="button" data-load={ex.id}>Load into the sheet</button>
         </div>
         <div class="scroll">
           <table class="exsheet">
+            <colgroup>
+              <col style="width:15%" />
+              <col style="width:14%" />
+              <col style="width:9%" />
+              <col style="width:13%" />
+              <col style="width:5%" />
+              <col style="width:8%" />
+              <col style="width:10%" />
+              <col style="width:13%" />
+              <col style="width:13%" />
+            </colgroup>
             <thead>
               <tr>
                 <th>Step</th>
                 <th>Evidence needed</th>
-                <th>Who decides</th>
+                <th>Judgment</th>
+                <th>Hard limit</th>
+                <th>Undo</th>
+                <th>Repeat</th>
+                <th>Author's call</th>
                 <th>What it may do</th>
                 <th>If evidence is missing</th>
-                <th>Undo</th>
               </tr>
             </thead>
             <tbody>
@@ -207,16 +375,20 @@ const BLANK_ROWS = 8;
                 <tr>
                   <td class="cstep">{r.step}</td>
                   <td>{r.evidence}</td>
+                  <td class="cchoice">{JUDGMENT_CHOICES.find((c) => c.value === r.judgment)?.label}</td>
+                  <td>{r.limit}</td>
+                  <td class="cundo mono" data-lvl={r.undo}>{r.undo}</td>
+                  <td class="cchoice">{REPEAT_CHOICES.find((c) => c.value === r.repeat)?.label}</td>
                   <td class="cdecides">{r.decides}</td>
                   <td>{r.may}</td>
                   <td>{r.missing}</td>
-                  <td class="cundo mono" data-lvl={r.undo}>{r.undo}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <h3 class="notyet-head">Where I would say no agent, not yet — and why</h3>
+        {ex.caveat && <p class="excaveat mono">{ex.caveat}</p>}
+        <h4 class="notyet-head">Where the author says no agent, not yet, and why</h4>
         {ex.notYet.map((n) => (
           <p class="notyet"><strong>{n.name}.</strong> {n.body}</p>
         ))}
@@ -228,7 +400,7 @@ const BLANK_ROWS = 8;
   <section id="protocol">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">09</span> Do this in 40 minutes</span>
+        <span class="eyebrow"><span class="num">09</span> Run it in 40 minutes</span>
         <h2>Pick the workflow you are most <em>tired of</em>.</h2>
       </div>
       <p class="prose-lead">One workflow or runbook that you own. Not the most interesting one.</p>
@@ -275,21 +447,152 @@ const BLANK_ROWS = 8;
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
+
+  {/* One row of the sheet. Cloned by the script for every step, so the markup
+      stays here under Astro's scoping and the script only fills it. */}
+  <template id="row-tpl">
+    <div class="srow" data-k="incomplete">
+      <div class="srow-head">
+        <span class="rn mono"></span>
+        <input class="f-step" type="text" maxlength={FIELD_MAX.step} placeholder="Step, e.g. Send the refund" aria-label="Step" />
+        <span class="owner" data-k="incomplete">Not decided</span>
+        <button class="rm" type="button" aria-label="Remove this step" title="Remove this step">×</button>
+      </div>
+      <div class="srow-grid">
+        <label class="fld span4">
+          <span class="fl mono">1 · Evidence needed</span>
+          <input class="f-evidence" type="text" maxlength={FIELD_MAX.evidence} placeholder="What must be true before this step runs" />
+        </label>
+        <div class="fld span2">
+          <span class="fl mono">1 · Is it checked?</span>
+          <div class="choices" data-f="checked" role="group" aria-label="Is the evidence checked?">
+            {EVIDENCE_CHOICES.map((c) => (
+              <button type="button" class="choice" data-v={c.value} aria-pressed="false" title={c.means}>{c.label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">2 · Judgment</span>
+          <div class="choices" data-f="judgment" role="group" aria-label="Judgment">
+            {JUDGMENT_CHOICES.map((c) => (
+              <button type="button" class="choice" data-v={c.value} aria-pressed="false" title={c.means}>{c.label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">4 · Undo cost</span>
+          <div class="choices undo" data-f="undo" role="group" aria-label="Undo cost">
+            {UNDO_SCALE.map((b) => (
+              <button type="button" class="choice mono" data-v={b.level} data-lvl={b.level} aria-pressed="false" title={b.headline}>{b.level}</button>
+            ))}
+          </div>
+        </div>
+        <div class="fld span2">
+          <span class="fl mono">5 · Repeat</span>
+          <div class="choices" data-f="repeat" role="group" aria-label="What a second run does">
+            {REPEAT_CHOICES.map((c) => (
+              <button type="button" class="choice" data-v={c.value} aria-pressed="false" title={c.means}>{c.label}</button>
+            ))}
+          </div>
+        </div>
+        <label class="fld span3">
+          <span class="fl mono">3 · Hard limit</span>
+          <input class="f-limit" type="text" maxlength={FIELD_MAX.limit} placeholder="What must not bend, however good the story" />
+        </label>
+        <label class="fld span3">
+          <span class="fl mono">If the evidence is missing</span>
+          <input class="f-missing" type="text" maxlength={FIELD_MAX.missing} placeholder="What the step does instead. Optional." />
+        </label>
+      </div>
+      <ul class="rflags" hidden></ul>
+    </div>
+  </template>
+
+  {/* The PDF request. A native dialog: focus is trapped, Escape closes it,
+      and nothing else on the page needs a script to make that true. */}
+  <dialog class="pdf-dialog" id="pdf-dialog" aria-labelledby="pdf-title">
+    <form method="dialog" id="pdf-form" novalidate>
+      <span class="eyebrow"><span class="num">PDF</span> Your assessment</span>
+      <h2 id="pdf-title">Get the PDF</h2>
+      <p class="pdf-lead">
+        The PDF carries your steps, your answers, the owner of each step and the result. It is
+        built against a name and an email address.
+      </p>
+      <div class="pdf-grid">
+        <label>
+          {nameField.label}
+          <input type="text" name="name" autocomplete={nameField.autocomplete} maxlength={nameField.max} required />
+        </label>
+        <label>
+          {emailField.label}
+          <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
+        </label>
+      </div>
+      <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <p class="pdf-note">
+        Your steps and answers go into the file and are not stored. Your address is used to send
+        you this tool once. It does not start any other email.
+      </p>
+      <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
+      <div class="pdf-actions">
+        <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
+        <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
 </ResourcesLayout>
 
 <style>
   /* global.css resets every margin and has no .prose p rule, so sibling
-     paragraphs collide. Scoped, as on the other resource pages — /caio carries
-     the same defect and fixing it centrally would reflow three live surfaces. */
+     paragraphs collide. Scoped, as on the other resource pages. */
   .prose p + p { margin-top: var(--space-4); }
-
   .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
   .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .faint { color: var(--text-quiet); }
 
-  /* ── undo bands ───────────────────────────────────────────────────────── */
+  /* ── about ────────────────────────────────────────────────────────────── */
+  .about { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+  .about-col {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+  }
+  .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
+  ul.plain, ol.steps { display: flex; flex-direction: column; gap: var(--space-3); padding: 0; margin: 0; list-style: none; }
+  ul.plain li { position: relative; padding-left: var(--space-5); }
+  ul.plain li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+  }
+  ol.steps { counter-reset: s; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: var(--space-6); }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--accent-ink);
+  }
+
+  /* ── undo cost ────────────────────────────────────────────────────────── */
+  .explain { max-width: var(--measure-prose); margin-bottom: var(--space-6); }
+  .explain p + p { margin-top: var(--space-4); }
+  .explain strong { color: var(--text-body); }
   .bands { display: flex; flex-direction: column; gap: var(--space-3); }
-  .band {
+  /* `.ulevel`, not `.band`: the tally bar's outcome word is `.band` and the
+     two used to share a name, which put the word inside a raised card. */
+  .ulevel {
     display: grid;
     grid-template-columns: 56px 1fr;
     gap: var(--space-4);
@@ -300,9 +603,9 @@ const BLANK_ROWS = 8;
     padding: var(--space-4) var(--space-5);
   }
   .blvl { font-size: var(--size-4); font-weight: var(--weight-strong); }
-  /* R3 is the only level that can never be walked back — it reads as a refusal. */
-  .band[data-lvl='R2'] .blvl { color: var(--accent-ink); }
-  .band[data-lvl='R3'] .blvl { color: var(--danger); }
+  /* R2 is where a customer sees the mistake; R3 can never be walked back. */
+  [data-lvl='R2'] .blvl, .lg-item[data-lvl='R2'] b { color: var(--accent-ink); }
+  [data-lvl='R3'] .blvl, .lg-item[data-lvl='R3'] b { color: var(--danger); }
   .bbody strong { display: block; margin-bottom: 2px; }
   .bbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: 70ch; }
 
@@ -316,21 +619,233 @@ const BLANK_ROWS = 8;
 
   /* ── five questions ───────────────────────────────────────────────────── */
   .qgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
-  .qcard {
+  .qcard { background: var(--surface-panel); border-radius: var(--radius-card); box-shadow: var(--shadow-raise); padding: var(--space-5); }
+  .qnum { font-size: var(--size-1); color: var(--text-quiet); }
+  .qcard h3 { font-size: var(--size-5); margin: var(--space-2) 0 var(--space-2); }
+  .qask { color: var(--text-body); margin-bottom: var(--space-2); }
+  .qwhy { font-size: var(--size-2); color: var(--text-quiet); }
+
+  /* ── the tally bar ────────────────────────────────────────────────────── */
+  /* Sticky under the nav. Its parent is `.scoring`, which wraps the sheet and
+     the result, so it holds through both and releases before the rubric. */
+  .scorebar-wrap {
+    position: sticky;
+    top: 76px;
+    z-index: var(--z-sticky);
+    padding: var(--space-3) 0;
+    background: var(--surface-sunken);
+  }
+  .scorebar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+  }
+  .sb-score {
+    font-family: var(--font-mono);
+    font-size: var(--size-7);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .sb-score .of { font-size: var(--size-3); color: var(--text-quiet); }
+  .sb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .band { font-size: var(--size-4); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); line-height: var(--lh-snug); }
+  .sb-note { font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-secs { display: flex; gap: var(--space-2); flex-wrap: wrap; font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-sec { background: var(--surface-sunken); border-radius: var(--radius-pill); padding: 3px 10px; white-space: nowrap; }
+  .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .sb-sec[data-k='stop'] b { color: var(--danger); }
+  /* Outcomes read through colour on the word, not a yellow chip: sun is
+     reserved for things you can click, so it cannot carry a status. */
+  [data-b='stop'] .band, [data-b='stop'] .r-band { color: var(--danger); }
+  [data-b='decided'] .band, [data-b='decided'] .r-band { color: var(--text-loud); }
+  [data-b='progress'] .band, [data-b='progress'] .r-band { color: var(--accent-ink); }
+  [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
+
+  /* ── controls and legend ──────────────────────────────────────────────── */
+  #sheet { padding-bottom: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-5); }
+  .ctl-group { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: 4px 4px 4px var(--space-3); border-radius: var(--radius-pill); background: var(--surface-panel); box-shadow: var(--shadow-raise); }
+  .ctl-label { font-size: var(--size-1); color: var(--text-quiet); }
+  .copied { font-size: var(--size-1); color: var(--text-quiet); }
+
+  .legend {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+  .lg-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border-hair); }
+  .lg-row:last-child { border-bottom: 0; }
+  .lg-k { font-size: var(--size-1); color: var(--text-quiet); padding-top: 2px; }
+  .lg-v { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); font-size: var(--size-1); color: var(--text-quiet); }
+  .lg-item b { color: var(--text-body); font-weight: var(--weight-strong); }
+
+  /* ── the rows ─────────────────────────────────────────────────────────── */
+  /* Row elements are cloned from the template by the script, so the template's
+     markup carries Astro's scoping and these rules reach it unaided. */
+  .rows { display: flex; flex-direction: column; gap: var(--space-4); }
+  .srow {
     background: var(--surface-panel);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
-    padding: var(--space-5);
+    padding: var(--space-4) var(--space-5) var(--space-5);
   }
-  .qnum { font-size: var(--size-1); color: var(--text-quiet); }
-  .qcard h3 { font-size: var(--size-5); margin: var(--space-2) 0 var(--space-2); }
-  .qcard p { font-size: var(--size-2); color: var(--text-quiet); }
+  .srow[data-k='stop'] { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
+  .srow-head {
+    display: grid;
+    grid-template-columns: 32px 1fr auto 32px;
+    gap: var(--space-3);
+    align-items: center;
+    margin-bottom: var(--space-4);
+  }
+  .rn { font-size: var(--size-2); color: var(--text-quiet); font-weight: var(--weight-strong); }
+  .srow input {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 0 var(--space-3);
+    height: var(--control-h);
+    width: 100%;
+  }
+  .srow .f-step { font-weight: var(--weight-medium); }
+  .srow input:focus { outline: none; border-color: var(--text-body); }
+  .srow input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .owner {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    color: var(--text-quiet);
+  }
+  .owner[data-k='code'] { color: var(--text-body); }
+  .owner[data-k='agent'] { color: var(--text-loud); background: var(--accent-quiet); }
+  .owner[data-k='suggest'] { color: var(--accent-ink); background: var(--accent-quiet); }
+  .owner[data-k='stop'] { color: var(--text-on-invert); background: var(--danger); }
+  .rm {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-pill);
+    border: var(--border-w-rule) solid var(--border-field);
+    background: none;
+    color: var(--text-quiet);
+    font-size: var(--size-4);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .rm:hover { color: var(--danger); border-color: var(--danger); }
+  /* Three lines per step: evidence + checked, the three deciding answers,
+     then the two optional notes. Six columns so each line divides cleanly. */
+  .srow-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3) var(--space-4); }
+  .fld { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .fld.span2 { grid-column: span 2; }
+  .fld.span3 { grid-column: span 3; }
+  .fld.span4 { grid-column: span 4; }
+  .fl { font-size: var(--size-1); color: var(--text-quiet); }
+  .choices { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .choice {
+    font-family: var(--font-body);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .choice.mono { font-family: var(--font-mono); }
+  .choice:hover { border-color: var(--text-body); }
+  .choice:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  /* The chosen answer is the one clickable-yellow thing on the row. */
+  .choice[aria-pressed='true'] { background: var(--sun); border-color: var(--sun); color: var(--ink-1); }
+  .choice[aria-pressed='true'][data-lvl='R3'] { background: var(--danger); border-color: var(--danger); color: var(--text-on-invert); }
+  .rflags { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .rflags li { font-size: var(--size-1); color: var(--accent-ink); padding-left: var(--space-4); position: relative; }
+  .rflags li::before { content: '!'; position: absolute; left: 0; font-family: var(--font-mono); font-weight: var(--weight-strong); }
+  .addrow { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+  .noscript { margin-top: var(--space-4); color: var(--text-quiet); max-width: var(--measure-prose); }
 
-  /* ── tables ───────────────────────────────────────────────────────────── */
+  /* ── the result ───────────────────────────────────────────────────────── */
+  #result { padding-top: var(--space-7); }
+  .resultcard { background: var(--surface-panel); border-radius: var(--radius-card); box-shadow: var(--shadow-raise); padding: var(--space-6); }
+  .r-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-3); }
+  .r-score { font-size: var(--size-8); font-weight: var(--weight-strong); line-height: 1; letter-spacing: -0.02em; color: var(--text-quiet); }
+  .r-score b { color: var(--text-body); }
+  .r-band { font-size: var(--size-6); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); line-height: var(--lh-tight); }
+  .r-what { max-width: var(--measure-prose); margin: 0 0 var(--space-5); }
+  .r-secs { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+  /* The tally boxes and the two lists are created by the script, so they never
+     carry Astro's scoping attribute. `:global()` lets these rules reach them. */
+  .r-secs :global(.r-sec) { background: var(--surface-sunken); border-radius: var(--radius-inner); padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 2px; }
+  .r-secs :global(.r-sec .k) { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); }
+  .r-secs :global(.r-sec .v) { font-family: var(--font-mono); font-size: var(--size-6); font-weight: var(--weight-strong); line-height: 1; }
+  .r-secs :global(.r-sec.stop .v) { color: var(--danger); }
+  .r-secs :global(.r-sec .n) { font-size: var(--size-1); color: var(--text-quiet); }
+  .r-map h3, .r-fix h3 { font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-medium); color: var(--accent-ink); margin: 0 0 var(--space-3); }
+  .r-map { margin-bottom: var(--space-5); }
+  .r-map ol, .r-fix ol { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+  .r-map :global(li) { display: grid; grid-template-columns: 32px 1fr auto auto; gap: var(--space-3); align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--border-hair); font-size: var(--size-2); }
+  .r-map :global(li:last-child) { border-bottom: 0; }
+  .r-map :global(.mn) { font-family: var(--font-mono); color: var(--text-quiet); }
+  .r-map :global(.ms) { color: var(--text-body); }
+  .r-map :global(.ms.untitled) { color: var(--text-quiet); font-style: italic; }
+  .r-map :global(.mu) { font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-strong); color: var(--text-quiet); }
+  .r-map :global(.mu[data-lvl='R2']) { color: var(--accent-ink); }
+  .r-map :global(.mu[data-lvl='R3']) { color: var(--danger); }
+  .r-map :global(.mo) { font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-strong); padding: 3px 10px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-quiet); white-space: nowrap; }
+  .r-map :global(.mo[data-k='code']) { color: var(--text-body); }
+  .r-map :global(.mo[data-k='agent']) { color: var(--text-loud); background: var(--accent-quiet); }
+  .r-map :global(.mo[data-k='suggest']) { color: var(--accent-ink); background: var(--accent-quiet); }
+  .r-map :global(.mo[data-k='stop']) { color: var(--text-on-invert); background: var(--danger); }
+  .r-fix { margin-bottom: var(--space-5); }
+  .r-fix :global(li) { display: grid; grid-template-columns: 24px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border-hair); font-size: var(--size-2); color: var(--text-quiet); }
+  .r-fix :global(li:last-child) { border-bottom: 0; }
+  .r-fix :global(.fn) { font-family: var(--font-mono); font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .r-fix :global(.fn.stop) { color: var(--danger); }
+  .r-fix :global(b) { color: var(--text-body); }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── rubric ───────────────────────────────────────────────────────────── */
+  .rule-row { background: var(--surface-panel); border-radius: var(--radius-inner); box-shadow: var(--shadow-raise); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); }
+  .rule-row.stop { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
+  .rwhen { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .rcond { font-weight: var(--weight-strong); }
+  .rarrow { color: var(--text-quiet); }
+  .rthen { font-weight: var(--weight-strong); color: var(--accent-ink); }
+  .rule-row.stop .rthen { color: var(--danger); }
+  .rcount { margin-left: auto; font-size: var(--size-1); color: var(--text-quiet); background: var(--surface-sunken); border-radius: var(--radius-pill); padding: 3px 10px; }
+  .rcount b { color: var(--text-body); }
+  .rmay { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-1); }
+  .rule-row p:not(.rmay) { font-size: var(--size-2); color: var(--text-quiet); max-width: 78ch; }
+
+  /* ── examples ─────────────────────────────────────────────────────────── */
+  #examples { padding-bottom: 0; }
+  .example { padding-top: var(--space-6); }
+  .exhead { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .extitle { font-size: var(--size-6); margin: var(--space-2) 0 var(--space-1); }
+  .exsetting { color: var(--text-quiet); max-width: 70ch; }
   .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
   table { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
-  .sheet { min-width: 900px; }
-  .exsheet { min-width: 1000px; }
+  /* Nine columns with fixed shares, so no one column can push the rest off
+     the screen. Below the wrap width the table scrolls sideways inside .scroll. */
+  .exsheet { min-width: 1120px; table-layout: fixed; }
   thead th {
     background: var(--noir);
     color: var(--text-on-invert);
@@ -341,46 +856,15 @@ const BLANK_ROWS = 8;
     padding: var(--space-3) var(--space-4);
     vertical-align: bottom;
   }
-  tbody td {
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--border-hair);
-    vertical-align: top;
-    font-size: var(--size-2);
-    color: var(--text-quiet);
-  }
+  tbody td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-hair); vertical-align: top; font-size: var(--size-2); color: var(--text-quiet); }
   tbody tr:last-child td { border-bottom: 0; }
-  .sheet tbody td { height: 46px; }
-  .cstep { color: var(--text-body); font-weight: var(--weight-medium); min-width: 180px; }
-  .cdecides { color: var(--text-body); white-space: nowrap; }
+  .cstep { color: var(--text-body); font-weight: var(--weight-medium); }
+  .cdecides { color: var(--text-body); }
   .cundo { font-weight: var(--weight-strong); color: var(--text-body); white-space: nowrap; }
   .cundo[data-lvl='R2'] { color: var(--accent-ink); }
-  .cundo[data-lvl='R3'], .cundo[data-lvl='R2–R3'] { color: var(--danger); }
-
-  /* ── reading rules ────────────────────────────────────────────────────── */
-  .rule-row {
-    background: var(--surface-panel);
-    border-radius: var(--radius-inner);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-3);
-  }
-  .rule-row.stop { box-shadow: none; outline: var(--border-w-rule) solid var(--danger-mark); }
-  .rwhen { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
-  .rcond { font-weight: var(--weight-strong); }
-  .rarrow { color: var(--text-quiet); }
-  .rthen { font-weight: var(--weight-strong); color: var(--accent-ink); }
-  .rule-row.stop .rthen { color: var(--danger); }
-  .rule-row p { font-size: var(--size-2); color: var(--text-quiet); max-width: 78ch; }
-
-  /* ── examples ─────────────────────────────────────────────────────────── */
-  .example { padding-top: var(--space-7); }
-  .notyet-head {
-    margin: var(--space-6) 0 var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    font-weight: var(--weight-medium);
-    color: var(--accent-ink);
-  }
+  .cundo[data-lvl='R3'] { color: var(--danger); }
+  .excaveat { margin-top: var(--space-3); font-size: var(--size-1); color: var(--text-quiet); }
+  .notyet-head { margin: var(--space-6) 0 var(--space-3); font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-medium); color: var(--accent-ink); }
   .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; margin-bottom: var(--space-3); }
   .notyet strong { color: var(--text-body); }
 
@@ -393,21 +877,490 @@ const BLANK_ROWS = 8;
   .pbody strong { display: block; margin-bottom: 2px; }
   .pbody p { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
 
-  @media (max-width: 720px) {
-    .band, ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
+  /* ── the PDF dialog ───────────────────────────────────────────────────── */
+  .pdf-dialog {
+    /* The reset zeroes margin on everything, which also removes the
+       browser's own centring of a modal dialog. Put it back. */
+    margin: auto;
+    border: 0;
+    padding: 0;
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: var(--surface-panel);
+    color: var(--text-body);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-overlay);
+  }
+  .pdf-dialog::backdrop { background: rgba(22, 33, 46, 0.45); }
+  .pdf-dialog form { padding: var(--space-6); }
+  .pdf-dialog .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .pdf-dialog h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
+  .pdf-lead { margin: 0 0 var(--space-5); }
+  .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .pdf-dialog label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-marginal); font-size: var(--size-1); color: var(--text-quiet); }
+  .pdf-dialog input {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 0 var(--space-4);
+    height: var(--control-h);
+    width: 100%;
+  }
+  .pdf-dialog input:focus { outline: none; border-color: var(--text-body); }
+  .pdf-dialog input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .pdf-dialog .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .pdf-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
+  .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
+  .pdf-status.err { color: var(--danger); }
+  .pdf-status.ok { color: var(--text-loud); }
+  .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+  .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
+
+  @media (max-width: 960px) {
+    .srow-grid { grid-template-columns: repeat(2, 1fr); }
+    .fld.span2 { grid-column: span 1; }
+    .fld.span3, .fld.span4 { grid-column: span 2; }
+  }
+  @media (max-width: 860px) {
+    .about { grid-template-columns: 1fr; }
+    .scorebar { grid-template-columns: auto 1fr; }
+    .sb-secs { grid-column: 1 / -1; }
+    .sb-score { font-size: var(--size-6); }
+    .band { font-size: var(--size-3); }
+    .lg-row { grid-template-columns: 1fr; gap: var(--space-1); }
+    .r-secs { grid-template-columns: 1fr 1fr; }
+    .r-map :global(li) { grid-template-columns: 32px 1fr; }
+    .r-map :global(.mu), .r-map :global(.mo) { grid-column: 2; justify-self: start; }
+    .pdf-grid { grid-template-columns: 1fr; }
+    .ulevel, ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+  @media (max-width: 600px) {
+    .srow-grid { grid-template-columns: 1fr; }
+    .fld.span2, .fld.span3, .fld.span4 { grid-column: span 1; }
+    .srow-head { grid-template-columns: 32px 1fr 32px; }
+    .srow-head .owner { grid-column: 2; justify-self: start; }
   }
 
-  /* ── print: the worksheet is meant to go into a room on paper ─────────── */
+  /* ── print: the assessment is meant to go into a room on paper ────────── */
   @media print {
-    .hero-cta, .final .btn { display: none !important; }
-    .band, .qcard, .rule-row { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    .scorebar-wrap { position: static; background: none; }
+    .scorebar, .resultcard, .about-col, .legend, .srow, .ulevel, .qcard, .rule-row { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    .controls, .hero-cta, .r-actions, .pdf-dialog, .addrow, .rm, .exhead .btn { display: none !important; }
+    .srow input { border: 0; border-bottom: 1px solid var(--border-hair); height: auto; padding: 2px 0; }
+    .choice { border: 1px solid var(--border-hair); }
+    .choice[aria-pressed='true'] { outline: 2px solid var(--ink-1); }
     table, .scroll { overflow: visible !important; }
-    .sheet, .exsheet { min-width: 0 !important; font-size: 10px; }
-    .sheet tbody td { height: 34px; }
+    .exsheet { min-width: 0 !important; font-size: 9px; }
     thead { display: table-header-group; }
     tr, .notyet, ol.protocol li { break-inside: avoid; }
-    #worksheet { break-before: page; }
-    .example { break-before: page; }
+    #result, .example { break-before: page; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
+
+<script>
+  // The sheet is a plain array in this closure. Never written to localStorage,
+  // never posted except inside the PDF request, and gone when the tab closes.
+  //
+  // This is a module script, so it imports the same data module the page
+  // rendered from. The owner beside each step, the bar, the result, the
+  // copied sheet and (on the server) the PDF all read one rubric.
+  import {
+    EVIDENCE_CHOICES,
+    JUDGMENT_CHOICES,
+    REPEAT_CHOICES,
+    MAX_ROWS,
+    START_ROWS,
+    TOOL_NAME,
+    blankRow,
+    exampleById,
+    exampleRows,
+    readRow,
+    readSheet,
+    ruleFor,
+    type EvidenceAnswer,
+    type JudgmentAnswer,
+    type RepeatAnswer,
+    type SheetRow,
+    type UndoLevel,
+  } from '../../data/authority-review';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const labelOf = <T extends string>(choices: { value: T; label: string }[], v: T | null) =>
+    v === null ? '-' : (choices.find((c) => c.value === v)?.label ?? v);
+
+  let rows: SheetRow[] = Array.from({ length: START_ROWS }, blankRow);
+
+  const rowsEl = $('rows');
+  const tpl = document.getElementById('row-tpl') as HTMLTemplateElement;
+
+  // ---- one row ------------------------------------------------------------
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  /** Repaint the computed parts of row `i`: pressed answers, owner, flags. */
+  function paintRow(i: number) {
+    const card = rowsEl.children[i] as HTMLElement | undefined;
+    if (!card) return;
+    const r = rows[i];
+    const read = readRow(r);
+
+    card.dataset.k = read.key;
+    card.querySelector('.rn')!.textContent = pad(i + 1);
+    const owner = card.querySelector('.owner') as HTMLElement;
+    owner.textContent = read.owner;
+    owner.dataset.k = read.key;
+
+    for (const group of card.querySelectorAll<HTMLElement>('.choices')) {
+      const f = group.dataset.f as 'checked' | 'judgment' | 'undo' | 'repeat';
+      for (const b of group.querySelectorAll<HTMLButtonElement>('.choice')) {
+        b.setAttribute('aria-pressed', String(r[f] === b.dataset.v));
+      }
+    }
+
+    const flags = card.querySelector('.rflags') as HTMLElement;
+    flags.replaceChildren(...read.flags.map((f) => el('li', undefined, f)));
+    flags.hidden = read.flags.length === 0;
+  }
+
+  /** Build the DOM for row `i` from the template and wire its inputs. */
+  function buildRow(i: number): HTMLElement {
+    const card = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const r = rows[i];
+
+    const bind = (cls: string, key: 'step' | 'evidence' | 'limit' | 'missing') => {
+      const input = card.querySelector(`.${cls}`) as HTMLInputElement;
+      input.value = r[key];
+      input.addEventListener('input', () => {
+        rows[indexOf(card)][key] = input.value;
+        update();
+      });
+    };
+    bind('f-step', 'step');
+    bind('f-evidence', 'evidence');
+    bind('f-limit', 'limit');
+    bind('f-missing', 'missing');
+
+    for (const group of card.querySelectorAll<HTMLElement>('.choices')) {
+      const f = group.dataset.f as 'checked' | 'judgment' | 'undo' | 'repeat';
+      for (const b of group.querySelectorAll<HTMLButtonElement>('.choice')) {
+        b.addEventListener('click', () => {
+          const idx = indexOf(card);
+          const v = b.dataset.v as string;
+          const row = rows[idx];
+          // Clicking the chosen answer again clears it, so a mis-click is undoable.
+          const next = row[f] === v ? null : v;
+          if (f === 'checked') row.checked = next as EvidenceAnswer | null;
+          else if (f === 'judgment') row.judgment = next as JudgmentAnswer | null;
+          else if (f === 'undo') row.undo = next as UndoLevel | null;
+          else row.repeat = next as RepeatAnswer | null;
+          update();
+        });
+      }
+    }
+
+    (card.querySelector('.rm') as HTMLButtonElement).addEventListener('click', () => {
+      const idx = indexOf(card);
+      // The last row is cleared rather than removed, so the sheet is never empty.
+      if (rows.length === 1) rows[0] = blankRow();
+      else rows.splice(idx, 1);
+      rebuild();
+      const focusTo = rowsEl.children[Math.min(idx, rows.length - 1)]?.querySelector('.f-step') as HTMLInputElement | undefined;
+      focusTo?.focus();
+    });
+
+    return card;
+  }
+
+  const indexOf = (card: HTMLElement) => Array.prototype.indexOf.call(rowsEl.children, card);
+
+  /** Rebuild every row element from state. Used when rows are added, removed or loaded. */
+  function rebuild() {
+    rowsEl.replaceChildren(...rows.map((_, i) => buildRow(i)));
+    update();
+  }
+
+  // ---- the sheet as a whole -----------------------------------------------
+
+  function renderResult(read: ReturnType<typeof readSheet>) {
+    const card = $('resultcard');
+    card.dataset.b = read.outcome.key;
+    $('r-decided').textContent = String(read.decided);
+    $('r-total').textContent = String(read.total);
+    $('r-band').textContent = read.outcome.name;
+    $('r-what').textContent = read.outcome.what;
+
+    const tally: { k: 'code' | 'agent' | 'suggest' | 'stop'; label: string; note: string }[] = [
+      { k: 'code', label: 'Code', note: 'a rule, no model' },
+      { k: 'agent', label: 'Agent acts', note: read.agentCeiling ? `highest undo cost ${read.agentCeiling}` : 'needs an eval set' },
+      { k: 'suggest', label: 'Human approves', note: 'agent suggests only' },
+      { k: 'stop', label: 'Stop', note: 'repeat unknown' },
+    ];
+    $('r-secs').replaceChildren(
+      ...tally.map((t) => {
+        const box = el('div', `r-sec${t.k === 'stop' && read.counts.stop ? ' stop' : ''}`);
+        box.append(el('span', 'k', t.label));
+        box.append(el('span', 'v', String(read.counts[t.k])));
+        box.append(el('span', 'n', t.note));
+        return box;
+      }),
+    );
+
+    // The authority map: one line per used row.
+    const used = rows.map((r, i) => ({ r, i, read: read.rows[i] })).filter((x) => x.read.key !== 'incomplete' || x.r.step.trim());
+    const map = $('r-map');
+    map.hidden = used.length === 0;
+    $('r-maplist').replaceChildren(
+      ...used.map((x) => {
+        const li = el('li');
+        li.append(el('span', 'mn', pad(x.i + 1)));
+        li.append(el('span', `ms${x.r.step.trim() ? '' : ' untitled'}`, x.r.step.trim() || 'Untitled step'));
+        const u = el('span', 'mu', x.r.undo ?? '-');
+        if (x.r.undo) u.dataset.lvl = x.r.undo;
+        li.append(u);
+        const o = el('span', 'mo', x.read.owner);
+        o.dataset.k = x.read.key;
+        li.append(o);
+        return li;
+      }),
+    );
+
+    // Before you hand anything over: the checks the rubric raises.
+    const checks: { n: string; stop?: boolean; lead: string; rest: string }[] = [];
+    for (const i of read.stopped) {
+      checks.push({
+        n: pad(i + 1),
+        stop: true,
+        lead: `${rows[i].step.trim() || 'Untitled step'}: repeat unknown.`,
+        rest: ruleFor('stop')!.body,
+      });
+    }
+    for (const i of read.irreversible) {
+      checks.push({
+        n: pad(i + 1),
+        lead: `${rows[i].step.trim() || 'Untitled step'}: cannot be undone (R3).`,
+        rest: rows[i].limit.trim()
+          ? `Name the person who owns it. The hard limit reads: "${rows[i].limit.trim()}"`
+          : 'Name the person who owns it, and write that name into the hard limit.',
+      });
+    }
+    for (const i of read.assumed) {
+      checks.push({
+        n: pad(i + 1),
+        lead: `${rows[i].step.trim() || 'Untitled step'}: the input is assumed.`,
+        rest: 'Every check after this step is for show until the input is confirmed from the system of record.',
+      });
+    }
+    if (read.counts.agent) {
+      checks.push({
+        n: '·',
+        lead: `${read.counts.agent} ${read.counts.agent === 1 ? 'step needs an eval set' : 'steps need eval sets'} before the agent is built.`,
+        rest: 'Real cases from production with known-correct outcomes. Not invented ones. If the team cannot collect fifty in a week, the row is not ready.',
+      });
+    }
+    const fix = $('r-fix');
+    fix.hidden = checks.length === 0;
+    $('r-fixlist').replaceChildren(
+      ...checks.map((c) => {
+        const li = el('li');
+        li.append(el('span', `fn${c.stop ? ' stop' : ''}`, c.n));
+        const t = el('div');
+        t.append(el('b', undefined, `${c.lead} `), document.createTextNode(c.rest));
+        li.append(t);
+        return li;
+      }),
+    );
+  }
+
+  function update() {
+    rows.forEach((_, i) => paintRow(i));
+    const read = readSheet(rows);
+
+    $('decided').textContent = String(read.decided);
+    $('total').textContent = String(read.total);
+    $('band').textContent = read.outcome.name;
+    $('note').textContent =
+      read.outcome.key === 'decided'
+        ? 'Every step has an owner. Read the result below the sheet.'
+        : read.outcome.what;
+    $('verdict').dataset.b = read.outcome.key;
+    for (const k of ['code', 'agent', 'suggest', 'stop'] as const) {
+      $(`tally-${k}`).textContent = String(read.counts[k]);
+      $(`rule-n-${k}`).textContent = String(read.counts[k]);
+    }
+    $('rowcount').textContent = `${rows.length} of ${MAX_ROWS} rows`;
+    ($('add') as HTMLButtonElement).disabled = rows.length >= MAX_ROWS;
+
+    renderResult(read);
+  }
+
+  // ---- controls -----------------------------------------------------------
+
+  const scrollToSheet = () => $('sheet').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  $('blank').addEventListener('click', () => {
+    rows = Array.from({ length: START_ROWS }, blankRow);
+    rebuild();
+    scrollToSheet();
+    (rowsEl.querySelector('.f-step') as HTMLInputElement | null)?.focus({ preventScroll: true });
+  });
+
+  $('add').addEventListener('click', () => {
+    if (rows.length >= MAX_ROWS) return;
+    rows.push(blankRow());
+    rebuild();
+    (rowsEl.lastElementChild?.querySelector('.f-step') as HTMLInputElement | null)?.focus();
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-load]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const ex = exampleById(b.dataset.load!);
+      if (!ex) return;
+      rows = exampleRows(ex);
+      rebuild();
+      scrollToSheet();
+    });
+  });
+
+  $('print').addEventListener('click', () => window.print());
+
+  function sheetText(): string {
+    const read = readSheet(rows);
+    const lines: string[] = [`${TOOL_NAME} — learning.thelivingcraft.ai/resources/agent-authority-review`, ''];
+    rows.forEach((r, i) => {
+      const rr = read.rows[i];
+      if (rr.key === 'incomplete' && !r.step.trim()) return;
+      lines.push(`${pad(i + 1)}  ${r.step.trim() || 'Untitled step'}  →  ${rr.owner}`);
+      lines.push(`     Evidence: ${r.evidence.trim() || '-'}  [${labelOf(EVIDENCE_CHOICES, r.checked)}]`);
+      lines.push(`     Judgment: ${labelOf(JUDGMENT_CHOICES, r.judgment)}  ·  Undo: ${r.undo ?? '-'}  ·  Repeat: ${labelOf(REPEAT_CHOICES, r.repeat)}`);
+      if (r.limit.trim()) lines.push(`     Hard limit: ${r.limit.trim()}`);
+      if (r.missing.trim()) lines.push(`     If evidence is missing: ${r.missing.trim()}`);
+      for (const f of rr.flags) lines.push(`     ! ${f}`);
+      lines.push('');
+    });
+    lines.push(`${read.decided}/${read.total} steps decided — ${read.outcome.name}`);
+    lines.push(read.outcome.what);
+    lines.push(`Code ${read.counts.code} · Agent acts ${read.counts.agent} · Human approves ${read.counts.suggest} · Stop ${read.counts.stop}`);
+    return lines.join('\n');
+  }
+
+  async function copySheet() {
+    const status = $('copied');
+    try {
+      await navigator.clipboard.writeText(sheetText());
+      status.textContent = 'Sheet copied';
+    } catch {
+      status.textContent = 'Copy blocked by the browser. Use Print instead.';
+    }
+    setTimeout(() => (status.textContent = ''), 4000);
+  }
+  $('copy').addEventListener('click', copySheet);
+  $('copy2').addEventListener('click', () => {
+    copySheet();
+    $('copied').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // ---- the PDF ------------------------------------------------------------
+
+  const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
+  const form = document.getElementById('pdf-form') as HTMLFormElement;
+  const pdfStatus = $('pdf-status');
+  const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
+  const cancel = $('pdf-cancel');
+
+  function openPdf() {
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'pdf-status';
+    submit.disabled = false;
+    cancel.textContent = 'Cancel';
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+  $('pdf').addEventListener('click', openPdf);
+  $('pdf2').addEventListener('click', openPdf);
+  cancel.addEventListener('click', () => dialog.close());
+
+  function say(text: string, kind: 'ok' | 'err' | '') {
+    pdfStatus.textContent = text;
+    pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
+  }
+
+  function download(base64: string, filename: string) {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const data = new FormData(form);
+    const name = String(data.get('name') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    if (!name || !email) {
+      say('Both fields are needed.', 'err');
+      return;
+    }
+
+    submit.disabled = true;
+    say('Building the PDF.', '');
+
+    // One key per attempt. A retry after a network error is a new attempt; a
+    // repeat click while this one runs is stopped by the disabled button.
+    const requestKey =
+      typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    try {
+      const res = await fetch('/api/pipeline/resource-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'agent-authority-review',
+          requestKey,
+          answers: { name, email },
+          botcheck: String(data.get('botcheck') ?? ''),
+          sheet: rows,
+          search: location.search,
+          referrer: document.referrer,
+          entryPath: location.pathname,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
+        const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
+        say(errs || body.error || 'We could not build the PDF just now. Use Print on the page instead.', 'err');
+        submit.disabled = false;
+        return;
+      }
+
+      download(body.pdf, body.filename || 'agent-authority-review.pdf');
+      cancel.textContent = 'Close';
+      say(`Your PDF is downloading. ${(body.saved ? body.delivery : body.note) ?? ''}`.trim(), 'ok');
+    } catch {
+      say('The request did not reach the server. Check the connection and try again, or use Print.', 'err');
+      submit.disabled = false;
+    }
+  });
+
+  rebuild();
+</script>

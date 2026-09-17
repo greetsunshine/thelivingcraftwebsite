@@ -99,11 +99,11 @@ export const resources: Resource[] = [
     number: '02',
     series: 'Agentic system design',
     title: 'The Agent Authority Review',
-    kind: 'Worksheet · 3 worked examples',
+    kind: 'Interactive sheet · live owner per step · 3 reference examples',
     summary:
-      'A way to decide which steps in a workflow should get an agent, and which should not — yet.',
+      'Type the steps of a workflow and find out which ones an agent may own, which it may only suggest on, and which stay as code.',
     description:
-      'Most agent design reviews ask one question: can the model do this step? That is the wrong question, and the demo hides it by doing the thinking and the acting in one go. There are two separate limits. How good the model is decides how much thinking you hand over; how hard an action is to undo decides how much authority you hand over. This sets out a four-level undo-cost scale from "undo in seconds, nobody notices" to "cannot be undone", five questions to ask of every step rather than of the workflow, a blank worksheet, and the rules for reading it once it is full. Then three worked examples with every row already decided — incident triage, refunds and goodwill credit, and automatic pull request merge — each one closing on the rows the author would not hand to an agent yet, and why. There is a forty-minute protocol at the end for running it against a workflow you already own.',
+      'Most agent design reviews ask one question: can the model do this step? That is the wrong question, and the demo hides it by doing the thinking and the acting in one go. There are two separate limits. How good the model is decides how much thinking you hand over; how hard an action is to undo decides how much authority you hand over. This tool sets a four-level undo-cost scale, from "undo in seconds, nobody notices" to "cannot be undone", and asks five questions of every step rather than of the workflow. You type the steps of your own workflow into the sheet and answer three of those questions per step: is there one right answer, what is the undo cost, and what does a second run do. The rubric names the owner of each step beside it as you answer: code, an agent with an eval set, or an agent that suggests while a human approves. The result is an authority map for the workflow, with the checks to clear before anything is handed over. Three reference examples with every row already decided, incident triage, refunds and goodwill credit, and automatic pull request merge, can be loaded into the sheet. There is a forty-minute protocol at the end for running it in a room.',
     useFor: [
       'Assign an undo cost to every action in a workflow before anyone argues about who owns the step',
       'Separate the steps that need a rule in code from the ones that genuinely need judgment',
@@ -111,7 +111,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Page, with a blank worksheet and three filled examples. Prints cleanly if you want the table on paper.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet or print it without giving anything. A PDF of your assessment is built against a name and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
