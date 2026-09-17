@@ -23,7 +23,8 @@
     "check:campaign": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/check-campaign.ts",
     "staff": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/add-staff.ts",
     "acceptance": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/acceptance.ts",
-    "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts"
+    "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts",
+    "build:kit": "node scripts/build-memory-kit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

@@ -1,0 +1,8 @@
+# Built PDF and ZIP. The published copies are committed at public/downloads/
+# in the site repo; dist/ here is working output.
+dist/
+harness/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
