@@ -75,22 +75,21 @@ export const resources: Resource[] = [
     topic: 'Cost Modelling',
     number: '01',
     series: 'Agent business case',
-    title: 'The Run-Cost Model',
-    kind: 'Spreadsheet · 3 tabs',
+    title: 'The Run-Cost Model Tool',
+    kind: 'Interactive model · 4 options side by side · 1 reference example',
     summary:
-      'A twelve-month cost comparison of four ways to do the same job, with the operating lines most business cases leave out.',
+      'Cost four ways of doing the same job over one period, with the operating lines most business cases leave out, and find the one with the lowest cost per acceptable outcome.',
     description:
-      'Almost every agent business case models the model bill and stops there. This one puts four arms side by side over twelve months — a rules workflow, the same workflow rebuilt on the decision rules an agent build forces you to write down, a model-assisted draft with human approval, and a full agent with tools — and separates what you pay once from what you pay every month. The lines it makes you fill in are the ones that get forgotten: retries and failed tool calls, review minutes per reviewed case, engineer minutes per escalation, evaluation maintenance, re-qualifying against a new model version, prompt and regression testing, incident and on-call load, and the cases the system declines that a person finishes by hand. Quality sits next to cost throughout, because cost per case is the wrong number to argue about on its own. The number to argue about is cost per acceptable outcome. The worked example is an ordering agent across forty sites, priced at Indian rates in rupees, and it is deliberately a case where the full agent never breaks even — and where building it was still worth doing, because it produced the written specification that made the cheap option good.',
+      'Almost every agent business case models the model bill and stops there. This tool puts four options side by side over one period: a rules workflow, the same workflow rebuilt on the decision rules an agent build forces you to write down, a model-assisted draft with human approval, and a full agent with tools. It keeps what you pay once apart from what you pay every month. The lines it makes you fill in are the ones that get forgotten: retries and failed tool calls, review minutes per reviewed case, engineer minutes per escalation, evaluation maintenance, re-qualifying against a new model version, prompt and regression testing, incident and on-call load, and the cases the system declines that a person finishes by hand. Quality sits beside cost throughout, because cost per case is the wrong number to argue about on its own. The number to argue about is cost per acceptable outcome. Every line is worked out as you type. The result names the leading option, gives the break-even month for each one, flags when cost per case and cost per acceptable outcome disagree, and lists the assumptions to check before you trust the answer. The reference example is an ordering agent across forty sites, priced at Indian rates in rupees, and it is deliberately a case where the full agent does not pay back inside the period, and where building it was still worth doing, because it produced the written specification that made the cheap option good.',
     useFor: [
       'Price an agent proposal across build and run, not just the model bill',
       'Compare a full agent against a rules workflow and a model-assisted draft on the same cases and one definition of an acceptable outcome',
       'Put a break-even month in front of a budget holder, including when the answer is never',
-      'Show a team which of their operating assumptions — escalation rate, review minutes, upkeep — are doing the real work in the number',
+      'Show a team which of their operating assumptions, such as escalation rate, review minutes and upkeep, are doing the real work in the number',
     ],
     format:
-      'Excel workbook. Read Me, the model, and a filled worked example. Fill in the blue cells; the yellow ones set everything else.',
-    url: '/downloads/agent-run-cost-model.xlsx',
-    fileSize: '17 KB',
+      'Interactive. Type your figures in the page; every total, the leading option and the break-even months update as you go. The reference example is on its own tab and can be loaded into your model. Copy the model or print it without giving anything. A PDF of your model is built against a name and an email address. The same model is also offered as an Excel workbook.',
+    url: '/resources/run-cost-model',
     publishedAt: '2026-09-14',
   },
   {
