@@ -27,6 +27,7 @@
 // its bound: one key, only what the reader typed, every read and write in
 // try/catch, and the page works with storage blocked.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -102,6 +103,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
       <p class="hero-note mono">
         {PLACEMENTS.length} placements · {STATUSES.length} statuses · 1 worked example · entries stay in this browser
       </p>
+      <ResourceCredit />
     </div>
   </section>
 
