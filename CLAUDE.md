@@ -1103,6 +1103,18 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
   only, never on `/craft/admin` or `/craft` (both are gated, `noindex`, and deliberately carry
   no third-party analytics). Track captures most events by delegation, so adding a section
   or a link does not mean remembering to instrument it.
+  - **One exception, decided 2026-09-17: the Rule Placement Audit autosaves to
+    `localStorage`** ([src/pages/resources/rule-placement-audit.astro](src/pages/resources/rule-placement-audit.astro)).
+    It is a worksheet a reader fills in over more than one sitting, and losing the
+    list on a closed tab is the failure the brief asked to prevent. The exception is
+    bounded: one key, only what the reader typed, every read and write in try/catch,
+    and the page works with storage blocked. Nothing else reads that key. A page that
+    wants the same thing has to make the same case, not point at this one.
+  - **A page that promises "nothing is sent to us" must not load Google Tag Manager.**
+    The container loads Microsoft Clarity, which records page text, and a tag added
+    later in the GTM console can capture anything. `PracticeLayout` takes
+    `tagManager={false}` for exactly this; the audit page is the only user. The
+    first-party beacon stays, because it sends a path and a referrer and never content.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an

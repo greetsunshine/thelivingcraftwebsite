@@ -1,0 +1,1187 @@
+---
+/**
+ * /resources/rule-placement-audit — the Rule Placement Audit, a browser worksheet.
+ *
+ * One row per hard rule. The reader marks where each rule is enforced (in code
+ * before the model, in the prompt, in code after the model, or nowhere), and
+ * the page groups the rows into a rule map with the prompt-only and unenforced
+ * rules first. The vocabulary, the status rule and the example row live in
+ * src/data/rule-placement-audit.ts; this file renders them and holds the CSS.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ENTRIES NEVER LEAVE THE BROWSER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Four things hold that up:
+ *
+ * 1. NO <form>. The inputs sit in a table inside a plain <div>, same as the
+ *    agent design check. A form can be submitted by a stray Enter key, and a
+ *    GET submission puts every entry in the query string. No form, no path.
+ * 2. NO fetch, no XMLHttpRequest, no sendBeacon anywhere in the script. The
+ *    only network activity on this page is the layout's own pageview beacon,
+ *    which reads a path and a referrer and nothing from this page.
+ *    `tagManager={false}` on the layout keeps Google Tag Manager off this page,
+ *    because the container loads Microsoft Clarity, which records page text —
+ *    and the rule map IS page text. See note 4 in PracticeLayout.astro.
+ * 3. The tracker (Track.astro) captures form starts only for `form.apply-form`
+ *    and CTA clicks only by href. Nothing typed here is ever put in an href.
+ * 4. The CSV and the print are produced by the browser: a Blob and
+ *    window.print(). Neither touches a server.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THIS PAGE USES localStorage, BY REQUEST
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * CLAUDE.md forbids localStorage on public pages. The brief for this tool asks
+ * for autosave so a reader can come back to a half-finished list, and Sunil
+ * approved that. It is the one exception on a public surface. The store holds
+ * only what the reader typed, under one key (STORAGE_KEY), and every read and
+ * write is wrapped in try/catch: with storage blocked, the page works and says
+ * autosave is off. Nothing here reads that store back into anything but this
+ * page.
+ */
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import {
+  SETTERS,
+  PLACEMENTS,
+  FIXES,
+  STATUS_LABEL,
+  STATUS_ORDER,
+} from '../../data/rule-placement-audit';
+
+export const prerender = true;
+
+const path = '/resources/rule-placement-audit';
+const url = `${SITE_ORIGIN}${path}`;
+
+const title = 'Rule Placement Audit — The Living Craft';
+const description =
+  'Where is each hard rule actually enforced? A browser worksheet: for each rule your agent must never break, mark whether it is enforced in code before the model, in the prompt, in code after the model, or nowhere, and leave with a one-page rule map.';
+
+const schema: unknown[] = [
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumbs`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: `${SITE_ORIGIN}/resources/` },
+      { '@type': 'ListItem', position: 3, name: 'Rule Placement Audit' },
+    ],
+  },
+];
+
+/** The status glyphs. Plain characters, not emoji, so the label never relies on colour alone. */
+const GLYPH: Record<string, string> = { none: '×', prompt: '!', code: '✓' };
+
+/** HTML-escape a data value. The lists are constants, but the rule costs nothing. */
+const esc = (t: string): string =>
+  t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** One label with the hidden row-number slot the script fills in. */
+const lbl = (text: string): string =>
+  `<span class="lbl">${esc(text)}<span class="sr" data-f="rown"></span></span>`;
+
+/** The row template. See the note above the <template> element below. */
+const rowHtml = `<tr class="r">
+  <td class="c-n"><span class="n" data-f="n"></span></td>
+  <td class="c-rule">
+    <span class="tag" data-f="tag" hidden>Example — delete when you start</span>
+    <label>${lbl('Rule')}<input type="text" data-f="rule" autocomplete="off"></label>
+  </td>
+  <td class="c-set">
+    <label>${lbl('Who set it')}<select data-f="setter">${SETTERS.map(
+      (s) => `<option value="${esc(s)}">${esc(s)}</option>`,
+    ).join('')}</select></label>
+  </td>
+  <td class="c-where">
+    <fieldset>
+      <legend class="lbl">Where it's enforced<span class="sr" data-f="rown"></span></legend>
+      ${PLACEMENTS.map(
+        (p) =>
+          `<label class="tick"><input type="checkbox" data-p="${p.key}"><span>${esc(p.label)}</span></label>`,
+      ).join('')}
+    </fieldset>
+  </td>
+  <td class="c-status">
+    <span class="lbl" aria-hidden="true">Status</span>
+    <span class="status" data-f="status"></span>
+  </td>
+  <td class="c-broken">
+    <label>${lbl("What happens if it's broken")}<input type="text" data-f="broken" autocomplete="off"></label>
+  </td>
+  <td class="c-fix">
+    <label>${lbl('Fix to add')}<select data-f="fix">${FIXES.map(
+      (f) => `<option value="${esc(f)}">${esc(f)}</option>`,
+    ).join('')}</select></label>
+  </td>
+  <td class="c-owner">
+    <label>${lbl('Owner')}<input type="text" data-f="owner" autocomplete="off"></label>
+  </td>
+  <td class="c-act">
+    <div class="acts">
+      <button type="button" class="ib" data-a="up" aria-label="Move up">↑</button>
+      <button type="button" class="ib" data-a="down" aria-label="Move down">↓</button>
+      <button type="button" class="ib del" data-a="del">Delete</button>
+    </div>
+  </td>
+</tr>`;
+---
+
+<PracticeLayout
+  title={title}
+  description={description}
+  canonical={path}
+  schema={schema}
+  tagManager={false}
+>
+  <div class="rpa" id="rpa">
+    <nav class="wrap crumbs-wrap" aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li><a href="/resources/">Resources</a></li>
+        <li class="sep" aria-hidden="true">/</li>
+        <li aria-current="page">Rule Placement Audit</li>
+      </ol>
+    </nav>
+
+    {/* Print only: the map needs a title on paper. Hidden on screen. */}
+    <div class="print-head" aria-hidden="true">
+      <p class="eyebrow">Rule Placement Audit</p>
+      <p class="print-sub">Where is each hard rule actually enforced?</p>
+    </div>
+
+    <section class="hero rpa-hero">
+      <div class="wrap">
+        <p class="eyebrow">Resources · browser worksheet</p>
+        <h1>Rule Placement <em>Audit</em></h1>
+        <p class="credential">Where is each hard rule actually enforced?</p>
+
+        <div class="bring">
+          <div class="bring-item">
+            <h2>What to bring</h2>
+            <p>
+              A list of the rules your agent must never break (for example user no-go lists,
+              allergens, spending limits, regions you can't serve), and a rough sketch of how one
+              request travels through your system, from the user's input to the answer they see.
+            </p>
+          </div>
+          <div class="bring-item">
+            <h2>What to do</h2>
+            <p>
+              For each rule, mark where it is enforced: in code before the model sees the inputs,
+              in the prompt, in code after the model answers, or nowhere. Flag every rule enforced
+              only in the prompt or nowhere, and note the filter or check it needs.
+            </p>
+          </div>
+          <div class="bring-item">
+            <h2>What you leave with</h2>
+            <p>
+              A one-page map of your agent's hard rules and where each one is enforced, with the
+              prompt-only and unenforced rules flagged as the first to move into code.
+            </p>
+          </div>
+        </div>
+
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#worksheet"
+            >Use the Rule Placement Audit&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+          >
+        </div>
+      </div>
+    </section>
+
+    {/* ── the worksheet ─────────────────────────────────────────────────────── */}
+    <section class="wrap band" id="worksheet" aria-labelledby="ws-h">
+      <div class="sec-head">
+        <p class="eyebrow">The worksheet</p>
+        <h2 id="ws-h">One row <em>per rule</em></h2>
+      </div>
+
+      <p class="privacy">Your entries stay in this browser. Nothing is sent to us.</p>
+      <p class="autosave" id="autosave" role="status"></p>
+
+      <noscript>
+        <p class="empty">This worksheet runs in your browser and needs JavaScript turned on.</p>
+      </noscript>
+
+      <div class="toolbar" role="group" aria-label="Worksheet actions">
+        <button type="button" class="btn btn-primary" id="add">Add a rule</button>
+        <button type="button" class="btn btn-ghost" id="print">Print or save as PDF</button>
+        <button type="button" class="btn btn-ghost" id="csv">Download CSV</button>
+        <button type="button" class="btn btn-ghost" id="clear">Clear all</button>
+      </div>
+
+      {/* Not a <form>. See the header comment. */}
+      <div class="panel sheet-panel">
+        <div class="sheet-scroll">
+          <table class="sheet" id="sheet">
+            <thead>
+              <tr>
+                <th scope="col" class="c-n"><span class="sr">Row</span>#</th>
+                <th scope="col" class="c-rule">Rule</th>
+                <th scope="col" class="c-set">Who set it</th>
+                <th scope="col" class="c-where">Where it's enforced</th>
+                <th scope="col" class="c-status">Status</th>
+                <th scope="col" class="c-broken">What happens if it's broken</th>
+                <th scope="col" class="c-fix">Fix to add</th>
+                <th scope="col" class="c-owner">Owner</th>
+                <th scope="col" class="c-act"><span class="sr">Row actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty" hidden>No rules yet. Add a rule to start.</p>
+      </div>
+
+      <p class="sr" id="live" aria-live="polite"></p>
+    </section>
+
+    {/* One row, cloned by the script for each rule. Built as a string and
+        placed with set:html: the Astro compiler closes a <tr> early when a
+        <template> mixes table cells with expressions, and the row then loses
+        its last six cells. The option lists still come from the data module. */}
+    <template id="row-tpl" set:html={rowHtml}></template>
+
+    {/* ── the output ────────────────────────────────────────────────────────── */}
+    <section class="wrap band" id="map" aria-labelledby="map-h">
+      <div class="sec-head">
+        <p class="eyebrow">The output</p>
+        <h2 id="map-h">Your rule map</h2>
+      </div>
+
+      <div class="map">
+        {
+          STATUS_ORDER.map((s) => (
+            <section class="group" data-status={s} aria-labelledby={`g-${s}`}>
+              <h3 id={`g-${s}`}>
+                <span class="status" data-status={s}>
+                  <span class="glyph" aria-hidden="true">{GLYPH[s]}</span>
+                  {STATUS_LABEL[s]}
+                </span>
+                <span class="count" data-f="count">0 rules</span>
+              </h3>
+              {s !== 'code' && <p class="first">Move these into code first.</p>}
+              <ol class="glist" data-f="list"></ol>
+              <p class="none" data-f="none">None.</p>
+            </section>
+          ))
+        }
+      </div>
+    </section>
+
+    {/* ── the explanation, after the worksheet on purpose ───────────────────── */}
+    <section class="wrap band" aria-labelledby="why-h">
+      <div class="sec-head">
+        <p class="eyebrow">Why this matters</p>
+        <h2 id="why-h">A prompt is something the model <em>weighs</em></h2>
+      </div>
+      <div class="prose">
+        <p>
+          A rule written in the prompt is one input among many. The model weighs it against the
+          user's message, the retrieved data and everything else in the context. Most of the
+          time it complies. Some of the time it does not, and nothing in the system notices.
+          That is what happened to the restaurant agent: the no-go list was in the prompt, and
+          the model recommended a blocked restaurant anyway.
+        </p>
+        <p>Code does not weigh. There are two places to put a rule in code:</p>
+        <ul>
+          <li>
+            <strong>A filter before the model.</strong> Remove what the model must never choose
+            before it sees the inputs. If the blocked restaurants are not in the candidate list,
+            the model cannot recommend one.
+          </li>
+          <li>
+            <strong>A check after the model.</strong> Test the answer against the rule before the
+            user sees it. If it fails, reject it, retry, or fall back.
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</PracticeLayout>
+
+<script>
+  /**
+   * The worksheet. Holds the rows in a closure, renders the table and the rule
+   * map, autosaves to localStorage, and hands the reader a CSV or a print.
+   *
+   * A MODULE SCRIPT, NOT `is:inline`, so it can import the data module and is
+   * type-checked by `astro check`.
+   *
+   * NOTHING HERE TOUCHES THE NETWORK. No fetch, no XMLHttpRequest, no
+   * sendBeacon. If you add one, you have broken the promise printed above the
+   * worksheet.
+   */
+  import {
+    EXAMPLE_ROW,
+    PLACEMENTS,
+    STATUS_LABEL,
+    STATUS_ORDER,
+    STORAGE_KEY,
+    CSV_FILENAME,
+    blankRow,
+    csvOf,
+    parseRows,
+    statusOf,
+    type Fix,
+    type Placement,
+    type Row,
+    type Setter,
+    type Status,
+  } from '../../data/rule-placement-audit';
+
+  const GLYPH: Record<Status, string> = { none: '×', prompt: '!', code: '✓' };
+
+  const tbody = document.getElementById('rows');
+  const tpl = document.getElementById('row-tpl');
+  const empty = document.getElementById('empty');
+  const live = document.getElementById('live');
+  const autosave = document.getElementById('autosave');
+  const mapEl = document.querySelector<HTMLElement>('.rpa .map');
+  const addBtn = document.getElementById('add');
+  const printBtn = document.getElementById('print');
+  const csvBtn = document.getElementById('csv');
+  const clearBtn = document.getElementById('clear');
+
+  if (
+    tbody &&
+    tpl instanceof HTMLTemplateElement &&
+    empty &&
+    live &&
+    autosave &&
+    mapEl &&
+    addBtn &&
+    printBtn &&
+    csvBtn &&
+    clearBtn
+  ) {
+    boot(tbody, tpl, empty, live, autosave, mapEl, addBtn, printBtn, csvBtn, clearBtn);
+  }
+
+  function boot(
+    tbody: HTMLElement,
+    tpl: HTMLTemplateElement,
+    empty: HTMLElement,
+    live: HTMLElement,
+    autosave: HTMLElement,
+    mapEl: HTMLElement,
+    addBtn: HTMLElement,
+    printBtn: HTMLElement,
+    csvBtn: HTMLElement,
+    clearBtn: HTMLElement,
+  ): void {
+    /** The only state. */
+    let rows: Row[] = [];
+    let seq = 0;
+    let storageOk = false;
+
+    const newId = (): string => `r${Date.now().toString(36)}${(seq++).toString(36)}`;
+
+    // ── storage, every touch wrapped ─────────────────────────────────────────
+    function probeStorage(): boolean {
+      try {
+        const k = `${STORAGE_KEY}:probe`;
+        localStorage.setItem(k, '1');
+        localStorage.removeItem(k);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    /** null means nothing has been stored yet — a first visit. */
+    function load(): Row[] | null {
+      try {
+        const v = localStorage.getItem(STORAGE_KEY);
+        return v === null ? null : parseRows(v);
+      } catch {
+        return null;
+      }
+    }
+
+    function save(): void {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+        storageOk = true;
+      } catch {
+        storageOk = false;
+      }
+      autosave.textContent = storageOk
+        ? 'Autosaved in this browser as you type.'
+        : 'Autosave is off: this browser does not allow storage. Download the CSV before you close the tab.';
+    }
+
+    function say(text: string): void {
+      live.textContent = '';
+      // A repeated message is not re-announced unless the node changes.
+      window.setTimeout(() => {
+        live.textContent = text;
+      }, 30);
+    }
+
+    // ── render the table ─────────────────────────────────────────────────────
+    function setStatus(el: Element, s: Status): void {
+      el.setAttribute('data-status', s);
+      el.textContent = '';
+      const g = document.createElement('span');
+      g.className = 'glyph';
+      g.setAttribute('aria-hidden', 'true');
+      g.textContent = GLYPH[s];
+      el.append(g, ` ${STATUS_LABEL[s]}`);
+    }
+
+    function buildRow(row: Row, i: number): HTMLTableRowElement {
+      const frag = tpl.content.cloneNode(true) as DocumentFragment;
+      const tr = frag.querySelector('tr');
+      if (!tr) throw new Error('row template has no <tr>');
+      tr.dataset.id = row.id;
+
+      const q = <T extends Element>(sel: string): T | null => tr.querySelector<T>(sel);
+
+      const n = q<HTMLElement>('[data-f="n"]');
+      if (n) n.textContent = String(i + 1);
+      tr.querySelectorAll<HTMLElement>('[data-f="rown"]').forEach((el) => {
+        el.textContent = ` (row ${i + 1})`;
+      });
+
+      const tag = q<HTMLElement>('[data-f="tag"]');
+      if (tag) tag.hidden = !row.example;
+
+      const rule = q<HTMLInputElement>('[data-f="rule"]');
+      if (rule) rule.value = row.rule;
+      const setter = q<HTMLSelectElement>('[data-f="setter"]');
+      if (setter) setter.value = row.setter;
+      const broken = q<HTMLInputElement>('[data-f="broken"]');
+      if (broken) broken.value = row.broken;
+      const fix = q<HTMLSelectElement>('[data-f="fix"]');
+      if (fix) fix.value = row.fix;
+      const owner = q<HTMLInputElement>('[data-f="owner"]');
+      if (owner) owner.value = row.owner;
+
+      tr.querySelectorAll<HTMLInputElement>('input[data-p]').forEach((cb) => {
+        cb.checked = row.placements.includes(cb.dataset.p as Placement);
+      });
+
+      const status = q<HTMLElement>('[data-f="status"]');
+      if (status) setStatus(status, statusOf(row.placements));
+
+      const up = q<HTMLButtonElement>('[data-a="up"]');
+      if (up) up.disabled = i === 0;
+      const down = q<HTMLButtonElement>('[data-a="down"]');
+      if (down) down.disabled = i === rows.length - 1;
+      const del = q<HTMLButtonElement>('[data-a="del"]');
+      if (del) {
+        del.textContent = row.example ? 'Delete example' : 'Delete';
+        del.setAttribute('aria-label', row.example ? 'Delete the example row' : `Delete row ${i + 1}`);
+      }
+      return tr;
+    }
+
+    /** Rebuild the whole table. Used for structural changes only, never per keystroke. */
+    function render(focus?: { id: string; field: string }): void {
+      tbody.textContent = '';
+      rows.forEach((row, i) => tbody.append(buildRow(row, i)));
+      empty.hidden = rows.length > 0;
+      renderMap();
+      if (focus) {
+        const el = tbody.querySelector<HTMLElement>(
+          `tr[data-id="${focus.id}"] [data-f="${focus.field}"]`,
+        );
+        el?.focus();
+      }
+    }
+
+    // ── render the rule map ──────────────────────────────────────────────────
+    function renderMap(): void {
+      STATUS_ORDER.forEach((s) => {
+        const group = mapEl.querySelector<HTMLElement>(`.group[data-status="${s}"]`);
+        if (!group) return;
+        const list = group.querySelector<HTMLElement>('[data-f="list"]');
+        const count = group.querySelector<HTMLElement>('[data-f="count"]');
+        const none = group.querySelector<HTMLElement>('[data-f="none"]');
+        const first = group.querySelector<HTMLElement>('.first');
+        if (!list || !count || !none) return;
+
+        const items = rows
+          .map((r, i) => ({ r, i }))
+          .filter(({ r }) => statusOf(r.placements) === s);
+
+        count.textContent = `${items.length} ${items.length === 1 ? 'rule' : 'rules'}`;
+        list.textContent = '';
+        items.forEach(({ r, i }) => {
+          const li = document.createElement('li');
+          const name = document.createElement('strong');
+          name.textContent = r.rule.trim() || `Row ${i + 1} (no rule text yet)`;
+          li.append(name);
+
+          const meta = document.createElement('span');
+          meta.className = 'meta';
+          const parts = [`Set by: ${r.setter}`, `Fix to add: ${r.fix}`];
+          if (r.owner.trim()) parts.push(`Owner: ${r.owner.trim()}`);
+          if (r.placements.length) {
+            parts.push(
+              `Enforced: ${r.placements
+                .map((p) => PLACEMENTS.find((x) => x.key === p)?.label ?? p)
+                .join('; ')}`,
+            );
+          }
+          meta.textContent = parts.join(' · ');
+          li.append(meta);
+
+          if (r.broken.trim()) {
+            const b = document.createElement('span');
+            b.className = 'broken';
+            b.textContent = `If broken: ${r.broken.trim()}`;
+            li.append(b);
+          }
+          list.append(li);
+        });
+        none.hidden = items.length > 0;
+        if (first) first.hidden = items.length === 0;
+      });
+    }
+
+    // ── edits: update state in place, never rebuild on a keystroke ───────────
+    function rowOf(el: Element): { row: Row; tr: HTMLElement; index: number } | null {
+      const tr = el.closest<HTMLElement>('tr[data-id]');
+      if (!tr) return null;
+      const index = rows.findIndex((r) => r.id === tr.dataset.id);
+      if (index < 0) return null;
+      return { row: rows[index], tr, index };
+    }
+
+    tbody.addEventListener('input', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement) && !(target instanceof HTMLSelectElement)) return;
+      const hit = rowOf(target);
+      if (!hit) return;
+      const { row, tr } = hit;
+
+      if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+        const p = target.dataset.p as Placement;
+        row.placements = PLACEMENTS.map((x) => x.key).filter((k) => {
+          const cb = tr.querySelector<HTMLInputElement>(`input[data-p="${k}"]`);
+          return k === p ? target.checked : Boolean(cb?.checked);
+        });
+        const status = tr.querySelector<HTMLElement>('[data-f="status"]');
+        if (status) setStatus(status, statusOf(row.placements));
+      } else {
+        const f = target.dataset.f;
+        if (f === 'rule') row.rule = target.value;
+        else if (f === 'broken') row.broken = target.value;
+        else if (f === 'owner') row.owner = target.value;
+        else if (f === 'setter') row.setter = target.value as Setter;
+        else if (f === 'fix') row.fix = target.value as Fix;
+      }
+      renderMap();
+      save();
+    });
+
+    tbody.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest<HTMLButtonElement>('button[data-a]');
+      if (!btn) return;
+      const hit = rowOf(btn);
+      if (!hit) return;
+      const { row, index } = hit;
+      const a = btn.dataset.a;
+
+      if (a === 'del') {
+        rows.splice(index, 1);
+        save();
+        const next = rows[Math.min(index, rows.length - 1)];
+        render(next ? { id: next.id, field: 'rule' } : undefined);
+        if (!next) addBtn.focus();
+        say(row.example ? 'Example row deleted.' : `Row ${index + 1} deleted.`);
+      } else if (a === 'up' && index > 0) {
+        rows.splice(index - 1, 0, rows.splice(index, 1)[0]);
+        save();
+        render();
+        tbody.querySelector<HTMLElement>(`tr[data-id="${row.id}"] [data-a="up"]`)?.focus();
+        say(`Moved to row ${index}.`);
+      } else if (a === 'down' && index < rows.length - 1) {
+        rows.splice(index + 1, 0, rows.splice(index, 1)[0]);
+        save();
+        render();
+        tbody.querySelector<HTMLElement>(`tr[data-id="${row.id}"] [data-a="down"]`)?.focus();
+        say(`Moved to row ${index + 2}.`);
+      }
+    });
+
+    // ── the actions ──────────────────────────────────────────────────────────
+    addBtn.addEventListener('click', () => {
+      const row = blankRow(newId());
+      rows.push(row);
+      save();
+      render({ id: row.id, field: 'rule' });
+      say(`Row ${rows.length} added.`);
+    });
+
+    printBtn.addEventListener('click', () => window.print());
+
+    csvBtn.addEventListener('click', () => {
+      const blob = new Blob([csvOf(rows)], { type: 'text/csv;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = CSV_FILENAME;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      say('CSV downloaded.');
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (!window.confirm('Clear all rows? This cannot be undone.')) return;
+      rows = [];
+      save();
+      render();
+      addBtn.focus();
+      say('All rows cleared.');
+    });
+
+    // ── start ────────────────────────────────────────────────────────────────
+    storageOk = probeStorage();
+    const stored = load();
+    // A first visit gets the example. A sheet the reader emptied on purpose
+    // stays empty: bringing the example back would undo their delete.
+    rows = stored === null ? [{ ...EXAMPLE_ROW, placements: [...EXAMPLE_ROW.placements] }] : stored;
+    save();
+    render();
+  }
+</script>
+
+<style is:global>
+  /* Global on purpose, namespaced under .rpa: the worksheet rows come from a
+     set:html template and carry no scoping attribute, so a scoped block could
+     not style them. Nothing here reaches outside .rpa except the print rules
+     for the layout chrome. */
+  .rpa {
+    padding-bottom: var(--space-8);
+  }
+  /* `hidden` must win over any display rule below (the tag is inline-block). */
+  .rpa [hidden] {
+    display: none !important;
+  }
+  .rpa .band {
+    padding-block: var(--space-7);
+  }
+  .rpa .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .rpa .print-head {
+    display: none;
+  }
+  .rpa .crumbs-wrap {
+    padding-block: var(--space-4) var(--space-3);
+  }
+
+  /* ── hero: subtitle, the three blocks, then the one button ──────────────── */
+  .rpa-hero .credential {
+    max-width: var(--measure-prose);
+  }
+  .rpa .bring {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+  .rpa .bring-item {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-panel);
+    padding: var(--space-5);
+  }
+  .rpa .bring-item h2 {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-mono);
+    color: var(--sun);
+    margin-bottom: var(--space-3);
+  }
+  .rpa .bring-item p {
+    font-size: var(--size-3);
+    line-height: var(--lh-normal);
+    color: rgba(255, 255, 255, 0.86);
+  }
+  @media (max-width: 900px) {
+    .rpa .bring {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── the worksheet ──────────────────────────────────────────────────────── */
+  .rpa .privacy {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    color: var(--text-loud);
+    margin-bottom: var(--space-1);
+  }
+  .rpa .autosave {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    min-height: 1.2em;
+    margin-bottom: var(--space-5);
+  }
+  .rpa .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .rpa .sheet-panel {
+    padding: var(--space-3);
+  }
+  .rpa .sheet-scroll {
+    overflow-x: auto;
+  }
+  .rpa .sheet {
+    width: 100%;
+    min-width: 1080px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: var(--size-2);
+  }
+  .rpa .sheet th {
+    text-align: left;
+    vertical-align: bottom;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-quiet);
+    padding: var(--space-3) var(--space-2);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+  }
+  .rpa .sheet td {
+    vertical-align: top;
+    padding: var(--space-3) var(--space-2);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+  }
+  .rpa .sheet tr:last-child td {
+    border-bottom: 0;
+  }
+  .rpa .c-n {
+    width: 3ch;
+  }
+  .rpa .c-rule {
+    width: 19%;
+  }
+  .rpa .c-set {
+    width: 10%;
+  }
+  .rpa .c-where {
+    width: 16%;
+  }
+  .rpa .c-status {
+    width: 10%;
+  }
+  .rpa .c-broken {
+    width: 19%;
+  }
+  .rpa .c-fix {
+    width: 12%;
+  }
+  .rpa .c-owner {
+    width: 9%;
+  }
+  .rpa .c-act {
+    width: 5%;
+  }
+  .rpa .sheet .n {
+    font-family: var(--font-mono);
+    color: var(--text-quiet);
+    padding-top: 9px;
+    display: inline-block;
+  }
+  /* On the wide table the column header is the visible label; the <label> text
+     is kept for the accessible name and shown again on the stacked cards. */
+  .rpa .sheet .lbl {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    margin-bottom: var(--space-1);
+  }
+  @media (min-width: 761px) {
+    .rpa .sheet .lbl {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+  }
+  .rpa .sheet label {
+    display: block;
+  }
+  .rpa .sheet input[type='text'],
+  .rpa .sheet select {
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: 10px;
+    height: 36px;
+    padding: 0 var(--space-3);
+    width: 100%;
+  }
+  .rpa .sheet input[type='text']:focus,
+  .rpa .sheet select:focus {
+    outline: none;
+    border-color: var(--text-body);
+  }
+  .rpa .sheet input:focus-visible,
+  .rpa .sheet select:focus-visible,
+  .rpa .sheet button:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .rpa .sheet fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  .rpa .sheet legend {
+    padding: 0;
+  }
+  .rpa .tick {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    font-size: var(--size-2);
+    color: var(--text-body);
+    line-height: 1.3;
+    padding: 3px 0;
+    cursor: pointer;
+  }
+  .rpa .tick input {
+    width: 16px;
+    height: 16px;
+    margin: 1px 0 0;
+    flex: none;
+    accent-color: var(--text-loud);
+  }
+  .rpa .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--accent-ink);
+    background: var(--accent-quiet);
+    border-radius: var(--radius-pill);
+    padding: 2px 10px;
+    margin-bottom: var(--space-2);
+  }
+  .rpa .c-status .status {
+    margin-top: 6px;
+  }
+
+  /* The status label. Text and glyph carry the meaning; colour is on top. */
+  .rpa .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-field);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    white-space: nowrap;
+  }
+  .rpa .status .glyph {
+    font-weight: var(--weight-strong);
+  }
+  .rpa .status[data-status='none'] {
+    color: var(--danger);
+    border-color: var(--danger-mark);
+    background: var(--danger-quiet);
+    border-style: dashed;
+  }
+  .rpa .status[data-status='prompt'] {
+    color: var(--accent-ink-strong);
+    border-color: var(--accent-ink);
+    background: var(--accent-quiet);
+  }
+  .rpa .status[data-status='code'] {
+    color: var(--text-loud);
+    border-color: var(--text-loud);
+  }
+
+  .rpa .acts {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .rpa .ib {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border-field);
+    border-radius: var(--radius-pill);
+    height: 30px;
+    min-width: 30px;
+    padding: 0 10px;
+    cursor: pointer;
+  }
+  .rpa .ib:hover {
+    background: var(--surface-hover);
+  }
+  .rpa .ib:disabled {
+    opacity: 0.42;
+    pointer-events: none;
+  }
+  .rpa .ib.del {
+    color: var(--danger);
+  }
+  .rpa .empty {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    padding: var(--space-4) var(--space-2);
+  }
+
+  /* Stacked cards below 760px: each row becomes a card, every label shows. */
+  @media (max-width: 760px) {
+    .rpa .sheet-panel {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .rpa .sheet-scroll {
+      overflow: visible;
+    }
+    .rpa .sheet {
+      min-width: 0;
+      display: block;
+    }
+    .rpa .sheet thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    .rpa .sheet tbody,
+  .rpa .sheet tr {
+      display: block;
+    }
+    .rpa .sheet tr {
+      background: var(--surface-panel);
+      border-radius: var(--radius-panel);
+      box-shadow: var(--shadow-raise);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+    .rpa .sheet td {
+      display: block;
+      width: auto;
+      border-bottom: 0;
+      padding: var(--space-2) 0;
+    }
+    .rpa .c-n {
+      padding-bottom: 0;
+    }
+    .rpa .sheet .n {
+      padding-top: 0;
+    }
+    .rpa .sheet .n::before {
+      content: 'Row ';
+    }
+    .rpa .c-status .lbl {
+      display: block;
+    }
+    .rpa .acts {
+      justify-content: flex-end;
+      padding-top: var(--space-2);
+      border-top: var(--border-w-hair) solid var(--border-hair);
+    }
+  }
+
+  /* ── the rule map ───────────────────────────────────────────────────────── */
+  .rpa .map {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .rpa .group {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .rpa .group h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    font-size: var(--size-4);
+    margin-bottom: var(--space-2);
+  }
+  .rpa .group h3 .status {
+    font-size: var(--size-2);
+    padding: 6px 12px;
+  }
+  .rpa .group .count {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    font-weight: var(--weight-normal);
+    color: var(--text-quiet);
+  }
+  .rpa .group .first {
+    font-size: var(--size-3);
+    font-weight: var(--weight-medium);
+    color: var(--text-loud);
+    margin-bottom: var(--space-3);
+  }
+  .rpa .glist {
+    list-style: decimal;
+    padding-left: 1.5em;
+    margin: 0;
+  }
+  .rpa .glist li {
+    padding: var(--space-3) 0;
+    border-top: var(--border-w-hair) solid var(--border-hair);
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+  }
+  .rpa .glist li strong {
+    display: block;
+    color: var(--text-loud);
+    font-weight: var(--weight-strong);
+  }
+  .rpa .glist .meta,
+  .rpa .glist .broken {
+    display: block;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    margin-top: 2px;
+  }
+  .rpa .group .none {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+
+  .rpa .prose ul {
+    list-style: disc;
+    padding-left: 1.4em;
+    max-width: var(--measure-prose);
+  }
+  .rpa .prose li {
+    font-size: var(--size-4);
+    line-height: var(--lh-normal);
+    color: var(--text-body);
+    margin-bottom: var(--space-3);
+  }
+  .rpa .prose li strong {
+    color: var(--text-loud);
+  }
+
+  /* ── print: the rule map, on one page ───────────────────────────────────── */
+  @media print {
+    @page {
+      margin: 14mm;
+    }
+    /* The mist ground is a grey page on paper. */
+    html,
+    body {
+      background: #fff !important;
+    }
+    .sitenav,
+  .sitefooter,
+  .skip,
+  .rpa .crumbs,
+  .rpa .rpa-hero,
+  .rpa #worksheet,
+  .rpa .band[aria-labelledby='why-h'] {
+      display: none !important;
+    }
+    .rpa {
+      padding: 0;
+    }
+    .rpa .print-head {
+      display: block;
+      margin-bottom: 6mm;
+    }
+    .rpa .print-head .eyebrow {
+      color: #000;
+      font-size: 14pt;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .rpa .print-sub {
+      font-size: 10pt;
+      color: #333;
+    }
+    .rpa #map {
+      padding: 0;
+      max-width: none;
+    }
+    .rpa #map .sec-head {
+      display: none;
+    }
+    .rpa .map {
+      gap: 4mm;
+    }
+    .rpa .group {
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0 0 3mm;
+      border-bottom: 1px solid #999;
+      break-inside: avoid;
+    }
+    .rpa .group h3 {
+      font-size: 11pt;
+      margin-bottom: 1mm;
+    }
+    .rpa .group h3 .status,
+  .rpa .status {
+      color: #000 !important;
+      background: #fff !important;
+      border-color: #000 !important;
+      font-size: 9pt;
+      padding: 2px 8px;
+    }
+    .rpa .group .first {
+      font-size: 9.5pt;
+      margin-bottom: 1mm;
+    }
+    .rpa .glist li {
+      padding: 1.5mm 0;
+      font-size: 9.5pt;
+      line-height: 1.3;
+      border-top: 1px solid #ddd;
+      break-inside: avoid;
+    }
+    .rpa .glist li strong {
+      color: #000;
+    }
+    .rpa .glist .meta,
+  .rpa .glist .broken {
+      font-size: 8.5pt;
+      color: #333;
+    }
+    .rpa .group .none {
+      font-size: 9pt;
+      color: #333;
+    }
+  }
+</style>
