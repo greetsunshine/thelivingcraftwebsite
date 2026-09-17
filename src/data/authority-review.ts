@@ -49,6 +49,8 @@ export interface UndoBand {
   level: UndoLevel;
   /** The one-line meaning, as shown in the legend beside every row. */
   short: string;
+  /** Two or three words, for the sticky bar on a phone. */
+  terse: string;
   /** The full headline, as shown in the scale. */
   headline: string;
   examples: string;
@@ -58,6 +60,7 @@ export interface UndoBand {
 export const UNDO_SCALE: UndoBand[] = [
   {
     level: 'R0',
+    terse: 'seconds',
     short: 'Undo in seconds',
     headline: 'Undo in seconds. Nobody notices.',
     examples:
@@ -65,6 +68,7 @@ export const UNDO_SCALE: UndoBand[] = [
   },
   {
     level: 'R1',
+    terse: 'effort, in team',
     short: 'Undo with effort, inside the team',
     headline: 'Undo with some effort. Stays inside the team.',
     examples:
@@ -72,6 +76,7 @@ export const UNDO_SCALE: UndoBand[] = [
   },
   {
     level: 'R2',
+    terse: 'customers see it',
     short: 'Fixable, but customers or auditors see it',
     headline: 'Can be fixed, but customers or auditors will see it.',
     examples:
@@ -79,6 +84,7 @@ export const UNDO_SCALE: UndoBand[] = [
   },
   {
     level: 'R3',
+    terse: 'no undo',
     short: 'Cannot be undone',
     headline: 'Cannot be undone.',
     examples:
