@@ -13,6 +13,7 @@ import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
+import { TOOL_CREDIT } from '../data/resources';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
@@ -79,7 +80,7 @@ const year = new Date().getFullYear();
           </div>
         </div>
         <div class="foot-bottom">
-          <span>© {year} The Living Craft · Sunil Mathew · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span>
+          <span>© {year} The Living Craft · {TOOL_CREDIT} · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span>
           <span class="mono">Resources · agentic system design</span>
         </div>
       </div>

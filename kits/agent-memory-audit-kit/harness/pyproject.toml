@@ -9,6 +9,7 @@ description = "Agent Memory Audit Kit: the MemoryStore protocol, a naive store, 
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
+# Built by Sunil Mathew, co-authored with Claude (Anthropic).
 authors = [{ name = "Sunil Mathew, The Living Craft" }]
 # Two dependencies, on purpose. The tests must run on a laptop with nothing else installed.
 dependencies = ["pytest>=8", "jsonschema>=4.18"]

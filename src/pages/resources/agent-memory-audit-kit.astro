@@ -15,8 +15,9 @@
 // data module asserts them, and the page prints the counts from the arrays
 // rather than from a literal, so a wrong count cannot survive a build.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
-import { publishedResources, longDate } from '../../data/resources';
+import { publishedResources, longDate, TOOL_CREDIT } from '../../data/resources';
 import {
   DOWNLOADS,
   RESOURCE_ID,
@@ -98,7 +99,7 @@ const sections = [
     <p class="cover-eyebrow mono">The Living Craft · Resources · agentic system design 05</p>
     <p class="cover-title">{TITLE}</p>
     <p class="cover-sub">{SUBTITLE}</p>
-    <p class="cover-meta">Sunil Mathew · The Living Craft</p>
+    <p class="cover-meta">{TOOL_CREDIT} · The Living Craft</p>
     <p class="cover-meta mono">{SITE_ORIGIN}{canonical}</p>
     <p class="cover-meta mono">Published {longDate(meta.publishedAt)} · {LICENCE_LINE}</p>
   </div>
@@ -121,6 +122,7 @@ const sections = [
         </a>
       </p>
       <p class="hero-note mono">{META_LINE}</p>
+      <ResourceCredit />
     </div>
   </section>
 

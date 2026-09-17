@@ -301,6 +301,15 @@ Three things a later session would otherwise rediscover:
 
 The LinkedIn DM link, once merged: `https://learning.thelivingcraft.ai/resources/agent-memory-audit-kit?utm_source=linkedin&utm_medium=dm&utm_campaign=ep6-memory`.
 
+## Every tool now says who built it — 17 September
+
+`TOOL_CREDIT` in `src/data/resources.ts` ("Built by Sunil Mathew, co-authored with
+Claude") is rendered by `ResourceCredit.astro` in every tool's hero, in the
+`ResourcesLayout` footer, on `/resources`, in the three worksheets' byline, and inside
+the memory kit's PDF cover and footer, README and both licences. A new tool page gets
+the footer line for free and should add `<ResourceCredit />` under its counts line.
+Sunil's standing request; do not ship a tool without it.
+
 ## Nothing else is in flight
 
 All six stages are built. The work that remains needs somebody who is not us — see

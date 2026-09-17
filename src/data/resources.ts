@@ -35,6 +35,16 @@
 
 import { csvDocument, type CsvColumn } from '../lib/admin/csv';
 
+/**
+ * Who made the tools. Every published tool says this, in the hero, in the
+ * footer of the resources layout, and inside any file that ships with it.
+ * One string, so the wording cannot differ from one page to the next.
+ * Sunil asked for it on 17 September 2026: built by him, co-authored with
+ * Claude, said plainly on the artefact itself and not only in a commit trailer.
+ */
+export const TOOL_AUTHOR = 'Sunil Mathew, co-authored with Claude';
+export const TOOL_CREDIT = `Built by ${TOOL_AUTHOR}`;
+
 export interface Resource {
   /** Slug. The anchor on /resources and the id in structured data. */
   id: string;
@@ -540,7 +550,7 @@ const costCeiling: LongformResource = {
     'A workflow is about to be allowed to retry, call tools or run in the background, and nothing yet stops it.',
   order: 1,
   fileBase: 'cost-ceiling-worksheet',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [
@@ -648,7 +658,7 @@ const evaluationGates: LongformResource = {
     'A release meeting is coming and somebody is going to ask whether the evaluation results mean the system is ready.',
   order: 2,
   fileBase: 'evaluation-gates-worksheet',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [
@@ -756,7 +766,7 @@ const deploymentChecklist: LongformResource = {
     'A release is going out and the question "who would notice if this silently stopped working" has no answer yet.',
   order: 3,
   fileBase: 'deployment-checklist',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [

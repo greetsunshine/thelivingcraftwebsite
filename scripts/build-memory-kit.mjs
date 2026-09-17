@@ -37,6 +37,9 @@ const SCHEMA_OUT = join(OUT, 'memory-record.schema.json');
 // The canonical host, read from facts.ts so this script cannot disagree with the site.
 const SITE_ORIGIN = readFileSync(join(ROOT, 'src', 'data', 'facts.ts'), 'utf8').match(/SITE_ORIGIN = '([^']+)'/)?.[1];
 if (!SITE_ORIGIN) fail('could not read SITE_ORIGIN from src/data/facts.ts');
+// The credit line, from the same constant the page and the footer use.
+const TOOL_AUTHOR = readFileSync(join(ROOT, 'src', 'data', 'resources.ts'), 'utf8').match(/TOOL_AUTHOR = '([^']+)'/)?.[1];
+if (!TOOL_AUTHOR) fail('could not read TOOL_AUTHOR from src/data/resources.ts');
 
 const args = process.argv.slice(2);
 const urlArg = args.includes('--url') ? args[args.indexOf('--url') + 1] : null;
@@ -94,6 +97,12 @@ try {
   await loaded;
   // Fonts arrive after load. A PDF printed before they do falls back to Helvetica.
   await page.send('Runtime.evaluate', { expression: 'document.fonts.ready.then(() => true)', awaitPromise: true });
+  // The page must be the current one. A dev server that answered before it
+  // had rebuilt once printed a cover with last week's byline, so read the
+  // cover back and refuse to print anything that disagrees with resources.ts.
+  const cover = await page.send('Runtime.evaluate', { expression: 'document.querySelector(".cover")?.textContent ?? ""', returnByValue: true });
+  if (!String(cover.result.value).includes(TOOL_AUTHOR)) fail(`the served page's cover does not carry "${TOOL_AUTHOR}"; is the server serving the current source?`);
+
   // A PDF is a file that travels. Site-relative links inside it would point at
   // whoever opened it, so every one becomes absolute on the canonical host.
   await page.send('Runtime.evaluate', {
@@ -102,7 +111,7 @@ try {
 
   const footer =
     '<div style="width:100%;font-family:Inter,Helvetica,Arial,sans-serif;font-size:7.5px;color:#5C5345;padding:0 14mm;display:flex;justify-content:space-between;">' +
-    '<span>Agent Memory Audit Kit · Sunil Mathew · The Living Craft · CC BY 4.0 / MIT</span>' +
+    `<span>Agent Memory Audit Kit · Built by ${TOOL_AUTHOR} · The Living Craft · CC BY 4.0 / MIT</span>` +
     '<span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>';
   const { data } = await page.send('Page.printToPDF', {
     printBackground: true,

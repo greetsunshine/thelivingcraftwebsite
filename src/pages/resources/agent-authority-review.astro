@@ -20,6 +20,7 @@
 // the tally in the bar, the result, the copied sheet and the PDF all read one
 // rubric: readRow() and readSheet().
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -93,6 +94,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       <p class="hero-note mono">
         4 undo levels · 5 questions per step · 3 reference examples · 40 minutes
       </p>
+      <ResourceCredit />
     </div>
   </section>
 
