@@ -30,7 +30,7 @@ export const RESOURCE_ID = 'agent-memory-audit-kit';
 export const TITLE = 'Agent Memory Audit Kit';
 export const SUBTITLE =
   'Every fact your agent remembers needs three answers: where it came from, where it applies, and what happens when someone corrects it.';
-export const META_LINE = 'Free · No sign-up · By Sunil Mathew, The Living Craft';
+export const META_LINE = 'Free · No sign-up · The Living Craft';
 
 // ── why this exists ────────────────────────────────────────────────────────
 

@@ -17,6 +17,7 @@
 // imports that module too (Vite bundles it), so the live score bar, the result
 // summary, the copied scorecard and the PDF all read one rubric.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -92,6 +93,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <p class="hero-note mono">
         {QUESTION_COUNT} questions · {SECTIONS.length} sections · maximum {MAX_SCORE} · one hard gate
       </p>
+      <ResourceCredit />
     </div>
   </section>
 

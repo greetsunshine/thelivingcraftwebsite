@@ -34,6 +34,7 @@
  * points at, and nobody would notice which copy they had.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { longDate } from '../../data/resources';
 import {
@@ -174,6 +175,7 @@ const schema = [
         <a class="btn btn-ghost" href="#calculator">{SECONDARY_CTA}</a>
       </p>
       <p class="hero-note mono">{SUPPORTING_LINE}</p>
+      <ResourceCredit />
     </div>
   </section>
 

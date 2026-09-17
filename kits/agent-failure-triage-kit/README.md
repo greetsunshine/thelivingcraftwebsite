@@ -133,4 +133,4 @@ See `LICENSE`. Not yet chosen.
 
 ---
 
-Sunil Mathew · The Living Craft · [learning.thelivingcraft.ai](https://learning.thelivingcraft.ai)
+Built by Sunil Mathew, co-authored with Claude · The Living Craft · [learning.thelivingcraft.ai](https://learning.thelivingcraft.ai)

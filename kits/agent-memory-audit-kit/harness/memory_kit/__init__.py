@@ -6,7 +6,8 @@ Three modules:
 * ``naive_store``     last-value-wins per key; fails all seven failure tests on purpose
 * ``reference_store`` enforces invariants I1 to I7; passes all seven
 
-Content is CC BY 4.0. Code is MIT. See the two LICENSE files one directory up.
+Built by Sunil Mathew, co-authored with Claude. Content is CC BY 4.0. Code is
+MIT. See the two LICENSE files one directory up.
 """
 
 from .adapter import MemoryStore, RecallResult

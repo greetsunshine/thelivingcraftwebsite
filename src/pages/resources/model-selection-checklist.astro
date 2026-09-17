@@ -12,6 +12,7 @@
 // note beside them says so, because "where did my ticks go" is a fair question
 // and the honest answer is that they were never anywhere.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -96,6 +97,7 @@ const unweighted = CRITERIA.filter((c) => !c.weights);
       <p class="hero-note mono">
         {CHECK_COUNT} checks · 4 test cases you build yourself · one afternoon
       </p>
+      <ResourceCredit />
     </div>
   </section>
 

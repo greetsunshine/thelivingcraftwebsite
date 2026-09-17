@@ -3,7 +3,8 @@
 Every fact your agent remembers needs three answers: where it came from,
 where it applies, and what happens when someone corrects it.
 
-By Sunil Mathew · The Living Craft · https://learning.thelivingcraft.ai/resources/agent-memory-audit-kit
+Built by Sunil Mathew, co-authored with Claude · The Living Craft
+https://learning.thelivingcraft.ai/resources/agent-memory-audit-kit
 
 ## What is in the kit
 

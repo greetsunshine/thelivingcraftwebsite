@@ -12,6 +12,7 @@
 // links somewhere a visitor cannot open is worse than one that does not link
 // there yet.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -107,6 +108,7 @@ const schema = [
       <p class="hero-note mono">
         3 failure classes · 4 ordered questions · 12 failure-injection tests · 45 minutes
       </p>
+      <ResourceCredit />
     </div>
   </section>
 
