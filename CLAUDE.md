@@ -1112,9 +1112,10 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     wants the same thing has to make the same case, not point at this one.
   - **A page that promises "nothing is sent to us" must not load Google Tag Manager.**
     The container loads Microsoft Clarity, which records page text, and a tag added
-    later in the GTM console can capture anything. `PracticeLayout` takes
-    `tagManager={false}` for exactly this; the audit page is the only user. The
-    first-party beacon stays, because it sends a path and a referrer and never content.
+    later in the GTM console can capture anything. The audit page sits on
+    `ResourcesLayout`, which carries no tag manager; do not add one there, and do not
+    move the page onto a layout that has one. The first-party beacon stays, because it
+    sends a path and a referrer and never content.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an

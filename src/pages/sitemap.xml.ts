@@ -75,10 +75,6 @@ const EXTRA = [
   { path: '/tools/', priority: '0.6' },
   { path: '/tools/agent-design-check', priority: '0.7' },
 
-  // The Rule Placement Audit — a browser worksheet, listed in the choices at
-  // the top of /resources (src/data/resource-choices.ts).
-  { path: '/resources/rule-placement-audit', priority: '0.7' },
-
   // Not an offer page, but a real one somebody may need to find in a hurry:
   // how to stop receiving something. Indexed for that reason.
   { path: '/communication-preferences', priority: '0.4' },

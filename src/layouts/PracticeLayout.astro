@@ -27,15 +27,6 @@
 //    It is namespaced under .practice so it cannot reach the other four
 //    surfaces. Anything used by one page belongs in that page's scoped block,
 //    which is this repo's established split.
-//
-// 4. `tagManager={false}` drops Google Tag Manager, and with it everything the
-//    container loads (Google Analytics, Microsoft Clarity session recording).
-//    It exists for one kind of page: a browser worksheet that promises the
-//    reader "nothing is sent to us". Clarity records page text, and a tag
-//    added later in the GTM console can capture anything, so that promise is
-//    only true by construction on a page that does not load the container.
-//    The first-party beacon (Track.astro) stays: it sends a path, a referrer
-//    and CTA hrefs, never page content. Default is on; nothing else changes.
 import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import SiteNav from '../components/site/SiteNav.astro';
@@ -58,28 +49,19 @@ export interface Props {
    * honest placeholders until the owner supplies the facts they need.
    */
   noindex?: boolean;
-  /** See note 4 above. Off only on a page that promises entries never leave the browser. */
-  tagManager?: boolean;
 }
 
-const {
-  title,
-  description,
-  canonical,
-  schema,
-  noindex = false,
-  tagManager = true,
-} = Astro.props;
+const { title, description, canonical, schema, noindex = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {tagManager && <GoogleTagManager />}
+    <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
   <body>
-    {tagManager && <GoogleTagManagerNoscript />}
+    <GoogleTagManagerNoscript />
     <a class="skip" href="#main">Skip to content</a>
 
     <SiteNav />

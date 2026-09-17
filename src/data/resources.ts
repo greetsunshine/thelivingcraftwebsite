@@ -206,6 +206,28 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-17',
   },
   {
+    id: 'rule-placement-audit',
+    topic: 'Rule Placement',
+    number: '06',
+    series: 'Agentic system design',
+    title: 'The Rule Placement Audit',
+    kind: 'Browser worksheet · live status per rule · 1 worked example',
+    summary:
+      'List the rules your agent must never break and find out where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere.',
+    description:
+      'A restaurant-picking agent recommended a restaurant on the user\u2019s no-go list. The model was not at fault: the rule was written in the prompt and enforced nowhere else, so the model weighed it against everything else in the context and, once, chose against it. This worksheet is the audit that finds every rule in that position. One row per hard rule: who set it, how many agents can act on it, and where it is enforced, across five placements. Two of them are code before the model and code after it; one is the tool or data boundary, which holds whichever agent asked; the other two are the prompt and a critic or guardrail model, which are both something a model weighs. The status beside each rule updates as you tick, and the rule map groups the rows with the unenforced, prompt-only and model-only rules first, each with the fix it needs and an owner. A flag names the rule that more than one agent can break and that is enforced inside only one of them. Entries stay in the browser; the map prints on one page and downloads as CSV.',
+    useFor: [
+      'Find the rule that exists only in a prompt, and name the filter or check it needs in code',
+      'Tell a critic model checking a step from a check that enforces the step',
+      'Find the rule that two agents can break and that only one of them checks',
+      'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
+    ],
+    format:
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Print the map, copy it or download the CSV without giving anything. Autosaved in your browser; nothing is sent.',
+    url: '/resources/rule-placement-audit',
+    publishedAt: '2026-09-17',
+  },
+  {
     id: 'cost-ceiling-workbook',
     topic: 'Cost Control',
     number: '02',
