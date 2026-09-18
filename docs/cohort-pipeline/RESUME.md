@@ -269,7 +269,7 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
-## Public site redesign: design system v1 — 18 September, in progress
+## Site redesign: design system v1 — 18 September, on PR #18 for review
 
 **What.** The public site is moving to the Living Craft website design system v1 (Alchemy and
 Ein, 18 September, a "review edition"). Forest green actions, ivory ground, serif h1 and h2,
@@ -328,6 +328,26 @@ shapes, not by eye: dark text on an action or dark fill, and a status on the act
   Source Serif 4 and no longer load JetBrains Mono.
 - **Not fixed, and not a colour problem:** `/craft/login` at desktop width puts the card
   left of centre and the footer at the top right. It did that before the redesign too.
+
+**Step 6, public page styles.** Same two scans, run on the public pages.
+- Two resource tools put ink on a selected (forest) choice: now `--text-on-accent`. The
+  memory kit's copy button had a forest focus ring on a forest code block: now ivory.
+- Eight code rules moved to `--font-code`. Three PDF dialog backdrops moved to the new ink.
+- **A real AA failure, fixed:** the design-check's worked-example card was a gold block, and
+  its note was ink at 85% on gold, **4.19:1**. The card is now soft green with the 1px line
+  (ink 11.89:1, note muted 5.32:1). Its comment said the note passed; it did on the old orange.
+- Serif lines that pages had bolded now use the serif's regular weight; short titles and
+  labels that used the display face are Figtree bold (`/caio` tiers, `/assessment` fit
+  heads, the Ask widget title, and others).
+- **Phone header:** the wordmark is one size smaller below 560px, so the cohort header stays
+  one row with Apply and the menu on the right. The junction and the 22px face had pushed
+  them onto a second row.
+
+**Verified:** `astro check` 0 errors, clean build, no horizontal overflow on any in-scope page
+at 1280 or 390. Before and after screenshots of `/`, `/caio`, `/about`, `/craft/login` and
+`/craft/admin/login` at 390 and 1280. **Only the two sign-in pages were reachable in
+/craft and /craft/admin**: there is no local `.env`, so no seat code or console password.
+The gated pages behind them were checked by scanning their stylesheets, not by rendering.
 
 **Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
 They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest

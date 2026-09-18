@@ -583,6 +583,13 @@ footer.site :focus-visible { outline-color: var(--footer-focus); }
   .hero-cta { width: 100%; }
   .hero-cta .btn { width: 100%; }
 
+  /* The wordmark carries the junction since design system v1, and the heading
+     face grew from 20px to 22px. At 390px that pushed Apply and the menu button
+     onto a second row, at its left edge. One step smaller keeps the cohort
+     header on one row, with Apply and the menu on the right. */
+  .wordmark { font-size: var(--size-4); }
+  .wordmark .junction { width: 24px; }
+
   /* A second step down, and a density pass inside the panels themselves —
      on a phone the padding inside a card costs as much scrolling as the gap
      between two of them. */
