@@ -1178,6 +1178,11 @@ before changing a colour.
   set off by a 1px line (`--panel-border`), **not a shadow**. Only a layer floating over
   the page keeps a shadow.
 - **Spacing**: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128. Max width 1160px.
+- **The junction motif** ([src/components/site/Junction.astro](src/components/site/Junction.astro))
+  sits beside "the living craft" wordmark. It is the package's supporting motif, **not the
+  logo**, which is still to be commissioned. It is drawn still: the package's one-time
+  animation relies on `sessionStorage`, which this site does not use. The consulting
+  wordmark ("Sunil Mathew") keeps its plain dot.
 - **`/craft`, `/craft/admin` and `/book/[id]` keep the previous system.**
   [src/styles/ds/theme-course.css](src/styles/ds/theme-course.css) restores it over
   `theme.css` at higher specificity, imported only by `admin.css` and `craft.css`.

@@ -37,6 +37,7 @@
  */
 import MobileMenu from './MobileMenu.astro';
 import TalkToSunilLink from './TalkToSunilLink.astro';
+import Junction from './Junction.astro';
 
 interface Destination {
   href: string;
@@ -63,7 +64,7 @@ const isCurrent = (href: string) => {
 <header class="sitenav">
   <div class="wrap sitenav-inner">
     <a class="wordmark" href="/">
-      <span class="dot"></span> the living craft
+      <Junction /> the living craft
     </a>
 
     <nav class="sitenav-links" aria-label="Sections">

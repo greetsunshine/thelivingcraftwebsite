@@ -298,6 +298,17 @@ rule colour, and never small text. The two old near-misses (`--accent-ink` 4.02 
 `--text-quiet` 4.04 on mist) are gone on the public site: deep gold is 5.98 and muted is 5.69
 on ivory.
 
+**Step 2, the shared stylesheet and shell.** `global.css` now reads the component tokens:
+h1 and h2 are the serif at 400, h3, h4, `summary` and the wordmark are Figtree 700, eyebrows
+are uppercase, and every panel class carries `--panel-border`. The footer is a dark forest
+band, driven by `--footer-*` in both `footer.site` and `SiteFooter.astro`. `SeoHead` loads
+Source Serif 4 (400 to 700) and no longer loads JetBrains Mono. The Living Craft wordmarks
+show the static junction motif (`Junction.astro`) in place of the dot. **The consulting
+wordmark ("Sunil Mathew" on `/caio`, `/assessment`, `/latest`) keeps its dot on
+purpose**: CLAUDE.md keeps that practice distinct, and the junction is The Living Craft's
+motif. The package animates the junction once per session through `sessionStorage`; this
+site stores nothing in the browser, so it is drawn still.
+
 **Two things the package does not design, decided here.** A primary button on the dark
 hero is ivory with forest text, because forest on forest would vanish. Layers that float
 over the page (menu panel, Ask panel, sticky bar) keep a soft shadow; nothing else does.

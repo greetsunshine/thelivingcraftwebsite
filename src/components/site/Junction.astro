@@ -1,0 +1,39 @@
+---
+/**
+ * The woven junction: the supporting motif from the Living Craft website
+ * design system v1 (18 September 2026), drawn inline so it takes its colours
+ * from the page.
+ *
+ * IT IS NOT THE LOGO. The package says so in as many words: the vector logo
+ * and its small-size mark are still to be commissioned, and the navigation
+ * uses a text wordmark with this motif beside it until they exist. When the
+ * approved mark arrives it replaces this component, not the wordmark text.
+ *
+ * STATIC, ON PURPOSE. The package animates it once per browser session and
+ * remembers that it has played in sessionStorage. This site writes nothing to
+ * a visitor's browser (CLAUDE.md, hard rules), so the motif is drawn still,
+ * every time, which is also what the package does under reduced motion.
+ *
+ * Colours: the forest strands are `currentColor`, so the wordmark's own colour
+ * sets them (forest on ivory, ivory in the dark footer). The gold strands are
+ * --lc-gold, which is decoration here and never carries meaning on its own.
+ *
+ * Used on The Living Craft's wordmarks only. The consulting surfaces (/caio,
+ * /assessment, /latest) carry the brand-neutral "Sunil Mathew" wordmark and
+ * keep their dot; CLAUDE.md keeps that practice distinct from this brand.
+ */
+---
+
+<svg class="junction" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false">
+  <g stroke="currentColor" stroke-width="5">
+    <path d="M10 27H45Q73 27 73 55V90" />
+    <path d="M10 39H43Q61 39 61 57V90" />
+    <path d="M10 51H40Q49 51 49 60V90" />
+  </g>
+  <g stroke="var(--lc-gold)" stroke-width="5">
+    <path d="M27 10V43Q27 73 57 73H90" />
+    <path d="M39 10V42Q39 61 58 61H90" />
+    <path d="M51 10V39Q51 49 60 49H90" />
+  </g>
+  <path d="M19 27H35M31 39H44M58 49V64M70 66V80" stroke="currentColor" stroke-width="5" />
+</svg>

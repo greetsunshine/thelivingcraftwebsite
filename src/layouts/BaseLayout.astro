@@ -10,6 +10,7 @@ import MobileMenu from '../components/site/MobileMenu.astro';
 import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import Junction from '../components/site/Junction.astro';
 
 export interface Props {
   title: string;
@@ -40,7 +41,7 @@ const year = new Date().getFullYear();
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="/"><span class="dot"></span> the living craft</a>
+        <a class="wordmark" href="/"><Junction /> the living craft</a>
         <nav class="navlinks">
           <a href="/#fit">Who it is for</a>
           <a href="/#curriculum">The work</a>
@@ -79,7 +80,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <div class="wordmark" style="margin-bottom:14px"><Junction /> the living craft</div>
             <p class="muted">Build a working agentic system, and develop the ability to explain its design, examine its behaviour and guide the decisions behind it.</p>
           </div>
           <div class="foot-col">
