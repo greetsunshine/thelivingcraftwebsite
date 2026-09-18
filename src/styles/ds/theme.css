@@ -225,15 +225,24 @@
   --radius-shell: 12px;
   --radius-pill: 999px;   /* true circles only */
 
-  /* --- elevation. The package defines none: a panel is set off by a 1px
-     line, not a shadow. --panel-border carries that line. The one exception
-     is a layer that floats over the page (menu panel, Ask panel, sticky bar),
-     which the package does not design; it keeps a soft overlay shadow so it
-     reads as above the page rather than part of it. --- */
-  --shadow-raise:   none;
-  --shadow-lift:    none;
+  /* --- elevation. The package defines no shadows: a panel is set off by a
+     1px line. These two tokens DRAW THAT LINE, as a 1px box-shadow ring.
+
+     Why a ring and not a border. 102 rules across 34 files already say
+     "box-shadow: var(--shadow-raise)" for a panel's edge, on the public
+     pages, in /craft and in the console. A ring makes every one of them the
+     package's 1px line from this file alone, without a hundred edits and
+     without changing any box's size. It is safe because the previous
+     system's own law was "a shadow OR a border, never both", so nothing
+     that reads these tokens also has a border to double up with.
+
+     --shadow-lift is the hover and "raised" state: the same ring in the
+     darker control line. --shadow-overlay is the one real shadow, for layers
+     that float over the page (menu panel, Ask panel, sticky bar), which the
+     package does not design. --- */
+  --shadow-raise:   0 0 0 var(--border-w-hair) var(--lc-line);
+  --shadow-lift:    0 0 0 var(--border-w-hair) var(--lc-control-line);
   --shadow-overlay: 0 8px 12px rgba(23, 46, 38, 0.06), 0 32px 64px -24px rgba(23, 46, 38, 0.24);
-  --panel-border:   var(--border-w-hair) solid var(--lc-line);
 
   /* --- component: the dark hero shell --- */
   --hero-eyebrow: var(--lc-on-dark-muted);    /* 7.79:1. Gold would be 3.82:1 at 12px — a fail */

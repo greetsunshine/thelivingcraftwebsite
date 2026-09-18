@@ -279,7 +279,7 @@ on purpose (`.git/info/exclude`); its values are in `src/styles/ds/theme.css` an
 
 **Step 1, tokens only.** `theme.css` and `contract.css` carry the new values. Existing
 token names were re-pointed, not renamed, so `--sun` is now forest green and still means
-"the action colour". New component tokens (`--panel-border`, `--hero-*`, `--footer-*`,
+"the action colour". New component tokens (`--hero-*`, `--footer-*`,
 `--eyebrow-*`, `--weight-display`, `--font-heading`, `--size-h1`, `--size-h2`) exist
 for `global.css` to read in the next commit.
 
@@ -300,7 +300,14 @@ deliberately:
   WCAG's 24px.
 - **Status never looks like an action.** Forest fill is the action colour, so no pill,
   badge or tag may use it. Five did (quiz state, two pinned tags, the ADR week badge, the
-  forum role badge); step 4 fixes them.
+  forum role badge); step 5 fixes them.
+
+**Step 4, the panel line is a token.** `--shadow-raise` is now a 1px box-shadow ring in the
+line colour, and `--shadow-lift` the same ring in the darker control line. 102 rules in 34
+files already used those tokens for a panel's edge, so this one change gives every panel on
+every surface the package's 1px line. Step 2 had added a separate `--panel-border` to the
+`global.css` panels; that was taken back out, or those panels would draw the line twice.
+**Never add a border to something that uses a shadow token.**
 
 **Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
 They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest
@@ -311,7 +318,7 @@ on ivory.
 
 **Step 2, the shared stylesheet and shell.** `global.css` now reads the component tokens:
 h1 and h2 are the serif at 400, h3, h4, `summary` and the wordmark are Figtree 700, eyebrows
-are uppercase, and every panel class carries `--panel-border`. The footer is a dark forest
+are uppercase, and panels show a 1px line (see step 4). The footer is a dark forest
 band, driven by `--footer-*` in both `footer.site` and `SiteFooter.astro`. `SeoHead` loads
 Source Serif 4 (400 to 700) and no longer loads JetBrains Mono. The Living Craft wordmarks
 show the static junction motif (`Junction.astro`) in place of the dot. **The consulting

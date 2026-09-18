@@ -964,7 +964,7 @@ prospect.
   the illustration-led system while the three pages behind the gate were the old
   warm-craft structure with new tokens poured into it. Two laws it holds and page-scoped
   CSS kept breaking: **a panel gets a shadow or a border, never both** (under design
-  system v1 it is the 1px `--panel-border`, and hairlines are still legal *inside* a
+  system v1 it is the 1px ring `--shadow-raise` draws, and hairlines are still legal *inside* a
   panel, as row dividers), and **if it is forest-filled it is clickable**. `--sun` is
   the action colour's old name and now resolves to forest green, so ink text on it is
   about 1.2:1; text on it is `--text-on-accent` (ivory). A status pill, badge or tag is
@@ -1182,8 +1182,11 @@ before changing a colour.
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay
   fixed-width through `font-feature-settings`. Body 16px / 1.6.
 - **Shape**: 6px radius on anything you press or type into, 12px on a panel. Panels are
-  set off by a 1px line (`--panel-border`), **not a shadow**. Only a layer floating over
-  the page keeps a shadow.
+  set off by a 1px line, **not a shadow**. The line is drawn by `--shadow-raise` as a 1px
+  box-shadow ring (`--shadow-lift` is the darker hover ring), so the 102 rules that already
+  said `box-shadow: var(--shadow-raise)` all became the package's line at once. Never add
+  a border to something that uses those tokens: that draws the line twice. Only a layer
+  floating over the page (`--shadow-overlay`) keeps a real shadow.
 - **Spacing**: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128. Max width 1160px.
 - **The junction motif** ([src/components/site/Junction.astro](src/components/site/Junction.astro))
   sits beside "the living craft" wordmark. It is the package's supporting motif, **not the
