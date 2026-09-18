@@ -23,7 +23,7 @@
 
 export const TOOL_NAME = 'The Run-Cost Model Tool';
 
-/** What the tool is for, in four lines. Printed above the tabs. */
+/** What the tool is for, in four lines. Printed on the Start step. */
 export const PURPOSE = [
   'You are asked to put a number on an AI agent proposal. This tool gives you that number, and it includes the costs most business cases leave out.',
   'Four options are compared side by side over one period: a rules workflow, the same rules rebuilt on a written spec, a model that drafts while a person approves, and a full agent with tools.',
@@ -33,12 +33,19 @@ export const PURPOSE = [
 
 /** How to use it, as numbered steps. */
 export const HOW_TO_USE = [
-  'Set the workload and the rates first. Every other line is multiplied by them.',
-  'Fill in each option column by column. Leave a line blank if you do not know it. A blank keeps the result off the screen; a 0 is a claim.',
-  'Watch the bar at the top. It shows cost per acceptable outcome for each option as soon as enough lines are filled.',
-  'Read the result at the end. It names the leading option, the break-even month for each, and the assumptions that decide the answer.',
-  'Open the Reference example tab to see every line filled for a real-shaped case, and load it into your model to start from there.',
+  'The reference example is already loaded: an ordering agent across 40 sites, every line filled. Change any figure to make the model yours, or start from a blank model.',
+  'Work through the seven sections with Next and Back. Sections 1 and 2 take one value each. Sections 3 to 7 take one value per option.',
+  'Leave a line blank if you do not know it. A blank keeps the result off the screen; a 0 is a claim. After you fill a blank line, the page moves to the next blank line for you.',
+  'Watch the bar and the progress bar at the top. The bar shows cost per acceptable outcome for each option as soon as enough lines are filled.',
+  'Read the result at the end. It names the leading option, the break-even month for each, and the assumptions that decide the answer. Get the PDF of your model there.',
+  'Prefer a spreadsheet? The Excel workbook on the Start step has the same rows and the same formulas, with an instruction beside every line.',
 ];
+
+/** The notice above the loaded example, on the Start step and in the bar. */
+export const EXAMPLE_NOTICE = {
+  lead: 'The reference example is loaded.',
+  rest: 'An ordering agent across 40 sites in India: 2,000 purchase orders a month, every figure in rupees at Indian rates. Every one of the 83 lines is filled, so you can see what a finished model looks like before you type anything. Change any figure and the model becomes yours.',
+};
 
 /** The rules for using it in a budget conversation. Each one is a rule, then the reason. */
 export const HOW_TO_RUN = [
@@ -203,6 +210,8 @@ export interface ModelSection {
   num: number;
   /** The header. Named for the engineering concern. */
   name: string;
+  /** One or two words for the progress pip. */
+  short: string;
   /** The question the section answers. Printed under the header. */
   question: string;
   blurb: string;
@@ -216,6 +225,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 1,
     name: 'Workload and manual baseline',
+    short: 'Workload',
     question: 'What does this work cost today, done by hand?',
     blurb:
       'Every option is measured against this. If the manual baseline is wrong, every break-even month below it is wrong by the same amount.',
@@ -254,6 +264,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 2,
     name: 'Team rates',
+    short: 'Rates',
     question: 'What does an hour of each person cost?',
     blurb:
       'Three rates, shared by all four options. Engineers build and handle escalations; reviewers approve output and finish declined cases.',
@@ -283,6 +294,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 3,
     name: 'Build cost, paid once',
+    short: 'Build',
     question: 'What does each option cost before it handles its first case?',
     blurb:
       'Engineering days, converted at the day rate. Evaluation work is a separate line because it is the one most estimates skip, and it is where a model-based option earns the right to be trusted.',
@@ -308,6 +320,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 4,
     name: 'Inference and tool calls, per month',
+    short: 'Inference',
     question: 'What does the model bill actually include?',
     blurb:
       'Inference is the cost of calling the model. Most business cases price the successful calls and stop there. The retry multiplier is where the rest goes.',
@@ -353,6 +366,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 5,
     name: 'Human in the loop, per month',
+    short: 'Human loop',
     question: 'How much human time does each option still need?',
     blurb:
       'Three kinds of human time. Review is routine checking of output. Escalation is a case that needs an engineer. Declined is a case the system would not finish, which a person then does by hand. This section decides most comparisons.',
@@ -407,6 +421,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 6,
     name: 'Upkeep and operations, per month',
+    short: 'Upkeep',
     question: 'What does it cost to keep the system trustworthy after launch?',
     blurb:
       'A rules workflow needs almost none of this. A model-based option needs all of it, every month, and none of it appears in a demo.',
@@ -455,6 +470,7 @@ export const SECTIONS: ModelSection[] = [
   {
     num: 7,
     name: 'Quality',
+    short: 'Quality',
     question: 'How often does each option produce an outcome you would accept?',
     blurb:
       'This is what turns cost per case into cost per acceptable outcome. One written definition of "acceptable", applied to every option by the same reviewer.',
@@ -818,7 +834,10 @@ export function readModel(inputs: ModelInputs): ModelRead {
 
     const lead = lowest(saving, 'perOutcome');
     leader = lead?.key ?? null;
-    leaderPerCase = lowest(known, 'perCase')?.key ?? null;
+    // Cost per case has a figure even when cost per acceptable outcome does
+    // not (an acceptable-outcome rate of 0), so it is read over every option
+    // with a total, not over `known`.
+    leaderPerCase = lowest(arms.filter((a) => a.values.perCase !== null), 'perCase')?.key ?? null;
     outcome = outcomeByKey(leader ?? 'manual');
 
     if (leader && leaderPerCase && leader !== leaderPerCase) {
