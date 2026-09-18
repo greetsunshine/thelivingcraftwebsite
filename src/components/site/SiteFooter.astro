@@ -13,7 +13,7 @@
  * routes. Everything else is marked pending and turns into a link in the same
  * commit that creates its page.
  */
-import Junction from './Junction.astro';
+import Logo from './Logo.astro';
 
 const year = new Date().getFullYear();
 
@@ -57,7 +57,7 @@ const PRACTICE: Item[] = [
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="wordmark"><Junction /> the living craft</div>
+        <div class="wordmark"><Logo tile /> the living craft</div>
         <p class="muted">
           Build a working agentic system, and develop the ability to explain its design,
           examine its behaviour and guide the decisions behind it.
@@ -122,11 +122,6 @@ const PRACTICE: Item[] = [
   }
   .foot-brand .wordmark {
     margin-bottom: var(--space-4);
-    color: var(--footer-ink);
-  }
-  /* global.css colours the junction with the action colour, which is the
-     footer's own background here. Follow the wordmark instead. */
-  .foot-brand .wordmark :global(.junction) {
     color: var(--footer-ink);
   }
   .sitefooter :global(:focus-visible) {

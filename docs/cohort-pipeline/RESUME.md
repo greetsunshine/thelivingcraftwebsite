@@ -269,6 +269,42 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## The LC mark replaces the junction — 19 September, on PR #18
+
+**No logo SVG exists yet.** Alchemy supplied only `logo-reference.png` (1254×1254, no
+transparency). The design package forbids tracing or inventing a vector, so the mark is a
+crop of that PNG, scaled down and nothing else. When the approved vector mark and its
+small-size version arrive, they replace the files below; `Logo.astro` stays.
+
+- **Files:** `public/brand/lc-mark.webp` (199×128, 4.4 KB), the mark only. The crop is
+  x 160–1185, y 130–790 of the artwork. The name and the tagline start at y 812, so
+  **neither appears anywhere on the site**.
+- **It keeps its own cream paper** (`--logo-paper` #F1EDE4). Keying the paper out turned
+  the shadow and the glow round the gold dots into grey smudges on dark green. On the
+  ivory header the paper is a faint box with 4px corners. On the dark footers it sits on
+  a deliberate paper tile (`<Logo tile />`).
+- **Sizes:** 40px tall in a desktop header, the smallest at which the woven stem and the
+  dots still read. 28px below 560px. 36px in a footer tile. At 32px on a normal-density
+  screen the detail blurs; at 16px it is a smudge.
+- **Where:** every Living Craft wordmark: `BaseLayout`, `SiteNav`, `SiteFooter`,
+  `PolicyLayout`, `ResourcesLayout`, the `/craft` phone bar and dashboard footer, and
+  `/book`. The "Sunil Mathew" consulting wordmark on `/caio`, `/assessment` and `/latest`
+  keeps its dot on purpose. `Junction.astro` is deleted.
+- **Alt text:** `alt=""` and `aria-hidden="true"`, because "the living craft" beside it
+  already names the brand.
+- **The phone header had no slack.** Before this change the cohort header needed exactly
+  its 358px at 390px wide, and the mark is 26px wider than the junction. Below 560px the
+  mark is 28px (not 32) and the gaps between the three items are 12px (not 24). Measured
+  after: one row at 390 and at 375, Apply and the menu on the right. The practice-page
+  header still wraps to two rows on a phone, as it did before, with the menu on the right.
+- **Favicon.** `public/favicon.svg` was **Astro's default logo**, left over from setup, on
+  every page. Deleted. Replaced with `favicon-32.png`, `apple-touch-icon.png` (180px,
+  15 KB) and a regenerated `favicon.ico` (16, 32 and 48px), all cut from the same artwork.
+  There is no SVG favicon, because that would need a vector. The 16px size is weak until
+  the approved small mark exists.
+
+---
+
 ## Dark green linen on the large dark surfaces — 19 September, on PR #18
 
 Task 1 of "Organised TLC Design System Changes". One commit, separate from the redesign.

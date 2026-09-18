@@ -24,6 +24,7 @@ import SessionPrompt from '../../components/craft/SessionPrompt.astro';
 import { liveSession } from '../../lib/craft/live';
 import { blockAt } from '../../lib/craft/schedule';
 import { offerKind } from '../../lib/craft/tour';
+import Logo from '../../components/site/Logo.astro';
 
 // Gated: never prerender. A static file under dist/ would be served without the
 // middleware ever running, which is the whole gate gone.
@@ -471,7 +472,7 @@ if (familiarityDue) {
           <div class="foot-grid" style="display:flex; justify-content:space-between; margin-bottom:32px;">
             <div>
               <div class="wordmark" style="margin-bottom:14px">
-                <span class="dot" style="color:var(--sun);"></span> the living craft
+                <Logo /> the living craft
               </div>
               <p class="muted" style="max-width:32ch">
                 Your cohort area. Sessions, pre-work, and what to bring to the room.

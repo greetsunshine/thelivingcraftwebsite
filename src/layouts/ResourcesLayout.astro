@@ -16,7 +16,7 @@ import Track from '../components/Track.astro';
 import { TOOL_CREDIT } from '../data/resources';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
-import Junction from '../components/site/Junction.astro';
+import Logo from '../components/site/Logo.astro';
 
 export interface Props {
   title: string;
@@ -40,7 +40,7 @@ const year = new Date().getFullYear();
     <header class="nav">
       <div class="wrap nav-inner">
         <a class="wordmark" href="#top">
-          <Junction /> the living craft
+          <Logo /> the living craft
           <span class="wordmark-sub">Resources</span>
         </a>
         <nav class="navlinks">
@@ -59,7 +59,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><Junction /> the living craft</div>
+            <div class="wordmark" style="margin-bottom:14px"><Logo tile /> the living craft</div>
             <p class="muted">Working material from the practice. Free to use, free to share, and built for the decision it names rather than for an audience.</p>
           </div>
           <div class="foot-col">

@@ -1202,11 +1202,17 @@ before changing a colour.
   a border to something that uses those tokens: that draws the line twice. Only a layer
   floating over the page (`--shadow-overlay`) keeps a real shadow.
 - **Spacing**: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128. Max width 1160px.
-- **The junction motif** ([src/components/site/Junction.astro](src/components/site/Junction.astro))
-  sits beside "the living craft" wordmark. It is the package's supporting motif, **not the
-  logo**, which is still to be commissioned. It is drawn still: the package's one-time
-  animation relies on `sessionStorage`, which this site does not use. The consulting
-  wordmark ("Sunil Mathew") keeps its plain dot.
+- **The LC mark** ([src/components/site/Logo.astro](src/components/site/Logo.astro)) sits
+  beside "the living craft" on every Living Craft wordmark, replacing the junction motif
+  (19 September). It is a **crop of Alchemy's `logo-reference.png`**, scaled down and
+  nothing else: `public/brand/lc-mark.webp`. **Never trace, redraw or recolour it**; the
+  package forbids a made-up vector, and the approved vector and small mark are still to be
+  commissioned. **Never show the artwork's tagline** ("People × AI × A brighter
+  tomorrow", "A premium cohort programme…"); the crop stops above it. The mark keeps its
+  own cream paper (`--logo-paper`) and sits on a paper tile on dark footers
+  (`<Logo tile />`). It is `aria-hidden` because the text beside it names the brand.
+  Sizes: 40px header, 28px on phones, 36px footer tile. The favicons come from the same
+  crop. The consulting wordmark ("Sunil Mathew") keeps its plain dot.
 - **One token set for the whole site.** The public pages, `/craft`, `/craft/admin` and
   `/book/[id]` all read `theme.css`. A `theme-course.css` override kept the old system on
   the gated areas for part of 18 September and was removed the same day at Sunil's

@@ -283,6 +283,11 @@
     linear-gradient(rgba(16, 42, 34, 0.45), rgba(16, 42, 34, 0.45)),
     var(--texture-linen) center / cover no-repeat var(--lc-dark-forest);
 
+  /* --- the LC mark: its own cream paper, from the supplied artwork. The
+     artwork has no transparency, so the mark carries this ground with it
+     (see Logo.astro). Used for the footer tile. Not a text colour. --- */
+  --logo-paper: #F1EDE4;
+
   /* --- component: the dark hero shell --- */
   --hero-eyebrow: var(--lc-on-dark-muted);    /* 7.79:1. Gold would be 3.82:1 at 12px — a fail */
   /* Ivory, not gold, since the linen texture (19 September). Gold was 3.82:1

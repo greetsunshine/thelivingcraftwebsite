@@ -11,6 +11,7 @@
 // index, and a booking URL in a search result would be a leaked credential.
 import '../styles/global.css';
 import '../styles/craft.css';
+import Logo from '../components/site/Logo.astro';
 
 export interface Props {
   title: string;
@@ -27,7 +28,8 @@ const year = new Date().getFullYear();
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>{title} · The Living Craft</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,7 +40,7 @@ const year = new Date().getFullYear();
   <body>
     <header class="nav">
       <div class="wrap nav-inner">
-        <span class="wordmark"><span class="dot"></span> the living craft</span>
+        <span class="wordmark"><Logo /> the living craft</span>
       </div>
     </header>
 
