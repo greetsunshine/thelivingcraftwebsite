@@ -90,7 +90,7 @@ interface Renderer<T> {
 }
 
 const CHECK_FAILED =
-  'The PDF failed a check before download, so it was not built. Nothing was saved and nothing was sent. Use Print on the page instead.';
+  'The PDF failed a check before download, so it was not built. Nothing was saved and nothing was sent. Try again in a moment.';
 
 const RENDERERS: Record<string, Renderer<any>> = {
   'poc-screen': {
@@ -173,7 +173,7 @@ export const POST: APIRoute = async (ctx) => {
     // email copy; only the file failed.
     console.error('resource pdf render threw:', err instanceof Error ? err.name : 'unknown');
     return json(
-      { ok: false, error: 'We could not build the PDF just now. Use Print on the page instead.' },
+      { ok: false, error: 'We could not build the PDF just now. Try again in a moment.' },
       500,
     );
   }

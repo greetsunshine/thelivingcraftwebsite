@@ -56,7 +56,7 @@ export const HOW_TO_USE = [
   'For each question, choose the answer that is true today, not the one that is planned.',
   'Watch the score bar and the progress bar. Both stay at the top and update as you answer.',
   'Read the result at the end. It gives the outcome and what to fix first.',
-  'Copy the scorecard, print it, or get the PDF of your scored copy.',
+  'Get the PDF of your scored copy at the end.',
 ];
 
 export const SECTIONS: ScreenSection[] = [
