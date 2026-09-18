@@ -12,16 +12,16 @@
  *   it once;
  * - an inline SVG of the knots the photo already has. Each one lights as the
  *   front passes it: a short flash of gold light that fades out, and a solid
- *   gold knot that stays. No script inside the SVG, no external request.
+ *   gold knot that stays while the brain is lit. No script inside the SVG,
+ *   no external request.
  *
- * It plays once per page view, when it scrolls into view, and never loops.
- * About 1.4s: the light takes 1.25 × --motion-brand (1000ms) to cross, and
- * the last knot's flash ends 600ms after the front reaches it (at 82% of the
- * width). Light that crosses nine knots in 800ms reads as a blink, not as the
- * brain lighting up. Sunil asked
- * for "like a GIF lighting up" on 18 September, which is a deliberate step
- * past the "no glowing brains" line in CLAUDE.md. The glow is kept to the
- * moment each knot lights; nothing glows in the final frame.
+ * It LOOPS, on Sunil's request (18 September: "like a GIF lighting up", then
+ * "make sure it continuously loops"). One cycle is --cycle (5s): the light
+ * crosses in 1s and each knot flashes as it is reached, the brain holds lit,
+ * then the light goes out left to right and it starts again. Nothing plays
+ * until it first scrolls into view, and it pauses while off screen, so it
+ * costs nothing while somebody reads the rest of the page. The glow is a
+ * deliberate step past the "no glowing brains" line in CLAUDE.md.
  *
  * The default is the FINAL frame. The script arms the start state only when
  * motion is allowed, so a blocked script or prefers-reduced-motion both show
@@ -74,16 +74,17 @@ const SRCSET = '/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w';
 </figure>
 
 <script>
-  // Arm, then play once. Armed = the start frame; without this script the
-  // figure simply shows its final frame.
+  // Arm, start on first sight, then pause whenever it is off screen.
+  // Armed = the start frame; without this script the figure simply shows
+  // its final frame.
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   for (const fig of document.querySelectorAll<HTMLElement>('[data-thread-brain]')) {
     if (reduce.matches || !('IntersectionObserver' in window)) continue;
     fig.dataset.armed = '';
     const io = new IntersectionObserver((entries) => {
-      if (!entries.some((e) => e.isIntersecting)) return;
-      io.disconnect();
-      fig.dataset.play = '';
+      const seen = entries.some((e) => e.isIntersecting);
+      if (seen) fig.dataset.play = '';
+      fig.toggleAttribute('data-paused', !seen);
     }, { threshold: 0.4 });
     io.observe(fig);
   }
@@ -91,9 +92,8 @@ const SRCSET = '/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w';
 
 <style>
   .thread-brain {
-    /* The light front takes --sweep to cross; each knot lights for --beat. */
-    --sweep: calc(var(--motion-brand) * 1.25);
-    --beat: 500ms;
+    /* One loop. The light crosses in the first fifth (1s at 5s). */
+    --cycle: 5s;
     display: none;
     position: absolute;
     top: var(--space-6);
@@ -152,29 +152,42 @@ const SRCSET = '/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w';
   }
   .thread-brain[data-armed] .knot { opacity: 0; transform: scale(0.3); }
 
-  /* Play. The front crosses in --sweep; a knot at x = --at of the width
-     lights at --at × --sweep, flashes for --beat, and keeps its gold. */
-  .thread-brain[data-play] .lit {
-    -webkit-mask-position: 0 0;
-    mask-position: 0 0;
-    transition: -webkit-mask-position var(--sweep) linear, mask-position var(--sweep) linear;
-  }
+  /* Play, forever. A knot at x = --at of the width is offset by
+     --at × 1s, so it lights when the front reaches it and goes out in the
+     same left-to-right order. An infinite animation keeps that offset on
+     every cycle. */
+  .thread-brain[data-play] .lit { animation: thread-brain-sweep var(--cycle) linear infinite both; }
   .thread-brain[data-play] .knot {
-    animation: thread-brain-knot var(--beat) var(--ease-out) both;
-    animation-delay: calc(var(--at) * var(--sweep));
+    animation: thread-brain-knot var(--cycle) var(--ease-out) infinite both;
+    animation-delay: calc(var(--at) * 1s);
   }
   .thread-brain[data-play] .flash {
-    animation: thread-brain-flash calc(var(--beat) * 1.2) ease-out both;
-    animation-delay: calc(var(--at) * var(--sweep));
+    animation: thread-brain-flash var(--cycle) ease-out infinite both;
+    animation-delay: calc(var(--at) * 1s);
+  }
+  .thread-brain[data-paused] :is(.lit, .knot, .flash) { animation-play-state: paused; }
+
+  /* 0-20% the light crosses, 20-72% it holds, 72-88% it fades out. The
+     jump back to the masked start happens while it is invisible. */
+  @keyframes thread-brain-sweep {
+    0%   { -webkit-mask-position: 100% 0; mask-position: 100% 0; opacity: 1; }
+    20%  { -webkit-mask-position: 0 0;    mask-position: 0 0;    opacity: 1; }
+    72%  { -webkit-mask-position: 0 0;    mask-position: 0 0;    opacity: 1; }
+    88%  { -webkit-mask-position: 0 0;    mask-position: 0 0;    opacity: 0; }
+    100% { -webkit-mask-position: 0 0;    mask-position: 0 0;    opacity: 0; }
   }
   @keyframes thread-brain-knot {
     0%   { opacity: 0; transform: scale(0.3); }
-    45%  { opacity: 1; transform: scale(1.5); }
-    100% { opacity: 1; transform: scale(1); }
+    4%   { opacity: 1; transform: scale(1.5); }
+    10%  { opacity: 1; transform: scale(1); }
+    74%  { opacity: 1; transform: scale(1); }
+    88%  { opacity: 0; transform: scale(0.6); }
+    100% { opacity: 0; transform: scale(0.3); }
   }
   @keyframes thread-brain-flash {
     0%   { opacity: 0; transform: scale(0.4); }
-    35%  { opacity: 1; transform: scale(1); }
+    4%   { opacity: 1; transform: scale(1); }
+    12%  { opacity: 0; transform: scale(1.3); }
     100% { opacity: 0; transform: scale(1.3); }
   }
 

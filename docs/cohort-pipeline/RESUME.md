@@ -282,9 +282,12 @@ Task 2 of "Organised TLC Design System Changes". Its own branch and PR, based on
 - **It lights up, on Sunil's request ("like a GIF lighting up", 18 September).** A grey,
   pale copy of the brain shows first. A lit copy is revealed over it from left to right in
   1000 ms. As the light reaches each of nine knots (an inline SVG, placed on knots the photo
-  already has, found by colour), the knot flashes gold and stays solid. About 1.4 s in all,
-  once, on scroll into view, never looping. **This steps past CLAUDE.md's "no glowing brains"
-  on purpose**; the flash fades, so nothing glows in the final frame.
+  already has, found by colour), the knot flashes gold and stays solid. **It loops**, on
+  Sunil's second request the same day: a 5 s cycle (light crosses, holds, goes out left to
+  right, starts again). It starts on first scroll into view and pauses while off screen.
+  **This steps past CLAUDE.md's "no glowing brains" on purpose.** Reduced motion still gets
+  one still, lit frame. WCAG 2.2.2 asks for a way to pause motion that runs longer than 5 s;
+  there is no pause control, and reduced motion is the only off switch.
 - **Final frame is the default.** The script only arms the start frame when motion is allowed,
   so reduced motion and a blocked script both show the finished picture.
 - **1100px and up only.** Hidden on phones; a `<picture>` source hands phones a one-pixel image,
