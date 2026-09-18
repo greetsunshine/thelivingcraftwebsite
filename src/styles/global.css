@@ -250,7 +250,9 @@ header.nav {
    both together double-inset it (48px a side) and misalign it with body text. */
 .hero { background: transparent; padding: var(--space-2) 0 var(--space-8); }
 .hero > .wrap {
-  background: var(--surface-invert);
+  /* Dark green linen with a forest overlay; flat forest if the image fails.
+     See --texture-forest in ds/theme.css for the contrast it guarantees. */
+  background: var(--texture-forest);
   color: var(--text-on-invert);
   border-radius: var(--radius-shell);
   padding: var(--space-8);
@@ -271,7 +273,7 @@ header.nav {
   max-width: 15ch;                                   /* wraps early on purpose */
   color: var(--text-on-invert);
 }
-.hero h1 em { font-style: normal; color: var(--hero-em); }   /* gold is 3.82:1 on forest: large text only */
+.hero h1 em { font-style: italic; color: var(--hero-em); }   /* ivory serif italic: gold failed 3:1 on the linen */
 .credential { font-size: var(--size-5); line-height: var(--lh-snug); color: var(--hero-muted); max-width: var(--measure-narrow); margin-bottom: var(--space-6); }
 .credential strong { color: var(--text-on-invert); font-weight: var(--weight-strong); }
 .hero-cta { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }

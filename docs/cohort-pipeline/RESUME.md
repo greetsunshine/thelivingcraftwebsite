@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 18 September 2026
+**Last updated:** 19 September 2026
 **Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -266,6 +266,35 @@ domain and a monitored reply mailbox. Until then the browser also notifies
 
 Plain-language explainer for Sunil:
 https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
+
+---
+
+## Dark green linen on the large dark surfaces — 19 September, on PR #18
+
+Task 1 of "Organised TLC Design System Changes". One commit, separate from the redesign.
+
+- **What has it:** the hero shell (`.hero > .wrap` in `global.css`, so every public page
+  with a hero and all nine resource tools), both footer bands (`footer.site` and
+  `SiteFooter.astro`, through `--footer-bg`) and the `/craft` dashboard hero
+  (`.hero-black` in `craft/index.astro`, the one page that painted its own).
+- **What does not, on purpose:** buttons and selected states, table header rows, code
+  blocks, avatar marks and dots. They stay flat forest. `/craft/login` has no dark surface,
+  and its screenshots are byte-identical before and after.
+- **The file:** `public/textures/linen-forest.webp`, 708x708, 83.5 KB. It is the middle
+  third of the package's `woven-materials.png`, with 8px trimmed each side to remove the
+  pale gutter between panels. The package folder stays uncommitted.
+- **The tokens:** `--texture-forest` and `--texture-footer` in `theme.css`. Each is a
+  whole `background` value: an overlay, the linen, and a flat fallback colour.
+  **`--footer-bg` is now a background, not a colour**; use it only in `background:`.
+- **The overlay is there for contrast.** The raw linen's lightest 5% of pixels give ivory
+  3.39:1 and on-dark-muted 2.51:1. Forest at 0.55 and dark forest at 0.45 are the smallest
+  opacities, rounded up, that bring both past 4.5:1.
+- **Measured in the browser afterwards,** on a text-free strip of each rendered surface,
+  lightest 5% of pixels: hero ivory 6.25 to 6.47, on-dark-muted 4.62 to 4.78; footer ivory
+  9.20 to 10.35, on-dark-muted 6.79 to 7.64 (`/` at 1280 and 390, `/caio` at 1280).
+- **The gold h1 words are now ivory italic.** Gold was 3.82:1 on flat forest but 2.27:1 on
+  the lightest linen, below the 3:1 large text needs. Keeping gold would have needed a 0.79
+  overlay, which hides the weave. `--hero-em` is ivory and `.hero h1 em` is italic.
 
 ---
 

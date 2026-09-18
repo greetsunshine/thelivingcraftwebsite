@@ -244,9 +244,43 @@
   --shadow-lift:    0 0 0 var(--border-w-hair) var(--lc-control-line);
   --shadow-overlay: 0 8px 12px rgba(23, 46, 38, 0.06), 0 32px 64px -24px rgba(23, 46, 38, 0.24);
 
+  /* --- texture: dark green linen on the large dark surfaces (19 September).
+     The swatch is the middle third of the design package's woven-materials.png
+     (the package itself stays out of the repo), trimmed of its pale gutter:
+     public/textures/linen-forest.webp, 708x708, 83.5 KB.
+
+     Each token is a whole `background` value, so use it only in a
+     `background:` shorthand, never as a colour. Three layers:
+       1. a flat overlay, which is what keeps text readable;
+       2. the linen, stretched to cover the surface;
+       3. the flat colour, which is what shows if the image fails to load.
+
+     THE OVERLAY IS A CONTRAST CONTROL, NOT A MOOD. Measured on the lightest
+     5% of the swatch's pixels (mean #788671), the raw linen gives ivory 3.39:1
+     and on-dark-muted 2.51:1. The opacities below are the smallest that bring
+     both past 4.5:1, rounded up:
+       forest 0.55 ....... ivory 6.27 · on-dark-muted 4.63 (minimum 0.53)
+       dark forest 0.45 .. ivory 6.28 · on-dark-muted 4.64 (minimum 0.43)
+     Lowering either opacity puts the hero eyebrow and footer text below AA.
+
+     Used on: the hero shell (.hero > .wrap), both footer bands (through
+     --footer-bg) and the /craft dashboard hero. NOT on buttons, table header
+     rows, code blocks or small marks: they stay flat forest. --- */
+  --texture-linen: url('/textures/linen-forest.webp');
+  --texture-forest:
+    linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
+    var(--texture-linen) center / cover no-repeat var(--lc-forest);
+  --texture-footer:
+    linear-gradient(rgba(16, 42, 34, 0.45), rgba(16, 42, 34, 0.45)),
+    var(--texture-linen) center / cover no-repeat var(--lc-dark-forest);
+
   /* --- component: the dark hero shell --- */
   --hero-eyebrow: var(--lc-on-dark-muted);    /* 7.79:1. Gold would be 3.82:1 at 12px — a fail */
-  --hero-em: var(--lc-gold);                  /* 3.82:1, large text only (h1 is 44px and up) */
+  /* Ivory, not gold, since the linen texture (19 September). Gold was 3.82:1
+     on flat forest, but 2.27:1 on the lightest 5% of the textured hero, below
+     the 3:1 large text needs. The emphasis is carried by the serif italic
+     instead (see .hero h1 em in global.css). */
+  --hero-em: var(--lc-ivory);
   --hero-muted: var(--lc-on-dark-muted);
   --hero-primary-bg: var(--lc-ivory);         /* forest on forest would vanish; not in the package */
   --hero-primary-fg: var(--lc-forest);        /* 10.55:1 */
@@ -255,7 +289,7 @@
   --hero-focus: var(--lc-ivory);
 
   /* --- component: footer, a dark forest band --- */
-  --footer-bg: var(--lc-dark-forest);
+  --footer-bg: var(--texture-footer);         /* a BACKGROUND, not a colour: use only in `background:` */
   --footer-ink: var(--lc-ivory);              /* 13.43:1 */
   --footer-muted: var(--lc-on-dark-muted);    /* 9.92:1 */
   --footer-rule: var(--lc-control-line);
