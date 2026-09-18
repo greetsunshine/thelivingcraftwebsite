@@ -279,10 +279,12 @@ Task 2 of "Organised TLC Design System Changes". Its own branch and PR, based on
   poster (1080×1350, 551 KB, headline and logo baked in). Tracing it into a vector is what the
   package forbids for the logo, so the brain is a crop (x 470–1080, y 470–1200, no text) with a
   soft elliptical edge in the alpha: `public/brand/lc-brain-240.webp` (20 KB) and `-480` (68 KB).
-- **The animation is an inline SVG on top**: nine gold circles on knots the photo already has,
-  found by colour. The photo draws in left to right, then the knots appear in order. 800 ms
-  (`--motion-brand`), once, on scroll into view. No glow, blur or pulse: CLAUDE.md bans
-  "glowing brains", and the rule was read as banning the glow.
+- **It lights up, on Sunil's request ("like a GIF lighting up", 18 September).** A grey,
+  pale copy of the brain shows first. A lit copy is revealed over it from left to right in
+  1000 ms. As the light reaches each of nine knots (an inline SVG, placed on knots the photo
+  already has, found by colour), the knot flashes gold and stays solid. About 1.4 s in all,
+  once, on scroll into view, never looping. **This steps past CLAUDE.md's "no glowing brains"
+  on purpose**; the flash fades, so nothing glows in the final frame.
 - **Final frame is the default.** The script only arms the start frame when motion is allowed,
   so reduced motion and a blocked script both show the finished picture.
 - **1100px and up only.** Hidden on phones; a `<picture>` source hands phones a one-pixel image,

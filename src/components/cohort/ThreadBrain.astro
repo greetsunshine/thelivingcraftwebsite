@@ -3,17 +3,25 @@
  * The thread brain from the October campaign poster (assets/LC-Brain.jpeg),
  * beside "01 Who this is for" on the cohort page. Decoration only.
  *
- * Two layers, because the source is a photograph and not a vector:
- * - the brain is a crop of the poster, with none of its text, and a soft
- *   edge baked into the alpha channel (public/brand/lc-brain-*.webp);
- * - the "lighting up" is the inline SVG on top: one circle on each knot the
- *   photo already has, filled in the gold token. No script, no filter, no
- *   external request.
+ * The source is a photograph, not a vector, so it is built in three layers:
+ * - a DIM copy of the brain, visible from the start: the thread before it
+ *   carries anything;
+ * - a LIT copy on top, revealed left to right, the way the thread runs in the
+ *   poster. Both are one crop with no poster text and a soft edge baked into
+ *   the alpha channel (public/brand/lc-brain-*.webp), so the browser fetches
+ *   it once;
+ * - an inline SVG of the knots the photo already has. Each one lights as the
+ *   front passes it: a short flash of gold light that fades out, and a solid
+ *   gold knot that stays. No script inside the SVG, no external request.
  *
- * It plays once per page view, when it scrolls into view, in --motion-brand
- * (800ms). It never loops and it never glows: CLAUDE.md bans "glowing
- * brains", so there is no halo, blur or pulse. The knots go from nothing to
- * solid gold and stop.
+ * It plays once per page view, when it scrolls into view, and never loops.
+ * About 1.4s: the light takes 1.25 × --motion-brand (1000ms) to cross, and
+ * the last knot's flash ends 600ms after the front reaches it (at 82% of the
+ * width). Light that crosses nine knots in 800ms reads as a blink, not as the
+ * brain lighting up. Sunil asked
+ * for "like a GIF lighting up" on 18 September, which is a deliberate step
+ * past the "no glowing brains" line in CLAUDE.md. The glow is kept to the
+ * moment each knot lights; nothing glows in the final frame.
  *
  * The default is the FINAL frame. The script arms the start state only when
  * motion is allowed, so a blocked script or prefers-reduced-motion both show
@@ -26,31 +34,41 @@
 // Knot centres in the crop's own pixels (610 × 730), found by colour, not by
 // eye. Only the knots inside the solid part of the soft edge are kept: a gold
 // dot on a thread that has faded out reads as a stray mark. Ordered left to
-// right, which is the way the thread runs in the poster.
+// right, which is the way the light travels.
 const KNOTS: Array<[number, number]> = [
   [114, 208], [188, 269], [198, 407], [272, 472], [296, 512], [393, 213],
   [412, 394], [443, 142], [498, 336],
-];---
+];
+const WIDTH = 610;
+
+const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+const SRC = '/brand/lc-brain-240.webp';
+const SRCSET = '/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w';
+---
 
 <figure class="thread-brain" aria-hidden="true" data-thread-brain>
-  <picture>
-    <!-- Below 1100px the figure is hidden, and a hidden lazy image is still
-         fetched. This one-pixel source means a phone downloads nothing. -->
-    <source media="(max-width: 1099px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACw=" />
-  <img
-    src="/brand/lc-brain-240.webp"
-    srcset="/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w"
-    sizes="240px"
-    width="240"
-    height="287"
-    alt=""
-    loading="lazy"
-    decoding="async"
-  />
-  </picture>
+  {['dim', 'lit'].map((layer) => (
+    <picture class={layer}>
+      {/* Below 1100px the figure is hidden, and a hidden lazy image is still
+          fetched. This one-pixel source means a phone downloads nothing. */}
+      <source media="(max-width: 1099px)" srcset={PIXEL} />
+      <img src={SRC} srcset={SRCSET} sizes="240px" width="240" height="287" alt="" loading="lazy" decoding="async" />
+    </picture>
+  ))}
   <svg viewBox="0 0 610 730" focusable="false">
-    {KNOTS.map(([cx, cy], i) => (
-      <circle cx={cx} cy={cy} r="9" style={`--i:${i}`} />
+    <defs>
+      <radialGradient id="thread-brain-light">
+        <stop offset="0" style="stop-color: var(--lc-gold); stop-opacity: 0.9" />
+        <stop offset="1" style="stop-color: var(--lc-gold); stop-opacity: 0" />
+      </radialGradient>
+    </defs>
+    {KNOTS.map(([cx, cy]) => (
+      // The delay follows the light front: a knot lights when the reveal
+      // reaches its x position.
+      <g style={`--at:${(cx / WIDTH).toFixed(3)}`}>
+        <circle class="flash" cx={cx} cy={cy} r="34" fill="url(#thread-brain-light)" />
+        <circle class="knot" cx={cx} cy={cy} r="9" />
+      </g>
     ))}
   </svg>
 </figure>
@@ -73,6 +91,9 @@ const KNOTS: Array<[number, number]> = [
 
 <style>
   .thread-brain {
+    /* The light front takes --sweep to cross; each knot lights for --beat. */
+    --sweep: calc(var(--motion-brand) * 1.25);
+    --beat: 500ms;
     display: none;
     position: absolute;
     top: var(--space-6);
@@ -85,6 +106,7 @@ const KNOTS: Array<[number, number]> = [
     .thread-brain { display: block; }
   }
   .thread-brain picture { display: block; }
+  .thread-brain .lit { position: absolute; inset: 0; }
   .thread-brain img {
     display: block;
     width: 100%;
@@ -92,6 +114,12 @@ const KNOTS: Array<[number, number]> = [
     /* Drops the poster's cream paper into the page's ivory. */
     mix-blend-mode: multiply;
   }
+  /* Unlit thread: pale and nearly colourless. Hidden in the final frame,
+     because the lit copy covers it exactly. */
+  .thread-brain .dim img { filter: grayscale(0.85) opacity(0.45); }
+  /* Lit thread: a little warmer and deeper than the photo. */
+  .thread-brain .lit img { filter: saturate(1.3) contrast(1.08); }
+
   .thread-brain svg {
     position: absolute;
     inset: 0;
@@ -99,7 +127,7 @@ const KNOTS: Array<[number, number]> = [
     height: 100%;
     overflow: visible;
   }
-  .thread-brain circle {
+  .thread-brain .knot {
     fill: var(--lc-gold);
     stroke: var(--lc-forest);
     stroke-width: 1.5;
@@ -107,9 +135,14 @@ const KNOTS: Array<[number, number]> = [
     transform-box: fill-box;
     transform-origin: center;
   }
+  .thread-brain .flash {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
 
-  /* Start frame: the thread is not yet drawn and no knot is tied. */
-  .thread-brain[data-armed] img {
+  /* Start frame: dim thread, no light, no knots. */
+  .thread-brain[data-armed] .lit {
     -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
     mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
     -webkit-mask-size: 250% 100%;
@@ -117,28 +150,37 @@ const KNOTS: Array<[number, number]> = [
     -webkit-mask-position: 100% 0;
     mask-position: 100% 0;
   }
-  .thread-brain[data-armed] circle {
-    opacity: 0;
-    transform: scale(0.3);
-  }
+  .thread-brain[data-armed] .knot { opacity: 0; transform: scale(0.3); }
 
-  /* Play: the thread draws left to right over the first 60%, then the knots
-     tie in order. Last knot ends at 800ms (240 + 8 × 50 + 150 = 790). */
-  .thread-brain[data-play] img {
+  /* Play. The front crosses in --sweep; a knot at x = --at of the width
+     lights at --at × --sweep, flashes for --beat, and keeps its gold. */
+  .thread-brain[data-play] .lit {
     -webkit-mask-position: 0 0;
     mask-position: 0 0;
-    transition: -webkit-mask-position calc(var(--motion-brand) * 0.6) var(--ease-out),
-      mask-position calc(var(--motion-brand) * 0.6) var(--ease-out);
+    transition: -webkit-mask-position var(--sweep) linear, mask-position var(--sweep) linear;
   }
-  .thread-brain[data-play] circle {
-    opacity: 1;
-    transform: scale(1);
-    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
-    transition-delay: calc(var(--motion-brand) * 0.3 + var(--i) * 50ms);
+  .thread-brain[data-play] .knot {
+    animation: thread-brain-knot var(--beat) var(--ease-out) both;
+    animation-delay: calc(var(--at) * var(--sweep));
+  }
+  .thread-brain[data-play] .flash {
+    animation: thread-brain-flash calc(var(--beat) * 1.2) ease-out both;
+    animation-delay: calc(var(--at) * var(--sweep));
+  }
+  @keyframes thread-brain-knot {
+    0%   { opacity: 0; transform: scale(0.3); }
+    45%  { opacity: 1; transform: scale(1.5); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes thread-brain-flash {
+    0%   { opacity: 0; transform: scale(0.4); }
+    35%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.3); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .thread-brain img { -webkit-mask-image: none; mask-image: none; }
-    .thread-brain circle { opacity: 1; transform: none; transition: none; }
+    .thread-brain .lit { -webkit-mask-image: none; mask-image: none; }
+    .thread-brain .knot { opacity: 1; transform: none; animation: none; }
+    .thread-brain .flash { opacity: 0; animation: none; }
   }
 </style>
