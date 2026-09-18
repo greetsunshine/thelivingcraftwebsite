@@ -2,25 +2,34 @@
 // /resources/run-cost-model — The Run-Cost Model Tool, self-hosted.
 //
 // Until 17 September 2026 this was an Excel workbook in public/downloads. It
-// is now a page in the same shape as the POC Selection Tool: the inputs are
-// typed here, every line is worked out as it is typed, and the result is read
-// against a rubric. The workbook is still offered at the foot of the page for
-// people who need the model in a budget meeting; the formulas are the same.
+// is now a page in the same shape as the POC Selection Tool, which is the
+// reference for every tool here: one framed shell, a sticky score bar and
+// progress bar, one step per section, a result step, and an email-gated PDF
+// that is checked before it is handed over.
 //
-// Two tabs. "Your model" is the tool. "Reference example" is the ordering
-// agent across 40 sites with every line filled, rendered here on the server
-// from the same data module, and loadable into the tool with one button.
+// THE TOOL IS NINE STEPS: Start, the seven sections, and the result. One step
+// is on screen at a time. The steps are only hidden by the script: without
+// JavaScript, and in print, every step is on the page in order, so a crawler
+// and a printer see the whole tool. Step state is a number in the closure.
+//
+// THE REFERENCE EXAMPLE IS LOADED WHEN YOU ARRIVE. Eighty-three lines is a lot
+// to face blank, so the page opens on the ordering agent across 40 sites with
+// every line filled, says so in the bar and on the Start step, and lets you
+// change any figure or start from a blank model. The example values and every
+// worked-out line are rendered on the server, so the filled model is readable
+// with no script at all. The Excel workbook, with the same rows and formulas,
+// is offered on the Start step for anyone who would rather fill it offline.
 //
 // Inputs are a closure and die with the tab. No localStorage, no
 // sessionStorage. The one thing that leaves the browser is the PDF request:
-// name, email and the inputs go to /api/pipeline/resource-pdf, which records
-// the person (the V4 addendum's "optional email request"), builds the PDF from
-// the same data module this page renders from, and hands it back. The inputs
-// are used for the file and not stored; the dialog says so.
+// name, email and the inputs go to /api/pipeline/resource-pdf, which checks
+// the file before anything is saved, records the person, builds the PDF from
+// the same data module this page renders from, and hands it back with the
+// list of checks it passed. The inputs are used for the file and not stored.
 //
 // Every string here comes from src/data/run-cost-model.ts. The page's script
-// imports that module too (Vite bundles it), so the live bar, the computed
-// lines, the result, the copied text and the PDF all read one set of formulas.
+// imports that module too (Vite bundles it), so the bar, every computed line,
+// the result and (on the server) the PDF all read one set of formulas.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -30,26 +39,30 @@ import {
   PURPOSE,
   HOW_TO_USE,
   HOW_TO_RUN,
+  EXAMPLE_NOTICE,
   LIMITS,
   ARMS,
+  ARMS_NOTE,
   SECTIONS,
   TOTALS,
   FORGOTTEN_ROWS,
   INPUT_COUNT,
   OUTCOMES,
   EXAMPLE,
-  EXAMPLE_STORY,
   readModel,
   unitOf,
   fmtInput,
   fmtComputed,
   fmtMoney,
+  fmtMonths,
   type SharedKey,
   type ArmRowKey,
+  type ArmComputedKey,
 } from '../../data/run-cost-model';
 import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
 
 const meta = publishedResources.find((r) => r.id === 'run-cost-model')!;
+const WORKBOOK = '/downloads/agent-run-cost-model.xlsx';
 
 const title = `${TOOL_NAME} — what an AI agent costs to run, against three cheaper ways to do the same job · The Living Craft`;
 const description =
@@ -80,13 +93,32 @@ const schema = [
   },
 ];
 
-// The reference example, worked out here so the tab reads without a script.
+// The reference example is the initial state. Worked out here so every
+// computed line and the result render on the server, filled in.
 const ex = readModel(EXAMPLE);
-const exCur = EXAMPLE.currency;
-const exLead = ex.arms.find((a) => a.key === ex.leader)!;
+const cur = EXAMPLE.currency;
+const exLead = ex.arms.find((a) => a.key === ex.leader) ?? null;
+
+// The nine steps, in order. The script and the progress bar both read this
+// list from the DOM, so the markup is the one place the order is written.
+const steps = [
+  { key: 'start', dot: '0', name: 'Start' },
+  ...SECTIONS.map((s) => ({ key: `s${s.num}`, dot: String(s.num), name: s.short })),
+  { key: 'result', dot: '✓', name: 'Result' },
+];
+const STEP_COUNT = steps.length;
 
 const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
 const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
+
+const breakEvenNote = (a: (typeof ex.arms)[number]) =>
+  a.breakEvenState === 'never'
+    ? 'Never breaks even'
+    : a.breakEvenState === 'beyond'
+      ? `Breaks even in month ${fmtMonths(a.values.breakEven)}, after the period`
+      : a.breakEvenState === 'inside'
+        ? `Breaks even in month ${fmtMonths(a.values.breakEven)}`
+        : `${a.filled}/19 lines set`;
 ---
 
 <ResourcesLayout title={title} description={description} canonical="/resources/run-cost-model" schema={schema}>
@@ -99,104 +131,97 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       </div>
       <h1>{TOOL_NAME}</h1>
       <p class="lead">
-        Put a number on an agent proposal <em>before</em> anyone commits to building it. Four ways of
-        doing the same job, costed side by side, with the operating lines most business cases leave
-        out. The number it lands on is cost per acceptable outcome.
+        Put a number on an agent proposal <em>before</em> anyone commits to building it. Four ways
+        of doing the same job, costed side by side in seven short steps, with the operating lines
+        most business cases leave out. The number it lands on is cost per acceptable outcome.
       </p>
       <p class="hero-note mono">
-        {ARMS.length} options · {SECTIONS.length} sections · {INPUT_COUNT} lines · 1 reference example
+        {ARMS.length} options · {SECTIONS.length} sections · {INPUT_COUNT} lines · reference example loaded
       </p>
       <ResourceCredit />
     </div>
   </section>
 
-  <!-- Purpose and how to use -->
-  <section id="about">
-    <div class="wrap">
-      <div class="about">
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
-          <ul class="plain">
-            {PURPOSE.map((p) => <li>{p}</li>)}
-          </ul>
-        </div>
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">02</span> How to use it</span>
-          <ol class="steps">
-            {HOW_TO_USE.map((p) => <li>{p}</li>)}
-          </ol>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Rules -->
-  <section id="rules">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">03</span> Rules for using it in a budget conversation</span>
-        <h2>Five rules that decide whether the number is <em>evidence</em> or a guess.</h2>
-      </div>
-      <ol class="howto">
-        {HOW_TO_RUN.map((h) => (
-          <li>
-            <strong>{h.lead}</strong> {h.rest}
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
-  <!-- Tabs -->
-  <section id="tabs-section">
-    <div class="wrap">
-      <div class="tabs" role="tablist" aria-label="Your model or the reference example">
-        <button class="tab" role="tab" id="tab-model" aria-selected="true" aria-controls="panel-model" type="button">Your model</button>
-        <button class="tab" role="tab" id="tab-example" aria-selected="false" aria-controls="panel-example" type="button">Reference example</button>
-      </div>
-      <noscript>
-        <p class="noscript">The model needs JavaScript to work out the lines as you type. Without it, the
-          reference example below shows every line filled and every total, and the rubric says how the
-          outcome was reached.</p>
-      </noscript>
-    </div>
-  </section>
-
-  {/* Everything the bar has to stay above lives inside this one element. A
-      sticky element only sticks within its parent, so the bar's parent has
-      to be as tall as the sections and the result together. */}
-  <div class="scoring" id="panel-model" role="tabpanel" aria-labelledby="tab-model">
+  {/* The tool, inside one framed shell. Everything the score bar has to stay
+      above lives inside this element: a sticky element only sticks within its
+      parent. The frame is the tool's edge, so the page's section rhythm stops
+      at it and the steps use `.inner` for their gutters, not `.wrap`. */}
+  <section class="tool-section">
+  <div class="wrap">
+  <div class="tool" id="tool" data-step="0">
     <div class="scorebar-wrap">
-      <div class="wrap">
-        <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
+      <div class="inner">
+        <div class="scorebar" id="verdict" data-b={ex.outcome?.key ?? 'none'} role="status" aria-live="polite">
           <div class="sb-score">
-            <span id="lead-cost">—</span><span class="of" id="lead-of"> per acceptable outcome</span>
+            <span id="lead-cost">{exLead ? fmtMoney(exLead.values.perOutcome, cur, true) : '—'}</span>
+            <span class="of" id="lead-of">{exLead ? `per acceptable outcome, ${exLead.short}` : 'per acceptable outcome'}</span>
           </div>
           <div class="sb-text">
-            <span class="band" id="band">Not started</span>
-            <span class="sb-note" id="note">{INPUT_COUNT} lines to fill. A blank is unknown, not zero.</span>
+            <span class="band" id="band">{ex.outcome?.name ?? 'Not started'}</span>
+            <span class="sb-note" id="note">{EXAMPLE_NOTICE.lead} Change any figure to make the model yours.</span>
           </div>
           <div class="sb-secs mono" aria-label="Cost per acceptable outcome by option">
-            {ARMS.map((a) => (
-              <span class="sb-sec" id={`pill-${a.key}`} title={`${a.name}: ${a.legend}`}>
-                {a.short} <b id={`pill-v-${a.key}`}>—</b>
+            {ex.arms.map((a) => (
+              <span class={`sb-sec${a.key === ex.leader ? ' is-lead' : ''}`} id={`pill-${a.key}`} title={`${a.name}: ${ARMS.find((x) => x.key === a.key)!.legend}`}>
+                {a.short} <b id={`pill-v-${a.key}`}>{fmtMoney(a.values.perOutcome, cur, true)}</b>
               </span>
             ))}
           </div>
-          <div class="sb-prog mono" id="progress">0/{INPUT_COUNT} lines set</div>
+        </div>
+
+        {/* The progress bar. The fill is lines set out of 83; the pips are the
+            nine steps, and each one is a button that jumps there. */}
+        <div class="progress" aria-label="Progress">
+          <div class="p-track" role="progressbar" aria-valuemin="0" aria-valuemax={INPUT_COUNT} aria-valuenow={ex.filled} id="p-track">
+            <div class="p-fill" id="p-fill" style={`width:${(ex.filled / INPUT_COUNT) * 100}%`}></div>
+          </div>
+          <div class="p-row">
+            <ol class="p-steps" id="p-steps">
+              {steps.map((s, i) => (
+                <li>
+                  <button type="button" class="p-step" data-go={i} aria-current={i === 0 ? 'step' : undefined}>
+                    <span class="p-dot mono">{s.dot}</span>
+                    <span class="p-label">{s.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <span class="p-text mono" id="p-text">Step 1 of {STEP_COUNT} · {ex.filled} of {INPUT_COUNT} lines set</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <section id="score">
-      <div class="wrap">
-        <div class="controls" role="group" aria-label="Model controls">
-          <button class="btn btn-ghost" id="blank" type="button">New model</button>
-          <button class="btn btn-ghost" id="load-example" type="button">Load the reference example</button>
-          <button class="btn btn-ghost" id="copy" type="button">Copy the model</button>
-          <button class="btn btn-ghost" id="print" type="button">Print</button>
-          <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
-          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+    <!-- Step 0: start -->
+    <section class="step" id="step-start" data-index="0">
+      <div class="inner">
+        <div class="stepnav top">
+          <span class="stepnote mono">Nine steps. About twenty minutes with your own figures.</span>
+          <button class="btn btn-primary" type="button" data-go="1">Start with the example&nbsp;<span class="arrow">→</span></button>
+        </div>
+
+        <div class="example-notice" id="example-notice">
+          <span class="eyebrow"><span class="num">Loaded</span> Reference example</span>
+          <p><strong>{EXAMPLE_NOTICE.lead}</strong> {EXAMPLE_NOTICE.rest}</p>
+          <div class="notice-actions">
+            <button class="btn btn-ghost" id="blank-start" type="button">Start from a blank model</button>
+            <a class="btn btn-ghost" href={WORKBOOK} download>Download Excel version&nbsp;<span class="arrow">↓</span></a>
+          </div>
+        </div>
+
+        <div class="about">
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+            <ul class="plain">
+              {PURPOSE.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">02</span> How to use it</span>
+            <ol class="steps">
+              {HOW_TO_USE.map((p) => <li>{p}</li>)}
+            </ol>
+          </div>
         </div>
 
         <div class="arms" aria-label="The four options being compared">
@@ -207,17 +232,44 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
             </div>
           ))}
         </div>
+        <p class="arms-note">{ARMS_NOTE}</p>
+
+        <div class="rules">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">03</span> Rules for using it in a budget conversation</span>
+            <h2 class="step-title" tabindex="-1">Five rules that decide whether the number is <em>evidence</em> or a guess.</h2>
+          </div>
+          <ol class="howto">
+            {HOW_TO_RUN.map((h) => (
+              <li>
+                <strong>{h.lead}</strong> {h.rest}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-primary" type="button" data-go="1">Start with the example&nbsp;<span class="arrow">→</span></button>
+          <button class="btn btn-ghost" id="blank-start-2" type="button">Start from a blank model</button>
+        </div>
       </div>
     </section>
 
-    <!-- The seven sections -->
+    <!-- Steps 1 to 7: the sections -->
     {SECTIONS.map((s) => (
-      <section id={`section-${s.num}`} class="qsection">
-        <div class="wrap">
+      <section id={`step-s${s.num}`} class="step qsection" data-index={s.num}>
+        <div class="inner">
+          <div class="stepnav top">
+            <button class="btn btn-ghost" type="button" data-go={s.num - 1}>← Back</button>
+            <span class="stepnote mono">Step {s.num + 1} of {STEP_COUNT}</span>
+            <button class="btn btn-primary" type="button" data-go={s.num + 1}>
+              {s.num < SECTIONS.length ? 'Next' : 'See the result'}&nbsp;<span class="arrow">→</span>
+            </button>
+          </div>
           <div class="shead">
             <span class="sletter">{s.num}</span>
             <div class="stitle">
-              <h2 class="sname">{s.name}</h2>
+              <h2 class="sname step-title" tabindex="-1">{s.name}</h2>
               <p class="squestion">{s.question}</p>
             </div>
             <span class="ssub mono">{s.scope === 'shared' ? 'shared by all four options' : 'one value per option'}</span>
@@ -233,7 +285,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
                   <p class="gwhy">Such as INR or USD. Shown in front of every money figure. Not counted as a line.</p>
                 </div>
                 <span class="gcell">
-                  <input type="text" id="in-currency" maxlength="12" placeholder="e.g. INR" autocomplete="off" />
+                  <input type="text" id="in-currency" maxlength="12" placeholder="e.g. INR" autocomplete="off" value={EXAMPLE.currency} class="set" />
                 </span>
               </div>
             )}
@@ -256,7 +308,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
                   ) : (
                     <span class="glabel-t" id={`lbl-${row.key}`}>{row.label}</span>
                   )}
-                  <span class="gunit mono" data-kind={row.kind}>{unitOf(row.kind, '')}</span>
+                  <span class="gunit mono" data-kind={row.kind}>{unitOf(row.kind, cur)}</span>
                   {row.forgotten && <span class="gforgot mono">often left out</span>}
                   <p class="gwhy">{row.why}</p>
                 </div>
@@ -265,11 +317,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
                     <input
                       type="number"
                       id={`in-${row.key}`}
+                      class="set"
                       data-scope="shared"
                       data-key={row.key}
                       min="0"
                       step="any"
                       inputmode="decimal"
+                      value={EXAMPLE.shared[row.key as SharedKey]}
                       placeholder={`e.g. ${fmtInput(EXAMPLE.shared[row.key as SharedKey])}`}
                     />
                   </span>
@@ -280,12 +334,14 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
                       <input
                         type="number"
                         id={`in-${a.key}-${row.key}`}
+                        class="set"
                         data-scope="arm"
                         data-arm={a.key}
                         data-key={row.key}
                         min="0"
                         step="any"
                         inputmode="decimal"
+                        value={EXAMPLE.arms[a.key][row.key as ArmRowKey]}
                         placeholder={`e.g. ${fmtInput(EXAMPLE.arms[a.key][row.key as ArmRowKey])}`}
                         aria-label={`${row.label}, ${a.name}`}
                       />
@@ -301,36 +357,65 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
                   <p class="gwhy">{row.why}</p>
                 </div>
                 {s.scope === 'shared' ? (
-                  <output class="gcell out mono" id={`c-${row.key}`} aria-label={row.label}>—</output>
+                  <output class="gcell out mono has" id={`c-${row.key}`} aria-label={row.label}>
+                    {fmtComputed(row, ex.shared.values[row.key as keyof typeof ex.shared.values], cur)}
+                  </output>
                 ) : (
-                  ARMS.map((a) => (
-                    <output class="gcell out mono" id={`c-${row.key}-${a.key}`} aria-label={`${row.label}, ${a.name}`}>—</output>
+                  ex.arms.map((a) => (
+                    <output class="gcell out mono has" id={`c-${row.key}-${a.key}`} aria-label={`${row.label}, ${a.name}`}>
+                      {fmtComputed(row, a.values[row.key as ArmComputedKey], cur, a.breakEvenState)}
+                    </output>
                   ))
                 )}
               </div>
             ))}
           </div>
+
+          <div class="stepnav">
+            <button class="btn btn-ghost" type="button" data-go={s.num - 1}>← Back</button>
+            <span class="stepnote mono" id={`stepnote-${s.num}`}></span>
+            <button class="btn btn-primary" type="button" data-go={s.num + 1}>
+              {s.num < SECTIONS.length ? 'Next' : 'See the result'}&nbsp;<span class="arrow">→</span>
+            </button>
+          </div>
         </div>
       </section>
     ))}
 
-    <!-- The result -->
-    <section id="result">
-      <div class="wrap">
+    <!-- Step 8: the result -->
+    <section class="step" id="step-result" data-index={STEP_COUNT - 1}>
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <span class="stepnote mono">Step {STEP_COUNT} of {STEP_COUNT}</span>
+          <button class="btn btn-ghost" type="button" data-go="1">Change a figure</button>
+        </div>
         <div class="sec-head">
           <span class="eyebrow"><span class="num">04</span> Your result</span>
-          <h2>The outcome, read against the <em>rubric</em>.</h2>
+          <h2 class="step-title" tabindex="-1">The outcome, read against the <em>rubric</em>.</h2>
         </div>
-        <div class="resultcard" id="resultcard" data-b="none">
+        <div class="resultcard" id="resultcard" data-b={ex.outcome?.key ?? 'none'}>
           <div class="r-head">
-            <span class="r-band" id="r-band">Not started</span>
-            <span class="r-lead mono" id="r-lead"></span>
+            <span class="r-band" id="r-band">{ex.outcome?.name ?? 'Not started'}</span>
+            <span class="r-lead mono" id="r-lead">{exLead ? `Leading option: ${exLead.name} · ${fmtMoney(exLead.values.perOutcome, cur, true)} per acceptable outcome` : ''}</span>
           </div>
-          <p class="r-what" id="r-what">
-            Fill every one of the {INPUT_COUNT} lines to read the outcome. Until then this shows each total as soon as the lines that feed it are filled.
-          </p>
-          <ul class="r-flags" id="r-flags"></ul>
-          <div class="r-secs" id="r-secs"></div>
+          <p class="r-example mono" id="r-example">{EXAMPLE_NOTICE.lead} These are the example's numbers, not yours.</p>
+          <p class="r-what" id="r-what">{ex.outcome?.what}</p>
+          <ul class="r-flags" id="r-flags">
+            {ex.flags.map((f) => <li class={f.key}>{f.text}</li>)}
+          </ul>
+          <div class="r-secs" id="r-secs">
+            {ex.arms.map((a) => (
+              <div class={`r-sec${a.key === ex.leader ? ' is-lead' : ''}`}>
+                <span class="k">{a.name}</span>
+                <span class="v">{fmtMoney(a.values.perOutcome, cur, true)}<small>per acceptable outcome</small></span>
+                <span class={`n${a.breakEvenState === 'never' || a.breakEvenState === 'beyond' ? ' bad' : ''}`}>{breakEvenNote(a)}</span>
+                {a.blocks[0]?.share !== null && a.blocks[0]?.value !== null && (
+                  <span class="n">Largest run line: {a.blocks[0].name.toLowerCase()}, {Math.round((a.blocks[0].share ?? 0) * 100)}%</span>
+                )}
+              </div>
+            ))}
+          </div>
 
           <table class="rtable" id="r-table">
             <thead>
@@ -343,167 +428,70 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
               {TOTALS.map((row) => (
                 <tr class={row.key === 'perOutcome' ? 'key' : ''}>
                   <th scope="row">{row.label}<span class="twhy">{row.why}</span></th>
-                  {ARMS.map((a) => <td class="mono" id={`t-${row.key}-${a.key}`}>—</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div class="r-fix" id="r-fix" hidden>
-            <h3>Check these assumptions first</h3>
-            <p class="r-fixlead">The leading option first, then the full agent, then the rest. Each one is a line that decides the answer and is usually guessed.</p>
-            <ol id="r-fixlist"></ol>
-          </div>
-          <div class="r-actions">
-            <button class="btn btn-primary" id="pdf2" type="button">Get the PDF</button>
-            <button class="btn btn-ghost" id="copy2" type="button">Copy the model</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Reference example -->
-  <div id="panel-example" role="tabpanel" aria-labelledby="tab-example" class="example-panel">
-    <section id="example">
-      <div class="wrap">
-        <div class="sec-head">
-          <span class="eyebrow"><span class="num">Reference example</span></span>
-          <h2>{EXAMPLE_STORY.title}, every line <em>already filled</em>.</h2>
-        </div>
-        <div class="prose ex-story">
-          {EXAMPLE_STORY.lines.map((l) => <p>{l}</p>)}
-        </div>
-        <div class="controls">
-          <button class="btn btn-primary" id="load-example-2" type="button">Load this example into your model</button>
-          <a class="btn btn-ghost" href="#tab-model" id="to-model">Back to your model</a>
-        </div>
-
-        <div class="resultcard ex-result" data-b={ex.outcome?.key ?? 'none'}>
-          <div class="r-head">
-            <span class="r-band">{ex.outcome?.name}</span>
-            <span class="r-lead mono">Leading option: {exLead.name} · {fmtMoney(exLead.values.perOutcome, exCur, true)} per acceptable outcome</span>
-          </div>
-          <p class="r-what">{ex.outcome?.what}</p>
-          <ul class="r-flags">
-            {ex.flags.map((f) => <li class={f.key}>{f.text}</li>)}
-          </ul>
-          <table class="rtable">
-            <thead>
-              <tr>
-                <th scope="col"><span class="visually-hidden">Line</span></th>
-                {ARMS.map((a) => <th scope="col">{a.short}<small class="thlegend">{a.legend}</small></th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {TOTALS.map((row) => (
-                <tr class={row.key === 'perOutcome' ? 'key' : ''}>
-                  <th scope="row">{row.label}</th>
                   {ex.arms.map((a) => (
-                    <td class={`mono${a.key === ex.leader && row.key === 'perOutcome' ? ' is-lead' : ''}${(row.key === 'net' && (a.values.net ?? 0) < 0) || (row.key === 'breakEven' && a.breakEvenState === 'never') ? ' bad' : ''}`}>
-                      {fmtComputed(row, a.values[row.key as keyof typeof a.values], exCur, a.breakEvenState)}
+                    <td
+                      class={`mono${a.key === ex.leader && row.key === 'perOutcome' ? ' is-lead' : ''}${(row.key === 'net' && (a.values.net ?? 0) < 0) || (row.key === 'breakEven' && a.breakEvenState === 'never') ? ' bad' : ''}`}
+                      id={`t-${row.key}-${a.key}`}
+                    >
+                      {fmtComputed(row, a.values[row.key as ArmComputedKey], cur, a.breakEvenState)}
                     </td>
                   ))}
                 </tr>
               ))}
             </tbody>
           </table>
-          {ex.checks.length > 0 && (
-            <div class="r-fix">
-              <h3>Check these assumptions first</h3>
-              <ol>
-                {ex.checks.map((c, i) => (
-                  <li>
-                    <span class="fn">{String(i + 1).padStart(2, '0')}</span>
-                    <div class="ft">{c.text}</div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+
+          <div class="r-fix" id="r-fix" hidden={ex.checks.length === 0}>
+            <h3>Check these assumptions first</h3>
+            <p class="r-fixlead">The leading option first, then the full agent, then the rest. Each one is a line that decides the answer and is usually guessed.</p>
+            <ol id="r-fixlist">
+              {ex.checks.map((c, i) => (
+                <li>
+                  <span class="fn">{String(i + 1).padStart(2, '0')}</span>
+                  <div class="ft">{c.text}</div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="r-actions" role="group" aria-label="Model controls">
+            <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
+            <button class="btn btn-ghost" id="blank" type="button">New model</button>
+          </div>
         </div>
 
-        {SECTIONS.map((s) => (
-          <div class="ex-section">
-            <div class="shead">
-              <span class="sletter">{s.num}</span>
-              <div class="stitle">
-                <h3 class="sname">{s.name}</h3>
-                <p class="squestion">{s.question}</p>
-              </div>
-            </div>
-            <table class="extable">
-              <thead>
-                <tr>
-                  <th scope="col">Line</th>
-                  <th scope="col">Unit</th>
-                  {s.scope === 'shared' ? <th scope="col">Value</th> : ARMS.map((a) => <th scope="col">{a.short}<small class="thlegend">{a.legend}</small></th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {s.num === 1 && (
-                  <tr>
-                    <th scope="row">Currency label</th>
-                    <td class="unit mono">free text</td>
-                    <td class="mono">{EXAMPLE.currency}</td>
-                  </tr>
-                )}
-                {s.inputs.map((row) => (
-                  <tr class={row.forgotten ? 'forgot' : ''}>
-                    <th scope="row">{row.label}{row.forgotten && <span class="gforgot mono">often left out</span>}</th>
-                    <td class="unit mono">{unitOf(row.kind, exCur)}</td>
-                    {s.scope === 'shared' ? (
-                      <td class="mono">{fmtInput(EXAMPLE.shared[row.key as SharedKey])}</td>
-                    ) : (
-                      ARMS.map((a) => <td class="mono">{fmtInput(EXAMPLE.arms[a.key][row.key as ArmRowKey])}</td>)
-                    )}
-                  </tr>
-                ))}
-                {s.computed.map((row) => (
-                  <tr class="calc">
-                    <th scope="row">{row.label}</th>
-                    <td class="unit mono">worked out</td>
-                    {s.scope === 'shared' ? (
-                      <td class="mono">{fmtComputed(row, ex.shared.values[row.key as keyof typeof ex.shared.values], exCur)}</td>
-                    ) : (
-                      ex.arms.map((a) => <td class="mono">{fmtComputed(row, a.values[row.key as keyof typeof a.values], exCur, a.breakEvenState)}</td>)
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div class="rubric">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">05</span> How the outcome is read</span>
+            <h2>Agree this <em>before</em> the numbers go in, not after.</h2>
           </div>
-        ))}
+          <p class="prose-lead">
+            The leading option is the one with the lowest cost per acceptable outcome among the
+            options that save money against the manual baseline over the period. The row that
+            matches your result is highlighted.
+          </p>
+          {OUTCOMES.map((o) => (
+            <div class={`cutrow${ex.outcome?.key === o.key ? ' active' : ''}`} id={`cut-${o.key}`} data-b={o.key}>
+              <div class="cutscore">{o.when}</div>
+              <div class="cutname">{o.name}</div>
+              <div class="cutwhat">{o.what}</div>
+            </div>
+          ))}
+          <p class="prose-lead flags-lead">
+            Three flags sit beside the outcome and do not change it. <strong>Disagreement:</strong> cost
+            per case and cost per acceptable outcome pick different options. <strong>Never breaks
+            even:</strong> an option costs more to run each month than doing it by hand. <strong>Beyond
+            the period:</strong> an option pays back, but after the months you modelled.
+          </p>
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <button class="btn btn-ghost" type="button" data-go="1">Change a figure</button>
+        </div>
       </div>
     </section>
   </div>
-
-  <!-- The rubric -->
-  <section id="rubric">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">05</span> How the outcome is read</span>
-        <h2>Agree this <em>before</em> the numbers go in, not after.</h2>
-      </div>
-      <p class="prose-lead">
-        The leading option is the one with the lowest cost per acceptable outcome among the options
-        that save money against the manual baseline over the period. The row that matches your
-        result is highlighted.
-      </p>
-      {OUTCOMES.map((o) => (
-        <div class="cutrow" id={`cut-${o.key}`} data-b={o.key}>
-          <div class="cutscore">{o.when}</div>
-          <div class="cutname">{o.name}</div>
-          <div class="cutwhat">{o.what}</div>
-        </div>
-      ))}
-      <p class="prose-lead flags-lead">
-        Three flags sit beside the outcome and do not change it. <strong>Disagreement:</strong> cost per
-        case and cost per acceptable outcome pick different options. <strong>Never breaks
-        even:</strong> an option costs more to run each month than doing it by hand. <strong>Beyond the
-        period:</strong> an option pays back, but after the months you modelled.
-      </p>
-    </div>
+  </div>
   </section>
 
   <!-- The nine lines -->
@@ -550,7 +538,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/downloads/agent-run-cost-model.xlsx" download>The same model as an Excel workbook&nbsp;<span class="arrow">↓</span></a>
+        <a class="btn btn-ghost" href={WORKBOOK} download>Download Excel version&nbsp;<span class="arrow">↓</span></a>
       </p>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
@@ -564,7 +552,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <h2 id="pdf-title">Get the PDF</h2>
       <p class="pdf-lead">
         The PDF carries every line you typed, every total, the outcome and the assumptions to check.
-        It is built against a name and an email address.
+        It is built against a name and an email address, and checked before it is handed over.
       </p>
       <div class="pdf-grid">
         <label>
@@ -582,6 +570,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         tool once. It does not start any other email.
       </p>
       <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
+      <ul class="pdf-checks mono" id="pdf-checks" hidden></ul>
       <div class="pdf-actions">
         <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
         <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
@@ -591,16 +580,75 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 </ResourcesLayout>
 
 <style>
+  /* ── the frame ────────────────────────────────────────────────────────── */
+  /* One white shell on the mist ground, the app-shell radius and the overlay
+     shadow the design system gives a shell. `overflow: clip` rounds the corners
+     without making the frame a scroll container, which `hidden` would, and a
+     scroll container is what stops the score bar sticking to the viewport. */
+  .tool-section { padding-top: var(--space-6); }
+  .tool {
+    background: var(--surface-panel);
+    border-radius: var(--radius-shell);
+    box-shadow: var(--shadow-overlay);
+    overflow: clip;
+  }
+  .inner { padding: 0 var(--space-7); }
+  .tool .sec-head h2 { font-size: var(--size-7); }
+  .tool .sec-head { margin-bottom: var(--space-5); }
+
+  /* ── steps ────────────────────────────────────────────────────────────── */
+  /* Without the script every step is visible. With it, only the current one.
+     `data-step` on the tool is the cursor; each step carries its index. */
+  .tool.js .step { display: none; }
+  .tool.js .step.current { display: block; }
+  .step { padding: var(--space-5) 0 var(--space-7); }
+  .step-title:focus, .step-title:focus-visible { outline: none; }
+
+  .stepnav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-hair);
+  }
+  .stepnav .btn-primary { margin-left: auto; }
+  .stepnav.top {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    margin-bottom: var(--space-5);
+  }
+  .stepnote { font-size: var(--size-1); color: var(--text-quiet); }
+  /* Without the script the steps are all on the page, so the buttons that move
+     between them do nothing useful and are hidden. */
+  .tool:not(.js) .stepnav [data-go], .tool:not(.js) .p-step, .tool:not(.js) #blank, .tool:not(.js) #blank-start, .tool:not(.js) #blank-start-2 { display: none; }
+
+  /* ── the loaded example ───────────────────────────────────────────────── */
+  .example-notice {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-5) var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+  .example-notice .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .example-notice p { margin: 0 0 var(--space-4); max-width: var(--measure-prose); }
+  .example-notice strong { font-weight: var(--weight-strong); }
+  .notice-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
   /* ── about ────────────────────────────────────────────────────────────── */
   .about {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
+    margin-bottom: var(--space-6);
   }
   .about-col {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-5) var(--space-6);
   }
   .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
@@ -612,10 +660,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     margin: 0;
     list-style: none;
   }
-  ul.plain li {
-    position: relative;
-    padding-left: var(--space-5);
-  }
+  ul.plain li { position: relative; padding-left: var(--space-5); }
   ul.plain li::before {
     content: '';
     position: absolute;
@@ -627,11 +672,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     background: var(--sun);
   }
   ol.steps { counter-reset: s; }
-  ol.steps li {
-    counter-increment: s;
-    position: relative;
-    padding-left: var(--space-6);
-  }
+  ol.steps li { counter-increment: s; position: relative; padding-left: var(--space-6); }
   ol.steps li::before {
     content: counter(s);
     position: absolute;
@@ -649,6 +690,26 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     place-items: center;
   }
 
+  .arms {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .arms-note {
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-7);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .arm {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+  }
+  .armname { display: block; font-weight: var(--weight-strong); margin-bottom: var(--space-1); }
+  .armwhat { margin: 0; font-size: var(--size-2); color: var(--text-quiet); }
+
   /* ── rules ────────────────────────────────────────────────────────────── */
   ol.howto {
     list-style: none;
@@ -660,11 +721,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     padding: 0;
     margin: 0;
   }
-  ol.howto li {
-    counter-increment: h;
-    position: relative;
-    padding-left: var(--space-7);
-  }
+  ol.howto li { counter-increment: h; position: relative; padding-left: var(--space-7); }
   ol.howto li::before {
     content: counter(h);
     position: absolute;
@@ -676,72 +733,24 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   ol.howto strong { font-weight: var(--weight-strong); }
 
-  /* ── tabs ─────────────────────────────────────────────────────────────── */
-  #tabs-section { padding-bottom: 0; }
-  .tabs {
-    display: flex;
-    gap: var(--space-2);
-    border-bottom: 1px solid var(--border-hair);
-  }
-  .tab {
-    font: inherit;
-    font-weight: var(--weight-strong);
-    font-size: var(--size-3);
-    color: var(--text-quiet);
-    background: none;
-    border: 0;
-    border-bottom: 3px solid transparent;
-    padding: var(--space-3) var(--space-4);
-    margin-bottom: -1px;
-    cursor: pointer;
-  }
-  .tab:hover { color: var(--text-body); }
-  .tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-  .tab[aria-selected='true'] { color: var(--text-body); border-bottom-color: var(--sun); }
-  .noscript { margin-top: var(--space-4); color: var(--text-quiet); max-width: var(--measure-prose); }
-
-  /* ── controls ─────────────────────────────────────────────────────────── */
-  #score { padding-top: var(--space-5); padding-bottom: 0; }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: center;
-  }
-  .copied { font-size: var(--size-1); color: var(--text-quiet); }
-
-  .arms {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-3);
-    margin-top: var(--space-6);
-  }
-  .arm {
-    background: var(--surface-panel);
-    border-radius: var(--radius-inner);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-4);
-  }
-  .armname { display: block; font-weight: var(--weight-strong); margin-bottom: var(--space-1); }
-  .armwhat { margin: 0; font-size: var(--size-2); color: var(--text-quiet); }
-
-  /* ── the bar ──────────────────────────────────────────────────────────── */
+  /* ── the score bar ────────────────────────────────────────────────────── */
+  /* The frame's header. Sticky under the nav; flat, with a hairline under it,
+     because it sits inside the shell rather than floating over the page. */
   .scorebar-wrap {
     position: sticky;
+    /* The nav is 76px on a desktop and wraps taller on a phone. The script
+       measures it and sets --nav-h; the fallback is the desktop height. */
     top: var(--nav-h, 76px);
     z-index: var(--z-sticky);
-    padding: var(--space-3) 0;
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
+    border-bottom: 1px solid var(--border-hair);
   }
   .scorebar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--space-3) var(--space-5);
-    background: var(--surface-panel);
-    border-radius: var(--radius-panel);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-4) 0 var(--space-3);
   }
   .sb-score {
     font-family: var(--font-mono);
@@ -779,7 +788,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
   .sb-sec.is-lead { outline: 2px solid var(--ink-1); }
-  .sb-prog { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
   /* Outcomes read through colour on the word, never a yellow chip: sun is for
      things you can click. */
   [data-b='manual'] .band, [data-b='manual'] .r-band { color: var(--danger); }
@@ -789,8 +797,61 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   [data-b='agent'] .band, [data-b='agent'] .r-band { color: var(--text-loud); }
   [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
 
+  /* ── the progress bar ─────────────────────────────────────────────────── */
+  .progress { padding: 0 0 var(--space-3); }
+  .p-track {
+    height: 4px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .p-fill {
+    height: 100%;
+    background: var(--sun);
+    border-radius: var(--radius-pill);
+    transition: width var(--motion-base, 160ms) ease;
+  }
+  .p-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-3);
+  }
+  .p-steps { list-style: none; padding: 0; margin: 0; display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .p-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 3px 10px 3px 4px;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .p-step:hover { background: var(--surface-hover); color: var(--text-body); }
+  .p-step:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .p-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    display: inline-grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .p-step[aria-current='step'] { color: var(--text-loud); }
+  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
+
   /* ── sections ─────────────────────────────────────────────────────────── */
-  .qsection { padding-top: var(--space-7); padding-bottom: 0; }
   .shead {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -817,7 +878,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .ssub {
     font-size: var(--size-1);
     color: var(--text-quiet);
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-pill);
     padding: 4px 12px;
     margin-top: 6px;
@@ -829,15 +890,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     margin: 0 0 var(--space-5) calc(28px + var(--space-4));
   }
 
-  /* One grid per section. The label column and the value columns share one
-     set of tracks, so every input in a section sits under its option's name
-     and every label starts on one left edge. */
+  /* One mist card per section, the reference's card inside the shell. The
+     label column and the value columns share one set of tracks, so every
+     input sits under its option's name and every label starts on one edge. */
   .grid {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-2) var(--space-5);
-    /* The computed rows bleed to the card's edge; clip them to its corners. */
     overflow: hidden;
   }
   .grow {
@@ -862,8 +921,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .garm b { font-weight: var(--weight-strong); color: var(--text-body); }
   /* The legend: what the column is, in a few words, under its name in every
-     table. The four cards under the controls say the same thing at length,
-     and they have scrolled away by section 3. */
+     table. The four cards on the Start step say the same thing at length. */
   .glegend, .thlegend {
     display: block;
     font-family: var(--font-body);
@@ -875,44 +933,31 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .thlegend { margin-top: 2px; }
   .glabel { min-width: 0; }
-  .glabel label, .glabel-t, .glabel-c {
-    display: block;
-    font-weight: var(--weight-strong);
-    line-height: var(--lh-snug);
-  }
+  .glabel label, .glabel-t, .glabel-c { display: block; font-weight: var(--weight-strong); line-height: var(--lh-snug); }
   .glabel-c { color: var(--text-quiet); }
-  .gunit {
-    display: inline-block;
-    margin-top: 2px;
-    margin-right: var(--space-2);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-  }
+  .gunit { display: inline-block; margin-top: 2px; margin-right: var(--space-2); font-size: var(--size-1); color: var(--text-quiet); }
   .gforgot {
     display: inline-block;
     margin-top: 2px;
     font-size: var(--size-1);
     color: var(--accent-ink);
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
     border-radius: var(--radius-pill);
     padding: 1px 8px;
     vertical-align: middle;
   }
-  .gforgot.inline { margin: 0 2px; }
-  .gwhy {
-    margin: var(--space-1) 0 0;
-    font-size: var(--size-2);
-    color: var(--text-quiet);
-    max-width: 52ch;
-  }
+  .gforgot.inline { margin: 0 2px; background: var(--surface-sunken); }
+  .gwhy { margin: var(--space-1) 0 0; font-size: var(--size-2); color: var(--text-quiet); max-width: 52ch; }
   .gcell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .cellarm { display: none; font-size: var(--size-1); color: var(--text-quiet); }
+  /* Answer fields are white on the mist card, and a filled one is sun: the
+     same rule as the reference's anchors, yellow means the value is yours. */
   .grid input {
     font-family: var(--font-mono);
     font-size: var(--size-2);
     color: var(--text-body);
     background: var(--surface-panel);
-    border: var(--border-w-rule) solid var(--border-field);
+    border: var(--border-w-rule) solid transparent;
     border-radius: var(--radius-field);
     padding: 0 var(--space-3);
     height: 40px;
@@ -924,9 +969,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .grid input::placeholder { color: var(--text-quiet); opacity: 0.7; }
   .grid input:focus { outline: none; border-color: var(--text-body); }
   .grid input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
-  /* A filled field is sun: yellow means the value is yours and can be changed. */
-  .grid input.set { background: var(--surface-sun); color: var(--text-on-accent); border-color: transparent; }
-  .grow.computed { background: var(--surface-sunken); margin: 0 calc(-1 * var(--space-5)); padding-left: var(--space-5); padding-right: var(--space-5); }
+  .grid input.set { background: var(--surface-sun); color: var(--text-on-accent); }
+  .grow.computed { background: var(--surface-panel); margin: 0 calc(-1 * var(--space-5)); padding-left: var(--space-5); padding-right: var(--space-5); }
   .out {
     display: block;
     text-align: right;
@@ -938,20 +982,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .out.has { color: var(--text-body); }
 
   /* ── the result ───────────────────────────────────────────────────────── */
-  #result { padding-top: var(--space-7); }
   .resultcard {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-6);
+    margin-bottom: var(--space-7);
   }
-  .r-head {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin-bottom: var(--space-3);
-  }
+  .r-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin-bottom: var(--space-2); }
   .r-band {
     font-size: var(--size-6);
     font-weight: var(--weight-heavy);
@@ -959,23 +996,12 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     line-height: var(--lh-tight);
   }
   .r-lead { font-size: var(--size-1); color: var(--text-quiet); }
+  .r-example { margin: 0 0 var(--space-3); font-size: var(--size-1); color: var(--accent-ink); }
+  .r-example[hidden] { display: none; }
   .r-what { max-width: var(--measure-prose); margin: 0 0 var(--space-4); }
-  .r-flags {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 var(--space-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    max-width: var(--measure-prose);
-  }
+  .r-flags { list-style: none; padding: 0; margin: 0 0 var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--measure-prose); }
   .r-flags:empty { display: none; }
-  .r-flags :global(li) {
-    font-size: var(--size-2);
-    font-weight: var(--weight-strong);
-    padding-left: var(--space-5);
-    position: relative;
-  }
+  .r-flags :global(li) { font-size: var(--size-2); font-weight: var(--weight-strong); padding-left: var(--space-5); position: relative; }
   .r-flags :global(li)::before {
     content: '';
     position: absolute;
@@ -987,15 +1013,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     background: var(--ink-1);
   }
   .r-flags :global(li.never), .r-flags :global(li.beyond) { color: var(--danger); }
-  .r-flags :global(li.never)::before, .r-flags :global(li.beyond)::before { background: var(--danger); }
-  .r-secs {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-  }
+  .r-flags :global(li.never)::before, .r-flags :global(li.beyond)::before { background: var(--danger-mark); }
+  .r-secs { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+  /* The boxes and the check rows are rebuilt by the script, so they never
+     carry Astro's scoping attribute. `:global()` is what lets these rules
+     reach them; the parents stay scoped. */
   .r-secs :global(.r-sec) {
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
     border-radius: var(--radius-inner);
     padding: var(--space-3) var(--space-4);
     display: flex;
@@ -1009,17 +1033,12 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .r-secs :global(.r-sec .n) { font-size: var(--size-1); color: var(--text-quiet); }
   .r-secs :global(.r-sec .n.bad) { color: var(--danger); }
 
-  .rtable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: var(--space-5);
-    font-size: var(--size-2);
-  }
+  .rtable { width: 100%; border-collapse: collapse; margin-bottom: var(--space-5); font-size: var(--size-2); }
   .rtable th, .rtable td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--border-hair); vertical-align: top; text-align: right; }
   .rtable thead th { border-top: 0; font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-strong); color: var(--text-body); vertical-align: bottom; }
   .rtable tbody th { text-align: left; font-weight: var(--weight-strong); }
   .rtable tbody th .twhy { display: block; font-weight: var(--weight-regular); font-size: var(--size-1); color: var(--text-quiet); max-width: 40ch; }
-  .rtable tr.key th, .rtable tr.key td { background: var(--surface-sunken); }
+  .rtable tr.key th, .rtable tr.key td { background: var(--surface-panel); }
   .rtable td.is-lead { font-weight: var(--weight-strong); color: var(--text-loud); }
   .rtable td.bad { color: var(--danger); }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -1027,43 +1046,10 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .r-fix h3 { font-size: var(--size-4); margin: 0 0 var(--space-1); }
   .r-fixlead { font-size: var(--size-2); color: var(--text-quiet); margin: 0 0 var(--space-3); max-width: var(--measure-prose); }
   .r-fix ol { list-style: none; padding: 0; margin: 0 0 var(--space-5); display: flex; flex-direction: column; }
-  .r-fix :global(li) {
-    display: grid;
-    grid-template-columns: 40px 1fr;
-    gap: var(--space-3);
-    padding: var(--space-3) 0;
-    border-top: 1px solid var(--border-hair);
-    font-size: var(--size-2);
-  }
+  .r-fix :global(li) { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--border-hair); font-size: var(--size-2); }
   .r-fix :global(li:last-child) { border-bottom: 1px solid var(--border-hair); }
   .r-fix :global(.fn) { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); padding-top: 3px; }
-  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-
-  /* ── the reference example ────────────────────────────────────────────── */
-  .example-panel[hidden] { display: none; }
-  .ex-story { max-width: var(--measure-prose); margin-bottom: var(--space-5); }
-  .ex-story p { margin: 0 0 var(--space-3); }
-  #example .controls { margin-bottom: var(--space-6); }
-  .ex-result { margin-bottom: var(--space-7); }
-  .ex-section { margin-bottom: var(--space-6); }
-  .ex-section .sname { font-size: var(--size-5); }
-  .extable {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    font-size: var(--size-2);
-    margin-left: 0;
-  }
-  .extable th, .extable td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--border-hair); text-align: right; vertical-align: top; }
-  .extable thead th { border-top: 0; font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-strong); color: var(--text-body); vertical-align: bottom; }
-  .extable thead th:first-child, .extable tbody th { text-align: left; }
-  .extable tbody th { font-weight: var(--weight-regular); }
-  .extable td.unit { text-align: left; color: var(--text-quiet); font-size: var(--size-1); white-space: nowrap; }
-  .extable tr.calc th, .extable tr.calc td { background: var(--surface-sunken); font-weight: var(--weight-strong); }
-  .extable tr.calc td.unit { font-weight: var(--weight-regular); }
-  .extable .gforgot { margin-left: var(--space-2); }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
 
   /* ── rubric ───────────────────────────────────────────────────────────── */
   .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
@@ -1077,11 +1063,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-inner);
     margin-bottom: var(--space-3);
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     opacity: 0.55;
     transition: opacity var(--motion-base, 160ms) ease;
   }
-  .cutrow.active { opacity: 1; box-shadow: var(--shadow-raise); }
+  .cutrow.active { opacity: 1; background: var(--surface-panel); box-shadow: var(--shadow-raise); }
   .cutscore { font-size: var(--size-2); color: var(--text-quiet); }
   .cutname { font-weight: var(--weight-strong); }
   .cutwhat { font-size: var(--size-2); color: var(--text-quiet); }
@@ -1089,13 +1075,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .cutrow[data-b='rules'].active .cutname, .cutrow[data-b='rules2'].active .cutname { color: var(--accent-ink); }
 
   /* ── the nine lines ───────────────────────────────────────────────────── */
-  .move {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: var(--space-4);
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--border-hair);
-  }
+  .move { display: grid; grid-template-columns: 56px 1fr; gap: var(--space-4); padding: var(--space-4) 0; border-top: 1px solid var(--border-hair); }
   .move:last-of-type { border-bottom: 1px solid var(--border-hair); }
   .mnum { font-size: var(--size-2); color: var(--text-quiet); padding-top: 4px; }
   .mname { font-size: var(--size-4); margin: 0 0 var(--space-1); }
@@ -1126,14 +1106,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .pdf-dialog h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
   .pdf-lead { margin: 0 0 var(--space-5); }
   .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-  .pdf-dialog label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-family: var(--font-marginal);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-  }
+  .pdf-dialog label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-marginal); font-size: var(--size-1); color: var(--text-quiet); }
   .pdf-dialog input {
     font-family: var(--font-body);
     font-size: var(--size-3);
@@ -1152,6 +1125,23 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
   .pdf-status.err { color: var(--danger); }
   .pdf-status.ok { color: var(--text-loud); }
+  .pdf-checks {
+    list-style: none;
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-3) 0 0;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 180px;
+    overflow: auto;
+  }
+  .pdf-checks :global(li) { display: flex; gap: var(--space-2); }
+  .pdf-checks :global(li b) { flex: 0 0 5ch; font-weight: var(--weight-strong); color: var(--text-body); }
+  .pdf-checks :global(li.fail b) { color: var(--danger); }
   .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
   .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
 
@@ -1160,62 +1150,65 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     .garm { padding-right: var(--space-2); }
   }
   @media (max-width: 860px) {
+    .tool { border-radius: var(--radius-panel); }
+    .inner { padding: 0 var(--space-4); }
     .about { grid-template-columns: 1fr; }
-    .scorebar { grid-template-columns: auto 1fr; }
-    .sb-secs { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
-    .sb-prog { display: none; }
-    .sb-score { font-size: var(--size-5); }
-    .band { font-size: var(--size-3); }
     .arms { grid-template-columns: 1fr 1fr; }
+    /* Stacked: the score line is wide, and beside it the outcome text had an
+       80px column and wrapped to eight lines. */
+    .scorebar { grid-template-columns: 1fr; gap: var(--space-2); }
+    .sb-secs { grid-template-columns: 1fr 1fr; }
+    .sb-score { font-size: var(--size-5); white-space: normal; }
+    .band { font-size: var(--size-3); }
+    .p-label { display: none; }
+    .p-step { padding-right: 4px; }
+    .p-text { white-space: normal; }
     .shead { grid-template-columns: auto 1fr; }
     .ssub { grid-column: 2; justify-self: start; margin-top: 0; }
     .sblurb { margin-left: 0; }
     .grid.shared .grow, .grid.arm .grow { grid-template-columns: 1fr; }
     .grow.ghead { display: none; }
-    .cellarm { display: block; }
+    .cellarm { display: block; flex: 0 0 72px; }
     .gcell { flex-direction: row; align-items: center; gap: var(--space-3); }
-    .cellarm { flex: 0 0 72px; }
     .out { padding-top: 0; text-align: left; }
-    .grow.computed .gcell { flex-direction: row; }
     .r-secs { grid-template-columns: 1fr 1fr; }
     .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
     .pdf-grid { grid-template-columns: 1fr; }
-    .rtable, .extable { display: block; overflow-x: auto; }
+    .stepnav .btn-primary { margin-left: 0; }
+    .rtable { display: block; overflow-x: auto; }
   }
 
-  /* ── print: this is a model people print ──────────────────────────────── */
+  /* ── print: every step, in order, as a model people print ─────────────── */
   @media print {
-    .scorebar-wrap { position: static; background: none; }
-    .scorebar, .resultcard, .about-col, .grid, .arm { box-shadow: none; border: 1px solid var(--border-hair); }
-    .controls, .hero-cta, .r-actions, .pdf-dialog, .tabs, .noscript { display: none !important; }
-    .example-panel[hidden] { display: block; }
-    .grid, .grow, .cutrow, .move, .resultcard, .ex-section { break-inside: avoid; }
+    .tool.js .step { display: block; }
+    .scorebar-wrap { position: static; }
+    .tool { box-shadow: none; border: 1px solid var(--border-hair); }
+    .resultcard, .about-col, .grid, .arm, .example-notice { border: 1px solid var(--border-hair); }
+    .stepnav, .hero-cta, .r-actions, .pdf-dialog, .p-steps, .notice-actions { display: none !important; }
+    .grid, .grow, .cutrow, .move, .resultcard { break-inside: avoid; }
     .cutrow { opacity: 1 !important; }
     .grid input { border: 1px solid var(--border-hair); }
     .grid input.set { outline: 2px solid var(--ink-1); }
-    #example { break-before: page; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 
 <script>
-  // The inputs are one object in this closure. Never written to localStorage,
-  // never posted except inside the PDF request, and gone when the tab closes.
+  // The inputs are one object in this closure, and the step is a number
+  // beside it. Never written to localStorage, never posted except inside the
+  // PDF request, and gone when the tab closes.
   //
   // This is a module script, so it imports the same data module the page
-  // rendered from. The bar, every computed line, the result, the copied text
-  // and (on the server) the PDF all read one set of formulas: `readModel()`.
+  // rendered from. The bar, every computed line, the result and (on the
+  // server) the PDF all read one set of formulas: `readModel()`.
   import {
-    ARMS,
     ARM_ROWS,
     EXAMPLE,
+    EXAMPLE_NOTICE,
     INPUT_COUNT,
     OUTCOMES,
     SECTIONS,
-    SHARED_ROWS,
-    TOOL_NAME,
     TOTALS,
-    armByKey,
     blankInputs,
     fmtComputed,
     fmtInput,
@@ -1236,44 +1229,71 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   let state: ModelInputs = blankInputs();
 
-  // The bar sticks under the nav, and the nav is taller when its links wrap
-  // on a narrow screen. Measure it rather than guess.
+  // ---- the steps ----------------------------------------------------------
+
+  const tool = $('tool');
   const nav = document.querySelector<HTMLElement>('header.nav');
   const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
-  function placeBar() {
-    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
-  }
-  placeBar();
-  window.addEventListener('resize', placeBar);
-
-  // ---- tabs ---------------------------------------------------------------
-
-  const tabModel = $('tab-model');
-  const tabExample = $('tab-example');
-  const panelModel = $('panel-model');
-  const panelExample = $('panel-example');
-
-  function showTab(which: 'model' | 'example') {
-    const model = which === 'model';
-    tabModel.setAttribute('aria-selected', String(model));
-    tabExample.setAttribute('aria-selected', String(!model));
-    panelModel.hidden = !model;
-    panelExample.hidden = model;
-    placeBar();
-  }
-  tabModel.addEventListener('click', () => showTab('model'));
-  tabExample.addEventListener('click', () => showTab('example'));
-  $('to-model').addEventListener('click', (ev) => {
-    ev.preventDefault();
-    showTab('model');
-    $('tabs-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-  showTab('model');
-
-  // ---- inputs -------------------------------------------------------------
+  const stepEls = [...tool.querySelectorAll<HTMLElement>('.step')];
+  const STEP_COUNT = stepEls.length;
+  const LAST = STEP_COUNT - 1;
+  let step = 0;
+  tool.classList.add('js');
 
   const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('.grid input[type="number"]'));
   const currencyInput = $('in-currency') as HTMLInputElement;
+
+  // Which lines live in which step. Step 0 and the last have none.
+  const stepInputs = stepEls.map((el) => [...el.querySelectorAll<HTMLInputElement>('input[type="number"]')]);
+
+  function stepLabel(i: number) {
+    if (i === 0) return 'Start';
+    if (i === LAST) return 'Result';
+    return `${SECTIONS[i - 1].num} ${SECTIONS[i - 1].name}`;
+  }
+
+  function goTo(i: number, move = true) {
+    step = Math.max(0, Math.min(LAST, i));
+    tool.dataset.step = String(step);
+    stepEls.forEach((el, k) => el.classList.toggle('current', k === step));
+    updateProgress();
+    if (!move) return;
+    // Scroll so the tool's top sits just under the nav. The score bar is the
+    // tool's first child, so the step heading lands directly beneath it.
+    const navH = nav?.getBoundingClientRect().height ?? 76;
+    const top = tool.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - 8), behavior: 'smooth' });
+    stepEls[step].querySelector<HTMLElement>('.step-title')?.focus({ preventScroll: true });
+  }
+
+  const valueOf = (el: HTMLInputElement): Cell =>
+    el.dataset.scope === 'shared' ? state.shared[el.dataset.key as SharedKey] : state.arms[el.dataset.arm as ArmKey][el.dataset.key as ArmRowKey];
+
+  function updateProgress() {
+    const filled = inputs.filter((e) => valueOf(e) !== null).length;
+    $('p-fill').style.width = `${(filled / INPUT_COUNT) * 100}%`;
+    $('p-track').setAttribute('aria-valuenow', String(filled));
+    $('p-text').textContent = `Step ${step + 1} of ${STEP_COUNT} · ${stepLabel(step)} · ${filled} of ${INPUT_COUNT} lines set`;
+    document.querySelectorAll<HTMLButtonElement>('.p-step').forEach((b) => {
+      const i = Number(b.dataset.go);
+      if (i === step) b.setAttribute('aria-current', 'step');
+      else b.removeAttribute('aria-current');
+      // A section step is "done" once every line in it is set.
+      const qs = stepInputs[i];
+      b.classList.toggle('done', qs.length > 0 && qs.every((e) => valueOf(e) !== null));
+    });
+    stepInputs.forEach((qs, i) => {
+      if (!qs.length) return;
+      const note = document.getElementById(`stepnote-${SECTIONS[i - 1].num}`);
+      if (note) note.textContent = `${qs.filter((e) => valueOf(e) !== null).length} of ${qs.length} lines set in this step`;
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) => {
+    b.addEventListener('click', () => goTo(Number(b.dataset.go)));
+  });
+
+  // ---- inputs -------------------------------------------------------------
 
   function parseCell(raw: string): Cell {
     const t = raw.trim();
@@ -1282,29 +1302,27 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     return Number.isFinite(n) && n >= 0 ? n : null;
   }
 
-  /** Copy the state into the fields, for New model and Load example. */
+  /** The state from the fields, for the first paint and a back-navigation restore. */
+  function readInputs() {
+    state = blankInputs();
+    for (const el of inputs) {
+      const v = parseCell(el.value);
+      if (el.dataset.scope === 'shared') state.shared[el.dataset.key as SharedKey] = v;
+      else state.arms[el.dataset.arm as ArmKey][el.dataset.key as ArmRowKey] = v;
+    }
+    state.currency = currencyInput.value.slice(0, 12);
+  }
+
+  /** The fields from the state, for New model and the loaded example. */
   function writeInputs() {
     currencyInput.value = state.currency;
     for (const el of inputs) {
-      const key = el.dataset.key!;
-      const v = el.dataset.scope === 'shared' ? state.shared[key as SharedKey] : state.arms[el.dataset.arm as ArmKey][key as ArmRowKey];
+      const v = valueOf(el);
       el.value = v === null ? '' : String(v);
     }
   }
 
-  for (const el of inputs) {
-    el.addEventListener('input', () => {
-      const v = parseCell(el.value);
-      const key = el.dataset.key!;
-      if (el.dataset.scope === 'shared') state.shared[key as SharedKey] = v;
-      else state.arms[el.dataset.arm as ArmKey][key as ArmRowKey] = v;
-      update();
-    });
-  }
-  currencyInput.addEventListener('input', () => {
-    state.currency = currencyInput.value.slice(0, 12);
-    update();
-  });
+  const isExample = () => JSON.stringify(state) === JSON.stringify(EXAMPLE);
 
   // ---- render -------------------------------------------------------------
 
@@ -1322,15 +1340,14 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     o.classList.toggle('has', text !== '—');
   }
 
-  const isExample = () => JSON.stringify(state) === JSON.stringify(EXAMPLE);
-
   function update() {
     const r = readModel(state);
     const cur = state.currency;
+    const example = isExample();
 
-    // Fields: a filled one is sun.
+    // Fields: a filled one is sun. Units follow the currency label.
     for (const e of inputs) e.classList.toggle('set', e.value.trim() !== '');
-    // Units follow the currency label.
+    currencyInput.classList.toggle('set', currencyInput.value.trim() !== '');
     document.querySelectorAll<HTMLElement>('.gunit[data-kind]').forEach((u) => {
       u.textContent = unitOf(u.dataset.kind as RowKind, cur);
     });
@@ -1350,16 +1367,18 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     const lead = r.leader ? r.arms.find((a) => a.key === r.leader)! : null;
     const left = r.totalInputs - r.filled;
     $('lead-cost').textContent = lead ? fmtMoney(lead.values.perOutcome, cur, true) : '—';
-    $('lead-of').textContent = lead ? ` per acceptable outcome, ${lead.short}` : ' per acceptable outcome';
+    $('lead-of').textContent = lead ? `per acceptable outcome, ${lead.short}` : 'per acceptable outcome';
     let bandKey = 'none';
     let bandText = 'Not started';
     let noteText = `${INPUT_COUNT} lines to fill. A blank is unknown, not zero.`;
     if (r.outcome) {
       bandKey = r.outcome.key;
       bandText = r.outcome.name;
-      noteText = lead
-        ? `Leading option: ${lead.name}. Net ${fmtMoney(lead.values.net, cur)} against doing it by hand over ${fmtInput(state.shared.months)} months.`
-        : 'No option saves money against the manual baseline over the period.';
+      noteText = example
+        ? `${EXAMPLE_NOTICE.lead} Change any figure to make the model yours.`
+        : lead
+          ? `Leading option: ${lead.name}. Net ${fmtMoney(lead.values.net, cur)} against doing it by hand over ${fmtInput(state.shared.months)} months.`
+          : 'No option saves money against the manual baseline over the period.';
     } else if (r.filled > 0) {
       bandText = 'In progress';
       noteText = `${left} ${left === 1 ? 'line' : 'lines'} to fill. Each total appears once the lines that feed it are filled.`;
@@ -1367,17 +1386,17 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     $('verdict').dataset.b = bandKey;
     $('band').textContent = bandText;
     $('note').textContent = noteText;
-    $('progress').textContent = `${r.filled}/${INPUT_COUNT} lines set`;
     for (const a of r.arms) {
       $(`pill-v-${a.key}`).textContent = fmtMoney(a.values.perOutcome, cur, true);
       $(`pill-${a.key}`).classList.toggle('is-lead', a.key === r.leader);
     }
 
-    // The result card.
+    // The result step.
     const card = $('resultcard');
     card.dataset.b = bandKey;
     $('r-band').textContent = bandText;
     $('r-lead').textContent = lead ? `Leading option: ${lead.name} · ${fmtMoney(lead.values.perOutcome, cur, true)} per acceptable outcome` : '';
+    $('r-example').hidden = !example;
     $('r-what').textContent = r.outcome
       ? r.outcome.what
       : `Fill every one of the ${INPUT_COUNT} lines to read the outcome. Until then this shows each total as soon as the lines that feed it are filled.`;
@@ -1414,8 +1433,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       }
     }
 
-    const fix = $('r-fix');
-    fix.hidden = r.checks.length === 0;
+    $('r-fix').hidden = r.checks.length === 0;
     $('r-fixlist').replaceChildren(
       ...r.checks.map((c, i) => {
         const li = el('li');
@@ -1428,108 +1446,131 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     for (const o of OUTCOMES) {
       document.getElementById(`cut-${o.key}`)?.classList.toggle('active', r.outcome?.key === o.key);
     }
+
+    updateProgress();
   }
 
   // ---- controls -----------------------------------------------------------
 
-  $('blank').addEventListener('click', () => {
+  // Scroll a line to sit just under the sticky header and put focus in it.
+  function revealInput(target: HTMLInputElement) {
+    const navH = nav?.getBoundingClientRect().height ?? 76;
+    const barH = bar?.getBoundingClientRect().height ?? 0;
+    const row = target.closest<HTMLElement>('.grow') ?? target;
+    const top = row.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - barH - 12), behavior: 'smooth' });
+    target.focus({ preventScroll: true });
+  }
+
+  // After a blank line is filled, move on: to the next blank line in this
+  // step, else to the next step. A changed or cleared line stays put, so
+  // revising a figure does not throw the page around. The pause lets the sun
+  // fill land before the move, so the entry is seen to have taken.
+  function advanceFrom(target: HTMLInputElement) {
+    const qs = stepInputs[step];
+    const at = qs.indexOf(target);
+    if (at < 0) return;
+    const after = qs.slice(at + 1).concat(qs.slice(0, at));
+    const next = after.find((e) => valueOf(e) === null);
+    window.setTimeout(() => {
+      if (next) revealInput(next);
+      else if (step < LAST) goTo(step + 1);
+    }, 350);
+  }
+
+  for (const target of inputs) {
+    let blankOnFocus = false;
+    target.addEventListener('focus', () => {
+      blankOnFocus = valueOf(target) === null;
+    });
+    target.addEventListener('input', () => {
+      const v = parseCell(target.value);
+      if (target.dataset.scope === 'shared') state.shared[target.dataset.key as SharedKey] = v;
+      else state.arms[target.dataset.arm as ArmKey][target.dataset.key as ArmRowKey] = v;
+      update();
+    });
+    // `change` fires when the value is committed: on Enter or on leaving the field.
+    target.addEventListener('change', () => {
+      if (blankOnFocus && valueOf(target) !== null) {
+        blankOnFocus = false;
+        advanceFrom(target);
+      }
+    });
+    target.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      if (blankOnFocus && valueOf(target) !== null) {
+        blankOnFocus = false;
+        advanceFrom(target);
+        return;
+      }
+      // A revised line: Enter just moves to the next line in the step.
+      const qs = stepInputs[step];
+      const at = qs.indexOf(target);
+      const next = qs[at + 1];
+      if (next) next.focus();
+    });
+  }
+  currencyInput.addEventListener('input', () => {
+    state.currency = currencyInput.value.slice(0, 12);
+    update();
+  });
+
+  function startBlank() {
     state = blankInputs();
     writeInputs();
     update();
-    $('section-1').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  function loadExample() {
-    state = JSON.parse(JSON.stringify(EXAMPLE)) as ModelInputs;
-    writeInputs();
-    update();
-    showTab('model');
-    $('section-1').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    goTo(1);
   }
-  $('load-example').addEventListener('click', loadExample);
-  $('load-example-2').addEventListener('click', loadExample);
+  $('blank').addEventListener('click', startBlank);
+  $('blank-start').addEventListener('click', startBlank);
+  $('blank-start-2').addEventListener('click', startBlank);
 
-  $('print').addEventListener('click', () => window.print());
-
-  function modelText(): string {
-    const r = readModel(state);
-    const cur = state.currency;
-    const lines: string[] = [`${TOOL_NAME} — learning.thelivingcraft.ai/resources/run-cost-model`, ''];
-    if (isExample()) lines.push('Reference example: an ordering agent across 40 sites, unchanged.', '');
-    lines.push(`Currency: ${cur || '(not set)'}`, '');
-    const cols = (cells: string[]) => cells.map((c, i) => (i === 0 ? c.padEnd(44) : c.padStart(16))).join('');
-    for (const s of SECTIONS) {
-      lines.push(`${s.num}  ${s.name}`);
-      if (s.scope === 'arm') lines.push(cols(['', ...ARMS.map((a) => a.short)]));
-      for (const row of s.inputs) {
-        const label = `${row.forgotten ? '* ' : ''}${row.label} (${unitOf(row.kind, cur)})`;
-        if (s.scope === 'shared') lines.push(cols([label, fmtInput(state.shared[row.key as SharedKey])]));
-        else lines.push(cols([label, ...ARMS.map((a) => fmtInput(state.arms[a.key][row.key as ArmRowKey]))]));
-      }
-      for (const row of s.computed) {
-        if (s.scope === 'shared') lines.push(cols([`= ${row.label}`, fmtComputed(row, r.shared.values[row.key as keyof typeof r.shared.values], cur)]));
-        else lines.push(cols([`= ${row.label}`, ...r.arms.map((a) => fmtComputed(row, a.values[row.key as keyof typeof a.values], cur, a.breakEvenState))]));
-      }
-      lines.push('');
-    }
-    lines.push('Totals', cols(['', ...ARMS.map((a) => a.short)]));
-    for (const row of TOTALS) {
-      lines.push(cols([row.label, ...r.arms.map((a) => fmtComputed(row, a.values[row.key as keyof typeof a.values], cur, a.breakEvenState))]));
-    }
-    lines.push('');
-    if (r.outcome) {
-      lines.push(`Outcome: ${r.outcome.name}`);
-      if (r.leader) lines.push(`Leading option: ${armByKey(r.leader).name}`);
-      lines.push(r.outcome.what);
-      for (const f of r.flags) lines.push(`Flag: ${f.text}`);
-      if (r.checks.length) lines.push('', 'Check these assumptions first:');
-      r.checks.forEach((c, i) => lines.push(`${pad(i + 1)}  ${c.text}`));
-    } else {
-      lines.push(`Incomplete: ${r.totalInputs - r.filled} lines blank. A blank is unknown, not zero.`);
-    }
-    lines.push('', '* = one of the nine lines teams leave out');
-    return lines.join('\n');
+  // The score bar sticks under the nav, and the nav is taller when its links
+  // wrap on a narrow screen. Measure it rather than guess.
+  function placeBar() {
+    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
   }
-
-  async function copyModel() {
-    const status = $('copied');
-    try {
-      await navigator.clipboard.writeText(modelText());
-      status.textContent = 'Model copied';
-    } catch {
-      status.textContent = 'Copy blocked by the browser. Use Print instead.';
-    }
-    setTimeout(() => (status.textContent = ''), 4000);
-  }
-  $('copy').addEventListener('click', copyModel);
-  $('copy2').addEventListener('click', () => {
-    copyModel();
-    $('copied').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  placeBar();
+  window.addEventListener('resize', placeBar);
 
   // ---- the PDF ------------------------------------------------------------
 
   const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
   const form = document.getElementById('pdf-form') as HTMLFormElement;
   const pdfStatus = $('pdf-status');
+  const pdfChecks = $('pdf-checks');
   const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
   const cancel = $('pdf-cancel');
 
   function openPdf() {
     pdfStatus.textContent = '';
     pdfStatus.className = 'pdf-status';
+    pdfChecks.hidden = true;
+    pdfChecks.replaceChildren();
     submit.disabled = false;
     cancel.textContent = 'Cancel';
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
   }
   $('pdf').addEventListener('click', openPdf);
-  $('pdf2').addEventListener('click', openPdf);
   cancel.addEventListener('click', () => dialog.close());
 
   function say(text: string, kind: 'ok' | 'err' | '') {
     pdfStatus.textContent = text;
     pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
+  }
+
+  function showChecks(checks: { name: string; ok: boolean }[]) {
+    if (!Array.isArray(checks) || !checks.length) return;
+    pdfChecks.replaceChildren(
+      ...checks.map((c) => {
+        const li = el('li', c.ok ? undefined : 'fail');
+        li.append(el('b', undefined, c.ok ? 'ok' : 'failed'), document.createTextNode(c.name));
+        return li;
+      }),
+    );
+    pdfChecks.hidden = false;
   }
 
   function download(base64: string, filename: string) {
@@ -1557,7 +1598,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     }
 
     submit.disabled = true;
-    say('Building the PDF.', '');
+    say('Checking and building the PDF.', '');
 
     // One key per attempt. A retry after a network error is a new attempt; a
     // repeat click while this one runs is stopped by the disabled button.
@@ -1586,28 +1627,29 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
       if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
         const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
-        say(errs || body.error || 'We could not build the PDF just now. Use Print on the page instead.', 'err');
+        say(errs || body.error || 'We could not build the PDF just now. Try again in a moment.', 'err');
+        showChecks(body.checks);
         submit.disabled = false;
         return;
       }
 
       download(body.pdf, body.filename || 'run-cost-model.pdf');
       cancel.textContent = 'Close';
-      say(`Your PDF is downloading. ${(body.saved ? body.delivery : body.note) ?? ''}`.trim(), 'ok');
+
+      const checks = Array.isArray(body.checks) ? body.checks : [];
+      const passed = checks.filter((c: { ok: boolean }) => c.ok).length;
+      const checkLine = checks.length ? ` Checked before download: ${passed} of ${checks.length} checks passed.` : '';
+      say(`Your PDF is downloading.${checkLine} ${body.saved ? (body.delivery ?? '') : (body.note ?? '')}`.trim(), 'ok');
+      showChecks(checks);
     } catch {
-      say('The request did not reach the server. Check the connection and try again, or use Print.', 'err');
+      say('The request did not reach the server. Check the connection and try again.', 'err');
       submit.disabled = false;
     }
   });
 
-  // Nothing is stored between visits, so the fields start blank; the browser
-  // may restore typed values on a back-navigation, and this reads them.
-  for (const e of inputs) {
-    const v = parseCell(e.value);
-    if (v === null) continue;
-    if (e.dataset.scope === 'shared') state.shared[e.dataset.key as SharedKey] = v;
-    else state.arms[e.dataset.arm as ArmKey][e.dataset.key as ArmRowKey] = v;
-  }
-  state.currency = currencyInput.value.slice(0, 12);
+  // The fields arrive filled with the reference example from the server, and
+  // a back-navigation may restore typed values. Read them rather than assume.
+  readInputs();
   update();
+  goTo(0, false);
 </script>

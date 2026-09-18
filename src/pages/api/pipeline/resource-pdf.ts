@@ -52,7 +52,7 @@ import { handleResourceRequest } from '../../../lib/pipeline/resource-request';
 import { resolveResource } from '../../../lib/pipeline/resources';
 import { parseScores, renderPocScreenPdf, verifyPocScreenPdf, type PdfCheck } from '../../../lib/resources/poc-screen-pdf';
 import { parseSheet, renderAuthorityReviewPdf } from '../../../lib/resources/authority-review-pdf';
-import { parseInputs, renderRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
+import { parseInputs, renderRunCostModelPdf, verifyRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
 import type { SheetRow } from '../../../data/authority-review';
 import type { ModelInputs } from '../../../data/run-cost-model';
 
@@ -114,6 +114,8 @@ const RENDERERS: Record<string, Renderer<any>> = {
       const inputs = parseInputs(body.inputs);
       return inputs ? { inputs, isExample: body.isExample === true } : null;
     },
+    verify: (payload: { inputs: ModelInputs; isExample: boolean }, name) =>
+      verifyRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
     render: (payload: { inputs: ModelInputs; isExample: boolean }, name) =>
       renderRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
     filename: 'run-cost-model.pdf',
