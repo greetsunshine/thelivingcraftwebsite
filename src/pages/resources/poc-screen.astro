@@ -1081,6 +1081,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   // ---- the steps ----------------------------------------------------------
 
   const tool = $('tool');
+  const nav = document.querySelector<HTMLElement>('header.nav');
+  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
   const stepEls = [...tool.querySelectorAll<HTMLElement>('.step')];
   const STEP_COUNT = stepEls.length;
   const LAST = STEP_COUNT - 1;
@@ -1251,13 +1253,43 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   // ---- controls -----------------------------------------------------------
 
+  // Scroll a question to sit just under the sticky header, and put focus on
+  // its first anchor so a keyboard user lands there too.
+  function revealQuestion(i: number) {
+    const row = document.getElementById(`row-${i}`);
+    if (!row) return;
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const barH = bar?.getBoundingClientRect().height ?? 0;
+    const top = row.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - barH - 12), behavior: 'smooth' });
+    row.querySelector<HTMLElement>('.anchor')?.focus({ preventScroll: true });
+  }
+
+  // After a fresh answer, move on: to the next unanswered question in this
+  // step, else to the next step. A changed answer stays put, so revising a
+  // score does not throw the page around. The pause lets the sun fill land
+  // before the move, so the click is seen to have taken.
+  function advanceFrom(q: number) {
+    const qs = stepQuestions[step];
+    const at = qs.indexOf(q);
+    if (at < 0) return;
+    const after = qs.slice(at + 1).concat(qs.slice(0, at));
+    const next = after.find((i) => state[i] === null);
+    window.setTimeout(() => {
+      if (next !== undefined) revealQuestion(next);
+      else if (step < LAST) goTo(step + 1);
+    }, 350);
+  }
+
   document.querySelectorAll<HTMLButtonElement>('.anchor').forEach((b) => {
     b.addEventListener('click', () => {
       const q = Number(b.dataset.q);
       const v = Number(b.dataset.v);
+      const wasBlank = state[q] === null;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       state[q] = state[q] === v ? null : v;
       update();
+      if (wasBlank && state[q] !== null) advanceFrom(q);
     });
   });
 
@@ -1275,8 +1307,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   // The score bar sticks under the nav, and the nav is taller when its links
   // wrap on a narrow screen. Measure it rather than guess.
-  const nav = document.querySelector<HTMLElement>('header.nav');
-  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
   function placeBar() {
     if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
   }
