@@ -23,7 +23,8 @@
     "check:campaign": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/check-campaign.ts",
     "staff": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/add-staff.ts",
     "acceptance": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/acceptance.ts",
-    "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts"
+    "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts",
+    "build:kit": "node scripts/build-memory-kit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
@@ -32,7 +33,8 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "astro": "^6.1.4",
-    "marked": "^18.0.11"
+    "marked": "^18.0.11",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

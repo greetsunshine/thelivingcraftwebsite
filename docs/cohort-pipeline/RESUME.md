@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 16 September 2026
+**Last updated:** 17 September 2026
 **Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -63,6 +63,52 @@ employment context remains without implying employer endorsement.
 
 The same cleanup was applied to `/caio` and `/assessment`: the unapproved stat band and
 product-scale claims were removed rather than inferred from older material.
+
+---
+
+## Three tools now have an email-gated PDF — 17 September
+
+`/resources/poc-screen` and `/resources/agent-authority-review` were both rebuilt on
+Sunil's twelve-point list (plain English, a purpose block, a bar that stays on screen, a
+result summary, *New assessment*, reference examples, aligned layout). The authority
+review went further than a rewrite: it was a table to print and is now a sheet the
+visitor types into, with the reading rules as `readRow()` / `readSheet()` in
+`src/data/authority-review.ts`. The one piece with a backend on either page is the PDF:
+**Get the PDF** opens a name-and-email dialog, posts to `/api/pipeline/resource-pdf`, and
+the server builds the copy with `pdf-lib` and returns it in the JSON as base64. Each tool
+has its own renderer in that route's map (`lib/resources/poc-screen-pdf.ts`,
+`lib/resources/authority-review-pdf.ts`) and its own held delivery wording. Three things
+to know before touching it:
+
+- **The page stays open.** Score, copy, print: nothing asks for anything. Only the PDF does.
+  That keeps it inside the V4 addendum's "optional email request" and off the "gated
+  download" path the addendum forbids.
+- **The request is the same request.** `lib/pipeline/resource-request.ts` is the one
+  sequence both `/api/pipeline/resource` and `/api/pipeline/resource-pdf` run. Do not add a
+  check to one route and not the other; add it to the function.
+- **A failed save still hands over the PDF**, with `saved: false` and the reason in the
+  response. The schema is not applied on production, so today every PDF request takes that
+  path: the visitor gets the file, nothing is recorded, and the dialog says so in one
+  sentence. Once the schema is run, the same request records a person, a resource request
+  and a queued (held) delivery with the `resource-poc-screen`,
+  `resource-agent-authority-review` or `resource-run-cost-model` wording.
+
+The scores, the authority review's steps and the cost model's figures travel to the server
+for the file and are not stored anywhere.
+
+**The Run-Cost Model joined them last.** `/resources/run-cost-model` replaces the Excel
+download as the resource's address, built in the POC tool's shape with two tabs (*Your
+model*, *Reference example*). Three more things to know:
+
+- **`src/data/run-cost-model.ts` is the model.** The formulas are the workbook's, row for
+  row, and were checked against the sheet's computed values. If a formula changes there,
+  change `public/downloads/agent-run-cost-model.xlsx` in the same commit; the workbook is
+  still linked from the foot of the page.
+- **A blank is unknown, not zero.** The opposite of the POC tool. A total stays blank until
+  every line that feeds it is set, and the outcome reads only at 83/83. Do not add a
+  default or a fallback to 0: "this system never retries" is a claim the tool must not make.
+- **The three PDF renderers share `lib/resources/pdf-writer.ts`.** It was two identical
+  copies until today. A fourth renderer imports it; it does not copy it.
 
 ---
 
@@ -327,6 +373,32 @@ given `#book` now does the job from our own database. If the answer is no, this 
 
 **Still owed:** the actual Google appointment schedule URL/embed from the calendar owner, followed
 by desktop and mobile popup, close, direct-link and completed test-booking checks in staging.
+
+## Resource 05, the Agent Memory Audit Kit — 17 September, on a branch
+
+Branch `resource/agent-memory-audit-kit`, promised in LinkedIn post "Agentic system design ·
+Episode 6". Page at `/resources/agent-memory-audit-kit`; kit files in
+`kits/agent-memory-audit-kit/`; downloads committed at `public/downloads/agent-memory-audit-kit.{pdf,zip}`.
+
+Three things a later session would otherwise rediscover:
+- **The PDF is printed from the page** by `npm run build:kit` (headless Chrome over the
+  DevTools protocol, no Playwright). Edit the page or the data module, run the script, commit
+  the three files under `public/downloads/`. Never edit the PDF or the ZIP by hand.
+- **The Ask widget owns the class `.ask`.** A print rule hiding `.ask` also hid every
+  outcome pill named `ask`. Pills are `oc-*`; the widget is hidden by `#ask`.
+- **Four numbers are promises:** 12 questions, 7 tests (one titled "Correction bleed"), 4
+  outcomes. The page throws at render if the data module breaks any of them.
+
+The LinkedIn DM link, once merged: `https://learning.thelivingcraft.ai/resources/agent-memory-audit-kit?utm_source=linkedin&utm_medium=dm&utm_campaign=ep6-memory`.
+
+## Every tool now says who built it — 17 September
+
+`TOOL_CREDIT` in `src/data/resources.ts` ("Built by Sunil Mathew, co-authored with
+Claude") is rendered by `ResourceCredit.astro` in every tool's hero, in the
+`ResourcesLayout` footer, on `/resources`, in the three worksheets' byline, and inside
+the memory kit's PDF cover and footer, README and both licences. A new tool page gets
+the footer line for free and should add `<ResourceCredit />` under its counts line.
+Sunil's standing request; do not ship a tool without it.
 
 ## Nothing else is in flight
 

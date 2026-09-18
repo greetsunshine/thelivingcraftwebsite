@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memory-kit"
+version = "1.0.0"
+description = "Agent Memory Audit Kit: the MemoryStore protocol, a naive store, a reference store, and the seven failure tests."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+# Built by Sunil Mathew, co-authored with Claude (Anthropic).
+authors = [{ name = "Sunil Mathew, The Living Craft" }]
+# Two dependencies, on purpose. The tests must run on a laptop with nothing else installed.
+dependencies = ["pytest>=8", "jsonschema>=4.18"]
+
+[tool.setuptools]
+packages = ["memory_kit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

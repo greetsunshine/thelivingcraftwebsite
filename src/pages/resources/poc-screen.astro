@@ -1,38 +1,49 @@
 ---
-// /resources/poc-screen — The POC Screen, self-hosted.
+// /resources/poc-screen — The POC Selection Tool, self-hosted.
 //
 // This was a published Artifact. It now lives here because an Artifact is
 // private until it is shared, and a resource on a public page whose link only
 // opens for its author is worse than no resource. Self-hosting also makes the
 // twelve questions crawlable, which is the point of publishing them at all.
 //
-// State is a closure and dies with the tab. No localStorage, no sessionStorage,
-// nothing posted anywhere — the same rule the rest of the public site holds, and
-// here it is also the honest answer to "where does my score go?". Nowhere.
+// Scores are a closure and die with the tab. No localStorage, no sessionStorage.
+// The one thing that leaves the browser is the PDF request: name, email and
+// the twelve scores go to /api/pipeline/resource-pdf, which records the person
+// (the V4 addendum's "optional email request"), builds the PDF from the same
+// data module this page renders from, and hands it back. The scores are used
+// for the file and not stored; the dialog says so.
+//
+// Every string here comes from src/data/poc-screen.ts. The page's script
+// imports that module too (Vite bundles it), so the live score bar, the result
+// summary, the copied scorecard and the PDF all read one rubric.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
+  TOOL_NAME,
+  PURPOSE,
+  HOW_TO_USE,
+  HOW_TO_RUN,
   SECTIONS,
-  EXAMPLE,
   MAX_SCORE,
   QUESTION_COUNT,
-  HOW_TO_RUN,
   CUT_LINES,
   MOVES,
 } from '../../data/poc-screen';
+import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
 
 const meta = publishedResources.find((r) => r.id === 'poc-screen')!;
 
-const title = 'The POC Screen — can this agentic proof of concept reach production? · The Living Craft';
+const title = `${TOOL_NAME} — can this agent proof of concept reach production? · The Living Craft`;
 const description =
-  'A scored checklist for deciding which agentic proof of concept can reach production, asked before you build. Twelve questions across four sections, each with the definition of what earns a 0, a 1 and a 2. One hard gate on blast radius.';
+  'A scored checklist for deciding whether an agent proof of concept can reach production, used before you build. Twelve questions in four sections, each with the definition of what earns a 0, a 1 and a 2. One hard gate on failure containment. The score and the outcome update as you answer.';
 
 const schema = [
   {
     '@type': 'HowTo',
     '@id': `${SITE_ORIGIN}/resources/poc-screen#howto`,
-    name: 'The POC Screen',
+    name: TOOL_NAME,
     description,
     url: `${SITE_ORIGIN}/resources/poc-screen`,
     author: { '@id': `${SITE_ORIGIN}/#person` },
@@ -57,8 +68,12 @@ const schema = [
 let n = 0;
 const rows = SECTIONS.map((s) => ({
   ...s,
+  max: s.items.length * 2,
   items: s.items.map((it) => ({ ...it, i: n++ })),
 }));
+
+const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
+const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 ---
 
 <ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema}>
@@ -66,54 +81,48 @@ const rows = SECTIONS.map((s) => ({
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
       <div class="eyebrow">
-        <a href="/resources" class="crumb">Resources</a> <span class="num">/ agentic system design 01</span>
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number}</span>
       </div>
-      <h1>Can this proof of concept <em>reach production</em>?</h1>
+      <h1>{TOOL_NAME}</h1>
       <p class="lead">
-        Most agentic proofs of concept get judged after the demo goes well, which is the one moment
-        nobody is able to judge them. Twelve questions, scored before you build. Each one says what
-        earns a 0, a 1 and a 2, so two people scoring the same thing land in the same place.
+        Score an agent proof of concept <em>before</em> you build it, and find out whether it can
+        reach production. Twelve questions. Each one says what earns a 0, a 1 and a 2, so two
+        people scoring the same idea land on the same number.
       </p>
       <p class="hero-note mono">
-        {QUESTION_COUNT} questions · {SECTIONS.length} sections · max {MAX_SCORE} · one hard gate
+        {QUESTION_COUNT} questions · {SECTIONS.length} sections · maximum {MAX_SCORE} · one hard gate
       </p>
+      <ResourceCredit />
     </div>
   </section>
 
-  <!-- Controls + verdict -->
-  <section id="score">
+  <!-- Purpose and how to use -->
+  <section id="about">
     <div class="wrap">
-      <div class="controls" role="group" aria-label="Scorecard controls">
-        <button class="btn btn-ghost" id="blank" type="button">Start blank</button>
-        <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
-        <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
-        <button class="btn btn-ghost" id="print" type="button">Print</button>
-        <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
-      </div>
-
-      {/* The worked example, handed to the script as data rather than inlined
-          into it — keeps the scores in the data module as the single source. */}
-      <script type="application/json" id="example-data" set:html={JSON.stringify(EXAMPLE)} />
-
-      <div class="verdict" id="verdict" data-b="stop">
-        <div class="vscore">
-          <span id="total">0</span><span class="of">/{MAX_SCORE}</span>
+      <div class="about">
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+          <ul class="plain">
+            {PURPOSE.map((p) => <li>{p}</li>)}
+          </ul>
         </div>
-        <div class="vtext">
-          <span class="band" id="band">Incomplete</span>
-          <span class="vnote" id="note">{QUESTION_COUNT} questions unscored. A blank is a 0.</span>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">02</span> How to use it</span>
+          <ol class="steps">
+            {HOW_TO_USE.map((p) => <li>{p}</li>)}
+          </ol>
         </div>
-        <div class="vprog mono" id="progress">0/{QUESTION_COUNT} scored</div>
       </div>
     </div>
   </section>
 
-  <!-- How to run it -->
-  <section id="howto">
+  <!-- Scoring rules -->
+  <section id="rules">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">00</span> How to run it</span>
-        <h2>The rules that decide whether this is useful or <em>theatre</em>.</h2>
+        <span class="eyebrow"><span class="num">03</span> Rules for scoring in a room</span>
+        <h2>Five rules that decide whether this is useful or <em>theatre</em>.</h2>
       </div>
       <ol class="howto">
         {HOW_TO_RUN.map((h) => (
@@ -125,54 +134,130 @@ const rows = SECTIONS.map((s) => ({
     </div>
   </section>
 
-  <!-- The twelve -->
-  {rows.map((s, si) => (
-    <section id={`section-${s.letter.toLowerCase()}`} class="qsection">
+  {/* Everything the score bar has to stay above lives inside this one
+      element. A sticky element only sticks within its parent, so the bar's
+      parent has to be as tall as the questions and the result together. */}
+  <div class="scoring" id="scoring">
+    <div class="scorebar-wrap">
       <div class="wrap">
-        <div class="shead">
-          <span class="sletter">{s.letter}</span>
-          <h2 class="sname">{s.name}</h2>
-          {s.gate && <span class="sgate">Hard gate</span>}
-        </div>
-        <p class="sblurb">{s.blurb}</p>
-
-        {s.items.map((it) => (
-          <div class={`item${s.gate ? ' gate' : ''}`} id={`row-${it.i}`} data-i={it.i}>
-            <div class="qhead">
-              <span class="qn mono">{String(it.i + 1).padStart(2, '0')}</span>
-              <span class="q">{it.q}</span>
-            </div>
-            <p class="why">{it.why}</p>
-            <div class="anchors" role="group" aria-label={`Score for question ${it.i + 1}: ${it.short}`}>
-              {it.a.map((text, v) => (
-                <button
-                  type="button"
-                  class="anchor"
-                  id={`q${it.i}v${v}`}
-                  data-q={it.i}
-                  data-v={v}
-                  aria-pressed="false"
-                >
-                  <span class="av mono">{v}</span>
-                  <span class="at">{text}</span>
-                </button>
-              ))}
-            </div>
+        <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
+          <div class="sb-score">
+            <span id="total">0</span><span class="of">/{MAX_SCORE}</span>
           </div>
-        ))}
+          <div class="sb-text">
+            <span class="band" id="band">Not started</span>
+            <span class="sb-note" id="note">{QUESTION_COUNT} questions to answer. A blank counts as 0.</span>
+          </div>
+          <div class="sb-secs mono" aria-label="Score by section">
+            {rows.map((s) => (
+              <span class="sb-sec" data-sec={s.letter} title={s.name}>
+                {s.letter} <b id={`sec-${s.letter}`}>0</b>/{s.max}
+              </span>
+            ))}
+          </div>
+          <div class="sb-prog mono" id="progress">0/{QUESTION_COUNT} answered</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="score">
+      <div class="wrap">
+        <div class="controls" role="group" aria-label="Assessment controls">
+          <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
+          <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
+          <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
+          <button class="btn btn-ghost" id="print" type="button">Print</button>
+          <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
+          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+        </div>
       </div>
     </section>
-  ))}
 
-  <!-- Cut lines -->
+    <!-- The twelve -->
+    {rows.map((s) => (
+      <section id={`section-${s.letter.toLowerCase()}`} class="qsection">
+        <div class="wrap">
+          <div class="shead">
+            <span class="sletter">{s.letter}</span>
+            <div class="stitle">
+              <h2 class="sname">{s.name}</h2>
+              <p class="squestion">{s.question}</p>
+            </div>
+            {s.gate && <span class="sgate">Hard gate</span>}
+            <span class="ssub mono" aria-label={`Section ${s.letter} score`}>
+              <b id={`secsub-${s.letter}`}>0</b>/{s.max}
+            </span>
+          </div>
+          <p class="sblurb">{s.blurb}</p>
+
+          {s.items.map((it) => (
+            <div class={`item${s.gate ? ' gate' : ''}`} id={`row-${it.i}`} data-i={it.i}>
+              <span class="qn mono">{String(it.i + 1).padStart(2, '0')}</span>
+              <div class="qbody">
+                <p class="q">{it.q}</p>
+                <p class="why">{it.why}</p>
+                <div class="anchors" role="group" aria-label={`Score for question ${it.i + 1}: ${it.short}`}>
+                  {it.a.map((text, v) => (
+                    <button
+                      type="button"
+                      class="anchor"
+                      id={`q${it.i}v${v}`}
+                      data-q={it.i}
+                      data-v={v}
+                      aria-pressed="false"
+                    >
+                      <span class="av mono">{v}</span>
+                      <span class="at">{text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <!-- The result -->
+    <section id="result">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">04</span> Your result</span>
+          <h2>The outcome, read against the <em>rubric</em>.</h2>
+        </div>
+        <div class="resultcard" id="resultcard" data-b="none">
+          <div class="r-head">
+            <span class="r-score mono"><b id="r-total">0</b>/{MAX_SCORE}</span>
+            <span class="r-band" id="r-band">Not started</span>
+          </div>
+          <p class="r-what" id="r-what">
+            Answer all {QUESTION_COUNT} questions to read the outcome. Until then this shows the running total, and a blank counts as 0.
+          </p>
+          <div class="r-secs" id="r-secs"></div>
+          <p class="r-gate" id="r-gate" hidden></p>
+          <div class="r-fix" id="r-fix" hidden>
+            <h3>Fix first</h3>
+            <p class="r-fixlead">Lowest scores first, with the move that answers each one before the agent exists.</p>
+            <ol id="r-fixlist"></ol>
+          </div>
+          <div class="r-actions">
+            <button class="btn btn-primary" id="pdf2" type="button">Get the PDF</button>
+            <button class="btn btn-ghost" id="copy2" type="button">Copy the scorecard</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- The rubric -->
   <section id="cuts">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="num">05</span> The cut-lines</span>
+        <span class="eyebrow"><span class="num">05</span> The rubric</span>
         <h2>Agree these <em>before</em> you score, not after.</h2>
       </div>
       <p class="prose-lead">
-        A total that lands one point above a line is a narrow, not a yes.
+        A total one point above a line is a narrow, not a yes. The row that matches your result is highlighted.
       </p>
       {CUT_LINES.map((c) => (
         <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
@@ -189,21 +274,21 @@ const rows = SECTIONS.map((s) => ({
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><span class="num">06</span> Before you build</span>
-        <h2>Four ways to answer most of these <em>without</em> the agent existing.</h2>
+        <h2>Four ways to answer most questions <em>before</em> you build the agent.</h2>
       </div>
       <p class="prose-lead">
-        In ascending order of cost. Every one of them is cheaper than a pilot that fails in front of
-        a customer.
+        Listed from cheapest to most expensive. Each one costs less than a pilot that fails in
+        front of a customer.
       </p>
       {MOVES.map((m) => (
-        <div class="move">
+        <div class="move" id={`move-${m.num}`}>
           <div class="mnum mono">{m.num}</div>
           <div class="mbody">
             <h3 class="mname">{m.name}</h3>
             <p>{m.body}</p>
             <div class="mmeta mono">
-              <span>{m.cost}</span>
-              <span class="ans">{m.answers}</span>
+              <span>Cost: {m.cost}</span>
+              <span class="ans">Answers {m.answers.map((q) => String(q).padStart(2, '0')).join(' · ')}</span>
             </div>
           </div>
         </div>
@@ -216,13 +301,13 @@ const rows = SECTIONS.map((s) => ({
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><span class="num">→</span> Where this comes from</span>
-        <h2>The screen is the easy half. The <em>argument</em> is the other one.</h2>
+        <h2>The score is the easy half. The <em>argument</em> is the other one.</h2>
       </div>
       <div class="prose">
         <p>
-          A blank scorecard is genuinely useful and costs nothing to give away. What it cannot do on
-          its own is settle the rows where two people scored two points apart, which is where the
-          real disagreement about the system lives. That part takes a room.
+          A blank scorecard is useful and costs nothing to give away. What it cannot do on its own
+          is settle the rows where two people scored two points apart. That is where the real
+          disagreement about the system lives, and that part takes a room.
         </p>
       </div>
       <p class="hero-cta">
@@ -232,75 +317,101 @@ const rows = SECTIONS.map((s) => ({
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
+
+  {/* The PDF request. A native dialog: focus is trapped, Escape closes it,
+      and nothing else on the page needs a script to make that true. */}
+  <dialog class="pdf-dialog" id="pdf-dialog" aria-labelledby="pdf-title">
+    <form method="dialog" id="pdf-form" novalidate>
+      <span class="eyebrow"><span class="num">PDF</span> Your scored copy</span>
+      <h2 id="pdf-title">Get the PDF</h2>
+      <p class="pdf-lead">
+        The PDF carries your twelve answers, the score, the outcome and what to fix first. It is
+        built against a name and an email address.
+      </p>
+      <div class="pdf-grid">
+        <label>
+          {nameField.label}
+          <input type="text" name="name" autocomplete={nameField.autocomplete} maxlength={nameField.max} required />
+        </label>
+        <label>
+          {emailField.label}
+          <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
+        </label>
+      </div>
+      <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <p class="pdf-note">
+        Your scores go into the file and are not stored. Your address is used to send you this
+        tool once. It does not start any other email.
+      </p>
+      <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
+      <div class="pdf-actions">
+        <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
+        <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
 </ResourcesLayout>
 
 <style>
-  /* ── controls ─────────────────────────────────────────────────────────── */
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: center;
-    margin-bottom: var(--space-5);
+  /* ── about ────────────────────────────────────────────────────────────── */
+  .about {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
   }
-  .copied {
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-  }
-
-  /* ── verdict ──────────────────────────────────────────────────────────── */
-  .verdict {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-5);
+  .about-col {
     background: var(--surface-panel);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
     padding: var(--space-5) var(--space-6);
-    position: sticky;
-    top: 76px;
-    z-index: 5;
   }
-  .vscore {
-    font-family: var(--font-mono);
-    font-size: var(--size-8);
-    font-weight: var(--weight-strong);
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-  .vscore .of {
-    font-size: var(--size-5);
-    color: var(--text-quiet);
-  }
-  .vtext {
+  .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
+  ul.plain, ol.steps {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 1 1 260px;
+    gap: var(--space-3);
+    padding: 0;
+    margin: 0;
+    list-style: none;
   }
-  .band {
-    font-size: var(--size-5);
-    font-weight: var(--weight-heavy);
-    letter-spacing: var(--tracking-display);
+  ul.plain li {
+    position: relative;
+    padding-left: var(--space-5);
   }
-  .vnote {
-    font-size: var(--size-2);
-    color: var(--text-quiet);
+  ul.plain li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
   }
-  .vprog {
+  ol.steps { counter-reset: s; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: var(--space-6);
+  }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    font-family: var(--font-mono);
     font-size: var(--size-1);
-    color: var(--text-quiet);
-    white-space: nowrap;
+    font-weight: var(--weight-strong);
+    color: var(--text-on-invert);
+    background: var(--noir);
+    border-radius: var(--radius-pill);
+    width: 20px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
   }
-  /* Bands read through colour on the word, not a yellow chip — sun is reserved
-     for things you can click, so it cannot carry a status. */
-  .verdict[data-b='stop'] .band { color: var(--danger); }
-  .verdict[data-b='narrow'] .band { color: var(--accent-ink); }
-  .verdict[data-b='go'] .band { color: var(--text-loud); }
-  .verdict[data-b='none'] .band { color: var(--text-quiet); }
 
-  /* ── how to run ───────────────────────────────────────────────────────── */
+  /* ── scoring rules ────────────────────────────────────────────────────── */
   ol.howto {
     list-style: none;
     counter-reset: h;
@@ -308,6 +419,8 @@ const rows = SECTIONS.map((s) => ({
     flex-direction: column;
     gap: var(--space-4);
     max-width: var(--measure-prose);
+    padding: 0;
+    margin: 0;
   }
   ol.howto li {
     counter-increment: h;
@@ -325,13 +438,103 @@ const rows = SECTIONS.map((s) => ({
   }
   ol.howto strong { font-weight: var(--weight-strong); }
 
+  /* ── controls ─────────────────────────────────────────────────────────── */
+  #score { padding-top: var(--space-5); padding-bottom: 0; }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+  }
+  .copied {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+
+  /* ── the score bar ────────────────────────────────────────────────────── */
+  /* Sticky under the nav. Its parent is `.scoring`, which wraps every section
+     the bar has to stay above, so it holds through the questions and the
+     result and releases before the rubric. */
+  .scorebar-wrap {
+    position: sticky;
+    /* The nav is 76px on a desktop and wraps taller on a phone. The script
+       measures it and sets --nav-h; the fallback is the desktop height. */
+    top: var(--nav-h, 76px);
+    z-index: var(--z-sticky);
+    padding: var(--space-3) 0;
+    background: var(--surface-sunken);
+  }
+  .scorebar {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+  }
+  .sb-score {
+    font-family: var(--font-mono);
+    font-size: var(--size-7);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .sb-score .of {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .sb-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .band {
+    font-size: var(--size-4);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--lh-snug);
+  }
+  .sb-note {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .sb-secs {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .sb-sec {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .sb-prog {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    white-space: nowrap;
+  }
+  /* Bands read through colour on the word, not a yellow chip — sun is reserved
+     for things you can click, so it cannot carry a status. */
+  [data-b='stop'] .band, [data-b='gate'] .band, [data-b='stop'] .r-band, [data-b='gate'] .r-band { color: var(--danger); }
+  [data-b='narrow'] .band, [data-b='narrow'] .r-band { color: var(--accent-ink); }
+  [data-b='go'] .band, [data-b='go'] .r-band { color: var(--text-loud); }
+  [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
+
   /* ── question sections ────────────────────────────────────────────────── */
   .qsection { padding-top: var(--space-7); padding-bottom: 0; }
   .shead {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--space-3);
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: start;
+    gap: var(--space-3) var(--space-4);
     margin-bottom: var(--space-3);
   }
   .sletter {
@@ -341,27 +544,52 @@ const rows = SECTIONS.map((s) => ({
     color: var(--text-on-invert);
     background: var(--noir);
     border-radius: var(--radius-pill);
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     display: inline-grid;
     place-items: center;
+    margin-top: 4px;
   }
-  .sname { font-size: var(--size-6); }
+  .stitle { min-width: 0; }
+  .sname { font-size: var(--size-6); line-height: var(--lh-tight); }
+  .squestion {
+    margin: var(--space-1) 0 0;
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
   .sgate {
     font-family: var(--font-mono);
     font-size: var(--size-1);
     color: var(--danger);
     background: var(--danger-quiet);
     border-radius: var(--radius-pill);
-    padding: 3px 10px;
+    padding: 4px 12px;
+    margin-top: 6px;
+    white-space: nowrap;
   }
+  .ssub {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    background: var(--surface-panel);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+  .ssub b { color: var(--text-body); font-weight: var(--weight-strong); }
   .sblurb {
     color: var(--text-quiet);
     max-width: var(--measure-prose);
-    margin-bottom: var(--space-5);
+    margin: 0 0 var(--space-5) calc(28px + var(--space-4));
   }
 
+  /* One grid per question: the number in a fixed gutter, everything else in
+     the second column, so the question, the reason and the three anchors all
+     share one left edge. */
   .item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 0 var(--space-3);
     background: var(--surface-panel);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
@@ -374,15 +602,20 @@ const rows = SECTIONS.map((s) => ({
     outline: var(--border-w-rule) solid var(--danger-mark);
     outline-offset: 0;
   }
-  .qhead { display: flex; gap: var(--space-3); align-items: baseline; }
-  .qn { font-size: var(--size-1); color: var(--text-quiet); flex: 0 0 auto; }
+  .qn {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    padding-top: 6px;
+  }
+  .qbody { min-width: 0; }
   .q {
+    margin: 0;
     font-size: var(--size-4);
     font-weight: var(--weight-strong);
     line-height: var(--lh-snug);
   }
   .why {
-    margin: var(--space-3) 0 var(--space-4) calc(var(--space-3) + 2ch);
+    margin: var(--space-2) 0 var(--space-4);
     font-size: var(--size-2);
     color: var(--text-quiet);
     max-width: 64ch;
@@ -392,7 +625,6 @@ const rows = SECTIONS.map((s) => ({
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-3);
-    margin-left: calc(var(--space-3) + 2ch);
   }
   .anchor {
     display: flex;
@@ -423,7 +655,101 @@ const rows = SECTIONS.map((s) => ({
   }
   .anchor[aria-pressed='true'] .av { color: var(--text-on-accent); }
 
-  /* ── cut lines ────────────────────────────────────────────────────────── */
+  /* ── the result ───────────────────────────────────────────────────────── */
+  #result { padding-top: var(--space-7); }
+  .resultcard {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+  .r-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+  .r-score {
+    font-size: var(--size-8);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-quiet);
+  }
+  .r-score b { color: var(--text-body); }
+  .r-band {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--lh-tight);
+  }
+  .r-what {
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-5);
+  }
+  .r-secs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  /* The section boxes and the fix-first rows are created by the script, so
+     they never carry Astro's scoping attribute. `:global()` is what lets these
+     rules reach them; the parents above are in the template and stay scoped. */
+  .r-secs :global(.r-sec) {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .r-secs :global(.r-sec .k) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .r-secs :global(.r-sec .v) {
+    font-family: var(--font-mono);
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+  }
+  .r-secs :global(.r-sec .v small) { font-size: var(--size-2); color: var(--text-quiet); font-weight: var(--weight-regular); }
+  .r-secs :global(.r-sec .n) { font-size: var(--size-1); color: var(--text-quiet); }
+  .r-secs :global(.r-sec.low .v) { color: var(--danger); }
+  .r-gate {
+    color: var(--danger);
+    font-weight: var(--weight-strong);
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-5);
+  }
+  .r-fix h3 { font-size: var(--size-4); margin: 0 0 var(--space-1); }
+  .r-fixlead { font-size: var(--size-2); color: var(--text-quiet); margin: 0 0 var(--space-3); }
+  .r-fix ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+  .r-fix :global(li) {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border-hair);
+    font-size: var(--size-2);
+  }
+  .r-fix :global(li:last-child) { border-bottom: 1px solid var(--border-hair); }
+  .r-fix :global(.fn) { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); padding-top: 3px; }
+  .r-fix :global(.fn.zero) { color: var(--danger); }
+  .r-fix :global(.ft b) { font-weight: var(--weight-strong); }
+  .r-fix :global(.ft .fm) { display: block; margin-top: 2px; color: var(--accent-ink); }
+  .r-fix :global(.ft .fm a) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── rubric ───────────────────────────────────────────────────────────── */
   .prose-lead {
     color: var(--text-quiet);
     max-width: var(--measure-prose);
@@ -431,7 +757,7 @@ const rows = SECTIONS.map((s) => ({
   }
   .cutrow {
     display: grid;
-    grid-template-columns: 130px 220px 1fr;
+    grid-template-columns: 120px 240px 1fr;
     gap: var(--space-4);
     align-items: start;
     padding: var(--space-4) var(--space-5);
@@ -459,8 +785,8 @@ const rows = SECTIONS.map((s) => ({
   }
   .move:last-of-type { border-bottom: 1px solid var(--border-hair); }
   .mnum { font-size: var(--size-2); color: var(--text-quiet); padding-top: 4px; }
-  .mname { font-size: var(--size-5); margin-bottom: var(--space-2); }
-  .mbody p { max-width: var(--measure-prose); }
+  .mname { font-size: var(--size-5); margin: 0 0 var(--space-2); }
+  .mbody p { max-width: var(--measure-prose); margin: 0; }
   .mmeta {
     display: flex;
     flex-wrap: wrap;
@@ -474,20 +800,82 @@ const rows = SECTIONS.map((s) => ({
   .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
 
+  /* ── the PDF dialog ───────────────────────────────────────────────────── */
+  .pdf-dialog {
+    /* The reset zeroes margin on everything, which also removes the
+       browser's own centring of a modal dialog. Put it back. */
+    margin: auto;
+    border: 0;
+    padding: 0;
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: var(--surface-panel);
+    color: var(--text-body);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-overlay);
+  }
+  .pdf-dialog::backdrop { background: rgba(22, 33, 46, 0.45); }
+  .pdf-dialog form { padding: var(--space-6); }
+  .pdf-dialog .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .pdf-dialog h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
+  .pdf-lead { margin: 0 0 var(--space-5); }
+  .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .pdf-dialog label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-family: var(--font-marginal);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .pdf-dialog input {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 0 var(--space-4);
+    height: var(--control-h);
+    width: 100%;
+  }
+  .pdf-dialog input:focus { outline: none; border-color: var(--text-body); }
+  .pdf-dialog input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .pdf-dialog .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .pdf-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
+  .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
+  .pdf-status.err { color: var(--danger); }
+  .pdf-status.ok { color: var(--text-loud); }
+  .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+  .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
+
   @media (max-width: 860px) {
+    .about { grid-template-columns: 1fr; }
+    .scorebar { grid-template-columns: auto 1fr; }
+    .sb-secs { grid-column: 1 / -1; }
+    .sb-prog { display: none; }
+    .sb-score { font-size: var(--size-6); }
+    .band { font-size: var(--size-3); }
+    .shead { grid-template-columns: auto 1fr; }
+    .sgate, .ssub { grid-column: 2; justify-self: start; margin-top: 0; }
+    .sblurb { margin-left: 0; }
+    .item { grid-template-columns: 1fr; }
+    .qn { padding-top: 0; margin-bottom: var(--space-1); }
     .anchors { grid-template-columns: 1fr; }
-    .why, .anchors { margin-left: 0; }
+    .r-secs { grid-template-columns: 1fr 1fr; }
     .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
-    .verdict { position: static; }
+    .pdf-grid { grid-template-columns: 1fr; }
   }
 
   /* ── print: this is a scorecard people print ──────────────────────────── */
   @media print {
-    .verdict { position: static; box-shadow: none; border: 1px solid var(--border-hair); }
-    .controls, .hero-cta { display: none !important; }
+    .scorebar-wrap { position: static; background: none; }
+    .scorebar, .resultcard, .about-col { box-shadow: none; border: 1px solid var(--border-hair); }
+    .controls, .hero-cta, .r-actions, .pdf-dialog { display: none !important; }
     .item { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
     .cutrow { opacity: 1 !important; break-inside: avoid; }
-    .move, .anchor { break-inside: avoid; }
+    .move, .anchor, .resultcard { break-inside: avoid; }
     .anchor { border: 1px solid var(--border-hair); }
     .anchor[aria-pressed='true'] { outline: 2px solid var(--ink-1); }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -495,98 +883,157 @@ const rows = SECTIONS.map((s) => ({
 </style>
 
 <script>
-  // State is a plain array in this closure. It is never written to
-  // localStorage, never posted, and dies with the tab — the site's no-client-
-  // storage rule, and also the honest answer to "where does my score go?".
-  const COUNT = Number(document.querySelectorAll('.item').length);
-  const GATE = [...document.querySelectorAll('.item.gate')].map((el) =>
-    Number((el as HTMLElement).dataset.i),
-  );
-  const MAX = COUNT * 2;
-  const EXAMPLE_SCORES = JSON.parse(document.getElementById('example-data')?.textContent || 'null');
-
-  let state: (number | null)[] = new Array(COUNT).fill(null);
+  // Scores are a plain array in this closure. Never written to localStorage,
+  // never posted except inside the PDF request, and gone when the tab closes.
+  //
+  // This is a module script, so it imports the same data module the page
+  // rendered from. The score bar, the result summary, the copied scorecard
+  // and (on the server) the PDF all read one rubric: `readScores()`.
+  import {
+    EXAMPLE,
+    FLAT,
+    MAX_SCORE,
+    QUESTION_COUNT,
+    SECTIONS,
+    TOOL_NAME,
+    moveFor,
+    readScores,
+  } from '../../data/poc-screen';
 
   const $ = (id: string) => document.getElementById(id)!;
+  const pad = (n: number) => String(n).padStart(2, '0');
 
-  function verdict() {
-    const answered = state.filter((v) => v !== null).length;
-    const total = state.reduce<number>((a, v) => a + (v ?? 0), 0);
-    const gateZero = GATE.some((i) => state[i] === 0);
-    if (gateZero)
+  let state: (number | null)[] = new Array(QUESTION_COUNT).fill(null);
+
+  // The score bar sticks under the nav, and the nav is taller when its links
+  // wrap on a narrow screen. Measure it rather than guess.
+  const nav = document.querySelector<HTMLElement>('header.nav');
+  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
+  function placeBar() {
+    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  }
+  placeBar();
+  window.addEventListener('resize', placeBar);
+
+  // ---- the read, in the bar's words ---------------------------------------
+
+  function bandLine(r: ReturnType<typeof readScores>) {
+    if (r.band?.key === 'gate') {
+      const names = r.gateZero.map((i) => `${pad(i + 1)} ${FLAT[i].short}`).join(', ');
       return {
-        answered,
-        total,
-        gateZero,
-        band: 'This is a demo, not a pilot',
-        note: 'Hard stop: a zero in section B. Fix the blast radius before the total matters.',
-        key: 'stop',
+        key: 'gate',
+        band: r.band.name,
+        note: `A 0 in section B on ${names}. Fix that before the total matters.`,
       };
-    if (answered < COUNT)
+    }
+    if (!r.complete) {
+      const left = QUESTION_COUNT - r.answered;
       return {
-        answered,
-        total,
-        gateZero,
-        band: 'Incomplete',
-        note: `${COUNT - answered} ${COUNT - answered === 1 ? 'question' : 'questions'} unscored. A blank is a 0.`,
         key: 'none',
+        band: r.answered === 0 ? 'Not started' : 'In progress',
+        note: `${left} ${left === 1 ? 'question' : 'questions'} to answer. A blank counts as 0.`,
       };
-    if (total >= 20)
-      return {
-        answered,
-        total,
-        gateZero,
-        band: 'Pilot candidate',
-        note: 'Write the boundary down, then run a limited trial against it.',
-        key: 'go',
-      };
-    if (total >= 14)
-      return {
-        answered,
-        total,
-        gateZero,
-        band: 'Narrow it, then re-score',
-        note: 'Cut the action list until the low-scoring rows move.',
-        key: 'narrow',
-      };
-    return {
-      answered,
-      total,
-      gateZero,
-      band: 'This is a demo, not a pilot',
-      note: 'Not a bad idea — a bad first idea. Pick a different one to start with.',
-      key: 'stop',
-    };
+    }
+    return { key: r.band!.key, band: r.band!.name, note: r.band!.what };
+  }
+
+  // ---- render -------------------------------------------------------------
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function renderResult(r: ReturnType<typeof readScores>, line: ReturnType<typeof bandLine>) {
+    const card = $('resultcard');
+    card.dataset.b = line.key;
+    $('r-total').textContent = String(r.total);
+    $('r-band').textContent = line.band;
+    $('r-what').textContent = r.complete || r.band
+      ? line.note
+      : `Answer all ${QUESTION_COUNT} questions to read the outcome. Until then this shows the running total, and a blank counts as 0.`;
+
+    const secs = $('r-secs');
+    secs.replaceChildren(
+      ...r.sections.map((s) => {
+        const box = el('div', `r-sec${s.score <= s.max / 3 && s.answered > 0 ? ' low' : ''}`);
+        box.append(el('span', 'k', `${s.letter} · ${s.name}`));
+        const v = el('span', 'v', String(s.score));
+        v.append(el('small', undefined, `/${s.max}`));
+        box.append(v);
+        const left = s.max / 2 - s.answered;
+        box.append(el('span', 'n', left ? `${left} unanswered` : 'all answered'));
+        return box;
+      }),
+    );
+
+    const gate = $('r-gate');
+    if (r.gateZero.length) {
+      gate.hidden = false;
+      gate.textContent = `Hard gate. Section B has a 0 on ${r.gateZero
+        .map((i) => `${pad(i + 1)} ${FLAT[i].short}`)
+        .join(', ')}. This stops the proof of concept whatever the total.`;
+    } else {
+      gate.hidden = true;
+    }
+
+    const weak = FLAT.map((it, i) => ({ it, i, v: state[i] }))
+      .filter((x) => x.v === 0 || x.v === 1)
+      .sort((a, b) => (a.v ?? 0) - (b.v ?? 0) || Number(b.it.gate) - Number(a.it.gate));
+    const fix = $('r-fix');
+    fix.hidden = weak.length === 0;
+    $('r-fixlist').replaceChildren(
+      ...weak.map((x) => {
+        const li = el('li');
+        li.append(el('span', `fn${x.v === 0 ? ' zero' : ''}`, pad(x.i + 1)));
+        const t = el('div', 'ft');
+        const b = el('b', undefined, `${x.it.short}, scored ${x.v}${x.it.gate ? ' (hard gate)' : ''}. `);
+        t.append(b, document.createTextNode(x.it.a[x.v ?? 0]));
+        const m = moveFor(x.i + 1);
+        if (m) {
+          const fm = el('span', 'fm');
+          const a = el('a', undefined, `Move ${m.num}: ${m.name}`);
+          a.href = `#move-${m.num}`;
+          fm.append(a);
+          t.append(fm);
+        }
+        li.append(t);
+        return li;
+      }),
+    );
   }
 
   function update() {
     state.forEach((v, i) => {
       for (let k = 0; k < 3; k++) {
-        const b = document.getElementById(`q${i}v${k}`);
-        if (b) b.setAttribute('aria-pressed', String(v === k));
+        document.getElementById(`q${i}v${k}`)?.setAttribute('aria-pressed', String(v === k));
       }
-      const row = document.getElementById(`row-${i}`);
-      if (row) row.classList.toggle('zeroed', v === 0 && GATE.includes(i));
+      document.getElementById(`row-${i}`)?.classList.toggle('zeroed', v === 0 && FLAT[i].gate);
     });
 
-    const r = verdict();
-    $('total').textContent = String(r.total);
-    $('band').textContent = r.band;
-    $('note').textContent = r.note;
-    $('progress').textContent = `${r.answered}/${COUNT} scored`;
-    $('verdict').dataset.b = r.key;
+    const r = readScores(state);
+    const line = bandLine(r);
 
-    const done = r.answered === COUNT;
-    const active: Record<string, boolean> = {
-      gate: r.gateZero,
-      go: !r.gateZero && done && r.total >= 20,
-      narrow: !r.gateZero && done && r.total >= 14 && r.total < 20,
-      stop: !r.gateZero && done && r.total < 14,
-    };
-    for (const k of Object.keys(active)) {
-      document.getElementById(`cut-${k}`)?.classList.toggle('active', active[k]);
+    $('total').textContent = String(r.total);
+    $('band').textContent = line.band;
+    $('note').textContent = line.note;
+    $('progress').textContent = `${r.answered}/${QUESTION_COUNT} answered`;
+    $('verdict').dataset.b = line.key;
+    for (const s of r.sections) {
+      $(`sec-${s.letter}`).textContent = String(s.score);
+      $(`secsub-${s.letter}`).textContent = String(s.score);
+    }
+
+    renderResult(r, line);
+
+    for (const key of ['gate', 'go', 'narrow', 'stop']) {
+      document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
     }
   }
+
+  // ---- controls -----------------------------------------------------------
 
   document.querySelectorAll<HTMLButtonElement>('.anchor').forEach((b) => {
     b.addEventListener('click', () => {
@@ -599,44 +1046,151 @@ const rows = SECTIONS.map((s) => ({
   });
 
   $('blank').addEventListener('click', () => {
-    state = new Array(COUNT).fill(null);
+    state = new Array(QUESTION_COUNT).fill(null);
     update();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   $('example').addEventListener('click', () => {
-    state = Array.isArray(EXAMPLE_SCORES) ? EXAMPLE_SCORES.slice() : new Array(COUNT).fill(null);
+    state = EXAMPLE.slice();
     update();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   $('print').addEventListener('click', () => window.print());
 
-  $('copy').addEventListener('click', async () => {
-    const r = verdict();
-    const lines: string[] = ['The POC Screen — learning.thelivingcraft.ai/resources/poc-screen', ''];
-    document.querySelectorAll<HTMLElement>('.qsection').forEach((sec) => {
-      const letter = sec.querySelector('.sletter')?.textContent ?? '';
-      const name = sec.querySelector('.sname')?.textContent ?? '';
-      lines.push(`${letter} — ${name}`);
-      sec.querySelectorAll<HTMLElement>('.item').forEach((item) => {
-        const i = Number(item.dataset.i);
-        const nLabel = item.querySelector('.qn')?.textContent ?? '';
-        const q = item.querySelector('.q')?.textContent ?? '';
+  function scorecard(): string {
+    const r = readScores(state);
+    const line = bandLine(r);
+    const lines: string[] = [`${TOOL_NAME} — learning.thelivingcraft.ai/resources/poc-screen`, ''];
+    let i = 0;
+    for (const s of SECTIONS) {
+      const sec = r.sections.find((x) => x.letter === s.letter)!;
+      lines.push(`${s.letter} — ${s.name}  (${sec.score}/${sec.max})`);
+      for (const it of s.items) {
         const v = state[i];
-        lines.push(`  ${nLabel}  [${v === null ? '-' : v}]  ${q}`);
-      });
+        lines.push(`  ${pad(i + 1)}  [${v === null ? '-' : v}]  ${it.q}`);
+        i++;
+      }
       lines.push('');
-    });
-    lines.push(`Total ${r.total}/${MAX} — ${r.band}`);
-    lines.push(r.note);
-    try {
-      await navigator.clipboard.writeText(lines.join('\n'));
-      $('copied').textContent = 'Scorecard copied';
-    } catch {
-      $('copied').textContent = 'Copy blocked by the browser — use Print instead';
     }
-    setTimeout(() => ($('copied').textContent = ''), 4000);
+    lines.push(`Total ${r.total}/${MAX_SCORE} — ${line.band}`);
+    lines.push(line.note);
+    return lines.join('\n');
+  }
+
+  async function copyScorecard() {
+    const status = $('copied');
+    try {
+      await navigator.clipboard.writeText(scorecard());
+      status.textContent = 'Scorecard copied';
+    } catch {
+      status.textContent = 'Copy blocked by the browser. Use Print instead.';
+    }
+    setTimeout(() => (status.textContent = ''), 4000);
+  }
+  $('copy').addEventListener('click', copyScorecard);
+  $('copy2').addEventListener('click', () => {
+    copyScorecard();
+    $('copied').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // ---- the PDF ------------------------------------------------------------
+
+  const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
+  const form = document.getElementById('pdf-form') as HTMLFormElement;
+  const pdfStatus = $('pdf-status');
+  const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
+
+  const cancel = $('pdf-cancel');
+
+  function openPdf() {
+    pdfStatus.textContent = '';
+    pdfStatus.className = 'pdf-status';
+    submit.disabled = false;
+    cancel.textContent = 'Cancel';
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+  $('pdf').addEventListener('click', openPdf);
+  $('pdf2').addEventListener('click', openPdf);
+  $('pdf-cancel').addEventListener('click', () => dialog.close());
+
+  function say(text: string, kind: 'ok' | 'err' | '') {
+    pdfStatus.textContent = text;
+    pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
+  }
+
+  function download(base64: string, filename: string) {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const data = new FormData(form);
+    const name = String(data.get('name') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    if (!name || !email) {
+      say('Both fields are needed.', 'err');
+      return;
+    }
+
+    submit.disabled = true;
+    say('Building the PDF.', '');
+
+    // One key per attempt. A retry after a network error is a new attempt; a
+    // repeat click while this one runs is stopped by the disabled button.
+    const requestKey =
+      typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    try {
+      const res = await fetch('/api/pipeline/resource-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'poc-screen',
+          requestKey,
+          answers: { name, email },
+          botcheck: String(data.get('botcheck') ?? ''),
+          scores: state,
+          search: location.search,
+          referrer: document.referrer,
+          entryPath: location.pathname,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
+        const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
+        say(errs || body.error || 'We could not build the PDF just now. Use Print on the page instead.', 'err');
+        submit.disabled = false;
+        return;
+      }
+
+      download(body.pdf, body.filename || 'poc-selection-tool-scored.pdf');
+      cancel.textContent = 'Close';
+
+      if (body.saved) {
+        say(`Your PDF is downloading. ${body.delivery ?? ''}`.trim(), 'ok');
+      } else {
+        say(`Your PDF is downloading. ${body.note ?? ''}`.trim(), 'ok');
+      }
+    } catch {
+      say('The request did not reach the server. Check the connection and try again, or use Print.', 'err');
+      submit.disabled = false;
+    }
   });
 
   update();

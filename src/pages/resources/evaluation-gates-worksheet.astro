@@ -87,9 +87,8 @@ const rows = d.csv.rows.map((cells) => columns.map((_, i) => cells[i] ?? ''));
 const pageTitle = `${d.title} — open resource · ${practitioner.name}`;
 
 // Sunil is the Person node SeoHead already emits; reference it by @id rather
-// than describing him twice. These three are authored by the practice rather
-// than by a named person, so the author node is the Organization-less string
-// the collection carries.
+// than describing him twice. The visible byline (`d.author`) says who built
+// it and with what; the schema names the person.
 const schema: unknown[] = [
   {
     '@type': 'Article',
@@ -99,7 +98,7 @@ const schema: unknown[] = [
     url,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     inLanguage: 'en-GB',
-    author: { '@type': 'Organization', name: d.author },
+    author: { '@id': `${SITE_ORIGIN}/#person` },
     // dateModified only. There is no record of a first-published date and
     // guessing one would be inventing a fact a crawler treats as ours.
     dateModified: d.revisedOn,

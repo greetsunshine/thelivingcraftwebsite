@@ -23,7 +23,7 @@
 // distinction the sitemap already draws for /latest.
 //
 // `url` should be a path on this site wherever the resource can be hosted here.
-// The POC Screen began life as a published Artifact and moved: an Artifact is
+// The POC Selection Tool began life as a published Artifact and moved: an Artifact is
 // private until it is shared from its own share menu, so a link to one is broken
 // for every visitor until somebody remembers that step. Self-hosting removes the
 // failure mode, and it makes the content crawlable, which is most of the reason
@@ -34,6 +34,16 @@
 // cannot open is worse than no resources page.
 
 import { csvDocument, type CsvColumn } from '../lib/admin/csv';
+
+/**
+ * Who made the tools. Every published tool says this, in the hero, in the
+ * footer of the resources layout, and inside any file that ships with it.
+ * One string, so the wording cannot differ from one page to the next.
+ * Sunil asked for it on 17 September 2026: built by him, co-authored with
+ * Claude, said plainly on the artefact itself and not only in a commit trailer.
+ */
+export const TOOL_AUTHOR = 'Sunil Mathew, co-authored with Claude';
+export const TOOL_CREDIT = `Built by ${TOOL_AUTHOR}`;
 
 export interface Resource {
   /** Slug. The anchor on /resources and the id in structured data. */
@@ -48,7 +58,7 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Screen" and "The Run-Cost Model" are names, and a reader
+   * "The POC Selection Tool" and "The Run-Cost Model" are names, and a reader
    * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
@@ -75,22 +85,21 @@ export const resources: Resource[] = [
     topic: 'Cost Modelling',
     number: '01',
     series: 'Agent business case',
-    title: 'The Run-Cost Model',
-    kind: 'Spreadsheet · 3 tabs',
+    title: 'The Run-Cost Model Tool',
+    kind: 'Interactive model · 4 options side by side · 1 reference example',
     summary:
-      'A twelve-month cost comparison of four ways to do the same job, with the operating lines most business cases leave out.',
+      'Cost four ways of doing the same job over one period, with the operating lines most business cases leave out, and find the one with the lowest cost per acceptable outcome.',
     description:
-      'Almost every agent business case models the model bill and stops there. This one puts four arms side by side over twelve months — a rules workflow, the same workflow rebuilt on the decision rules an agent build forces you to write down, a model-assisted draft with human approval, and a full agent with tools — and separates what you pay once from what you pay every month. The lines it makes you fill in are the ones that get forgotten: retries and failed tool calls, review minutes per reviewed case, engineer minutes per escalation, evaluation maintenance, re-qualifying against a new model version, prompt and regression testing, incident and on-call load, and the cases the system declines that a person finishes by hand. Quality sits next to cost throughout, because cost per case is the wrong number to argue about on its own. The number to argue about is cost per acceptable outcome. The worked example is an ordering agent across forty sites, priced at Indian rates in rupees, and it is deliberately a case where the full agent never breaks even — and where building it was still worth doing, because it produced the written specification that made the cheap option good.',
+      'Almost every agent business case models the model bill and stops there. This tool puts four options side by side over one period: a rules workflow, the same workflow rebuilt on the decision rules an agent build forces you to write down, a model-assisted draft with human approval, and a full agent with tools. It keeps what you pay once apart from what you pay every month. The lines it makes you fill in are the ones that get forgotten: retries and failed tool calls, review minutes per reviewed case, engineer minutes per escalation, evaluation maintenance, re-qualifying against a new model version, prompt and regression testing, incident and on-call load, and the cases the system declines that a person finishes by hand. Quality sits beside cost throughout, because cost per case is the wrong number to argue about on its own. The number to argue about is cost per acceptable outcome. Every line is worked out as you type. The result names the leading option, gives the break-even month for each one, flags when cost per case and cost per acceptable outcome disagree, and lists the assumptions to check before you trust the answer. The reference example is an ordering agent across forty sites, priced at Indian rates in rupees, and it is deliberately a case where the full agent does not pay back inside the period, and where building it was still worth doing, because it produced the written specification that made the cheap option good.',
     useFor: [
       'Price an agent proposal across build and run, not just the model bill',
       'Compare a full agent against a rules workflow and a model-assisted draft on the same cases and one definition of an acceptable outcome',
       'Put a break-even month in front of a budget holder, including when the answer is never',
-      'Show a team which of their operating assumptions — escalation rate, review minutes, upkeep — are doing the real work in the number',
+      'Show a team which of their operating assumptions, such as escalation rate, review minutes and upkeep, are doing the real work in the number',
     ],
     format:
-      'Excel workbook. Read Me, the model, and a filled worked example. Fill in the blue cells; the yellow ones set everything else.',
-    url: '/downloads/agent-run-cost-model.xlsx',
-    fileSize: '17 KB',
+      'Interactive. Type your figures in the page; every total, the leading option and the break-even months update as you go. The reference example is on its own tab and can be loaded into your model. Copy the model or print it without giving anything. A PDF of your model is built against a name and an email address. The same model is also offered as an Excel workbook.',
+    url: '/resources/run-cost-model',
     publishedAt: '2026-09-14',
   },
   {
@@ -99,11 +108,11 @@ export const resources: Resource[] = [
     number: '02',
     series: 'Agentic system design',
     title: 'The Agent Authority Review',
-    kind: 'Worksheet · 3 worked examples',
+    kind: 'Interactive sheet · live owner per step · 3 reference examples',
     summary:
-      'A way to decide which steps in a workflow should get an agent, and which should not — yet.',
+      'Type the steps of a workflow and find out which ones an agent may own, which it may only suggest on, and which stay as code.',
     description:
-      'Most agent design reviews ask one question: can the model do this step? That is the wrong question, and the demo hides it by doing the thinking and the acting in one go. There are two separate limits. How good the model is decides how much thinking you hand over; how hard an action is to undo decides how much authority you hand over. This sets out a four-level undo-cost scale from "undo in seconds, nobody notices" to "cannot be undone", five questions to ask of every step rather than of the workflow, a blank worksheet, and the rules for reading it once it is full. Then three worked examples with every row already decided — incident triage, refunds and goodwill credit, and automatic pull request merge — each one closing on the rows the author would not hand to an agent yet, and why. There is a forty-minute protocol at the end for running it against a workflow you already own.',
+      'Most agent design reviews ask one question: can the model do this step? That is the wrong question, and the demo hides it by doing the thinking and the acting in one go. There are two separate limits. How good the model is decides how much thinking you hand over; how hard an action is to undo decides how much authority you hand over. This tool sets a four-level undo-cost scale, from "undo in seconds, nobody notices" to "cannot be undone", and asks five questions of every step rather than of the workflow. You type the steps of your own workflow into the sheet and answer three of those questions per step: is there one right answer, what is the undo cost, and what does a second run do. The rubric names the owner of each step beside it as you answer: code, an agent with an eval set, or an agent that suggests while a human approves. The result is an authority map for the workflow, with the checks to clear before anything is handed over. Three reference examples with every row already decided, incident triage, refunds and goodwill credit, and automatic pull request merge, can be loaded into the sheet. There is a forty-minute protocol at the end for running it in a room.',
     useFor: [
       'Assign an undo cost to every action in a workflow before anyone argues about who owns the step',
       'Separate the steps that need a rule in code from the ones that genuinely need judgment',
@@ -111,7 +120,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Page, with a blank worksheet and three filled examples. Prints cleanly if you want the table on paper.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet or print it without giving anything. A PDF of your assessment is built against a name and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
@@ -120,20 +129,20 @@ export const resources: Resource[] = [
     topic: 'Pilot Readiness',
     number: '01',
     series: 'Agentic system design',
-    title: 'The POC Screen',
-    kind: 'Scored checklist',
+    title: 'The POC Selection Tool',
+    kind: 'Scored checklist · live score and result',
     summary:
-      'Twelve questions that decide whether an agentic proof of concept can reach production — asked before you build it.',
+      'Twelve questions that decide whether an agent proof of concept can reach production, scored before you build it.',
     description:
-      'Most agentic proofs of concept are judged after the demo goes well, which is the one moment nobody is able to judge them. This screen moves the decision earlier. Twelve questions across four sections, and each question defines what earns a 0, a 1 and a 2, so two people scoring the same proof of concept land in the same place instead of trading opinions. The maximum is 24. One section is a hard gate: any zero on blast radius stops the exercise whatever the total says, because a high score elsewhere does not buy back an action you cannot undo. Three cut-lines read the result — pilot candidate, narrow it and score again, or a demo rather than a pilot. It closes with four ways to answer most of the questions before the agent exists, in ascending order of cost, each one cheaper than a pilot that fails in front of a customer.',
+      'Most agent proofs of concept are judged after the demo goes well, which is the one moment nobody can judge them. This tool moves the decision earlier. Twelve questions in four sections: task fit, failure containment, evaluation evidence, and ownership and unit economics. Each question defines what earns a 0, a 1 and a 2, so two people scoring the same idea land on the same number instead of trading opinions. The maximum is 24. The score stays on screen and updates as you answer. One section is a hard gate: a 0 on failure containment stops the proof of concept whatever the total, because a high score elsewhere does not buy back an action you cannot undo. The result is read against a rubric with three outcomes: pilot candidate, narrow it and score again, or a demo rather than a pilot. A summary lists what to fix first and which of four pre-build moves answers each weak row. It closes with those four moves, cheapest first, each one cheaper than a pilot that fails in front of a customer.',
     useFor: [
       'Score a proposed agent against twelve criteria, and defend the number to someone who disagrees',
       'Find the rows where two people scored two points apart, which is where the team does not share a picture of the system',
       'Decide whether to narrow the scope of a proof of concept or stop it',
-      'Answer most of the screen without building anything, using an evaluation set, a human behind the curtain, deliberate tool failures, or a shadow run',
+      'Answer most of the questions without building anything, using an evaluation set, a person playing the agent, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive. Scores in the page and nothing is stored or sent — a worked example to load, a copyable scorecard, and a print view.',
+      'Interactive. Score in the page; the total, the section scores and the outcome update as you go. Copy the scorecard or print it without giving anything. A PDF of your scored copy is built against a name and an email address.',
     url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },
@@ -182,6 +191,51 @@ export const resources: Resource[] = [
       'Page, with the triage tree, every table and a worked rejection record. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
     url: '/resources/agent-failure-triage-kit',
     publishedAt: '2026-09-16',
+  },
+  {
+    id: 'agent-memory-audit-kit',
+    topic: 'Agent Memory',
+    number: '05',
+    series: 'Agentic system design',
+    title: 'Agent Memory Audit Kit',
+    kind: 'Kit \u00b7 schema, 12 questions, 7 runnable tests, decision table',
+    summary:
+      'A schema, 12 audit questions, 7 runnable failure tests and a decision table for designing agent memory that stays correct.',
+    description:
+      'An expense agent remembered a project code Priya typed once, for one trip, and reused it on the next trip. The team shipped a fix: learn from user corrections. Three weeks later the agent put her own team’s dinner on a client’s bill, because a correction is a memory too. This kit gives every fact an agent remembers three answers: where it came from, where it applies, and what happens when someone corrects it. A memory record schema with fields for source, evidence, scope, expiry and correction route, and seven invariants a store has to hold. Twelve audit questions to run against one remembered fact, each with the red flag that means a design task. Seven failure tests as a pytest harness, with a naive store that fails all seven on purpose and a reference store that passes them, and a six-method protocol for running the same seven against your own memory layer. And a one-page decision table with four outcomes: Remember, Revalidate, Ask, Forget. The page is the resource; the ZIP carries the PDF, the schema, four example records, the harness and both licences.',
+    useFor: [
+      'Name the evidence, the scope and the correction route for one fact your agent remembers today',
+      'Separate what a user stated, what a system record says and what the agent inferred, before any of it reaches a prompt',
+      'Run seven failure tests against your own memory layer and read each failure as one design task',
+      'Decide, for any remembered fact, whether the agent may apply it, must revalidate it, must ask, or must forget it',
+      'Find the correction in your system that changed more than the instance it was made on',
+    ],
+    format:
+      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Nothing is stored or sent.',
+    url: '/resources/agent-memory-audit-kit',
+    publishedAt: '2026-09-17',
+  },
+  {
+    id: 'rule-placement-audit',
+    topic: 'Rule Placement',
+    number: '06',
+    series: 'Agentic system design',
+    title: 'The Rule Placement Audit',
+    kind: 'Browser worksheet · live status per rule · 1 worked example',
+    summary:
+      'List the rules your agent must never break and find out where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere.',
+    description:
+      'A restaurant-picking agent recommended a restaurant on the user\u2019s no-go list. The model was not at fault: the rule was written in the prompt and enforced nowhere else, so the model weighed it against everything else in the context and, once, chose against it. This worksheet is the audit that finds every rule in that position. One row per hard rule: who set it, how many agents can act on it, and where it is enforced, across five placements. Two of them are code before the model and code after it; one is the tool or data boundary, which holds whichever agent asked; the other two are the prompt and a critic or guardrail model, which are both something a model weighs. The status beside each rule updates as you tick, and the rule map groups the rows with the unenforced, prompt-only and model-only rules first, each with the fix it needs and an owner. A flag names the rule that more than one agent can break and that is enforced inside only one of them. Entries stay in the browser; the map prints on one page and downloads as CSV.',
+    useFor: [
+      'Find the rule that exists only in a prompt, and name the filter or check it needs in code',
+      'Tell a critic model checking a step from a check that enforces the step',
+      'Find the rule that two agents can break and that only one of them checks',
+      'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
+    ],
+    format:
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Print the map, copy it or download the CSV without giving anything. Autosaved in your browser; nothing is sent.',
+    url: '/resources/rule-placement-audit',
+    publishedAt: '2026-09-17',
   },
   {
     id: 'cost-ceiling-workbook',
@@ -496,7 +550,7 @@ const costCeiling: LongformResource = {
     'A workflow is about to be allowed to retry, call tools or run in the background, and nothing yet stops it.',
   order: 1,
   fileBase: 'cost-ceiling-worksheet',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [
@@ -604,7 +658,7 @@ const evaluationGates: LongformResource = {
     'A release meeting is coming and somebody is going to ask whether the evaluation results mean the system is ready.',
   order: 2,
   fileBase: 'evaluation-gates-worksheet',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [
@@ -712,7 +766,7 @@ const deploymentChecklist: LongformResource = {
     'A release is going out and the question "who would notice if this silently stopped working" has no answer yet.',
   order: 3,
   fileBase: 'deployment-checklist',
-  author: 'The Living Craft',
+  author: TOOL_AUTHOR,
   revisedOn: '2026-09-11',
   status: 'ready',
   sections: [

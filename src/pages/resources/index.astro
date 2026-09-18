@@ -67,8 +67,10 @@ import {
   resourceSeries,
   newestResourceDate,
   longDate,
+  TOOL_CREDIT,
 } from '../../data/resources';
 import { SITE_ORIGIN } from '../../data/facts';
+import { RESOURCE_CHOICES } from '../../data/resource-choices';
 
 const published = await getCollection('guides', (g) => g.data.status === 'ready');
 
@@ -100,8 +102,8 @@ const count = published.length;
 const guidesNote =
   count === 1 ? 'One guide is published.' : `${count} guides are published.`;
 
-// The practice's own published pieces — the POC Screen, the Agent Authority
-// Review, the run-cost workbook. They used to live on a second /resources page
+// The practice's own published pieces — the POC Selection Tool, the Agent Authority
+// Review, the Run-Cost Model Tool. They used to live on a second /resources page
 // built on another branch; two pages cannot hold one address, so they are a
 // section here instead. Dropping either page would have taken real, indexed
 // content off the site.
@@ -166,6 +168,29 @@ const description =
         <a class="btn btn-ghost" href="/latest">Field notes</a>
       </div>
       <p class="hero-note">{guidesNote} Nothing is listed here before it is written.</p>
+      <p class="hero-note credit">{TOOL_CREDIT}</p>
+    </div>
+  </section>
+
+  {/* ── the choices: released, featured tools only, from resource-choices.ts ── */}
+  <section class="wrap band choices" aria-labelledby="choices-h">
+    <div class="sec-head">
+      <p class="eyebrow">Tools</p>
+      <h2 id="choices-h">Your question, <em>and the tool for it</em></h2>
+    </div>
+
+    <div class="panel routes">
+      {
+        RESOURCE_CHOICES.map((c) => (
+          <div class="detail-row">
+            <span class="dk">{c.question}</span>
+            <span class="dv">
+              <span class="sep" aria-hidden="true">→ </span>
+              <a class="textlink" href={c.url}>{c.action}</a>
+            </span>
+          </div>
+        ))
+      }
     </div>
   </section>
 
@@ -343,6 +368,10 @@ const description =
 <style>
   .band {
     padding-block: var(--space-8);
+  }
+  /* The choices sit directly under the hero, so the first band is shallower. */
+  .choices {
+    padding-top: var(--space-6);
   }
 
   /* The topic leads the row, so the list can be read down the left edge: what

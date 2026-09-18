@@ -1,0 +1,31 @@
+{
+  "id": "mem_03",
+  "subject": { "type": "org", "id": "acme" },
+  "key": "expense.meal_limit_inr",
+  "value": null,
+  "authority": "policy",
+  "source": {
+    "type": "system_record",
+    "evidence": { "kind": "record", "ref": "policy-registry/expense/meal-limit" },
+    "observations": 1,
+    "captured_at": "2026-01-15T08:00:00Z",
+    "captured_by": "expense-agent@1.4.0",
+    "source_of_truth": "https://policy.acme.example/expense/meal-limit"
+  },
+  "scope": {
+    "level": "org",
+    "bindings": { "org_id": "acme" },
+    "valid_from": "2026-01-15",
+    "valid_until": null,
+    "revalidate_on": ["policy_updated"]
+  },
+  "correction": {
+    "route": "policy_owner_change_request",
+    "supersedes": [],
+    "superseded_by": null,
+    "broadened": false
+  },
+  "lineage": { "derived_from": [] },
+  "lifecycle": { "status": "active", "sensitivity": "none", "retain_value_after_expiry": false },
+  "usage": { "last_used_at": "2026-03-25T19:40:05Z", "use_count": 212, "last_confirmed_at": null }
+}

@@ -511,7 +511,7 @@ export const COHORT_CTA = 'Apply to the cohort';
  * Two sibling resources with confusingly similar names, linked on purpose.
  *
  * /resources/cost-ceiling-worksheet is the one-page register for a single
- * workflow; the Run-Cost Model is the twelve-month business case. This workbook
+ * workflow; the Run-Cost Model Tool is the business case over a period. This workbook
  * sits between them, and a reader who lands on the wrong one from a search
  * should be one click from the right one. Agreed with Sunil, 16 September 2026.
  */
@@ -522,8 +522,8 @@ export const NEIGHBOURS = [
     body: 'One page, one workflow. Decide what it may spend or repeat and who reviews the result, with no arithmetic.',
   },
   {
-    url: '/downloads/agent-run-cost-model.xlsx',
-    title: 'The Run-Cost Model',
-    body: 'Twelve months, four ways to do the same job. The business case around the per-attempt figure this workbook produces.',
+    url: '/resources/run-cost-model',
+    title: 'The Run-Cost Model Tool',
+    body: 'One period, four ways to do the same job, worked out as you type. The business case around the per-attempt figure this workbook produces.',
   },
 ];

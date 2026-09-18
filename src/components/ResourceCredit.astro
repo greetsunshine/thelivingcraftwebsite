@@ -1,0 +1,13 @@
+---
+// The credit line every tool carries in its hero, under the counts line.
+// The words come from TOOL_CREDIT in resources.ts; this file only places them.
+import { TOOL_CREDIT } from '../data/resources';
+---
+
+<p class="hero-note mono credit">{TOOL_CREDIT}</p>
+
+<style>
+  /* Sits directly under the counts line, so it takes the small gap, not the
+     hero's section gap. */
+  .credit { margin-top: var(--space-2); }
+</style>
