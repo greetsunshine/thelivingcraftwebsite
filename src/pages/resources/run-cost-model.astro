@@ -42,6 +42,7 @@ import {
   EXAMPLE_NOTICE,
   LIMITS,
   ARMS,
+  ARMS_NOTE,
   SECTIONS,
   TOTALS,
   FORGOTTEN_ROWS,
@@ -231,6 +232,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
             </div>
           ))}
         </div>
+        <p class="arms-note">{ARMS_NOTE}</p>
 
         <div class="rules">
           <div class="sec-head">
@@ -692,7 +694,13 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-3);
-    margin-bottom: var(--space-7);
+    margin-bottom: var(--space-4);
+  }
+  .arms-note {
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-7);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
   }
   .arm {
     background: var(--surface-sunken);

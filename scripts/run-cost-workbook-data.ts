@@ -15,6 +15,7 @@
 
 import {
   ARMS,
+  ARMS_NOTE,
   EXAMPLE,
   EXAMPLE_STORY,
   FORGOTTEN_ROWS,
@@ -40,6 +41,7 @@ const out = {
   rules: HOW_TO_RUN,
   limits: LIMITS,
   arms: ARMS,
+  armsNote: ARMS_NOTE,
   sections: SECTIONS.map((s) => ({
     num: s.num,
     name: s.name,

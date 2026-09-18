@@ -291,6 +291,7 @@ def build_readme(wb, data):
     h("The four options")
     for a in data["arms"]:
         p(f"{a['name']}: {a['what']}")
+    p(data["armsNote"], QUIET)
     r += 1
 
     h("Rules for using it in a budget conversation")

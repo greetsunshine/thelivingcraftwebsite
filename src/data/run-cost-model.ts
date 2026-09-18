@@ -26,7 +26,7 @@ export const TOOL_NAME = 'The Run-Cost Model Tool';
 /** What the tool is for, in four lines. Printed on the Start step. */
 export const PURPOSE = [
   'You are asked to put a number on an AI agent proposal. This tool gives you that number, and it includes the costs most business cases leave out.',
-  'Four options are compared side by side over one period: a rules workflow, the same rules rebuilt on a written spec, a model that drafts while a person approves, and a full agent with tools.',
+  'Four options are compared side by side over one period: a rules workflow as first written, the same workflow rebuilt on the decision rules the agent build forced the team to write down, a model that drafts while a person approves, and a full agent with tools.',
   'Build cost is kept apart from run cost. Quality sits beside cost, so the number you argue about is cost per acceptable outcome, not cost per case.',
   'The result names the option with the lowest cost per acceptable outcome, says whether each option ever pays back its build, and lists the assumptions to check before you trust it.',
 ];
@@ -100,17 +100,17 @@ export interface Arm {
 export const ARMS: Arm[] = [
   {
     key: 'rules',
-    name: 'Rules workflow',
+    name: 'Rules workflow, as first written',
     short: 'Rules',
-    what: 'Plain code that follows fixed rules. No model anywhere in the path.',
-    legend: 'Plain code. No model.',
+    what: 'Plain code that follows fixed rules, written from what the team already knew. No model anywhere in the path. It handles the common cases and declines or escalates the rest, because the rules for the hard cases were never written down.',
+    legend: 'Plain code, from the rules the team already knew.',
   },
   {
     key: 'rules2',
-    name: 'Rules v2, on the written spec',
+    name: 'Rules v2, rebuilt on the written spec',
     short: 'Rules v2',
-    what: 'The same code, rebuilt on the decision rules the agent build forced the team to write down.',
-    legend: 'Same code, rebuilt on the written spec.',
+    what: 'The same kind of plain code, rebuilt after the agent was built. Building the agent forced the team to write every decision rule down. Code rebuilt on that written spec covers more cases and declines fewer, so it costs more to build and less to run. Still no model in the path.',
+    legend: 'Plain code again, rebuilt on every rule the agent build forced you to write down.',
   },
   {
     key: 'assisted',
@@ -127,6 +127,10 @@ export const ARMS: Arm[] = [
     legend: 'Model plans, calls tools, acts.',
   },
 ];
+
+/** The one thing readers ask: why two rules workflows. Printed under the four cards. */
+export const ARMS_NOTE =
+  'Rules and Rules v2 are both plain code with no model in the path. The difference is where the rules came from. Rules runs on the rules the team already knew. Rules v2 runs on every rule that got written down while the agent was being built, which is why it handles more cases and costs more to build. If you have not done that spec work, set the Rules v2 column equal to Rules, or leave it blank.';
 
 export const armByKey = (key: ArmKey): Arm => ARMS.find((a) => a.key === key)!;
 
