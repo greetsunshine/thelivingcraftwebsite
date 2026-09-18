@@ -59,6 +59,7 @@
 import RouteForm from './RouteForm.astro';
 import TalkToSunilLink from '../site/TalkToSunilLink.astro';
 import BookingWidget from '../BookingWidget.astro';
+import ThreadBrain from './ThreadBrain.astro';
 import { cohort } from '../../data/facts';
 import type { Region } from '../../data/regions';
 import {
@@ -148,6 +149,7 @@ const hasPrice = Boolean(region?.publicPrice);
 
 {/* ── 01 · Audience fit ─────────────────────────────────────────────────── */}
 <section class="wrap band" id="fit">
+  <ThreadBrain />
   <div class="sec-head">
     <span class="eyebrow"><span class="num">01</span> Who this is for</span>
     <h2>For engineers who've hit the <em>ceiling</em> of what tutorials teach.</h2>
@@ -805,6 +807,9 @@ const hasPrice = Boolean(region?.publicPrice);
      reading as cramped. The two responsive steps are in global.css, with the
      rest of the site's density pass. */
   .band { padding-block: calc(var(--space-7) + var(--space-2)); }
+
+  /* ThreadBrain sits in the empty space right of the heading. */
+  #fit { position: relative; }
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {

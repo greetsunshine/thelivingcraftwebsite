@@ -1,0 +1,144 @@
+---
+/**
+ * The thread brain from the October campaign poster (assets/LC-Brain.jpeg),
+ * beside "01 Who this is for" on the cohort page. Decoration only.
+ *
+ * Two layers, because the source is a photograph and not a vector:
+ * - the brain is a crop of the poster, with none of its text, and a soft
+ *   edge baked into the alpha channel (public/brand/lc-brain-*.webp);
+ * - the "lighting up" is the inline SVG on top: one circle on each knot the
+ *   photo already has, filled in the gold token. No script, no filter, no
+ *   external request.
+ *
+ * It plays once per page view, when it scrolls into view, in --motion-brand
+ * (800ms). It never loops and it never glows: CLAUDE.md bans "glowing
+ * brains", so there is no halo, blur or pulse. The knots go from nothing to
+ * solid gold and stop.
+ *
+ * The default is the FINAL frame. The script arms the start state only when
+ * motion is allowed, so a blocked script or prefers-reduced-motion both show
+ * the finished picture. Nothing is stored in the browser.
+ *
+ * Shown from 1100px up only. Below that it is display:none, and the
+ * <picture> hands a phone a one-pixel source, so the photo is not downloaded.
+ */
+
+// Knot centres in the crop's own pixels (610 × 730), found by colour, not by
+// eye. Only the knots inside the solid part of the soft edge are kept: a gold
+// dot on a thread that has faded out reads as a stray mark. Ordered left to
+// right, which is the way the thread runs in the poster.
+const KNOTS: Array<[number, number]> = [
+  [114, 208], [188, 269], [198, 407], [272, 472], [296, 512], [393, 213],
+  [412, 394], [443, 142], [498, 336],
+];---
+
+<figure class="thread-brain" aria-hidden="true" data-thread-brain>
+  <picture>
+    <!-- Below 1100px the figure is hidden, and a hidden lazy image is still
+         fetched. This one-pixel source means a phone downloads nothing. -->
+    <source media="(max-width: 1099px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACw=" />
+  <img
+    src="/brand/lc-brain-240.webp"
+    srcset="/brand/lc-brain-240.webp 240w, /brand/lc-brain-480.webp 480w"
+    sizes="240px"
+    width="240"
+    height="287"
+    alt=""
+    loading="lazy"
+    decoding="async"
+  />
+  </picture>
+  <svg viewBox="0 0 610 730" focusable="false">
+    {KNOTS.map(([cx, cy], i) => (
+      <circle cx={cx} cy={cy} r="9" style={`--i:${i}`} />
+    ))}
+  </svg>
+</figure>
+
+<script>
+  // Arm, then play once. Armed = the start frame; without this script the
+  // figure simply shows its final frame.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  for (const fig of document.querySelectorAll<HTMLElement>('[data-thread-brain]')) {
+    if (reduce.matches || !('IntersectionObserver' in window)) continue;
+    fig.dataset.armed = '';
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      fig.dataset.play = '';
+    }, { threshold: 0.4 });
+    io.observe(fig);
+  }
+</script>
+
+<style>
+  .thread-brain {
+    display: none;
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-7);
+    width: 240px;
+    margin: 0;
+    pointer-events: none;
+  }
+  @media (min-width: 1100px) {
+    .thread-brain { display: block; }
+  }
+  .thread-brain picture { display: block; }
+  .thread-brain img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Drops the poster's cream paper into the page's ivory. */
+    mix-blend-mode: multiply;
+  }
+  .thread-brain svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .thread-brain circle {
+    fill: var(--lc-gold);
+    stroke: var(--lc-forest);
+    stroke-width: 1.5;
+    stroke-opacity: 0.35;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Start frame: the thread is not yet drawn and no knot is tied. */
+  .thread-brain[data-armed] img {
+    -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+    mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+    -webkit-mask-size: 250% 100%;
+    mask-size: 250% 100%;
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  .thread-brain[data-armed] circle {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  /* Play: the thread draws left to right over the first 60%, then the knots
+     tie in order. Last knot ends at 800ms (240 + 8 × 50 + 150 = 790). */
+  .thread-brain[data-play] img {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    transition: -webkit-mask-position calc(var(--motion-brand) * 0.6) var(--ease-out),
+      mask-position calc(var(--motion-brand) * 0.6) var(--ease-out);
+  }
+  .thread-brain[data-play] circle {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+    transition-delay: calc(var(--motion-brand) * 0.3 + var(--i) * 50ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .thread-brain img { -webkit-mask-image: none; mask-image: none; }
+    .thread-brain circle { opacity: 1; transform: none; transition: none; }
+  }
+</style>

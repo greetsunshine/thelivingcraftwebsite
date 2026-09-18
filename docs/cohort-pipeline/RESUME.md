@@ -9,7 +9,8 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 19 September 2026
-**Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
+**Branch:** `feat/thread-network-animation`, stacked on `cta-book-now-rework` (PR #18).
+PR #14 (`cohort-page-restore`) is merged. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
@@ -266,6 +267,30 @@ domain and a monitored reply mailbox. Until then the browser also notifies
 
 Plain-language explainer for Sunil:
 https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
+
+---
+
+## The thread brain beside "01 Who this is for" — 18 September, stacked on PR #18
+
+Task 2 of "Organised TLC Design System Changes". Its own branch and PR, based on
+`cta-book-now-rework`, because it reads #18's tokens. Once #18 merges, point this PR at `main`.
+
+- **The source is a JPEG, not an SVG.** `assets/LC-Brain.jpeg` is the whole October campaign
+  poster (1080×1350, 551 KB, headline and logo baked in). Tracing it into a vector is what the
+  package forbids for the logo, so the brain is a crop (x 470–1080, y 470–1200, no text) with a
+  soft elliptical edge in the alpha: `public/brand/lc-brain-240.webp` (20 KB) and `-480` (68 KB).
+- **The animation is an inline SVG on top**: nine gold circles on knots the photo already has,
+  found by colour. The photo draws in left to right, then the knots appear in order. 800 ms
+  (`--motion-brand`), once, on scroll into view. No glow, blur or pulse: CLAUDE.md bans
+  "glowing brains", and the rule was read as banning the glow.
+- **Final frame is the default.** The script only arms the start frame when motion is allowed,
+  so reduced motion and a blocked script both show the finished picture.
+- **1100px and up only.** Hidden on phones; a `<picture>` source hands phones a one-pixel image,
+  so they do not download the photo. In `npm run dev` you will still see one `fetch` of it:
+  that is the Astro dev toolbar's image audit, not the page.
+- **The staging link is the branch alias**, and it follows every push to this branch:
+  `thelivingcraft-git-feat-thread-network-animation-greetsunshine-1213s-projects.vercel.app`
+  (Vercel shortens long names; the PR's Vercel comment has the exact link).
 
 ---
 
