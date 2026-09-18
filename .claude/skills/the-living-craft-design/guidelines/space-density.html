@@ -1,0 +1,11 @@
+<!-- @dsCard group="Spacing" viewport="700x230" name="Density" subtitle="Generous by default; data-density=&quot;compact&quot; retunes the same token names for tables" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>body{padding:18px 20px;background:var(--surface-sunken)}.lb{font-family:var(--font-mono);font-size:11px;line-height:1.4;color:var(--text-quiet)}.pane{background:var(--surface-panel);border-radius:var(--radius-panel);box-shadow:var(--shadow-raise);padding:var(--space-4) var(--space-5)}.r{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);height:var(--row-h);border-bottom:var(--border-w-hair) solid var(--border-hair);font-size:var(--size-3)}.r:last-child{border-bottom:0}.n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--text-quiet)}</style></head>
+<body><div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5)">
+<div><div class="lb" style="margin-bottom:8px">default · row 60px · control 44px · pad 24px</div>
+<div class="pane"><div class="r"><span>Retry wrapper is not idempotent</span><span class="n">#4821</span></div><div class="r"><span>Queue config unread</span><span class="n">#4818</span></div><div class="r"><span>Fan-out bound removed</span><span class="n">#4802</span></div></div></div>
+<div data-density="compact"><div class="lb" style="margin-bottom:8px">compact · row 40px · control 34px · pad 16px</div>
+<div class="pane"><div class="r"><span>Retry wrapper is not idempotent</span><span class="n">#4821</span></div><div class="r"><span>Queue config unread</span><span class="n">#4818</span></div><div class="r"><span>Fan-out bound removed</span><span class="n">#4802</span></div><div class="r"><span>Consumer not opened</span><span class="n">#4799</span></div><div class="r"><span>Idempotency key reused</span><span class="n">#4791</span></div></div></div>
+</div>
+<div class="lb" style="margin-top:var(--space-4)">Compact also tightens <span style="color:var(--text-body)">--radius-panel</span> to 16px and <span style="color:var(--text-body)">--size-3</span> to 14px — large radii read as toys at row height 40. Use it for tables, log views and the admin console; never for the marketing site.</div>
+</body></html>

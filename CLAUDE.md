@@ -944,6 +944,14 @@ prospect.
   unattached (404) — flagged to Sunil, not fixed here.
 
 ## Shared infrastructure
+- **The design system of record is the `the-living-craft-design` skill**, checked in at
+  [.claude/skills/the-living-craft-design/](.claude/skills/the-living-craft-design/). **Load it
+  before generating any page, tool, kit, PDF, slide or Artifact for this practice**, and tell
+  a subagent to load it too. A skill only loads on its own when a task looks like design work,
+  so a quiz page or a PDF kit would otherwise be built without it. Its `tokens/` folder and
+  `src/styles/ds/` are the same three files; change both in the same commit. Production is the
+  copy that has been measured, so when they disagree, production wins. It was a personal skill
+  under `~/.claude/skills/` until 18 September, which is why Ein never had it.
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
