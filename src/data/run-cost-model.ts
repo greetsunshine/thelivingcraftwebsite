@@ -38,7 +38,7 @@ export const HOW_TO_USE = [
   'Leave a line blank if you do not know it. A blank keeps the result off the screen; a 0 is a claim. After you fill a blank line, the page moves to the next blank line for you.',
   'Watch the bar and the progress bar at the top. The bar shows cost per acceptable outcome for each option as soon as enough lines are filled.',
   'Read the result at the end. It names the leading option, the break-even month for each, and the assumptions that decide the answer. Get the PDF of your model there.',
-  'Prefer a spreadsheet? The Excel workbook on the Start step has the same rows and the same formulas, with an instruction beside every line.',
+  'Prefer a spreadsheet? Download Excel version, on the Start step, has the same rows and the same formulas, with an instruction beside every line.',
 ];
 
 /** The notice above the loaded example, on the Start step and in the bar. */
