@@ -142,7 +142,7 @@ export const resources: Resource[] = [
       'Answer most of the questions without building anything, using an evaluation set, a person playing the agent, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive. Score in the page; the total, the section scores and the outcome update as you go. Copy the scorecard or print it without giving anything. A PDF of your scored copy is built against a name and an email address.',
+      'Interactive, in six steps with a progress bar. Score in the page; the total, the section scores and the outcome update as you go. Copy the scorecard or print it without giving anything. A branded PDF of your scored copy, checked before download, is built against a name and an email address.',
     url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },

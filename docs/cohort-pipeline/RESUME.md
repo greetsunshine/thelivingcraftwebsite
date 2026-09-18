@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 17 September 2026
+**Last updated:** 18 September 2026
 **Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -63,6 +63,26 @@ employment context remains without implying employer endorsement.
 
 The same cleanup was applied to `/caio` and `/assessment`: the unapproved stat band and
 product-scale claims were removed rather than inferred from older material.
+
+---
+
+## The POC Selection Tool is stepped, and its PDF is branded and checked — 18 September
+
+Six steps with a progress bar; every step still renders without JavaScript and in print.
+The PDF is built in three stages in `lib/resources/poc-screen-pdf.ts`: `buildModel()`,
+`checkModel()` (12 named checks, recomputed independently of the model), then drawing.
+A failed check is a 500 and nothing is saved, because `verify` runs before the request
+handler. The cohort copy on the PDF's *Join the cohort* panel is read from `facts.ts` and
+`offer-display.ts`; if D1 changes what is published, that panel changes with it and the
+"no unpublished figure" check is where a stray fee would be caught.
+
+Two things to know:
+- **Fonts.** The design system names Figtree (standing in for Sofia Pro) and ships no file.
+  The PDF uses Helvetica, the fallback the token stack itself names. Adding a licensed
+  font file and `@pdf-lib/fontkit` is the change that closes that gap.
+- **The other two PDF renderers** (Agent Authority Review, Run-Cost Model) do not yet have
+  a `verify` step or a brand band. The `Renderer` interface makes both optional so they
+  keep working; giving them the same treatment is the obvious next piece.
 
 ---
 

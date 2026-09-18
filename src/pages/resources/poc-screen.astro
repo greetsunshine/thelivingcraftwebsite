@@ -6,12 +6,19 @@
 // opens for its author is worse than no resource. Self-hosting also makes the
 // twelve questions crawlable, which is the point of publishing them at all.
 //
+// THE TOOL IS SIX STEPS: Start, the four sections A to D, and the result. One
+// step is on screen at a time, with a progress bar that fills as questions are
+// answered. The steps are only hidden by the script: without JavaScript, and in
+// print, every step is on the page in order, so a crawler and a printer see the
+// whole tool. Step state is a number in the closure, like the scores.
+//
 // Scores are a closure and die with the tab. No localStorage, no sessionStorage.
 // The one thing that leaves the browser is the PDF request: name, email and
 // the twelve scores go to /api/pipeline/resource-pdf, which records the person
-// (the V4 addendum's "optional email request"), builds the PDF from the same
-// data module this page renders from, and hands it back. The scores are used
-// for the file and not stored; the dialog says so.
+// (the V4 addendum's "optional email request"), checks and builds the PDF from
+// the same data module this page renders from, and hands it back with the list
+// of checks it passed. The scores are used for the file and not stored; the
+// dialog says so.
 //
 // Every string here comes from src/data/poc-screen.ts. The page's script
 // imports that module too (Vite bundles it), so the live score bar, the result
@@ -72,6 +79,15 @@ const rows = SECTIONS.map((s) => ({
   items: s.items.map((it) => ({ ...it, i: n++ })),
 }));
 
+// The six steps, in order. The script and the progress bar both read this
+// list from the DOM, so the markup is the one place the order is written.
+const steps = [
+  { key: 'start', dot: '0', name: 'Start' },
+  ...SECTIONS.map((s) => ({ key: s.letter.toLowerCase(), dot: s.letter, name: s.name })),
+  { key: 'result', dot: '✓', name: 'Result' },
+];
+const STEP_COUNT = steps.length;
+
 const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
 const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 ---
@@ -87,8 +103,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <h1>{TOOL_NAME}</h1>
       <p class="lead">
         Score an agent proof of concept <em>before</em> you build it, and find out whether it can
-        reach production. Twelve questions. Each one says what earns a 0, a 1 and a 2, so two
-        people scoring the same idea land on the same number.
+        reach production. Twelve questions in four short steps. Each one says what earns a 0, a 1
+        and a 2, so two people scoring the same idea land on the same number.
       </p>
       <p class="hero-note mono">
         {QUESTION_COUNT} questions · {SECTIONS.length} sections · maximum {MAX_SCORE} · one hard gate
@@ -97,47 +113,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     </div>
   </section>
 
-  <!-- Purpose and how to use -->
-  <section id="about">
-    <div class="wrap">
-      <div class="about">
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
-          <ul class="plain">
-            {PURPOSE.map((p) => <li>{p}</li>)}
-          </ul>
-        </div>
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">02</span> How to use it</span>
-          <ol class="steps">
-            {HOW_TO_USE.map((p) => <li>{p}</li>)}
-          </ol>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Scoring rules -->
-  <section id="rules">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">03</span> Rules for scoring in a room</span>
-        <h2>Five rules that decide whether this is useful or <em>theatre</em>.</h2>
-      </div>
-      <ol class="howto">
-        {HOW_TO_RUN.map((h) => (
-          <li>
-            <strong>{h.lead}</strong> {h.rest}
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
-  {/* Everything the score bar has to stay above lives inside this one
-      element. A sticky element only sticks within its parent, so the bar's
-      parent has to be as tall as the questions and the result together. */}
-  <div class="scoring" id="scoring">
+  {/* The tool. Everything the score bar has to stay above lives inside this
+      one element: a sticky element only sticks within its parent. */}
+  <div class="tool" id="tool" data-step="0">
     <div class="scorebar-wrap">
       <div class="wrap">
         <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
@@ -155,32 +133,78 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
               </span>
             ))}
           </div>
-          <div class="sb-prog mono" id="progress">0/{QUESTION_COUNT} answered</div>
+        </div>
+
+        {/* The progress bar. The fill is answered questions out of twelve; the
+            pips are the six steps, and each one is a button that jumps there. */}
+        <div class="progress" aria-label="Progress">
+          <div class="p-track" role="progressbar" aria-valuemin="0" aria-valuemax={QUESTION_COUNT} aria-valuenow="0" id="p-track">
+            <div class="p-fill" id="p-fill" style="width:0%"></div>
+          </div>
+          <div class="p-row">
+            <ol class="p-steps" id="p-steps">
+              {steps.map((s, i) => (
+                <li>
+                  <button type="button" class="p-step" data-go={i} aria-current={i === 0 ? 'step' : undefined}>
+                    <span class="p-dot mono">{s.dot}</span>
+                    <span class="p-label">{s.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <span class="p-text mono" id="p-text">Step 1 of {STEP_COUNT} · 0 of {QUESTION_COUNT} answered</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <section id="score">
+    <!-- Step 0: start -->
+    <section class="step" id="step-start" data-index="0">
       <div class="wrap">
-        <div class="controls" role="group" aria-label="Assessment controls">
-          <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
+        <div class="about">
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+            <ul class="plain">
+              {PURPOSE.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">02</span> How to use it</span>
+            <ol class="steps">
+              {HOW_TO_USE.map((p) => <li>{p}</li>)}
+            </ol>
+          </div>
+        </div>
+
+        <div class="rules">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">03</span> Rules for scoring in a room</span>
+            <h2 class="step-title" tabindex="-1">Five rules that decide whether this is useful or <em>theatre</em>.</h2>
+          </div>
+          <ol class="howto">
+            {HOW_TO_RUN.map((h) => (
+              <li>
+                <strong>{h.lead}</strong> {h.rest}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-primary" type="button" data-go="1">Start scoring&nbsp;<span class="arrow">→</span></button>
           <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
-          <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
-          <button class="btn btn-ghost" id="print" type="button">Print</button>
-          <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
-          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
       </div>
     </section>
 
-    <!-- The twelve -->
-    {rows.map((s) => (
-      <section id={`section-${s.letter.toLowerCase()}`} class="qsection">
+    <!-- Steps 1 to 4: the twelve -->
+    {rows.map((s, si) => (
+      <section id={`step-${s.letter.toLowerCase()}`} class="step qsection" data-index={si + 1}>
         <div class="wrap">
           <div class="shead">
             <span class="sletter">{s.letter}</span>
             <div class="stitle">
-              <h2 class="sname">{s.name}</h2>
+              <h2 class="sname step-title" tabindex="-1">{s.name}</h2>
               <p class="squestion">{s.question}</p>
             </div>
             {s.gate && <span class="sgate">Hard gate</span>}
@@ -214,16 +238,24 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
               </div>
             </div>
           ))}
+
+          <div class="stepnav">
+            <button class="btn btn-ghost" type="button" data-go={si}>← Back</button>
+            <span class="stepnote mono" id={`stepnote-${s.letter}`}>0 of {s.items.length} answered in this step</span>
+            <button class="btn btn-primary" type="button" data-go={si + 2}>
+              {si + 1 < SECTIONS.length ? 'Next' : 'See the result'}&nbsp;<span class="arrow">→</span>
+            </button>
+          </div>
         </div>
       </section>
     ))}
 
-    <!-- The result -->
-    <section id="result">
+    <!-- Step 5: the result -->
+    <section class="step" id="step-result" data-index={STEP_COUNT - 1}>
       <div class="wrap">
         <div class="sec-head">
           <span class="eyebrow"><span class="num">04</span> Your result</span>
-          <h2>The outcome, read against the <em>rubric</em>.</h2>
+          <h2 class="step-title" tabindex="-1">The outcome, read against the <em>rubric</em>.</h2>
         </div>
         <div class="resultcard" id="resultcard" data-b="none">
           <div class="r-head">
@@ -240,34 +272,39 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
             <p class="r-fixlead">Lowest scores first, with the move that answers each one before the agent exists.</p>
             <ol id="r-fixlist"></ol>
           </div>
-          <div class="r-actions">
-            <button class="btn btn-primary" id="pdf2" type="button">Get the PDF</button>
-            <button class="btn btn-ghost" id="copy2" type="button">Copy the scorecard</button>
+          <div class="r-actions" role="group" aria-label="Assessment controls">
+            <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
+            <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
+            <button class="btn btn-ghost" id="print" type="button">Print</button>
+            <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
+            <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
           </div>
+        </div>
+
+        <div class="rubric">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">05</span> The rubric</span>
+            <h2>Agree these <em>before</em> you score, not after.</h2>
+          </div>
+          <p class="prose-lead">
+            A total one point above a line is a narrow, not a yes. The row that matches your result is highlighted.
+          </p>
+          {CUT_LINES.map((c) => (
+            <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
+              <div class="cutscore mono">{c.score}</div>
+              <div class="cutname">{c.name}</div>
+              <div class="cutwhat">{c.what}</div>
+            </div>
+          ))}
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <button class="btn btn-ghost" type="button" data-go="1">Change an answer</button>
         </div>
       </div>
     </section>
   </div>
-
-  <!-- The rubric -->
-  <section id="cuts">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">05</span> The rubric</span>
-        <h2>Agree these <em>before</em> you score, not after.</h2>
-      </div>
-      <p class="prose-lead">
-        A total one point above a line is a narrow, not a yes. The row that matches your result is highlighted.
-      </p>
-      {CUT_LINES.map((c) => (
-        <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
-          <div class="cutscore mono">{c.score}</div>
-          <div class="cutname">{c.name}</div>
-          <div class="cutwhat">{c.what}</div>
-        </div>
-      ))}
-    </div>
-  </section>
 
   <!-- The four moves -->
   <section id="moves">
@@ -326,7 +363,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <h2 id="pdf-title">Get the PDF</h2>
       <p class="pdf-lead">
         The PDF carries your twelve answers, the score, the outcome and what to fix first. It is
-        built against a name and an email address.
+        built against a name and an email address, and checked before it is handed over.
       </p>
       <div class="pdf-grid">
         <label>
@@ -344,6 +381,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         tool once. It does not start any other email.
       </p>
       <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
+      <ul class="pdf-checks mono" id="pdf-checks" hidden></ul>
       <div class="pdf-actions">
         <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
         <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
@@ -353,11 +391,36 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 </ResourcesLayout>
 
 <style>
+  /* ── steps ────────────────────────────────────────────────────────────── */
+  /* Without the script every step is visible. With it, only the current one.
+     `data-step` on the tool is the cursor; each step carries its index. */
+  .tool.js .step { display: none; }
+  .tool.js .step.current { display: block; }
+  .step { padding-top: var(--space-6); padding-bottom: 0; }
+  .step-title:focus { outline: none; }
+  .step-title:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
+
+  .stepnav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-hair);
+  }
+  .stepnav .btn-primary { margin-left: auto; }
+  .stepnote { font-size: var(--size-1); color: var(--text-quiet); }
+  /* Without the script the steps are all on the page, so the buttons that move
+     between them do nothing useful and are hidden. */
+  .tool:not(.js) .stepnav [data-go], .tool:not(.js) .p-step { display: none; }
+
   /* ── about ────────────────────────────────────────────────────────────── */
   .about {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
+    margin-bottom: var(--space-7);
   }
   .about-col {
     background: var(--surface-panel);
@@ -438,23 +501,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   ol.howto strong { font-weight: var(--weight-strong); }
 
-  /* ── controls ─────────────────────────────────────────────────────────── */
-  #score { padding-top: var(--space-5); padding-bottom: 0; }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: center;
-  }
-  .copied {
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-  }
-
   /* ── the score bar ────────────────────────────────────────────────────── */
-  /* Sticky under the nav. Its parent is `.scoring`, which wraps every section
-     the bar has to stay above, so it holds through the questions and the
-     result and releases before the rubric. */
+  /* Sticky under the nav. Its parent is `.tool`, which wraps every step, so it
+     holds through the whole tool and releases before the moves. */
   .scorebar-wrap {
     position: sticky;
     /* The nav is 76px on a desktop and wraps taller on a phone. The script
@@ -466,11 +515,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .scorebar {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--space-3) var(--space-5);
     background: var(--surface-panel);
-    border-radius: var(--radius-panel);
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
     box-shadow: var(--shadow-raise);
     padding: var(--space-3) var(--space-5);
   }
@@ -516,11 +565,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     white-space: nowrap;
   }
   .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
-  .sb-prog {
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-    white-space: nowrap;
-  }
   /* Bands read through colour on the word, not a yellow chip — sun is reserved
      for things you can click, so it cannot carry a status. */
   [data-b='stop'] .band, [data-b='gate'] .band, [data-b='stop'] .r-band, [data-b='gate'] .r-band { color: var(--danger); }
@@ -528,8 +572,76 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   [data-b='go'] .band, [data-b='go'] .r-band { color: var(--text-loud); }
   [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
 
+  /* ── the progress bar ─────────────────────────────────────────────────── */
+  /* Joined to the score bar as one panel: the bar's bottom corners are square
+     and the progress block carries the rounded ones. The fill is sun, and it is
+     the one yellow thing here that is not a control, so it stays a thin line. */
+  .progress {
+    background: var(--surface-panel);
+    border-radius: 0 0 var(--radius-panel) var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: 0 var(--space-5) var(--space-3);
+  }
+  .p-track {
+    height: 4px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .p-fill {
+    height: 100%;
+    background: var(--sun);
+    border-radius: var(--radius-pill);
+    transition: width var(--motion-base, 160ms) ease;
+  }
+  .p-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-3);
+  }
+  .p-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .p-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 3px 10px 3px 4px;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .p-step:hover { background: var(--surface-hover); color: var(--text-body); }
+  .p-step:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .p-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    display: inline-grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .p-step[aria-current='step'] { color: var(--text-loud); }
+  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
+
   /* ── question sections ────────────────────────────────────────────────── */
-  .qsection { padding-top: var(--space-7); padding-bottom: 0; }
   .shead {
     display: grid;
     grid-template-columns: auto 1fr auto auto;
@@ -656,12 +768,12 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .anchor[aria-pressed='true'] .av { color: var(--text-on-accent); }
 
   /* ── the result ───────────────────────────────────────────────────────── */
-  #result { padding-top: var(--space-7); }
   .resultcard {
     background: var(--surface-panel);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
     padding: var(--space-6);
+    margin-bottom: var(--space-7);
   }
   .r-head {
     display: flex;
@@ -747,7 +859,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .r-fix :global(.ft b) { font-weight: var(--weight-strong); }
   .r-fix :global(.ft .fm) { display: block; margin-top: 2px; color: var(--accent-ink); }
   .r-fix :global(.ft .fm a) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+  .copied { font-size: var(--size-1); color: var(--text-quiet); }
 
   /* ── rubric ───────────────────────────────────────────────────────────── */
   .prose-lead {
@@ -847,6 +960,23 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
   .pdf-status.err { color: var(--danger); }
   .pdf-status.ok { color: var(--text-loud); }
+  .pdf-checks {
+    list-style: none;
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-3) 0 0;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 180px;
+    overflow: auto;
+  }
+  .pdf-checks :global(li) { display: flex; gap: var(--space-2); }
+  .pdf-checks :global(li b) { flex: 0 0 5ch; font-weight: var(--weight-strong); color: var(--text-body); }
+  .pdf-checks :global(li.fail b) { color: var(--danger); }
   .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
   .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
 
@@ -854,9 +984,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     .about { grid-template-columns: 1fr; }
     .scorebar { grid-template-columns: auto 1fr; }
     .sb-secs { grid-column: 1 / -1; }
-    .sb-prog { display: none; }
     .sb-score { font-size: var(--size-6); }
     .band { font-size: var(--size-3); }
+    .p-label { display: none; }
+    .p-step { padding-right: 4px; }
+    .p-text { white-space: normal; }
     .shead { grid-template-columns: auto 1fr; }
     .sgate, .ssub { grid-column: 2; justify-self: start; margin-top: 0; }
     .sblurb { margin-left: 0; }
@@ -866,13 +998,15 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     .r-secs { grid-template-columns: 1fr 1fr; }
     .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
     .pdf-grid { grid-template-columns: 1fr; }
+    .stepnav .btn-primary { margin-left: 0; }
   }
 
-  /* ── print: this is a scorecard people print ──────────────────────────── */
+  /* ── print: every step, in order, as a scorecard ──────────────────────── */
   @media print {
+    .tool.js .step { display: block; }
     .scorebar-wrap { position: static; background: none; }
-    .scorebar, .resultcard, .about-col { box-shadow: none; border: 1px solid var(--border-hair); }
-    .controls, .hero-cta, .r-actions, .pdf-dialog { display: none !important; }
+    .scorebar, .progress, .resultcard, .about-col { box-shadow: none; border: 1px solid var(--border-hair); }
+    .stepnav, .hero-cta, .r-actions, .pdf-dialog, .p-steps { display: none !important; }
     .item { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
     .cutrow { opacity: 1 !important; break-inside: avoid; }
     .move, .anchor, .resultcard { break-inside: avoid; }
@@ -883,8 +1017,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 </style>
 
 <script>
-  // Scores are a plain array in this closure. Never written to localStorage,
-  // never posted except inside the PDF request, and gone when the tab closes.
+  // Scores are a plain array in this closure, and the step is a number beside
+  // it. Never written to localStorage, never posted except inside the PDF
+  // request, and gone when the tab closes.
   //
   // This is a module script, so it imports the same data module the page
   // rendered from. The score bar, the result summary, the copied scorecard
@@ -905,15 +1040,61 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   let state: (number | null)[] = new Array(QUESTION_COUNT).fill(null);
 
-  // The score bar sticks under the nav, and the nav is taller when its links
-  // wrap on a narrow screen. Measure it rather than guess.
-  const nav = document.querySelector<HTMLElement>('header.nav');
-  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
-  function placeBar() {
-    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  // ---- the steps ----------------------------------------------------------
+
+  const tool = $('tool');
+  const stepEls = [...tool.querySelectorAll<HTMLElement>('.step')];
+  const STEP_COUNT = stepEls.length;
+  const LAST = STEP_COUNT - 1;
+  let step = 0;
+  tool.classList.add('js');
+
+  // Which questions live in which step. Step 0 and the last have none.
+  const stepQuestions = stepEls.map((el) => [...el.querySelectorAll<HTMLElement>('.item')].map((i) => Number(i.dataset.i)));
+
+  function stepLabel(i: number) {
+    if (i === 0) return 'Start';
+    if (i === LAST) return 'Result';
+    return `${SECTIONS[i - 1].letter} ${SECTIONS[i - 1].name}`;
   }
-  placeBar();
-  window.addEventListener('resize', placeBar);
+
+  function goTo(i: number, move = true) {
+    step = Math.max(0, Math.min(LAST, i));
+    tool.dataset.step = String(step);
+    stepEls.forEach((el, k) => el.classList.toggle('current', k === step));
+    updateProgress();
+    if (!move) return;
+    // Scroll so the tool's top sits just under the nav. The score bar is the
+    // tool's first child, so the step heading lands directly beneath it.
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const top = tool.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - 8), behavior: 'smooth' });
+    stepEls[step].querySelector<HTMLElement>('.step-title')?.focus({ preventScroll: true });
+  }
+
+  function updateProgress() {
+    const answered = state.filter((v) => v !== null).length;
+    $('p-fill').style.width = `${(answered / QUESTION_COUNT) * 100}%`;
+    $('p-track').setAttribute('aria-valuenow', String(answered));
+    $('p-text').textContent = `Step ${step + 1} of ${STEP_COUNT} · ${stepLabel(step)} · ${answered} of ${QUESTION_COUNT} answered`;
+    document.querySelectorAll<HTMLButtonElement>('.p-step').forEach((b) => {
+      const i = Number(b.dataset.go);
+      if (i === step) b.setAttribute('aria-current', 'step');
+      else b.removeAttribute('aria-current');
+      // A section step is "done" once all of its questions are answered.
+      const qs = stepQuestions[i];
+      b.classList.toggle('done', qs.length > 0 && qs.every((q) => state[q] !== null));
+    });
+    stepQuestions.forEach((qs, i) => {
+      if (!qs.length) return;
+      const note = document.getElementById(`stepnote-${SECTIONS[i - 1].letter}`);
+      if (note) note.textContent = `${qs.filter((q) => state[q] !== null).length} of ${qs.length} answered in this step`;
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) => {
+    b.addEventListener('click', () => goTo(Number(b.dataset.go)));
+  });
 
   // ---- the read, in the bar's words ---------------------------------------
 
@@ -955,8 +1136,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       ? line.note
       : `Answer all ${QUESTION_COUNT} questions to read the outcome. Until then this shows the running total, and a blank counts as 0.`;
 
-    const secs = $('r-secs');
-    secs.replaceChildren(
+    $('r-secs').replaceChildren(
       ...r.sections.map((s) => {
         const box = el('div', `r-sec${s.score <= s.max / 3 && s.answered > 0 ? ' low' : ''}`);
         box.append(el('span', 'k', `${s.letter} · ${s.name}`));
@@ -982,15 +1162,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     const weak = FLAT.map((it, i) => ({ it, i, v: state[i] }))
       .filter((x) => x.v === 0 || x.v === 1)
       .sort((a, b) => (a.v ?? 0) - (b.v ?? 0) || Number(b.it.gate) - Number(a.it.gate));
-    const fix = $('r-fix');
-    fix.hidden = weak.length === 0;
+    $('r-fix').hidden = weak.length === 0;
     $('r-fixlist').replaceChildren(
       ...weak.map((x) => {
         const li = el('li');
         li.append(el('span', `fn${x.v === 0 ? ' zero' : ''}`, pad(x.i + 1)));
         const t = el('div', 'ft');
-        const b = el('b', undefined, `${x.it.short}, scored ${x.v}${x.it.gate ? ' (hard gate)' : ''}. `);
-        t.append(b, document.createTextNode(x.it.a[x.v ?? 0]));
+        t.append(el('b', undefined, `${x.it.short}, scored ${x.v}${x.it.gate ? ' (hard gate)' : ''}. `), document.createTextNode(x.it.a[x.v ?? 0]));
         const m = moveFor(x.i + 1);
         if (m) {
           const fm = el('span', 'fm');
@@ -1019,7 +1197,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     $('total').textContent = String(r.total);
     $('band').textContent = line.band;
     $('note').textContent = line.note;
-    $('progress').textContent = `${r.answered}/${QUESTION_COUNT} answered`;
     $('verdict').dataset.b = line.key;
     for (const s of r.sections) {
       $(`sec-${s.letter}`).textContent = String(s.score);
@@ -1027,6 +1204,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     }
 
     renderResult(r, line);
+    updateProgress();
 
     for (const key of ['gate', 'go', 'narrow', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
@@ -1048,13 +1226,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   $('blank').addEventListener('click', () => {
     state = new Array(QUESTION_COUNT).fill(null);
     update();
-    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    goTo(1);
   });
 
   $('example').addEventListener('click', () => {
     state = EXAMPLE.slice();
     update();
-    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    goTo(LAST);
   });
 
   $('print').addEventListener('click', () => window.print());
@@ -1079,7 +1257,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     return lines.join('\n');
   }
 
-  async function copyScorecard() {
+  $('copy').addEventListener('click', async () => {
     const status = $('copied');
     try {
       await navigator.clipboard.writeText(scorecard());
@@ -1088,37 +1266,55 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       status.textContent = 'Copy blocked by the browser. Use Print instead.';
     }
     setTimeout(() => (status.textContent = ''), 4000);
-  }
-  $('copy').addEventListener('click', copyScorecard);
-  $('copy2').addEventListener('click', () => {
-    copyScorecard();
-    $('copied').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+
+  // The score bar sticks under the nav, and the nav is taller when its links
+  // wrap on a narrow screen. Measure it rather than guess.
+  const nav = document.querySelector<HTMLElement>('header.nav');
+  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
+  function placeBar() {
+    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  }
+  placeBar();
+  window.addEventListener('resize', placeBar);
 
   // ---- the PDF ------------------------------------------------------------
 
   const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
   const form = document.getElementById('pdf-form') as HTMLFormElement;
   const pdfStatus = $('pdf-status');
+  const pdfChecks = $('pdf-checks');
   const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
-
   const cancel = $('pdf-cancel');
 
   function openPdf() {
     pdfStatus.textContent = '';
     pdfStatus.className = 'pdf-status';
+    pdfChecks.hidden = true;
+    pdfChecks.replaceChildren();
     submit.disabled = false;
     cancel.textContent = 'Cancel';
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
   }
   $('pdf').addEventListener('click', openPdf);
-  $('pdf2').addEventListener('click', openPdf);
-  $('pdf-cancel').addEventListener('click', () => dialog.close());
+  cancel.addEventListener('click', () => dialog.close());
 
   function say(text: string, kind: 'ok' | 'err' | '') {
     pdfStatus.textContent = text;
     pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
+  }
+
+  function showChecks(checks: { name: string; ok: boolean }[]) {
+    if (!Array.isArray(checks) || !checks.length) return;
+    pdfChecks.replaceChildren(
+      ...checks.map((c) => {
+        const li = el('li', c.ok ? undefined : 'fail');
+        li.append(el('b', undefined, c.ok ? 'ok' : 'failed'), document.createTextNode(c.name));
+        return li;
+      }),
+    );
+    pdfChecks.hidden = false;
   }
 
   function download(base64: string, filename: string) {
@@ -1146,7 +1342,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     }
 
     submit.disabled = true;
-    say('Building the PDF.', '');
+    say('Checking and building the PDF.', '');
 
     // One key per attempt. A retry after a network error is a new attempt; a
     // repeat click while this one runs is stopped by the disabled button.
@@ -1175,6 +1371,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
         const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
         say(errs || body.error || 'We could not build the PDF just now. Use Print on the page instead.', 'err');
+        showChecks(body.checks);
         submit.disabled = false;
         return;
       }
@@ -1182,11 +1379,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       download(body.pdf, body.filename || 'poc-selection-tool-scored.pdf');
       cancel.textContent = 'Close';
 
-      if (body.saved) {
-        say(`Your PDF is downloading. ${body.delivery ?? ''}`.trim(), 'ok');
-      } else {
-        say(`Your PDF is downloading. ${body.note ?? ''}`.trim(), 'ok');
-      }
+      const checks = Array.isArray(body.checks) ? body.checks : [];
+      const passed = checks.filter((c: { ok: boolean }) => c.ok).length;
+      const checkLine = checks.length ? ` Checked before download: ${passed} of ${checks.length} checks passed.` : '';
+      say(`Your PDF is downloading.${checkLine} ${body.saved ? (body.delivery ?? '') : (body.note ?? '')}`.trim(), 'ok');
+      showChecks(checks);
     } catch {
       say('The request did not reach the server. Check the connection and try again, or use Print.', 'err');
       submit.disabled = false;
@@ -1194,4 +1391,5 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   });
 
   update();
+  goTo(0, false);
 </script>
