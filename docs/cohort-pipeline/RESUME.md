@@ -309,6 +309,26 @@ every surface the package's 1px line. Step 2 had added a separate `--panel-borde
 `global.css` panels; that was taken back out, or those panels would draw the line twice.
 **Never add a border to something that uses a shadow token.**
 
+**Step 5, /craft and the console components.** Fixed by scanning every stylesheet for two
+shapes, not by eye: dark text on an action or dark fill, and a status on the action fill.
+- Six actions on forest carried ink text (about 1.2:1): the dock toggle, tour Next,
+  familiarity go, the dashboard's next-step, to-do tab and live banner. All now
+  `--text-on-accent`.
+- Five statuses used the action fill: the quiz "open" state (now success green), both
+  pinned tags (now ivory with a control-line edge), the ADR week badge and the dashboard
+  count (now soft or panel fills). **A status is never forest-filled.**
+- Forum voices applied: the instructor's avatar mark is forest with ivory initials (a face,
+  not a status); the Instructor badge, the endorsed tag and the thread's "Sunil replied" tag
+  are soft green with forest text; "solved" is an ink outline, so it can never be mistaken
+  for Sunil's endorsement; the agent dock's avatar is the machine's gold, because it answers
+  from the syllabus.
+- Code stays monospace (`--font-code`) in nine rules, including the seat-code field.
+  Console headings and small titles are Figtree, not the serif: the package keeps the serif
+  out of dense working areas. Seven scrims moved to the new ink. The gated layouts load
+  Source Serif 4 and no longer load JetBrains Mono.
+- **Not fixed, and not a colour problem:** `/craft/login` at desktop width puts the card
+  left of centre and the footer at the top right. It did that before the redesign too.
+
 **Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
 They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest
 3.82 (large text only), muted on line 4.15 (disabled controls only). So gold is a fill and a

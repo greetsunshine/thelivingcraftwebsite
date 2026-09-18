@@ -434,11 +434,11 @@ const ordered = [...threads].sort(
     white-space: nowrap;
     border: 1px solid transparent;
   }
-  .tag.sunil   { background: var(--accent-quiet); color: var(--accent-ink-strong); }
-  .tag.solved  { background: var(--agent-human-bg); color: var(--agent-human); }
+  .tag.sunil   { background: var(--agent-instructor-bg); color: var(--agent-instructor); }
+  .tag.solved  { background: transparent; border-color: var(--agent-human); color: var(--agent-human); }
   .tag.open    { border-color: var(--line-strong); color: var(--ink-soft); }
   .tag.private { border-color: var(--line-strong); color: var(--ink-faint); }
-  .tag.pinned  { background: var(--surface-invert); color: var(--text-on-invert); }
+  .tag.pinned  { background: var(--surface-sunken); border-color: var(--border-field); color: var(--text-loud); }
 
   /* --- empties ---------------------------------------------------------- */
   .blank {

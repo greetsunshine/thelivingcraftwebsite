@@ -969,7 +969,9 @@ prospect.
   the action colour's old name and now resolves to forest green, so ink text on it is
   about 1.2:1; text on it is `--text-on-accent` (ivory). A status pill, badge or tag is
   therefore never forest-filled: it is an outline or a soft fill. The forum's instructor
-  badge is soft green with forest text for exactly this reason. One trap: `global.css` already owns short names like `.mod` (the
+  badge is soft green with forest text for exactly this reason. Code keeps a monospace
+  face through `--font-code`: `--font-mono` is Figtree now, so any rule that sets code or
+  the seat code must use `--font-code`. One trap: `global.css` already owns short names like `.mod` (the
   public module card), so a bare `.mod` in a session row renders inside a phantom nested
   card. Namespace anything generic.
   `admin.css` imports `ds/contract.css` and `ds/theme.css` — the tokens — and the
