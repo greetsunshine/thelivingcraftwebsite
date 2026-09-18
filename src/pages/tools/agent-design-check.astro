@@ -752,8 +752,13 @@ const schema: unknown[] = [
           'Nothing above was recorded and no one has been notified. If you want these questions asked against your own system, ',
         ),
       );
-      const ask = el('a', '', 'send a note about what you are building');
-      ask.href = '/#ask-drop';
+      // The cohort page's separate "Ask about the cohort" form is gone — its
+      // job was folded into the one branching application flow, and the
+      // secondary CTA everywhere else on the site is now "Talk with Sunil"
+      // (a real call). Neither is the right size for "send a quick note", so
+      // this stays the one place that hands off by email directly.
+      const ask = el('a', '', 'email us about what you are building');
+      ask.href = 'mailto:apply@thelivingcraft.ai';
       after.append(ask);
       after.append(document.createTextNode(' — that is a separate thing you choose to do.'));
       panel.append(after);
@@ -859,7 +864,7 @@ const schema: unknown[] = [
   .adc-after { padding-block: var(--space-8) var(--space-7); }
   .adc-after h2 {
     font-size: var(--size-6);
-    font-weight: var(--weight-strong);
+    font-weight: var(--weight-display);
     color: var(--text-loud);
     margin-bottom: var(--space-3);
   }
@@ -921,10 +926,12 @@ const schema: unknown[] = [
   }
 
   /* ── the worked example ──────────────────────────────────────────────────
-     Ember is the secondary feature surface and it carries INK text, never
-     white. This is the page's one warm card; the hero is its one black area. */
+     The page's one feature card. Under design system v1 it is soft green with
+     a 1px line: the package keeps gold for decoration, and a gold block of body
+     text is only 4.60:1 while soft green gives ink 11.89:1. */
   .example-card {
-    background: var(--surface-ember);
+    background: var(--surface-hover);
+    box-shadow: var(--shadow-raise);
     color: var(--ink-1);
     border-radius: var(--radius-card);
     padding: var(--space-7);
@@ -943,8 +950,8 @@ const schema: unknown[] = [
     font-family: var(--font-mono);
     font-size: var(--size-1);
     line-height: var(--lh-snug);
-    /* Ink at 85% still clears 4.5:1 on ember; it is a marginal note, not body. */
-    color: rgba(22, 33, 46, 0.85);
+    /* A marginal note, not body. Muted on soft green is 5.32:1. */
+    color: var(--text-quiet);
   }
 
   /* ── what the three answers mean ─────────────────────────────────────────
@@ -1067,7 +1074,7 @@ const schema: unknown[] = [
   }
   .area-head h2 {
     font-size: clamp(var(--size-6), 3vw, var(--size-7));
-    font-weight: var(--weight-heavy);
+    font-weight: var(--weight-display);
     color: var(--text-loud);
     margin: var(--space-3) 0 var(--space-3);
   }
@@ -1264,7 +1271,7 @@ const schema: unknown[] = [
   }
   .tool-copy h2 {
     font-size: var(--size-5);
-    font-weight: var(--weight-strong);
+    font-weight: var(--weight-display);
     color: var(--text-loud);
   }
   .tool-copy p {

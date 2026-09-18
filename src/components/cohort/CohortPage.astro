@@ -15,10 +15,10 @@
  * restored on 15 September. It is not arbitrary: outcome, fit, example, what a
  * review changes, outcomes, the transformation, the work, the modules,
  * process, Sunil, what you leave with, live experience, commitment, questions,
- * application. Somebody arrives wondering whether this is for them, and each
- * section answers the next question they have.
+ * a call, application. Somebody arrives wondering whether this is for them, and
+ * each section answers the next question they have.
  *
- * THE PRINTED NUMBERS RUN 00 TO 14, IN DOCUMENT ORDER, WITH NO GAPS. They were
+ * THE PRINTED NUMBERS RUN 00 TO 15, IN DOCUMENT ORDER, WITH NO GAPS. They were
  * 00, 01, 02, 04, 03, 05 with five sections unnumbered, because the restored
  * sections kept the numbers they carried on the pre-rebuild page and were
  * interleaved with rebuild sections that carried none. If you add or move a
@@ -57,7 +57,8 @@
  *     says in terms: do not place it in public copy as a guarantee.
  */
 import RouteForm from './RouteForm.astro';
-import GoogleCalendarBooking from './GoogleCalendarBooking.astro';
+import TalkToSunilLink from '../site/TalkToSunilLink.astro';
+import BookingWidget from '../BookingWidget.astro';
 import { cohort } from '../../data/facts';
 import type { Region } from '../../data/regions';
 import {
@@ -83,8 +84,6 @@ interface Props {
 
 const { region = null } = Astro.props;
 const hasPrice = Boolean(region?.publicPrice);
-import { googleCalendarAppointmentUrl } from '../../lib/booking';
-
 
 ---
 
@@ -100,12 +99,19 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         Here I teach the craft of agentic and systems architecture, live, to a small cohort.
       </p>
 
+      {/* Apply is primary; "Talk with Sunil" is the secondary path, right
+          beside it. This pair is now the ONLY place on the page above the
+          fold that offers the conversation — the top nav and the persistent
+          prompt both carry Apply alone since 16 September.
+
+          It opens section 14 below, which is this site's own booking widget
+          reading real availability, so there is nothing to configure and
+          nothing that can render as a dead control. There is no third "ask a
+          question" link here any more — that was a separate enquiry form, and
+          it is now one branching application flow in section 15. */}
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        {googleCalendarAppointmentUrl && (
-          <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
-        )}
-        <a class="btn btn-ghost" href="#ask-drop">Ask about the cohort</a>
+        <TalkToSunilLink placement="hero" onCohortPage />
       </div>
 
       <p class="hero-note">
@@ -123,14 +129,20 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── Proof bar ──────────────────────────────────────────────────────────── */}
+{/* ── Proof bar ──────────────────────────────────────────────────────────
+    Three employers, and nothing else. A fourth cell read "Consulting" until
+    16 September, when Sunil asked for it to come off. It was the odd one out
+    twice over: the other three are places the twenty-six years were spent,
+    and this page is the cohort, not the practice — /caio and /assessment are
+    where consulting is the offer, and each has its own proof bar saying
+    "Agentic AI, now" in that fourth cell rather than naming a second
+    business. */}
 <div class="proofbar">
   <div class="wrap inner">
     <span class="label">26 years, shipped at</span>
     <span class="logo">Google</span>
     <span class="logo">Amazon</span>
     <span class="logo">Walmart</span>
-    <span class="logo">Consulting</span>
   </div>
 </div>
 
@@ -583,51 +595,91 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 </section>
 
 {/* ── 14 · Application ──────────────────────────────────────────────────── */}
+{/* ONE APPLICATION FLOW, BRANCHING BY WHO IS APPLYING.
+
+    Until this rework, three separate forms sat here — the open-cohort
+    application, a team/enterprise enquiry beside it, and a third "Ask about
+    the cohort" panel folded under a dropdown. That third form is gone: the
+    site's secondary CTA is now "Talk with Sunil" (a real appointment — see
+    the hero), and a written question is one email away, in the
+    contact line below. What is left branches on one thing — applying for
+    yourself, or arranging learning for a team — because those really are two
+    different journeys (forms.ts: an application and an enterprise enquiry
+    are different record types, and an enterprise enquiry is never counted as
+    an application), while a plain question about fit was never a
+    commitment either form is built to capture.
+
+    Only one branch's form is visible at a time (route-choice.ts equivalent
+    is the inline script below), so a visitor sees ONE form, not two stacked
+    ones — the biggest single cut to how much scrolling the mobile flow
+    needs. Each form itself is now progressive (see RouteForm.astro's
+    `steps`), so nobody meets all seven-plus fields on one screen either. */}
+{/* ── 14 · Talk with Sunil ──────────────────────────────────────────────
+    Where every "Talk with Sunil" link on the site lands.
+
+    It is THIS SITE'S booking widget, the same one /caio and /assessment use,
+    against the `cohort-call` meeting type in meetings.ts. Availability is read
+    from our own `booking_rules`, so there is no third-party popup to configure
+    and no dead control to guard against — the reason the Google Calendar
+    scaffold it replaced was invisible until somebody supplied a URL.
+
+    IT SITS ABOVE THE APPLICATION, AND THAT IS LOAD-BEARING. BookingWidget's
+    own empty and failure states say "use the form below" — on this page that
+    sentence is only true while the Apply section follows it. Moving this
+    below the form silently turns that copy into a lie.
+
+    A call is NOT an application. The meeting type's blurb says so, and Apply
+    stays the primary CTA in the hero, the nav, the price card and the
+    persistent prompt. */}
+<section class="wrap band" id="book">
+  <div class="sec-head">
+    <p class="eyebrow"><span class="num">14</span> Talk first</p>
+    {/* The heading repeats the label of the link that brought most people
+        here, so arriving reads as landing rather than as a redirect. */}
+    <h2>Talk with <em>Sunil</em></h2>
+  </div>
+
+  <BookingWidget type="cohort-call" heading="Book a call about the cohort" />
+</section>
+
 <section class="wrap band forms" id="apply">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">14</span> Apply</p>
-    <h2>Start with your experience and <em>a question</em></h2>
+    <p class="eyebrow"><span class="num">15</span> Apply</p>
+    <h2>Start <em>here</em></h2>
+    <p class="lead">
+      One flow, however you are arriving at it. Pick the one that matches you, then answer a
+      few questions at a time.
+    </p>
   </div>
 
-  {googleCalendarAppointmentUrl && (
-    <div class="closing-next-step">
-      <div class="closing-next-step-actions" aria-label="Programme next steps">
-        <a class="btn btn-primary" href="#apply-form">Apply for the open cohort</a>
-        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="closing" />
-      </div>
-      <p>
-        You can schedule an appointment without applying. A scheduling request remains separate
-        from an application and is confirmed in Google Calendar.
-      </p>
-    </div>
-  )}
+  <div class="route-choice" role="group" aria-label="What brings you here?">
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="application"
+      aria-pressed="true"
+    >
+      <span class="rc-title">Apply for the open cohort</span>
+      <span class="rc-body">Joining as an individual — self-funded or exploring employer support.</span>
+    </button>
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="enterprise"
+      aria-pressed="false"
+    >
+      <span class="rc-title">Arrange learning for a team</span>
+      <span class="rc-body">Scoping an enterprise group programme for your organisation.</span>
+    </button>
+  </div>
 
-  {/* Apply and the team route sit side by side — both are a full, committed
-      submission (an application, or an organisation opportunity), just two
-      different journeys. The enquiry route below is a smaller ask — "no
-      application milestone inferred", per forms.ts — so it is a dropdown
-      rather than a third equal column. */}
-  <div class="apply-split">
+  <div id="apply-panel" class="route-panel" tabindex="-1">
     <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
-
-    <div id="team" class="alt-route">
-      <RouteForm route="enterprise" id="enterprise-form" />
-    </div>
   </div>
 
-  {/* NOT id="ask". AskWidget renders <div class="ask" id="ask"> on this same
-      page and finds its own root with getElementById('ask'); a second element
-      with that id wins on document order and the widget then binds to this
-      panel, losing its region attribute and every control inside it. */}
-  <details class="ask-drop" id="ask-drop">
-    <summary>
-      Ask about the cohort
-      <span class="plus" aria-hidden="true">+</span>
-    </summary>
-    <div class="alt-route">
-      <RouteForm route="enquiry" id="enquiry-form" />
-    </div>
-  </details>
+  <div id="team" class="route-panel" tabindex="-1" hidden>
+    <RouteForm route="enterprise" id="enterprise-form" heading="Arrange learning for a team" />
+  </div>
 
   <p class="contact-line">
     Programme enquiries and employer-funding support, and enterprise enquiries:
@@ -635,55 +687,124 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </p>
 </section>
 
-{/* The enquiry route is a dropdown, but three links point straight at it: the
-    hero CTA above, both /contact links, and the agent-design-check handoff.
-    Without this, all of them scroll to a closed row and the visitor has to
-    work out that the form is behind it. Opening on the fragment is also what
-    keeps RESUME.md's documented fallback real: while the Google appointment
-    URL is blank, "Ask about the cohort" is the only alternative to applying.
+{/* Switches which of the two forms above is visible, and runs the arrival
+    cue.
 
-    A <details> is opened by an attribute, not by a style, so CSS :target
-    cannot do this. Six lines is the whole cost. */}
+    A button pair rather than a <select> or radios, because there are only two
+    and each needs room for a description — the same reasoning RouteForm's own
+    field choices follow.
+
+    THE CUE. Arriving from any Apply CTA closes both forms, lights BOTH
+    buttons, and waits for a choice. It does not open a form by itself: an
+    earlier version did that after 900ms, which read as the form simply
+    opening on arrival, and picked the individual route on the reader's
+    behalf into the bargain. The point is that the team route is seen at all
+    — with a form already open, the chooser was something a reader scrolled
+    past on the way to the fields. Anyone who scrolls here themselves, with
+    no Apply click behind them, gets the individual form open as before; the
+    cue is only for people who were sent here by a CTA.
+
+    Three links elsewhere on the site point straight at a branch and must
+    skip the cue entirely: #team and #enterprise-form (the contact page, and
+    the footer's "Learning for a team") open the team form directly, and
+    #apply-form opens the individual one. Somebody who asked for one form
+    does not need to be shown that a choice exists. */}
 <script>
   (function () {
-    var drop = document.getElementById('ask-drop') as HTMLDetailsElement | null;
-    if (!drop) return;
-    var openOnTarget = function () {
-      if (location.hash === '#ask-drop') drop!.open = true;
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-route-choice]'),
+    );
+    const panels: Record<string, HTMLElement | null> = {
+      application: document.getElementById('apply-panel'),
+      enterprise: document.getElementById('team'),
     };
-    openOnTarget();
-    window.addEventListener('hashchange', openOnTarget);
+    if (buttons.length === 0 || !panels.application || !panels.enterprise) return;
+
+    const select = (branch: string, focus: boolean) => {
+      if (!panels[branch]) return;
+      buttons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.routeChoice === branch)),
+      );
+      Object.entries(panels).forEach(([key, panel]) => {
+        if (panel) panel.hidden = key !== branch;
+      });
+      if (focus) panels[branch]!.focus();
+    };
+
+    const endCue = () => {
+      buttons.forEach((b) => b.classList.remove('is-cueing'));
+    };
+
+    /**
+     * Highlight both choices and WAIT.
+     *
+     * There is no timer here on purpose. A previous version opened the
+     * individual form by itself after 900ms, which read as the form simply
+     * opening on arrival — the highlight was over before anybody registered
+     * it, and the choice had been made on the reader's behalf anyway. The
+     * highlight now holds until somebody picks, which is the whole point of
+     * showing them two things.
+     */
+    const cue = () => {
+      // Both panels closed, so the two buttons are the only thing to look at.
+      Object.values(panels).forEach((panel) => {
+        if (panel) panel.hidden = true;
+      });
+      // Nothing is selected while the question is open. Leaving the
+      // individual button pressed would answer it for them.
+      buttons.forEach((b) => {
+        b.setAttribute('aria-pressed', 'false');
+        // Restart the animation on a second click, which it will not do on
+        // its own while the class is already there.
+        b.classList.remove('is-cueing');
+        void b.offsetWidth;
+        b.classList.add('is-cueing');
+      });
+    };
+
+    buttons.forEach((b) => {
+      b.addEventListener('click', () => {
+        // The choice answers the cue, so the cue stops being asked.
+        endCue();
+        select(b.dataset.routeChoice ?? 'application', true);
+      });
+    });
+
+    const fromHash = () => {
+      if (location.hash === '#team' || location.hash === '#enterprise-form') {
+        endCue();
+        select('enterprise', false);
+      } else if (location.hash === '#apply-form') {
+        endCue();
+        select('application', false);
+      } else if (location.hash === '#apply') {
+        cue();
+      }
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+
+    /* A second click on an Apply CTA fires no hashchange, because the hash is
+       already #apply — so the cue would run once and never again. This
+       catches the click itself, on this page only; the browser still does the
+       scrolling. */
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link) return;
+      const url = new URL(link.href, location.href);
+      const samePage = url.pathname.replace(/\/+$/, '') === location.pathname.replace(/\/+$/, '');
+      if (samePage && url.hash === '#apply') cue();
+    });
   })();
 </script>
 
 <style>
-  .band { padding-block: var(--space-8); }
-
-  .closing-next-step {
-    max-width: 580px;
-    margin: 0 auto var(--space-6);
-    text-align: center;
-  }
-
-  .closing-next-step-actions {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-
-  .closing-next-step p {
-    max-width: 52ch;
-    margin: var(--space-3) auto 0;
-    color: var(--text-quiet);
-    font-size: var(--size-2);
-  }
-
-  @media (max-width: 560px) {
-    .closing-next-step-actions .btn {
-      width: 100%;
-    }
-  }
+  /* 56px rather than 72. This page is the long one — sixteen sections — and a
+     notch off each band takes ~500px out of the scroll without any section
+     reading as cramped. The two responsive steps are in global.css, with the
+     rest of the site's density pass. */
+  .band { padding-block: calc(var(--space-7) + var(--space-2)); }
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {
@@ -764,53 +885,87 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     box-shadow: var(--shadow-raise);
     padding: var(--space-2) var(--space-6);
   }
-  .commit + .price-card { margin-top: var(--space-8); }
+  .commit + .price-card { margin-top: var(--space-7); }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
-  .forms :global(.apply-form) { margin-inline: 0; }
+  /* Centred, not flush left: the form sits under a two-button chooser, and
+     hanging it off the left edge reads as belonging to the left-hand button
+     rather than to whichever one is selected. `auto` restores the centring
+     global.css already gives .apply-form. */
+  .forms :global(.apply-form) { margin-inline: auto; }
 
-  /* Apply and the team route, side by side — see the markup comment for why
-     the enquiry route is not a third column here. */
-  .apply-split {
+  /* The branch chooser. Two buttons, not a <select> — each needs room for a
+     one-line description, and a visible pair is one fewer click than a
+     dropdown for a decision this page exists to help someone make quickly. */
+  .route-choice {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    align-items: start;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
   }
-  .alt-route {
+  .route-choice-btn {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
     background: var(--surface-panel);
+    border: var(--border-w-hair) solid transparent;
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
-    padding: var(--space-6);
+    padding: var(--space-5) var(--space-6);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
   }
-  .alt-route :global(.apply-form) {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    max-width: none;
+  .route-choice-btn:hover { box-shadow: var(--shadow-lift); }
+  .route-choice-btn:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  /* The selected branch is marked the same way the design system marks any
+     selected control — ink, never sun; sun is a fill for an action, not a
+     state, and this button is not "go", it is "chosen". */
+  .route-choice-btn[aria-pressed='true'] { border-color: var(--text-loud); }
+  .rc-title {
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    color: var(--text-loud);
+  }
+  .rc-body { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-snug); }
+
+  .route-panel:focus { outline: none; }
+
+  /* THE ARRIVAL CUE. Landing on #apply from an Apply CTA closes both forms
+     and lights both choices, and the highlight HOLDS until somebody picks —
+     the class stays on, so these declarations outlast the pulse. The form
+     used to be open on arrival, which meant the chooser was the thing a
+     reader scrolled past on their way to the fields, and the team route was
+     invisible to anyone who did not look up. Border and ink only: --sun is a
+     fill for an action, and a button being pointed at has not been chosen —
+     which is also why this has to look different from the pressed state
+     above, and does, by the shadow. */
+  .route-choice-btn.is-cueing {
+    border-color: var(--text-loud);
+    box-shadow: var(--shadow-lift);
+    animation: rc-cue 500ms var(--ease-out) 3;
+  }
+  @keyframes rc-cue {
+    0%,
+    100% {
+      border-color: var(--text-loud);
+    }
+    50% {
+      border-color: var(--accent-ink);
+    }
+  }
+  /* The cue still happens for somebody who has asked for less motion — it
+     just holds the highlight instead of pulsing it. */
+  @media (prefers-reduced-motion: reduce) {
+    .route-choice-btn.is-cueing { animation: none; }
   }
 
-  /* The enquiry route, collapsed. Reuses the FAQ's bare details/summary
-     styling from global.css (the plus rotates on open) inside its own panel,
-     rather than the multi-item .faq wrapper, which assumes several stacked
-     rows with dividers between them. */
-  .ask-drop {
-    margin-top: var(--space-6);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-    border-bottom: 0;
-  }
-  .ask-drop summary { padding: var(--space-5) 0; }
-  .ask-drop[open] summary { border-bottom: var(--border-w-hair) solid var(--border-hair); }
-  .ask-drop .alt-route {
-    background: transparent;
-    box-shadow: none;
-    padding: var(--space-5) 0;
-  }
   .contact-line {
-    margin-top: var(--space-7);
+    margin-top: var(--space-6);
     font-size: var(--size-3);
     color: var(--text-quiet);
   }
@@ -820,16 +975,19 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   @media (max-width: 900px) {
     .two-up,
     .example,
-    .commit,
-    .apply-split {
+    .commit {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
-    .band { padding-block: var(--space-7); }
+    .band { padding-block: var(--space-6); }
   }
 
   @media (max-width: 560px) {
-    .alt-route { padding: var(--space-5); }
     .commit-facts { padding-inline: var(--space-5); }
+    /* One less full section of vertical padding per screen on a phone, where
+       the extra room this token gives on a desktop reading distance is just
+       more scrolling. */
+    .band { padding-block: var(--space-5); }
+    .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
   }
 </style>

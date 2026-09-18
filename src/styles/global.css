@@ -1,5 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   The Living Craft — illustration-led direction.
+   The Living Craft — public stylesheet.
+
+   18 September 2026: now drawn from design system v1 (forest, ivory, serif
+   h1/h2, 1px lines instead of shadows). Every value comes from a token in
+   ds/theme.css; a panel's 1px line is --shadow-raise, drawn as a ring. The
+   component tokens (--hero-*, --footer-*,
+   --eyebrow-*) carry the choices the package makes per component. /craft
+   loads this file too, so the course area follows the same rules. The history
+   below is the previous direction, kept because it explains the class names.
+
+   Previously: illustration-led direction.
 
    Replaces the warm-craft system (paper #F4EEE2, terracotta, Fraunces/Inter,
    2px radii, hairline borders, no shadows) with the design system in
@@ -66,6 +76,23 @@
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* ANCHOR TARGETS CLEAR THE STICKY HEADER.
+
+   `header.nav` is sticky at the top of every page BaseLayout renders, so a
+   bare #fragment scrolls the target to y=0 and the header then covers its
+   first 76-odd pixels — the section heading lands behind the nav and the page
+   looks like it scrolled too far. scroll-margin-top reserves that space, and
+   it applies to programmatic scrolls (focus(), scrollIntoView()) as well as
+   to a clicked link.
+
+   The height is MEASURED, not guessed: --anchor-offset is set from the real
+   header in BaseLayout, because .nav-inner wraps and is not one fixed height
+   across viewports. Shells with no sticky header never set it, and the
+   fallback of 0 is then correct rather than a gap above every target. */
+:target {
+  scroll-margin-top: var(--anchor-offset, 0px);
+}
 body {
   background: var(--surface-sunken);
   color: var(--text-body);
@@ -77,12 +104,22 @@ body {
   /* the paper-grain noise is gone: this ground is flat mist, and grain under a
      soft shadow reads as a rendering artefact */
 }
-h1, h2, h3, h4, .serif {
+/* h1 and h2 carry the display face; h3 and h4 carry the heading face. On the
+   site that is Source Serif 4 at 400 and Figtree at 700. This rule used to set
+   all four in Figtree 800. */
+h1, h2, .serif {
   font-family: var(--font-display);
-  font-weight: var(--weight-heavy);
+  font-weight: var(--weight-display);
   letter-spacing: var(--tracking-display);
   line-height: var(--lh-tight);
 }
+h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--lh-snug);
+}
+code, kbd, pre { font-family: var(--font-code); }
 .mono { font-family: var(--font-mono); font-feature-settings: var(--font-features); }
 a { color: inherit; text-decoration: none; }
 
@@ -91,10 +128,11 @@ a { color: inherit; text-decoration: none; }
 /* Eyebrows are sentence case now. §2: caps read as shouting against soft
    geometry, so the human/machine split is carried by face alone. */
 .eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--eyebrow-font);
   font-size: var(--size-1);
-  letter-spacing: var(--tracking-mono);
-  text-transform: none;
+  font-weight: var(--eyebrow-weight);
+  letter-spacing: var(--eyebrow-tracking);
+  text-transform: var(--eyebrow-case);
   color: var(--clay);
   display: inline-flex; gap: var(--space-3); align-items: center;
 }
@@ -112,7 +150,7 @@ section { padding: var(--space-8) 0; border-top: 0; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
   font-family: var(--font-body);
-  font-size: var(--size-3); font-weight: var(--weight-medium);
+  font-size: var(--button-size); font-weight: var(--button-weight);
   letter-spacing: var(--tracking-normal);
   height: var(--control-h); padding: var(--pad-control);
   border-radius: var(--radius-control);
@@ -128,15 +166,15 @@ section { padding: var(--space-8) 0; border-top: 0; }
    <button> in the same form did not. These restate the skin at (0,2,1). */
 a.btn:hover, a.btn-primary:hover { color: var(--control-primary-fg); }
 a.btn-ghost:hover { color: var(--text-body); }
-.hero > .wrap a.btn:hover, .hero > .wrap a.btn-ghost:hover { color: var(--text-on-invert); }
+.hero > .wrap a.btn-ghost:hover { color: var(--text-on-invert); }
 a.btn-primary:hover { color: var(--control-primary-fg); }
 .btn-primary {
-  background: var(--control-primary-bg);
+  background: var(--texture-forest);
   color: var(--control-primary-fg);
   border-color: var(--control-primary-bg);
 }
 .btn-primary:hover {
-  background: var(--control-primary-bg-hover);
+  background: var(--texture-forest-hover);
   border-color: var(--control-primary-bg-hover);
   transform: none;   /* the old system lifted buttons; §3 animates press, not hover */
 }
@@ -158,8 +196,8 @@ header.nav {
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); min-height: 76px; flex-wrap: wrap; }
 .wordmark {
-  font-family: var(--font-display);
-  font-size: var(--size-5); font-weight: var(--weight-heavy);
+  font-family: var(--font-heading);
+  font-size: var(--size-5); font-weight: var(--weight-heading);
   letter-spacing: var(--tracking-display);
   color: var(--text-loud);
   display: flex; align-items: center; gap: var(--space-2);
@@ -167,7 +205,15 @@ header.nav {
 }
 /* the terracotta dot was the old mark. Nothing was supplied to replace it, so
    it becomes a sun dot — the one filled glyph the system allows. */
-.wordmark .dot { width: 9px; height: 9px; border-radius: var(--radius-pill); background: var(--sun); display: inline-block; flex: none; }
+/* The LC mark (Logo.astro): cropped from the supplied logo artwork, on its own
+   cream paper because the artwork has no transparency. 40px tall is the
+   smallest size at which the woven stem and the gold dots still read; 32px on
+   phones keeps the cohort header on one row. On a dark footer it sits on a
+   paper tile, so the paper reads as a frame rather than a stray rectangle. */
+.lc-mark { display: block; flex: none; height: 40px; width: auto; border-radius: var(--radius-tick); }
+.lc-tile { display: inline-flex; flex: none; padding: var(--space-1) 6px; background: var(--logo-paper); border-radius: var(--radius-control); }
+.lc-tile .lc-mark { height: 36px; border-radius: 0; }
+.wordmark .dot { width: 9px; height: 9px; border-radius: var(--radius-pill); background: var(--texture-forest); display: inline-block; flex: none; }
 .wordmark-sub {
   font-family: var(--font-mono); font-size: var(--size-1);
   letter-spacing: var(--tracking-label); text-transform: none;
@@ -179,21 +225,24 @@ header.nav {
 .navlinks { display: flex; gap: var(--space-3) var(--space-5); align-items: center; flex-wrap: wrap; font-size: var(--size-3); color: var(--text-quiet); }
 .navlinks a { white-space: nowrap; }
 .navlinks a:hover { color: var(--text-loud); }
-@media (max-width: 900px) { .navlinks a:not(.btn) { display: none; } }
+/* Direct children only (`>`). The phone menu (MobileMenu.astro) sits inside
+   .navlinks and holds these same links; a descendant selector hid those too,
+   leaving a menu that opened onto an empty panel. */
+@media (max-width: 900px) { .navlinks > a:not(.btn) { display: none; } }
 
 .region-switch {
   display: inline-flex; gap: 3px; align-items: center;
-  border-radius: var(--radius-pill); padding: 3px;
+  border-radius: var(--radius-control); padding: 3px;
   background: var(--surface-panel); box-shadow: var(--shadow-raise);
 }
 .region-switch .region-link {
   font-family: var(--font-mono); font-size: var(--size-1);
   letter-spacing: var(--tracking-label); text-transform: none;
-  color: var(--text-quiet); padding: 7px 14px; border-radius: var(--radius-pill);
+  color: var(--text-quiet); padding: 7px 14px; border-radius: var(--radius-control);
   line-height: 1; transition: background var(--motion-fast) var(--ease-out);
 }
 .region-switch .region-link:hover { color: var(--text-loud); background: var(--surface-hover); }
-.region-switch .region-link.active { background: var(--sun); color: var(--text-on-accent); }
+.region-switch .region-link.active { background: var(--texture-forest); color: var(--text-on-accent); }
 @media (max-width: 680px) { .region-switch { display: none; } }
 
 /* ── hero — THE one black area per view ───────────────────────────────────── */
@@ -205,7 +254,9 @@ header.nav {
    both together double-inset it (48px a side) and misalign it with body text. */
 .hero { background: transparent; padding: var(--space-2) 0 var(--space-8); }
 .hero > .wrap {
-  background: var(--surface-invert);
+  /* Dark green linen with a forest overlay; flat forest if the image fails.
+     See --texture-forest in ds/theme.css for the contrast it guarantees. */
+  background: var(--texture-forest);
   color: var(--text-on-invert);
   border-radius: var(--radius-shell);
   padding: var(--space-8);
@@ -217,24 +268,30 @@ header.nav {
   margin-inline: auto;
 }
 .hero > .wrap.hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: var(--space-8); align-items: center; }
-.hero .eyebrow { color: var(--sun); }
+.hero .eyebrow { color: var(--hero-eyebrow); }
 .hero .eyebrow .num { color: var(--text-faint); }   /* faint is legitimate on noir: 9.15:1 */
 .hero h1 {
-  font-size: clamp(var(--size-7), 5.6vw, var(--size-9));
-  font-weight: var(--weight-heavy);
+  font-size: var(--size-h1);
+  font-weight: var(--weight-display);
   margin: var(--space-4) 0 var(--space-5);
   max-width: 15ch;                                   /* wraps early on purpose */
   color: var(--text-on-invert);
 }
-.hero h1 em { font-style: normal; color: var(--sun); }
-.credential { font-size: var(--size-5); line-height: var(--lh-snug); color: rgba(255,255,255,.86); max-width: var(--measure-narrow); margin-bottom: var(--space-6); }
+.hero h1 em { font-style: italic; color: var(--hero-em); }   /* ivory serif italic: gold failed 3:1 on the linen */
+.credential { font-size: var(--size-5); line-height: var(--lh-snug); color: var(--hero-muted); max-width: var(--measure-narrow); margin-bottom: var(--space-6); }
 .credential strong { color: var(--text-on-invert); font-weight: var(--weight-strong); }
 .hero-cta { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
 /* Scoped to the noir shell. .hero-cta is reused on the mist ground (latest.astro's
    closing CTA), where white-on-white would make the button invisible. */
-.hero > .wrap .btn-ghost { color: var(--text-on-invert); border-color: rgba(255,255,255,.28); }
+.hero > .wrap .btn-ghost { color: var(--text-on-invert); border-color: var(--hero-ghost-line); }
+/* The primary action on the dark shell. The action colour IS the shell colour
+   on the public site, so it inverts: ivory with forest text, 10.55:1. The
+   package has no rule for this case; see --hero-primary-* in theme.css. */
+.hero > .wrap .btn-primary { background: var(--hero-primary-bg); border-color: var(--hero-primary-bg); color: var(--hero-primary-fg); }
+.hero > .wrap .btn-primary:hover { background: var(--hero-primary-bg-hover); border-color: var(--hero-primary-bg-hover); color: var(--hero-primary-fg); }
+.hero > .wrap :focus-visible { outline-color: var(--hero-focus); }
 .hero > .wrap .btn-ghost:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.45); }
-.hero .lead, .hero .muted { color: rgba(255,255,255,.86); }
+.hero .lead, .hero .muted { color: var(--hero-muted); }
 .hero .faint { color: var(--text-faint); }
 .hero-note { font-size: var(--size-2); color: var(--text-quiet); margin-top: var(--space-5); font-family: var(--font-mono); }
 .hero > .wrap .hero-note { color: var(--text-faint); }   /* 9.15:1 on noir */
@@ -273,11 +330,11 @@ header.nav {
   margin-inline: auto;
 }
 .proofbar .label { font-family: var(--font-mono); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--text-quiet); }
-.proofbar .logo { font-family: var(--font-display); font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-quiet); opacity: 1; letter-spacing: var(--tracking-display); }
+.proofbar .logo { font-family: var(--font-heading); font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-quiet); opacity: 1; letter-spacing: var(--tracking-display); }
 
 /* ── section heading ──────────────────────────────────────────────────────── */
 .sec-head { max-width: var(--measure-prose); margin-bottom: var(--space-6); }
-.sec-head h2 { font-size: clamp(var(--size-7), 3.6vw, var(--size-8)); margin: var(--space-3) 0 var(--space-4); font-weight: var(--weight-heavy); color: var(--text-loud); }
+.sec-head h2 { font-size: var(--size-h2); margin: var(--space-3) 0 var(--space-4); font-weight: var(--weight-display); color: var(--text-loud); }
 .sec-head h2 em { font-style: normal; color: var(--accent-ink); }
 
 /* ── cards: white on mist, shadow not rule. Never both. ───────────────────── */
@@ -288,16 +345,19 @@ header.nav {
   padding: var(--space-6);
   transition: box-shadow var(--motion-base) var(--ease-out);
 }
-.card:hover { box-shadow: var(--shadow-lift); transform: none; border-color: transparent; }
+.card:hover { box-shadow: var(--shadow-lift); transform: none; }
 .card .k { font-family: var(--font-mono); font-size: var(--size-1); color: var(--clay); letter-spacing: var(--tracking-label); }
 .card h3 { font-size: var(--size-5); margin: var(--space-3) 0 var(--space-2); font-weight: var(--weight-strong); color: var(--text-loud); }
 .card p { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
-@media (max-width: 900px) { .cards3 { grid-template-columns: 1fr; } }
+/* .cards3 drops to two columns at 900px and one at 560px — both steps live in
+   the density block near the foot of this file, so the whole responsive
+   rhythm is readable in one place. This used to go straight to one column
+   here, which is why three short cards became three screens on a tablet. */
 
 /* region chooser */
 .region-choices { align-items: stretch; }
 a.region-choice { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-5); text-decoration: none; }
-a.region-choice .rc-name { font-family: var(--font-display); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); line-height: var(--lh-tight); letter-spacing: var(--tracking-display); }
+a.region-choice .rc-name { font-family: var(--font-heading); font-size: var(--size-6); font-weight: var(--weight-heading); color: var(--text-loud); line-height: var(--lh-tight); letter-spacing: var(--tracking-display); }
 a.region-choice .rc-meta { font-size: var(--size-3); color: var(--text-quiet); margin-top: var(--space-3); line-height: var(--lh-snug); }
 a.region-choice .rc-cta { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--size-3); font-weight: var(--weight-medium); color: var(--clay); }
 a.region-choice .arrow { transition: transform var(--motion-fast) var(--ease-out); }
@@ -323,7 +383,7 @@ a.region-choice:hover .rc-cta .arrow { transform: translateX(3px); }
 .experience { background: transparent; color: var(--text-body); border: 0; }
 .experience .eyebrow { color: var(--clay); }
 .experience .eyebrow .num { color: var(--text-quiet); }
-.experience h2 { font-size: clamp(var(--size-7), 3.6vw, var(--size-8)); font-weight: var(--weight-heavy); margin: var(--space-3) 0 var(--space-4); color: var(--text-loud); }
+.experience h2 { font-size: var(--size-h2); font-weight: var(--weight-display); margin: var(--space-3) 0 var(--space-4); color: var(--text-loud); }
 .experience h2 em { font-style: normal; color: var(--accent-ink); }
 .statband {
   display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--space-4);
@@ -352,11 +412,11 @@ a.region-choice:hover .rc-cta .arrow { transform: translateX(3px); }
 .pullquote {
   font-family: var(--font-display); font-style: normal;
   font-size: var(--size-6); line-height: var(--lh-tight); letter-spacing: var(--tracking-display);
-  font-weight: var(--weight-heavy); color: var(--text-loud);
+  font-weight: var(--weight-display); color: var(--text-loud);
   border-left: var(--agent-rule) solid var(--ember); padding-left: var(--space-5);
   margin: var(--space-4) 0;
 }
-.signature { font-family: var(--font-display); font-style: normal; font-weight: var(--weight-heavy); font-size: var(--size-5); color: var(--accent-ink); margin-top: var(--space-6); }
+.signature { font-family: var(--font-display); font-style: normal; font-weight: var(--weight-display); font-size: var(--size-5); color: var(--accent-ink); margin-top: var(--space-6); }
 @media (max-width: 900px) { .story { grid-template-columns: 1fr; gap: var(--space-5); } .maker-portrait { max-width: 300px; } }
 
 /* ── curriculum ───────────────────────────────────────────────────────────── */
@@ -409,7 +469,7 @@ a.region-choice:hover .rc-cta .arrow { transform: translateX(3px); }
 .faq { max-width: 820px; margin: 0 auto; background: var(--surface-panel); border-radius: var(--radius-card); box-shadow: var(--shadow-raise); padding: var(--space-3) var(--space-6); }
 details { border-bottom: var(--border-w-hair) solid var(--border-hair); padding: 0; }
 details:last-child { border-bottom: 0; }
-summary { cursor: pointer; list-style: none; padding: var(--space-5) 0; font-family: var(--font-display); font-size: var(--size-5); font-weight: var(--weight-strong); letter-spacing: var(--tracking-display); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); color: var(--text-loud); }
+summary { cursor: pointer; list-style: none; padding: var(--space-5) 0; font-family: var(--font-heading); font-size: var(--size-5); font-weight: var(--weight-strong); letter-spacing: var(--tracking-display); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); color: var(--text-loud); }
 summary::-webkit-details-marker { display: none; }
 summary .plus { color: var(--clay); font-family: var(--font-body); font-size: var(--size-6); transition: transform var(--motion-base) var(--ease-out); flex-shrink: 0; line-height: 1; }
 details[open] summary .plus { transform: rotate(45deg); }
@@ -417,7 +477,7 @@ details p { padding: 0 0 var(--space-5); color: var(--text-quiet); font-size: va
 
 /* ── final cta ────────────────────────────────────────────────────────────── */
 .final { text-align: center; }
-.final h2 { font-size: clamp(var(--size-7), 4.4vw, var(--size-9)); font-weight: var(--weight-heavy); margin-bottom: var(--space-4); color: var(--text-loud); }
+.final h2 { font-size: var(--size-h2); font-weight: var(--weight-display); margin-bottom: var(--space-4); color: var(--text-loud); }
 .final h2 em { font-style: normal; color: var(--accent-ink); }
 .final .lead { max-width: 48ch; margin: 0 auto var(--space-6); }
 
@@ -460,30 +520,55 @@ details p { padding: 0 0 var(--space-5); color: var(--text-quiet); font-size: va
 @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
 
 /* ── footer. Not black: the hero holds the one black area. ────────────────── */
-footer.site { background: transparent; border-top: var(--border-w-hair) solid var(--border-hair); padding: var(--space-7) 0 var(--space-6); font-size: var(--size-3); margin-top: var(--space-6); }
+/* A dark forest band, as the package draws it. Every colour in it comes from
+   --footer-*, so the band can be retuned from theme.css alone. */
+footer.site { background: var(--footer-bg); color: var(--footer-ink); border-top: var(--border-w-hair) solid var(--footer-rule); padding: var(--space-7) 0 var(--space-6); font-size: var(--size-3); margin-top: var(--space-6); }
+footer.site .wordmark { color: var(--footer-ink); }
+footer.site :focus-visible { outline-color: var(--footer-focus); }
 .foot-grid { display: flex; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
-.foot-grid .muted { color: var(--text-quiet); max-width: 32ch; line-height: var(--lh-snug); }
+.foot-grid .muted { color: var(--footer-muted); max-width: 32ch; line-height: var(--lh-snug); }
 /* h2, because the footer is a top-level landmark and an h5 here followed the
    page's last h2 or h3 — a skipped level on every page that uses this footer.
    The h5 half stays for CaioLayout, AssessmentLayout and NotesLayout, which
    still emit one. Both render identically. */
-.foot-col h2, .foot-col h5 { font-family: var(--font-marginal); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--text-quiet); margin-bottom: var(--space-3); font-weight: var(--weight-medium); line-height: var(--lh-normal); }
-.foot-col a { display: block; color: var(--text-body); padding: var(--space-1) 0; font-size: var(--size-3); }
-.foot-col a:hover { color: var(--accent-ink); }
-.foot-bottom { margin-top: var(--space-6); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--border-hair); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); color: var(--text-quiet); font-size: var(--size-2); }
+.foot-col h2, .foot-col h5 { font-family: var(--font-marginal); font-size: var(--size-1); letter-spacing: var(--tracking-label); text-transform: none; color: var(--footer-muted); margin-bottom: var(--space-3); font-weight: var(--weight-medium); line-height: var(--lh-normal); }
+.foot-col a { display: block; color: var(--footer-ink); padding: var(--space-1) 0; font-size: var(--size-3); }
+.foot-col a:hover { color: var(--footer-link-hover); text-decoration: underline; text-underline-offset: .2em; }
+.foot-bottom { margin-top: var(--space-6); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--footer-rule); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); color: var(--footer-muted); font-size: var(--size-2); }
 .foot-legal { display: flex; gap: var(--space-4); flex-wrap: wrap; }
-.foot-legal a { color: var(--text-quiet); }
-.foot-legal a:hover { color: var(--accent-ink); }
+.foot-legal a { color: var(--footer-muted); }
+.foot-legal a:hover { color: var(--footer-link-hover); text-decoration: underline; text-underline-offset: .2em; }
 
 /* ── course-area chrome (CraftLayout) ─────────────────────────────────────── */
 .backbar { padding-top: var(--space-5); }
 .backbar a { font-size: var(--size-2); color: var(--text-quiet); font-family: var(--font-mono); }
 .backbar a:hover { color: var(--text-loud); }
 
+/* ── density ──────────────────────────────────────────────────────────────
+   The rhythm is generous by design — high whitespace is part of this
+   register, not an accident — but the same 72px band that reads as
+   confidence on a 1440px screen is just distance on a 390px one. Every
+   section shrinks a step at 900px and another at 560px, so the page gets
+   shorter without any section getting cramped, and nothing is deleted to
+   make it happen. Section count is unchanged; only the air between them is.
+
+   Cut on the cohort page, which is the long one: roughly 40px of padding per
+   section at 900px and 80px at 560px, across sixteen sections. */
 @media (max-width: 900px) {
   .hero { padding: 0 0 var(--space-6); }
   .hero > .wrap { padding: var(--space-6); border-radius: var(--radius-card); }
   .wrap { padding: 0 var(--space-4); }
+
+  section { padding: var(--space-7) 0; }
+  .proofbar { padding-bottom: var(--space-6); }
+  .sec-head { margin-bottom: var(--space-5); }
+  .statband { margin: var(--space-6) 0; }
+  .price-card { padding: var(--space-6); }
+  footer.site { padding: var(--space-6) 0 var(--space-5); margin-top: var(--space-5); }
+
+  /* Two across rather than one. Three stacked cards is three screens on a
+     tablet, and these cards are short enough to pair. */
+  .cards3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Phones. This block must stay LAST: it shares specificity with the 900px block
@@ -502,6 +587,39 @@ footer.site { background: transparent; border-top: var(--border-w-hair) solid va
   }
   .hero-cta { width: 100%; }
   .hero-cta .btn { width: 100%; }
+
+  /* The cohort header on a 390px phone holds the wordmark, Apply and the menu
+     button in one row, and it has no slack: 358px of content in 358px of
+     space before the LC mark, which is 26px wider than the junction it
+     replaced. Three steps down, phones only, keep it on one row with Apply and
+     the menu on the right: the text one size smaller, the mark 28px tall, and
+     the gaps between the three items 12px instead of 24px. Measured, not
+     estimated: see RESUME.md. The footer tile keeps its 36px. */
+  .wordmark { font-size: var(--size-4); }
+  .lc-mark { height: 28px; }
+  .nav-inner, .navlinks { column-gap: var(--space-3); }
+
+  /* A second step down, and a density pass inside the panels themselves —
+     on a phone the padding inside a card costs as much scrolling as the gap
+     between two of them. */
+  section { padding: var(--space-6) 0; }
+  .cards3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .card { padding: var(--space-5); }
+  .mod { padding: var(--space-5); }
+  .stat { padding: var(--space-4); }
+  .statband { margin: var(--space-5) 0; gap: var(--space-3); }
+  .tlist { padding-inline: var(--space-5); }
+  .tlist li { padding: var(--space-4) 0; }
+  .price-card { padding: var(--space-5); }
+  .price-card ul { margin-bottom: var(--space-5); }
+  .faq { padding-inline: var(--space-5); }
+  summary { padding: var(--space-4) 0; }
+  details p { padding-bottom: var(--space-4); }
+  .apply-form { padding: var(--space-5); margin-top: var(--space-5); }
+  .credential { margin-bottom: var(--space-5); }
+  .proofbar .inner { padding: var(--space-4) var(--space-5); gap: var(--space-3) var(--space-5); }
+  footer.site { padding: var(--space-5) 0 var(--space-4); }
+  .foot-grid { gap: var(--space-5); }
 }
 
 /* The line between booking a time and writing an enquiry. Both paths sit in the

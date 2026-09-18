@@ -1,12 +1,22 @@
-/* The shared spine. Reconstructed verbatim from _ds_manifest.json.
-   Motion, easing, z-layers, breakpoints, focus geometry. No colour, no type. */
+/* The shared spine: motion, easing, z-layers, breakpoints, focus geometry.
+   No colour, no type.
+
+   Motion, easing and focus offset follow the Living Craft website design
+   system v1 (18 September 2026), on every surface including /craft and the
+   console.
+
+   The three breakpoint tokens are documentation, not live values: a custom
+   property cannot be read inside an @media query. The package's breakpoints
+   are 560, 800 and 1100px; this site's stylesheets still switch at 560 and
+   900px, and changing those is a layout change, not a token change. */
 :root {
   --motion-instant: 0ms;
-  --motion-fast: 90ms;
-  --motion-base: 160ms;
-  --motion-slow: 260ms;
+  --motion-fast: 150ms;
+  --motion-base: 240ms;
+  --motion-slow: 240ms;   /* the package has two task durations; slow is base */
+  --motion-brand: 800ms;  /* reserved for a brand moment. Nothing uses it yet */
 
-  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0.05, 0.55, 0.95);
 
   --z-base: 0;
@@ -14,10 +24,10 @@
   --z-overlay: 100;
   --z-dialog: 200;
 
-  --bp-reading: 44rem;
-  --bp-working: 68rem;
-  --bp-wide: 90rem;
+  --bp-reading: 35rem;    /* 560px */
+  --bp-working: 50rem;    /* 800px */
+  --bp-wide: 68.75rem;    /* 1100px */
 
   --focus-w: 2px;
-  --focus-offset: 2px;
+  --focus-offset: 3px;
 }

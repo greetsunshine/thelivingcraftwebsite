@@ -23,7 +23,11 @@ export const isGoogleCalendarAppointmentUrl = (value: string): boolean => {
   }
 };
 
-/** Empty means scheduling remains unavailable and the existing enquiry route stays visible. */
+/**
+ * Empty means scheduling remains unavailable. Every "Book now" control on the
+ * site is gated on this string, never rendered as a dead link when it is
+ * blank — see GoogleCalendarBooking.astro.
+ */
 export const googleCalendarAppointmentUrl = isGoogleCalendarAppointmentUrl(configuredUrl)
   ? configuredUrl
   : '';

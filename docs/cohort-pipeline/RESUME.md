@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 17 September 2026
+**Last updated:** 19 September 2026
 **Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -269,17 +269,292 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
-## Appointment scheduling scaffold is ready
+## The LC mark replaces the junction — 19 September, on PR #18
 
-The cohort page now has a configuration-gated Google Calendar appointment route. When
-`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` contains the appointment schedule URL from Google's
-"Button with popup" embed, **Schedule an appointment** appears beside the hero application CTA
-and in the closing next-step area. The site-native link opens Google's official popup when its
-script is available and remains a direct new-tab link when that script is blocked or unavailable.
+**No logo SVG exists yet.** Alchemy supplied only `logo-reference.png` (1254×1254, no
+transparency). The design package forbids tracing or inventing a vector, so the mark is a
+crop of that PNG, scaled down and nothing else. When the approved vector mark and its
+small-size version arrive, they replace the files below; `Logo.astro` stays.
 
-The URL is deliberately blank. While it is blank, no scheduling claim or dead control appears and
-the existing **Ask about the cohort** route remains the fallback. Opening the scheduling control is
-recorded only as `cta_click` intent; it is not a confirmed appointment, application or CRM event.
+- **Files:** `public/brand/lc-mark.webp` (199×128, 4.4 KB), the mark only. The crop is
+  x 160–1185, y 130–790 of the artwork. The name and the tagline start at y 812, so
+  **neither appears anywhere on the site**.
+- **It keeps its own cream paper** (`--logo-paper` #F1EDE4). Keying the paper out turned
+  the shadow and the glow round the gold dots into grey smudges on dark green. On the
+  ivory header the paper is a faint box with 4px corners. On the dark footers it sits on
+  a deliberate paper tile (`<Logo tile />`).
+- **Sizes:** 40px tall in a desktop header, the smallest at which the woven stem and the
+  dots still read. 28px below 560px. 36px in a footer tile. At 32px on a normal-density
+  screen the detail blurs; at 16px it is a smudge.
+- **Where:** every Living Craft wordmark: `BaseLayout`, `SiteNav`, `SiteFooter`,
+  `PolicyLayout`, `ResourcesLayout`, the `/craft` phone bar and dashboard footer, and
+  `/book`. The "Sunil Mathew" consulting wordmark on `/caio`, `/assessment` and `/latest`
+  keeps its dot on purpose. `Junction.astro` is deleted.
+- **Alt text:** `alt=""` and `aria-hidden="true"`, because "the living craft" beside it
+  already names the brand.
+- **The phone header had no slack.** Before this change the cohort header needed exactly
+  its 358px at 390px wide, and the mark is 26px wider than the junction. Below 560px the
+  mark is 28px (not 32) and the gaps between the three items are 12px (not 24). Measured
+  after: one row at 390 and at 375, Apply and the menu on the right. The practice-page
+  header still wraps to two rows on a phone, as it did before, with the menu on the right.
+- **Favicon.** `public/favicon.svg` was **Astro's default logo**, left over from setup, on
+  every page. Deleted. Replaced with `favicon-32.png`, `apple-touch-icon.png` (180px,
+  15 KB) and a regenerated `favicon.ico` (16, 32 and 48px), all cut from the same artwork.
+  There is no SVG favicon, because that would need a vector. The 16px size is weak until
+  the approved small mark exists.
+
+---
+
+## Dark green linen on the large dark surfaces — 19 September, on PR #18
+
+Task 1 of "Organised TLC Design System Changes". One commit, separate from the redesign.
+
+- **What has it:** the hero shell (`.hero > .wrap` in `global.css`, so every public page
+  with a hero and all nine resource tools), both footer bands (`footer.site` and
+  `SiteFooter.astro`, through `--footer-bg`) and the `/craft` dashboard hero
+  (`.hero-black` in `craft/index.astro`, the one page that painted its own).
+- **Widened the same day to every dark green background.** Sunil: "replace everyplace
+  wherever dark green is there with the textured one." 65 rules in 23 files now use
+  `--texture-forest`: buttons, selected choices, filter chips, table header rows, code
+  blocks, avatar marks, small dots and 3px spines, in the public pages, `/craft` and the
+  console. That includes the old ink-coloured panels (`--ink`, `--ink-1`), which were
+  dark green too. Hover states use `--texture-forest-hover` (the lighter forest #244F41 at
+  0.55 over the linen). **Not surfaces, so still flat:** borders, text, SVG strokes and focus
+  rings in forest. A rescan finds no flat dark green background left.
+- **Measured on the small elements,** text hidden and the rendered background sampled,
+  lightest 5% of pixels, ivory text: header Apply 6.54 (6.44 on a phone), Apply on hover
+  5.76, `/craft` sign-in button 6.14, a resource-tool table header 6.56, a code block 6.54.
+- **The two Ask widget avatars** draw a chat icon on the dark circle. The icon is the top
+  layer and the linen sits under it. The large avatar's `background-size` lists one size per
+  layer (`19px 19px, auto, cover`); a single value would shrink the linen to 19px.
+- **The file:** `public/textures/linen-forest.webp`, 708x708, 83.5 KB. It is the middle
+  third of the package's `woven-materials.png`, with 8px trimmed each side to remove the
+  pale gutter between panels. The package folder stays uncommitted.
+- **The tokens:** `--texture-forest` and `--texture-footer` in `theme.css`. Each is a
+  whole `background` value: an overlay, the linen, and a flat fallback colour.
+  **`--footer-bg` is now a background, not a colour**; use it only in `background:`.
+- **The overlay is there for contrast.** The raw linen's lightest 5% of pixels give ivory
+  3.39:1 and on-dark-muted 2.51:1. Forest at 0.55 and dark forest at 0.45 are the smallest
+  opacities, rounded up, that bring both past 4.5:1.
+- **Measured in the browser afterwards,** on a text-free strip of each rendered surface,
+  lightest 5% of pixels: hero ivory 6.25 to 6.47, on-dark-muted 4.62 to 4.78; footer ivory
+  9.20 to 10.35, on-dark-muted 6.79 to 7.64 (`/` at 1280 and 390, `/caio` at 1280).
+- **The gold h1 words are now ivory italic.** Gold was 3.82:1 on flat forest but 2.27:1 on
+  the lightest linen, below the 3:1 large text needs. Keeping gold would have needed a 0.79
+  overlay, which hides the weave. `--hero-em` is ivory and `.hero h1 em` is italic.
+
+---
+
+## Site redesign: design system v1 — 18 September, on PR #18 for review
+
+**What.** The public site is moving to the Living Craft website design system v1 (Alchemy and
+Ein, 18 September, a "review edition"). Forest green actions, ivory ground, serif h1 and h2,
+6px and 12px corners, and a 1px line instead of shadows. The package is kept OUT of the repo
+on purpose (`.git/info/exclude`); its values are in `src/styles/ds/theme.css` and
+`contract.css`. On `cta-book-now-rework` (PR #18), in commits separate from the CTA work.
+
+**Step 1, tokens only.** `theme.css` and `contract.css` carry the new values. Existing
+token names were re-pointed, not renamed, so `--sun` is now forest green and still means
+"the action colour". New component tokens (`--hero-*`, `--footer-*`,
+`--eyebrow-*`, `--weight-display`, `--font-heading`, `--size-h1`, `--size-h2`) exist
+for `global.css` to read in the next commit.
+
+**Scope widened the same day: `/craft`, `/craft/admin` and `/book/[id]` now use it too.**
+Steps 1 and 2 kept those areas on the old system through a `theme-course.css` override
+(verified byte-identical). Sunil then asked for all three areas to match, so step 3 deleted
+the override and put everything on `theme.css`. There is one token set now; do not
+reintroduce a second.
+
+**Step 3, tokens for the gated areas.** Three things the package does not design, decided
+deliberately:
+- **Forum voices** (`--agent-*`). Learner ink on paper 13.61; instructor forest on soft
+  green 9.87 (new `--agent-instructor` tokens); machine deep gold on warm cream 5.62;
+  uncertain moved from gold to blue, 6.19, because gold is now the machine's; refused
+  error on its soft, 5.84. No two share a hue.
+- **Compact density** (the console). 40px rows, 36px controls, 14px body, and no radius
+  override. 36px is a stated departure from the package's 44px target and well above
+  WCAG's 24px.
+- **Status never looks like an action.** Forest fill is the action colour, so no pill,
+  badge or tag may use it. Five did (quiz state, two pinned tags, the ADR week badge, the
+  forum role badge); step 5 fixes them.
+
+**Step 4, the panel line is a token.** `--shadow-raise` is now a 1px box-shadow ring in the
+line colour, and `--shadow-lift` the same ring in the darker control line. 102 rules in 34
+files already used those tokens for a panel's edge, so this one change gives every panel on
+every surface the package's 1px line. Step 2 had added a separate `--panel-border` to the
+`global.css` panels; that was taken back out, or those panels would draw the line twice.
+**Never add a border to something that uses a shadow token.**
+
+**Step 5, /craft and the console components.** Fixed by scanning every stylesheet for two
+shapes, not by eye: dark text on an action or dark fill, and a status on the action fill.
+- Six actions on forest carried ink text (about 1.2:1): the dock toggle, tour Next,
+  familiarity go, the dashboard's next-step, to-do tab and live banner. All now
+  `--text-on-accent`.
+- Five statuses used the action fill: the quiz "open" state (now success green), both
+  pinned tags (now ivory with a control-line edge), the ADR week badge and the dashboard
+  count (now soft or panel fills). **A status is never forest-filled.**
+- Forum voices applied: the instructor's avatar mark is forest with ivory initials (a face,
+  not a status); the Instructor badge, the endorsed tag and the thread's "Sunil replied" tag
+  are soft green with forest text; "solved" is an ink outline, so it can never be mistaken
+  for Sunil's endorsement; the agent dock's avatar is the machine's gold, because it answers
+  from the syllabus.
+- Code stays monospace (`--font-code`) in nine rules, including the seat-code field.
+  Console headings and small titles are Figtree, not the serif: the package keeps the serif
+  out of dense working areas. Seven scrims moved to the new ink. The gated layouts load
+  Source Serif 4 and no longer load JetBrains Mono.
+- **Not fixed, and not a colour problem:** `/craft/login` at desktop width puts the card
+  left of centre and the footer at the top right. It did that before the redesign too.
+
+**Step 6, public page styles.** Same two scans, run on the public pages.
+- Two resource tools put ink on a selected (forest) choice: now `--text-on-accent`. The
+  memory kit's copy button had a forest focus ring on a forest code block: now ivory.
+- Eight code rules moved to `--font-code`. Three PDF dialog backdrops moved to the new ink.
+- **A real AA failure, fixed:** the design-check's worked-example card was a gold block, and
+  its note was ink at 85% on gold, **4.19:1**. The card is now soft green with the 1px line
+  (ink 11.89:1, note muted 5.32:1). Its comment said the note passed; it did on the old orange.
+- Serif lines that pages had bolded now use the serif's regular weight; short titles and
+  labels that used the display face are Figtree bold (`/caio` tiers, `/assessment` fit
+  heads, the Ask widget title, and others).
+- **Phone header:** the wordmark is one size smaller below 560px, so the cohort header stays
+  one row with Apply and the menu on the right. The junction and the 22px face had pushed
+  them onto a second row.
+
+**Verified:** `astro check` 0 errors, clean build, no horizontal overflow on any in-scope page
+at 1280 or 390. Before and after screenshots of `/`, `/caio`, `/about`, `/craft/login` and
+`/craft/admin/login` at 390 and 1280. **Only the two sign-in pages were reachable in
+/craft and /craft/admin**: there is no local `.env`, so no seat code or console password.
+The gated pages behind them were checked by scanning their stylesheets, not by rendering.
+
+**Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
+They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest
+3.82 (large text only), muted on line 4.15 (disabled controls only). So gold is a fill and a
+rule colour, and never small text. The two old near-misses (`--accent-ink` 4.02 and
+`--text-quiet` 4.04 on mist) are gone on the public site: deep gold is 5.98 and muted is 5.69
+on ivory.
+
+**Step 2, the shared stylesheet and shell.** `global.css` now reads the component tokens:
+h1 and h2 are the serif at 400, h3, h4, `summary` and the wordmark are Figtree 700, eyebrows
+are uppercase, and panels show a 1px line (see step 4). The footer is a dark forest
+band, driven by `--footer-*` in both `footer.site` and `SiteFooter.astro`. `SeoHead` loads
+Source Serif 4 (400 to 700) and no longer loads JetBrains Mono. The Living Craft wordmarks
+show the static junction motif (`Junction.astro`) in place of the dot. **The consulting
+wordmark ("Sunil Mathew" on `/caio`, `/assessment`, `/latest`) keeps its dot on
+purpose**: CLAUDE.md keeps that practice distinct, and the junction is The Living Craft's
+motif. The package animates the junction once per session through `sessionStorage`; this
+site stores nothing in the browser, so it is drawn still.
+
+**Two things the package does not design, decided here.** A primary button on the dark
+hero is ivory with forest text, because forest on forest would vanish. Layers that float
+over the page (menu panel, Ask panel, sticky bar) keep a soft shadow; nothing else does.
+
+**Kept from the density pass, on purpose.** The package sets section padding to
+clamp(56px, 7vw, 112px), which is MORE space on desktop than today. The site keeps its
+existing section rhythm (now 64px, then 48 and 32 on narrower screens), because Sunil asked
+for less blank space on 16 September.
+
+---
+
+## Phones: no floating button, and a hamburger menu — 16 September, last pass
+
+- **Nothing floats on a phone any more except the Ask pill.** `StickyApplyBar.astro` lost its
+  phone shape and its drag code. Below 640px it shows nothing; above, it is still the bar
+  with Apply on the right. The drag code is in git at `5c20938` if a phone shape returns.
+- **Both headers have a hamburger menu below 900px** (`MobileMenu.astro`), in the slot the
+  top-right Book now used to hold. Below 900px the text links were hidden with no other route
+  to them. The menu shows the same links plus **Talk with Sunil**. It is not a dialog: it
+  closes on a link tap, Escape, a tap outside, or widening past 900px.
+- **The rule that hides header links is now direct-children only** (`.navlinks > a` in
+  `global.css`, `.sitenav-links > a` in `SiteNav.astro`). The descendant form also hid the
+  menu's own links. Keep the `>` if you edit either.
+- On practice pages the header wraps to two rows on a phone, as it did before.
+  `.sitenav-links` now takes the whole second row and packs to the end, so the menu button
+  stays on the right edge.
+- **Tested in headless Chromium at 390×844**, not only by reading markup: the menu opens with 6
+  links on `/` and `/about/`. Escape closes it. Tapping "Questions" closes it and lands the
+  heading 160px from the top, clear of the 77px header. At 1280px the button is hidden and
+  the bar shows.
+
+## The secondary CTA is "Talk with Sunil", and there are three of them — 16 September, later
+
+Sunil's second pass on the same day. Five changes, and the first three are one idea: **the
+secondary CTA is quieter and there is less of it.**
+
+- **The floating "Book now" and the top-right "Book now" are both gone.** The nav in
+  `BaseLayout.astro` and the nav in `SiteNav.astro` each carry ONE action now, and it is the
+  primary one — Apply, and "Explore the cohort" respectively. Both navs are
+  `justify-content: space-between`, so with nothing after it the action sits hard against the
+  right edge. That is "apply on the right side".
+- **`BookNowLink.astro` is now `TalkToSunilLink.astro`**, and the label reads **Talk with
+  Sunil**. The destination did not change: `#book`, section 14 of the cohort page, this
+  site's own BookingWidget against the `cohort-call` type. Three placements remain — the
+  cohort hero, the `/contact` hero, and one row of the contact routing table. The data
+  attributes the traffic beacon groups by were renamed with it (`data-talk-cta`,
+  `data-talk-cta-placement`).
+- **The persistent prompt carries Apply alone.** `StickyApplyBar.astro` had both buttons; it
+  now has one. On a phone the draggable circle says **Apply** rather than Book now and still
+  opens mid-right. Its IntersectionObserver landmark list lost `#book` to match.
+- **Section 14's heading is "Talk with *Sunil*"**, so the link and the place it lands say the
+  same words. The widget heading under it still reads "Book a call about the cohort".
+- **The proof bar's fourth cell, "Consulting", is off the cohort page.** The other three name
+  places the twenty-six years were spent; `/caio` and `/assessment` have their own proof bars
+  and say "Agentic AI, now" in that slot, so no page names a second business beside the three
+  employers now.
+- **The Ask widget is a corner pill on phones, not a full-width bar.** `AskWidget.astro`'s
+  ≤520px block dropped `left: 12px` and `width: 100%`. **Read the comment there before
+  changing it back** — the full-width bar was itself a fix for covering the submit button,
+  and the body padding that made that fix work is still in place.
+
+**One thing to know if this is reverted:** `GoogleCalendarBooking.astro` and `lib/booking.ts`
+are still in the repo and still unimported. The secondary CTA has not depended on
+`PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` since it started pointing at `#book`.
+
+## CTAs and forms reworked — 16 September
+
+**"Ask about the cohort" is gone, as both a CTA label and a form.** It became **Book now**
+here, and then **Talk with Sunil** later the same day — read the section above this one for
+where the label and its placements actually stand, because the paragraphs below describe the
+first pass only.
+
+**The separate "Ask about the cohort" enquiry FORM is removed from the page.** Applying for
+the open cohort and arranging learning for a team are now one branching flow in the Apply
+section — a two-button chooser, then one of the two forms (never both at once). The `enquiry`
+route in `forms.ts` still exists — the API still validates it, the console still reads its
+labels, the comms templates still reference it — only the page no longer renders a form for
+it. Three links that used to point at the old `#ask-drop` fragment (`/contact`, twice, and the
+agent-design-check handoff) now point at Book now, the application itself, or a plain mailto,
+whichever fits the context — see the comments at each site.
+
+**Each form is now progressive.** `forms.ts` gained an optional `steps` field per route;
+`RouteForm.astro` renders three short screens behind Continue/Back instead of one long one,
+with the same field names, the same server-side `validate()`, and the same idempotency key —
+nothing about the save path changed, only how many fields are on screen at once. A route with
+no `steps` (only `enquiry`, no longer linked) still renders flat, exactly as before.
+
+**Still owed, unchanged:** the actual Google appointment schedule URL/embed from the calendar
+owner, followed by desktop and mobile popup, close, direct-link and completed test-booking
+checks in staging — see "Appointment scheduling scaffold is ready" below for what that gate
+already covers.
+
+---
+
+## Appointment scheduling scaffold is built and NOT WIRED UP
+
+**Nothing imports it.** `GoogleCalendarBooking.astro` and `lib/booking.ts` sit in the repo
+with no caller. That is deliberate and it is not a loose end from a refactor: the site's
+secondary CTA points at `#book`, which is our own BookingWidget reading our own
+`booking_rules`, so it always works and can never be a dead control. The Google route was the
+version that stayed invisible until somebody supplied a URL.
+
+The component still does what it says: given a valid appointment schedule URL from Google's
+"Button with popup" embed, it renders a site-native link that opens Google's popup when the
+script is available and stays a direct new-tab link when that script is blocked. Opening it is
+recorded only as `cta_click` intent; it is never a confirmed appointment, application or CRM
+event. `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` is still read by `lib/booking.ts` and still
+blank.
+
+**Decide before reviving it** whether the cohort call should be booked through Google at all,
+given `#book` now does the job from our own database. If the answer is no, this component and
+`lib/booking.ts` can be deleted and the "still owed" line below goes with them.
 
 **Still owed:** the actual Google appointment schedule URL/embed from the calendar owner, followed
 by desktop and mobile popup, close, direct-link and completed test-booking checks in staging.
@@ -397,7 +672,10 @@ insert.
 reasoned, never executed. It is the first thing to exercise once a database exists.
 
 
-## ⚠ Two tokens are below AA on the ground `body` actually uses
+## ✅ Two tokens were below AA on the ground `body` actually uses — resolved 18 September
+
+**Resolved everywhere on 18 September** by design system v1 (see the redesign section
+above): deep gold is 5.98 and muted is 5.69 on ivory. Kept for the record.
 
 Measured 11 September, and independently recomputed. `theme.css` had one number simply
 wrong.
@@ -428,11 +706,10 @@ and every reader who checked it was misled.
 - **Astro's origin check refuses a POST with no `Origin` header** and returns 403. When
   testing endpoints with curl, send `-H "Origin: http://localhost:4321"`. That 403 is not
   a bug in this code, and it cost half an hour once already.
-- **The design tokens in `CLAUDE.md` are STALE.** The live system is illustration-led and
-  lives in `src/styles/ds/theme.css`: `--noir` for hero surfaces only and never text,
-  `--sun #ffc123` for every action and it is a FILL that cannot carry text, `--mist` the
-  sunken ground, text `--ink-1`, and **never `--ink-3` for anything a person reads**
-  (2.29:1). Figtree, not Fraunces. Sentence-case labels.
+- **`--sun` is forest green now.** The token names outlived their colours: `--sun` and
+  `--noir` both resolve to forest `#183D32`. Ink text on either is about 1.2:1, so text on
+  an action fill is always `--text-on-accent` (ivory). `--ink-3` is on-dark-muted and is a
+  text colour on forest ONLY. CLAUDE.md's Design tokens section has the full palette.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
 - **Two cohort descriptions exist now, and only one is public.** `src/data/facts.ts` holds

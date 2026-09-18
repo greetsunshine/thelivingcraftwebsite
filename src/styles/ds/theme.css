@@ -1,153 +1,316 @@
-/* Every value, on :root. Reconstructed from _ds_manifest.json.
-   Components read the semantic and domain aliases only, never the base layer. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   The site's tokens — Living Craft website design system v1.
+
+   Source: the design-system package Alchemy and Ein delivered on
+   18 September 2026 (assets/tokens.json, "review edition"). The package is
+   kept out of the repository on purpose; the values it defines are here.
+
+   TWO LAYERS, ONE FILE
+     1. `--lc-*` is the package's own foundation and purpose layer, copied
+        value for value. Nothing outside this file should need it.
+     2. The names below it are the ones every stylesheet and page on this site
+        already reads — `--sun`, `--surface-panel`, `--radius-card`. They are
+        RE-POINTED at the new values rather than renamed, which is what lets
+        the whole public site change from this one file.
+
+   Some of those names now describe their old job, not their new colour:
+   `--sun` is forest green and `--noir` is forest green. Kept because a page
+   saying `var(--sun)` means "the action colour", and that meaning survived.
+
+   ONE SET OF VALUES FOR THE WHOLE SITE. The public pages, the course area
+   (/craft) and the operator console (/craft/admin) all read this file. For
+   one day (18 September) the last two kept the previous system through a
+   theme-course.css override; Sunil asked the same day for all three to
+   match, and that file is gone. Do not reintroduce a second token set.
+
+   CONTRAST. Every ratio below was computed, not copied. Four pairs in the new
+   system fail AA for normal text and are recorded rather than adjusted:
+     gold on ivory 2.76 · gold on paper 2.96 · gold on forest 3.82 (large text
+     only) · muted on line 4.15 (disabled controls only).
+   Gold is therefore a fill and a rule colour here, never small text.
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* --- brand: four values carry the identity, each with one job --- */
-  --noir:  #000000;   /* hero surfaces. one black area per view. never text. */
-  --ember: #fd8549;   /* promo + secondary feature cards. carries INK text, never white. */
-  --sun:   #ffc123;   /* every action. if it is yellow, it is clickable. */
-  --mist:  #f1f3f5;   /* the sunken ground white cards float on. */
-  --berry: #eb1450;   /* focus ring, error, refusal, rating marks. */
+  /* --- foundation: the package's literal values --- */
+  --lc-forest:        #183D32;
+  --lc-forest-hover:  #244F41;
+  --lc-dark-forest:   #102A22;
+  --lc-ivory:         #F5F0E6;
+  --lc-paper:         #FBF8F2;
+  --lc-soft:          #E5EBE1;
+  --lc-gold:          #B58A46;   /* decoration only: 2.76:1 on ivory */
+  --lc-deep-gold:     #765523;   /* accent as text: 5.98:1 ivory · 6.40:1 paper */
+  --lc-ink:           #172E26;   /* 12.71:1 ivory */
+  --lc-muted:         #526259;   /* 5.69:1 ivory · 6.10:1 paper · 5.32:1 soft */
+  --lc-line:          #CBD1C8;   /* 1.37:1 — decorative rules, never a control boundary */
+  --lc-control-line:  #758279;   /* 3.54:1 ivory — the boundary of an input */
+  --lc-on-dark-muted: #C6D4C8;   /* 7.79:1 forest · 9.92:1 dark forest */
+  --lc-error:         #963D34;   /* 6.13:1 ivory · 5.84:1 on its soft */
+  --lc-error-soft:    #F7E8E3;
+  --lc-warning:       #765523;
+  --lc-warning-soft:  #F4E9CE;
+  --lc-success:       #215C42;
+  --lc-success-soft:  #E6EFE5;
+  --lc-info:          #315D6B;
+  --lc-info-soft:     #E7EFF1;
+
+  /* --- brand names, re-pointed --- */
+  --noir:  var(--lc-forest);      /* the one dark surface per view */
+  --ember: var(--lc-gold);        /* rules and fills. Ink on gold is 4.60:1, so ink text on it passes, just */
+  --sun:   var(--lc-forest);      /* every action */
+  --mist:  var(--lc-ivory);       /* the page ground */
+  --berry: var(--lc-error);
 
   /* --- paper --- */
-  --paper-1: #ffffff;
-  --paper-2: #f7f8fa;
+  --paper-1: var(--lc-paper);
+  --paper-2: var(--lc-soft);
   --paper-3: var(--mist);
   --paper-invert: var(--noir);
 
-  /* --- ink. text is slate-black, never pure black: black belongs to surfaces --- */
-  --ink-1: #16212e;
-  --ink-2: #6d7885;
-  --ink-3: #a3acb8;
-  --ink-invert: #ffffff;
+  /* --- ink --- */
+  --ink-1: var(--lc-ink);
+  --ink-2: var(--lc-muted);
+  --ink-3: var(--lc-on-dark-muted);   /* a text colour on forest ONLY */
+  --ink-invert: var(--lc-ivory);
 
-  --line-hair: #e7eaef;
+  --line-hair: var(--lc-line);
   --line-rule: var(--ink-1);
 
   --accent: var(--sun);
-  --accent-hover: #f2b010;
-  --accent-quiet: #fff4d6;
-  /* Accent as INK. Sun is a fill colour and cannot carry text (1.6:1 on white),
-     but the warm accent is used as text all over this site — eyebrows, list
-     markers, link hovers. This is the ember family at a text-safe weight. */
-  /* MEASURED 11 September, and the number that was here was wrong.
-     This said 5.9:1. It is 4.47:1 on white and 4.02:1 on --mist — and `body`
-     sits on mist, not white, so the ground that matters is the lower one.
-     Both are below the 4.5 AA needs for normal text; it clears AA only at
-     large sizes (18.66px, or 14px bold).
-     --accent-ink-strong is 6.66 / 5.99 and passes on both.
-     Swapping them is a whole-site visual change and an owner's call, so the
-     numbers are recorded here rather than acted on. Do not restate a contrast
-     figure from memory — compute it. */
-  --accent-ink: #c4561c;          /* 4.47:1 white · 4.02:1 mist */
-  --accent-ink-strong: #9d3f12;   /* 8.2:1 — hover / pressed */
+  --accent-hover: var(--lc-forest-hover);
+  --accent-quiet: var(--lc-warning-soft);
+  --accent-ink: var(--lc-deep-gold);          /* 5.98:1 ivory — passes, where the old one did not */
+  --accent-ink-strong: var(--lc-forest);      /* the package has no stronger gold; forest is 10.55:1 */
 
-  /* danger is split: ink bar vs mark bar. sun cannot carry error. */
-  --danger: #cf0f45;              /* 5.5:1 on white — the ink */
-  --danger-mark: var(--berry);    /* 3:1 — fills, dots, the focus ring */
-  --danger-hover: #b70b3b;
-  --danger-quiet: #fde3ea;
+  --danger: var(--lc-error);
+  --danger-mark: var(--lc-error);
+  --danger-hover: var(--lc-error);
+  --danger-quiet: var(--lc-error-soft);
 
   /* --- semantic: text --- */
   --text-loud: var(--ink-1);
   --text-body: var(--ink-1);
-  /* 4.49:1 on white — but 4.04:1 on --mist, which is what `body` actually
-     uses, so secondary text sitting on the page ground is just under AA.
-     On a white card it passes. Same owner's decision as --accent-ink. */
-  --text-quiet: var(--ink-2);     /* 4.49:1 white · 4.04:1 mist */
-  --text-faint: var(--ink-3);     /* 2.29:1 — NOT a text colour on white */
-  --text-on-accent: var(--ink-1);
+  --text-quiet: var(--ink-2);
+  --text-faint: var(--ink-3);
+  --text-on-accent: var(--lc-ivory);          /* on forest: 10.55:1 */
   --text-on-invert: var(--ink-invert);
 
   /* --- semantic: surface --- */
-  --surface-page: var(--paper-1);
-  --surface-panel: var(--paper-1);
-  --surface-sunken: var(--paper-3);
+  --surface-page: var(--lc-ivory);
+  --surface-panel: var(--lc-paper);
+  --surface-sunken: var(--lc-ivory);
   --surface-invert: var(--paper-invert);
-  --surface-hover: var(--paper-2);
-  --surface-active: #eceff3;
+  --surface-hover: var(--lc-soft);
+  --surface-active: var(--lc-soft);
   --surface-ember: var(--ember);
   --surface-sun: var(--sun);
 
   /* --- semantic: border --- */
   --border-hair: var(--line-hair);
   --border-rule: var(--line-rule);
-  --border-field: #d9dee5;
+  --border-field: var(--lc-control-line);
   --border-w-hair: 1px;
-  --border-w-rule: 1.5px;
+  --border-w-rule: 1px;
   --border-w-heavy: 3px;
 
   --link: var(--ink-1);
-  --link-hover: var(--berry);
-  --focus-ring: var(--danger-mark);
+  --link-hover: var(--accent-ink);
+  --focus-ring: var(--lc-forest);             /* ivory on dark surfaces, set where they are */
 
-  /* --- domain: agent provenance. colour is language here, not decoration --- */
-  --agent-machine: #c4561c;
-  --agent-machine-bg: #fdece1;
+  /* --- semantic: status. The package's four status families, by name. --- */
+  --success: var(--lc-success);          /* 6.67:1 on its quiet */
+  --success-quiet: var(--lc-success-soft);
+  --info: var(--lc-info);                /* 6.19:1 on its quiet */
+  --info-quiet: var(--lc-info-soft);
+
+  /* --- domain: agent provenance. COLOUR IS LANGUAGE HERE.
+     The forum's three voices (learner, instructor, system) and the two
+     hedges (uncertain, refused) must never be mistaken for one another, so
+     each gets its own hue family. The package designs none of this; the
+     mapping below is ours, and every pair was computed:
+
+       human (learner)  ink #172E26 on paper #FBF8F2 ....... 13.61:1
+       instructor       forest #183D32 on soft #E5EBE1 ...... 9.87:1
+                        ivory on forest (the avatar mark) .. 10.55:1
+       machine (system) deep gold #765523 on #F4E9CE ........ 5.62:1
+       uncertain        info #315D6B on #E7EFF1 ............. 6.19:1
+       refused          error #963D34 on #F7E8E3 ............ 5.84:1
+
+     Why these hues. Instructor takes forest because Sunil's answer is the
+     course's position, and forest is the brand. Machine takes the warm
+     family, the nearest the new palette has to the old machine orange, and
+     it sits apart from green at a glance. Uncertain moved from gold to blue,
+     because gold is now the machine's and two meanings cannot share one
+     colour. Human stays neutral: a learner is a face, not a colour.
+
+     An instructor badge is a SOFT fill with forest text, never a forest
+     fill: forest fill is the action colour, and a status that looks like a
+     button is a bug (see .pill in craft.css). --- */
+  --agent-machine: var(--lc-deep-gold);
+  --agent-machine-bg: var(--lc-warning-soft);
   --agent-human: var(--ink-1);
-  --agent-human-bg: var(--paper-2);
-  --agent-uncertain: #8a6100;
-  --agent-uncertain-bg: var(--accent-quiet);
+  --agent-human-bg: var(--lc-paper);
+  --agent-instructor: var(--lc-forest);
+  --agent-instructor-bg: var(--lc-soft);
+  --agent-uncertain: var(--info);
+  --agent-uncertain-bg: var(--info-quiet);
   --agent-refused: var(--danger);
   --agent-refused-bg: var(--danger-quiet);
   --agent-refused-mark: var(--danger-mark);
-  --agent-cite: var(--ink-2);   /* was --ink-3 (2.29:1 on white) — see CORRECTIONS.md §8 */
+  --agent-cite: var(--ink-2);
   --agent-rule: var(--border-w-heavy);
 
   /* --- domain: the unwritten --- */
-  --state-unwritten-ink: var(--ink-3);
-  --state-unwritten-bg: var(--paper-2);
+  --state-unwritten-ink: var(--ink-2);
+  --state-unwritten-bg: var(--lc-soft);
   --state-unwritten-line: repeating-linear-gradient(90deg, var(--line-hair) 0 8px, transparent 8px 16px);
 
   /* --- type --- */
-  --font-display:  "Figtree", "Avenir Next", "Helvetica Neue", sans-serif;
-  --font-body:     "Figtree", "Avenir Next", "Helvetica Neue", sans-serif;
-  --font-mono:     "JetBrains Mono", ui-monospace, monospace;
-  --font-marginal: "Figtree", "Avenir Next", sans-serif;
+  --font-display:  "Source Serif 4", Georgia, serif;          /* h1, h2 and the pull quote */
+  --font-body:     "Figtree", system-ui, sans-serif;
+  /* No mono on the public pages any more. Labels, prices and stats that used
+     it are Figtree, and --font-features keeps their digits fixed-width. */
+  --font-mono:     var(--font-body);
+  --font-code:     ui-monospace, Consolas, monospace;
+  --font-marginal: var(--font-body);
   --font-features: "tnum" 1;
 
-  --size-1: 12px; --size-2: 13px; --size-3: 15px;
-  --size-4: 17px; --size-5: 20px; --size-6: 26px;
-  --size-7: 34px; --size-8: 46px; --size-9: 62px;
+  --size-1: 12px; --size-2: 14px; --size-3: 16px;
+  --size-4: 18px; --size-5: 22px; --size-6: 26px;
+  --size-7: 32px; --size-8: 46px; --size-9: 62px;
+  --size-h1: clamp(2.75rem, 5.8vw, 5.5rem);
+  --size-h2: clamp(2rem, 3.3vw, 3.4rem);
 
   --lh-flat: 1; --lh-tight: 1.08; --lh-snug: 1.3;
-  --lh-normal: 1.55; --lh-loose: 1.7;
+  --lh-normal: 1.6; --lh-loose: 1.7;
 
-  --tracking-display: -0.025em;
+  --tracking-display: -0.035em;
   --tracking-normal: 0;
-  --tracking-caps: 0.06em;
+  --tracking-caps: 0.12em;
   --tracking-label: 0;
-  --tracking-mono: -0.01em;
+  --tracking-mono: 0;
 
   --weight-normal: 400; --weight-medium: 500;
   --weight-strong: 700; --weight-heavy: 800;
 
-  --case-label: none;   /* sentence case throughout, including labels */
+  --case-label: none;
+
+  /* --- component: type roles --- */
+  --weight-display: 400;                  /* the serif is set at its regular weight */
+  --font-heading: var(--font-body);       /* h3, h4, summary, wordmark: Figtree */
+  --weight-heading: 700;
+  --eyebrow-font: var(--font-body);
+  --eyebrow-weight: 700;
+  --eyebrow-case: uppercase;
+  --eyebrow-tracking: var(--tracking-caps);
+  --button-weight: 700;
+  --button-size: var(--size-2);
 
   /* --- space --- */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
   --space-4: 16px; --space-5: 24px; --space-6: 32px;
-  --space-7: 48px; --space-8: 72px; --space-9: 112px;
+  --space-7: 48px; --space-8: 64px; --space-9: 96px;
+  --space-10: 128px;
 
-  --measure-prose: 62ch;
+  --measure-prose: 65ch;
   --measure-narrow: 38ch;
   --measure-marginal: 26ch;
 
-  /* --- radii are the brand. nothing is square except the page --- */
-  --radius-control: 999px;  /* buttons, chips, avatars */
-  --radius-field: 16px;     /* text inputs and selects */
-  --radius-tick: 6px;       /* the checkbox */
-  --radius-inner: 16px;
-  --radius-panel: 24px;
-  --radius-card: 28px;
-  --radius-shell: 40px;
-  --radius-pill: 999px;
+  /* --- radii: 6px on anything you press or type into, 12px on a panel --- */
+  --radius-control: 6px;
+  --radius-field: 6px;
+  --radius-tick: 4px;
+  --radius-inner: 6px;
+  --radius-panel: 12px;
+  --radius-card: 12px;
+  --radius-shell: 12px;
+  --radius-pill: 999px;   /* true circles only */
 
-  /* --- elevation replaces rules. never a border AND a shadow --- */
-  --shadow-raise:   0 1px 2px rgba(22, 33, 46, 0.04), 0 10px 24px -14px rgba(22, 33, 46, 0.12);
-  --shadow-lift:    0 2px 4px rgba(22, 33, 46, 0.04), 0 22px 44px -20px rgba(22, 33, 46, 0.18);
-  --shadow-overlay: 0 8px 12px rgba(22, 33, 46, 0.06), 0 40px 80px -24px rgba(22, 33, 46, 0.26);
+  /* --- elevation. The package defines no shadows: a panel is set off by a
+     1px line. These two tokens DRAW THAT LINE, as a 1px box-shadow ring.
 
-  /* --- density: generous by default --- */
+     Why a ring and not a border. 102 rules across 34 files already say
+     "box-shadow: var(--shadow-raise)" for a panel's edge, on the public
+     pages, in /craft and in the console. A ring makes every one of them the
+     package's 1px line from this file alone, without a hundred edits and
+     without changing any box's size. It is safe because the previous
+     system's own law was "a shadow OR a border, never both", so nothing
+     that reads these tokens also has a border to double up with.
+
+     --shadow-lift is the hover and "raised" state: the same ring in the
+     darker control line. --shadow-overlay is the one real shadow, for layers
+     that float over the page (menu panel, Ask panel, sticky bar), which the
+     package does not design. --- */
+  --shadow-raise:   0 0 0 var(--border-w-hair) var(--lc-line);
+  --shadow-lift:    0 0 0 var(--border-w-hair) var(--lc-control-line);
+  --shadow-overlay: 0 8px 12px rgba(23, 46, 38, 0.06), 0 32px 64px -24px rgba(23, 46, 38, 0.24);
+
+  /* --- texture: dark green linen on the large dark surfaces (19 September).
+     The swatch is the middle third of the design package's woven-materials.png
+     (the package itself stays out of the repo), trimmed of its pale gutter:
+     public/textures/linen-forest.webp, 708x708, 83.5 KB.
+
+     Each token is a whole `background` value, so use it only in a
+     `background:` shorthand, never as a colour. Three layers:
+       1. a flat overlay, which is what keeps text readable;
+       2. the linen, stretched to cover the surface;
+       3. the flat colour, which is what shows if the image fails to load.
+
+     THE OVERLAY IS A CONTRAST CONTROL, NOT A MOOD. Measured on the lightest
+     5% of the swatch's pixels (mean #788671), the raw linen gives ivory 3.39:1
+     and on-dark-muted 2.51:1. The opacities below are the smallest that bring
+     both past 4.5:1, rounded up:
+       forest 0.55 ....... ivory 6.27 · on-dark-muted 4.63 (minimum 0.53)
+       dark forest 0.45 .. ivory 6.28 · on-dark-muted 4.64 (minimum 0.43)
+     Lowering either opacity puts the hero eyebrow and footer text below AA.
+
+     Used on EVERY dark green background on the site (19 September): hero
+     shells, footer bands (through --footer-bg), buttons, selected states,
+     table headers, code blocks and small marks. Write var(--texture-forest)
+     where you would have written background: var(--sun), and
+     --texture-forest-hover for a hover state. --sun itself stays a flat
+     colour, for borders, text and strokes. --- */
+  --texture-linen: url('/textures/linen-forest.webp');
+  --texture-forest:
+    linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
+    var(--texture-linen) center / cover no-repeat var(--lc-forest);
+  /* Hover and pressed states of textured actions: the same linen under the
+     lighter forest #244F41, so the change is still visible. Ivory text on the
+     lightest 5% of pixels: 5.44:1. */
+  --texture-forest-hover:
+    linear-gradient(rgba(36, 79, 65, 0.55), rgba(36, 79, 65, 0.55)),
+    var(--texture-linen) center / cover no-repeat var(--lc-forest-hover);
+  --texture-footer:
+    linear-gradient(rgba(16, 42, 34, 0.45), rgba(16, 42, 34, 0.45)),
+    var(--texture-linen) center / cover no-repeat var(--lc-dark-forest);
+
+  /* --- the LC mark: its own cream paper, from the supplied artwork. The
+     artwork has no transparency, so the mark carries this ground with it
+     (see Logo.astro). Used for the footer tile. Not a text colour. --- */
+  --logo-paper: #F1EDE4;
+
+  /* --- component: the dark hero shell --- */
+  --hero-eyebrow: var(--lc-on-dark-muted);    /* 7.79:1. Gold would be 3.82:1 at 12px — a fail */
+  /* Ivory, not gold, since the linen texture (19 September). Gold was 3.82:1
+     on flat forest, but 2.27:1 on the lightest 5% of the textured hero, below
+     the 3:1 large text needs. The emphasis is carried by the serif italic
+     instead (see .hero h1 em in global.css). */
+  --hero-em: var(--lc-ivory);
+  --hero-muted: var(--lc-on-dark-muted);
+  --hero-primary-bg: var(--lc-ivory);         /* forest on forest would vanish; not in the package */
+  --hero-primary-fg: var(--lc-forest);        /* 10.55:1 */
+  --hero-primary-bg-hover: var(--lc-paper);
+  --hero-ghost-line: var(--lc-on-dark-muted);
+  --hero-focus: var(--lc-ivory);
+
+  /* --- component: footer, a dark forest band --- */
+  --footer-bg: var(--texture-footer);         /* a BACKGROUND, not a colour: use only in `background:` */
+  --footer-ink: var(--lc-ivory);              /* 13.43:1 */
+  --footer-muted: var(--lc-on-dark-muted);    /* 9.92:1 */
+  --footer-rule: var(--lc-control-line);
+  --footer-link-hover: var(--lc-ivory);
+  --footer-focus: var(--lc-ivory);
+
+  /* --- density --- */
   --row-h: 60px;
   --control-h: 44px;
   --pad-cell: var(--space-4) var(--space-5);
@@ -155,18 +318,30 @@
   --pad-control: 0 var(--space-5);
 
   --control-primary-bg: var(--sun);
-  --control-primary-fg: var(--ink-1);
+  --control-primary-fg: var(--text-on-accent);
   --control-primary-bg-hover: var(--accent-hover);
 }
 
-/* Same token names, retuned. Tables and log views only — never the marketing site. */
+/* Same token names, retuned for the console (AdminLayout sets this on <body>).
+   Tables and log views only — never the marketing site.
+
+   What changed for design system v1, and why:
+   - Radii are NOT overridden any more. The old compact block shrank 24/28px
+     panels to 16 and 16px fields to 10, because the big radii read as soft
+     on a dense table. The new system's radii are already 6px and 12px, so
+     the console uses them as they are and the two surfaces share one shape.
+   - Controls are 36px, not 34 and not the package's 44. The package sets a
+     44px minimum target; that is right for the public pages and too tall
+     for a console that is scanned in rows on a desktop. 36px clears the
+     WCAG 2.2 AA minimum target (24px) with room, and is the one place this
+     file departs from the package's 44. Said here so it is a decision, not
+     drift.
+   - Body text is 14px, the package's "small" size, so the console's type
+     sits on the same scale as the site's rather than beside it. */
 [data-density="compact"] {
   --row-h: 40px;
-  --control-h: 34px;
+  --control-h: 36px;
   --pad-cell: var(--space-2) var(--space-3);
   --pad-panel: var(--space-4);
-  --radius-field: 10px;
-  --radius-panel: 16px;
-  --radius-card: 16px;
   --size-3: 14px;
 }

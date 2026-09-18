@@ -1,0 +1,223 @@
+---
+/**
+ * The persistent application prompt. Wide screens only.
+ *
+ * WHAT IT IS
+ *
+ * A bar across the foot of the page, with one line of copy on the left and
+ * Apply on the right. It appears after the first 640px of scrolling and gets
+ * out of the way while the application section itself is on screen.
+ *
+ * WHY THERE IS NO PHONE SHAPE
+ *
+ * There was one for most of 16 September: a small round button, draggable,
+ * opening at the middle of the right edge. It said Book now, then Apply. Sunil
+ * asked the same day for it to go: "remove the floating apply in mobile."
+ * So below 640px this component renders nothing visible and runs nothing
+ * beyond one media check. A phone reaches Apply from the header, which carries
+ * it on every page, and from the hero and the price card on the cohort page.
+ * The hamburger menu (MobileMenu.astro) reaches everything else.
+ *
+ * If a phone shape comes back, the drag code is in git at 5c20938. Read the
+ * comments there first: it is an anchor with a pointer enhancement laid over
+ * it, not a button, and that is what kept it working without the script.
+ *
+ * WHY A BAR AND NOT A MODAL. The public pages' voice rule is restraint —
+ * "respected practitioner… not SaaS-templated, not bootcamp-hype" — and a
+ * dialog thrown over the page is exactly that hype. It takes no focus and
+ * blocks nothing behind it.
+ *
+ * WHAT IS NOT REMEMBERED, AND WHY. A dismissal does not survive a reload.
+ * CLAUDE.md's no-localStorage/sessionStorage rule is in force on every public
+ * surface, so it lives in a JS variable and dies with the page.
+ *
+ * Included once in BaseLayout and once in PracticeLayout — the cohort page
+ * and the wider practice pages. Deliberately NOT on /caio or /assessment:
+ * each carries its own primary CTA and its own register, and a cohort
+ * prompt floating over a different offer is the surface confusion the
+ * cross-linked-but-distinct spine in CLAUDE.md exists to prevent. Not inside
+ * /craft or /craft/admin either — both are gated.
+ */
+export interface Props {
+  /** Where "Apply" points. Defaults to the cohort's apply anchor, on- or off-page as needed. */
+  applyHref?: string;
+}
+
+const onCohortPage = Astro.url.pathname.replace(/\/+$/, '') === '';
+const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
+---
+
+<div
+  class="sticky-apply"
+  data-sticky-apply
+  hidden
+  role="complementary"
+  aria-label="Apply for the cohort"
+>
+  <div class="sa-inner">
+    <p class="sa-copy">Build a working agentic system with Sunil Mathew.</p>
+
+    {/* Apply sits at the right-hand end of the bar, between the copy and the
+        dismiss control. */}
+    <div class="sa-actions">
+      <a class="btn btn-primary" href={applyHref}>
+        Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <button type="button" class="sa-dismiss" data-sticky-dismiss aria-label="Dismiss">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const bar = document.querySelector<HTMLElement>('[data-sticky-apply]');
+    if (!bar) return;
+
+    const dismissBtn = bar.querySelector<HTMLButtonElement>('[data-sticky-dismiss]');
+
+    // The sections this prompt is a shortcut to. While one of them is on
+    // screen the shortcut has nothing to offer, so it gets out of the way.
+    const landmarks = Array.from(
+      document.querySelectorAll<HTMLElement>('#apply, #apply-panel, #apply-form'),
+    );
+
+    let dismissed = false;
+    let landmarkVisible = false;
+
+    /** Matches the stylesheet's breakpoint. Below it, the prompt never shows. */
+    const phone = window.matchMedia('(max-width: 640px)');
+
+    // The bar spans the foot of the page, so the footer's last line needs
+    // clearing — but only while the bar is actually there.
+    const setBodyClearance = () => {
+      document.body.style.paddingBottom = bar.hidden ? '' : `${bar.offsetHeight}px`;
+    };
+
+    const evaluate = () => {
+      bar.hidden = dismissed || phone.matches || landmarkVisible || window.scrollY <= 640;
+      setBodyClearance();
+    };
+
+    if (landmarks.length && 'IntersectionObserver' in window) {
+      const seen = new Set<Element>();
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) seen.add(entry.target);
+            else seen.delete(entry.target);
+          });
+          landmarkVisible = seen.size > 0;
+          evaluate();
+        },
+        { rootMargin: '0px 0px -20% 0px' },
+      );
+      landmarks.forEach((el) => observer.observe(el));
+    }
+
+    let ticking = false;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          evaluate();
+          ticking = false;
+        });
+      },
+      { passive: true },
+    );
+
+    phone.addEventListener('change', evaluate);
+    window.addEventListener('resize', evaluate, { passive: true });
+
+    dismissBtn?.addEventListener('click', () => {
+      dismissed = true;
+      evaluate();
+    });
+
+    // Escape dismisses it, from anywhere inside it. It is not a dialog and
+    // traps nothing.
+    bar.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      dismissed = true;
+      evaluate();
+    });
+
+    evaluate();
+  })();
+</script>
+
+<style>
+  .sticky-apply {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    background: var(--surface-panel);
+    box-shadow: var(--shadow-overlay);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+  .sticky-apply[hidden] { display: none; }
+
+  /* Belt and braces with the script: if it never runs, the `hidden` attribute
+     in the markup already keeps this off screen; if it runs and a width change
+     races it, this keeps the bar off a phone regardless. */
+  @media (max-width: 640px) {
+    .sticky-apply { display: none; }
+  }
+
+  .sa-inner {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: var(--space-3) var(--space-5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .sa-copy {
+    margin: 0;
+    font-size: var(--size-3);
+    color: var(--text-body);
+    flex: 1 1 240px;
+  }
+
+  /* Pushed to the right end of the row. `space-between` already does this
+     while the copy is wide enough to fill the left; `margin-left: auto`
+     holds it there on a narrow viewport where the copy has wrapped short. */
+  .sa-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-left: auto;
+    flex: none;
+  }
+
+  .sa-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-quiet);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    flex: none;
+  }
+  .sa-dismiss:hover { background: var(--surface-hover); color: var(--text-loud); }
+  .sa-dismiss:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+</style>

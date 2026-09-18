@@ -1,0 +1,48 @@
+---
+/**
+ * The LC mark: the woven "LC" from The Living Craft's supplied logo artwork.
+ *
+ * WHERE IT COMES FROM. Cropped from the design package's logo-reference.png
+ * (Alchemy, 18 September 2026) and scaled down. Nothing is traced, redrawn or
+ * recoloured: the package forbids inventing a vector version, and says the
+ * approved vector mark and its small-size version are still to be
+ * commissioned. When they arrive, they replace public/brand/lc-mark.webp and
+ * the favicons, and this component stays.
+ *
+ * THE MARK ONLY. The crop stops above the name and the tagline in the
+ * artwork. The tagline must not appear anywhere on the site.
+ *
+ * IT CARRIES ITS OWN PAPER. The artwork has no transparency, and keying the
+ * paper out turned the shadows and the glow round the gold dots into grey
+ * smudges. So the mark keeps its cream paper (--logo-paper), rounded at the
+ * corners. On a dark footer that paper becomes a deliberate tile (`tile`);
+ * placed flat there, it read as an unframed rectangle.
+ *
+ * DECORATIVE TO A SCREEN READER. Every use sits beside the text "the living
+ * craft", which already names the brand, so the image is aria-hidden with an
+ * empty alt. Announcing "The Living Craft logo, the living craft" helps nobody.
+ *
+ * Used on The Living Craft's wordmarks only. The consulting surfaces (/caio,
+ * /assessment, /latest) carry the brand-neutral "Sunil Mathew" wordmark and
+ * keep their dot; CLAUDE.md keeps that practice distinct from this brand.
+ *
+ * Sizes live in global.css (.lc-mark, .lc-tile): 40px tall in a header, 32px
+ * below 560px, 36px inside a footer tile.
+ */
+export interface Props {
+  /** Put the mark on its paper tile. For dark backgrounds, where the paper would otherwise show as a bare rectangle. */
+  tile?: boolean;
+}
+
+const { tile = false } = Astro.props;
+---
+
+{
+  tile ? (
+    <span class="lc-tile" aria-hidden="true">
+      <img class="lc-mark" src="/brand/lc-mark.webp" width="199" height="128" alt="" decoding="async" />
+    </span>
+  ) : (
+    <img class="lc-mark" src="/brand/lc-mark.webp" width="199" height="128" alt="" aria-hidden="true" decoding="async" />
+  )
+}

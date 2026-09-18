@@ -13,6 +13,8 @@
  * routes. Everything else is marked pending and turns into a link in the same
  * commit that creates its page.
  */
+import Logo from './Logo.astro';
+
 const year = new Date().getFullYear();
 
 interface Item {
@@ -55,7 +57,7 @@ const PRACTICE: Item[] = [
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="wordmark"><span class="dot"></span> the living craft</div>
+        <div class="wordmark"><Logo tile /> the living craft</div>
         <p class="muted">
           Build a working agentic system, and develop the ability to explain its design,
           examine its behaviour and guide the decisions behind it.
@@ -103,8 +105,12 @@ const PRACTICE: Item[] = [
 </footer>
 
 <style>
+  /* The dark forest band from design system v1. Same --footer-* tokens as
+     footer.site in global.css, so the two footers cannot drift apart. */
   .sitefooter {
-    border-top: var(--border-w-hair) solid var(--border-hair);
+    background: var(--footer-bg);
+    color: var(--footer-ink);
+    border-top: var(--border-w-hair) solid var(--footer-rule);
     padding: var(--space-7) 0 var(--space-6);
     font-size: var(--size-3);
     margin-top: var(--space-8);
@@ -116,9 +122,13 @@ const PRACTICE: Item[] = [
   }
   .foot-brand .wordmark {
     margin-bottom: var(--space-4);
+    color: var(--footer-ink);
+  }
+  .sitefooter :global(:focus-visible) {
+    outline-color: var(--footer-focus);
   }
   .foot-brand .muted {
-    color: var(--text-quiet);
+    color: var(--footer-muted);
     max-width: 34ch;
     line-height: var(--lh-snug);
   }
@@ -130,20 +140,22 @@ const PRACTICE: Item[] = [
   .foot-col h2 {
     font-family: var(--font-marginal);
     font-size: var(--size-1);
-    color: var(--text-quiet);
+    color: var(--footer-muted);
     margin-bottom: var(--space-3);
     font-weight: var(--weight-medium);
   }
   .foot-col a {
-    color: var(--text-body);
+    color: var(--footer-ink);
     padding: var(--space-1) 0;
     font-size: var(--size-3);
   }
   .foot-col a:hover {
-    color: var(--accent-ink);
+    color: var(--footer-link-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
   .foot-col .pending {
-    color: var(--text-quiet);
+    color: var(--footer-muted);
     padding: var(--space-1) 0;
     font-size: var(--size-3);
   }
@@ -151,12 +163,12 @@ const PRACTICE: Item[] = [
   .foot-bottom {
     margin-top: var(--space-6);
     padding-top: var(--space-5);
-    border-top: var(--border-w-hair) solid var(--border-hair);
+    border-top: var(--border-w-hair) solid var(--footer-rule);
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--space-3);
-    color: var(--text-quiet);
+    color: var(--footer-muted);
     font-size: var(--size-2);
   }
   .foot-legal {
@@ -165,10 +177,12 @@ const PRACTICE: Item[] = [
     flex-wrap: wrap;
   }
   .foot-legal a {
-    color: var(--text-quiet);
+    color: var(--footer-muted);
   }
   .foot-legal a:hover {
-    color: var(--accent-ink);
+    color: var(--footer-link-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 
   @media (max-width: 900px) {

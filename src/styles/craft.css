@@ -3,8 +3,9 @@
 
    Imported by CraftLayout, AFTER global.css and never instead of it. That order
    is the whole design of this file: the learner applied on the strength of the
-   public pages, so /craft keeps their design system — the noir hero shell, the
-   sun button, .wrap, .eyebrow, .lead, .card, .tlist all come from global.css
+   public pages, so /craft keeps their design system — the dark forest hero
+   shell, the forest button, .wrap, .eyebrow, .lead, .card, .tlist all come from
+   global.css
    and are not restated here. What lives below is only what the course area
    needs and the marketing pages do not: session rows, a scale matrix, a state
    pill, a prev/next pager, a sign-in card.
@@ -17,15 +18,19 @@
    and a clay-filled button where the system says every action is yellow. Three
    pages also defined the same 11px mono label at three different values.
 
-   The two laws this file exists to hold, both from ds/theme.css:
-     · elevation replaces rules — a panel gets a shadow OR a border, never both.
-       Hairlines are legal INSIDE a panel, as dividers between its rows.
-     · if it is yellow it is clickable. Accent as text is --clay (ember ink);
-       accent as a fill is --sun. They are not interchangeable.
+   The two laws this file exists to hold, both from ds/theme.css. Restated for
+   design system v1 (18 September 2026):
+     · a panel gets a shadow token OR a border, never both. Under v1 the shadow
+       token IS the panel's 1px line (--shadow-raise is a ring), so a border
+       beside it draws the line twice. Hairlines are still legal INSIDE a
+       panel, as dividers between its rows.
+     · if it is forest-filled it is clickable. Accent as text is --clay (deep
+       gold ink); the action fill is --sun, which is forest now. Text on it is
+       --text-on-accent, never ink. They are not interchangeable.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── the hero, at course-area scale ───────────────────────────────────────────
-   global.css's .hero is sized for a 7000px marketing page. Same noir shell,
+   global.css's .hero is sized for a 7000px marketing page. Same dark shell,
    same radius, less of it — and as a class rather than the inline padding
    override the three pages each carried, which fought .hero > .wrap's own
    gutter calc and produced a different top margin on every page. */
@@ -51,7 +56,7 @@
 .page-head { padding-top: var(--space-5); }
 .page-head h1 {
   font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
-  font-weight: var(--weight-heavy);
+  font-weight: var(--weight-display);
   letter-spacing: var(--tracking-display);
   color: var(--text-loud);
   margin: var(--space-4) 0 var(--space-3);
@@ -73,7 +78,7 @@
 .craft-sec:first-child { margin-top: 0; }
 .craft-sec > h2 {
   font-size: var(--size-6);
-  font-weight: var(--weight-heavy);
+  font-weight: var(--weight-display);
   letter-spacing: var(--tracking-display);
   color: var(--text-loud);
   margin-bottom: var(--space-2);
@@ -126,7 +131,7 @@
 .panel.marked::before {
   content: '';
   position: absolute; inset: 0 auto 0 0; width: var(--border-w-heavy);
-  background: var(--sun);
+  background: var(--texture-forest);
 }
 .panel.marked.quiet::before { background: var(--border-field); }
 .panel.marked.bad::before { background: var(--danger-mark); }
@@ -152,9 +157,11 @@
 }
 
 /* ── pill: a state, not an action ────────────────────────────────────────────
-   Pill radius, hairline, quiet ink. Deliberately never sun and never filled —
-   in this system a yellow rounded thing is a button, and a status that looks
-   clickable is a bug you find by watching someone click it. */
+   Pill radius, hairline, quiet ink. Deliberately never forest-filled — under
+   design system v1 a forest fill is the action colour, so a forest rounded
+   thing is a button, and a status that looks clickable is a bug you find by
+   watching someone click it. Checked across /craft and the console on
+   18 September: the five statuses that did use it now use a soft fill. */
 .pill {
   display: inline-block;
   font-family: var(--font-mono);
@@ -207,7 +214,7 @@
 .srow .sess-wk { padding-top: 3px; }
 .srow .body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
 .srow .t {
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   font-size: var(--size-5);
   font-weight: var(--weight-strong);
   line-height: var(--lh-snug);
@@ -235,7 +242,7 @@ a.row:hover .t { color: var(--clay); }
 }
 .task:hover { box-shadow: var(--shadow-lift); }
 .task .t {
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   font-size: var(--size-5);
   font-weight: var(--weight-strong);
   color: var(--text-loud);
@@ -295,7 +302,7 @@ a.row:hover .t { color: var(--clay); }
 .choice:hover span { border-color: var(--text-quiet); }
 .choice input:checked + span {
   border-color: var(--sun);
-  background: var(--sun);
+  background: var(--texture-forest);
   color: var(--text-on-accent);
   font-weight: var(--weight-medium);
 }
@@ -321,7 +328,7 @@ a.row:hover .t { color: var(--clay); }
 .scale-cell:hover .n { border-color: var(--text-quiet); }
 .scale-cell input:checked + .n {
   border-color: var(--sun);
-  background: var(--sun);
+  background: var(--texture-forest);
   color: var(--text-on-accent);
   font-weight: var(--weight-strong);
 }
@@ -346,7 +353,7 @@ a.row:hover .t { color: var(--clay); }
 }
 .pager a { display: flex; flex-direction: column; gap: var(--space-1); max-width: 46%; }
 .pager .right { text-align: right; }
-.pager .t { font-family: var(--font-display); font-size: var(--size-4); font-weight: var(--weight-medium); line-height: var(--lh-snug); }
+.pager .t { font-family: var(--font-heading); font-size: var(--size-4); font-weight: var(--weight-medium); line-height: var(--lh-snug); }
 .pager a:hover .t { color: var(--clay); }
 
 /* ── reading measure ─────────────────────────────────────────────────────────
@@ -356,7 +363,7 @@ a.row:hover .t { color: var(--clay); }
 /* ── prose, for the session Markdown ─────────────────────────────────────────
    The only place on the site that emits unstyled headings and lists. Sits on a
    panel, so its own code and quote blocks use rules rather than a second edge. */
-.prose h2 { font-size: var(--size-6); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); color: var(--text-loud); margin: var(--space-7) 0 var(--space-3); }
+.prose h2 { font-size: var(--size-6); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); color: var(--text-loud); margin: var(--space-7) 0 var(--space-3); }
 .prose h3 { font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-loud); margin: var(--space-6) 0 var(--space-2); }
 .prose h2:first-child, .prose h3:first-child { margin-top: 0; }
 .prose p { color: var(--text-quiet); margin-bottom: var(--space-4); }
@@ -366,14 +373,14 @@ a.row:hover .t { color: var(--clay); }
 .prose a { color: var(--clay); text-decoration: underline; text-underline-offset: .2em; }
 .prose a:hover { color: var(--clay-deep); }
 .prose code {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   font-size: .88em;
   background: var(--surface-sunken);
   border-radius: var(--radius-tick);
   padding: 2px 6px;
 }
 .prose pre {
-  background: var(--surface-invert);
+  background: var(--texture-forest);
   color: var(--text-on-invert);
   padding: var(--space-5);
   border-radius: var(--radius-panel);
@@ -425,7 +432,7 @@ a.row:hover .t { color: var(--clay); }
    no footer identity — but the same panel as everything else. */
 .signin { display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-5); min-height: 70vh; }
 .signin .panel { width: 100%; max-width: 440px; padding: var(--space-7) var(--space-6) var(--space-6); }
-.signin h1 { font-size: var(--size-7); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-display); margin-bottom: var(--space-2); }
+.signin h1 { font-size: var(--size-7); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); margin-bottom: var(--space-2); }
 .signin .panel > .muted { margin-bottom: var(--space-6); max-width: 36ch; }
 .signin label { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-4); }
 .signin .btn { width: 100%; margin-top: var(--space-2); }
