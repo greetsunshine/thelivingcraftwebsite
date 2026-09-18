@@ -277,9 +277,20 @@ Task 1 of "Organised TLC Design System Changes". One commit, separate from the r
   with a hero and all nine resource tools), both footer bands (`footer.site` and
   `SiteFooter.astro`, through `--footer-bg`) and the `/craft` dashboard hero
   (`.hero-black` in `craft/index.astro`, the one page that painted its own).
-- **What does not, on purpose:** buttons and selected states, table header rows, code
-  blocks, avatar marks and dots. They stay flat forest. `/craft/login` has no dark surface,
-  and its screenshots are byte-identical before and after.
+- **Widened the same day to every dark green background.** Sunil: "replace everyplace
+  wherever dark green is there with the textured one." 65 rules in 23 files now use
+  `--texture-forest`: buttons, selected choices, filter chips, table header rows, code
+  blocks, avatar marks, small dots and 3px spines, in the public pages, `/craft` and the
+  console. That includes the old ink-coloured panels (`--ink`, `--ink-1`), which were
+  dark green too. Hover states use `--texture-forest-hover` (the lighter forest #244F41 at
+  0.55 over the linen). **Not surfaces, so still flat:** borders, text, SVG strokes and focus
+  rings in forest. A rescan finds no flat dark green background left.
+- **Measured on the small elements,** text hidden and the rendered background sampled,
+  lightest 5% of pixels, ivory text: header Apply 6.54 (6.44 on a phone), Apply on hover
+  5.76, `/craft` sign-in button 6.14, a resource-tool table header 6.56, a code block 6.54.
+- **The two Ask widget avatars** draw a chat icon on the dark circle. The icon is the top
+  layer and the linen sits under it. The large avatar's `background-size` lists one size per
+  layer (`19px 19px, auto, cover`); a single value would shrink the linen to 19px.
 - **The file:** `public/textures/linen-forest.webp`, 708x708, 83.5 KB. It is the middle
   third of the package's `woven-materials.png`, with 8px trimmed each side to remove the
   pale gutter between panels. The package folder stays uncommitted.

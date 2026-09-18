@@ -648,7 +648,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
   .choice:hover { border-color: var(--text-body); }
   .choice:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
   /* The chosen answer is the one clickable-yellow thing on the row. */
-  .choice[aria-pressed='true'] { background: var(--sun); border-color: var(--sun); color: var(--text-on-accent); }
+  .choice[aria-pressed='true'] { background: var(--texture-forest); border-color: var(--sun); color: var(--text-on-accent); }
   /* A weighed placement stays visibly different from a code one even when pressed. */
   .choice[aria-pressed='true'][data-code='false'] { background: var(--accent-quiet); border-color: var(--accent-ink); color: var(--accent-ink-strong); }
   .rflags { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
@@ -719,7 +719,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
   table { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
   .exsheet { min-width: 1120px; table-layout: fixed; }
   thead th {
-    background: var(--noir);
+    background: var(--texture-forest);
     color: var(--text-on-invert);
     text-align: left;
     font-family: var(--font-mono);

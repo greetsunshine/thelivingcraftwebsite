@@ -169,12 +169,12 @@ a.btn-ghost:hover { color: var(--text-body); }
 .hero > .wrap a.btn-ghost:hover { color: var(--text-on-invert); }
 a.btn-primary:hover { color: var(--control-primary-fg); }
 .btn-primary {
-  background: var(--control-primary-bg);
+  background: var(--texture-forest);
   color: var(--control-primary-fg);
   border-color: var(--control-primary-bg);
 }
 .btn-primary:hover {
-  background: var(--control-primary-bg-hover);
+  background: var(--texture-forest-hover);
   border-color: var(--control-primary-bg-hover);
   transform: none;   /* the old system lifted buttons; §3 animates press, not hover */
 }
@@ -209,7 +209,7 @@ header.nav {
    Junction.astro. It is NOT the logo (the package says the vector logo is
    still owed), and it replaces the dot only on public headers. */
 .wordmark .junction { width: 30px; height: auto; flex: none; color: var(--sun); }
-.wordmark .dot { width: 9px; height: 9px; border-radius: var(--radius-pill); background: var(--sun); display: inline-block; flex: none; }
+.wordmark .dot { width: 9px; height: 9px; border-radius: var(--radius-pill); background: var(--texture-forest); display: inline-block; flex: none; }
 .wordmark-sub {
   font-family: var(--font-mono); font-size: var(--size-1);
   letter-spacing: var(--tracking-label); text-transform: none;
@@ -238,7 +238,7 @@ header.nav {
   line-height: 1; transition: background var(--motion-fast) var(--ease-out);
 }
 .region-switch .region-link:hover { color: var(--text-loud); background: var(--surface-hover); }
-.region-switch .region-link.active { background: var(--sun); color: var(--text-on-accent); }
+.region-switch .region-link.active { background: var(--texture-forest); color: var(--text-on-accent); }
 @media (max-width: 680px) { .region-switch { display: none; } }
 
 /* ── hero — THE one black area per view ───────────────────────────────────── */

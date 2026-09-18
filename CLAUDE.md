@@ -1179,14 +1179,18 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture** on the large dark surfaces only: the hero shell, both footer
-  bands and the `/craft` dashboard hero. Tokens `--texture-forest` and `--texture-footer`
+- **Dark green linen texture on every dark green background**, large and small: hero
+  shells, footer bands, buttons, selected states, table headers, code blocks and marks.
+  **Never write `background: var(--sun)` (or `--noir`, `--ink`) again**: use
+  `var(--texture-forest)`, and `var(--texture-forest-hover)` for a hover or pressed
+  state. `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
   in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
   whole `background` value (overlay, linen, flat fallback colour), and so is
   `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
   is a contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
-  on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. Buttons,
-  table header rows, code blocks and small marks stay flat forest.
+  on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. A layered
+  background, such as an icon drawn on a textured circle, puts the icon first and the
+  texture after it, and any `background-size` must give one size per layer.
 - **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
   everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay

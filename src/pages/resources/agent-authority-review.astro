@@ -588,7 +588,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     width: 8px;
     height: 8px;
     border-radius: var(--radius-pill);
-    background: var(--sun);
+    background: var(--texture-forest);
   }
   ol.steps { counter-reset: s; }
   ol.steps li { counter-increment: s; position: relative; padding-left: var(--space-6); }
@@ -807,7 +807,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   .choice:hover { border-color: var(--text-body); }
   .choice:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
   /* The chosen answer is the one clickable-yellow thing on the row. */
-  .choice[aria-pressed='true'] { background: var(--sun); border-color: var(--sun); color: var(--text-on-accent); }
+  .choice[aria-pressed='true'] { background: var(--texture-forest); border-color: var(--sun); color: var(--text-on-accent); }
   .choice[aria-pressed='true'][data-lvl='R3'] { background: var(--danger); border-color: var(--danger); color: var(--text-on-invert); }
   .rflags { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: flex; flex-direction: column; gap: var(--space-1); }
   /* The flag items are created by the script, so they never carry Astro's
@@ -882,7 +882,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
      the screen. Below the wrap width the table scrolls sideways inside .scroll. */
   .exsheet { min-width: 1120px; table-layout: fixed; }
   thead th {
-    background: var(--noir);
+    background: var(--texture-forest);
     color: var(--text-on-invert);
     text-align: left;
     font-family: var(--font-mono);
