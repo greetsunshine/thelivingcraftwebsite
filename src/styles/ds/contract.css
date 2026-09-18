@@ -2,8 +2,8 @@
    No colour, no type.
 
    Motion, easing and focus offset follow the Living Craft website design
-   system v1 (18 September 2026). /craft and /craft/admin keep the previous
-   values through theme-course.css.
+   system v1 (18 September 2026), on every surface including /craft and the
+   console.
 
    The three breakpoint tokens are documentation, not live values: a custom
    property cannot be read inside an @media query. The package's breakpoints

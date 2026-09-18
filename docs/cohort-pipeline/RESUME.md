@@ -283,13 +283,24 @@ token names were re-pointed, not renamed, so `--sun` is now forest green and sti
 `--eyebrow-*`, `--weight-display`, `--font-heading`, `--size-h1`, `--size-h2`) exist
 for `global.css` to read in the next commit.
 
-**`/craft`, `/craft/admin` and `/book/[id]` are deliberately unchanged.** They share the
-token files, so `src/styles/ds/theme-course.css` restores the old values over the new ones
-at `:root:root` specificity. Only `admin.css` and `craft.css` import it. It was
-generated from the two token files at `25d7b45`, not retyped. **Verified:** `/craft/login`
-and `/craft/admin/login` screenshot byte-identical with and without the change.
-**If you add a token that `global.css` reads, add its old value to `theme-course.css`**,
-or the course area changes with the public site.
+**Scope widened the same day: `/craft`, `/craft/admin` and `/book/[id]` now use it too.**
+Steps 1 and 2 kept those areas on the old system through a `theme-course.css` override
+(verified byte-identical). Sunil then asked for all three areas to match, so step 3 deleted
+the override and put everything on `theme.css`. There is one token set now; do not
+reintroduce a second.
+
+**Step 3, tokens for the gated areas.** Three things the package does not design, decided
+deliberately:
+- **Forum voices** (`--agent-*`). Learner ink on paper 13.61; instructor forest on soft
+  green 9.87 (new `--agent-instructor` tokens); machine deep gold on warm cream 5.62;
+  uncertain moved from gold to blue, 6.19, because gold is now the machine's; refused
+  error on its soft, 5.84. No two share a hue.
+- **Compact density** (the console). 40px rows, 36px controls, 14px body, and no radius
+  override. 36px is a stated departure from the package's 44px target and well above
+  WCAG's 24px.
+- **Status never looks like an action.** Forest fill is the action colour, so no pill,
+  badge or tag may use it. Five did (quiz state, two pinned tags, the ADR week badge, the
+  forum role badge); step 4 fixes them.
 
 **Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
 They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest
@@ -538,11 +549,10 @@ insert.
 reasoned, never executed. It is the first thing to exercise once a database exists.
 
 
-## ⚠ Two tokens are below AA on the ground `body` actually uses — /craft and /craft/admin only now
+## ✅ Two tokens were below AA on the ground `body` actually uses — resolved 18 September
 
-**Resolved on the public site on 18 September** by design system v1 (see the redesign
-section above). The course area and the console still use these values through
-`theme-course.css`, so the finding below still holds there.
+**Resolved everywhere on 18 September** by design system v1 (see the redesign section
+above): deep gold is 5.98 and muted is 5.69 on ivory. Kept for the record.
 
 Measured 11 September, and independently recomputed. `theme.css` had one number simply
 wrong.
@@ -573,12 +583,10 @@ and every reader who checked it was misled.
 - **Astro's origin check refuses a POST with no `Origin` header** and returns 403. When
   testing endpoints with curl, send `-H "Origin: http://localhost:4321"`. That 403 is not
   a bug in this code, and it cost half an hour once already.
-- **Two token systems are live, on purpose.** The public site reads design system v1 from
-  `src/styles/ds/theme.css` (forest, ivory, serif headings, uppercase eyebrows, no shadows).
-  `/craft`, `/craft/admin` and `/book/[id]` read the previous system restored by
-  `theme-course.css` (`--sun #ffc123` as a fill that cannot carry text, `--noir` hero, and
-  **never `--ink-3` for anything a person reads**, at 2.29:1). CLAUDE.md's Design tokens
-  section describes both.
+- **`--sun` is forest green now.** The token names outlived their colours: `--sun` and
+  `--noir` both resolve to forest `#183D32`. Ink text on either is about 1.2:1, so text on
+  an action fill is always `--text-on-accent` (ivory). `--ink-3` is on-dark-muted and is a
+  text colour on forest ONLY. CLAUDE.md's Design tokens section has the full palette.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
 - **Two cohort descriptions exist now, and only one is public.** `src/data/facts.ts` holds

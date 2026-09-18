@@ -4,9 +4,9 @@
    18 September 2026: now drawn from design system v1 (forest, ivory, serif
    h1/h2, 1px lines instead of shadows). Every value comes from a token in
    ds/theme.css; the component tokens (--panel-border, --hero-*, --footer-*,
-   --eyebrow-*) are how one rule here renders one way on the public site and
-   the old way on /craft, which reads theme-course.css. The history below is
-   the previous direction, kept because it explains the class names.
+   --eyebrow-*) carry the choices the package makes per component. /craft
+   loads this file too, so the course area follows the same rules. The history
+   below is the previous direction, kept because it explains the class names.
 
    Previously: illustration-led direction.
 
@@ -104,9 +104,8 @@ body {
      soft shadow reads as a rendering artefact */
 }
 /* h1 and h2 carry the display face; h3 and h4 carry the heading face. On the
-   public site that is Source Serif 4 at 400 and Figtree at 700. On /craft
-   theme-course.css points both at Figtree 800, which is what this rule used to
-   say for all four. */
+   site that is Source Serif 4 at 400 and Figtree at 700. This rule used to set
+   all four in Figtree 800. */
 h1, h2, .serif {
   font-family: var(--font-display);
   font-weight: var(--weight-display);
@@ -514,9 +513,8 @@ details p { padding: 0 0 var(--space-5); color: var(--text-quiet); font-size: va
 @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
 
 /* ── footer. Not black: the hero holds the one black area. ────────────────── */
-/* A dark forest band on the public site, as the package draws it. Every colour
-   in it comes from --footer-*, which theme-course.css points back at the old
-   light footer for /craft. */
+/* A dark forest band, as the package draws it. Every colour in it comes from
+   --footer-*, so the band can be retuned from theme.css alone. */
 footer.site { background: var(--footer-bg); color: var(--footer-ink); border-top: var(--border-w-hair) solid var(--footer-rule); padding: var(--space-7) 0 var(--space-6); font-size: var(--size-3); margin-top: var(--space-6); }
 footer.site .wordmark { color: var(--footer-ink); }
 footer.site .wordmark .junction { color: var(--footer-ink); }

@@ -227,8 +227,8 @@ Do not inline either one here.
   learner→Sunil inbox until 4 September. Learners answer each other. The rule that makes
   that safe is not moderation, it is that a reply carries an `author_role` and the three
   roles can never be mistaken for one another: `learner` (their face and name),
-  `instructor` (a rule down the side — the course's position), `system` (machine-orange,
-  labelled *not a person*, and only ever code quoting `facts.ts` or session frontmatter).
+  `instructor` (a rule down the side — the course's position), `system` (the machine's warm
+  gold family, labelled *not a person*, and only ever code quoting `facts.ts` or session frontmatter).
   **Only `instructor` replies are eligible for relay** to a later asker, so no amount of
   peer approval can turn a guess into something the machine repeats as fact. And the two
   marks stay separate on purpose: *solved it* is the asker's report, *endorsed* is Sunil's
@@ -955,23 +955,30 @@ prospect.
   would mean every change to the public design reflows the console.
   The course area has [src/styles/craft.css](src/styles/craft.css), which — unlike `admin.css` — is **additive to
   `global.css`, never a replacement**: a learner who applied on the strength of the public
-  pages should not land somewhere that looks like a different product, so the noir hero,
-  the sun button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all still come from
-  `global.css`. `craft.css` holds only what the marketing pages have no use for —
+  pages should not land somewhere that looks like a different product, so the dark
+  forest hero, the forest action button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all
+  still come from `global.css`. `craft.css` holds only what the marketing pages have no use for —
   `panel`/`stack`/`row`, the state `pill`, `klabel`, `facts`, `page-head`, the intake's
   scale cells, the pager, the sign-in card. It exists because those pieces had been
   written four times in four page-scoped `<style>` blocks and had drifted: sign-in was on
   the illustration-led system while the three pages behind the gate were the old
   warm-craft structure with new tokens poured into it. Two laws it holds and page-scoped
-  CSS kept breaking: **a panel gets a shadow or a border, never both** (hairlines are
-  legal *inside* a panel, as row dividers), and **if it is yellow it is clickable** —
-  `--sun` is a fill and cannot carry text, `--clay` is the accent as ink. A status pill is
-  therefore never sun. One trap: `global.css` already owns short names like `.mod` (the
+  CSS kept breaking: **a panel gets a shadow or a border, never both** (under design
+  system v1 it is the 1px `--panel-border`, and hairlines are still legal *inside* a
+  panel, as row dividers), and **if it is forest-filled it is clickable**. `--sun` is
+  the action colour's old name and now resolves to forest green, so ink text on it is
+  about 1.2:1; text on it is `--text-on-accent` (ivory). A status pill, badge or tag is
+  therefore never forest-filled: it is an outline or a soft fill. The forum's instructor
+  badge is soft green with forest text for exactly this reason. One trap: `global.css` already owns short names like `.mod` (the
   public module card), so a bare `.mod` in a session row renders inside a phantom nested
   card. Namespace anything generic.
   `admin.css` imports `ds/contract.css` and `ds/theme.css` — the tokens — and the
   console sets `data-density="compact"` on `<body>`, which is the surface those
-  compact values were written for.
+  compact values were written for. Since 18 September the console and the course area
+  use the same design system v1 values as the public site. Compact density now changes
+  only rhythm, not shape: 40px rows, **36px controls** (the one deliberate departure from
+  the package's 44px target, and still well above WCAG's 24px), 14px body. It no longer
+  overrides radii, because the package's 6px and 12px already suit a dense table.
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.
@@ -1183,11 +1190,14 @@ before changing a colour.
   logo**, which is still to be commissioned. It is drawn still: the package's one-time
   animation relies on `sessionStorage`, which this site does not use. The consulting
   wordmark ("Sunil Mathew") keeps its plain dot.
-- **`/craft`, `/craft/admin` and `/book/[id]` keep the previous system.**
-  [src/styles/ds/theme-course.css](src/styles/ds/theme-course.css) restores it over
-  `theme.css` at higher specificity, imported only by `admin.css` and `craft.css`.
-  **Any token `global.css` reads must have its old value in that file too**, or the
-  course area changes with the public site.
+- **One token set for the whole site.** The public pages, `/craft`, `/craft/admin` and
+  `/book/[id]` all read `theme.css`. A `theme-course.css` override kept the old system on
+  the gated areas for part of 18 September and was removed the same day at Sunil's
+  request. Do not reintroduce a second token set.
+- **Forum voices are a colour language** (`--agent-*` in `theme.css`, mapping and ratios
+  in its comment). Learner: neutral ink on paper. Instructor: forest, soft-green badge.
+  System (machine): deep gold on warm cream. Uncertain: blue. Refused: error red. No two
+  share a hue.
 - **Voice**: respected practitioner. Restrained, senior-technical, high whitespace.
   This is the *register*. The *sentences* follow **Communication style** at the top of
   this file — plain words, one idea each. Restrained and plain are the same goal.

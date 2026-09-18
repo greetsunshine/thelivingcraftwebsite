@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   The public site's tokens — Living Craft website design system v1.
+   The site's tokens — Living Craft website design system v1.
 
    Source: the design-system package Alchemy and Ein delivered on
    18 September 2026 (assets/tokens.json, "review edition"). The package is
@@ -17,9 +17,11 @@
    `--sun` is forest green and `--noir` is forest green. Kept because a page
    saying `var(--sun)` means "the action colour", and that meaning survived.
 
-   /craft AND /craft/admin DO NOT USE THESE VALUES. They import
-   theme-course.css after this file, which restores the previous system at a
-   higher specificity. See that file for why.
+   ONE SET OF VALUES FOR THE WHOLE SITE. The public pages, the course area
+   (/craft) and the operator console (/craft/admin) all read this file. For
+   one day (18 September) the last two kept the previous system through a
+   theme-course.css override; Sunil asked the same day for all three to
+   match, and that file is gone. Do not reintroduce a second token set.
 
    CONTRAST. Every ratio below was computed, not copied. Four pairs in the new
    system fail AA for normal text and are recorded rather than adjusted:
@@ -114,13 +116,43 @@
   --link-hover: var(--accent-ink);
   --focus-ring: var(--lc-forest);             /* ivory on dark surfaces, set where they are */
 
-  /* --- domain: agent provenance --- */
+  /* --- semantic: status. The package's four status families, by name. --- */
+  --success: var(--lc-success);          /* 6.67:1 on its quiet */
+  --success-quiet: var(--lc-success-soft);
+  --info: var(--lc-info);                /* 6.19:1 on its quiet */
+  --info-quiet: var(--lc-info-soft);
+
+  /* --- domain: agent provenance. COLOUR IS LANGUAGE HERE.
+     The forum's three voices (learner, instructor, system) and the two
+     hedges (uncertain, refused) must never be mistaken for one another, so
+     each gets its own hue family. The package designs none of this; the
+     mapping below is ours, and every pair was computed:
+
+       human (learner)  ink #172E26 on paper #FBF8F2 ....... 13.61:1
+       instructor       forest #183D32 on soft #E5EBE1 ...... 9.87:1
+                        ivory on forest (the avatar mark) .. 10.55:1
+       machine (system) deep gold #765523 on #F4E9CE ........ 5.62:1
+       uncertain        info #315D6B on #E7EFF1 ............. 6.19:1
+       refused          error #963D34 on #F7E8E3 ............ 5.84:1
+
+     Why these hues. Instructor takes forest because Sunil's answer is the
+     course's position, and forest is the brand. Machine takes the warm
+     family, the nearest the new palette has to the old machine orange, and
+     it sits apart from green at a glance. Uncertain moved from gold to blue,
+     because gold is now the machine's and two meanings cannot share one
+     colour. Human stays neutral: a learner is a face, not a colour.
+
+     An instructor badge is a SOFT fill with forest text, never a forest
+     fill: forest fill is the action colour, and a status that looks like a
+     button is a bug (see .pill in craft.css). --- */
   --agent-machine: var(--lc-deep-gold);
   --agent-machine-bg: var(--lc-warning-soft);
   --agent-human: var(--ink-1);
-  --agent-human-bg: var(--lc-soft);
-  --agent-uncertain: var(--lc-warning);
-  --agent-uncertain-bg: var(--lc-warning-soft);
+  --agent-human-bg: var(--lc-paper);
+  --agent-instructor: var(--lc-forest);
+  --agent-instructor-bg: var(--lc-soft);
+  --agent-uncertain: var(--info);
+  --agent-uncertain-bg: var(--info-quiet);
   --agent-refused: var(--danger);
   --agent-refused-bg: var(--danger-quiet);
   --agent-refused-mark: var(--danger-mark);
@@ -233,14 +265,26 @@
   --control-primary-bg-hover: var(--accent-hover);
 }
 
-/* Same token names, retuned. Tables and log views only — never the marketing site. */
+/* Same token names, retuned for the console (AdminLayout sets this on <body>).
+   Tables and log views only — never the marketing site.
+
+   What changed for design system v1, and why:
+   - Radii are NOT overridden any more. The old compact block shrank 24/28px
+     panels to 16 and 16px fields to 10, because the big radii read as soft
+     on a dense table. The new system's radii are already 6px and 12px, so
+     the console uses them as they are and the two surfaces share one shape.
+   - Controls are 36px, not 34 and not the package's 44. The package sets a
+     44px minimum target; that is right for the public pages and too tall
+     for a console that is scanned in rows on a desktop. 36px clears the
+     WCAG 2.2 AA minimum target (24px) with room, and is the one place this
+     file departs from the package's 44. Said here so it is a decision, not
+     drift.
+   - Body text is 14px, the package's "small" size, so the console's type
+     sits on the same scale as the site's rather than beside it. */
 [data-density="compact"] {
   --row-h: 40px;
-  --control-h: 34px;
+  --control-h: 36px;
   --pad-cell: var(--space-2) var(--space-3);
   --pad-panel: var(--space-4);
-  --radius-field: 10px;
-  --radius-panel: 16px;
-  --radius-card: 16px;
   --size-3: 14px;
 }
