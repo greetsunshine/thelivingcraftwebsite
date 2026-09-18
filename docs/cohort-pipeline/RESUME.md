@@ -289,8 +289,8 @@ Task 2 of "Organised TLC Design System Changes". Its own branch and PR, based on
   so they do not download the photo. In `npm run dev` you will still see one `fetch` of it:
   that is the Astro dev toolbar's image audit, not the page.
 - **The staging link is the branch alias**, and it follows every push to this branch:
-  `thelivingcraft-git-feat-thread-network-animation-greetsunshine-1213s-projects.vercel.app`
-  (Vercel shortens long names; the PR's Vercel comment has the exact link).
+  https://thelivingcraft-git-feat-thr-554e58-greetsunshine-1213s-projects.vercel.app (PR #27).
+  Vercel's login wall is on for previews: you need to be signed in to the Vercel team.
 
 ---
 
