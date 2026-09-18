@@ -18,6 +18,9 @@
 
 @import url('./ds/contract.css');
 @import url('./ds/theme.css');
+/* The console keeps the previous design system: theme.css now carries the
+   public site's v1 values, and this restores the old ones over them. */
+@import url('./ds/theme-course.css');
 
 /* Old token names re-pointed at the new palette, so the nine admin pages'
    scoped <style> blocks stay correct rather than stale. Three judgement calls:

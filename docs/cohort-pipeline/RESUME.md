@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 17 September 2026
+**Last updated:** 18 September 2026
 **Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -269,6 +269,46 @@ https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
 
 ---
 
+## Public site redesign: design system v1 — 18 September, in progress
+
+**What.** The public site is moving to the Living Craft website design system v1 (Alchemy and
+Ein, 18 September, a "review edition"). Forest green actions, ivory ground, serif h1 and h2,
+6px and 12px corners, and a 1px line instead of shadows. The package is kept OUT of the repo
+on purpose (`.git/info/exclude`); its values are in `src/styles/ds/theme.css` and
+`contract.css`. On `cta-book-now-rework` (PR #18), in commits separate from the CTA work.
+
+**Step 1, tokens only.** `theme.css` and `contract.css` carry the new values. Existing
+token names were re-pointed, not renamed, so `--sun` is now forest green and still means
+"the action colour". New component tokens (`--panel-border`, `--hero-*`, `--footer-*`,
+`--eyebrow-*`, `--weight-display`, `--font-heading`, `--size-h1`, `--size-h2`) exist
+for `global.css` to read in the next commit.
+
+**`/craft`, `/craft/admin` and `/book/[id]` are deliberately unchanged.** They share the
+token files, so `src/styles/ds/theme-course.css` restores the old values over the new ones
+at `:root:root` specificity. Only `admin.css` and `craft.css` import it. It was
+generated from the two token files at `25d7b45`, not retyped. **Verified:** `/craft/login`
+and `/craft/admin/login` screenshot byte-identical with and without the change.
+**If you add a token that `global.css` reads, add its old value to `theme-course.css`**,
+or the course area changes with the public site.
+
+**Contrast, computed for every pair.** Four pairs in the new system fail AA for normal text.
+They were recorded, not adjusted: gold on ivory 2.76, gold on paper 2.96, gold on forest
+3.82 (large text only), muted on line 4.15 (disabled controls only). So gold is a fill and a
+rule colour, and never small text. The two old near-misses (`--accent-ink` 4.02 and
+`--text-quiet` 4.04 on mist) are gone on the public site: deep gold is 5.98 and muted is 5.69
+on ivory.
+
+**Two things the package does not design, decided here.** A primary button on the dark
+hero is ivory with forest text, because forest on forest would vanish. Layers that float
+over the page (menu panel, Ask panel, sticky bar) keep a soft shadow; nothing else does.
+
+**Kept from the density pass, on purpose.** The package sets section padding to
+clamp(56px, 7vw, 112px), which is MORE space on desktop than today. The site keeps its
+existing section rhythm (now 64px, then 48 and 32 on narrower screens), because Sunil asked
+for less blank space on 16 September.
+
+---
+
 ## Phones: no floating button, and a hamburger menu — 16 September, last pass
 
 - **Nothing floats on a phone any more except the Ask pill.** `StickyApplyBar.astro` lost its
@@ -487,7 +527,11 @@ insert.
 reasoned, never executed. It is the first thing to exercise once a database exists.
 
 
-## ⚠ Two tokens are below AA on the ground `body` actually uses
+## ⚠ Two tokens are below AA on the ground `body` actually uses — /craft and /craft/admin only now
+
+**Resolved on the public site on 18 September** by design system v1 (see the redesign
+section above). The course area and the console still use these values through
+`theme-course.css`, so the finding below still holds there.
 
 Measured 11 September, and independently recomputed. `theme.css` had one number simply
 wrong.
@@ -518,11 +562,12 @@ and every reader who checked it was misled.
 - **Astro's origin check refuses a POST with no `Origin` header** and returns 403. When
   testing endpoints with curl, send `-H "Origin: http://localhost:4321"`. That 403 is not
   a bug in this code, and it cost half an hour once already.
-- **The design tokens in `CLAUDE.md` are STALE.** The live system is illustration-led and
-  lives in `src/styles/ds/theme.css`: `--noir` for hero surfaces only and never text,
-  `--sun #ffc123` for every action and it is a FILL that cannot carry text, `--mist` the
-  sunken ground, text `--ink-1`, and **never `--ink-3` for anything a person reads**
-  (2.29:1). Figtree, not Fraunces. Sentence-case labels.
+- **Two token systems are live, on purpose.** The public site reads design system v1 from
+  `src/styles/ds/theme.css` (forest, ivory, serif headings, uppercase eyebrows, no shadows).
+  `/craft`, `/craft/admin` and `/book/[id]` read the previous system restored by
+  `theme-course.css` (`--sun #ffc123` as a fill that cannot carry text, `--noir` hero, and
+  **never `--ink-3` for anything a person reads**, at 2.29:1). CLAUDE.md's Design tokens
+  section describes both.
 - **`form_submissions`, not `submissions`.** The latter is the learners' decision records
   and the collision would have been silent.
 - **Two cohort descriptions exist now, and only one is public.** `src/data/facts.ts` holds

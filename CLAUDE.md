@@ -1158,12 +1158,31 @@ startups, based in Bengaluru. Do not infer or publish user counts, team counts, 
 metrics, testimonials or employer endorsement without a dated approval record.
 
 ## Design tokens
-- **Palette** (warm "craft", one accent): paper `#F4EEE2` · surface `#FBF7EE` ·
-  ink `#221C15` · ink-soft `#5C5345` · line `#DCD2BE` · **accent (terracotta/clay) `#B0512E`**
-  · clay-deep `#8F3F22` · ochre `#C2914A`.
-- **Type**: Fraunces (display serif) · Inter (body) · JetBrains Mono (eyebrows/labels).
-- **Scale**: body 17px/1.65; H1 clamp(40–72px); H2 clamp(30–46px); display weight ~360.
-- **Spacing**: section padding ~104px; max width 1180px; radius 2–3px; hairline borders.
+**The public site uses the Living Craft website design system v1** (Alchemy and Ein,
+18 September 2026, a "review edition"). The package itself is kept out of the repository;
+its values live in [src/styles/ds/theme.css](src/styles/ds/theme.css) and
+[src/styles/ds/contract.css](src/styles/ds/contract.css). Read the header of `theme.css`
+before changing a colour.
+- **Palette**: forest `#183D32` for actions and the one dark surface per view · ivory
+  `#F5F0E6` page ground · paper `#FBF8F2` panels · ink `#172E26` · muted `#526259` ·
+  line `#CBD1C8` · control line `#758279` · deep gold `#765523` as accent TEXT · gold
+  `#B58A46` for rules and fills ONLY · dark forest `#102A22` footer.
+- **Gold is never small text.** It is 2.76:1 on ivory and 3.82:1 on forest. On the dark
+  hero the eyebrow is on-dark-muted `#C6D4C8` (7.79:1); gold appears there only in the
+  h1, which is large text.
+- **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
+  everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
+  **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay
+  fixed-width through `font-feature-settings`. Body 16px / 1.6.
+- **Shape**: 6px radius on anything you press or type into, 12px on a panel. Panels are
+  set off by a 1px line (`--panel-border`), **not a shadow**. Only a layer floating over
+  the page keeps a shadow.
+- **Spacing**: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128. Max width 1160px.
+- **`/craft`, `/craft/admin` and `/book/[id]` keep the previous system.**
+  [src/styles/ds/theme-course.css](src/styles/ds/theme-course.css) restores it over
+  `theme.css` at higher specificity, imported only by `admin.css` and `craft.css`.
+  **Any token `global.css` reads must have its old value in that file too**, or the
+  course area changes with the public site.
 - **Voice**: respected practitioner. Restrained, senior-technical, high whitespace.
   This is the *register*. The *sentences* follow **Communication style** at the top of
   this file — plain words, one idea each. Restrained and plain are the same goal.

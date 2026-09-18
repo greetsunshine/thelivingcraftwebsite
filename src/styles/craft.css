@@ -1,3 +1,8 @@
+/* The course area keeps the previous design system. theme.css (loaded through
+   global.css) now carries the public site's v1 values; this restores the old
+   ones over them at a higher specificity. It must be the first rule here. */
+@import url('./ds/theme-course.css');
+
 /* ═══════════════════════════════════════════════════════════════════════════
    The course area (/craft) — the component layer.
 
