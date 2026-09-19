@@ -1,0 +1,31 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Structure" subtitle="Panel, SectionHead, DataTable, MetaList" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../../_ds_bundle.js"></script>
+<style>body{padding:18px 20px}.lbl{font-family:var(--font-marginal);font-size:var(--size-1);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-faint)}</style></head>
+<body><div id="root"></div>
+<script type="text/babel">
+const { Panel, SectionHead, DataTable, MetaList, Provenance } = window.TheLivingCraftDesignSystem_41caae;
+
+function Demo(){
+  const rows=[
+    {id:1,pr:'#4821',finding:'Retry wrapper is not idempotent',state:<Provenance state="machine" label={false} filled/>},
+    {id:2,pr:'#4818',finding:'Queue config unread',state:<Provenance state="uncertain" label={false} filled/>},
+    {id:3,pr:'#4802',finding:'Fan-out bound removed in review',state:<Provenance state="human" label={false} filled/>},
+  ];
+  return <div style={{display:'grid',gap:'var(--space-4)'}}>
+    <SectionHead index="03.2" title="Where the retry loop failed" note="Two production incidents, six weeks apart, same root cause." />
+    <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:'var(--space-4)',alignItems:'start'}}>
+      <Panel title="Review queue" meta="3 open">
+        <DataTable dense columns={[{key:'pr',label:'PR',mono:true,width:'64px'},{key:'finding',label:'Finding'},{key:'state',label:'Read',width:'52px'}]} rows={rows} />
+      </Panel>
+      <Panel title="Cohort 04" meta="8/8" heavy>
+        <MetaList items={[{label:'Seats',value:'8 — full'},{label:'Fee',value:'₹1,20,000',mono:true},{label:'Length',value:'6 weeks'},{label:'Timezones',value:'IST · GST · AEST'}]} />
+      </Panel>
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body></html>

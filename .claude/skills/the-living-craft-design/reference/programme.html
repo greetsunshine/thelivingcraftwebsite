@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Living Craft — agentic systems architecture, six weeks, eight seats</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="page.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PROTOTYPE — not production. Standalone mock of the marketing programme page
+     in the illustration-led direction (readme §3).
+
+     PLACEHOLDER, needs Sunil:
+       · All ₹ / AED / AUD figures are anchors to calibrate, not decided prices.
+       · Week 1–4 copy is prototype text written from the documented positioning
+         spine. Weeks 5–6 are left genuinely Unwritten rather than invented.
+       · Both illustration positions are labelled placeholders. Nothing is drawn.
+       · No testimonials, no client names, no logos, no student counts appear
+         anywhere on this page, deliberately. There are no real ones yet.
+
+     This direction REPLACES the live warm-craft palette. It cannot sit beside
+     /caio or /assessment as they stand today.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="shell">
+
+  <!-- header: deliberately not sticky. §3 permits one fixed element and it is
+       the icon rail on working surfaces. This is not one. -->
+  <header class="site-head">
+    <a class="wordmark" href="#">The Living Craft</a>
+    <nav class="site-nav">
+      <a href="#weeks">Programme</a>
+      <a href="#agents">Field notes</a>
+      <a class="btn btn--primary btn--sm" href="#apply">Apply</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ── hero · THE one black area on this page ──────────────────────────── -->
+    <section class="hero">
+      <div class="hero__grid">
+        <div>
+          <p class="mono hero__eyebrow">Cohort 04 · September 2026 · Live online</p>
+          <h1>AI builds. You judge, and you direct.</h1>
+          <p class="hero__lead">Anyone can show you the agent pattern. I can show you the three times it failed in production.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary btn--lg" href="#apply">Apply</a>
+            <a class="btn btn--onDark btn--lg" href="#agents">Read a field note</a>
+          </div>
+        </div>
+
+        <div class="plate">
+          <span class="mono">illustration</span>
+          <span class="mono">1200 × 900 · on noir</span>
+          <span class="mono">not drawn — readme §9</span>
+        </div>
+      </div>
+
+      <dl class="hero__facts">
+        <div class="hero__fact"><dt>Cohort</dt><dd>04 — Sep</dd></div>
+        <div class="hero__fact"><dt>Seats</dt><dd class="num">8</dd></div>
+        <div class="hero__fact"><dt>Fee</dt><dd class="num">₹1,20,000</dd></div>
+        <div class="hero__fact"><dt>Length</dt><dd>6 weeks</dd></div>
+        <div class="hero__fact"><dt>Commitment</dt><dd class="num">~5 hrs / week</dd></div>
+        <div class="hero__fact"><dt>Bangalore</dt><dd>Hybrid</dd></div>
+      </dl>
+    </section>
+
+    <!-- ── 01 what this is ─────────────────────────────────────────────────── -->
+    <section class="sec">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">01</span>
+          <h2>What this is</h2>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card card--pad-lg prose">
+          <p>The market is filling with courses on how to use AI tools. This is not one. The tools turn over every few months. The judgment about what to ship, what to instrument and what to refuse does not.</p>
+          <p>Six weeks, about five hours a week, eight people. You bring a system you are responsible for and we take it apart on the two axes that decide whether an agentic system survives production: whether you can tell that it works, and whether someone else can make it do something you did not intend.</p>
+          <p>I have led 150 engineers across the US, UK, China and India, and the systems I ran served more than 100 million users. Most of what I will teach you came out of the incidents rather than the designs.</p>
+        </div>
+
+        <!-- ember promo · ink text, never white: 6.7:1 against 2.43:1. §3 -->
+        <aside class="promo">
+          <p class="promo__claim">Eight seats. I read every application myself, and most get a no.</p>
+          <div class="plate plate--onEmber">
+            <span class="mono">illustration</span>
+            <span class="mono">600 × 600 · on ember</span>
+          </div>
+          <p class="promo__note">Admission is by application, not by payment. I am looking for people who own something in production and can say plainly what went wrong with it.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 02 six weeks ────────────────────────────────────────────────────── -->
+    <section class="sec" id="weeks">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">02</span>
+          <h2>Six weeks</h2>
+        </div>
+        <p>Weeks 5 and 6 are not written. They are set in week 2, once I have seen the eight systems in the room.</p>
+      </div>
+
+      <!-- PLACEHOLDER: weeks 1–4 are prototype copy from the documented outcomes
+           (evaluation &amp; reliability, security / red-teaming). Sunil to correct. -->
+      <div class="weeks">
+        <article class="card week">
+          <span class="mono week__no">Week 1</span>
+          <h3 class="card__title">The system you brought</h3>
+          <p class="week__body">Each of you presents one agentic system you are on the hook for. No slides. The reading list for the cohort is written this week, out of what the eight of you brought.</p>
+        </article>
+
+        <article class="card week">
+          <span class="mono week__no">Week 2</span>
+          <h3 class="card__title">Architecture, and what it costs later</h3>
+          <p class="week__body">The four or five shapes an agentic system takes, and the bill each one sends you in month nine. We pick the shape for each system in the room and write down what we are giving up.</p>
+        </article>
+
+        <article class="card week">
+          <span class="mono week__no">Week 3</span>
+          <h3 class="card__title">Where the retry loop failed</h3>
+          <p class="week__body">Two incidents, six weeks apart, one wrapper that looked idempotent. The pattern was right and the deployment around it was not. We read the config, not the design doc.</p>
+        </article>
+
+        <article class="card week">
+          <span class="mono week__no">Week 4</span>
+          <h3 class="card__title">Evaluation you can defend</h3>
+          <p class="week__body">How you tell that it works, in a form that survives a review. Confidence is reported as a fraction, never a percentage — 87% implies a calibration nobody has.</p>
+        </article>
+
+        <article class="card week">
+          <span class="mono week__no">Week 5</span>
+          <div class="unwritten">
+            <div class="unwritten__head">
+              <span class="unwritten__label">unwritten</span>
+              <span class="unwritten__owner">sunil · set in week 2</span>
+            </div>
+            <div class="unwritten__lines" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="card week">
+          <span class="mono week__no">Week 6</span>
+          <div class="unwritten">
+            <div class="unwritten__head">
+              <span class="unwritten__label">unwritten</span>
+              <span class="unwritten__owner">sunil · set in week 2</span>
+            </div>
+            <div class="unwritten__lines" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="empty" style="margin-top: var(--space-4)">
+        <p class="empty__label">Cohort 04 has no reading list yet.</p>
+        <p class="empty__note">It is written in week 1, from what the eight of you bring. Cohort 03's list is not reused.</p>
+      </div>
+    </section>
+
+    <!-- ── 03 the agents ───────────────────────────────────────────────────── -->
+    <section class="sec" id="agents">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">03</span>
+          <h2>The reviewer reads your pull requests</h2>
+        </div>
+        <p>An agent reads every pull request you open during the six weeks and posts what it found. It marks its own work — what it read, what it could not read, and what it declined to answer.</p>
+      </div>
+
+      <div class="card card--pad-lg" style="display: grid; gap: var(--space-5)">
+        <p class="prose">Below is real output, unedited. Note the second mark: the finding is hedged because <a class="cite" href="#" title="queue/config.yaml:31 — read at run 118">†4</a>the queue was configured for at-least-once delivery and the agent could not open the consumer to check the acknowledgement order.</p>
+
+        <div class="agentblock agentblock--uncertain">
+          <div class="agentblock__head">
+            <span class="agentblock__who">reviewer</span>
+            <span class="prov prov--uncertain"><span class="prov__sigil" aria-hidden="true">[~]</span><span>hedged</span></span>
+            <span class="conf">
+              <span class="conf__ticks" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+              <span class="conf__val">2/5</span>
+            </span>
+            <span class="agentblock__stamp">run 118 · 04:12 IST</span>
+          </div>
+          <p class="agentblock__body">The retry wrapper around submitJob reads as idempotent, but I could not open the consumer, so I have not checked the acknowledgement order.</p>
+        </div>
+
+        <div class="refusal">
+          <div class="agentblock__head">
+            <span class="agentblock__who">scout</span>
+            <span class="prov prov--refused"><span class="prov__sigil" aria-hidden="true">[×]</span><span>refused</span></span>
+            <span class="agentblock__stamp">run 118 · 04:14 IST</span>
+          </div>
+          <p class="refusal__reason">I won't summarise this incident — the postmortem is a draft and two of its claims contradict each other.</p>
+          <p class="refusal__next">Ask Arun, or read both versions in § 04.</p>
+        </div>
+
+        <div>
+          <p class="label" style="margin-bottom: var(--space-3)">Five marks, and unmarked text is written by a person</p>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5)">
+            <span class="prov prov--machine"><span class="prov__sigil" aria-hidden="true">[M]</span><span>machine-read</span></span>
+            <span class="prov prov--human"><span class="prov__sigil" aria-hidden="true">[H]</span><span>human-approved</span></span>
+            <span class="prov prov--uncertain"><span class="prov__sigil" aria-hidden="true">[~]</span><span>hedged</span></span>
+            <span class="prov prov--refused"><span class="prov__sigil" aria-hidden="true">[×]</span><span>refused</span></span>
+            <span class="prov prov--cited"><span class="prov__sigil" aria-hidden="true">[†]</span><span>cited</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 04 who's in the room ────────────────────────────────────────────── -->
+    <section class="sec">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">04</span>
+          <h2>Who is in the room</h2>
+        </div>
+        <p>Staff-plus engineers, architects and directors of engineering, most with ten or more years of shipping systems.</p>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h3 class="card__title" style="margin-bottom: var(--space-4)">Apply if</h3>
+          <div class="tick tick--yes"><span class="tick__mark" aria-hidden="true">[H]</span><p>You own an agentic system, or you are about to be handed one.</p></div>
+          <div class="tick tick--yes"><span class="tick__mark" aria-hidden="true">[H]</span><p>You can name an incident and say what you changed afterwards.</p></div>
+          <div class="tick tick--yes"><span class="tick__mark" aria-hidden="true">[H]</span><p>You are the person who has to answer for it when it is wrong.</p></div>
+          <div class="tick tick--yes"><span class="tick__mark" aria-hidden="true">[H]</span><p>You have five hours a week for six weeks, and you will use them.</p></div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title" style="margin-bottom: var(--space-4)">Do not apply if</h3>
+          <div class="tick tick--no"><span class="tick__mark" aria-hidden="true">[×]</span><p>You want a walkthrough of a framework. That is on the framework's website.</p></div>
+          <div class="tick tick--no"><span class="tick__mark" aria-hidden="true">[×]</span><p>You have nothing in production to bring. There is nothing for us to take apart.</p></div>
+          <div class="tick tick--no"><span class="tick__mark" aria-hidden="true">[×]</span><p>You want a certificate. I do not issue one.</p></div>
+          <div class="tick tick--no"><span class="tick__mark" aria-hidden="true">[×]</span><p>You want me to write the code. I will tell you why yours is wrong.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 05 fee ──────────────────────────────────────────────────────────── -->
+    <!-- ▲ PRICING PLACEHOLDER ▲ every figure below is an anchor for Sunil to
+         calibrate against India mid-market / regulated-enterprise / PE buyers.
+         Nothing here has been agreed. Do not publish as-is. -->
+    <section class="sec">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">05</span>
+          <h2>Fee</h2>
+        </div>
+        <p>The founding rate holds until all eight seats are taken. Enrolment is rolling; there is no discount after that and no cohort discount before it.</p>
+      </div>
+
+      <div class="fees">
+        <article class="card fee fee--live">
+          <span class="label fee__region">India</span>
+          <span class="fee__amount">₹1,20,000</span>
+          <span class="fee__was">Standard rate ₹1,50,000</span>
+          <div class="fee__hair"></div>
+          <p class="fee__note">Founding rate, 8 seats. Bangalore members attend in person for weeks 1 and 6.</p>
+        </article>
+
+        <article class="card fee">
+          <span class="label fee__region">Dubai</span>
+          <span class="fee__amount">AED 8,000</span>
+          <span class="fee__was">Sessions run to GST</span>
+          <div class="fee__hair"></div>
+          <p class="fee__note">Live online. Recordings are not a substitute and are not circulated.</p>
+        </article>
+
+        <article class="card fee">
+          <span class="label fee__region">Australia</span>
+          <span class="fee__amount">AUD 3,000</span>
+          <span class="fee__was">Sessions run to AEST</span>
+          <div class="fee__hair"></div>
+          <p class="fee__note">Live online. Two of the six weeks fall outside standard business hours.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── 06 instructor ───────────────────────────────────────────────────── -->
+    <section class="sec">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">06</span>
+          <h2>Who teaches it</h2>
+        </div>
+      </div>
+
+      <div class="card card--pad-lg bio">
+        <dl class="bio__facts">
+          <div class="bio__fact"><dt class="label">Years</dt><dd>26</dd></div>
+          <div class="bio__fact"><dt class="label">Engineers led</dt><dd>150</dd></div>
+          <div class="bio__fact"><dt class="label">Users served</dt><dd>100M+</dd></div>
+          <div class="bio__fact"><dt class="label">Based</dt><dd>Bangalore</dd></div>
+        </dl>
+
+        <div class="prose">
+          <p>I am Sunil Mathew. I spent twenty-six years building systems, at director and L7 level at Google, Amazon and Walmart, and led 150 engineers across the US, UK, China and India.</p>
+          <p>I am not doing this from the outside. I am building an agentic product of my own and running a live enterprise AI-adoption engagement, which is where the material for weeks 3 and 4 keeps coming from.</p>
+          <p>One person makes everything here — the curriculum, the agents that read your code, and this page. That is the reason there are eight seats and not eighty.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 07 apply ────────────────────────────────────────────────────────── -->
+    <section class="sec" id="apply">
+      <div class="sec-head">
+        <div class="sec-head__row">
+          <span class="mono sec-head__index">07</span>
+          <h2>Apply</h2>
+        </div>
+        <p>Ten minutes. I read every one myself and reply either way, usually within a week.</p>
+      </div>
+
+      <div class="card card--pad-lg">
+        <form class="form" onsubmit="return false">
+          <div class="form__row">
+            <div class="field">
+              <label class="label" for="f-name">Your name</label>
+              <input class="input" id="f-name" name="name" type="text" autocomplete="name">
+            </div>
+            <div class="field">
+              <label class="label" for="f-email">Email</label>
+              <input class="input" id="f-email" name="email" type="email" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="form__row">
+            <div class="field">
+              <label class="label" for="f-role">Role</label>
+              <input class="input" id="f-role" name="role" type="text" placeholder="Staff engineer, architect, director…">
+            </div>
+            <div class="field">
+              <label class="label" for="f-region">Region</label>
+              <div class="select-wrap">
+                <select class="select" id="f-region" name="region">
+                  <option>India</option>
+                  <option>Dubai</option>
+                  <option>Australia</option>
+                  <option>Somewhere else</option>
+                </select>
+                <span class="select-wrap__caret" aria-hidden="true">▾</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-system">A system you are responsible for</label>
+            <textarea class="input" id="f-system" name="system" rows="3"></textarea>
+            <span class="field__hint">What it does, who it serves, and how long it has been running.</span>
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-incident">One time it went wrong</label>
+            <textarea class="input" id="f-incident" name="incident" rows="3"></textarea>
+            <span class="field__hint">What broke, what you thought was true that was not, and what you changed. This is the question I actually read.</span>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="f-consent" name="consent">
+            <span class="check__box" aria-hidden="true"></span>
+            <span class="check__text">I am happy for Sunil to keep this application on file while Cohort 04 is filling, and to write back about it.</span>
+          </label>
+
+          <div>
+            <button class="btn btn--primary btn--lg" type="submit">Apply</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- footer is mist, not black: §3 allows one black area per view, and the
+       hero has it. -->
+  <footer class="site-foot">
+    <p>The Living Craft · Cohort 04 · 8 seats · Bangalore</p>
+    <nav>
+      <a href="#weeks">Programme</a>
+      <a href="#agents">Field notes</a>
+      <a href="#apply">Apply</a>
+    </nav>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,390 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Programme page — marketing surface.
+   Reads semantic and domain aliases only. No base token (--sun, --ink-1) appears
+   below; a retheme stays one file. readme §4.
+
+   Seven prototype-only corrections against _ds_bundle.js are marked FIX.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.shell { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 var(--space-5); }
+
+/* ── apparatus: mono, small, machine-adjacent ─────────────────────────────── */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--size-1);
+  letter-spacing: var(--tracking-mono);
+  font-feature-settings: var(--font-features);
+}
+/* FIX 2 — labels are sentence case (--case-label: none), so they take
+   --tracking-label (0), not --tracking-caps (0.06em). §5 recorded this fix for
+   DataTable only; the bundle still applies caps tracking in seven other places. */
+.label {
+  font-family: var(--font-marginal);
+  font-size: var(--size-1);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: var(--case-label);
+  color: var(--text-quiet);   /* FIX 3 — never --text-faint for a real label (2.29:1) */
+}
+
+/* ── header. deliberately not sticky: §3 allows one fixed element and it is the
+      icon rail on working surfaces, which this is not. ───────────────────────── */
+.site-head {
+  display: flex; align-items: center; gap: var(--space-6);
+  padding: var(--space-5) 0;
+}
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  font-size: var(--size-5);
+  letter-spacing: var(--tracking-display);
+  color: var(--text-loud);
+  text-decoration: none;
+}
+.site-nav { display: flex; gap: var(--space-5); margin-left: auto; align-items: center; }
+.site-nav a { font-size: var(--size-3); color: var(--text-quiet); text-decoration: none; }
+.site-nav a:hover { color: var(--text-loud); }
+
+/* ── buttons. every action is sun. a pill, always. ────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-h);
+  padding: var(--pad-control);
+  border-radius: var(--radius-control);
+  border: var(--border-w-hair) solid transparent;
+  font-family: var(--font-body);
+  font-size: var(--size-3);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-normal);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.btn:active { transform: translateY(1px); }
+.btn--primary {
+  background: var(--control-primary-bg);
+  color: var(--control-primary-fg);
+  border-color: var(--control-primary-bg);
+}
+.btn--primary:hover {
+  background: var(--control-primary-bg-hover);
+  border-color: var(--control-primary-bg-hover);
+  color: var(--control-primary-fg);
+}
+.btn--secondary { background: transparent; color: var(--text-body); border-color: var(--border-field); }
+.btn--secondary:hover { background: var(--surface-hover); color: var(--text-body); }
+.btn--lg { height: calc(var(--control-h) + var(--space-3)); padding: 0 var(--space-6); font-size: var(--size-4); }
+.btn--sm { height: calc(var(--control-h) - var(--space-2)); padding: 0 var(--space-4); font-size: var(--size-2); }
+/* on noir only */
+.btn--onDark { background: transparent; color: var(--text-on-invert); border-color: rgba(255,255,255,0.28); }
+.btn--onDark:hover { background: rgba(255,255,255,0.08); color: var(--text-on-invert); border-color: rgba(255,255,255,0.45); }
+
+/* ── the hero. THE one black area on this page. §3: never two. ────────────── */
+.hero {
+  background: var(--surface-invert);
+  color: var(--text-on-invert);
+  border-radius: var(--radius-shell);
+  padding: var(--space-8) var(--space-8) var(--space-6);
+  margin-bottom: var(--space-8);
+  /* no shadow: black on mist separates on its own, and a shadow under a 40px
+     black shell reads as a drop-shadowed sticker. */
+}
+.hero__grid {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: var(--space-8); align-items: center;
+}
+.hero__eyebrow { color: var(--text-faint); }  /* legitimate on noir: 9.15:1 */
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  font-size: clamp(var(--size-8), 6.2vw, var(--size-9));
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-4) 0 var(--space-5);
+  max-width: 14ch;              /* wraps early on purpose — three short lines */
+}
+.hero__lead {
+  font-size: var(--size-5);
+  line-height: var(--lh-snug);
+  max-width: var(--measure-narrow);
+  color: rgba(255,255,255,0.86);
+}
+.hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
+.hero__facts {
+  display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8);
+  margin-top: var(--space-8); padding-top: var(--space-5);
+  border-top: var(--border-w-hair) solid rgba(255,255,255,0.14);
+}
+.hero__fact { display: grid; gap: var(--space-1); }
+.hero__fact dt { font-family: var(--font-marginal); font-size: var(--size-1); letter-spacing: var(--tracking-label); color: var(--text-faint); }
+.hero__fact dd { font-size: var(--size-5); font-weight: var(--weight-medium); }
+.hero__fact dd.num { font-family: var(--font-mono); font-feature-settings: var(--font-features); }
+
+/* ── illustration placeholders. §9: the direction is illustration-led and none
+      has been drawn. Every position is labelled with its intended size. ────── */
+.plate {
+  display: grid; place-content: center; gap: var(--space-2);
+  text-align: center;
+  border-radius: var(--radius-card);
+  border: var(--border-w-rule) dashed rgba(255,255,255,0.22);
+  color: var(--text-faint);
+  aspect-ratio: 4 / 3;
+}
+.plate--onEmber {
+  border-color: rgba(22,33,46,0.28);
+  color: var(--text-on-accent);
+  aspect-ratio: 1 / 1;
+  opacity: 0.72;
+}
+
+/* ── sections ─────────────────────────────────────────────────────────────── */
+.sec { margin-bottom: var(--space-8); }
+.sec-head { margin-bottom: var(--space-6); display: grid; gap: var(--space-2); }
+.sec-head__row { display: flex; align-items: baseline; gap: var(--space-3); }
+.sec-head__index { color: var(--text-quiet); flex: none; }   /* FIX 8 */
+.sec-head h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  font-size: var(--size-7);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+  color: var(--text-loud);
+}
+.sec-head p { color: var(--text-quiet); max-width: var(--measure-prose); line-height: var(--lh-snug); }
+
+/* ── cards. white on mist, shadow not rule. never both. ───────────────────── */
+.card {
+  background: var(--surface-panel);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raise);
+  padding: var(--space-6);
+  transition: box-shadow var(--motion-base) var(--ease-out);
+}
+.card--pad-lg { padding: var(--space-7); }
+.card__title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-strong);
+  font-size: var(--size-5);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-display);
+  color: var(--text-loud);
+}
+.prose { max-width: var(--measure-prose); }
+.prose p + p { margin-top: var(--space-4); }
+.prose p { color: var(--text-body); }
+
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--space-5); align-items: stretch; }
+
+/* ── the ember promo. ink text, never white: 6.7:1 vs 2.43:1. §3. ─────────── */
+.promo {
+  background: var(--surface-ember);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  display: grid; gap: var(--space-5);
+}
+.promo__claim {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  font-size: var(--size-6);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+}
+.promo__note { font-size: var(--size-3); line-height: var(--lh-snug); color: rgba(22,33,46,0.78); }
+
+/* ── weeks ────────────────────────────────────────────────────────────────── */
+.weeks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+.week { display: grid; gap: var(--space-3); align-content: start; }
+.week__no { color: var(--text-quiet); }   /* FIX 8 */
+.week__body { font-size: var(--size-3); line-height: var(--lh-snug); color: var(--text-quiet); }
+
+/* ── unwritten. visible in production; hiding it would misrepresent the
+      programme. §3. ────────────────────────────────────────────────────────── */
+.unwritten { display: grid; gap: var(--space-2); }
+.unwritten__head { display: flex; gap: var(--space-3); align-items: baseline; }
+.unwritten__label {
+  font-family: var(--font-marginal); font-size: var(--size-1);
+  letter-spacing: var(--tracking-label); text-transform: var(--case-label);
+  color: var(--state-unwritten-ink);
+}
+.unwritten__owner { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); }
+.unwritten__lines { display: grid; gap: var(--space-2); background: var(--state-unwritten-bg); padding: var(--space-2) 0; }
+.unwritten__lines span { height: 1px; background: var(--state-unwritten-line); }
+.unwritten__lines span:nth-child(2) { width: 88%; }
+.unwritten__lines span:nth-child(3) { width: 48%; }
+
+/* ── empty state. names what will appear, who writes it and when. §2. ─────── */
+.empty {
+  border: var(--border-w-rule) dashed var(--border-field);
+  border-radius: var(--radius-panel);
+  padding: var(--space-5);
+  display: grid; gap: var(--space-2); justify-items: start;
+  /* dashed border, no shadow — never both */
+}
+.empty__label {
+  font-family: var(--font-display); font-size: var(--size-4);
+  line-height: var(--lh-snug); color: var(--text-body); max-width: var(--measure-narrow);
+}
+.empty__note { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-narrow); line-height: var(--lh-snug); }
+
+/* ── agent provenance. sigils are typographic so they survive print, plain
+      text and a screen reader. §7. ─────────────────────────────────────────── */
+.prov {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  font-family: var(--font-mono); font-size: var(--size-1);
+  letter-spacing: var(--tracking-label); text-transform: var(--case-label);
+  white-space: nowrap;
+}
+.prov--machine   { color: var(--agent-machine); }
+.prov--human     { color: var(--agent-human); }
+.prov--uncertain { color: var(--agent-uncertain); }
+.prov--refused   { color: var(--agent-refused); }
+.prov--cited     { color: var(--text-quiet); }   /* FIX 8 — see below */
+.prov__sigil { opacity: 0.85; }
+
+.agentblock {
+  border-left: var(--agent-rule) solid var(--agent-machine);
+  background: var(--surface-sunken);
+  border-radius: 0 var(--radius-inner) var(--radius-inner) 0;
+  padding: var(--space-4) var(--space-5);
+  display: grid; gap: var(--space-3);
+}
+.agentblock--uncertain { border-left-color: var(--agent-uncertain); }
+.agentblock__head { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.agentblock__who { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); }
+.agentblock__stamp { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); margin-left: auto; }
+.agentblock__body { font-size: var(--size-3); line-height: var(--lh-snug); color: var(--text-body); max-width: var(--measure-prose); }
+
+.conf { display: inline-flex; align-items: center; gap: var(--space-2); }
+.conf__ticks { display: inline-flex; gap: 2px; }
+.conf__ticks i {
+  width: 6px; height: 12px; border-radius: 2px;
+  border: var(--border-w-hair) solid var(--border-field);
+}
+.conf__ticks i.on { background: var(--agent-machine); border-color: var(--agent-machine); }
+.conf__val { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); }
+
+/* FIX 8 (found by rendering, not by reading) — --agent-cite resolves to --ink-3,
+   the exact value §3 rules out as a text colour on white (2.29:1). The citation
+   marker and the [†] legend are text marks on a white card, so they fall under
+   that rule. The system forbids the value, then assigns it to the one mark whose
+   job is to be findable in running prose. Prototype uses --text-quiet (4.49:1).
+   The base token needs re-pointing at --ink-2 in tokens/theme.css. */
+.cite { font-family: var(--font-mono); font-size: 0.72em; vertical-align: super; color: var(--text-quiet); text-decoration: none; padding: 0 0.15em; }
+.cite:hover { color: var(--text-body); }
+
+/* refusal: border, no shadow */
+.refusal {
+  border: var(--border-w-hair) solid var(--agent-refused);
+  background: var(--agent-refused-bg);
+  border-radius: var(--radius-inner);
+  padding: var(--space-4) var(--space-5);
+  display: grid; gap: var(--space-3);
+}
+.refusal__reason { font-size: var(--size-3); line-height: var(--lh-snug); color: var(--text-body); max-width: var(--measure-narrow); }
+.refusal__next { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-narrow); }
+
+/* ── fit / not fit ────────────────────────────────────────────────────────── */
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.tick { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; }
+.tick + .tick { margin-top: var(--space-3); }
+.tick__mark { font-family: var(--font-mono); font-size: var(--size-2); line-height: var(--lh-normal); }
+.tick--yes .tick__mark { color: var(--agent-human); }
+.tick--no  .tick__mark { color: var(--agent-refused); }
+.tick p { font-size: var(--size-3); line-height: var(--lh-snug); color: var(--text-body); }
+
+/* ── fee ──────────────────────────────────────────────────────────────────── */
+.fees { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+.fee { display: grid; gap: var(--space-3); align-content: start; }
+.fee__region { color: var(--text-quiet); }
+.fee__amount {
+  font-family: var(--font-mono); font-weight: var(--weight-medium);
+  font-size: var(--size-7); line-height: var(--lh-flat);
+  letter-spacing: var(--tracking-mono); color: var(--text-loud);
+  font-feature-settings: var(--font-features);
+}
+.fee__was { font-size: var(--size-2); color: var(--text-quiet); }
+.fee__hair { height: 1px; background: var(--border-hair); }  /* hairline inside a raised card — allowed */
+.fee__note { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-snug); }
+.fee--live { box-shadow: var(--shadow-lift); }
+
+/* ── instructor ───────────────────────────────────────────────────────────── */
+.bio { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: var(--space-7); align-items: start; }
+.bio__facts { display: grid; gap: var(--space-3); }
+.bio__fact { display: grid; gap: var(--space-1); }
+.bio__fact dd { font-family: var(--font-mono); font-size: var(--size-4); color: var(--text-loud); font-feature-settings: var(--font-features); }
+
+/* ── the form ─────────────────────────────────────────────────────────────── */
+.form { display: grid; gap: var(--space-5); }
+#apply .card { max-width: 52rem; }
+.form__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.field { display: grid; gap: var(--space-1); }
+.field__hint { font-size: var(--size-2); line-height: var(--lh-snug); color: var(--text-quiet); }
+.input, .select {
+  width: 100%;
+  height: var(--control-h);
+  padding: var(--pad-control);
+  font-family: var(--font-body); font-size: var(--size-3);
+  color: var(--text-body); background: var(--surface-panel);
+  border: var(--border-w-rule) solid var(--border-field);
+  border-radius: var(--radius-field);
+  outline: none;
+}
+textarea.input { height: auto; min-height: calc(var(--control-h) * 2.6); padding: var(--space-3) var(--space-5); line-height: var(--lh-normal); resize: vertical; }
+.input:focus-visible, .select:focus-visible { border-color: var(--text-body); }
+.select-wrap { position: relative; }
+.select { appearance: none; padding-right: var(--space-8); }
+.select-wrap__caret {
+  position: absolute; right: var(--space-5); top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: var(--size-1);
+  color: var(--text-quiet); pointer-events: none;
+}
+
+/* FIX 4 + 5 — a real focus ring, and a tick rather than a cross.
+   The bundle paints ✗ when checked, which is the fixed sigil for *refused*. */
+.check { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; cursor: pointer; position: relative; }
+.check input { position: absolute; opacity: 0; width: 20px; height: 20px; margin: 0; cursor: pointer; }
+.check__box {
+  width: 20px; height: 20px; margin-top: 1px; flex: none;
+  display: grid; place-items: center;
+  border: var(--border-w-rule) solid var(--border-field);
+  border-radius: var(--radius-tick);
+  background: var(--surface-panel);
+  color: var(--surface-panel);
+  font-family: var(--font-mono); font-size: 13px; line-height: 1;
+  transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+}
+.check input:checked ~ .check__box { background: var(--text-body); border-color: var(--text-body); }
+.check input:checked ~ .check__box::after { content: "✓"; }
+.check input:focus-visible ~ .check__box { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+.check__text { font-size: var(--size-3); color: var(--text-body); line-height: var(--lh-snug); }
+
+/* ── footer. NOT black: §3 allows one black area per view and the hero has it. */
+.site-foot {
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  margin-top: var(--space-8); padding: var(--space-6) 0 var(--space-8);
+  display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-7); align-items: baseline;
+}
+.site-foot p { font-size: var(--size-2); color: var(--text-quiet); }
+.site-foot nav { display: flex; gap: var(--space-5); margin-left: auto; }
+.site-foot nav a { font-size: var(--size-2); color: var(--text-quiet); text-decoration: none; }
+.site-foot nav a:hover { color: var(--text-loud); }
+
+/* ── responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 68rem) {
+  .hero { padding: var(--space-7) var(--space-6) var(--space-5); border-radius: var(--radius-card); }
+  .hero__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .weeks, .fees { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .split, .bio { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+}
+@media (max-width: 44rem) {
+  .site-nav { display: none; }
+  .weeks, .fees, .two, .form__row { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { max-width: none; }
+  .hero__facts { gap: var(--space-4) var(--space-5); }
+}
