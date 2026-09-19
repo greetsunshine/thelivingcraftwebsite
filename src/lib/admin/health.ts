@@ -77,6 +77,10 @@ const TABLES = [
   // only somebody who typed an address does — so a count here is people, and a
   // missing table must not read as "nobody asked".
   'resource_requests',
+  // The marketing view over resource_requests and people. A view can go
+  // missing on its own (a schema run that stopped early), and the requests
+  // page and the export both read it.
+  'resource_requests_marketing',
   'booking_rules',
   'booking_blocks',
   'bookings',

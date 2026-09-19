@@ -15,11 +15,17 @@
 // 1. NO <form>. The inputs sit in plain divs. A form can be submitted by a
 //    stray Enter key, and a GET submission puts every entry in the query
 //    string. No form, no path.
-// 2. NO fetch, no XMLHttpRequest, no sendBeacon in the script. The layout's
-//    pageview beacon sends a path and a referrer, never page content.
-// 3. NO email-gated PDF, unlike the two sibling tools. The brief for this one
-//    forbids capture. The print button opens the browser's own dialog and the
-//    CSV is a Blob; neither touches a server.
+// 2. ONE fetch, and only from the download gate. Until 19 September 2026 the
+//    script made no request at all and the brief for this tool forbade
+//    capture. Sunil's instruction that day put every download option on every
+//    tool behind a name and an address, this one included, and that reversed
+//    the brief. What survives of it: the rows never leave the browser. The
+//    gate posts the name and the address and nothing else; the CSV is still
+//    a Blob built here from the rows, after the request is recorded. The
+//    privacy line under the controls says exactly that.
+// 3. The print button and the CSV go through the gate (src/components/
+//    ResourceGate.astro), which hands nothing back for this tool: `onDone`
+//    builds the CSV or opens the print dialogue.
 // 4. ResourcesLayout carries no Google Tag Manager. Keep it that way here:
 //    the container loads a session recorder, and the rule map is page text.
 //
@@ -27,6 +33,7 @@
 // its bound: one key, only what the reader typed, every read and write in
 // try/catch, and the page works with storage blocked.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
@@ -162,15 +169,15 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           <h2>One row per rule. Tick only what you can <em>point at</em>.</h2>
         </div>
 
-        <p class="privacy mono">Your entries stay in this browser. Nothing is sent to us.</p>
+        <p class="privacy mono">Your entries stay in this browser. The CSV and the print copy ask for your name and email first. Your rows are never sent.</p>
         <p class="autosave mono" id="autosave" role="status"></p>
 
         <div class="controls" role="group" aria-label="Audit controls">
           <button class="btn btn-primary" id="add" type="button">Add a rule</button>
           <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
           <button class="btn btn-ghost" id="copy" type="button">Copy the map</button>
-          <button class="btn btn-ghost" id="print" type="button">Print or save as PDF</button>
-          <button class="btn btn-ghost" id="csv" type="button">Download CSV</button>
+          <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print or save as PDF</button>
+          <button class="btn btn-ghost" id="csv" type="button" data-gate="csv">Download CSV</button>
           <button class="btn btn-ghost" id="clear" type="button">Clear all</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
@@ -264,9 +271,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions">
-            <button class="btn btn-primary" id="print2" type="button">Print or save as PDF</button>
+            <button class="btn btn-primary" id="print2" type="button" data-gate="print">Print or save as PDF</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the map</button>
-            <button class="btn btn-ghost" id="csv2" type="button">Download CSV</button>
+            <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv">Download CSV</button>
           </div>
         </div>
       </div>
@@ -456,6 +463,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
       <ul class="rflags" hidden></ul>
     </div>
   </template>
+  <ResourceGate resource="rule-placement-audit" lead="The CSV is your rule map: one row per rule with its setter, reach, placements, status, fix and owner." manual />
 </ResourcesLayout>
 
 <style>
@@ -829,9 +837,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     STATUSES,
     STATUS_LABEL,
     STORAGE_KEY,
-    CSV_FILENAME,
     blankRow,
-    csvOf,
     flagsFor,
     labelOfFix,
     labelOfPlacement,
@@ -847,7 +853,10 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     type Row,
     type Setter,
     type Status,
+    CSV_FILENAME,
+    csvOf,
   } from '../../data/rule-placement-audit';
+  import { mountGate } from '../../lib/resources/gate-client';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -1131,10 +1140,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     say('All rows cleared.');
   });
 
-  const doPrint = () => window.print();
-  $('print').addEventListener('click', doPrint);
-  $('print2').addEventListener('click', doPrint);
-
+  // Print and the CSV go through the download gate (data-gate on the four
+  // buttons). The gate records the name and the address and hands nothing
+  // back; the CSV is built HERE from the rows, which never leave the browser.
   function downloadCsv(): void {
     const blob = new Blob([csvOf(rows)], { type: 'text/csv;charset=utf-8' });
     const objectUrl = URL.createObjectURL(blob);
@@ -1147,8 +1155,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     say('CSV downloaded.');
   }
-  $('csv').addEventListener('click', downloadCsv);
-  $('csv2').addEventListener('click', downloadCsv);
+  mountGate({ onDone: (kind) => (kind === 'csv' ? downloadCsv() : say('Opening the print dialogue.')) });
 
   async function copyMap(): Promise<void> {
     try {

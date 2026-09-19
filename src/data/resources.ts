@@ -98,7 +98,7 @@ export const resources: Resource[] = [
       'Show a team which of their operating assumptions, such as escalation rate, review minutes and upkeep, are doing the real work in the number',
     ],
     format:
-      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name and an email address. The same model is offered as an Excel workbook with an instruction beside every line.',
+      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name and an email address. The same model is offered as an Excel workbook with an instruction beside every line, behind the same name and email address.',
     url: '/resources/run-cost-model',
     publishedAt: '2026-09-14',
   },
@@ -120,7 +120,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet or print it without giving anything. A PDF of your assessment is built against a name and an email address.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The PDF of your assessment and the print copy ask for a name and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
@@ -188,7 +188,7 @@ export const resources: Resource[] = [
       'Run three failure injections against a production agent on a Monday morning',
     ],
     format:
-      'Page, with the triage tree, every table and a worked rejection record. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
+      'Page, with the triage tree, every table and a worked rejection record. Print or save as PDF asks for a name and an email address, then opens the print dialogue. Nothing on the page is scored.',
     url: '/resources/agent-failure-triage-kit',
     publishedAt: '2026-09-16',
   },
@@ -211,7 +211,7 @@ export const resources: Resource[] = [
       'Find the correction in your system that changed more than the instance it was made on',
     ],
     format:
-      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Nothing is stored or sent.',
+      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Each asks for a name and an email address.',
     url: '/resources/agent-memory-audit-kit',
     publishedAt: '2026-09-17',
   },
@@ -233,7 +233,7 @@ export const resources: Resource[] = [
       'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
     ],
     format:
-      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Print the map, copy it or download the CSV without giving anything. Autosaved in your browser; nothing is sent.',
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The CSV and the print copy ask for a name and an email address; your rows never leave the browser. Autosaved in your browser.',
     url: '/resources/rule-placement-audit',
     publishedAt: '2026-09-17',
   },
@@ -256,7 +256,7 @@ export const resources: Resource[] = [
       'Write down every boundary with its enforcement point, its stop behaviour and its owner',
     ],
     format:
-      'Page with a live calculator, plus an Excel workbook to download. Nothing is stored, nothing is sent, and no email address is asked for.',
+      'Page with a live calculator that stores and sends nothing, plus an Excel workbook that asks for a name and an email address before it downloads.',
     url: '/resources/cost-ceiling-workbook',
     publishedAt: '2026-09-16',
   },
@@ -402,12 +402,14 @@ export const longDate = (iso: string): string =>
  *    addendum calls it "illustrative arithmetic only" and so does the label.
  *    Do not remove a label to tighten a layout.
  *
- * 3. NEVER GATE ANY OF IT. The addendum: "HTML stays open; optional download
- *    email requires a separate communication preference." The HTML is the
- *    resource — complete, readable and fillable without downloading anything
- *    and without leaving an address. There is no form on these routes and
- *    there must not be one. The optional email delivery is a different path
- *    with its own permission, and it is not built here.
+ * 3. THE PAGE STAYS OPEN; EVERY FILE IS GATED. The HTML is the resource —
+ *    complete, readable and fillable without downloading anything and without
+ *    leaving an address. The CSV, the print button and every other file a
+ *    resource page hands out go through the download gate (19 September 2026,
+ *    Sunil's instruction, which reversed the addendum's "anonymous downloads
+ *    are events, not people"): a name and an address, recorded in
+ *    resource_requests, then the file. The gate grants no marketing
+ *    permission; see src/pages/api/pipeline/download.ts.
  */
 
 
@@ -523,16 +525,12 @@ export const NO_SCORE =
   'Nothing here is scored. There is no grade, no percentage, no readiness level and no certificate — the columns exist so that a decision can be read and challenged by somebody else, not added up.';
 
 /**
- * Said on every resource page, once, beside the downloads.
- *
- * The addendum offers "optional downloadable PDF and CSV" and an "optional
- * email request". What is built is the CSV, as a direct download, and the
- * browser's own print-to-PDF — so the page states exactly that rather than
- * implying a PDF file exists somewhere. Nothing on these routes asks for an
- * address; see rule 3.
+ * Said on every resource page, once, beside the downloads. What is open and
+ * what is asked for, in one sentence, so no page says it differently. See
+ * rule 3.
  */
 export const NO_GATE =
-  'The page is the resource. Everything is here to read, fill in or print, and nothing asks for an email address.';
+  'The page is the resource. Everything is here to read and fill in. The file and the print copy ask for your name and email address first, and use them to send you this resource once.';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LC-R01 · Cost-ceiling worksheet

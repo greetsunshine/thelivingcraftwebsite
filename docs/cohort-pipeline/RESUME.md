@@ -66,6 +66,58 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## Every download is gated, and the requests are one table — 19 September
+
+Sunil's instruction: every download option on every tool asks for a name and an email
+address, the pair is kept in one table the marketing team can read, and the mechanism is
+one standard. CLAUDE.md now has a section, *The download gate*, that is the standard;
+this is the checkpoint on it.
+
+- **What changed on the public pages.** Fourteen pages. The four scored-PDF tools swapped
+  their own dialogs for `<ResourceGate>`; the memory kit's ZIP, PDF and JSON, the run-cost
+  workbook, the three worksheet CSVs, the toolkit's CSV buttons, the four templates'
+  Markdown files, the rule audit's CSV, the design check's text file, and every print
+  button now go through it. Copy that promised "nothing asks for an email address" was
+  rewritten on each page and in the register. `/api/pipeline/resource-pdf` is gone;
+  `/api/pipeline/download` replaced it.
+- **The files moved out of `public/`.** `downloads/` at the repo root is private and is
+  bundled into the function by `includeFiles` (a list read from the folder at config
+  time, because the option takes paths, not globs). Vite's dev server would still serve
+  the folder by URL, so `vite.server.fs.deny` closes it in dev too. The build was checked:
+  the gated files are in `_render.func/downloads/` and not in `static/`.
+- **Two tools post nothing the reader typed.** The Agent Design Check and the Rule
+  Placement Audit both carried a promise that their answers never reach a server. The
+  gate keeps it: their route entries are `local()`, the request records the name and the
+  address only, and the page builds the file from its own state. Verified in the browser
+  by reading the request body.
+- **The cost-ceiling workbook has never existed.** `/downloads/cost-ceiling-workbook.xlsx`
+  was a 404 behind the page's primary button since it shipped. The page now checks the
+  file at render time and prints a pending line instead of a button; the route refuses
+  the kind before the save while the file is absent. Producing the workbook is somebody's
+  job and is not done here.
+- **Schema.** `resource_requests.kind` (additive), `resource_request_submit(..., p_kind)`,
+  and the view `resource_requests_marketing` (people ⋈ resource_requests, test rows out,
+  `consented` read from the latest consent row). **Not applied on production**, like the
+  rest of the file; until it is, every request saves nothing, the file is still handed
+  over, and the dialog says so. The view is in the health probe list.
+- **Marketing's two screens.** `/craft/admin/requests` (tally by resource and kind, latest
+  200) and the *Resource requests* record set on `/craft/admin/records`. Both read the
+  view. Nine held delivery wordings were added for the newly gated resources, unapproved
+  like the six before them.
+- **What this does not do, and why.** No consent checkbox. The addendum still says "never
+  infer marketing permission from downloading", no wording has been approved, and a
+  permission recorded against words nobody signed off is a liability. `consented` is on
+  the marketing screens precisely so the absence is visible. Adding the box is one
+  approved wording in `CONSENT_HISTORY` away.
+- **Verified**: 27 route cases (14 kinds handed over, 13 refusals incl. honeypot, bad
+  email, missing key, wrong kind, unknown template, absent static file); headless Chrome
+  on eight pages (18 checks: gate opens, bad email refused, each file downloads, print
+  opens after the gate, the two local tools post no answers, the toolkit button names its
+  own resource, the workbook page shows the pending line); `astro check` 0 errors;
+  `npm run build` passes.
+
+---
+
 ## The Model Selection Tool is in the POC tool's shape — 19 September
 
 `/resources/model-selection-tool` replaces `/resources/model-selection-checklist` (a page

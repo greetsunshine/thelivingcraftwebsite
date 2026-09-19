@@ -274,3 +274,84 @@ export async function questionStats(days: number): Promise<QuestionStats> {
     return empty;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Resource requests — the download gate's table, for the marketing team
+// ---------------------------------------------------------------------------
+
+/** One row of the resource_requests_marketing view. */
+export interface ResourceRequestRow {
+  request_id: string;
+  requested_at: string;
+  person_id: string;
+  name: string | null;
+  email: string;
+  resource_id: string;
+  kind: string;
+  resource_version: string | null;
+  delivery_state: string;
+  session_source: string | null;
+  session_medium: string | null;
+  session_campaign: string | null;
+  session_content: string | null;
+  entry_path: string | null;
+  referrer_host: string | null;
+  consented: boolean;
+}
+
+/**
+ * The latest requests, newest first, from the view that joins people to
+ * resource_requests. Same degradation rule as every other read here: an error
+ * returns an empty list and the health banner says why.
+ */
+export async function resourceRequests(limit = 200): Promise<ResourceRequestRow[]> {
+  const client = db();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('resource_requests_marketing')
+    .select('*')
+    .order('requested_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    fail('resource_requests_marketing', error);
+    return [];
+  }
+  return (data ?? []) as ResourceRequestRow[];
+}
+
+export interface ResourceRequestTally {
+  resource_id: string;
+  kind: string;
+  count: number;
+  people: number;
+}
+
+/**
+ * Requests per resource and kind, with the number of distinct people behind
+ * them. Counted in TypeScript over at most 10,000 recent rows, which is the
+ * same cap the export uses; past that, the export is the honest instrument.
+ */
+export async function resourceRequestTally(): Promise<ResourceRequestTally[]> {
+  const client = db();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('resource_requests_marketing')
+    .select('resource_id, kind, person_id')
+    .order('requested_at', { ascending: false })
+    .limit(10_000);
+  if (error) {
+    fail('resource_requests_marketing', error);
+    return [];
+  }
+  const buckets = new Map<string, { resource_id: string; kind: string; count: number; people: Set<string> }>();
+  for (const r of (data ?? []) as { resource_id: string; kind: string; person_id: string }[]) {
+    const key = r.resource_id + '|' + r.kind;
+    const b = buckets.get(key) ?? { resource_id: r.resource_id, kind: r.kind, count: 0, people: new Set<string>() };
+    b.count += 1;
+    b.people.add(r.person_id);
+    buckets.set(key, b);
+  }
+  return [...buckets.values()]
+    .map((b) => ({ resource_id: b.resource_id, kind: b.kind, count: b.count, people: b.people.size }))
+    .sort((a, b) => b.count - a.count || a.resource_id.localeCompare(b.resource_id));
+}

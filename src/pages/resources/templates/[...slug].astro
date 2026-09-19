@@ -36,13 +36,15 @@
 //    from the module that owns them. Writing either string into the markdown
 //    would create a second source that can drift from the public offer policy.
 //
-// 4. IT IS USABLE WITHOUT JAVASCRIPT AND WITHOUT AN ADDRESS. The downloads are
-//    `<a download>` with a build-time data: URL — no script in the path at all.
-//    The plain-text block is a <details> that is in the DOM whether or not
-//    script runs, so "copy to clipboard" degrades to a selectable block rather
-//    than to nothing. There is no email gate on this route and there must not
-//    be one: "wants value without a sales form" is the roadmap's own reading of
-//    this visitor.
+// 4. THE PAGE IS USABLE WITHOUT JAVASCRIPT; THE FILES ARE GATED. The blank,
+//    the example and the plain-text blocks are all on the page. The two .md
+//    downloads and the print button go through the download gate (19
+//    September 2026, Sunil's instruction): a name and an address, recorded in
+//    resource_requests, then the file, built on the server by
+//    src/lib/resources/template-text.ts from the same sections this page
+//    renders. The plain-text block is a <details> that is in the DOM whether
+//    or not script runs, so "copy to clipboard" degrades to a selectable block
+//    rather than to nothing.
 //
 // 5. FRONTMATTER MARKDOWN GOES THROUGH renderMarkdown(), THE BODY GOES THROUGH
 //    <Content />. <Content /> renders the body and only the body; the prompts,
@@ -53,8 +55,9 @@
 //    files contain no raw HTML, so nothing is lost by the dropped html token.
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import ResourceGate from '../../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
-import { COMMITMENT, FEES_NOTE } from '../../../data/offer-display';
+import { blankTemplateText, resolveTokens as resolve, templateFilenames, workedTemplateText } from '../../../lib/resources/template-text';
 import { renderMarkdown } from '../../../lib/craft/markdown';
 
 export const prerender = false;
@@ -95,9 +98,9 @@ const url = `${SITE_ORIGIN}${path}`;
 // See note 3. An unknown token is left visible rather than blanked: a
 // {{TYPO}} on the page is a bug somebody reports in an hour, and a silently
 // empty sentence is one nobody ever notices.
-const TOKENS: Record<string, string> = { COMMITMENT, FEES_NOTE };
-const resolve = (s: string): string =>
-  s.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key: string) => TOKENS[key] ?? whole);
+// `resolve` is `resolveTokens` from lib/resources/template-text.ts, the
+// module that also builds both downloads, so the page and the files
+// substitute the same two strings.
 
 // A revision date is a DATE, not an instant — same reasoning, and the same
 // formatter, as the guides route. new Date('2026-09-11') is midnight UTC and
@@ -128,81 +131,13 @@ const sections = d.sections.map((s, i) => ({
 
 const totalMinutes = d.sections.reduce((sum, s) => sum + (s.minutes ?? 0), 0);
 
-// ── the .md serialisation ────────────────────────────────────────────────────
-// THIS BLOCK IS THE FORMAT'S ONE OWNER (note 1). Prompts become `>` lines so
-// that clearing them out of your own copy is one keystroke per block, which is
-// the whole reason they are carried into the download at all rather than left
-// behind on the page.
-
-const quote = (lines: string[]): string[] =>
-  lines.flatMap((line, i) => (i === 0 ? [`> ${line}`] : ['>', `> ${line}`]));
-
-const blankLines: string[] = [
-  `# ${d.title}`,
-  '',
-  d.artifact,
-  '',
-  `Blank template · ${url}`,
-  '',
-  ...(d.header.length > 0 ? [...d.header.map((h) => `${h}:`), ''] : []),
-  '---',
-  '',
-];
-
-for (const s of sections) {
-  blankLines.push(`## ${s.heading}`, '');
-  blankLines.push(
-    ...quote([
-      ...(s.minutes ? [`${s.minutes} minutes`] : []),
-      s.promptText,
-      ...(s.noteText ? [s.noteText] : []),
-    ]),
-  );
-  // Room to write, and a blank line either side of it.
-  blankLines.push('', '', '');
-}
-
-const blankText = `${blankLines.join('\n').trimEnd()}\n`;
-
-const workedLines: string[] = [
-  `# ${d.title} — worked example`,
-  '',
-  d.worked.title,
-  '',
-  // The illustrative label travels with the file. A worked example that leaves
-  // the site without it is a claim about a customer somebody did not make.
-  d.worked.note,
-  '',
-  resolve(d.worked.lead),
-  '',
-  ...(d.worked.header.length > 0
-    ? [...d.header.map((h, i) => `${h}: ${d.worked.header[i] ?? ''}`.trimEnd()), '']
-    : []),
-  '---',
-  '',
-];
-
-for (const s of sections) {
-  workedLines.push(`## ${s.heading}`, '', s.exampleText, '');
-}
-
-workedLines.push(
-  '---',
-  '',
-  `Blank version of this template · ${url}`,
-);
-
-const workedText = `${workedLines.join('\n').trimEnd()}\n`;
-
-// Build-time data: URLs, so a download needs no script and no round trip.
-// These files are a few kilobytes; a Blob would be the right call at a
-// megabyte and is the wrong call here, because it would put JavaScript back in
-// the one path that currently does not need it.
-const asDownload = (text: string): string =>
-  `data:text/markdown;charset=utf-8,${encodeURIComponent(text)}`;
-
-const blankFile = `${d.fileBase}.md`;
-const workedFile = `${d.fileBase}-example.md`;
+// ── the two files ────────────────────────────────────────────────────────────
+// Built by lib/resources/template-text.ts, which is also what the download
+// gate calls on the server. The page shows the same text in the <details>
+// blocks below, so a reader can copy it without giving anything.
+const blankText = blankTemplateText(entry);
+const workedText = workedTemplateText(entry);
+const { blank: blankFile, worked: workedFile } = templateFilenames(entry);
 
 // ── head ─────────────────────────────────────────────────────────────────────
 
@@ -329,11 +264,11 @@ const schema: unknown[] = [
           downloaded file each one is a quoted block, so it goes in a keystroke.
         </p>
         <div class="toolbar">
-          <a class="btn btn-primary" href={asDownload(blankText)} download={blankFile}>
+          <button class="btn btn-primary" type="button" data-gate="md" data-variant="blank">
             Download {blankFile}
-          </a>
+          </button>
           <button class="btn btn-ghost" type="button" data-copy="blank">Copy the blank</button>
-          <button class="btn btn-ghost" type="button" data-print>Print this page</button>
+          <button class="btn btn-ghost" type="button" data-gate="print">Print this page</button>
         </div>
       </div>
 
@@ -390,9 +325,9 @@ const schema: unknown[] = [
           illustration may not smuggle in a statistic.
         </p>
         <div class="toolbar">
-          <a class="btn btn-ghost" href={asDownload(workedText)} download={workedFile}>
+          <button class="btn btn-ghost" type="button" data-gate="md" data-variant="worked">
             Download {workedFile}
-          </a>
+          </button>
           <button class="btn btn-ghost" type="button" data-copy="worked">Copy the example</button>
         </div>
       </div>
@@ -499,6 +434,7 @@ const schema: unknown[] = [
       </p>
     </aside>
   </article>
+  <ResourceGate resource={`template-${entry.id}`} lead="The Markdown file is the template as it reads on this page: the blank with every prompt as a quoted block you delete as you answer it, or the worked example with its illustrative label." />
 </PracticeLayout>
 
 <style>
@@ -1101,7 +1037,6 @@ const schema: unknown[] = [
     });
   });
 
-  document.querySelectorAll<HTMLButtonElement>('button[data-print]').forEach((button) => {
-    button.addEventListener('click', () => window.print());
-  });
+  // Print goes through the download gate (data-gate="print"), which opens
+  // the print dialogue after the request is recorded.
 </script>

@@ -4,7 +4,9 @@
 // Fourth in the agentic system design series, and the same publishing decision
 // as the other three: the page is the resource, and the PDF a reader wants is
 // made by their own print dialogue against the stylesheet at the foot of this
-// file. Nothing is stored, posted or scored.
+// file, after the download gate has asked for a name and an address (19
+// September 2026). Nothing typed on this page is stored, posted or scored;
+// there is nothing to type.
 //
 // The one thing to be careful about here is the repo link. REPO_URL is blank
 // until the repository is public. While it is blank the page names the
@@ -13,6 +15,7 @@
 // there yet.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -116,10 +119,10 @@ const schema = [
   <section id="use">
     <div class="wrap">
       <div class="controls" role="group" aria-label="Page controls">
-        <button class="btn btn-primary" id="pdf" type="button">
-          Download as PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        <button class="btn btn-primary" id="pdf" type="button" data-gate="print">
+          Print or save as PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
         </button>
-        <span class="ctrl-note mono">Opens your browser’s print dialogue. Choose “Save as PDF”.</span>
+        <span class="ctrl-note mono">Asks for your name and email, then opens your browser’s print dialogue. Choose “Save as PDF”.</span>
       </div>
       <p class="prose-lead">
         The page is the resource. Free to read, print, and run against a system you already
@@ -456,6 +459,11 @@ const schema = [
       <p class="disclaimer">{DISCLAIMER}</p>
     </div>
   </section>
+  {/* There is no PDF file to download: the browser makes one from the print
+      stylesheet at the foot of this file, which is why the button says what it
+      opens. The button goes through the download gate first (data-gate="print"),
+      which records the name and the address and then opens the print dialogue. */}
+  <ResourceGate resource="agent-failure-triage-kit" lead="The print copy is this page as one document: the triage tree, every table and the worked rejection record." />
 </ResourcesLayout>
 
 <style>
@@ -734,10 +742,3 @@ const schema = [
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
-
-<script>
-  // The only script on the page. There is no PDF file to download: the browser
-  // makes one from the print stylesheet above, which is why the button says
-  // what it opens. Nothing is stored, and nothing is posted.
-  document.getElementById('pdf')?.addEventListener('click', () => window.print());
-</script>

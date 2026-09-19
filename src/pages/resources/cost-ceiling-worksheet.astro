@@ -21,14 +21,14 @@
 //
 // WHAT MUST NOT HAPPEN TO THIS PAGE
 //
-// 1. NO EMAIL GATE, NO FORM, NO SIGN-UP. The addendum: "HTML stays open;
-//    optional download email requires a separate communication preference."
-//    The whole worksheet is on the page — explanation, worked case, both
-//    tables, the fillable grid, the limits and the next-step question — and it
-//    is readable, printable and fillable without downloading anything and
-//    without leaving an address. A page that withholds the substance until you
-//    identify yourself is not open. The optional email delivery is a different
-//    path with its own permission and it is not built here.
+// 1. THE PAGE STAYS OPEN; THE FILE IS GATED. The whole worksheet is on the
+//    page — explanation, worked case, both tables, the fillable grid, the
+//    limits and the next-step question — readable and fillable without
+//    leaving an address. What asks for a name and an address is the CSV and
+//    the print button, through the download gate (19 September 2026, Sunil's
+//    instruction, reversing the addendum's "anonymous downloads are events,
+//    not people"). The gate records the request in resource_requests and
+//    grants no marketing permission.
 //
 // 2. NO SCORE, NO GRADE, NO CERTIFICATE. Nothing on this page reads a cell,
 //    counts one, or turns a set of answers into a number. See NO_SCORE and
@@ -39,17 +39,17 @@
 //    links below name the cohort and the contact page and say nothing about
 //    either one's terms.
 //
-// 4. THE DOWNLOAD STAYS SCRIPT-FREE. It is an `<a download>` with a
-//    build-time data: URL, the same mechanism the templates route uses. The
-//    only script on this page is the print button, and the page is complete
-//    without it — a reader can print from their own browser menu.
+// 4. THE DOWNLOAD IS THE GATE'S. The CSV is built on the server by
+//    /api/pipeline/download from the same `csvFor()` the page's table comes
+//    from, so the file and the table cannot disagree. The page is complete
+//    without the script: a reader can print from their own browser menu.
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../data/facts';
 import {
   NO_GATE,
   NO_SCORE,
   csvFilename,
-  csvHref,
   releasedResources,
   resourceById,
 } from '../../data/resources';
@@ -58,7 +58,6 @@ const d = resourceById('cost-ceiling-worksheet')!;
 
 const url = `${SITE_ORIGIN}${d.path}`;
 const file = csvFilename(d);
-const href = csvHref(d);
 
 // The other released resources, for the foot of the page. Read through the
 // same predicate /toolkit uses, so a resource that is not published cannot be
@@ -266,10 +265,10 @@ const schema: unknown[] = [
               {s.note && <p class="sheet-note">{s.note}</p>}
 
               <div class="toolbar">
-                <a class="btn btn-primary" href={href} download={file}>
+                <button class="btn btn-primary" type="button" data-gate="csv">
                   Download {file}
-                </a>
-                <button class="btn btn-ghost" type="button" data-print>Print this page</button>
+                </button>
+                <button class="btn btn-ghost" type="button" data-gate="print">Print this page</button>
               </div>
               <p class="dl-note">
                 The file is the table above, with the same column names. There is no PDF to
@@ -334,6 +333,7 @@ const schema: unknown[] = [
       </p>
     </aside>
   </article>
+  <ResourceGate resource="cost-ceiling-worksheet" lead="The CSV is the table above, with the same column names, for a spreadsheet." />
 </PracticeLayout>
 
 <style>
@@ -762,18 +762,4 @@ const schema: unknown[] = [
   }
 </style>
 
-<script>
-  // The ONLY script on this page, and the page is complete without it: the
-  // download is a plain <a download> with a build-time data: URL, and printing
-  // is in every browser's own menu. All this adds is the button.
-  //
-  // A module script, not is:inline, so Vite bundles it and astro check sees it.
-  const live = document.getElementById('res-live');
 
-  document.querySelectorAll<HTMLButtonElement>('button[data-print]').forEach((button) => {
-    button.addEventListener('click', () => {
-      if (live) live.textContent = 'Opening the print dialogue.';
-      window.print();
-    });
-  });
-</script>
