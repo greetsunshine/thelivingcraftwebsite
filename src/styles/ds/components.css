@@ -37,6 +37,33 @@
   border: 0;
 }
 
+/* ── the shell: one skip link and one current-page mark on every layout ── */
+/* Hidden until focused; the first thing a keyboard reaches on every public
+   page. Layouts that already style their own .skip keep doing so. */
+.skip {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: var(--z-dialog);
+  transform: translateY(-200%);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-control);
+  background: var(--surface-panel);
+  color: var(--text-loud);
+  box-shadow: var(--shadow-lift);
+  font-size: var(--size-3);
+  font-weight: var(--weight-medium);
+}
+.skip:focus-visible { transform: none; }
+/* The page you are on, in any header: ink and a deep-gold underline. */
+.navlinks > a[aria-current='page'] {
+  color: var(--text-loud);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-ink);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
 /* ── actions ────────────────────────────────────────────────────────────── */
 /* The package's text button: an action that reads as a link, 44px tall. */
 .btn.btn-text {

@@ -423,6 +423,15 @@ says to keep branded storytelling out of dense working areas.
   `Toast` (`window.lcToast()`, polite live region, stays until closed, focus returns).
   **`/design-system`** renders every one of them in every state: `noindex`, not in the sitemap, not
   linked. Nothing existing changed visually in this step.
+- [x] **Step 1b, the shell on every public layout.** A skip link and `<main id="main">` on
+  CaioLayout, AssessmentLayout, NotesLayout, PolicyLayout, ResourcesLayout and BookingLayout (only
+  Base and Practice had them). **A phone menu on the five that had none.** Their header links hide
+  below 900px (global.css), so on `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms` and every
+  resource page a phone could not reach them at all; a pre-existing defect. Policy links carry
+  `aria-current="page"`, drawn as a deep-gold underline. Checked on 20 public pages at 390 and 1280:
+  every page has the skip link and `#main`, every hidden link is reachable from the menu, no header
+  overlap, no overflow, no script errors. The consulting and resource headers still wrap to two rows
+  on a phone, as they did; the page-template step tightens them.
 
 ---
 

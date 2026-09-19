@@ -7,6 +7,7 @@ import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
 
 export interface Props {
   title: string;
@@ -27,6 +28,7 @@ const year = new Date().getFullYear();
   </head>
   <body>
     <GoogleTagManagerNoscript />
+    <a class="skip" href="#main">Skip to content</a>
     <!-- Nav — personal practice, brand-neutral, cross-linked to The Living Craft -->
     <header class="nav">
       <div class="wrap nav-inner">
@@ -42,11 +44,21 @@ const year = new Date().getFullYear();
           <a href="#tiers">Ways to work</a>
           <a href="/assessment">AI Readiness</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="#contact">Book a call&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+          {/* Phones: the links above are hidden below 900px (global.css), and this
+              is how a phone reaches them. Same links, same order. */}
+          <MobileMenu>
+            <a href="#problem">The gap</a>
+            <a href="#own">What I own</a>
+            <a href="#maker">Why me</a>
+            <a href="#engagement">Engagement</a>
+            <a href="#tiers">Ways to work</a>
+            <a href="/assessment">AI Readiness</a>
+          </MobileMenu>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 

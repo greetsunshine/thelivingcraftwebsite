@@ -7,6 +7,7 @@ import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
 
 export interface Props {
   title: string;
@@ -27,6 +28,7 @@ const year = new Date().getFullYear();
   </head>
   <body>
     <GoogleTagManagerNoscript />
+    <a class="skip" href="#main">Skip to content</a>
     <!-- Nav — AI Readiness Assessment, brand-neutral, cross-linked -->
     <header class="nav">
       <div class="wrap nav-inner">
@@ -41,11 +43,20 @@ const year = new Date().getFullYear();
           <a href="#investment">Investment</a>
           <a href="/caio">Fractional CAIO</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="#contact">Request a scope call&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+          {/* Phones: the links above are hidden below 900px (global.css), and this
+              is how a phone reaches them. Same links, same order. */}
+          <MobileMenu>
+            <a href="#what">What it is</a>
+            <a href="#deliverables">What you get</a>
+            <a href="#run">How it runs</a>
+            <a href="#investment">Investment</a>
+            <a href="/caio">Fractional CAIO</a>
+          </MobileMenu>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 
