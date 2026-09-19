@@ -436,7 +436,7 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Model Selection Tool',
     body:
-      'Here is the Model Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/model-selection-tool\n\nIt scores one candidate model for one step of your system. You choose the job the model is being staffed on, answer ten deployment gates from the model card, score twelve behaviours from ten runs on four test cases you build yourself, and check four disqualifiers. The page shows the weighted score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one. Two reference candidates are on their own tab.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Model Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/model-selection-tool\n\nIt scores one candidate model for one step of your system. You choose the job the model is being staffed on, answer ten deployment gates from the model card, score twelve behaviours from ten runs on four test cases you build yourself, and check four disqualifiers. The page shows the weighted score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one. Two reference candidates can be loaded from the first step.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
     version: RESOURCE_PACKAGE_VERSION,
   },

@@ -45,10 +45,11 @@ export const PURPOSE = [
 /** How to use it, as numbered steps. */
 export const HOW_TO_USE = [
   'Pick one step and one candidate model. Score one candidate at a time, and run the tool again for the next.',
-  'Choose the step in section A first. The weights in section C change with it.',
-  'Answer section B from the model card and the contract, before you run anything.',
-  'Build the four test cases in section 06, run the candidate ten times on each, then score sections C and D from what the runs showed.',
-  'Watch the score bar. It stays at the top of the page and updates as you answer. Read the result at the end, then copy it, print it, or get the PDF.',
+  'Work through the four sections with Next and Back. A sets the weights. B has ten gates, C has twelve behaviours, D has four disqualifiers.',
+  'Answer B from the model card and the contract, before you run anything. Score C and D from ten runs on the four test cases described under the tool.',
+  'For each row, choose the answer the runs showed, not the one the model card promises. The page moves to the next row for you.',
+  'Watch the score bar and the progress bar. Both stay at the top and update as you answer.',
+  'Read the result at the end. It gives the outcome and the rows to fix first. Get the PDF of your scored copy there.',
 ];
 
 /** The rules for scoring. Each one is a rule, then the reason. */
@@ -832,4 +833,17 @@ export const EXAMPLES: Example[] = [
 ];
 
 export const EXAMPLES_NOTE =
-  'Both candidates are fiction. The step is the invoice job from the table below. Load either one into your assessment to see how each row was scored, then start a new assessment for your own candidate.';
+  'Two reference candidates for one step, the invoice job from the table under the tool. Both are fiction. Load either one to see how each row was scored and how the result reads, then start a new assessment for your own candidate.';
+
+/** True when the state is one of the reference candidates, unchanged. */
+export function exampleFor(a: Assessment): Example | undefined {
+  const same = (x: (number | null)[], y: (number | null)[]) => x.length === y.length && x.every((v, i) => v === y[i]);
+  return EXAMPLES.find(
+    (e) =>
+      e.assessment.profile === a.profile &&
+      same(e.assessment.gates, a.gates) &&
+      same(e.assessment.scores, a.scores) &&
+      same(e.assessment.own, a.own) &&
+      same(e.assessment.dq, a.dq),
+  );
+}

@@ -1,6 +1,6 @@
 // The PDF of a filled resource, handed over against an email address. Today
-// that is the POC Selection Tool, the Agent Authority Review and the Run-Cost
-// Model Tool.
+// that is the POC Selection Tool, the Agent Authority Review, the Run-Cost
+// Model Tool and the Model Selection Tool.
 //
 // Same request as /api/pipeline/resource — the same rate limit, honeypot,
 // key, fields, save and queued delivery, through the same function — plus a
@@ -55,6 +55,8 @@ import { parseSheet, renderAuthorityReviewPdf } from '../../../lib/resources/aut
 import { parseInputs, renderRunCostModelPdf, verifyRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
 import type { SheetRow } from '../../../data/authority-review';
 import type { ModelInputs } from '../../../data/run-cost-model';
+import { parseAssessment, renderModelSelectionPdf, verifyModelSelectionPdf } from '../../../lib/resources/model-selection-pdf';
+import type { Assessment } from '../../../data/model-selection-tool';
 
 export const prerender = false;
 
@@ -120,6 +122,14 @@ const RENDERERS: Record<string, Renderer<any>> = {
       renderRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
     filename: 'run-cost-model.pdf',
   } satisfies Renderer<{ inputs: ModelInputs; isExample: boolean }>,
+  'model-selection-tool': {
+    parse: (body) => parseAssessment(body.assessment),
+    verify: (assessment: Assessment, name) =>
+      verifyModelSelectionPdf({ assessment, name, builtOn: new Date().toISOString() }),
+    render: (assessment: Assessment, name) =>
+      renderModelSelectionPdf({ assessment, name, builtOn: new Date().toISOString() }),
+    filename: 'model-selection-tool-scored.pdf',
+  } satisfies Renderer<Assessment>,
 };
 
 export const POST: APIRoute = async (ctx) => {

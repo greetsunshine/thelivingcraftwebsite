@@ -6,23 +6,26 @@
 // addresses redirect here from astro.config.mjs. Do not re-add a link to
 // either: the redirects are the only things that should still know them.
 //
-// Built in the POC Selection Tool's shape (see poc-screen.astro): purpose and
-// how-to block, rules for scoring, a score bar that stays on screen, four
-// sections of anchored answers, a result card read against the rubric, then
-// the rubric, the test cases and the decision record. Two tabs, as on the
-// Run-Cost Model: "Your assessment" is the tool, "Reference example" holds
-// two worked candidates that load into it.
+// Built against /resources/poc-screen as the reference. Where the two differ
+// in layout, interaction, wording style, PDF or checks, the POC tool wins.
+//
+// THE TOOL IS SIX STEPS: Start, the four sections A to D, and the result. One
+// step is on screen at a time, with a progress bar that fills as rows are
+// answered. The steps are only hidden by the script: without JavaScript, and in
+// print, every step is on the page in order, so a crawler and a printer see the
+// whole tool. Step state is a number in the closure, like the answers.
 //
 // Answers are a closure and die with the tab. No localStorage, no
 // sessionStorage. The one thing that leaves the browser is the PDF request:
 // name, email and the assessment go to /api/pipeline/resource-pdf, which
-// records the person (the V4 addendum's "optional email request"), builds the
-// PDF from the same data module this page renders from, and hands it back.
-// The answers are used for the file and not stored; the dialog says so.
+// records the person (the V4 addendum's "optional email request"), checks and
+// builds the PDF from the same data module this page renders from, and hands
+// it back with the list of checks it passed. The answers are used for the file
+// and not stored; the dialog says so.
 //
 // Every string here comes from src/data/model-selection-tool.ts. The page's
-// script imports that module too (Vite bundles it), so the live bar, the
-// result, the copied scorecard and the PDF all read one rubric.
+// script imports that module too (Vite bundles it), so the live score bar, the
+// result summary and the PDF all read one rubric: `readAssessment()`.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -60,9 +63,6 @@ import {
   EXAMPLES_NOTE,
   GATE_COUNT,
   ANSWER_COUNT,
-  readAssessment,
-  weightOf,
-  caseFor,
 } from '../../data/model-selection-tool';
 import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
 
@@ -94,9 +94,21 @@ const schema = [
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// The two examples, read on the server so the tab shows a result without a
-// script, and so the script and the page cannot disagree about it.
-const examples = EXAMPLES.map((ex) => ({ ...ex, r: readAssessment(ex.assessment) }));
+// The four sections, as the steps between Start and Result. The script and
+// the progress bar both read the step order from the DOM, so the markup is
+// the one place it is written.
+const sections = [
+  { letter: 'A', name: 'The step', question: 'What job is this model being staffed on?' },
+  { letter: 'B', name: 'Deployment gates', question: 'Can this model be deployed where you need it, on the terms you need?' },
+  { letter: 'C', name: 'Behaviour under test', question: 'What did ten runs on your own four cases show?' },
+  { letter: 'D', name: 'Disqualifiers', question: 'Did it do the one thing that ends a candidate?' },
+];
+const steps = [
+  { key: 'start', dot: '0', name: 'Start' },
+  ...sections.map((s) => ({ key: s.letter.toLowerCase(), dot: s.letter, name: s.name })),
+  { key: 'result', dot: '✓', name: 'Result' },
+];
+const STEP_COUNT = steps.length;
 
 const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
 const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
@@ -114,73 +126,25 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <p class="lead">
         Find out whether one candidate model is fit for <em>one step</em> of your system. Ten
         gates from the model card, twelve behaviours from your own test runs, four
-        disqualifiers. Each answer says what earns it, so two people scoring the same ten runs
-        land on the same number.
+        disqualifiers, in four short steps. Each answer says what earns it, so two people
+        scoring the same ten runs land on the same number.
       </p>
       <p class="hero-note mono">
-        {ANSWER_COUNT} answers · 4 sections · two hard gates · one afternoon
+        {ANSWER_COUNT} answers · {sections.length} sections · two hard gates · one afternoon
       </p>
       <ResourceCredit />
     </div>
   </section>
 
-  <!-- Purpose and how to use -->
-  <section id="about">
-    <div class="wrap">
-      <div class="about">
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
-          <ul class="plain">
-            {PURPOSE.map((p) => <li>{p}</li>)}
-          </ul>
-        </div>
-        <div class="about-col">
-          <span class="eyebrow"><span class="num">02</span> How to use it</span>
-          <ol class="steps">
-            {HOW_TO_USE.map((p) => <li>{p}</li>)}
-          </ol>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Scoring rules -->
-  <section id="rules">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">03</span> Rules for scoring</span>
-        <h2>Five rules. Break one and the score <em>stops meaning much</em>.</h2>
-      </div>
-      <ol class="howto">
-        {HOW_TO_RUN.map((h) => (
-          <li>
-            <strong>{h.lead}</strong> {h.rest}
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
-  <!-- Tabs -->
-  <section id="tabs-section">
-    <div class="wrap">
-      <div class="tabs" role="tablist" aria-label="Your assessment or the reference example">
-        <button class="tab" role="tab" id="tab-assess" aria-selected="true" aria-controls="panel-assess" type="button">Your assessment</button>
-        <button class="tab" role="tab" id="tab-example" aria-selected="false" aria-controls="panel-example" type="button">Reference example</button>
-      </div>
-      <noscript>
-        <p class="noscript">The tool needs JavaScript to score as you answer. Without it, the reference
-          example below shows two candidates scored in full, and the rubric says how each outcome was reached.</p>
-      </noscript>
-    </div>
-  </section>
-
-  {/* Everything the score bar has to stay above lives inside this one
-      element. A sticky element only sticks within its parent, so the bar's
-      parent has to be as tall as the four sections and the result together. */}
-  <div class="scoring" id="panel-assess" role="tabpanel" aria-labelledby="tab-assess">
+  {/* The tool, inside one framed shell. Everything the score bar has to stay
+      above lives inside this element: a sticky element only sticks within its
+      parent. The frame is the tool's edge, so the page's section rhythm stops
+      at it and the steps use `.inner` for their gutters, not `.wrap`. */}
+  <section class="tool-section">
+  <div class="wrap">
+  <div class="tool" id="tool" data-step="0">
     <div class="scorebar-wrap">
-      <div class="wrap">
+      <div class="inner">
         <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
           <div class="sb-score">
             <span id="pct">—</span><span class="of">%</span>
@@ -189,44 +153,102 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
             <span class="band" id="band">Not started</span>
             <span class="sb-note" id="note">{ANSWER_COUNT} answers to give. Choose the step first.</span>
           </div>
-          <div class="sb-secs mono" aria-label="Progress by section">
+          <div class="sb-secs mono" aria-label="Score by section">
             <span class="sb-sec" title="The step">A <b id="sb-a">—</b></span>
             <span class="sb-sec" title="Deployment gates">B <b id="sb-b">0</b>/{GATE_COUNT} pass</span>
             <span class="sb-sec" title="Behaviour under test">C <b id="sb-c">—</b>/<span id="sb-cmax">—</span></span>
             <span class="sb-sec" title="Disqualifiers">D <b id="sb-d">0</b> hit</span>
           </div>
-          <div class="sb-prog mono" id="progress">0/{ANSWER_COUNT} answered</div>
+        </div>
+
+        {/* The progress bar. The fill is answers given out of twenty-seven; the
+            pips are the six steps, and each one is a button that jumps there. */}
+        <div class="progress" aria-label="Progress">
+          <div class="p-track" role="progressbar" aria-valuemin="0" aria-valuemax={ANSWER_COUNT} aria-valuenow="0" id="p-track">
+            <div class="p-fill" id="p-fill" style="width:0%"></div>
+          </div>
+          <div class="p-row">
+            <ol class="p-steps" id="p-steps">
+              {steps.map((s, i) => (
+                <li>
+                  <button type="button" class="p-step" data-go={i} aria-current={i === 0 ? 'step' : undefined}>
+                    <span class="p-dot mono">{s.dot}</span>
+                    <span class="p-label">{s.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <span class="p-text mono" id="p-text">Step 1 of {STEP_COUNT} · 0 of {ANSWER_COUNT} answered</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <section id="score">
-      <div class="wrap">
-        <div class="controls" role="group" aria-label="Assessment controls">
-          <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
-          <button class="btn btn-ghost" id="example" type="button">Load a reference example</button>
-          <button class="btn btn-ghost" id="copy" type="button">Copy the scorecard</button>
-          <button class="btn btn-ghost" id="print" type="button">Print</button>
-          <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
-          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+    <!-- Step 0: start -->
+    <section class="step" id="step-start" data-index="0">
+      <div class="inner">
+        <div class="stepnav top">
+          <span class="stepnote mono">Six steps. About fifteen minutes once the runs are done.</span>
+          <button class="btn btn-primary" type="button" data-go="1">Start scoring&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="about">
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+            <ul class="plain">
+              {PURPOSE.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">02</span> How to use it</span>
+            <ol class="steps">
+              {HOW_TO_USE.map((p) => <li>{p}</li>)}
+            </ol>
+          </div>
+        </div>
+
+        <div class="rules">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">03</span> Rules for scoring</span>
+            <h2 class="step-title" tabindex="-1">Five rules. Break one and the score <em>stops meaning much</em>.</h2>
+          </div>
+          <ol class="howto">
+            {HOW_TO_RUN.map((h) => (
+              <li>
+                <strong>{h.lead}</strong> {h.rest}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <p class="examples-note">{EXAMPLES_NOTE}</p>
+        <div class="stepnav">
+          <button class="btn btn-primary" type="button" data-go="1">Start scoring&nbsp;<span class="arrow">→</span></button>
+          {EXAMPLES.map((ex) => (
+            <button class="btn btn-ghost load-example" data-example={ex.id} type="button">Load reference candidate {ex.id.toUpperCase()}</button>
+          ))}
         </div>
       </div>
     </section>
 
-    <!-- A · the step -->
-    <section id="section-a" class="qsection">
-      <div class="wrap">
+    <!-- Step 1: A · the step -->
+    <section id="step-a" class="step qsection" data-index="1">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="0">← Back</button>
+          <span class="stepnote mono">Step 2 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="2">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
         <div class="shead">
           <span class="sletter">A</span>
           <div class="stitle">
-            <h2 class="sname">The step</h2>
-            <p class="squestion">What job is this model being staffed on?</p>
+            <h2 class="sname step-title" tabindex="-1">{sections[0].name}</h2>
+            <p class="squestion">{sections[0].question}</p>
           </div>
           <span class="ssub mono" aria-label="Section A answer"><b id="secsub-a">Not chosen</b></span>
         </div>
         <p class="sblurb">One answer. It sets every weight in section C, so it comes first.</p>
 
-        <div class="item" id="row-profile">
+        <div class="item" id="row-profile" data-k="profile" data-i="0">
           <span class="qn mono">A1</span>
           <div class="qbody">
             <p class="q">{STEP_QUESTION}</p>
@@ -241,17 +263,28 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
             </div>
           </div>
         </div>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="0">← Back</button>
+          <span class="stepnote mono" id="stepnote-A">0 of 1 answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="2">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
       </div>
     </section>
 
-    <!-- B · deployment gates -->
-    <section id="section-b" class="qsection">
-      <div class="wrap">
+    <!-- Step 2: B · deployment gates -->
+    <section id="step-b" class="step qsection" data-index="2">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="1">← Back</button>
+          <span class="stepnote mono">Step 3 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="3">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
         <div class="shead">
           <span class="sletter">B</span>
           <div class="stitle">
-            <h2 class="sname">Deployment gates</h2>
-            <p class="squestion">Can this model be deployed where you need it, on the terms you need?</p>
+            <h2 class="sname step-title" tabindex="-1">{sections[1].name}</h2>
+            <p class="squestion">{sections[1].question}</p>
           </div>
           <span class="sgate">Hard gate</span>
           <span class="ssub mono" aria-label="Section B passes"><b id="secsub-b">0</b>/{GATE_COUNT} pass</span>
@@ -262,7 +295,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         </p>
 
         {GATES.map((g, i) => (
-          <div class="item gate" id={`row-gate-${i}`}>
+          <div class="item gate" id={`row-gate-${i}`} data-k="gate" data-i={i}>
             <span class="qn mono">B{i + 1}</span>
             <div class="qbody">
               <p class="q">{g.q}</p>
@@ -281,17 +314,28 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
           </div>
         ))}
         <p class="callout">{GATES_CLOSER}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="1">← Back</button>
+          <span class="stepnote mono" id="stepnote-B">0 of {GATE_COUNT} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="3">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
       </div>
     </section>
 
-    <!-- C · behaviour under test -->
-    <section id="section-c" class="qsection">
-      <div class="wrap">
+    <!-- Step 3: C · behaviour under test -->
+    <section id="step-c" class="step qsection" data-index="3">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="2">← Back</button>
+          <span class="stepnote mono">Step 4 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="4">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
         <div class="shead">
           <span class="sletter">C</span>
           <div class="stitle">
-            <h2 class="sname">Behaviour under test</h2>
-            <p class="squestion">What did ten runs on your own four cases show?</p>
+            <h2 class="sname step-title" tabindex="-1">{sections[2].name}</h2>
+            <p class="squestion">{sections[2].question}</p>
           </div>
           <span class="ssub mono" aria-label="Section C weighted score"><b id="secsub-c">—</b>/<span id="secsub-cmax">—</span></span>
         </div>
@@ -303,7 +347,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         {CRITERIA.map((c, i) => {
           const k = OWN_WEIGHT_ROWS.indexOf(i);
           return (
-            <div class={`item${c.key ? ' keyrow' : ''}`} id={`row-score-${i}`}>
+            <div class={`item${c.key ? ' keyrow' : ''}`} id={`row-score-${i}`} data-k="score" data-i={i}>
               <span class="qn mono">C{pad(i + 1)}</span>
               <div class="qbody">
                 <div class="qtop">
@@ -335,17 +379,28 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
           );
         })}
         <p class="callout">{WEIGHTS_NOTE}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="2">← Back</button>
+          <span class="stepnote mono" id="stepnote-C">0 of {CRITERIA.length} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="4">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
       </div>
     </section>
 
-    <!-- D · disqualifiers -->
-    <section id="section-d" class="qsection">
-      <div class="wrap">
+    <!-- Step 4: D · disqualifiers -->
+    <section id="step-d" class="step qsection" data-index="4">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="3">← Back</button>
+          <span class="stepnote mono">Step 5 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="5">See the result&nbsp;<span class="arrow">→</span></button>
+        </div>
         <div class="shead">
           <span class="sletter">D</span>
           <div class="stitle">
-            <h2 class="sname">Disqualifiers</h2>
-            <p class="squestion">Did it do the one thing that ends a candidate?</p>
+            <h2 class="sname step-title" tabindex="-1">{sections[3].name}</h2>
+            <p class="squestion">{sections[3].question}</p>
           </div>
           <span class="sgate">Hard gate</span>
           <span class="ssub mono" aria-label="Section D hits"><b id="secsub-d">0</b> hit</span>
@@ -355,7 +410,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         </p>
 
         {DISQUALIFIERS.map((d, i) => (
-          <div class="item gate" id={`row-dq-${i}`}>
+          <div class="item gate" id={`row-dq-${i}`} data-k="dq" data-i={i}>
             <span class="qn mono">D{i + 1}</span>
             <div class="qbody">
               <p class="q">{d.q}</p>
@@ -374,155 +429,76 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
           </div>
         ))}
         <p class="callout stop">{DISQUALIFIERS_CLOSER}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="3">← Back</button>
+          <span class="stepnote mono" id="stepnote-D">0 of {DISQUALIFIERS.length} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="5">See the result&nbsp;<span class="arrow">→</span></button>
+        </div>
       </div>
     </section>
 
-    <!-- The result -->
-    <section id="result">
-      <div class="wrap">
+    <!-- Step 5: the result -->
+    <section class="step" id="step-result" data-index={STEP_COUNT - 1}>
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <span class="stepnote mono">Step {STEP_COUNT} of {STEP_COUNT}</span>
+          <button class="btn btn-ghost" type="button" data-go="1">Change an answer</button>
+        </div>
         <div class="sec-head">
           <span class="eyebrow"><span class="num">04</span> Your result</span>
-          <h2>The outcome, read against the <em>rubric</em>.</h2>
+          <h2 class="step-title" tabindex="-1">The outcome, read against the <em>rubric</em>.</h2>
         </div>
         <div class="resultcard" id="resultcard" data-b="none">
           <div class="r-head">
             <span class="r-score mono"><b id="r-pct">—</b>%</span>
             <span class="r-band" id="r-band">Not started</span>
           </div>
+          <p class="r-example mono" id="r-example" hidden></p>
           <p class="r-what" id="r-what">
             Give all {ANSWER_COUNT} answers to read the outcome. Until then this shows the running score, and a blank row in C counts as 0.
           </p>
           <div class="r-secs" id="r-secs"></div>
           <p class="r-gate" id="r-gate" hidden></p>
           <div class="r-fix" id="r-fix" hidden>
-            <h3>Before you choose</h3>
+            <h3>Fix first</h3>
             <p class="r-fixlead">Rows scored 0 first, then 1, heaviest weight first. Each names the test case that is the evidence for it. A row scored 1 needs a named cover before it is accepted; a row scored 0 needs a fix or a narrower step.</p>
             <ol id="r-fixlist"></ol>
           </div>
-          <div class="r-actions">
-            <button class="btn btn-primary" id="pdf2" type="button">Get the PDF</button>
-            <button class="btn btn-ghost" id="copy2" type="button">Copy the scorecard</button>
+          <div class="r-actions" role="group" aria-label="Assessment controls">
+            <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
+            <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
-      </div>
-    </section>
-  </div>
 
-  <!-- Reference example -->
-  <div id="panel-example" role="tabpanel" aria-labelledby="tab-example" class="example-panel">
-    <section id="examples">
-      <div class="wrap">
-        <div class="sec-head">
-          <span class="eyebrow"><span class="num">Reference example</span></span>
-          <h2>Two candidates for one step, <em>scored in full</em>.</h2>
-        </div>
-        <p class="prose-lead">{EXAMPLES_NOTE}</p>
-
-        {examples.map((ex) => (
-          <article class="excard" id={`example-${ex.id}`}>
-            <h3 class="extitle">{ex.title}</h3>
-            <div class="prose ex-story">
-              {ex.story.map((l) => <p>{l}</p>)}
+        <div class="rubric">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">05</span> The rubric</span>
+            <h2>Agree these <em>before</em> you score, not after.</h2>
+          </div>
+          <p class="prose-lead">
+            The two gates are checked first and ignore the score. The percentage is your weighted score over the
+            weighted maximum for the step you chose, so it means the same thing whichever job the model has.
+            The row that matches your result is highlighted.
+          </p>
+          {CUT_LINES.map((c) => (
+            <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
+              <div class="cutscore mono">{c.score}</div>
+              <div class="cutname">{c.name}</div>
+              <div class="cutwhat">{c.what}</div>
             </div>
-            <p class="callout">{ex.lesson}</p>
-            <div class="resultcard ex-result" data-b={ex.r.band?.key ?? 'none'}>
-              <div class="r-head">
-                <span class="r-score mono"><b>{ex.r.pct}</b>%</span>
-                <span class="r-band">{ex.r.band?.name}</span>
-              </div>
-              <p class="r-what">{ex.r.band?.what}</p>
-              <div class="r-secs">
-                <div class="r-sec"><span class="k">A · The step</span><span class="v small">{PROFILES[ex.assessment.profile!].name}</span></div>
-                <div class="r-sec"><span class="k">B · Gates</span><span class="v">{ex.r.gatesPassed}<small>/{GATE_COUNT} pass</small></span></div>
-                <div class="r-sec"><span class="k">C · Weighted score</span><span class="v">{ex.r.total}<small>/{ex.r.max}</small></span></div>
-                <div class={`r-sec${ex.r.dqHit.length ? ' low' : ''}`}><span class="k">D · Disqualifiers</span><span class="v">{ex.r.dqHit.length}<small> hit</small></span></div>
-              </div>
-              {ex.r.dqHit.length > 0 && (
-                <p class="r-gate">
-                  Disqualifier {ex.r.dqHit.map((i) => `D${i + 1} ${DISQUALIFIERS[i].short}`).join(', ')}. This ends the candidate whatever the score.
-                </p>
-              )}
-              {ex.r.weak.length > 0 && (
-                <div class="r-fix">
-                  <h3>Before you choose</h3>
-                  <ol>
-                    {ex.r.weak.map((x) => {
-                      const cs = caseFor(x.i + 1);
-                      return (
-                        <li>
-                          <span class={`fn${x.v === 0 ? ' zero' : ''}`}>C{pad(x.i + 1)}</span>
-                          <div class="ft">
-                            <b>{CRITERIA[x.i].short}, scored {x.v}, weight {weightOf(x.i, ex.assessment)}. </b>
-                            {CRITERIA[x.i].a[x.v]}
-                            {cs && <span class="fm">Evidence: case {cs.n}, {cs.name.toLowerCase()}</span>}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              )}
-              <div class="r-actions">
-                <button class="btn btn-primary load-example" data-example={ex.id} type="button">Load this candidate into your assessment</button>
-              </div>
-            </div>
-          </article>
-        ))}
-
-        <h3 class="sub">The same three cases, in four different jobs</h3>
-        <p class="prose-note">
-          Illustrations of how to build a case. They describe no real team, product or system. Case 1 is
-          not in the table because an ordinary case looks the same in every job.
-        </p>
-        <div class="scroll">
-          <table class="grid domains">
-            <thead>
-              <tr>
-                <th>The job</th>
-                <th>Case 2 · missing input</th>
-                <th>Case 3 · planted item</th>
-                <th>Case 4 · closing deadline</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DOMAINS.map((d) => (
-                <tr>
-                  <td class="cname">{d.job}</td>
-                  <td>{d.missing}</td>
-                  <td>{d.planted}</td>
-                  <td>{d.deadline}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          ))}
         </div>
-        <div class="controls">
-          <a class="btn btn-ghost" href="#tab-assess" id="to-assess">Back to your assessment</a>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <button class="btn btn-ghost" type="button" data-go="1">Change an answer</button>
         </div>
       </div>
     </section>
   </div>
-
-  <!-- The rubric -->
-  <section id="cuts">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="num">05</span> The rubric</span>
-        <h2>Agree these <em>before</em> you score, not after.</h2>
-      </div>
-      <p class="prose-lead">
-        The two gates are checked first and ignore the score. The percentage is your weighted score over the
-        weighted maximum for the step you chose, so it means the same thing whichever job the model has.
-        The row that matches your result is highlighted.
-      </p>
-      {CUT_LINES.map((c) => (
-        <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
-          <div class="cutscore mono">{c.score}</div>
-          <div class="cutname">{c.name}</div>
-          <div class="cutwhat">{c.what}</div>
-        </div>
-      ))}
-    </div>
+  </div>
   </section>
 
   <!-- Build the test set -->
@@ -553,6 +529,34 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         ))}
       </div>
       <p class="callout">{CASES_CLOSER}</p>
+
+      <h3 class="sub">The same three cases, in four different jobs</h3>
+      <p class="prose-note">
+        Illustrations of how to build a case. They describe no real team, product or system. Case 1 is
+        not in the table because an ordinary case looks the same in every job.
+      </p>
+      <div class="scroll">
+        <table class="grid domains">
+          <thead>
+            <tr>
+              <th>The job</th>
+              <th>Case 2 · missing input</th>
+              <th>Case 3 · planted item</th>
+              <th>Case 4 · closing deadline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DOMAINS.map((d) => (
+              <tr>
+                <td class="cname">{d.job}</td>
+                <td>{d.missing}</td>
+                <td>{d.planted}</td>
+                <td>{d.deadline}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -583,7 +587,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         <h2>One page. Written when you decide, <em>not afterwards</em>.</h2>
       </div>
       <p class="prose-lead">
-        Your result above gives the first half: the step, the score, the rows to cover. Print this section
+        Your result above gives the first half: the step, the score, the rows to fix. Print this section
         to fill in the rest, or copy the headings into your own architecture decision record.
       </p>
       <div class="rec">
@@ -654,8 +658,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       <span class="eyebrow"><span class="num">PDF</span> Your scored copy</span>
       <h2 id="pdf-title">Get the PDF</h2>
       <p class="pdf-lead">
-        The PDF carries your {ANSWER_COUNT} answers, the weighted score, the outcome and the rows to cover
-        before you choose. It is built against a name and an email address.
+        The PDF carries your {ANSWER_COUNT} answers, the weighted score, the outcome and the rows to fix
+        first. It is built against a name and an email address, and checked before it is handed over.
       </p>
       <div class="pdf-grid">
         <label>
@@ -673,6 +677,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         once. It does not start any other email.
       </p>
       <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
+      <ul class="pdf-checks mono" id="pdf-checks" hidden></ul>
       <div class="pdf-actions">
         <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
         <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
@@ -686,16 +691,78 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
      paragraphs collide. Scoped, as on the other resource pages. */
   .prose p + p { margin-top: var(--space-4); }
 
+  /* ── the frame ────────────────────────────────────────────────────────── */
+  /* One white shell on the mist ground, the app-shell radius and the overlay
+     shadow the design system gives a shell. `overflow: clip` rounds the corners
+     without making the frame a scroll container, which `hidden` would, and a
+     scroll container is what stops the score bar sticking to the viewport. */
+  .tool-section { padding-top: var(--space-6); }
+  .tool {
+    background: var(--surface-panel);
+    border-radius: var(--radius-shell);
+    box-shadow: var(--shadow-overlay);
+    overflow: clip;
+  }
+  .inner { padding: 0 var(--space-7); }
+  /* Page-scale display headings read as a landing page inside a tool. Step
+     them down one size inside the shell; the section names stay as they are. */
+  .tool .sec-head h2 { font-size: var(--size-7); }
+  .tool .sec-head { margin-bottom: var(--space-5); }
+
+  /* ── steps ────────────────────────────────────────────────────────────── */
+  /* Without the script every step is visible. With it, only the current one.
+     `data-step` on the tool is the cursor; each step carries its index. */
+  .tool.js .step { display: none; }
+  .tool.js .step.current { display: block; }
+  .step { padding: var(--space-5) 0 var(--space-7); }
+  /* The heading takes focus from the script after a step change, so a screen
+     reader announces where it landed. It has tabindex="-1", so Tab never
+     reaches it, and the ring would only ever show to a mouse user, in berry,
+     looking like an error. */
+  .step-title:focus, .step-title:focus-visible { outline: none; }
+
+  .stepnav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-hair);
+  }
+  .stepnav .btn-primary { margin-left: auto; }
+  .stepnav.top {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    margin-bottom: var(--space-5);
+  }
+  .stepnote { font-size: var(--size-1); color: var(--text-quiet); }
+  /* Without the script the steps are all on the page, so the buttons that move
+     between them do nothing useful and are hidden. */
+  .tool:not(.js) .stepnav [data-go], .tool:not(.js) .p-step, .tool:not(.js) .load-example { display: none; }
+  .examples-note {
+    margin-top: var(--space-6);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  /* The start step's bottom nav carries the two load buttons; the primary
+     button keeps its place on the right. */
+  #step-start .stepnav:not(.top) .btn-primary { order: 3; }
+
   /* ── about ────────────────────────────────────────────────────────────── */
   .about {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
+    margin-bottom: var(--space-7);
   }
   .about-col {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-5) var(--space-6);
   }
   .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
@@ -771,65 +838,26 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   ol.howto strong { font-weight: var(--weight-strong); }
 
-  /* ── tabs ─────────────────────────────────────────────────────────────── */
-  #tabs-section { padding-bottom: 0; }
-  .tabs {
-    display: flex;
-    gap: var(--space-2);
-    border-bottom: 1px solid var(--border-hair);
-  }
-  .tab {
-    font: inherit;
-    font-weight: var(--weight-strong);
-    font-size: var(--size-3);
-    color: var(--text-quiet);
-    background: none;
-    border: 0;
-    border-bottom: 3px solid transparent;
-    padding: var(--space-3) var(--space-4);
-    margin-bottom: -1px;
-    cursor: pointer;
-  }
-  .tab:hover { color: var(--text-body); }
-  .tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-  .tab[aria-selected='true'] { color: var(--text-body); border-bottom-color: var(--sun); }
-  .noscript { margin-top: var(--space-4); color: var(--text-quiet); max-width: var(--measure-prose); }
-
-  /* ── controls ─────────────────────────────────────────────────────────── */
-  #score { padding-top: var(--space-5); padding-bottom: 0; }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: center;
-  }
-  .copied {
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-  }
-
   /* ── the score bar ────────────────────────────────────────────────────── */
-  /* Sticky under the nav. Its parent is `.scoring`, which wraps every section
-     the bar has to stay above, so it holds through the four sections and the
-     result and releases before the rubric. */
+  /* The frame's header. Sticky under the nav; flat, with a hairline under it,
+     because it sits inside the shell rather than floating over the page. Its
+     parent is `.tool`, which wraps every step, so it holds through the whole
+     tool and releases before the test cases. */
   .scorebar-wrap {
     position: sticky;
     /* The nav is 76px on a desktop and wraps taller on a phone. The script
        measures it and sets --nav-h; the fallback is the desktop height. */
     top: var(--nav-h, 76px);
     z-index: var(--z-sticky);
-    padding: var(--space-3) 0;
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
+    border-bottom: 1px solid var(--border-hair);
   }
   .scorebar {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--space-3) var(--space-5);
-    background: var(--surface-panel);
-    border-radius: var(--radius-panel);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-4) 0 var(--space-3);
   }
   .sb-score {
     font-family: var(--font-mono);
@@ -873,11 +901,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     white-space: nowrap;
   }
   .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
-  .sb-prog {
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-    white-space: nowrap;
-  }
   /* Bands read through colour on the word, not a yellow chip — sun is reserved
      for things you can click, so it cannot carry a status. */
   [data-b='stop'] .band, [data-b='gate'] .band, [data-b='dq'] .band,
@@ -886,8 +909,70 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   [data-b='fit'] .band, [data-b='fit'] .r-band { color: var(--text-loud); }
   [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
 
+  /* ── the progress bar ─────────────────────────────────────────────────── */
+  /* Joined to the score bar as one panel. The fill is sun, and it is the one
+     yellow thing here that is not a control, so it stays a thin line. */
+  .progress { padding: 0 0 var(--space-3); }
+  .p-track {
+    height: 4px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .p-fill {
+    height: 100%;
+    background: var(--sun);
+    border-radius: var(--radius-pill);
+    transition: width var(--motion-base, 160ms) ease;
+  }
+  .p-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-3);
+  }
+  .p-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .p-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 3px 10px 3px 4px;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .p-step:hover { background: var(--surface-hover); color: var(--text-body); }
+  .p-step:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .p-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    display: inline-grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .p-step[aria-current='step'] { color: var(--text-loud); }
+  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
+
   /* ── question sections ────────────────────────────────────────────────── */
-  .qsection { padding-top: var(--space-7); padding-bottom: 0; }
   .shead {
     display: grid;
     grid-template-columns: auto 1fr auto auto;
@@ -928,7 +1013,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .ssub {
     font-size: var(--size-2);
     color: var(--text-quiet);
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-pill);
     padding: 4px 12px;
     margin-top: 4px;
@@ -948,15 +1033,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     display: grid;
     grid-template-columns: 40px 1fr;
     gap: 0 var(--space-3);
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-5);
     margin-bottom: var(--space-4);
   }
   /* A failed gate or a disqualifier that happened must not be missable. */
   .item.gate.zeroed {
-    box-shadow: none;
     outline: var(--border-w-rule) solid var(--danger-mark);
     outline-offset: 0;
   }
@@ -991,7 +1074,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .wchip {
     font-size: var(--size-1);
     color: var(--text-body);
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
     border-radius: var(--radius-pill);
     padding: 4px 12px;
     white-space: nowrap;
@@ -1030,7 +1113,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     flex-direction: column;
     gap: var(--space-2);
     text-align: left;
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
     border: 0;
     border-radius: var(--radius-inner);
     padding: var(--space-4);
@@ -1039,7 +1122,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     color: var(--text-body);
     transition: background var(--motion-fast, 90ms) ease, color var(--motion-fast, 90ms) ease;
   }
-  .anchor:hover { background: var(--surface-active); }
+  .anchor:hover { background: var(--surface-hover); }
   .anchor:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   .anchor .av {
     font-size: var(--size-1);
@@ -1067,12 +1150,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .callout.stop { background: var(--danger-quiet); }
 
   /* ── the result ───────────────────────────────────────────────────────── */
-  #result { padding-top: var(--space-7); }
   .resultcard {
-    background: var(--surface-panel);
+    background: var(--surface-sunken);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
     padding: var(--space-6);
+    margin-bottom: var(--space-7);
   }
   .r-head {
     display: flex;
@@ -1095,6 +1177,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     letter-spacing: var(--tracking-display);
     line-height: var(--lh-tight);
   }
+  .r-example { margin: 0 0 var(--space-3); font-size: var(--size-1); color: var(--accent-ink); max-width: var(--measure-prose); }
+  .r-example[hidden] { display: none; }
   .r-what {
     max-width: var(--measure-prose);
     margin: 0 0 var(--space-5);
@@ -1105,12 +1189,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     gap: var(--space-3);
     margin-bottom: var(--space-5);
   }
-  /* The section boxes and the rows-to-cover list are created by the script
-     on the assessment tab, so they never carry Astro's scoping attribute.
-     `:global()` is what lets these rules reach them; the same markup in the
-     example panel is in the template and matches either way. */
+  /* The section boxes and the fix-first rows are created by the script, so
+     they never carry Astro's scoping attribute. `:global()` is what lets these
+     rules reach them; the parents above are in the template and stay scoped. */
   .r-secs :global(.r-sec) {
-    background: var(--surface-sunken);
+    background: var(--surface-panel);
     border-radius: var(--radius-inner);
     padding: var(--space-3) var(--space-4);
     display: flex;
@@ -1162,25 +1245,60 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .r-fix :global(.ft b) { font-weight: var(--weight-strong); }
   .r-fix :global(.ft .fm) { display: block; margin-top: 2px; color: var(--accent-ink); }
   .r-fix :global(.ft .fm a) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
 
-  /* ── reference examples ───────────────────────────────────────────────── */
+  /* ── rubric ───────────────────────────────────────────────────────────── */
   .prose-lead {
     color: var(--text-quiet);
     max-width: var(--measure-prose);
     margin-bottom: var(--space-5);
   }
+  .cutrow {
+    display: grid;
+    grid-template-columns: 120px 240px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-inner);
+    margin-bottom: var(--space-3);
+    background: var(--surface-sunken);
+    opacity: 0.55;
+    transition: opacity var(--motion-base, 160ms) ease;
+  }
+  .cutrow.active { opacity: 1; background: var(--surface-panel); box-shadow: var(--shadow-raise); }
+  .cutscore { font-size: var(--size-2); font-weight: var(--weight-strong); }
+  .cutname { font-weight: var(--weight-strong); }
+  .cutwhat { font-size: var(--size-2); color: var(--text-quiet); }
+  .cutrow[data-b='gate'].active .cutscore,
+  .cutrow[data-b='dq'].active .cutscore,
+  .cutrow[data-b='stop'].active .cutscore { color: var(--danger); }
+  .cutrow[data-b='cover'].active .cutscore { color: var(--accent-ink); }
+
+  /* ── cases, method, record, afternoon: below the shell ────────────────── */
   .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-4); }
-  .excard { margin-bottom: var(--space-7); }
-  .extitle { font-size: var(--size-5); margin: 0 0 var(--space-3); }
-  .ex-story { max-width: var(--measure-prose); }
-  .ex-result { margin-top: var(--space-5); }
   .sub {
     margin: var(--space-6) 0 var(--space-3);
     font-size: var(--size-5);
     font-weight: var(--weight-heavy);
     color: var(--text-loud);
   }
+  /* Four cards, two-up. Three-and-one reads as a card that failed to load. */
+  .cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .case {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .chead { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+  .cn { font-size: var(--size-1); color: var(--text-quiet); }
+  .case h3 { font-size: var(--size-5); }
+  .crow { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-3); }
+  .crow:last-child { margin-bottom: 0; }
+  .clabel { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-bottom: 2px; }
+  .crow.watch .clabel { color: var(--danger); }
+  .crow.reveals { font-size: var(--size-1); color: var(--accent-ink); padding-top: var(--space-2); border-top: 1px solid var(--border-hair); }
+
   .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
   table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
   .domains { min-width: 820px; }
@@ -1203,49 +1321,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .grid tbody tr:last-child td { border-bottom: 0; }
   .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 170px; }
-  #examples .controls { margin-top: var(--space-5); }
 
-  /* ── rubric ───────────────────────────────────────────────────────────── */
-  .cutrow {
-    display: grid;
-    grid-template-columns: 120px 240px 1fr;
-    gap: var(--space-4);
-    align-items: start;
-    padding: var(--space-4) var(--space-5);
-    border-radius: var(--radius-inner);
-    margin-bottom: var(--space-3);
-    background: var(--surface-panel);
-    opacity: 0.55;
-    transition: opacity var(--motion-base, 160ms) ease;
-  }
-  .cutrow.active { opacity: 1; box-shadow: var(--shadow-raise); }
-  .cutscore { font-size: var(--size-2); font-weight: var(--weight-strong); }
-  .cutname { font-weight: var(--weight-strong); }
-  .cutwhat { font-size: var(--size-2); color: var(--text-quiet); }
-  .cutrow[data-b='gate'].active .cutscore,
-  .cutrow[data-b='dq'].active .cutscore,
-  .cutrow[data-b='stop'].active .cutscore { color: var(--danger); }
-  .cutrow[data-b='cover'].active .cutscore { color: var(--accent-ink); }
-
-  /* ── cases ────────────────────────────────────────────────────────────── */
-  /* Four cards, two-up. Three-and-one reads as a card that failed to load. */
-  .cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-  .case {
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-5);
-  }
-  .chead { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
-  .cn { font-size: var(--size-1); color: var(--text-quiet); }
-  .case h3 { font-size: var(--size-5); }
-  .crow { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-3); }
-  .crow:last-child { margin-bottom: 0; }
-  .clabel { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-bottom: 2px; }
-  .crow.watch .clabel { color: var(--danger); }
-  .crow.reveals { font-size: var(--size-1); color: var(--accent-ink); padding-top: var(--space-2); border-top: 1px solid var(--border-hair); }
-
-  /* ── method + afternoon ───────────────────────────────────────────────── */
   ol.method { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); padding: 0; margin: 0; }
   ol.method li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: baseline; }
   .mn { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
@@ -1258,7 +1334,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .pmin { font-size: var(--size-1); color: var(--text-quiet); }
   .pbody p { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
 
-  /* ── decision record ──────────────────────────────────────────────────── */
   .rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
   .recgroup {
     background: var(--surface-panel);
@@ -1340,6 +1415,23 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
   .pdf-status.err { color: var(--danger); }
   .pdf-status.ok { color: var(--text-loud); }
+  .pdf-checks {
+    list-style: none;
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-3) 0 0;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 180px;
+    overflow: auto;
+  }
+  .pdf-checks :global(li) { display: flex; gap: var(--space-2); }
+  .pdf-checks :global(li b) { flex: 0 0 5ch; font-weight: var(--weight-strong); color: var(--text-body); }
+  .pdf-checks :global(li.fail b) { color: var(--danger); }
   .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
   .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
 
@@ -1347,10 +1439,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     .cases { grid-template-columns: 1fr; }
   }
   @media (max-width: 860px) {
+    .tool { border-radius: var(--radius-panel); }
+    .inner { padding: 0 var(--space-4); }
     .about { grid-template-columns: 1fr; }
     .scorebar { grid-template-columns: auto 1fr; }
     .sb-secs { grid-column: 1 / -1; }
-    .sb-prog { display: none; }
     .sb-score { font-size: var(--size-6); }
     .band { font-size: var(--size-3); }
     /* The outcome's full text is on the result card. In a sticky bar on a
@@ -1361,6 +1454,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .p-label { display: none; }
+    .p-step { padding-right: 4px; }
+    .p-text { white-space: normal; }
     .shead { grid-template-columns: auto 1fr; }
     .sgate, .ssub { grid-column: 2; justify-self: start; margin-top: 0; }
     .sblurb { margin-left: 0; }
@@ -1370,16 +1466,19 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     .r-secs { grid-template-columns: 1fr 1fr; }
     .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
     .pdf-grid { grid-template-columns: 1fr; }
+    .stepnav .btn-primary { margin-left: 0; }
   }
   @media (max-width: 720px) {
     ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
   }
 
-  /* ── print: this is a scorecard people print ──────────────────────────── */
+  /* ── print: every step, in order, as a scorecard ──────────────────────── */
   @media print {
-    .scorebar-wrap { position: static; background: none; }
-    .scorebar, .resultcard, .about-col { box-shadow: none; border: 1px solid var(--border-hair); }
-    .controls, .hero-cta, .r-actions, .pdf-dialog, .tabs, .noscript { display: none !important; }
+    .tool.js .step { display: block; }
+    .scorebar-wrap { position: static; }
+    .tool { box-shadow: none; border: 1px solid var(--border-hair); }
+    .resultcard, .about-col { border: 1px solid var(--border-hair); }
+    .stepnav, .hero-cta, .r-actions, .pdf-dialog, .p-steps, .examples-note { display: none !important; }
     .item, .case, .recgroup { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
     .cutrow { opacity: 1 !important; break-inside: avoid; }
     .anchor, .resultcard { break-inside: avoid; }
@@ -1392,12 +1491,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 </style>
 
 <script>
-  // Answers are a plain object in this closure. Never written to localStorage,
-  // never posted except inside the PDF request, and gone when the tab closes.
+  // Answers are a plain object in this closure, and the step is a number
+  // beside it. Never written to localStorage, never posted except inside the
+  // PDF request, and gone when the tab closes.
   //
   // This is a module script, so it imports the same data module the page
-  // rendered from. The score bar, the result summary, the copied scorecard
-  // and (on the server) the PDF all read one rubric: `readAssessment()`.
+  // rendered from. The score bar, the result summary and (on the server) the
+  // PDF all read one rubric: `readAssessment()`.
   import {
     ANSWER_COUNT,
     CRITERIA,
@@ -1408,9 +1508,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     GATE_COUNT,
     OWN_WEIGHT_ROWS,
     PROFILES,
-    TOOL_NAME,
     blankAssessment,
     caseFor,
+    exampleFor,
     readAssessment,
     weightOf,
     type Assessment,
@@ -1421,50 +1521,85 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   let state: Assessment = blankAssessment();
 
-  // The score bar sticks under the nav, and the nav is taller when its links
-  // wrap on a narrow screen. Measure it rather than guess.
+  // ---- the steps ----------------------------------------------------------
+
+  const tool = $('tool');
   const nav = document.querySelector<HTMLElement>('header.nav');
   const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
-  function placeBar() {
-    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  const stepEls = [...tool.querySelectorAll<HTMLElement>('.step')];
+  const STEP_COUNT = stepEls.length;
+  const LAST = STEP_COUNT - 1;
+  const LETTERS = ['A', 'B', 'C', 'D'];
+  let step = 0;
+  tool.classList.add('js');
+
+  // Which rows live in which step. A row is `kind:index`; step 0 and the
+  // last have none.
+  type RowKey = { k: string; i: number };
+  const stepRows: RowKey[][] = stepEls.map((el) =>
+    [...el.querySelectorAll<HTMLElement>('.item')].map((r) => ({ k: r.dataset.k ?? '', i: Number(r.dataset.i) })),
+  );
+
+  function valueOf(r: RowKey): number | null {
+    if (r.k === 'profile') return state.profile;
+    if (r.k === 'gate') return state.gates[r.i];
+    if (r.k === 'score') return state.scores[r.i];
+    if (r.k === 'dq') return state.dq[r.i];
+    return null;
   }
-  placeBar();
-  window.addEventListener('resize', placeBar);
+  const rowId = (r: RowKey) => (r.k === 'profile' ? 'row-profile' : `row-${r.k}-${r.i}`);
 
-  // ---- tabs ---------------------------------------------------------------
-
-  const tabAssess = $('tab-assess');
-  const tabExample = $('tab-example');
-  const panelAssess = $('panel-assess');
-  const panelExample = $('panel-example');
-
-  function showTab(which: 'assess' | 'example') {
-    const assess = which === 'assess';
-    tabAssess.setAttribute('aria-selected', String(assess));
-    tabExample.setAttribute('aria-selected', String(!assess));
-    panelAssess.hidden = !assess;
-    panelExample.hidden = assess;
-    placeBar();
+  function stepLabel(i: number) {
+    if (i === 0) return 'Start';
+    if (i === LAST) return 'Result';
+    const name = stepEls[i].querySelector('.sname')?.textContent ?? '';
+    return `${LETTERS[i - 1]} ${name}`;
   }
-  tabAssess.addEventListener('click', () => showTab('assess'));
-  tabExample.addEventListener('click', () => showTab('example'));
-  $('to-assess').addEventListener('click', (ev) => {
-    ev.preventDefault();
-    showTab('assess');
-    $('tabs-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  function goTo(i: number, move = true) {
+    step = Math.max(0, Math.min(LAST, i));
+    tool.dataset.step = String(step);
+    stepEls.forEach((el, k) => el.classList.toggle('current', k === step));
+    updateProgress();
+    if (!move) return;
+    // Scroll so the tool's top sits just under the nav. The score bar is the
+    // tool's first child, so the step heading lands directly beneath it.
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const top = tool.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - 8), behavior: 'smooth' });
+    stepEls[step].querySelector<HTMLElement>('.step-title')?.focus({ preventScroll: true });
+  }
+
+  function updateProgress() {
+    const answered = readAssessment(state).answered;
+    $('p-fill').style.width = `${(answered / ANSWER_COUNT) * 100}%`;
+    $('p-track').setAttribute('aria-valuenow', String(answered));
+    $('p-text').textContent = `Step ${step + 1} of ${STEP_COUNT} · ${stepLabel(step)} · ${answered} of ${ANSWER_COUNT} answered`;
+    document.querySelectorAll<HTMLButtonElement>('.p-step').forEach((b) => {
+      const i = Number(b.dataset.go);
+      if (i === step) b.setAttribute('aria-current', 'step');
+      else b.removeAttribute('aria-current');
+      // A section step is "done" once all of its rows are answered.
+      const rows = stepRows[i];
+      b.classList.toggle('done', rows.length > 0 && rows.every((r) => valueOf(r) !== null));
+    });
+    stepRows.forEach((rows, i) => {
+      if (!rows.length) return;
+      const note = document.getElementById(`stepnote-${LETTERS[i - 1]}`);
+      if (note) note.textContent = `${rows.filter((r) => valueOf(r) !== null).length} of ${rows.length} answered in this step`;
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) => {
+    b.addEventListener('click', () => goTo(Number(b.dataset.go)));
   });
-  showTab('assess');
 
   // ---- the read, in the bar's words ---------------------------------------
 
   type R = ReturnType<typeof readAssessment>;
 
-  function gateNames(r: R) {
-    return r.gatesFailed.map((i) => `B${i + 1} ${GATES[i].short}`).join(', ');
-  }
-  function dqNames(r: R) {
-    return r.dqHit.map((i) => `D${i + 1} ${DISQUALIFIERS[i].short}`).join(', ');
-  }
+  const gateNames = (r: R) => r.gatesFailed.map((i) => `B${i + 1} ${GATES[i].short}`).join(', ');
+  const dqNames = (r: R) => r.dqHit.map((i) => `D${i + 1} ${DISQUALIFIERS[i].short}`).join(', ');
 
   function bandLine(r: R) {
     if (r.band?.key === 'gate') {
@@ -1474,15 +1609,11 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       return { key: 'dq', band: r.band.name, note: `Disqualifier ${dqNames(r)} happened. This ends the candidate whatever the score.` };
     }
     if (state.profile === null) {
-      return { key: 'none', band: 'Not started', note: `${ANSWER_COUNT} answers to give. Choose the step in section A first.` };
+      return { key: 'none', band: r.answered === 0 ? 'Not started' : 'In progress', note: `${ANSWER_COUNT - r.answered} answers to give. Choose the step in section A first.` };
     }
     if (!r.complete) {
       const left = ANSWER_COUNT - r.answered;
-      return {
-        key: 'none',
-        band: 'In progress',
-        note: `${left} ${left === 1 ? 'answer' : 'answers'} to give. A blank row in C counts as 0.`,
-      };
+      return { key: 'none', band: 'In progress', note: `${left} ${left === 1 ? 'answer' : 'answers'} to give. A blank row in C counts as 0.` };
     }
     return { key: r.band!.key, band: r.band!.name, note: r.band!.what };
   }
@@ -1514,6 +1645,13 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       ? line.note
       : `Give all ${ANSWER_COUNT} answers to read the outcome. Until then this shows the running score, and a blank row in C counts as 0.`;
 
+    // When the state is one of the reference candidates, unchanged, say so:
+    // these are its answers, not the reader's.
+    const ex = exampleFor(state);
+    const exLine = $('r-example');
+    exLine.hidden = !ex;
+    exLine.textContent = ex ? `Reference candidate ${ex.id.toUpperCase()}: ${ex.lesson} These are its answers, not yours.` : '';
+
     const gatesLeft = GATE_COUNT - state.gates.filter((v) => v !== null).length;
     const scoresLeft = CRITERIA.length - state.scores.filter((v) => v !== null).length;
     const dqLeft = DQ_COUNT - state.dq.filter((v) => v !== null).length;
@@ -1528,8 +1666,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     if (r.gatesFailed.length || r.dqHit.length) {
       gate.hidden = false;
       gate.textContent = [
-        r.gatesFailed.length ? `Section B fails on ${gateNames(r)}.` : '',
-        r.dqHit.length ? `Section D: ${dqNames(r)} happened.` : '',
+        r.gatesFailed.length ? `Hard gate. Section B fails on ${gateNames(r)}.` : '',
+        r.dqHit.length ? `Hard gate. Section D: ${dqNames(r)} happened.` : '',
         'This ends the candidate whatever the score.',
       ]
         .filter(Boolean)
@@ -1538,8 +1676,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       gate.hidden = true;
     }
 
-    const fix = $('r-fix');
-    fix.hidden = r.weak.length === 0;
+    $('r-fix').hidden = r.weak.length === 0;
     $('r-fixlist').replaceChildren(
       ...r.weak.map((x) => {
         const li = el('li');
@@ -1600,7 +1737,6 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     $('pct').textContent = r.pct === null ? '—' : String(r.pct);
     $('band').textContent = line.band;
     $('note').textContent = line.note;
-    $('progress').textContent = `${r.answered}/${ANSWER_COUNT} answered`;
     $('verdict').dataset.b = line.key;
 
     const stepName = state.profile === null ? '—' : PROFILES[state.profile].name;
@@ -1616,6 +1752,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     $('secsub-d').textContent = String(r.dqHit.length);
 
     renderResult(r, line);
+    updateProgress();
 
     for (const key of ['gate', 'dq', 'fit', 'cover', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
@@ -1624,17 +1761,47 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   // ---- controls -----------------------------------------------------------
 
+  // Scroll a row to sit just under the sticky header, and put focus on its
+  // first anchor so a keyboard user lands there too.
+  function revealRow(r: RowKey) {
+    const row = document.getElementById(rowId(r));
+    if (!row) return;
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const barH = bar?.getBoundingClientRect().height ?? 0;
+    const top = row.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - barH - 12), behavior: 'smooth' });
+    row.querySelector<HTMLElement>('.anchor')?.focus({ preventScroll: true });
+  }
+
+  // After a fresh answer, move on: to the next unanswered row in this step,
+  // else to the next step. A changed answer stays put, so revising a score
+  // does not throw the page around. The pause lets the sun fill land before
+  // the move, so the click is seen to have taken.
+  function advanceFrom(k: string, i: number) {
+    const rows = stepRows[step];
+    const at = rows.findIndex((r) => r.k === k && r.i === i);
+    if (at < 0) return;
+    const after = rows.slice(at + 1).concat(rows.slice(0, at));
+    const next = after.find((r) => valueOf(r) === null);
+    window.setTimeout(() => {
+      if (next !== undefined) revealRow(next);
+      else if (step < LAST) goTo(step + 1);
+    }, 350);
+  }
+
   document.querySelectorAll<HTMLButtonElement>('.anchor').forEach((b) => {
     b.addEventListener('click', () => {
-      const k = b.dataset.k;
+      const k = b.dataset.k ?? '';
       const i = Number(b.dataset.i);
       const v = Number(b.dataset.v);
+      const wasBlank = valueOf({ k, i }) === null;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       if (k === 'profile') state.profile = state.profile === v ? null : v;
       else if (k === 'gate') state.gates[i] = state.gates[i] === v ? null : v;
       else if (k === 'score') state.scores[i] = state.scores[i] === v ? null : v;
       else if (k === 'dq') state.dq[i] = state.dq[i] === v ? null : v;
       update();
+      if (wasBlank && valueOf({ k, i }) !== null) advanceFrom(k, i);
     });
   });
 
@@ -1659,96 +1826,63 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
   $('blank').addEventListener('click', () => {
     load(blankAssessment());
-    showTab('assess');
-    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    goTo(1);
   });
 
-  // The controls-row button loads the second candidate, the one to write the
-  // record for. Each card on the example tab loads its own.
-  $('example').addEventListener('click', () => {
-    load(EXAMPLES[EXAMPLES.length - 1].assessment);
-    document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
   document.querySelectorAll<HTMLButtonElement>('.load-example').forEach((b) => {
     b.addEventListener('click', () => {
       const ex = EXAMPLES.find((e) => e.id === b.dataset.example);
       if (!ex) return;
       load(ex.assessment);
-      showTab('assess');
-      document.getElementById('section-a')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      goTo(LAST);
     });
   });
 
-  $('print').addEventListener('click', () => window.print());
-
-  function scorecard(): string {
-    const r = readAssessment(state);
-    const line = bandLine(r);
-    const lines: string[] = [`${TOOL_NAME} — learning.thelivingcraft.ai/resources/model-selection-tool`, ''];
-    lines.push(`A — The step: ${state.profile === null ? '-' : PROFILES[state.profile].name}`, '');
-    lines.push(`B — Deployment gates  (${r.gatesPassed}/${GATE_COUNT} pass)`);
-    GATES.forEach((g, i) => {
-      const v = state.gates[i];
-      lines.push(`  B${i + 1}  [${v === null ? '-' : v === 1 ? 'pass' : 'FAIL'}]  ${g.q}`);
-    });
-    lines.push('');
-    lines.push(`C — Behaviour under test  (${r.total ?? '-'}/${r.max ?? '-'})`);
-    CRITERIA.forEach((c, i) => {
-      const v = state.scores[i];
-      const w = weightOf(i, state);
-      lines.push(`  C${pad(i + 1)}  [${v === null ? '-' : v}]  w${w ?? '-'}  ${c.q}`);
-    });
-    lines.push('');
-    lines.push(`D — Disqualifiers  (${r.dqHit.length} hit)`);
-    DISQUALIFIERS.forEach((d, i) => {
-      const v = state.dq[i];
-      lines.push(`  D${i + 1}  [${v === null ? '-' : v === 1 ? 'HIT' : 'no'}]  ${d.q}`);
-    });
-    lines.push('');
-    lines.push(`Score ${r.pct === null ? '-' : `${r.pct}%`} — ${line.band}`);
-    lines.push(line.note);
-    return lines.join('\n');
+  // The score bar sticks under the nav, and the nav is taller when its links
+  // wrap on a narrow screen. Measure it rather than guess.
+  function placeBar() {
+    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
   }
-
-  async function copyScorecard() {
-    const status = $('copied');
-    try {
-      await navigator.clipboard.writeText(scorecard());
-      status.textContent = 'Scorecard copied';
-    } catch {
-      status.textContent = 'Copy blocked by the browser. Use Print instead.';
-    }
-    setTimeout(() => (status.textContent = ''), 4000);
-  }
-  $('copy').addEventListener('click', copyScorecard);
-  $('copy2').addEventListener('click', () => {
-    copyScorecard();
-    $('copied').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  placeBar();
+  window.addEventListener('resize', placeBar);
 
   // ---- the PDF ------------------------------------------------------------
 
   const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
   const form = document.getElementById('pdf-form') as HTMLFormElement;
   const pdfStatus = $('pdf-status');
+  const pdfChecks = $('pdf-checks');
   const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
   const cancel = $('pdf-cancel');
 
   function openPdf() {
     pdfStatus.textContent = '';
     pdfStatus.className = 'pdf-status';
+    pdfChecks.hidden = true;
+    pdfChecks.replaceChildren();
     submit.disabled = false;
     cancel.textContent = 'Cancel';
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
   }
   $('pdf').addEventListener('click', openPdf);
-  $('pdf2').addEventListener('click', openPdf);
-  $('pdf-cancel').addEventListener('click', () => dialog.close());
+  cancel.addEventListener('click', () => dialog.close());
 
   function say(text: string, kind: 'ok' | 'err' | '') {
     pdfStatus.textContent = text;
     pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
+  }
+
+  function showChecks(checks: { name: string; ok: boolean }[]) {
+    if (!Array.isArray(checks) || !checks.length) return;
+    pdfChecks.replaceChildren(
+      ...checks.map((c) => {
+        const li = el('li', c.ok ? undefined : 'fail');
+        li.append(el('b', undefined, c.ok ? 'ok' : 'failed'), document.createTextNode(c.name));
+        return li;
+      }),
+    );
+    pdfChecks.hidden = false;
   }
 
   function download(base64: string, filename: string) {
@@ -1776,7 +1910,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     }
 
     submit.disabled = true;
-    say('Building the PDF.', '');
+    say('Checking and building the PDF.', '');
 
     // One key per attempt. A retry after a network error is a new attempt; a
     // repeat click while this one runs is stopped by the disabled button.
@@ -1804,7 +1938,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
       if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
         const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
-        say(errs || body.error || 'We could not build the PDF just now. Use Print on the page instead.', 'err');
+        say(errs || body.error || 'We could not build the PDF just now. Try again in a moment.', 'err');
+        showChecks(body.checks);
         submit.disabled = false;
         return;
       }
@@ -1812,16 +1947,17 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       download(body.pdf, body.filename || 'model-selection-tool-scored.pdf');
       cancel.textContent = 'Close';
 
-      if (body.saved) {
-        say(`Your PDF is downloading. ${body.delivery ?? ''}`.trim(), 'ok');
-      } else {
-        say(`Your PDF is downloading. ${body.note ?? ''}`.trim(), 'ok');
-      }
+      const checks = Array.isArray(body.checks) ? body.checks : [];
+      const passed = checks.filter((c: { ok: boolean }) => c.ok).length;
+      const checkLine = checks.length ? ` Checked before download: ${passed} of ${checks.length} checks passed.` : '';
+      say(`Your PDF is downloading.${checkLine} ${body.saved ? (body.delivery ?? '') : (body.note ?? '')}`.trim(), 'ok');
+      showChecks(checks);
     } catch {
-      say('The request did not reach the server. Check the connection and try again, or use Print.', 'err');
+      say('The request did not reach the server. Check the connection and try again.', 'err');
       submit.disabled = false;
     }
   });
 
   update();
+  goTo(0, false);
 </script>

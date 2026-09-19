@@ -66,6 +66,49 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## The Model Selection Tool is in the POC tool's shape — 19 September
+
+`/resources/model-selection-tool` replaces `/resources/model-selection-checklist` (a page
+to tick and print, itself the replacement for the Contract Agent Test Kit). Both old
+addresses redirect to it directly from `astro.config.mjs`. It was rebuilt against
+`/resources/poc-screen` as the reference, on top of PRs #29 and #30. Where the two
+differed, the POC tool won. What to know before touching it:
+
+- **Six steps, one shell.** Start, A *The step*, B *Deployment gates*, C *Behaviour under
+  test*, D *Disqualifiers*, Result. Back and Next above and below each step, pips that
+  jump, every step visible without JavaScript and in print, auto-advance 350ms after a
+  first answer. The tabbed *Reference example* is gone: the two reference candidates load
+  from two buttons on the Start step, and the result card says which one is loaded and
+  what it teaches (`exampleFor()`), the way the run-cost tool labels its example.
+- **The score is Sunil's call, and it sits inside two hard gates.** The checklist's module
+  said nothing was summed or ranked. `src/data/model-selection-tool.ts` now scores: A sets
+  the weight on each C row, each C row is 0/1/2 against a written threshold, and the
+  percentage is weighted score over weighted maximum. Any fail in B or any hit in D ends
+  the candidate whatever the percentage. The bands are 80%+ *Fit for this step*, 60–79%
+  *Fit with covers*, under 60% *Not for this step*, two numbers in `CUT_LINES`. Four C
+  rows carry no kit weight and start at 2, set by the reader in a select; changing one
+  never moves the step.
+- **The PDF has three stages and thirteen checks** in `lib/resources/model-selection-pdf.ts`,
+  plus the reopen. Each check recomputes its fact from the raw answers with its own
+  arithmetic, not through `readAssessment()`. The route's `verify` runs them before the
+  save; a failure is a 500 and nothing is written. Branding is the reference's: black cover
+  band, wordmark, credit line, mist result panel, berry only on a failed gate or a
+  disqualifier that happened, ember *Join the cohort* panel with a clickable apply link.
+  One thing found and fixed on the way: the result panel's height was estimated at a
+  narrower width than the text is drawn at, so the panel came out taller than its contents
+  and *Fix first* landed inside it. The estimate now uses the drawn width.
+- **Verified**: every reachable weighted total for all three steps reads by the rubric
+  (`3^12` score vectors each), thirteen tampered models each caught by the check named
+  for it, the route with four valid and nine malformed payloads plus the honeypot and a
+  bad email, headless Chrome at 1280px and 390px (steps, pips, progress, auto-advance,
+  sticky header, keyboard, dialog with the check list, no-JS, print), every page of five
+  generated PDFs rasterised. `astro check` 0 errors, `npm run build` passes.
+- **The same tension as the run-cost tool.** The PDF's cohort panel prints the week count
+  and start month from `facts.ts`, because the reference does and its check requires them.
+  Sunil's call, on every tool at once.
+
+---
+
 ## The POC Selection Tool is stepped, and its PDF is branded and checked — 18 September
 
 Six steps with a progress bar; every step still renders without JavaScript and in print.

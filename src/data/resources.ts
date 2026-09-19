@@ -152,11 +152,11 @@ export const resources: Resource[] = [
     topic: 'Model Selection',
     series: 'Agentic system design',
     title: 'The Model Selection Tool',
-    kind: 'Interactive tool \u00b7 27 answers \u00b7 2 reference candidates',
+    kind: 'Interactive tool \u00b7 6 steps \u00b7 27 answers \u00b7 2 reference candidates',
     summary:
       'Score one candidate model for one step of your system, from the model card and your own test runs, and read whether it is fit.',
     description:
-      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This tool scores one candidate for one step. First you choose the job the model is being staffed on: drafting for a person, flagging and routing, or acting on its own. That sets the weights. Then ten deployment gates, pass or fail from the model card, each saying what a pass looks like and what a fail costs. Then twelve behaviours scored 0, 1 or 2 from ten runs on four test cases you build out of your own work, each with a written threshold so two people land on the same number. Then four disqualifiers that end a candidate whatever it scored. The score bar stays on screen and the result reads the rubric: fit for this step, fit with covers, or not for this step, with the rows to cover before you choose and the test case that is the evidence for each one. Two reference candidates for the same step can be loaded into the tool: the higher-scoring one is out on a disqualifier, the lower-scoring one is the one to write the record for. The four test cases, the method for scoring what is missing and the one-page decision record follow.',
+      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This tool scores one candidate for one step, in six short steps. First you choose the job the model is being staffed on: drafting for a person, flagging and routing, or acting on its own. That sets the weights. Then ten deployment gates, pass or fail from the model card, each saying what a pass looks like and what a fail costs. Then twelve behaviours scored 0, 1 or 2 from ten runs on four test cases you build out of your own work, each with a written threshold so two people land on the same number. Then four disqualifiers that end a candidate whatever it scored. The score bar and the progress bar stay on screen, and the page moves to the next row as you answer. The result reads the rubric: fit for this step, fit with covers, or not for this step, with the rows to fix first and the test case that is the evidence for each one. Two reference candidates for the same step can be loaded: the higher-scoring one is out on a disqualifier, the lower-scoring one is the one to write the record for. The four test cases, the method for scoring what is missing and the one-page decision record follow under the tool.',
     useFor: [
       'Remove half a candidate list in half an hour, before running a single test',
       'Weight the twelve behaviours for the specific step you are staffing rather than for the system',
@@ -165,7 +165,7 @@ export const resources: Resource[] = [
       'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Interactive. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go. Two reference candidates on their own tab can be loaded into the tool. Copy the scorecard or print it without giving anything. A PDF of your scored copy is built against a name and an email address.',
+      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. A PDF of your scored copy is built against a name and an email address, and checked before it is handed over.',
     url: '/resources/model-selection-tool',
     publishedAt: '2026-09-15',
   },
