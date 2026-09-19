@@ -312,6 +312,14 @@ Progress, one commit each:
   hero is full width on the linen; the price panel is forest on the linen. **Measured at 390:
   17,947 px before, 16,564 px after.** At 1280 the page grew from 12,618 to 13,880 px, which is
   the package's 18px text and 88px sections on a desktop.
+- [x] Header and chat: the header shows the LC mark with the "The Living Craft" lettering
+  (images of text, so the link's `aria-label` carries the name), and so does the footer, on an
+  ivory tile. **Chat opens from the header now**, not from a floating pill: `AskWidget` takes
+  `launcher="header"`, renders no pill, and opens from any `[data-ask-open]` button. There is
+  one in the header (desktop) and one in the phone menu. The panel drops from under the header;
+  closing returns focus to the button used, or to the menu button when the menu has closed.
+  `lib/agent/ready.ts` is the one check both read, so neither button exists without the key.
+  The sticky Apply bar hides while chat is open (`lc:ask` event). Other pages keep the pill.
 
 ---
 

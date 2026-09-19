@@ -88,6 +88,13 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
 
     let dismissed = false;
     let landmarkVisible = false;
+    // While the Ask panel is open the bar steps aside, so the two never
+    // stack in the same corner. AskWidget announces it with `lc:ask`.
+    let askOpen = false;
+    document.addEventListener('lc:ask', (event) => {
+      askOpen = Boolean((event as CustomEvent<{ open: boolean }>).detail?.open);
+      evaluate();
+    });
 
     /** Matches the stylesheet's breakpoint. Below it, the prompt never shows. */
     const phone = window.matchMedia('(max-width: 640px)');
@@ -99,7 +106,7 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     };
 
     const evaluate = () => {
-      bar.hidden = dismissed || phone.matches || landmarkVisible || window.scrollY <= 640;
+      bar.hidden = dismissed || askOpen || phone.matches || landmarkVisible || window.scrollY <= 640;
       setBodyClearance();
     };
 

@@ -82,7 +82,8 @@
     // would otherwise stay open over the section it just scrolled to.
     panel.addEventListener('click', (event) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest('a')) setOpen(false);
+      // A button that opens the Ask panel is the same kind of decision.
+      if (target?.closest('a, [data-ask-open]')) setOpen(false);
     });
 
     document.addEventListener('keydown', (event) => {

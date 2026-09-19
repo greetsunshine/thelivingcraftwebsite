@@ -488,6 +488,70 @@ body.landing {
   color: var(--text-body);
 }
 
+/* ── header: the lockup and the chat button ─────────────────────────────── */
+.landing .nav-inner { min-height: 88px; flex-wrap: nowrap; }
+.landing .navlinks { flex-wrap: nowrap; }
+.landing .brand-lockup { gap: var(--space-3); }
+.landing .brand-lockup .brand-symbol { display: block; flex: none; height: 52px; width: auto; }
+.landing .brand-lockup .brand-name { display: block; flex: none; height: 28px; width: auto; }
+/* The chat glyph: the Ask widget's own stroke icon, in ivory on the forest
+   button and in forest inside the phone menu. */
+.landing .ask-glyph {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F5F0E6' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E") center / 18px 18px no-repeat;
+}
+.landing .nav-ask { display: none; }
+@media (min-width: 901px) {
+  .landing .nav-ask {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--texture-forest);
+    cursor: pointer;
+  }
+  .landing .nav-ask:hover { background: var(--texture-forest-hover); }
+}
+.landing .nav-ask:focus-visible,
+.landing .mm-ask:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+/* In the phone menu, a row like the links above it. */
+.landing .mm-ask {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-2);
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: var(--size-3);
+  color: var(--text-loud);
+  text-align: left;
+  cursor: pointer;
+}
+.landing .mm-ask .ask-glyph { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23183D32' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E"); }
+
+/* The footer lockup sits on an ivory tile, because the lettering is dark. */
+.landing footer.site .brand-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-3) 14px;
+  margin-bottom: var(--space-4);
+  background: var(--surface-page);
+  border-radius: var(--radius-control);
+}
+.landing .brand-tile .brand-symbol { display: block; height: 44px; width: auto; }
+.landing .brand-tile .brand-name { display: block; height: 24px; width: auto; }
+
 /* ── narrower screens ───────────────────────────────────────────────────── */
 @media (min-width: 1450px) {
   .landing .woven-brain { margin-right: -60px; }
@@ -495,6 +559,9 @@ body.landing {
 }
 
 @media (max-width: 1150px) {
+  .landing .brand-lockup .brand-symbol { height: 44px; }
+  .landing .brand-lockup .brand-name { height: 24px; }
+  .landing .navlinks { column-gap: var(--space-4); }
   .landing .hero > .wrap.hero-grid { gap: 0; }
   .landing .hero-cta .btn { padding-inline: var(--space-4); }
 }
@@ -520,6 +587,7 @@ body.landing {
 /* Phones. Decision 4: 16px reading text and the tighter spacing. */
 @media (max-width: 760px) {
   body.landing { --landing-text: var(--size-3); }
+  .landing .nav-inner { min-height: 76px; }
 
   /* Decision 2: copy, then the intro strip with the portrait, then the brain.
      The grid steps aside (display: contents) so the three can be ordered. */
@@ -598,4 +666,11 @@ body.landing {
   .landing .price-card .btn { width: 100%; min-width: 0; }
   .landing .faq summary { min-height: 56px; padding: var(--space-4) 0; }
   .landing .faq details p { padding-right: var(--space-2); padding-bottom: var(--space-4); }
+}
+
+/* The narrowest header: lockup, Apply and the menu on one row at 390 wide. */
+@media (max-width: 560px) {
+  .landing .brand-lockup { gap: 6px; }
+  .landing .brand-lockup .brand-symbol { height: 34px; }
+  .landing .brand-lockup .brand-name { height: 19px; }
 }

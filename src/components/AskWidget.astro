@@ -10,23 +10,31 @@
 // array and dies with the tab, which is what CLAUDE.md's no-localStorage rule
 // requires and what keeps the privacy story simple.
 import { CONTACT_EMAIL } from '../data/site';
+import { agentReady } from '../lib/agent/ready';
 
 export interface Props {
   /** Which page the visitor is on — sent with each turn so answers can be local. */
   surface: string;
   /** Region the page resolved, so the agent quotes the same rate the page shows. */
   region?: string | null;
+  /**
+   * Where the button that opens the panel lives.
+   * - 'floating' (the default): the widget's own pill in the bottom corner.
+   * - 'header': no pill. The page supplies its own buttons carrying
+   *   `data-ask-open` (the cohort page puts one in its header and one in the
+   *   phone menu), and the panel opens under the header. The 19 September
+   *   refinement moved chat there so nothing floats over the reading text.
+   */
+  launcher?: 'floating' | 'header';
 }
 
-const { surface, region = null } = Astro.props;
+const { surface, region = null, launcher = 'floating' } = Astro.props;
 
-// Render nothing unless the agent can actually answer. A chat button that
-// opens and says "not configured" is worse than no button — it reads as a
-// broken site to the exact senior audience this page is trying to impress.
-// Adding the key to Vercel triggers a redeploy, which is when it appears.
-const agentReady = Boolean(
-  import.meta.env.ANTHROPIC_API_KEY ?? process.env.ANTHROPIC_API_KEY,
-);
+// Render nothing unless the agent can actually answer (lib/agent/ready.ts).
+// A chat button that opens and says "not configured" is worse than no button —
+// it reads as a broken site to the exact senior audience this page is trying
+// to impress. Adding the key to Vercel triggers a redeploy, which is when it
+// appears.
 
 const OPENERS: Record<string, string[]> = {
   '/': ['What does the cohort cost?', 'Is it right for a staff engineer?', 'When does it start?'],
@@ -37,11 +45,13 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
 ---
 
 {agentReady && (
-<div class="ask" id="ask" data-surface={surface} data-region={region ?? ""}>
-  <button class="ask-toggle" id="askToggle" aria-expanded="false" aria-controls="askPanel">
-    <span class="ask-avatar" aria-hidden="true"></span>
-    <span class="ask-toggle-label">Ask about the practice</span>
-  </button>
+<div class="ask" id="ask" data-surface={surface} data-region={region ?? ""} data-launcher={launcher}>
+  {launcher === 'floating' && (
+    <button class="ask-toggle" id="askToggle" aria-expanded="false" aria-controls="askPanel">
+      <span class="ask-avatar" aria-hidden="true"></span>
+      <span class="ask-toggle-label">Ask about the practice</span>
+    </button>
+  )}
 
   <div class="ask-panel" id="askPanel" role="dialog" aria-label="Ask about the practice" hidden>
     <div class="ask-head">
@@ -120,6 +130,16 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   }
   .ask-avatar--lg { width: 36px; height: 36px; background-size: 19px 19px, auto, cover; }
   .ask[data-open='true'] .ask-toggle { display: none; }
+  /* Header launcher: the panel drops from under the sticky header on the
+     right, where the button that opened it is. --anchor-offset is the
+     header's measured height (BaseLayout publishes it). */
+  .ask[data-launcher='header'] {
+    top: calc(var(--anchor-offset, 88px) + 4px);
+    bottom: auto;
+  }
+  .ask[data-launcher='header'] .ask-panel {
+    height: min(560px, calc(100vh - var(--anchor-offset, 88px) - 32px));
+  }
 
   /* panel */
   .ask-panel {
@@ -337,7 +357,8 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
      is scoped and the space it needs belongs to the page, not to the widget —
      without this the last element on every page sits behind it. */
   @media (max-width: 520px) {
-    :global(body) { padding-bottom: calc(52px + 24px); }
+    :global(body:has(.ask[data-launcher='floating'])) { padding-bottom: calc(52px + 24px); }
+    .ask[data-launcher='header'] { top: calc(var(--anchor-offset, 76px) + 4px); bottom: auto; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -351,7 +372,13 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     var root = document.getElementById('ask');
     if (!root) return;
 
-    var toggle = document.getElementById('askToggle') as HTMLButtonElement;
+    // The widget's own pill, when it has one, plus any button on the page
+    // that carries data-ask-open (the cohort page's header and phone menu).
+    var ownToggle = document.getElementById('askToggle') as HTMLButtonElement | null;
+    var openers = Array.from(document.querySelectorAll<HTMLElement>('[data-ask-open]'));
+    if (ownToggle) openers.unshift(ownToggle);
+    // Which opener was used, so closing returns focus to it.
+    var lastOpener: HTMLElement | null = null;
     var closeBtn = document.getElementById('askClose') as HTMLButtonElement;
     var panel = document.getElementById('askPanel') as HTMLElement;
     var form = document.getElementById('askForm') as HTMLFormElement;
@@ -379,10 +406,17 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     // "had a question the page did not answer". Fired once, not on every reopen.
     var opened = false;
 
-    function open() {
+    function announce(isOpen: boolean) {
+      openers.forEach(function (b) { b.setAttribute('aria-expanded', String(isOpen)); });
+      // The sticky Apply bar steps aside while the panel is open.
+      document.dispatchEvent(new CustomEvent('lc:ask', { detail: { open: isOpen } }));
+    }
+
+    function open(from?: HTMLElement) {
+      lastOpener = from || null;
       root!.setAttribute('data-open', 'true');
       panel.hidden = false;
-      toggle.setAttribute('aria-expanded', 'true');
+      announce(true);
       input.focus();
       if (!opened) {
         opened = true;
@@ -393,11 +427,20 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     function close() {
       root!.removeAttribute('data-open');
       panel.hidden = true;
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.focus();
+      announce(false);
+      // Back to the button that opened it. If that button has since been
+      // hidden (the phone menu closed behind it), to the menu button instead.
+      var target: HTMLElement | null = lastOpener;
+      if (!target || target.offsetParent === null) {
+        target = document.querySelector<HTMLElement>('[data-mm-toggle]');
+        if (target && target.offsetParent === null) target = null;
+      }
+      target?.focus();
     }
 
-    toggle.addEventListener('click', open);
+    openers.forEach(function (b) {
+      b.addEventListener('click', function () { open(b); });
+    });
     closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !panel.hidden) close();
