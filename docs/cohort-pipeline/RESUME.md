@@ -515,6 +515,13 @@ says to keep branded storytelling out of dense working areas.
   a border, and the boundary step's full-width gold rules and margin cut it. Each step now draws the
   rail from its own knot to the next, so it is one line from "Reads" to "Acts". The boundary step
   is an open gold ring with its words on a soft gold panel beside the rail.
+- [x] **Step 2b, the brand template on `/about`** (`src/styles/templates/brand.css`, the
+  package's `brand.html`, applied by `bodyClass="brand-page"`). Full-width linen hero; split
+  sections (heading left, reading right) divided by hairlines on the text column; the four steps
+  as open columns (4 across, 2 on a tablet, stacked on a phone); the verified facts as open
+  rows; the two routes as open rows. No boxed panels, no gold heading words. The "Not stated on this
+  page" block keeps its blue uncertain panel on purpose. No copy changed. 390: 5,828px
+  (was 5,872); 1280: 3,930px (was 3,806).
 
 ---
 

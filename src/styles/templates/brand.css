@@ -1,0 +1,113 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   templates/brand.css — the design system's BRAND template (18 September
+   package, brand.html), for /about.
+
+   The page's own content stays; this changes its composition to the one the
+   package uses for a reflective, story-led page:
+   - a full-width linen hero, not a rounded box, with room around the words;
+   - "split" sections: the heading in a left column, the reading on the right,
+     each section set off by a hairline and generous space;
+   - numbered steps as open columns under a rule, not a boxed list;
+   - facts as rule-separated rows, and the two routes as open rows, with no
+     boxed panels. Gold is never a heading colour here.
+   The "not stated yet" block keeps its uncertain-blue panel on purpose: a
+   reader must be able to tell at a glance which sentences are not yet facts
+   (PracticeLayout, .pending).
+
+   Applied by `body.brand-page`, which /about passes to PracticeLayout.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── hero: full width on the linen ──────────────────────────────────────── */
+.brand-page .hero { padding: 0; }
+.brand-page .hero > .wrap {
+  width: auto;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: var(--space-9) var(--space-5) var(--space-8);
+  border-radius: 0;
+  background: none;
+}
+.brand-page .hero { background: var(--texture-forest); }
+.brand-page .hero h1 { max-width: 14ch; margin: var(--space-4) 0 var(--space-5); }
+.brand-page .hero h1 em { font-style: normal; color: inherit; }
+.brand-page .hero .credential { max-width: 52ch; }
+
+/* ── split sections ─────────────────────────────────────────────────────── */
+.brand-page main > section.wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  column-gap: 80px;
+  align-items: start;
+  padding-block: 88px;
+  /* The dividing hairline sits on the text column, not the section's padded
+     edge, so it starts and ends where the words do. */
+  background: linear-gradient(var(--border-hair), var(--border-hair)) center top / calc(100% - 2 * var(--space-5)) 1px no-repeat;
+}
+.brand-page main > section.hero + section.wrap { background: none; }
+.brand-page main > section.wrap > * { grid-column: 2; }
+.brand-page main > section.wrap > .sec-head { grid-column: 1; grid-row: 1 / span 20; margin: 0; }
+.brand-page .sec-head h2 { max-width: 14ch; }
+.brand-page .sec-head h2 em { color: inherit; font-style: normal; }
+/* A section that carries a set of steps or routes reads across the full
+   width, as the package's usage list does: heading on top, columns below. */
+.brand-page main > section.wrap:has(.tlist, .cards2) { display: block; }
+.brand-page main > section.wrap:has(.tlist, .cards2) > .sec-head { margin-bottom: var(--space-6); }
+.brand-page main > section.wrap:has(.tlist, .cards2) > .sec-head h2 { max-width: 24ch; }
+.brand-page main > section.wrap:has(.tlist, .cards2) > .prose { margin-bottom: var(--space-7); }
+
+/* ── numbered steps as open columns ─────────────────────────────────────── */
+.brand-page .tlist {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-6);
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.brand-page .tlist li {
+  display: block;
+  padding: var(--space-5) 0 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  border-bottom: 0;
+}
+.brand-page .tlist li:first-child { border-top: var(--border-w-hair) solid var(--border-hair); }
+.brand-page .tlist .n { display: block; margin-bottom: var(--space-3); font-family: var(--font-body); font-size: var(--size-1); color: var(--accent-ink); }
+.brand-page .tlist h3 { font-size: 1.125rem; line-height: 1.3; margin: 0 0 var(--space-2); }
+.brand-page .tlist p { font-size: var(--size-2); line-height: 1.6; color: var(--text-quiet); }
+
+/* ── facts as rows, no panel ────────────────────────────────────────────── */
+.brand-page .panel.facts { padding: 0; background: none; box-shadow: none; border-radius: 0; border-top: var(--border-w-hair) solid var(--border-hair); }
+.brand-page .facts .detail-row { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--space-5); padding: var(--space-4) 0; border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.brand-page .facts .detail-row:first-child { padding-top: var(--space-4); }
+.brand-page .facts .detail-row:last-child { padding-bottom: var(--space-4); border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.brand-page .facts .dk { font-family: var(--font-body); font-size: var(--size-2); font-weight: var(--weight-strong); letter-spacing: 0; color: var(--text-loud); }
+.brand-page .facts .dv { text-align: left; font-weight: 400; max-width: none; }
+
+/* ── the two routes as open rows ────────────────────────────────────────── */
+.brand-page .cards2 { gap: var(--space-6); }
+.brand-page .cards2 a.card {
+  padding: var(--space-5) 0 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+}
+.brand-page .cards2 a.card:hover { box-shadow: none; }
+.brand-page .cards2 a.card:hover h3 { text-decoration: underline; text-underline-offset: 0.2em; }
+
+@media (max-width: 1000px) {
+  .brand-page .tlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+  .brand-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
+  .brand-page main > section.wrap { display: block; padding-block: var(--space-7); background-size: calc(100% - 2 * var(--space-4)) 1px; }
+  .brand-page main > section.wrap > .sec-head { margin-bottom: var(--space-5); }
+  .brand-page .sec-head h2 { max-width: none; }
+}
+@media (max-width: 560px) {
+  .brand-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
+  .brand-page main > section.wrap { padding-block: var(--space-6); }
+  .brand-page .tlist { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .brand-page .facts .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+}
