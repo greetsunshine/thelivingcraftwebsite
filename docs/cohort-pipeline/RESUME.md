@@ -305,6 +305,13 @@ Progress, one commit each:
   in the hero; the portrait (a new 8 KB `public/sunil-profile-thumb.webp`) and the proof bar sit
   in an intro strip under it. All 16 section ids and every word are unchanged. The module ids
   (M1 to M4) keep their `.num` spans; only the eyebrow numbers went.
+- [x] Styles: `src/styles/landing.css`, imported by `BaseLayout` and scoped under
+  `body.landing`, ports the package's layout in theme tokens. `CohortPage.astro`'s own `<style>`
+  now holds only the page's own pieces (the two-up, the boundary timeline, the commitment grid,
+  the route chooser). Cards, lists, modules, the stat band and the FAQ lost their panels; the
+  hero is full width on the linen; the price panel is forest on the linen. **Measured at 390:
+  17,947 px before, 16,564 px after.** At 1280 the page grew from 12,618 to 13,880 px, which is
+  the package's 18px text and 88px sections on a desktop.
 
 ---
 

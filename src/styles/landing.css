@@ -1,0 +1,601 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   landing.css — the cohort page (`/`) after the 19 September refinement.
+
+   WHERE IT COMES FROM. The landing-page refinement package
+   (docs/2026-09-19_Landing_Page_Refinement-…, kept out of the repo). Its
+   styles.css was written against a static export of this page. This file
+   ports its layout and rhythm, and NOT its colour values: every colour here is
+   a theme.css token. The package defined its own --forest, --ink, --muted,
+   --paper and --error, each a few steps off ours, and CLAUDE.md allows one
+   token set for the whole site.
+
+   WHERE IT APPLIES. `/` only. BaseLayout imports it, and BaseLayout is used by
+   index.astro alone. Every rule is also scoped under `body.landing`, so a
+   stray import elsewhere would still style nothing. /caio, /about and the
+   resource pages are untouched until Sunil approves this look for them.
+
+   THREE PLACES IT DEPARTS FROM THE PACKAGE, on Sunil's decisions of
+   19 September (docs/cohort-pipeline/RESUME.md):
+   - The hero and the dark price panel keep the linen (--texture-forest).
+     The package drew both flat.
+   - Phones keep 16px reading text and the tighter section spacing, because
+     Sunil asked for less blank space on phones on 16 September. The package's
+     phone page was 2,500px longer than ours with the same words.
+   - On a phone the intro strip, with Sunil's portrait, comes straight after
+     the hero buttons, and the brain comes after it.
+
+   One custom property of its own: --landing-text, the reading size. 18px on
+   a desktop, 16px on a phone. Use it for paragraphs; headings keep theirs.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+body.landing {
+  --landing-text: var(--size-4);
+  background: var(--surface-page);
+  font-size: var(--landing-text);
+  line-height: 1.62;
+}
+
+/* ── type ───────────────────────────────────────────────────────────────── */
+.landing h1,
+.landing h2 { text-wrap: balance; }
+.landing h2 { max-width: 23ch; }
+/* One colour per heading. The gold emphasis on a word in every heading was
+   the busiest single thing on the page. The <em> stays in the markup. */
+.landing h2 em,
+.landing .sec-head h2 em,
+.landing .experience h2 em { color: inherit; font-style: normal; }
+.landing .eyebrow {
+  display: block;
+  font-size: var(--size-2);
+  line-height: 1.5;
+  color: var(--accent-ink);
+  margin-bottom: var(--space-5);
+}
+.landing .sec-head { max-width: none; margin-bottom: var(--space-7); }
+.landing .sec-head h2 { margin: 0; }
+.landing .sec-head .lead { margin-top: var(--space-5); }
+.landing .lead { font-size: var(--size-5); line-height: 1.48; max-width: 56ch; color: var(--text-body); }
+
+/* ── sections and chapters ──────────────────────────────────────────────── */
+.landing .band,
+.landing .transform { padding-block: 88px; }
+.landing .chapter { position: relative; }
+.landing .chapter:not(.chapter-opening) { padding-top: 26px; }
+/* The fabric crossing above each chapter: decoration, never the LC mark. */
+.landing .chapter:not(.chapter-opening)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: url('/textures/fabric-crossing.svg') center / 1200px 110px no-repeat;
+  opacity: 0.65;
+  pointer-events: none;
+}
+.landing .chapter-teaching,
+.landing .chapter-practice,
+.landing .chapter-joining { background: var(--surface-panel); }
+/* Sections inside one chapter sit closer together than chapters do. */
+.landing .chapter section + section { padding-top: var(--space-5); }
+
+/* ── hero: full width, linen, the brain beside the words ────────────────── */
+.landing .hero {
+  background: var(--texture-forest);
+  color: var(--text-on-invert);
+  padding: 0;
+  overflow: clip;
+}
+.landing .hero > .wrap {
+  background: none;
+  border-radius: 0;
+  width: auto;
+  max-width: var(--maxw);
+  padding: 0 var(--space-5);
+}
+.landing .hero > .wrap.hero-grid {
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  padding-block: 68px 40px;
+}
+.landing .hero-copy { position: relative; z-index: 1; }
+.landing .hero .eyebrow { color: var(--hero-eyebrow); max-width: 50ch; line-height: 1.65; }
+.landing .hero h1 {
+  font-size: clamp(2.75rem, 4.65vw, 4.5rem);
+  line-height: 1.1;
+  max-width: none;
+  margin: 0;
+}
+.landing .hero h1 em { font-style: normal; color: inherit; }
+.landing .credential {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  max-width: 48ch;
+  margin: 28px 0 0;
+  color: var(--hero-muted);
+}
+.landing .hero-cta { margin-top: var(--space-6); gap: 14px; }
+.landing .hero > .wrap .hero-note {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  line-height: 1.6;
+  color: var(--hero-muted);
+  max-width: 58ch;
+  margin-top: 20px;
+}
+.landing .woven-brain { margin-right: -28px; }
+
+/* The intro strip: Sunil's portrait and the proof bar, under a hairline. */
+.landing .hero > .wrap.intro-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: var(--space-7);
+  padding-block: var(--space-5) var(--space-6);
+}
+.landing .intro-strip::before {
+  /* The hairline, inset to the text column rather than the full shell. */
+  content: '';
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--hero-rule);
+  margin-bottom: var(--space-2);
+}
+.landing .intro-strip .portrait { display: flex; align-items: center; gap: 20px; max-width: none; }
+.landing .intro-strip .portrait .frame {
+  position: relative;
+  width: 82px;
+  height: 96px;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.landing .intro-strip .portrait .frame img { position: static; width: 100%; height: 100%; object-fit: cover; }
+.landing .intro-strip .portrait .tag {
+  position: static;
+  max-width: none;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  line-height: 1.5;
+  color: var(--hero-muted);
+}
+.landing .intro-strip .portrait .tag b {
+  font-size: 1.125rem;
+  color: var(--text-on-invert);
+  margin-bottom: 5px;
+}
+.landing .intro-strip .proofbar { padding: 0; }
+.landing .intro-strip .proofbar .inner {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  justify-content: flex-end;
+  gap: var(--space-2) var(--space-5);
+}
+.landing .intro-strip .proofbar .label {
+  width: 100%;
+  text-align: right;
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  letter-spacing: 0;
+  color: var(--hero-muted);
+}
+.landing .intro-strip .proofbar .logo {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  font-weight: var(--weight-strong);
+  color: var(--text-on-invert);
+}
+
+/* ── #fit: a heading column beside open reading rows ────────────────────── */
+.landing #fit {
+  display: grid;
+  grid-template-columns: 0.95fr 1fr;
+  gap: 80px;
+  padding-block: 96px;
+}
+.landing #fit .sec-head { margin: 0; }
+.landing #fit .lead { font-size: var(--landing-text); line-height: 1.62; margin-top: 28px; }
+
+/* ── cards become rows ──────────────────────────────────────────────────── */
+.landing .cards3 { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.landing .card,
+.landing .inaugural .card {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.landing .card:hover { box-shadow: none; }
+.landing .card:not(:first-child) { border-top: var(--border-w-hair) solid var(--border-hair); padding-top: 26px; }
+.landing .card .k {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  letter-spacing: 0;
+  color: var(--accent-ink);
+  margin-bottom: var(--space-3);
+}
+.landing .card h3,
+.landing .inaugural .card h3 { font-size: 1.375rem; line-height: 1.3; margin: 0; }
+.landing .card p { margin-top: 14px; font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
+.landing #fit .card { display: grid; grid-template-columns: 44px 1fr; column-gap: var(--space-4); }
+.landing #fit .card .k { grid-row: span 2; padding-top: 4px; margin: 0; }
+.landing #fit .card p { grid-column: 2; }
+
+/* ── teaching chapter ───────────────────────────────────────────────────── */
+.landing #example .sec-head { max-width: 700px; }
+.landing #review { padding-bottom: 96px; }
+.landing #review .lead,
+.landing #process .lead,
+.landing #transform .lead { font-size: var(--landing-text); line-height: 1.62; }
+
+/* ── development chapter ────────────────────────────────────────────────── */
+.landing #outcomes { padding-bottom: 56px; }
+.landing #transform {
+  display: grid;
+  grid-template-columns: 0.75fr 1.25fr;
+  column-gap: 80px;
+  padding-bottom: var(--space-8);
+}
+.landing #transform .sec-head { margin: 0; }
+.landing #transform > p { grid-column: 2; color: var(--accent-ink); }
+.landing .tlist { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.landing .tlist li {
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  gap: 18px;
+  padding-block: var(--space-5);
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.landing .tlist li:first-child { padding-top: 0; }
+.landing .tlist li:last-child { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.landing .tlist .n {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  font-weight: var(--weight-strong);
+  color: var(--accent-ink);
+  padding-top: 5px;
+}
+.landing .tlist h3,
+.landing .tlist h4 { font-size: 1.25rem; margin: 0; }
+.landing .tlist p { margin-top: var(--space-3); font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
+.landing #takeaways { padding-bottom: 96px; }
+.landing #takeaways .cards3 { grid-template-columns: 1.05fr 1.4fr 1fr; gap: 40px; }
+/* A gold rule over each takeaway: gold as a line, never as text. */
+.landing #takeaways .card { border-top: var(--border-w-hair) solid var(--ember); padding-top: var(--space-5); }
+
+/* ── practice chapter ───────────────────────────────────────────────────── */
+.landing #curriculum {
+  display: grid;
+  grid-template-columns: 0.9fr 1fr;
+  gap: 80px;
+  padding-bottom: var(--space-8);
+}
+.landing #curriculum .sec-head { margin: 0; }
+.landing .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
+.landing .mod {
+  position: relative;
+  padding: 0 0 0 28px;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-left: var(--border-w-hair) solid var(--border-hair);
+}
+.landing .mod::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ember);
+}
+.landing .mod:nth-child(even) { margin-top: 56px; }
+.landing .mod .mk { justify-content: flex-start; align-items: center; gap: 20px; margin-bottom: 20px; }
+.landing .mod .mk .num,
+.landing .mod .mk .wk {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  letter-spacing: 0;
+  color: var(--accent-ink);
+}
+.landing .mod .mk .num { font-weight: var(--weight-strong); }
+.landing .mod h4 { font-size: 1.375rem; line-height: 1.3; margin: 0; max-width: 30ch; }
+.landing .mod p { margin-top: 20px; font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
+.landing #process { padding-bottom: 96px; }
+
+/* ── teacher chapter ────────────────────────────────────────────────────── */
+.landing .statband {
+  gap: var(--space-6);
+  margin: 0 0 var(--space-7);
+  padding: var(--space-5) 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.landing .stat { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.landing .stat .big {
+  font-family: var(--font-body);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.landing .stat .cap {
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  letter-spacing: 0;
+  line-height: 1.6;
+  color: var(--text-quiet);
+  margin-top: 10px;
+}
+.landing .story { grid-template-columns: 0.78fr 1.22fr; gap: 72px; }
+.landing .maker-portrait { position: sticky; top: 128px; }
+.landing .maker-portrait .mframe { border-radius: 4px; box-shadow: none; }
+.landing .maker-portrait .mcap { font-family: var(--font-body); font-size: var(--size-2); margin-top: var(--space-3); }
+.landing .story p { font-size: var(--landing-text); line-height: 1.62; }
+.landing .story .lead { font-size: 1.25rem; line-height: 1.6; }
+.landing .pullquote {
+  font-size: 1.875rem;
+  line-height: 1.38;
+  border-left: 0;
+  padding-left: 0;
+  margin: 36px 0 var(--space-4);
+}
+.landing #live-experience .sec-head { max-width: 750px; }
+.landing #live-experience .cards3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) 64px; }
+.landing #live-experience .card { border-top: var(--border-w-hair) solid var(--border-hair); padding-top: var(--space-5); }
+.landing #live-experience .card:last-child { grid-column: 1 / -1; max-width: 62ch; }
+
+/* ── joining chapter ────────────────────────────────────────────────────── */
+.landing .detail-row {
+  display: grid;
+  grid-template-columns: 135px 1fr;
+  gap: 20px;
+  padding: 15px 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+  font-size: var(--size-3);
+}
+.landing .detail-row:last-child { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.landing .detail-row .dk {
+  font-family: var(--font-body);
+  font-size: var(--size-3);
+  letter-spacing: 0;
+  font-weight: var(--weight-strong);
+  color: var(--text-loud);
+}
+.landing .detail-row .dv { font-weight: 400; text-align: left; }
+
+/* The price panel: the page's second dark surface, on the linen like the hero.
+   Ivory 6.25:1 and on-dark-muted 4.62:1 on the lightest 5% of the texture. */
+.landing .price-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5) 64px;
+  max-width: none;
+  margin: 0;
+  padding: 40px;
+  text-align: left;
+  background: var(--texture-forest);
+  color: var(--text-on-invert);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+.landing .price-card .seat {
+  grid-column: 1;
+  font-family: var(--font-body);
+  font-size: var(--size-2);
+  color: var(--hero-eyebrow);
+}
+.landing .price-card .amt {
+  grid-column: 1;
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 3rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-on-invert);
+}
+.landing .price-card .amt .was {
+  display: block;
+  margin: 0 0 var(--space-3);
+  font-size: 1.25rem;
+  letter-spacing: 0;
+  color: var(--hero-muted);
+}
+.landing .price-card .amt small {
+  display: block;
+  margin-top: 14px;
+  font-size: var(--size-2);
+  letter-spacing: 0;
+  color: var(--hero-muted);
+}
+.landing .price-card .terms {
+  grid-column: 1;
+  margin: 0;
+  max-width: 55ch;
+  font-size: var(--size-3);
+  line-height: 1.65;
+  color: var(--hero-muted);
+}
+.landing .price-card .terms strong { color: var(--text-on-invert); }
+.landing .price-card ul {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  align-self: center;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.landing .price-card li {
+  display: block;
+  padding: 14px 0;
+  font-size: var(--size-3);
+  line-height: 1.6;
+  color: var(--text-on-invert);
+  border-bottom: var(--border-w-hair) solid var(--hero-rule);
+}
+.landing .price-card li::before { content: none; }
+.landing .price-card .btn {
+  grid-column: 2;
+  justify-self: start;
+  align-self: end;
+  min-width: 200px;
+  background: var(--hero-primary-bg);
+  border-color: var(--hero-primary-bg);
+  color: var(--hero-primary-fg);
+}
+.landing .price-card .btn:hover { background: var(--hero-primary-bg-hover); border-color: var(--hero-primary-bg-hover); }
+.landing .price-card :focus-visible { outline-color: var(--hero-focus); }
+
+/* The questions: a full-width list under hairlines, not a boxed panel. */
+.landing .faq {
+  max-width: 860px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.landing .faq details { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.landing .faq details:first-child { border-top: var(--border-w-hair) solid var(--border-hair); }
+.landing .faq details:last-child { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.landing .faq summary {
+  min-height: 72px;
+  padding: 20px 0;
+  font-size: var(--landing-text);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.landing .faq summary .plus { font-size: 26px; font-weight: 400; color: var(--accent-ink); }
+.landing .faq details p {
+  padding: 0 48px var(--space-5) 0;
+  max-width: 70ch;
+  font-size: var(--landing-text);
+  line-height: 1.62;
+  color: var(--text-body);
+}
+
+/* ── narrower screens ───────────────────────────────────────────────────── */
+@media (min-width: 1450px) {
+  .landing .woven-brain { margin-right: -60px; }
+  .landing .hero > .wrap.hero-grid { gap: 40px; }
+}
+
+@media (max-width: 1150px) {
+  .landing .hero > .wrap.hero-grid { gap: 0; }
+  .landing .hero-cta .btn { padding-inline: var(--space-4); }
+}
+
+@media (max-width: 900px) {
+  .landing .hero > .wrap { padding: 0 var(--space-4); }
+  .landing .hero > .wrap.hero-grid { grid-template-columns: 1.1fr 0.9fr; padding-top: var(--space-7); }
+  .landing .woven-brain { margin-right: calc(var(--space-5) * -1); }
+  .landing .credential { font-size: var(--size-4); }
+  .landing .hero > .wrap.intro-strip { gap: var(--space-5); }
+  .landing #fit,
+  .landing #transform,
+  .landing #curriculum,
+  .landing .story { gap: 40px; }
+  .landing .band,
+  .landing .transform,
+  .landing #fit { padding-block: var(--space-8); }
+  .landing .lead { font-size: 1.25rem; }
+  .landing .modules { gap: var(--space-6); }
+  .landing #takeaways .cards3 { gap: var(--space-5); }
+}
+
+/* Phones. Decision 4: 16px reading text and the tighter spacing. */
+@media (max-width: 760px) {
+  body.landing { --landing-text: var(--size-3); }
+
+  /* Decision 2: copy, then the intro strip with the portrait, then the brain.
+     The grid steps aside (display: contents) so the three can be ordered. */
+  .landing .hero { display: flex; flex-direction: column; }
+  .landing .hero > .wrap.hero-grid { display: contents; }
+  .landing .hero-copy { order: 1; padding: var(--space-6) var(--space-4) var(--space-5); }
+  .landing .hero > .wrap.intro-strip {
+    order: 2;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: 0 var(--space-5);
+  }
+  .landing .intro-strip::before { margin-bottom: var(--space-1); }
+  .landing .woven-brain { order: 3; width: 100%; margin: 0; padding: 0 var(--space-4) var(--space-5); }
+  .landing .woven-brain .brain-scene { width: min(240px, 70%); margin: 0 auto; }
+  .landing .woven-brain .motion-controls { gap: var(--space-4); }
+  .landing .hero h1 { font-size: clamp(2.5rem, 9vw, 3.4rem); }
+  .landing .credential { font-size: var(--size-3); margin-top: var(--space-4); }
+  .landing .hero-cta { margin-top: var(--space-5); }
+  .landing .intro-strip .portrait .frame { width: 68px; height: 80px; }
+  .landing .intro-strip .proofbar .inner { justify-content: flex-start; gap: var(--space-2) var(--space-5); }
+  .landing .intro-strip .proofbar .label { text-align: left; }
+  .landing .intro-strip .proofbar .logo { font-size: var(--size-3); }
+
+  .landing .band,
+  .landing .transform,
+  .landing #fit { padding-block: var(--space-6); }
+  .landing .chapter:not(.chapter-opening) { padding-top: var(--space-4); }
+  .landing .chapter:not(.chapter-opening)::before { background-size: 900px 83px; height: 42px; }
+  .landing .chapter section + section { padding-top: var(--space-2); }
+  .landing #review,
+  .landing #takeaways,
+  .landing #process { padding-bottom: var(--space-6); }
+  .landing #outcomes { padding-bottom: var(--space-4); }
+
+  .landing #fit,
+  .landing #transform,
+  .landing #curriculum,
+  .landing .story { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .landing #transform > p { grid-column: auto; }
+  .landing .sec-head { margin-bottom: var(--space-5); }
+  .landing .sec-head .lead { margin-top: var(--space-4); }
+  .landing .eyebrow { margin-bottom: var(--space-3); }
+  .landing .lead { font-size: var(--size-4); }
+  .landing h3,
+  .landing .card h3,
+  .landing .mod h4 { font-size: 1.1875rem; }
+
+  .landing .cards3,
+  .landing #fit .cards3 { gap: var(--space-4); }
+  .landing .card:not(:first-child) { padding-top: var(--space-4); }
+  .landing .card p { margin-top: var(--space-2); }
+  .landing #fit .card { grid-template-columns: 36px 1fr; column-gap: var(--space-3); }
+  .landing .tlist li { padding-block: var(--space-4); }
+  .landing .tlist p { margin-top: var(--space-2); }
+  .landing #takeaways .cards3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .landing .modules { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .landing .mod { padding-left: var(--space-5); }
+  .landing .mod:nth-child(even) { margin-top: 0; }
+  .landing .mod .mk { margin-bottom: var(--space-3); }
+  .landing .mod p { margin-top: var(--space-3); }
+
+  .landing .statband { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin-bottom: var(--space-5); }
+  .landing .stat .big { font-size: 1.5rem; }
+  .landing .maker-portrait { position: static; max-width: 300px; }
+  .landing .story .lead { font-size: var(--size-4); }
+  .landing .pullquote { font-size: 1.5rem; margin-top: var(--space-5); }
+  .landing #live-experience .cards3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .landing #live-experience .card:last-child { grid-column: auto; }
+
+  .landing .detail-row { grid-template-columns: 115px 1fr; gap: var(--space-4); padding-block: var(--space-3); }
+  .landing .price-card { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); padding: var(--space-5); }
+  .landing .price-card > * { grid-column: 1 !important; grid-row: auto !important; }
+  .landing .price-card .amt { font-size: 2.5rem; }
+  .landing .price-card .btn { width: 100%; min-width: 0; }
+  .landing .faq summary { min-height: 56px; padding: var(--space-4) 0; }
+  .landing .faq details p { padding-right: var(--space-2); padding-bottom: var(--space-4); }
+}

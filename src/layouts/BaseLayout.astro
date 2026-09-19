@@ -1,5 +1,8 @@
 ---
 import '../styles/global.css';
+// The cohort page's refinement (19 September). This layout serves `/` alone,
+// and every rule in it is scoped under body.landing.
+import '../styles/landing.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
@@ -31,7 +34,7 @@ const year = new Date().getFullYear();
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="landing">
     <GoogleTagManagerNoscript />
     {/* Keyboard-only bypass for the header, the same one PracticeLayout carries.
         This page is 7000px of anchor navigation and the header repeats on every

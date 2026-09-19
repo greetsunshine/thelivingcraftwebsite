@@ -98,7 +98,7 @@ const hasPrice = Boolean(region?.publicPrice);
 {/* ── Hero ──────────────────────────────────────────────────────────── */}
 <section class="hero" id="top" style="border-top:0">
   <div class="wrap hero-grid">
-    <div>
+    <div class="hero-copy">
       <span class="eyebrow">An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</span>
       <h1>Build systems that <em>outlive</em> their makers.</h1>
       <p class="credential">
@@ -847,92 +847,111 @@ const hasPrice = Boolean(region?.publicPrice);
 </script>
 
 <style>
-  /* 56px rather than 72. This page is the long one — sixteen sections — and a
-     notch off each band takes ~500px out of the scroll without any section
-     reading as cramped. The two responsive steps are in global.css, with the
-     rest of the site's density pass. */
-  .band { padding-block: calc(var(--space-7) + var(--space-2)); }
+  /* The page's own pieces. The shared components (hero, cards, lists, modules,
+     the stat band, the FAQ, the price card) and the section rhythm are styled
+     for this page in src/styles/landing.css, which is where the 19 September
+     refinement lives. Section padding used to be set here; it is there now, so
+     one file owns the rhythm. */
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: var(--space-6) var(--space-7);
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6) 80px;
     align-items: start;
   }
+  .two-up > .body-copy { align-self: end; }
   .body-copy {
-    font-size: var(--size-4);
-    line-height: var(--lh-normal);
+    font-size: var(--landing-text, var(--size-4));
+    line-height: 1.62;
     color: var(--text-body);
-    max-width: var(--measure-prose);
+    max-width: 64ch;
   }
-  .body-copy + .body-copy { margin-top: var(--space-4); }
+  .body-copy + .body-copy { margin-top: 20px; }
   .body-copy.quiet { color: var(--text-quiet); font-size: var(--size-3); }
   .sunil-copy { max-width: var(--measure-prose); }
 
-  /* The signature is the pullquote’s attribution here, not a sign-off at the
-     foot of a letter, so it sits directly under the quote. */
-  .quote-attrib { margin-top: var(--space-3); font-size: var(--size-3); }
-  .after-quote { margin-top: var(--space-6); }
+  /* The pull quote's attribution, directly under the quote. */
+  .quote-attrib {
+    margin: 0 0 var(--space-5);
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    color: var(--accent-ink);
+  }
+  .after-quote { margin-top: var(--space-5); }
 
-  /* ── the boundary diagram ────────────────────────────────────────────── */
-  .example { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
-  .example-body { display: flex; flex-direction: column; gap: var(--space-4); }
+  /* ── the boundary diagram: a timeline, not a boxed card ──────────────── */
+  .example { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .example-body { display: flex; flex-direction: column; }
 
   .boundary {
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-6);
-    counter-reset: none;
+    display: grid;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    position: relative;
   }
   .boundary li {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2px;
-    padding: var(--space-3) 0;
+    position: relative;
+    display: block;
+    padding: 0 0 26px 40px;
+    margin-left: 6px;
+    border-left: var(--border-w-hair) solid var(--border-field);
   }
+  /* A gold knot on the line for each step. The outline is the chapter's own
+     ground, so the line appears to pass behind the knot. */
+  .boundary li::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 6px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--ember);
+    outline: 5px solid var(--surface-panel);
+  }
+  .boundary li:last-child { border-left-color: transparent; padding-bottom: 0; }
   .boundary .b-k {
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-    letter-spacing: var(--tracking-mono);
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    letter-spacing: 0.04em;
+    color: var(--accent-ink);
   }
   .boundary b {
-    font-size: var(--size-5);
+    display: block;
+    margin: 6px 0;
+    font-size: 1.375rem;
+    line-height: 1.35;
     font-weight: var(--weight-strong);
     color: var(--text-loud);
-    letter-spacing: var(--tracking-display);
   }
-  .boundary .b-n { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
-
+  .boundary .b-n {
+    display: block;
+    max-width: 36ch;
+    font-size: var(--size-3);
+    line-height: 1.6;
+    color: var(--text-body);
+  }
   /* The one item that is a question rather than a step, marked as the moment
-     the responsibility changes. */
+     the responsibility changes: between two gold rules. */
   .boundary .b-line {
-    background: var(--accent-quiet);
-    border-radius: var(--radius-inner);
-    padding: var(--space-4);
-    margin-block: var(--space-2);
+    padding-top: 22px;
+    padding-bottom: 26px;
+    margin-bottom: var(--space-5);
+    border-top: var(--border-w-hair) solid var(--ember);
+    border-bottom: var(--border-w-hair) solid var(--ember);
   }
-  .boundary .b-line b { color: var(--accent-ink-strong); }
+  .boundary .b-line::before { top: 30px; }
 
   /* ── explores list ───────────────────────────────────────────────────── */
   .explores { max-width: 880px; }
 
   /* ── commitment ──────────────────────────────────────────────────────── */
-  .commit { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
-  .commit-copy { display: flex; flex-direction: column; gap: var(--space-4); }
-  .commit-facts {
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-  }
-  .commit + .price-card { margin-top: var(--space-7); }
+  .commit { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-bottom: 40px; }
+  .commit-copy { display: flex; flex-direction: column; }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
   /* Centred, not flush left: the form sits under a two-button chooser, and
@@ -943,42 +962,47 @@ const hasPrice = Boolean(region?.publicPrice);
 
   /* The branch chooser. Two buttons, not a <select> — each needs room for a
      one-line description, and a visible pair is one fewer click than a
-     dropdown for a decision this page exists to help someone make quickly. */
+     dropdown for a decision this page exists to help someone make quickly.
+     Outlined, not raised, as the refinement draws them. */
   .route-choice {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-4);
-    margin-bottom: var(--space-5);
+    max-width: 940px;
+    margin: 0 auto var(--space-6);
   }
   .route-choice-btn {
     text-align: left;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    background: var(--surface-panel);
-    border: var(--border-w-hair) solid transparent;
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-5) var(--space-6);
+    background: transparent;
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-control);
+    padding: 22px var(--space-5);
     cursor: pointer;
     font: inherit;
     color: inherit;
   }
-  .route-choice-btn:hover { box-shadow: var(--shadow-lift); }
+  .route-choice-btn:hover { border-color: var(--text-loud); }
   .route-choice-btn:focus-visible {
     outline: var(--focus-w) solid var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
-  /* The selected branch is marked the same way the design system marks any
-     selected control — ink, never sun; sun is a fill for an action, not a
-     state, and this button is not "go", it is "chosen". */
-  .route-choice-btn[aria-pressed='true'] { border-color: var(--text-loud); }
+  /* The selected branch: a heavier forest edge on the soft green. Forest as a
+     line, not a fill — a fill is for an action, and this button is not "go",
+     it is "chosen". Ink on soft green is 11.89:1. */
+  .route-choice-btn[aria-pressed='true'] {
+    border: 2px solid var(--sun);
+    padding: 21px 23px;
+    background: var(--surface-hover);
+  }
   .rc-title {
     font-size: var(--size-4);
     font-weight: var(--weight-strong);
     color: var(--text-loud);
   }
-  .rc-body { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-snug); }
+  .rc-body { font-size: var(--size-3); color: var(--text-quiet); line-height: 1.6; }
 
   .route-panel:focus { outline: none; }
 
@@ -1022,19 +1046,20 @@ const hasPrice = Boolean(region?.publicPrice);
   @media (max-width: 900px) {
     .two-up,
     .example,
+    .commit { gap: 40px; }
+  }
+
+  @media (max-width: 760px) {
+    .two-up,
+    .example,
     .commit {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
-    .band { padding-block: var(--space-6); }
-  }
-
-  @media (max-width: 560px) {
-    .commit-facts { padding-inline: var(--space-5); }
-    /* One less full section of vertical padding per screen on a phone, where
-       the extra room this token gives on a desktop reading distance is just
-       more scrolling. */
-    .band { padding-block: var(--space-5); }
+    .two-up > .body-copy { align-self: start; }
+    .commit { margin-bottom: var(--space-5); }
     .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
+    .route-choice-btn { padding: 18px 20px; }
+    .route-choice-btn[aria-pressed='true'] { padding: 17px 19px; }
   }
 </style>
