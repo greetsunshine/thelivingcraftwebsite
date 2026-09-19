@@ -485,6 +485,22 @@ says to keep branded storytelling out of dense working areas.
   every page has the skip link and `#main`, every hidden link is reachable from the menu, no header
   overlap, no overflow, no script errors. The consulting and resource headers still wrap to two rows
   on a phone, as they did; the page-template step tightens them.
+- [x] **Main merged in first** (`5950a90`): #29 and #30 (the stepped POC Selection Tool and Run-Cost
+  Model) landed on main after this branch was cut. One conflict in `run-cost-model.astro`, resolved
+  to keep the linen on a filled field and main's panel background on computed rows. Main's two
+  pages also brought back six flat forest fills (`background: var(--sun)` / `--noir` on the progress
+  bar and step dots); they are `--texture-forest` now, per the linen rule.
+- [x] **Step 2a, the tool template** (`src/styles/templates/tool.css`, the package's `tool.html`)
+  on all nine interactive tools: the eight on ResourcesLayout (which now sets `body.tool-page`) and
+  `/tools/agent-design-check` (PracticeLayout gained a `bodyClass` prop). The dark linen hero with a
+  serif h1 becomes a working heading: ivory, deep-gold eyebrow, Figtree bold h1 at the tool size,
+  muted lead, ordinary buttons. Section headings inside a tool lose the gold emphasised word.
+  **Chosen answer cards** (the POC tool's 0/1/2 anchors, the design check's answers) are now the
+  design system's choice card: a forest line on the soft fill, not a forest fill. The R0 to R3 and
+  Checked/Assumed pills stay forest when pressed: they are segmented toggles, which the package
+  fills. Each tool's scoring, stepping and PDF logic is untouched; clicked through all nine at 1280
+  and 390 with no script errors and no overflow. **Not changed:** the three printable worksheets
+  (cost-ceiling, deployment, evaluation gates) already use a plain document heading.
 
 ---
 

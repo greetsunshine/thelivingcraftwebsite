@@ -93,6 +93,7 @@
  * makes the page worth opening, and the <noscript> note says so plainly rather
  * than apologising.
  */
+import '../../styles/templates/tool.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import {
@@ -131,7 +132,7 @@ const schema: unknown[] = [
 ];
 ---
 
-<PracticeLayout title={title} description={description} canonical={path} schema={schema}>
+<PracticeLayout bodyClass="tool-page" title={title} description={description} canonical={path} schema={schema}>
   <div class="adc" id="adc" data-state="rest">
     <nav aria-label="Breadcrumb">
       <ol class="crumbs">
@@ -1185,8 +1186,12 @@ const schema: unknown[] = [
     line-height: var(--lh-snug);
     color: var(--text-body);
   }
+  /* Chosen: the design system's choice card, a forest line on the soft
+     fill. The two answers that mean "not yet" keep their own fills below. */
   .choice:has(input:checked) {
-    background: var(--accent-quiet);
+    background: var(--surface-hover);
+    border-color: var(--sun);
+    box-shadow: inset 0 0 0 1px var(--sun);
   }
   .choice[data-standing='no']:has(input:checked) {
     background: var(--agent-refused-bg);

@@ -10,6 +10,8 @@
 // cohort single-page. Shared where it matters — global.css, SeoHead, Track and
 // the Ask widget are the same on every public surface.
 import '../styles/global.css';
+// Every page this layout serves is a tool: the design system's tool template.
+import '../styles/templates/tool.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
@@ -37,7 +39,7 @@ const year = new Date().getFullYear();
   <head>
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="tool-page">
     <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
       <div class="wrap nav-inner">
