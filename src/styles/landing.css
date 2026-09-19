@@ -808,3 +808,21 @@ body.landing :focus-visible:not([tabindex='-1']) {
 @media (prefers-reduced-motion: reduce) {
   .landing { scroll-behavior: auto; }
 }
+
+/* ── the last three sections, centred (Sunil, 19 September) ──────────────
+   "Before you apply", "Talk first" and "Apply" close the page as one
+   centred column: headings, the FAQ, the booking panel, the route chooser
+   and the form share one centre line. Text inside the FAQ answers, the
+   booking panel and the form stays left-aligned for reading. */
+.landing #questions .sec-head,
+.landing #book .sec-head,
+.landing #apply .sec-head { text-align: center; }
+.landing #questions .sec-head h2,
+.landing #book .sec-head h2,
+.landing #apply .sec-head h2,
+.landing #apply .sec-head .lead { margin-inline: auto; }
+.landing #questions .faq { margin-inline: auto; }
+.landing #book .booker { margin-inline: auto; }
+.landing #apply .route-choice,
+.landing #apply .route-panel { margin-inline: auto; }
+.landing #apply .contact-line { margin-inline: auto; text-align: center; }

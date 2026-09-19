@@ -569,6 +569,10 @@ says to keep branded storytelling out of dense working areas.
   kept its 44px tablet size there and ran under Apply. It takes the phone size (35px mark) up to
   560px now. Scanned every 5px from 320 to 1300 on `/` and six other layouts: no overlap and nothing
   past the right edge. (300px still overflows; below the 320 floor this site supports.)
+- [x] **"Before you apply", "Talk first" and "Apply" are centred** (Sunil, 19 September): headings,
+  the FAQ list, the booking panel, the route chooser, the form and the contact line share one centre
+  line (measured 0px off centre at 1280 and 390). Text inside the answers, the booking panel and the
+  form stays left-aligned for reading.
 
 ---
 
