@@ -263,12 +263,13 @@
        dark forest 0.45 .. ivory 6.28 · on-dark-muted 4.64 (minimum 0.43)
      Lowering either opacity puts the hero eyebrow and footer text below AA.
 
-     Used on EVERY dark green background on the site (19 September): hero
-     shells, footer bands (through --footer-bg), buttons, selected states,
-     table headers, code blocks and small marks. Write var(--texture-forest)
-     where you would have written background: var(--sun), and
-     --texture-forest-hover for a hover state. --sun itself stays a flat
-     colour, for borders, text and strokes. --- */
+     Used on the large dark green SURFACES (19 September): hero shells,
+     footer bands (through --footer-bg), the price panel, table headers,
+     code blocks and small marks. NOT on buttons: every button, and a
+     pressed or selected button state, is flat forest,
+     var(--control-primary-bg) with --control-primary-bg-hover (Sunil,
+     19 September: "the buttons do not need the texture"). --sun itself
+     stays a flat colour, for borders, text and strokes. --- */
   --texture-linen: url('/textures/linen-forest.webp');
   --texture-forest:
     linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),

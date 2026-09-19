@@ -1199,11 +1199,12 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture on every dark green background**, large and small: hero
-  shells, footer bands, buttons, selected states, table headers, code blocks and marks.
-  **Never write `background: var(--sun)` (or `--noir`, `--ink`) again**: use
-  `var(--texture-forest)`, and `var(--texture-forest-hover)` for a hover or pressed
-  state. `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
+- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
+  shells, footer bands, the price panel, table headers, code blocks and marks take
+  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
+  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
+  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
+  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
   in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
   whole `background` value (overlay, linen, flat fallback colour), and so is
   `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity

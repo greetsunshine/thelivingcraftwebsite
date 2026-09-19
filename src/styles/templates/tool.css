@@ -49,11 +49,11 @@
 .tool-page .hero > .wrap .hero-note { color: var(--text-quiet); }
 .tool-page .hero > .wrap :focus-visible { outline-color: var(--focus-ring); }
 .tool-page .hero > .wrap .btn-primary {
-  background: var(--texture-forest);
+  background: var(--control-primary-bg);
   border-color: transparent;
   color: var(--text-on-accent);
 }
-.tool-page .hero > .wrap .btn-primary:hover { background: var(--texture-forest-hover); color: var(--text-on-accent); }
+.tool-page .hero > .wrap .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
 .tool-page .hero > .wrap .btn-ghost { color: var(--text-body); border-color: var(--border-field); }
 .tool-page .hero > .wrap .btn-ghost:hover,
 .tool-page .hero > .wrap a.btn-ghost:hover { background: var(--surface-hover); color: var(--text-body); border-color: var(--border-field); }

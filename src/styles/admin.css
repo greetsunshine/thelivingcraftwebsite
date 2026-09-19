@@ -226,8 +226,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
 }
 .btn:hover { background: var(--surface-hover); }
-.btn.primary { background: var(--texture-forest); border-color: var(--control-primary-bg); color: var(--control-primary-fg); }
-.btn.primary:hover { background: var(--texture-forest-hover); border-color: var(--control-primary-bg-hover); }
+.btn.primary { background: var(--control-primary-bg); border-color: var(--control-primary-bg); color: var(--control-primary-fg); }
+.btn.primary:hover { background: var(--control-primary-bg-hover); border-color: var(--control-primary-bg-hover); }
 /* Erasure is a hard delete and reads like one. §3 gives destructive its own ink. */
 .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
 .btn.danger:hover { background: var(--danger-quiet); }
@@ -303,7 +303,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .cat-nav { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
 .cat-nav a { border: var(--border-w-hair) solid var(--border-field); border-radius: var(--radius-pill); padding: 6px 14px; font-size: var(--size-2); color: var(--text-quiet); }
 .cat-nav a:hover { border-color: var(--text-body); color: var(--text-loud); }
-.cat-nav a.on { background: var(--texture-forest); border-color: var(--sun); color: var(--text-on-accent); }
+.cat-nav a.on { background: var(--control-primary-bg); border-color: var(--sun); color: var(--text-on-accent); }
 
 .finding {
   background: var(--surface-panel); border: 0;

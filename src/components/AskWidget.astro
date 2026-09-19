@@ -107,7 +107,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    background: var(--texture-forest);
+    background: var(--control-primary-bg);
     color: var(--text-on-accent);
     border: 0;
     border-radius: var(--radius-control);
@@ -121,7 +121,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     box-shadow: var(--shadow-lift);
     transition: background 0.2s, transform 0.2s;
   }
-  .ask-toggle:hover { background: var(--texture-forest-hover); transform: none; }
+  .ask-toggle:hover { background: var(--control-primary-bg-hover); transform: none; }
   /* The agent's face. A stroke chat glyph on noir, per §7: 1.6px stroke, single
      colour, never filled. Typographic sigils stay typographic; this is chrome. */
   .ask-avatar {
@@ -312,7 +312,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   }
   /* every action is sun */
   .ask-form button {
-    background: var(--texture-forest);
+    background: var(--control-primary-bg);
     color: var(--text-on-accent);
     border: 0;
     border-radius: var(--radius-pill);
@@ -322,7 +322,7 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease-out);
   }
-  .ask-form button:hover:not(:disabled) { background: var(--texture-forest-hover); }
+  .ask-form button:hover:not(:disabled) { background: var(--control-primary-bg-hover); }
   .ask-form button:disabled { opacity: 0.4; cursor: default; }
 
   .ask-foot {

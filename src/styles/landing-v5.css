@@ -12,7 +12,8 @@
    WHERE THIS DEPARTS FROM THE PACKAGE, AND WHY.
    - Colours are tokens. The package's two warm tones are --surface-cloth and
      --line-warm in theme.css; its soft greens are --surface-hover.
-   - Dark green fills keep the linen (--texture-forest), a standing rule.
+   - Buttons are flat forest on every page (Sunil, 19 September); the linen
+     is only for dark surfaces.
    - No divider between sections. V4 marks a new topic with a plain
      hairline; the site had a knot divider there instead until Sunil asked
      for it to go (19 September). Neither is drawn: spacing and the
@@ -145,9 +146,9 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
   max-width: 600px;
   align-items: stretch;
 }
-/* Two equal routes, both forest on the linen. */
+/* Two equal routes, both flat forest. Buttons never take the linen. */
 .landing .hero .btn-primary {
-  background: var(--texture-forest);
+  background: var(--control-primary-bg);
   border-color: transparent;
   color: var(--text-on-accent);
   padding: 14px 17px;
@@ -155,7 +156,7 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
   justify-content: space-between;
   text-align: left;
 }
-.landing .hero .btn-primary:hover { background: var(--texture-forest-hover); color: var(--text-on-accent); }
+.landing .hero .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
 
 .landing .woven-brain { position: relative; min-width: 0; width: calc(100% + 45px); margin: 0 -45px 0 0; }
 .landing .brain-art { display: block; width: 100%; height: auto; overflow: visible; }
