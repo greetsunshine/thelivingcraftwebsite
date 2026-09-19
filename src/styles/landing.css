@@ -674,3 +674,16 @@ body.landing {
   .landing .brand-lockup .brand-symbol { height: 34px; }
   .landing .brand-lockup .brand-name { height: 19px; }
 }
+
+/* 320px phones: the smallest lockup, and Apply without its arrow, so the
+   three header items still fit on one row without overlapping. */
+@media (max-width: 380px) {
+  .landing .nav-inner,
+  .landing .navlinks { column-gap: var(--space-2); }
+  .landing .brand-lockup { gap: 4px; }
+  .landing .brand-lockup .brand-symbol { height: 28px; }
+  .landing .brand-lockup .brand-name { height: 15px; }
+  /* !important only because BaseLayout sets this button's padding inline. */
+  .landing .navlinks > .btn { padding: 10px 12px !important; }
+  .landing .navlinks > .btn .arrow { display: none; }
+}

@@ -320,6 +320,19 @@ Progress, one commit each:
   closing returns focus to the button used, or to the menu button when the menu has closed.
   `lib/agent/ready.ts` is the one check both read, so neither button exists without the key.
   The sticky Apply bar hides while chat is open (`lc:ask` event). Other pages keep the pill.
+- [x] Verified: `astro check` 0 errors, clean build. No horizontal overflow at 320, 390, 768,
+  1024, 1280 and 1440. `/` at 390: **17,947 px before, 16,514 px after**; at 1280: 12,618 before,
+  13,892 after. `/caio` and `/about` are the same height to the pixel before and after, so the
+  change did not leak. At 320 the header needed a smaller lockup and Apply without its arrow to
+  keep one row. 21 scripted checks pass: header chat opens, takes focus, closes on Escape and
+  returns focus; the phone menu row opens chat and closes the menu; the sticky bar steps aside;
+  Replay plays once and stops; Reduce motion disables Replay; phone order is copy, portrait,
+  brain; nothing in localStorage. Without `ANTHROPIC_API_KEY` neither chat button renders.
+
+**Still open, and not code:** the six content questions in the package's `HANDOFF.md` (price and
+dates reconciliation, "lifetime room" and direct-access promises, the 100+ counts, the "nothing
+else" privacy line beside optional emails, repeated outcomes, real-company architecture). No copy
+was changed. Real 200% browser zoom and a screen reader pass are still to do on staging.
 
 ---
 

@@ -187,6 +187,14 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
+  - **The look is the 19 September refinement, and it is `/` only.** [src/styles/landing.css](src/styles/landing.css)
+    is imported by `BaseLayout` alone and scoped under `body.landing`; `/caio`, `/about` and the
+    resource pages do not see it. The sixteen sections sit in seven `.chapter` wrappers with
+    **no printed section numbers**. The hero is full width on the linen with the woven brain
+    ([WovenBrain.astro](src/components/cohort/WovenBrain.astro): plays once, Replay, a Reduce motion
+    button, nothing stored). **Chat opens from the header** (`AskWidget launcher="header"` and
+    `[data-ask-open]` buttons), not from a floating pill. Phones keep 16px text and tight spacing
+    on purpose; do not port the package's phone spacing back in, it made the page 2,500px longer.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
