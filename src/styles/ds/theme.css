@@ -301,6 +301,16 @@
   --hero-primary-bg-hover: var(--lc-paper);
   --hero-ghost-line: var(--lc-on-dark-muted);
   --hero-focus: var(--lc-ivory);
+  /* The hairline between the landing hero and the intro strip under it.
+     The control line would disappear on forest. Decoration, not a boundary. */
+  --hero-rule: rgba(198, 212, 200, 0.3);
+
+  /* --- component: the woven brain on the landing hero (19 September) ---
+     Warm light drawn over the artwork's own gold knots, from the package's
+     illumination layer. Decoration only: never a text colour, never a fill
+     for a control. */
+  --brain-glow: #FFE0A0;
+  --brain-glow-core: #FFF2B9;
 
   /* --- component: footer, a dark forest band --- */
   --footer-bg: var(--texture-footer);         /* a BACKGROUND, not a colour: use only in `background:` */

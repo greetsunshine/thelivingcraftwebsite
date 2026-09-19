@@ -1,0 +1,178 @@
+---
+/**
+ * The woven brain in the landing hero, from the 19 September refinement
+ * package (docs/2026-09-19_Landing_Page_Refinement-…, kept out of the repo).
+ *
+ * WHAT IT IS. The package's generated artwork, a brain woven from forest-green
+ * fibre and gold strands, with seven gold knots. Its flat forest background is
+ * keyed out in public/brand/woven-brain-*.webp, so the hero's linen shows round
+ * it. The "lighting up" is the inline SVG on top: one warm light on each knot,
+ * at the package's seven alignment points on the 1254 × 1254 artwork.
+ *
+ * HOW IT MOVES. Once, when it first scrolls into view: the seven lights come up
+ * one after another and settle back, about 3.2 seconds in all. It never loops.
+ * Replay runs it again. That is the package's behaviour and Sunil's choice on
+ * 19 September; the looping thread brain of PR #27 is retired.
+ *
+ * MOTION PREFERENCES. The operating system's reduced-motion setting turns it
+ * off, and so does the Reduce motion button, for this page view only. Nothing
+ * is stored: CLAUDE.md's no-client-storage rule holds. With either one on, the
+ * artwork is still there, knots at rest, and Replay is disabled.
+ *
+ * NOT aria-hidden, because it holds two real buttons. The image itself is
+ * decorative, so its alt is empty and the SVG is hidden.
+ */
+
+// The package's alignment points, in the artwork's own 1254 × 1254 pixels.
+const NODES: Array<[number, number]> = [
+  [410, 305], [830, 225], [939, 375], [1142, 568], [805, 627], [344, 690], [784, 933],
+];
+---
+
+<figure class="woven-brain" data-woven-brain>
+  <div class="brain-scene">
+    <img
+      src="/brand/woven-brain-1200.webp"
+      srcset="/brand/woven-brain-640.webp 640w, /brand/woven-brain-1200.webp 1200w"
+      sizes="(max-width: 760px) 320px, 48vw"
+      width="1200"
+      height="1200"
+      alt=""
+      decoding="async"
+      fetchpriority="high"
+    />
+    <svg class="brain-light" viewBox="0 0 1254 1254" aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="woven-brain-light">
+          <stop offset="0" style="stop-color: var(--brain-glow); stop-opacity: 0.85" />
+          <stop offset="1" style="stop-color: var(--brain-glow); stop-opacity: 0" />
+        </radialGradient>
+      </defs>
+      {NODES.map(([cx, cy], i) => (
+        <g class="node" style={`--i:${i}`}>
+          <circle cx={cx} cy={cy} r="46" fill="url(#woven-brain-light)" />
+          <circle class="core" cx={cx - 6} cy={cy - 7} r="8" />
+        </g>
+      ))}
+    </svg>
+  </div>
+  <div class="motion-controls">
+    <button type="button" class="brain-btn" data-brain-replay>
+      <span aria-hidden="true">↻</span> Replay illumination
+    </button>
+    <button type="button" class="brain-btn" data-brain-motion aria-pressed="false">Reduce motion</button>
+  </div>
+</figure>
+
+<script>
+  (function () {
+    const fig = document.querySelector<HTMLElement>('[data-woven-brain]');
+    if (!fig) return;
+    const replay = fig.querySelector<HTMLButtonElement>('[data-brain-replay]');
+    const toggle = fig.querySelector<HTMLButtonElement>('[data-brain-motion]');
+    if (!replay || !toggle) return;
+
+    const os = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // This page view only. Deliberately not stored anywhere.
+    let manual = false;
+    let timer = 0;
+    const off = () => os.matches || manual;
+
+    const play = () => {
+      window.clearTimeout(timer);
+      fig.classList.remove('is-playing');
+      if (off()) return;
+      // Two frames, so removing and re-adding the class restarts the animation.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (off()) return;
+          fig.classList.add('is-playing');
+          timer = window.setTimeout(() => fig.classList.remove('is-playing'), 3200);
+        }),
+      );
+    };
+
+    const sync = () => {
+      window.clearTimeout(timer);
+      fig.classList.remove('is-playing');
+      fig.classList.toggle('motion-reduced', off());
+      replay.disabled = off();
+      toggle.setAttribute('aria-pressed', String(off()));
+      toggle.textContent = off() ? 'Motion reduced' : 'Reduce motion';
+      // The operating system's setting wins; the button cannot undo it.
+      toggle.disabled = os.matches;
+    };
+
+    replay.addEventListener('click', play);
+    toggle.addEventListener('click', () => {
+      manual = !manual;
+      sync();
+    });
+    os.addEventListener('change', sync);
+    sync();
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          io.disconnect();
+          play();
+        },
+        { threshold: 0.2 },
+      );
+      io.observe(fig);
+    }
+  })();
+</script>
+
+<style>
+  .woven-brain { position: relative; min-width: 0; margin: 0; }
+  .brain-scene { position: relative; width: 100%; aspect-ratio: 1; }
+  .brain-scene img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .brain-light { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .core { fill: var(--brain-glow-core); }
+
+  /* At rest the knots carry a faint light, so the still frame is the same
+     picture the animation settles back to. */
+  .node { opacity: 0.16; transform-box: fill-box; transform-origin: center; }
+  .is-playing .node {
+    animation: woven-brain-light 1.25s ease-out both;
+    animation-delay: calc(0.05s + var(--i) * 0.3s);
+  }
+  @keyframes woven-brain-light {
+    0% { opacity: 0.16; transform: scale(0.75); }
+    38% { opacity: 0.95; transform: scale(1.06); }
+    100% { opacity: 0.16; transform: scale(1); }
+  }
+  .motion-reduced .node { animation: none; opacity: 0.22; }
+  @media (prefers-reduced-motion: reduce) {
+    .node { animation: none !important; opacity: 0.22; }
+  }
+
+  .motion-controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-5);
+    flex-wrap: wrap;
+  }
+  /* Text buttons on the forest hero: on-dark-muted, 7.79:1 on flat forest and
+     above 4.5:1 on the lightest linen. 44px tall for a thumb. */
+  .brain-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) 2px;
+    background: transparent;
+    border: 0;
+    border-bottom: var(--border-w-hair) solid var(--hero-rule);
+    color: var(--hero-muted);
+    font: inherit;
+    font-size: var(--size-3);
+    cursor: pointer;
+  }
+  .brain-btn:hover:not(:disabled) { color: var(--text-on-invert); border-bottom-color: var(--hero-muted); }
+  .brain-btn:disabled { cursor: default; opacity: 0.7; }
+  .brain-btn:focus-visible { outline: var(--focus-w) solid var(--hero-focus); outline-offset: var(--focus-offset); }
+  .brain-btn span { font-size: 1.25em; line-height: 1; }
+</style>

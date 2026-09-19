@@ -294,6 +294,10 @@ Progress, one commit each:
   `lc-name.webp` (the mark and the "The Living Craft" lettering, cropped from the same
   `logo-reference.png` as `lc-mark.webp`, paper keyed out the way the package's SVG filter does
   it), `public/textures/fabric-crossing.svg` (the chapter divider).
+- [x] Tokens and the brain: `--hero-rule`, `--brain-glow` and `--brain-glow-core` in `theme.css`
+  (decoration only, never text). `src/components/cohort/WovenBrain.astro` plays the seven lights
+  once on first sight, about 3.2 s; Replay, and a Reduce motion button that lasts for the page
+  view only. OS reduced motion wins over the button. Nothing is stored.
 
 ---
 
