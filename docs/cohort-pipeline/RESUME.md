@@ -334,6 +334,9 @@ dates reconciliation, "lifetime room" and direct-access promises, the 100+ count
 else" privacy line beside optional emails, repeated outcomes, real-company architecture). No copy
 was changed. Real 200% browser zoom and a screen reader pass are still to do on staging.
 
+**Where to look:** draft PR #31, stacked on #18. Staging (follows every push to this branch,
+behind Vercel's login): https://thelivingcraft-git-feat-lan-37a779-greetsunshine-1213s-projects.vercel.app
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18
