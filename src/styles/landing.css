@@ -757,6 +757,15 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .foot-bottom { flex-direction: column; gap: 18px; }
 }
 
+/* Phones wider than 390: the lockup at its phone size. QA 19 September:
+   at 391 to ~560 it kept the 44px tablet size and ran under Apply. */
+@media (max-width: 560px) {
+  .landing .brand-lockup { gap: 6px; }
+  .landing .brand-lockup .brand-symbol { height: 35px; }
+  .landing .brand-lockup .brand-name { height: 19px; }
+  .landing .nav-inner, .landing .navlinks { gap: 10px; }
+}
+
 @media (max-width: 390px) {
   .landing .wrap { width: calc(100% - 36px); }
   .landing .nav-inner { gap: 8px; min-height: 76px; }

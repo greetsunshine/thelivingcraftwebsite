@@ -565,6 +565,10 @@ says to keep branded storytelling out of dense working areas.
   is resolved at `:root`, so to narrow it to a text column you must write the two layers out on the
   element and set `--seam-w` there (brand.css, programme.css and tool.css do). `/` at 390 is
   20,482px (was 20,086) because in-chapter sections now open with 64px instead of 24px.
+- [x] **Header overlap on phones 391 to ~560px wide** (Sunil's screenshot, 19 September): the lockup
+  kept its 44px tablet size there and ran under Apply. It takes the phone size (35px mark) up to
+  560px now. Scanned every 5px from 320 to 1300 on `/` and six other layouts: no overlap and nothing
+  past the right edge. (300px still overflows; below the 320 floor this site supports.)
 
 ---
 
