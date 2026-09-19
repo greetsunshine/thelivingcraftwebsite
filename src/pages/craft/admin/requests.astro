@@ -1,0 +1,156 @@
+---
+// Resource requests — the download gate's table, as the marketing team reads it.
+//
+// Every file a resource page hands out asks for a name and an email address
+// first (19 September 2026), and each ask is one row in resource_requests,
+// joined to the person. This page reads the resource_requests_marketing view:
+// a tally per resource and kind, then the latest rows. The CSV of the whole
+// table is the "Resource requests" record set on /craft/admin/records.
+//
+// WHAT THIS TABLE IS NOT. It is not a list of people who agreed to hear from
+// us. A download grants no marketing permission, no consent wording has been
+// approved, and `consented` is false on every row until one exists. The
+// column is on the screen so that the absence is visible rather than assumed.
+//
+// Erasing a person from /craft/admin/leads removes their rows here in the
+// same statement: the view is a join, not a copy.
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { resourceRequestTally, resourceRequests } from '../../../lib/admin/queries';
+import { RESOURCE_KINDS } from '../../../lib/pipeline/resources';
+
+const [tally, rows] = await Promise.all([resourceRequestTally(), resourceRequests(200)]);
+
+const total = tally.reduce((n, t) => n + t.count, 0);
+const people = new Set(rows.map((r) => r.person_id)).size;
+
+const when = (iso: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+
+const KIND_LABEL: Record<string, string> = {
+  email: 'email copy',
+  pdf: 'PDF',
+  xlsx: 'Excel',
+  zip: 'ZIP',
+  json: 'JSON',
+  csv: 'CSV',
+  md: 'Markdown',
+  txt: 'text',
+  print: 'print',
+};
+const kindLabel = (k: string) => KIND_LABEL[k] ?? k;
+---
+
+<AdminLayout title="Resource requests" active="requests">
+  <div class="page-head">
+    <div>
+      <span class="label">{total} requests · {people} people in the latest {rows.length}</span>
+      <h1>Resource requests</h1>
+      <p>
+        Who asked for which file, from which page. Every download and print copy on the public
+        resource pages asks for a name and an email address first, and this is where those land.
+        The whole table downloads as CSV from <a href="/craft/admin/records">Records</a>, under
+        <em>Resource requests</em>.
+      </p>
+      <p class="warn-line">
+        A download is not permission to send anything else. <code>consented</code> is false on every
+        row until a marketing consent wording is approved and somebody ticks it. Kinds:
+        {RESOURCE_KINDS.map(kindLabel).join(', ')}.
+      </p>
+    </div>
+  </div>
+
+  <h2 class="sec-title">By resource</h2>
+  <div class="table-scroll">
+    {
+      tally.length === 0 ? (
+        <p class="empty">
+          No requests yet. Either nobody has asked for a file since the gate went in, or the
+          <code>resource_requests_marketing</code> view is not answering, which the banner above would say.
+        </p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Resource</th>
+              <th>Kind</th>
+              <th class="num">Requests</th>
+              <th class="num">People</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tally.map((t) => (
+              <tr>
+                <td class="mono">{t.resource_id}</td>
+                <td>{kindLabel(t.kind)}</td>
+                <td class="num">{t.count}</td>
+                <td class="num">{t.people}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+
+  <h2 class="sec-title">Latest {rows.length}</h2>
+  <div class="table-scroll">
+    {
+      rows.length === 0 ? (
+        <p class="empty">Nothing to list.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>When (IST)</th>
+              <th>Who</th>
+              <th>Resource</th>
+              <th>Kind</th>
+              <th>Delivery</th>
+              <th>Campaign</th>
+              <th>Consented</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr>
+                <td class="faint mono" style="font-size:12px;white-space:nowrap">{when(r.requested_at)}</td>
+                <td>
+                  {r.name ?? <span class="faint">no name</span>}
+                  <div class="faint mono" style="font-size:12px">{r.email}</div>
+                </td>
+                <td class="mono">
+                  {r.resource_id}
+                  {r.resource_version && <div class="faint" style="font-size:12px">{r.resource_version}</div>}
+                </td>
+                <td>{kindLabel(r.kind)}</td>
+                <td>
+                  <span class={r.delivery_state === 'failed' ? 'pill warn' : 'pill'}>{r.delivery_state}</span>
+                </td>
+                <td class="faint mono" style="font-size:12px">
+                  {[r.session_source, r.session_medium, r.session_campaign, r.session_content].filter(Boolean).join(' · ') || '—'}
+                  {r.referrer_host && <div>{r.referrer_host}</div>}
+                </td>
+                <td>{r.consented ? 'yes' : <span class="faint">no</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+    }
+  </div>
+</AdminLayout>
+
+<style>
+  .warn-line { margin-top: 8px; font-size: 13px; color: var(--text-quiet); }
+  .num { text-align: right; }
+</style>

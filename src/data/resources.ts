@@ -58,7 +58,7 @@ export interface Resource {
   /**
    * The decision this piece is about, in two or three words. It leads the row
    * on /resources, because a title alone does not say what the thing is FOR —
-   * "The POC Selection Tool" and "The Run-Cost Model" are names, and a reader
+   * "The POC Selection Tool" and "The Model Selection Tool" are names, and a reader
    * scanning the list is looking for their problem, not for a name.
    * Required, so a new resource cannot join the list unlabelled.
    */
@@ -98,7 +98,7 @@ export const resources: Resource[] = [
       'Show a team which of their operating assumptions, such as escalation rate, review minutes and upkeep, are doing the real work in the number',
     ],
     format:
-      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name and an email address. The same model is offered as an Excel workbook with an instruction beside every line.',
+      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name and an email address. The same model is offered as an Excel workbook with an instruction beside every line, behind the same name and email address.',
     url: '/resources/run-cost-model',
     publishedAt: '2026-09-14',
   },
@@ -120,7 +120,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet or print it without giving anything. A PDF of your assessment is built against a name and an email address.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The PDF of your assessment and the print copy ask for a name and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
@@ -147,26 +147,26 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-13',
   },
   {
-    id: 'model-selection-checklist',
+    id: 'model-selection-tool',
     number: '03',
     topic: 'Model Selection',
     series: 'Agentic system design',
-    title: 'The Model Selection Checklist',
-    kind: 'Checklist · 26 checks',
+    title: 'The Model Selection Tool',
+    kind: 'Interactive tool \u00b7 6 steps \u00b7 27 answers \u00b7 2 reference candidates',
     summary:
-      'What to check before you choose a model for one step of your system, in the order to check it.',
+      'Score one candidate model for one step of your system, from the model card and your own test runs, and read whether it is fit.',
     description:
-      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This checklist is the generic version of the method: it works for support triage, invoice checks, code review, claim intake or anything else where a model reads something and produces a decision. Ten gates read off the model card in half an hour, each saying what a pass looks like and what a fail actually costs. Twelve things to score, each written as the single question you are answering, with starting weights for three kinds of step: drafting for a person, flagging and routing, and acting alone. Four disqualifiers that end a candidate whatever it scored. Four test cases you build out of your own work, including one where you plant the answer yourself so you know what should have been there, and one where the cost of doing nothing is the whole point. Then the method for scoring what is missing, and a one-page decision record to write on the day you choose. The boxes tick in the browser and nothing is stored.',
+      'Most model choices are made on a benchmark, a price and a demo. None of those tell you what a model leaves out, and what it leaves out is what costs you, because there is nothing on the page to mark wrong. This tool scores one candidate for one step, in six short steps. First you choose the job the model is being staffed on: drafting for a person, flagging and routing, or acting on its own. That sets the weights. Then ten deployment gates, pass or fail from the model card, each saying what a pass looks like and what a fail costs. Then twelve behaviours scored 0, 1 or 2 from ten runs on four test cases you build out of your own work, each with a written threshold so two people land on the same number. Then four disqualifiers that end a candidate whatever it scored. The score bar and the progress bar stay on screen, and the page moves to the next row as you answer. The result reads the rubric: fit for this step, fit with covers, or not for this step, with the rows to fix first and the test case that is the evidence for each one. Two reference candidates for the same step can be loaded: the higher-scoring one is out on a disqualifier, the lower-scoring one is the one to write the record for. The four test cases, the method for scoring what is missing and the one-page decision record follow under the tool.',
     useFor: [
       'Remove half a candidate list in half an hour, before running a single test',
-      'Weight the twelve criteria for the specific step you are staffing rather than for the system',
+      'Weight the twelve behaviours for the specific step you are staffing rather than for the system',
       'Build four test cases out of your own work, with an answer key written before the first run',
       'Measure what a model leaves out, which no benchmark and no quality review will show you',
       'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Page, with tickable checkboxes, blank tables and a decision record. A Download as PDF control opens the print dialogue. Nothing is stored or sent.',
-    url: '/resources/model-selection-checklist',
+      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. A PDF of your scored copy is built against a name and an email address, and checked before it is handed over.',
+    url: '/resources/model-selection-tool',
     publishedAt: '2026-09-15',
   },
   {
@@ -188,7 +188,7 @@ export const resources: Resource[] = [
       'Run three failure injections against a production agent on a Monday morning',
     ],
     format:
-      'Page, with the triage tree, every table and a worked rejection record. A Download as PDF control opens the print dialogue; nothing is stored or sent.',
+      'Page, with the triage tree, every table and a worked rejection record. Print or save as PDF asks for a name and an email address, then opens the print dialogue. Nothing on the page is scored.',
     url: '/resources/agent-failure-triage-kit',
     publishedAt: '2026-09-16',
   },
@@ -211,7 +211,7 @@ export const resources: Resource[] = [
       'Find the correction in your system that changed more than the instance it was made on',
     ],
     format:
-      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Nothing is stored or sent.',
+      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Each asks for a name and an email address.',
     url: '/resources/agent-memory-audit-kit',
     publishedAt: '2026-09-17',
   },
@@ -233,7 +233,7 @@ export const resources: Resource[] = [
       'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
     ],
     format:
-      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Print the map, copy it or download the CSV without giving anything. Autosaved in your browser; nothing is sent.',
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The CSV and the print copy ask for a name and an email address; your rows never leave the browser. Autosaved in your browser.',
     url: '/resources/rule-placement-audit',
     publishedAt: '2026-09-17',
   },
@@ -256,7 +256,7 @@ export const resources: Resource[] = [
       'Write down every boundary with its enforcement point, its stop behaviour and its owner',
     ],
     format:
-      'Page with a live calculator, plus an Excel workbook to download. Nothing is stored, nothing is sent, and no email address is asked for.',
+      'Page with a live calculator that stores and sends nothing, plus an Excel workbook that asks for a name and an email address before it downloads.',
     url: '/resources/cost-ceiling-workbook',
     publishedAt: '2026-09-16',
   },
@@ -402,12 +402,14 @@ export const longDate = (iso: string): string =>
  *    addendum calls it "illustrative arithmetic only" and so does the label.
  *    Do not remove a label to tighten a layout.
  *
- * 3. NEVER GATE ANY OF IT. The addendum: "HTML stays open; optional download
- *    email requires a separate communication preference." The HTML is the
- *    resource — complete, readable and fillable without downloading anything
- *    and without leaving an address. There is no form on these routes and
- *    there must not be one. The optional email delivery is a different path
- *    with its own permission, and it is not built here.
+ * 3. THE PAGE STAYS OPEN; EVERY FILE IS GATED. The HTML is the resource —
+ *    complete, readable and fillable without downloading anything and without
+ *    leaving an address. The CSV, the print button and every other file a
+ *    resource page hands out go through the download gate (19 September 2026,
+ *    Sunil's instruction, which reversed the addendum's "anonymous downloads
+ *    are events, not people"): a name and an address, recorded in
+ *    resource_requests, then the file. The gate grants no marketing
+ *    permission; see src/pages/api/pipeline/download.ts.
  */
 
 
@@ -523,16 +525,12 @@ export const NO_SCORE =
   'Nothing here is scored. There is no grade, no percentage, no readiness level and no certificate — the columns exist so that a decision can be read and challenged by somebody else, not added up.';
 
 /**
- * Said on every resource page, once, beside the downloads.
- *
- * The addendum offers "optional downloadable PDF and CSV" and an "optional
- * email request". What is built is the CSV, as a direct download, and the
- * browser's own print-to-PDF — so the page states exactly that rather than
- * implying a PDF file exists somewhere. Nothing on these routes asks for an
- * address; see rule 3.
+ * Said on every resource page, once, beside the downloads. What is open and
+ * what is asked for, in one sentence, so no page says it differently. See
+ * rule 3.
  */
 export const NO_GATE =
-  'The page is the resource. Everything is here to read, fill in or print, and nothing asks for an email address.';
+  'The page is the resource. Everything is here to read and fill in. The file and the print copy ask for your name and email address first, and use them to send you this resource once.';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LC-R01 · Cost-ceiling worksheet

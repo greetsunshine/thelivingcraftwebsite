@@ -15,11 +15,16 @@
 import schema from '../../kits/agent-memory-audit-kit/schema/memory-record.schema.json';
 import exampleRecord from '../../kits/agent-memory-audit-kit/examples/01-explicit-trip-scoped.json';
 
-/** Where the built files live. `npm run build:kit` writes all three. */
+/**
+ * The three files, by the kind the download gate hands them out as.
+ * `npm run build:kit` writes all three into downloads/ at the repo root, which
+ * is private; the gate at /api/pipeline/download reads them from there after
+ * a name and an address. Nothing here is a URL any more.
+ */
 export const DOWNLOADS = {
-  zip: '/downloads/agent-memory-audit-kit.zip',
-  pdf: '/downloads/agent-memory-audit-kit.pdf',
-  schema: '/downloads/memory-record.schema.json',
+  zip: 'zip',
+  pdf: 'pdf',
+  schema: 'json',
 } as const;
 
 /** The resource id, used by the beacon and the resources list. */

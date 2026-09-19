@@ -66,6 +66,101 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## Every download is gated, and the requests are one table — 19 September
+
+Sunil's instruction: every download option on every tool asks for a name and an email
+address, the pair is kept in one table the marketing team can read, and the mechanism is
+one standard. CLAUDE.md now has a section, *The download gate*, that is the standard;
+this is the checkpoint on it.
+
+- **What changed on the public pages.** Fourteen pages. The four scored-PDF tools swapped
+  their own dialogs for `<ResourceGate>`; the memory kit's ZIP, PDF and JSON, the run-cost
+  workbook, the three worksheet CSVs, the toolkit's CSV buttons, the four templates'
+  Markdown files, the rule audit's CSV, the design check's text file, and every print
+  button now go through it. Copy that promised "nothing asks for an email address" was
+  rewritten on each page and in the register. `/api/pipeline/resource-pdf` is gone;
+  `/api/pipeline/download` replaced it.
+- **The files moved out of `public/`.** `downloads/` at the repo root is private and is
+  bundled into the function by `includeFiles` (a list read from the folder at config
+  time, because the option takes paths, not globs). Vite's dev server would still serve
+  the folder by URL, so `vite.server.fs.deny` closes it in dev too. The build was checked:
+  the gated files are in `_render.func/downloads/` and not in `static/`.
+- **Two tools post nothing the reader typed.** The Agent Design Check and the Rule
+  Placement Audit both carried a promise that their answers never reach a server. The
+  gate keeps it: their route entries are `local()`, the request records the name and the
+  address only, and the page builds the file from its own state. Verified in the browser
+  by reading the request body.
+- **The cost-ceiling workbook has never existed.** `/downloads/cost-ceiling-workbook.xlsx`
+  was a 404 behind the page's primary button since it shipped. The page now checks the
+  file at render time and prints a pending line instead of a button; the route refuses
+  the kind before the save while the file is absent. Producing the workbook is somebody's
+  job and is not done here.
+- **Schema.** `resource_requests.kind` (additive), `resource_request_submit(..., p_kind)`,
+  and the view `resource_requests_marketing` (people ⋈ resource_requests, test rows out,
+  `consented` read from the latest consent row). **Not applied on production**, like the
+  rest of the file; until it is, every request saves nothing, the file is still handed
+  over, and the dialog says so. The view is in the health probe list.
+- **Marketing's two screens.** `/craft/admin/requests` (tally by resource and kind, latest
+  200) and the *Resource requests* record set on `/craft/admin/records`. Both read the
+  view. Nine held delivery wordings were added for the newly gated resources, unapproved
+  like the six before them.
+- **What this does not do, and why.** No consent checkbox. The addendum still says "never
+  infer marketing permission from downloading", no wording has been approved, and a
+  permission recorded against words nobody signed off is a liability. `consented` is on
+  the marketing screens precisely so the absence is visible. Adding the box is one
+  approved wording in `CONSENT_HISTORY` away.
+- **Verified**: 27 route cases (14 kinds handed over, 13 refusals incl. honeypot, bad
+  email, missing key, wrong kind, unknown template, absent static file); headless Chrome
+  on eight pages (18 checks: gate opens, bad email refused, each file downloads, print
+  opens after the gate, the two local tools post no answers, the toolkit button names its
+  own resource, the workbook page shows the pending line); `astro check` 0 errors;
+  `npm run build` passes.
+
+---
+
+## The Model Selection Tool is in the POC tool's shape — 19 September
+
+`/resources/model-selection-tool` replaces `/resources/model-selection-checklist` (a page
+to tick and print, itself the replacement for the Contract Agent Test Kit). Both old
+addresses redirect to it directly from `astro.config.mjs`. It was rebuilt against
+`/resources/poc-screen` as the reference, on top of PRs #29 and #30. Where the two
+differed, the POC tool won. What to know before touching it:
+
+- **Six steps, one shell.** Start, A *The step*, B *Deployment gates*, C *Behaviour under
+  test*, D *Disqualifiers*, Result. Back and Next above and below each step, pips that
+  jump, every step visible without JavaScript and in print, auto-advance 350ms after a
+  first answer. The tabbed *Reference example* is gone: the two reference candidates load
+  from two buttons on the Start step, and the result card says which one is loaded and
+  what it teaches (`exampleFor()`), the way the run-cost tool labels its example.
+- **The score is Sunil's call, and it sits inside two hard gates.** The checklist's module
+  said nothing was summed or ranked. `src/data/model-selection-tool.ts` now scores: A sets
+  the weight on each C row, each C row is 0/1/2 against a written threshold, and the
+  percentage is weighted score over weighted maximum. Any fail in B or any hit in D ends
+  the candidate whatever the percentage. The bands are 80%+ *Fit for this step*, 60–79%
+  *Fit with covers*, under 60% *Not for this step*, two numbers in `CUT_LINES`. Four C
+  rows carry no kit weight and start at 2, set by the reader in a select; changing one
+  never moves the step.
+- **The PDF has three stages and thirteen checks** in `lib/resources/model-selection-pdf.ts`,
+  plus the reopen. Each check recomputes its fact from the raw answers with its own
+  arithmetic, not through `readAssessment()`. The route's `verify` runs them before the
+  save; a failure is a 500 and nothing is written. Branding is the reference's: black cover
+  band, wordmark, credit line, mist result panel, berry only on a failed gate or a
+  disqualifier that happened, ember *Join the cohort* panel with a clickable apply link.
+  One thing found and fixed on the way: the result panel's height was estimated at a
+  narrower width than the text is drawn at, so the panel came out taller than its contents
+  and *Fix first* landed inside it. The estimate now uses the drawn width.
+- **Verified**: every reachable weighted total for all three steps reads by the rubric
+  (`3^12` score vectors each), thirteen tampered models each caught by the check named
+  for it, the route with four valid and nine malformed payloads plus the honeypot and a
+  bad email, headless Chrome at 1280px and 390px (steps, pips, progress, auto-advance,
+  sticky header, keyboard, dialog with the check list, no-JS, print), every page of five
+  generated PDFs rasterised. `astro check` 0 errors, `npm run build` passes.
+- **The same tension as the run-cost tool.** The PDF's cohort panel prints the week count
+  and start month from `facts.ts`, because the reference does and its check requires them.
+  Sunil's call, on every tool at once.
+
+---
+
 ## The POC Selection Tool is stepped, and its PDF is branded and checked — 18 September
 
 Six steps with a progress bar; every step still renders without JavaScript and in print.

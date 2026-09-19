@@ -24,17 +24,23 @@
  * WHAT THIS PAGE DOES NOT DO
  * ───────────────────────────────────────────────────────────────────────────
  *
- * It stores nothing and sends nothing. No localStorage (CLAUDE.md forbids it
- * site-wide, and the calculator's state is a closure that dies with the tab), no
- * form, no email address, no gate on the download. Three analytics events go to
- * the first-party beacon and carry no input values — see the script at the foot.
+ * The calculator stores nothing and sends nothing. No localStorage (CLAUDE.md
+ * forbids it site-wide, and the calculator's state is a closure that dies with
+ * the tab). Three analytics events go to the first-party beacon and carry no
+ * input values — see the script at the foot.
  *
- * The .xlsx is a static file under public/downloads. It is not generated here:
+ * The workbook download goes through the download gate (19 September 2026):
+ * a name and an address, recorded, then the file. The .xlsx is a static file
+ * in the private downloads/ folder at the repo root. It is not generated here:
  * a workbook built at request time would drift from the one the LinkedIn post
- * points at, and nobody would notice which copy they had.
+ * points at, and nobody would notice which copy they had. The page checks the
+ * file exists and, while it does not, says so instead of offering a button.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { longDate } from '../../data/resources';
 import {
@@ -47,7 +53,8 @@ import {
   CEILING_FIELDS,
   COHORT_CTA,
   COHORT_HEADING,
-  DOWNLOAD_PATH,
+  DOWNLOAD_FILE,
+  DOWNLOAD_PENDING,
   HEADING,
   HEADLINE_VIEWS,
   LEGEND,
@@ -146,6 +153,9 @@ const schema = [
     })),
   },
 ];
+
+// The workbook is offered only when the file is actually there to hand over.
+const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE));
 ---
 
 <ResourcesLayout
@@ -164,14 +174,13 @@ const schema = [
       <h1>{HEADING}</h1>
       <p class="lead">{SUBHEADING}</p>
       <p class="hero-cta">
-        <a
-          class="btn btn-primary"
-          href={DOWNLOAD_PATH}
-          download
-          data-download="cost-ceiling-workbook"
-        >
-          {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
+        {workbookReady ? (
+          <button class="btn btn-primary" type="button" data-gate="xlsx" data-download="cost-ceiling-workbook">
+            {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+          </button>
+        ) : (
+          <span class="hero-note mono pending">{DOWNLOAD_PENDING}</span>
+        )}
         <a class="btn btn-ghost" href="#calculator">{SECONDARY_CTA}</a>
       </p>
       <p class="hero-note mono">{SUPPORTING_LINE}</p>
@@ -691,9 +700,13 @@ const schema = [
       </ul>
 
       <p class="hero-cta">
-        <a class="btn btn-primary" href={DOWNLOAD_PATH} download data-download="cost-ceiling-workbook">
-          {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
+        {workbookReady ? (
+          <button class="btn btn-primary" type="button" data-gate="xlsx" data-download="cost-ceiling-workbook">
+            {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+          </button>
+        ) : (
+          <span class="hero-note mono pending">{DOWNLOAD_PENDING}</span>
+        )}
       </p>
     </div>
   </section>
@@ -811,6 +824,7 @@ const schema = [
       </p>
     </div>
   </section>
+  <ResourceGate resource="cost-ceiling-workbook" lead="The workbook is the calculator on this page as an Excel file, with the same boundaries and the same arithmetic." />
 </ResourcesLayout>
 
 <style>

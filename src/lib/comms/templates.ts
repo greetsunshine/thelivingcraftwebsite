@@ -426,6 +426,125 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_PACKAGE_VERSION,
   },
 
+  // The Model Selection Tool: the fourth tool with a PDF. The PDF carries the
+  // person's own scores for a candidate, so the email points at the page and
+  // carries nothing.
+  {
+    key: 'resource-model-selection-tool',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Model Selection Tool',
+    body:
+      'Here is the Model Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/model-selection-tool\n\nIt scores one candidate model for one step of your system. You choose the job the model is being staffed on, answer ten deployment gates from the model card, score twelve behaviours from ten runs on four test cases you build yourself, and check four disqualifiers. The page shows the weighted score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one. Two reference candidates can be loaded from the first step.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+
+  // The download gate (19 September 2026) put every file on every resource
+  // page behind a name and an address, so each of these now takes requests
+  // and needs its own held wording. Same rule as the six above: a literal
+  // body, unapproved until reviewed, so nothing sends. The last line is the
+  // promise the marketing view depends on and is not decoration.
+  {
+    key: 'resource-agent-memory-audit-kit',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Agent Memory Audit Kit',
+    body:
+      'Here is the Agent Memory Audit Kit you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/agent-memory-audit-kit\n\nIt is a memory record schema, twelve audit questions, seven runnable failure tests and a one-page decision table for agent memory that stays correct. The full kit is a ZIP with the schema, four example records and the validation harness; the PDF is the page as one document; the JSON Schema is the record format alone. Each downloads from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-cost-ceiling-workbook',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Cost-Ceiling Workbook',
+    body:
+      'Here is the Cost-Ceiling Workbook you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/cost-ceiling-workbook\n\nIt is a working model of what one AI agent workflow is allowed to spend: token-level cost per attempt, concurrency overshoot and the cost of stopping at the budget. The calculator on the page is live and stores nothing; the Excel workbook downloads from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-rule-placement-audit',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Rule Placement Audit',
+    body:
+      'Here is the Rule Placement Audit you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/rule-placement-audit\n\nIt lists the rules your agent must never break and finds where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere. Your rows stay in your browser and are never sent. The CSV and the print copy are made in your browser after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-agent-failure-triage-kit',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Agent Failure Triage Kit',
+    body:
+      'Here is the Agent Failure Triage Kit you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/agent-failure-triage-kit\n\nIt says what an agent should do after a checker says no: the four triage questions in order, the response playbook, retry budgets by tool type, the reconciliation checklist and twelve failure injections. The page prints as one document after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-agent-design-check',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Agent Design Check',
+    body:
+      'Here is the Agent Design Check you asked for.\n\nhttps://learning.thelivingcraft.ai/tools/agent-design-check\n\nIt is nineteen questions about a design you already have, scored against rules you can read in full, with the next step for each one. Your answers never leave your browser. The text summary and the print copy are made in your browser after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-template-agent-design-canvas',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The agent design canvas template',
+    body:
+      'Here is the agent design canvas template you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/templates/agent-design-canvas\n\nIt is the one-page canvas as a blank you can fill in and as a completed illustrative example. Both download as Markdown from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-template-decision-record',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The decision record template',
+    body:
+      'Here is the decision record template you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/templates/decision-record\n\nIt is the decision record as a blank you can fill in and as a completed illustrative example. Both download as Markdown from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-template-design-review-agenda',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The design review agenda template',
+    body:
+      'Here is the design review agenda template you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/templates/design-review-agenda\n\nIt is the review agenda as a blank you can fill in and as a completed illustrative example. Both download as Markdown from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
+  {
+    key: 'resource-template-employer-funding-summary',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The employer funding summary template',
+    body:
+      'Here is the employer funding summary template you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/templates/employer-funding-summary\n\nIt is the funding summary as a blank you can fill in and as a completed illustrative example. Both download as Markdown from the page after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
 ];
 
 /**

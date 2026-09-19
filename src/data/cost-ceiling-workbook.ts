@@ -61,7 +61,15 @@ export const META_DESCRIPTION =
   'A free working model for engineering leaders: token-level cost per attempt, concurrency overshoot, and the cost of stopping when an AI agent hits its budget.';
 
 /** Where the file sits. One constant, read by the button and by the build check. */
-export const DOWNLOAD_PATH = '/downloads/cost-ceiling-workbook.xlsx';
+/**
+ * The workbook's file name inside the private downloads/ folder. The download
+ * gate reads it from there after a name and an address. The page checks the
+ * file exists at render time and, while it does not, says so instead of
+ * offering a button: the file has never been produced, and until 19
+ * September 2026 the button on this page was a link to a 404.
+ */
+export const DOWNLOAD_FILE = 'cost-ceiling-workbook.xlsx';
+export const DOWNLOAD_PENDING = 'The Excel workbook is not published yet. The calculator below is the same model, live.';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Section 2 — the 01:52 problem

@@ -118,6 +118,19 @@ export interface RequestableResource {
 
 export const resourceIdOf = (resource: RequestableResource): string => resource.id;
 
+/**
+ * What a request hands over. 'email' is the addendum's original "email me
+ * this" request. The rest are the download gate, decided 19 September 2026:
+ * every file a resource page hands out asks for a name and an address first.
+ * 'print' is a print button that asked before opening the print dialogue.
+ * ONE OWNER: the schema deliberately has no check constraint on the column, so
+ * a new kind is one entry here and nothing else.
+ */
+export const RESOURCE_KINDS = ['email', 'pdf', 'xlsx', 'zip', 'json', 'csv', 'md', 'txt', 'print'] as const;
+export type ResourceKind = (typeof RESOURCE_KINDS)[number];
+export const isResourceKind = (v: unknown): v is ResourceKind =>
+  typeof v === 'string' && (RESOURCE_KINDS as readonly string[]).includes(v);
+
 const fromWorksheet = (r: LongformResource): RequestableResource => ({
   id: canonicalResourceId(r.code) ?? r.id,
   title: r.title,
@@ -265,6 +278,8 @@ export interface ResourceRequestInput {
   values: Record<string, string>;
   attribution: Attribution;
   isTest?: boolean;
+  /** What is being handed over. Stored on the row; 'email' when absent. */
+  kind?: ResourceKind;
 }
 
 export type ResourceSaveResult =
@@ -321,6 +336,7 @@ export async function saveResourceRequest(
       p_attribution: input.attribution,
       p_is_test: input.isTest === true,
       p_actor: 'public_form',
+      p_kind: input.kind ?? 'email',
     });
 
     if (error) {

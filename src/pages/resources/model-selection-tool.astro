@@ -1,0 +1,1754 @@
+---
+// /resources/model-selection-tool — The Model Selection Tool.
+//
+// This REPLACED /resources/model-selection-checklist (a page to tick and
+// print), which had replaced /resources/contract-agent-test-kit. Both old
+// addresses redirect here from astro.config.mjs. Do not re-add a link to
+// either: the redirects are the only things that should still know them.
+//
+// Built against /resources/poc-screen as the reference. Where the two differ
+// in layout, interaction, wording style, PDF or checks, the POC tool wins.
+//
+// THE TOOL IS SIX STEPS: Start, the four sections A to D, and the result. One
+// step is on screen at a time, with a progress bar that fills as rows are
+// answered. The steps are only hidden by the script: without JavaScript, and in
+// print, every step is on the page in order, so a crawler and a printer see the
+// whole tool. Step state is a number in the closure, like the answers.
+//
+// Answers are a closure and die with the tab. No localStorage, no
+// sessionStorage. The one thing that leaves the browser is the PDF request:
+// name, email and the assessment go to /api/pipeline/resource-pdf, which
+// records the person (the V4 addendum's "optional email request"), checks and
+// builds the PDF from the same data module this page renders from, and hands
+// it back with the list of checks it passed. The answers are used for the file
+// and not stored; the dialog says so.
+//
+// Every string here comes from src/data/model-selection-tool.ts. The page's
+// script imports that module too (Vite bundles it), so the live score bar, the
+// result summary and the PDF all read one rubric: `readAssessment()`.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  TOOL_NAME,
+  PURPOSE,
+  HOW_TO_USE,
+  HOW_TO_RUN,
+  PROFILES,
+  STEP_QUESTION,
+  STEP_WHY,
+  GATES,
+  GATES_CLOSER,
+  CRITERIA,
+  WEIGHTS_NOTE,
+  KEY_ROWS_NOTE,
+  OWN_WEIGHT_ROWS,
+  OWN_WEIGHT_DEFAULT,
+  OWN_WEIGHT_MAX,
+  DISQUALIFIERS,
+  DISQUALIFIERS_CLOSER,
+  CASE_SHAPES,
+  CASES_CLOSER,
+  DOMAINS,
+  METHOD,
+  METHOD_CLOSER,
+  RECORD,
+  RETEST_TRIGGERS,
+  RECORD_CLOSER,
+  AFTERNOON,
+  AFTERNOON_CLOSER,
+  CUT_LINES,
+  EXAMPLES,
+  EXAMPLES_NOTE,
+  GATE_COUNT,
+  ANSWER_COUNT,
+} from '../../data/model-selection-tool';
+
+const meta = publishedResources.find((r) => r.id === 'model-selection-tool')!;
+
+const title = `${TOOL_NAME} — is this model fit for this step? · The Living Craft`;
+const description =
+  'A scored tool for choosing a model for one step of an agentic system. Choose the step, answer ten deployment gates from the model card, score twelve behaviours from your own test runs, and check four disqualifiers. The score and the outcome update as you answer. Two reference candidates to load, and a decision record to write when you choose.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_ORIGIN}/resources/model-selection-tool#howto`,
+    name: TOOL_NAME,
+    description,
+    url: `${SITE_ORIGIN}/resources/model-selection-tool`,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    totalTime: 'PT4H5M',
+    step: AFTERNOON.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.body,
+      text: `${s.body} (${s.minutes})`,
+    })),
+  },
+];
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// The four sections, as the steps between Start and Result. The script and
+// the progress bar both read the step order from the DOM, so the markup is
+// the one place it is written.
+const sections = [
+  { letter: 'A', name: 'The step', question: 'What job is this model being staffed on?' },
+  { letter: 'B', name: 'Deployment gates', question: 'Can this model be deployed where you need it, on the terms you need?' },
+  { letter: 'C', name: 'Behaviour under test', question: 'What did ten runs on your own four cases show?' },
+  { letter: 'D', name: 'Disqualifiers', question: 'Did it do the one thing that ends a candidate?' },
+];
+const steps = [
+  { key: 'start', dot: '0', name: 'Start' },
+  ...sections.map((s) => ({ key: s.letter.toLowerCase(), dot: s.letter, name: s.name })),
+  { key: 'result', dot: '✓', name: 'Result' },
+];
+const STEP_COUNT = steps.length;
+
+---
+
+<ResourcesLayout title={title} description={description} canonical="/resources/model-selection-tool" schema={schema}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number}</span>
+      </div>
+      <h1>{TOOL_NAME}</h1>
+      <p class="lead">
+        Find out whether one candidate model is fit for <em>one step</em> of your system. Ten
+        gates from the model card, twelve behaviours from your own test runs, four
+        disqualifiers, in four short steps. Each answer says what earns it, so two people
+        scoring the same ten runs land on the same number.
+      </p>
+      <p class="hero-note mono">
+        {ANSWER_COUNT} answers · {sections.length} sections · two hard gates · one afternoon
+      </p>
+      <ResourceCredit />
+    </div>
+  </section>
+
+  {/* The tool, inside one framed shell. Everything the score bar has to stay
+      above lives inside this element: a sticky element only sticks within its
+      parent. The frame is the tool's edge, so the page's section rhythm stops
+      at it and the steps use `.inner` for their gutters, not `.wrap`. */}
+  <section class="tool-section">
+  <div class="wrap">
+  <div class="tool" id="tool" data-step="0">
+    <div class="scorebar-wrap">
+      <div class="inner">
+        <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
+          <div class="sb-score">
+            <span id="pct">—</span><span class="of">%</span>
+          </div>
+          <div class="sb-text">
+            <span class="band" id="band">Not started</span>
+            <span class="sb-note" id="note">{ANSWER_COUNT} answers to give. Choose the step first.</span>
+          </div>
+          <div class="sb-secs mono" aria-label="Score by section">
+            <span class="sb-sec" title="The step">A <b id="sb-a">—</b></span>
+            <span class="sb-sec" title="Deployment gates">B <b id="sb-b">0</b>/{GATE_COUNT} pass</span>
+            <span class="sb-sec" title="Behaviour under test">C <b id="sb-c">—</b>/<span id="sb-cmax">—</span></span>
+            <span class="sb-sec" title="Disqualifiers">D <b id="sb-d">0</b> hit</span>
+          </div>
+        </div>
+
+        {/* The progress bar. The fill is answers given out of twenty-seven; the
+            pips are the six steps, and each one is a button that jumps there. */}
+        <div class="progress" aria-label="Progress">
+          <div class="p-track" role="progressbar" aria-valuemin="0" aria-valuemax={ANSWER_COUNT} aria-valuenow="0" id="p-track">
+            <div class="p-fill" id="p-fill" style="width:0%"></div>
+          </div>
+          <div class="p-row">
+            <ol class="p-steps" id="p-steps">
+              {steps.map((s, i) => (
+                <li>
+                  <button type="button" class="p-step" data-go={i} aria-current={i === 0 ? 'step' : undefined}>
+                    <span class="p-dot mono">{s.dot}</span>
+                    <span class="p-label">{s.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <span class="p-text mono" id="p-text">Step 1 of {STEP_COUNT} · 0 of {ANSWER_COUNT} answered</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 0: start -->
+    <section class="step" id="step-start" data-index="0">
+      <div class="inner">
+        <div class="stepnav top">
+          <span class="stepnote mono">Six steps. About fifteen minutes once the runs are done.</span>
+          <button class="btn btn-primary" type="button" data-go="1">Start scoring&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="about">
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">01</span> What this tool is for</span>
+            <ul class="plain">
+              {PURPOSE.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+          <div class="about-col">
+            <span class="eyebrow"><span class="num">02</span> How to use it</span>
+            <ol class="steps">
+              {HOW_TO_USE.map((p) => <li>{p}</li>)}
+            </ol>
+          </div>
+        </div>
+
+        <div class="rules">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">03</span> Rules for scoring</span>
+            <h2 class="step-title" tabindex="-1">Five rules. Break one and the score <em>stops meaning much</em>.</h2>
+          </div>
+          <ol class="howto">
+            {HOW_TO_RUN.map((h) => (
+              <li>
+                <strong>{h.lead}</strong> {h.rest}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <p class="examples-note">{EXAMPLES_NOTE}</p>
+        <div class="stepnav">
+          <button class="btn btn-primary" type="button" data-go="1">Start scoring&nbsp;<span class="arrow">→</span></button>
+          {EXAMPLES.map((ex) => (
+            <button class="btn btn-ghost load-example" data-example={ex.id} type="button">Load reference candidate {ex.id.toUpperCase()}</button>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 1: A · the step -->
+    <section id="step-a" class="step qsection" data-index="1">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="0">← Back</button>
+          <span class="stepnote mono">Step 2 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="2">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="shead">
+          <span class="sletter">A</span>
+          <div class="stitle">
+            <h2 class="sname step-title" tabindex="-1">{sections[0].name}</h2>
+            <p class="squestion">{sections[0].question}</p>
+          </div>
+          <span class="ssub mono" aria-label="Section A answer"><b id="secsub-a">Not chosen</b></span>
+        </div>
+        <p class="sblurb">One answer. It sets every weight in section C, so it comes first.</p>
+
+        <div class="item" id="row-profile" data-k="profile" data-i="0">
+          <span class="qn mono">A1</span>
+          <div class="qbody">
+            <p class="q">{STEP_QUESTION}</p>
+            <p class="why">{STEP_WHY}</p>
+            <div class="anchors" role="group" aria-label="The step">
+              {PROFILES.map((p, v) => (
+                <button type="button" class="anchor" id={`profile${v}`} data-k="profile" data-i="0" data-v={v} aria-pressed="false">
+                  <span class="av mono">{p.name}</span>
+                  <span class="at">{p.cost}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="0">← Back</button>
+          <span class="stepnote mono" id="stepnote-A">0 of 1 answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="2">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: B · deployment gates -->
+    <section id="step-b" class="step qsection" data-index="2">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="1">← Back</button>
+          <span class="stepnote mono">Step 3 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="3">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="shead">
+          <span class="sletter">B</span>
+          <div class="stitle">
+            <h2 class="sname step-title" tabindex="-1">{sections[1].name}</h2>
+            <p class="squestion">{sections[1].question}</p>
+          </div>
+          <span class="sgate">Hard gate</span>
+          <span class="ssub mono" aria-label="Section B passes"><b id="secsub-b">0</b>/{GATE_COUNT} pass</span>
+        </div>
+        <p class="sblurb">
+          Ten answers from the model card and the contract, before you run anything. Any fail here ends
+          the candidate whatever it scores elsewhere.
+        </p>
+
+        {GATES.map((g, i) => (
+          <div class="item gate" id={`row-gate-${i}`} data-k="gate" data-i={i}>
+            <span class="qn mono">B{i + 1}</span>
+            <div class="qbody">
+              <p class="q">{g.q}</p>
+              <p class="why">{g.cost}</p>
+              <div class="anchors two" role="group" aria-label={`Gate ${i + 1}: ${g.short}`}>
+                <button type="button" class="anchor" id={`gate${i}v1`} data-k="gate" data-i={i} data-v="1" aria-pressed="false">
+                  <span class="av mono">Passes</span>
+                  <span class="at">{g.passes}</span>
+                </button>
+                <button type="button" class="anchor fail" id={`gate${i}v0`} data-k="gate" data-i={i} data-v="0" aria-pressed="false">
+                  <span class="av mono">Fails</span>
+                  <span class="at">Not confirmed, or confirmed and it does not meet the line above.</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        <p class="callout">{GATES_CLOSER}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="1">← Back</button>
+          <span class="stepnote mono" id="stepnote-B">0 of {GATE_COUNT} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="3">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: C · behaviour under test -->
+    <section id="step-c" class="step qsection" data-index="3">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="2">← Back</button>
+          <span class="stepnote mono">Step 4 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="4">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="shead">
+          <span class="sletter">C</span>
+          <div class="stitle">
+            <h2 class="sname step-title" tabindex="-1">{sections[2].name}</h2>
+            <p class="squestion">{sections[2].question}</p>
+          </div>
+          <span class="ssub mono" aria-label="Section C weighted score"><b id="secsub-c">—</b>/<span id="secsub-cmax">—</span></span>
+        </div>
+        <p class="sblurb">
+          Twelve behaviours, each scored 0, 1 or 2 against a written threshold. The weight beside each row
+          comes from the step you chose in A. {KEY_ROWS_NOTE}
+        </p>
+
+        {CRITERIA.map((c, i) => {
+          const k = OWN_WEIGHT_ROWS.indexOf(i);
+          return (
+            <div class={`item${c.key ? ' keyrow' : ''}`} id={`row-score-${i}`} data-k="score" data-i={i}>
+              <span class="qn mono">C{pad(i + 1)}</span>
+              <div class="qbody">
+                <div class="qtop">
+                  <p class="q">{c.q}</p>
+                  {k < 0 ? (
+                    <span class="wchip mono" id={`w${i}`}>Weight —</span>
+                  ) : (
+                    <label class="wown mono">
+                      Weight, you set it
+                      <select id={`own${k}`} data-k={k}>
+                        {Array.from({ length: OWN_WEIGHT_MAX }, (_, n) => n + 1).map((n) => (
+                          <option value={n} selected={n === OWN_WEIGHT_DEFAULT}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+                <p class="why">{c.why}{c.key ? ' A quality review will not raise this row.' : ''}</p>
+                <div class="anchors" role="group" aria-label={`Score for row ${i + 1}: ${c.short}`}>
+                  {c.a.map((text, v) => (
+                    <button type="button" class="anchor" id={`score${i}v${v}`} data-k="score" data-i={i} data-v={v} aria-pressed="false">
+                      <span class="av mono">{v}</span>
+                      <span class="at">{text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <p class="callout">{WEIGHTS_NOTE}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="2">← Back</button>
+          <span class="stepnote mono" id="stepnote-C">0 of {CRITERIA.length} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="4">Next&nbsp;<span class="arrow">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 4: D · disqualifiers -->
+    <section id="step-d" class="step qsection" data-index="4">
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go="3">← Back</button>
+          <span class="stepnote mono">Step 5 of {STEP_COUNT}</span>
+          <button class="btn btn-primary" type="button" data-go="5">See the result&nbsp;<span class="arrow">→</span></button>
+        </div>
+        <div class="shead">
+          <span class="sletter">D</span>
+          <div class="stitle">
+            <h2 class="sname step-title" tabindex="-1">{sections[3].name}</h2>
+            <p class="squestion">{sections[3].question}</p>
+          </div>
+          <span class="sgate">Hard gate</span>
+          <span class="ssub mono" aria-label="Section D hits"><b id="secsub-d">0</b> hit</span>
+        </div>
+        <p class="sblurb">
+          Four things. If any one of them happened on any run, the candidate is out, whatever it scored in C.
+        </p>
+
+        {DISQUALIFIERS.map((d, i) => (
+          <div class="item gate" id={`row-dq-${i}`} data-k="dq" data-i={i}>
+            <span class="qn mono">D{i + 1}</span>
+            <div class="qbody">
+              <p class="q">{d.q}</p>
+              <p class="why">{d.why}</p>
+              <div class="anchors two" role="group" aria-label={`Disqualifier ${i + 1}: ${d.short}`}>
+                <button type="button" class="anchor" id={`dq${i}v0`} data-k="dq" data-i={i} data-v="0" aria-pressed="false">
+                  <span class="av mono">Did not happen</span>
+                  <span class="at">Not on any of the ten runs, on any of the four cases.</span>
+                </button>
+                <button type="button" class="anchor fail" id={`dq${i}v1`} data-k="dq" data-i={i} data-v="1" aria-pressed="false">
+                  <span class="av mono">Happened</span>
+                  <span class="at">At least once. Write down which run and keep the output as evidence.</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        <p class="callout stop">{DISQUALIFIERS_CLOSER}</p>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go="3">← Back</button>
+          <span class="stepnote mono" id="stepnote-D">0 of {DISQUALIFIERS.length} answered in this step</span>
+          <button class="btn btn-primary" type="button" data-go="5">See the result&nbsp;<span class="arrow">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 5: the result -->
+    <section class="step" id="step-result" data-index={STEP_COUNT - 1}>
+      <div class="inner">
+        <div class="stepnav top">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <span class="stepnote mono">Step {STEP_COUNT} of {STEP_COUNT}</span>
+          <button class="btn btn-ghost" type="button" data-go="1">Change an answer</button>
+        </div>
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">04</span> Your result</span>
+          <h2 class="step-title" tabindex="-1">The outcome, read against the <em>rubric</em>.</h2>
+        </div>
+        <div class="resultcard" id="resultcard" data-b="none">
+          <div class="r-head">
+            <span class="r-score mono"><b id="r-pct">—</b>%</span>
+            <span class="r-band" id="r-band">Not started</span>
+          </div>
+          <p class="r-example mono" id="r-example" hidden></p>
+          <p class="r-what" id="r-what">
+            Give all {ANSWER_COUNT} answers to read the outcome. Until then this shows the running score, and a blank row in C counts as 0.
+          </p>
+          <div class="r-secs" id="r-secs"></div>
+          <p class="r-gate" id="r-gate" hidden></p>
+          <div class="r-fix" id="r-fix" hidden>
+            <h3>Fix first</h3>
+            <p class="r-fixlead">Rows scored 0 first, then 1, heaviest weight first. Each names the test case that is the evidence for it. A row scored 1 needs a named cover before it is accepted; a row scored 0 needs a fix or a narrower step.</p>
+            <ol id="r-fixlist"></ol>
+          </div>
+          <div class="r-actions" role="group" aria-label="Assessment controls">
+            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
+          </div>
+        </div>
+
+        <div class="rubric">
+          <div class="sec-head">
+            <span class="eyebrow"><span class="num">05</span> The rubric</span>
+            <h2>Agree these <em>before</em> you score, not after.</h2>
+          </div>
+          <p class="prose-lead">
+            The two gates are checked first and ignore the score. The percentage is your weighted score over the
+            weighted maximum for the step you chose, so it means the same thing whichever job the model has.
+            The row that matches your result is highlighted.
+          </p>
+          {CUT_LINES.map((c) => (
+            <div class="cutrow" id={`cut-${c.key}`} data-b={c.key}>
+              <div class="cutscore mono">{c.score}</div>
+              <div class="cutname">{c.name}</div>
+              <div class="cutwhat">{c.what}</div>
+            </div>
+          ))}
+        </div>
+
+        <div class="stepnav">
+          <button class="btn btn-ghost" type="button" data-go={STEP_COUNT - 2}>← Back</button>
+          <button class="btn btn-ghost" type="button" data-go="1">Change an answer</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  </div>
+  </section>
+
+  <!-- Build the test set -->
+  <section id="cases">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">06</span> Build the test set</span>
+        <h2>Four cases, built out of <em>your own work</em>. They are the evidence for section C.</h2>
+      </div>
+      <p class="prose-lead">
+        Use real inputs with the names removed. A public benchmark cannot tell you how a model behaves on
+        the documents your team actually receives. Each card says which rows in C it is the evidence for.
+      </p>
+      <div class="cases">
+        {CASE_SHAPES.map((c) => (
+          <div class="case" id={`case-${c.n}`}>
+            <div class="chead">
+              <span class="cn mono">Case {c.n}</span>
+              <h3>{c.name}</h3>
+            </div>
+            <p class="crow"><span class="clabel mono">How to build it</span> {c.build}</p>
+            <p class="crow"><span class="clabel mono">Right answer</span> {c.right}</p>
+            <p class={`crow${c.failure ? ' watch' : ''}`}>
+              <span class="clabel mono">{c.watchLabel}</span> {c.watch}
+            </p>
+            <p class="crow reveals mono">Evidence for {c.reveals.map((n) => `C${pad(n)}`).join(' · ')}</p>
+          </div>
+        ))}
+      </div>
+      <p class="callout">{CASES_CLOSER}</p>
+
+      <h3 class="sub">The same three cases, in four different jobs</h3>
+      <p class="prose-note">
+        Illustrations of how to build a case. They describe no real team, product or system. Case 1 is
+        not in the table because an ordinary case looks the same in every job.
+      </p>
+      <div class="scroll">
+        <table class="grid domains">
+          <thead>
+            <tr>
+              <th>The job</th>
+              <th>Case 2 · missing input</th>
+              <th>Case 3 · planted item</th>
+              <th>Case 4 · closing deadline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DOMAINS.map((d) => (
+              <tr>
+                <td class="cname">{d.job}</td>
+                <td>{d.missing}</td>
+                <td>{d.planted}</td>
+                <td>{d.deadline}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section id="method">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> Score what is missing</span>
+        <h2>The step most teams skip, because <em>nothing is on the page</em> to mark wrong.</h2>
+      </div>
+      <ol class="method">
+        {METHOD.map((m) => (
+          <li>
+            <span class="mn mono">{m.n}</span>
+            <span class="mbody">{m.body}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{METHOD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Decision record -->
+  <section id="record">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">08</span> The decision record</span>
+        <h2>One page. Written when you decide, <em>not afterwards</em>.</h2>
+      </div>
+      <p class="prose-lead">
+        Your result above gives the first half: the step, the score, the rows to fix. Print this section
+        to fill in the rest, or copy the headings into your own architecture decision record.
+      </p>
+      <div class="rec">
+        {RECORD.map((g) => (
+          <div class="recgroup">
+            <h3 class="recheading mono">{g.heading}</h3>
+            {g.fields.map((f) => (
+              <p class="recfield"><span class="rlabel">{f}</span><span class="rline"></span></p>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <h3 class="sub">Re-test if any of these happen</h3>
+      <ul class="retest">
+        {RETEST_TRIGGERS.map((t) => <li>{t}</li>)}
+      </ul>
+      <p class="recfield next"><span class="rlabel">Next re-test due</span><span class="rline"></span></p>
+      <p class="callout">{RECORD_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- The afternoon -->
+  <section id="afternoon">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">09</span> Run it in an afternoon</span>
+        <h2>Four hours and five minutes, <em>in this order</em>.</h2>
+      </div>
+      <ol class="protocol">
+        {AFTERNOON.map((s) => (
+          <li>
+            <div class="pmeta"><span class="pn mono">{s.n}</span><span class="pmin mono">{s.minutes}</span></div>
+            <div class="pbody"><p>{s.body}</p></div>
+          </li>
+        ))}
+      </ol>
+      <p class="callout">{AFTERNOON_CLOSER}</p>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> What comes next</span>
+        <h2>This picks a model. It does not tell you the system <em>holds up</em>.</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Everything you scored is a claim about one step on one day. Keeping that claim true needs an
+          eval set you run again when the version moves, and a register that catches the work the model
+          never mentions. That part takes a room.
+        </p>
+      </div>
+      <p class="hero-cta">
+        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
+    </div>
+  </section>
+
+  <ResourceGate resource="model-selection-tool" lead="The PDF carries your twenty-seven answers, the weighted score, the outcome and the rows to fix first, and is checked before it is handed over." manual />
+</ResourcesLayout>
+
+<style>
+  /* global.css resets every margin and has no .prose p rule, so sibling
+     paragraphs collide. Scoped, as on the other resource pages. */
+  .prose p + p { margin-top: var(--space-4); }
+
+  /* ── the frame ────────────────────────────────────────────────────────── */
+  /* One white shell on the mist ground, the app-shell radius and the overlay
+     shadow the design system gives a shell. `overflow: clip` rounds the corners
+     without making the frame a scroll container, which `hidden` would, and a
+     scroll container is what stops the score bar sticking to the viewport. */
+  .tool-section { padding-top: var(--space-6); }
+  .tool {
+    background: var(--surface-panel);
+    border-radius: var(--radius-shell);
+    box-shadow: var(--shadow-overlay);
+    overflow: clip;
+  }
+  .inner { padding: 0 var(--space-7); }
+  /* Page-scale display headings read as a landing page inside a tool. Step
+     them down one size inside the shell; the section names stay as they are. */
+  .tool .sec-head h2 { font-size: var(--size-7); }
+  .tool .sec-head { margin-bottom: var(--space-5); }
+
+  /* ── steps ────────────────────────────────────────────────────────────── */
+  /* Without the script every step is visible. With it, only the current one.
+     `data-step` on the tool is the cursor; each step carries its index. */
+  .tool.js .step { display: none; }
+  .tool.js .step.current { display: block; }
+  .step { padding: var(--space-5) 0 var(--space-7); }
+  /* The heading takes focus from the script after a step change, so a screen
+     reader announces where it landed. It has tabindex="-1", so Tab never
+     reaches it, and the ring would only ever show to a mouse user, in berry,
+     looking like an error. */
+  .step-title:focus, .step-title:focus-visible { outline: none; }
+
+  .stepnav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-hair);
+  }
+  .stepnav .btn-primary { margin-left: auto; }
+  .stepnav.top {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    margin-bottom: var(--space-5);
+  }
+  .stepnote { font-size: var(--size-1); color: var(--text-quiet); }
+  /* Without the script the steps are all on the page, so the buttons that move
+     between them do nothing useful and are hidden. */
+  .tool:not(.js) .stepnav [data-go], .tool:not(.js) .p-step, .tool:not(.js) .load-example { display: none; }
+  .examples-note {
+    margin-top: var(--space-6);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+  }
+  /* The start step's bottom nav carries the two load buttons; the primary
+     button keeps its place on the right. */
+  #step-start .stepnav:not(.top) .btn-primary { order: 3; }
+
+  /* ── about ────────────────────────────────────────────────────────────── */
+  .about {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-7);
+  }
+  .about-col {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-5) var(--space-6);
+  }
+  .about-col .eyebrow { display: block; margin-bottom: var(--space-4); }
+  ul.plain, ol.steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  ul.plain li {
+    position: relative;
+    padding-left: var(--space-5);
+  }
+  ul.plain li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--sun);
+  }
+  ol.steps { counter-reset: s; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: var(--space-6);
+  }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--text-on-invert);
+    background: var(--noir);
+    border-radius: var(--radius-pill);
+    width: 20px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  /* ── scoring rules ────────────────────────────────────────────────────── */
+  ol.howto {
+    list-style: none;
+    counter-reset: h;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: var(--measure-prose);
+    padding: 0;
+    margin: 0;
+  }
+  ol.howto li {
+    counter-increment: h;
+    position: relative;
+    padding-left: var(--space-7);
+  }
+  ol.howto li::before {
+    content: counter(h);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  ol.howto strong { font-weight: var(--weight-strong); }
+
+  /* ── the score bar ────────────────────────────────────────────────────── */
+  /* The frame's header. Sticky under the nav; flat, with a hairline under it,
+     because it sits inside the shell rather than floating over the page. Its
+     parent is `.tool`, which wraps every step, so it holds through the whole
+     tool and releases before the test cases. */
+  .scorebar-wrap {
+    position: sticky;
+    /* The nav is 76px on a desktop and wraps taller on a phone. The script
+       measures it and sets --nav-h; the fallback is the desktop height. */
+    top: var(--nav-h, 76px);
+    z-index: var(--z-sticky);
+    background: var(--surface-panel);
+    border-bottom: 1px solid var(--border-hair);
+  }
+  .scorebar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    padding: var(--space-4) 0 var(--space-3);
+  }
+  .sb-score {
+    font-family: var(--font-mono);
+    font-size: var(--size-7);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .sb-score .of {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .sb-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .band {
+    font-size: var(--size-4);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--lh-snug);
+  }
+  .sb-note {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .sb-secs {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .sb-sec {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .sb-sec b { color: var(--text-body); font-weight: var(--weight-strong); }
+  /* Bands read through colour on the word, not a yellow chip — sun is reserved
+     for things you can click, so it cannot carry a status. */
+  [data-b='stop'] .band, [data-b='gate'] .band, [data-b='dq'] .band,
+  [data-b='stop'] .r-band, [data-b='gate'] .r-band, [data-b='dq'] .r-band { color: var(--danger); }
+  [data-b='cover'] .band, [data-b='cover'] .r-band { color: var(--accent-ink); }
+  [data-b='fit'] .band, [data-b='fit'] .r-band { color: var(--text-loud); }
+  [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
+
+  /* ── the progress bar ─────────────────────────────────────────────────── */
+  /* Joined to the score bar as one panel. The fill is sun, and it is the one
+     yellow thing here that is not a control, so it stays a thin line. */
+  .progress { padding: 0 0 var(--space-3); }
+  .p-track {
+    height: 4px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .p-fill {
+    height: 100%;
+    background: var(--sun);
+    border-radius: var(--radius-pill);
+    transition: width var(--motion-base, 160ms) ease;
+  }
+  .p-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-3);
+  }
+  .p-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .p-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 3px 10px 3px 4px;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .p-step:hover { background: var(--surface-hover); color: var(--text-body); }
+  .p-step:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .p-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    display: inline-grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .p-step[aria-current='step'] { color: var(--text-loud); }
+  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
+
+  /* ── question sections ────────────────────────────────────────────────── */
+  .shead {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: start;
+    gap: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .sletter {
+    font-family: var(--font-mono);
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    color: var(--text-on-invert);
+    background: var(--noir);
+    border-radius: var(--radius-pill);
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    margin-top: 4px;
+  }
+  .stitle { min-width: 0; }
+  .sname { font-size: var(--size-6); line-height: var(--lh-tight); }
+  .squestion {
+    margin: var(--space-1) 0 0;
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+  }
+  .sgate {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--danger);
+    background: var(--danger-quiet);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+  .ssub {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+  .ssub b { color: var(--text-body); font-weight: var(--weight-strong); }
+  .sblurb {
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-5) calc(28px + var(--space-4));
+  }
+
+  /* One grid per row: the number in a fixed gutter, everything else in the
+     second column, so the question, the reason and the anchors all share one
+     left edge. */
+  .item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 0 var(--space-3);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  /* A failed gate or a disqualifier that happened must not be missable. */
+  .item.gate.zeroed {
+    outline: var(--border-w-rule) solid var(--danger-mark);
+    outline-offset: 0;
+  }
+  .qn {
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    padding-top: 6px;
+  }
+  .qbody { min-width: 0; }
+  .qtop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .q {
+    margin: 0;
+    font-size: var(--size-4);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-snug);
+    flex: 1 1 32ch;
+  }
+  /* Marked, not ranked: the two rows a quality review will not raise. */
+  .keyrow .q { color: var(--accent-ink-strong); }
+  .why {
+    margin: var(--space-2) 0 var(--space-4);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: 64ch;
+  }
+  .wchip {
+    font-size: var(--size-1);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .wchip.unset { color: var(--text-quiet); }
+  .wown {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    white-space: nowrap;
+  }
+  .wown select {
+    font: inherit;
+    font-family: var(--font-mono);
+    font-weight: var(--weight-strong);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 2px 6px;
+    height: 32px;
+  }
+  .wown select:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .anchors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .anchors.two { grid-template-columns: repeat(2, 1fr); }
+  .anchor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    text-align: left;
+    background: var(--surface-panel);
+    border: 0;
+    border-radius: var(--radius-inner);
+    padding: var(--space-4);
+    cursor: pointer;
+    font: inherit;
+    color: var(--text-body);
+    transition: background var(--motion-fast, 90ms) ease, color var(--motion-fast, 90ms) ease;
+  }
+  .anchor:hover { background: var(--surface-hover); }
+  .anchor:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .anchor .av {
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+  }
+  .anchor .at { font-size: var(--size-2); line-height: var(--lh-snug); }
+  /* Selected is sun: these are buttons, so yellow still means clickable. */
+  .anchor[aria-pressed='true'] {
+    background: var(--surface-sun);
+    color: var(--text-on-accent);
+  }
+  .anchor[aria-pressed='true'] .av { color: var(--text-on-accent); }
+  /* A chosen fail or hit reads in the danger colour on the label, so the
+     yellow does not read as "good". */
+  .anchor.fail[aria-pressed='true'] .av { color: var(--danger); }
+
+  .callout {
+    background: var(--accent-quiet);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-5);
+    max-width: var(--measure-prose);
+  }
+  .callout.stop { background: var(--danger-quiet); }
+
+  /* ── the result ───────────────────────────────────────────────────────── */
+  .resultcard {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-card);
+    padding: var(--space-6);
+    margin-bottom: var(--space-7);
+  }
+  .r-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+  .r-score {
+    font-size: var(--size-8);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-quiet);
+  }
+  .r-score b { color: var(--text-body); }
+  .r-band {
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--lh-tight);
+  }
+  .r-example { margin: 0 0 var(--space-3); font-size: var(--size-1); color: var(--accent-ink); max-width: var(--measure-prose); }
+  .r-example[hidden] { display: none; }
+  .r-what {
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-5);
+  }
+  .r-secs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  /* The section boxes and the fix-first rows are created by the script, so
+     they never carry Astro's scoping attribute. `:global()` is what lets these
+     rules reach them; the parents above are in the template and stay scoped. */
+  .r-secs :global(.r-sec) {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .r-secs :global(.r-sec .k) {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .r-secs :global(.r-sec .v) {
+    font-family: var(--font-mono);
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    overflow-wrap: anywhere;
+  }
+  .r-secs :global(.r-sec .v.small) { font-size: var(--size-3); font-family: var(--font-body); }
+  .r-secs :global(.r-sec .v small) { font-size: var(--size-2); color: var(--text-quiet); font-weight: var(--weight-regular); }
+  .r-secs :global(.r-sec .n) { font-size: var(--size-1); color: var(--text-quiet); }
+  .r-secs :global(.r-sec.low .v) { color: var(--danger); }
+  .r-gate {
+    color: var(--danger);
+    font-weight: var(--weight-strong);
+    max-width: var(--measure-prose);
+    margin: 0 0 var(--space-5);
+  }
+  .r-fix h3 { font-size: var(--size-4); margin: 0 0 var(--space-1); }
+  .r-fixlead { font-size: var(--size-2); color: var(--text-quiet); margin: 0 0 var(--space-3); max-width: var(--measure-prose); }
+  .r-fix ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+  .r-fix :global(li) {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border-hair);
+    font-size: var(--size-2);
+  }
+  .r-fix :global(li:last-child) { border-bottom: 1px solid var(--border-hair); }
+  .r-fix :global(.fn) { font-family: var(--font-mono); font-size: var(--size-1); color: var(--text-quiet); padding-top: 3px; }
+  .r-fix :global(.fn.zero) { color: var(--danger); }
+  .r-fix :global(.ft b) { font-weight: var(--weight-strong); }
+  .r-fix :global(.ft .fm) { display: block; margin-top: 2px; color: var(--accent-ink); }
+  .r-fix :global(.ft .fm a) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .r-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+
+  /* ── rubric ───────────────────────────────────────────────────────────── */
+  .prose-lead {
+    color: var(--text-quiet);
+    max-width: var(--measure-prose);
+    margin-bottom: var(--space-5);
+  }
+  .cutrow {
+    display: grid;
+    grid-template-columns: 120px 240px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-inner);
+    margin-bottom: var(--space-3);
+    background: var(--surface-sunken);
+    opacity: 0.55;
+    transition: opacity var(--motion-base, 160ms) ease;
+  }
+  .cutrow.active { opacity: 1; background: var(--surface-panel); box-shadow: var(--shadow-raise); }
+  .cutscore { font-size: var(--size-2); font-weight: var(--weight-strong); }
+  .cutname { font-weight: var(--weight-strong); }
+  .cutwhat { font-size: var(--size-2); color: var(--text-quiet); }
+  .cutrow[data-b='gate'].active .cutscore,
+  .cutrow[data-b='dq'].active .cutscore,
+  .cutrow[data-b='stop'].active .cutscore { color: var(--danger); }
+  .cutrow[data-b='cover'].active .cutscore { color: var(--accent-ink); }
+
+  /* ── cases, method, record, afternoon: below the shell ────────────────── */
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-4); }
+  .sub {
+    margin: var(--space-6) 0 var(--space-3);
+    font-size: var(--size-5);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+  /* Four cards, two-up. Three-and-one reads as a card that failed to load. */
+  .cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .case {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .chead { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+  .cn { font-size: var(--size-1); color: var(--text-quiet); }
+  .case h3 { font-size: var(--size-5); }
+  .crow { font-size: var(--size-2); color: var(--text-body); margin-bottom: var(--space-3); }
+  .crow:last-child { margin-bottom: 0; }
+  .clabel { display: block; font-size: var(--size-1); color: var(--text-quiet); margin-bottom: 2px; }
+  .crow.watch .clabel { color: var(--danger); }
+  .crow.reveals { font-size: var(--size-1); color: var(--accent-ink); padding-top: var(--space-2); border-top: 1px solid var(--border-hair); }
+
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .domains { min-width: 820px; }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 170px; }
+
+  ol.method { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); padding: 0; margin: 0; }
+  ol.method li { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); align-items: baseline; }
+  .mn { color: var(--accent-ink-strong); font-weight: var(--weight-strong); }
+  .mbody { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  ol.protocol { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); padding: 0; margin: 0; }
+  ol.protocol li { display: grid; grid-template-columns: 76px 1fr; gap: var(--space-4); align-items: start; }
+  .pmeta { display: flex; flex-direction: column; gap: 2px; }
+  .pn { font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .pmin { font-size: var(--size-1); color: var(--text-quiet); }
+  .pbody p { font-size: var(--size-3); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  .rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
+  .recgroup {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+  }
+  .recheading { font-size: var(--size-1); color: var(--accent-ink-strong); margin-bottom: var(--space-4); }
+  .recfield { margin-bottom: var(--space-4); }
+  .recfield:last-child { margin-bottom: 0; }
+  .rlabel { display: block; font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-2); }
+  .rline { display: block; height: 1px; background: var(--border-field); }
+  .recfield.next { max-width: 420px; margin-top: var(--space-5); }
+  ul.retest { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); padding: 0; margin: 0; }
+  ul.retest li {
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    padding-left: var(--space-5);
+    position: relative;
+  }
+  ul.retest li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .55em;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--border-field);
+    border-radius: 2px;
+  }
+
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+
+  @media (max-width: 900px) {
+    .cases { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .tool { border-radius: var(--radius-panel); }
+    .inner { padding: 0 var(--space-4); }
+    .about { grid-template-columns: 1fr; }
+    .scorebar { grid-template-columns: auto 1fr; }
+    .sb-secs { grid-column: 1 / -1; }
+    .sb-score { font-size: var(--size-6); }
+    .band { font-size: var(--size-3); }
+    /* The outcome's full text is on the result card. In a sticky bar on a
+       phone, five lines of it is a third of the screen. */
+    .sb-note {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .p-label { display: none; }
+    .p-step { padding-right: 4px; }
+    .p-text { white-space: normal; }
+    .shead { grid-template-columns: auto 1fr; }
+    .sgate, .ssub { grid-column: 2; justify-self: start; margin-top: 0; }
+    .sblurb { margin-left: 0; }
+    .item { grid-template-columns: 1fr; }
+    .qn { padding-top: 0; margin-bottom: var(--space-1); }
+    .anchors, .anchors.two { grid-template-columns: 1fr; }
+    .r-secs { grid-template-columns: 1fr 1fr; }
+    .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
+    .stepnav .btn-primary { margin-left: 0; }
+  }
+  @media (max-width: 720px) {
+    ol.protocol li { grid-template-columns: 1fr; gap: var(--space-2); }
+  }
+
+  /* ── print: every step, in order, as a scorecard ──────────────────────── */
+  @media print {
+    .tool.js .step { display: block; }
+    .scorebar-wrap { position: static; }
+    .tool { box-shadow: none; border: 1px solid var(--border-hair); }
+    .resultcard, .about-col { border: 1px solid var(--border-hair); }
+    .stepnav, .hero-cta, .r-actions, .p-steps, .examples-note { display: none !important; }
+    .item, .case, .recgroup { box-shadow: none; border: 1px solid var(--border-hair); break-inside: avoid; }
+    .cutrow { opacity: 1 !important; break-inside: avoid; }
+    .anchor, .resultcard { break-inside: avoid; }
+    .anchor { border: 1px solid var(--border-hair); }
+    .anchor[aria-pressed='true'] { outline: 2px solid var(--ink-1); }
+    table.grid, .scroll { overflow: visible !important; }
+    .domains { min-width: 0 !important; font-size: 10px; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
+<script>
+  // Answers are a plain object in this closure, and the step is a number
+  // beside it. Never written to localStorage, never posted except inside the
+  // PDF request, and gone when the tab closes.
+  //
+  // This is a module script, so it imports the same data module the page
+  // rendered from. The score bar, the result summary and (on the server) the
+  // PDF all read one rubric: `readAssessment()`.
+  import {
+    ANSWER_COUNT,
+    CRITERIA,
+    DISQUALIFIERS,
+    DQ_COUNT,
+    EXAMPLES,
+    GATES,
+    GATE_COUNT,
+    OWN_WEIGHT_ROWS,
+    PROFILES,
+    blankAssessment,
+    caseFor,
+    exampleFor,
+    readAssessment,
+    weightOf,
+    type Assessment,
+  } from '../../data/model-selection-tool';
+  import { mountGate } from '../../lib/resources/gate-client';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  let state: Assessment = blankAssessment();
+
+  // ---- the steps ----------------------------------------------------------
+
+  const tool = $('tool');
+  const nav = document.querySelector<HTMLElement>('header.nav');
+  const bar = document.querySelector<HTMLElement>('.scorebar-wrap');
+  const stepEls = [...tool.querySelectorAll<HTMLElement>('.step')];
+  const STEP_COUNT = stepEls.length;
+  const LAST = STEP_COUNT - 1;
+  const LETTERS = ['A', 'B', 'C', 'D'];
+  let step = 0;
+  tool.classList.add('js');
+
+  // Which rows live in which step. A row is `kind:index`; step 0 and the
+  // last have none.
+  type RowKey = { k: string; i: number };
+  const stepRows: RowKey[][] = stepEls.map((el) =>
+    [...el.querySelectorAll<HTMLElement>('.item')].map((r) => ({ k: r.dataset.k ?? '', i: Number(r.dataset.i) })),
+  );
+
+  function valueOf(r: RowKey): number | null {
+    if (r.k === 'profile') return state.profile;
+    if (r.k === 'gate') return state.gates[r.i];
+    if (r.k === 'score') return state.scores[r.i];
+    if (r.k === 'dq') return state.dq[r.i];
+    return null;
+  }
+  const rowId = (r: RowKey) => (r.k === 'profile' ? 'row-profile' : `row-${r.k}-${r.i}`);
+
+  function stepLabel(i: number) {
+    if (i === 0) return 'Start';
+    if (i === LAST) return 'Result';
+    const name = stepEls[i].querySelector('.sname')?.textContent ?? '';
+    return `${LETTERS[i - 1]} ${name}`;
+  }
+
+  function goTo(i: number, move = true) {
+    step = Math.max(0, Math.min(LAST, i));
+    tool.dataset.step = String(step);
+    stepEls.forEach((el, k) => el.classList.toggle('current', k === step));
+    updateProgress();
+    if (!move) return;
+    // Scroll so the tool's top sits just under the nav. The score bar is the
+    // tool's first child, so the step heading lands directly beneath it.
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const top = tool.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - 8), behavior: 'smooth' });
+    stepEls[step].querySelector<HTMLElement>('.step-title')?.focus({ preventScroll: true });
+  }
+
+  function updateProgress() {
+    const answered = readAssessment(state).answered;
+    $('p-fill').style.width = `${(answered / ANSWER_COUNT) * 100}%`;
+    $('p-track').setAttribute('aria-valuenow', String(answered));
+    $('p-text').textContent = `Step ${step + 1} of ${STEP_COUNT} · ${stepLabel(step)} · ${answered} of ${ANSWER_COUNT} answered`;
+    document.querySelectorAll<HTMLButtonElement>('.p-step').forEach((b) => {
+      const i = Number(b.dataset.go);
+      if (i === step) b.setAttribute('aria-current', 'step');
+      else b.removeAttribute('aria-current');
+      // A section step is "done" once all of its rows are answered.
+      const rows = stepRows[i];
+      b.classList.toggle('done', rows.length > 0 && rows.every((r) => valueOf(r) !== null));
+    });
+    stepRows.forEach((rows, i) => {
+      if (!rows.length) return;
+      const note = document.getElementById(`stepnote-${LETTERS[i - 1]}`);
+      if (note) note.textContent = `${rows.filter((r) => valueOf(r) !== null).length} of ${rows.length} answered in this step`;
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) => {
+    b.addEventListener('click', () => goTo(Number(b.dataset.go)));
+  });
+
+  // ---- the read, in the bar's words ---------------------------------------
+
+  type R = ReturnType<typeof readAssessment>;
+
+  const gateNames = (r: R) => r.gatesFailed.map((i) => `B${i + 1} ${GATES[i].short}`).join(', ');
+  const dqNames = (r: R) => r.dqHit.map((i) => `D${i + 1} ${DISQUALIFIERS[i].short}`).join(', ');
+
+  function bandLine(r: R) {
+    if (r.band?.key === 'gate') {
+      return { key: 'gate', band: r.band.name, note: `A fail in section B on ${gateNames(r)}. No score buys that back.` };
+    }
+    if (r.band?.key === 'dq') {
+      return { key: 'dq', band: r.band.name, note: `Disqualifier ${dqNames(r)} happened. This ends the candidate whatever the score.` };
+    }
+    if (state.profile === null) {
+      return { key: 'none', band: r.answered === 0 ? 'Not started' : 'In progress', note: `${ANSWER_COUNT - r.answered} answers to give. Choose the step in section A first.` };
+    }
+    if (!r.complete) {
+      const left = ANSWER_COUNT - r.answered;
+      return { key: 'none', band: 'In progress', note: `${left} ${left === 1 ? 'answer' : 'answers'} to give. A blank row in C counts as 0.` };
+    }
+    return { key: r.band!.key, band: r.band!.name, note: r.band!.what };
+  }
+
+  // ---- render -------------------------------------------------------------
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function secBox(k: string, value: string, small: string, opts: { low?: boolean; text?: boolean } = {}) {
+    const box = el('div', `r-sec${opts.low ? ' low' : ''}`);
+    box.append(el('span', 'k', k));
+    const v = el('span', `v${opts.text ? ' small' : ''}`, value);
+    if (small) v.append(el('small', undefined, small));
+    box.append(v);
+    return box;
+  }
+
+  function renderResult(r: R, line: ReturnType<typeof bandLine>) {
+    const card = $('resultcard');
+    card.dataset.b = line.key;
+    $('r-pct').textContent = r.pct === null ? '—' : String(r.pct);
+    $('r-band').textContent = line.band;
+    $('r-what').textContent = r.complete || r.band
+      ? line.note
+      : `Give all ${ANSWER_COUNT} answers to read the outcome. Until then this shows the running score, and a blank row in C counts as 0.`;
+
+    // When the state is one of the reference candidates, unchanged, say so:
+    // these are its answers, not the reader's.
+    const ex = exampleFor(state);
+    const exLine = $('r-example');
+    exLine.hidden = !ex;
+    exLine.textContent = ex ? `Reference candidate ${ex.id.toUpperCase()}: ${ex.lesson} These are its answers, not yours.` : '';
+
+    const gatesLeft = GATE_COUNT - state.gates.filter((v) => v !== null).length;
+    const scoresLeft = CRITERIA.length - state.scores.filter((v) => v !== null).length;
+    const dqLeft = DQ_COUNT - state.dq.filter((v) => v !== null).length;
+    $('r-secs').replaceChildren(
+      secBox('A · The step', state.profile === null ? 'Not chosen' : PROFILES[state.profile].name, '', { text: true }),
+      secBox('B · Gates', String(r.gatesPassed), `/${GATE_COUNT} pass${gatesLeft ? ` · ${gatesLeft} left` : ''}`, { low: r.gatesFailed.length > 0 }),
+      secBox('C · Weighted score', r.total === null ? '—' : String(r.total), r.max === null ? '' : `/${r.max}${scoresLeft ? ` · ${scoresLeft} left` : ''}`),
+      secBox('D · Disqualifiers', String(r.dqHit.length), ` hit${dqLeft ? ` · ${dqLeft} left` : ''}`, { low: r.dqHit.length > 0 }),
+    );
+
+    const gate = $('r-gate');
+    if (r.gatesFailed.length || r.dqHit.length) {
+      gate.hidden = false;
+      gate.textContent = [
+        r.gatesFailed.length ? `Hard gate. Section B fails on ${gateNames(r)}.` : '',
+        r.dqHit.length ? `Hard gate. Section D: ${dqNames(r)} happened.` : '',
+        'This ends the candidate whatever the score.',
+      ]
+        .filter(Boolean)
+        .join(' ');
+    } else {
+      gate.hidden = true;
+    }
+
+    $('r-fix').hidden = r.weak.length === 0;
+    $('r-fixlist').replaceChildren(
+      ...r.weak.map((x) => {
+        const li = el('li');
+        li.append(el('span', `fn${x.v === 0 ? ' zero' : ''}`, `C${pad(x.i + 1)}`));
+        const t = el('div', 'ft');
+        const c = CRITERIA[x.i];
+        t.append(
+          el('b', undefined, `${c.short}, scored ${x.v}${x.w === null ? '' : `, weight ${x.w}`}. `),
+          document.createTextNode(c.a[x.v]),
+        );
+        const cs = caseFor(x.i + 1);
+        if (cs) {
+          const fm = el('span', 'fm');
+          const a = el('a', undefined, `Evidence: case ${cs.n}, ${cs.name.toLowerCase()}`);
+          a.href = `#case-${cs.n}`;
+          fm.append(a);
+          t.append(fm);
+        }
+        li.append(t);
+        return li;
+      }),
+    );
+  }
+
+  function pressed(id: string, on: boolean) {
+    document.getElementById(id)?.setAttribute('aria-pressed', String(on));
+  }
+
+  function update() {
+    for (let v = 0; v < PROFILES.length; v++) pressed(`profile${v}`, state.profile === v);
+    state.gates.forEach((v, i) => {
+      pressed(`gate${i}v1`, v === 1);
+      pressed(`gate${i}v0`, v === 0);
+      document.getElementById(`row-gate-${i}`)?.classList.toggle('zeroed', v === 0);
+    });
+    state.scores.forEach((v, i) => {
+      for (let k = 0; k < 3; k++) pressed(`score${i}v${k}`, v === k);
+      const chip = document.getElementById(`w${i}`);
+      if (chip) {
+        const w = weightOf(i, state);
+        chip.textContent = w === null ? 'Weight — · choose the step in A' : `Weight ${w}`;
+        chip.classList.toggle('unset', w === null);
+      }
+    });
+    OWN_WEIGHT_ROWS.forEach((_, k) => {
+      const sel = document.getElementById(`own${k}`) as HTMLSelectElement | null;
+      if (sel) sel.value = String(state.own[k]);
+    });
+    state.dq.forEach((v, i) => {
+      pressed(`dq${i}v0`, v === 0);
+      pressed(`dq${i}v1`, v === 1);
+      document.getElementById(`row-dq-${i}`)?.classList.toggle('zeroed', v === 1);
+    });
+
+    const r = readAssessment(state);
+    const line = bandLine(r);
+
+    $('pct').textContent = r.pct === null ? '—' : String(r.pct);
+    $('band').textContent = line.band;
+    $('note').textContent = line.note;
+    $('verdict').dataset.b = line.key;
+
+    const stepName = state.profile === null ? '—' : PROFILES[state.profile].name;
+    $('sb-a').textContent = stepName;
+    $('secsub-a').textContent = state.profile === null ? 'Not chosen' : stepName;
+    $('sb-b').textContent = String(r.gatesPassed);
+    $('secsub-b').textContent = String(r.gatesPassed);
+    $('sb-c').textContent = r.total === null ? '—' : String(r.total);
+    $('secsub-c').textContent = r.total === null ? '—' : String(r.total);
+    $('sb-cmax').textContent = r.max === null ? '—' : String(r.max);
+    $('secsub-cmax').textContent = r.max === null ? '—' : String(r.max);
+    $('sb-d').textContent = String(r.dqHit.length);
+    $('secsub-d').textContent = String(r.dqHit.length);
+
+    renderResult(r, line);
+    updateProgress();
+
+    for (const key of ['gate', 'dq', 'fit', 'cover', 'stop']) {
+      document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
+    }
+  }
+
+  // ---- controls -----------------------------------------------------------
+
+  // Scroll a row to sit just under the sticky header, and put focus on its
+  // first anchor so a keyboard user lands there too.
+  function revealRow(r: RowKey) {
+    const row = document.getElementById(rowId(r));
+    if (!row) return;
+    const navH = document.querySelector('header.nav')?.getBoundingClientRect().height ?? 76;
+    const barH = bar?.getBoundingClientRect().height ?? 0;
+    const top = row.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - navH - barH - 12), behavior: 'smooth' });
+    row.querySelector<HTMLElement>('.anchor')?.focus({ preventScroll: true });
+  }
+
+  // After a fresh answer, move on: to the next unanswered row in this step,
+  // else to the next step. A changed answer stays put, so revising a score
+  // does not throw the page around. The pause lets the sun fill land before
+  // the move, so the click is seen to have taken.
+  function advanceFrom(k: string, i: number) {
+    const rows = stepRows[step];
+    const at = rows.findIndex((r) => r.k === k && r.i === i);
+    if (at < 0) return;
+    const after = rows.slice(at + 1).concat(rows.slice(0, at));
+    const next = after.find((r) => valueOf(r) === null);
+    window.setTimeout(() => {
+      if (next !== undefined) revealRow(next);
+      else if (step < LAST) goTo(step + 1);
+    }, 350);
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.anchor').forEach((b) => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.k ?? '';
+      const i = Number(b.dataset.i);
+      const v = Number(b.dataset.v);
+      const wasBlank = valueOf({ k, i }) === null;
+      // Clicking the selected anchor again clears it, so a mis-click is undoable.
+      if (k === 'profile') state.profile = state.profile === v ? null : v;
+      else if (k === 'gate') state.gates[i] = state.gates[i] === v ? null : v;
+      else if (k === 'score') state.scores[i] = state.scores[i] === v ? null : v;
+      else if (k === 'dq') state.dq[i] = state.dq[i] === v ? null : v;
+      update();
+      if (wasBlank && valueOf({ k, i }) !== null) advanceFrom(k, i);
+    });
+  });
+
+  OWN_WEIGHT_ROWS.forEach((_, k) => {
+    const sel = document.getElementById(`own${k}`) as HTMLSelectElement | null;
+    sel?.addEventListener('change', () => {
+      state.own[k] = Number(sel.value);
+      update();
+    });
+  });
+
+  function load(a: Assessment) {
+    state = {
+      profile: a.profile,
+      gates: a.gates.slice(),
+      scores: a.scores.slice(),
+      own: a.own.slice(),
+      dq: a.dq.slice(),
+    };
+    update();
+  }
+
+  $('blank').addEventListener('click', () => {
+    load(blankAssessment());
+    goTo(1);
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.load-example').forEach((b) => {
+    b.addEventListener('click', () => {
+      const ex = EXAMPLES.find((e) => e.id === b.dataset.example);
+      if (!ex) return;
+      load(ex.assessment);
+      goTo(LAST);
+    });
+  });
+
+  // The score bar sticks under the nav, and the nav is taller when its links
+  // wrap on a narrow screen. Measure it rather than guess.
+  function placeBar() {
+    if (nav && bar) bar.style.setProperty('--nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  }
+  placeBar();
+  window.addEventListener('resize', placeBar);
+
+  // ---- the download gate ---------------------------------------------
+  // One component, one client, one route: see src/components/ResourceGate.astro.
+  mountGate({ payload: () => state });
+
+  update();
+  goTo(0, false);
+</script>

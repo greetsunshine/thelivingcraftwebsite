@@ -85,6 +85,7 @@ export type Column = CsvColumn;
 export type ScopeId =
   | 'people'
   | 'organisations'
+  | 'requests'
   | 'submissions'
   | 'opportunities'
   | 'attributions'
@@ -147,6 +148,15 @@ export const SCOPES: readonly ScopeDefinition[] = [
     table: 'attributions',
     dateColumn: 'session_captured_at',
     personal: false,
+  },
+  {
+    id: 'requests',
+    label: 'Resource requests',
+    description:
+      'One row per download: who asked, for which resource, which file, when, and the campaign it came from. This is the marketing table. `consented` is false on every row until a consent wording exists; a download is not permission to send anything else.',
+    table: 'resource_requests_marketing',
+    dateColumn: 'requested_at',
+    personal: true,
   },
   {
     id: 'consents',
@@ -477,6 +487,44 @@ export async function buildExport(
           'first_captured_at',
           'session_captured_at',
         ].map((k) => ({ key: k, header: k }));
+        rows = (data ?? []) as Record<string, unknown>[];
+        break;
+      }
+
+      case 'requests': {
+        // The view joins people to resource_requests, so the export is one
+        // read and erasing a person removes their rows from it in the same
+        // statement. See resource_requests_marketing in supabase/schema.sql.
+        let q = client
+          .from('resource_requests_marketing')
+          .select(
+            'request_id, requested_at, person_id, name, email, resource_id, kind, resource_version, delivery_state, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, consented',
+          )
+          .order('requested_at', { ascending: false })
+          .limit(limit);
+        if (from) q = q.gte('requested_at', from);
+
+        const { data, error } = await q;
+        if (error) return unavailable(sourceFailed(`${def.table} view`, error));
+
+        columns = [
+          { key: 'request_id', header: 'request_id' },
+          { key: 'requested_at', header: 'requested_at' },
+          { key: 'person_id', header: 'person_id' },
+          { key: 'name', header: 'name' },
+          { key: 'email', header: 'email' },
+          { key: 'resource_id', header: 'resource_id' },
+          { key: 'kind', header: 'kind' },
+          { key: 'resource_version', header: 'resource_version' },
+          { key: 'delivery_state', header: 'delivery_state' },
+          { key: 'session_source', header: 'session_source' },
+          { key: 'session_medium', header: 'session_medium' },
+          { key: 'session_campaign', header: 'session_campaign' },
+          { key: 'session_content', header: 'session_content' },
+          { key: 'entry_path', header: 'entry_path' },
+          { key: 'referrer_host', header: 'referrer_host' },
+          { key: 'consented', header: 'consented' },
+        ];
         rows = (data ?? []) as Record<string, unknown>[];
         break;
       }

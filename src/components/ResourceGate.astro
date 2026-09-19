@@ -1,0 +1,149 @@
+---
+// The download gate's dialog. One per page, the same on every resource page.
+//
+// HOW A PAGE USES IT
+//
+//   1. Render <ResourceGate resource="poc-screen" lead="..." /> once, anywhere
+//      in the page body.
+//   2. Put data-gate="<kind>" on any button or link that hands over a file:
+//      pdf, xlsx, zip, json, csv, md, txt, or print. Optional data-variant
+//      (templates use blank | worked). The client wires them by delegation.
+//   3. A page whose file is built from the reader's own answers (a scored
+//      PDF, a CSV of their rows) passes `manual` here and calls mountGate()
+//      from its own module script with a `payload` function. Every other page
+//      needs no script of its own: this component mounts the gate itself.
+//
+// The dialog is a native <dialog>: focus is trapped, Escape closes it, and
+// nothing else on the page needs a script to make that true. The two fields
+// come from RESOURCE_FIELDS, the same definition the server validates against,
+// so a field cannot be required in the browser and optional on the server.
+//
+// What it says is fixed on purpose: the answers go into the file and are not
+// stored; the address is used to send this resource once and starts no other
+// email. That last sentence is the promise the marketing view depends on
+// (`consented = false`), and no page may reword it.
+import { RESOURCE_FIELDS } from '../lib/pipeline/resources';
+
+interface Props {
+  /** The resource id the request is recorded against. */
+  resource: string;
+  /** One sentence on what the file carries. Shown above the fields. */
+  lead: string;
+  /** The page mounts the gate itself, with a payload. */
+  manual?: boolean;
+}
+
+const { resource, lead, manual = false } = Astro.props;
+const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
+const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
+---
+
+<dialog class="gate" id="gate-dialog" aria-labelledby="gate-title" data-resource={resource} data-manual={manual ? '' : undefined}>
+  <form method="dialog" id="gate-form" novalidate>
+    <span class="eyebrow"><span class="num" id="gate-kind">File</span> Your copy</span>
+    <h2 id="gate-title">Get the file</h2>
+    <p class="gate-lead">{lead} It is built against a name and an email address.</p>
+    <div class="gate-grid">
+      <label>
+        {nameField.label}
+        <input type="text" name="name" autocomplete={nameField.autocomplete} maxlength={nameField.max} required />
+      </label>
+      <label>
+        {emailField.label}
+        <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
+      </label>
+    </div>
+    <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    <p class="gate-note">
+      What you typed into the tool goes into the file and is not stored. Your address is used to
+      send you this resource once. It does not start any other email.
+    </p>
+    <p class="gate-status" id="gate-status" role="status" aria-live="polite"></p>
+    <ul class="gate-checks mono" id="gate-checks" hidden></ul>
+    <div class="gate-actions">
+      <button class="btn btn-primary" id="gate-submit" type="submit">Get the file</button>
+      <button class="btn btn-ghost" id="gate-cancel" type="button">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+{/* Pages with a payload mount the gate themselves; every other page gets it here. */}
+<script>
+  import { mountGate } from '../lib/resources/gate-client';
+  const dialog = document.getElementById('gate-dialog');
+  if (dialog && !dialog.hasAttribute('data-manual')) mountGate();
+</script>
+
+<style>
+  .gate {
+    /* The reset zeroes margin on everything, which also removes the
+       browser's own centring of a modal dialog. Put it back. */
+    margin: auto;
+    border: 0;
+    padding: 0;
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: var(--surface-panel);
+    color: var(--text-body);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-overlay);
+  }
+  .gate::backdrop { background: rgba(22, 33, 46, 0.45); }
+  .gate form { padding: var(--space-6); }
+  .gate .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .gate h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
+  .gate-lead { margin: 0 0 var(--space-5); }
+  .gate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .gate label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-family: var(--font-marginal);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+  }
+  .gate input {
+    font-family: var(--font-body);
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: var(--border-w-rule) solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 0 var(--space-4);
+    height: var(--control-h);
+    width: 100%;
+  }
+  .gate input:focus { outline: none; border-color: var(--text-body); }
+  .gate input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .gate .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .gate-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
+  .gate-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
+  .gate-status.err { color: var(--danger); }
+  .gate-status.ok { color: var(--text-loud); }
+  .gate-checks {
+    list-style: none;
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-3) 0 0;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 180px;
+    overflow: auto;
+  }
+  .gate-checks :global(li) { display: flex; gap: var(--space-2); }
+  .gate-checks :global(li b) { flex: 0 0 5ch; font-weight: var(--weight-strong); color: var(--text-body); }
+  .gate-checks :global(li.fail b) { color: var(--danger); }
+  .gate-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+  .gate button[disabled] { opacity: 0.42; pointer-events: none; }
+  @media (max-width: 860px) {
+    .gate-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    .gate { display: none !important; }
+  }
+</style>

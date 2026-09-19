@@ -35,19 +35,14 @@
  * ═══════════════════════════════════════════════════════════════════════════
  *
  * The addendum offers "optional downloadable PDF and CSV". What is built is
- * the CSV, generated at build time from the same column list the page renders,
- * as a direct `<a download>` — so every download named here is a file that
- * exists and is attached to the link naming it. There is NO PDF file, and this
- * page therefore does not offer one: it says the page prints, which is true and
- * is a different sentence.
+ * the CSV, generated on the server from the same column list the page renders,
+ * handed over by the download gate after a name and an address (19 September
+ * 2026). There is NO PDF file, and this page therefore does not offer one: it
+ * says the page prints, which is true and is a different sentence.
  *
- * The second half of that rule is the email delivery. The addendum makes it
- * "optional" and gates it: "optional download email requires a separate
- * communication preference", and separately, "Never infer marketing permission
- * from downloading." It is another agent's path, it is not wired, and so it is
- * not mentioned here as an option — an offer to email you something, on a page
- * that cannot email you anything, is the same defect as a dead download link
- * with better manners.
+ * The gate records the request and grants no marketing permission: "Never
+ * infer marketing permission from downloading" still holds, because no consent
+ * wording has been approved.
  *
  * NO STRUCTURED DATA BEYOND BREADCRUMBS. This index authored nothing. A
  * DataCatalog or an ItemList of downloads is the manufactured markup the
@@ -56,7 +51,8 @@
  */
 import PracticeLayout from '../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../data/facts';
-import { NO_GATE, NO_SCORE, csvFilename, csvHref, releasedResources } from '../data/resources';
+import { NO_GATE, NO_SCORE, csvFilename, releasedResources } from '../data/resources';
+import ResourceGate from '../components/ResourceGate.astro';
 
 const resources = releasedResources();
 const count = resources.length;
@@ -67,7 +63,6 @@ const count = resources.length;
 const cards = resources.map((r) => ({
   resource: r,
   file: csvFilename(r),
-  href: csvHref(r),
 }));
 
 const path = '/toolkit';
@@ -75,7 +70,7 @@ const url = `${SITE_ORIGIN}${path}`;
 
 const title = 'Toolkit — open worksheets for agentic systems · The Living Craft';
 const description =
-  'Open worksheets and checklists for teams building systems that act: a cost-ceiling worksheet, an evaluation-gates worksheet and a deployment checklist. Readable in full on the page, with a companion spreadsheet. No sign-up, no score.';
+  'Open worksheets and checklists for teams building systems that act: a cost-ceiling worksheet, an evaluation-gates worksheet and a deployment checklist. Readable in full on the page, with a companion spreadsheet behind a name and an email address. No score.';
 
 const schema: unknown[] = [
   {
@@ -127,7 +122,7 @@ const schema: unknown[] = [
 
     <div class="kit">
       {
-        cards.map(({ resource: r, file, href }) => (
+        cards.map(({ resource: r, file }) => (
           <article class="item">
             <div class="i-head">
               <span class="code">{r.code}</span>
@@ -164,9 +159,9 @@ const schema: unknown[] = [
               <a class="btn btn-primary" href={`${r.path}/`}>
                 Read it&nbsp;<span class="arrow" aria-hidden="true">→</span>
               </a>
-              <a class="btn btn-ghost" href={href} download={file}>
+              <button class="btn btn-ghost" type="button" data-gate="csv" data-resource={r.id}>
                 Download the spreadsheet
-              </a>
+              </button>
             </div>
           </article>
         ))
@@ -185,21 +180,20 @@ const schema: unknown[] = [
         <span class="dk">On the page</span>
         <span class="dv">
           The whole resource — explanation, worked case, the tables and the limits. Nothing is
-          held back for a download.
+          held back: the page is open to read.
         </span>
       </div>
       <div class="detail-row">
         <span class="dk">As a spreadsheet</span>
         <span class="dv">
           A comma-separated file whose columns are the table you just read, ready for Excel,
-          Sheets or anything else. It downloads straight from this page.
+          Sheets or anything else. It asks for your name and email address, then downloads.
         </span>
       </div>
       <div class="detail-row">
         <span class="dk">On paper</span>
         <span class="dv">
-          Each resource prints as a form, rules and all. There is no PDF file to download —
-          your browser's own print dialogue will save one if you want it.
+          Each resource prints as a form, rules and all, from its own page after a name and an email address. There is no PDF file to download.
         </span>
       </div>
     </div>
@@ -236,6 +230,7 @@ const schema: unknown[] = [
       </p>
     </div>
   </section>
+  <ResourceGate resource="" lead="The CSV is the resource's table, with the same column names, for a spreadsheet." />
 </PracticeLayout>
 
 <style>
