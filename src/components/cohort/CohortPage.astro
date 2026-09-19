@@ -219,24 +219,32 @@ const hasPrice = Boolean(region?.publicPrice);
         are two different responsibilities that look like one box. */}
     <ol class="boundary" aria-label="Recommendation and action are separate responsibilities">
       <li>
-        <span class="b-k">Reads</span>
-        <b>The policy</b>
-        <span class="b-n">Gathers the evidence it will rely on.</span>
+        <div class="b-body">
+          <span class="b-k">Reads</span>
+          <b>The policy</b>
+          <span class="b-n">Gathers the evidence it will rely on.</span>
+        </div>
       </li>
       <li>
-        <span class="b-k">Recommends</span>
-        <b>A refund</b>
-        <span class="b-n">A person can still read this and decide.</span>
+        <div class="b-body">
+          <span class="b-k">Recommends</span>
+          <b>A refund</b>
+          <span class="b-n">A person can still read this and decide.</span>
+        </div>
       </li>
       <li class="b-line">
-        <span class="b-k">The boundary</span>
-        <b>What permits the action?</b>
-        <span class="b-n">Evidence, limits, repeated requests, an uncertain result.</span>
+        <div class="b-body">
+          <span class="b-k">The boundary</span>
+          <b>What permits the action?</b>
+          <span class="b-n">Evidence, limits, repeated requests, an uncertain result.</span>
+        </div>
       </li>
       <li>
-        <span class="b-k">Acts</span>
-        <b>Issues the refund</b>
-        <span class="b-n">The system moves money. Its own controls, not the prompt’s.</span>
+        <div class="b-body">
+          <span class="b-k">Acts</span>
+          <b>Issues the refund</b>
+          <span class="b-n">The system moves money. Its own controls, not the prompt’s.</span>
+        </div>
       </li>
     </ol>
   </div>
@@ -887,40 +895,39 @@ const hasPrice = Boolean(region?.publicPrice);
   .example-body { display: flex; flex-direction: column; }
   .example-body p { font-size: 1.125rem; }
 
+  /* THE TIMELINE. One continuous rail through four knots. Each step draws
+     the rail from its own knot down to the next one (::after), so the line
+     is unbroken whatever each step's height, and stops at the last knot.
+     QA on 19 September: as borders, the rail broke at the boundary step and
+     never reached "Acts". */
   .boundary {
     list-style: none;
     display: grid;
     gap: 0;
     padding: 0;
     margin: 0;
-    position: relative;
   }
-  .boundary li {
-    position: relative;
-    display: block;
-    padding: 0 0 26px 40px;
-    margin-left: 6px;
-    border-left: var(--border-w-hair) solid var(--border-field);
-  }
-  /* A gold knot on the line for each step. The outline is the chapter's own
-     ground, so the line appears to pass behind the knot. */
+  .boundary li { position: relative; padding: 0 0 28px 40px; }
+  .boundary li:last-child { padding-bottom: 0; }
   .boundary li::before {
     content: '';
     position: absolute;
-    left: -6px;
-    top: 6px;
+    z-index: 1;
+    left: 1px;
+    top: 7px;
     width: 11px;
     height: 11px;
     border-radius: 50%;
     background: var(--ember);
-    outline: 5px solid var(--surface-panel);
   }
-  .boundary li:last-child { border-left-color: transparent; padding-bottom: 0; }
-  /* The line starts at the first knot. As a border it began 6px above it,
-     a small stray tick over "Reads". */
-  .boundary li:first-child {
-    border-left-color: transparent;
-    background: linear-gradient(var(--border-field), var(--border-field)) left 12px / 1px 100% no-repeat border-box;
+  .boundary li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 12px;
+    bottom: -12px;
+    width: 1px;
+    background: var(--border-field);
   }
   .boundary .b-k {
     font-family: var(--font-body);
@@ -944,16 +951,22 @@ const hasPrice = Boolean(region?.publicPrice);
     line-height: 1.6;
     color: var(--text-body);
   }
-  /* The one item that is a question rather than a step, marked as the moment
-     the responsibility changes: between two gold rules. */
-  .boundary .b-line {
-    padding-top: 22px;
-    padding-bottom: 26px;
-    margin-bottom: var(--space-5);
-    border-top: var(--border-w-hair) solid var(--ember);
-    border-bottom: var(--border-w-hair) solid var(--ember);
+  /* The one step that is a question, not an action: the moment the
+     responsibility changes. Its knot is an open gold ring, and its words sit
+     on a soft gold panel beside the rail, so the rail itself stays whole.
+     Deep gold on that panel is 5.62:1; ink is 11.4:1. */
+  .boundary .b-line { padding-bottom: 28px; }
+  .boundary .b-line::before {
+    top: 23px;
+    background: var(--surface-panel);
+    box-shadow: inset 0 0 0 2px var(--ember);
   }
-  .boundary .b-line::before { top: 30px; }
+  .boundary .b-line .b-body {
+    margin-left: -16px;
+    padding: 16px 20px 18px 16px;
+    border-radius: var(--radius-control);
+    background: var(--accent-quiet);
+  }
 
   /* ── explores list ───────────────────────────────────────────────────── */
   .explores { max-width: 880px; }

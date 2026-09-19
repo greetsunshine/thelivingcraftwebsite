@@ -502,6 +502,20 @@ says to keep branded storytelling out of dense working areas.
   and 390 with no script errors and no overflow. **Not changed:** the three printable worksheets
   (cost-ceiling, deployment, evaluation gates) already use a plain document heading.
 
+**Three fixes on `/`, Sunil's review of 19 September:**
+- **The brain loops continuously**, and the Replay and Reduce motion buttons are gone ("it should
+  keep on looping"). A 4.8 s cycle: the seven knots light in turn over about 3.2 s, then it rests.
+  It pauses off screen, and the OS reduced-motion setting still shows it still. **WCAG 2.2.2 gap:**
+  motion over five seconds should have a pause control; the OS setting is now the only off switch.
+- **The chapter break** was the package's full-width fabric band, which looked like a loose image
+  over the seam. It is now a hairline on the seam, fading at both ends, with a gap at its centre
+  where two strands cross over a gold knot (`public/textures/chapter-knot.svg`, 96Ã—24).
+  `fabric-crossing.svg` is deleted.
+- **The worked-example timeline** broke at the boundary step and never reached "Acts": its rail was
+  a border, and the boundary step's full-width gold rules and margin cut it. Each step now draws the
+  rail from its own knot to the next, so it is one line from "Reads" to "Acts". The boundary step
+  is an open gold ring with its words on a soft gold panel beside the rail.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18

@@ -111,23 +111,37 @@ body.landing :focus-visible:not([tabindex='-1']) {
 .landing .band,
 .landing .transform { padding-block: 88px; }
 .landing .chapter { position: relative; }
-.landing .chapter:not(.chapter-opening) { padding-top: 26px; }
-/* The fabric crossing above each chapter: decoration, never the LC mark.
-   One departure: the artwork stops in a hard vertical cut at its own 1200px
-   edges, visible on any wider screen, so the ends fade out here. */
+.landing .chapter:not(.chapter-opening) { padding-top: 12px; }
+/* THE CHAPTER BREAK. A hairline along the seam where one chapter's ground
+   meets the next, fading at both ends, with a gap at its centre where two strands
+   cross over a gold knot. It replaced the package's full-width fabric
+   band on 19 September: that read as a loose image laid over the seam
+   rather than part of it. Decoration only, and not the LC mark. */
 .landing .chapter:not(.chapter-opening)::before {
   content: '';
   position: absolute;
   top: 0;
   left: 50%;
-  width: min(1200px, 100%);
+  width: min(1200px, calc(100% - 48px));
+  height: 1px;
   transform: translateX(-50%);
-  height: 64px;
-  background: url('/textures/fabric-crossing.svg') center / 1200px 110px no-repeat;
-  opacity: 0.65;
+  background: linear-gradient(90deg,
+    transparent 0, var(--border-hair) 20%,
+    var(--border-hair) calc(50% - 64px), transparent calc(50% - 64px),
+    transparent calc(50% + 64px), var(--border-hair) calc(50% + 64px),
+    var(--border-hair) 80%, transparent 100%);
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.landing .chapter:not(.chapter-opening)::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 96px;
+  height: 24px;
+  transform: translateX(-50%);
+  background: url('/textures/chapter-knot.svg') center / 96px 24px no-repeat;
+  pointer-events: none;
 }
 .landing .chapter-teaching,
 .landing .chapter-practice,
@@ -715,7 +729,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .hero-cta { margin-top: 24px; }
   .landing .hero > .wrap .hero-note { max-width: 56ch; }
   .landing .woven-brain { width: min(490px, 100%); margin: 0 auto; }
-  .landing .woven-brain .motion-controls { margin-top: -12px; }
   .landing .hero > .wrap.intro-strip { grid-template-columns: minmax(0, 1fr); padding-block: 24px 32px; gap: 24px; }
   .landing .intro-strip .proofbar .inner { justify-content: flex-start; }
   .landing .intro-strip .proofbar .label { text-align: left; width: auto; }
@@ -774,7 +787,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .brand-tile .brand-symbol { height: 48px; }
   .landing .brand-tile .brand-name { height: 26.5px; }
   .landing .foot-bottom { flex-direction: column; gap: 18px; }
-  .landing .chapter:not(.chapter-opening)::before { background-size: 900px 83px; height: 42px; }
 }
 
 @media (max-width: 390px) {
