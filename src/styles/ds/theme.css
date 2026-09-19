@@ -263,12 +263,13 @@
        dark forest 0.45 .. ivory 6.28 · on-dark-muted 4.64 (minimum 0.43)
      Lowering either opacity puts the hero eyebrow and footer text below AA.
 
-     Used on EVERY dark green background on the site (19 September): hero
-     shells, footer bands (through --footer-bg), buttons, selected states,
-     table headers, code blocks and small marks. Write var(--texture-forest)
-     where you would have written background: var(--sun), and
-     --texture-forest-hover for a hover state. --sun itself stays a flat
-     colour, for borders, text and strokes. --- */
+     Used on the large dark green SURFACES (19 September): hero shells,
+     footer bands (through --footer-bg), the price panel, table headers,
+     code blocks and small marks. NOT on buttons: every button, and a
+     pressed or selected button state, is flat forest,
+     var(--control-primary-bg) with --control-primary-bg-hover (Sunil,
+     19 September: "the buttons do not need the texture"). --sun itself
+     stays a flat colour, for borders, text and strokes. --- */
   --texture-linen: url('/textures/linen-forest.webp');
   --texture-forest:
     linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
@@ -301,6 +302,23 @@
   --hero-primary-bg-hover: var(--lc-paper);
   --hero-ghost-line: var(--lc-on-dark-muted);
   --hero-focus: var(--lc-ivory);
+  /* The hairline between the landing hero and the intro strip under it.
+     The control line would disappear on forest. Decoration, not a boundary. */
+  --hero-rule: rgba(198, 212, 200, 0.3);
+
+  /* --- component: the V5 landing page (19 September) ---
+     Two warm tones from the V5 illustrated package, used only on `/`.
+     --surface-cloth is the unbleached panel behind the boundary timeline
+     (ink 12.1:1, deep gold 5.5:1 on it). --line-warm is the warm rule over
+     the modules and the enterprise section: decoration, never a boundary
+     a control depends on. */
+  --surface-cloth: #F3EEE1;
+  --line-warm: #BFB598;
+
+  /* --- component: a text field on the landing page's form panels ---
+     A shade lighter than the paper panel it sits on, so the field reads as
+     a field before its border is noticed (the 19 September package). */
+  --field-bg: #FFFDF8;
 
   /* --- component: footer, a dark forest band --- */
   --footer-bg: var(--texture-footer);         /* a BACKGROUND, not a colour: use only in `background:` */

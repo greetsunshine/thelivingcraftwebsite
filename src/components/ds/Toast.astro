@@ -1,0 +1,38 @@
+---
+/**
+ * Toast — brief feedback after something the reader did (18 September
+ * package, "Notification"). One per page. A page calls
+ *
+ *   window.lcToast('Copied to clipboard.')
+ *
+ * and the message appears in a polite live region with a close button. It
+ * stays until closed or until the next message: nothing disappears while
+ * somebody is still reading it. A form error is NEVER a toast; errors stay
+ * beside their field (FormField).
+ */
+---
+
+<div class="lc-toast" data-lc-toast role="status" aria-live="polite" hidden>
+  <span data-toast-text></span>
+  <button type="button" aria-label="Close notification">×</button>
+</div>
+
+<script>
+  const toast = document.querySelector<HTMLElement>('[data-lc-toast]');
+  if (toast) {
+    const text = toast.querySelector<HTMLElement>('[data-toast-text]')!;
+    const close = toast.querySelector<HTMLButtonElement>('button')!;
+    let returnTo: HTMLElement | null = null;
+    const hide = () => {
+      toast.hidden = true;
+      returnTo?.focus();
+    };
+    close.addEventListener('click', hide);
+    toast.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+    (window as unknown as { lcToast: (m: string) => void }).lcToast = (message: string) => {
+      returnTo = document.activeElement as HTMLElement | null;
+      text.textContent = message;
+      toast.hidden = false;
+    };
+  }
+</script>

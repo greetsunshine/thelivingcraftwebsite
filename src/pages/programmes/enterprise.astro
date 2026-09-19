@@ -44,6 +44,7 @@
  *     and its own idempotency key. A duplicate here would be a second form
  *     definition to keep in step, which is how the two drift.
  */
+import '../../styles/templates/programme.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { EXPLORES } from '../../data/cohort-copy';
@@ -71,7 +72,7 @@ const schema = [
 ];
 ---
 
-<PracticeLayout
+<PracticeLayout bodyClass="programme-page"
   title={title}
   description={description}
   canonical="/programmes/enterprise/"

@@ -35,9 +35,19 @@
  * positioned element. `header.nav` is sticky, which counts. SiteNav sets
  * `position: relative` on `.sitenav` for the same reason.
  */
+export interface Props {
+  /**
+   * The widest viewport, in px, at which the menu is used. Must match the
+   * width at which the page's CSS hides its inline links and shows `.mm`.
+   * 900 everywhere except the cohort page, which follows the 19 September
+   * package and switches at 960.
+   */
+  breakpoint?: number;
+}
+const { breakpoint = 900 } = Astro.props;
 ---
 
-<div class="mm" data-mobile-menu>
+<div class="mm" data-mobile-menu data-breakpoint={breakpoint}>
   <button
     type="button"
     class="mm-toggle"
@@ -82,7 +92,8 @@
     // would otherwise stay open over the section it just scrolled to.
     panel.addEventListener('click', (event) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest('a')) setOpen(false);
+      // A button that opens the Ask panel is the same kind of decision.
+      if (target?.closest('a, [data-ask-open]')) setOpen(false);
     });
 
     document.addEventListener('keydown', (event) => {
@@ -98,7 +109,7 @@
 
     // Past the breakpoint the button is hidden, so an open panel would have
     // no visible way to close. Close it rather than strand it.
-    const wide = window.matchMedia('(min-width: 901px)');
+    const wide = window.matchMedia(`(min-width: ${Number(root.dataset.breakpoint || 900) + 1}px)`);
     wide.addEventListener('change', (event) => {
       if (event.matches) setOpen(false);
     });

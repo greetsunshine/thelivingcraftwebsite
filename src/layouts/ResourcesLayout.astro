@@ -10,6 +10,8 @@
 // cohort single-page. Shared where it matters — global.css, SeoHead, Track and
 // the Ask widget are the same on every public surface.
 import '../styles/global.css';
+// Every page this layout serves is a tool: the design system's tool template.
+import '../styles/templates/tool.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
@@ -17,6 +19,7 @@ import { TOOL_CREDIT } from '../data/resources';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 import Logo from '../components/site/Logo.astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
 
 export interface Props {
   title: string;
@@ -36,7 +39,8 @@ const year = new Date().getFullYear();
   <head>
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="tool-page">
+    <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
       <div class="wrap nav-inner">
         <a class="wordmark" href="#top">
@@ -47,11 +51,17 @@ const year = new Date().getFullYear();
           {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
           <a href="/latest">Field notes</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow">→</span></a>
+          {/* Phones: the links above are hidden below 900px (global.css), and this
+              is how a phone reaches them. Same links, same order. */}
+          <MobileMenu>
+            {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
+            <a href="/latest">Field notes</a>
+          </MobileMenu>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 

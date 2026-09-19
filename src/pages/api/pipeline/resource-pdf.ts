@@ -27,6 +27,18 @@
 // answer says `saved: false` and why, so the page can tell them plainly.
 //
 // ───────────────────────────────────────────────────────────────────────────
+// THE FILE IS CHECKED BEFORE IT IS HANDED OVER
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Every renderer runs a list of named checks over what the file will say (the
+// total is the sum of the answers, the outcome is what the rubric says, the
+// cohort copy carries no unpublished figure, and so on) and then reopens the
+// bytes it drew. The checks run once BEFORE the save, so a request that would
+// fail one leaves no person or queued email behind it, and again inside the
+// render. A failed check is a 500 that says so. The list of passed checks goes
+// back in the answer, and the page prints it beside the download.
+//
+// ───────────────────────────────────────────────────────────────────────────
 // THE SCORES ARE USED AND NOT KEPT
 // ───────────────────────────────────────────────────────────────────────────
 //
@@ -38,9 +50,9 @@
 import type { APIRoute } from 'astro';
 import { handleResourceRequest } from '../../../lib/pipeline/resource-request';
 import { resolveResource } from '../../../lib/pipeline/resources';
-import { parseScores, renderPocScreenPdf } from '../../../lib/resources/poc-screen-pdf';
+import { parseScores, renderPocScreenPdf, verifyPocScreenPdf, type PdfCheck } from '../../../lib/resources/poc-screen-pdf';
 import { parseSheet, renderAuthorityReviewPdf } from '../../../lib/resources/authority-review-pdf';
-import { parseInputs, renderRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
+import { parseInputs, renderRunCostModelPdf, verifyRunCostModelPdf } from '../../../lib/resources/run-cost-model-pdf';
 import type { SheetRow } from '../../../data/authority-review';
 import type { ModelInputs } from '../../../data/run-cost-model';
 
@@ -67,13 +79,24 @@ const REFUSED = 'We could not accept that request. The page is the resource eith
  */
 interface Renderer<T> {
   parse: (body: Record<string, unknown>) => T | null;
-  render: (payload: T, name: string) => Promise<Uint8Array>;
+  /**
+   * The content checks, run BEFORE the save. Any failure stops the request
+   * with nothing written. Optional while the other renderers grow their own.
+   */
+  verify?: (payload: T, name: string) => PdfCheck[];
+  /** The bytes, or the bytes with the checks the render ran on the way. */
+  render: (payload: T, name: string) => Promise<Uint8Array | { bytes: Uint8Array; checks: PdfCheck[] }>;
   filename: string;
 }
+
+const CHECK_FAILED =
+  'The PDF failed a check before download, so it was not built. Nothing was saved and nothing was sent. Try again in a moment.';
 
 const RENDERERS: Record<string, Renderer<any>> = {
   'poc-screen': {
     parse: (body) => parseScores(body.scores),
+    verify: (scores: (number | null)[], name) =>
+      verifyPocScreenPdf({ scores, name, builtOn: new Date().toISOString() }),
     render: (scores: (number | null)[], name) =>
       renderPocScreenPdf({ scores, name, builtOn: new Date().toISOString() }),
     filename: 'poc-selection-tool-scored.pdf',
@@ -91,6 +114,8 @@ const RENDERERS: Record<string, Renderer<any>> = {
       const inputs = parseInputs(body.inputs);
       return inputs ? { inputs, isExample: body.isExample === true } : null;
     },
+    verify: (payload: { inputs: ModelInputs; isExample: boolean }, name) =>
+      verifyRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
     render: (payload: { inputs: ModelInputs; isExample: boolean }, name) =>
       renderRunCostModelPdf({ ...payload, name, builtOn: new Date().toISOString() }),
     filename: 'run-cost-model.pdf',
@@ -122,23 +147,35 @@ export const POST: APIRoute = async (ctx) => {
   const payload = renderer.parse(body);
   if (payload === null) return json({ ok: false, error: REFUSED }, 400);
 
-  const outcome = await handleResourceRequest(ctx, body);
-  if (outcome.kind === 'refused') return json(outcome.body, outcome.status);
-
   const name =
     typeof (body.answers as Record<string, unknown> | undefined)?.name === 'string'
       ? String((body.answers as Record<string, unknown>).name).trim().slice(0, 200)
       : '';
 
-  let file: { bytes: Uint8Array; filename: string };
+  // The content checks, before anything is written.
+  const preflight: PdfCheck[] = renderer.verify ? renderer.verify(payload, name) : [];
+  const failed = preflight.filter((c) => !c.ok);
+  if (failed.length) {
+    console.error('resource pdf check failed:', failed.map((c) => `${c.name}: ${c.detail ?? ''}`).join('; '));
+    return json({ ok: false, error: CHECK_FAILED, checks: preflight }, 500);
+  }
+
+  const outcome = await handleResourceRequest(ctx, body);
+  if (outcome.kind === 'refused') return json(outcome.body, outcome.status);
+
+  let file: { bytes: Uint8Array; filename: string; checks: PdfCheck[] };
   try {
-    file = { bytes: await renderer.render(payload, name), filename: renderer.filename };
+    const built = await renderer.render(payload, name);
+    file =
+      built instanceof Uint8Array
+        ? { bytes: built, checks: [], filename: renderer.filename }
+        : { ...built, filename: renderer.filename };
   } catch (err) {
     // The request IS saved at this point, so the person still gets their
     // email copy; only the file failed.
     console.error('resource pdf render threw:', err instanceof Error ? err.name : 'unknown');
     return json(
-      { ok: false, error: 'We could not build the PDF just now. Use Print on the page instead.' },
+      { ok: false, error: 'We could not build the PDF just now. Try again in a moment.' },
       500,
     );
   }
@@ -157,6 +194,7 @@ export const POST: APIRoute = async (ctx) => {
         delivery: null,
         pdf,
         filename: file.filename,
+        checks: file.checks,
       },
       200,
     );
@@ -171,6 +209,7 @@ export const POST: APIRoute = async (ctx) => {
       delivery: outcome.delivery,
       pdf,
       filename: file.filename,
+      checks: file.checks,
     },
     200,
   );

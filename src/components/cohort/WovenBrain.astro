@@ -1,0 +1,31 @@
+---
+/**
+ * The brain in the landing hero, from the V5 illustrated package of
+ * 19 September (docs/2026-09-19_Landing_Page_V5_Illustrated-…, kept out of the
+ * repo). It replaced the woven-fibre artwork of the earlier refinement.
+ *
+ * WHAT IT IS. A line drawing: fine gold fibres come in from the edges and meet
+ * eight gold junctions inside the outline of a brain. ./art/brain.svg is the
+ * package's assets/brain-lines.svg, byte for byte (Sunil, 19 September:
+ * "change the brain image in the hero section to … brain-lines.svg"). It carries a <title> and <desc>, so it
+ * is an image with a text alternative.
+ *
+ * HOW IT MOVES. It LOOPS, as Sunil asked on 19 September ("it should keep on
+ * looping"): a light travels along each fibre and the junctions light in turn,
+ * on one eight-second timeline, again and again. The loop runs only while the
+ * brain is on screen and the tab is visible. It stops under the operating
+ * system's reduced-motion setting and under the footer's Pause motion control.
+ * That footer control is the package's single pause for all page motion, and
+ * it is what satisfies WCAG 2.2.2 for a loop longer than five seconds. There is
+ * no Replay or Reduce motion button beside the brain.
+ *
+ * The script that sets `is-looping` and `is-visible` is in BaseLayout, beside
+ * the pause control. Styles: src/styles/landing-v5.css. Nothing is stored in
+ * the browser.
+ */
+import brain from './art/brain.svg?raw';
+---
+
+<figure class="woven-brain" data-woven-brain>
+  <Fragment set:html={brain} />
+</figure>

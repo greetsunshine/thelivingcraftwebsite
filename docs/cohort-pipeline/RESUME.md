@@ -9,7 +9,8 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 19 September 2026
-**Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
+**Branch:** `feat/landing-refinement`, off `cta-book-now-rework` (PR #18). PR #14 is merged.
+PR #27 (the thread brain) is superseded by this work. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
@@ -66,6 +67,57 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## The POC Selection Tool is stepped, and its PDF is branded and checked — 18 September
+
+Six steps with a progress bar; every step still renders without JavaScript and in print.
+The PDF is built in three stages in `lib/resources/poc-screen-pdf.ts`: `buildModel()`,
+`checkModel()` (12 named checks, recomputed independently of the model), then drawing.
+A failed check is a 500 and nothing is saved, because `verify` runs before the request
+handler. The cohort copy on the PDF's *Join the cohort* panel is read from `facts.ts` and
+`offer-display.ts`; if D1 changes what is published, that panel changes with it and the
+"no unpublished figure" check is where a stray fee would be caught.
+
+Two things to know:
+- **Fonts.** The design system names Figtree (standing in for Sofia Pro) and ships no file.
+  The PDF uses Helvetica, the fallback the token stack itself names. Adding a licensed
+  font file and `@pdf-lib/fontkit` is the change that closes that gap.
+- **The other two PDF renderers** (Agent Authority Review, Run-Cost Model) do not yet have
+  a `verify` step or a brand band. The `Renderer` interface makes both optional so they
+  keep working; giving them the same treatment is the obvious next piece.
+
+---
+
+## The Run-Cost Model Tool is in the POC tool's shape — 18 September
+
+`/resources/run-cost-model` was rebuilt against `/resources/poc-screen` as the reference,
+on top of PR #29 (the stepped POC tool). Where the two differed, the POC tool won. What to
+know before touching it:
+
+- **The reference example is loaded on arrival.** Eighty-three blank lines is too many to
+  face, so the page opens on the ordering agent with every line filled, says so in the bar,
+  on the Start step and on the result card, and offers *Start from a blank model*. The
+  server renders the example's values and every worked-out line, so the filled model reads
+  with no script. `isExample()` compares the state to `EXAMPLE`; the PDF says when it holds
+  the example unchanged.
+- **A blank is unknown, not zero.** Unchanged from before, and the opposite of the POC
+  tool. Do not add a fallback to 0.
+- **The PDF has three stages and fourteen checks**, in `lib/resources/run-cost-model-pdf.ts`.
+  Each check recomputes its fact from the raw inputs with its own arithmetic
+  (`recompute()`), not by calling `readModel()` again. The route's `verify` runs them before
+  the save. The `Writer` is a copy of the reference's, with the page decorator; the shared
+  `pdf-writer.ts` no longer has a caller among the three tools once #29 lands.
+- **The workbook is generated, not hand-edited.** `npm run workbook` rewrites
+  `public/downloads/agent-run-cost-model.xlsx` from the data module (TypeScript exports the
+  rows and copy as JSON; Python with openpyxl writes the sheet). Change the data module,
+  run the script, commit both. Its formulas were evaluated and match the page.
+- **One tension, named.** The PDF's *Join the cohort* panel prints the week count and the
+  start month, read from `facts.ts` through `offer-display.ts`, because the reference
+  prints them and its check requires them. CLAUDE.md's offer policy says not to publish a
+  week count or start date. The reference won here; it is Sunil's call whether the panel
+  should drop those two figures on every tool.
+
+---
+
 ## Three tools now have an email-gated PDF — 17 September
 
 `/resources/poc-screen` and `/resources/agent-authority-review` were both rebuilt on
@@ -107,8 +159,10 @@ model*, *Reference example*). Three more things to know:
 - **A blank is unknown, not zero.** The opposite of the POC tool. A total stays blank until
   every line that feeds it is set, and the outcome reads only at 83/83. Do not add a
   default or a fallback to 0: "this system never retries" is a claim the tool must not make.
-- **The three PDF renderers share `lib/resources/pdf-writer.ts`.** It was two identical
-  copies until today. A fourth renderer imports it; it does not copy it.
+- **`lib/resources/pdf-writer.ts` is now the authority review's writer only.** The POC
+  tool (#29) and the run-cost tool each carry the reference's `Writer` with the page
+  decorator for the cover band. Lifting that decorated writer into the shared file is a
+  follow-up, not something to do inside either tool's PR.
 
 ---
 
@@ -266,6 +320,299 @@ domain and a monitored reply mailbox. Until then the browser also notifies
 
 Plain-language explainer for Sunil:
 https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
+
+---
+
+## Landing page refinement — 19 September, `feat/landing-refinement`
+
+The 19 September package (`docs/2026-09-19_Landing_Page_Refinement-…/`, kept out of the repo
+through `.git/info/exclude`) is a restyle of our own `/`. Its source export matches this branch's
+rendered HTML class for class. It was ported into the Astro page, not pasted in: its
+`styles.css` carries a second token set, drops the linen and loads a 1.8 MB PNG in the header.
+
+Decisions, all Sunil's (19 September, "go with your recommendations"):
+1. **The woven brain replaces the thread brain.** It plays once, with Replay and Reduce
+   motion buttons. PR #27 is closed.
+2. **Sunil's portrait stays near the top on phones:** the intro strip (portrait and proof bar)
+   comes straight after the hero buttons, and the brain after it.
+3. **Linen stays** on the hero and on the dark price panel.
+4. **Phones keep 16px body text and the tighter section spacing.** Desktop takes the package's
+   18px and its spacing.
+5. **`/` only.** Everything is in `src/styles/landing.css`, imported by `BaseLayout` alone and
+   scoped under `body.landing`. `/caio`, `/about` and the rest are unchanged.
+
+Progress, one commit each:
+- [x] Assets: `public/brand/woven-brain-{640,1200}.webp` (the package's artwork with its flat
+  forest background keyed out, so the linen shows round it), `lc-mark-keyed.webp` and
+  `lc-name.webp` (the mark and the "The Living Craft" lettering, cropped from the same
+  `logo-reference.png` as `lc-mark.webp`, paper keyed out the way the package's SVG filter does
+  it), `public/textures/fabric-crossing.svg` (the chapter divider).
+- [x] Tokens and the brain: `--hero-rule`, `--brain-glow` and `--brain-glow-core` in `theme.css`
+  (decoration only, never text). `src/components/cohort/WovenBrain.astro` plays the seven lights
+  once on first sight, about 3.2 s; Replay, and a Reduce motion button that lasts for the page
+  view only. OS reduced motion wins over the button. Nothing is stored.
+- [x] Structure, in `CohortPage.astro`: seven `<div class="chapter chapter-â€¦">` wrappers
+  (opening, teaching, development, practice, teacher, joining, conversation). The printed
+  section numbers are gone. **One section moved:** "What you leave with" (`#takeaways`) now
+  closes the development chapter, as in the package. The woven brain takes the portrait's place
+  in the hero; the portrait (a new 8 KB `public/sunil-profile-thumb.webp`) and the proof bar sit
+  in an intro strip under it. All 16 section ids and every word are unchanged. The module ids
+  (M1 to M4) keep their `.num` spans; only the eyebrow numbers went.
+- [x] Styles: `src/styles/landing.css`, imported by `BaseLayout` and scoped under
+  `body.landing`, ports the package's layout in theme tokens. `CohortPage.astro`'s own `<style>`
+  now holds only the page's own pieces (the two-up, the boundary timeline, the commitment grid,
+  the route chooser). Cards, lists, modules, the stat band and the FAQ lost their panels; the
+  hero is full width on the linen; the price panel is forest on the linen. **Measured at 390:
+  17,947 px before, 16,564 px after.** At 1280 the page grew from 12,618 to 13,880 px, which is
+  the package's 18px text and 88px sections on a desktop.
+- [x] Header and chat: the header shows the LC mark with the "The Living Craft" lettering
+  (images of text, so the link's `aria-label` carries the name), and so does the footer, on an
+  ivory tile. **Chat opens from the header now**, not from a floating pill: `AskWidget` takes
+  `launcher="header"`, renders no pill, and opens from any `[data-ask-open]` button. There is
+  one in the header (desktop) and one in the phone menu. The panel drops from under the header;
+  closing returns focus to the button used, or to the menu button when the menu has closed.
+  `lib/agent/ready.ts` is the one check both read, so neither button exists without the key.
+  The sticky Apply bar hides while chat is open (`lc:ask` event). Other pages keep the pill.
+- [x] Verified: `astro check` 0 errors, clean build. No horizontal overflow at 320, 390, 768,
+  1024, 1280 and 1440. `/` at 390: **17,947 px before, 16,514 px after**; at 1280: 12,618 before,
+  13,892 after. `/caio` and `/about` are the same height to the pixel before and after, so the
+  change did not leak. At 320 the header needed a smaller lockup and Apply without its arrow to
+  keep one row. 21 scripted checks pass: header chat opens, takes focus, closes on Escape and
+  returns focus; the phone menu row opens chat and closes the menu; the sticky bar steps aside;
+  Replay plays once and stops; Reduce motion disables Replay; phone order is copy, portrait,
+  brain; nothing in localStorage. Without `ANTHROPIC_API_KEY` neither chat button renders.
+
+**Still open, and not code:** the six content questions in the package's `HANDOFF.md` (price and
+dates reconciliation, "lifetime room" and direct-access promises, the 100+ counts, the "nothing
+else" privacy line beside optional emails, repeated outcomes, real-company architecture). No copy
+was changed. Real 200% browser zoom and a screen reader pass are still to do on staging.
+
+**Where to look:** draft PR #31, stacked on #18. Staging (follows every push to this branch,
+behind Vercel's login): https://thelivingcraft-git-feat-lan-37a779-greetsunshine-1213s-projects.vercel.app
+
+**QA pass, 19 September.** A scripted audit of `/` at 1280 and 390 (every text style, section
+padding, contrast of every text node, tap targets, heading order, ids, anchors, overflow) found
+and fixed six inconsistencies:
+- **Section gaps ran 80 to 112 px** because the package set padding per section. Now one rule:
+  88 px at a chapter's ends, 88 px between sections inside a chapter (32 px on a phone).
+- **Row titles came in five sizes** (19, 20, 22 px, h3 and h4). Now one: `--landing-title`,
+  20 px desktop, 18 px phone.
+- **Leads came in three sizes** in the same role. Now two: 22 px under a full-width heading,
+  `--landing-lead` 20 px in a column; both 18 px on a phone.
+- **Two heading-level skips** (h2 straight to h4 in "What you'll be able to do" and the modules).
+  Both are h3 now.
+- **The last chapter had three centre lines**: the booking panel, the chooser and the form were
+  centred at 640, 940 and 580 px under left-aligned headings. All three share the text's left
+  edge at 940 px. The form heading was 26 px at weight 800, the only heavy weight on the page;
+  it now matches the booking panel's heading.
+- **Radii:** the price panel is 12 px like every other panel; photos are 6 px. The header logo
+  link is 44 px tall on a phone.
+After: 0 contrast failures, 0 heading skips, 0 overflow, 21 of 21 interaction checks. `/` is
+16,317 px at 390 and 13,653 px at 1280. `/caio` and `/about` unchanged to the pixel.
+
+**Visual QA pass, 19 September**, screen by screen at a 1366Ã—768 laptop and a 390Ã—844 phone,
+plus the open states (menu, chat, FAQ, team route, form errors, keyboard focus). Six fixes:
+- **Chapter dividers** stopped in a hard vertical cut at 1200px; the ends now fade out.
+- **Titles** break into even lines (`text-wrap: balance`). "â€¦the irreversible trade-offs" had
+  left "offs" alone on a line on both screens; the 30ch cap that caused it is gone.
+- **The fifth live-experience item** spanned wider than the four above it, so its rule was a
+  third longer. It sits in the left column now.
+- **The short paragraph beside a lead** starts level with it (it was bottom-aligned and floated
+  60px low on a laptop).
+- **The boundary timeline** began 6px above its first knot; it starts at the knot now.
+- **On a laptop the split sections keep their heading in view** ("What you'll be able to do",
+  "What the work explores"), where the left column was empty for a screen or more.
+Heights unchanged: `/` 16,317px at 390. Audit clean, 21/21 interaction checks.
+
+**Full alignment with the 19 September package, 19 September (later).** The brief changed: the
+package is now the source of truth, ahead of the earlier QA passes. `landing.css` was rewritten as
+a rule-by-rule port of its `styles.css` at its own breakpoints (1450, 1150, 960, 760, 390, 350),
+checked with a section-by-section render of the package beside ours. At 1440 every section is
+within a few pixels of the package's height except where our content differs (no region price
+locally). **This reverses several earlier choices on purpose:**
+- **Phones use the package's 18px text and 64px sections.** `/` at 390 is now 20,210px (the
+  package is 20,447px; the compact version was 16,317px). Sunil asked for less blank space on
+  phones on 16 September; the package supersedes that here, and it is flagged for him.
+- **Phone hero order is the package's**: words, brain (up to 490px), then the portrait strip.
+- **The menu takes over at 960px**, not 900: `MobileMenu` gained a `breakpoint` prop.
+- Reverted to the package: the two-up paragraph aligned to the lead's end, the fifth
+  live-experience item spanning, 22px card and module titles, the price panel's 4px radius, no
+  sticky headings. Kept: divider ends fade, titles balanced, timeline starts at its first knot.
+- Images: the package's `sunil-introduction.webp` (47 KB) and `sunil-teaching.webp` (31 KB)
+  replace the 202 KB and 331 KB JPEGs on `/`, with width and height set.
+- Forms and booking take the package's presentation: 16px bold labels, 48px fields on
+  `--field-bg` (new token), Continue at its natural width on the right, booking inside one panel.
+- Focus is 3px with a 4px offset on `/`, ivory on the dark surfaces.
+
+**A real bug, found by this pass, on every page with the booking widget** (`/`, `/caio`,
+`/assessment`): the day and time buttons are built by script, and Astro's scoped styles never
+reached them, so they rendered as bare browser buttons ("Mon21 Sept"). They are `:global` inside
+the widget now. It only shows when real slots exist, which is why nobody had seen it.
+
+Checked: 64 of 66 functional checks pass with the three APIs stubbed at the network layer (the
+two "failures" are the browser logging the deliberate 500 from the failure-state stub). No
+overflow at 320, 360, 390, 393, 430, 768, 1024, 1280, 1366, 1440, 1920, a 390Ã—600 short phone
+and an 844Ã—390 landscape phone. `astro check` 0 errors, 37/37 unit tests, clean build.
+
+## The complete design system, site-wide â€” started 19 September (later)
+
+Sunil asked for the whole 18 September design system across the site, not only `/`. The plan,
+one commit per step on this branch: (1) shared components and the shell, (2) page templates per
+page group (`tool.html` for the resource tools, `brand.html` for `/about`, `programme.html` for
+`/programmes`, `/advisory`, `/contact`, consulting register for `/caio` and `/assessment`), (3) zoom,
+screen-reader and Lighthouse checks. `/craft` and the console stay on tokens only, as the package
+says to keep branded storytelling out of dense working areas.
+
+- [x] **Step 1a, components.** `src/styles/ds/components.css` (imported by `global.css`) holds the
+  package's reusable components as **opt-in `lc-` classes**: fields, helper and error text, check
+  rows, tabs, disclosure, resource rows, download list, table, badges, callout, state panel, guided
+  tool (workspace, progress, choices, result), toast, plus `.btn-text`, busy and disabled buttons
+  and a global `.sr-only`. **Prefixed on purpose**: `.field`, `.tabs`, `.choice`, `.badge`,
+  `.callout` and `.table-scroll` are already page-scoped class names on nine resource pages, and a
+  global rule under the same name would have restyled all of them. Behaviour is in
+  `src/components/ds/`: `Tabs` (arrow keys, Home and End, one tab stop, panels stay in the
+  document), `FormField` (label, helper and error wired with `aria-describedby` and
+  `aria-invalid`), `StatePanel` (symbol and sentence), `ToolProgress` (`aria-current="step"`) and
+  `Toast` (`window.lcToast()`, polite live region, stays until closed, focus returns).
+  **`/design-system`** renders every one of them in every state: `noindex`, not in the sitemap, not
+  linked. Nothing existing changed visually in this step.
+- [x] **Step 1b, the shell on every public layout.** A skip link and `<main id="main">` on
+  CaioLayout, AssessmentLayout, NotesLayout, PolicyLayout, ResourcesLayout and BookingLayout (only
+  Base and Practice had them). **A phone menu on the five that had none.** Their header links hide
+  below 900px (global.css), so on `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms` and every
+  resource page a phone could not reach them at all; a pre-existing defect. Policy links carry
+  `aria-current="page"`, drawn as a deep-gold underline. Checked on 20 public pages at 390 and 1280:
+  every page has the skip link and `#main`, every hidden link is reachable from the menu, no header
+  overlap, no overflow, no script errors. The consulting and resource headers still wrap to two rows
+  on a phone, as they did; the page-template step tightens them.
+- [x] **Main merged in first** (`5950a90`): #29 and #30 (the stepped POC Selection Tool and Run-Cost
+  Model) landed on main after this branch was cut. One conflict in `run-cost-model.astro`, resolved
+  to keep the linen on a filled field and main's panel background on computed rows. Main's two
+  pages also brought back six flat forest fills (`background: var(--sun)` / `--noir` on the progress
+  bar and step dots); they are `--texture-forest` now, per the linen rule.
+- [x] **Step 2a, the tool template** (`src/styles/templates/tool.css`, the package's `tool.html`)
+  on all nine interactive tools: the eight on ResourcesLayout (which now sets `body.tool-page`) and
+  `/tools/agent-design-check` (PracticeLayout gained a `bodyClass` prop). The dark linen hero with a
+  serif h1 becomes a working heading: ivory, deep-gold eyebrow, Figtree bold h1 at the tool size,
+  muted lead, ordinary buttons. Section headings inside a tool lose the gold emphasised word.
+  **Chosen answer cards** (the POC tool's 0/1/2 anchors, the design check's answers) are now the
+  design system's choice card: a forest line on the soft fill, not a forest fill. The R0 to R3 and
+  Checked/Assumed pills stay forest when pressed: they are segmented toggles, which the package
+  fills. Each tool's scoring, stepping and PDF logic is untouched; clicked through all nine at 1280
+  and 390 with no script errors and no overflow. **Not changed:** the three printable worksheets
+  (cost-ceiling, deployment, evaluation gates) already use a plain document heading.
+
+**Three fixes on `/`, Sunil's review of 19 September:**
+- **The brain loops continuously**, and the Replay and Reduce motion buttons are gone ("it should
+  keep on looping"). A 4.8 s cycle: the seven knots light in turn over about 3.2 s, then it rests.
+  It pauses off screen, and the OS reduced-motion setting still shows it still. **WCAG 2.2.2 gap:**
+  motion over five seconds should have a pause control; the OS setting is now the only off switch.
+- **The chapter break** was the package's full-width fabric band, which looked like a loose image
+  over the seam. It is now a hairline on the seam, fading at both ends, with a gap at its centre
+  where two strands cross over a gold knot (`public/textures/chapter-knot.svg`, 96Ã—24).
+  `fabric-crossing.svg` is deleted.
+- **The worked-example timeline** broke at the boundary step and never reached "Acts": its rail was
+  a border, and the boundary step's full-width gold rules and margin cut it. Each step now draws the
+  rail from its own knot to the next, so it is one line from "Reads" to "Acts". The boundary step
+  is an open gold ring with its words on a soft gold panel beside the rail.
+- [x] **Step 2b, the brand template on `/about`** (`src/styles/templates/brand.css`, the
+  package's `brand.html`, applied by `bodyClass="brand-page"`). Full-width linen hero; split
+  sections (heading left, reading right) divided by hairlines on the text column; the four steps
+  as open columns (4 across, 2 on a tablet, stacked on a phone); the verified facts as open
+  rows; the two routes as open rows. No boxed panels, no gold heading words. The "Not stated on this
+  page" block keeps its blue uncertain panel on purpose. No copy changed. 390: 5,828px
+  (was 5,872); 1280: 3,930px (was 3,806).
+- [x] **Step 2c, the programme template** (`src/styles/templates/programme.css`, the package's
+  `programme.html`, `bodyClass="programme-page"`) on `/programmes`, `/programmes/enterprise`,
+  `/advisory` and `/contact`: full-width linen hero, stacked sections under a hairline, cards and
+  comparison panels as open rows, numbered steps as the work list, the contact routes as a two-column
+  list. Pending-facts panels kept. No copy changed. No overflow at 390 or 1280.
+- [x] **Chat is back in the bottom-right corner on `/`** (Sunil, 19 September). The header and
+  phone-menu chat buttons are removed; `AskWidget`'s `launcher="header"` option still exists and is
+  unused. The pill now lifts above the sticky Apply bar while the bar shows (`--sticky-apply-h`,
+  set by StickyApplyBar), on every page that has both.
+- [x] **Step 2d, the consulting template on `/caio` and `/assessment`**
+  (`src/styles/templates/consulting.css`, set by CaioLayout and AssessmentLayout as
+  `body.consult-page`): full-width linen hero with the portrait, open proof bar, sections under a
+  hairline, the six "what I own" and deliverable cards as rows, open stat band and fit columns, open
+  FAQ, no section numbers, no gold heading words. The "Sunil Mathew" wordmark stays; the pricing
+  tiers and price card stay as panels (the decision surface). No copy changed.
+  **Fixed on Sunil's go-ahead (19 September):** `/caio`'s maker section said "100M+ users", "teams of
+  up to 150 people", "~31 billion executions a week", "300+ products", "three Fortune-100 companies"
+  and named product work at each employer; `/assessment`'s said "100M+ users". The 11 September
+  finding had claimed these were gone from every public surface; they were still live on `main`.
+  Both now carry the approved context only: Google, Amazon, Walmart and startups, teams across the
+  US, UK, China and India, and current agentic-AI work. A comment in `caio.astro` records the cut.
+- [x] **Step 2e, `/craft`** (Sunil: "use the same design for /craft"). Rendered locally for the first
+  time with the existing dev-only preview learner (`CRAFT_DEV_BYPASS=1` in `.env.local`, which is
+  gitignored and compiled out of every build). Fixed, all pre-existing:
+  - **The footer rendered as a third column at the top right of every `/craft` page**: it was a
+    sibling of `<main>` in the flex shell. It is inside the scroller now, under the content.
+  - **The dashboard hero text was illegible**: the eyebrow was forest on the forest linen and the
+    lead was muted ink on it. They use the hero tokens now.
+  - **The dashboard footer's text and email link were near-invisible**: global.css colours
+    `.foot-grid` for the dark public footers, and this footer is light.
+  - **The session list read as one grey block** (a 1px-gap grid on a line-coloured ground behind
+    transparent rows). It is rule-separated rows now, as the design system draws lists.
+  - The LC mark heads the rail, as it heads every public header.
+  Contrast audit on 15 `/craft` pages at 1280 and 390: 0 failures, 0 overflow. The console
+  (`/craft/admin`) is not in this step; it needs the admin password to render.
+- [x] **The topic break everywhere a topic changes** (Sunil, 19 September). One drawing, defined
+  once in `components.css` as `--seam-line` / `--seam-bg`: a hairline fading at both ends with two
+  strands crossing over a gold knot at its centre. Now between every two sections on `/` (inside
+  chapters too, not only between them), on `/about`, the programme pages, `/caio`, `/assessment` and
+  the reading sections of every tool page (not inside a tool's own workspace). **Trap:** `--seam-bg`
+  is resolved at `:root`, so to narrow it to a text column you must write the two layers out on the
+  element and set `--seam-w` there (brand.css, programme.css and tool.css do). `/` at 390 is
+  20,482px (was 20,086) because in-chapter sections now open with 64px instead of 24px.
+- [x] **Header overlap on phones 391 to ~560px wide** (Sunil's screenshot, 19 September): the lockup
+  kept its 44px tablet size there and ran under Apply. It takes the phone size (35px mark) up to
+  560px now. Scanned every 5px from 320 to 1300 on `/` and six other layouts: no overlap and nothing
+  past the right edge. (300px still overflows; below the 320 floor this site supports.)
+- [x] **"Before you apply", "Talk first" and "Apply" are centred** (Sunil, 19 September): headings,
+  the FAQ list, the booking panel, the route chooser, the form and the contact line share one centre
+  line (measured 0px off centre at 1280 and 390). Text inside the answers, the booking panel and the
+  form stays left-aligned for reading.
+
+## V5 illustrated on `/` — 19 September (later), `feat/landing-refinement`
+
+The V5 package (`docs/2026-09-19_Landing_Page_V5_Illustrated-…/`, kept out of the repo via
+`.git/info/exclude`) is now the source of truth for `/`. It is V4 (an ivory, quieter re-layout of
+the refinement) plus eleven drawings. Its `base.css` is the refinement's `styles.css` almost
+byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`** carries
+`v4.css` + `illustrated.css`, loaded after it in the package's order. preview.js is not shipped.
+
+- [x] **Hero**: ivory with `public/textures/ivory-weave.svg`; the line-drawn brain is the package's
+  `assets/brain-lines.svg`, byte for byte, in `src/components/cohort/art/brain.svg` (Sunil asked for
+  exactly that file). It loops on an 8-second timeline, only while on screen and the tab is visible.
+  The woven-brain webp files are deleted. Two equal buttons: Apply for the cohort / Start the team
+  conversation. The proof bar is gone; the intro strip carries the one employer/26-years sentence.
+- [x] **New sections**: `#routes` (two ways to learn, cohort figures from `facts.ts`) and
+  `#enterprise-scope` (no price, no dates). Questions now open the last chapter, then `#apply`,
+  then `#book`, with the short enquiry form (`route="enquiry"`) folded under the booking widget.
+  That keeps the widget's "use the form below" copy true.
+- [x] **Drawings**: `ConceptFigure.astro` inlines the eleven SVGs from `src/components/cohort/art/`.
+  Each traces once on first view, then rests.
+- [x] **One Pause motion control in the footer**, for the brain and the drawings (WCAG 2.2.2).
+  Session only, nothing stored. This closes the 2.2.2 gap noted above.
+- [x] **Header**: the site's five sections + **Apply** (to `#apply`), and an "On this page" row (a
+  `<details>` on phones). Menu below 1080px. Sticky bar on `/`: "Find the right programme for you." +
+  Apply (still hidden on phones). The package's "Enquire" was replaced by Apply on Sunil's answer
+  (19 September): the cohort CTA is Apply everywhere.
+- [x] **Meta title and description are V4's** (Sunil, 19 September): "The Living Craft — Design
+  agentic systems. Guide your team." and `STANDFIRST` = "Live learning with Sunil Mathew for
+  experienced engineers and engineering teams. Explore the open cohort or start a team-learning
+  conversation." The JSON-LD Course description reads the same constant.
+- [x] Copy changes that came with V4, taken as written: the hero, the Sunil lead ("global technology
+  companies and startups") and the paragraph after it, "Open cohort" labels.
+- [x] **The knot divider is gone everywhere** (Sunil, 19 September: "remove this everywhere").
+  `--seam-bg`/`--seam-line` and `public/textures/chapter-knot.svg` are deleted; `/`, `/about`, the
+  programme pages, `/caio`, `/assessment` and the tool pages draw no divider between sections now.
+  Spacing stays as it was. The V4 plain hairlines were not added in its place.
+- **Kept against the package, on Sunil's earlier instructions**: the centred last three sections, no sticky bar on phones.
+- QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
+  500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
+  errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.
 
 ---
 

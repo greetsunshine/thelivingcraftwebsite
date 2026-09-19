@@ -28,6 +28,8 @@
 @import url('./ds/contract.css');
 @import url('./ds/theme.css');
 @import url('./ds/reset.css');
+/* The design system's reusable components, all opt-in `lc-` classes. */
+@import url('./ds/components.css');
 
 /* ── compatibility layer ──────────────────────────────────────────────────────
    The old token names, re-pointed at the new palette. Every page-scoped
@@ -169,12 +171,12 @@ a.btn-ghost:hover { color: var(--text-body); }
 .hero > .wrap a.btn-ghost:hover { color: var(--text-on-invert); }
 a.btn-primary:hover { color: var(--control-primary-fg); }
 .btn-primary {
-  background: var(--texture-forest);
+  background: var(--control-primary-bg);
   color: var(--control-primary-fg);
   border-color: var(--control-primary-bg);
 }
 .btn-primary:hover {
-  background: var(--texture-forest-hover);
+  background: var(--control-primary-bg-hover);
   border-color: var(--control-primary-bg-hover);
   transform: none;   /* the old system lifted buttons; §3 animates press, not hover */
 }
@@ -242,7 +244,7 @@ header.nav {
   line-height: 1; transition: background var(--motion-fast) var(--ease-out);
 }
 .region-switch .region-link:hover { color: var(--text-loud); background: var(--surface-hover); }
-.region-switch .region-link.active { background: var(--texture-forest); color: var(--text-on-accent); }
+.region-switch .region-link.active { background: var(--control-primary-bg); color: var(--text-on-accent); }
 @media (max-width: 680px) { .region-switch { display: none; } }
 
 /* ── hero — THE one black area per view ───────────────────────────────────── */

@@ -6,6 +6,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "workbook": "npx tsx scripts/run-cost-workbook-data.ts | python3 scripts/run-cost-workbook.py public/downloads/agent-run-cost-model.xlsx",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

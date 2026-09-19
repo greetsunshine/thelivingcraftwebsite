@@ -187,6 +187,20 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
+  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+    [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
+    [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
+    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    **no printed section numbers**, and no divider ornament between sections (the knot
+    divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
+    package's `brain-lines.svg`), which **loops**; eleven drawings come from
+    [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
+    "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the
+    floating launcher, bottom right. The header carries the site's sections, Apply (never the
+    package's "Enquire") and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
+    source of truth for this page's look.** Re-check against it with a side-by-side render.
+  - **BookingWidget builds its day and time buttons in script.** Their styles must be `:global`
+    inside the widget; scoped styles never reach script-built elements.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
@@ -944,6 +958,12 @@ prospect.
   unattached (404) — flagged to Sunil, not fixed here.
 
 ## Shared infrastructure
+- **Components:** [src/styles/ds/components.css](src/styles/ds/components.css) and
+  [src/components/ds/](src/components/ds/) are the design system's reusable components, as opt-in
+  `lc-` classes (fields, tabs, disclosure, resource rows, tables, badges, state panels, the guided
+  tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
+  names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
+  `/design-system` renders every component in every state (noindex, unlinked).
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
@@ -1179,11 +1199,12 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture on every dark green background**, large and small: hero
-  shells, footer bands, buttons, selected states, table headers, code blocks and marks.
-  **Never write `background: var(--sun)` (or `--noir`, `--ink`) again**: use
-  `var(--texture-forest)`, and `var(--texture-forest-hover)` for a hover or pressed
-  state. `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
+- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
+  shells, footer bands, the price panel, table headers, code blocks and marks take
+  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
+  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
+  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
+  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
   in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
   whole `background` value (overlay, linen, flat fallback colour), and so is
   `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
