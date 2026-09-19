@@ -112,48 +112,16 @@ body.landing :focus-visible:not([tabindex='-1']) {
 .landing .transform { padding-block: 88px; }
 .landing .chapter { position: relative; }
 .landing .chapter:not(.chapter-opening) { padding-top: 12px; }
-/* THE CHAPTER BREAK. A hairline along the seam where one chapter's ground
-   meets the next, fading at both ends, with a gap at its centre where two strands
-   cross over a gold knot. It replaced the package's full-width fabric
-   band on 19 September: that read as a loose image laid over the seam
-   rather than part of it. Decoration only, and not the LC mark. */
-.landing .chapter:not(.chapter-opening)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: min(1200px, calc(100% - 48px));
-  height: 1px;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg,
-    transparent 0, var(--border-hair) 20%,
-    var(--border-hair) calc(50% - 64px), transparent calc(50% - 64px),
-    transparent calc(50% + 64px), var(--border-hair) calc(50% + 64px),
-    var(--border-hair) 80%, transparent 100%);
-  pointer-events: none;
-}
-.landing .chapter:not(.chapter-opening)::after {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  width: 96px;
-  height: 24px;
-  transform: translateX(-50%);
-  background: url('/textures/chapter-knot.svg') center / 96px 24px no-repeat;
-  pointer-events: none;
-}
+/* No divider ornament between chapters (removed 19 September, Sunil):
+   the change of ground from ivory to paper is the break. */
 .landing .chapter-teaching,
 .landing .chapter-practice,
 .landing .chapter-joining { background: var(--surface-panel); }
 .landing .chapter section + section { padding-top: 24px; }
-/* The topic break between every two sections inside a chapter, not only
-   between chapters (Sunil, 19 September: "at all the places the topics
-   change"). Not after the hero, whose own edge is the break. */
-.landing .chapter section + section:not(.hero + section) {
-  padding-top: 64px;
-  background: var(--seam-bg);
-}
+/* A new topic inside a chapter opens with 64px of space. It also carried
+   a knot divider until Sunil asked for it to go (19 September). Not after
+   the hero, whose own edge is the break. */
+.landing .chapter section + section:not(.hero + section) { padding-top: 64px; }
 
 /* ── header ─────────────────────────────────────────────────────────────── */
 .landing header.nav { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); }

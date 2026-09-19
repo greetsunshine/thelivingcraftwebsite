@@ -13,11 +13,10 @@
    - Colours are tokens. The package's two warm tones are --surface-cloth and
      --line-warm in theme.css; its soft greens are --surface-hover.
    - Dark green fills keep the linen (--texture-forest), a standing rule.
-   - Topic breaks. V4 removes the chapter divider and marks a new topic
-     with a plain hairline. Sunil asked for a break "at all the places the
-     topics change", so the knot seam from landing.css stays at every chapter
-     and every in-chapter change. The package's plain border-tops are not
-     ported.
+   - No divider between sections. V4 marks a new topic with a plain
+     hairline; the site had a knot divider there instead until Sunil asked
+     for it to go (19 September). Neither is drawn: spacing and the
+     chapters' alternating grounds separate the topics.
    - The last three sections stay centred (Sunil, 19 September), which V4
      sets left-aligned.
    - The sticky bar stays off phones (Sunil, 16 September).

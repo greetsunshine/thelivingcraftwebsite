@@ -191,8 +191,8 @@ Do not inline either one here.
     [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
     [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
     are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
-    **no printed section numbers**, a knot topic break at every change of topic. The hero is ivory
-    with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
+    **no printed section numbers**, and no divider ornament between sections (the knot
+    divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
     package's `brain-lines.svg`), which **loops**; eleven drawings come from
     [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
     "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the

@@ -24,28 +24,12 @@
      package details/summary   → global details/summary, or .lc-accordion
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── the topic break ────────────────────────────────────────────────────────
-   Where one topic ends and the next begins: a hairline fading at both ends,
-   broken at its centre where two strands cross over a gold knot
-   (public/textures/chapter-knot.svg). One drawing for every page, used as a
-   whole background value on the section that starts the new topic:
-       background: var(--seam-bg);
-   The line sits 12px below the section's top edge, so give that section at
-   least 48px of top padding. To narrow it to a text column, write the two
-   layers out and set --seam-w on the same element (a custom property is
-   resolved where it is declared, so overriding --seam-w alone does nothing
-   to --seam-bg); templates/brand.css does this. */
-:root {
-  --seam-w: 100%;
-  --seam-line: linear-gradient(90deg,
-    transparent 0, var(--border-hair) 20%,
-    var(--border-hair) calc(50% - 64px), transparent calc(50% - 64px),
-    transparent calc(50% + 64px), var(--border-hair) calc(50% + 64px),
-    var(--border-hair) 80%, transparent 100%);
-  --seam-bg:
-    url('/textures/chapter-knot.svg') center top / 96px 24px no-repeat,
-    var(--seam-line) center 12px / var(--seam-w) 1px no-repeat;
-}
+/* ── the topic break: REMOVED 19 September ─────────────────────────────────
+   A knot drawing on a hairline (--seam-bg) marked every change of topic on
+   the public pages from 19 September until Sunil asked for it to go the
+   same day ("remove this everywhere"). Sections are now set apart by their
+   spacing, and on `/` by the chapters' alternating grounds. Do not bring
+   back a divider ornament without asking. */
 
 /* ── utilities ──────────────────────────────────────────────────────────── */
 .sr-only {

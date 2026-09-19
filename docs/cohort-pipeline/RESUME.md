@@ -605,8 +605,11 @@ byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`
   conversation." The JSON-LD Course description reads the same constant.
 - [x] Copy changes that came with V4, taken as written: the hero, the Sunil lead ("global technology
   companies and startups") and the paragraph after it, "Open cohort" labels.
-- **Kept against the package, on Sunil's earlier instructions**: knot topic breaks at every change
-  (V4 uses plain hairlines), the centred last three sections, no sticky bar on phones.
+- [x] **The knot divider is gone everywhere** (Sunil, 19 September: "remove this everywhere").
+  `--seam-bg`/`--seam-line` and `public/textures/chapter-knot.svg` are deleted; `/`, `/about`, the
+  programme pages, `/caio`, `/assessment` and the tool pages draw no divider between sections now.
+  Spacing stays as it was. The V4 plain hairlines were not added in its place.
+- **Kept against the package, on Sunil's earlier instructions**: the centred last three sections, no sticky bar on phones.
 - QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
   500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
   errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.

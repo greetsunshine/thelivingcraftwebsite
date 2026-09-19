@@ -39,14 +39,6 @@
 
 /* ── section rhythm ─────────────────────────────────────────────────────── */
 .consult-page main > section:not(.hero) { padding-block: 88px; }
-.consult-page main > section:not(.hero) + section:not(.hero)::before {
-  content: '';
-  display: block;
-  width: min(var(--maxw), calc(100% - 2 * var(--space-5)));
-  height: 24px;
-  margin: -100px auto 76px;
-  background: var(--seam-bg);
-}
 .consult-page .sec-head h2 em,
 .consult-page .experience h2 em,
 .consult-page .final h2 em { color: inherit; font-style: normal; }
@@ -102,14 +94,9 @@
 @media (max-width: 900px) {
   .consult-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
   .consult-page main > section:not(.hero) { padding-block: var(--space-7); }
-  .consult-page main > section:not(.hero) + section:not(.hero)::before {
-    width: calc(100% - 2 * var(--space-4));
-    margin: calc(-1 * var(--space-7) - 12px) auto calc(var(--space-7) - 12px);
-  }
 }
 @media (max-width: 560px) {
   .consult-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
   .consult-page main > section:not(.hero) { padding-block: var(--space-6); }
-  .consult-page main > section:not(.hero) + section:not(.hero)::before { margin: calc(-1 * var(--space-6) - 12px) auto calc(var(--space-6) - 12px); }
   .consult-page .fit-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
 }
