@@ -67,6 +67,57 @@ product-scale claims were removed rather than inferred from older material.
 
 ---
 
+## The POC Selection Tool is stepped, and its PDF is branded and checked — 18 September
+
+Six steps with a progress bar; every step still renders without JavaScript and in print.
+The PDF is built in three stages in `lib/resources/poc-screen-pdf.ts`: `buildModel()`,
+`checkModel()` (12 named checks, recomputed independently of the model), then drawing.
+A failed check is a 500 and nothing is saved, because `verify` runs before the request
+handler. The cohort copy on the PDF's *Join the cohort* panel is read from `facts.ts` and
+`offer-display.ts`; if D1 changes what is published, that panel changes with it and the
+"no unpublished figure" check is where a stray fee would be caught.
+
+Two things to know:
+- **Fonts.** The design system names Figtree (standing in for Sofia Pro) and ships no file.
+  The PDF uses Helvetica, the fallback the token stack itself names. Adding a licensed
+  font file and `@pdf-lib/fontkit` is the change that closes that gap.
+- **The other two PDF renderers** (Agent Authority Review, Run-Cost Model) do not yet have
+  a `verify` step or a brand band. The `Renderer` interface makes both optional so they
+  keep working; giving them the same treatment is the obvious next piece.
+
+---
+
+## The Run-Cost Model Tool is in the POC tool's shape — 18 September
+
+`/resources/run-cost-model` was rebuilt against `/resources/poc-screen` as the reference,
+on top of PR #29 (the stepped POC tool). Where the two differed, the POC tool won. What to
+know before touching it:
+
+- **The reference example is loaded on arrival.** Eighty-three blank lines is too many to
+  face, so the page opens on the ordering agent with every line filled, says so in the bar,
+  on the Start step and on the result card, and offers *Start from a blank model*. The
+  server renders the example's values and every worked-out line, so the filled model reads
+  with no script. `isExample()` compares the state to `EXAMPLE`; the PDF says when it holds
+  the example unchanged.
+- **A blank is unknown, not zero.** Unchanged from before, and the opposite of the POC
+  tool. Do not add a fallback to 0.
+- **The PDF has three stages and fourteen checks**, in `lib/resources/run-cost-model-pdf.ts`.
+  Each check recomputes its fact from the raw inputs with its own arithmetic
+  (`recompute()`), not by calling `readModel()` again. The route's `verify` runs them before
+  the save. The `Writer` is a copy of the reference's, with the page decorator; the shared
+  `pdf-writer.ts` no longer has a caller among the three tools once #29 lands.
+- **The workbook is generated, not hand-edited.** `npm run workbook` rewrites
+  `public/downloads/agent-run-cost-model.xlsx` from the data module (TypeScript exports the
+  rows and copy as JSON; Python with openpyxl writes the sheet). Change the data module,
+  run the script, commit both. Its formulas were evaluated and match the page.
+- **One tension, named.** The PDF's *Join the cohort* panel prints the week count and the
+  start month, read from `facts.ts` through `offer-display.ts`, because the reference
+  prints them and its check requires them. CLAUDE.md's offer policy says not to publish a
+  week count or start date. The reference won here; it is Sunil's call whether the panel
+  should drop those two figures on every tool.
+
+---
+
 ## Three tools now have an email-gated PDF — 17 September
 
 `/resources/poc-screen` and `/resources/agent-authority-review` were both rebuilt on
@@ -108,8 +159,10 @@ model*, *Reference example*). Three more things to know:
 - **A blank is unknown, not zero.** The opposite of the POC tool. A total stays blank until
   every line that feeds it is set, and the outcome reads only at 83/83. Do not add a
   default or a fallback to 0: "this system never retries" is a claim the tool must not make.
-- **The three PDF renderers share `lib/resources/pdf-writer.ts`.** It was two identical
-  copies until today. A fourth renderer imports it; it does not copy it.
+- **`lib/resources/pdf-writer.ts` is now the authority review's writer only.** The POC
+  tool (#29) and the run-cost tool each carry the reference's `Writer` with the page
+  decorator for the cover band. Lifting that decorated writer into the shared file is a
+  follow-up, not something to do inside either tool's PR.
 
 ---
 

@@ -52,10 +52,11 @@ export const PURPOSE = [
 /** How to use it, as numbered steps. */
 export const HOW_TO_USE = [
   'Pick one proof of concept. Score one at a time.',
-  'For each question, choose the answer that is true today, not the one that is planned.',
-  'Watch the score bar. It stays at the top of the page and updates as you answer.',
+  'Work through the four sections with Next and Back. Each has three questions.',
+  'For each question, choose the answer that is true today, not the one that is planned. The page moves to the next question for you.',
+  'Watch the score bar and the progress bar. Both stay at the top and update as you answer.',
   'Read the result at the end. It gives the outcome and what to fix first.',
-  'Copy the scorecard, print it, or get the PDF of your scored copy.',
+  'Get the PDF of your scored copy at the end.',
 ];
 
 export const SECTIONS: ScreenSection[] = [
