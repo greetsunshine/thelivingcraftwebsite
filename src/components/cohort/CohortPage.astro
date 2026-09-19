@@ -860,7 +860,10 @@ const hasPrice = Boolean(region?.publicPrice);
     gap: var(--space-6) 80px;
     align-items: start;
   }
-  .two-up > .body-copy { align-self: end; }
+  /* The shorter paragraph starts level with the lead. Aligned to the bottom
+     (the package's choice) it floated 60px below the lead on a laptop and
+     read as a separate note. */
+  .two-up > .body-copy { align-self: start; }
   .body-copy {
     font-size: var(--landing-text, var(--size-4));
     line-height: 1.62;
@@ -913,6 +916,12 @@ const hasPrice = Boolean(region?.publicPrice);
     outline: 5px solid var(--surface-panel);
   }
   .boundary li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  /* The line starts at the first knot. As a border it began 6px above it,
+     a small stray tick over "Reads". */
+  .boundary li:first-child {
+    border-left-color: transparent;
+    background: linear-gradient(var(--border-field), var(--border-field)) left 12px / 1px 100% no-repeat border-box;
+  }
   .boundary .b-k {
     font-family: var(--font-body);
     font-size: var(--size-2);
@@ -1054,7 +1063,6 @@ const hasPrice = Boolean(region?.publicPrice);
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
-    .two-up > .body-copy { align-self: start; }
     .commit { margin-bottom: var(--space-5); }
     .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
     .route-choice-btn { padding: 18px 20px; }

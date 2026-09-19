@@ -357,6 +357,20 @@ and fixed six inconsistencies:
 After: 0 contrast failures, 0 heading skips, 0 overflow, 21 of 21 interaction checks. `/` is
 16,317 px at 390 and 13,653 px at 1280. `/caio` and `/about` unchanged to the pixel.
 
+**Visual QA pass, 19 September**, screen by screen at a 1366Ã—768 laptop and a 390Ã—844 phone,
+plus the open states (menu, chat, FAQ, team route, form errors, keyboard focus). Six fixes:
+- **Chapter dividers** stopped in a hard vertical cut at 1200px; the ends now fade out.
+- **Titles** break into even lines (`text-wrap: balance`). "â€¦the irreversible trade-offs" had
+  left "offs" alone on a line on both screens; the 30ch cap that caused it is gone.
+- **The fifth live-experience item** spanned wider than the four above it, so its rule was a
+  third longer. It sits in the left column now.
+- **The short paragraph beside a lead** starts level with it (it was bottom-aligned and floated
+  60px low on a laptop).
+- **The boundary timeline** began 6px above its first knot; it starts at the knot now.
+- **On a laptop the split sections keep their heading in view** ("What you'll be able to do",
+  "What the work explores"), where the left column was empty for a screen or more.
+Heights unchanged: `/` 16,317px at 390. Audit clean, 21/21 interaction checks.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18
