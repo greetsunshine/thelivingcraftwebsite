@@ -196,8 +196,8 @@ Do not inline either one here.
     package's `brain-lines.svg`), which **loops**; eleven drawings come from
     [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
     "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the
-    floating launcher, bottom right. The header carries the site's sections, "Enquire" (to
-    `#enquire`) and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
+    floating launcher, bottom right. The header carries the site's sections, Apply (never the
+    package's "Enquire") and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
     source of truth for this page's look.** Re-check against it with a side-by-side render.
   - **BookingWidget builds its day and time buttons in script.** Their styles must be `:global`
     inside the widget; scoped styles never reach script-built elements.

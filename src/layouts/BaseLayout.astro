@@ -73,16 +73,14 @@ const PAGE_NAV = [
         </a>
         <nav class="navlinks" aria-label="Main navigation">
           {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
-          {/* "Enquire", as the V4/V5 package names it. It lands on the
-              application section's heading (#enquire), ABOVE the choice
-              between the open cohort and a team programme, so the header
-              does not pick a route for anybody. Apply is still the action
-              inside that section and on the price card. */}
-          <a class="btn btn-primary" href="#enquire">Enquire<span class="arrow" aria-hidden="true">→</span></a>
+          {/* "Apply", not the package's "Enquire" (Sunil, 19 September: the
+              cohort's call to action is Apply everywhere). It goes to #apply,
+              which lights both routes and waits for a choice. */}
+          <a class="btn btn-primary" href="#apply">Apply<span class="arrow" aria-hidden="true">→</span></a>
           {/* Below 1080px the five links fold into this menu. */}
           <MobileMenu breakpoint={1080}>
             {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
-            <a href="#enquire">Enquire</a>
+            <a href="#apply">Apply</a>
             <TalkToSunilLink placement="menu" variant="textlink" onCohortPage />
           </MobileMenu>
         </nav>
@@ -165,7 +163,7 @@ const PAGE_NAV = [
 
     <Track region={region} />
     <AskWidget surface="/" region={region} />
-    <StickyApplyBar applyHref="#enquire" copy="Find the right programme for you." label="Enquire" />
+    <StickyApplyBar applyHref="#apply" copy="Find the right programme for you." />
 
     {/* Publishes the sticky header's real height as --anchor-offset, which
         global.css spends as scroll-margin-top on :target. Every CTA on this

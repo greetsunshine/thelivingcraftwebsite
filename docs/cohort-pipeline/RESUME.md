@@ -595,16 +595,18 @@ byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`
   Each traces once on first view, then rests.
 - [x] **One Pause motion control in the footer**, for the brain and the drawings (WCAG 2.2.2).
   Session only, nothing stored. This closes the 2.2.2 gap noted above.
-- [x] **Header**: the site's five sections + "Enquire" (to `#enquire`, above both routes), and an
-  "On this page" row (a `<details>` on phones). Menu below 1080px. Sticky bar on `/`: "Find the right
-  programme for you." + Enquire (still hidden on phones).
+- [x] **Header**: the site's five sections + **Apply** (to `#apply`), and an "On this page" row (a
+  `<details>` on phones). Menu below 1080px. Sticky bar on `/`: "Find the right programme for you." +
+  Apply (still hidden on phones). The package's "Enquire" was replaced by Apply on Sunil's answer
+  (19 September): the cohort CTA is Apply everywhere.
+- [x] **Meta title and description are V4's** (Sunil, 19 September): "The Living Craft — Design
+  agentic systems. Guide your team." and `STANDFIRST` = "Live learning with Sunil Mathew for
+  experienced engineers and engineering teams. Explore the open cohort or start a team-learning
+  conversation." The JSON-LD Course description reads the same constant.
 - [x] Copy changes that came with V4, taken as written: the hero, the Sunil lead ("global technology
   companies and startups") and the paragraph after it, "Open cohort" labels.
 - **Kept against the package, on Sunil's earlier instructions**: knot topic breaks at every change
   (V4 uses plain hairlines), the centred last three sections, no sticky bar on phones.
-- **Open for Sunil**: "Enquire" in the header and sticky bar departs from CLAUDE.md's "cohort CTA =
-  APPLY" (it lands above both routes; Apply is still the button inside). The meta title and
-  description still use the older `STANDFIRST`, not V4's.
 - QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
   500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
   errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.

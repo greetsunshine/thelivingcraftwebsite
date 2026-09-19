@@ -22,7 +22,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CohortPage from '../components/cohort/CohortPage.astro';
-import { EXPLORES, QUESTIONS, STANDFIRST } from '../data/cohort-copy';
+import { EXPLORES, QUESTIONS, STANDFIRST, HEADLINE } from '../data/cohort-copy';
 import { SITE_ORIGIN, publicCohort } from '../data/facts';
 import { regions } from '../data/regions';
 
@@ -39,7 +39,7 @@ const region = key ? regions[key] : null;
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-const title = 'The Living Craft — Design agentic systems, guide your team';
+const title = `The Living Craft — ${HEADLINE}`;
 const description = STANDFIRST;
 
 /**

@@ -682,7 +682,7 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing .concept-figure figcaption { font-size: 0.875rem; }
 }
 
-/* Phones wider than 390: the lockup at its phone size, clear of Enquire
+/* Phones wider than 390: the lockup at its phone size, clear of Apply
    and the menu button (QA 19 September, the 391-560 overlap). */
 @media (max-width: 560px) {
   .landing .brand-lockup { gap: 6px; }
