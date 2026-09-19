@@ -193,8 +193,11 @@ Do not inline either one here.
     **no printed section numbers**. The hero is full width on the linen with the woven brain
     ([WovenBrain.astro](src/components/cohort/WovenBrain.astro): plays once, Replay, a Reduce motion
     button, nothing stored). **Chat opens from the header** (`AskWidget launcher="header"` and
-    `[data-ask-open]` buttons), not from a floating pill. Phones keep 16px text and tight spacing
-    on purpose; do not port the package's phone spacing back in, it made the page 2,500px longer.
+    `[data-ask-open]` buttons), not from a floating pill. **The 19 September package is the
+    source of truth for this page's look**, including its phone type (18px) and spacing, and the
+    menu switching at 960px. Re-check against it with a side-by-side render, not by eye.
+  - **BookingWidget builds its day and time buttons in script.** Their styles must be `:global`
+    inside the widget; scoped styles never reach script-built elements.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the

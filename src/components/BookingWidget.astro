@@ -202,7 +202,10 @@ const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Pleas
     border-bottom: var(--border-w-hair) solid var(--border-hair);
   }
 
-  .booker-day {
+  /* :global because these buttons are built by the script below, and Astro's
+     scoped styles only reach elements in the component's own markup. Until
+     19 September they rendered as bare browser buttons on every page. */
+  .booker-days :global(.booker-day) {
     flex: none;
     min-width: 84px;
     text-align: center;
@@ -216,16 +219,16 @@ const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Pleas
     line-height: 1.3;
   }
 
-  .booker-day .dow {
+  .booker-days :global(.booker-day .dow) {
     display: block;
     font-family: var(--font-mono);
     font-size: var(--size-1);
     color: var(--text-quiet);
   }
 
-  .booker-day .dom { display: block; font-size: var(--size-4); font-weight: var(--weight-strong); }
+  .booker-days :global(.booker-day .dom) { display: block; font-size: var(--size-4); font-weight: var(--weight-strong); }
 
-  .booker-day[aria-pressed='true'] {
+  .booker-days :global(.booker-day[aria-pressed='true']) {
     border-color: var(--clay);
     background: var(--accent-quiet);
     color: var(--accent-ink);
@@ -233,7 +236,8 @@ const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Pleas
 
   .booker-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: var(--space-2); }
 
-  .booker-time {
+  .booker-times :global(.booker-time) {
+    min-height: 44px;
     padding: var(--space-3);
     border: var(--border-w-hair) solid var(--border-field);
     border-radius: var(--radius-inner);
@@ -244,7 +248,7 @@ const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Pleas
     cursor: pointer;
   }
 
-  .booker-time:hover { background: var(--surface-hover); border-color: var(--clay); }
+  .booker-times :global(.booker-time:hover) { background: var(--surface-hover); border-color: var(--clay); }
 
   .booker-chosen {
     display: flex;

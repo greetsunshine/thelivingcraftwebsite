@@ -312,6 +312,11 @@
   --brain-glow: #FFE0A0;
   --brain-glow-core: #FFF2B9;
 
+  /* --- component: a text field on the landing page's form panels ---
+     A shade lighter than the paper panel it sits on, so the field reads as
+     a field before its border is noticed (the 19 September package). */
+  --field-bg: #FFFDF8;
+
   /* --- component: footer, a dark forest band --- */
   --footer-bg: var(--texture-footer);         /* a BACKGROUND, not a colour: use only in `background:` */
   --footer-ink: var(--lc-ivory);              /* 13.43:1 */

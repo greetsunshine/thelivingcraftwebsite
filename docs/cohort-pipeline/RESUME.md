@@ -371,6 +371,36 @@ plus the open states (menu, chat, FAQ, team route, form errors, keyboard focus).
   "What the work explores"), where the left column was empty for a screen or more.
 Heights unchanged: `/` 16,317px at 390. Audit clean, 21/21 interaction checks.
 
+**Full alignment with the 19 September package, 19 September (later).** The brief changed: the
+package is now the source of truth, ahead of the earlier QA passes. `landing.css` was rewritten as
+a rule-by-rule port of its `styles.css` at its own breakpoints (1450, 1150, 960, 760, 390, 350),
+checked with a section-by-section render of the package beside ours. At 1440 every section is
+within a few pixels of the package's height except where our content differs (no region price
+locally). **This reverses several earlier choices on purpose:**
+- **Phones use the package's 18px text and 64px sections.** `/` at 390 is now 20,210px (the
+  package is 20,447px; the compact version was 16,317px). Sunil asked for less blank space on
+  phones on 16 September; the package supersedes that here, and it is flagged for him.
+- **Phone hero order is the package's**: words, brain (up to 490px), then the portrait strip.
+- **The menu takes over at 960px**, not 900: `MobileMenu` gained a `breakpoint` prop.
+- Reverted to the package: the two-up paragraph aligned to the lead's end, the fifth
+  live-experience item spanning, 22px card and module titles, the price panel's 4px radius, no
+  sticky headings. Kept: divider ends fade, titles balanced, timeline starts at its first knot.
+- Images: the package's `sunil-introduction.webp` (47 KB) and `sunil-teaching.webp` (31 KB)
+  replace the 202 KB and 331 KB JPEGs on `/`, with width and height set.
+- Forms and booking take the package's presentation: 16px bold labels, 48px fields on
+  `--field-bg` (new token), Continue at its natural width on the right, booking inside one panel.
+- Focus is 3px with a 4px offset on `/`, ivory on the dark surfaces.
+
+**A real bug, found by this pass, on every page with the booking widget** (`/`, `/caio`,
+`/assessment`): the day and time buttons are built by script, and Astro's scoped styles never
+reached them, so they rendered as bare browser buttons ("Mon21 Sept"). They are `:global` inside
+the widget now. It only shows when real slots exist, which is why nobody had seen it.
+
+Checked: 64 of 66 functional checks pass with the three APIs stubbed at the network layer (the
+two "failures" are the browser logging the deliberate 500 from the failure-state stub). No
+overflow at 320, 360, 390, 393, 430, 768, 1024, 1280, 1366, 1440, 1920, a 390Ã—600 short phone
+and an 844Ã—390 landscape phone. `astro check` 0 errors, 37/37 unit tests, clean build.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18
