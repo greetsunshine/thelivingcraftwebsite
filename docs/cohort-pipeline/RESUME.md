@@ -537,10 +537,12 @@ says to keep branded storytelling out of dense working areas.
   hairline, the six "what I own" and deliverable cards as rows, open stat band and fit columns, open
   FAQ, no section numbers, no gold heading words. The "Sunil Mathew" wordmark stays; the pricing
   tiers and price card stay as panels (the decision surface). No copy changed.
-  **Found, not changed (copy):** `/caio`'s maker section still says "100M+ users", "teams of up to
-  150 people", "~31 billion executions a week" and "300+ products"; `/assessment`'s says "100M+
-  users". The 11 September finding says these were removed from every public surface, and CLAUDE.md
-  forbids them without a dated approval. They are live on `main` too. Needs Sunil's decision.
+  **Fixed on Sunil's go-ahead (19 September):** `/caio`'s maker section said "100M+ users", "teams of
+  up to 150 people", "~31 billion executions a week", "300+ products", "three Fortune-100 companies"
+  and named product work at each employer; `/assessment`'s said "100M+ users". The 11 September
+  finding had claimed these were gone from every public surface; they were still live on `main`.
+  Both now carry the approved context only: Google, Amazon, Walmart and startups, teams across the
+  US, UK, China and India, and current agentic-AI work. A comment in `caio.astro` records the cut.
 - [x] **Step 2e, `/craft`** (Sunil: "use the same design for /craft"). Rendered locally for the first
   time with the existing dev-only preview learner (`CRAFT_DEV_BYPASS=1` in `.env.local`, which is
   gitignored and compiled out of every build). Fixed, all pre-existing:
