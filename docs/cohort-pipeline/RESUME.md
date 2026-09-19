@@ -531,6 +531,16 @@ says to keep branded storytelling out of dense working areas.
   phone-menu chat buttons are removed; `AskWidget`'s `launcher="header"` option still exists and is
   unused. The pill now lifts above the sticky Apply bar while the bar shows (`--sticky-apply-h`,
   set by StickyApplyBar), on every page that has both.
+- [x] **Step 2d, the consulting template on `/caio` and `/assessment`**
+  (`src/styles/templates/consulting.css`, set by CaioLayout and AssessmentLayout as
+  `body.consult-page`): full-width linen hero with the portrait, open proof bar, sections under a
+  hairline, the six "what I own" and deliverable cards as rows, open stat band and fit columns, open
+  FAQ, no section numbers, no gold heading words. The "Sunil Mathew" wordmark stays; the pricing
+  tiers and price card stay as panels (the decision surface). No copy changed.
+  **Found, not changed (copy):** `/caio`'s maker section still says "100M+ users", "teams of up to
+  150 people", "~31 billion executions a week" and "300+ products"; `/assessment`'s says "100M+
+  users". The 11 September finding says these were removed from every public surface, and CLAUDE.md
+  forbids them without a dated approval. They are live on `main` too. Needs Sunil's decision.
 
 ---
 

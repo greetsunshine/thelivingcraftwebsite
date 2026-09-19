@@ -1,0 +1,115 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   templates/consulting.css — the design system's programme composition in
+   the consulting register, for /caio and /assessment.
+
+   Same rules as templates/programme.css (full-width linen hero, sections
+   under a hairline, rows instead of boxed cards, one colour per heading, no
+   printed section numbers), with two things kept on purpose:
+   - the "Sunil Mathew" wordmark with its dot: CLAUDE.md keeps the consulting
+     practice distinct from The Living Craft, so no LC lockup here;
+   - the pricing tiers and the price card stay as panels. They are the
+     decision surface on each page, and the package keeps a panel for that.
+   Board-facing register: a notch quieter, so the hero keeps the portrait.
+
+   Applied by `body.consult-page`, which CaioLayout and AssessmentLayout set.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.consult-page .hero { padding: 0; background: var(--texture-forest); }
+.consult-page .hero > .wrap {
+  width: auto;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: var(--space-9) var(--space-5) var(--space-8);
+  border-radius: 0;
+  background: none;
+}
+.consult-page .hero h1 em { font-style: normal; color: inherit; }
+.consult-page .eyebrow .num { display: none; }
+
+/* The proof bar: open, between two hairlines, not a boxed panel. */
+.consult-page .proofbar { padding: 0; }
+.consult-page .proofbar .inner {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: var(--space-5) 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+
+/* ── section rhythm ─────────────────────────────────────────────────────── */
+.consult-page main > section:not(.hero) { padding-block: 88px; }
+.consult-page main > section:not(.hero) + section:not(.hero)::before {
+  content: '';
+  display: block;
+  width: min(var(--maxw), calc(100% - 2 * var(--space-5)));
+  height: 1px;
+  margin: -88px auto 88px;
+  background: var(--border-hair);
+}
+.consult-page .sec-head h2 em,
+.consult-page .experience h2 em,
+.consult-page .final h2 em { color: inherit; font-style: normal; }
+.consult-page .inaugural { background: transparent; }
+
+/* ── cards become rows ──────────────────────────────────────────────────── */
+.consult-page .cards3 { gap: var(--space-5) var(--space-7); }
+.consult-page .cards3 .card,
+.consult-page .inaugural .card {
+  padding: var(--space-5) 0 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+}
+.consult-page .cards3 .card:hover { box-shadow: none; }
+.consult-page .card .k { font-family: var(--font-body); letter-spacing: 0; color: var(--accent-ink); }
+
+/* Stat band: four open cells between hairlines. */
+.consult-page .statband {
+  gap: var(--space-6);
+  padding: var(--space-5) 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.consult-page .stat { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.consult-page .stat .big { font-family: var(--font-body); font-weight: 400; font-size: 1.75rem; }
+.consult-page .maker-portrait .mframe { box-shadow: none; }
+.consult-page .pullquote { border-left: 0; padding-left: 0; }
+
+/* Who it is for, and who it is not: two open columns under a rule. The
+   "for" column's rule is gold (a line, never text); "not for" is grey. */
+.consult-page .fit-grid { gap: var(--space-7); }
+.consult-page .fit-col {
+  padding: var(--space-5) 0 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.consult-page .fit-col.fit-yes { border-top: 2px solid var(--ember); }
+.consult-page .fit-col.fit-no { border-top: 2px solid var(--border-field); }
+
+/* The questions: an open list, as on the cohort page. */
+.consult-page .faq { max-width: 860px; margin: 0; padding: 0; background: none; box-shadow: none; border-radius: 0; border-top: var(--border-w-hair) solid var(--border-hair); }
+
+/* Tiers keep their panels: the 1px line, not a lifted shadow. */
+.consult-page .tier,
+.consult-page .tier:hover,
+.consult-page .tier.feature { box-shadow: var(--shadow-raise); }
+.consult-page .tier.feature { box-shadow: inset 0 0 0 2px var(--sun); }
+
+@media (max-width: 900px) {
+  .consult-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
+  .consult-page main > section:not(.hero) { padding-block: var(--space-7); }
+  .consult-page main > section:not(.hero) + section:not(.hero)::before {
+    width: calc(100% - 2 * var(--space-4));
+    margin: calc(-1 * var(--space-7)) auto var(--space-7);
+  }
+}
+@media (max-width: 560px) {
+  .consult-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
+  .consult-page main > section:not(.hero) { padding-block: var(--space-6); }
+  .consult-page main > section:not(.hero) + section:not(.hero)::before { margin: calc(-1 * var(--space-6)) auto var(--space-6); }
+  .consult-page .fit-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+}

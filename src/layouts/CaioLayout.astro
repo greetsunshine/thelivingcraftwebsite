@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+// The consulting page template (design system v1).
+import '../styles/templates/consulting.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
@@ -26,7 +28,7 @@ const year = new Date().getFullYear();
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="consult-page">
     <GoogleTagManagerNoscript />
     <a class="skip" href="#main">Skip to content</a>
     <!-- Nav — personal practice, brand-neutral, cross-linked to The Living Craft -->
