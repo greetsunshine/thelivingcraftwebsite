@@ -1,0 +1,28 @@
+---
+/**
+ * ToolProgress — where a reader is in a guided tool (18 September package,
+ * "Guided tool"). A progress bar for the eye and a step list for everything
+ * else; the current step carries aria-current="step".
+ *
+ * `current` is zero-based. A page that moves between steps in script updates
+ * the same markup: set `value` on the <progress>, move aria-current, and
+ * rewrite the "Step N of M" line.
+ */
+export interface Props {
+  steps: string[];
+  current: number;
+  label?: string;
+}
+const { steps, current, label = 'Progress' } = Astro.props;
+const n = steps.length;
+---
+
+<div class="lc-tool-progress" data-lc-progress>
+  <span><span data-progress-text>Step {current + 1} of {n}</span><span>{steps[current]}</span></span>
+  <progress max={n} value={current + 1} aria-label={label}>{current + 1} of {n}</progress>
+  <ol>
+    {steps.map((s, i) => (
+      <li aria-current={i === current ? 'step' : undefined}><span aria-hidden="true">{i + 1}</span>{s}</li>
+    ))}
+  </ol>
+</div>

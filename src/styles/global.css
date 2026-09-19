@@ -28,6 +28,8 @@
 @import url('./ds/contract.css');
 @import url('./ds/theme.css');
 @import url('./ds/reset.css');
+/* The design system's reusable components, all opt-in `lc-` classes. */
+@import url('./ds/components.css');
 
 /* ── compatibility layer ──────────────────────────────────────────────────────
    The old token names, re-pointed at the new palette. Every page-scoped

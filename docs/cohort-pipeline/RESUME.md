@@ -401,6 +401,29 @@ two "failures" are the browser logging the deliberate 500 from the failure-state
 overflow at 320, 360, 390, 393, 430, 768, 1024, 1280, 1366, 1440, 1920, a 390Ã—600 short phone
 and an 844Ã—390 landscape phone. `astro check` 0 errors, 37/37 unit tests, clean build.
 
+## The complete design system, site-wide â€” started 19 September (later)
+
+Sunil asked for the whole 18 September design system across the site, not only `/`. The plan,
+one commit per step on this branch: (1) shared components and the shell, (2) page templates per
+page group (`tool.html` for the resource tools, `brand.html` for `/about`, `programme.html` for
+`/programmes`, `/advisory`, `/contact`, consulting register for `/caio` and `/assessment`), (3) zoom,
+screen-reader and Lighthouse checks. `/craft` and the console stay on tokens only, as the package
+says to keep branded storytelling out of dense working areas.
+
+- [x] **Step 1a, components.** `src/styles/ds/components.css` (imported by `global.css`) holds the
+  package's reusable components as **opt-in `lc-` classes**: fields, helper and error text, check
+  rows, tabs, disclosure, resource rows, download list, table, badges, callout, state panel, guided
+  tool (workspace, progress, choices, result), toast, plus `.btn-text`, busy and disabled buttons
+  and a global `.sr-only`. **Prefixed on purpose**: `.field`, `.tabs`, `.choice`, `.badge`,
+  `.callout` and `.table-scroll` are already page-scoped class names on nine resource pages, and a
+  global rule under the same name would have restyled all of them. Behaviour is in
+  `src/components/ds/`: `Tabs` (arrow keys, Home and End, one tab stop, panels stay in the
+  document), `FormField` (label, helper and error wired with `aria-describedby` and
+  `aria-invalid`), `StatePanel` (symbol and sentence), `ToolProgress` (`aria-current="step"`) and
+  `Toast` (`window.lcToast()`, polite live region, stays until closed, focus returns).
+  **`/design-system`** renders every one of them in every state: `noindex`, not in the sitemap, not
+  linked. Nothing existing changed visually in this step.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18

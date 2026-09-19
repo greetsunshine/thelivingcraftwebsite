@@ -1,0 +1,86 @@
+---
+/**
+ * Tabs — the design system's tab set (18 September package, "Tabs").
+ *
+ * Usage:
+ *   <Tabs label="Model views" tabs={[{ id: 'yours', label: 'Your model' }, { id: 'ref', label: 'Reference example' }]}>
+ *     <section data-tab-panel="yours">…</section>
+ *     <section data-tab-panel="ref">…</section>
+ *   </Tabs>
+ *
+ * Behaviour, as the package specifies it: one tab stop for the whole list,
+ * Left and Right move between tabs, Home and End jump to the ends, and a
+ * tab is chosen when it is focused (automatic activation). The content of
+ * every panel stays in the document. Without the script, every panel shows,
+ * one after another, and the buttons do nothing, so nothing is lost.
+ *
+ * Nothing is remembered between visits: no storage, per CLAUDE.md.
+ */
+export interface Props {
+  /** Names the tab list for a screen reader. */
+  label: string;
+  tabs: Array<{ id: string; label: string }>;
+  /** The tab open on first render. Defaults to the first. */
+  initial?: string;
+}
+const { label, tabs, initial = tabs[0]?.id } = Astro.props;
+const uid = `tabs-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<div class="lc-tabs" data-lc-tabs data-uid={uid} data-initial={initial}>
+  <div class="lc-tab-list" role="tablist" aria-label={label}>
+    {tabs.map((t) => (
+      <button
+        type="button"
+        role="tab"
+        id={`${uid}-tab-${t.id}`}
+        data-tab={t.id}
+        aria-controls={`${uid}-panel-${t.id}`}
+        aria-selected={t.id === initial ? 'true' : 'false'}
+        tabindex={t.id === initial ? 0 : -1}
+      >{t.label}</button>
+    ))}
+  </div>
+  <slot />
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-lc-tabs]').forEach((root) => {
+    const uid = root.dataset.uid!;
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>(':scope > [role=tablist] [role=tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>(':scope > [data-tab-panel]'));
+    // Wire each panel to its tab. The panels come from the page, so their
+    // ARIA is set here rather than asked of every author.
+    panels.forEach((p) => {
+      const id = p.dataset.tabPanel!;
+      p.id = `${uid}-panel-${id}`;
+      p.setAttribute('role', 'tabpanel');
+      p.setAttribute('aria-labelledby', `${uid}-tab-${id}`);
+      p.tabIndex = 0;
+    });
+    const select = (tab: HTMLButtonElement, focus: boolean) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => { p.hidden = p.dataset.tabPanel !== tab.dataset.tab; });
+      if (focus) tab.focus();
+    };
+    const start = tabs.find((t) => t.dataset.tab === root.dataset.initial) ?? tabs[0];
+    if (start) select(start, false);
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(tab, false));
+      tab.addEventListener('keydown', (e) => {
+        const to =
+          e.key === 'ArrowRight' ? tabs[(i + 1) % tabs.length] :
+          e.key === 'ArrowLeft' ? tabs[(i - 1 + tabs.length) % tabs.length] :
+          e.key === 'Home' ? tabs[0] :
+          e.key === 'End' ? tabs[tabs.length - 1] : null;
+        if (!to) return;
+        e.preventDefault();
+        select(to, true);
+      });
+    });
+  });
+</script>

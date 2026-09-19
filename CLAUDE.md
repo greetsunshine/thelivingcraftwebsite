@@ -955,6 +955,12 @@ prospect.
   unattached (404) — flagged to Sunil, not fixed here.
 
 ## Shared infrastructure
+- **Components:** [src/styles/ds/components.css](src/styles/ds/components.css) and
+  [src/components/ds/](src/components/ds/) are the design system's reusable components, as opt-in
+  `lc-` classes (fields, tabs, disclosure, resource rows, tables, badges, state panels, the guided
+  tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
+  names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
+  `/design-system` renders every component in every state (noindex, unlinked).
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
