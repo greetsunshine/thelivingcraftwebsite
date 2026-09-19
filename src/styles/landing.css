@@ -147,6 +147,13 @@ body.landing :focus-visible:not([tabindex='-1']) {
 .landing .chapter-practice,
 .landing .chapter-joining { background: var(--surface-panel); }
 .landing .chapter section + section { padding-top: 24px; }
+/* The topic break between every two sections inside a chapter, not only
+   between chapters (Sunil, 19 September: "at all the places the topics
+   change"). Not after the hero, whose own edge is the break. */
+.landing .chapter section + section:not(.hero + section) {
+  padding-top: 64px;
+  background: var(--seam-bg);
+}
 
 /* ── header ─────────────────────────────────────────────────────────────── */
 .landing header.nav { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); }

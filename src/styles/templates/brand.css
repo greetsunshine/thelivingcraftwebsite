@@ -41,7 +41,11 @@
   padding-block: 88px;
   /* The dividing hairline sits on the text column, not the section's padded
      edge, so it starts and ends where the words do. */
-  background: linear-gradient(var(--border-hair), var(--border-hair)) center top / calc(100% - 2 * var(--space-5)) 1px no-repeat;
+  /* The topic break (components.css) on the text column. */
+  --seam-w: calc(100% - 2 * var(--space-5));
+  background:
+    url('/textures/chapter-knot.svg') center top / 96px 24px no-repeat,
+    var(--seam-line) center 12px / var(--seam-w) 1px no-repeat;
 }
 .brand-page main > section.hero + section.wrap { background: none; }
 .brand-page main > section.wrap > * { grid-column: 2; }
@@ -101,7 +105,7 @@
 }
 @media (max-width: 800px) {
   .brand-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
-  .brand-page main > section.wrap { display: block; padding-block: var(--space-7); background-size: calc(100% - 2 * var(--space-4)) 1px; }
+  .brand-page main > section.wrap { display: block; padding-block: var(--space-7); --seam-w: calc(100% - 2 * var(--space-4)); }
   .brand-page main > section.wrap > .sec-head { margin-bottom: var(--space-5); }
   .brand-page .sec-head h2 { max-width: none; }
 }

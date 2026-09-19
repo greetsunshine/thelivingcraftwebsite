@@ -63,6 +63,16 @@
 .tool-page h2 em,
 .tool-page .sec-head h2 em { color: inherit; font-style: normal; }
 
+/* The topic break (components.css) between the reading sections of a tool
+   page. Not on the tool's own framed workspace, and not inside it. */
+.tool-page main section:not(.hero):not(.tool-section):not(.step) + section:not(.tool-section):not(.step),
+.tool-page main .tool-section + section {
+  --seam-w: min(calc(var(--maxw) - 2 * var(--space-5)), calc(100% - 2 * var(--space-4)));
+  background:
+    url('/textures/chapter-knot.svg') center top / 96px 24px no-repeat,
+    var(--seam-line) center 12px / var(--seam-w) 1px no-repeat;
+}
+
 @media (max-width: 900px) {
   .tool-page .hero { padding: var(--space-7) 0 var(--space-5); }
   .tool-page .hero > .wrap { padding: 0 var(--space-4); border-radius: 0; }

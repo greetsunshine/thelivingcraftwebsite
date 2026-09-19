@@ -34,7 +34,11 @@
 /* ── section rhythm ─────────────────────────────────────────────────────── */
 .programme-page main > section.wrap {
   padding-block: 88px;
-  background: linear-gradient(var(--border-hair), var(--border-hair)) center top / calc(100% - 2 * var(--space-5)) 1px no-repeat;
+  /* The topic break (components.css) on the text column. */
+  --seam-w: calc(100% - 2 * var(--space-5));
+  background:
+    url('/textures/chapter-knot.svg') center top / 96px 24px no-repeat,
+    var(--seam-line) center 12px / var(--seam-w) 1px no-repeat;
 }
 .programme-page main > section.hero + section.wrap { background: none; }
 .programme-page .sec-head { margin-bottom: var(--space-7); }
@@ -101,7 +105,7 @@
 
 @media (max-width: 800px) {
   .programme-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
-  .programme-page main > section.wrap { padding-block: var(--space-7); background-size: calc(100% - 2 * var(--space-4)) 1px; }
+  .programme-page main > section.wrap { padding-block: var(--space-7); --seam-w: calc(100% - 2 * var(--space-4)); }
   .programme-page .sec-head { margin-bottom: var(--space-5); }
   .programme-page main .panel.routes .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
 }

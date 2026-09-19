@@ -557,6 +557,14 @@ says to keep branded storytelling out of dense working areas.
   - The LC mark heads the rail, as it heads every public header.
   Contrast audit on 15 `/craft` pages at 1280 and 390: 0 failures, 0 overflow. The console
   (`/craft/admin`) is not in this step; it needs the admin password to render.
+- [x] **The topic break everywhere a topic changes** (Sunil, 19 September). One drawing, defined
+  once in `components.css` as `--seam-line` / `--seam-bg`: a hairline fading at both ends with two
+  strands crossing over a gold knot at its centre. Now between every two sections on `/` (inside
+  chapters too, not only between them), on `/about`, the programme pages, `/caio`, `/assessment` and
+  the reading sections of every tool page (not inside a tool's own workspace). **Trap:** `--seam-bg`
+  is resolved at `:root`, so to narrow it to a text column you must write the two layers out on the
+  element and set `--seam-w` there (brand.css, programme.css and tool.css do). `/` at 390 is
+  20,482px (was 20,086) because in-chapter sections now open with 64px instead of 24px.
 
 ---
 
