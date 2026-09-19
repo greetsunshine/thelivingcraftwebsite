@@ -18,12 +18,16 @@
  * a call, application. Somebody arrives wondering whether this is for them, and
  * each section answers the next question they have.
  *
- * THE PRINTED NUMBERS RUN 00 TO 15, IN DOCUMENT ORDER, WITH NO GAPS. They were
- * 00, 01, 02, 04, 03, 05 with five sections unnumbered, because the restored
- * sections kept the numbers they carried on the pre-rebuild page and were
- * interleaved with rebuild sections that carried none. If you add or move a
- * section, renumber the whole run. A reader uses these to tell how far through
- * they are, and a sequence that skips or repeats tells them the wrong thing.
+ * SEVEN CHAPTERS, NO PRINTED NUMBERS (19 September 2026). The landing
+ * refinement package groups the sixteen sections into seven chapters —
+ * opening, teaching, development, practice, teacher, joining, conversation —
+ * each a <div class="chapter"> with a fabric divider above it. The printed
+ * section numbers (00 to 15) are gone: the package removed them as decoration,
+ * and a reader now tells where they are by the chapter breaks. One section
+ * moved to make the chapters hold together: "What you leave with" (#takeaways)
+ * now closes the development chapter, after "What you'll be able to do", and
+ * no longer sits between the teacher and the live experience. Every section
+ * id, and every word, is unchanged. The styles are in src/styles/landing.css.
  *
  * THE HERO PORTRAIT, RESTORED 15 September 2026
  *
@@ -59,6 +63,7 @@
 import RouteForm from './RouteForm.astro';
 import TalkToSunilLink from '../site/TalkToSunilLink.astro';
 import BookingWidget from '../BookingWidget.astro';
+import WovenBrain from './WovenBrain.astro';
 import { cohort } from '../../data/facts';
 import type { Region } from '../../data/regions';
 import {
@@ -87,12 +92,15 @@ const hasPrice = Boolean(region?.publicPrice);
 
 ---
 
-{/* ── 00 · Hero ──────────────────────────────────────────────────────────── */}
+{/* ════ Chapter: opening — the hero and who this is for ════ */}
+<div class="chapter chapter-opening">
+
+{/* ── Hero ──────────────────────────────────────────────────────────── */}
 <section class="hero" id="top" style="border-top:0">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</span>
-      <h1>Build systems<br />that <em>outlive</em><br />their makers.</h1>
+      <span class="eyebrow">An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</span>
+      <h1>Build systems that <em>outlive</em> their makers.</h1>
       <p class="credential">
         I'm <strong>Sunil Mathew</strong>. I have spent 26 years building and leading
         engineering at <strong>Google</strong>, <strong>Amazon</strong>, and <strong>Walmart</strong>.
@@ -104,11 +112,11 @@ const hasPrice = Boolean(region?.publicPrice);
           fold that offers the conversation — the top nav and the persistent
           prompt both carry Apply alone since 16 September.
 
-          It opens section 14 below, which is this site's own booking widget
+          It opens #book below, which is this site's own booking widget
           reading real availability, so there is nothing to configure and
           nothing that can render as a dead control. There is no third "ask a
           question" link here any more — that was a separate enquiry form, and
-          it is now one branching application flow in section 15. */}
+          it is now one branching application flow in #apply. */}
       <div class="hero-cta">
         <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <TalkToSunilLink placement="hero" onCohortPage />
@@ -119,37 +127,44 @@ const hasPrice = Boolean(region?.publicPrice);
       </p>
     </div>
 
+    {/* The woven brain, where the portrait used to be. On a phone it moves
+        below the intro strip, so Sunil's face still comes first there. */}
+    <WovenBrain />
+  </div>
+
+  {/* THE INTRO STRIP. Sunil's portrait and the proof bar, inside the hero
+      and under a hairline. On a phone this comes straight after the hero
+      buttons and before the brain (landing.css, decision 2). */}
+  <div class="wrap intro-strip">
     <div class="portrait">
       <div class="frame">
-        <img src="/sunil-profile.jpg" alt="Sunil Mathew" />
-        <div class="warm"></div>
+        <img src="/sunil-profile-thumb.webp" alt="Sunil Mathew" width="164" height="192" decoding="async" />
       </div>
       <div class="tag"><b>Sunil Mathew</b>Engineering leader · Google, Amazon, Walmart</div>
+    </div>
+    {/* ── Proof bar ──────────────────────────────────────────────────────────
+        Three employers, and nothing else. A fourth cell read "Consulting" until
+        16 September, when Sunil asked for it to come off. It was the odd one out
+        twice over: the other three are places the twenty-six years were spent,
+        and this page is the cohort, not the practice — /caio and /assessment are
+        where consulting is the offer, and each has its own proof bar saying
+        "Agentic AI, now" in that fourth cell rather than naming a second
+        business. */}
+    <div class="proofbar">
+      <div class="wrap inner">
+        <span class="label">26 years, shipped at</span>
+        <span class="logo">Google</span>
+        <span class="logo">Amazon</span>
+        <span class="logo">Walmart</span>
+      </div>
     </div>
   </div>
 </section>
 
-{/* ── Proof bar ──────────────────────────────────────────────────────────
-    Three employers, and nothing else. A fourth cell read "Consulting" until
-    16 September, when Sunil asked for it to come off. It was the odd one out
-    twice over: the other three are places the twenty-six years were spent,
-    and this page is the cohort, not the practice — /caio and /assessment are
-    where consulting is the offer, and each has its own proof bar saying
-    "Agentic AI, now" in that fourth cell rather than naming a second
-    business. */}
-<div class="proofbar">
-  <div class="wrap inner">
-    <span class="label">26 years, shipped at</span>
-    <span class="logo">Google</span>
-    <span class="logo">Amazon</span>
-    <span class="logo">Walmart</span>
-  </div>
-</div>
-
-{/* ── 01 · Audience fit ─────────────────────────────────────────────────── */}
+{/* ── Audience fit ─────────────────────────────────────────────────── */}
 <section class="wrap band" id="fit">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">01</span> Who this is for</span>
+    <span class="eyebrow">Who this is for</span>
     <h2>For engineers who've hit the <em>ceiling</em> of what tutorials teach.</h2>
     <p class="lead">
       You can build. What you want now is judgment. That comes from shipping hard
@@ -170,10 +185,15 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 02 · Practical example ─────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: teaching — two illustrative examples ════ */}
+<div class="chapter chapter-teaching">
+
+{/* ── Practical example ─────────────────────────────────────────────── */}
 <section class="wrap band" id="example">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">02</span> An illustrative example</p>
+    <p class="eyebrow">An illustrative example</p>
     <h2>Follow a decision <em>beyond the demo</em></h2>
   </div>
 
@@ -222,7 +242,7 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 03 · What a review changes ───────────────────────────────────────────
+{/* ── What a review changes ───────────────────────────────────────────
     Added by the V4 addendum, 11 September. It sits between the example and
     the outcomes deliberately: the returns assistant above shows a design
     QUESTION, and this shows what asking it produces. Without this section the
@@ -233,7 +253,7 @@ const hasPrice = Boolean(region?.publicPrice);
     words. Neither is a claimed incident. */}
 <section class="wrap band" id="review">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">03</span> A second illustrative example</p>
+    <p class="eyebrow">A second illustrative example</p>
     <h2>See what a review <em>can change</em></h2>
   </div>
   <div class="two-up">
@@ -250,10 +270,15 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 04 · Outcomes and curriculum ───────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: development — what you develop, what you can do, what you keep ════ */}
+<div class="chapter chapter-development">
+
+{/* ── Outcomes and curriculum ───────────────────────────────────────── */}
 <section class="wrap band" id="outcomes">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">04</span> What you develop</p>
+    <p class="eyebrow">What you develop</p>
     <h2>Develop practical <em>design judgment</em></h2>
   </div>
   <div class="two-up">
@@ -269,14 +294,14 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 05 · The transformation ───────────────────────────────────────────────
+{/* ── The transformation ───────────────────────────────────────────────
     Restored 15 September 2026, from the pre-rebuild page. A–E are
     `cohort.outcomes` in facts.ts, already fed to JSON-LD and the Q&A agent;
     F is previously-published copy carried verbatim (see TRANSFORMATION in
     cohort-copy.ts for why it is not treated as an invented figure). */}
 <section class="wrap transform" id="transform">
   <div class="sec-head" style="margin-bottom:0">
-    <span class="eyebrow"><span class="num">05</span> The transformation</span>
+    <span class="eyebrow">The transformation</span>
     <h2>What you'll be able to do.</h2>
     <p class="lead">
       By the end, the work shows up in how you decide. Under real constraints, with
@@ -302,10 +327,38 @@ const hasPrice = Boolean(region?.publicPrice);
   </p>
 </section>
 
-{/* ── 06 · What the work explores ─────────────────────────────────────── */}
+{/* ── What you leave with ───────────────────────────────────────────
+    Restored 15 September 2026, verbatim from the pre-rebuild page. No
+    figures here — artifacts and access, not metrics — so nothing about it
+    was in question. */}
+<section class="wrap band" id="takeaways">
+  <div class="sec-head">
+    <span class="eyebrow">What you leave with</span>
+    <h2>What physically <em>leaves the room</em>.</h2>
+    <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
+  </div>
+  <div class="cards3">
+    {
+      LEAVE_WITH.map((t) => (
+        <div class="card">
+          <div class="k">{t.k}</div>
+          <h3>{t.title}</h3>
+          <p>{t.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+</div>
+
+{/* ════ Chapter: practice — the work, the modules, how it runs ════ */}
+<div class="chapter chapter-practice">
+
+{/* ── What the work explores ─────────────────────────────────────── */}
 <section class="wrap band" id="curriculum">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">06</span> The work</p>
+    <p class="eyebrow">The work</p>
     <h2>What the work <em>explores</em></h2>
   </div>
   {/* Five areas, not five modules with durations. The brief: "Use validated
@@ -327,13 +380,13 @@ const hasPrice = Boolean(region?.publicPrice);
   </ol>
 </section>
 
-{/* ── 07 · Inside the program ────────────────────────────────────────────
+{/* ── Inside the program ────────────────────────────────────────────
     Restored 15 September 2026. The four modules are `cohort.modules` in
     facts.ts; the body copy for each is not invented — it is the description
     the pre-rebuild page carried for the same four modules. */}
 <section class="wrap band" id="modules">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">07</span> Inside the program</span>
+    <span class="eyebrow">Inside the program</span>
     <h2>A small set of deep things, done <em>properly</em>.</h2>
     <p class="lead">
       Six weeks. Live, in a small cohort. Built around your real systems, not toy
@@ -353,10 +406,10 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 08 · Learning process ──────────────────────────────────────────────── */}
+{/* ── Learning process ──────────────────────────────────────────────── */}
 <section class="wrap band" id="process">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">08</span> How it runs</p>
+    <p class="eyebrow">How it runs</p>
     <h2>Build, examine and <em>revise</em></h2>
   </div>
   <div class="two-up">
@@ -372,7 +425,12 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 09 · Sunil ─────────────────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: teacher — Sunil, and the track record ════ */}
+<div class="chapter chapter-teacher">
+
+{/* ── Sunil ─────────────────────────────────────────────────────────── */}
 {/* THE MAKER SECTION, REINSTATED 15 September 2026.
  *
  * This was section 03 of the pre-rebuild page (ProgramPage.astro) and the
@@ -401,7 +459,7 @@ const hasPrice = Boolean(region?.publicPrice);
  */}
 <section class="wrap band" id="sunil">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">09</span> Who teaches it</p>
+    <p class="eyebrow">Who teaches it</p>
     <h2>Work with <em>Sunil Mathew</em></h2>
   </div>
 
@@ -446,36 +504,13 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 10 · What you leave with ───────────────────────────────────────────
-    Restored 15 September 2026, verbatim from the pre-rebuild page. No
-    figures here — artifacts and access, not metrics — so nothing about it
-    was in question. */}
-<section class="wrap band" id="takeaways">
-  <div class="sec-head">
-    <span class="eyebrow"><span class="num">10</span> What you leave with</span>
-    <h2>What physically <em>leaves the room</em>.</h2>
-    <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
-  </div>
-  <div class="cards3">
-    {
-      LEAVE_WITH.map((t) => (
-        <div class="card">
-          <div class="k">{t.k}</div>
-          <h3>{t.title}</h3>
-          <p>{t.body}</p>
-        </div>
-      ))
-    }
-  </div>
-</section>
-
-{/* ── 11 · Live experience ───────────────────────────────────────────────
+{/* ── Live experience ───────────────────────────────────────────────
     Restored 15 September 2026, with one deliberate omission — see the
     LIVE_EXPERIENCE comment in cohort-copy.ts for exactly which figures did
     and did not come back, and why. */}
 <section class="wrap band inaugural" id="live-experience">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">11</span> Live experience</span>
+    <span class="eyebrow">Live experience</span>
     <h2>I've spent a career growing <em>people</em>, not just systems.</h2>
     <p class="lead">
       The craft only counts if it transfers, and it already has. This is the track
@@ -495,10 +530,15 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 12 · Commitment ───────────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: joining — the commitment and the questions ════ */}
+<div class="chapter chapter-joining">
+
+{/* ── Commitment ───────────────────────────────────────────────────── */}
 <section class="wrap band" id="commitment">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">12</span> The commitment</p>
+    <p class="eyebrow">The commitment</p>
     <h2>Make room for <em>the work</em></h2>
   </div>
 
@@ -571,10 +611,10 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 13 · FAQs ──────────────────────────────────────────────────────────── */}
+{/* ── FAQs ──────────────────────────────────────────────────────────── */}
 <section class="wrap band" id="questions">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">13</span> Before you apply</p>
+    <p class="eyebrow">Before you apply</p>
     <h2>Questions before <em>joining</em></h2>
   </div>
   <div class="faq">
@@ -594,7 +634,40 @@ const hasPrice = Boolean(region?.publicPrice);
   </div>
 </section>
 
-{/* ── 14 · Application ──────────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: conversation — a call, then the application ════ */}
+<div class="chapter chapter-conversation">
+
+{/* ── Talk with Sunil ──────────────────────────────────────────────
+    Where every "Talk with Sunil" link on the site lands.
+
+    It is THIS SITE'S booking widget, the same one /caio and /assessment use,
+    against the `cohort-call` meeting type in meetings.ts. Availability is read
+    from our own `booking_rules`, so there is no third-party popup to configure
+    and no dead control to guard against — the reason the Google Calendar
+    scaffold it replaced was invisible until somebody supplied a URL.
+
+    IT SITS ABOVE THE APPLICATION, AND THAT IS LOAD-BEARING. BookingWidget's
+    own empty and failure states say "use the form below" — on this page that
+    sentence is only true while the Apply section follows it. Moving this
+    below the form silently turns that copy into a lie.
+
+    A call is NOT an application. The meeting type's blurb says so, and Apply
+    stays the primary CTA in the hero, the nav, the price card and the
+    persistent prompt. */}
+<section class="wrap band" id="book">
+  <div class="sec-head">
+    <p class="eyebrow">Talk first</p>
+    {/* The heading repeats the label of the link that brought most people
+        here, so arriving reads as landing rather than as a redirect. */}
+    <h2>Talk with <em>Sunil</em></h2>
+  </div>
+
+  <BookingWidget type="cohort-call" heading="Book a call about the cohort" />
+</section>
+
+{/* ── Application ──────────────────────────────────────────────────── */}
 {/* ONE APPLICATION FLOW, BRANCHING BY WHO IS APPLYING.
 
     Until this rework, three separate forms sat here — the open-cohort
@@ -614,37 +687,9 @@ const hasPrice = Boolean(region?.publicPrice);
     ones — the biggest single cut to how much scrolling the mobile flow
     needs. Each form itself is now progressive (see RouteForm.astro's
     `steps`), so nobody meets all seven-plus fields on one screen either. */}
-{/* ── 14 · Talk with Sunil ──────────────────────────────────────────────
-    Where every "Talk with Sunil" link on the site lands.
-
-    It is THIS SITE'S booking widget, the same one /caio and /assessment use,
-    against the `cohort-call` meeting type in meetings.ts. Availability is read
-    from our own `booking_rules`, so there is no third-party popup to configure
-    and no dead control to guard against — the reason the Google Calendar
-    scaffold it replaced was invisible until somebody supplied a URL.
-
-    IT SITS ABOVE THE APPLICATION, AND THAT IS LOAD-BEARING. BookingWidget's
-    own empty and failure states say "use the form below" — on this page that
-    sentence is only true while the Apply section follows it. Moving this
-    below the form silently turns that copy into a lie.
-
-    A call is NOT an application. The meeting type's blurb says so, and Apply
-    stays the primary CTA in the hero, the nav, the price card and the
-    persistent prompt. */}
-<section class="wrap band" id="book">
-  <div class="sec-head">
-    <p class="eyebrow"><span class="num">14</span> Talk first</p>
-    {/* The heading repeats the label of the link that brought most people
-        here, so arriving reads as landing rather than as a redirect. */}
-    <h2>Talk with <em>Sunil</em></h2>
-  </div>
-
-  <BookingWidget type="cohort-call" heading="Book a call about the cohort" />
-</section>
-
 <section class="wrap band forms" id="apply">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">15</span> Apply</p>
+    <p class="eyebrow">Apply</p>
     <h2>Start <em>here</em></h2>
     <p class="lead">
       One flow, however you are arriving at it. Pick the one that matches you, then answer a
@@ -686,6 +731,8 @@ const hasPrice = Boolean(region?.publicPrice);
     <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
   </p>
 </section>
+
+</div>
 
 {/* Switches which of the two forms above is visible, and runs the arrival
     cue.

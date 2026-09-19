@@ -298,6 +298,13 @@ Progress, one commit each:
   (decoration only, never text). `src/components/cohort/WovenBrain.astro` plays the seven lights
   once on first sight, about 3.2 s; Replay, and a Reduce motion button that lasts for the page
   view only. OS reduced motion wins over the button. Nothing is stored.
+- [x] Structure, in `CohortPage.astro`: seven `<div class="chapter chapter-â€¦">` wrappers
+  (opening, teaching, development, practice, teacher, joining, conversation). The printed
+  section numbers are gone. **One section moved:** "What you leave with" (`#takeaways`) now
+  closes the development chapter, as in the package. The woven brain takes the portrait's place
+  in the hero; the portrait (a new 8 KB `public/sunil-profile-thumb.webp`) and the proof bar sit
+  in an intro strip under it. All 16 section ids and every word are unchanged. The module ids
+  (M1 to M4) keep their `.num` spans; only the eyebrow numbers went.
 
 ---
 
