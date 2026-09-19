@@ -41,10 +41,22 @@
 export interface Props {
   /** Where "Apply" points. Defaults to the cohort's apply anchor, on- or off-page as needed. */
   applyHref?: string;
+  /**
+   * The line of copy and the button label. The cohort page passes the V5
+   * package's "Find the right programme for you." and "Enquire", which lands
+   * above BOTH routes (#enquire) rather than on the individual one. Every
+   * other page keeps Apply.
+   */
+  copy?: string;
+  label?: string;
 }
 
 const onCohortPage = Astro.url.pathname.replace(/\/+$/, '') === '';
-const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
+const {
+  applyHref = onCohortPage ? '#apply' : '/#apply',
+  copy = 'Build a working agentic system with Sunil Mathew.',
+  label = 'Apply',
+} = Astro.props;
 ---
 
 <div
@@ -52,16 +64,16 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
   data-sticky-apply
   hidden
   role="complementary"
-  aria-label="Apply for the cohort"
+  aria-label={label === 'Apply' ? 'Apply for the cohort' : copy}
 >
   <div class="sa-inner">
-    <p class="sa-copy">Build a working agentic system with Sunil Mathew.</p>
+    <p class="sa-copy">{copy}</p>
 
     {/* Apply sits at the right-hand end of the bar, between the copy and the
         dismiss control. */}
     <div class="sa-actions">
       <a class="btn btn-primary" href={applyHref}>
-        Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        {label}&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
     </div>
 
@@ -83,7 +95,7 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     // The sections this prompt is a shortcut to. While one of them is on
     // screen the shortcut has nothing to offer, so it gets out of the way.
     const landmarks = Array.from(
-      document.querySelectorAll<HTMLElement>('#apply, #apply-panel, #apply-form'),
+      document.querySelectorAll<HTMLElement>('#apply, #apply-panel, #apply-form, #book'),
     );
 
     let dismissed = false;

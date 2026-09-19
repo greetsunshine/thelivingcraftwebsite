@@ -305,12 +305,14 @@
      The control line would disappear on forest. Decoration, not a boundary. */
   --hero-rule: rgba(198, 212, 200, 0.3);
 
-  /* --- component: the woven brain on the landing hero (19 September) ---
-     Warm light drawn over the artwork's own gold knots, from the package's
-     illumination layer. Decoration only: never a text colour, never a fill
-     for a control. */
-  --brain-glow: #FFE0A0;
-  --brain-glow-core: #FFF2B9;
+  /* --- component: the V5 landing page (19 September) ---
+     Two warm tones from the V5 illustrated package, used only on `/`.
+     --surface-cloth is the unbleached panel behind the boundary timeline
+     (ink 12.1:1, deep gold 5.5:1 on it). --line-warm is the warm rule over
+     the modules and the enterprise section: decoration, never a boundary
+     a control depends on. */
+  --surface-cloth: #F3EEE1;
+  --line-warm: #BFB598;
 
   /* --- component: a text field on the landing page's form panels ---
      A shade lighter than the paper panel it sits on, so the field reads as

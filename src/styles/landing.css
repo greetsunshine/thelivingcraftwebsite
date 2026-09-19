@@ -175,7 +175,9 @@ body.landing :focus-visible:not([tabindex='-1']) {
 .landing .mm-panel { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); padding: 16px 24px; }
 .landing .mm-panel .mm-list a { font-size: 1.125rem; min-height: 48px; padding: 12px 0; color: var(--text-body); }
 
-/* ── hero: full width, linen, words beside the brain ────────────────────── */
+/* ── hero: the refinement's layout ───────────────────────────────────────
+   Its dark linen ground, brain and intro strip are restyled by the V4/V5
+   layer (landing-v5.css): an ivory textile and a line-drawn brain. */
 .landing .hero { background: var(--texture-forest); color: var(--text-on-invert); padding: 0; overflow: clip; }
 .landing .hero > .wrap { background: none; border-radius: 0; }
 .landing .hero > .wrap.hero-grid {
@@ -194,20 +196,9 @@ body.landing :focus-visible:not([tabindex='-1']) {
   margin-bottom: 24px;
 }
 .landing .hero h1 { font-size: clamp(2.75rem, 4.65vw, 4.5rem); max-width: none; margin: 0; color: var(--text-on-invert); }
-.landing .credential { font-size: 1.25rem; line-height: 1.6; max-width: 48ch; margin: 28px 0 0; color: var(--hero-muted); }
-.landing .credential strong { color: var(--text-on-invert); }
 .landing .hero-cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
-.landing .hero > .wrap .hero-note {
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--hero-muted);
-  max-width: 58ch;
-  margin-top: 20px;
-}
-.landing .woven-brain { align-self: center; margin: 0 -28px 0 0; }
 
-/* The intro strip: Sunil's portrait and the proof bar, under a hairline. */
+/* The intro strip: Sunil's portrait and his opening line, under a hairline. */
 .landing .hero > .wrap.intro-strip {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -240,35 +231,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
   color: var(--hero-muted);
 }
 .landing .intro-strip .portrait .tag b { display: block; font-size: 1.125rem; color: var(--text-on-invert); margin-bottom: 5px; }
-.landing .intro-strip .proofbar { padding: 0; }
-.landing .intro-strip .proofbar .inner {
-  width: 100%;
-  max-width: none;
-  padding: 0;
-  background: none;
-  box-shadow: none;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 24px;
-}
-.landing .intro-strip .proofbar .label {
-  width: 100%;
-  text-align: right;
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  letter-spacing: 0;
-  color: var(--hero-muted);
-}
-.landing .intro-strip .proofbar .logo {
-  font-family: var(--font-body);
-  font-size: 1.25rem;
-  font-weight: var(--weight-strong);
-  letter-spacing: -0.015em;
-  color: var(--text-on-invert);
-}
 
 /* ── #fit: a heading column beside open reading rows ────────────────────── */
 .landing #fit { display: grid; grid-template-columns: 0.95fr 1fr; gap: 80px; padding-block: 96px; }
@@ -628,7 +590,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
    ═══════════════════════════════════════════════════════════════════════ */
 
 @media (min-width: 1450px) {
-  .landing .woven-brain { margin-right: -60px; }
   .landing .hero > .wrap.hero-grid { gap: 40px; }
 }
 
@@ -664,11 +625,7 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .navlinks { gap: 14px; }
   .landing .wrap { width: calc(100% - 48px); }
   .landing .hero > .wrap.hero-grid { grid-template-columns: 1.1fr 0.9fr; padding-top: 48px; }
-  .landing .credential { font-size: 1.125rem; }
-  .landing .woven-brain { margin-right: -24px; }
   .landing .hero > .wrap.intro-strip { gap: 24px; }
-  .landing .intro-strip .proofbar .inner { gap: 16px; }
-  .landing .intro-strip .proofbar .logo { font-size: 1.125rem; }
   .landing #fit,
   .landing #transform,
   .landing #curriculum,
@@ -692,15 +649,9 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .hero > .wrap.hero-grid { grid-template-columns: minmax(0, 1fr); padding-block: 40px 24px; gap: 20px; }
   .landing .hero-copy { max-width: 600px; }
   .landing .hero h1 { font-size: clamp(2.7rem, 7.8vw, 3.6rem); max-width: 18ch; }
-  .landing .credential { font-size: 1.125rem; line-height: 1.62; margin-top: 24px; }
   .landing .hero .eyebrow { max-width: 44ch; letter-spacing: 0.07em; }
   .landing .hero-cta { margin-top: 24px; }
-  .landing .hero > .wrap .hero-note { max-width: 56ch; }
-  .landing .woven-brain { width: min(490px, 100%); margin: 0 auto; }
   .landing .hero > .wrap.intro-strip { grid-template-columns: minmax(0, 1fr); padding-block: 24px 32px; gap: 24px; }
-  .landing .intro-strip .proofbar .inner { justify-content: flex-start; }
-  .landing .intro-strip .proofbar .label { text-align: left; width: auto; }
-  .landing .intro-strip .proofbar .logo { font-size: 1rem; }
   .landing .intro-strip .portrait .frame { width: 68px; height: 80px; }
 
   .landing #fit,
@@ -781,8 +732,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing .hero-cta .btn { width: 100%; min-height: 48px; }
   .landing .hero h1 { font-size: 2.65rem; }
   .landing .hero .eyebrow { text-transform: none; letter-spacing: 0; line-height: 1.5; }
-  .landing .intro-strip .proofbar .label { width: 100%; }
-  .landing .intro-strip .proofbar .inner { gap: 10px 20px; }
   .landing .lead { font-size: 1.25rem; }
   .landing h2,
   .landing .sec-head h2,

@@ -187,15 +187,18 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
-  - **The look is the 19 September refinement, and it is `/` only.** [src/styles/landing.css](src/styles/landing.css)
-    is imported by `BaseLayout` alone and scoped under `body.landing`; `/caio`, `/about` and the
-    resource pages do not see it. The sixteen sections sit in seven `.chapter` wrappers with
-    **no printed section numbers**. The hero is full width on the linen with the woven brain
-    ([WovenBrain.astro](src/components/cohort/WovenBrain.astro): plays once, Replay, a Reduce motion
-    button, nothing stored). **Chat opens from the header** (`AskWidget launcher="header"` and
-    `[data-ask-open]` buttons), not from a floating pill. **The 19 September package is the
-    source of truth for this page's look**, including its phone type (18px) and spacing, and the
-    menu switching at 960px. Re-check against it with a side-by-side render, not by eye.
+  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+    [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
+    [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
+    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    **no printed section numbers**, a knot topic break at every change of topic. The hero is ivory
+    with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
+    package's `brain-lines.svg`), which **loops**; eleven drawings come from
+    [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
+    "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the
+    floating launcher, bottom right. The header carries the site's sections, "Enquire" (to
+    `#enquire`) and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
+    source of truth for this page's look.** Re-check against it with a side-by-side render.
   - **BookingWidget builds its day and time buttons in script.** Their styles must be `:global`
     inside the widget; scoped styles never reach script-built elements.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):

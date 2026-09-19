@@ -1,106 +1,31 @@
 ---
 /**
- * The woven brain in the landing hero, from the 19 September refinement
- * package (docs/2026-09-19_Landing_Page_Refinement-…, kept out of the repo).
+ * The brain in the landing hero, from the V5 illustrated package of
+ * 19 September (docs/2026-09-19_Landing_Page_V5_Illustrated-…, kept out of the
+ * repo). It replaced the woven-fibre artwork of the earlier refinement.
  *
- * WHAT IT IS. The package's generated artwork, a brain woven from forest-green
- * fibre and gold strands, with seven gold knots. Its flat forest background is
- * keyed out in public/brand/woven-brain-*.webp, so the hero's linen shows round
- * it. The "lighting up" is the inline SVG on top: one warm light on each knot,
- * at the package's seven alignment points on the 1254 × 1254 artwork.
+ * WHAT IT IS. A line drawing: fine gold fibres come in from the edges and meet
+ * eight gold junctions inside the outline of a brain. ./art/brain.svg is the
+ * package's assets/brain-lines.svg, byte for byte (Sunil, 19 September:
+ * "change the brain image in the hero section to … brain-lines.svg"). It carries a <title> and <desc>, so it
+ * is an image with a text alternative.
  *
- * HOW IT MOVES. It LOOPS, on Sunil's instruction of 19 September: "replay
- * animation and reduce motion not needed, it should keep on looping". The
- * seven lights come up one after another and settle, the cycle rests, and it
- * starts again: a 4.8-second cycle. This departs from the package, which
- * played once with Replay and Reduce motion buttons; both buttons are gone.
+ * HOW IT MOVES. It LOOPS, as Sunil asked on 19 September ("it should keep on
+ * looping"): a light travels along each fibre and the junctions light in turn,
+ * on one eight-second timeline, again and again. The loop runs only while the
+ * brain is on screen and the tab is visible. It stops under the operating
+ * system's reduced-motion setting and under the footer's Pause motion control.
+ * That footer control is the package's single pause for all page motion, and
+ * it is what satisfies WCAG 2.2.2 for a loop longer than five seconds. There is
+ * no Replay or Reduce motion button beside the brain.
  *
- * WHAT STILL STOPS IT. The operating system's reduced-motion setting: the
- * artwork stays, knots at rest. And it pauses while off screen, so it costs
- * nothing while somebody reads the rest of the page. WCAG 2.2.2 asks for a
- * pause control on motion longer than five seconds; with the buttons gone,
- * the OS setting is the only off switch. Recorded in RESUME.md.
- *
- * Decorative: the image has empty alt and the whole figure is aria-hidden.
- * Nothing is stored in the browser.
+ * The script that sets `is-looping` and `is-visible` is in BaseLayout, beside
+ * the pause control. Styles: src/styles/landing-v5.css. Nothing is stored in
+ * the browser.
  */
-
-// The package's alignment points, in the artwork's own 1254 × 1254 pixels.
-const NODES: Array<[number, number]> = [
-  [410, 305], [830, 225], [939, 375], [1142, 568], [805, 627], [344, 690], [784, 933],
-];
+import brain from './art/brain.svg?raw';
 ---
 
-<figure class="woven-brain" data-woven-brain aria-hidden="true">
-  <div class="brain-scene">
-    <img
-      src="/brand/woven-brain-1200.webp"
-      srcset="/brand/woven-brain-640.webp 640w, /brand/woven-brain-1200.webp 1200w"
-      sizes="(max-width: 760px) min(490px, calc(100vw - 48px)), 48vw"
-      width="1200"
-      height="1200"
-      alt=""
-      decoding="async"
-      fetchpriority="high"
-    />
-    <svg class="brain-light" viewBox="0 0 1254 1254" focusable="false">
-      <defs>
-        <radialGradient id="woven-brain-light">
-          <stop offset="0" style="stop-color: var(--brain-glow); stop-opacity: 0.85" />
-          <stop offset="1" style="stop-color: var(--brain-glow); stop-opacity: 0" />
-        </radialGradient>
-      </defs>
-      {NODES.map(([cx, cy], i) => (
-        <g class="node" style={`--i:${i}`}>
-          <circle cx={cx} cy={cy} r="46" fill="url(#woven-brain-light)" />
-          <circle class="core" cx={cx - 6} cy={cy - 7} r="8" />
-        </g>
-      ))}
-    </svg>
-  </div>
+<figure class="woven-brain" data-woven-brain>
+  <Fragment set:html={brain} />
 </figure>
-
-<script>
-  // Start on first sight and pause whenever the brain is off screen.
-  const fig = document.querySelector<HTMLElement>('[data-woven-brain]');
-  if (fig && 'IntersectionObserver' in window) {
-    new IntersectionObserver(
-      (entries) => {
-        const seen = entries.some((e) => e.isIntersecting);
-        if (seen) fig.classList.add('is-playing');
-        fig.classList.toggle('is-paused', !seen);
-      },
-      { threshold: 0.2 },
-    ).observe(fig);
-  } else {
-    fig?.classList.add('is-playing');
-  }
-</script>
-
-<style>
-  .woven-brain { position: relative; min-width: 0; margin: 0; }
-  .brain-scene { position: relative; width: 100%; aspect-ratio: 1; }
-  .brain-scene img { display: block; width: 100%; height: 100%; object-fit: contain; }
-  .brain-light { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .core { fill: var(--brain-glow-core); }
-
-  /* At rest the knots carry a faint light, so the still frame is the same
-     picture the loop returns to between cycles. */
-  .node { opacity: 0.16; transform-box: fill-box; transform-origin: center; }
-  /* One 4.8s cycle per knot, each offset by 0.3s: the seven light in turn
-     over about 3.2s, then the brain rests before the next pass. */
-  .is-playing .node {
-    animation: woven-brain-light 4.8s ease-out infinite both;
-    animation-delay: calc(0.05s + var(--i) * 0.3s);
-  }
-  .is-paused .node { animation-play-state: paused; }
-  @keyframes woven-brain-light {
-    0% { opacity: 0.16; transform: scale(0.75); }
-    10% { opacity: 0.95; transform: scale(1.06); }
-    26% { opacity: 0.16; transform: scale(1); }
-    100% { opacity: 0.16; transform: scale(1); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .node { animation: none !important; opacity: 0.22; }
-  }
-</style>

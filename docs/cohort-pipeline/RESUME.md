@@ -574,6 +574,41 @@ says to keep branded storytelling out of dense working areas.
   line (measured 0px off centre at 1280 and 390). Text inside the answers, the booking panel and the
   form stays left-aligned for reading.
 
+## V5 illustrated on `/` — 19 September (later), `feat/landing-refinement`
+
+The V5 package (`docs/2026-09-19_Landing_Page_V5_Illustrated-…/`, kept out of the repo via
+`.git/info/exclude`) is now the source of truth for `/`. It is V4 (an ivory, quieter re-layout of
+the refinement) plus eleven drawings. Its `base.css` is the refinement's `styles.css` almost
+byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`** carries
+`v4.css` + `illustrated.css`, loaded after it in the package's order. preview.js is not shipped.
+
+- [x] **Hero**: ivory with `public/textures/ivory-weave.svg`; the line-drawn brain is the package's
+  `assets/brain-lines.svg`, byte for byte, in `src/components/cohort/art/brain.svg` (Sunil asked for
+  exactly that file). It loops on an 8-second timeline, only while on screen and the tab is visible.
+  The woven-brain webp files are deleted. Two equal buttons: Apply for the cohort / Start the team
+  conversation. The proof bar is gone; the intro strip carries the one employer/26-years sentence.
+- [x] **New sections**: `#routes` (two ways to learn, cohort figures from `facts.ts`) and
+  `#enterprise-scope` (no price, no dates). Questions now open the last chapter, then `#apply`,
+  then `#book`, with the short enquiry form (`route="enquiry"`) folded under the booking widget.
+  That keeps the widget's "use the form below" copy true.
+- [x] **Drawings**: `ConceptFigure.astro` inlines the eleven SVGs from `src/components/cohort/art/`.
+  Each traces once on first view, then rests.
+- [x] **One Pause motion control in the footer**, for the brain and the drawings (WCAG 2.2.2).
+  Session only, nothing stored. This closes the 2.2.2 gap noted above.
+- [x] **Header**: the site's five sections + "Enquire" (to `#enquire`, above both routes), and an
+  "On this page" row (a `<details>` on phones). Menu below 1080px. Sticky bar on `/`: "Find the right
+  programme for you." + Enquire (still hidden on phones).
+- [x] Copy changes that came with V4, taken as written: the hero, the Sunil lead ("global technology
+  companies and startups") and the paragraph after it, "Open cohort" labels.
+- **Kept against the package, on Sunil's earlier instructions**: knot topic breaks at every change
+  (V4 uses plain hairlines), the centred last three sections, no sticky bar on phones.
+- **Open for Sunil**: "Enquire" in the header and sticky bar departs from CLAUDE.md's "cohort CTA =
+  APPLY" (it lands above both routes; Apply is still the button inside). The meta title and
+  description still use the older `STANDFIRST`, not V4's.
+- QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
+  500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
+  errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18
