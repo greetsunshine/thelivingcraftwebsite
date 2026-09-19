@@ -124,6 +124,10 @@ const isDiscussion =
       {chrome && (
       <nav class="app-sidebar" id="appSidebar">
         <div class="sidebar-top">
+          {/* The LC mark heads the rail, as it heads every public header. */}
+          <a href="/craft" class="rail-mark" aria-label="The Living Craft, dashboard">
+            <img src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" />
+          </a>
           <a href="/craft" class={`sidebar-icon ${isActive('/craft')}`} title="Dashboard">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span class="rail-label">Home</span>
@@ -190,20 +194,22 @@ const isDiscussion =
             )
           }
           <slot />
+          <!-- Inside the scroller, under the content (QA 19 September: as a
+             sibling of <main> it rendered as a third column at the top right).
+             The footer identity moved out of this layout with the rail
+               redesign, and it stays out. This one line is back because the
+               privacy policy and the terms have to be reachable from inside the
+               gate too: the learner area is where the most personal data is, and
+               a policy the people it describes cannot find is not published.
+               Quiet, and not a nav. -->
+          <footer class="craft-foot">
+            <span>© {year} The Living Craft · Sunil Mathew</span>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+          </footer>
         </div>
       </main>
 
-        <!-- The footer identity moved out of this layout with the rail
-             redesign, and it stays out. This one line is back because the
-             privacy policy and the terms have to be reachable from inside the
-             gate too: the learner area is where the most personal data is, and
-             a policy the people it describes cannot find is not published.
-             Quiet, and not a nav. -->
-        <footer class="craft-foot">
-          <span>© {year} The Living Craft · Sunil Mathew</span>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
-        </footer>
     </div>
 
     <!-- Docked to the bottom of the viewport, on every /craft page, rather than
@@ -348,6 +354,10 @@ const isDiscussion =
     gap: 16px;
     align-items: center;
   }
+
+  .rail-mark { display: block; padding: 0 0 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .rail-mark img { display: block; width: 40px; height: auto; }
+  .rail-mark:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); border-radius: var(--radius-inner); }
 
   .sidebar-icon {
     width: 40px;

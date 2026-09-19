@@ -541,6 +541,20 @@ says to keep branded storytelling out of dense working areas.
   150 people", "~31 billion executions a week" and "300+ products"; `/assessment`'s says "100M+
   users". The 11 September finding says these were removed from every public surface, and CLAUDE.md
   forbids them without a dated approval. They are live on `main` too. Needs Sunil's decision.
+- [x] **Step 2e, `/craft`** (Sunil: "use the same design for /craft"). Rendered locally for the first
+  time with the existing dev-only preview learner (`CRAFT_DEV_BYPASS=1` in `.env.local`, which is
+  gitignored and compiled out of every build). Fixed, all pre-existing:
+  - **The footer rendered as a third column at the top right of every `/craft` page**: it was a
+    sibling of `<main>` in the flex shell. It is inside the scroller now, under the content.
+  - **The dashboard hero text was illegible**: the eyebrow was forest on the forest linen and the
+    lead was muted ink on it. They use the hero tokens now.
+  - **The dashboard footer's text and email link were near-invisible**: global.css colours
+    `.foot-grid` for the dark public footers, and this footer is light.
+  - **The session list read as one grey block** (a 1px-gap grid on a line-coloured ground behind
+    transparent rows). It is rule-separated rows now, as the design system draws lists.
+  - The LC mark heads the rail, as it heads every public header.
+  Contrast audit on 15 `/craft` pages at 1280 and 390: 0 failures, 0 overflow. The console
+  (`/craft/admin`) is not in this step; it needs the admin password to render.
 
 ---
 
