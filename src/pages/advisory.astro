@@ -43,6 +43,7 @@
  * actually asks — because "what does a review consist of" is the reader's real
  * question and a list of adjectives does not answer it.
  */
+import '../styles/templates/programme.css';
 import PracticeLayout from '../layouts/PracticeLayout.astro';
 
 const title = 'Advisory — The Living Craft';
@@ -50,7 +51,7 @@ const description =
   'Bounded advisory on agentic system design: framing a use case, reviewing an architecture and agreeing the next useful piece of work. Not a delivery engagement.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/advisory/">
+<PracticeLayout bodyClass="programme-page" title={title} description={description} canonical="/advisory/">
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Advisory</p>

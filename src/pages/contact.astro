@@ -49,6 +49,7 @@
  * with a call instead of a second form, and never links to a form that is no
  * longer there.
  */
+import '../styles/templates/programme.css';
 import PracticeLayout from '../layouts/PracticeLayout.astro';
 import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import { MARKETING_CONSENT } from '../lib/pipeline/consent';
@@ -58,7 +59,7 @@ const description =
   'Where each enquiry goes: the open cohort, employer funding, a team programme, advisory, the fractional CAIO retainer and the readiness assessment. One mailbox behind all of them.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/contact/">
+<PracticeLayout bodyClass="programme-page" title={title} description={description} canonical="/contact/">
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Contact</p>

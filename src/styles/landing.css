@@ -163,44 +163,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
 .landing .brand-lockup .brand-symbol { display: block; flex: none; height: 52px; width: auto; }
 .landing .brand-lockup .brand-name { display: block; flex: none; height: 28.5px; width: auto; }
 
-/* Chat from the header, a 48px forest square. The glyph is the Ask widget's
-   own stroke icon: ivory on the button, forest inside the phone menu. */
-.landing .ask-glyph {
-  display: inline-block;
-  flex: none;
-  width: 18px;
-  height: 18px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F5F0E6' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E") center / 18px 18px no-repeat;
-}
-.landing .nav-ask {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--texture-forest);
-  cursor: pointer;
-}
-.landing .nav-ask:hover { background: var(--texture-forest-hover); }
-.landing .mm-ask {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-height: 48px;
-  padding: 12px 0;
-  background: none;
-  border: 0;
-  font: inherit;
-  font-size: 1.125rem;
-  color: var(--text-body);
-  text-align: left;
-  cursor: pointer;
-}
-.landing .mm-ask .ask-glyph { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23183D32' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E"); }
 /* The phone menu, as the package draws it: ivory, 18px rows. */
 .landing .mm-toggle { width: 48px; height: 48px; }
 .landing .mm-panel { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); padding: 16px 24px; }
@@ -691,7 +653,6 @@ body.landing :focus-visible:not([tabindex='-1']) {
      full navigation does not fit comfortably between them. */
   .landing .navlinks > a:not(.btn) { display: none; }
   body.landing .mm { display: block; }
-  .landing .nav-ask { display: none; }
   .landing .nav-inner { min-height: 84px; }
   .landing .navlinks { gap: 14px; }
   .landing .wrap { width: calc(100% - 48px); }

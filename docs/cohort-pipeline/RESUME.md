@@ -522,6 +522,15 @@ says to keep branded storytelling out of dense working areas.
   rows; the two routes as open rows. No boxed panels, no gold heading words. The "Not stated on this
   page" block keeps its blue uncertain panel on purpose. No copy changed. 390: 5,828px
   (was 5,872); 1280: 3,930px (was 3,806).
+- [x] **Step 2c, the programme template** (`src/styles/templates/programme.css`, the package's
+  `programme.html`, `bodyClass="programme-page"`) on `/programmes`, `/programmes/enterprise`,
+  `/advisory` and `/contact`: full-width linen hero, stacked sections under a hairline, cards and
+  comparison panels as open rows, numbered steps as the work list, the contact routes as a two-column
+  list. Pending-facts panels kept. No copy changed. No overflow at 390 or 1280.
+- [x] **Chat is back in the bottom-right corner on `/`** (Sunil, 19 September). The header and
+  phone-menu chat buttons are removed; `AskWidget`'s `launcher="header"` option still exists and is
+  unused. The pill now lifts above the sticky Apply bar while the bar shows (`--sticky-apply-h`,
+  set by StickyApplyBar), on every page that has both.
 
 ---
 

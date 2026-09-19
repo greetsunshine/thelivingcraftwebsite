@@ -95,7 +95,9 @@ const prompts = OPENERS[surface] ?? OPENERS['/'];
   .ask {
     position: fixed;
     right: 24px;
-    bottom: 24px;
+    /* Above the sticky Apply bar when it shows (StickyApplyBar sets it). */
+    bottom: calc(24px + var(--sticky-apply-h, 0px));
+    transition: bottom var(--motion-fast) var(--ease-out);
     z-index: 90;
     font-family:var(--font-body);
   }

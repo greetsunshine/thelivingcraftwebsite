@@ -1,0 +1,113 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   templates/programme.css — the design system's PROGRAMME template
+   (18 September package, programme.html), for /programmes,
+   /programmes/enterprise, /advisory and /contact.
+
+   The pages keep their content; this gives them the package's composition:
+   - a full-width linen hero, not a rounded box;
+   - stacked sections set off by a hairline on the text column;
+   - cards, comparison panels and the contact routes as open rows under a
+     rule (the package's role-list and work-list), never boxed panels;
+   - numbered steps as a work list: number, title, one line of reading;
+   - one colour per heading.
+   The pending-facts block keeps its uncertain panel on purpose (see
+   PracticeLayout, .pending).
+
+   Applied by `body.programme-page`, passed to PracticeLayout by each page.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.programme-page .hero { padding: 0; background: var(--texture-forest); }
+.programme-page .hero > .wrap {
+  width: auto;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: var(--space-9) var(--space-5) var(--space-8);
+  border-radius: 0;
+  background: none;
+}
+.programme-page .hero h1 { max-width: 16ch; margin: var(--space-4) 0 var(--space-5); }
+.programme-page .hero h1 em { font-style: normal; color: inherit; }
+.programme-page .hero .credential,
+.programme-page .hero .lede { max-width: 52ch; }
+
+/* ── section rhythm ─────────────────────────────────────────────────────── */
+.programme-page main > section.wrap {
+  padding-block: 88px;
+  background: linear-gradient(var(--border-hair), var(--border-hair)) center top / calc(100% - 2 * var(--space-5)) 1px no-repeat;
+}
+.programme-page main > section.hero + section.wrap { background: none; }
+.programme-page .sec-head { margin-bottom: var(--space-7); }
+.programme-page .sec-head h2 { max-width: 22ch; }
+.programme-page .sec-head h2 em { color: inherit; font-style: normal; }
+
+/* ── cards and panels become open rows ──────────────────────────────────── */
+.programme-page main .cards3,
+.programme-page main .cards2 { gap: var(--space-5) var(--space-7); }
+.programme-page main .card,
+.programme-page main .panel {
+  padding: var(--space-5) 0 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+}
+.programme-page main .card:hover { box-shadow: none; }
+.programme-page main a.card:hover h3 { text-decoration: underline; text-underline-offset: 0.2em; }
+.programme-page main .panel > h3 { margin-bottom: var(--space-3); font-size: 1.25rem; }
+.programme-page main .card .k { font-family: var(--font-body); letter-spacing: 0; color: var(--accent-ink); }
+
+/* Label and value rows inside a panel: the label on top in a phone column,
+   beside the value where there is room. */
+.programme-page main .panel .detail-row {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+  font-size: var(--size-2);
+}
+.programme-page main .panel .detail-row:first-of-type { padding-top: 0; }
+.programme-page main .panel .detail-row:last-child { border-bottom: 0; }
+.programme-page main .panel .dk { font-family: var(--font-body); font-size: var(--size-2); font-weight: var(--weight-strong); letter-spacing: 0; color: var(--text-loud); }
+.programme-page main .panel .dv { text-align: left; font-weight: 400; }
+/* Three comparison columns are narrow: stack label over value there. */
+.programme-page main .cards3 .panel .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+
+/* The contact routes read as a list of rows with the destination beside. */
+.programme-page main .panel.routes .detail-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: var(--space-4) 0;
+  font-size: var(--size-3);
+}
+.programme-page main .panel.routes .dk { font-size: var(--size-3); font-weight: 400; color: var(--text-body); }
+.programme-page main .panel.routes .dv { font-weight: var(--weight-strong); }
+
+/* ── numbered steps: the package's work list ────────────────────────────── */
+.programme-page main .tlist { padding: 0; background: none; box-shadow: none; border-radius: 0; border-top: var(--border-w-hair) solid var(--border-hair); }
+.programme-page main .tlist li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.programme-page main .tlist li:first-child { border-top: 0; }
+.programme-page main .tlist li:last-child { border-bottom: var(--border-w-hair) solid var(--border-hair); }
+.programme-page main .tlist .n { font-family: var(--font-body); font-size: var(--size-2); font-weight: var(--weight-strong); color: var(--accent-ink); padding-top: 3px; }
+.programme-page main .tlist h3,
+.programme-page main .tlist h4 { font-size: 1.25rem; margin: 0 0 var(--space-2); }
+.programme-page main .tlist p { max-width: var(--measure-prose); }
+
+@media (max-width: 800px) {
+  .programme-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
+  .programme-page main > section.wrap { padding-block: var(--space-7); background-size: calc(100% - 2 * var(--space-4)) 1px; }
+  .programme-page .sec-head { margin-bottom: var(--space-5); }
+  .programme-page main .panel.routes .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+}
+@media (max-width: 560px) {
+  .programme-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
+  .programme-page main > section.wrap { padding-block: var(--space-6); }
+  .programme-page main .panel .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .programme-page main .tlist li { grid-template-columns: 2rem minmax(0, 1fr); gap: var(--space-3); }
+}

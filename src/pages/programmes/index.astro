@@ -39,6 +39,7 @@
  *     "subject to capacity agreement" and the operating guide forbids it in
  *     public copy as a guarantee.
  */
+import '../../styles/templates/programme.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import {
   COHORT_SIZE,
@@ -54,7 +55,7 @@ const description =
   'Three routes into the same practical work on agentic system design: the open cohort for an individual, an employer-funded place, and an enterprise programme for a team.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/programmes/">
+<PracticeLayout bodyClass="programme-page" title={title} description={description} canonical="/programmes/">
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Programmes</p>

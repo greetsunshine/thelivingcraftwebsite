@@ -103,6 +103,9 @@ const { applyHref = onCohortPage ? '#apply' : '/#apply' } = Astro.props;
     // clearing — but only while the bar is actually there.
     const setBodyClearance = () => {
       document.body.style.paddingBottom = bar.hidden ? '' : `${bar.offsetHeight}px`;
+      // The Ask pill sits in the bottom-right corner; it lifts above the bar
+      // while the bar is showing (AskWidget reads this).
+      document.documentElement.style.setProperty('--sticky-apply-h', bar.hidden ? '0px' : `${bar.offsetHeight}px`);
     };
 
     const evaluate = () => {
