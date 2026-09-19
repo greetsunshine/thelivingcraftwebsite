@@ -29,7 +29,14 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 body.landing {
+  /* Three reading sizes, so one kind of text is one size everywhere:
+     --landing-text  paragraphs            18px desktop, 16px phone
+     --landing-lead  a lead in a column    20px desktop, 18px phone
+     --landing-title a row or card title   20px desktop, 18px phone
+     A lead under a full-width heading is one step larger (22px, 18px). */
   --landing-text: var(--size-4);
+  --landing-lead: 1.25rem;
+  --landing-title: 1.25rem;
   background: var(--surface-page);
   font-size: var(--landing-text);
   line-height: 1.62;
@@ -76,8 +83,17 @@ body.landing {
 .landing .chapter-teaching,
 .landing .chapter-practice,
 .landing .chapter-joining { background: var(--surface-panel); }
-/* Sections inside one chapter sit closer together than chapters do. */
+/* ONE RHYTHM. A chapter's first section starts 88px down and its last ends
+   88px up. Inside a chapter a section ends 64px up and the next starts 24px
+   down, so every gap between two sections of one chapter is the same 88px.
+   The package set these per section (56, 64, 88, 96) and the gaps ran from
+   80 to 112px; QA on 19 September made them one rule. The hero is excluded:
+   it owns its own padding. */
 .landing .chapter section + section { padding-top: var(--space-5); }
+.landing .chapter section:not(:last-child):not(.hero) { padding-bottom: var(--space-8); }
+/* The first section after the hero opens its chapter's reading, so it gets
+   the chapter's opening space, not the in-chapter 24px. */
+.landing .chapter .hero + section { padding-top: 88px; }
 
 /* ── hero: full width, linen, the brain beside the words ────────────────── */
 .landing .hero {
@@ -149,7 +165,7 @@ body.landing {
   height: 96px;
   aspect-ratio: auto;
   border: 0;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -201,10 +217,9 @@ body.landing {
   display: grid;
   grid-template-columns: 0.95fr 1fr;
   gap: 80px;
-  padding-block: 96px;
 }
 .landing #fit .sec-head { margin: 0; }
-.landing #fit .lead { font-size: var(--landing-text); line-height: 1.62; margin-top: 28px; }
+.landing #fit .lead { margin-top: 28px; }
 
 /* ── cards become rows ──────────────────────────────────────────────────── */
 .landing .cards3 { grid-template-columns: minmax(0, 1fr); gap: 28px; }
@@ -226,7 +241,7 @@ body.landing {
   margin-bottom: var(--space-3);
 }
 .landing .card h3,
-.landing .inaugural .card h3 { font-size: 1.375rem; line-height: 1.3; margin: 0; }
+.landing .inaugural .card h3 { font-size: var(--landing-title); line-height: 1.3; margin: 0; }
 .landing .card p { margin-top: 14px; font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
 .landing #fit .card { display: grid; grid-template-columns: 44px 1fr; column-gap: var(--space-4); }
 .landing #fit .card .k { grid-row: span 2; padding-top: 4px; margin: 0; }
@@ -234,18 +249,19 @@ body.landing {
 
 /* ── teaching chapter ───────────────────────────────────────────────────── */
 .landing #example .sec-head { max-width: 700px; }
-.landing #review { padding-bottom: 96px; }
-.landing #review .lead,
-.landing #process .lead,
-.landing #transform .lead { font-size: var(--landing-text); line-height: 1.62; }
+/* A lead that sits in a column (beside other text, or in the narrow heading
+   column of a split section) is one step smaller than one under a
+   full-width heading. The same rule for all of them. */
+.landing .two-up .lead,
+.landing #fit .lead,
+.landing #transform .lead,
+.landing .story .lead { font-size: var(--landing-lead); line-height: 1.6; }
 
 /* ── development chapter ────────────────────────────────────────────────── */
-.landing #outcomes { padding-bottom: 56px; }
 .landing #transform {
   display: grid;
   grid-template-columns: 0.75fr 1.25fr;
   column-gap: 80px;
-  padding-bottom: var(--space-8);
 }
 .landing #transform .sec-head { margin: 0; }
 .landing #transform > p { grid-column: 2; color: var(--accent-ink); }
@@ -267,9 +283,8 @@ body.landing {
   padding-top: 5px;
 }
 .landing .tlist h3,
-.landing .tlist h4 { font-size: 1.25rem; margin: 0; }
+.landing .tlist h4 { font-size: var(--landing-title); line-height: 1.3; margin: 0; }
 .landing .tlist p { margin-top: var(--space-3); font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
-.landing #takeaways { padding-bottom: 96px; }
 .landing #takeaways .cards3 { grid-template-columns: 1.05fr 1.4fr 1fr; gap: 40px; }
 /* A gold rule over each takeaway: gold as a line, never as text. */
 .landing #takeaways .card { border-top: var(--border-w-hair) solid var(--ember); padding-top: var(--space-5); }
@@ -279,7 +294,6 @@ body.landing {
   display: grid;
   grid-template-columns: 0.9fr 1fr;
   gap: 80px;
-  padding-bottom: var(--space-8);
 }
 .landing #curriculum .sec-head { margin: 0; }
 .landing .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
@@ -311,9 +325,9 @@ body.landing {
   color: var(--accent-ink);
 }
 .landing .mod .mk .num { font-weight: var(--weight-strong); }
-.landing .mod h4 { font-size: 1.375rem; line-height: 1.3; margin: 0; max-width: 30ch; }
+.landing .mod h3,
+.landing .mod h4 { font-size: var(--landing-title); line-height: 1.3; margin: 0; max-width: 30ch; }
 .landing .mod p { margin-top: 20px; font-size: var(--landing-text); line-height: 1.62; color: var(--text-body); }
-.landing #process { padding-bottom: 96px; }
 
 /* ── teacher chapter ────────────────────────────────────────────────────── */
 .landing .statband {
@@ -341,10 +355,9 @@ body.landing {
 }
 .landing .story { grid-template-columns: 0.78fr 1.22fr; gap: 72px; }
 .landing .maker-portrait { position: sticky; top: 128px; }
-.landing .maker-portrait .mframe { border-radius: 4px; box-shadow: none; }
+.landing .maker-portrait .mframe { border-radius: var(--radius-control); box-shadow: none; }
 .landing .maker-portrait .mcap { font-family: var(--font-body); font-size: var(--size-2); margin-top: var(--space-3); }
 .landing .story p { font-size: var(--landing-text); line-height: 1.62; }
-.landing .story .lead { font-size: 1.25rem; line-height: 1.6; }
 .landing .pullquote {
   font-size: 1.875rem;
   line-height: 1.38;
@@ -388,7 +401,7 @@ body.landing {
   text-align: left;
   background: var(--texture-forest);
   color: var(--text-on-invert);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-panel);
   box-shadow: none;
 }
 .landing .price-card .seat {
@@ -491,7 +504,7 @@ body.landing {
 /* ── header: the lockup and the chat button ─────────────────────────────── */
 .landing .nav-inner { min-height: 88px; flex-wrap: nowrap; }
 .landing .navlinks { flex-wrap: nowrap; }
-.landing .brand-lockup { gap: var(--space-3); }
+.landing .brand-lockup { gap: var(--space-3); min-height: 44px; align-items: center; }
 .landing .brand-lockup .brand-symbol { display: block; flex: none; height: 52px; width: auto; }
 .landing .brand-lockup .brand-name { display: block; flex: none; height: 28px; width: auto; }
 /* The chat glyph: the Ask widget's own stroke icon, in ivory on the forest
@@ -577,8 +590,9 @@ body.landing {
   .landing #curriculum,
   .landing .story { gap: 40px; }
   .landing .band,
-  .landing .transform,
-  .landing #fit { padding-block: var(--space-8); }
+  .landing .transform { padding-block: var(--space-8); }
+  .landing .chapter section:not(:last-child):not(.hero) { padding-bottom: var(--space-7); }
+  .landing .chapter .hero + section { padding-top: var(--space-8); }
   .landing .lead { font-size: 1.25rem; }
   .landing .modules { gap: var(--space-6); }
   .landing #takeaways .cards3 { gap: var(--space-5); }
@@ -586,7 +600,11 @@ body.landing {
 
 /* Phones. Decision 4: 16px reading text and the tighter spacing. */
 @media (max-width: 760px) {
-  body.landing { --landing-text: var(--size-3); }
+  body.landing {
+    --landing-text: var(--size-3);
+    --landing-lead: var(--size-4);
+    --landing-title: 1.125rem;
+  }
   .landing .nav-inner { min-height: 76px; }
 
   /* Decision 2: copy, then the intro strip with the portrait, then the brain.
@@ -613,16 +631,15 @@ body.landing {
   .landing .intro-strip .proofbar .label { text-align: left; }
   .landing .intro-strip .proofbar .logo { font-size: var(--size-3); }
 
+  /* The same rhythm, smaller: 32px at a chapter's ends, 32px between the
+     sections inside it (24 + 8). */
   .landing .band,
-  .landing .transform,
-  .landing #fit { padding-block: var(--space-6); }
+  .landing .transform { padding-block: var(--space-6); }
   .landing .chapter:not(.chapter-opening) { padding-top: var(--space-4); }
   .landing .chapter:not(.chapter-opening)::before { background-size: 900px 83px; height: 42px; }
   .landing .chapter section + section { padding-top: var(--space-2); }
-  .landing #review,
-  .landing #takeaways,
-  .landing #process { padding-bottom: var(--space-6); }
-  .landing #outcomes { padding-bottom: var(--space-4); }
+  .landing .chapter section:not(:last-child):not(.hero) { padding-bottom: var(--space-5); }
+  .landing .chapter .hero + section { padding-top: var(--space-6); }
 
   .landing #fit,
   .landing #transform,
@@ -633,9 +650,6 @@ body.landing {
   .landing .sec-head .lead { margin-top: var(--space-4); }
   .landing .eyebrow { margin-bottom: var(--space-3); }
   .landing .lead { font-size: var(--size-4); }
-  .landing h3,
-  .landing .card h3,
-  .landing .mod h4 { font-size: 1.1875rem; }
 
   .landing .cards3,
   .landing #fit .cards3 { gap: var(--space-4); }
@@ -654,7 +668,6 @@ body.landing {
   .landing .statband { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin-bottom: var(--space-5); }
   .landing .stat .big { font-size: 1.5rem; }
   .landing .maker-portrait { position: static; max-width: 300px; }
-  .landing .story .lead { font-size: var(--size-4); }
   .landing .pullquote { font-size: 1.5rem; margin-top: var(--space-5); }
   .landing #live-experience .cards3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
   .landing #live-experience .card:last-child { grid-column: auto; }
@@ -686,4 +699,21 @@ body.landing {
   /* !important only because BaseLayout sets this button's padding inline. */
   .landing .navlinks > .btn { padding: 10px 12px !important; }
   .landing .navlinks > .btn .arrow { display: none; }
+}
+
+/* ── the conversation chapter: one left edge ───────────────────────────────
+   The booking panel, the route chooser and the form were each centred at a
+   different width (640, 940 and 580px) under left-aligned headings, so the
+   last chapter had three centre lines. QA on 19 September put all three on
+   the text's left edge at one width, as the package draws them. */
+.landing #book .booker { max-width: 940px; margin: 0; }
+.landing #apply .route-choice { margin-left: 0; margin-right: 0; }
+.landing #apply .apply-form { max-width: 940px; margin-inline: 0; }
+/* The form's heading is a panel heading, like the booking panel's: the same
+   size and weight. It was 26px at 800, the one heavy weight on the page. */
+.landing #apply .rf-head h3,
+.landing #book .booker-head { font-size: 1.375rem; font-weight: var(--weight-strong); line-height: 1.3; }
+@media (max-width: 760px) {
+  .landing #apply .rf-head h3,
+  .landing #book .booker-head { font-size: 1.25rem; }
 }

@@ -337,6 +337,26 @@ was changed. Real 200% browser zoom and a screen reader pass are still to do on 
 **Where to look:** draft PR #31, stacked on #18. Staging (follows every push to this branch,
 behind Vercel's login): https://thelivingcraft-git-feat-lan-37a779-greetsunshine-1213s-projects.vercel.app
 
+**QA pass, 19 September.** A scripted audit of `/` at 1280 and 390 (every text style, section
+padding, contrast of every text node, tap targets, heading order, ids, anchors, overflow) found
+and fixed six inconsistencies:
+- **Section gaps ran 80 to 112 px** because the package set padding per section. Now one rule:
+  88 px at a chapter's ends, 88 px between sections inside a chapter (32 px on a phone).
+- **Row titles came in five sizes** (19, 20, 22 px, h3 and h4). Now one: `--landing-title`,
+  20 px desktop, 18 px phone.
+- **Leads came in three sizes** in the same role. Now two: 22 px under a full-width heading,
+  `--landing-lead` 20 px in a column; both 18 px on a phone.
+- **Two heading-level skips** (h2 straight to h4 in "What you'll be able to do" and the modules).
+  Both are h3 now.
+- **The last chapter had three centre lines**: the booking panel, the chooser and the form were
+  centred at 640, 940 and 580 px under left-aligned headings. All three share the text's left
+  edge at 940 px. The form heading was 26 px at weight 800, the only heavy weight on the page;
+  it now matches the booking panel's heading.
+- **Radii:** the price panel is 12 px like every other panel; photos are 6 px. The header logo
+  link is 44 px tall on a phone.
+After: 0 contrast failures, 0 heading skips, 0 overflow, 21 of 21 interaction checks. `/` is
+16,317 px at 390 and 13,653 px at 1280. `/caio` and `/about` unchanged to the pixel.
+
 ---
 
 ## The LC mark replaces the junction — 19 September, on PR #18
