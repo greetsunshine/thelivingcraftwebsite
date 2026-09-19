@@ -9,7 +9,8 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 19 September 2026
-**Branch:** `cohort-page-restore` (PR #14), off `main`. The pipeline work is
+**Branch:** `feat/landing-refinement`, off `cta-book-now-rework` (PR #18). PR #14 is merged.
+PR #27 (the thread brain) is superseded by this work. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
@@ -266,6 +267,33 @@ domain and a monitored reply mailbox. Until then the browser also notifies
 
 Plain-language explainer for Sunil:
 https://claude.ai/code/artifact/529e50fc-74a7-4e62-b162-3940f5b53d2a
+
+---
+
+## Landing page refinement — 19 September, `feat/landing-refinement`
+
+The 19 September package (`docs/2026-09-19_Landing_Page_Refinement-…/`, kept out of the repo
+through `.git/info/exclude`) is a restyle of our own `/`. Its source export matches this branch's
+rendered HTML class for class. It was ported into the Astro page, not pasted in: its
+`styles.css` carries a second token set, drops the linen and loads a 1.8 MB PNG in the header.
+
+Decisions, all Sunil's (19 September, "go with your recommendations"):
+1. **The woven brain replaces the thread brain.** It plays once, with Replay and Reduce
+   motion buttons. PR #27 is closed.
+2. **Sunil's portrait stays near the top on phones:** the intro strip (portrait and proof bar)
+   comes straight after the hero buttons, and the brain after it.
+3. **Linen stays** on the hero and on the dark price panel.
+4. **Phones keep 16px body text and the tighter section spacing.** Desktop takes the package's
+   18px and its spacing.
+5. **`/` only.** Everything is in `src/styles/landing.css`, imported by `BaseLayout` alone and
+   scoped under `body.landing`. `/caio`, `/about` and the rest are unchanged.
+
+Progress, one commit each:
+- [x] Assets: `public/brand/woven-brain-{640,1200}.webp` (the package's artwork with its flat
+  forest background keyed out, so the linen shows round it), `lc-mark-keyed.webp` and
+  `lc-name.webp` (the mark and the "The Living Craft" lettering, cropped from the same
+  `logo-reference.png` as `lc-mark.webp`, paper keyed out the way the package's SVG filter does
+  it), `public/textures/fabric-crossing.svg` (the chapter divider).
 
 ---
 
