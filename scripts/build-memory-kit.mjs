@@ -2,9 +2,9 @@
 /**
  * Build the two downloads for /resources/agent-memory-audit-kit.
  *
- *   npm run build:kit                  → public/downloads/agent-memory-audit-kit.pdf
- *                                        public/downloads/agent-memory-audit-kit.zip
- *                                        public/downloads/memory-record.schema.json
+ *   npm run build:kit                  → downloads/agent-memory-audit-kit.pdf
+ *                                        downloads/agent-memory-audit-kit.zip
+ *                                        downloads/memory-record.schema.json
  *   npm run build:kit -- --url http://localhost:4321   print from a server already running
  *
  * The PDF is printed FROM THE PAGE by headless Chrome, against the print rules
@@ -27,7 +27,7 @@ import { join, resolve } from 'node:path';
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
 const KIT = join(ROOT, 'kits', 'agent-memory-audit-kit');
-const OUT = join(ROOT, 'public', 'downloads');
+const OUT = join(ROOT, 'downloads');
 const ROUTE = '/resources/agent-memory-audit-kit';
 const PDF = join(OUT, 'agent-memory-audit-kit.pdf');
 const ZIP = join(OUT, 'agent-memory-audit-kit.zip');

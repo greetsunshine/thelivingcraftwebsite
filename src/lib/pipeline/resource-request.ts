@@ -74,6 +74,7 @@ import {
 } from './attribution';
 import {
   deliveryLine,
+  isResourceKind,
   queueResourceDelivery,
   recordDelivery,
   resolveResource,
@@ -119,6 +120,14 @@ export type ResourceRequestOutcome =
 export async function handleResourceRequest(
   ctx: Pick<APIContext, 'request' | 'clientAddress' | 'cookies' | 'url'>,
   body: Record<string, unknown>,
+  opts: {
+    /**
+     * A resource the route has already resolved from its own registry (the
+     * download route knows templates the two registers do not). When given,
+     * `body.resource` is not resolved again here.
+     */
+    resource?: RequestableResource;
+  } = {},
 ): Promise<ResourceRequestOutcome> {
   const { request, clientAddress, cookies, url } = ctx;
 
@@ -150,21 +159,33 @@ export async function handleResourceRequest(
   // identifier for a page that does not exist yet, and accepting a request for
   // it would be a stronger claim than the toolkit is allowed to make by
   // displaying it.
-  const lookup = resolveResource(body.resource);
-  if (lookup.state === 'unknown') {
+  let resource: RequestableResource;
+  if (opts.resource) {
+    resource = opts.resource;
+  } else {
+    const lookup = resolveResource(body.resource);
+    if (lookup.state === 'unknown') {
+      return { kind: 'refused', status: 400, body: { ok: false, error: REFUSED } };
+    }
+    if (lookup.state === 'unreleased') {
+      return {
+        kind: 'refused',
+        status: 409,
+        body: {
+          ok: false,
+          error: 'That one is not published yet. Nothing has been saved and nothing will be sent.',
+        },
+      };
+    }
+    resource = lookup.resource;
+  }
+
+  // What is being handed over. Absent means the plain email request; anything
+  // else has to be a kind this module knows.
+  const kind = body.kind === undefined ? 'email' : body.kind;
+  if (!isResourceKind(kind)) {
     return { kind: 'refused', status: 400, body: { ok: false, error: REFUSED } };
   }
-  if (lookup.state === 'unreleased') {
-    return {
-      kind: 'refused',
-      status: 409,
-      body: {
-        ok: false,
-        error: 'That one is not published yet. Nothing has been saved and nothing will be sent.',
-      },
-    };
-  }
-  const resource = lookup.resource;
 
   // ---- validation, server-side and authoritative --------------------------
   const { values, errors } = validateResourceRequest(
@@ -198,7 +219,7 @@ export async function handleResourceRequest(
   });
 
   // ---- the save -----------------------------------------------------------
-  const saved = await saveResourceRequest({ requestKey, resource, values, attribution });
+  const saved = await saveResourceRequest({ requestKey, resource, values, attribution, kind });
 
   if (!saved.ok) {
     return { kind: 'unsaved', resource, message: saved.message };

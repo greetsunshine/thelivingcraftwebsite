@@ -702,6 +702,70 @@ did before it existed.
   `GITHUB_REPO` and disable themselves with an explanation when absent. Every panel
   degrades on its own — a missing var greys out one thing, not the page.
 
+## The download gate — every file a resource page hands out
+**Decided 19 September 2026.** Every download option on every public tool and resource
+page asks for a name and an email address first, and every ask is one row in one table.
+This reverses the V4 addendum's *"anonymous resource views/downloads are events, not
+people"*, on Sunil's instruction. It also reversed two tool-specific briefs (the Rule
+Placement Audit's "no capture", the Agent Design Check's "download without login"); both
+files say so at the top. What did **not** change: a download grants no marketing
+permission. No consent wording has been approved, so no row carries one, and the
+marketing view reads `consented = false` until one exists. Sending these people anything
+beyond the resource they asked for needs that wording first.
+
+**The standard is three pieces, and every page uses the same three.** A page that adds a
+fourth way to collect an address is the drift this section exists to stop.
+- [src/components/ResourceGate.astro](src/components/ResourceGate.astro) — the dialog.
+  Render it once per page with `resource="<id>"` and a one-sentence `lead`. Its fields come
+  from `RESOURCE_FIELDS`, the definition the server validates against. Its wording (used to
+  send this resource once; starts no other email) is fixed and no page may reword it.
+- [src/lib/resources/gate-client.ts](src/lib/resources/gate-client.ts) — the browser half.
+  Any control with `data-gate="pdf|xlsx|zip|json|csv|md|txt|print"` opens the dialog
+  (`data-variant` for a template's blank or worked copy; `data-resource` on a page that
+  lists several resources). A page whose file is built from the reader's own answers passes
+  `manual` to the component and calls `mountGate({ payload })` from its own script;
+  every other page needs no script at all, because the component mounts the gate itself.
+- [src/pages/api/pipeline/download.ts](src/pages/api/pipeline/download.ts) — the one route.
+  A registry of `resource → kind → { parse, verify, render }`: a PDF renderer with its
+  checks, a CSV from the data module, Markdown from the templates collection, or a static
+  file. It runs `handleResourceRequest()`, the same sequence as `/api/pipeline/resource`
+  (rate limit, honeypot, key, fields, save, queued delivery), with a `kind` on the row.
+  `/api/pipeline/resource-pdf` is gone; this replaced it.
+
+**Static files live in `downloads/` at the repo root, never under `public/`.** Anything
+under `public/` is a plain URL, and a gate on the button alone is theatre. The folder is
+bundled into the server function by `includeFiles` in `astro.config.mjs`, and
+`downloads/README.md` lists what is there and which script builds it. The cost-ceiling
+workbook has never been produced; its page checks the file exists at render time and says
+so instead of offering a button (until 19 September it was a link to a 404).
+
+**Two tools hand nothing back on purpose.** The Agent Design Check's roadmap row says
+"processed in the browser" and the Rule Placement Audit promises "your entries stay in this
+browser". For both, the route's entry is `local()`: the gate records the name and the
+address, returns no file, and the page's `onDone` builds the file from its own state. What
+the reader typed on those two pages is never posted. Do not "simplify" this by posting the
+answers to build the file on the server.
+
+**`print` is a kind.** A print button asks first, the request is recorded, then
+`window.print()` opens. It cannot stop Ctrl+P, and it does not claim to; it stops the
+button from being a download that skipped the gate.
+
+**Where the rows go.** `people` + `resource_requests` (`kind` column added 19 September,
+additive), joined by the SQL view `resource_requests_marketing` in `supabase/schema.sql`.
+That view is what the marketing team reads: `/craft/admin/requests` (a tally per resource
+and kind, then the latest 200) and the *Resource requests* record set on
+`/craft/admin/records`, which downloads the whole table as CSV. Marketing signs in to the
+console with the shared password; `export.records` and `read.people` are the two
+capabilities the export checks. Erasing a person on `/craft/admin/leads` removes their
+rows from the view in the same statement, because it is a join, not a copy. **Run
+`supabase/schema.sql` before deploying this**: the column, the function argument and the
+view are all in it, idempotent.
+
+**Each gated resource needs its own held delivery wording** in
+[src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,
+unapproved until reviewed. A resource without one still saves; its delivery is recorded
+`blocked` with the reason, which is designed behaviour, not a fault.
+
 ## Booking (`/book`, the widget, `/craft/admin/bookings`)
 **This site owns the calendar. Google is a notification channel, not a source of
 truth.** Availability is computed from rules in our own database

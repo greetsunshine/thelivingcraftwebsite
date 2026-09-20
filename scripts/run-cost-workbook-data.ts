@@ -1,6 +1,6 @@
 // The Run-Cost Model workbook, half one: everything the sheet needs, as JSON.
 //
-// The Excel workbook at public/downloads/agent-run-cost-model.xlsx is the same
+// The Excel workbook at downloads/agent-run-cost-model.xlsx is the same
 // model as /resources/run-cost-model, for people who would rather fill it in
 // offline. The rows, the instruction beside each row, the four options, the
 // reference example, the rubric and the credit line all come from
@@ -10,7 +10,7 @@
 //
 //   npm run workbook
 //
-// runs both halves and rewrites the file in public/downloads. Commit the
+// runs both halves and rewrites the file in downloads. Commit the
 // result with the change to the data module that made it necessary.
 
 import {

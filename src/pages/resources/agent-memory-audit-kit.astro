@@ -4,7 +4,10 @@
 // Fifth in the agentic system design series, and the first with real files
 // behind the download buttons. The other kit pages make a PDF in the reader's
 // own print dialogue; this one was promised as a download, so the PDF and the
-// ZIP are built by `npm run build:kit` and committed under public/downloads/.
+// ZIP are built by `npm run build:kit` and committed under downloads/ at the
+// repo root, which is private: every button here goes through the download
+// gate (src/components/ResourceGate.astro) and asks for a name and an address
+// before the file is handed over.
 //
 // The PDF is printed FROM THIS PAGE by headless Chrome, using the print rules
 // at the foot of this file. That is what keeps the page and the PDF the same
@@ -16,6 +19,7 @@
 // rather than from a literal, so a wrong count cannot survive a build.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate, TOOL_CREDIT } from '../../data/resources';
 import {
@@ -63,7 +67,7 @@ if (outcomeKinds.size !== 4 || OUTCOMES.length !== 4) throw new Error('memory ki
 const title = `${TITLE} — source, scope and correction for every fact an agent remembers · The Living Craft`;
 // Under 155 characters, as the meta description.
 const description =
-  'A memory record schema, 12 audit questions, 7 runnable failure tests and a one-page decision table for agent memory that stays correct. Free, no sign-up.';
+  'A memory record schema, 12 audit questions, 7 runnable failure tests and a one-page decision table for agent memory that stays correct. Free; the downloads ask for a name and an email.';
 
 const schema = [
   {
@@ -114,12 +118,12 @@ const sections = [
       <h1>{TITLE}</h1>
       <p class="lead">{SUBTITLE}</p>
       <p class="hero-cta controls">
-        <a class="btn btn-primary" href={DOWNLOADS.zip} download data-download="zip">
+        <button class="btn btn-primary" type="button" data-gate={DOWNLOADS.zip} data-download="zip">
           Download full kit (ZIP)&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="btn btn-ghost" href={DOWNLOADS.pdf} download data-download="pdf">
+        </button>
+        <button class="btn btn-ghost" type="button" data-gate={DOWNLOADS.pdf} data-download="pdf">
           Download PDF&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
+        </button>
       </p>
       <p class="hero-note mono">{META_LINE}</p>
       <ResourceCredit />
@@ -209,7 +213,7 @@ const sections = [
         <pre class="code" id="example-record"><code>{EXAMPLE_RECORD}</code></pre>
       </div>
       <p class="prose-note">
-        <a class="textlink" href={DOWNLOADS.schema} download data-download="schema">Download the full JSON Schema</a>
+        <button type="button" class="textlink linkbtn" data-gate={DOWNLOADS.schema} data-download="schema">Download the full JSON Schema</button>
         {' '}(draft 2020-12, {SCHEMA_FIELD_COUNT} top-level fields, invariants encoded with if/then). It is also in the ZIP, with four example records and the harness that validates them.
       </p>
     </div>
@@ -284,7 +288,7 @@ const sections = [
       </div>
       <p class="prose-note">
         {TESTS_NOTE}{' '}
-        <a class="textlink" href={DOWNLOADS.zip} download data-download="zip">Download the ZIP</a>.
+        <button type="button" class="textlink linkbtn" data-gate={DOWNLOADS.zip} data-download="zip">Download the ZIP</button>.
       </p>
     </div>
   </section>
@@ -347,9 +351,16 @@ const sections = [
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · {LICENCE_LINE}</p>
     </div>
   </section>
+  <ResourceGate
+    resource={RESOURCE_ID}
+    lead="The ZIP carries the kit's schema, four example records, the validation harness and the PDF; the PDF is this page as one document; the JSON Schema is the record format alone."
+  />
 </ResourcesLayout>
 
 <style>
+  /* A text link that is a button, because it opens the gate rather than a URL. */
+  .linkbtn { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+
   /* Same reasons as the other kit pages: global.css has no .prose p rule and
      no measure, so sibling paragraphs collide and lines run past 130
      characters inside the 1180px wrap. */

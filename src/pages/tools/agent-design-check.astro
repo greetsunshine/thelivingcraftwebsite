@@ -20,13 +20,21 @@
  *     before the form and again inside the result
  *   all-unknown returns a starting checklist ............. verdict 'starting'
  *   every box addressed still requests evidence .......... verdict 'evidence'
- *   processed in the browser ............................. no fetch on this
- *     page at all; see THE PRIVACY PROPERTY below
- *   downloadable text / print summary without login ...... Blob download,
- *     window.print() with a print stylesheet, clipboard as a fallback
+ *   processed in the browser ............................. the answers never
+ *     leave the page; see THE PRIVACY PROPERTY below
+ *   downloadable text / print summary without login ...... REVERSED on 19
+ *     September 2026 by Sunil's instruction that every download option on
+ *     every tool asks for a name and an email address first. The text file
+ *     and the print button now go through the download gate
+ *     (src/components/ResourceGate.astro). What the gate posts is the name
+ *     and the address and nothing else; the file is still a Blob built here,
+ *     from the closure, after the request is recorded, and the clipboard copy
+ *     stays ungated. The roadmap's own line is kept above so the reversal is
+ *     visible
  *   optional email signup AFTER the result, separate ..... one secondary
- *     link at the foot of the result. No inline capture, no gate
- *   no lead record from anonymous use .................... nothing posts
+ *     link at the foot of the result
+ *   no lead record from anonymous use .................... anonymous use
+ *     posts nothing; a download or a print records a resource request
  *   track starts/completions only with analytics permission ... NOTHING IS
  *     WIRED. There is no consent mechanism on this site, so the honest
  *     implementation of "only with permission" is to instrument none of it
@@ -35,8 +43,11 @@
  * THE PRIVACY PROPERTY, AND THE TWO THINGS THAT WOULD BREAK IT
  * ═══════════════════════════════════════════════════════════════════════════
  *
- * Nothing typed here about an architecture may reach a server. Two structural
- * choices hold that up, and both look like details:
+ * Nothing typed here about an architecture may reach a server. The download
+ * gate does not change that: it posts a name and an address, never an answer,
+ * and the route's entry for this tool (`local()` in
+ * src/pages/api/pipeline/download.ts) hands nothing back. Two structural
+ * choices hold the property up, and both look like details:
  *
  * 1. THE ANSWERS ARE NOT IN A <form>. They are radios in a plain <div>. A form
  *    element can be submitted — by a stray Enter keypress, by a button that
@@ -95,6 +106,7 @@
  */
 import '../../styles/templates/tool.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import {
   AREAS,
@@ -184,8 +196,9 @@ const schema: unknown[] = [
       </ol>
       <p class="privacy-note">
         Your answers are held in this page and nowhere else. They are not saved to your
-        browser, not sent to a server, and not recoverable by anybody — including us — once
-        you close the tab. That is also why there is nothing to sign in to.
+        browser, not sent to a server, and not recoverable by anybody, including us, once
+        you close the tab. The text file and the print copy ask for your name and email
+        address first; your answers still do not leave this page.
       </p>
     </section>
 
@@ -394,7 +407,7 @@ const schema: unknown[] = [
     <ul class="adc-routes">
       <li>
         <a href="/resources/guides/">The guides</a> — the reasoning behind these
-        questions, in longer form. Free, and no sign-up.
+        questions, in longer form. Free to read.
       </li>
       <li>
         <a href="/">The open cohort</a> — building a working agentic system and
@@ -407,6 +420,7 @@ const schema: unknown[] = [
       </li>
     </ul>
   </section>
+  <ResourceGate resource="agent-design-check" lead="The text file is the summary of your nineteen answers, built in your browser; your answers are not sent." manual />
 </PracticeLayout>
 
 <script>
@@ -440,6 +454,7 @@ const schema: unknown[] = [
     type Answers,
     type Standing,
   } from '../../data/agent-design-check';
+  import { mountGate } from '../../lib/resources/gate-client';
 
   const form = document.getElementById('adc-form');
   const root = document.getElementById('adc');
@@ -615,9 +630,11 @@ const schema: unknown[] = [
       // thing somebody wants once they have read a step and want to take the
       // rest to a colleague, not after scrolling past everything twice.
       const exportRow = el('div', 'export');
+      // Both hand-overs go through the download gate (data-gate); the file is
+      // still built here, by `download()`, once the gate has recorded the ask.
       const downloadBtn = el('button', 'btn btn-primary', 'Download as a text file');
       downloadBtn.type = 'button';
-      downloadBtn.addEventListener('click', download);
+      downloadBtn.dataset.gate = 'txt';
       const copyBtn = el('button', 'btn btn-ghost', 'Copy the summary');
       copyBtn.type = 'button';
       copyBtn.addEventListener('click', () => {
@@ -625,14 +642,14 @@ const schema: unknown[] = [
       });
       const printBtn = el('button', 'btn btn-ghost', 'Print or save as PDF');
       printBtn.type = 'button';
-      printBtn.addEventListener('click', () => window.print());
+      printBtn.dataset.gate = 'print';
       exportRow.append(downloadBtn, copyBtn, printBtn);
       panel.append(exportRow);
       panel.append(
         el(
           'p',
           'export-note',
-          'The file is built here and handed straight to you. It is not uploaded, and no copy of it exists anywhere else.',
+          'The file is built here, in your browser. Your answers are not uploaded, and no copy of the file exists anywhere else. The gate asks for your name and email address before handing it over.',
         ),
       );
 
@@ -808,6 +825,8 @@ const schema: unknown[] = [
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
       say('Summary downloaded as agent-design-check.txt');
     }
+
+    mountGate({ onDone: (kind) => { if (kind === 'txt') download(); } });
 
     async function copyToClipboard(): Promise<void> {
       const text = summary();

@@ -1,7 +1,7 @@
 ---
 // /resources/run-cost-model — The Run-Cost Model Tool, self-hosted.
 //
-// Until 17 September 2026 this was an Excel workbook in public/downloads. It
+// Until 17 September 2026 this was an Excel workbook in downloads. It
 // is now a page in the same shape as the POC Selection Tool, which is the
 // reference for every tool here: one framed shell, a sticky score bar and
 // progress bar, one step per section, a result step, and an email-gated PDF
@@ -32,6 +32,7 @@
 // the result and (on the server) the PDF all read one set of formulas.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
 import {
@@ -59,10 +60,8 @@ import {
   type ArmRowKey,
   type ArmComputedKey,
 } from '../../data/run-cost-model';
-import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
 
 const meta = publishedResources.find((r) => r.id === 'run-cost-model')!;
-const WORKBOOK = '/downloads/agent-run-cost-model.xlsx';
 
 const title = `${TOOL_NAME} — what an AI agent costs to run, against three cheaper ways to do the same job · The Living Craft`;
 const description =
@@ -108,8 +107,6 @@ const steps = [
 ];
 const STEP_COUNT = steps.length;
 
-const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
-const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
 const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   a.breakEvenState === 'never'
@@ -205,7 +202,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
           <p><strong>{EXAMPLE_NOTICE.lead}</strong> {EXAMPLE_NOTICE.rest}</p>
           <div class="notice-actions">
             <button class="btn btn-ghost" id="blank-start" type="button">Start from a blank model</button>
-            <a class="btn btn-ghost" href={WORKBOOK} download>Download Excel version&nbsp;<span class="arrow">↓</span></a>
+            <button class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow">↓</span></button>
           </div>
         </div>
 
@@ -454,7 +451,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
             </ol>
           </div>
           <div class="r-actions" role="group" aria-label="Model controls">
-            <button class="btn btn-primary" id="pdf" type="button">Get the PDF</button>
+            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
             <button class="btn btn-ghost" id="blank" type="button">New model</button>
           </div>
         </div>
@@ -538,45 +535,13 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href={WORKBOOK} download>Download Excel version&nbsp;<span class="arrow">↓</span></a>
+        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow">↓</span></button>
       </p>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
 
-  {/* The PDF request. A native dialog: focus is trapped, Escape closes it,
-      and nothing else on the page needs a script to make that true. */}
-  <dialog class="pdf-dialog" id="pdf-dialog" aria-labelledby="pdf-title">
-    <form method="dialog" id="pdf-form" novalidate>
-      <span class="eyebrow"><span class="num">PDF</span> Your model</span>
-      <h2 id="pdf-title">Get the PDF</h2>
-      <p class="pdf-lead">
-        The PDF carries every line you typed, every total, the outcome and the assumptions to check.
-        It is built against a name and an email address, and checked before it is handed over.
-      </p>
-      <div class="pdf-grid">
-        <label>
-          {nameField.label}
-          <input type="text" name="name" autocomplete={nameField.autocomplete} maxlength={nameField.max} required />
-        </label>
-        <label>
-          {emailField.label}
-          <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
-        </label>
-      </div>
-      <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
-      <p class="pdf-note">
-        Your figures go into the file and are not stored. Your address is used to send you this
-        tool once. It does not start any other email.
-      </p>
-      <p class="pdf-status" id="pdf-status" role="status" aria-live="polite"></p>
-      <ul class="pdf-checks mono" id="pdf-checks" hidden></ul>
-      <div class="pdf-actions">
-        <button class="btn btn-primary" id="pdf-submit" type="submit">Build the PDF</button>
-        <button class="btn btn-ghost" id="pdf-cancel" type="button">Cancel</button>
-      </div>
-    </form>
-  </dialog>
+  <ResourceGate resource="run-cost-model" lead="The PDF carries every line of your model, the four options side by side, the leading option and the assumptions to check, and is checked before it is handed over. The Excel version is the same model as a workbook." manual />
 </ResourcesLayout>
 
 <style>
@@ -1089,64 +1054,6 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
 
-  /* ── the PDF dialog ───────────────────────────────────────────────────── */
-  .pdf-dialog {
-    margin: auto;
-    border: 0;
-    padding: 0;
-    width: min(560px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
-    overflow: auto;
-    background: var(--surface-panel);
-    color: var(--text-body);
-    border-radius: var(--radius-panel);
-    box-shadow: var(--shadow-overlay);
-  }
-  .pdf-dialog::backdrop { background: rgba(23, 46, 38, 0.45); }
-  .pdf-dialog form { padding: var(--space-6); }
-  .pdf-dialog .eyebrow { display: block; margin-bottom: var(--space-3); }
-  .pdf-dialog h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
-  .pdf-lead { margin: 0 0 var(--space-5); }
-  .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-  .pdf-dialog label { display: flex; flex-direction: column; gap: var(--space-1); font-family: var(--font-marginal); font-size: var(--size-1); color: var(--text-quiet); }
-  .pdf-dialog input {
-    font-family: var(--font-body);
-    font-size: var(--size-3);
-    color: var(--text-body);
-    background: var(--surface-panel);
-    border: var(--border-w-rule) solid var(--border-field);
-    border-radius: var(--radius-field);
-    padding: 0 var(--space-4);
-    height: var(--control-h);
-    width: 100%;
-  }
-  .pdf-dialog input:focus { outline: none; border-color: var(--text-body); }
-  .pdf-dialog input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
-  .pdf-dialog .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-  .pdf-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
-  .pdf-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }
-  .pdf-status.err { color: var(--danger); }
-  .pdf-status.ok { color: var(--text-loud); }
-  .pdf-checks {
-    list-style: none;
-    padding: var(--space-3) var(--space-4);
-    margin: var(--space-3) 0 0;
-    background: var(--surface-sunken);
-    border-radius: var(--radius-inner);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    max-height: 180px;
-    overflow: auto;
-  }
-  .pdf-checks :global(li) { display: flex; gap: var(--space-2); }
-  .pdf-checks :global(li b) { flex: 0 0 5ch; font-weight: var(--weight-strong); color: var(--text-body); }
-  .pdf-checks :global(li.fail b) { color: var(--danger); }
-  .pdf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
-  .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
-
   @media (max-width: 960px) {
     .grid.arm .grow { grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr)); }
     .garm { padding-right: var(--space-2); }
@@ -1175,7 +1082,6 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     .out { padding-top: 0; text-align: left; }
     .r-secs { grid-template-columns: 1fr 1fr; }
     .cutrow { grid-template-columns: 1fr; gap: var(--space-2); }
-    .pdf-grid { grid-template-columns: 1fr; }
     .stepnav .btn-primary { margin-left: 0; }
     .rtable { display: block; overflow-x: auto; }
   }
@@ -1186,7 +1092,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     .scorebar-wrap { position: static; }
     .tool { box-shadow: none; border: 1px solid var(--border-hair); }
     .resultcard, .about-col, .grid, .arm, .example-notice { border: 1px solid var(--border-hair); }
-    .stepnav, .hero-cta, .r-actions, .pdf-dialog, .p-steps, .notice-actions { display: none !important; }
+    .stepnav, .hero-cta, .r-actions, .p-steps, .notice-actions { display: none !important; }
     .grid, .grow, .cutrow, .move, .resultcard { break-inside: avoid; }
     .cutrow { opacity: 1 !important; }
     .grid input { border: 1px solid var(--border-hair); }
@@ -1225,6 +1131,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     type RowKind,
     type SharedKey,
   } from '../../data/run-cost-model';
+  import { mountGate } from '../../lib/resources/gate-client';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -1536,121 +1443,10 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   placeBar();
   window.addEventListener('resize', placeBar);
 
-  // ---- the PDF ------------------------------------------------------------
+  // ---- the download gate ---------------------------------------------
+  // One component, one client, one route: see src/components/ResourceGate.astro.
+  mountGate({ payload: (kind) => (kind === 'pdf' ? { inputs: state, isExample: isExample() } : undefined) });
 
-  const dialog = document.getElementById('pdf-dialog') as HTMLDialogElement;
-  const form = document.getElementById('pdf-form') as HTMLFormElement;
-  const pdfStatus = $('pdf-status');
-  const pdfChecks = $('pdf-checks');
-  const submit = document.getElementById('pdf-submit') as HTMLButtonElement;
-  const cancel = $('pdf-cancel');
-
-  function openPdf() {
-    pdfStatus.textContent = '';
-    pdfStatus.className = 'pdf-status';
-    pdfChecks.hidden = true;
-    pdfChecks.replaceChildren();
-    submit.disabled = false;
-    cancel.textContent = 'Cancel';
-    if (typeof dialog.showModal === 'function') dialog.showModal();
-    else dialog.setAttribute('open', '');
-  }
-  $('pdf').addEventListener('click', openPdf);
-  cancel.addEventListener('click', () => dialog.close());
-
-  function say(text: string, kind: 'ok' | 'err' | '') {
-    pdfStatus.textContent = text;
-    pdfStatus.className = `pdf-status${kind ? ` ${kind}` : ''}`;
-  }
-
-  function showChecks(checks: { name: string; ok: boolean }[]) {
-    if (!Array.isArray(checks) || !checks.length) return;
-    pdfChecks.replaceChildren(
-      ...checks.map((c) => {
-        const li = el('li', c.ok ? undefined : 'fail');
-        li.append(el('b', undefined, c.ok ? 'ok' : 'failed'), document.createTextNode(c.name));
-        return li;
-      }),
-    );
-    pdfChecks.hidden = false;
-  }
-
-  function download(base64: string, filename: string) {
-    const bin = atob(base64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  }
-
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const data = new FormData(form);
-    const name = String(data.get('name') ?? '').trim();
-    const email = String(data.get('email') ?? '').trim();
-    if (!name || !email) {
-      say('Both fields are needed.', 'err');
-      return;
-    }
-
-    submit.disabled = true;
-    say('Checking and building the PDF.', '');
-
-    // One key per attempt. A retry after a network error is a new attempt; a
-    // repeat click while this one runs is stopped by the disabled button.
-    const requestKey =
-      typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-    try {
-      const res = await fetch('/api/pipeline/resource-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resource: 'run-cost-model',
-          requestKey,
-          answers: { name, email },
-          botcheck: String(data.get('botcheck') ?? ''),
-          inputs: state,
-          isExample: isExample(),
-          search: location.search,
-          referrer: document.referrer,
-          entryPath: location.pathname,
-        }),
-      });
-      const body = await res.json().catch(() => ({}));
-
-      if (!res.ok || !body.ok || typeof body.pdf !== 'string') {
-        const errs = Array.isArray(body.errors) ? body.errors.map((e: { message: string }) => e.message).join(' ') : '';
-        say(errs || body.error || 'We could not build the PDF just now. Try again in a moment.', 'err');
-        showChecks(body.checks);
-        submit.disabled = false;
-        return;
-      }
-
-      download(body.pdf, body.filename || 'run-cost-model.pdf');
-      cancel.textContent = 'Close';
-
-      const checks = Array.isArray(body.checks) ? body.checks : [];
-      const passed = checks.filter((c: { ok: boolean }) => c.ok).length;
-      const checkLine = checks.length ? ` Checked before download: ${passed} of ${checks.length} checks passed.` : '';
-      say(`Your PDF is downloading.${checkLine} ${body.saved ? (body.delivery ?? '') : (body.note ?? '')}`.trim(), 'ok');
-      showChecks(checks);
-    } catch {
-      say('The request did not reach the server. Check the connection and try again.', 'err');
-      submit.disabled = false;
-    }
-  });
-
-  // The fields arrive filled with the reference example from the server, and
-  // a back-navigation may restore typed values. Read them rather than assume.
   readInputs();
   update();
   goTo(0, false);

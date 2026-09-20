@@ -2913,8 +2913,22 @@ create table if not exists public.resource_requests (
   updated_at       timestamptz not null default now()
 );
 
+-- What was handed over for this request. 'email' is the addendum's original
+-- "email me this" request; the rest are the download gate (19 September
+-- 2026): every file a resource page hands out asks for a name and an address
+-- first, and the kind says which file it was. 'print' is a print button that
+-- asked before it opened the print dialogue; no file leaves the server for
+-- it. Additive: a row from before the gate reads as 'email'. The allowed set
+-- is owned by src/lib/pipeline/resources.ts (RESOURCE_KINDS), not by a check
+-- constraint, for the same reason resource_id is not constrained.
+alter table public.resource_requests
+  add column if not exists kind text not null default 'email';
+
 create index if not exists resource_requests_person_idx
   on public.resource_requests (person_id, requested_at desc);
+
+create index if not exists resource_requests_kind_idx
+  on public.resource_requests (kind, requested_at desc);
 -- Reporting counts "saved database request IDs, excluding retries" by resource.
 create index if not exists resource_requests_resource_idx
   on public.resource_requests (resource_id, requested_at desc);
@@ -2924,6 +2938,47 @@ create index if not exists resource_requests_delivery_idx
   where delivery_state <> 'queued';
 create index if not exists resource_requests_campaign_idx
   on public.resource_requests (session_campaign, session_content);
+
+-- ---------------------------------------------------------------------------
+-- resource_requests_marketing -- the table the marketing team reads
+-- ---------------------------------------------------------------------------
+-- One row per request, with the person's name and address beside it, so the
+-- console's export and the /craft/admin/requests page do not each write the
+-- join. It is a view over the two tables, never a copy: erasing a person from
+-- the console removes their rows here in the same statement, which is what a
+-- deletion request needs to be true. Test rows are left out. Nothing here is
+-- a marketing permission: `consented` is read from consents at the time of
+-- the query and is false for every download-gate row until a consent wording
+-- exists and somebody ticks it.
+create or replace view public.resource_requests_marketing as
+select
+  r.request_id,
+  r.requested_at,
+  p.person_id,
+  p.name,
+  p.original_email                                   as email,
+  r.resource_id,
+  r.kind,
+  r.resource_version,
+  r.delivery_state,
+  r.session_source,
+  r.session_medium,
+  r.session_campaign,
+  r.session_content,
+  r.entry_path,
+  r.referrer_host,
+  -- consents is append-only: the latest row for the purpose is the answer.
+  coalesce((
+    select c.state = 'granted'
+      from public.consents c
+     where c.person_id = p.person_id
+       and c.purpose = 'marketing'
+     order by c.obtained_at desc
+     limit 1
+  ), false)                                          as consented
+from public.resource_requests r
+join public.people p on p.person_id = r.person_id
+where r.is_test = false;
 
 alter table public.resource_requests enable row level security;
 
@@ -2963,7 +3018,8 @@ create or replace function public.resource_request_submit(
   p_resource_version text        default null,
   p_attribution      jsonb       default '{}'::jsonb,
   p_is_test          boolean     default false,
-  p_actor            text        default 'public_form'
+  p_actor            text        default 'public_form',
+  p_kind             text        default 'email'
 )
 returns table (
   request_id      uuid,
@@ -3016,7 +3072,7 @@ begin
   --      the winner's row back rather than raising.
   begin
     insert into public.resource_requests (
-      request_key, person_id, resource_id, resource_version, is_test,
+      request_key, person_id, resource_id, resource_version, is_test, kind,
       resource_id_dimension,
       first_source, first_medium, first_campaign, first_content, first_term,
       session_source, session_medium, session_campaign, session_content, session_term,
@@ -3028,6 +3084,7 @@ begin
       p_resource_id,
       nullif(btrim(coalesce(p_resource_version, '')), ''),
       coalesce(p_is_test, false),
+      coalesce(nullif(btrim(coalesce(p_kind, '')), ''), 'email'),
       nullif(p_attribution ->> 'resource_id', ''),
       nullif(p_attribution ->> 'first_source', ''),
       nullif(p_attribution ->> 'first_medium', ''),

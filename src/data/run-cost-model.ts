@@ -2,7 +2,7 @@
 //
 // Source of truth for /resources/run-cost-model and for the PDF that route
 // hands out. Until 17 September 2026 this model was an Excel workbook in
-// public/downloads. The formulas here are the workbook's formulas, row for
+// downloads. The formulas here are the workbook's formulas, row for
 // row, so a number on the page and a number in the spreadsheet agree. The
 // workbook is still offered from the page for people who need the model in a
 // budget meeting; if a formula changes here, change it there in the same
