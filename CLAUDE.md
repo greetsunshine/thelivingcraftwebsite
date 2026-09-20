@@ -522,8 +522,18 @@ the `/assessment` and `/caio` pages.
 
 ## Branding
 Teaching brand = **The Living Craft** (`/`). Consulting = a brand-neutral **personal
-practice** ("Sunil Mathew", mono descriptor "Fractional CAIO" / "AI Readiness"), a distinct
-but cross-linked surface. Open decision (flag to Sunil): umbrella vs personal brand vs new
+practice** (mono descriptor "Fractional CAIO" / "AI Readiness"), a distinct but
+cross-linked surface.
+
+**ONE LOCKUP ON EVERY PAGE** (Sunil, 20 September 2026: "I want the logo from the landing
+page on each and every page"). [src/components/site/BrandLockup.astro](src/components/site/BrandLockup.astro)
+draws the LC mark beside the "The Living Craft" lettering, and every header and footer on
+the site uses it — the cohort page, the practice pages, resources, policies, field notes,
+booking, `/caio`, `/assessment`, the course area and the console. It replaced the
+"Sunil Mathew" dot wordmark on the consulting pages, so those two surfaces now carry the
+Living Craft mark with their own descriptor beside it ("Fractional CAIO", "AI Readiness").
+That is a deliberate change to the separation described above, not an oversight; the copy
+on those pages is still brand-neutral. Open decision (flag to Sunil): umbrella vs personal brand vs new
 practice name — copy is written brand-neutral so the wordmark can be swapped.
 
 ## The facts module — read this before editing any offer
@@ -1297,7 +1307,10 @@ before changing a colour.
   own cream paper (`--logo-paper`) and sits on a paper tile on dark footers
   (`<Logo tile />`). It is `aria-hidden` because the text beside it names the brand.
   Sizes: 40px header, 28px on phones, 36px footer tile. The favicons come from the same
-  crop. The consulting wordmark ("Sunil Mathew") keeps its plain dot.
+  crop. **The lockup that every page's header and footer actually draws is
+  BrandLockup.astro** — the keyed mark plus the lettering, sized by height (40px/22px in a
+  header, 28px/15px on a phone, a cream tile on a dark band). Logo.astro remains for the
+  places that want the mark alone, such as the course area's nav rail.
 - **One token set for the whole site.** The public pages, `/craft`, `/craft/admin` and
   `/book/[id]` all read `theme.css`. A `theme-course.css` override kept the old system on
   the gated areas for part of 18 September and was removed the same day at Sunil's

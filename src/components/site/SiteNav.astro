@@ -37,7 +37,7 @@
  */
 import MobileMenu from './MobileMenu.astro';
 import TalkToSunilLink from './TalkToSunilLink.astro';
-import Logo from './Logo.astro';
+import BrandLockup from './BrandLockup.astro';
 
 interface Destination {
   href: string;
@@ -63,9 +63,7 @@ const isCurrent = (href: string) => {
 
 <header class="sitenav">
   <div class="wrap sitenav-inner">
-    <a class="wordmark" href="/">
-      <Logo /> the living craft
-    </a>
+    <BrandLockup href="/" />
 
     <nav class="sitenav-links" aria-label="Sections">
       {

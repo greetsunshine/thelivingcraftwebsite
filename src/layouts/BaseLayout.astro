@@ -11,6 +11,7 @@ import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
+import BrandLockup from '../components/site/BrandLockup.astro';
 import MobileMenu from '../components/site/MobileMenu.astro';
 import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import Analytics from '@vercel/analytics/astro';
@@ -63,42 +64,41 @@ const PAGE_NAV = [
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        {/* The lockup from the 19 September refinement: the LC mark and the
-            "The Living Craft" lettering, both cropped from the supplied artwork
-            with the paper keyed out (public/brand/lc-mark-keyed.webp,
-            lc-name.webp). Images of text, so the link carries the name. */}
-        <a class="wordmark brand-lockup" href="/" aria-label="The Living Craft, home">
-          <img class="brand-symbol" src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" />
-          <img class="brand-name" src="/brand/lc-name.webp" width="364" height="57" alt="" decoding="async" />
-        </a>
+        {/* The lockup, from BrandLockup.astro — the same one every other page
+            carries since 20 September. Its cohort sizes are in landing.css. */}
+        <BrandLockup href="/" />
         <nav class="navlinks" aria-label="Main navigation">
           {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
           {/* "Apply", not the package's "Enquire" (Sunil, 19 September: the
               cohort's call to action is Apply everywhere). It goes to #apply,
               which lights both routes and waits for a choice. */}
           <a class="btn btn-primary" href="#apply">Apply<span class="arrow" aria-hidden="true">→</span></a>
-          {/* Below 1080px the five links fold into this menu. */}
+          {/* ONE MENU ON PHONES (Sunil, 19 September). Below 1080px the site's
+              five links fold into this menu. Below 760px the "On this page"
+              row folds in too, as the menu's first group, so a phone has one
+              menu control instead of two. */}
           <MobileMenu breakpoint={1080}>
-            {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
-            <a href="#apply">Apply</a>
-            <TalkToSunilLink placement="menu" variant="textlink" onCohortPage />
+            <div class="mm-group mm-group-page">
+              <p class="mm-group-label">On this page</p>
+              {PAGE_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+            </div>
+            <div class="mm-group">
+              <p class="mm-group-label">The Living Craft</p>
+              {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+              <a href="#apply">Apply</a>
+              <TalkToSunilLink placement="menu" variant="textlink" onCohortPage />
+            </div>
           </MobileMenu>
         </nav>
       </div>
-      {/* ON THIS PAGE. A quiet second row with the page's own sections. On a
-          phone it folds into a native <details>, which needs no script to
-          open; the script below only closes it after a jump. */}
+      {/* ON THIS PAGE. A quiet second row with the page's own sections, on
+          screens wider than 760px. On a phone it is hidden and the same
+          links are the first group of the menu above. */}
       <div class="page-navigation">
         <div class="wrap">
           <nav class="page-links" aria-label="On this page">
             {PAGE_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
           </nav>
-          <details class="page-menu" data-page-menu>
-            <summary>On this page<span aria-hidden="true">⌄</span></summary>
-            <nav aria-label="On this page, menu">
-              {PAGE_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
-            </nav>
-          </details>
         </div>
       </div>
     </header>
@@ -183,24 +183,6 @@ const PAGE_NAV = [
         };
         publish();
         window.addEventListener('resize', publish, { passive: true });
-      })();
-    </script>
-
-    {/* THE PAGE MENU (phones). Close it after a jump, and on Escape. */}
-    <script>
-      (function () {
-        const menu = document.querySelector<HTMLDetailsElement>('[data-page-menu]');
-        if (!menu) return;
-        menu.querySelectorAll('a').forEach((a) =>
-          a.addEventListener('click', () => {
-            menu.open = false;
-          }),
-        );
-        document.addEventListener('keydown', (e) => {
-          if (e.key !== 'Escape' || !menu.open) return;
-          menu.open = false;
-          menu.querySelector('summary')?.focus();
-        });
       })();
     </script>
 

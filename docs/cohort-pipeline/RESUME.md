@@ -704,7 +704,25 @@ byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`
   `--seam-bg`/`--seam-line` and `public/textures/chapter-knot.svg` are deleted; `/`, `/about`, the
   programme pages, `/caio`, `/assessment` and the tool pages draw no divider between sections now.
   Spacing stays as it was. The V4 plain hairlines were not added in its place.
-- **Kept against the package, on Sunil's earlier instructions**: the centred last three sections, no sticky bar on phones.
+- **Kept against the package, on Sunil's earlier instructions**: no sticky bar on phones.
+- [x] **One menu on phones** (Sunil, 19 September). At 760px and below the "On this page"
+  row is hidden and its six links are the first group of the ☰ menu, in two columns, above
+  the site's links. The package's separate `<details>` page menu is gone. The panel scrolls
+  on a short phone.
+- [x] **The last three sections are left-aligned again** (Sunil, 20 September). "Before you
+  apply", "Talk first" and "Apply" share the page's left edge, like every section above
+  them, which is also what V4 draws. The centring rules of 19 September are deleted.
+- [x] **The booking widget on `/` points UP** (Sunil, 20 September): its empty, failure and
+  no-JavaScript copy says "use the form above", because the application sits above #book
+  since the V5 order. `BookingWidget` takes `formAt`; /caio and /assessment still say
+  "below", where their enquiry form really is below it.
+- [x] **The Living Craft lockup is on every page** (Sunil, 20 September). One component,
+  `src/components/site/BrandLockup.astro`, in every header and footer: the practice pages
+  (SiteNav and SiteFooter), resources, policies, field notes, booking, `/caio`,
+  `/assessment`, the course area's phone bar and the console. It replaces the "Sunil Mathew"
+  dot on the two consulting pages, which is a branding change to raise with Sunil if it was
+  not intended that far. Phone headers on /about, /resources and /assessment already wrapped
+  to two rows before this; they are now about 15px taller.
 - QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
   500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
   errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.

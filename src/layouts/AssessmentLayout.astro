@@ -10,6 +10,7 @@ import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.ast
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 import MobileMenu from '../components/site/MobileMenu.astro';
+import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
   title: string;
@@ -34,10 +35,7 @@ const year = new Date().getFullYear();
     <!-- Nav — AI Readiness Assessment, brand-neutral, cross-linked -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="#top">
-          <span class="dot"></span> Sunil Mathew
-          <span class="wordmark-sub">AI&nbsp;Readiness</span>
-        </a>
+        <BrandLockup href="#top" sub="AI Readiness" />
         <nav class="navlinks">
           <a href="#what">What it is</a>
           <a href="#deliverables">What you get</a>
@@ -67,7 +65,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> Sunil Mathew</div>
+            <div style="margin-bottom:14px"><BrandLockup tile /></div>
             <p class="muted">A fixed-scope AI diagnostic for leaders who want a straight answer. It runs on your systems, and gives you a board-ready roadmap you own.</p>
           </div>
           <div class="foot-col">

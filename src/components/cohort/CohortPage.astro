@@ -824,10 +824,10 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     `cohort-call` meeting type in meetings.ts.
 
     V4/V5 moved it BELOW the application and put the short written enquiry
-    back under it, folded, as "Ask about the cohort". That keeps the widget's
-    own empty and failure copy ("use the form below") true: the form below it
-    is now that enquiry, in this same section. If the enquiry ever leaves,
-    that sentence becomes false.
+    back under it, folded, as "Ask about the cohort". The widget's empty and
+    failure copy therefore points UP, not down (`formAt="above"`, Sunil,
+    20 September): the application is the form a reader sees first here. The
+    folded enquiry stays as the shorter way to ask a question.
 
     A call is NOT an application, and neither is an enquiry: forms.ts keeps
     `enquiry` as its own record type, never counted as an application. */}
@@ -837,7 +837,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     <h2>Talk with <em>Sunil</em></h2>
   </div>
 
-  <BookingWidget type="cohort-call" heading="Book a call about the cohort" />
+  <BookingWidget type="cohort-call" heading="Book a call about the cohort" formAt="above" />
 
   <details class="cohort-question" id="cohort-question">
     <summary>Ask about the cohort<span class="plus" aria-hidden="true">+</span></summary>

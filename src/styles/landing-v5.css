@@ -18,8 +18,6 @@
      hairline; the site had a knot divider there instead until Sunil asked
      for it to go (19 September). Neither is drawn: spacing and the
      chapters' alternating grounds separate the topics.
-   - The last three sections stay centred (Sunil, 19 September), which V4
-     sets left-aligned.
    - The sticky bar stays off phones (Sunil, 16 September).
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -69,7 +67,18 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
   color: var(--text-quiet);
 }
 .landing .page-links a:hover { color: var(--text-loud); text-decoration: underline; text-underline-offset: 4px; }
-.landing .page-menu { display: none; }
+/* The menu's two groups. "On this page" shows only on phones, where the
+   row above is hidden (Sunil, 19 September: one menu on phones). */
+.landing .mm-group + .mm-group { margin-top: 12px; }
+.landing .mm-group-label {
+  margin: 8px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.landing .mm-group-page { display: none; }
 
 /* ── hero: an ivory textile, words beside the line-drawn brain ──────────── */
 .landing .hero {
@@ -325,7 +334,7 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
 .landing #apply .route-panel { max-width: 960px; }
 .landing :is(#apply, #book) .apply-form { border-radius: 4px; }
 
-.landing .cohort-question { max-width: 860px; margin: 28px auto 0; }
+.landing .cohort-question { max-width: 860px; margin: 28px 0 0; }
 .landing .cohort-question .apply-form { margin: 12px 0 28px; }
 
 /* ── footer ─────────────────────────────────────────────────────────────── */
@@ -572,24 +581,12 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   body.landing { --chapter-gap: 64px; }
   .landing .wrap { width: calc(100% - 40px); }
   .landing .nav-inner { min-height: 76px; }
-  .landing .page-navigation { border-top: var(--border-w-hair) solid var(--border-hair); }
-  .landing .page-links { display: none; }
-  .landing .page-menu { display: block; }
-  .landing .page-menu summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 10px 0;
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: var(--text-quiet);
-    cursor: pointer;
-    list-style: none;
-  }
-  .landing .page-menu summary::-webkit-details-marker { display: none; }
-  .landing .page-menu nav { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; padding-bottom: 14px; }
-  .landing .page-menu nav a { display: flex; align-items: center; min-height: 44px; font-size: 1rem; text-decoration: none; color: var(--text-body); }
+  .landing .page-navigation { display: none; }
+  /* Six short section links in two columns, to keep the menu short. */
+  .landing .mm-group-page { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+  .landing .mm-group-page .mm-group-label { grid-column: 1 / -1; }
+  /* Both groups can be taller than a small phone: the panel scrolls. */
+  .landing .mm-panel { max-height: calc(100dvh - var(--anchor-offset, 90px) + 12px); overflow-y: auto; overscroll-behavior: contain; }
 
   .landing .hero > .wrap.hero-grid {
     display: flex;

@@ -39,9 +39,19 @@ export interface Props {
    * screen reads as a mistake rather than as emphasis.
    */
   showBlurb?: boolean;
+  /**
+   * Where the written form sits relative to this widget, so the empty and
+   * failure copy points the right way.
+   *
+   * 'below' is the default and is true on /caio and /assessment, where the
+   * enquiry form follows the widget. The cohort page passes 'above': since the
+   * V5 order (19 September) the application sits above this section, and Sunil
+   * asked on 20 September for the copy to say so.
+   */
+  formAt?: 'above' | 'below';
 }
 
-const { type, heading, mode = 'public', showBlurb = true } = Astro.props;
+const { type, heading, mode = 'public', showBlurb = true, formAt = 'below' } = Astro.props;
 const meeting = meetingType(type);
 
 // The script finds its own markup by id rather than by walking the DOM, so two
@@ -63,21 +73,26 @@ const endpoint = mode === 'learner' ? '/api/craft/booking' : '/api/booking/creat
 const slotsUrl = `${mode === 'learner' ? '/api/craft/booking' : '/api/booking/slots'}?type=${meeting.key}`;
 
 // WHEN THERE IS NOTHING TO OFFER, SAY SOMETHING TRUE FOR THIS SURFACE.
-// The public pages carry an enquiry form directly under this widget, so
-// pointing at it is the most useful thing an empty state can do. Inside the
-// gate there is no form, and telling a participant to use one sends them
-// looking for something that does not exist. That shipped once.
+// The public pages carry a written form beside this widget, so pointing at it
+// is the most useful thing an empty state can do. `formAt` says which way to
+// point, because the cohort page puts the application above this section and
+// the consulting pages put their enquiry below it. Inside the gate there is no
+// form at all, and telling a participant to use one sends them looking for
+// something that does not exist. That shipped once.
+const where = formAt;
+
 const emptyCopy =
   mode === 'learner'
     ? 'There is nothing open at the moment. I add new times each week, so it is worth looking again in a few days.'
-    : 'There is nothing open at the moment. Use the form below and I will come back with times.';
+    : `There is nothing open at the moment. Use the form ${where} and I will come back with times.`;
 
 const failCopy =
   mode === 'learner'
     ? 'Booking is not working right now. Email me and we will find a time between us.'
-    : 'Online booking is unavailable right now. Use the form below and I will reply with times.';
+    : `Online booking is unavailable right now. Use the form ${where} and I will reply with times.`;
 
-const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Please try again, or use the form below.';
+const retryCopy =
+  mode === 'learner' ? 'Please try again, or email me.' : `Please try again, or use the form ${where}.`;
 ---
 
 <div
@@ -102,7 +117,7 @@ const retryCopy = mode === 'learner' ? 'Please try again, or email me.' : 'Pleas
         {
           mode === 'learner'
             ? 'Choosing a time needs JavaScript. Email me and we will find a time between us.'
-            : 'Choosing a time needs JavaScript. Use the enquiry form below instead, and I will reply with times by email.'
+            : `Choosing a time needs JavaScript. Use the enquiry form ${where} instead, and I will reply with times by email.`
         }
       </p>
     </noscript>

@@ -213,6 +213,23 @@ header.nav {
    phones keeps the cohort header on one row. On a dark footer it sits on a
    paper tile, so the paper reads as a frame rather than a stray rectangle. */
 .lc-mark { display: block; flex: none; height: 40px; width: auto; border-radius: var(--radius-tick); }
+
+/* THE LOCKUP (BrandLockup.astro): the mark beside the "The Living Craft"
+   lettering, on every page since 20 September. Sized by height, because both
+   files are crops of one artwork. A dark band gets `tile`, which puts the pair
+   back on cream paper — the mark's shadows need it. The cohort page sets its
+   own sizes in landing.css. */
+.brand-lockup { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
+.brand-lockup .brand-symbol { display: block; flex: none; height: 40px; width: auto; }
+.brand-lockup .brand-name { display: block; flex: none; height: 22px; width: auto; }
+.brand-lockup.brand-tile {
+  gap: 8px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-page);
+  border-radius: var(--radius-control);
+}
+.brand-lockup.brand-tile .brand-symbol { height: 34px; }
+.brand-lockup.brand-tile .brand-name { height: 19px; }
 .lc-tile { display: inline-flex; flex: none; padding: var(--space-1) 6px; background: var(--logo-paper); border-radius: var(--radius-control); }
 .lc-tile .lc-mark { height: 36px; border-radius: 0; }
 .wordmark .dot { width: 9px; height: 9px; border-radius: var(--radius-pill); background: var(--texture-forest); display: inline-block; flex: none; }
@@ -599,6 +616,15 @@ footer.site :focus-visible { outline-color: var(--footer-focus); }
      estimated: see RESUME.md. The footer tile keeps its 36px. */
   .wordmark { font-size: var(--size-4); }
   .lc-mark { height: 28px; }
+  /* Phone sizes: the pair has to fit beside a call to action and the menu
+     button on one row, which the text wordmark it replaced just did. */
+  .brand-lockup { gap: 6px; }
+  .brand-lockup .brand-symbol { height: 28px; }
+  .brand-lockup .brand-name { height: 15px; }
+  /* The descriptor pill ("Fractional CAIO", "Resources") comes off a phone:
+     with the lockup beside it the header wrapped to two rows. The page's own
+     heading names the surface. */
+  .brand-lockup .wordmark-sub { display: none; }
   .nav-inner, .navlinks { column-gap: var(--space-3); }
 
   /* A second step down, and a density pass inside the panels themselves —

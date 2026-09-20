@@ -13,7 +13,7 @@
  * routes. Everything else is marked pending and turns into a link in the same
  * commit that creates its page.
  */
-import Logo from './Logo.astro';
+import BrandLockup from './BrandLockup.astro';
 
 const year = new Date().getFullYear();
 
@@ -57,7 +57,7 @@ const PRACTICE: Item[] = [
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="wordmark"><Logo tile /> the living craft</div>
+        <div class="foot-lockup"><BrandLockup tile /></div>
         <p class="muted">
           Build a working agentic system, and develop the ability to explain its design,
           examine its behaviour and guide the decisions behind it.
@@ -120,9 +120,8 @@ const PRACTICE: Item[] = [
     grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
     gap: var(--space-6);
   }
-  .foot-brand .wordmark {
+  .foot-brand .foot-lockup {
     margin-bottom: var(--space-4);
-    color: var(--footer-ink);
   }
   .sitefooter :global(:focus-visible) {
     outline-color: var(--footer-focus);
