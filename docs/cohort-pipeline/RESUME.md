@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 19 September 2026
+**Last updated:** 20 September 2026
 **Branch:** `feat/landing-refinement`, off `cta-book-now-rework` (PR #18). PR #14 is merged.
 PR #27 (the thread brain) is superseded by this work. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
@@ -726,6 +726,41 @@ byte for byte, so `landing.css` stays the base and **`src/styles/landing-v5.css`
 - QA: side-by-side with the package at 1440 and 390; functional script 77/79 (the 2 are the stubbed
   500s, expected); 0 contrast failures at 1280 and 390; no overflow 320 to 1920; `astro check` 0
   errors; `npm test` 37/37; build clean. Chat does not render locally without `ANTHROPIC_API_KEY`.
+
+---
+
+## Booking times on staging — 20 September
+
+**`.env.local` points at the STAGING Supabase, not a scratch project.** Its `events` rows
+carry `referrer_host: thelivingcraft-git-feat-lan-…vercel.app`. Production runs on a
+different project whose credentials are team-level in Vercel and are not in this project's
+`vercel env ls`. So a write from a session here reaches staging and cannot reach
+production. That is the hour this cost to work out.
+
+**Staging had no `booking_rules` at all**, which is why `/`'s "Talk with Sunil" showed
+"There is nothing open at the moment" — and why `/caio` there was just as empty. The open
+times Sunil was comparing against were production's. Fifteen rows were inserted on
+20 September, on his instruction ("no need for it in production, just needed in staging.
+The timings can be the same"): `discovery`, `cohort-call` and `scope`, Monday to Friday,
+`start_min` 960 to `end_min` 1080 — 16:00 to 18:00 Asia/Kolkata, the band production
+already offers for `discovery`. All three types now return the same 76 slots.
+
+**A booking on one call type already blocks that time on every other one**, and this is not
+new behaviour: `busyBetween()` in `lib/booking/store.ts` selects every row in `bookings`
+with no `meeting_type` filter, because it is one person and one diary. Availability is
+per type; bookings are not. `src/lib/booking/slots.test.ts` now holds that rule — including
+a guard that reads `store.ts` and fails if a `meeting_type` filter appears in
+`busyBetween()`, which no pure test could catch. `npm test` runs `src/lib/**/*.test.ts`
+now, quoted so Node expands it rather than the shell.
+
+**One thing a booking costs two slots.** Fifteen quiet minutes either side of a thirty
+minute call reach into the next half hour, so booking 16:00 also takes 16:30 off both
+lists. Existing behaviour on `/caio`, stated here because it surprises people.
+
+**A booking cannot be completed from a local dev server.** `bookSlot()` signs the manage
+token with `ADMIN_SESSION_SECRET`, which Vercel Preview has and `.env.local` does not;
+without it the request dies with `DataError: Zero-length key is not supported` before any
+row is written. Test bookings happen on staging, in a browser, past the Vercel SSO gate.
 
 ---
 

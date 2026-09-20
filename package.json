@@ -14,7 +14,7 @@
     "gather": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-latest.ts",
     "radar": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-radar.ts",
     "check": "astro check",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "test": "node --experimental-strip-types --test \"src/lib/**/*.test.ts\"",
     "eval": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/eval-agent.ts",
     "smoke": "npm run eval --",
     "gaps": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/gather-gaps.ts",
