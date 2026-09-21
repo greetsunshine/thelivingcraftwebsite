@@ -1,0 +1,73 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   templates/tool.css — the design system's TOOL template (18 September
+   package, tool.html), for every interactive resource tool.
+
+   What the template changes, and why:
+   - The heading is a working heading, not a brand moment. The package keeps
+     "branded storytelling out of dense working areas": no dark linen hero,
+     no serif display h1. Ivory ground, a deep-gold eyebrow, a Figtree bold
+     h1 (tool size, clamp 2rem to 3.5rem) and a muted lead.
+   - Primary and secondary buttons in the heading go back to their ordinary
+     colours, because they no longer sit on forest.
+
+   Applied by `body.tool-page`: ResourcesLayout sets it on all eight tools it
+   serves, and /tools/agent-design-check passes `bodyClass="tool-page"` to
+   PracticeLayout. Each tool keeps its own workspace, scoring and PDF logic;
+   only the shell and shared parts are restyled here.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tool-page .hero { padding: var(--space-8) 0 var(--space-6); background: transparent; }
+.tool-page .hero > .wrap {
+  width: auto;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: 0 var(--space-5);
+  background: none;
+  border-radius: 0;
+  color: var(--text-body);
+}
+.tool-page .hero .eyebrow { color: var(--accent-ink); }
+.tool-page .hero .eyebrow .num { color: var(--text-quiet); }
+.tool-page .hero .eyebrow a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.tool-page .hero h1 {
+  max-width: 24ch;
+  margin: var(--space-4) 0 var(--space-5);
+  font-family: var(--font-body);
+  font-size: clamp(2rem, 3.4vw, 3.5rem);
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  color: var(--text-loud);
+}
+.tool-page .hero h1 em { font-style: normal; color: inherit; }
+.tool-page .hero .lead,
+.tool-page .hero .credential { max-width: 47rem; color: var(--text-quiet); }
+.tool-page .hero .credential strong,
+.tool-page .hero .lead strong { color: var(--text-body); }
+.tool-page .hero .muted,
+.tool-page .hero .faint,
+.tool-page .hero > .wrap .hero-note { color: var(--text-quiet); }
+.tool-page .hero > .wrap :focus-visible { outline-color: var(--focus-ring); }
+.tool-page .hero > .wrap .btn-primary {
+  background: var(--control-primary-bg);
+  border-color: transparent;
+  color: var(--text-on-accent);
+}
+.tool-page .hero > .wrap .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
+.tool-page .hero > .wrap .btn-ghost { color: var(--text-body); border-color: var(--border-field); }
+.tool-page .hero > .wrap .btn-ghost:hover,
+.tool-page .hero > .wrap a.btn-ghost:hover { background: var(--surface-hover); color: var(--text-body); border-color: var(--border-field); }
+
+/* Section headings inside a tool: one colour. The gold emphasised word is a
+   brand flourish the working area does not need; the <em> stays. */
+.tool-page h2 em,
+.tool-page .sec-head h2 em { color: inherit; font-style: normal; }
+
+@media (max-width: 900px) {
+  .tool-page .hero { padding: var(--space-7) 0 var(--space-5); }
+  .tool-page .hero > .wrap { padding: 0 var(--space-4); border-radius: 0; }
+}
+@media (max-width: 560px) {
+  .tool-page .hero { padding: var(--space-6) 0 var(--space-4); }
+  .tool-page .hero h1 { font-size: 2.2rem; }
+}

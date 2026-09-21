@@ -634,7 +634,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     width: 8px;
     height: 8px;
     border-radius: var(--radius-pill);
-    background: var(--sun);
+    background: var(--texture-forest);
   }
   ol.steps { counter-reset: s; }
   ol.steps li { counter-increment: s; position: relative; padding-left: var(--space-6); }
@@ -647,7 +647,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     font-size: var(--size-1);
     font-weight: var(--weight-strong);
     color: var(--text-on-invert);
-    background: var(--noir);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     width: 20px;
     height: 20px;
@@ -772,7 +772,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   }
   .p-fill {
     height: 100%;
-    background: var(--sun);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     transition: width var(--motion-base, 160ms) ease;
   }
@@ -812,8 +812,8 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     color: var(--text-quiet);
   }
   .p-step[aria-current='step'] { color: var(--text-loud); }
-  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
-  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-step[aria-current='step'] .p-dot { background: var(--texture-forest); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--texture-forest); color: var(--text-on-accent); }
   .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
 
   /* ── sections ─────────────────────────────────────────────────────────── */
@@ -829,7 +829,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     font-size: var(--size-2);
     font-weight: var(--weight-strong);
     color: var(--text-on-invert);
-    background: var(--noir);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     width: 28px;
     height: 28px;
@@ -934,7 +934,9 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   .grid input::placeholder { color: var(--text-quiet); opacity: 0.7; }
   .grid input:focus { outline: none; border-color: var(--text-body); }
   .grid input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
-  .grid input.set { background: var(--surface-sun); color: var(--text-on-accent); }
+  /* A filled field is the action colour, on the linen: the value is yours
+     and can be changed. (Merge of main's #30 with the linen rule.) */
+  .grid input.set { background: var(--texture-forest); color: var(--text-on-accent); border-color: transparent; }
   .grow.computed { background: var(--surface-panel); margin: 0 calc(-1 * var(--space-5)); padding-left: var(--space-5); padding-right: var(--space-5); }
   .out {
     display: block;
@@ -975,7 +977,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     width: 8px;
     height: 8px;
     border-radius: var(--radius-pill);
-    background: var(--ink-1);
+    background: var(--texture-forest);
   }
   .r-flags :global(li.never), .r-flags :global(li.beyond) { color: var(--danger); }
   .r-flags :global(li.never)::before, .r-flags :global(li.beyond)::before { background: var(--danger-mark); }

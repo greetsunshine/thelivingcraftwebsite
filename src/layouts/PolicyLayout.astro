@@ -17,6 +17,8 @@
 // consent screen cannot fetch does not do its job.
 import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
+import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
   title: string;
@@ -28,6 +30,9 @@ export interface Props {
 
 const { title, description, canonical, label } = Astro.props;
 const year = new Date().getFullYear();
+// The current page is marked for a screen reader and by the underline below.
+const here = (href: string) =>
+  Astro.url.pathname.replace(/\/+$/, '') === href ? ('page' as const) : undefined;
 ---
 
 <!DOCTYPE html>
@@ -36,23 +41,30 @@ const year = new Date().getFullYear();
     <SeoHead title={title} description={description} canonical={canonical} />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="/">
-          <span class="dot"></span> the living craft
-          <span class="wordmark-sub">{label}</span>
-        </a>
+        <BrandLockup href="/" sub={label} />
         <nav class="navlinks">
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
+          <a href="/privacy" aria-current={here("/privacy")}>Privacy</a>
+          <a href="/terms" aria-current={here("/terms")}>Terms</a>
           <a href="/">Cohort</a>
           <a href="/caio">Fractional CAIO</a>
           <a href="/assessment">AI Readiness</a>
+          {/* Phones: the links above are hidden below 900px (global.css), and this
+              is how a phone reaches them. Same links, same order. */}
+          <MobileMenu>
+            <a href="/privacy" aria-current={here("/privacy")}>Privacy</a>
+            <a href="/terms" aria-current={here("/terms")}>Terms</a>
+            <a href="/">Cohort</a>
+            <a href="/caio">Fractional CAIO</a>
+            <a href="/assessment">AI Readiness</a>
+          </MobileMenu>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 
@@ -60,7 +72,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <div style="margin-bottom:14px"><BrandLockup tile /></div>
             <p class="muted">
               A teaching and consulting practice in agentic systems architecture, run by one person
               from Bangalore.

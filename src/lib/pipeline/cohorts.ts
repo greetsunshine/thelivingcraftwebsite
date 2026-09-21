@@ -127,7 +127,7 @@ export function routeIsOpen(
       open: false,
       status: 409,
       reason:
-        'The open cohort is not taking applications through this page at the moment. Ask about the cohort below, or email apply@thelivingcraft.ai.',
+        'The open cohort is not taking applications through this page at the moment. Email apply@thelivingcraft.ai and we will help you find the right route.',
     };
   }
 
@@ -138,7 +138,7 @@ export function routeIsOpen(
       open: false,
       status: 409,
       reason:
-        'Applications for the open cohort are closed at the moment. Ask about the cohort below and we will tell you when the next one opens.',
+        'Applications for the open cohort are closed at the moment. Email apply@thelivingcraft.ai and we will tell you when the next one opens.',
     };
   }
 

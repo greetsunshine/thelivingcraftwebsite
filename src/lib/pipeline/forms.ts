@@ -59,6 +59,15 @@ export interface FormDefinition {
    * confirmed place." Do not reword without an approval round.
    */
   confirmation: string;
+  /**
+   * Optional progressive-disclosure grouping, read by RouteForm.astro.
+   *
+   * Every name here must be a `fields[].name` on the SAME route — nothing else
+   * checks that, so a typo here is a field that silently never appears. When
+   * absent, RouteForm renders the flat, single-screen form it always has —
+   * this is additive, not a second field list to keep in step with the first.
+   */
+  steps?: { label: string; fields: string[] }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -193,15 +202,31 @@ export const FORMS: Record<Route, FormDefinition> = {
     ],
     confirmation:
       "Your application has been received. We'll review your experience and learning goal and contact you about the next step. An application is not a confirmed place.",
+    // Three short screens instead of one long one — the same seven fields,
+    // grouped so nobody meets all of them at once on a phone.
+    steps: [
+      { label: 'About you', fields: ['name', 'email', 'role'] },
+      { label: 'Your experience', fields: ['experience', 'goal'] },
+      { label: 'A few more details', fields: ['funding', 'organisation', 'phone', 'discovery'] },
+    ],
   },
 
   /**
    * A question about the cohort.
    *
-   * Kept separate from the application on purpose. The brief: "no application
-   * milestone inferred". Somebody asking whether the schedule works for them
-   * has not applied, and counting them as an applicant overstates the pipeline
-   * to the one person who most needs it to be accurate.
+   * NO LONGER SURFACED AS A PUBLIC FORM. The cohort page carried this as a
+   * separate "Ask about the cohort" panel until the CTA rework replaced that
+   * secondary path with Book Now (a real appointment, not a written enquiry)
+   * and merged the two commitment routes — apply for yourself, or arrange
+   * learning for a team — into one branching application flow. See
+   * CohortPage.astro's route chooser.
+   *
+   * The definition stays: the API still validates the `enquiry` route, the
+   * console still reads its labels for any row already in the pipeline, and
+   * the comms templates (`enquiry-receipt`, `enquiry-day2`, …) still exist for
+   * whatever reaches this route by email or by a direct POST. Deleting the
+   * type would touch the database, the console and the template bank for a
+   * change that is only about which forms the page renders.
    */
   enquiry: {
     route: 'enquiry',
@@ -281,6 +306,11 @@ export const FORMS: Record<Route, FormDefinition> = {
     ],
     confirmation:
       "Your enquiry has been received. We'll contact you about your question.",
+    steps: [
+      { label: 'About you', fields: ['name', 'email', 'organisation', 'role'] },
+      { label: 'What the team needs', fields: ['goal'] },
+      { label: 'A few more details', fields: ['group_size', 'industry', 'phone', 'discovery'] },
+    ],
   },
 };
 
@@ -324,7 +354,13 @@ export interface FieldError {
   message: string;
 }
 
-const messageFor = (field: Field, code: FieldError['code']): string => {
+/**
+ * Exported so the client-side per-step check in RouteForm.astro can raise the
+ * exact same wording the server does, rather than a second copy of it that
+ * drifts. See the module comment at the top of this file — this is the same
+ * argument, applied to error text instead of field definitions.
+ */
+export const messageFor = (field: Field, code: FieldError['code']): string => {
   switch (code) {
     case 'required':
       return `${field.label} is needed.`;

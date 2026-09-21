@@ -31,6 +31,7 @@ import '../styles/global.css';
 import SeoHead from '../components/SeoHead.astro';
 import SiteNav from '../components/site/SiteNav.astro';
 import SiteFooter from '../components/site/SiteFooter.astro';
+import StickyApplyBar from '../components/site/StickyApplyBar.astro';
 import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
@@ -49,9 +50,11 @@ export interface Props {
    * honest placeholders until the owner supplies the facts they need.
    */
   noindex?: boolean;
+  /** A page-template class for the body element, e.g. 'tool-page' (see styles/templates). */
+  bodyClass?: string;
 }
 
-const { title, description, canonical, schema, noindex = false } = Astro.props;
+const { title, description, canonical, schema, noindex = false, bodyClass } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -60,7 +63,7 @@ const { title, description, canonical, schema, noindex = false } = Astro.props;
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
-  <body>
+  <body class={bodyClass}>
     <GoogleTagManagerNoscript />
     <a class="skip" href="#main">Skip to content</a>
 
@@ -73,6 +76,7 @@ const { title, description, canonical, schema, noindex = false } = Astro.props;
     <SiteFooter />
 
     <Track />
+    <StickyApplyBar />
     <Analytics />
     <SpeedInsights />
   </body>

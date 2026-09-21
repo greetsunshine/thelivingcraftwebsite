@@ -11,6 +11,7 @@
 // index, and a booking URL in a search result would be a leaked credential.
 import '../styles/global.css';
 import '../styles/craft.css';
+import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
   title: string;
@@ -27,22 +28,24 @@ const year = new Date().getFullYear();
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>{title} · The Living Craft</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
       <div class="wrap nav-inner">
-        <span class="wordmark"><span class="dot"></span> the living craft</span>
+        <BrandLockup />
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <div class="wrap" style="max-width:760px;padding-top:var(--space-7);padding-bottom:var(--space-8)">
         <slot />
       </div>

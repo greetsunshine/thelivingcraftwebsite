@@ -23,6 +23,11 @@ for (const meeting of MEETING_TYPES) {
   openByType.set(meeting.key, (await availableSlots(meeting)).slice(0, 12));
 }
 
+// A type that borrows another type's hours (`rulesFrom`) gets no band of its
+// own: a band filed under it would never be read, and would look like it was.
+const ownHours = MEETING_TYPES.filter((m) => !m.rulesFrom);
+const borrowing = MEETING_TYPES.filter((m) => m.rulesFrom);
+
 const googleOn = calendarConfigured();
 // Only calls that are still going ahead. A cancelled booking has no calendar
 // event by definition, and counting those as "no invite" cried wolf every time
@@ -189,6 +194,14 @@ const clock = (minutes: number) =>
     Written in your own time ({HOST_TIMEZONE.replace('_', ' ')}). Each band is cut into slots the
     length of that call type, so 16:00 to 18:00 gives four 30-minute discovery calls.
   </p>
+  {
+    borrowing.length > 0 && (
+      <p class="muted" style="font-size:13.5px;max-width:64ch;margin-bottom:14px">
+        {borrowing.map((m) => `${m.label} uses the ${meetingType(m.rulesFrom!)?.label ?? m.rulesFrom} hours`).join('. ')}.
+        Edit those hours and both change together.
+      </p>
+    )
+  }
 
   <div class="table-scroll">
     {
@@ -237,7 +250,7 @@ const clock = (minutes: number) =>
     <span class="label">Add a band</span>
     <div class="toolbar" style="margin-top:10px;margin-bottom:0">
       <select id="rule-type">
-        {MEETING_TYPES.map((m) => <option value={m.key}>{m.label} ({m.durationMin} min)</option>)}
+        {ownHours.map((m) => <option value={m.key}>{m.label} ({m.durationMin} min)</option>)}
       </select>
       <select id="rule-day">
         {WEEKDAYS.map((day, i) => <option value={i} selected={i === 2}>{day}</option>)}

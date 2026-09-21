@@ -191,8 +191,12 @@ const schema = [
           <div class="mcap">Sunil Mathew · Bengaluru, India</div>
         </div>
         <div>
-          <p>I'm <strong>Sunil Mathew</strong>. I have spent twenty-six years building and leading engineering at three Fortune-100 companies: <strong>Google, Amazon, and Walmart</strong>. The systems served up to <strong>100M+ users</strong>. I led teams of up to 150 people across the US, UK, China, and India.</p>
-          <p>At Google I shipped a Generative-AI product and ran a platform at <strong>~31 billion executions a week</strong>. At Amazon I re-architected Prime's membership core. At Walmart I modernised <strong>300+ products</strong> from legacy systems into microservices, and built the AI and data-science capability. Today I lead <strong>agentic-AI</strong> work: multi-agent orchestration, RAG, evals, LLM-Ops. I am also building an agentic-AI product of my own. So my judgment is current, not a memory.</p>
+          {/* Unsourced scale and product figures (100M+ users, teams of 150,
+              ~31 billion weekly executions, 300+ products) removed on
+              19 September: the 11 September QA finding and CLAUDE.md's
+              Instructor rule. Restoring any needs a dated approval record. */}
+          <p>I'm <strong>Sunil Mathew</strong>. I have spent twenty-six years building and leading engineering at <strong>Google, Amazon, and Walmart</strong>, and at startups. I have built and led engineering teams across the US, UK, China, and India.</p>
+          <p>Today I lead <strong>agentic-AI</strong> work: multi-agent orchestration, RAG, evals, LLM-Ops. I am also building an agentic-AI product of my own. So my judgment is current, not a memory.</p>
           <div class="pullquote">"Here is the rare part for this role. I have done both the executive strategy and the production delivery. I also teach this craft to senior engineers. So transferring capability to your team is not an afterthought. It is how I work."</div>
           <p style="margin-top:24px"><a href="/" class="link-ochre">See how I teach the craft at The Living Craft <span class="arrow" aria-hidden="true">→</span></a></p>
           <div class="signature">— Sunil Mathew</div>
@@ -387,11 +391,11 @@ const schema = [
   /* problem prose */
   .prose{max-width:62ch}
   .prose p{font-size:18px;color:var(--ink-soft);margin-bottom:22px}
-  .prose .prose-emph{font-family:var(--font-display);font-weight:var(--weight-heavy);font-size:24px;color:var(--ink);margin-top:4px}
+  .prose .prose-emph{font-family:var(--font-display);font-weight: var(--weight-display);font-size:24px;color:var(--ink);margin-top:4px}
 
   /* light pull-quote (dark version lives in global .pullquote) */
   .quote-light{
-    font-family:var(--font-display);font-weight:var(--weight-heavy);font-size:clamp(22px,2.6vw,30px);line-height:1.4;
+    font-family:var(--font-display);font-weight: var(--weight-display);font-size:clamp(22px,2.6vw,30px);line-height:1.4;
     color:var(--ink);border-left:2px solid var(--clay);padding-left:26px;max-width:58ch;margin:52px 0 0;
   }
 
@@ -402,7 +406,7 @@ const schema = [
     padding:26px 0;border-bottom:1px solid var(--line);
   }
   .compare .row:first-child{border-top:1px solid var(--line)}
-  .compare .vs{font-family:var(--font-display);font-size:22px;font-weight:var(--weight-strong);color:var(--ink-soft);line-height:1.2}
+  .compare .vs{font-family: var(--font-heading);font-size:22px;font-weight:var(--weight-strong);color:var(--ink-soft);line-height:1.2}
   .compare .vs span{color:var(--ink);display:block;font-size:24px}
   .compare .row p{font-size:16.5px;color:var(--ink-soft);max-width:64ch}
   .compare .row p em{font-style:italic;color:var(--clay)}
@@ -447,7 +451,7 @@ const schema = [
     font-family:var(--font-mono);font-size:var(--size-1);letter-spacing:var(--tracking-label);text-transform:none;
     padding:5px 12px;border-radius:var(--radius-pill);
   }
-  .tier .tname{font-family:var(--font-display);font-size:26px;font-weight:var(--weight-strong)}
+  .tier .tname{font-family: var(--font-heading);font-size:26px;font-weight:var(--weight-strong)}
   .tier .tdays{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--clay);margin:6px 0 18px}
   .tier p{font-size:15px;color:var(--ink-soft);flex:1}
   .tier .tprice{font-family:var(--font-display);font-size:30px;font-weight:var(--weight-normal);color:var(--ink);margin:24px 0 22px}
@@ -458,7 +462,7 @@ const schema = [
 
   /* closing line under the form */
   .closing-line{
-    max-width:54ch;margin:44px auto 0;font-family:var(--font-display);font-weight:var(--weight-heavy);
+    max-width:54ch;margin:44px auto 0;font-family:var(--font-display);font-weight: var(--weight-display);
     font-size:clamp(20px,2.4vw,26px);line-height:1.4;color:var(--ink);
   }
 

@@ -1,0 +1,42 @@
+---
+/**
+ * FormField — one labelled field (18 September package, "Forms").
+ *
+ * The rules it enforces so a page cannot forget them:
+ * - the label is a real <label for>, never a placeholder;
+ * - the helper and the error are tied to the input with aria-describedby;
+ * - an error sets aria-invalid and stays beside the field;
+ * - "optional" is written out, so required is the default a reader assumes.
+ *
+ * For a <select> or anything custom, put it in the slot and give it the
+ * `id` you pass here; the label and messages are still wired to it.
+ */
+export interface Props {
+  id: string;
+  name?: string;
+  label: string;
+  type?: 'text' | 'email' | 'tel' | 'number' | 'url' | 'textarea';
+  required?: boolean;
+  helper?: string;
+  error?: string;
+  value?: string;
+  autocomplete?: string;
+  maxlength?: number;
+}
+const { id, name = id, label, type = 'text', required = false, helper, error, value, autocomplete, maxlength } = Astro.props;
+const describedBy = [helper && `${id}-help`, error && `${id}-err`].filter(Boolean).join(' ') || undefined;
+const custom = Astro.slots.has('default');
+---
+
+<div class="lc-field">
+  <label for={id}>{label}{!required && <span class="lc-optional"> (optional)</span>}</label>
+  {custom ? (
+    <slot />
+  ) : type === 'textarea' ? (
+    <textarea id={id} name={name} required={required} aria-invalid={error ? 'true' : undefined} aria-describedby={describedBy} maxlength={maxlength}>{value}</textarea>
+  ) : (
+    <input id={id} name={name} type={type} required={required} value={value} autocomplete={autocomplete} maxlength={maxlength} aria-invalid={error ? 'true' : undefined} aria-describedby={describedBy} />
+  )}
+  {helper && <p class="lc-helper" id={`${id}-help`}>{helper}</p>}
+  {error && <p class="lc-field-error" id={`${id}-err`}>{error}</p>}
+</div>

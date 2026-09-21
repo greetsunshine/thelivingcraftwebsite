@@ -80,11 +80,12 @@ const cohort = NAV.filter((n) => n.group === 'cohort');
     <!-- Belt and braces: middleware sets X-Robots-Tag on the response, this
          covers a crawler that somehow renders the page without seeing it. -->
     <meta name="robots" content="noindex, nofollow, noarchive" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -93,7 +94,9 @@ const cohort = NAV.filter((n) => n.group === 'cohort');
   <body data-density="compact">
     <header class="admin-nav">
       <div class="wrap admin-nav-inner">
-        <a class="admin-mark" href="/craft/admin"><span class="dot"></span> Console</a>
+        <a class="admin-mark" href="/craft/admin" aria-label="The Living Craft console">
+          <img src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" /> Console
+        </a>
         <button
           type="button"
           class="admin-burger"

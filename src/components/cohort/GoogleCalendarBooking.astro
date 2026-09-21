@@ -7,13 +7,20 @@
  * generated popup button; if it is blocked, slow or unavailable, the same link
  * opens the booking page directly in a new tab. A visitor is therefore never
  * left with a dead scheduling control.
+ *
+ * LABEL: "Book now". This used to read "Schedule an appointment" before the
+ * CTA rename — same control, same gating, same fallback behaviour. Every
+ * placement on the site (hero, closing, the top nav, the sticky bar, contact)
+ * renders through this one component so the label never drifts between them.
  */
 export interface Props {
   url: string;
-  placement: 'hero' | 'closing';
+  placement: 'hero' | 'closing' | 'nav' | 'sticky' | 'contact';
+  /** Defaults to 'Book now'. Only the label varies — never the target or the fallback. */
+  label?: string;
 }
 
-const { url, placement } = Astro.props;
+const { url, placement, label = 'Book now' } = Astro.props;
 ---
 
 <span class="booking-widget" data-google-calendar-booking data-booking-url={url}>
@@ -25,7 +32,7 @@ const { url, placement } = Astro.props;
     data-booking-trigger
     data-booking-placement={placement}
   >
-    Schedule an appointment
+    {label}
   </a>
   <span class="booking-embed-host" data-booking-embed-host aria-hidden="true">
     <span data-booking-embed-target></span>
@@ -114,7 +121,7 @@ const { url, placement } = Astro.props;
         api.load({
           url,
           color: '#ffc123',
-          label: 'Schedule an appointment',
+          label: trigger.textContent?.trim() || 'Book now',
           target,
         });
 

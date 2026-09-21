@@ -1,0 +1,737 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   landing-v5.css — the V4 and V5 layers of the cohort page (`/`).
+
+   SOURCE OF TRUTH. docs/2026-09-19_Landing_Page_V5_Illustrated-…/ (kept out
+   of the repo). The package loads three stylesheets in order: base.css (the
+   refinement, already ported as landing.css), v4.css (an ivory textile
+   opening and quieter grouped reading) and illustrated.css (the eleven
+   drawings). This file is the last two, rule by rule, in that order, at the
+   package's breakpoints (1200, 1080, 760, 390). BaseLayout imports it after
+   landing.css, so an equal selector here wins.
+
+   WHERE THIS DEPARTS FROM THE PACKAGE, AND WHY.
+   - Colours are tokens. The package's two warm tones are --surface-cloth and
+     --line-warm in theme.css; its soft greens are --surface-hover.
+   - Buttons are flat forest on every page (Sunil, 19 September); the linen
+     is only for dark surfaces.
+   - No divider between sections. V4 marks a new topic with a plain
+     hairline; the site had a knot divider there instead until Sunil asked
+     for it to go (19 September). Neither is drawn: spacing and the
+     chapters' alternating grounds separate the topics.
+   - The sticky bar stays off phones (Sunil, 16 September).
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ══ V4 ══════════════════════════════════════════════════════════════════ */
+
+body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
+
+.landing .chapter:not(.chapter-opening) { padding-top: 0; }
+.landing .chapter > section { position: relative; }
+.landing .chapter > section:first-child:not(.hero) { padding-top: var(--chapter-gap); }
+.landing .chapter > section:last-child { padding-bottom: var(--chapter-gap); }
+.landing .chapter > .band { padding-bottom: 64px; }
+.landing .chapter > .band:last-child { padding-bottom: var(--chapter-gap); }
+.landing .chapter > section + section > .sec-head h2 { font-size: clamp(1.9rem, 2.9vw, 2.65rem); }
+
+.landing .sec-head { margin-bottom: 36px; }
+.landing .sec-head .eyebrow { margin-bottom: 16px; }
+.landing .eyebrow { letter-spacing: 0.035em; }
+.landing .lead { font-size: 1.25rem; line-height: 1.55; }
+.landing p { max-width: 70ch; }
+.landing h1 { color: var(--sun); }
+
+/* ── header: the site's sections, then "On this page" ───────────────────── */
+.landing header.nav { background: var(--surface-page); }
+.landing .nav-inner { min-height: 88px; }
+.landing .navlinks { gap: 24px; }
+.landing .navlinks > a { font-size: 1rem; }
+.landing .brand-lockup { gap: 8px; }
+.landing .brand-lockup .brand-symbol { height: 44px; }
+.landing .brand-lockup .brand-name { height: 24px; }
+
+.landing .page-navigation {
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  background: var(--surface-page);
+}
+.landing .page-links {
+  display: flex;
+  gap: 32px;
+  min-height: 46px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.landing .page-links a {
+  font-size: 0.875rem;
+  text-decoration: none;
+  padding-block: 10px;
+  color: var(--text-quiet);
+}
+.landing .page-links a:hover { color: var(--text-loud); text-decoration: underline; text-underline-offset: 4px; }
+/* The menu's two groups. "On this page" shows only on phones, where the
+   row above is hidden (Sunil, 19 September: one menu on phones). */
+.landing .mm-group + .mm-group { margin-top: 12px; }
+.landing .mm-group-label {
+  margin: 8px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.landing .mm-group-page { display: none; }
+
+/* ── hero: an ivory textile, words beside the line-drawn brain ──────────── */
+.landing .hero {
+  --landing-focus: var(--focus-ring);
+  position: relative;
+  isolation: isolate;
+  padding: 0;
+  overflow: clip;
+  background: var(--surface-page);
+  color: var(--sun);
+}
+/* The fabric, at 64%: the only textile ground on the page. */
+.landing .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/textures/ivory-weave.svg') 0 0 / 48px 48px repeat;
+  opacity: 0.64;
+  pointer-events: none;
+}
+.landing .hero > .wrap.hero-grid {
+  grid-template-columns: 1.08fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding-block: 62px 42px;
+  min-height: 600px;
+}
+/* A soft ivory wash behind the words, so the weave never sits under text. */
+.landing .hero-copy {
+  background: radial-gradient(
+    ellipse at 20% 50%,
+    color-mix(in srgb, var(--surface-page) 95%, transparent) 38%,
+    color-mix(in srgb, var(--surface-page) 90%, transparent) 72%,
+    transparent 100%
+  );
+}
+.landing .hero .eyebrow {
+  color: var(--accent-ink);
+  font-size: 0.875rem;
+  letter-spacing: 0.035em;
+  max-width: none;
+  margin-bottom: 26px;
+}
+.landing .hero h1 {
+  font-size: clamp(2.65rem, 4.25vw, 4rem);
+  max-width: 16ch;
+  line-height: 1.09;
+  letter-spacing: -0.035em;
+  text-wrap: initial;
+  color: var(--sun);
+}
+.landing .hero h1 br { display: block; }
+.landing .hero-intro {
+  font-size: 1.375rem;
+  line-height: 1.45;
+  max-width: 38ch;
+  margin-top: 28px;
+  font-weight: var(--weight-strong);
+  color: var(--text-loud);
+}
+.landing .hero-description {
+  font-size: 1.125rem;
+  line-height: 1.62;
+  max-width: 53ch;
+  margin-top: 18px;
+  color: var(--text-body);
+}
+.landing .hero-cta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 30px;
+  max-width: 600px;
+  align-items: stretch;
+}
+/* Two equal routes, both flat forest. Buttons never take the linen. */
+.landing .hero .btn-primary {
+  background: var(--control-primary-bg);
+  border-color: transparent;
+  color: var(--text-on-accent);
+  padding: 14px 17px;
+  line-height: 1.35;
+  justify-content: space-between;
+  text-align: left;
+}
+.landing .hero .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
+
+.landing .woven-brain { position: relative; min-width: 0; width: calc(100% + 45px); margin: 0 -45px 0 0; }
+.landing .brain-art { display: block; width: 100%; height: auto; overflow: visible; }
+
+.landing .hero > .wrap.intro-strip {
+  grid-template-columns: 210px 1fr;
+  gap: 36px;
+  align-items: center;
+  border-top: var(--border-w-hair) solid var(--line-warm);
+  padding-block: 26px 32px;
+}
+.landing .intro-strip .portrait .tag { color: var(--text-quiet); }
+.landing .intro-strip .portrait .tag b { color: var(--sun); font-size: 1rem; }
+.landing .intro-strip .portrait .frame { width: 70px; height: 82px; }
+.landing .founder-intro {
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 85ch;
+  color: var(--text-body);
+  background: color-mix(in srgb, var(--surface-page) 90%, transparent);
+}
+
+/* ── two ways to learn ─────────────────────────────────────────────────── */
+/* `.chapter >` to out-rank landing.css's in-chapter spacing, as the
+   package's !important does. */
+.landing .chapter > .route-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  padding-top: 48px;
+  padding-bottom: 24px;
+}
+.landing .route-overview article {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding-top: 28px;
+  border-top: 2px solid var(--sun);
+}
+.landing .route-overview h2 { font-size: 2rem; margin-bottom: 22px; max-width: none; }
+.landing .route-overview p { font-size: 1rem; line-height: 1.6; }
+.landing .route-overview p + p { margin-top: 16px; }
+.landing .route-overview .route-kicker { font-size: 0.875rem; color: var(--accent-ink); font-weight: var(--weight-strong); margin: 0 0 14px; }
+.landing .route-overview .route-fact { font-weight: var(--weight-strong); color: var(--text-loud); }
+.landing .route-overview .route-small { font-size: 0.875rem; color: var(--text-quiet); margin-top: 12px; }
+.landing .route-overview .textlink { font-size: 1rem; margin-top: auto; padding-top: 34px; min-height: 44px; }
+
+/* ── reading sections ───────────────────────────────────────────────────── */
+.landing #fit { padding-top: 72px; gap: 64px; }
+.landing #fit .lead { font-size: 1.125rem; }
+
+.landing #example .sec-head h2 { max-width: 24ch; }
+.landing .example-body p { max-width: 53ch; }
+.landing .two-up { gap: 64px; }
+
+.landing #outcomes { padding-bottom: 40px; }
+.landing #transform { column-gap: 64px; padding-bottom: 52px; }
+.landing .tlist p { font-size: 1.125rem; line-height: 1.62; }
+
+.landing #takeaways .cards3 { gap: 40px; }
+.landing #takeaways .card { border-top: 0; padding-top: 0; }
+.landing #takeaways .card .k { font-size: 0.875rem; }
+
+/* "Open cohort": which sections describe the cohort and not a team. */
+.landing .scope-label {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--accent-ink);
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+}
+.landing .story .scope-label { margin-top: 0; }
+
+.landing #curriculum { column-gap: 64px; }
+.landing .modules { column-gap: 64px; row-gap: 44px; }
+.landing .mod:nth-child(even) { margin-top: 0; }
+.landing .mod { padding: 24px 0 0; border-left: 0; border-top: var(--border-w-hair) solid var(--line-warm); }
+.landing .mod::before { display: none; }
+.landing .mod p { font-size: 1.125rem; line-height: 1.62; }
+.landing .mod .mk { margin-bottom: 16px; }
+
+.landing .story { gap: 64px; grid-template-columns: 0.76fr 1.24fr; }
+.landing .maker-portrait { top: calc(var(--anchor-offset, 150px) + 16px); }
+.landing .story p { font-size: 1.125rem; line-height: 1.62; }
+.landing .story .lead { font-size: 1.25rem; }
+.landing .story p + p { margin-top: 24px; }
+.landing .maker-portrait .mframe { aspect-ratio: 4 / 4.9; }
+
+.landing .statband { padding: 20px 0; margin-bottom: 40px; }
+.landing .stat .big { font-size: 1.35rem; font-weight: var(--weight-strong); }
+.landing .stat .cap { margin-top: 4px; }
+
+.landing .pullquote { font-size: 1.65rem; line-height: 1.45; color: var(--accent-ink); margin-top: 30px; }
+.landing .quote-attrib { font-size: 0.875rem; }
+
+.landing #live-experience .card h3 { font-size: 1.5rem; line-height: 1.35; }
+.landing #live-experience .card p { font-size: 1.125rem; }
+
+.landing .price-card { border-radius: 4px; }
+.landing .price-card .amt { font-size: 3.4rem; }
+.landing .price-card .terms { font-size: 1.0625rem; }
+.landing .price-card li { font-size: 1rem; }
+
+/* ── enterprise learning ────────────────────────────────────────────────── */
+.landing .enterprise-grid {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 64px;
+  align-items: center;
+}
+.landing .enterprise-grid h3 { font-size: 1.375rem; margin-bottom: 22px; }
+.landing .enterprise-grid p { font-size: 1.125rem; line-height: 1.62; }
+.landing .enterprise-facts { background: var(--surface-hover); padding: 30px; border-radius: 4px; }
+.landing .enterprise-facts dl { margin: 0; }
+.landing .enterprise-facts dl > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+  font-size: 1rem;
+}
+.landing .enterprise-facts dt { font-weight: var(--weight-strong); color: var(--text-loud); }
+.landing .enterprise-facts dd { margin: 0; }
+.landing .enterprise-facts .btn { margin-top: 28px; width: 100%; justify-content: space-between; }
+.landing .enterprise-facts .textlink { display: block; font-size: 1rem; margin-top: 20px; }
+
+/* The same open disclosure as the questions: summary row, plus sign. */
+.landing .company-material,
+.landing .cohort-question {
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.landing .company-material { margin-top: 36px; max-width: 850px; }
+.landing .company-material summary,
+.landing .cohort-question summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 72px;
+  padding: 20px 0;
+  font-size: 1.125rem;
+  font-weight: var(--weight-strong);
+  line-height: 1.5;
+  color: var(--text-loud);
+  cursor: pointer;
+  list-style: none;
+}
+.landing .company-material summary::-webkit-details-marker,
+.landing .cohort-question summary::-webkit-details-marker { display: none; }
+.landing .company-material .plus,
+.landing .cohort-question .plus { font-size: 26px; font-weight: 400; line-height: 1.5; color: var(--accent-ink); }
+.landing .company-material[open] .plus,
+.landing .cohort-question[open] .plus { transform: rotate(45deg); }
+.landing .company-material p { padding: 0 0 24px; font-size: 1.125rem; }
+.landing .company-material p + p { margin-top: 0; }
+
+/* ── the last chapter ───────────────────────────────────────────────────── */
+.landing #questions .faq { max-width: 940px; }
+.landing .faq details p { line-height: 1.65; }
+
+.landing #apply .route-choice { gap: 24px; }
+.landing #apply .route-choice,
+.landing #apply .route-panel { max-width: 960px; }
+.landing :is(#apply, #book) .apply-form { border-radius: 4px; }
+
+.landing .cohort-question { max-width: 860px; margin: 28px 0 0; }
+.landing .cohort-question .apply-form { margin: 12px 0 28px; }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+.landing .foot-grid { grid-template-columns: 1.35fr 1fr 1fr 1fr; }
+.landing .foot-grid > .foot-col:last-child {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 28px;
+}
+.landing .foot-col:last-child h2 { margin-bottom: 0; }
+.landing footer.site::before { height: 8px; }
+.landing .foot-bottom { align-items: center; flex-wrap: wrap; }
+.landing .motion-setting {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  border-bottom: var(--border-w-hair) solid var(--footer-rule);
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--footer-muted);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.landing .motion-setting:hover { color: var(--footer-ink); }
+.landing .motion-setting:disabled { cursor: default; }
+
+.landing .sa-actions { margin-right: 0; }
+.landing .sa-copy { margin-right: auto; }
+.landing .sa-inner { gap: 20px; }
+
+/* ── the brain: fibre travel and junction light on one 8-second loop ─────── */
+.landing .brain-art .signal { stroke-dasharray: 0.13 0.87; stroke-dashoffset: 1; opacity: 0; }
+.landing .brain-art .junction { opacity: 0.14; }
+.landing .is-looping .signal { animation: fibre-arrival 8s linear infinite; animation-play-state: paused; }
+.landing .is-looping .junction { animation: node-arrival 8s ease-in-out infinite; animation-play-state: paused; }
+.landing .is-visible .signal,
+.landing .is-visible .junction { animation-play-state: running; }
+.landing .signal-1 { animation-delay: 0.3s !important; }
+.landing .signal-2 { animation-delay: 0.65s !important; }
+.landing .signal-3 { animation-delay: 1s !important; }
+.landing .signal-4 { animation-delay: 0.7s !important; }
+.landing .signal-5 { animation-delay: 1.1s !important; }
+.landing .signal-6 { animation-delay: 1.5s !important; }
+.landing .signal-7 { animation-delay: 2.1s !important; }
+.landing .pulse-1 { animation-delay: 0.3s !important; }
+.landing .pulse-2 { animation-delay: 0.7s !important; }
+.landing .pulse-3 { animation-delay: 1.1s !important; }
+.landing .pulse-4 { animation-delay: 1.5s !important; }
+.landing .pulse-5 { animation-delay: 1s !important; }
+.landing .pulse-6 { animation-delay: 2.1s !important; }
+.landing .pulse-7 { animation-delay: 0.65s !important; }
+@keyframes fibre-arrival {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  5% { opacity: 0.85; }
+  26% { stroke-dashoffset: 0; opacity: 0.85; }
+  32%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes node-arrival {
+  0%, 21% { opacity: 0.14; }
+  29% { opacity: 0.95; }
+  43%, 100% { opacity: 0.14; }
+}
+html[data-motion='paused'] body.landing .signal { animation: none !important; opacity: 0 !important; }
+html[data-motion='paused'] body.landing .junction { animation: none !important; opacity: 0.14 !important; }
+
+/* ══ V5: the drawings ═══════════════════════════════════════════════════ */
+
+.landing .concept-figure { position: relative; margin: 0; min-width: 0; isolation: isolate; }
+.landing .concept-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.landing .concept-figure figcaption { font-size: 0.875rem; line-height: 1.5; color: var(--text-quiet); padding-top: 14px; }
+
+/* One trace, then rest. The static drawing is always there. */
+.landing .concept-figure .art-travel { opacity: 0; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.landing .concept-figure.art-play .art-travel {
+  animation: thread-trace 3.6s cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+  animation-play-state: paused;
+}
+.landing .concept-figure.art-in-view .art-travel { animation-play-state: running; }
+.landing .concept-figure.art-in-view .art-junction { animation: junction-settle 3.6s ease-out 1 both; }
+@keyframes thread-trace {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  10% { opacity: 1; }
+  75% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes junction-settle {
+  0%, 15%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+html[data-motion='paused'] body.landing .concept-figure .art-travel { animation: none !important; opacity: 0 !important; }
+html[data-motion='paused'] body.landing .concept-figure .art-junction { animation: none !important; }
+
+.landing .art-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--sun);
+}
+.landing .art-labels span { max-width: 14ch; }
+
+.landing .art-decision { margin-top: 38px; padding-top: 20px; border-top: var(--border-w-hair) solid var(--border-hair); }
+.landing .art-decision .concept-svg { max-width: 560px; }
+.landing #example .example { align-items: start; }
+
+.landing #review { padding-bottom: 60px; }
+.landing #review .two-up { grid-template-columns: 1.04fr 1fr; gap: 64px; align-items: center; }
+.landing .review-copy .lead { font-size: 1.25rem; line-height: 1.55; }
+.landing .review-copy p + p { margin-top: 28px; }
+.landing .art-review { max-width: 540px; padding-top: 10px; }
+/* The four labels sit on the drawing, each on a small paper tag. */
+.landing .art-review .art-labels { position: absolute; inset: 0; pointer-events: none; }
+.landing .art-review .art-labels span {
+  position: absolute;
+  max-width: none;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--surface-panel);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.landing .art-review .art-labels span:nth-child(1) { left: 10%; top: 8%; }
+.landing .art-review .art-labels span:nth-child(2) { right: 12%; top: 17%; }
+.landing .art-review .art-labels span:nth-child(3) { left: 21%; top: 72%; }
+.landing .art-review .art-labels span:nth-child(4) { right: 4%; top: 66%; }
+.landing .art-review figcaption { padding-left: 8%; padding-top: 2px; }
+
+.landing #transform { grid-template-columns: 0.88fr 1.12fr; gap: 0 72px; align-items: start; }
+.landing #transform > .sec-head { position: sticky; top: calc(var(--anchor-offset, 150px) + 8px); margin-bottom: 0; }
+.landing .art-architecture { margin-top: 26px; max-width: 480px; }
+.landing .art-architecture .concept-svg { max-height: 420px; }
+.landing .art-architecture .art-labels { justify-content: flex-start; gap: 24px; flex-wrap: wrap; margin-top: 8px; }
+.landing .art-architecture figcaption { padding-top: 18px; font-size: 1rem; color: var(--sun); }
+.landing #transform .tlist li { padding-block: 24px; }
+.landing #transform .tlist li:first-child { padding-top: 0; }
+.landing .tlist h3 { font-size: 1.25rem; line-height: 1.4; }
+
+.landing #takeaways .cards3 { gap: 36px; }
+.landing #takeaways .concept-figure { margin: 0 0 22px; width: 100%; max-width: 350px; }
+.landing #takeaways .k { margin-bottom: 14px; }
+.landing #takeaways .card h3 { font-size: 1.375rem; }
+
+.landing #curriculum { grid-template-columns: 0.9fr 1.1fr; align-items: start; gap: 68px; }
+.landing #curriculum .sec-head { position: sticky; top: calc(var(--anchor-offset, 150px) + 8px); }
+.landing .art-curriculum { margin-top: 32px; max-width: 460px; }
+.landing .art-curriculum .art-labels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 18px; padding-top: 12px; }
+.landing .art-curriculum .art-labels span { display: flex; gap: 7px; align-items: center; font-size: 0.875rem; }
+.landing .art-curriculum .art-labels span::before {
+  content: '';
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+}
+
+/* Build, examine, revise: three drawings on one soft-green strip, joined by
+   a gold thread behind them. */
+.landing .learning-sequence {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin: 4px 0 40px;
+  padding: 24px 36px;
+  background: var(--surface-hover);
+  border-radius: 4px;
+}
+.landing .learning-sequence::before {
+  content: '';
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 51%;
+  height: 1px;
+  background: var(--ember);
+  opacity: 0.45;
+}
+.landing .learning-sequence .concept-figure { max-width: 280px; justify-self: center; width: 100%; }
+.landing .learning-sequence figcaption {
+  padding: 4px 0;
+  font-size: 1.125rem;
+  font-weight: var(--weight-strong);
+  color: var(--sun);
+  text-align: center;
+}
+
+.landing .art-team { margin-top: 28px; max-width: 580px; }
+.landing .art-team figcaption { font-size: 1rem; color: var(--sun); padding-top: 0; }
+
+/* ══ Breakpoints, in the package's order ════════════════════════════════ */
+
+@media (min-width: 1450px) {
+  .landing .woven-brain { margin-right: -45px; }
+}
+
+@media (max-width: 1200px) {
+  .landing .navlinks { gap: 18px; }
+  .landing .hero-cta { grid-template-columns: 1fr; max-width: 310px; }
+  .landing .hero > .wrap.hero-grid { padding-top: 50px; padding-bottom: 36px; }
+  .landing .hero h1 { font-size: 3.15rem; }
+  .landing .hero-intro { font-size: 1.25rem; }
+  .landing .route-overview { gap: 44px; }
+}
+
+@media (max-width: 1150px) {
+  .landing .hero > .wrap.hero-grid { gap: 16px; }
+}
+
+/* The site's five links fit down to 1081. Below that they fold into the
+   menu, which is the package's 1080, not landing.css's 960. */
+@media (max-width: 1150px) and (min-width: 1081px) {
+  .landing .navlinks > a { font-size: 0.9375rem; }
+}
+
+@media (max-width: 1080px) {
+  .landing .navlinks > a:not(.btn) { display: none; }
+  body.landing .mm { display: block; }
+  .landing .nav-inner { min-height: 82px; }
+  .landing .navlinks { gap: 14px; }
+  .landing .page-links { justify-content: flex-start; gap: 30px; }
+  .landing .hero > .wrap.hero-grid { grid-template-columns: 1.1fr 0.9fr; }
+  .landing .woven-brain { width: calc(100% + 24px); margin: 0 -24px 0 0; }
+  .landing .hero h1 { font-size: 2.85rem; }
+  .landing .hero > .wrap.intro-strip { grid-template-columns: 185px 1fr; gap: 28px; }
+  .landing .brand-lockup .brand-symbol { height: 40px; }
+  .landing .brand-lockup .brand-name { height: 22.5px; }
+  .landing .enterprise-grid { gap: 36px; }
+  .landing .story { gap: 40px; }
+  .landing #transform { gap: 0 40px; }
+  .landing .art-review .art-labels span { font-size: 0.8125rem; }
+  .landing .learning-sequence { gap: 20px; padding: 22px 24px; }
+  .landing #curriculum { gap: 40px; }
+  .landing .art-architecture .art-labels { gap: 16px; }
+}
+
+@media (max-width: 760px) {
+  body.landing { --chapter-gap: 64px; }
+  .landing .wrap { width: calc(100% - 40px); }
+  .landing .nav-inner { min-height: 76px; }
+  .landing .page-navigation { display: none; }
+  /* Six short section links in two columns, to keep the menu short. */
+  .landing .mm-group-page { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+  .landing .mm-group-page .mm-group-label { grid-column: 1 / -1; }
+  /* Both groups can be taller than a small phone: the panel scrolls. */
+  .landing .mm-panel { max-height: calc(100dvh - var(--anchor-offset, 90px) + 12px); overflow-y: auto; overscroll-behavior: contain; }
+
+  .landing .hero > .wrap.hero-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 38px;
+    padding-bottom: 0;
+    min-height: 0;
+  }
+  .landing .hero-copy { max-width: none; background: color-mix(in srgb, var(--surface-page) 90%, transparent); }
+  .landing .hero h1 { font-size: clamp(2.65rem, 7.6vw, 3.6rem); max-width: 17ch; }
+  .landing .hero .eyebrow { font-size: 0.875rem; letter-spacing: 0; margin-bottom: 20px; }
+  .landing .hero-intro { font-size: 1.25rem; line-height: 1.5; margin-top: 22px; }
+  .landing .hero-description { font-size: 1.125rem; margin-top: 16px; }
+  .landing .hero-cta { grid-template-columns: 1fr 1fr; max-width: none; margin-top: 24px; }
+  .landing .hero-cta .btn { font-size: 1rem; padding: 14px; min-height: 70px; }
+  .landing .hero-cta .arrow { display: none; }
+  .landing .woven-brain { width: min(540px, 100%); margin: -4px auto 0; }
+  .landing .hero > .wrap.intro-strip { grid-template-columns: 1fr; gap: 18px; padding-top: 22px; }
+  .landing .intro-strip .portrait .frame { width: 62px; height: 72px; }
+  .landing .intro-strip .portrait .tag b { font-size: 1.125rem; }
+  .landing .founder-intro { font-size: 1rem; line-height: 1.62; }
+
+  .landing .chapter > .route-overview { grid-template-columns: 1fr; gap: 36px; padding-top: 16px; }
+  .landing .route-overview h2 { font-size: 1.9rem; }
+  .landing .route-overview article { padding-top: 22px; }
+  .landing .route-overview .textlink { padding-top: 16px; }
+
+  .landing .chapter > .band { padding-bottom: 48px; }
+  .landing .chapter > .band:last-child { padding-bottom: var(--chapter-gap); }
+  .landing .chapter > section + section > .sec-head h2 { font-size: 1.9rem; }
+  .landing #fit { grid-template-columns: 1fr; gap: 32px; padding-top: 52px; }
+  .landing .example,
+  .landing .two-up,
+  .landing #review .two-up,
+  .landing #curriculum,
+  .landing .story,
+  .landing .enterprise-grid,
+  .landing .commit { grid-template-columns: 1fr; gap: 32px; }
+  .landing #transform { display: block; }
+  .landing #transform > .sec-head { position: static; margin-bottom: 32px; }
+  .landing #transform > p { margin-top: 24px; }
+  .landing #curriculum .sec-head { position: static; }
+  .landing .tlist li { grid-template-columns: 26px 1fr; gap: 12px; }
+  .landing .modules { grid-template-columns: 1fr; gap: 32px; }
+  .landing .mod { padding-left: 0; }
+  .landing .story .lead { font-size: 1.125rem; }
+  .landing .maker-portrait { max-width: 440px; position: static; }
+  .landing .statband { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .landing .stat .big { font-size: 1.3rem; }
+  .landing #takeaways .cards3 { grid-template-columns: 1fr; gap: 34px; }
+  .landing #takeaways .card { padding: 0; }
+  .landing #live-experience .cards3 { grid-template-columns: 1fr; gap: 24px; }
+  .landing .enterprise-facts { padding: 24px; }
+  .landing .enterprise-facts dl > div { grid-template-columns: 100px 1fr; }
+  .landing .price-card { padding: 28px; }
+  .landing .price-card .amt { font-size: 2.8rem; }
+  .landing #apply .route-choice { gap: 12px; }
+  .landing :is(#apply, #book) .apply-form { padding: 24px; }
+  .landing .foot-grid { grid-template-columns: 1fr 1fr; }
+  .landing .foot-grid > .foot-col:last-child { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .landing .foot-bottom { align-items: flex-start; }
+
+  /* The drawings stack with their words. */
+  .landing .art-review { margin-inline: auto; width: min(500px, 100%); }
+  .landing .review-copy .lead { font-size: 1.125rem; }
+  .landing .art-decision { margin-top: 26px; padding-top: 8px; }
+  .landing .art-architecture { max-width: 440px; margin-inline: auto; margin-top: 20px; }
+  .landing .art-architecture .concept-svg { max-height: 330px; }
+  .landing .art-architecture .art-labels { justify-content: space-between; gap: 10px; flex-wrap: nowrap; }
+  .landing .art-architecture .art-labels span { font-size: 0.875rem; max-width: 10ch; }
+  .landing .art-architecture figcaption { font-size: 0.875rem; }
+  .landing #transform .tlist li { padding-block: 20px; }
+  /* A takeaway's drawing sits beside its heading; the paragraph runs full
+     width under both, at 18px. */
+  .landing #takeaways .card { display: grid; grid-template-columns: 135px 1fr; column-gap: 18px; align-items: start; }
+  .landing #takeaways .card .concept-figure { grid-column: 1; grid-row: 1 / 3; margin: 0; align-self: center; }
+  .landing #takeaways .card .k,
+  .landing #takeaways .card h3 { grid-column: 2; }
+  .landing #takeaways .card h3 { font-size: 1.125rem; }
+  .landing #takeaways .card p { grid-column: 1 / -1; font-size: 1.125rem; line-height: 1.6; margin-top: 14px; }
+  .landing #takeaways .k { font-size: 0.8125rem; margin-bottom: 8px; }
+  .landing .art-curriculum { max-width: 450px; margin-inline: auto; margin-top: 24px; }
+  .landing .art-curriculum .concept-svg { max-height: 295px; }
+  .landing .learning-sequence { gap: 12px; padding: 18px 12px; margin-bottom: 32px; }
+  .landing .learning-sequence figcaption { font-size: 1rem; }
+  .landing .art-team { margin-top: 22px; }
+  .landing .art-team figcaption,
+  .landing .concept-figure figcaption { font-size: 0.875rem; }
+}
+
+/* Phones wider than 390: the lockup at its phone size, clear of Apply
+   and the menu button (QA 19 September, the 391-560 overlap). */
+@media (max-width: 560px) {
+  .landing .brand-lockup { gap: 6px; }
+  .landing .brand-lockup .brand-symbol { height: 35px; }
+  .landing .brand-lockup .brand-name { height: 19px; }
+  .landing .nav-inner,
+  .landing .navlinks { gap: 10px; }
+}
+
+@media (max-width: 390px) {
+  .landing .wrap { width: calc(100% - 36px); }
+  .landing .brand-lockup { gap: 5px; }
+  .landing .brand-lockup .brand-symbol { height: 30px; }
+  .landing .brand-lockup .brand-name { height: 16px; }
+  .landing .navlinks { gap: 8px; }
+  .landing .navlinks > .btn { font-size: 0.875rem; padding: 10px 11px; }
+  .landing .navlinks > .btn .arrow { display: none; }
+  .landing .hero h1 { font-size: 2.55rem; }
+  .landing .hero-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .landing .hero-cta .btn { width: auto; font-size: 0.9375rem; padding: 12px 10px; min-height: 68px; }
+  .landing .hero-intro { font-size: 1.25rem; }
+  .landing .route-overview h2 { font-size: 1.8rem; }
+  .landing .enterprise-facts { padding: 22px; }
+  .landing .enterprise-facts dl > div { grid-template-columns: 1fr; gap: 6px; }
+  .landing :is(#apply, #book) .apply-form { padding: 22px 18px; }
+  .landing .price-card { padding: 24px; }
+  .landing .price-card .amt { font-size: 2.6rem; }
+  .landing .foot-grid { grid-template-columns: 1fr; }
+  .landing #takeaways .card { grid-template-columns: 105px 1fr; column-gap: 14px; }
+  .landing .art-review .art-labels span { font-size: 0.8125rem; padding: 2px 4px; }
+  .landing .art-review .art-labels span:nth-child(4) { right: 0; top: 65%; }
+  .landing .art-curriculum .art-labels { grid-template-columns: repeat(2, 1fr); }
+  .landing .art-architecture .art-labels { font-size: 0.8125rem; }
+  .landing .learning-sequence { gap: 6px; padding-inline: 7px; }
+  .landing .learning-sequence figcaption { font-size: 0.9375rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .brain-art .signal { animation: none !important; opacity: 0 !important; }
+  .landing .brain-art .junction { animation: none !important; opacity: 0.14 !important; }
+  .landing .concept-figure .art-travel { animation: none !important; opacity: 0 !important; }
+  .landing .concept-figure .art-junction { animation: none !important; }
+}
+
+@media print {
+  .landing .page-navigation,
+  .landing .motion-setting { display: none; }
+  .landing .hero::before { display: none; }
+  .landing .hero-copy { background: none; }
+  .landing .signal,
+  .landing .art-travel { display: none; }
+  .landing .concept-figure { break-inside: avoid; }
+  .landing #transform > .sec-head,
+  .landing #curriculum .sec-head { position: static; }
+}

@@ -13,6 +13,8 @@ import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
+import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
   title: string;
@@ -35,22 +37,27 @@ const year = new Date().getFullYear();
   </head>
   <body>
     <GoogleTagManagerNoscript />
+    <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="#top">
-          <span class="dot"></span> Sunil Mathew
-          <span class="wordmark-sub">Field&nbsp;Notes</span>
-        </a>
+        <BrandLockup href="#top" sub="Field notes" />
         <nav class="navlinks">
           {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
           <a href="/caio">Fractional CAIO</a>
           <a href="/assessment">AI Readiness</a>
           <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+          {/* Phones: the links above are hidden below 900px (global.css), and this
+              is how a phone reaches them. Same links, same order. */}
+          <MobileMenu>
+            {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
+            <a href="/caio">Fractional CAIO</a>
+            <a href="/assessment">AI Readiness</a>
+          </MobileMenu>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 
@@ -58,7 +65,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> Sunil Mathew</div>
+            <div style="margin-bottom:14px"><BrandLockup tile /></div>
             <p class="muted">What is actually changing in agentic AI. Gathered from original sources, and read by a person before it is published.</p>
           </div>
           <div class="foot-col">

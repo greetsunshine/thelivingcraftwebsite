@@ -42,6 +42,7 @@
  * moving between pages should meet one system being examined from different
  * angles, not four unrelated illustrations.
  */
+import '../styles/templates/brand.css';
 import PracticeLayout from '../layouts/PracticeLayout.astro';
 import { COMMITMENT } from '../data/offer-display';
 
@@ -50,7 +51,7 @@ const description =
   'Sunil Mathew teaches the design of agentic systems and advises engineering teams on those decisions. Engineering and leadership experience from Google, Amazon, Walmart and startups.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/about/">
+<PracticeLayout bodyClass="brand-page" title={title} description={description} canonical="/about/">
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">About</p>

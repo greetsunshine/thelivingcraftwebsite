@@ -1,0 +1,190 @@
+---
+/**
+ * The phone menu: a hamburger button and the panel it opens.
+ *
+ * WHERE IT SITS, AND WHY THERE
+ *
+ * At the right-hand end of the header, immediately after the primary action,
+ * in the slot a secondary "Book now" link used to occupy. Sunil, 16 September:
+ * "Need a hamburger menu at the book now section in mobile."
+ *
+ * WHAT IT FIXES
+ *
+ * Below 900px both headers hide every text link and keep only the primary
+ * action. That left a phone visitor with no way to reach "Who it is for",
+ * "Questions" or the practice's other pages except by scrolling. The links
+ * were never removed; they were only hidden. This panel shows the same links
+ * again, one per row, at a size a thumb can hit.
+ *
+ * The caller supplies the links through the slot, because the two headers
+ * list different destinations (in-page anchors on the cohort page, separate
+ * pages everywhere else). This component owns only the button, the panel and
+ * the open/close behaviour, so the two menus cannot behave differently.
+ *
+ * WHAT IT IS NOT
+ *
+ * Not a dialog. It does not trap focus or lock the page scroll: it is a list
+ * of links under the header, and the page behind it stays usable. It closes
+ * on a link tap, on Escape, on a tap outside it, and when the window grows
+ * past the breakpoint. Nothing about its state is stored anywhere — CLAUDE.md's
+ * no-client-storage rule holds here too.
+ *
+ * ONE ON A PAGE. The panel's id is fixed, and each layout renders one header.
+ *
+ * The panel is positioned against the header, so the header must be a
+ * positioned element. `header.nav` is sticky, which counts. SiteNav sets
+ * `position: relative` on `.sitenav` for the same reason.
+ */
+export interface Props {
+  /**
+   * The widest viewport, in px, at which the menu is used. Must match the
+   * width at which the page's CSS hides its inline links and shows `.mm`.
+   * 900 everywhere except the cohort page, which follows the 19 September
+   * package and switches at 960.
+   */
+  breakpoint?: number;
+}
+const { breakpoint = 900 } = Astro.props;
+---
+
+<div class="mm" data-mobile-menu data-breakpoint={breakpoint}>
+  <button
+    type="button"
+    class="mm-toggle"
+    aria-expanded="false"
+    aria-controls="mobile-menu-panel"
+    aria-label="Menu"
+    data-mm-toggle
+  >
+    <svg class="mm-icon mm-icon-open" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </svg>
+    <svg class="mm-icon mm-icon-close" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M5 5l12 12M17 5L5 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <div class="mm-panel" id="mobile-menu-panel" hidden data-mm-panel>
+    <nav class="mm-list" aria-label="Menu">
+      <slot />
+    </nav>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const root = document.querySelector<HTMLElement>('[data-mobile-menu]');
+    if (!root) return;
+    const toggle = root.querySelector<HTMLButtonElement>('[data-mm-toggle]');
+    const panel = root.querySelector<HTMLElement>('[data-mm-panel]');
+    if (!toggle || !panel) return;
+
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    const isOpen = () => !panel.hidden;
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()));
+
+    // A tap on a link is a decision to go somewhere. On the cohort page most
+    // links are in-page anchors, so the page does not reload and the menu
+    // would otherwise stay open over the section it just scrolled to.
+    panel.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      // A button that opens the Ask panel is the same kind of decision.
+      if (target?.closest('a, [data-ask-open]')) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !isOpen()) return;
+      setOpen(false);
+      toggle.focus();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!isOpen()) return;
+      if (!root.contains(event.target as Node)) setOpen(false);
+    });
+
+    // Past the breakpoint the button is hidden, so an open panel would have
+    // no visible way to close. Close it rather than strand it.
+    const wide = window.matchMedia(`(min-width: ${Number(root.dataset.breakpoint || 900) + 1}px)`);
+    wide.addEventListener('change', (event) => {
+      if (event.matches) setOpen(false);
+    });
+  })();
+</script>
+
+<style>
+  /* Phones and small tablets only. Above 900px the header shows every link
+     inline, so there is nothing for a menu to hold. */
+  .mm { display: none; }
+
+  @media (max-width: 900px) {
+    .mm { display: block; }
+  }
+
+  .mm-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: var(--border-w-hair) solid var(--border-hair);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-loud);
+    cursor: pointer;
+  }
+  .mm-toggle:hover { background: var(--surface-hover); }
+  .mm-toggle:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .mm-icon-close { display: none; }
+  .mm-toggle[aria-expanded='true'] .mm-icon-open { display: none; }
+  .mm-toggle[aria-expanded='true'] .mm-icon-close { display: block; }
+
+  /* Hangs from the bottom edge of the header, full width. The header is the
+     containing block, not this wrapper — `.mm` is deliberately unpositioned. */
+  .mm-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: var(--surface-panel);
+    box-shadow: var(--shadow-overlay);
+    padding: var(--space-2) var(--space-4) var(--space-4);
+  }
+  .mm-panel[hidden] { display: none; }
+
+  .mm-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* `:global` because the links come through the slot, so they carry the
+     caller's scope id rather than this component's. 48px rows: the smallest
+     comfortable thumb target. */
+  .mm-list :global(a) {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 var(--space-2);
+    border-bottom: var(--border-w-hair) solid var(--border-hair);
+    color: var(--text-loud);
+    font-size: var(--size-4);
+    text-decoration: none;
+    white-space: normal;
+  }
+  .mm-list :global(a:last-child) { border-bottom: 0; }
+  .mm-list :global(a:hover) { background: var(--surface-hover); }
+  .mm-list :global(a[aria-current='page']) { font-weight: var(--weight-strong); }
+  .mm-list :global(a:focus-visible) {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: calc(var(--focus-w) * -1);
+  }
+</style>

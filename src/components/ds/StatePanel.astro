@@ -1,0 +1,26 @@
+---
+/**
+ * StatePanel — empty, loading, error or complete (18 September package,
+ * "Tables / status"). A symbol AND a sentence, never colour alone, and the
+ * slot is for the way on: a retry, an email, the next step.
+ *
+ * `live` announces the panel when it changes: set it on a panel a script
+ * swaps in, not on one that is on the page from the start.
+ */
+export interface Props {
+  state: 'empty' | 'loading' | 'error' | 'complete';
+  title: string;
+  live?: boolean;
+}
+const { state, title, live = false } = Astro.props;
+const SYMBOL = { empty: '○', loading: '…', error: '!', complete: '✓' } as const;
+const WORD = { empty: 'Nothing yet', loading: 'Loading', error: 'Problem', complete: 'Done' } as const;
+---
+
+<div class="lc-state-panel" data-state={state} role={live ? (state === 'error' ? 'alert' : 'status') : undefined}>
+  <span class="lc-state-symbol" aria-hidden="true">{SYMBOL[state]}</span>
+  <div>
+    <h3><span class="sr-only">{WORD[state]}: </span>{title}</h3>
+    <slot />
+  </div>
+</div>
