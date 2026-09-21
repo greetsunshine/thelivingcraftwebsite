@@ -178,8 +178,11 @@ export async function availableSlots(
   const [rules, blocks, held] = await Promise.all([allRules(), blocksBetween(from, to), busyBetween(from, to)]);
   const busy = excludeBookingId ? held.filter((b) => b.id !== excludeBookingId) : held;
 
+  // A type may borrow another type's hours (meetings.ts, `rulesFrom`). The
+  // diary is still shared: `busy` above is every booking of every type.
+  const source = meeting.rulesFrom ?? meeting.key;
   const mine: AvailabilityRule[] = rules
-    .filter((r) => r.active && r.meeting_type === meeting.key)
+    .filter((r) => r.active && r.meeting_type === source)
     .map((r) => ({ weekday: r.weekday, start_min: r.start_min, end_min: r.end_min }));
 
   return generateSlots({ meeting, timeZone: HOST_TIMEZONE, rules: mine, blocks, busy, now });

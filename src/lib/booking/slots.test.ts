@@ -196,3 +196,24 @@ test('busyBetween reads every booking, whatever its call type', () => {
       'type, because it is one person and one diary. See the header of this file.',
   );
 });
+
+/**
+ * The cohort call shows the discovery call's hours (Sunil, 21 September:
+ * reuse the calendar /caio already has). `rulesFrom` says so in meetings.ts;
+ * this checks that `availableSlots()` actually reads it, because a filter on
+ * `meeting.key` alone would keep the build green and show "nothing open" on
+ * the cohort page in production, where no `cohort-call` rows exist.
+ */
+test('the cohort call reads the discovery hours, and availableSlots honours rulesFrom', () => {
+  assert.equal(meetingType('cohort-call')?.rulesFrom, 'discovery');
+  assert.equal(meetingType('discovery')?.rulesFrom, undefined);
+
+  const source = readFileSync(new URL('./store.ts', import.meta.url), 'utf8');
+  const start = source.indexOf('async function availableSlots');
+  assert.ok(start > -1, 'availableSlots has been renamed; this guard needs updating');
+  const body = source.slice(start, source.indexOf('async function', start + 1));
+  assert.ok(
+    body.includes('meeting.rulesFrom ?? meeting.key'),
+    'availableSlots filters booking_rules by meeting.key alone; a type with rulesFrom would find no hours.',
+  );
+});

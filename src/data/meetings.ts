@@ -56,6 +56,16 @@ export interface MeetingType {
    * must never refuse a booking Sunil deliberately made.
    */
   bufferMin: number;
+  /**
+   * Read availability from another type's rules instead of this type's own.
+   *
+   * The cohort call uses this to share the discovery call's hours. Sunil keeps
+   * one set of hours for calls with people outside the cohort, and asking him
+   * to enter the same band twice in the console is how two copies drift. The
+   * diary itself is already shared (busyBetween() ignores the type), so this
+   * only decides which rows in `booking_rules` open the calendar.
+   */
+  rulesFrom?: string;
 }
 
 export const MEETING_TYPES: MeetingType[] = [
@@ -80,12 +90,15 @@ export const MEETING_TYPES: MeetingType[] = [
      * inherits its one job: let somebody ask whether this fits before they
      * commit to anything.
      *
-     * Same thirty minutes, notice and horizon as the two consulting calls.
-     * Nothing here is a new offer fact: the cohort's own facts (fee, dates,
+     * Same thirty minutes, notice and horizon as the two consulting calls, and
+     * the same hours: `rulesFrom` reads the discovery call's rules, so the
+     * calendar /caio already shows is the one this shows. Nothing here is a
+     * new offer fact: the cohort's own facts (fee, dates,
      * seats, admission) still come from facts.ts and are not restated.
      */
     key: 'cohort-call',
     label: 'Cohort call',
+    rulesFrom: 'discovery',
     durationMin: 30,
     blurb:
       'Thirty minutes. We talk through what you are trying to develop and whether this cohort is the right way to do it. This is a conversation, not an application.',

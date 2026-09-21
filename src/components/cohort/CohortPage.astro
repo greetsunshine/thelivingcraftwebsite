@@ -930,13 +930,22 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
       });
     });
 
+    // Arriving from another page with the hash already set (the contact page
+    // links /#team), the browser tries its fragment scroll while the panel is
+    // still hidden, and a hidden element cannot be scrolled to. So once the
+    // panel is open, scroll to the target ourselves. scroll-margin-top keeps
+    // it clear of the sticky header, the same as a native fragment jump.
+    const reveal = (branch: string) => {
+      endCue();
+      select(branch, false);
+      document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    };
+
     const fromHash = () => {
       if (location.hash === '#team' || location.hash === '#enterprise-form') {
-        endCue();
-        select('enterprise', false);
+        reveal('enterprise');
       } else if (location.hash === '#apply-form') {
-        endCue();
-        select('application', false);
+        reveal('application');
       } else if (location.hash === '#apply') {
         cue();
       }

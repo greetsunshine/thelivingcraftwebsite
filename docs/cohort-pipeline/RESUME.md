@@ -8,8 +8,9 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 20 September 2026
-**Branch:** `feat/landing-refinement`, off `cta-book-now-rework` (PR #18). PR #14 is merged.
+**Last updated:** 21 September 2026
+**Branch:** `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
+commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
 PR #27 (the thread brain) is superseded by this work. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
@@ -744,6 +745,14 @@ times Sunil was comparing against were production's. Fifteen rows were inserted 
 The timings can be the same"): `discovery`, `cohort-call` and `scope`, Monday to Friday,
 `start_min` 960 to `end_min` 1080 — 16:00 to 18:00 Asia/Kolkata, the band production
 already offers for `discovery`. All three types now return the same 76 slots.
+
+**`cohort-call` reads the `discovery` hours, since 21 September.** Sunil asked for the
+cohort page to reuse the calendar `/caio` already has, rather than a second set of rows he
+would have to keep in step. `MeetingType.rulesFrom` in `meetings.ts` does it, `availableSlots()`
+in `store.ts` reads it, and the console's "Add a band" no longer lists `cohort-call`. So the
+fifteen staging rows above are now twelve that matter (the three `cohort-call` bands are
+never read) and **production needs no new rows at all** for "Talk with Sunil" to show times.
+A cohort booking is filed in `leads` as `interest: 'cohort'`, surface `/`.
 
 **A booking on one call type already blocks that time on every other one**, and this is not
 new behaviour: `busyBetween()` in `lib/booking/store.ts` selects every row in `bookings`

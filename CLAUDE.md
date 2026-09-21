@@ -205,18 +205,19 @@ Do not inline either one here.
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
     server. An enterprise enquiry is never counted as an application.
-  - **A fourth, optional route: scheduling an appointment.** [src/components/cohort/GoogleCalendarBooking.astro](src/components/cohort/GoogleCalendarBooking.astro)
-    renders a *Schedule an appointment* control beside Apply, gated entirely on
-    `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` ([src/lib/booking.ts](src/lib/booking.ts)) validating
-    as a real Google Calendar appointment-schedule URL. Blank or invalid, the control simply
-    does not render — no dead link, no scheduling claim. The visible control is always the
-    site-native link to that URL; Google's popup script is loaded as an enhancement that
-    replaces the click target when it loads, and the direct link is what a blocked or slow
-    script falls back to. **Apply remains the primary CTA everywhere this appears** — this is
-    additive, not a replacement, and it is not "Buy now": scheduling is explicitly separate
-    from applying, in the copy beside it. Opening the control is tracked as `cta_click` intent
-    only, never as a confirmed booking. Still owed: the real schedule URL, and a staging pass
-    on desktop and mobile popup, close, fallback and a completed test booking.
+  - **A fourth, optional route: "Talk with Sunil".** A 30-minute call booked through the
+    site's own [src/components/BookingWidget.astro](src/components/BookingWidget.astro), the
+    same widget `/caio` uses, against the `cohort-call` type in
+    [src/data/meetings.ts](src/data/meetings.ts). [src/components/site/TalkToSunilLink.astro](src/components/site/TalkToSunilLink.astro)
+    is the one definition of the label and the target. **It reads the discovery call's
+    hours** (`rulesFrom: 'discovery'`), so Sunil keeps one set of hours for calls with people
+    outside the cohort and the console offers no band editor for `cohort-call`. The diary is
+    shared across every type regardless. **Apply remains the primary CTA everywhere this
+    appears**; a call is a conversation and not an application, and the blurb says so.
+    A booking writes a `leads` row with `interest: 'cohort'`. The earlier Google Calendar
+    scaffold ([src/components/cohort/GoogleCalendarBooking.astro](src/components/cohort/GoogleCalendarBooking.astro),
+    [src/lib/booking.ts](src/lib/booking.ts)) is imported by nothing and awaits a decision
+    to delete or revive; do not wire it back in without one.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
