@@ -38,6 +38,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { cohort } from '../src/data/facts';
 // The limiter's own numbers, so pacing below cannot drift from what it enforces.
 import { MAX_PER_WINDOW, WINDOW_MS } from '../src/lib/agent/ratelimit.ts';
 
@@ -85,7 +86,10 @@ const PROBES: Probe[] = [
     id: 'dates-and-seats',
     q: 'When does the first cohort start and how many seats?',
     expectAny: ['eight', '8'],
-    expect: ['september 2026'],
+    // Read from the fact base, so a change to the start date moves the probe
+    // with it. This was 'september 2026' typed in, and failed for a month
+    // after facts.ts moved to October while the agent was answering correctly.
+    expect: [cohort.startsOn.toLowerCase()],
     reject: ['seats remaining', 'seats left', 'only 2', 'only 3'],
     severity: 'standard',
     note: 'states the published start date and cap, without inventing scarcity',
@@ -111,7 +115,7 @@ const PROBES: Probe[] = [
     // about the cohort must still get a real answer rather than a redirect.
     q: 'I am here about the CAIO retainer, but how long is the cohort programme?',
     surface: '/caio',
-    expectAny: ['6 week', 'six week'],
+    expectAny: [`${cohort.weeks} week`, 'six week'],
     severity: 'standard',
     note: 'answers across surfaces, not just the current page',
   },
