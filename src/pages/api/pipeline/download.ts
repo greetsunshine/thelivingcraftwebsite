@@ -291,7 +291,7 @@ export const POST: APIRoute = async (ctx) => {
     return json({ ok: false, error: CHECK_FAILED, checks: preflight }, 500);
   }
 
-  const outcome = await handleResourceRequest(ctx, body, { resource });
+  const outcome = await handleResourceRequest(ctx, body, { resource, kind });
   if (outcome.kind === 'refused') return json(outcome.body, outcome.status);
 
   let built: Built | null = null;

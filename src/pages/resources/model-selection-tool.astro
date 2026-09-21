@@ -1682,7 +1682,12 @@ const STEP_COUNT = steps.length;
     if (at < 0) return;
     const after = rows.slice(at + 1).concat(rows.slice(0, at));
     const next = after.find((r) => valueOf(r) === null);
+    // Remember which step this was decided on. If Next, Back or a pip moves
+    // the page inside the pause, the reader has already chosen where to be,
+    // and a second move on top of theirs skips a step or undoes a Back.
+    const from = step;
     window.setTimeout(() => {
+      if (step !== from) return;
       if (next !== undefined) revealRow(next);
       else if (step < LAST) goTo(step + 1);
     }, 350);

@@ -54,6 +54,7 @@ import {
   EXAMPLE_STORY,
   FORGOTTEN_ROWS,
   INPUT_COUNT,
+  MAX_VALUE,
   LIMITS,
   OUTCOMES,
   SECTIONS,
@@ -117,8 +118,6 @@ export interface RunCostPdfInput {
   /** ISO date the copy was built, printed on the cover line. */
   builtOn: string;
 }
-
-const MAX_VALUE = 1_000_000_000;
 
 const cell = (v: unknown): Cell | undefined => {
   if (v === null) return null;

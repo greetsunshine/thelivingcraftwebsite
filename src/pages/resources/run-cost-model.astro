@@ -935,6 +935,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   .grid input:focus { outline: none; border-color: var(--text-body); }
   .grid input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
   .grid input.set { background: var(--surface-sun); color: var(--text-on-accent); }
+  .grid input.refused { border-color: var(--danger); color: var(--danger); }
   .grow.computed { background: var(--surface-panel); margin: 0 calc(-1 * var(--space-5)); padding-left: var(--space-5); padding-right: var(--space-5); }
   .out {
     display: block;
@@ -1112,6 +1113,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     EXAMPLE,
     EXAMPLE_NOTICE,
     INPUT_COUNT,
+    MAX_VALUE,
     OUTCOMES,
     SECTIONS,
     TOTALS,
@@ -1120,6 +1122,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     fmtInput,
     fmtMoney,
     fmtMonths,
+    parseCell,
     readModel,
     unitOf,
     type ArmKey,
@@ -1202,12 +1205,8 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
 
   // ---- inputs -------------------------------------------------------------
 
-  function parseCell(raw: string): Cell {
-    const t = raw.trim();
-    if (t === '') return null;
-    const n = Number(t);
-    return Number.isFinite(n) && n >= 0 ? n : null;
-  }
+  /** Typed something the model will not take: text, a negative, or a figure above the bound. */
+  const refused = (e: HTMLInputElement) => e.value.trim() !== '' && parseCell(e.value) === null;
 
   /** The state from the fields, for the first paint and a back-navigation restore. */
   function readInputs() {
@@ -1252,8 +1251,16 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     const cur = state.currency;
     const example = isExample();
 
-    // Fields: a filled one is sun. Units follow the currency label.
-    for (const e of inputs) e.classList.toggle('set', e.value.trim() !== '');
+    // Fields: a filled one is sun, and only a figure the model took counts as
+    // filled. A negative or an over-large entry is marked instead, so the
+    // count in the bar and the PDF agree with what the reader sees.
+    for (const e of inputs) {
+      e.classList.toggle('set', parseCell(e.value) !== null);
+      const bad = refused(e);
+      e.classList.toggle('refused', bad);
+      e.setAttribute('aria-invalid', bad ? 'true' : 'false');
+      e.title = bad ? `Enter a figure from 0 to ${MAX_VALUE.toLocaleString('en-IN')}.` : '';
+    }
     currencyInput.classList.toggle('set', currencyInput.value.trim() !== '');
     document.querySelectorAll<HTMLElement>('.gunit[data-kind]').forEach((u) => {
       u.textContent = unitOf(u.dataset.kind as RowKind, cur);
@@ -1379,7 +1386,12 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     if (at < 0) return;
     const after = qs.slice(at + 1).concat(qs.slice(0, at));
     const next = after.find((e) => valueOf(e) === null);
+    // Remember which step this was decided on. If Next, Back or a pip moves
+    // the page inside the pause, the reader has already chosen where to be,
+    // and a second move on top of theirs skips a step or undoes a Back.
+    const from = step;
     window.setTimeout(() => {
+      if (step !== from) return;
       if (next) revealInput(next);
       else if (step < LAST) goTo(step + 1);
     }, 350);

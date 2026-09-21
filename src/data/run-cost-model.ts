@@ -535,6 +535,27 @@ export function unitOf(kind: RowKind, currency: string): string {
 
 export type Cell = number | null;
 
+/**
+ * The largest figure any line accepts, on the page and on the PDF route.
+ *
+ * One bound in one place. The page used to accept any finite number and the
+ * server refused anything above this, so a figure the reader had watched turn
+ * sun on screen was refused after the save with a message naming no line.
+ */
+export const MAX_VALUE = 1_000_000_000;
+
+/**
+ * Read one typed figure. Blank is `null`; so is anything the model cannot use:
+ * text, a negative, or a figure above MAX_VALUE. Callers that want to show the
+ * reader the difference between blank and refused compare the raw text.
+ */
+export const parseCell = (raw: string): Cell => {
+  const t = raw.trim();
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 && n <= MAX_VALUE ? n : null;
+};
+
 export interface ModelInputs {
   /** A label, such as INR or USD. Free text. Not counted as an input. */
   currency: string;

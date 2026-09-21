@@ -29,7 +29,8 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
-  const outcome = await handleResourceRequest(ctx, body);
+  // This route hands over nothing, so the kind is 'email' whatever was posted.
+  const outcome = await handleResourceRequest(ctx, body, { kind: 'email' });
 
   switch (outcome.kind) {
     case 'refused':
