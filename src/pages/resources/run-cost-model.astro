@@ -56,6 +56,7 @@ import {
   fmtComputed,
   fmtMoney,
   fmtMonths,
+  working,
   type SharedKey,
   type ArmRowKey,
   type ArmComputedKey,
@@ -364,6 +365,18 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
                     </output>
                   ))
                 )}
+                {/* The same formula with the figures in, so the number above can be checked without leaving the screen. */}
+                <div class="gwork mono">
+                  {s.scope === 'shared' ? (
+                    <span id={`w-${row.key}`}>{working(row.key, EXAMPLE, ex, null, cur)}</span>
+                  ) : (
+                    ex.arms.map((a) => (
+                      <span class="gwork-line">
+                        <b>{a.short}</b> <span id={`w-${row.key}-${a.key}`}>{working(row.key, EXAMPLE, ex, a.key, cur)}</span>
+                      </span>
+                    ))
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -433,6 +446,18 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
                       {fmtComputed(row, a.values[row.key as ArmComputedKey], cur, a.breakEvenState)}
                     </td>
                   ))}
+                </tr>
+                <tr class="twork">
+                  <td colspan={ARMS.length + 1}>
+                    <span class="visually-hidden">Working for {row.label}.</span>
+                    <div class="gwork mono">
+                      {ex.arms.map((a) => (
+                        <span class="gwork-line">
+                          <b>{a.short}</b> <span id={`tw-${row.key}-${a.key}`}>{working(row.key, EXAMPLE, ex, a.key, cur)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -937,6 +962,10 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   .grid input.set { background: var(--surface-sun); color: var(--text-on-accent); }
   .grid input.refused { border-color: var(--danger); color: var(--danger); }
   .grow.computed { background: var(--surface-panel); margin: 0 calc(-1 * var(--space-5)); padding-left: var(--space-5); padding-right: var(--space-5); }
+  /* The working spans the row under the figures. One line per option; a dash while an input is missing. */
+  .gwork { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px; margin-top: var(--space-1); font-size: var(--size-1); color: var(--text-quiet); line-height: 1.5; overflow-wrap: anywhere; }
+  .gwork-line b { font-weight: 600; color: var(--text-muted); margin-right: var(--space-1); }
+  .gwork span:empty::before { content: '—'; }
   .out {
     display: block;
     text-align: right;
@@ -1004,6 +1033,8 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
   .rtable thead th { border-top: 0; font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-strong); color: var(--text-body); vertical-align: bottom; }
   .rtable tbody th { text-align: left; font-weight: var(--weight-strong); }
   .rtable tbody th .twhy { display: block; font-weight: var(--weight-regular); font-size: var(--size-1); color: var(--text-quiet); max-width: 40ch; }
+  .rtable tr.twork td { border-top: 0; padding-top: 0; text-align: left; }
+  .rtable tr.twork .gwork { margin-top: 0; }
   .rtable tr.key th, .rtable tr.key td { background: var(--surface-panel); }
   .rtable td.is-lead { font-weight: var(--weight-strong); color: var(--text-loud); }
   .rtable td.bad { color: var(--danger); }
@@ -1124,6 +1155,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     fmtMonths,
     parseCell,
     readModel,
+    working,
     unitOf,
     type ArmKey,
     type ArmRowKey,
@@ -1239,6 +1271,12 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     return e;
   }
 
+  /** A working line: plain text, blank (shown as a dash by CSS) while an input is missing. */
+  function setText(id: string, text: string) {
+    const o = document.getElementById(id);
+    if (o) o.textContent = text;
+  }
+
   function setOut(id: string, text: string) {
     const o = document.getElementById(id);
     if (!o) return;
@@ -1271,8 +1309,12 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
       for (const row of s.computed) {
         if (s.scope === 'shared') {
           setOut(`c-${row.key}`, fmtComputed(row, r.shared.values[row.key as keyof typeof r.shared.values], cur));
+          setText(`w-${row.key}`, working(row.key, state, r, null, cur) ?? '');
         } else {
-          for (const a of r.arms) setOut(`c-${row.key}-${a.key}`, fmtComputed(row, a.values[row.key as keyof typeof a.values], cur, a.breakEvenState));
+          for (const a of r.arms) {
+            setOut(`c-${row.key}-${a.key}`, fmtComputed(row, a.values[row.key as keyof typeof a.values], cur, a.breakEvenState));
+            setText(`w-${row.key}-${a.key}`, working(row.key, state, r, a.key, cur) ?? '');
+          }
         }
       }
     }
@@ -1344,6 +1386,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
         td.textContent = fmtComputed(row, a.values[row.key as keyof typeof a.values], cur, a.breakEvenState);
         td.classList.toggle('is-lead', row.key === 'perOutcome' && a.key === r.leader);
         td.classList.toggle('bad', (row.key === 'net' && (a.values.net ?? 0) < 0) || (row.key === 'breakEven' && a.breakEvenState === 'never'));
+        setText(`tw-${row.key}-${a.key}`, working(row.key, state, r, a.key, cur) ?? '');
       }
     }
 
