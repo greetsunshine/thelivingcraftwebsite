@@ -628,7 +628,7 @@ export const EXAMPLE_STORY = {
   title: 'An ordering agent across 40 sites',
   lines: [
     'A retailer in India raises about 2,000 purchase orders a month across 40 sites. Each one takes a buyer 25 minutes by hand.',
-    'The team built a full agent that reads the request, checks stock and supplier terms, and places the order. It worked. It also cost more to run each month than the buyers did.',
+    'The team built a full agent that reads the request, checks stock and supplier terms, and places the order. It worked. It ran at ₹3.7L a month against ₹5L for the buyers, and still lost money over the year once the ₹23L build and the upkeep were counted.',
     'Building it forced the team to write down every decision rule the buyers had been carrying in their heads. A second rules workflow, rebuilt on that written spec, took 35 engineering days and wins on cost per acceptable outcome.',
     'Cost per case picks the original rules workflow. Cost per acceptable outcome picks the rebuilt one. That gap is the whole reason the second number exists.',
     'Every figure is in Indian rupees at Indian rates. If you work elsewhere, change the four rates in sections 1 and 2 first. The shape of the comparison holds; the absolute numbers will not.',
