@@ -1493,10 +1493,15 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
     const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
     if (typeof fn !== 'function') return;
 
-    if (target.closest('[data-download]')) {
-      fn('resource_download', { resource: 'cost-ceiling-workbook' });
-    } else if (target.closest('[data-apply]')) {
+    if (target.closest('[data-apply]')) {
       fn('cohort_apply_click', { resource: 'cost-ceiling-workbook' });
     }
+  });
+
+  // Counted when the gate hands the file over, not when its button is clicked
+  // (the click only opens the dialog). See agent-memory-audit-kit.astro.
+  document.addEventListener('lc:download', () => {
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn === 'function') fn('resource_download', { resource: 'cost-ceiling-workbook' });
   });
 </script>

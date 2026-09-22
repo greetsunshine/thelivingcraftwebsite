@@ -633,11 +633,18 @@ const sections = [
 
     const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
     if (typeof fn !== 'function') return;
-    const dl = target.closest('[data-download]');
-    if (dl) {
-      fn('resource_download', { resource: RESOURCE, file: dl.getAttribute('data-download') });
-    } else if (target.closest('[data-apply]')) {
+    if (target.closest('[data-apply]')) {
       fn('cohort_apply_click', { resource: RESOURCE });
     }
+  });
+
+  // A download is counted when the gate hands the file over, not when its
+  // button is clicked: the click only opens the dialog, and cancelling it
+  // used to count as a download in the console.
+  document.addEventListener('lc:download', (e) => {
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn !== 'function') return;
+    const d = (e as CustomEvent<{ kind: string }>).detail;
+    fn('resource_download', { resource: RESOURCE, file: d.kind });
   });
 </script>

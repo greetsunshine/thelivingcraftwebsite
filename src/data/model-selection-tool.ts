@@ -374,9 +374,9 @@ export const DISQUALIFIERS: Disqualifier[] = [
     why: 'One invented figure that reads well undoes the value of every correct one.',
   },
   {
-    short: 'Missed the plant',
-    q: 'It missed the item you planted yourself.',
-    why: 'You knew that item was there and it still did not appear. Nothing you did not plant is safer.',
+    short: 'Never found the plant',
+    q: 'It never found the item you planted.',
+    why: 'You knew that item was there and it never appeared. A miss on some runs is scored in C06 and covered; a miss on every run is this. Nothing you did not plant is safer.',
   },
   {
     short: 'Let a deadline pass',

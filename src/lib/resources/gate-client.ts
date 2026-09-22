@@ -16,6 +16,20 @@
 
 export type GateKind = 'pdf' | 'xlsx' | 'zip' | 'json' | 'csv' | 'md' | 'txt' | 'print';
 
+/**
+ * Fired on `document` once a hand-over has actually happened: the file is
+ * downloading, the print dialogue is opening, or the page is about to build
+ * the file itself. A page that counts downloads listens for this rather than
+ * for the click on the gate button, because the click only opens the dialog
+ * and a reader who cancels it has downloaded nothing.
+ */
+export const DOWNLOAD_EVENT = 'lc:download';
+export interface DownloadDetail {
+  resource: string;
+  kind: GateKind;
+  variant: string | null;
+}
+
 export interface GateOptions {
   /** What to post as `payload` for a kind. Absent means no payload. */
   payload?: (kind: GateKind, variant: string | null) => unknown;
@@ -174,10 +188,17 @@ export function mountGate(opts: GateOptions = {}) {
       const tail = `${body.saved ? (body.delivery ?? '') : (body.note ?? '')}`.trim();
       cancel.textContent = 'Close';
 
+      const done = () => {
+        document.dispatchEvent(
+          new CustomEvent<DownloadDetail>(DOWNLOAD_EVENT, { detail: { resource, kind, variant } }),
+        );
+        opts.onDone?.(kind, variant);
+      };
+
       if (kind === 'print') {
         say(`Your request is saved. ${tail}`.trim(), 'ok');
         dialog.close();
-        opts.onDone?.(kind, variant);
+        done();
         window.print();
         return;
       }
@@ -186,14 +207,14 @@ export function mountGate(opts: GateOptions = {}) {
         download(body.file, body.filename || `resource.${kind}`, body.contentType || 'application/octet-stream');
         say(`Your ${LABEL[kind]} is downloading.${checkLine} ${tail}`.trim(), 'ok');
         showChecks(checks);
-        opts.onDone?.(kind, variant);
+        done();
         return;
       }
       // No file from the server: the page builds it from its own state, so
       // nothing the reader typed was posted. `onDone` is where that happens.
       say(`Your request is saved. ${tail}`.trim(), 'ok');
       dialog.close();
-      opts.onDone?.(kind, variant);
+      done();
     } catch {
       say('The request did not reach the server. Check the connection and try again.', 'err');
       submit.disabled = false;

@@ -35,6 +35,8 @@ export const clean = (s: string): string =>
   s
     .replace(/→/g, '->')
     .replace(/₹/g, 'INR ')
+    // The working lines subtract with a true minus, which the standard fonts lack.
+    .replace(/−/g, '-')
     .replace(/[^\x20-\x7e\xa0-\xff–—‘’“”…•]/g, '');
 
 export interface Column {

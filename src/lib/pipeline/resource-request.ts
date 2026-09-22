@@ -74,7 +74,6 @@ import {
 } from './attribution';
 import {
   deliveryLine,
-  isResourceKind,
   queueResourceDelivery,
   recordDelivery,
   resolveResource,
@@ -84,6 +83,7 @@ import {
   validateResourceRequest,
   type DeliveryState,
   type RequestableResource,
+  type ResourceKind,
 } from './resources';
 import type { FieldError } from './forms';
 import { checkRate } from '../agent/ratelimit';
@@ -127,7 +127,16 @@ export async function handleResourceRequest(
      * `body.resource` is not resolved again here.
      */
     resource?: RequestableResource;
-  } = {},
+    /**
+     * What the route is handing over. The route decides this, not the body:
+     * the email route hands over nothing and must say `'email'` whatever was
+     * posted, otherwise a crafted POST records a `pdf` request in
+     * `resource_requests` with no file behind it, and the marketing view
+     * counts a download that never happened. The download route passes the
+     * kind it has already validated against its own registry.
+     */
+    kind: ResourceKind;
+  },
 ): Promise<ResourceRequestOutcome> {
   const { request, clientAddress, cookies, url } = ctx;
 
@@ -180,12 +189,8 @@ export async function handleResourceRequest(
     resource = lookup.resource;
   }
 
-  // What is being handed over. Absent means the plain email request; anything
-  // else has to be a kind this module knows.
-  const kind = body.kind === undefined ? 'email' : body.kind;
-  if (!isResourceKind(kind)) {
-    return { kind: 'refused', status: 400, body: { ok: false, error: REFUSED } };
-  }
+  // What is being handed over: the route's word, never the body's.
+  const kind = opts.kind;
 
   // ---- validation, server-side and authoritative --------------------------
   const { values, errors } = validateResourceRequest(

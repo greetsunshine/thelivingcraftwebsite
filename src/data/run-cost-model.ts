@@ -535,6 +535,27 @@ export function unitOf(kind: RowKind, currency: string): string {
 
 export type Cell = number | null;
 
+/**
+ * The largest figure any line accepts, on the page and on the PDF route.
+ *
+ * One bound in one place. The page used to accept any finite number and the
+ * server refused anything above this, so a figure the reader had watched turn
+ * sun on screen was refused after the save with a message naming no line.
+ */
+export const MAX_VALUE = 1_000_000_000;
+
+/**
+ * Read one typed figure. Blank is `null`; so is anything the model cannot use:
+ * text, a negative, or a figure above MAX_VALUE. Callers that want to show the
+ * reader the difference between blank and refused compare the raw text.
+ */
+export const parseCell = (raw: string): Cell => {
+  const t = raw.trim();
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 && n <= MAX_VALUE ? n : null;
+};
+
 export interface ModelInputs {
   /** A label, such as INR or USD. Free text. Not counted as an input. */
   currency: string;
@@ -607,7 +628,7 @@ export const EXAMPLE_STORY = {
   title: 'An ordering agent across 40 sites',
   lines: [
     'A retailer in India raises about 2,000 purchase orders a month across 40 sites. Each one takes a buyer 25 minutes by hand.',
-    'The team built a full agent that reads the request, checks stock and supplier terms, and places the order. It worked. It also cost more to run each month than the buyers did.',
+    'The team built a full agent that reads the request, checks stock and supplier terms, and places the order. It worked. It ran at ₹3.7L a month against ₹5L for the buyers, and still lost money over the year once the ₹23L build and the upkeep were counted.',
     'Building it forced the team to write down every decision rule the buyers had been carrying in their heads. A second rules workflow, rebuilt on that written spec, took 35 engineering days and wins on cost per acceptable outcome.',
     'Cost per case picks the original rules workflow. Cost per acceptable outcome picks the rebuilt one. That gap is the whole reason the second number exists.',
     'Every figure is in Indian rupees at Indian rates. If you work elsewhere, change the four rates in sections 1 and 2 first. The shape of the comparison holds; the absolute numbers will not.',
@@ -941,4 +962,101 @@ export function fmtComputed(row: ComputedRow, v: Cell, currency: string, breakEv
 export function fmtInput(v: Cell): string {
   if (v === null) return '—';
   return v.toLocaleString('en-GB', { maximumFractionDigits: 4 });
+}
+
+// ---------------------------------------------------------------------------
+// The working: every computed line with the reader's own figures in it
+// ---------------------------------------------------------------------------
+//
+// A computed row carries a `why` in words ("cases, times calls per case, times
+// the retry multiplier, times the cost per call"). Words alone made a reader
+// go back three screens and add six numbers in their head to see where the
+// run cost came from. This prints the same formula with the numbers in:
+// "2,000 × 6 × 1.35 × ₹ 2.50 = ₹ 40,500". The page shows it under the row
+// and updates it as they type; the PDF prints it under the same row. One
+// function so the two cannot say different things.
+
+const fmtN = (v: number, currency: string, digits = 0) =>
+  v.toLocaleString(localeFor(currency), { minimumFractionDigits: 0, maximumFractionDigits: digits });
+
+/** Format a typed figure inside the working: grouping, and decimals only when it has them. */
+const wn = (v: number, currency: string) => fmtN(v, currency, 2);
+
+/**
+ * The arithmetic behind one computed row, or null while any figure it needs
+ * is blank. `arm` is null for a shared row.
+ */
+export function working(key: ComputedKey, inputs: ModelInputs, r: ModelRead, arm: ArmKey | null, currency: string): string | null {
+  const s = inputs.shared;
+  const sv = r.shared.values;
+  const m = (v: Cell) => fmtMoney(v, currency);
+  const each = (v: Cell) => fmtMoney(v, currency, true);
+  const n = (v: Cell) => (v === null ? '—' : wn(v, currency));
+  const ok = (...xs: Cell[]) => xs.every((x) => x !== null && Number.isFinite(x));
+
+  if (arm === null) {
+    switch (key) {
+      case 'totalCases':
+        return ok(s.casesPerMonth, s.months) ? `${n(s.casesPerMonth)} × ${n(s.months)} = ${n(sv.totalCases)}` : null;
+      case 'manualBaseline':
+        return ok(sv.totalCases, s.manualMinutes, s.manualRate)
+          ? `${n(sv.totalCases)} × ${n(s.manualMinutes)} min ÷ 60 × ${m(s.manualRate)} = ${m(sv.manualBaseline)}`
+          : null;
+      case 'manualPerMonth':
+        return ok(sv.manualBaseline, s.months) ? `${m(sv.manualBaseline)} ÷ ${n(s.months)} = ${m(sv.manualPerMonth)}` : null;
+      default:
+        return null;
+    }
+  }
+
+  const a = inputs.arms[arm];
+  const v = r.arms.find((x) => x.key === arm)!.values;
+  const c = s.casesPerMonth;
+  const share = (sh: Cell, min: Cell, rate: Cell, out: Cell) =>
+    ok(c, sh, min, rate) ? `${n(c)} × ${n(sh)}% × ${n(min)} min ÷ 60 × ${m(rate)} = ${m(out)}` : null;
+
+  switch (key) {
+    case 'buildCost':
+      return ok(a.buildDays, a.evalDays, s.engDayRate) ? `(${n(a.buildDays)} + ${n(a.evalDays)}) days × ${m(s.engDayRate)} = ${m(v.buildCost)}` : null;
+    case 'modelCost':
+      return ok(c, a.modelCalls, a.retryMult, a.modelCallCost)
+        ? `${n(c)} × ${n(a.modelCalls)} × ${n(a.retryMult)} × ${each(a.modelCallCost)} = ${m(v.modelCost)}`
+        : null;
+    case 'toolCost':
+      return ok(c, a.toolCalls, a.toolCallCost) ? `${n(c)} × ${n(a.toolCalls)} × ${each(a.toolCallCost)} = ${m(v.toolCost)}` : null;
+    case 'reviewCost':
+      return share(a.reviewShare, a.reviewMinutes, s.reviewerRate, v.reviewCost);
+    case 'escalationCost':
+      return share(a.escalationShare, a.escalationMinutes, s.engHourRate, v.escalationCost);
+    case 'declinedCost':
+      return share(a.declinedShare, a.declinedMinutes, s.reviewerRate, v.declinedCost);
+    case 'upkeepCost':
+      return ok(a.toolingCost, a.evalUpkeepDays, a.requalDays, a.regressionDays, a.incidentDays, s.engDayRate)
+        ? `${m(a.toolingCost)} + (${n(a.evalUpkeepDays)} + ${n(a.requalDays)} ÷ 12 + ${n(a.regressionDays)} + ${n(a.incidentDays)}) days × ${m(s.engDayRate)} = ${m(v.upkeepCost)}`
+        : null;
+    case 'runPerMonth':
+      return ok(v.modelCost, v.toolCost, v.reviewCost, v.escalationCost, v.declinedCost, v.upkeepCost)
+        ? `model ${m(v.modelCost)} + tools ${m(v.toolCost)} + review ${m(v.reviewCost)} + escalation ${m(v.escalationCost)} + declined ${m(v.declinedCost)} + upkeep ${m(v.upkeepCost)} = ${m(v.runPerMonth)}`
+        : null;
+    case 'runPeriod':
+      return ok(v.runPerMonth, s.months) ? `${m(v.runPerMonth)} × ${n(s.months)} = ${m(v.runPeriod)}` : null;
+    case 'total':
+      return ok(v.buildCost, v.runPeriod) ? `build ${m(v.buildCost)} + run ${m(v.runPeriod)} = ${m(v.total)}` : null;
+    case 'perCase':
+      return ok(v.total, sv.totalCases) ? `${m(v.total)} ÷ ${n(sv.totalCases)} = ${each(v.perCase)}` : null;
+    case 'outcomes':
+      return ok(sv.totalCases, a.acceptRate) ? `${n(sv.totalCases)} × ${n(a.acceptRate)}% = ${n(v.outcomes)}` : null;
+    case 'perOutcome':
+      return ok(v.total, v.outcomes) && (v.outcomes ?? 0) > 0 ? `${m(v.total)} ÷ ${n(v.outcomes)} = ${each(v.perOutcome)}` : null;
+    case 'net':
+      return ok(sv.manualBaseline, v.total) ? `manual ${m(sv.manualBaseline)} − total ${m(v.total)} = ${m(v.net)}` : null;
+    case 'breakEven': {
+      if (!ok(sv.manualPerMonth, v.runPerMonth, v.buildCost)) return null;
+      const saving = (sv.manualPerMonth as number) - (v.runPerMonth as number);
+      if (saving <= 0) return `manual ${m(sv.manualPerMonth)} − run ${m(v.runPerMonth)} per month saves nothing, so never`;
+      return `build ${m(v.buildCost)} ÷ (manual ${m(sv.manualPerMonth)} − run ${m(v.runPerMonth)} per month) = ${fmtMonths(v.breakEven)} months`;
+    }
+    default:
+      return null;
+  }
 }

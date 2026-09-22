@@ -54,6 +54,8 @@ import {
   EXAMPLE_STORY,
   FORGOTTEN_ROWS,
   INPUT_COUNT,
+  MAX_VALUE,
+  working,
   LIMITS,
   OUTCOMES,
   SECTIONS,
@@ -103,6 +105,8 @@ const clean = (s: string): string =>
   s
     .replace(/→/g, '->')
     .replace(/₹/g, 'INR ')
+    // The working lines subtract with a true minus, which the standard fonts lack.
+    .replace(/−/g, '-')
     .replace(/[^\x20-\x7e\xa0-\xff–—‘’“”…•]/g, '');
 
 /** True when `clean()` would change nothing. Our own copy must satisfy this. */
@@ -117,8 +121,6 @@ export interface RunCostPdfInput {
   /** ISO date the copy was built, printed on the cover line. */
   builtOn: string;
 }
-
-const MAX_VALUE = 1_000_000_000;
 
 const cell = (v: unknown): Cell | undefined => {
   if (v === null) return null;
@@ -185,7 +187,7 @@ export interface RunCostPdfModel {
   comparison: {
     columns: string[];
     legend: string;
-    rows: { key: ArmComputedKey; label: string; cells: string[]; strong: boolean }[];
+    rows: { key: ArmComputedKey; label: string; cells: string[]; strong: boolean; working: string[] }[];
     baselineLine: string;
   };
   breakdown: { key: ArmComputedKey; name: string; cells: string[] }[] | null;
@@ -196,7 +198,7 @@ export interface RunCostPdfModel {
     question: string;
     scope: 'shared' | 'arm';
     columns: string[];
-    rows: { label: string; unit: string; forgotten: boolean; computed: boolean; cells: string[] }[];
+    rows: { label: string; unit: string; forgotten: boolean; computed: boolean; cells: string[]; working?: string[] }[];
   }[];
   rubric: { key: OutcomeKey; when: string; name: string; what: string; active: boolean }[];
   forgotten: string[];
@@ -256,6 +258,8 @@ export function buildModel(input: RunCostPdfInput): RunCostPdfModel {
         label: row.label,
         cells: r.arms.map((a) => fmtComputed(row, a.values[row.key as ArmComputedKey], cur, a.breakEvenState)),
         strong: row.key === 'perOutcome',
+        // The formula with the figures in, one per option, so the figure above it can be checked by hand.
+        working: r.arms.map((a) => working(row.key, input.inputs, r, a.key, cur) ?? '—'),
       })),
       baselineLine: `Manual baseline for the period: ${fmtMoney(r.shared.values.manualBaseline, cur)} for ${fmtInput(r.shared.values.totalCases)} cases (${fmtInput(input.inputs.shared.casesPerMonth)} a month, ${fmtInput(input.inputs.shared.manualMinutes)} minutes each at ${fmtMoney(input.inputs.shared.manualRate, cur)} an hour).`,
     },
@@ -297,6 +301,10 @@ export function buildModel(input: RunCostPdfInput): RunCostPdfModel {
             s.scope === 'shared'
               ? [fmtComputed(row, r.shared.values[row.key as keyof typeof r.shared.values], cur)]
               : r.arms.map((a) => fmtComputed(row, a.values[row.key as ArmComputedKey], cur, a.breakEvenState)),
+          working:
+            s.scope === 'shared'
+              ? [working(row.key, input.inputs, r, null, cur) ?? '—']
+              : r.arms.map((a) => working(row.key, input.inputs, r, a.key, cur) ?? '—'),
         })),
       ],
     })),
@@ -923,6 +931,8 @@ export async function renderRunCostModelPdf(input: RunCostPdfInput): Promise<{ b
       const k = ARMS[i].key;
       return (row.key === 'net' && (model.numbers.arms[k].net ?? 0) < 0) || (row.key === 'breakEven' && model.numbers.breakEvenState[k] === 'never');
     };
+    // A row and its working stay on one page together.
+    w.ensure(9 * 1.4 + row.working.reduce((h, t) => h + w.heightOf(t, body, 7.5, MEASURE - 44), 0) + 8);
     if (row.strong && lead) {
       // The leading option's figure carries the sun mark, the same mark the page uses.
       const i = ARMS.findIndex((a) => a.key === lead);
@@ -934,7 +944,11 @@ export async function renderRunCostModelPdf(input: RunCostPdfInput): Promise<{ b
       fonts: [row.strong ? bold : body, ...ARMS.map((a) => (row.strong && a.key === lead ? bold : body))],
       colors: [INK, ...ARMS.map((_, i) => (bad(i) ? DANGER : INK))],
     });
-    w.gap(3);
+    // The working, one line per option, under the figures it explains.
+    for (let i = 0; i < ARMS.length; i++) {
+      w.labelled(ARMS[i].short, row.working[i], { size: 7.5, gutter: 44, color: QUIET, labelColor: QUIET });
+    }
+    w.gap(4);
   }
   w.gap(4);
   w.text(model.comparison.baselineLine, { size: 9, color: QUIET });
@@ -991,12 +1005,18 @@ export async function renderRunCostModelPdf(input: RunCostPdfInput): Promise<{ b
     w.columns(['', 'Unit', ...s.columns], cols, { size: 8.5, font: bold, color: QUIET });
     w.gap(2);
     for (const r of s.rows) {
+      if (r.working) w.ensure(9 * 1.4 + r.working.reduce((h, t) => h + w.heightOf(t, body, 7.5, MEASURE - 44), 0) + 6);
       w.columns([`${r.forgotten ? '• ' : ''}${r.label}`, r.unit, ...r.cells], cols, {
         size: 9,
         font: r.computed ? bold : body,
         color: r.computed ? QUIET : INK,
         colors: [r.computed ? QUIET : INK, QUIET],
       });
+      if (r.working) {
+        for (let i = 0; i < r.working.length; i++) {
+          w.labelled(s.scope === 'shared' ? '=' : ARMS[i].short, r.working[i], { size: 7.5, gutter: 44, color: QUIET, labelColor: QUIET });
+        }
+      }
       w.gap(2);
     }
     w.gap(8);
