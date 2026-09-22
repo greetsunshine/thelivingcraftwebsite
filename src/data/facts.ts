@@ -269,9 +269,12 @@ export const facts: Fact[] = [
   {
     id: 'cohort-length',
     surface: '/',
-    q: 'How long is the program and what is the time commitment?',
+    // "cohort" has to be in the question. Retrieval is lexical and every other
+    // cohort fact says the word, so "cohort duration" ranked five of them above
+    // this one and the agent told a visitor the length was not in the fact base.
+    q: 'How long is the cohort programme and what is the time commitment?',
     a: `${cohort.weeks} weeks, live. The commitment is ${cohort.commitment}. Format is ${cohort.format}.`,
-    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time', 'long', 'how long', 'programme', 'program', 'length'],
+    tags: ['duration', 'weeks', 'hours', 'commitment', 'time', 'part-time', 'long', 'how long', 'programme', 'program', 'length', 'cohort'],
   },
   {
     id: 'cohort-price',
