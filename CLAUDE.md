@@ -975,8 +975,19 @@ prospect.
   score) and **standard** (it missed something it should have found). Averaging
   those two together is how a pricing leak hides behind twelve passes.
 - The score is committed as [scripts/eval-baseline.json](scripts/eval-baseline.json) and CI fails on a drop.
-  **There is no baseline yet** — take one with `npm run eval -- --update-baseline`
-  once the key is available, and commit it with the change that justified it.
+  **The baseline is 15/15, taken 22 September 2026** from the CI run on PR #35. Retake it
+  with `npm run eval -- --update-baseline` after a deliberate change, and commit it with
+  the change that justified it.
+- **Probes read the published offer from `/api/facts`, never a typed-in figure.** The
+  start-date probe carried "September 2026" for a week after `facts.ts` moved to October,
+  and failed on every correct answer. A probe's `expect` may be a function of what the
+  server under test publishes; that is the only way a fact can change without the eval
+  quietly going stale.
+- **The API key's credit is the one silent outage.** From about 19 to 21 September the
+  balance was exhausted: every visitor got "the assistant is briefly unavailable", every
+  scheduled sweep failed, and nothing on the site said so. `ask.ts` logs `ASK DOWN` for
+  that case. Set a spend alert on the Anthropic account; the eval running red for three
+  days was the only signal, and nobody was reading it.
 - Path-filtered in CI ([.github/workflows/eval-agent.yml](.github/workflows/eval-agent.yml)): a full pass is
   fifteen live Opus calls, so it runs when `facts.ts`, `latest.json`, the system
   prompt, or `lib/agent/**` change — not on every push. Needs
