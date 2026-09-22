@@ -1,10 +1,19 @@
 ---
 import '../styles/global.css';
+// The cohort page's refinement (19 September). This layout serves `/` alone,
+// and every rule in it is scoped under body.landing.
+import '../styles/landing.css';
+// The V4 and V5 layers of 19 September, after the base, as the package loads them.
+import '../styles/landing-v5.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
+import StickyApplyBar from '../components/site/StickyApplyBar.astro';
+import BrandLockup from '../components/site/BrandLockup.astro';
+import MobileMenu from '../components/site/MobileMenu.astro';
+import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
@@ -19,6 +28,24 @@ export interface Props {
 
 const { title, description, canonical, schema, region = null } = Astro.props;
 const year = new Date().getFullYear();
+
+/* The site's own sections, in the header and the phone menu (V4/V5). The
+   page's own sections moved to the "On this page" bar under it. */
+const GLOBAL_NAV = [
+  ['Programmes', '/programmes'],
+  ['Advisory', '/advisory'],
+  ['Resources', '/resources'],
+  ['Tools', '/tools'],
+  ['About', '/about'],
+];
+const PAGE_NAV = [
+  ['Overview', '#top'],
+  ['Examples', '#example'],
+  ['Curriculum', '#curriculum'],
+  ['Sunil', '#sunil'],
+  ['Fees', '#commitment'],
+  ['Questions', '#questions'],
+];
 ---
 
 <!DOCTYPE html>
@@ -27,7 +54,7 @@ const year = new Date().getFullYear();
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="landing">
     <GoogleTagManagerNoscript />
     {/* Keyboard-only bypass for the header, the same one PracticeLayout carries.
         This page is 7000px of anchor navigation and the header repeats on every
@@ -37,15 +64,42 @@ const year = new Date().getFullYear();
     <!-- Nav -->
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="wordmark" href="/"><span class="dot"></span> the living craft</a>
-        <nav class="navlinks">
-          <a href="/#fit">Who it is for</a>
-          <a href="/#curriculum">The work</a>
-          <a href="/#sunil">Sunil</a>
-          <a href="/#commitment">Commitment</a>
-          <a href="/#questions">Questions</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="/#apply">Apply&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        {/* The lockup, from BrandLockup.astro — the same one every other page
+            carries since 20 September. Its cohort sizes are in landing.css. */}
+        <BrandLockup href="/" />
+        <nav class="navlinks" aria-label="Main navigation">
+          {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+          {/* "Apply", not the package's "Enquire" (Sunil, 19 September: the
+              cohort's call to action is Apply everywhere). It goes to #apply,
+              which lights both routes and waits for a choice. */}
+          <a class="btn btn-primary" href="#apply">Apply<span class="arrow" aria-hidden="true">→</span></a>
+          {/* ONE MENU ON PHONES (Sunil, 19 September). Below 1080px the site's
+              five links fold into this menu. Below 760px the "On this page"
+              row folds in too, as the menu's first group, so a phone has one
+              menu control instead of two. */}
+          <MobileMenu breakpoint={1080}>
+            <div class="mm-group mm-group-page">
+              <p class="mm-group-label">On this page</p>
+              {PAGE_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+            </div>
+            <div class="mm-group">
+              <p class="mm-group-label">The Living Craft</p>
+              {GLOBAL_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+              <a href="#apply">Apply</a>
+              <TalkToSunilLink placement="menu" variant="textlink" onCohortPage />
+            </div>
+          </MobileMenu>
         </nav>
+      </div>
+      {/* ON THIS PAGE. A quiet second row with the page's own sections, on
+          screens wider than 760px. On a phone it is hidden and the same
+          links are the first group of the menu above. */}
+      <div class="page-navigation">
+        <div class="wrap">
+          <nav class="page-links" aria-label="On this page">
+            {PAGE_NAV.map(([label, href]) => <a href={href}>{label}</a>)}
+          </nav>
+        </div>
       </div>
     </header>
 
@@ -58,7 +112,10 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div class="wordmark" style="margin-bottom:14px"><span class="dot"></span> the living craft</div>
+            <span class="brand-tile" role="img" aria-label="The Living Craft">
+              <img class="brand-symbol" src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" loading="lazy" />
+              <img class="brand-name" src="/brand/lc-name.webp" width="364" height="57" alt="" decoding="async" loading="lazy" />
+            </span>
             <p class="muted">Build a working agentic system, and develop the ability to explain its design, examine its behaviour and guide the decisions behind it.</p>
           </div>
           <div class="foot-col">
@@ -81,6 +138,12 @@ const year = new Date().getFullYear();
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>
+          <div class="foot-col">
+            <h2>Explore</h2>
+            <a href="/resources">Resources</a>
+            <a href="/tools">Tools</a>
+            <a href="/programmes/enterprise">Enterprise learning</a>
+          </div>
         </div>
         <div class="foot-bottom">
           <span>© {year} The Living Craft · Sunil Mathew</span>
@@ -89,12 +152,121 @@ const year = new Date().getFullYear();
             <a href="/terms">Terms</a>
             <a href="/communication-preferences">Email preferences</a>
           </span>
+          {/* The one pause for all motion on this page: the hero brain's loop
+              and the drawings' single trace. It is what satisfies WCAG 2.2.2
+              for a loop longer than five seconds. The choice lasts for this
+              page view only; nothing is stored. */}
+          <button type="button" class="motion-setting" data-pause-motion aria-pressed="false">Pause motion</button>
         </div>
       </div>
     </footer>
 
     <Track region={region} />
     <AskWidget surface="/" region={region} />
+    <StickyApplyBar applyHref="#apply" copy="Find the right programme for you." />
+
+    {/* Publishes the sticky header's real height as --anchor-offset, which
+        global.css spends as scroll-margin-top on :target. Every CTA on this
+        page is an in-page anchor and header.nav is sticky, so without this
+        each one lands with its heading hidden behind the nav. Measured
+        rather than hard-coded because .nav-inner wraps, so its height is not
+        one number across viewports. */}
+    <script>
+      (function () {
+        const nav = document.querySelector<HTMLElement>('header.nav');
+        if (!nav) return;
+        const publish = () => {
+          document.documentElement.style.setProperty(
+            '--anchor-offset',
+            `${nav.offsetHeight + 12}px`,
+          );
+        };
+        publish();
+        window.addEventListener('resize', publish, { passive: true });
+      })();
+    </script>
+
+    {/* MOTION, from the V5 package (its preview adapter's motion state and
+        illustrated.js), rewritten here because the adapter itself is not
+        shipped.
+
+        One switch, `data-motion` on <html>: "paused" under the OS
+        reduced-motion setting or after Pause motion is pressed. Then:
+          * the hero brain loops (is-looping) and runs only while it is on
+            screen, the tab is visible and motion is on (is-visible);
+          * each concept drawing traces ONCE, the first time it is on screen
+            with motion on, and then rests (art-play, art-in-view).
+        Nothing is stored: the pause lasts for this page view. */}
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const button = document.querySelector<HTMLButtonElement>('[data-pause-motion]');
+        const brain = document.querySelector<HTMLElement>('[data-woven-brain]');
+        const figures = Array.from(document.querySelectorAll<HTMLElement>('[data-concept]'));
+        let manualPaused = false;
+        let brainSeen = true;
+        const visible = new Set<Element>();
+        const done = new Set<Element>();
+        const off = () => reduced.matches || manualPaused;
+
+        const update = () => {
+          const motionOff = off();
+          root.dataset.motion = motionOff ? 'paused' : 'on';
+          if (button) {
+            button.disabled = reduced.matches;
+            button.setAttribute('aria-pressed', String(motionOff));
+            button.textContent = reduced.matches
+              ? 'Motion paused'
+              : manualPaused
+                ? 'Resume motion'
+                : 'Pause motion';
+          }
+          brain?.classList.toggle('is-visible', brainSeen && !motionOff && !document.hidden);
+          figures.forEach((fig) => {
+            const active = visible.has(fig) && !document.hidden && !motionOff;
+            if (active && !done.has(fig)) fig.classList.add('art-play');
+            fig.classList.toggle('art-in-view', active && !done.has(fig));
+          });
+        };
+
+        brain?.classList.add('is-looping');
+        button?.addEventListener('click', () => {
+          manualPaused = !manualPaused;
+          update();
+        });
+        reduced.addEventListener('change', update);
+        document.addEventListener('visibilitychange', update);
+
+        if ('IntersectionObserver' in window) {
+          if (brain) {
+            new IntersectionObserver(
+              (entries) => {
+                brainSeen = entries[0].isIntersecting;
+                update();
+              },
+              { threshold: 0.05 },
+            ).observe(brain);
+          }
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target)));
+              update();
+            },
+            { threshold: 0.25 },
+          );
+          figures.forEach((fig) => io.observe(fig));
+        }
+        figures.forEach((fig) =>
+          fig.addEventListener('animationend', (event) => {
+            if (!['thread-trace', 'junction-settle'].includes((event as AnimationEvent).animationName)) return;
+            done.add(fig);
+            fig.classList.remove('art-in-view');
+          }),
+        );
+        update();
+      })();
+    </script>
     <Analytics />
     <SpeedInsights />
   </body>

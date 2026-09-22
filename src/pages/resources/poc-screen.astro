@@ -462,7 +462,7 @@ const STEP_COUNT = steps.length;
     width: 8px;
     height: 8px;
     border-radius: var(--radius-pill);
-    background: var(--sun);
+    background: var(--texture-forest);
   }
   ol.steps { counter-reset: s; }
   ol.steps li {
@@ -479,7 +479,7 @@ const STEP_COUNT = steps.length;
     font-size: var(--size-1);
     font-weight: var(--weight-strong);
     color: var(--text-on-invert);
-    background: var(--noir);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     width: 20px;
     height: 20px;
@@ -597,7 +597,7 @@ const STEP_COUNT = steps.length;
   }
   .p-fill {
     height: 100%;
-    background: var(--sun);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     transition: width var(--motion-base, 160ms) ease;
   }
@@ -644,8 +644,8 @@ const STEP_COUNT = steps.length;
     color: var(--text-quiet);
   }
   .p-step[aria-current='step'] { color: var(--text-loud); }
-  .p-step[aria-current='step'] .p-dot { background: var(--noir); color: var(--text-on-invert); }
-  .p-step.done .p-dot { background: var(--sun); color: var(--text-on-accent); }
+  .p-step[aria-current='step'] .p-dot { background: var(--texture-forest); color: var(--text-on-invert); }
+  .p-step.done .p-dot { background: var(--texture-forest); color: var(--text-on-accent); }
   .p-text { font-size: var(--size-1); color: var(--text-quiet); white-space: nowrap; }
 
   /* ── question sections ────────────────────────────────────────────────── */
@@ -661,7 +661,7 @@ const STEP_COUNT = steps.length;
     font-size: var(--size-2);
     font-weight: var(--weight-strong);
     color: var(--text-on-invert);
-    background: var(--noir);
+    background: var(--texture-forest);
     border-radius: var(--radius-pill);
     width: 28px;
     height: 28px;
@@ -765,12 +765,16 @@ const STEP_COUNT = steps.length;
     color: var(--text-quiet);
   }
   .anchor .at { font-size: var(--size-2); line-height: var(--lh-snug); }
-  /* Selected is sun: these are buttons, so yellow still means clickable. */
+  /* Chosen is a forest line on the soft fill, the design system's choice
+     card: a forest FILL is an action, and an answer already given is not.
+     The value line keeps its deep gold on the soft fill (5.32:1). */
   .anchor[aria-pressed='true'] {
-    background: var(--surface-sun);
-    color: var(--text-on-accent);
+    background: var(--surface-hover);
+    border-color: var(--sun);
+    box-shadow: inset 0 0 0 1px var(--sun);
+    color: var(--text-loud);
   }
-  .anchor[aria-pressed='true'] .av { color: var(--text-on-accent); }
+  .anchor[aria-pressed='true'] .av { color: var(--text-loud); }
 
   /* ── the result ───────────────────────────────────────────────────────── */
   .resultcard {

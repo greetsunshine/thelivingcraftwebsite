@@ -22,8 +22,8 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 /** Which page a meeting type is booked from, for the lead ledger's `surface`. */
-const SURFACE: Record<string, string> = { discovery: '/caio', scope: '/assessment' };
-const INTEREST: Record<string, string> = { discovery: 'caio', scope: 'assessment' };
+const SURFACE: Record<string, string> = { discovery: '/caio', 'cohort-call': '/', scope: '/assessment' };
+const INTEREST: Record<string, string> = { discovery: 'caio', 'cohort-call': 'cohort', scope: 'assessment' };
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   // Unlike the analytics beacon, this one tells the visitor when it refuses.

@@ -40,8 +40,18 @@
  *   * A promise about who reads a message. Who owns which route is an
  *     operational matter that changes; the page describes the ROUTE, not the
  *     person.
+ *
+ * The "question before applying" row used to point at a separate cohort
+ * enquiry form on the cohort page. That form is gone — the CTA rework folded
+ * it into one branching application flow and replaced the written-question
+ * path with "Talk with Sunil", which opens the cohort page's own booking
+ * section. The row therefore still answers the same situation it always did,
+ * with a call instead of a second form, and never links to a form that is no
+ * longer there.
  */
+import '../styles/templates/programme.css';
 import PracticeLayout from '../layouts/PracticeLayout.astro';
+import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import { MARKETING_CONSENT } from '../lib/pipeline/consent';
 
 const title = 'Contact — The Living Craft';
@@ -49,7 +59,7 @@ const description =
   'Where each enquiry goes: the open cohort, employer funding, a team programme, advisory, the fractional CAIO retainer and the readiness assessment. One mailbox behind all of them.';
 ---
 
-<PracticeLayout title={title} description={description} canonical="/contact/">
+<PracticeLayout bodyClass="programme-page" title={title} description={description} canonical="/contact/">
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Contact</p>
@@ -62,7 +72,7 @@ const description =
       </p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="mailto:apply@thelivingcraft.ai">Write to us&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="/#ask-drop">Ask about the cohort</a>
+        <TalkToSunilLink placement="contact" />
       </div>
       <p class="hero-note">No response-time commitment is published, because none has been agreed.</p>
     </div>
@@ -82,7 +92,10 @@ const description =
       </div>
       <div class="detail-row">
         <span class="dk">You have a question before applying</span>
-        <span class="dv"><a class="textlink" href="/#ask-drop">The cohort enquiry form</a></span>
+        <span class="dv">
+          <TalkToSunilLink placement="contact" variant="textlink" />
+          {' — thirty minutes, and it is not an application'}
+        </span>
       </div>
       <div class="detail-row">
         <span class="dk">Your employer might fund your place</span>
@@ -90,7 +103,7 @@ const description =
       </div>
       <div class="detail-row">
         <span class="dk">You are exploring learning for a team</span>
-        <span class="dv"><a class="textlink" href="/#team">The enterprise enquiry form</a> · <a class="textlink" href="/programmes/enterprise/">what it covers</a></span>
+        <span class="dv"><a class="textlink" href="/#team">The team application form</a> · <a class="textlink" href="/programmes/enterprise/">what it covers</a></span>
       </div>
       <div class="detail-row">
         <span class="dk">You have a design decision and want a review</span>

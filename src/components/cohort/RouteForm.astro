@@ -43,8 +43,20 @@
  *   * No file upload. The brief forbids requesting confidential documents and
  *     the copy says so twice.
  *   * No hidden cohort id. The server resolves it from its own configuration.
+ *
+ * PROGRESSIVE STEPS, ADDED FOR THE CTA/FORMS REWORK
+ *
+ * When a route's definition in forms.ts carries `steps`, the fields render a
+ * few at a time behind Continue/Back instead of as one long screen — the same
+ * fields, the same names, the same validation, just grouped. A route with no
+ * `steps` (today, only `enquiry`, which is no longer linked from the page)
+ * renders exactly as it always did: every field, one screen, one submit.
+ *
+ * Internally this is ALWAYS a list of steps — a route with no `steps` becomes
+ * one synthetic step holding every field, so there is one rendering path
+ * rather than a flat branch and a stepped branch that could drift apart.
  */
-import { FORMS, type Route } from '../../lib/pipeline/forms';
+import { FORMS, type Route, type Field } from '../../lib/pipeline/forms';
 import { MARKETING_CONSENT } from '../../lib/pipeline/consent';
 import { APPLY_ACCESS_KEY, isApplyConfigured } from '../../data/site';
 
@@ -73,12 +85,27 @@ const {
 } = Astro.props;
 
 const form = FORMS[route];
+const fieldByName = new Map(form.fields.map((f) => [f.name, f]));
+
+/** One step holding every field, when the route defines no `steps`. */
+const effectiveSteps: { label: string; fields: string[] }[] = form.steps ?? [
+  { label: form.title, fields: form.fields.map((f) => f.name) },
+];
+const multiStep = effectiveSteps.length > 1;
 
 /**
  * Fields that take the full width. A textarea always does; so does the funding
  * choice, whose three options need room to be read rather than guessed at.
  */
 const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
+
+const renderField = (field: Field) => {
+  const fieldId = `${id}-${field.name}`;
+  const hintId = field.hint ? `${fieldId}-hint` : undefined;
+  const errId = `${fieldId}-err`;
+  const describedBy = [hintId, errId].filter(Boolean).join(' ');
+  return { field, fieldId, hintId, errId, describedBy };
+};
 ---
 
 <form
@@ -86,6 +113,7 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
   id={id}
   data-route={route}
   data-notify={isApplyConfigured ? APPLY_ACCESS_KEY : undefined}
+  data-step-count={effectiveSteps.length}
   novalidate
 >
   <div class="rf-head">
@@ -106,99 +134,128 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
     aria-hidden="true"
   />
 
-  <div class="form-grid">
-    {
-      form.fields.map((field) => {
-        const fieldId = `${id}-${field.name}`;
-        const hintId = field.hint ? `${fieldId}-hint` : undefined;
-        const errId = `${fieldId}-err`;
-        const describedBy = [hintId, errId].filter(Boolean).join(' ');
-
-        return (
-          <label class={isFullWidth(field.kind) ? 'full' : undefined} for={fieldId}>
-            <span class="rf-label">
-              {field.label}
-              {!field.required && <span class="rf-opt"> (optional)</span>}
-            </span>
-
-            {field.kind === 'textarea' ? (
-              <textarea
-                id={fieldId}
-                name={field.name}
-                rows={field.rows ?? 4}
-                maxlength={field.max}
-                required={field.required}
-                aria-describedby={describedBy || undefined}
-              />
-            ) : field.kind === 'choice' ? (
-              <select
-                id={fieldId}
-                name={field.name}
-                required={field.required}
-                aria-describedby={describedBy || undefined}
-              >
-                <option value="">Choose one</option>
-                {field.options?.map((o) => <option value={o.value}>{o.label}</option>)}
-              </select>
-            ) : (
-              <input
-                id={fieldId}
-                name={field.name}
-                type={
-                  field.kind === 'email'
-                    ? 'email'
-                    : field.kind === 'tel'
-                      ? 'tel'
-                      : field.kind === 'number'
-                        ? 'text'
-                        : 'text'
-                }
-                inputmode={field.kind === 'number' ? 'numeric' : undefined}
-                maxlength={field.max}
-                required={field.required}
-                autocomplete={field.autocomplete}
-                aria-describedby={describedBy || undefined}
-              />
-            )}
-
-            {field.hint && (
-              <span class="rf-hint" id={hintId}>
-                {field.hint}
-              </span>
-            )}
-            <span class="rf-err" id={errId} hidden />
-          </label>
-        );
-      })
-    }
-  </div>
-
   {
-    consent && (
-      /* Separate, unticked, and in its own approved words.
+    effectiveSteps.map((step, i) => {
+      const isLast = i === effectiveSteps.length - 1;
+      return (
+        <div class="rf-step" data-step-index={i} hidden={i !== 0}>
+          {multiStep && (
+            <p class="rf-progress">{`Step ${i + 1} of ${effectiveSteps.length} — ${step.label}`}</p>
+          )}
 
-         It is not in `fields` and it is not styled like the rest of the form,
-         because it is not part of the request — it is a second, optional thing
-         somebody agrees to while they are here. The wording and its version
-         come from consent.ts so the record can say what they actually saw. */
-      <div class="rf-consent">
-        <label class="rf-tick" for={`${id}-consent`}>
-          <input type="checkbox" id={`${id}-consent`} name="marketing_consent" value="yes" />
-          <span>{MARKETING_CONSENT.wording}</span>
-        </label>
-      </div>
-    )
+          <div class="form-grid">
+            {
+              step.fields.map((name) => {
+                const field = fieldByName.get(name);
+                if (!field) return null;
+                const { fieldId, hintId, errId, describedBy } = renderField(field);
+
+                return (
+                  <label class={isFullWidth(field.kind) ? 'full' : undefined} for={fieldId}>
+                    <span class="rf-label">
+                      {field.label}
+                      {!field.required && <span class="rf-opt"> (optional)</span>}
+                    </span>
+
+                    {field.kind === 'textarea' ? (
+                      <textarea
+                        id={fieldId}
+                        name={field.name}
+                        rows={field.rows ?? 4}
+                        maxlength={field.max}
+                        required={field.required}
+                        aria-describedby={describedBy || undefined}
+                      />
+                    ) : field.kind === 'choice' ? (
+                      <select
+                        id={fieldId}
+                        name={field.name}
+                        required={field.required}
+                        aria-describedby={describedBy || undefined}
+                      >
+                        <option value="">Choose one</option>
+                        {field.options?.map((o) => <option value={o.value}>{o.label}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        id={fieldId}
+                        name={field.name}
+                        type={
+                          field.kind === 'email'
+                            ? 'email'
+                            : field.kind === 'tel'
+                              ? 'tel'
+                              : field.kind === 'number'
+                                ? 'text'
+                                : 'text'
+                        }
+                        inputmode={field.kind === 'number' ? 'numeric' : undefined}
+                        maxlength={field.max}
+                        required={field.required}
+                        autocomplete={field.autocomplete}
+                        aria-describedby={describedBy || undefined}
+                      />
+                    )}
+
+                    {field.hint && (
+                      <span class="rf-hint" id={hintId}>
+                        {field.hint}
+                      </span>
+                    )}
+                    <span class="rf-err" id={errId} hidden />
+                  </label>
+                );
+              })
+            }
+          </div>
+
+          {
+            isLast && consent && (
+              /* Separate, unticked, and in its own approved words.
+
+                 It is not in `fields` and it is not styled like the rest of the
+                 form, because it is not part of the request — it is a second,
+                 optional thing somebody agrees to while they are here. The
+                 wording and its version come from consent.ts so the record can
+                 say what they actually saw. Shown on the last step, next to
+                 the button that actually sends the request. */
+              <div class="rf-consent">
+                <label class="rf-tick" for={`${id}-consent`}>
+                  <input type="checkbox" id={`${id}-consent`} name="marketing_consent" value="yes" />
+                  <span>{MARKETING_CONSENT.wording}</span>
+                </label>
+              </div>
+            )
+          }
+
+          <div class="rf-step-actions">
+            {i > 0 && (
+              <button type="button" class="btn btn-ghost rf-back" data-step-back>
+                Back
+              </button>
+            )}
+            {isLast ? (
+              <button
+                type="submit"
+                class={emphasis === 'primary' ? 'btn btn-primary' : 'btn btn-ghost'}
+              >
+                {form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </button>
+            ) : (
+              <button type="button" class="btn btn-primary rf-continue" data-step-continue>
+                Continue&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    })
   }
 
-  <button
-    type="submit"
-    class={emphasis === 'primary' ? 'btn btn-primary' : 'btn btn-ghost'}
-  >
-    {form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
-  </button>
-
   {/* Live region. Assertive because a failed submit is the one moment where
-      interrupting is correct — the person is waiting on this answer. */}
+      interrupting is correct — the person is waiting on this answer. Outside
+      the steps because it has to stay reachable by screen readers whichever
+      step is showing. */}
   <p class="form-status" data-status role="status" aria-live="polite"></p>
 
   <p class="rf-privacy">
@@ -223,6 +280,28 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
     color: var(--text-quiet);
     line-height: var(--lh-normal);
   }
+
+  /* ── steps ───────────────────────────────────────────────────────────── */
+  .rf-progress {
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    letter-spacing: var(--tracking-mono);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-bottom: var(--space-4);
+  }
+  .rf-step-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .rf-step-actions .btn { flex: 1 1 0; justify-content: center; }
+  /* The global .apply-form button[type="submit"] rule forces width:100% —
+     right for a one-screen form, wrong once Back sits beside it. */
+  .rf-step-actions button[type="submit"] { width: auto; }
+  /* Back never competes for the eye; Continue and the real submit button
+     always come last so tab order and reading order agree. */
+  .rf-back { order: -1; }
 
   .rf-label { color: var(--text-quiet); }
   .rf-opt { color: var(--text-quiet); font-weight: var(--weight-normal); }
@@ -341,7 +420,7 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
    * component's script once no matter how many times the component is used, so
    * this must query all of them rather than assume there is one.
    */
-  import { FORMS, validate, type Route } from '../../lib/pipeline/forms';
+  import { FORMS, validate, messageFor, EMAIL_RE, type Route, type Field } from '../../lib/pipeline/forms';
 
   const forms = document.querySelectorAll<HTMLFormElement>('form.route-form');
 
@@ -351,6 +430,25 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
     if (!definition) return;
 
     const status = form.querySelector<HTMLElement>('[data-status]');
+
+    // ── steps ────────────────────────────────────────────────────────────
+    // A form with no `steps` in its definition renders one synthetic step in
+    // the markup above, so this code never has to branch on whether steps
+    // exist — there is always at least one.
+    const stepEls = Array.from(form.querySelectorAll<HTMLElement>('.rf-step'));
+    let currentStep = 0;
+
+    const focusFirstField = (stepEl: HTMLElement) => {
+      stepEl.querySelector<HTMLElement>('input, select, textarea')?.focus();
+    };
+
+    const goToStep = (i: number, focus = false) => {
+      if (i < 0 || i >= stepEls.length || i === currentStep) return;
+      stepEls[currentStep].hidden = true;
+      stepEls[i].hidden = false;
+      currentStep = i;
+      if (focus) focusFirstField(stepEls[i]);
+    };
 
     /**
      * Generated once, here, and never again for the life of this form.
@@ -379,6 +477,32 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
     const errEl = (name: string) =>
       form.querySelector<HTMLElement>(`#${CSS.escape(form.id)}-${CSS.escape(name)}-err`);
 
+    /**
+     * Gate for a Continue button: only the fields on the CURRENT step, and
+     * only the checks that make sense before every field on the form has been
+     * seen — required, and a plainly malformed email. Length is already
+     * capped by `maxlength`, and a choice/number field's format is checked in
+     * full on the final submit, which every step passes through on its way
+     * to `validate()`. Reuses `messageFor` from forms.ts so the wording is
+     * identical to a server-side rejection of the same field.
+     */
+    const checkStep = (names: string[], fields: Field[]) => {
+      const errors: { field: string; code: 'required' | 'invalid_email'; message: string }[] = [];
+      names.forEach((name) => {
+        const def = fields.find((f) => f.name === name);
+        if (!def) return;
+        const cleaned = (fieldEl(name)?.value ?? '').trim();
+        if (!cleaned) {
+          if (def.required) errors.push({ field: name, code: 'required', message: messageFor(def, 'required') });
+          return;
+        }
+        if (def.kind === 'email' && !EMAIL_RE.test(cleaned)) {
+          errors.push({ field: name, code: 'invalid_email', message: messageFor(def, 'invalid_email') });
+        }
+      });
+      return errors;
+    };
+
     const clearErrors = () => {
       definition.fields.forEach((f) => {
         const el = fieldEl(f.name);
@@ -404,9 +528,17 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
 
       // Move focus to the first problem. Without this a keyboard or screen
       // reader user is told something is wrong and left at the bottom of the
-      // form with no way to find out what.
+      // form with no way to find out what. If that field's step is not the
+      // one showing — the final submit's full validate() can in principle
+      // flag an earlier field — reveal that step first. Focusing a field
+      // inside a hidden container would leave a keyboard user nowhere.
       const first = errors[0] && fieldEl(errors[0].field);
-      if (first) first.focus();
+      if (first) {
+        const stepEl = first.closest('.rf-step') as HTMLElement | null;
+        const stepIndex = stepEl ? stepEls.indexOf(stepEl) : -1;
+        if (stepIndex !== -1 && stepEl!.hidden) goToStep(stepIndex);
+        first.focus();
+      }
 
       if (status) {
         status.className = 'form-status err';
@@ -483,6 +615,54 @@ const isFullWidth = (kind: string) => kind === 'textarea' || kind === 'choice';
       (panel as HTMLElement).setAttribute('tabindex', '-1');
       (panel as HTMLElement).focus();
     };
+
+    // ── Continue / Back ─────────────────────────────────────────────────
+    stepEls.forEach((stepEl, i) => {
+      const names = definition.steps?.[i]?.fields ?? [];
+
+      stepEl.querySelector<HTMLButtonElement>('[data-step-continue]')?.addEventListener('click', () => {
+        const errors = checkStep(names, definition.fields);
+        if (errors.length) {
+          showErrors(errors);
+          return;
+        }
+        names.forEach((name) => {
+          fieldEl(name)?.removeAttribute('aria-invalid');
+          const err = errEl(name);
+          if (err) {
+            err.textContent = '';
+            err.hidden = true;
+          }
+        });
+        if (status) {
+          status.className = 'form-status';
+          status.textContent = '';
+        }
+        goToStep(i + 1, true);
+      });
+
+      stepEl.querySelector<HTMLButtonElement>('[data-step-back]')?.addEventListener('click', () => {
+        goToStep(i - 1, true);
+      });
+    });
+
+    // Enter in a single-line field advances to the next step instead of
+    // trying to submit a form that has more steps left. On the last step
+    // there is no Continue button to click, so this does nothing and the
+    // browser's normal "Enter submits the form" behaviour takes over.
+    if (stepEls.length > 1) {
+      form.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        const target = event.target as HTMLElement | null;
+        if (!target || target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') return;
+        const stepEl = target.closest('.rf-step') as HTMLElement | null;
+        const continueBtn = stepEl?.querySelector<HTMLButtonElement>('[data-step-continue]');
+        if (continueBtn) {
+          event.preventDefault();
+          continueBtn.click();
+        }
+      });
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();

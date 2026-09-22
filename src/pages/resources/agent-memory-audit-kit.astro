@@ -399,7 +399,7 @@ const sections = [
     gap: var(--space-2);
   }
   .threename { font-size: var(--size-1); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
-  .threeask { font-family: var(--font-display); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .threeask { font-family: var(--font-heading); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
   .threebody { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
 
   /* ── tables ───────────────────────────────────────────────────────────── */
@@ -409,7 +409,7 @@ const sections = [
   .tests { min-width: 980px; }
   .decide { min-width: 0; }
   .grid thead th {
-    background: var(--noir);
+    background: var(--texture-forest);
     color: var(--text-on-invert);
     text-align: left;
     font-family: var(--font-mono);
@@ -468,13 +468,13 @@ const sections = [
   /* ── code, with a copy button ─────────────────────────────────────────── */
   .codeblock { position: relative; max-width: 860px; }
   pre.code {
-    background: var(--noir);
+    background: var(--texture-forest);
     color: var(--text-on-invert);
     border-radius: var(--radius-inner);
     padding: var(--space-5);
     padding-top: calc(var(--space-5) + 18px);
     overflow-x: auto;
-    font-family: var(--font-mono);
+    font-family: var(--font-code);
     font-size: var(--size-1);
     line-height: 1.7;
     tab-size: 2;
@@ -494,7 +494,7 @@ const sections = [
     cursor: pointer;
   }
   .copy:hover, .copy:focus-visible { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.6); outline: none; }
-  .copy:focus-visible { box-shadow: 0 0 0 2px var(--sun); }
+  .copy:focus-visible { box-shadow: 0 0 0 2px var(--text-on-invert); }
 
   /* ── the twelve questions ─────────────────────────────────────────────── */
   .qgroup + .qgroup { margin-top: var(--space-6); }
@@ -566,7 +566,7 @@ const sections = [
       gap: 6mm;
     }
     .cover-eyebrow { font-size: 10pt; color: var(--text-quiet); }
-    .cover-title { font-family: var(--font-display); font-size: 34pt; font-weight: var(--weight-heavy); color: var(--text-loud); line-height: 1.1; }
+    .cover-title { font-family: var(--font-display); font-size: 34pt; font-weight: var(--weight-display); color: var(--text-loud); line-height: 1.1; }
     .cover-sub { font-size: 14pt; color: var(--text-quiet); max-width: 150mm; }
     .cover-meta { font-size: 10pt; color: var(--text-quiet); }
     .cover-meta + .cover-meta { margin-top: -4mm; }

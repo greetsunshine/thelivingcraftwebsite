@@ -1,0 +1,168 @@
+---
+/**
+ * /design-system — the rendered reference for the design system's reusable
+ * components (src/styles/ds/components.css and src/components/ds/).
+ *
+ * It exists so a component can be reviewed, and regression-checked, in one
+ * place before a page adopts it. It is the site's version of the package's
+ * index.html guide, built from the real components rather than a copy.
+ *
+ * `noindex`, not in the sitemap and not linked from the site. The words below
+ * are sample text for the components; none of it is an offer fact, and no
+ * form here sends anything.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import Tabs from '../components/ds/Tabs.astro';
+import FormField from '../components/ds/FormField.astro';
+import StatePanel from '../components/ds/StatePanel.astro';
+import ToolProgress from '../components/ds/ToolProgress.astro';
+import Toast from '../components/ds/Toast.astro';
+
+export const prerender = false;
+---
+
+<PracticeLayout title="Design system components" description="Reference for the site's reusable components." noindex>
+  <section class="wrap ds-intro">
+    <p class="eyebrow">Design system v1</p>
+    <h1>Components</h1>
+    <p class="lead">Every reusable piece, in each of its states. Sample text only. Nothing here sends anything.</p>
+  </section>
+
+  <section class="wrap ds-block" id="actions">
+    <h2>Actions</h2>
+    <p class="muted">One principal action per decision. Classes: <code>btn btn-primary</code>, <code>btn btn-ghost</code>, <code>btn btn-text</code>.</p>
+    <div class="lc-actions">
+      <button type="button" class="btn btn-primary">Continue <span aria-hidden="true">→</span></button>
+      <button type="button" class="btn btn-ghost">Back</button>
+      <button type="button" class="btn btn-text">Skip this step</button>
+      <button type="button" class="btn btn-primary" disabled>Disabled</button>
+      <button type="button" class="btn btn-primary" aria-busy="true" disabled>Saving…</button>
+    </div>
+    <a class="lc-inline-link" href="#forms">Read how forms behave <span aria-hidden="true">→</span></a>
+  </section>
+
+  <section class="wrap ds-block" id="forms">
+    <h2>Forms</h2>
+    <p class="muted">Explicit labels. Helper and error text are tied to the field. The error stays until it is fixed.</p>
+    <form class="ds-sample-form" novalidate>
+      <FormField id="ds-name" label="Your name" required autocomplete="name" />
+      <FormField id="ds-email" label="Email" type="email" required helper="A personal address is fine." error="Enter an email address, like name@example.com." value="name@example" />
+      <FormField id="ds-org" label="Organisation" />
+      <FormField id="ds-route" label="Funding route" required>
+        <select id="ds-route" name="route" required>
+          <option value="">Choose one</option>
+          <option>Self-funded</option>
+          <option>Employer support</option>
+        </select>
+      </FormField>
+      <label class="lc-check-row"><input type="checkbox" name="updates" /> Email me programme updates. I can unsubscribe at any time.</label>
+    </form>
+  </section>
+
+  <section class="wrap ds-block" id="tabs">
+    <h2>Tabs</h2>
+    <p class="muted">Left and Right move between tabs, Home and End jump to the ends. One tab stop.</p>
+    <Tabs label="Model views" tabs={[{ id: 'yours', label: 'Your model' }, { id: 'ref', label: 'Reference example' }, { id: 'notes', label: 'Notes' }]}>
+      <section data-tab-panel="yours"><p>Your figures appear here as you enter them.</p></section>
+      <section data-tab-panel="ref"><p>A worked example with every figure filled in.</p></section>
+      <section data-tab-panel="notes"><p>What each figure means, and what it does not establish.</p></section>
+    </Tabs>
+  </section>
+
+  <section class="wrap ds-block" id="disclosure">
+    <h2>Disclosure</h2>
+    <p class="muted">For optional depth. Never to hide the terms a reader needs.</p>
+    <div class="lc-accordion">
+      <details><summary>What does this estimate leave out? <span class="plus" aria-hidden="true">+</span></summary><p>Retries after a timeout, and review time spent by people.</p></details>
+      <details><summary>Can I change the assumptions? <span class="plus" aria-hidden="true">+</span></summary><p>Yes. Every assumption is an input on the first tab.</p></details>
+    </div>
+  </section>
+
+  <section class="wrap ds-block" id="resources">
+    <h2>Resource rows</h2>
+    <p class="muted">Name the reader's question, and label what the link is: a guide, a tool or a download.</p>
+    <ul class="lc-resource-list">
+      <li><a class="lc-resource-row" href="#resources"><span class="lc-row-number">01</span><span><span class="lc-row-kind">Tool</span><h3>Is this agent worth building?</h3><p>Score a proof of concept against five questions before you staff it.</p></span><span class="lc-row-arrow" aria-hidden="true">→</span></a></li>
+      <li><a class="lc-resource-row" href="#resources"><span class="lc-row-number">02</span><span><span class="lc-row-kind">Guide</span><h3>What does a run cost at scale?</h3><p>Model the cost of one run, then of a day's volume.</p></span><span class="lc-row-arrow" aria-hidden="true">→</span></a></li>
+    </ul>
+    <div class="lc-download-list" style="margin-top:32px">
+      <a href="#resources">Worksheet (PDF) <span aria-hidden="true">↓</span></a>
+      <a href="#resources">Workbook (Excel) <span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
+
+  <section class="wrap ds-block" id="status">
+    <h2>Tables and status</h2>
+    <div class="lc-table-scroll">
+      <table class="lc-table">
+        <caption class="sr-only">Sample checks and their status</caption>
+        <thead><tr><th scope="col">Check</th><th scope="col">Owner</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Refund limit enforced by the tool</th><td>Platform</td><td><span class="lc-badge lc-badge--success">Passed</span></td></tr>
+          <tr><th scope="row">Repeated request detected</th><td>Agent team</td><td><span class="lc-badge lc-badge--warning">Needs review</span></td></tr>
+          <tr><th scope="row">Timeout after money moved</th><td>Agent team</td><td><span class="lc-badge lc-badge--error">Failing</span></td></tr>
+          <tr><th scope="row">Evaluation set refreshed</th><td>Evals</td><td><span class="lc-badge lc-badge--info">Scheduled</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lc-callout">A status always carries a word, never colour alone.</p>
+    <div class="ds-states">
+      <StatePanel state="empty" title="No results yet"><p>Answer the first question to see a result.</p></StatePanel>
+      <StatePanel state="loading" title="Checking your answers"><p>This takes a few seconds.</p></StatePanel>
+      <StatePanel state="error" title="That did not save"><p>Your answers are still here.</p><button type="button" class="btn btn-ghost">Try again</button></StatePanel>
+      <StatePanel state="complete" title="Saved"><p>Your reference is LC-0000.</p></StatePanel>
+    </div>
+  </section>
+
+  <section class="wrap ds-block" id="tool">
+    <h2>Guided tool</h2>
+    <div class="lc-tool-workspace">
+      <ToolProgress steps={['Purpose', 'Authority', 'Evidence', 'Result']} current={1} label="Walkthrough progress" />
+      <fieldset class="lc-tool-question ds-fieldset">
+        <legend><h2>What may the agent do without a person?</h2></legend>
+        <p class="muted">Choose the closest. You can change it later.</p>
+        <div class="lc-choice-list">
+          <label class="lc-choice"><input type="radio" name="authority" checked /><span><strong>Recommend only</strong><span class="lc-choice-note">A person reads every recommendation and acts.</span></span></label>
+          <label class="lc-choice"><input type="radio" name="authority" /><span><strong>Act within a limit</strong><span class="lc-choice-note">The tool enforces a ceiling the prompt cannot raise.</span></span></label>
+          <label class="lc-choice"><input type="radio" name="authority" /><span><strong>Act without a limit</strong><span class="lc-choice-note">Nothing outside the model stops an action.</span></span></label>
+        </div>
+      </fieldset>
+      <div class="lc-tool-actions">
+        <button type="button" class="btn btn-ghost">Back</button>
+        <button type="button" class="btn btn-primary">Continue <span aria-hidden="true">→</span></button>
+      </div>
+    </div>
+    <div class="lc-tool-workspace lc-tool-result" style="margin-top:24px">
+      <div class="lc-result-badge" aria-hidden="true">✓</div>
+      <h2>Worth a scoped proof of concept</h2>
+      <p class="muted">What this result does not establish: that the agent will work, or what it will cost to run.</p>
+    </div>
+  </section>
+
+  <section class="wrap ds-block" id="notification">
+    <h2>Notification</h2>
+    <p class="muted">Feedback on something the reader did. It stays until closed. A form error is never a toast.</p>
+    <button type="button" class="btn btn-ghost" data-ds-toast>Copy the link</button>
+  </section>
+
+  <Toast />
+</PracticeLayout>
+
+<script>
+  document.querySelector('[data-ds-toast]')?.addEventListener('click', () => {
+    (window as unknown as { lcToast: (m: string) => void }).lcToast('Copied to clipboard.');
+  });
+</script>
+
+<style>
+  .ds-intro { padding-block: var(--space-8) var(--space-6); }
+  .ds-intro h1 { font-size: var(--size-h1); margin: var(--space-3) 0 var(--space-4); }
+  .ds-block { padding-block: var(--space-7); border-top: var(--border-w-hair) solid var(--border-hair); }
+  .ds-block > h2 { font-size: var(--size-h2); margin-bottom: var(--space-3); }
+  .ds-sample-form { max-width: 32rem; }
+  .ds-states { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin-top: var(--space-5); }
+  .ds-fieldset { border: 0; padding: 0; margin: 0; }
+  .ds-fieldset legend { padding: 0; }
+  code { font-family: var(--font-code); font-size: 0.9em; }
+  @media (max-width: 800px) { .ds-states { grid-template-columns: 1fr; } }
+</style>

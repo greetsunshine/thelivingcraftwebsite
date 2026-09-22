@@ -15,15 +15,29 @@
  * restored on 15 September. It is not arbitrary: outcome, fit, example, what a
  * review changes, outcomes, the transformation, the work, the modules,
  * process, Sunil, what you leave with, live experience, commitment, questions,
- * application. Somebody arrives wondering whether this is for them, and each
- * section answers the next question they have.
+ * a call, application. Somebody arrives wondering whether this is for them, and
+ * each section answers the next question they have.
  *
- * THE PRINTED NUMBERS RUN 00 TO 14, IN DOCUMENT ORDER, WITH NO GAPS. They were
- * 00, 01, 02, 04, 03, 05 with five sections unnumbered, because the restored
- * sections kept the numbers they carried on the pre-rebuild page and were
- * interleaved with rebuild sections that carried none. If you add or move a
- * section, renumber the whole run. A reader uses these to tell how far through
- * they are, and a sequence that skips or repeats tells them the wrong thing.
+ * SEVEN CHAPTERS, NO PRINTED NUMBERS (19 September 2026). The landing
+ * refinement package groups the sections into seven chapters — opening,
+ * teaching, development, practice, teacher, joining, conversation — each a
+ * <div class="chapter">. No divider is drawn between sections (the knot
+ * divider was removed on 19 September). The printed section numbers are gone.
+ *
+ * V5, ILLUSTRATED (19 September 2026, docs/2026-09-19_Landing_Page_V5_
+ * Illustrated-…, kept out of the repo). The package is the source of truth
+ * for this page's look and order. What it changed:
+ *   * an ivory hero with the line-drawn brain and two equal routes, and a
+ *     "Two ways to learn" overview (#routes) under it;
+ *   * eleven concept drawings (ConceptFigure.astro) across seven sections;
+ *   * "Open cohort" labels on the sections that describe the cohort only;
+ *   * an enterprise section (#enterprise-scope) after the fees, so a team's
+ *     scope is never read off the cohort's price card;
+ *   * the questions open the last chapter, then the application, then the
+ *     call, with the short written enquiry folded under the booking widget;
+ *   * the proof bar is gone: the employers are named once, in the intro strip.
+ * Styles: landing.css (the refinement's base) then landing-v5.css (the V4 and
+ * V5 layers, in the package's own order).
  *
  * THE HERO PORTRAIT, RESTORED 15 September 2026
  *
@@ -57,8 +71,11 @@
  *     says in terms: do not place it in public copy as a guarantee.
  */
 import RouteForm from './RouteForm.astro';
-import GoogleCalendarBooking from './GoogleCalendarBooking.astro';
+import BookingWidget from '../BookingWidget.astro';
+import WovenBrain from './WovenBrain.astro';
+import ConceptFigure from './ConceptFigure.astro';
 import { cohort } from '../../data/facts';
+import { FORMS } from '../../lib/pipeline/forms';
 import type { Region } from '../../data/regions';
 import {
   EXPLORES,
@@ -68,6 +85,7 @@ import {
   MODULES,
   LEAVE_WITH,
   LIVE_EXPERIENCE,
+  HEADLINE,
 } from '../../data/cohort-copy';
 
 /**
@@ -83,61 +101,97 @@ interface Props {
 
 const { region = null } = Astro.props;
 const hasPrice = Boolean(region?.publicPrice);
-import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
+/** One drawing above each of the three takeaways, in LEAVE_WITH's order. */
+const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
 
 ---
 
-{/* ── 00 · Hero ──────────────────────────────────────────────────────────── */}
-<section class="hero" id="top" style="border-top:0">
+{/* ════ Chapter: opening — the hero and who this is for ════ */}
+<div class="chapter chapter-opening">
+
+{/* ── Hero ──────────────────────────────────────────────────────────────
+    V5 (19 September): an ivory hero, the line-drawn brain, and two EQUAL
+    opening routes: the open cohort and a team programme. The headline is
+    HEADLINE from cohort-copy.ts, the same string the meta title uses.
+
+    "Talk with Sunil" is no longer beside Apply here. The package gives the
+    second button to the team route, and the conversation stays reachable
+    from the menu, the footer and #book. The employer names and the 26 years
+    appear once, in the intro strip under the brain. */}
+<section class="hero" id="top">
   <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow"><span class="num">00</span> An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</span>
-      <h1>Build systems<br />that <em>outlive</em><br />their makers.</h1>
-      <p class="credential">
-        I'm <strong>Sunil Mathew</strong>. I have spent 26 years building and leading
-        engineering at <strong>Google</strong>, <strong>Amazon</strong>, and <strong>Walmart</strong>.
-        Here I teach the craft of agentic and systems architecture, live, to a small cohort.
+    <div class="hero-copy">
+      <p class="eyebrow">The Living Craft · Agentic &amp; systems architecture</p>
+      <h1>{HEADLINE.split(/(?<=\.)\s+/).map((line, i) => (i === 0 ? line : <Fragment><br />{line}</Fragment>))}</h1>
+      <p class="hero-intro">Live learning for experienced engineers and engineering teams.</p>
+      <p class="hero-description">
+        The Living Craft is a live programme with Sunil Mathew for engineers responsible for how AI
+        systems are designed and run. Build a working agentic system, examine its behaviour and
+        practise the decisions your team will depend on.
       </p>
-
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#apply">Apply for the {cohort.startsOn} cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        {googleCalendarAppointmentUrl && (
-          <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="hero" />
-        )}
-        <a class="btn btn-ghost" href="#ask-drop">Ask about the cohort</a>
+        <a class="btn btn-primary" href="#apply">Apply for the cohort<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="#team">Start the team conversation<span class="arrow" aria-hidden="true">→</span></a>
       </div>
-
-      <p class="hero-note">
-        {region ? `Inaugural ${region.label} cohort` : 'Inaugural cohort'} · starts {cohort.startsOn} · {cohort.seats} seats, capped · applications reviewed personally
-      </p>
     </div>
 
+    <WovenBrain />
+  </div>
+
+  {/* THE INTRO STRIP. Sunil's portrait and his own opening line, under a
+      hairline. The proof bar that sat here went with V4: the employer list
+      is in this sentence, once, and nowhere else on the page. */}
+  <div class="wrap intro-strip">
     <div class="portrait">
       <div class="frame">
-        <img src="/sunil-profile.jpg" alt="Sunil Mathew" />
-        <div class="warm"></div>
+        <img src="/sunil-introduction.webp" alt="Sunil Mathew" width="480" height="600" loading="lazy" decoding="async" />
       </div>
-      <div class="tag"><b>Sunil Mathew</b>Engineering leader · Google, Amazon, Walmart</div>
+      <div class="tag"><b>Sunil Mathew</b> Engineering leader</div>
     </div>
+    <p class="founder-intro">
+      I'm Sunil Mathew. I have spent 26 years building and leading engineering at Google, Amazon,
+      and Walmart. Here I teach the craft of agentic and systems architecture, live, to a small cohort.
+    </p>
   </div>
 </section>
 
-{/* ── Proof bar ──────────────────────────────────────────────────────────── */}
-<div class="proofbar">
-  <div class="wrap inner">
-    <span class="label">26 years, shipped at</span>
-    <span class="logo">Google</span>
-    <span class="logo">Amazon</span>
-    <span class="logo">Walmart</span>
-    <span class="logo">Consulting</span>
-  </div>
-</div>
+{/* ── Two ways to learn ──────────────────────────────────────────────────
+    The two routes the hero offers, side by side and equally weighted. The
+    cohort's figures come from facts.ts and the region, as everywhere else on
+    this page. The enterprise route states no price: its scope and fees are
+    set in its own conversation. */}
+<section class="wrap route-overview" id="routes" aria-label="Two ways to learn">
+  <article>
+    <p class="route-kicker">Open cohort</p>
+    <h2>Join the open cohort</h2>
+    <p>{FORMS.application.intro}</p>
+    <p class="route-fact">30 live hours with Sunil, plus independent work.</p>
+    <p>Joining as an individual — self-funded or exploring employer support.</p>
+    <p class="route-small">An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</p>
+    <p class="route-small">
+      {region ? `Inaugural ${region.label} cohort` : 'Inaugural cohort'} · starts {cohort.startsOn} · {cohort.seats} seats, capped · applications reviewed personally
+    </p>
+    <a class="textlink" href="#commitment">Explore the cohort and fees <span aria-hidden="true">→</span></a>
+  </article>
+  <article>
+    <p class="route-kicker">Enterprise learning</p>
+    <h2>Bring your team together</h2>
+    <p>
+      An enterprise programme normally brings 8–10 participants together with a schedule agreed
+      for the group. It begins with your learning objective, the experience of the people taking
+      part and your industry context. It is a separate purchase and a separate scoping
+      conversation from the open cohort.
+    </p>
+    <p class="route-fact">An enquiry is a conversation, not an application and not an order.</p>
+    <a class="textlink" href="#enterprise-scope">Explore enterprise learning <span aria-hidden="true">→</span></a>
+  </article>
+</section>
 
-{/* ── 01 · Audience fit ─────────────────────────────────────────────────── */}
+{/* ── Audience fit ─────────────────────────────────────────────────── */}
 <section class="wrap band" id="fit">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">01</span> Who this is for</span>
+    <span class="eyebrow">Who this is for</span>
     <h2>For engineers who've hit the <em>ceiling</em> of what tutorials teach.</h2>
     <p class="lead">
       You can build. What you want now is judgment. That comes from shipping hard
@@ -158,10 +212,15 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 02 · Practical example ─────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: teaching — two illustrative examples ════ */}
+<div class="chapter chapter-teaching">
+
+{/* ── Practical example ─────────────────────────────────────────────── */}
 <section class="wrap band" id="example">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">02</span> An illustrative example</p>
+    <p class="eyebrow">An illustrative example</p>
     <h2>Follow a decision <em>beyond the demo</em></h2>
   </div>
 
@@ -180,6 +239,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         This illustrative example shows the kind of connection you will practise:
         from a design choice to behaviour you can examine.
       </p>
+      <ConceptFigure name="decision" caption="The boundary between recommending and acting." />
     </div>
 
     {/* The one structural idea on the page that is a diagram rather than a
@@ -187,30 +247,38 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         are two different responsibilities that look like one box. */}
     <ol class="boundary" aria-label="Recommendation and action are separate responsibilities">
       <li>
-        <span class="b-k">Reads</span>
-        <b>The policy</b>
-        <span class="b-n">Gathers the evidence it will rely on.</span>
+        <div class="b-body">
+          <span class="b-k">Reads</span>
+          <b>The policy</b>
+          <span class="b-n">Gathers the evidence it will rely on.</span>
+        </div>
       </li>
       <li>
-        <span class="b-k">Recommends</span>
-        <b>A refund</b>
-        <span class="b-n">A person can still read this and decide.</span>
+        <div class="b-body">
+          <span class="b-k">Recommends</span>
+          <b>A refund</b>
+          <span class="b-n">A person can still read this and decide.</span>
+        </div>
       </li>
       <li class="b-line">
-        <span class="b-k">The boundary</span>
-        <b>What permits the action?</b>
-        <span class="b-n">Evidence, limits, repeated requests, an uncertain result.</span>
+        <div class="b-body">
+          <span class="b-k">The boundary</span>
+          <b>What permits the action?</b>
+          <span class="b-n">Evidence, limits, repeated requests, an uncertain result.</span>
+        </div>
       </li>
       <li>
-        <span class="b-k">Acts</span>
-        <b>Issues the refund</b>
-        <span class="b-n">The system moves money. Its own controls, not the prompt’s.</span>
+        <div class="b-body">
+          <span class="b-k">Acts</span>
+          <b>Issues the refund</b>
+          <span class="b-n">The system moves money. Its own controls, not the prompt’s.</span>
+        </div>
       </li>
     </ol>
   </div>
 </section>
 
-{/* ── 03 · What a review changes ───────────────────────────────────────────
+{/* ── What a review changes ───────────────────────────────────────────
     Added by the V4 addendum, 11 September. It sits between the example and
     the outcomes deliberately: the returns assistant above shows a design
     QUESTION, and this shows what asking it produces. Without this section the
@@ -221,27 +289,39 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
     words. Neither is a claimed incident. */}
 <section class="wrap band" id="review">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">03</span> A second illustrative example</p>
+    <p class="eyebrow">A second illustrative example</p>
     <h2>See what a review <em>can change</em></h2>
   </div>
   <div class="two-up">
-    <p class="lead">
-      Imagine a checker rejects an agent's result, and the workflow repeats the same
-      attempt. A useful review asks what new evidence the next attempt has. If nothing
-      changes, the next design question is how to recover or stop.
-    </p>
-    <p class="body-copy">
-      This is an illustrative teaching example. It shows how a question can lead to a
-      change you can build and examine. The aim is to develop how you reason, alongside
-      what you produce.
-    </p>
+    <div class="review-copy">
+      <p class="lead">
+        Imagine a checker rejects an agent's result, and the workflow repeats the same
+        attempt. A useful review asks what new evidence the next attempt has. If nothing
+        changes, the next design question is how to recover or stop.
+      </p>
+      <p class="body-copy">
+        This is an illustrative teaching example. It shows how a question can lead to a
+        change you can build and examine. The aim is to develop how you reason, alongside
+        what you produce.
+      </p>
+    </div>
+    <ConceptFigure
+      name="review"
+      labels={['Agent result', 'Checker', 'New evidence?', 'Recover or stop']}
+      caption="A repeated attempt needs new evidence."
+    />
   </div>
 </section>
 
-{/* ── 04 · Outcomes and curriculum ───────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: development — what you develop, what you can do, what you keep ════ */}
+<div class="chapter chapter-development">
+
+{/* ── Outcomes and curriculum ───────────────────────────────────────── */}
 <section class="wrap band" id="outcomes">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">04</span> What you develop</p>
+    <p class="eyebrow">What you develop</p>
     <h2>Develop practical <em>design judgment</em></h2>
   </div>
   <div class="two-up">
@@ -257,19 +337,24 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 05 · The transformation ───────────────────────────────────────────────
+{/* ── The transformation ───────────────────────────────────────────────
     Restored 15 September 2026, from the pre-rebuild page. A–E are
     `cohort.outcomes` in facts.ts, already fed to JSON-LD and the Q&A agent;
     F is previously-published copy carried verbatim (see TRANSFORMATION in
     cohort-copy.ts for why it is not treated as an invented figure). */}
 <section class="wrap transform" id="transform">
-  <div class="sec-head" style="margin-bottom:0">
-    <span class="eyebrow"><span class="num">05</span> The transformation</span>
+  <div class="sec-head">
+    <span class="eyebrow">The transformation</span>
     <h2>What you'll be able to do.</h2>
     <p class="lead">
       By the end, the work shows up in how you decide. Under real constraints, with
       real stakes.
     </p>
+    <ConceptFigure
+      name="architecture"
+      labels={['Model + tools', 'Evaluation', 'Controls + review']}
+      caption="The model is one part of the system."
+    />
   </div>
   <ol class="tlist">
     {
@@ -277,24 +362,59 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
         <li>
           <span class="n">{item.letter}.</span>
           <div>
-            <h4>{item.title}</h4>
+            <h3>{item.title}</h3>
             <p>{item.body}</p>
           </div>
         </li>
       ))
     }
   </ol>
-  <p class="lead" style="margin-top:32px">
+  <p class="lead">
     Then carry it forward. The real measure of having learned the craft is being
     able to hand it on.
   </p>
 </section>
 
-{/* ── 06 · What the work explores ─────────────────────────────────────── */}
+{/* ── What you leave with ───────────────────────────────────────────
+    Restored 15 September 2026, verbatim from the pre-rebuild page. No
+    figures here — artifacts and access, not metrics — so nothing about it
+    was in question. */}
+<section class="wrap band" id="takeaways">
+  <div class="sec-head">
+    <span class="eyebrow">What you leave with</span>
+    <h2>What physically <em>leaves the room</em>.</h2>
+    <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
+    <p class="scope-label">Open cohort</p>
+  </div>
+  <div class="cards3">
+    {
+      LEAVE_WITH.map((t, i) => (
+        <div class="card">
+          <ConceptFigure name={TAKEAWAY_ART[i]} />
+          <div class="k">{t.k}</div>
+          <h3>{t.title}</h3>
+          <p>{t.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+</div>
+
+{/* ════ Chapter: practice — the work, the modules, how it runs ════ */}
+<div class="chapter chapter-practice">
+
+{/* ── What the work explores ─────────────────────────────────────── */}
 <section class="wrap band" id="curriculum">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">06</span> The work</p>
+    <p class="eyebrow">The work</p>
     <h2>What the work <em>explores</em></h2>
+    <ConceptFigure
+      name="curriculum"
+      labels={['Purpose', 'Authority', 'Evaluation', 'Reliability', 'Review']}
+      caption="Five connected areas of practice."
+    />
   </div>
   {/* Five areas, not five modules with durations. The brief: "Use validated
       learning areas; no invented module durations." The old page carried four
@@ -315,25 +435,26 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </ol>
 </section>
 
-{/* ── 07 · Inside the program ────────────────────────────────────────────
+{/* ── Inside the program ────────────────────────────────────────────
     Restored 15 September 2026. The four modules are `cohort.modules` in
     facts.ts; the body copy for each is not invented — it is the description
     the pre-rebuild page carried for the same four modules. */}
 <section class="wrap band" id="modules">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">07</span> Inside the program</span>
+    <span class="eyebrow">Inside the program</span>
     <h2>A small set of deep things, done <em>properly</em>.</h2>
     <p class="lead">
       Six weeks. Live, in a small cohort. Built around your real systems, not toy
       problems.
     </p>
+    <p class="scope-label">Open cohort</p>
   </div>
   <div class="modules">
     {
       MODULES.map((m) => (
         <div class="mod">
           <div class="mk"><span class="num">{m.id}</span><span class="wk">{m.weeks}</span></div>
-          <h4>{m.title}</h4>
+          <h3>{m.title}</h3>
           <p>{m.body}</p>
         </div>
       ))
@@ -341,11 +462,16 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 08 · Learning process ──────────────────────────────────────────────── */}
+{/* ── Learning process ──────────────────────────────────────────────── */}
 <section class="wrap band" id="process">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">08</span> How it runs</p>
+    <p class="eyebrow">How it runs</p>
     <h2>Build, examine and <em>revise</em></h2>
+  </div>
+  <div class="learning-sequence" aria-label="Build, examine and revise">
+    <ConceptFigure name="build" caption="Build" />
+    <ConceptFigure name="examine" caption="Examine" />
+    <ConceptFigure name="revise" caption="Revise" />
   </div>
   <div class="two-up">
     <p class="lead">
@@ -360,7 +486,12 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 09 · Sunil ─────────────────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: teacher — Sunil, and the track record ════ */}
+<div class="chapter chapter-teacher">
+
+{/* ── Sunil ─────────────────────────────────────────────────────────── */}
 {/* THE MAKER SECTION, REINSTATED 15 September 2026.
  *
  * This was section 03 of the pre-rebuild page (ProgramPage.astro) and the
@@ -389,7 +520,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
  */}
 <section class="wrap band" id="sunil">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">09</span> Who teaches it</p>
+    <p class="eyebrow">Who teaches it</p>
     <h2>Work with <em>Sunil Mathew</em></h2>
   </div>
 
@@ -402,21 +533,19 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
 
   <div class="story">
     <div class="maker-portrait">
-      <div class="mframe"><img src="/sunil-bw.jpg" alt="Sunil Mathew" /></div>
+      <div class="mframe"><img src="/sunil-teaching.webp" alt="Sunil Mathew" width="1000" height="667" loading="lazy" decoding="async" /></div>
       <div class="mcap">Sunil Mathew · Bengaluru, India</div>
     </div>
     <div>
       {/* The delivered copy, reproduced and not edited. */}
       <p class="lead sunil-copy">
-        Sunil brings engineering and leadership experience from Google, Amazon, Walmart
+        Sunil brings engineering and leadership experience from global technology companies
         and startups. His focus is the reasoning behind a system’s design and the
         evidence that helps a team make its next decision. His teaching connects a
         concrete example, a question about the design and a change that can be examined.
       </p>
       <p>
-        He has spent twenty-six years building and leading engineering at
-        <strong>Google</strong>, <strong>Amazon</strong>, <strong>Walmart</strong> and
-        startups. The work was production systems and the teams that run them, where a
+        His work has centred on production systems and the teams that run them, where a
         design decision is expensive to undo once it ships.
       </p>
       <p>
@@ -426,6 +555,7 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
       </p>
       <div class="pullquote">“Anyone can show you the agent pattern. I can show you the three times it was the wrong pattern in production, and how I knew before it cost us.”</div>
       <div class="signature quote-attrib">— Sunil Mathew</div>
+      <p class="scope-label">Open cohort</p>
       <p class="after-quote">
         That is what the 30 live hours are for. You bring a design decision from your own
         work. He shows you how he would examine it, and what evidence would settle it.
@@ -434,36 +564,13 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 10 · What you leave with ───────────────────────────────────────────
-    Restored 15 September 2026, verbatim from the pre-rebuild page. No
-    figures here — artifacts and access, not metrics — so nothing about it
-    was in question. */}
-<section class="wrap band" id="takeaways">
-  <div class="sec-head">
-    <span class="eyebrow"><span class="num">10</span> What you leave with</span>
-    <h2>What physically <em>leaves the room</em>.</h2>
-    <p class="lead">Not just capabilities. Artifacts you keep, and your team inherits.</p>
-  </div>
-  <div class="cards3">
-    {
-      LEAVE_WITH.map((t) => (
-        <div class="card">
-          <div class="k">{t.k}</div>
-          <h3>{t.title}</h3>
-          <p>{t.body}</p>
-        </div>
-      ))
-    }
-  </div>
-</section>
-
-{/* ── 11 · Live experience ───────────────────────────────────────────────
+{/* ── Live experience ───────────────────────────────────────────────
     Restored 15 September 2026, with one deliberate omission — see the
     LIVE_EXPERIENCE comment in cohort-copy.ts for exactly which figures did
     and did not come back, and why. */}
 <section class="wrap band inaugural" id="live-experience">
   <div class="sec-head">
-    <span class="eyebrow"><span class="num">11</span> Live experience</span>
+    <span class="eyebrow">Live experience</span>
     <h2>I've spent a career growing <em>people</em>, not just systems.</h2>
     <p class="lead">
       The craft only counts if it transfers, and it already has. This is the track
@@ -483,11 +590,17 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 12 · Commitment ───────────────────────────────────────────────────── */}
+</div>
+
+{/* ════ Chapter: joining — the commitment and the questions ════ */}
+<div class="chapter chapter-joining">
+
+{/* ── Commitment ───────────────────────────────────────────────────── */}
 <section class="wrap band" id="commitment">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">12</span> The commitment</p>
+    <p class="eyebrow">The commitment</p>
     <h2>Make room for <em>the work</em></h2>
+    <p class="scope-label">Open cohort</p>
   </div>
 
   <div class="commit">
@@ -559,10 +672,67 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 13 · FAQs ──────────────────────────────────────────────────────────── */}
+{/* ── Enterprise learning ────────────────────────────────────────────
+    V4/V5: the team programme's own section, kept apart from the cohort's
+    fees above so that no cohort figure reads as a team figure. It states no
+    price and no dates. The button opens the team form in #apply directly. */}
+<section class="wrap band enterprise-scope" id="enterprise-scope">
+  <div class="sec-head">
+    <p class="eyebrow">Enterprise learning</p>
+    <h2>A programme for one team</h2>
+  </div>
+  <div class="enterprise-grid">
+    <div>
+      <h3>Start with the decisions your team shares.</h3>
+      <p>
+        A group programme earns its cost when several people will be arguing about the same
+        design and need the same vocabulary to do it. That is usually a team putting an agent
+        behind something that acts — a system that moves money, changes a record or contacts a
+        customer — where the awkward questions are going to be settled in a review meeting
+        rather than by one engineer.
+      </p>
+      <p>
+        Industry-specific practice is the default. The work is set in the kind of system your
+        team actually builds — the constraints, the review culture and the failure modes of your
+        sector — without anyone handing over confidential architecture to make that possible.
+      </p>
+      <ConceptFigure name="team" caption="A shared system. A shared review." />
+    </div>
+    <div class="enterprise-facts">
+      <dl>
+        <div><dt>Participants</dt><dd>Normally 8–10 participants</dd></div>
+        <div><dt>Schedule</dt><dd>Agreed for the group</dd></div>
+        <div><dt>Starting point</dt><dd>Learning objective, participant experience and industry context</dd></div>
+        <div><dt>Scope and fees</dt><dd>Confirmed through a separate scoping conversation</dd></div>
+      </dl>
+      <a class="btn btn-primary" href="#team">Start the team conversation<span class="arrow" aria-hidden="true">→</span></a>
+      <a class="textlink" href="/programmes/enterprise">Read about learning for a team <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+  <details class="company-material">
+    <summary>Company-specific work<span class="plus" aria-hidden="true">+</span></summary>
+    <p>
+      Company-specific work needs a separate conversation about scope and permission. It is not
+      refused; it is simply not something to arrange by email in an enquiry thread, because it
+      changes what material is shared, who may see it and what is agreed in writing first.
+    </p>
+    <p>
+      Please do not attach confidential company material to an enquiry. Your learning objective,
+      the experience of the participants and your industry are enough to have a useful first
+      conversation.
+    </p>
+  </details>
+</section>
+
+</div>
+
+{/* ════ Chapter: conversation — questions, the application, then a call ════ */}
+<div class="chapter chapter-conversation">
+
+{/* ── FAQs ──────────────────────────────────────────────────────────── */}
 <section class="wrap band" id="questions">
   <div class="sec-head">
-    <p class="eyebrow"><span class="num">13</span> Before you apply</p>
+    <p class="eyebrow">Before you apply</p>
     <h2>Questions before <em>joining</em></h2>
   </div>
   <div class="faq">
@@ -582,52 +752,65 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </div>
 </section>
 
-{/* ── 14 · Application ──────────────────────────────────────────────────── */}
+{/* ── Application ──────────────────────────────────────────────────── */}
+{/* ONE APPLICATION FLOW, BRANCHING BY WHO IS APPLYING.
+
+    This branches on one thing — applying for yourself, or arranging learning
+    for a team — because those really are two different journeys (forms.ts:
+    an application and an enterprise enquiry are different record types, and
+    an enterprise enquiry is never counted as an application). A plain
+    question about fit is neither, and it has its own short form, folded
+    under the booking widget in #book (V4/V5, 19 September).
+
+    The heading block carries id="enquire", the package's anchor for its
+    "Enquire" button. The site says Apply and links #apply instead
+    (Sunil, 19 September); the id stays so an old link still lands.
+
+    Only one branch's form is visible at a time (route-choice.ts equivalent
+    is the inline script below), so a visitor sees ONE form, not two stacked
+    ones — the biggest single cut to how much scrolling the mobile flow
+    needs. Each form itself is now progressive (see RouteForm.astro's
+    `steps`), so nobody meets all seven-plus fields on one screen either. */}
 <section class="wrap band forms" id="apply">
-  <div class="sec-head">
-    <p class="eyebrow"><span class="num">14</span> Apply</p>
-    <h2>Start with your experience and <em>a question</em></h2>
+  <div class="sec-head" id="enquire">
+    <p class="eyebrow">Apply</p>
+    <h2>Start <em>here</em></h2>
+    <p class="lead">
+      One flow, however you are arriving at it. Pick the one that matches you, then answer a
+      few questions at a time.
+    </p>
   </div>
 
-  {googleCalendarAppointmentUrl && (
-    <div class="closing-next-step">
-      <div class="closing-next-step-actions" aria-label="Programme next steps">
-        <a class="btn btn-primary" href="#apply-form">Apply for the open cohort</a>
-        <GoogleCalendarBooking url={googleCalendarAppointmentUrl} placement="closing" />
-      </div>
-      <p>
-        You can schedule an appointment without applying. A scheduling request remains separate
-        from an application and is confirmed in Google Calendar.
-      </p>
-    </div>
-  )}
+  <div class="route-choice" role="group" aria-label="What brings you here?">
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="application"
+      aria-pressed="true"
+      aria-controls="apply-panel"
+    >
+      <span class="rc-title">Apply for the open cohort</span>
+      <span class="rc-body">Joining as an individual — self-funded or exploring employer support.</span>
+    </button>
+    <button
+      type="button"
+      class="route-choice-btn"
+      data-route-choice="enterprise"
+      aria-pressed="false"
+      aria-controls="team"
+    >
+      <span class="rc-title">Arrange learning for a team</span>
+      <span class="rc-body">Scoping an enterprise group programme for your organisation.</span>
+    </button>
+  </div>
 
-  {/* Apply and the team route sit side by side — both are a full, committed
-      submission (an application, or an organisation opportunity), just two
-      different journeys. The enquiry route below is a smaller ask — "no
-      application milestone inferred", per forms.ts — so it is a dropdown
-      rather than a third equal column. */}
-  <div class="apply-split">
+  <div id="apply-panel" class="route-panel" tabindex="-1">
     <RouteForm route="application" id="apply-form" emphasis="primary" heading="Apply for the open cohort" />
-
-    <div id="team" class="alt-route">
-      <RouteForm route="enterprise" id="enterprise-form" />
-    </div>
   </div>
 
-  {/* NOT id="ask". AskWidget renders <div class="ask" id="ask"> on this same
-      page and finds its own root with getElementById('ask'); a second element
-      with that id wins on document order and the widget then binds to this
-      panel, losing its region attribute and every control inside it. */}
-  <details class="ask-drop" id="ask-drop">
-    <summary>
-      Ask about the cohort
-      <span class="plus" aria-hidden="true">+</span>
-    </summary>
-    <div class="alt-route">
-      <RouteForm route="enquiry" id="enquiry-form" />
-    </div>
-  </details>
+  <div id="team" class="route-panel" tabindex="-1" hidden>
+    <RouteForm route="enterprise" id="enterprise-form" heading="Arrange learning for a team" />
+  </div>
 
   <p class="contact-line">
     Programme enquiries and employer-funding support, and enterprise enquiries:
@@ -635,201 +818,401 @@ import { googleCalendarAppointmentUrl } from '../../lib/booking';
   </p>
 </section>
 
-{/* The enquiry route is a dropdown, but three links point straight at it: the
-    hero CTA above, both /contact links, and the agent-design-check handoff.
-    Without this, all of them scroll to a closed row and the visitor has to
-    work out that the form is behind it. Opening on the fragment is also what
-    keeps RESUME.md's documented fallback real: while the Google appointment
-    URL is blank, "Ask about the cohort" is the only alternative to applying.
+{/* ── Talk with Sunil ──────────────────────────────────────────────
+    Where every "Talk with Sunil" link on the site lands. It is THIS SITE'S
+    booking widget, the same one /caio and /assessment use, against the
+    `cohort-call` meeting type in meetings.ts.
 
-    A <details> is opened by an attribute, not by a style, so CSS :target
-    cannot do this. Six lines is the whole cost. */}
+    V4/V5 moved it BELOW the application and put the short written enquiry
+    back under it, folded, as "Ask about the cohort". The widget's empty and
+    failure copy therefore points UP, not down (`formAt="above"`, Sunil,
+    20 September): the application is the form a reader sees first here. The
+    folded enquiry stays as the shorter way to ask a question.
+
+    A call is NOT an application, and neither is an enquiry: forms.ts keeps
+    `enquiry` as its own record type, never counted as an application. */}
+<section class="wrap band" id="book">
+  <div class="sec-head">
+    <p class="eyebrow">Talk first</p>
+    <h2>Talk with <em>Sunil</em></h2>
+  </div>
+
+  <BookingWidget type="cohort-call" heading="Book a call about the cohort" formAt="above" />
+
+  <details class="cohort-question" id="cohort-question">
+    <summary>Ask about the cohort<span class="plus" aria-hidden="true">+</span></summary>
+    <RouteForm route="enquiry" id="enquiry-form" heading="Ask about the cohort" />
+  </details>
+</section>
+
+</div>
+
+{/* Switches which of the two forms above is visible, and runs the arrival
+    cue.
+
+    A button pair rather than a <select> or radios, because there are only two
+    and each needs room for a description — the same reasoning RouteForm's own
+    field choices follow.
+
+    THE CUE. Arriving from any Apply CTA closes both forms, lights BOTH
+    buttons, and waits for a choice. It does not open a form by itself: an
+    earlier version did that after 900ms, which read as the form simply
+    opening on arrival, and picked the individual route on the reader's
+    behalf into the bargain. The point is that the team route is seen at all
+    — with a form already open, the chooser was something a reader scrolled
+    past on the way to the fields. Anyone who scrolls here themselves, with
+    no Apply click behind them, gets the individual form open as before; the
+    cue is only for people who were sent here by a CTA.
+
+    Three links elsewhere on the site point straight at a branch and must
+    skip the cue entirely: #team and #enterprise-form (the contact page, and
+    the footer's "Learning for a team") open the team form directly, and
+    #apply-form opens the individual one. Somebody who asked for one form
+    does not need to be shown that a choice exists. */}
 <script>
   (function () {
-    var drop = document.getElementById('ask-drop') as HTMLDetailsElement | null;
-    if (!drop) return;
-    var openOnTarget = function () {
-      if (location.hash === '#ask-drop') drop!.open = true;
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-route-choice]'),
+    );
+    const panels: Record<string, HTMLElement | null> = {
+      application: document.getElementById('apply-panel'),
+      enterprise: document.getElementById('team'),
     };
-    openOnTarget();
-    window.addEventListener('hashchange', openOnTarget);
+    if (buttons.length === 0 || !panels.application || !panels.enterprise) return;
+
+    const select = (branch: string, focus: boolean) => {
+      if (!panels[branch]) return;
+      buttons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.routeChoice === branch)),
+      );
+      Object.entries(panels).forEach(([key, panel]) => {
+        if (panel) panel.hidden = key !== branch;
+      });
+      if (focus) panels[branch]!.focus();
+    };
+
+    const endCue = () => {
+      buttons.forEach((b) => b.classList.remove('is-cueing'));
+    };
+
+    /**
+     * Highlight both choices and WAIT.
+     *
+     * There is no timer here on purpose. A previous version opened the
+     * individual form by itself after 900ms, which read as the form simply
+     * opening on arrival — the highlight was over before anybody registered
+     * it, and the choice had been made on the reader's behalf anyway. The
+     * highlight now holds until somebody picks, which is the whole point of
+     * showing them two things.
+     */
+    const cue = () => {
+      // Both panels closed, so the two buttons are the only thing to look at.
+      Object.values(panels).forEach((panel) => {
+        if (panel) panel.hidden = true;
+      });
+      // Nothing is selected while the question is open. Leaving the
+      // individual button pressed would answer it for them.
+      buttons.forEach((b) => {
+        b.setAttribute('aria-pressed', 'false');
+        // Restart the animation on a second click, which it will not do on
+        // its own while the class is already there.
+        b.classList.remove('is-cueing');
+        void b.offsetWidth;
+        b.classList.add('is-cueing');
+      });
+    };
+
+    buttons.forEach((b) => {
+      b.addEventListener('click', () => {
+        // The choice answers the cue, so the cue stops being asked.
+        endCue();
+        select(b.dataset.routeChoice ?? 'application', true);
+      });
+    });
+
+    // Arriving from another page with the hash already set (the contact page
+    // links /#team), the browser tries its fragment scroll while the panel is
+    // still hidden, and a hidden element cannot be scrolled to. So once the
+    // panel is open, scroll to the target ourselves. scroll-margin-top keeps
+    // it clear of the sticky header, the same as a native fragment jump.
+    const reveal = (branch: string) => {
+      endCue();
+      select(branch, false);
+      document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    };
+
+    const fromHash = () => {
+      if (location.hash === '#team' || location.hash === '#enterprise-form') {
+        reveal('enterprise');
+      } else if (location.hash === '#apply-form') {
+        reveal('application');
+      } else if (location.hash === '#apply') {
+        cue();
+      }
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+
+    /* A second click on an Apply CTA fires no hashchange, because the hash is
+       already #apply — so the cue would run once and never again. This
+       catches the click itself, on this page only; the browser still does the
+       scrolling. */
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link) return;
+      const url = new URL(link.href, location.href);
+      const samePage = url.pathname.replace(/\/+$/, '') === location.pathname.replace(/\/+$/, '');
+      if (!samePage) return;
+      if (url.hash === '#apply') cue();
+      // The panel has to be visible BEFORE the browser scrolls to it: a
+      // hidden target cannot be scrolled to, and a repeat click fires no
+      // hashchange. The hero and the enterprise section both link #team.
+      else if (url.hash === '#team' || url.hash === '#enterprise-form') {
+        endCue();
+        select('enterprise', false);
+      } else if (url.hash === '#apply-form') {
+        endCue();
+        select('application', false);
+      }
+    });
   })();
 </script>
 
 <style>
-  .band { padding-block: var(--space-8); }
-
-  .closing-next-step {
-    max-width: 580px;
-    margin: 0 auto var(--space-6);
-    text-align: center;
-  }
-
-  .closing-next-step-actions {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-
-  .closing-next-step p {
-    max-width: 52ch;
-    margin: var(--space-3) auto 0;
-    color: var(--text-quiet);
-    font-size: var(--size-2);
-  }
-
-  @media (max-width: 560px) {
-    .closing-next-step-actions .btn {
-      width: 100%;
-    }
-  }
+  /* The page's own pieces. The shared components (hero, cards, lists, modules,
+     the stat band, the FAQ, the price card) and the section rhythm are styled
+     for this page in src/styles/landing.css, which is where the 19 September
+     refinement lives. Section padding used to be set here; it is there now, so
+     one file owns the rhythm. */
 
   /* ── prose ───────────────────────────────────────────────────────────── */
   .two-up {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: var(--space-6) var(--space-7);
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6) 80px;
     align-items: start;
   }
+  /* The shorter paragraph sits level with the END of the lead, as the
+     package sets it. On a phone they stack and it starts under the lead. */
+  .two-up > .body-copy { align-self: end; }
   .body-copy {
-    font-size: var(--size-4);
-    line-height: var(--lh-normal);
+    font-size: 1.125rem;
+    line-height: 1.62;
     color: var(--text-body);
-    max-width: var(--measure-prose);
+    max-width: 64ch;
   }
-  .body-copy + .body-copy { margin-top: var(--space-4); }
-  .body-copy.quiet { color: var(--text-quiet); font-size: var(--size-3); }
+  .body-copy + .body-copy { margin-top: 20px; }
+  .body-copy.quiet { color: var(--text-quiet); }
   .sunil-copy { max-width: var(--measure-prose); }
 
-  /* The signature is the pullquote’s attribution here, not a sign-off at the
-     foot of a letter, so it sits directly under the quote. */
-  .quote-attrib { margin-top: var(--space-3); font-size: var(--size-3); }
-  .after-quote { margin-top: var(--space-6); }
+  /* The pull quote's attribution, directly under the quote. */
+  .quote-attrib {
+    margin: 0 0 var(--space-5);
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    color: var(--accent-ink);
+  }
+  .after-quote { margin-top: var(--space-5); }
 
-  /* ── the boundary diagram ────────────────────────────────────────────── */
-  .example { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
-  .example-body { display: flex; flex-direction: column; gap: var(--space-4); }
+  /* ── the boundary diagram: a timeline, not a boxed card ──────────────── */
+  .example { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .example-body { display: flex; flex-direction: column; }
+  .example-body p { font-size: 1.125rem; }
 
+  /* THE TIMELINE. One continuous rail through four knots. Each step draws
+     the rail from its own knot down to the next one (::after), so the line
+     is unbroken whatever each step's height, and stops at the last knot.
+     QA on 19 September: as borders, the rail broke at the boundary step and
+     never reached "Acts". */
+  /* V4 sets the timeline on an unbleached cloth panel, under the drawing. */
   .boundary {
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-6);
-    counter-reset: none;
-  }
-  .boundary li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2px;
-    padding: var(--space-3) 0;
+    gap: 0;
+    padding: 28px 28px 30px;
+    margin: 16px 0 0;
+    border-radius: 4px;
+    background: var(--surface-cloth);
+  }
+  .boundary li { position: relative; padding: 0 0 28px 40px; }
+  .boundary li:last-child { padding-bottom: 0; }
+  .boundary li::before {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    left: 1px;
+    top: 7px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--ember);
+  }
+  .boundary li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 12px;
+    bottom: -12px;
+    width: 1px;
+    background: var(--border-field);
   }
   .boundary .b-k {
-    font-family: var(--font-mono);
-    font-size: var(--size-1);
-    color: var(--text-quiet);
-    letter-spacing: var(--tracking-mono);
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    letter-spacing: 0.04em;
+    color: var(--accent-ink);
   }
   .boundary b {
-    font-size: var(--size-5);
+    display: block;
+    margin: 6px 0;
+    font-size: 1.375rem;
+    line-height: 1.35;
     font-weight: var(--weight-strong);
     color: var(--text-loud);
-    letter-spacing: var(--tracking-display);
   }
-  .boundary .b-n { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-snug); }
-
-  /* The one item that is a question rather than a step, marked as the moment
-     the responsibility changes. */
-  .boundary .b-line {
+  .boundary .b-n {
+    display: block;
+    max-width: 36ch;
+    font-size: var(--size-3);
+    line-height: 1.6;
+    color: var(--text-body);
+  }
+  /* The one step that is a question, not an action: the moment the
+     responsibility changes. Its knot is an open gold ring, and its words sit
+     on a soft gold panel beside the rail, so the rail itself stays whole.
+     Deep gold on that panel is 5.62:1; ink is 11.4:1. */
+  .boundary .b-line { padding-bottom: 28px; }
+  .boundary .b-line::before {
+    top: 23px;
+    background: var(--surface-panel);
+    box-shadow: inset 0 0 0 2px var(--ember);
+  }
+  .boundary .b-line .b-body {
+    margin-left: -16px;
+    padding: 16px 20px 18px 16px;
+    border-radius: var(--radius-control);
     background: var(--accent-quiet);
-    border-radius: var(--radius-inner);
-    padding: var(--space-4);
-    margin-block: var(--space-2);
   }
-  .boundary .b-line b { color: var(--accent-ink-strong); }
 
   /* ── explores list ───────────────────────────────────────────────────── */
   .explores { max-width: 880px; }
 
   /* ── commitment ──────────────────────────────────────────────────────── */
-  .commit { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); align-items: start; }
-  .commit-copy { display: flex; flex-direction: column; gap: var(--space-4); }
-  .commit-facts {
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-  }
-  .commit + .price-card { margin-top: var(--space-8); }
+  .commit { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-bottom: 40px; }
+  .commit-copy { display: flex; flex-direction: column; }
 
   /* ── forms ───────────────────────────────────────────────────────────── */
-  .forms :global(.apply-form) { margin-inline: 0; }
+  /* The chooser and the form share the text's left edge and one 940px width
+     (landing.css). They were centred until QA on 19 September, at two
+     different widths, under a left-aligned heading. */
 
-  /* Apply and the team route, side by side — see the markup comment for why
-     the enquiry route is not a third column here. */
-  .apply-split {
+  /* The branch chooser. Two buttons, not a <select> — each needs room for a
+     one-line description, and a visible pair is one fewer click than a
+     dropdown for a decision this page exists to help someone make quickly.
+     Outlined, not raised, as the refinement draws them. */
+  .route-choice {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    align-items: start;
+    gap: var(--space-4);
+    max-width: 940px;
+    margin: 0 0 var(--space-6);
   }
-  .alt-route {
+  .route-choice-btn {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-6);
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: 4px;
+    padding: 22px 24px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
   }
-  .alt-route :global(.apply-form) {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    max-width: none;
+  .route-choice-btn:hover { border-color: var(--text-loud); }
+  .route-choice-btn:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  /* The selected branch: a heavier forest edge on the soft green. Forest as a
+     line, not a fill — a fill is for an action, and this button is not "go",
+     it is "chosen". Ink on soft green is 11.89:1. */
+  .route-choice-btn[aria-pressed='true'] {
+    border: 2px solid var(--sun);
+    padding: 21px 23px;
+    background: var(--surface-hover);
+  }
+  .rc-title {
+    font-size: 1.125rem;
+    font-weight: var(--weight-strong);
+    line-height: 1.4;
+    color: var(--text-loud);
+  }
+  .rc-body { font-size: 1rem; color: var(--text-body); line-height: 1.6; }
+
+  .route-panel:focus { outline: none; }
+
+  /* THE ARRIVAL CUE. Landing on #apply from an Apply CTA closes both forms
+     and lights both choices, and the highlight HOLDS until somebody picks —
+     the class stays on, so these declarations outlast the pulse. The form
+     used to be open on arrival, which meant the chooser was the thing a
+     reader scrolled past on their way to the fields, and the team route was
+     invisible to anyone who did not look up. Border and ink only: --sun is a
+     fill for an action, and a button being pointed at has not been chosen —
+     which is also why this has to look different from the pressed state
+     above, and does, by the shadow. */
+  .route-choice-btn.is-cueing {
+    border-color: var(--text-loud);
+    box-shadow: var(--shadow-lift);
+    animation: rc-cue 500ms var(--ease-out) 3;
+  }
+  @keyframes rc-cue {
+    0%,
+    100% {
+      border-color: var(--text-loud);
+    }
+    50% {
+      border-color: var(--accent-ink);
+    }
+  }
+  /* The cue still happens for somebody who has asked for less motion — it
+     just holds the highlight instead of pulsing it. */
+  @media (prefers-reduced-motion: reduce) {
+    .route-choice-btn.is-cueing { animation: none; }
   }
 
-  /* The enquiry route, collapsed. Reuses the FAQ's bare details/summary
-     styling from global.css (the plus rotates on open) inside its own panel,
-     rather than the multi-item .faq wrapper, which assumes several stacked
-     rows with dividers between them. */
-  .ask-drop {
-    margin-top: var(--space-6);
-    background: var(--surface-panel);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-raise);
-    padding: var(--space-2) var(--space-6);
-    border-bottom: 0;
-  }
-  .ask-drop summary { padding: var(--space-5) 0; }
-  .ask-drop[open] summary { border-bottom: var(--border-w-hair) solid var(--border-hair); }
-  .ask-drop .alt-route {
-    background: transparent;
-    box-shadow: none;
-    padding: var(--space-5) 0;
-  }
   .contact-line {
-    margin-top: var(--space-7);
-    font-size: var(--size-3);
-    color: var(--text-quiet);
+    margin-top: 32px;
+    max-width: 75ch;
+    font-size: 1rem;
+    color: var(--text-body);
   }
+  .contact-line a { overflow-wrap: anywhere; }
   .contact-line a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
 
   /* ── narrow ──────────────────────────────────────────────────────────── */
   @media (max-width: 900px) {
     .two-up,
     .example,
-    .commit,
-    .apply-split {
+    .commit { gap: 40px; }
+  }
+
+  @media (max-width: 760px) {
+    .boundary { padding: 24px 20px; }
+    .boundary b { font-size: 1.25rem; }
+    .two-up,
+    .example,
+    .commit {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-5);
     }
-    .band { padding-block: var(--space-7); }
-  }
-
-  @media (max-width: 560px) {
-    .alt-route { padding: var(--space-5); }
-    .commit-facts { padding-inline: var(--space-5); }
+    .two-up > .body-copy { align-self: start; }
+    .commit { margin-bottom: var(--space-5); }
+    .route-choice { grid-template-columns: 1fr; gap: var(--space-3); }
+    .route-choice-btn { padding: 20px; }
+    .route-choice-btn[aria-pressed='true'] { padding: 19px; }
   }
 </style>

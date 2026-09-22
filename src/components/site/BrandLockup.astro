@@ -1,0 +1,52 @@
+---
+/**
+ * The Living Craft lockup: the LC mark beside the "The Living Craft"
+ * lettering, both cropped from Alchemy's supplied artwork with the paper keyed
+ * out (public/brand/lc-mark-keyed.webp and lc-name.webp).
+ *
+ * ONE LOCKUP ON EVERY PAGE (Sunil, 20 September: "I want the logo from the
+ * landing page on each and every page"). It began on the cohort page with the
+ * 19 September refinement; this component is that same pair of images, so the
+ * header of `/`, the wider practice pages, the resources, the policies, the
+ * field notes, the booking page, the consulting pages and the course area all
+ * draw one lockup from one place.
+ *
+ * WHAT IT REPLACES. Three older marks: the text wordmark "the living craft"
+ * beside Logo.astro's mark, the brand-neutral "Sunil Mathew" dot on the
+ * consulting pages, and the console's own dot. Logo.astro still exists for the
+ * places that want the mark alone, such as the course area's nav rail.
+ *
+ * IMAGES OF TEXT, SO THE LINK CARRIES THE NAME. Both images have an empty alt
+ * and the link carries an aria-label, because announcing "The Living Craft
+ * logo, The Living Craft" helps nobody. Never trace, redraw or recolour the
+ * artwork, and never show its tagline: the crop stops above it.
+ *
+ * ON A DARK BAND, PASS `tile`. The mark's own shadows need cream paper behind
+ * them, so a footer gets the pair on a paper tile rather than flat on forest.
+ *
+ * Sizes are in global.css (.brand-lockup, .brand-tile); the cohort page sets
+ * its own in landing.css, which is more specific and still wins.
+ */
+export interface Props {
+  /** Where the lockup points. Omit on a page that is already home. */
+  href?: string;
+  /** A short descriptor beside it: "Resources", "Privacy", "Field notes". */
+  sub?: string;
+  /** Put the pair on its cream tile, for a dark footer or header. */
+  tile?: boolean;
+}
+
+const { href, sub, tile = false } = Astro.props;
+const Tag = href ? 'a' : 'span';
+const label = sub ? `The Living Craft, ${sub}` : 'The Living Craft';
+---
+
+<Tag
+  class:list={['wordmark', 'brand-lockup', tile && 'brand-tile']}
+  href={href}
+  aria-label={href ? `${label}, home` : label}
+>
+  <img class="brand-symbol" src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" />
+  <img class="brand-name" src="/brand/lc-name.webp" width="364" height="57" alt="" decoding="async" />
+  {sub && <span class="wordmark-sub" aria-hidden="true">{sub}</span>}
+</Tag>

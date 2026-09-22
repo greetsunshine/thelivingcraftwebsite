@@ -187,22 +187,37 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
+  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+    [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
+    [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
+    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    **no printed section numbers**, and no divider ornament between sections (the knot
+    divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
+    package's `brain-lines.svg`), which **loops**; eleven drawings come from
+    [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
+    "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the
+    floating launcher, bottom right. The header carries the site's sections, Apply (never the
+    package's "Enquire") and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
+    source of truth for this page's look.** Re-check against it with a side-by-side render.
+  - **BookingWidget builds its day and time buttons in script.** Their styles must be `:global`
+    inside the widget; scoped styles never reach script-built elements.
   - **Three routes, one definition** ([src/lib/pipeline/forms.ts](src/lib/pipeline/forms.ts)):
     application, cohort enquiry, enterprise enquiry. The page renders from it and the API
     validates against it, so a field cannot be required in the browser and optional on the
     server. An enterprise enquiry is never counted as an application.
-  - **A fourth, optional route: scheduling an appointment.** [src/components/cohort/GoogleCalendarBooking.astro](src/components/cohort/GoogleCalendarBooking.astro)
-    renders a *Schedule an appointment* control beside Apply, gated entirely on
-    `PUBLIC_GOOGLE_CALENDAR_APPOINTMENT_URL` ([src/lib/booking.ts](src/lib/booking.ts)) validating
-    as a real Google Calendar appointment-schedule URL. Blank or invalid, the control simply
-    does not render — no dead link, no scheduling claim. The visible control is always the
-    site-native link to that URL; Google's popup script is loaded as an enhancement that
-    replaces the click target when it loads, and the direct link is what a blocked or slow
-    script falls back to. **Apply remains the primary CTA everywhere this appears** — this is
-    additive, not a replacement, and it is not "Buy now": scheduling is explicitly separate
-    from applying, in the copy beside it. Opening the control is tracked as `cta_click` intent
-    only, never as a confirmed booking. Still owed: the real schedule URL, and a staging pass
-    on desktop and mobile popup, close, fallback and a completed test booking.
+  - **A fourth, optional route: "Talk with Sunil".** A 30-minute call booked through the
+    site's own [src/components/BookingWidget.astro](src/components/BookingWidget.astro), the
+    same widget `/caio` uses, against the `cohort-call` type in
+    [src/data/meetings.ts](src/data/meetings.ts). [src/components/site/TalkToSunilLink.astro](src/components/site/TalkToSunilLink.astro)
+    is the one definition of the label and the target. **It reads the discovery call's
+    hours** (`rulesFrom: 'discovery'`), so Sunil keeps one set of hours for calls with people
+    outside the cohort and the console offers no band editor for `cohort-call`. The diary is
+    shared across every type regardless. **Apply remains the primary CTA everywhere this
+    appears**; a call is a conversation and not an application, and the blurb says so.
+    A booking writes a `leads` row with `interest: 'cohort'`. The earlier Google Calendar
+    scaffold ([src/components/cohort/GoogleCalendarBooking.astro](src/components/cohort/GoogleCalendarBooking.astro),
+    [src/lib/booking.ts](src/lib/booking.ts)) is imported by nothing and awaits a decision
+    to delete or revive; do not wire it back in without one.
 - **`/caio`** — *Fractional Chief AI Officer*. Board-facing consulting retainer. Static.
   Files: [src/pages/caio.astro](src/pages/caio.astro), [src/layouts/CaioLayout.astro](src/layouts/CaioLayout.astro).
 - **`/assessment`** — *AI Readiness Assessment*. Fixed-scope diagnostic; the front door.
@@ -227,8 +242,8 @@ Do not inline either one here.
   learner→Sunil inbox until 4 September. Learners answer each other. The rule that makes
   that safe is not moderation, it is that a reply carries an `author_role` and the three
   roles can never be mistaken for one another: `learner` (their face and name),
-  `instructor` (a rule down the side — the course's position), `system` (machine-orange,
-  labelled *not a person*, and only ever code quoting `facts.ts` or session frontmatter).
+  `instructor` (a rule down the side — the course's position), `system` (the machine's warm
+  gold family, labelled *not a person*, and only ever code quoting `facts.ts` or session frontmatter).
   **Only `instructor` replies are eligible for relay** to a later asker, so no amount of
   peer approval can turn a guess into something the machine repeats as fact. And the two
   marks stay separate on purpose: *solved it* is the asker's report, *endorsed* is Sunil's
@@ -508,8 +523,18 @@ the `/assessment` and `/caio` pages.
 
 ## Branding
 Teaching brand = **The Living Craft** (`/`). Consulting = a brand-neutral **personal
-practice** ("Sunil Mathew", mono descriptor "Fractional CAIO" / "AI Readiness"), a distinct
-but cross-linked surface. Open decision (flag to Sunil): umbrella vs personal brand vs new
+practice** (mono descriptor "Fractional CAIO" / "AI Readiness"), a distinct but
+cross-linked surface.
+
+**ONE LOCKUP ON EVERY PAGE** (Sunil, 20 September 2026: "I want the logo from the landing
+page on each and every page"). [src/components/site/BrandLockup.astro](src/components/site/BrandLockup.astro)
+draws the LC mark beside the "The Living Craft" lettering, and every header and footer on
+the site uses it — the cohort page, the practice pages, resources, policies, field notes,
+booking, `/caio`, `/assessment`, the course area and the console. It replaced the
+"Sunil Mathew" dot wordmark on the consulting pages, so those two surfaces now carry the
+Living Craft mark with their own descriptor beside it ("Fractional CAIO", "AI Readiness").
+That is a deliberate change to the separation described above, not an oversight; the copy
+on those pages is still brand-neutral. Open decision (flag to Sunil): umbrella vs personal brand vs new
 practice name — copy is written brand-neutral so the wordmark can be swapped.
 
 ## The facts module — read this before editing any offer
@@ -1008,6 +1033,12 @@ prospect.
   unattached (404) — flagged to Sunil, not fixed here.
 
 ## Shared infrastructure
+- **Components:** [src/styles/ds/components.css](src/styles/ds/components.css) and
+  [src/components/ds/](src/components/ds/) are the design system's reusable components, as opt-in
+  `lc-` classes (fields, tabs, disclosure, resource rows, tables, badges, state panels, the guided
+  tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
+  names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
+  `/design-system` renders every component in every state (noindex, unlinked).
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
@@ -1019,23 +1050,32 @@ prospect.
   would mean every change to the public design reflows the console.
   The course area has [src/styles/craft.css](src/styles/craft.css), which — unlike `admin.css` — is **additive to
   `global.css`, never a replacement**: a learner who applied on the strength of the public
-  pages should not land somewhere that looks like a different product, so the noir hero,
-  the sun button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all still come from
-  `global.css`. `craft.css` holds only what the marketing pages have no use for —
+  pages should not land somewhere that looks like a different product, so the dark
+  forest hero, the forest action button, `.wrap`, `.eyebrow`, `.card` and `.tlist` all
+  still come from `global.css`. `craft.css` holds only what the marketing pages have no use for —
   `panel`/`stack`/`row`, the state `pill`, `klabel`, `facts`, `page-head`, the intake's
   scale cells, the pager, the sign-in card. It exists because those pieces had been
   written four times in four page-scoped `<style>` blocks and had drifted: sign-in was on
   the illustration-led system while the three pages behind the gate were the old
   warm-craft structure with new tokens poured into it. Two laws it holds and page-scoped
-  CSS kept breaking: **a panel gets a shadow or a border, never both** (hairlines are
-  legal *inside* a panel, as row dividers), and **if it is yellow it is clickable** —
-  `--sun` is a fill and cannot carry text, `--clay` is the accent as ink. A status pill is
-  therefore never sun. One trap: `global.css` already owns short names like `.mod` (the
+  CSS kept breaking: **a panel gets a shadow or a border, never both** (under design
+  system v1 it is the 1px ring `--shadow-raise` draws, and hairlines are still legal *inside* a
+  panel, as row dividers), and **if it is forest-filled it is clickable**. `--sun` is
+  the action colour's old name and now resolves to forest green, so ink text on it is
+  about 1.2:1; text on it is `--text-on-accent` (ivory). A status pill, badge or tag is
+  therefore never forest-filled: it is an outline or a soft fill. The forum's instructor
+  badge is soft green with forest text for exactly this reason. Code keeps a monospace
+  face through `--font-code`: `--font-mono` is Figtree now, so any rule that sets code or
+  the seat code must use `--font-code`. One trap: `global.css` already owns short names like `.mod` (the
   public module card), so a bare `.mod` in a session row renders inside a phantom nested
   card. Namespace anything generic.
   `admin.css` imports `ds/contract.css` and `ds/theme.css` — the tokens — and the
   console sets `data-density="compact"` on `<body>`, which is the surface those
-  compact values were written for.
+  compact values were written for. Since 18 September the console and the course area
+  use the same design system v1 values as the public site. Compact density now changes
+  only rhythm, not shape: 40px rows, **36px controls** (the one deliberate departure from
+  the package's 44px target, and still well above WCAG's 24px), 14px body. It no longer
+  overrides radii, because the package's 6px and 12px already suit a dense table.
 - **Forms:** Web3Forms via client `fetch` ([src/data/site.ts](src/data/site.ts) holds the access key + contact
   email). Same inbox (greetsunshine@gmail.com), distinct `subject` per page. Honeypot +
   graceful email fallback. No backend, no other client storage.
@@ -1222,12 +1262,64 @@ startups, based in Bengaluru. Do not infer or publish user counts, team counts, 
 metrics, testimonials or employer endorsement without a dated approval record.
 
 ## Design tokens
-- **Palette** (warm "craft", one accent): paper `#F4EEE2` · surface `#FBF7EE` ·
-  ink `#221C15` · ink-soft `#5C5345` · line `#DCD2BE` · **accent (terracotta/clay) `#B0512E`**
-  · clay-deep `#8F3F22` · ochre `#C2914A`.
-- **Type**: Fraunces (display serif) · Inter (body) · JetBrains Mono (eyebrows/labels).
-- **Scale**: body 17px/1.65; H1 clamp(40–72px); H2 clamp(30–46px); display weight ~360.
-- **Spacing**: section padding ~104px; max width 1180px; radius 2–3px; hairline borders.
+**The public site uses the Living Craft website design system v1** (Alchemy and Ein,
+18 September 2026, a "review edition"). The package itself is kept out of the repository;
+its values live in [src/styles/ds/theme.css](src/styles/ds/theme.css) and
+[src/styles/ds/contract.css](src/styles/ds/contract.css). Read the header of `theme.css`
+before changing a colour.
+- **Palette**: forest `#183D32` for actions and the one dark surface per view · ivory
+  `#F5F0E6` page ground · paper `#FBF8F2` panels · ink `#172E26` · muted `#526259` ·
+  line `#CBD1C8` · control line `#758279` · deep gold `#765523` as accent TEXT · gold
+  `#B58A46` for rules and fills ONLY · dark forest `#102A22` footer.
+- **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
+  and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
+  on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
+- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
+  shells, footer bands, the price panel, table headers, code blocks and marks take
+  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
+  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
+  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
+  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
+  in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
+  whole `background` value (overlay, linen, flat fallback colour), and so is
+  `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
+  is a contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
+  on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. A layered
+  background, such as an icon drawn on a textured circle, puts the icon first and the
+  texture after it, and any `background-size` must give one size per layer.
+- **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
+  everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
+  **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay
+  fixed-width through `font-feature-settings`. Body 16px / 1.6.
+- **Shape**: 6px radius on anything you press or type into, 12px on a panel. Panels are
+  set off by a 1px line, **not a shadow**. The line is drawn by `--shadow-raise` as a 1px
+  box-shadow ring (`--shadow-lift` is the darker hover ring), so the 102 rules that already
+  said `box-shadow: var(--shadow-raise)` all became the package's line at once. Never add
+  a border to something that uses those tokens: that draws the line twice. Only a layer
+  floating over the page (`--shadow-overlay`) keeps a real shadow.
+- **Spacing**: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128. Max width 1160px.
+- **The LC mark** ([src/components/site/Logo.astro](src/components/site/Logo.astro)) sits
+  beside "the living craft" on every Living Craft wordmark, replacing the junction motif
+  (19 September). It is a **crop of Alchemy's `logo-reference.png`**, scaled down and
+  nothing else: `public/brand/lc-mark.webp`. **Never trace, redraw or recolour it**; the
+  package forbids a made-up vector, and the approved vector and small mark are still to be
+  commissioned. **Never show the artwork's tagline** ("People × AI × A brighter
+  tomorrow", "A premium cohort programme…"); the crop stops above it. The mark keeps its
+  own cream paper (`--logo-paper`) and sits on a paper tile on dark footers
+  (`<Logo tile />`). It is `aria-hidden` because the text beside it names the brand.
+  Sizes: 40px header, 28px on phones, 36px footer tile. The favicons come from the same
+  crop. **The lockup that every page's header and footer actually draws is
+  BrandLockup.astro** — the keyed mark plus the lettering, sized by height (40px/22px in a
+  header, 28px/15px on a phone, a cream tile on a dark band). Logo.astro remains for the
+  places that want the mark alone, such as the course area's nav rail.
+- **One token set for the whole site.** The public pages, `/craft`, `/craft/admin` and
+  `/book/[id]` all read `theme.css`. A `theme-course.css` override kept the old system on
+  the gated areas for part of 18 September and was removed the same day at Sunil's
+  request. Do not reintroduce a second token set.
+- **Forum voices are a colour language** (`--agent-*` in `theme.css`, mapping and ratios
+  in its comment). Learner: neutral ink on paper. Instructor: forest, soft-green badge.
+  System (machine): deep gold on warm cream. Uncertain: blue. Refused: error red. No two
+  share a hue.
 - **Voice**: respected practitioner. Restrained, senior-technical, high whitespace.
   This is the *register*. The *sentences* follow **Communication style** at the top of
   this file — plain words, one idea each. Restrained and plain are the same goal.

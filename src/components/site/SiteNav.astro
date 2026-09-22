@@ -25,7 +25,20 @@
  * October campaign post links to the root with `utm_content=lc-oct-dNN`, and
  * the roadmap keeps that address working until redirects are approved and
  * tested. Changing this line without doing that work breaks fifteen live posts.
+ *
+ * ONE ACTION IN THE HEADER, AND IT IS ON THE RIGHT
+ *
+ * "Explore the cohort" is the last thing in the bar, and `.sitenav-inner` is
+ * `justify-content: space-between`, so it sits hard against the right edge.
+ * A secondary "Book now" link sat beside it for part of 16 September; Sunil
+ * asked the same day for the top-right secondary CTA to go. The conversation
+ * has not gone anywhere — "Talk with Sunil" is on the cohort hero and on
+ * /contact, and section 14 of the cohort page is where all of them land.
  */
+import MobileMenu from './MobileMenu.astro';
+import TalkToSunilLink from './TalkToSunilLink.astro';
+import BrandLockup from './BrandLockup.astro';
+
 interface Destination {
   href: string;
   label: string;
@@ -50,9 +63,7 @@ const isCurrent = (href: string) => {
 
 <header class="sitenav">
   <div class="wrap sitenav-inner">
-    <a class="wordmark" href="/">
-      <span class="dot"></span> the living craft
-    </a>
+    <BrandLockup href="/" />
 
     <nav class="sitenav-links" aria-label="Sections">
       {
@@ -73,12 +84,28 @@ const isCurrent = (href: string) => {
       <a class="btn btn-primary sitenav-cta" href="/">
         Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span>
       </a>
+      {/* Phones only. Same destinations as the row above, which is hidden
+          below 900px, and the same built/unbuilt rule: an unwritten page is
+          left out of the menu rather than shown as a dead row. */}
+      <MobileMenu>
+        {
+          DESTINATIONS.filter((d) => d.built).map((d) => (
+            <a href={d.href} aria-current={isCurrent(d.href) ? 'page' : undefined}>
+              {d.label}
+            </a>
+          ))
+        }
+        <TalkToSunilLink placement="menu" variant="textlink" />
+      </MobileMenu>
     </nav>
   </div>
 </header>
 
 <style>
   .sitenav {
+    /* The phone menu's panel hangs from this element's bottom edge. */
+    position: relative;
+    z-index: var(--z-sticky);
     border-bottom: var(--border-w-hair) solid var(--border-hair);
     background: var(--surface-page);
   }
@@ -99,16 +126,19 @@ const isCurrent = (href: string) => {
     font-size: var(--size-3);
     color: var(--text-quiet);
   }
-  .sitenav-links a:not(.btn) {
+  /* Direct children only (`>`), here and in the phone rule below. The phone
+     menu's links are nested inside .sitenav-links too, and must neither be
+     hidden nor pick up the quiet inline colour. */
+  .sitenav-links > a:not(.btn) {
     white-space: nowrap;
     color: var(--text-quiet);
   }
-  .sitenav-links a:not(.btn):hover {
+  .sitenav-links > a:not(.btn):hover {
     color: var(--text-loud);
   }
   /* The current section is marked by weight and ink, not by an underline —
      an underline here would read as a link state rather than as a position. */
-  .sitenav-links a[aria-current='page'] {
+  .sitenav-links > a[aria-current='page'] {
     color: var(--text-loud);
     font-weight: var(--weight-strong);
   }
@@ -126,12 +156,21 @@ const isCurrent = (href: string) => {
     padding: 10px 20px;
   }
 
-  /* Below 900px the destinations fold away and the action stays. Same rule the
-     cohort nav follows: on a phone the one thing worth keeping is the way in. */
+  /* Below 900px the destinations fold into the phone menu and the action
+     stays in the bar. Same rule the cohort nav follows. */
   @media (max-width: 900px) {
-    .sitenav-links a:not(.btn),
-    .sitenav-links .pending {
+    .sitenav-links > a:not(.btn),
+    .sitenav-links > .pending {
       display: none;
+    }
+    /* At phone width the wordmark and "Explore the cohort" do not fit on one
+       line, so the actions wrap to a second row. Without this that row starts
+       at the left edge and the menu button lands mid-screen. Taking the full
+       row and packing to the end keeps the menu button on the right edge,
+       where the cohort page's header puts it too. */
+    .sitenav-links {
+      flex: 1 1 auto;
+      justify-content: flex-end;
     }
   }
 </style>

@@ -311,8 +311,13 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
-/** The page's own headline and standfirst, so the meta description matches it. */
+/**
+ * The page's own headline and standfirst. HEADLINE is the hero h1 and the
+ * meta title. STANDFIRST is the meta description and the Course node's
+ * description in the JSON-LD: the V4/V5 package's wording, adopted on
+ * Sunil's instruction of 19 September.
+ */
 export const HEADLINE = 'Design agentic systems. Guide your team.';
 
 export const STANDFIRST =
-  'Build a working agentic system with Sunil Mathew. Develop the ability to explain its design, examine its behaviour and guide the decisions behind it. 30 live hours plus independent work.';
+  'Live learning with Sunil Mathew for experienced engineers and engineering teams. Explore the open cohort or start a team-learning conversation.';

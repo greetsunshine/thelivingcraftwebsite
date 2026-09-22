@@ -500,7 +500,7 @@ const { autoStart = false } = Astro.props;
     border: 2px solid var(--sun);
     /* One element, one shadow: the shadow IS the scrim, and the hole in it is
        this element's own box. */
-    box-shadow: 0 0 0 9999px rgba(15, 17, 20, 0.55);
+    box-shadow: 0 0 0 9999px rgba(23, 46, 38, 0.55);
     opacity: 0;
     transition:
       left 180ms ease,
@@ -524,7 +524,7 @@ const { autoStart = false } = Astro.props;
     overflow-y: auto;
     background: var(--surface);
     /* A panel gets a border OR a shadow, never both. This one floats, so: shadow. */
-    box-shadow: 0 18px 44px rgba(15, 17, 20, 0.28);
+    box-shadow: 0 18px 44px rgba(23, 46, 38, 0.28);
     border-radius: var(--radius-panel);
     padding: 20px 22px 16px;
   }
@@ -601,8 +601,8 @@ const { autoStart = false } = Astro.props;
   /* If it is yellow it is clickable — and sun is a fill, so the label on it is
      ink, never white. */
   .tour-next {
-    background: var(--sun);
-    color: var(--ink);
+    background: var(--control-primary-bg);
+    color: var(--text-on-accent);
     font-weight: 600;
   }
   .tour-btns button:focus-visible {

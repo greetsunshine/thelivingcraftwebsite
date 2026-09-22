@@ -1,0 +1,68 @@
+---
+/**
+ * One of the eleven concept drawings from the V5 illustrated package
+ * (docs/2026-09-19_Landing_Page_V5_Illustrated-…, kept out of the repo).
+ *
+ * WHAT THEY ARE. Fine-line explanations beside the copy: a policy boundary, an
+ * evidence loop, a layered architecture, the retained work, the curriculum
+ * strands, build/examine/revise, and a team review. They are conceptual. None
+ * of them is a diagram of something the programme promises to build.
+ *
+ * WHERE THEY COME FROM. The SVG files in ./art are the package's inline
+ * drawings, copied as they are. They are inlined here, not loaded as <img>,
+ * because the motion runs on classes inside the drawing: `.art-travel` is the
+ * gold thread that traces once, `.art-junction` is the knot that settles.
+ * Each drawing names itself with a <title>, so it is an image with a text
+ * alternative, not decoration.
+ *
+ * HOW THEY MOVE. One 3.6-second trace the first time a drawing is on screen,
+ * then it rests for good. The static lines are always drawn, so the picture is
+ * complete without motion. The observer lives in BaseLayout, beside the
+ * footer's Pause motion control, and nothing is stored in the browser.
+ * Styles: src/styles/landing-v5.css.
+ */
+import architecture from './art/architecture.svg?raw';
+import blueprint from './art/blueprint.svg?raw';
+import build from './art/build.svg?raw';
+import curriculum from './art/curriculum.svg?raw';
+import decision from './art/decision.svg?raw';
+import examine from './art/examine.svg?raw';
+import peers from './art/peers.svg?raw';
+import review from './art/review.svg?raw';
+import revise from './art/revise.svg?raw';
+import team from './art/team.svg?raw';
+import toolkit from './art/toolkit.svg?raw';
+
+const ART = {
+  architecture,
+  blueprint,
+  build,
+  curriculum,
+  decision,
+  examine,
+  peers,
+  review,
+  revise,
+  team,
+  toolkit,
+} as const;
+
+export interface Props {
+  name: keyof typeof ART;
+  /** Short labels printed with the drawing (the package's diagram labels). */
+  labels?: string[];
+  caption?: string;
+}
+
+const { name, labels, caption } = Astro.props;
+---
+
+<figure class={`concept-figure art-${name}`} data-concept={name}>
+  <Fragment set:html={ART[name]} />
+  {labels && (
+    <div class="art-labels">
+      {labels.map((l) => <span>{l}</span>)}
+    </div>
+  )}
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
