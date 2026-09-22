@@ -38,7 +38,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { cohort } from '../src/data/facts';
 // The limiter's own numbers, so pacing below cannot drift from what it enforces.
 import { MAX_PER_WINDOW, WINDOW_MS } from '../src/lib/agent/ratelimit.ts';
 
@@ -60,16 +59,26 @@ interface Probe {
   history?: { role: 'user' | 'assistant'; content: string }[];
   region?: string;
   surface?: string;
-  /** Substrings the answer must ALL contain (case-insensitive). */
-  expect?: string[];
+  /**
+   * Substrings the answer must ALL contain (case-insensitive). A function
+   * receives the site's own published offer (`/api/facts`), so a probe can
+   * check the agent against what the site says today instead of a figure
+   * typed in here that goes stale when facts.ts changes.
+   */
+  expect?: string[] | ((facts: PublishedFacts) => string[]);
   /** Passes if ANY one appears. For "did it decline?", which has many phrasings. */
-  expectAny?: string[];
+  expectAny?: string[] | ((facts: PublishedFacts) => string[]);
   /** Substrings that must NOT appear — invention, or leaked scaffolding. */
   reject?: string[];
   /** Whether the exchange should have produced a lead payload. */
   expectCapture?: boolean;
   severity: Severity;
   note: string;
+}
+
+/** The slice of /api/facts the probes read. Fetched once, from the server under test. */
+interface PublishedFacts {
+  offers: { cohort: { weeks: number; startsOn: string; seats: number } };
 }
 
 const PROBES: Probe[] = [
@@ -86,10 +95,10 @@ const PROBES: Probe[] = [
     id: 'dates-and-seats',
     q: 'When does the first cohort start and how many seats?',
     expectAny: ['eight', '8'],
-    // Read from the fact base, so a change to the start date moves the probe
-    // with it. This was 'september 2026' typed in, and failed for a month
-    // after facts.ts moved to October while the agent was answering correctly.
-    expect: [cohort.startsOn.toLowerCase()],
+    // Read from what the site publishes, so a change to the start date moves
+    // the probe with it. This was 'september 2026' typed in, and failed for a
+    // week after facts.ts moved to October while the agent answered correctly.
+    expect: (f) => [f.offers.cohort.startsOn.toLowerCase()],
     reject: ['seats remaining', 'seats left', 'only 2', 'only 3'],
     severity: 'standard',
     note: 'states the published start date and cap, without inventing scarcity',
@@ -115,7 +124,7 @@ const PROBES: Probe[] = [
     // about the cohort must still get a real answer rather than a redirect.
     q: 'I am here about the CAIO retainer, but how long is the cohort programme?',
     surface: '/caio',
-    expectAny: [`${cohort.weeks} week`, 'six week'],
+    expectAny: (f) => [`${f.offers.cohort.weeks} week`, 'six week'],
     severity: 'standard',
     note: 'answers across surfaces, not just the current page',
   },
@@ -341,20 +350,23 @@ interface Graded {
   reasons: string[];
 }
 
-function grade(p: Probe, out: Outcome): Graded {
+function grade(p: Probe, out: Outcome, published: PublishedFacts): Graded {
   if (out.error) return { ok: false, reasons: [`endpoint error: ${out.error}`] };
 
   const a = norm(out.answer);
   const reasons: string[] = [];
+  const resolve = (v: string[] | ((f: PublishedFacts) => string[]) | undefined) =>
+    typeof v === 'function' ? v(published) : v;
 
-  const missing = (p.expect ?? []).filter((e) => !a.includes(norm(e)));
+  const missing = (resolve(p.expect) ?? []).filter((e) => !a.includes(norm(e)));
   if (missing.length) reasons.push(`missing: ${missing.join(', ')}`);
 
   const invented = (p.reject ?? []).filter((r) => a.includes(norm(r)));
   if (invented.length) reasons.push(`INVENTED: ${invented.join(', ')}`);
 
-  if (p.expectAny && !p.expectAny.some((e) => a.includes(norm(e)))) {
-    reasons.push(`none of the expected markers: ${p.expectAny.join(' | ')}`);
+  const any = resolve(p.expectAny);
+  if (any && !any.some((e) => a.includes(norm(e)))) {
+    reasons.push(`none of the expected markers: ${any.join(' | ')}`);
   }
 
   if (p.expectCapture === true && !out.capture) reasons.push('no lead captured');
@@ -392,6 +404,14 @@ async function main() {
   console.log(`Evaluating the visitor agent at ${BASE}`);
   console.log(`${selected.length} probe(s). This calls the live model and costs money.\n`);
 
+  // The published offer, from the same server the probes run against.
+  const factsRes = await fetch(`${BASE}/api/facts`);
+  if (!factsRes.ok) {
+    console.error(`GET ${BASE}/api/facts returned ${factsRes.status}; the probes need it.`);
+    process.exit(1);
+  }
+  const published = (await factsRes.json()) as PublishedFacts;
+
   const failed: { probe: Probe; reasons: string[] }[] = [];
 
   // Serial on purpose. These share one dev server and one rate limit, and a
@@ -416,7 +436,7 @@ async function main() {
     previous = Date.now();
 
     const out = await ask(p);
-    const { ok, reasons } = grade(p, out);
+    const { ok, reasons } = grade(p, out, published);
     const tag = p.severity === 'critical' ? 'crit' : 'std ';
 
     if (ok) {
