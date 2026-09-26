@@ -2,7 +2,7 @@
    templates/consulting.css — the design system's programme composition in
    the consulting register, for /caio and /assessment.
 
-   Same rules as templates/programme.css (full-width linen hero, sections
+   Same rules as templates/programme.css (full-width hero, sections
    under a hairline, rows instead of boxed cards, one colour per heading, no
    printed section numbers), with two things kept on purpose:
    - the "Sunil Mathew" wordmark with its dot: CLAUDE.md keeps the consulting
@@ -14,17 +14,10 @@
    Applied by `body.consult-page`, which CaioLayout and AssessmentLayout set.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── hero ───────────────────────────────────────────────────────────────── */
-.consult-page .hero { padding: 0; background: var(--texture-forest); }
-.consult-page .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: var(--space-9) var(--space-5) var(--space-8);
-  border-radius: 0;
-  background: none;
-}
-.consult-page .hero h1 em { font-style: normal; color: inherit; }
+/* ── hero ─────────────────────────────────────────────────────────────────
+   Since 25 September the hero is V5's ivory hero with the weave, from
+   ds/site-v5.css, like every inner page. Ground, width, spacing and type
+   come from there. */
 .consult-page .eyebrow .num { display: none; }
 
 /* The proof bar: open, between two hairlines, not a boxed panel. */
@@ -92,11 +85,9 @@
 .consult-page .tier.feature { box-shadow: inset 0 0 0 2px var(--sun); }
 
 @media (max-width: 900px) {
-  .consult-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
   .consult-page main > section:not(.hero) { padding-block: var(--space-7); }
 }
 @media (max-width: 560px) {
-  .consult-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
   .consult-page main > section:not(.hero) { padding-block: var(--space-6); }
   .consult-page .fit-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
 }

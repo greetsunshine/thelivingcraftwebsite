@@ -12,6 +12,10 @@
  * cohort page, the two consulting surfaces, field notes, and the contact
  * routes. Everything else is marked pending and turns into a link in the same
  * commit that creates its page.
+ *
+ * SINCE 25 SEPTEMBER it is `/`'s footer in markup and in style: `footer.site`,
+ * `.foot-grid`, `.foot-col` with an h2, `.foot-bottom`, all styled once in
+ * ds/site-v5.css. The words did not change.
  */
 import BrandLockup from './BrandLockup.astro';
 
@@ -53,11 +57,11 @@ const PRACTICE: Item[] = [
 ];
 ---
 
-<footer class="sitefooter">
+<footer class="site">
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="foot-lockup"><BrandLockup tile /></div>
+        <BrandLockup tile />
         <p class="muted">
           Build a working agentic system, and develop the ability to explain its design,
           examine its behaviour and guide the decisions behind it.
@@ -105,97 +109,11 @@ const PRACTICE: Item[] = [
 </footer>
 
 <style>
-  /* The dark forest band from design system v1. Same --footer-* tokens as
-     footer.site in global.css, so the two footers cannot drift apart. */
-  .sitefooter {
-    background: var(--footer-bg);
-    color: var(--footer-ink);
-    border-top: var(--border-w-hair) solid var(--footer-rule);
-    padding: var(--space-7) 0 var(--space-6);
-    font-size: var(--size-3);
-    margin-top: var(--space-8);
-  }
-  .foot-grid {
-    display: grid;
-    grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
-    gap: var(--space-6);
-  }
-  .foot-brand .foot-lockup {
-    margin-bottom: var(--space-4);
-  }
-  .sitefooter :global(:focus-visible) {
-    outline-color: var(--footer-focus);
-  }
-  .foot-brand .muted {
-    color: var(--footer-muted);
-    max-width: 34ch;
-    line-height: var(--lh-snug);
-  }
-
-  .foot-col {
-    display: flex;
-    flex-direction: column;
-  }
-  .foot-col h2 {
-    font-family: var(--font-marginal);
-    font-size: var(--size-1);
-    color: var(--footer-muted);
-    margin-bottom: var(--space-3);
-    font-weight: var(--weight-medium);
-  }
-  .foot-col a {
-    color: var(--footer-ink);
-    padding: var(--space-1) 0;
-    font-size: var(--size-3);
-  }
-  .foot-col a:hover {
-    color: var(--footer-link-hover);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
+  /* The footer's layout and colours are `/`'s, from ds/site-v5.css
+     (`footer.site`), since 25 September. Only the unwritten-page mark is
+     this component's own. */
   .foot-col .pending {
     color: var(--footer-muted);
-    padding: var(--space-1) 0;
-    font-size: var(--size-3);
-  }
-
-  .foot-bottom {
-    margin-top: var(--space-6);
-    padding-top: var(--space-5);
-    border-top: var(--border-w-hair) solid var(--footer-rule);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    color: var(--footer-muted);
-    font-size: var(--size-2);
-  }
-  .foot-legal {
-    display: flex;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-  }
-  .foot-legal a {
-    color: var(--footer-muted);
-  }
-  .foot-legal a:hover {
-    color: var(--footer-link-hover);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  @media (max-width: 900px) {
-    .foot-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .foot-brand {
-      grid-column: 1 / -1;
-    }
-  }
-  @media (max-width: 560px) {
-    .foot-grid {
-      grid-template-columns: minmax(0, 1fr);
-      gap: var(--space-5);
-    }
+    font-size: 0.875rem;
   }
 </style>

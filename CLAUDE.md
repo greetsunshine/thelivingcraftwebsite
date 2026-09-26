@@ -187,10 +187,15 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
-  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+  - **The look is the V5 illustrated package of 19 September. Its chrome is shared; its cohort
+    sections are `/` only.** Since 25 September the parts that are not about the cohort live in
+    [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css): the header and "On this page" row, the
+    phone menu, the 1200px container, the ivory ground and weave, the reading type, the buttons and
+    the footer. `/` reads that file too, so there is one copy. See *V5 on the inner pages* below.
     [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
     [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
-    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    keep the cohort's own sections. They are imported by `BaseLayout` alone and scoped under
+    `body.landing`; landing.css imports site-v5.css on its first line. Seven `.chapter` wrappers,
     **no printed section numbers**, and no divider ornament between sections (the knot
     divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
     package's `brain-lines.svg`), which **loops**; eleven drawings come from
@@ -1050,6 +1055,41 @@ prospect.
   tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
   names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
   `/design-system` renders every component in every state (noindex, unlinked).
+- **V5 on the inner pages** (Sunil, 25 September 2026: "all the tool pages and internal sites
+  have to be redesigned to match the actual site"). Three pieces, and a page uses all three:
+  - [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css), imported straight after `global.css`.
+    Its rules were cut out of landing.css and landing-v5.css, kept in their order, and given the
+    prefix `:is(.landing, .lc-v5)` or `:is(.landing, .lc-v5-read)`. An `:is()` list is as
+    specific as its most specific member, so `/` resolves every rule exactly as before.
+  - Two body classes. **`lc-v5`** takes the chrome: header, page row, menu, 1200px container,
+    ivory ground with the weave behind the opening, footer. **`lc-v5-read`** adds the reading
+    type, 18px body, 48px buttons and the 3px focus ring. **Tool pages take `lc-v5` only**:
+    the design system keeps "branded storytelling out of dense working areas", so a tool keeps
+    the working heading and 16px workspace of `templates/tool.css`.
+  - [src/components/site/SiteHeader.astro](src/components/site/SiteHeader.astro) draws `/`'s
+    header markup, so the same rules style it. In-page links go in `pageLinks` (the "On this
+    page" row); links to other pages go in `related`, at the left of that row. It replaced
+    `SiteNav.astro` and the headers written out in each layout.
+  - **`/` does not use SiteHeader yet.** BaseLayout had uncommitted work on 26 September that
+    changes the same header, so its markup was left alone: the styles exist once, the markup
+    twice. Move BaseLayout onto SiteHeader once that work lands.
+  - **Who is on it.** ResourcesLayout (the nine tools), PracticeLayout (hubs, worksheets,
+    guides, templates, about, advisory, contact, programmes, toolkit, email preferences, and
+    `/tools/agent-design-check` as a tool), CaioLayout, AssessmentLayout, NotesLayout and
+    PolicyLayout. **Not** `/craft`, `/craft/admin` or `/book/[id]`: the course area and the
+    console have their own stylesheets, and the booking page was not in the brief. Pulling one
+    in is a body class, an import and a `<SiteHeader>`.
+  - **What each layout keeps.** Its own words, footer columns and action label; ResourcesLayout
+    and PolicyLayout still load no Google Tag Manager, and PolicyLayout still no analytics of
+    any kind. GTM lives in the layouts that had it, never in SiteHeader.
+  - **Check `/` after touching site-v5.css**: compare every element's box and computed style at
+    1440, 1024 and 390px before and after. Moving a rule in the order changes `/` silently.
+  - **Every inner hero is ivory now, not forest.** A page-scoped rule written for the old dark
+    hero still paints ivory text or adds the old shell's padding, and wins on specificity.
+    `/about` lost its employer names and `/latest` gained 76px above its eyebrow that way until
+    both were fixed. When moving a page onto V5, check contrast on the rendered page.
+  - **Never put a JSX comment between `</head>` and `<body>`** in a layout. Astro then opens an
+    implicit `<body>` and the real one's class is lost, which switches the whole V5 layer off.
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
@@ -1285,19 +1325,38 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
-  shells, footer bands, the price panel, table headers, code blocks and marks take
-  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
-  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
-  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
-  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
-  in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
-  whole `background` value (overlay, linen, flat fallback colour), and so is
-  `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
-  is a contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
+- **Flat forest green on every page except `/`** (Sunil, 25 September 2026: remove "that
+  green woven design" from the inner pages and use "the plain green that exists in the main
+  site"). Dark green surfaces still take `var(--texture-forest)`
+  (`var(--texture-forest-hover)` for a hover) and footers `var(--footer-bg)`. One rule in
+  `theme.css`, `body:not(.landing)`, points those tokens at the flat `--lc-forest`,
+  `--lc-forest-hover` and `--lc-dark-forest`. That covers the public inner pages, the
+  tool pages, `/craft` and `/craft/admin`. The tokens keep the name "texture" while
+  drawing a flat colour; renaming them is 57 edits across 26 files. To put the course area
+  back on the linen, narrow that one selector. Contrast on flat forest: ivory 10.55:1,
+  on-dark-muted 7.79:1.
+- **`/` is the one page that still draws the dark green linen**, on its price panel and
+  footer. The tokens' `:root` values are the linen: file
+  `public/textures/linen-forest.webp` (83.5 KB), which no other page now fetches.
+  **Buttons, and a pressed or selected button, are flat forest everywhere, `/` included**:
+  `var(--control-primary-bg)`, hover `var(--control-primary-bg-hover)` (Sunil,
+  19 September: "the buttons do not need the texture"). `--sun` stays a flat colour for
+  borders, text and strokes. Each token is a whole `background` value (overlay, linen,
+  flat fallback colour on `/`; one flat colour elsewhere), and so is `--footer-bg`: use
+  them only in `background:`, never as a colour. **On `/` the overlay opacity is a
+  contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
   on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. A layered
   background, such as an icon drawn on a textured circle, puts the icon first and the
-  texture after it, and any `background-size` must give one size per layer.
+  token last, because a flat colour is only legal in the last layer.
+  **`--footer-bg` is restated in the override** because a custom property is resolved
+  where it is declared: the `:root` one already holds the linen, and `body` inherits
+  that resolved value. A new token defined as `var(--texture-…)` on `:root` needs the
+  same line.
+- **The ivory weave is the one light texture**, on `/` and every page on the V5 layer (25 September
+  2026). `--weave-ivory` (a whole `background` value) and `--weave-ivory-opacity` (0.64) in
+  `theme.css` draw it on the `::before` of the opening section only: `/`'s hero and every inner
+  page's `.hero`, a tool's working heading included. V5: "Full-width ivory fabric is limited to
+  the hero." Never put it behind body text further down a page.
 - **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
   everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay

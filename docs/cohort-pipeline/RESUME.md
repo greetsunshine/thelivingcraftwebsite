@@ -9,12 +9,74 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 26 September 2026
-**Branch:** `resource/failure-triage-quiz`, off `main`, carrying resource 07 only.
-Before that: `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
-commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
-PR #27 (the thread brain) is superseded by this work. The pipeline work is
-`feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
+**Branch:** `feat/plain-green-v5-pages-branded-pdfs`, off `origin/main`, one draft PR against
+`main` for all four tasks from Sunil's call of 25 September (below). PR #31
+(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`, below) are merged.
+The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
+`feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Four tasks from Sunil's call, 25 September — `feat/plain-green-v5-pages-branded-pdfs`
+
+One branch, one draft PR, at least one commit per task. The brief was meant to be
+`docs/site-tasks-2026-09-25.md`, but that file was never written, and the decision on
+26 September was to go on without it. The task names come from the PR title.
+
+- [x] **1. Plain green on every page except `/`.** One rule in `src/styles/ds/theme.css`,
+  `body:not(.landing)`, points `--texture-forest`, `--texture-forest-hover`,
+  `--texture-footer` and `--footer-bg` at flat forest. `/` keeps the linen. A before/after
+  diff of every element's computed background on `/` matched at 1440px and 390px. `/craft`
+  and `/craft/admin` are included; narrowing the selector puts them back. Two things that
+  will cost an hour if forgotten:
+  - `--footer-bg` has to be restated in the override. A custom property is resolved where
+    it is declared, so `body` inherits the linen that `:root` already resolved.
+  - The signed-in `/craft` pages return 503 in local dev without Supabase, even with
+    `CRAFT_DEV_BYPASS=1`. They were checked by resolving the tokens under `CraftLayout` on
+    `/craft/login`, not by rendering the dashboard.
+  - **Open with Sunil:** the triage quiz's case file (resource 07) was given the linen on
+    26 September because he asked for the cohort page's surfaces there. This rule turns it
+    flat like every other inner page. The ivory weave behind its hero is untouched: it is
+    not green, and he named the green one. If he wants the case file woven again, that is
+    a one-page exception he has to ask for.
+- [x] **2. V5 look on the inner pages** (three commits, 26 September). Sunil: "all the tool
+  pages and internal sites have to be redesigned to match the actual site". The shared part of
+  V5 moved out of landing.css and landing-v5.css into `src/styles/ds/site-v5.css`; `/` imports
+  it through landing.css and still resolves every rule the same way. Inner pages opt in with
+  two body classes (`lc-v5` for the chrome, `lc-v5-read` for reading type) and draw
+  `SiteHeader.astro`. CLAUDE.md, *V5 on the inner pages*, has the rules.
+  - [x] Step 1, the nine tools on ResourcesLayout. Tools take `lc-v5` only: V5's header,
+    ground, width and footer, and they keep tool.css's working heading and workspace.
+  - [x] Step 2, PracticeLayout: the hubs, worksheets, guides, templates, about, advisory,
+    contact, programmes, toolkit and email preferences (`lc-v5 lc-v5-read`), and
+    `/tools/agent-design-check` (`lc-v5` only). SiteNav.astro is gone; SiteFooter now draws
+    `/`'s footer. The practice header is sticky now, as `/`'s is. `/about` had a page-scoped
+    rule painting its hero's `<strong>` in ivory for the old forest hero; it is ink now.
+  - [x] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`. Their anchor links
+    moved to the "On this page" row and their cross-links ("AI Readiness", "Fractional CAIO")
+    to the left of it. Policy pages have no action button, as before, and still no analytics.
+    Long actions ("Request a scope call") wrap to two lines on phones instead of running under
+    the lockup, which `/`'s short "Apply" never had to handle.
+  - Out of scope, said in the PR: `/craft`, `/craft/admin` and `/book/[id]`.
+  - Checked on all 31 pages at 1440 and 390px: status 200, no sideways scroll, and Google Tag
+    Manager on exactly the pages that had it before. A contrast sweep found two page-scoped
+    rules written for the old forest hero (`/about`, `/latest`), both fixed. It also found
+    `--text-faint` (#C6D4C8, 1.45:1) used as text on paper in three tool pages this work did
+    not touch: agent-memory-audit-kit, agent-failure-triage-kit, agent-design-check. Not fixed
+    here; it predates this branch.
+  - Things that cost time and will again:
+    - **`/` is checked element by element**, not by eye: a before/after dump of every element's
+      box and 27 computed properties at 1440, 1024 and 390px. It must show zero differences.
+      One exception is expected: after the split, 79,000 pixels at 1440px changed by 1/255 in
+      colour under the hero's wash. No computed style changed, and restoring the weave literal
+      did not remove it, so it is rasterisation, not layout.
+    - **A JSX comment between `</head>` and `<body>` switches V5 off.** Astro opens an implicit
+      `<body>` and the class on the real one is lost. Comments go in the frontmatter.
+    - **BaseLayout is not on SiteHeader.** It had uncommitted edits to the same header on
+      26 September; the styles are shared, the markup is not yet.
+- [ ] 3. Branded PDFs.
+- [ ] 4. Tool downloads.
 
 ---
 
@@ -41,6 +103,7 @@ Four things a later session would otherwise rediscover:
   keeps the dark linen off a tool's hero, so the band went on the case file instead, with
   the ivory weave behind the hero. One dark surface per view still holds. Sunil asked for
   the cohort page's two surfaces here.
+  Since the plain-green task (above), the band is flat forest, like every page but `/`.
 - **The missed-takeaway list is rendered server-side and hidden**, not built in JavaScript.
   Astro's scoped styles do not reach elements a script creates, so a script-built list
   silently loses its own CSS. That was the first version.

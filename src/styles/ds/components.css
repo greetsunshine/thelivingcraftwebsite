@@ -12,7 +12,8 @@
    - Every value is a theme.css token. The package's --lc-raised, --lc-line,
      --lc-border, --lc-soft and --lc-accent-text are --surface-panel,
      --border-hair, --border-field, --surface-hover and --accent-ink here.
-   - Dark green FILLS use --texture-forest (the linen), never a flat colour.
+   - Dark green FILLS use --texture-forest, never --sun: the linen on `/`,
+     flat forest everywhere else since 25 September (see ds/theme.css).
    - The behaviour the package's system.js supplied lives in small Astro
      components in src/components/ds/ (Tabs, FormField, StatePanel,
      ToolProgress, Toast). The rendered reference is /design-system.
