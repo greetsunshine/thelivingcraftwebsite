@@ -1,0 +1,1061 @@
+---
+// /resources/agent-failure-triage-quiz — the quiz that goes with the kit.
+//
+// Same shell as the other tools: the hero from templates/tool.css, the three
+// "about" blocks, a sticky bar over the working area, cards, a result card and
+// a close. Every string comes from src/data/agent-failure-triage-quiz.ts, which
+// the script imports too, so the question a reader sees and the answer they are
+// graded against cannot come apart.
+//
+// ═══════════════════════════════════════════════════════════════════════════
+// WHAT THIS PAGE LOOKS LIKE, AND WHY IT IS NOT THE PLAIN TOOL SHELL
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Sunil asked for the cohort page's surfaces here: the ivory weave and one deep
+// green band. Both are the site's own, from the design system rather than from
+// new values — /textures/ivory-weave.svg at 64% behind the hero, exactly as
+// landing-v5.css uses it, and --texture-forest on the case file.
+//
+// ONE DARK SURFACE PER VIEW, and on this page it is the case file rather than
+// the hero. templates/tool.css deliberately takes the dark linen off a tool's
+// hero ("branded storytelling out of dense working areas") and that still
+// holds: the heading is a working heading. The incident briefing is the one
+// place a reader is reading rather than answering, so the band goes there. Do
+// not add a second forest surface; pick which one earns it.
+//
+// ═══════════════════════════════════════════════════════════════════════════
+// ANSWERS NEVER LEAVE THE BROWSER
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// 1. NO <form>, the same rule the other tools carry. The options are buttons in
+//    plain divs. A form can be submitted by a stray Enter key, and a GET
+//    submission puts twelve answers in the query string, which then travels in
+//    a Referer header to the first link the reader clicks.
+// 2. NO NETWORK. No fetch, no sendBeacon, and no download gate, because there
+//    is nothing here to download. The script below touches nothing outside the
+//    page.
+// 3. NO STORAGE. CLAUDE.md forbids localStorage and sessionStorage site-wide
+//    except for the one audited worksheet. State is a closure and dies with the
+//    tab, so a shared machine cannot show the next reader somebody's score.
+//
+// THE ANSWER KEY IS IN THE PAGE'S JAVASCRIPT, and that is a deliberate
+// trade. Grading server-side would mean posting answers, which is worse for a
+// self-check that nothing turns on. Nobody is examined here.
+//
+// SOUND AND THE MARK ON A CORRECT ANSWER. Two short notes from an
+// AudioContext, no audio file, and a toggle that is honoured everywhere. The
+// spark is CSS transform and opacity only, so the reset's reduced-motion rule
+// flattens it without this page knowing. A reader who turns sound off or asks
+// for less motion loses nothing they need.
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { publishedResources, longDate } from '../../data/resources';
+import {
+  BRING,
+  CASE_LABEL,
+  CASE_SETTING,
+  CASE_TITLE,
+  CLOSE,
+  CLOSE_TITLE,
+  CONCEPT_ITEMS,
+  CTA,
+  DO,
+  EPISODE_LABEL,
+  HEADLINE,
+  INTRO,
+  ITEMS,
+  KIT_ITEMS,
+  LEAVE,
+  LINKEDIN_EPISODE_4_URL,
+  MCP_SPEC,
+  PRE_READ,
+  SUBTITLE,
+  TAKEAWAYS,
+  TOOL_NAME,
+  assertQuiz,
+  hasEpisodePost,
+} from '../../data/agent-failure-triage-quiz';
+
+export const prerender = true;
+
+// A broken question bank stops the build rather than reaching a reader: two
+// correct answers, an untested takeaway or a bracketed note left in an option.
+assertQuiz();
+
+const meta = publishedResources.find((r) => r.id === 'agent-failure-triage-quiz')!;
+
+const title = `${TOOL_NAME} — tell a failed action from an unanswered one · The Living Craft`;
+const description =
+  'Twelve questions on one illustrative incident: a purchase order that timed out and a supplier that received it twice. Tell a failed action from an unanswered one, and choose the recovery step. Scored in the browser, nothing stored or sent.';
+
+const schema = [
+  {
+    '@type': 'LearningResource',
+    '@id': `${SITE_ORIGIN}/resources/agent-failure-triage-quiz#quiz`,
+    name: TOOL_NAME,
+    description,
+    url: `${SITE_ORIGIN}/resources/agent-failure-triage-quiz`,
+    learningResourceType: 'Quiz',
+    educationalLevel: 'Professional',
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: meta.publishedAt,
+    isAccessibleForFree: true,
+    isBasedOn: `${SITE_ORIGIN}/resources/agent-failure-triage-kit`,
+    teaches: TAKEAWAYS.map((t) => ({ '@type': 'DefinedTerm', name: t.short })),
+  },
+];
+
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<ResourcesLayout
+  title={title}
+  description={description}
+  canonical="/resources/agent-failure-triage-quiz"
+  schema={schema}
+>
+  <!-- Hero. The ivory weave sits behind it and nowhere else. -->
+  <section class="hero weave" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ {meta.series.toLowerCase()} {meta.number} · {TOOL_NAME}</span>
+      </div>
+      <h1>{HEADLINE}</h1>
+      <p class="lead">{SUBTITLE}</p>
+      <p class="hero-note">
+        {CONCEPT_ITEMS.length} concept questions · {KIT_ITEMS.length} kit questions · 4 options each ·
+        answers stay in this browser
+      </p>
+      <ResourceCredit />
+    </div>
+  </section>
+
+  <!-- What to bring, what to do, what you leave with. Then the one button. -->
+  <section id="about">
+    <div class="wrap">
+      <div class="about about-3">
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">01</span> What to bring</span>
+          <p>{BRING}</p>
+        </div>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">02</span> What to do</span>
+          <p>{DO}</p>
+        </div>
+        <div class="about-col">
+          <span class="eyebrow"><span class="num">03</span> What you leave with</span>
+          <p>{LEAVE}</p>
+        </div>
+      </div>
+
+      <!-- The pre-read, before the quiz and not after it. -->
+      <div class="preread" id="pre-read">
+        <span class="eyebrow"><span class="num">04</span> {PRE_READ.label}</span>
+        <p>{PRE_READ.body}</p>
+        <ul class="prlist">
+          <li>
+            {
+              hasEpisodePost() ? (
+                <a class="textlink" href={LINKEDIN_EPISODE_4_URL} target="_blank" rel="noopener">
+                  {EPISODE_LABEL}
+                </a>
+              ) : (
+                <span><strong>{EPISODE_LABEL}</strong> — {PRE_READ.episodeFallback}</span>
+              )
+            }
+          </li>
+          <li>
+            <a class="textlink" href={PRE_READ.kitUrl}>{PRE_READ.kitLabel}</a> — the three failure
+            classes, the four triage questions and the response playbook, in writing.
+          </li>
+        </ul>
+      </div>
+
+      <p class="hero-cta about-cta">
+        <a class="btn btn-primary" href="#quiz">{CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href={PRE_READ.kitUrl}>Read the kit first</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- The case file: the one deep green surface on this page. -->
+  <section id="case">
+    <div class="wrap">
+      <div class="caseband">
+        <span class="caselabel">{CASE_LABEL}</span>
+        <h2>{CASE_TITLE}</h2>
+        {CASE_SETTING.map((p) => <p>{p}</p>)}
+        <p class="casebrief">{INTRO.join(' ')}</p>
+      </div>
+    </div>
+  </section>
+
+  {/* The bar stays above the cards. A sticky element only sticks inside its
+      parent, so the bar, the cards and the result share one wrapper. */}
+  <div class="scoring">
+    <div class="scorebar-wrap">
+      <div class="wrap">
+        <div class="scorebar" id="bar" data-b="none">
+          <div class="sb-score">
+            <span id="sb-right">0</span><span class="of">/{CONCEPT_ITEMS.length} concept</span>
+          </div>
+          <div class="sb-text">
+            <span class="band" id="sb-band">Not started</span>
+            <span class="sb-note" id="sb-note" role="status" aria-live="polite"
+              >Answer question one. Nothing is stored and nothing is sent.</span
+            >
+          </div>
+          <div class="sb-right">
+            <span class="streak" id="streak" hidden></span>
+            <span class="progress" aria-hidden="true"><i id="pbar"></i></span>
+            <span class="pcount">
+              <span id="sb-done">0</span>/{ITEMS.length}
+            </span>
+            <button class="toggle" id="sound" type="button" aria-pressed="true">
+              <span aria-hidden="true">♪</span> Sound <span class="on" id="soundstate">on</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The questions -->
+    <section id="quiz">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">05</span> The triage</span>
+          <h2>Commit to an answer, <em>then</em> read the evidence back.</h2>
+        </div>
+
+        <p class="privacy">
+          Your answers stay in this browser. Nothing is stored, nothing is sent, and closing the
+          tab clears them.
+        </p>
+
+        <div class="qlist">
+          {
+            ITEMS.map((item, i) => (
+              <article class="qcard" id={`q-${item.id}`} data-id={item.id} data-state="open">
+                <header class="qhead">
+                  <span class="qn">{item.kind === 'kit' ? 'Kit' : pad(i + 1)}</span>
+                  <span class="shape">{item.shape}</span>
+                  {item.source && <span class="src">{item.source}</span>}
+                </header>
+
+                {item.evidence && (
+                  <div class="evidence">
+                    <span class="evlabel">{item.evidence.label}</span>
+                    {item.evidence.mono ? (
+                      <pre class="evlog">{item.evidence.lines.join('\n')}</pre>
+                    ) : (
+                      item.evidence.lines.map((l) => <p>{l}</p>)
+                    )}
+                  </div>
+                )}
+
+                <h3>{item.ask}</h3>
+
+                <details class="hint">
+                  <summary>Hint</summary>
+                  <p>{item.hint}</p>
+                </details>
+
+                <div class="opts" role="group" aria-label={`Options for ${item.ask}`}>
+                  {item.options.map((o) => (
+                    <button class="opt" type="button" data-k={o.key} aria-pressed="false">
+                      <span class="ok" aria-hidden="true">{o.key}</span>
+                      <span class="ot">{o.text}</span>
+                      <span class="mark" aria-hidden="true"></span>
+                    </button>
+                  ))}
+                  <span class="spark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                </div>
+
+                <div class="fb" hidden>
+                  <p class="verdict" role="status"></p>
+                  <ul class="whys">
+                    {item.options.map((o) => (
+                      <li data-k={o.key}>
+                        <span class="wk">{o.key}</span>
+                        <span class="wt">
+                          <span class="tag" hidden></span>
+                          {o.why}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p class="lands">
+                    <strong>{item.lands}</strong>
+                    {item.kind === 'concept' && <span class="tkn"> Takeaway {item.takeaway}.</span>}
+                  </p>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+
+        <noscript>
+          <p class="noscript">
+            Scoring needs JavaScript, and the feedback stays hidden without it. The questions above
+            still read as a checklist for one incident, and the seven takeaways below say what each
+            one is testing.
+          </p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- The result -->
+    <section id="result">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">06</span> Where you stand</span>
+          <h2>The score is the small half. The <em>missed takeaways</em> are the list.</h2>
+        </div>
+        <div class="resultcard" id="rcard" data-b="none">
+          <div class="r-head">
+            <span class="r-score"><b id="r-right">0</b>/{CONCEPT_ITEMS.length}</span>
+            <span class="r-band" id="r-band">Not started</span>
+          </div>
+          <p class="r-what" id="r-what">Answer the concept questions to see where you stand.</p>
+          <p class="r-kit" id="r-kit" hidden></p>
+          {/* All seven are rendered here and hidden; the script shows the ones
+              behind a wrong answer. Building these in JavaScript instead would
+              put them outside Astro's scoped styles, which is how a
+              script-built list quietly loses its own CSS. */}
+          <div class="r-missed" id="r-missed" hidden>
+            <h3>Read these again</h3>
+            <ol id="r-missedlist">
+              {
+                TAKEAWAYS.map((t) => (
+                  <li data-t={t.n} hidden>
+                    <strong>Takeaway {t.n}. {t.short}</strong> {t.body}{' '}
+                    <a href={`#t-${t.n}`}>Read it again</a>
+                  </li>
+                ))
+              }
+            </ol>
+          </div>
+          <div class="r-actions">
+            <a class="btn btn-primary" href={PRE_READ.kitUrl}
+              >Open the kit&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+            >
+            <button class="btn btn-ghost" id="restart" type="button">Start again</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- The seven takeaways, in full, for a reader who scrolled here first -->
+  <section id="takeaways">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">07</span> The seven takeaways</span>
+        <h2>What every question is <em>actually</em> asking.</h2>
+      </div>
+      <ol class="tlist">
+        {
+          TAKEAWAYS.map((t) => (
+            <li id={`t-${t.n}`}>
+              <span class="n">{pad(t.n)}</span>
+              <div>
+                <h3>{t.short}</h3>
+                <p>{t.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Close, and the citation behind takeaway four -->
+  <section class="final">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="num">→</span> Where this comes from</span>
+        <h2>{CLOSE_TITLE}</h2>
+      </div>
+      <div class="prose">
+        {CLOSE.map((p) => <p>{p}</p>)}
+      </div>
+
+      <div class="cite">
+        <span class="eyebrow"><span class="num">Source</span> The annotation claim</span>
+        <p>
+          Takeaway four and question four describe the Model Context Protocol specification,
+          version {MCP_SPEC.version}, checked {MCP_SPEC.checked}. Hint defaults and client
+          behaviour can change between versions, so re-read it before you rely on this page.
+        </p>
+        <ul class="quotes">
+          {MCP_SPEC.quotes.map((q) => <li>{q}</li>)}
+        </ul>
+        <p>
+          <a class="textlink" href={MCP_SPEC.url} target="_blank" rel="noopener"
+            >The specification, tools</a
+          >
+        </p>
+      </div>
+
+      <p class="hero-cta">
+        <a class="btn btn-ghost" href={PRE_READ.kitUrl}
+          >The Agent Failure Triage Kit&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+        >
+        <a class="btn btn-ghost" href="/resources">All resources</a>
+      </p>
+      <p class="pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<style>
+  section { padding: var(--space-8) 0; }
+  #about { padding-top: var(--space-7); }
+  .sec-head .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .sec-head h2 { max-width: 24ch; }
+  .prose { max-width: var(--measure-prose); color: var(--text-quiet); }
+  .prose p + p { margin-top: var(--space-4); }
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); color: var(--text-quiet); }
+  .hero .lead { max-width: var(--measure-prose); }
+
+  /* ── the ivory weave, behind the hero and nowhere else ─────────────────── */
+  .weave { position: relative; overflow: clip; }
+  .weave::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url('/textures/ivory-weave.svg') 0 0 / 48px 48px repeat;
+    opacity: 0.64;
+    pointer-events: none;
+  }
+
+  /* ── about, and the pre-read ───────────────────────────────────────────── */
+  .about { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .about-col,
+  .preread {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+  }
+  .about-col .eyebrow, .preread .eyebrow { display: block; margin-bottom: var(--space-4); }
+  .about-col p { font-size: var(--size-3); line-height: var(--lh-normal); color: var(--text-body); }
+  .preread { margin-top: var(--space-4); }
+  .preread p { max-width: var(--measure-prose); color: var(--text-body); }
+  .prlist { list-style: none; margin-top: var(--space-4); display: grid; gap: var(--space-3); }
+  .prlist li {
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-quiet);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--line-hair);
+  }
+  .textlink { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+  .textlink:hover { color: var(--link-hover); }
+  .about-cta { margin-top: var(--space-6); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── the case file: the one dark surface on this page ──────────────────── */
+  .caseband {
+    background: var(--texture-forest);
+    color: var(--text-on-invert);
+    border-radius: var(--radius-shell);
+    padding: var(--space-8);
+  }
+  .caselabel {
+    display: inline-block;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: var(--space-5);
+  }
+  .caseband h2 {
+    font-size: var(--size-h2);
+    font-weight: var(--weight-display);
+    color: var(--text-on-invert);
+    max-width: 24ch;
+    margin-bottom: var(--space-5);
+  }
+  .caseband p {
+    max-width: var(--measure-prose);
+    color: var(--hero-muted);
+    line-height: var(--lh-normal);
+  }
+  .caseband p + p { margin-top: var(--space-4); }
+  .casebrief {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: var(--border-w-hair) solid var(--hero-ghost-line);
+    color: var(--text-on-invert) !important;
+    font-size: var(--size-4);
+  }
+
+  /* ── the bar ───────────────────────────────────────────────────────────── */
+  .scorebar-wrap {
+    position: sticky;
+    top: 76px;
+    z-index: var(--z-sticky);
+    padding: var(--space-3) 0;
+    background: var(--surface-sunken);
+  }
+  .scorebar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-3) var(--space-5);
+  }
+  .sb-score {
+    font-size: var(--size-7);
+    font-weight: var(--weight-strong);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    font-feature-settings: var(--font-features);
+  }
+  .sb-score .of { font-size: var(--size-2); color: var(--text-quiet); }
+  .sb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .band { font-size: var(--size-4); font-weight: var(--weight-strong); line-height: var(--lh-snug); }
+  .sb-note { font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-right { display: flex; align-items: center; gap: var(--space-3); }
+  .pcount { font-size: var(--size-1); color: var(--text-quiet); font-feature-settings: var(--font-features); }
+  .progress { display: block; width: 88px; height: 6px; border-radius: var(--radius-pill); background: var(--surface-hover); overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--sun); transition: width var(--motion-mid) var(--ease-out); }
+  .streak {
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--success);
+    background: var(--success-quiet);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .toggle {
+    font: inherit;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+    background: var(--surface-sunken);
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .toggle:hover { color: var(--text-body); }
+  .toggle[aria-pressed='false'] .on { text-decoration: line-through; }
+  [data-b='progress'] .band, [data-b='progress'] .r-band { color: var(--accent-ink); }
+  [data-b='done'] .band, [data-b='done'] .r-band { color: var(--text-loud); }
+  [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
+
+  /* ── the cards ─────────────────────────────────────────────────────────── */
+  #quiz { padding-bottom: 0; }
+  .privacy { font-size: var(--size-2); color: var(--text-loud); margin-bottom: var(--space-5); }
+  /* minmax(0, 1fr) and the min-width below are load-bearing, not tidying. A
+     grid item sizes to its content by default, and the log block inside is
+     `white-space: pre`, so without them one long log line widens the card,
+     widens the page, and gives the whole site a horizontal scrollbar on a
+     phone. The log scrolls inside its own box instead. */
+  .qlist { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); }
+  .qcard {
+    min-width: 0;
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    scroll-margin-top: 140px;
+  }
+  .qhead { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .qn {
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    color: var(--accent-ink);
+    font-feature-settings: var(--font-features);
+  }
+  .shape, .src {
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+  .src { text-transform: none; letter-spacing: var(--tracking-label); }
+  .qcard h3 {
+    font-size: var(--size-5);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-snug);
+    max-width: 62ch;
+    color: var(--text-loud);
+  }
+
+  .evidence {
+    min-width: 0;
+    background: var(--surface-sunken);
+    border-radius: var(--radius-inner);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .evlabel {
+    display: block;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-bottom: var(--space-3);
+  }
+  .evidence p { font-size: var(--size-3); color: var(--text-body); line-height: var(--lh-normal); max-width: var(--measure-prose); }
+  .evlog {
+    font-family: var(--font-code);
+    font-size: var(--size-2);
+    line-height: 1.75;
+    color: var(--text-body);
+    white-space: pre;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* global.css gives every <details> the FAQ treatment: a hairline under it
+     and a 22px summary. Both are wrong at this size, so both come off here. */
+  .hint { margin: var(--space-4) 0 var(--space-5); border-bottom: 0; }
+  .hint summary {
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-label);
+    color: var(--accent-ink);
+    cursor: pointer;
+    width: fit-content;
+    padding: 0;
+    gap: var(--space-2);
+  }
+  .hint summary::after { content: '\002b'; font-size: var(--size-4); line-height: 1; }
+  .hint[open] summary::after { content: '\2212'; }
+  .hint p {
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    margin-top: var(--space-2);
+    padding: 0;
+    max-width: var(--measure-prose);
+  }
+
+  /* ── the options ───────────────────────────────────────────────────────── */
+  .opts { position: relative; display: grid; gap: var(--space-3); }
+  .opt {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: var(--space-4);
+    text-align: left;
+    font: inherit;
+    font-size: var(--size-3);
+    line-height: var(--lh-snug);
+    color: var(--text-body);
+    background: var(--surface-page);
+    border: var(--border-w-hair) solid var(--border-field);
+    border-radius: var(--radius-control);
+    padding: var(--space-4) var(--space-5);
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+  }
+  .opt:hover:not(:disabled) { background: var(--surface-hover); }
+  .opt:disabled { cursor: default; }
+  .ok {
+    font-size: var(--size-2);
+    font-weight: var(--weight-strong);
+    color: var(--text-quiet);
+    font-feature-settings: var(--font-features);
+    padding-top: 1px;
+  }
+  .mark { font-size: var(--size-4); line-height: 1; min-width: 1em; text-align: right; }
+
+  /* The two answered states. Colour sits on the word and the glyph, never on
+     its own: sun is for things you can click, so it cannot mark a result. */
+  .opt.is-right { background: var(--success-quiet); border-color: var(--success); }
+  .opt.is-right .ok, .opt.is-right .mark { color: var(--success); }
+  .opt.is-picked-wrong { background: var(--danger-quiet); border-color: var(--danger); }
+  .opt.is-picked-wrong .ok, .opt.is-picked-wrong .mark { color: var(--danger); }
+  .opt.is-dim { opacity: 0.55; }
+
+  /* The spark: six gold dots, transform and opacity only. The reset's
+     reduced-motion rule flattens it to nothing, which is the intent. */
+  .spark { position: absolute; top: 0; left: 50%; width: 0; height: 0; pointer-events: none; }
+  .spark i {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: var(--ember);
+    opacity: 0;
+  }
+  .spark.go i { animation: pop 620ms var(--ease-out) forwards; }
+  .spark i:nth-child(1) { --dx: -78px; --dy: -26px; }
+  .spark i:nth-child(2) { --dx: -40px; --dy: -54px; }
+  .spark i:nth-child(3) { --dx: 0px;   --dy: -66px; }
+  .spark i:nth-child(4) { --dx: 40px;  --dy: -54px; }
+  .spark i:nth-child(5) { --dx: 78px;  --dy: -26px; }
+  .spark i:nth-child(6) { --dx: 0px;   --dy: -34px; }
+  .spark.go i:nth-child(2) { animation-delay: 40ms; }
+  .spark.go i:nth-child(3) { animation-delay: 80ms; }
+  .spark.go i:nth-child(4) { animation-delay: 120ms; }
+  .spark.go i:nth-child(5) { animation-delay: 160ms; }
+  .spark.go i:nth-child(6) { animation-delay: 60ms; }
+  @keyframes pop {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    35%  { opacity: 1; transform: translate(calc(var(--dx) * 0.7), calc(var(--dy) * 0.7)) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.7); }
+  }
+
+  /* ── the feedback ──────────────────────────────────────────────────────── */
+  .fb { margin-top: var(--space-5); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--border-hair); }
+  .verdict { font-size: var(--size-4); font-weight: var(--weight-strong); margin-bottom: var(--space-4); }
+  .qcard[data-state='right'] .verdict { color: var(--success); }
+  .qcard[data-state='wrong'] .verdict { color: var(--danger); }
+  .whys { list-style: none; display: grid; gap: var(--space-3); }
+  .whys li { display: grid; grid-template-columns: 1.6em 1fr; gap: var(--space-3); font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-normal); }
+  .whys .wk { font-weight: var(--weight-strong); color: var(--text-quiet); }
+  .whys li.is-key { color: var(--text-body); }
+  .whys li.is-key .wk { color: var(--success); }
+  .whys li.is-pick .wk { color: var(--danger); }
+  .tag {
+    display: inline-block;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-right: var(--space-2);
+  }
+  .lands { margin-top: var(--space-5); font-size: var(--size-3); color: var(--text-body); max-width: var(--measure-prose); }
+  .lands .tkn { color: var(--text-quiet); }
+
+  .noscript { margin-top: var(--space-6); font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  /* ── the result ────────────────────────────────────────────────────────── */
+  .resultcard {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+  }
+  .r-head { display: flex; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; }
+  .r-score { font-size: var(--size-8); font-weight: var(--weight-strong); line-height: 1; font-feature-settings: var(--font-features); }
+  .r-band { font-size: var(--size-5); font-weight: var(--weight-strong); }
+  .r-what { margin-top: var(--space-4); font-size: var(--size-4); color: var(--text-body); max-width: var(--measure-prose); }
+  .r-kit { margin-top: var(--space-3); font-size: var(--size-2); color: var(--text-quiet); }
+  .r-missed { margin-top: var(--space-5); padding-top: var(--space-5); border-top: var(--border-w-hair) solid var(--border-hair); }
+  .r-missed h3 { font-size: var(--size-4); font-weight: var(--weight-strong); margin-bottom: var(--space-3); }
+  .r-missed ol { padding-left: 1.4em; display: grid; gap: var(--space-3); }
+  .r-missed li { font-size: var(--size-3); color: var(--text-quiet); line-height: var(--lh-normal); }
+  .r-missed strong { color: var(--text-body); }
+  .r-missed a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+  .r-actions { margin-top: var(--space-6); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── the citation ──────────────────────────────────────────────────────── */
+  .cite {
+    margin-top: var(--space-7);
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+    max-width: var(--measure-prose);
+  }
+  .cite .eyebrow { display: block; margin-bottom: var(--space-4); }
+  .cite p { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-normal); }
+  .quotes { list-style: none; margin: var(--space-4) 0; display: grid; gap: var(--space-3); }
+  .quotes li {
+    font-family: var(--font-code);
+    font-size: var(--size-2);
+    line-height: 1.6;
+    color: var(--text-body);
+    padding-left: var(--space-4);
+    border-left: var(--border-w-heavy) solid var(--line-hair);
+  }
+
+  /* ── phones ────────────────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .about { grid-template-columns: 1fr; }
+    .scorebar { grid-template-columns: auto 1fr; }
+    .sb-right { grid-column: 1 / -1; flex-wrap: wrap; }
+  }
+  @media (max-width: 680px) {
+    section { padding: var(--space-7) 0; }
+    .caseband { padding: var(--space-6); }
+    .qcard { padding: var(--space-5); }
+    .opt { grid-template-columns: auto 1fr; padding: var(--space-3) var(--space-4); }
+    .mark { grid-column: 1; }
+    .progress { display: none; }
+  }
+</style>
+
+<script>
+  // The quiz runs entirely in this closure. It imports the same module the page
+  // rendered from, so the answer a reader is graded against is the answer the
+  // page printed.
+  //
+  // NOTHING HERE TOUCHES THE NETWORK OR STORAGE. No fetch, no sendBeacon, no
+  // localStorage. If you add one, you have broken the line printed above the
+  // questions.
+  import {
+    CONCEPT_ITEMS,
+    ITEMS,
+    KIT_ITEMS,
+    bandFor,
+    correctOf,
+    missedTakeaways,
+  } from '../../data/agent-failure-triage-quiz';
+
+  const $ = (id: string) => document.getElementById(id)!;
+
+  /** Answers so far, by question id. Dies with the tab. */
+  const picked = new Map<string, string>();
+  /** Correct concept answers in a row, for the streak note. */
+  let streak = 0;
+  let sound = true;
+
+  // ── sound: two short notes, built on the fly, no audio file ──────────────
+  //
+  // An AudioContext may only start from a user gesture, and answering is one,
+  // so it is created on the first answer rather than on load. Every call is
+  // wrapped: a browser that refuses audio must not break the scoring.
+  let audio: AudioContext | null = null;
+
+  function ctx(): AudioContext | null {
+    if (!sound) return null;
+    try {
+      if (!audio) {
+        const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!Ctor) return null;
+        audio = new Ctor();
+      }
+      if (audio.state === 'suspended') void audio.resume();
+      return audio;
+    } catch {
+      return null;
+    }
+  }
+
+  /** One note. `at` is seconds from now, `peak` is the gain it reaches. */
+  function note(hz: number, at: number, len: number, peak: number, shape: OscillatorType): void {
+    const ac = ctx();
+    if (!ac) return;
+    try {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = shape;
+      osc.frequency.value = hz;
+      const t = ac.currentTime + at;
+      // A ramped envelope, because a square-edged gain change clicks.
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(t);
+      osc.stop(t + len + 0.02);
+    } catch {
+      /* no sound is a fine outcome; a thrown error is not */
+    }
+  }
+
+  /** Right: two notes up, and a third once three in a row have landed. */
+  function playRight(run: number): void {
+    note(659.25, 0, 0.16, 0.07, 'sine'); // E5
+    note(987.77, 0.09, 0.2, 0.06, 'sine'); // B5
+    if (run >= 3) note(1318.51, 0.19, 0.24, 0.05, 'sine'); // E6
+  }
+
+  /** Wrong: one soft low note. Quieter than the right answer, deliberately. */
+  function playWrong(): void {
+    note(174.61, 0, 0.26, 0.05, 'triangle'); // F3
+  }
+
+  // ── the bar and the result ───────────────────────────────────────────────
+  const conceptIds = new Set(CONCEPT_ITEMS.map((i) => i.id));
+  const total = ITEMS.length;
+  const conceptTotal = CONCEPT_ITEMS.length;
+  const kitTotal = KIT_ITEMS.length;
+
+  const isRight = (id: string): boolean => {
+    const pick = picked.get(id);
+    const item = ITEMS.find((i) => i.id === id);
+    return Boolean(item && pick && correctOf(item).key === pick);
+  };
+
+  function conceptScore(): number {
+    return CONCEPT_ITEMS.filter((i) => isRight(i.id)).length;
+  }
+
+  function wrongConceptIds(): string[] {
+    return CONCEPT_ITEMS.filter((i) => picked.has(i.id) && !isRight(i.id)).map((i) => i.id);
+  }
+
+  function render(): void {
+    const done = picked.size;
+    const right = conceptScore();
+    const conceptDone = [...picked.keys()].filter((id) => conceptIds.has(id)).length;
+    const finished = conceptDone === conceptTotal;
+
+    $('sb-right').textContent = String(right);
+    $('sb-done').textContent = String(done);
+    ($('pbar') as HTMLElement).style.width = `${Math.round((done / total) * 100)}%`;
+
+    const bar = $('bar');
+    const band = bandFor(right);
+    bar.dataset.b = done === 0 ? 'none' : finished ? 'done' : 'progress';
+    $('sb-band').textContent = done === 0 ? 'Not started' : finished ? band.label : 'In progress';
+    $('sb-note').textContent =
+      done === 0
+        ? 'Answer question one. Nothing is stored and nothing is sent.'
+        : finished
+          ? band.guidance
+          : `${conceptTotal - conceptDone} concept questions to go.`;
+
+    const streakEl = $('streak');
+    streakEl.hidden = streak < 2;
+    streakEl.textContent = `${streak} in a row`;
+
+    // The result card.
+    const card = $('rcard');
+    card.dataset.b = bar.dataset.b;
+    $('r-right').textContent = String(right);
+    $('r-band').textContent = $('sb-band').textContent;
+    $('r-what').textContent =
+      conceptDone === 0
+        ? 'Answer the concept questions to see where you stand.'
+        : finished
+          ? band.guidance
+          : `${conceptDone} of ${conceptTotal} concept questions answered. The guidance appears when they are all in.`;
+
+    const kitAnswered = KIT_ITEMS.filter((i) => picked.has(i.id)).length;
+    const kitRight = KIT_ITEMS.filter((i) => isRight(i.id)).length;
+    const kit = $('r-kit');
+    kit.hidden = kitAnswered === 0;
+    kit.textContent = `Kit questions: ${kitRight} of ${kitTotal}. They are reported separately, because reading the kit and triaging a timeout are two different claims.`;
+
+    // The seven are already in the page. Showing and hiding them keeps every
+    // one inside the scoped styles, and keeps them readable without scripting.
+    const missed = missedTakeaways(wrongConceptIds());
+    $('r-missed').hidden = missed.length === 0;
+    for (const li of document.querySelectorAll<HTMLElement>('#r-missedlist li')) {
+      li.hidden = !missed.includes(Number(li.dataset.t));
+    }
+  }
+
+  // ── answering ────────────────────────────────────────────────────────────
+  function answer(cardEl: HTMLElement, key: string): void {
+    const id = cardEl.dataset.id!;
+    if (picked.has(id)) return; // one answer per question, and it is final
+    const item = ITEMS.find((i) => i.id === id);
+    if (!item) return;
+
+    const keyOpt = correctOf(item);
+    const right = keyOpt.key === key;
+    picked.set(id, key);
+
+    if (conceptIds.has(id)) streak = right ? streak + 1 : 0;
+
+    cardEl.dataset.state = right ? 'right' : 'wrong';
+
+    for (const btn of cardEl.querySelectorAll<HTMLButtonElement>('.opt')) {
+      const k = btn.dataset.k!;
+      btn.disabled = true;
+      btn.setAttribute('aria-pressed', String(k === key));
+      const mark = btn.querySelector('.mark')!;
+      if (k === keyOpt.key) {
+        btn.classList.add('is-right');
+        mark.textContent = '✓';
+      } else if (k === key) {
+        btn.classList.add('is-picked-wrong');
+        mark.textContent = '×';
+      } else {
+        btn.classList.add('is-dim');
+      }
+    }
+
+    for (const li of cardEl.querySelectorAll<HTMLElement>('.whys li')) {
+      const k = li.dataset.k!;
+      const tag = li.querySelector('.tag')!;
+      if (k === keyOpt.key) {
+        li.classList.add('is-key');
+        tag.textContent = k === key ? 'Your answer · the answer' : 'The answer';
+        (tag as HTMLElement).hidden = false;
+      } else if (k === key) {
+        li.classList.add('is-pick');
+        tag.textContent = 'Your answer';
+        (tag as HTMLElement).hidden = false;
+      }
+    }
+
+    const verdict = cardEl.querySelector('.verdict')!;
+    verdict.textContent = right
+      ? streak >= 3 && conceptIds.has(id)
+        ? `Right. ${streak} in a row.`
+        : 'Right.'
+      : `Not this one. The answer is ${keyOpt.key}.`;
+    (cardEl.querySelector('.fb') as HTMLElement).hidden = false;
+
+    if (right) {
+      const spark = cardEl.querySelector('.spark')!;
+      spark.classList.remove('go');
+      // Reading offsetWidth restarts the animation on a card answered again
+      // after a restart; without it the class is already there and nothing runs.
+      void (spark as HTMLElement).offsetWidth;
+      spark.classList.add('go');
+      playRight(conceptIds.has(id) ? streak : 1);
+    } else {
+      playWrong();
+    }
+
+    render();
+  }
+
+  for (const cardEl of document.querySelectorAll<HTMLElement>('.qcard')) {
+    cardEl.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt');
+      if (btn && !btn.disabled) answer(cardEl, btn.dataset.k!);
+    });
+  }
+
+  // ── sound toggle ─────────────────────────────────────────────────────────
+  const soundBtn = $('sound') as HTMLButtonElement;
+  soundBtn.addEventListener('click', () => {
+    sound = !sound;
+    soundBtn.setAttribute('aria-pressed', String(sound));
+    $('soundstate').textContent = sound ? 'on' : 'off';
+  });
+
+  // ── start again ──────────────────────────────────────────────────────────
+  $('restart').addEventListener('click', () => {
+    picked.clear();
+    streak = 0;
+    for (const cardEl of document.querySelectorAll<HTMLElement>('.qcard')) {
+      cardEl.dataset.state = 'open';
+      (cardEl.querySelector('.fb') as HTMLElement).hidden = true;
+      cardEl.querySelector('.spark')!.classList.remove('go');
+      for (const btn of cardEl.querySelectorAll<HTMLButtonElement>('.opt')) {
+        btn.disabled = false;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.classList.remove('is-right', 'is-picked-wrong', 'is-dim');
+        btn.querySelector('.mark')!.textContent = '';
+      }
+      for (const li of cardEl.querySelectorAll<HTMLElement>('.whys li')) {
+        li.classList.remove('is-key', 'is-pick');
+        const tag = li.querySelector('.tag') as HTMLElement;
+        tag.hidden = true;
+        tag.textContent = '';
+      }
+      const details = cardEl.querySelector('details');
+      if (details) details.open = false;
+    }
+    render();
+    document.getElementById('q-' + ITEMS[0].id)?.scrollIntoView({ block: 'start' });
+  });
+
+  render();
+</script>
