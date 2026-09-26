@@ -1073,8 +1073,21 @@ prospect.
   - **`/` does not use SiteHeader yet.** BaseLayout had uncommitted work on 26 September that
     changes the same header, so its markup was left alone: the styles exist once, the markup
     twice. Move BaseLayout onto SiteHeader once that work lands.
+  - **Who is on it.** ResourcesLayout (the nine tools), PracticeLayout (hubs, worksheets,
+    guides, templates, about, advisory, contact, programmes, toolkit, email preferences, and
+    `/tools/agent-design-check` as a tool), CaioLayout, AssessmentLayout, NotesLayout and
+    PolicyLayout. **Not** `/craft`, `/craft/admin` or `/book/[id]`: the course area and the
+    console have their own stylesheets, and the booking page was not in the brief. Pulling one
+    in is a body class, an import and a `<SiteHeader>`.
+  - **What each layout keeps.** Its own words, footer columns and action label; ResourcesLayout
+    and PolicyLayout still load no Google Tag Manager, and PolicyLayout still no analytics of
+    any kind. GTM lives in the layouts that had it, never in SiteHeader.
   - **Check `/` after touching site-v5.css**: compare every element's box and computed style at
     1440, 1024 and 390px before and after. Moving a rule in the order changes `/` silently.
+  - **Every inner hero is ivory now, not forest.** A page-scoped rule written for the old dark
+    hero still paints ivory text or adds the old shell's padding, and wins on specificity.
+    `/about` lost its employer names and `/latest` gained 76px above its eyebrow that way until
+    both were fixed. When moving a page onto V5, check contrast on the rendered page.
   - **Never put a JSX comment between `</head>` and `<body>`** in a layout. Astro then opens an
     implicit `<body>` and the real one's class is lost, which switches the whole V5 layer off.
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its

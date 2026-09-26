@@ -40,7 +40,7 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     flat like every other inner page. The ivory weave behind its hero is untouched: it is
     not green, and he named the green one. If he wants the case file woven again, that is
     a one-page exception he has to ask for.
-- [ ] **2. V5 look on the inner pages** (in progress, three commits). Sunil: "all the tool
+- [x] **2. V5 look on the inner pages** (three commits, 26 September). Sunil: "all the tool
   pages and internal sites have to be redesigned to match the actual site". The shared part of
   V5 moved out of landing.css and landing-v5.css into `src/styles/ds/site-v5.css`; `/` imports
   it through landing.css and still resolves every rule the same way. Inner pages opt in with
@@ -53,8 +53,18 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     `/tools/agent-design-check` (`lc-v5` only). SiteNav.astro is gone; SiteFooter now draws
     `/`'s footer. The practice header is sticky now, as `/`'s is. `/about` had a page-scoped
     rule painting its hero's `<strong>` in ivory for the old forest hero; it is ink now.
-  - [ ] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`.
-  - Out of scope: `/craft` and `/craft/admin`.
+  - [x] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`. Their anchor links
+    moved to the "On this page" row and their cross-links ("AI Readiness", "Fractional CAIO")
+    to the left of it. Policy pages have no action button, as before, and still no analytics.
+    Long actions ("Request a scope call") wrap to two lines on phones instead of running under
+    the lockup, which `/`'s short "Apply" never had to handle.
+  - Out of scope, said in the PR: `/craft`, `/craft/admin` and `/book/[id]`.
+  - Checked on all 31 pages at 1440 and 390px: status 200, no sideways scroll, and Google Tag
+    Manager on exactly the pages that had it before. A contrast sweep found two page-scoped
+    rules written for the old forest hero (`/about`, `/latest`), both fixed. It also found
+    `--text-faint` (#C6D4C8, 1.45:1) used as text on paper in three tool pages this work did
+    not touch: agent-memory-audit-kit, agent-failure-triage-kit, agent-design-check. Not fixed
+    here; it predates this branch.
   - Things that cost time and will again:
     - **`/` is checked element by element**, not by eye: a before/after dump of every element's
       box and 27 computed properties at 1440, 1024 and 390px. It must show zero differences.

@@ -445,6 +445,15 @@
 /* The current section is marked by ds/components.css (ink and a deep-gold
    underline), the design system's rule for any header. */
 
+/* A long action on a phone. `/`'s action is "Apply"; an inner page's can be
+   "Request a scope call", which at 390px ran under the lockup. Below 560px
+   the lockup keeps its size and the label wraps to two lines instead. */
+@media (max-width: 560px) {
+  .lc-v5 .nav-inner > .brand-lockup { flex: none; }
+  .lc-v5 .navlinks { min-width: 0; }
+  .lc-v5 .navlinks > .btn { min-width: 0; white-space: normal; text-align: center; line-height: 1.2; }
+}
+
 /* Links in the page row that go to ANOTHER page ("Field notes", "AI
    Readiness"). They sit at the left of the row, apart from "On this page",
    because they are not on this page. */

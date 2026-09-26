@@ -16,8 +16,11 @@
 // Indexed, unlike the gated shells: a privacy policy that a crawler or a
 // consent screen cannot fetch does not do its job.
 import '../styles/global.css';
+// The V5 layer shared with `/` (25 September): header, ground, width, reading
+// type, footer. A page template loads after it and refines it.
+import '../styles/ds/site-v5.css';
 import SeoHead from '../components/SeoHead.astro';
-import MobileMenu from '../components/site/MobileMenu.astro';
+import SiteHeader from '../components/site/SiteHeader.astro';
 import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
@@ -30,9 +33,11 @@ export interface Props {
 
 const { title, description, canonical, label } = Astro.props;
 const year = new Date().getFullYear();
-// The current page is marked for a screen reader and by the underline below.
-const here = (href: string) =>
-  Astro.url.pathname.replace(/\/+$/, '') === href ? ('page' as const) : undefined;
+// The current policy is marked by SiteHeader (aria-current), in the row under
+// the header. There is no action button here: a policy page asks nothing.
+// <body> takes `lc-v5` (V5's chrome) and `lc-v5-read` (V5's reading type):
+// see ds/site-v5.css. Comments stay up here: a JSX comment between </head>
+// and <body> makes Astro open an implicit <body> and loses these classes.
 ---
 
 <!DOCTYPE html>
@@ -40,29 +45,18 @@ const here = (href: string) =>
   <head>
     <SeoHead title={title} description={description} canonical={canonical} />
   </head>
-  <body>
+  <body class="lc-v5 lc-v5-read">
     <a class="skip" href="#main">Skip to content</a>
-    <header class="nav">
-      <div class="wrap nav-inner">
-        <BrandLockup href="/" sub={label} />
-        <nav class="navlinks">
-          <a href="/privacy" aria-current={here("/privacy")}>Privacy</a>
-          <a href="/terms" aria-current={here("/terms")}>Terms</a>
-          <a href="/">Cohort</a>
-          <a href="/caio">Fractional CAIO</a>
-          <a href="/assessment">AI Readiness</a>
-          {/* Phones: the links above are hidden below 900px (global.css), and this
-              is how a phone reaches them. Same links, same order. */}
-          <MobileMenu>
-            <a href="/privacy" aria-current={here("/privacy")}>Privacy</a>
-            <a href="/terms" aria-current={here("/terms")}>Terms</a>
-            <a href="/">Cohort</a>
-            <a href="/caio">Fractional CAIO</a>
-            <a href="/assessment">AI Readiness</a>
-          </MobileMenu>
-        </nav>
-      </div>
-    </header>
+    <SiteHeader
+      sub={label}
+      related={[
+        ['Privacy', '/privacy'],
+        ['Terms', '/terms'],
+        ['Cohort', '/'],
+        ['Fractional CAIO', '/caio'],
+        ['AI Readiness', '/assessment'],
+      ]}
+    />
 
     <main id="main">
       <slot />
@@ -72,21 +66,21 @@ const here = (href: string) =>
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div style="margin-bottom:14px"><BrandLockup tile /></div>
+            <BrandLockup tile />
             <p class="muted">
               A teaching and consulting practice in agentic systems architecture, run by one person
               from Bangalore.
             </p>
           </div>
           <div class="foot-col">
-            <h5>The practice</h5>
+            <h2>The practice</h2>
             <a href="/">The Living Craft · cohort →</a>
             <a href="/caio">Fractional CAIO retainer →</a>
             <a href="/assessment">AI Readiness Assessment →</a>
             <a href="/latest">Field notes · agentic AI →</a>
           </div>
           <div class="foot-col">
-            <h5>Connect</h5>
+            <h2>Connect</h2>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>

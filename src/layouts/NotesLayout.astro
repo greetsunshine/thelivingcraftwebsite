@@ -6,6 +6,9 @@
 // consulting pages equally. Same design system, same nav grammar, so the
 // section reads as part of one site rather than a bolted-on blog.
 import '../styles/global.css';
+// The V5 layer shared with `/` (25 September): header, ground, width, reading
+// type, footer. A page template loads after it and refines it.
+import '../styles/ds/site-v5.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
 import Track from '../components/Track.astro';
@@ -13,7 +16,7 @@ import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
-import MobileMenu from '../components/site/MobileMenu.astro';
+import SiteHeader from '../components/site/SiteHeader.astro';
 import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
@@ -27,6 +30,9 @@ export interface Props {
 
 const { title, description, canonical, schema, sections = [] } = Astro.props;
 const year = new Date().getFullYear();
+// <body> takes `lc-v5` (V5's chrome) and `lc-v5-read` (V5's reading type):
+// see ds/site-v5.css. Comments stay up here: a JSX comment between </head>
+// and <body> makes Astro open an implicit <body> and loses these classes.
 ---
 
 <!DOCTYPE html>
@@ -35,27 +41,19 @@ const year = new Date().getFullYear();
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body>
+  <body class="lc-v5 lc-v5-read">
     <GoogleTagManagerNoscript />
     <a class="skip" href="#main">Skip to content</a>
-    <header class="nav">
-      <div class="wrap nav-inner">
-        <BrandLockup href="#top" sub="Field notes" />
-        <nav class="navlinks">
-          {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-          <a href="/caio">Fractional CAIO</a>
-          <a href="/assessment">AI Readiness</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-          {/* Phones: the links above are hidden below 900px (global.css), and this
-              is how a phone reaches them. Same links, same order. */}
-          <MobileMenu>
-            {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-            <a href="/caio">Fractional CAIO</a>
-            <a href="/assessment">AI Readiness</a>
-          </MobileMenu>
-        </nav>
-      </div>
-    </header>
+    <SiteHeader
+      brandHref="#top"
+      sub="Field notes"
+      action={{ label: 'The cohort', href: '/' }}
+      pageLinks={sections.map((s) => [s.title, `#${s.id}`] as [string, string])}
+      related={[
+        ['Fractional CAIO', '/caio'],
+        ['AI Readiness', '/assessment'],
+      ]}
+    />
 
     <main id="main">
       <slot />
@@ -65,7 +63,7 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div style="margin-bottom:14px"><BrandLockup tile /></div>
+            <BrandLockup tile />
             <p class="muted">What is actually changing in agentic AI. Gathered from original sources, and read by a person before it is published.</p>
           </div>
           <div class="foot-col">
