@@ -269,7 +269,11 @@
      pressed or selected button state, is flat forest,
      var(--control-primary-bg) with --control-primary-bg-hover (Sunil,
      19 September: "the buttons do not need the texture"). --sun itself
-     stays a flat colour, for borders, text and strokes. --- */
+     stays a flat colour, for borders, text and strokes.
+
+     SINCE 25 SEPTEMBER THE LINEN IS DRAWN ON `/` ONLY. Every other page
+     gets flat colour from the `body:not(.landing)` rule after this block.
+     The values here are what `/` still draws. --- */
   --texture-linen: url('/textures/linen-forest.webp');
   --texture-forest:
     linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
@@ -338,6 +342,36 @@
   --control-primary-bg: var(--sun);
   --control-primary-fg: var(--text-on-accent);
   --control-primary-bg-hover: var(--accent-hover);
+}
+
+/* Flat green on every page except `/` (Sunil, 25 September 2026). On the
+   call he asked to remove "that green woven design" from the inner pages and
+   use "the plain green that exists in the main site", which is the flat
+   forest of the buttons.
+
+   Only `/` renders `body.landing` (BaseLayout), so `/` keeps the linen by
+   construction and nothing on it changes. The course area and the console
+   are included. Leaving them on the linen is one change to this selector.
+
+   The cost of doing it here: three tokens named "texture" now draw a flat
+   colour everywhere but `/`. Renaming them means editing 57 uses across
+   26 files, and one rule is easier to review and to take back. Each value is
+   still a whole `background` value. A flat colour is legal in the last layer
+   of a list, and every layered use puts the token last.
+
+   --footer-bg is restated because a custom property is resolved where it is
+   declared. The one on :root already holds the linen, and <body> would
+   inherit that resolved value whatever --texture-footer says here.
+
+   Contrast on the flat colours is higher than on the linen. Ivory 10.55:1
+   and on-dark-muted 7.79:1 on forest; 8.15 and 6.02 on the hover forest;
+   13.43 and 9.92 on dark forest. The linen gave 6.27 and 4.63 on forest.
+   The pages also stop fetching linen-forest.webp (83.5 KB). */
+body:not(.landing) {
+  --texture-forest: var(--lc-forest);
+  --texture-forest-hover: var(--lc-forest-hover);
+  --texture-footer: var(--lc-dark-forest);
+  --footer-bg: var(--lc-dark-forest);
 }
 
 /* Same token names, retuned for the console (AdminLayout sets this on <body>).

@@ -1285,19 +1285,33 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
-  shells, footer bands, the price panel, table headers, code blocks and marks take
-  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
-  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
-  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
-  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
-  in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
-  whole `background` value (overlay, linen, flat fallback colour), and so is
-  `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
-  is a contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
+- **Flat forest green on every page except `/`** (Sunil, 25 September 2026: remove "that
+  green woven design" from the inner pages and use "the plain green that exists in the main
+  site"). Dark green surfaces still take `var(--texture-forest)`
+  (`var(--texture-forest-hover)` for a hover) and footers `var(--footer-bg)`. One rule in
+  `theme.css`, `body:not(.landing)`, points those tokens at the flat `--lc-forest`,
+  `--lc-forest-hover` and `--lc-dark-forest`. That covers the public inner pages, the
+  tool pages, `/craft` and `/craft/admin`. The tokens keep the name "texture" while
+  drawing a flat colour; renaming them is 57 edits across 26 files. To put the course area
+  back on the linen, narrow that one selector. Contrast on flat forest: ivory 10.55:1,
+  on-dark-muted 7.79:1.
+- **`/` is the one page that still draws the dark green linen**, on its price panel and
+  footer. The tokens' `:root` values are the linen: file
+  `public/textures/linen-forest.webp` (83.5 KB), which no other page now fetches.
+  **Buttons, and a pressed or selected button, are flat forest everywhere, `/` included**:
+  `var(--control-primary-bg)`, hover `var(--control-primary-bg-hover)` (Sunil,
+  19 September: "the buttons do not need the texture"). `--sun` stays a flat colour for
+  borders, text and strokes. Each token is a whole `background` value (overlay, linen,
+  flat fallback colour on `/`; one flat colour elsewhere), and so is `--footer-bg`: use
+  them only in `background:`, never as a colour. **On `/` the overlay opacity is a
+  contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
   on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. A layered
   background, such as an icon drawn on a textured circle, puts the icon first and the
-  texture after it, and any `background-size` must give one size per layer.
+  token last, because a flat colour is only legal in the last layer.
+  **`--footer-bg` is restated in the override** because a custom property is resolved
+  where it is declared: the `:root` one already holds the linen, and `body` inherits
+  that resolved value. A new token defined as `var(--texture-…)` on `:root` needs the
+  same line.
 - **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
   everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay

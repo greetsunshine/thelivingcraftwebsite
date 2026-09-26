@@ -9,12 +9,40 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 26 September 2026
-**Branch:** `resource/failure-triage-quiz`, off `main`, carrying resource 07 only.
-Before that: `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
-commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
-PR #27 (the thread brain) is superseded by this work. The pipeline work is
-`feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
+**Branch:** `feat/plain-green-v5-pages-branded-pdfs`, off `origin/main`, one draft PR against
+`main` for all four tasks from Sunil's call of 25 September (below). PR #31
+(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`, below) are merged.
+The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
+`feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Four tasks from Sunil's call, 25 September — `feat/plain-green-v5-pages-branded-pdfs`
+
+One branch, one draft PR, at least one commit per task. The brief was meant to be
+`docs/site-tasks-2026-09-25.md`, but that file was never written, and the decision on
+26 September was to go on without it. The task names come from the PR title.
+
+- [x] **1. Plain green on every page except `/`.** One rule in `src/styles/ds/theme.css`,
+  `body:not(.landing)`, points `--texture-forest`, `--texture-forest-hover`,
+  `--texture-footer` and `--footer-bg` at flat forest. `/` keeps the linen. A before/after
+  diff of every element's computed background on `/` matched at 1440px and 390px. `/craft`
+  and `/craft/admin` are included; narrowing the selector puts them back. Two things that
+  will cost an hour if forgotten:
+  - `--footer-bg` has to be restated in the override. A custom property is resolved where
+    it is declared, so `body` inherits the linen that `:root` already resolved.
+  - The signed-in `/craft` pages return 503 in local dev without Supabase, even with
+    `CRAFT_DEV_BYPASS=1`. They were checked by resolving the tokens under `CraftLayout` on
+    `/craft/login`, not by rendering the dashboard.
+  - **Open with Sunil:** the triage quiz's case file (resource 07) was given the linen on
+    26 September because he asked for the cohort page's surfaces there. This rule turns it
+    flat like every other inner page. The ivory weave behind its hero is untouched: it is
+    not green, and he named the green one. If he wants the case file woven again, that is
+    a one-page exception he has to ask for.
+- [ ] 2. V5 look on the inner pages.
+- [ ] 3. Branded PDFs.
+- [ ] 4. Tool downloads.
 
 ---
 
@@ -41,6 +69,7 @@ Four things a later session would otherwise rediscover:
   keeps the dark linen off a tool's hero, so the band went on the case file instead, with
   the ivory weave behind the hero. One dark surface per view still holds. Sunil asked for
   the cohort page's two surfaces here.
+  Since the plain-green task (above), the band is flat forest, like every page but `/`.
 - **The missed-takeaway list is rendered server-side and hidden**, not built in JavaScript.
   Astro's scoped styles do not reach elements a script creates, so a script-built list
   silently loses its own CSS. That was the first version.
