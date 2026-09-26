@@ -477,11 +477,12 @@
 .lc-v5 .hero .eyebrow { color: var(--accent-ink); }
 .lc-v5 .hero .eyebrow .num { color: var(--text-quiet); }
 .lc-v5 .hero .eyebrow a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
-.lc-v5 .hero .lead,
-.lc-v5 .hero .lede,
-.lc-v5 .hero .credential { color: var(--text-body); }
-.lc-v5 .hero .credential strong,
-.lc-v5 .hero .lead strong { color: var(--text-loud); }
+/* A reading page's lead is body ink; a tool's stays muted (tool.css). */
+.lc-v5-read .hero .lead,
+.lc-v5-read .hero .lede,
+.lc-v5-read .hero .credential { color: var(--text-body); }
+.lc-v5-read .hero .credential strong,
+.lc-v5-read .hero .lead strong { color: var(--text-loud); }
 .lc-v5 .hero .muted,
 .lc-v5 .hero .faint,
 .lc-v5 .hero > .wrap .hero-note { color: var(--text-quiet); }

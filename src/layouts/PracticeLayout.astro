@@ -28,8 +28,11 @@
 //    surfaces. Anything used by one page belongs in that page's scoped block,
 //    which is this repo's established split.
 import '../styles/global.css';
+// The V5 layer shared with `/` (25 September). A page template a page imports
+// (programme.css, brand.css, tool.css) loads after it and refines it.
+import '../styles/ds/site-v5.css';
 import SeoHead from '../components/SeoHead.astro';
-import SiteNav from '../components/site/SiteNav.astro';
+import SiteHeader from '../components/site/SiteHeader.astro';
 import SiteFooter from '../components/site/SiteFooter.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
 import Track from '../components/Track.astro';
@@ -55,6 +58,11 @@ export interface Props {
 }
 
 const { title, description, canonical, schema, noindex = false, bodyClass } = Astro.props;
+
+// Every page here wears the V5 chrome (`lc-v5`). A reading page also takes V5's
+// reading type (`lc-v5-read`); a tool page does not, so it keeps the design
+// system's working heading and 16px workspace (see ds/site-v5.css).
+const isTool = bodyClass === 'tool-page';
 ---
 
 <!DOCTYPE html>
@@ -63,11 +71,11 @@ const { title, description, canonical, schema, noindex = false, bodyClass } = As
     <GoogleTagManager />
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
-  <body class={bodyClass}>
+  <body class:list={['lc-v5', !isTool && 'lc-v5-read', bodyClass]}>
     <GoogleTagManagerNoscript />
     <a class="skip" href="#main">Skip to content</a>
 
-    <SiteNav />
+    <SiteHeader action={{ label: 'Explore the cohort', href: '/' }} talk />
 
     <main id="main" class="practice">
       <slot />

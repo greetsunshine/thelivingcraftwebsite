@@ -32,13 +32,6 @@
   border-radius: 0;
   color: var(--text-body);
 }
-/* A tool page not yet on the V5 layer keeps the old shell width. */
-.tool-page:not(.lc-v5) .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: 0 var(--space-5);
-}
 .tool-page .hero h1 {
   max-width: 24ch;
   margin: var(--space-4) 0 var(--space-5);
@@ -62,7 +55,6 @@
 
 @media (max-width: 900px) {
   .tool-page .hero { padding: var(--space-7) 0 var(--space-5); }
-  .tool-page:not(.lc-v5) .hero > .wrap { padding: 0 var(--space-4); }
 }
 @media (max-width: 560px) {
   .tool-page .hero { padding: var(--space-6) 0 var(--space-4); }

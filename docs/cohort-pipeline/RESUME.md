@@ -48,8 +48,11 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   `SiteHeader.astro`. CLAUDE.md, *V5 on the inner pages*, has the rules.
   - [x] Step 1, the nine tools on ResourcesLayout. Tools take `lc-v5` only: V5's header,
     ground, width and footer, and they keep tool.css's working heading and workspace.
-  - [ ] Step 2, PracticeLayout (hubs, worksheets, guides, templates, about, advisory, contact,
-    programmes, and `/tools/agent-design-check`).
+  - [x] Step 2, PracticeLayout: the hubs, worksheets, guides, templates, about, advisory,
+    contact, programmes, toolkit and email preferences (`lc-v5 lc-v5-read`), and
+    `/tools/agent-design-check` (`lc-v5` only). SiteNav.astro is gone; SiteFooter now draws
+    `/`'s footer. The practice header is sticky now, as `/`'s is. `/about` had a page-scoped
+    rule painting its hero's `<strong>` in ivory for the old forest hero; it is ink now.
   - [ ] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`.
   - Out of scope: `/craft` and `/craft/admin`.
   - Things that cost time and will again:

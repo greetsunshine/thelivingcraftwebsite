@@ -4,7 +4,8 @@
    /programmes/enterprise, /advisory and /contact.
 
    The pages keep their content; this gives them the package's composition:
-   - a full-width linen hero, not a rounded box;
+   - a full-width hero, not a rounded box. Since 25 September it is V5's
+     ivory hero with the weave, from ds/site-v5.css, like every inner page;
    - stacked sections set off by a hairline on the text column;
    - cards, comparison panels and the contact routes as open rows under a
      rule (the package's role-list and work-list), never boxed panels;
@@ -17,17 +18,8 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* ── hero ───────────────────────────────────────────────────────────────── */
-.programme-page .hero { padding: 0; background: var(--texture-forest); }
-.programme-page .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: var(--space-9) var(--space-5) var(--space-8);
-  border-radius: 0;
-  background: none;
-}
-.programme-page .hero h1 { max-width: 16ch; margin: var(--space-4) 0 var(--space-5); }
-.programme-page .hero h1 em { font-style: normal; color: inherit; }
+/* Ground, width, spacing and type: ds/site-v5.css. Only the measures here. */
+.programme-page .hero h1 { max-width: 16ch; }
 .programme-page .hero .credential,
 .programme-page .hero .lede { max-width: 52ch; }
 
@@ -98,13 +90,11 @@
 .programme-page main .tlist p { max-width: var(--measure-prose); }
 
 @media (max-width: 800px) {
-  .programme-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
   .programme-page main > section.wrap { padding-block: var(--space-7); }
   .programme-page .sec-head { margin-bottom: var(--space-5); }
   .programme-page main .panel.routes .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
 }
 @media (max-width: 560px) {
-  .programme-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
   .programme-page main > section.wrap { padding-block: var(--space-6); }
   .programme-page main .panel .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .programme-page main .tlist li { grid-template-columns: 2rem minmax(0, 1fr); gap: var(--space-3); }
