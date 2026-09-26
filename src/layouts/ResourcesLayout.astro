@@ -8,9 +8,18 @@
 //
 // Separate from BaseLayout because BaseLayout's nav is all #anchors into the
 // cohort single-page. Shared where it matters — global.css, SeoHead, Track and
-// the Ask widget are the same on every public surface.
+// the Ask widget are the same on every public surface, and since 25 September
+// the V5 header and footer (SiteHeader, ds/site-v5.css) are too.
+//
+// NO GOOGLE TAG MANAGER, ON PURPOSE. The Rule Placement Audit on this layout
+// promises "nothing is sent to us", and the GTM container loads Microsoft
+// Clarity, which records page text. Sharing chrome with the other layouts
+// must never bring GTM with it: GTM lives in those layouts, not in SiteHeader.
 import '../styles/global.css';
+// The V5 chrome shared with `/` (25 September): header, ground, width, footer.
+import '../styles/ds/site-v5.css';
 // Every page this layout serves is a tool: the design system's tool template.
+// It comes after the V5 layer, so a tool keeps its working heading.
 import '../styles/templates/tool.css';
 import SeoHead from '../components/SeoHead.astro';
 import AskWidget from '../components/AskWidget.astro';
@@ -18,7 +27,7 @@ import Track from '../components/Track.astro';
 import { TOOL_CREDIT } from '../data/resources';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
-import MobileMenu from '../components/site/MobileMenu.astro';
+import SiteHeader from '../components/site/SiteHeader.astro';
 import BrandLockup from '../components/site/BrandLockup.astro';
 
 export interface Props {
@@ -31,6 +40,8 @@ export interface Props {
 }
 
 const { title, description, canonical, schema, sections = [] } = Astro.props;
+// `lc-v5` and not `lc-v5-read` on <body>: a tool takes V5's chrome and ground,
+// and keeps the design system's working heading and 16px workspace.
 const year = new Date().getFullYear();
 ---
 
@@ -39,24 +50,15 @@ const year = new Date().getFullYear();
   <head>
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} />
   </head>
-  <body class="tool-page">
+  <body class="tool-page lc-v5">
     <a class="skip" href="#main">Skip to content</a>
-    <header class="nav">
-      <div class="wrap nav-inner">
-        <BrandLockup href="#top" sub="Resources" />
-        <nav class="navlinks">
-          {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-          <a href="/latest">Field notes</a>
-          <a class="btn btn-primary" style="padding:10px 20px" href="/">The cohort&nbsp;<span class="arrow">→</span></a>
-          {/* Phones: the links above are hidden below 900px (global.css), and this
-              is how a phone reaches them. Same links, same order. */}
-          <MobileMenu>
-            {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-            <a href="/latest">Field notes</a>
-          </MobileMenu>
-        </nav>
-      </div>
-    </header>
+    <SiteHeader
+      brandHref="#top"
+      sub="Resources"
+      action={{ label: 'The cohort', href: '/' }}
+      pageLinks={sections.map((s) => [s.title, `#${s.id}`] as [string, string])}
+      related={[['Field notes', '/latest']]}
+    />
 
     <main id="main">
       <slot />
@@ -66,23 +68,23 @@ const year = new Date().getFullYear();
       <div class="wrap">
         <div class="foot-grid">
           <div>
-            <div style="margin-bottom:14px"><BrandLockup tile /></div>
+            <BrandLockup tile />
             <p class="muted">Working material from the practice. Free to use, free to share, and built for the decision it names rather than for an audience.</p>
           </div>
           <div class="foot-col">
-            <h5>Resources</h5>
+            <h2>Resources</h2>
             {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
             <a href="#how">How to use these</a>
           </div>
           <div class="foot-col">
-            <h5>The practice</h5>
+            <h2>The practice</h2>
             <a href="/">The Living Craft · cohort →</a>
             <a href="/caio">Fractional CAIO retainer →</a>
             <a href="/assessment">AI Readiness Assessment →</a>
             <a href="/latest">Field notes · agentic AI →</a>
           </div>
           <div class="foot-col">
-            <h5>Connect</h5>
+            <h2>Connect</h2>
             <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
             <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
           </div>

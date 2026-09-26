@@ -288,6 +288,14 @@
     linear-gradient(rgba(16, 42, 34, 0.45), rgba(16, 42, 34, 0.45)),
     var(--texture-linen) center / cover no-repeat var(--lc-dark-forest);
 
+  /* --- texture: the ivory weave (V5, 19 September). The one textile ground
+     on a light page, behind the opening section and nowhere else. A whole
+     `background` value, like the linen above; its opacity is a separate
+     token because it goes on the ::before that carries it. `/` and every
+     inner page read these two (landing-v5.css, ds/site-v5.css). --- */
+  --weave-ivory: url('/textures/ivory-weave.svg') 0 0 / 48px 48px repeat;
+  --weave-ivory-opacity: 0.64;
+
   /* --- the LC mark: its own cream paper, from the supplied artwork. The
      artwork has no transparency, so the mark carries this ground with it
      (see Logo.astro). Used for the footer tile. Not a text colour. --- */

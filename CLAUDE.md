@@ -187,10 +187,15 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
-  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+  - **The look is the V5 illustrated package of 19 September. Its chrome is shared; its cohort
+    sections are `/` only.** Since 25 September the parts that are not about the cohort live in
+    [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css): the header and "On this page" row, the
+    phone menu, the 1200px container, the ivory ground and weave, the reading type, the buttons and
+    the footer. `/` reads that file too, so there is one copy. See *V5 on the inner pages* below.
     [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
     [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
-    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    keep the cohort's own sections. They are imported by `BaseLayout` alone and scoped under
+    `body.landing`; landing.css imports site-v5.css on its first line. Seven `.chapter` wrappers,
     **no printed section numbers**, and no divider ornament between sections (the knot
     divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
     package's `brain-lines.svg`), which **loops**; eleven drawings come from
@@ -1050,6 +1055,28 @@ prospect.
   tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
   names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
   `/design-system` renders every component in every state (noindex, unlinked).
+- **V5 on the inner pages** (Sunil, 25 September 2026: "all the tool pages and internal sites
+  have to be redesigned to match the actual site"). Three pieces, and a page uses all three:
+  - [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css), imported straight after `global.css`.
+    Its rules were cut out of landing.css and landing-v5.css, kept in their order, and given the
+    prefix `:is(.landing, .lc-v5)` or `:is(.landing, .lc-v5-read)`. An `:is()` list is as
+    specific as its most specific member, so `/` resolves every rule exactly as before.
+  - Two body classes. **`lc-v5`** takes the chrome: header, page row, menu, 1200px container,
+    ivory ground with the weave behind the opening, footer. **`lc-v5-read`** adds the reading
+    type, 18px body, 48px buttons and the 3px focus ring. **Tool pages take `lc-v5` only**:
+    the design system keeps "branded storytelling out of dense working areas", so a tool keeps
+    the working heading and 16px workspace of `templates/tool.css`.
+  - [src/components/site/SiteHeader.astro](src/components/site/SiteHeader.astro) draws `/`'s
+    header markup, so the same rules style it. In-page links go in `pageLinks` (the "On this
+    page" row); links to other pages go in `related`, at the left of that row. It replaced
+    `SiteNav.astro` and the headers written out in each layout.
+  - **`/` does not use SiteHeader yet.** BaseLayout had uncommitted work on 26 September that
+    changes the same header, so its markup was left alone: the styles exist once, the markup
+    twice. Move BaseLayout onto SiteHeader once that work lands.
+  - **Check `/` after touching site-v5.css**: compare every element's box and computed style at
+    1440, 1024 and 390px before and after. Moving a rule in the order changes `/` silently.
+  - **Never put a JSX comment between `</head>` and `<body>`** in a layout. Astro then opens an
+    implicit `<body>` and the real one's class is lost, which switches the whole V5 layer off.
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
@@ -1312,6 +1339,11 @@ before changing a colour.
   where it is declared: the `:root` one already holds the linen, and `body` inherits
   that resolved value. A new token defined as `var(--texture-…)` on `:root` needs the
   same line.
+- **The ivory weave is the one light texture**, on `/` and every page on the V5 layer (25 September
+  2026). `--weave-ivory` (a whole `background` value) and `--weave-ivory-opacity` (0.64) in
+  `theme.css` draw it on the `::before` of the opening section only: `/`'s hero and every inner
+  page's `.hero`, a tool's working heading included. V5: "Full-width ivory fabric is limited to
+  the hero." Never put it behind body text further down a page.
 - **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
   everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay

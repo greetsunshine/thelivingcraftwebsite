@@ -10,25 +10,35 @@
    - Primary and secondary buttons in the heading go back to their ordinary
      colours, because they no longer sit on forest.
 
-   Applied by `body.tool-page`: ResourcesLayout sets it on all eight tools it
+   Applied by `body.tool-page`: ResourcesLayout sets it on all nine tools it
    serves, and /tools/agent-design-check passes `bodyClass="tool-page"` to
    PracticeLayout. Each tool keeps its own workspace, scoring and PDF logic;
    only the shell and shared parts are restyled here.
+
+   SINCE 25 SEPTEMBER (V5 on the inner pages). A tool page also carries
+   `lc-v5`, so its header, footer, content width and the ivory weave behind
+   this heading come from ds/site-v5.css, as on `/`. What stays here is the
+   working heading itself: the Figtree h1, the muted lead and the tool's own
+   spacing. The heading-on-ivory colours (eyebrow, notes, focus ring, the two
+   button styles) moved to ds/site-v5.css unchanged, because every inner
+   hero is on ivory now, not only a tool's.
    ───────────────────────────────────────────────────────────────────────────── */
 
 .tool-page .hero { padding: var(--space-8) 0 var(--space-6); background: transparent; }
+/* The width and side gutters are the V5 container's (ds/site-v5.css). */
 .tool-page .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: 0 var(--space-5);
+  padding-block: 0;
   background: none;
   border-radius: 0;
   color: var(--text-body);
 }
-.tool-page .hero .eyebrow { color: var(--accent-ink); }
-.tool-page .hero .eyebrow .num { color: var(--text-quiet); }
-.tool-page .hero .eyebrow a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+/* A tool page not yet on the V5 layer keeps the old shell width. */
+.tool-page:not(.lc-v5) .hero > .wrap {
+  width: auto;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: 0 var(--space-5);
+}
 .tool-page .hero h1 {
   max-width: 24ch;
   margin: var(--space-4) 0 var(--space-5);
@@ -44,19 +54,6 @@
 .tool-page .hero .credential { max-width: 47rem; color: var(--text-quiet); }
 .tool-page .hero .credential strong,
 .tool-page .hero .lead strong { color: var(--text-body); }
-.tool-page .hero .muted,
-.tool-page .hero .faint,
-.tool-page .hero > .wrap .hero-note { color: var(--text-quiet); }
-.tool-page .hero > .wrap :focus-visible { outline-color: var(--focus-ring); }
-.tool-page .hero > .wrap .btn-primary {
-  background: var(--control-primary-bg);
-  border-color: transparent;
-  color: var(--text-on-accent);
-}
-.tool-page .hero > .wrap .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
-.tool-page .hero > .wrap .btn-ghost { color: var(--text-body); border-color: var(--border-field); }
-.tool-page .hero > .wrap .btn-ghost:hover,
-.tool-page .hero > .wrap a.btn-ghost:hover { background: var(--surface-hover); color: var(--text-body); border-color: var(--border-field); }
 
 /* Section headings inside a tool: one colour. The gold emphasised word is a
    brand flourish the working area does not need; the <em> stays. */
@@ -65,7 +62,7 @@
 
 @media (max-width: 900px) {
   .tool-page .hero { padding: var(--space-7) 0 var(--space-5); }
-  .tool-page .hero > .wrap { padding: 0 var(--space-4); border-radius: 0; }
+  .tool-page:not(.lc-v5) .hero > .wrap { padding: 0 var(--space-4); }
 }
 @media (max-width: 560px) {
   .tool-page .hero { padding: var(--space-6) 0 var(--space-4); }

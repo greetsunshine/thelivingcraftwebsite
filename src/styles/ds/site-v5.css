@@ -1,0 +1,540 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ds/site-v5.css — the V5 look, shared by `/` and every public inner page.
+
+   Sunil, 25 September 2026: "all the tool pages and internal sites have to be
+   redesigned to match the actual site". The actual site is `/`, which carries
+   the V5 illustrated package of 19 September. This file is the part of that
+   package that is not about the cohort: the header with the site's sections,
+   the "On this page" row, the phone menu, the content width, the ivory ground,
+   the reading type and the footer. There is ONE copy of it, and `/` reads it
+   too.
+
+   HOW IT WAS MADE. The rules below the "lifted" headings were cut out of
+   landing.css and landing-v5.css, not rewritten. Each one kept its values and
+   its place in the order. Only its prefix changed: `.landing` became one of
+   two lists, and an :is() list is exactly as specific as its most specific
+   member, so `/` resolves every rule the way it did before.
+
+   TWO CLASSES, AND WHY THERE ARE TWO.
+   - `.lc-v5`: every inner page that wears the V5 chrome. Header, page row,
+     menu, content width, ivory ground, footer.
+   - `.lc-v5-read`: reading pages also take V5's reading type, 18px body,
+     buttons and focus ring. Tool pages do not. The design system of
+     18 September keeps "branded storytelling out of dense working areas", so
+     a tool keeps the working heading and the 16px workspace of
+     templates/tool.css. Its dark workspace marks also set their own ivory
+     focus ring, which V5's !important ring would overrule.
+   `/` matches both, through `.landing`.
+
+   LOAD ORDER. After global.css, before any page template. landing.css imports
+   this file on its first line, so on `/` these rules sit where they used to:
+   after global.css and before the cohort's own rules. Inner layouts import it
+   straight after global.css.
+
+   WHAT IS NOT HERE. The cohort's hero, chapters, drawings, price panel and
+   forms stay in landing.css and landing-v5.css. The eleven drawings belong to
+   the cohort page's own sections and appear nowhere else. So do the footer's
+   "Explore" row rules, which place one specific column of `/`'s footer.
+
+   BEFORE CHANGING ANYTHING HERE, re-run the `/` regression: every element's
+   box and computed style at 1440, 1024 and 390px, before and after. A lifted
+   rule that moves in the order changes `/` without any error.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ══ lifted from landing.css ═════════════════════════════════════════════ */
+
+:is(body.landing, body.lc-v5) {
+  background: var(--surface-page);
+  color: var(--text-body);
+}
+:is(body.landing, body.lc-v5-read) {
+  font-size: 1.125rem;            /* 18px, the package's reading size at every width */
+  line-height: 1.62;              /* 29.16px */
+}
+
+/* ── focus: 3px and clear, as the package draws it ───────────────────────
+   !important because several shared components (the menu button, the route
+   chooser, the form fields) set a 2px ring in scoped styles that out-rank
+   any page-level selector. Dark surfaces set --landing-focus to ivory. */
+:is(body.landing, body.lc-v5-read) { --landing-focus: var(--focus-ring); }
+:is(body.landing, body.lc-v5-read) :focus-visible:not([tabindex='-1']) {
+  outline: 3px solid var(--landing-focus) !important;
+  outline-offset: 4px !important;
+}
+:is(.landing, .lc-v5-read) footer.site { --landing-focus: var(--hero-focus); }
+
+/* ── containers: 1200px of content, 40px gutters (24 below 960, 18 at 390) ── */
+:is(.landing, .lc-v5) .wrap {
+  width: min(1200px, calc(100% - 80px));
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* ── type ───────────────────────────────────────────────────────────────── */
+:is(.landing, .lc-v5-read) h1,
+:is(.landing, .lc-v5-read) h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+:is(.landing, .lc-v5-read) h2,
+:is(.landing, .lc-v5-read) .sec-head h2,
+:is(.landing, .lc-v5-read) .experience h2 { font-size: clamp(2rem, 3.35vw, 3.125rem); max-width: 23ch; margin: 0; }
+:is(.landing, .lc-v5-read) h3,
+:is(.landing, .lc-v5-read) h4 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0;
+}
+/* One colour per heading. The <em> stays in the markup. (`.landing em`, which
+   also drops italics from body text, stays in landing.css: in a guide an
+   italic word carries meaning.) */
+:is(.landing, .lc-v5-read) h1 em,
+:is(.landing, .lc-v5-read) h2 em,
+:is(.landing, .lc-v5-read) .sec-head h2 em,
+:is(.landing, .lc-v5-read) .experience h2 em { color: inherit; font-style: normal; }
+:is(.landing, .lc-v5-read) .eyebrow {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: var(--weight-strong);
+  color: var(--accent-ink);
+  margin-bottom: 24px;
+}
+:is(.landing, .lc-v5-read) .sec-head { max-width: none; margin-bottom: 48px; }
+:is(.landing, .lc-v5-read) .sec-head .lead { margin-top: 24px; }
+:is(.landing, .lc-v5-read) .lead { font-size: 1.375rem; line-height: 1.48; max-width: 56ch; color: var(--text-body); }
+:is(.landing, .lc-v5-read) .quiet,
+:is(.landing, .lc-v5-read) .muted { color: var(--text-quiet); }
+
+/* ── buttons: 48px tall, 16px bold, as the package sets every action ───────
+   The second selector gives a tool page's header button the same size. A
+   tool's workspace buttons keep the design system's own. */
+:is(.landing, .lc-v5-read) .btn,
+.lc-v5 .navlinks > .btn {
+  min-height: 48px;
+  height: auto;
+  padding: 13px 22px;
+  font-size: 1rem;
+  font-weight: var(--weight-strong);
+  line-height: 1.35;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+:is(.landing, .lc-v5) header.nav { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); }
+:is(.landing, .lc-v5) .nav-inner { min-height: 96px; gap: 24px; flex-wrap: nowrap; }
+:is(.landing, .lc-v5) .navlinks { gap: 24px; flex-wrap: nowrap; color: var(--text-body); }
+:is(.landing, .lc-v5) .navlinks > a { font-size: 1rem; white-space: nowrap; }
+/* A 44px hit area without moving anything: the row is 96px tall. */
+:is(.landing, .lc-v5) .navlinks > a:not(.btn) { padding-block: 9px; }
+:is(.landing, .lc-v5) .navlinks > a:not(.btn):hover { color: var(--text-body); text-decoration: underline; text-underline-offset: 4px; }
+/* The lockup: the LC mark and the "The Living Craft" lettering, both cropped
+   from the supplied artwork with the paper keyed out. Sized by height; the
+   widths below follow from the images (the package's 83×52 + 182 wide). */
+:is(.landing, .lc-v5) .brand-lockup { display: flex; align-items: center; gap: 13px; min-height: 44px; }
+:is(.landing, .lc-v5) .brand-lockup .brand-symbol { display: block; flex: none; height: 52px; width: auto; }
+:is(.landing, .lc-v5) .brand-lockup .brand-name { display: block; flex: none; height: 28.5px; width: auto; }
+
+/* The phone menu, as the package draws it: ivory, 18px rows. */
+:is(.landing, .lc-v5) .mm-toggle { width: 48px; height: 48px; }
+:is(.landing, .lc-v5) .mm-panel { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); padding: 16px 24px; }
+:is(.landing, .lc-v5) .mm-panel .mm-list a { font-size: 1.125rem; min-height: 48px; padding: 12px 0; color: var(--text-body); }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+:is(.landing, .lc-v5) footer.site { position: relative; padding: 72px 0 72px; margin-top: 0; border-top: 0; }
+/* The package's thread strip along the top edge: a fine gold grid at 20%.
+   Decoration only. */
+:is(.landing, .lc-v5) footer.site::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb, var(--lc-gold) 20%, transparent) 7px 8px),
+    repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--lc-gold) 20%, transparent) 5px 6px);
+}
+:is(.landing, .lc-v5) .foot-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 36px; }
+:is(.landing, .lc-v5) footer.site .brand-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: var(--surface-page);
+  border-radius: 3px;
+}
+/* The second selector in each tile rule is BrandLockup's tile on an inner
+   footer. It also carries .brand-lockup, whose header sizes would otherwise
+   win, so it needs the longer selector to take the footer's sizes. */
+:is(.landing, .lc-v5) .brand-tile .brand-symbol,
+.lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { display: block; height: 45px; width: auto; }
+:is(.landing, .lc-v5) .brand-tile .brand-name,
+.lc-v5 footer.site .brand-lockup.brand-tile .brand-name { display: block; height: 25px; width: auto; }
+:is(.landing, .lc-v5) footer.site .foot-grid .muted { color: var(--footer-muted); font-size: 1rem; line-height: 1.62; max-width: 32ch; }
+:is(.landing, .lc-v5) .foot-col { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+:is(.landing, .lc-v5) .foot-col h2 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: var(--weight-strong);
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--footer-ink);
+  max-width: none;
+  margin: 0 0 8px;
+}
+:is(.landing, .lc-v5) .foot-col a { display: inline; padding: 0; font-size: 0.875rem; line-height: 1.6; color: var(--footer-ink); overflow-wrap: anywhere; }
+:is(.landing, .lc-v5) .foot-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: var(--border-w-hair) solid var(--footer-rule);
+  font-size: 0.875rem;
+  color: var(--footer-muted);
+}
+:is(.landing, .lc-v5) .foot-legal { gap: 24px; }
+:is(.landing, .lc-v5) .foot-legal a { color: var(--footer-muted); text-decoration: underline; text-underline-offset: 4px; }
+
+/* The sticky Apply bar keeps clear of a phone's home indicator. */
+:is(.landing, .lc-v5) .sticky-apply { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── landing.css breakpoints, in the package's order ────────────────────── */
+
+@media (max-width: 1150px) {
+  :is(.landing, .lc-v5) .navlinks { gap: 16px; }
+  :is(.landing, .lc-v5) .navlinks > a { font-size: 0.875rem; }
+  :is(.landing, .lc-v5) .brand-lockup { gap: 8px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 44px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 24.5px; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1.3fr 1fr 1fr; }
+}
+
+/* Between 961 and 1150 the full navigation still fits at 16px with a smaller
+   lockup; below 961 it becomes the menu. */
+@media (max-width: 1150px) and (min-width: 961px) {
+  :is(.landing, .lc-v5) .navlinks { gap: 13px; }
+  :is(.landing, .lc-v5) .navlinks > a { font-size: 1rem; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 40px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 22.5px; }
+}
+
+@media (max-width: 960px) {
+  /* The menu takes over at the package's 960, not the site's usual 900: the
+     full navigation does not fit comfortably between them. */
+  :is(.landing, .lc-v5) .navlinks > a:not(.btn) { display: none; }
+  :is(body.landing, body.lc-v5) .mm { display: block; }
+  :is(.landing, .lc-v5) .nav-inner { min-height: 84px; }
+  :is(.landing, .lc-v5) .navlinks { gap: 14px; }
+  :is(.landing, .lc-v5) .wrap { width: calc(100% - 48px); }
+  :is(.landing, .lc-v5-read) .lead { font-size: 1.25rem; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1.3fr 1fr; }
+  :is(.landing, .lc-v5) footer.site .brand-tile { padding: 10px; }
+  :is(.landing, .lc-v5) .brand-tile .brand-symbol,
+  .lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { height: 40px; }
+  :is(.landing, .lc-v5) .brand-tile .brand-name,
+  .lc-v5 footer.site .brand-lockup.brand-tile .brand-name { height: 22px; }
+}
+
+@media (max-width: 760px) {
+  :is(.landing, .lc-v5-read) .sec-head { margin-bottom: 32px; }
+  :is(.landing, .lc-v5-read) .sec-head .lead { margin-top: 20px; }
+  :is(.landing, .lc-v5-read) h2,
+  :is(.landing, .lc-v5-read) .sec-head h2,
+  :is(.landing, .lc-v5-read) .experience h2 { font-size: 2.125rem; max-width: 26ch; }
+  :is(.landing, .lc-v5-read) h3,
+  :is(.landing, .lc-v5-read) h4 { font-size: 1.25rem; }
+  :is(.landing, .lc-v5-read) .eyebrow { margin-bottom: 16px; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr 1fr; gap: 36px 24px; }
+  :is(.landing, .lc-v5) .foot-grid > div:first-child { grid-column: 1 / -1; }
+  :is(.landing, .lc-v5) footer.site .foot-grid .muted { max-width: 50ch; }
+  :is(.landing, .lc-v5) .brand-tile .brand-symbol,
+  .lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { height: 48px; }
+  :is(.landing, .lc-v5) .brand-tile .brand-name,
+  .lc-v5 footer.site .brand-lockup.brand-tile .brand-name { height: 26.5px; }
+  :is(.landing, .lc-v5) .foot-bottom { flex-direction: column; gap: 18px; }
+}
+
+/* Phones wider than 390: the lockup at its phone size. QA 19 September:
+   at 391 to ~560 it kept the 44px tablet size and ran under Apply. */
+@media (max-width: 560px) {
+  :is(.landing, .lc-v5) .brand-lockup { gap: 6px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 35px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 19px; }
+  :is(.landing, .lc-v5) .nav-inner, :is(.landing, .lc-v5) .navlinks { gap: 10px; }
+}
+
+@media (max-width: 390px) {
+  :is(.landing, .lc-v5) .wrap { width: calc(100% - 36px); }
+  :is(.landing, .lc-v5) .nav-inner { gap: 8px; min-height: 76px; }
+  :is(.landing, .lc-v5) .brand-lockup { gap: 6px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 35px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 19px; }
+  :is(.landing, .lc-v5) .navlinks { gap: 8px; }
+  /* !important only because BaseLayout sets this button's padding inline. */
+  :is(.landing, .lc-v5) .navlinks > .btn { font-size: 0.875rem; padding: 10px 12px !important; min-height: 44px; }
+  :is(.landing, .lc-v5) .navlinks > .btn .arrow { display: none; }
+  :is(.landing, .lc-v5) .mm-toggle { width: 42px; height: 44px; }
+  :is(.landing, .lc-v5-read) .lead { font-size: 1.25rem; }
+  :is(.landing, .lc-v5-read) h2,
+  :is(.landing, .lc-v5-read) .sec-head h2,
+  :is(.landing, .lc-v5-read) .experience h2 { font-size: 2rem; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: minmax(0, 1fr); }
+  :is(.landing, .lc-v5) .foot-grid > div:first-child { grid-column: auto; }
+}
+
+@media (max-width: 350px) {
+  :is(.landing, .lc-v5) .brand-lockup { gap: 5px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 30px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 15.5px; }
+  :is(.landing, .lc-v5) .navlinks,
+  :is(.landing, .lc-v5) .nav-inner { gap: 6px; }
+}
+
+/* ══ lifted from landing-v5.css (V4 and V5) ══════════════════════════════ */
+
+:is(body.landing, body.lc-v5-read) { --chapter-gap: clamp(64px, 7vw, 100px); }
+
+:is(.landing, .lc-v5-read) .sec-head { margin-bottom: 36px; }
+:is(.landing, .lc-v5-read) .sec-head .eyebrow { margin-bottom: 16px; }
+:is(.landing, .lc-v5-read) .eyebrow { letter-spacing: 0.035em; }
+:is(.landing, .lc-v5-read) .lead { font-size: 1.25rem; line-height: 1.55; }
+:is(.landing, .lc-v5-read) h1 { color: var(--sun); }
+
+/* ── header: the site's sections, then "On this page" ───────────────────── */
+:is(.landing, .lc-v5) header.nav { background: var(--surface-page); }
+:is(.landing, .lc-v5) .nav-inner { min-height: 88px; }
+:is(.landing, .lc-v5) .navlinks { gap: 24px; }
+:is(.landing, .lc-v5) .navlinks > a { font-size: 1rem; }
+:is(.landing, .lc-v5) .brand-lockup { gap: 8px; }
+:is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 44px; }
+:is(.landing, .lc-v5) .brand-lockup .brand-name { height: 24px; }
+
+:is(.landing, .lc-v5) .page-navigation {
+  border-top: var(--border-w-hair) solid var(--border-hair);
+  background: var(--surface-page);
+}
+:is(.landing, .lc-v5) .page-links {
+  display: flex;
+  gap: 32px;
+  min-height: 46px;
+  align-items: center;
+  justify-content: flex-end;
+}
+:is(.landing, .lc-v5) .page-links a {
+  font-size: 0.875rem;
+  text-decoration: none;
+  padding-block: 10px;
+  color: var(--text-quiet);
+}
+:is(.landing, .lc-v5) .page-links a:hover { color: var(--text-loud); text-decoration: underline; text-underline-offset: 4px; }
+/* The menu's two groups. "On this page" shows only on phones, where the
+   row above is hidden (Sunil, 19 September: one menu on phones). */
+:is(.landing, .lc-v5) .mm-group + .mm-group { margin-top: 12px; }
+:is(.landing, .lc-v5) .mm-group-label {
+  margin: 8px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+:is(.landing, .lc-v5) .mm-group-page { display: none; }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+:is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1.35fr 1fr 1fr 1fr; }
+:is(.landing, .lc-v5) footer.site::before { height: 8px; }
+:is(.landing, .lc-v5) .foot-bottom { align-items: center; flex-wrap: wrap; }
+:is(.landing, .lc-v5) .motion-setting {
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  border-bottom: var(--border-w-hair) solid var(--footer-rule);
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--footer-muted);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+:is(.landing, .lc-v5) .motion-setting:hover { color: var(--footer-ink); }
+:is(.landing, .lc-v5) .motion-setting:disabled { cursor: default; }
+
+:is(.landing, .lc-v5) .sa-actions { margin-right: 0; }
+:is(.landing, .lc-v5) .sa-copy { margin-right: auto; }
+:is(.landing, .lc-v5) .sa-inner { gap: 20px; }
+
+/* ── landing-v5.css breakpoints, in the package's order ─────────────────── */
+
+@media (max-width: 1200px) {
+  :is(.landing, .lc-v5) .navlinks { gap: 18px; }
+}
+
+/* The site's five links fit down to 1081. Below that they fold into the
+   menu, which is the package's 1080, not landing.css's 960. */
+@media (max-width: 1150px) and (min-width: 1081px) {
+  :is(.landing, .lc-v5) .navlinks > a { font-size: 0.9375rem; }
+}
+
+@media (max-width: 1080px) {
+  :is(.landing, .lc-v5) .navlinks > a:not(.btn) { display: none; }
+  :is(body.landing, body.lc-v5) .mm { display: block; }
+  :is(.landing, .lc-v5) .nav-inner { min-height: 82px; }
+  :is(.landing, .lc-v5) .navlinks { gap: 14px; }
+  :is(.landing, .lc-v5) .page-links { justify-content: flex-start; gap: 30px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 40px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 22.5px; }
+}
+
+@media (max-width: 760px) {
+  :is(body.landing, body.lc-v5-read) { --chapter-gap: 64px; }
+  :is(.landing, .lc-v5) .wrap { width: calc(100% - 40px); }
+  :is(.landing, .lc-v5) .nav-inner { min-height: 76px; }
+  :is(.landing, .lc-v5) .page-navigation { display: none; }
+  /* Six short section links in two columns, to keep the menu short. */
+  :is(.landing, .lc-v5) .mm-group-page { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+  :is(.landing, .lc-v5) .mm-group-page .mm-group-label { grid-column: 1 / -1; }
+  /* Both groups can be taller than a small phone: the panel scrolls. */
+  :is(.landing, .lc-v5) .mm-panel { max-height: calc(100dvh - var(--anchor-offset, 90px) + 12px); overflow-y: auto; overscroll-behavior: contain; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr 1fr; }
+  :is(.landing, .lc-v5) .foot-bottom { align-items: flex-start; }
+}
+
+/* Phones wider than 390: the lockup at its phone size, clear of Apply
+   and the menu button (QA 19 September, the 391-560 overlap). */
+@media (max-width: 560px) {
+  :is(.landing, .lc-v5) .brand-lockup { gap: 6px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 35px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 19px; }
+  :is(.landing, .lc-v5) .nav-inner,
+  :is(.landing, .lc-v5) .navlinks { gap: 10px; }
+}
+
+@media (max-width: 390px) {
+  :is(.landing, .lc-v5) .wrap { width: calc(100% - 36px); }
+  :is(.landing, .lc-v5) .brand-lockup { gap: 5px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-symbol { height: 30px; }
+  :is(.landing, .lc-v5) .brand-lockup .brand-name { height: 16px; }
+  :is(.landing, .lc-v5) .navlinks { gap: 8px; }
+  :is(.landing, .lc-v5) .navlinks > .btn { font-size: 0.875rem; padding: 10px 11px; }
+  :is(.landing, .lc-v5) .navlinks > .btn .arrow { display: none; }
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  :is(.landing, .lc-v5) .page-navigation,
+  :is(.landing, .lc-v5) .motion-setting { display: none; }
+}
+
+/* ══ inner pages only ═══════════════════════════════════════════════════
+   What `/` does not need, because its markup differs: its header is written
+   out in BaseLayout, its hero is the cohort's own. Nothing below matches `/`,
+   because nothing below names `.landing`. */
+
+/* The current section is marked by ds/components.css (ink and a deep-gold
+   underline), the design system's rule for any header. */
+
+/* Links in the page row that go to ANOTHER page ("Field notes", "AI
+   Readiness"). They sit at the left of the row, apart from "On this page",
+   because they are not on this page. */
+.lc-v5 .page-navigation > .wrap { display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+.lc-v5 .page-navigation .page-links { flex: 1 1 auto; flex-wrap: wrap; row-gap: 0; }
+.lc-v5 .page-related { display: flex; gap: 24px; min-height: 46px; align-items: center; }
+.lc-v5 .page-related a { font-size: 0.875rem; padding-block: 10px; color: var(--text-body); }
+.lc-v5 .page-related a[aria-current='page'] { color: var(--text-loud); text-decoration: underline; text-decoration-color: var(--accent-ink); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.lc-v5 .page-related a:hover { color: var(--text-loud); text-decoration: underline; text-underline-offset: 4px; }
+
+/* ── the ivory ground: the weave behind the opening, and nowhere else ─────
+   V5: "Full-width ivory fabric is limited to the hero. The body uses calm
+   solid ivory and paper surfaces." Every inner page's opening is
+   <section class="hero">. A tool's working heading gets the ground too, as
+   the triage quiz already had it; its type stays the tool's own. */
+.lc-v5 .hero { position: relative; isolation: isolate; overflow: clip; }
+.lc-v5 .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--weave-ivory);
+  opacity: var(--weave-ivory-opacity);
+  pointer-events: none;
+}
+
+/* Every inner hero now sits on ivory, not forest. These are the colours the
+   tool template already used for a heading on ivory; they moved here from
+   templates/tool.css so that every inner page reads them from one place. */
+.lc-v5 .hero .eyebrow { color: var(--accent-ink); }
+.lc-v5 .hero .eyebrow .num { color: var(--text-quiet); }
+.lc-v5 .hero .eyebrow a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.lc-v5 .hero .lead,
+.lc-v5 .hero .lede,
+.lc-v5 .hero .credential { color: var(--text-body); }
+.lc-v5 .hero .credential strong,
+.lc-v5 .hero .lead strong { color: var(--text-loud); }
+.lc-v5 .hero .muted,
+.lc-v5 .hero .faint,
+.lc-v5 .hero > .wrap .hero-note { color: var(--text-quiet); }
+.lc-v5 .hero > .wrap :focus-visible { outline-color: var(--focus-ring); }
+.lc-v5 .hero > .wrap .btn-primary {
+  background: var(--control-primary-bg);
+  border-color: transparent;
+  color: var(--text-on-accent);
+}
+.lc-v5 .hero > .wrap .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
+.lc-v5 .hero > .wrap .btn-ghost { color: var(--text-body); border-color: var(--border-field); }
+.lc-v5 .hero > .wrap .btn-ghost:hover,
+.lc-v5 .hero > .wrap a.btn-ghost:hover { background: var(--surface-hover); color: var(--text-body); border-color: var(--border-field); }
+
+/* ── a reading page's opening: V5's hero type, on the inner pages' markup ──
+   `/`'s hero is a two-column grid with the brain; an inner hero is one column
+   of words. So the rule is written for that markup, with the numbers of
+   landing-v5.css's hero at the same breakpoints. One departure: below 760px
+   the heading steps down to 2.3rem, not the cohort's 2.55rem. The inner
+   titles run to about 40 characters against the cohort's 30, and at 2.55rem
+   they take five lines on a 390px phone. */
+.lc-v5-read .hero { padding: 0; color: var(--sun); --landing-focus: var(--focus-ring); }
+.lc-v5-read .hero > .wrap {
+  padding: 62px 0 56px;
+  background: none;
+  border-radius: 0;
+  color: var(--text-body);
+}
+.lc-v5-read .hero .eyebrow { font-size: 0.875rem; letter-spacing: 0.035em; margin-bottom: 26px; }
+.lc-v5-read .hero h1 {
+  font-size: clamp(2.65rem, 4.25vw, 4rem);
+  max-width: 18ch;
+  margin: 0 0 28px;
+  line-height: 1.09;
+  letter-spacing: -0.035em;
+  color: var(--sun);
+}
+.lc-v5-read .hero .lead,
+.lc-v5-read .hero .lede,
+.lc-v5-read .hero .credential { max-width: 56ch; }
+.lc-v5-read .hero-cta { gap: 12px; margin-top: 30px; }
+
+@media (max-width: 1200px) {
+  .lc-v5-read .hero h1 { font-size: 3.15rem; }
+}
+@media (max-width: 1080px) {
+  .lc-v5-read .hero h1 { font-size: 2.85rem; }
+}
+@media (max-width: 760px) {
+  .lc-v5-read .hero > .wrap { padding: 38px 0 40px; }
+  .lc-v5-read .hero h1 { font-size: clamp(2.3rem, 7.6vw, 3.6rem); max-width: none; margin-bottom: 22px; }
+  .lc-v5-read .hero .eyebrow { letter-spacing: 0; margin-bottom: 20px; }
+}
+@media (max-width: 390px) {
+  .lc-v5-read .hero h1 { font-size: 2.3rem; }
+}

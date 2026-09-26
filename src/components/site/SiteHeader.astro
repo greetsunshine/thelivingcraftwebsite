@@ -1,0 +1,181 @@
+---
+/**
+ * The V5 header for every public page except `/` (25 September 2026).
+ *
+ * It draws the same markup as `/`'s header in BaseLayout: the lockup, the
+ * site's five sections, one action, the phone menu, and a quiet second row
+ * for the page's own sections. So the one set of rules in ds/site-v5.css
+ * styles both, and the two cannot drift apart in how they look.
+ *
+ * WHY `/` DOES NOT USE THIS COMPONENT YET. BaseLayout's header has
+ * uncommitted work in progress (on 26 September) that changes how its
+ * "On this page" links behave on a phone. Moving that header into this
+ * component now would collide with it. When that work lands, BaseLayout can
+ * render <SiteHeader> with its own links and this becomes the only header.
+ * Until then the markup exists twice and the styles exist once.
+ *
+ * WHAT IT REPLACES. SiteNav.astro (the practice pages) and the four headers
+ * written out in ResourcesLayout, CaioLayout, AssessmentLayout, NotesLayout
+ * and PolicyLayout. Their words did not change. Their in-page links moved to
+ * the second row; their links to other pages sit at the left of that row.
+ *
+ * ORDER IS THE ROADMAP'S. "Header order: Programmes, Advisory, Resources,
+ * Tools, About, then Explore the cohort. Logo returns home." A destination
+ * with `built: false` renders as plain text rather than a link, and is left
+ * out of the phone menu; flip the flag in the commit that creates the page.
+ */
+import BrandLockup from './BrandLockup.astro';
+import MobileMenu from './MobileMenu.astro';
+import TalkToSunilLink from './TalkToSunilLink.astro';
+
+type Link = [label: string, href: string];
+
+export interface Props {
+  /** Where the lockup points. `/` by default; a one-page surface uses '#top'. */
+  brandHref?: string;
+  /** A descriptor beside the lockup: "Resources", "Fractional CAIO". */
+  sub?: string;
+  /** The page's one action, on the right of the bar and in the menu. */
+  action?: { label: string; href: string };
+  /** Links to sections of THIS page. They fill the "On this page" row. */
+  pageLinks?: Link[];
+  /** Links to OTHER pages that belong with this one, at the left of the row. */
+  related?: Link[];
+  /** Offer "Talk with Sunil" in the phone menu, as the practice pages did. */
+  talk?: boolean;
+}
+
+const { brandHref = '/', sub, action, pageLinks = [], related = [], talk = false } = Astro.props;
+
+interface Destination {
+  href: string;
+  label: string;
+  built: boolean;
+}
+const DESTINATIONS: Destination[] = [
+  { href: '/programmes/', label: 'Programmes', built: true },
+  { href: '/advisory/', label: 'Advisory', built: true },
+  { href: '/resources/', label: 'Resources', built: true },
+  { href: '/tools/', label: 'Tools', built: true },
+  { href: '/about/', label: 'About', built: true },
+];
+
+/** Trailing slashes are noise for a comparison; strip once, compare simply. */
+const here = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isCurrent = (href: string) => {
+  if (href.startsWith('#')) return false;
+  const target = href.replace(/\/+$/, '') || '/';
+  return here === target || (target !== '/' && here.startsWith(`${target}/`));
+};
+const current = (href: string) => (isCurrent(href) ? ('page' as const) : undefined);
+const hasRow = pageLinks.length > 0 || related.length > 0;
+---
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <BrandLockup href={brandHref} sub={sub} />
+    <nav class="navlinks" aria-label="Main navigation">
+      {
+        DESTINATIONS.map((d) =>
+          d.built ? (
+            <a href={d.href} aria-current={current(d.href)}>
+              {d.label}
+            </a>
+          ) : (
+            <span class="pending" title="Being written">
+              {d.label}
+            </span>
+          ),
+        )
+      }
+      {
+        action && (
+          <a class="btn btn-primary" href={action.href}>
+            {action.label}
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        )
+      }
+      {/* Below 1080px the five sections fold into this menu. Below 760px the
+          page's own row folds in too, as the menu's first group, so a phone
+          has one menu control, as on `/`. */}
+      <MobileMenu breakpoint={1080}>
+        {
+          pageLinks.length > 0 && (
+            <div class="mm-group mm-group-page">
+              <p class="mm-group-label">On this page</p>
+              {pageLinks.map(([label, href]) => <a href={href}>{label}</a>)}
+            </div>
+          )
+        }
+        <div class="mm-group">
+          <p class="mm-group-label">The Living Craft</p>
+          {DESTINATIONS.filter((d) => d.built).map((d) => (
+            <a href={d.href} aria-current={current(d.href)}>
+              {d.label}
+            </a>
+          ))}
+          {related.map(([label, href]) => (
+            <a href={href} aria-current={current(href)}>
+              {label}
+            </a>
+          ))}
+          {action && <a href={action.href}>{action.label}</a>}
+          {talk && <TalkToSunilLink placement="menu" variant="textlink" />}
+        </div>
+      </MobileMenu>
+    </nav>
+  </div>
+  {
+    hasRow && (
+      <div class="page-navigation">
+        <div class="wrap">
+          {related.length > 0 && (
+            <nav class="page-related" aria-label="Related pages">
+              {related.map(([label, href]) => (
+                <a href={href} aria-current={current(href)}>
+                  {label}
+                </a>
+              ))}
+            </nav>
+          )}
+          {pageLinks.length > 0 && (
+            <nav class="page-links" aria-label="On this page">
+              {pageLinks.map(([label, href]) => <a href={href}>{label}</a>)}
+            </nav>
+          )}
+        </div>
+      </div>
+    )
+  }
+</header>
+
+{/* Publishes the sticky header's real height as --anchor-offset, which
+    global.css spends as scroll-margin-top on :target and the phone menu
+    spends on its height. The same script as BaseLayout's, for the same
+    reason: .nav-inner changes height across widths. */}
+<script>
+  (function () {
+    const nav = document.querySelector<HTMLElement>('header.nav');
+    if (!nav) return;
+    const publish = () => {
+      document.documentElement.style.setProperty('--anchor-offset', `${nav.offsetHeight + 12}px`);
+    };
+    publish();
+    window.addEventListener('resize', publish, { passive: true });
+  })();
+</script>
+
+<style>
+  /* A section that is not written yet: the system's "unwritten" mark, a
+     dashed underline (SiteNav's rule, kept with the flag it serves). */
+  .pending {
+    white-space: nowrap;
+    color: var(--text-quiet);
+    border-bottom: 1px dashed var(--border-field);
+    cursor: default;
+  }
+  @media (max-width: 1080px) {
+    .pending { display: none; }
+  }
+</style>

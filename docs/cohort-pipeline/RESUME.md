@@ -40,7 +40,28 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     flat like every other inner page. The ivory weave behind its hero is untouched: it is
     not green, and he named the green one. If he wants the case file woven again, that is
     a one-page exception he has to ask for.
-- [ ] 2. V5 look on the inner pages.
+- [ ] **2. V5 look on the inner pages** (in progress, three commits). Sunil: "all the tool
+  pages and internal sites have to be redesigned to match the actual site". The shared part of
+  V5 moved out of landing.css and landing-v5.css into `src/styles/ds/site-v5.css`; `/` imports
+  it through landing.css and still resolves every rule the same way. Inner pages opt in with
+  two body classes (`lc-v5` for the chrome, `lc-v5-read` for reading type) and draw
+  `SiteHeader.astro`. CLAUDE.md, *V5 on the inner pages*, has the rules.
+  - [x] Step 1, the nine tools on ResourcesLayout. Tools take `lc-v5` only: V5's header,
+    ground, width and footer, and they keep tool.css's working heading and workspace.
+  - [ ] Step 2, PracticeLayout (hubs, worksheets, guides, templates, about, advisory, contact,
+    programmes, and `/tools/agent-design-check`).
+  - [ ] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`.
+  - Out of scope: `/craft` and `/craft/admin`.
+  - Things that cost time and will again:
+    - **`/` is checked element by element**, not by eye: a before/after dump of every element's
+      box and 27 computed properties at 1440, 1024 and 390px. It must show zero differences.
+      One exception is expected: after the split, 79,000 pixels at 1440px changed by 1/255 in
+      colour under the hero's wash. No computed style changed, and restoring the weave literal
+      did not remove it, so it is rasterisation, not layout.
+    - **A JSX comment between `</head>` and `<body>` switches V5 off.** Astro opens an implicit
+      `<body>` and the class on the real one is lost. Comments go in the frontmatter.
+    - **BaseLayout is not on SiteHeader.** It had uncommitted edits to the same header on
+      26 September; the styles are shared, the markup is not yet.
 - [ ] 3. Branded PDFs.
 - [ ] 4. Tool downloads.
 

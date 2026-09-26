@@ -23,89 +23,25 @@
 
    WHERE IT APPLIES. `/` only: BaseLayout imports it, BaseLayout serves
    index.astro alone, and every rule is scoped under `body.landing`.
+
+   THE SHARED PART MOVED OUT (25 September 2026). The body, focus ring,
+   containers, type, buttons, header, menu and footer rules now live in
+   ds/site-v5.css, where every inner page reads them too. That file is
+   imported on the first line below, so on `/` those rules still come first
+   and everything left here still follows them. A rule here that sets the
+   same thing as a rule there, at the same specificity, wins.
    ───────────────────────────────────────────────────────────────────────────── */
 
-body.landing {
-  background: var(--surface-page);
-  font-size: 1.125rem;            /* 18px, the package's reading size at every width */
-  line-height: 1.62;              /* 29.16px */
-  color: var(--text-body);
-}
+@import url('./ds/site-v5.css');
 
-/* ── focus: 3px and clear, as the package draws it ───────────────────────
-   !important because several shared components (the menu button, the route
-   chooser, the form fields) set a 2px ring in scoped styles that out-rank
-   any page-level selector. Dark surfaces set --landing-focus to ivory. */
-body.landing { --landing-focus: var(--focus-ring); }
-body.landing :focus-visible:not([tabindex='-1']) {
-  outline: 3px solid var(--landing-focus) !important;
-  outline-offset: 4px !important;
-}
+/* The body, focus ring, containers, type and buttons: ds/site-v5.css. */
 .landing .hero,
-.landing .price-card,
-.landing footer.site { --landing-focus: var(--hero-focus); }
+.landing .price-card { --landing-focus: var(--hero-focus); }
 
-/* ── containers: 1200px of content, 40px gutters (24 below 960, 18 at 390) ── */
-.landing .wrap {
-  width: min(1200px, calc(100% - 80px));
-  max-width: none;
-  margin-inline: auto;
-  padding-inline: 0;
-}
-
-/* ── type ───────────────────────────────────────────────────────────────── */
-.landing h1,
-.landing h2 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-  text-wrap: balance;
-}
-.landing h2,
-.landing .sec-head h2,
-.landing .experience h2 { font-size: clamp(2rem, 3.35vw, 3.125rem); max-width: 23ch; margin: 0; }
-.landing h3,
-.landing h4 {
-  font-size: 1.375rem;
-  line-height: 1.3;
-  font-weight: var(--weight-strong);
-  letter-spacing: -0.015em;
-  text-wrap: balance;
-  margin: 0;
-}
+/* Italics are dropped from body text on `/` only. In a guide on an inner
+   page an italic word carries meaning, so this rule was not shared. */
 .landing em { font-style: normal; }
-/* One colour per heading. The <em> stays in the markup. */
-.landing h1 em,
-.landing h2 em,
-.landing .sec-head h2 em,
-.landing .experience h2 em { color: inherit; font-style: normal; }
 .landing .chapter p + p { margin-top: 20px; }
-.landing .eyebrow {
-  display: block;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: var(--weight-strong);
-  color: var(--accent-ink);
-  margin-bottom: 24px;
-}
-.landing .sec-head { max-width: none; margin-bottom: 48px; }
-.landing .sec-head .lead { margin-top: 24px; }
-.landing .lead { font-size: 1.375rem; line-height: 1.48; max-width: 56ch; color: var(--text-body); }
-.landing .quiet,
-.landing .muted { color: var(--text-quiet); }
-
-/* ── buttons: 48px tall, 16px bold, as the package sets every action ─────── */
-.landing .btn {
-  min-height: 48px;
-  height: auto;
-  padding: 13px 22px;
-  font-size: 1rem;
-  font-weight: var(--weight-strong);
-  line-height: 1.35;
-}
 
 /* ── chapters and the section rhythm (the package's own numbers) ────────── */
 .landing .band,
@@ -123,25 +59,7 @@ body.landing :focus-visible:not([tabindex='-1']) {
    the hero, whose own edge is the break. */
 .landing .chapter section + section:not(.hero + section) { padding-top: 64px; }
 
-/* ── header ─────────────────────────────────────────────────────────────── */
-.landing header.nav { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); }
-.landing .nav-inner { min-height: 96px; gap: 24px; flex-wrap: nowrap; }
-.landing .navlinks { gap: 24px; flex-wrap: nowrap; color: var(--text-body); }
-.landing .navlinks > a { font-size: 1rem; white-space: nowrap; }
-/* A 44px hit area without moving anything: the row is 96px tall. */
-.landing .navlinks > a:not(.btn) { padding-block: 9px; }
-.landing .navlinks > a:not(.btn):hover { color: var(--text-body); text-decoration: underline; text-underline-offset: 4px; }
-/* The lockup: the LC mark and the "The Living Craft" lettering, both cropped
-   from the supplied artwork with the paper keyed out. Sized by height; the
-   widths below follow from the images (the package's 83×52 + 182 wide). */
-.landing .brand-lockup { display: flex; align-items: center; gap: 13px; min-height: 44px; }
-.landing .brand-lockup .brand-symbol { display: block; flex: none; height: 52px; width: auto; }
-.landing .brand-lockup .brand-name { display: block; flex: none; height: 28.5px; width: auto; }
-
-/* The phone menu, as the package draws it: ivory, 18px rows. */
-.landing .mm-toggle { width: 48px; height: 48px; }
-.landing .mm-panel { background: var(--surface-page); border-bottom: var(--border-w-hair) solid var(--border-hair); padding: 16px 24px; }
-.landing .mm-panel .mm-list a { font-size: 1.125rem; min-height: 48px; padding: 12px 0; color: var(--text-body); }
+/* The header and the phone menu: ds/site-v5.css. */
 
 /* ── hero: the refinement's layout ───────────────────────────────────────
    Its dark linen ground, brain and intro strip are restyled by the V4/V5
@@ -497,61 +415,7 @@ body.landing :focus-visible:not([tabindex='-1']) {
 }
 .landing #apply .form-status:not(:empty) { margin-top: 24px; padding: 16px; background: var(--surface-hover); }
 
-/* ── footer ─────────────────────────────────────────────────────────────── */
-.landing footer.site { position: relative; padding: 72px 0 72px; margin-top: 0; border-top: 0; }
-/* The package's thread strip along the top edge: a fine gold grid at 20%.
-   Decoration only. */
-.landing footer.site::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 18px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb, var(--lc-gold) 20%, transparent) 7px 8px),
-    repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--lc-gold) 20%, transparent) 5px 6px);
-}
-.landing .foot-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 36px; }
-.landing footer.site .brand-tile {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  background: var(--surface-page);
-  border-radius: 3px;
-}
-.landing .brand-tile .brand-symbol { display: block; height: 45px; width: auto; }
-.landing .brand-tile .brand-name { display: block; height: 25px; width: auto; }
-.landing footer.site .foot-grid .muted { color: var(--footer-muted); font-size: 1rem; line-height: 1.62; max-width: 32ch; }
-.landing .foot-col { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
-.landing .foot-col h2 {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: var(--weight-strong);
-  line-height: 1.5;
-  letter-spacing: 0;
-  color: var(--footer-ink);
-  max-width: none;
-  margin: 0 0 8px;
-}
-.landing .foot-col a { display: inline; padding: 0; font-size: 0.875rem; line-height: 1.6; color: var(--footer-ink); overflow-wrap: anywhere; }
-.landing .foot-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 32px;
-  margin-top: 56px;
-  padding-top: 28px;
-  border-top: var(--border-w-hair) solid var(--footer-rule);
-  font-size: 0.875rem;
-  color: var(--footer-muted);
-}
-.landing .foot-legal { gap: 24px; }
-.landing .foot-legal a { color: var(--footer-muted); text-decoration: underline; text-underline-offset: 4px; }
-
-/* The sticky Apply bar keeps clear of a phone's home indicator. */
-.landing .sticky-apply { padding-bottom: env(safe-area-inset-bottom); }
+/* The footer and the sticky bar: ds/site-v5.css. */
 
 /* ═══════════════════════════════════════════════════════════════════════
    Breakpoints, in the package's order.
@@ -562,36 +426,14 @@ body.landing :focus-visible:not([tabindex='-1']) {
 }
 
 @media (max-width: 1150px) {
-  .landing .navlinks { gap: 16px; }
-  .landing .navlinks > a { font-size: 0.875rem; }
-  .landing .brand-lockup { gap: 8px; }
-  .landing .brand-lockup .brand-symbol { height: 44px; }
-  .landing .brand-lockup .brand-name { height: 24.5px; }
   .landing .hero > .wrap.hero-grid { gap: 0; }
   .landing .hero-cta { gap: 12px; }
   .landing .hero-cta .btn { padding-inline: 16px; }
-  .landing .foot-grid { grid-template-columns: 1.3fr 1fr 1fr; }
   .landing .foot-col:last-child { grid-column: 2 / -1; }
   .landing .commit { gap: 36px; }
 }
 
-/* Between 961 and 1150 the full navigation still fits at 16px with a smaller
-   lockup; below 961 it becomes the menu. */
-@media (max-width: 1150px) and (min-width: 961px) {
-  .landing .navlinks { gap: 13px; }
-  .landing .navlinks > a { font-size: 1rem; }
-  .landing .brand-lockup .brand-symbol { height: 40px; }
-  .landing .brand-lockup .brand-name { height: 22.5px; }
-}
-
 @media (max-width: 960px) {
-  /* The menu takes over at the package's 960, not the site's usual 900: the
-     full navigation does not fit comfortably between them. */
-  .landing .navlinks > a:not(.btn) { display: none; }
-  body.landing .mm { display: block; }
-  .landing .nav-inner { min-height: 84px; }
-  .landing .navlinks { gap: 14px; }
-  .landing .wrap { width: calc(100% - 48px); }
   .landing .hero > .wrap.hero-grid { grid-template-columns: 1.1fr 0.9fr; padding-top: 48px; }
   .landing .hero > .wrap.intro-strip { gap: 24px; }
   .landing #fit,
@@ -599,15 +441,10 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing #curriculum,
   .landing .story { gap: 40px; }
   .landing #fit { grid-template-columns: 1fr 1fr; }
-  .landing .lead { font-size: 1.25rem; }
   .landing .band,
   .landing .transform { padding-block: 64px; }
   .landing .modules { gap: 32px; }
-  .landing .foot-grid { grid-template-columns: 1.3fr 1fr; }
   .landing .foot-col:last-child { grid-column: auto; }
-  .landing footer.site .brand-tile { padding: 10px; }
-  .landing .brand-tile .brand-symbol { height: 40px; }
-  .landing .brand-tile .brand-name { height: 22px; }
   .landing #takeaways .cards3 { gap: 24px; }
   .landing .price-card { gap: 24px 40px; padding: 32px; }
 }
@@ -627,18 +464,11 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing #curriculum,
   .landing .story { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .landing #fit { padding-block: 64px; }
-  .landing .sec-head { margin-bottom: 32px; }
-  .landing .sec-head .lead { margin-top: 20px; }
-  .landing h2,
-  .landing .sec-head h2,
-  .landing .experience h2 { font-size: 2.125rem; max-width: 26ch; }
-  .landing h3,
-  .landing h4,
+  /* h3 and h4 at 1.25rem are in ds/site-v5.css; these four are the cohort's. */
   .landing .card h3,
   .landing .inaugural .card h3,
   .landing .mod h3,
   .landing .mod h4 { font-size: 1.25rem; }
-  .landing .eyebrow { margin-bottom: 16px; }
   .landing #fit .cards3 { gap: 22px; }
   .landing .card p { margin-top: 12px; }
   .landing #fit .card { grid-template-columns: 36px 1fr; column-gap: 12px; }
@@ -668,58 +498,19 @@ body.landing :focus-visible:not([tabindex='-1']) {
   .landing #apply .apply-form { padding: 24px; }
   .landing #apply .form-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .landing #apply .rf-step-actions .btn { max-width: 100%; }
-  .landing .foot-grid { grid-template-columns: 1fr 1fr; gap: 36px 24px; }
-  .landing .foot-grid > div:first-child { grid-column: 1 / -1; }
-  .landing footer.site .foot-grid .muted { max-width: 50ch; }
-  .landing .brand-tile .brand-symbol { height: 48px; }
-  .landing .brand-tile .brand-name { height: 26.5px; }
-  .landing .foot-bottom { flex-direction: column; gap: 18px; }
-}
-
-/* Phones wider than 390: the lockup at its phone size. QA 19 September:
-   at 391 to ~560 it kept the 44px tablet size and ran under Apply. */
-@media (max-width: 560px) {
-  .landing .brand-lockup { gap: 6px; }
-  .landing .brand-lockup .brand-symbol { height: 35px; }
-  .landing .brand-lockup .brand-name { height: 19px; }
-  .landing .nav-inner, .landing .navlinks { gap: 10px; }
 }
 
 @media (max-width: 390px) {
-  .landing .wrap { width: calc(100% - 36px); }
-  .landing .nav-inner { gap: 8px; min-height: 76px; }
-  .landing .brand-lockup { gap: 6px; }
-  .landing .brand-lockup .brand-symbol { height: 35px; }
-  .landing .brand-lockup .brand-name { height: 19px; }
-  .landing .navlinks { gap: 8px; }
-  /* !important only because BaseLayout sets this button's padding inline. */
-  .landing .navlinks > .btn { font-size: 0.875rem; padding: 10px 12px !important; min-height: 44px; }
-  .landing .navlinks > .btn .arrow { display: none; }
-  .landing .mm-toggle { width: 42px; height: 44px; }
   .landing .hero-cta { display: grid; grid-template-columns: 1fr; width: 100%; }
   .landing .hero-cta .btn { width: 100%; min-height: 48px; }
   .landing .hero h1 { font-size: 2.65rem; }
   .landing .hero .eyebrow { text-transform: none; letter-spacing: 0; line-height: 1.5; }
-  .landing .lead { font-size: 1.25rem; }
-  .landing h2,
-  .landing .sec-head h2,
-  .landing .experience h2 { font-size: 2rem; }
   .landing #apply .apply-form { padding: 22px 18px; }
   .landing #book .booker { padding: 22px 18px; }
-  .landing .foot-grid { grid-template-columns: minmax(0, 1fr); }
-  .landing .foot-grid > div:first-child { grid-column: auto; }
   .landing .statband { gap: 24px; }
   .landing .detail-row { grid-template-columns: 100px 1fr; }
   .landing #apply .rf-step-actions { flex-wrap: wrap; }
   .landing #apply .rf-step-actions .btn { flex-grow: 1; }
-}
-
-@media (max-width: 350px) {
-  .landing .brand-lockup { gap: 5px; }
-  .landing .brand-lockup .brand-symbol { height: 30px; }
-  .landing .brand-lockup .brand-name { height: 15.5px; }
-  .landing .navlinks,
-  .landing .nav-inner { gap: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

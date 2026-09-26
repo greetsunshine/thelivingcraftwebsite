@@ -19,11 +19,14 @@
      for it to go (19 September). Neither is drawn: spacing and the
      chapters' alternating grounds separate the topics.
    - The sticky bar stays off phones (Sunil, 16 September).
+
+   THE SHARED PART MOVED OUT (25 September 2026). The header, the "On this
+   page" row, the menu groups, the footer, the reading type and their
+   breakpoints now live in ds/site-v5.css, which every inner page reads too.
+   landing.css imports it first, so everything left here still follows it.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* ══ V4 ══════════════════════════════════════════════════════════════════ */
-
-body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
 
 .landing .chapter:not(.chapter-opening) { padding-top: 0; }
 .landing .chapter > section { position: relative; }
@@ -33,52 +36,10 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
 .landing .chapter > .band:last-child { padding-bottom: var(--chapter-gap); }
 .landing .chapter > section + section > .sec-head h2 { font-size: clamp(1.9rem, 2.9vw, 2.65rem); }
 
-.landing .sec-head { margin-bottom: 36px; }
-.landing .sec-head .eyebrow { margin-bottom: 16px; }
-.landing .eyebrow { letter-spacing: 0.035em; }
-.landing .lead { font-size: 1.25rem; line-height: 1.55; }
+/* The reading type, the header, the "On this page" row and the menu
+   groups: ds/site-v5.css. The 70ch measure stays here: inner pages set
+   their own measure per block. */
 .landing p { max-width: 70ch; }
-.landing h1 { color: var(--sun); }
-
-/* ── header: the site's sections, then "On this page" ───────────────────── */
-.landing header.nav { background: var(--surface-page); }
-.landing .nav-inner { min-height: 88px; }
-.landing .navlinks { gap: 24px; }
-.landing .navlinks > a { font-size: 1rem; }
-.landing .brand-lockup { gap: 8px; }
-.landing .brand-lockup .brand-symbol { height: 44px; }
-.landing .brand-lockup .brand-name { height: 24px; }
-
-.landing .page-navigation {
-  border-top: var(--border-w-hair) solid var(--border-hair);
-  background: var(--surface-page);
-}
-.landing .page-links {
-  display: flex;
-  gap: 32px;
-  min-height: 46px;
-  align-items: center;
-  justify-content: flex-end;
-}
-.landing .page-links a {
-  font-size: 0.875rem;
-  text-decoration: none;
-  padding-block: 10px;
-  color: var(--text-quiet);
-}
-.landing .page-links a:hover { color: var(--text-loud); text-decoration: underline; text-underline-offset: 4px; }
-/* The menu's two groups. "On this page" shows only on phones, where the
-   row above is hidden (Sunil, 19 September: one menu on phones). */
-.landing .mm-group + .mm-group { margin-top: 12px; }
-.landing .mm-group-label {
-  margin: 8px 0 4px;
-  font-size: 0.8125rem;
-  font-weight: var(--weight-strong);
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-  color: var(--accent-ink);
-}
-.landing .mm-group-page { display: none; }
 
 /* ── hero: an ivory textile, words beside the line-drawn brain ──────────── */
 .landing .hero {
@@ -96,8 +57,8 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: url('/textures/ivory-weave.svg') 0 0 / 48px 48px repeat;
-  opacity: 0.64;
+  background: var(--weave-ivory);
+  opacity: var(--weave-ivory-opacity);
   pointer-events: none;
 }
 .landing .hero > .wrap.hero-grid {
@@ -337,8 +298,9 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
 .landing .cohort-question { max-width: 860px; margin: 28px 0 0; }
 .landing .cohort-question .apply-form { margin: 12px 0 28px; }
 
-/* ── footer ─────────────────────────────────────────────────────────────── */
-.landing .foot-grid { grid-template-columns: 1.35fr 1fr 1fr 1fr; }
+/* ── footer ───────────────────────────────────────────────────────────────
+   The footer itself is in ds/site-v5.css. These two rules lay out `/`'s own
+   last column, "Explore", as one row, so they stay with `/`. */
 .landing .foot-grid > .foot-col:last-child {
   grid-column: 2 / -1;
   display: flex;
@@ -348,27 +310,6 @@ body.landing { --chapter-gap: clamp(64px, 7vw, 100px); }
   gap: 28px;
 }
 .landing .foot-col:last-child h2 { margin-bottom: 0; }
-.landing footer.site::before { height: 8px; }
-.landing .foot-bottom { align-items: center; flex-wrap: wrap; }
-.landing .motion-setting {
-  min-height: 44px;
-  padding: 6px 0;
-  border: 0;
-  border-bottom: var(--border-w-hair) solid var(--footer-rule);
-  background: transparent;
-  font: inherit;
-  font-size: 0.875rem;
-  color: var(--footer-muted);
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.landing .motion-setting:hover { color: var(--footer-ink); }
-.landing .motion-setting:disabled { cursor: default; }
-
-.landing .sa-actions { margin-right: 0; }
-.landing .sa-copy { margin-right: auto; }
-.landing .sa-inner { gap: 20px; }
 
 /* ── the brain: fibre travel and junction light on one 8-second loop ─────── */
 .landing .brain-art .signal { stroke-dasharray: 0.13 0.87; stroke-dashoffset: 1; opacity: 0; }
@@ -538,7 +479,6 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
 }
 
 @media (max-width: 1200px) {
-  .landing .navlinks { gap: 18px; }
   .landing .hero-cta { grid-template-columns: 1fr; max-width: 310px; }
   .landing .hero > .wrap.hero-grid { padding-top: 50px; padding-bottom: 36px; }
   .landing .hero h1 { font-size: 3.15rem; }
@@ -550,24 +490,11 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing .hero > .wrap.hero-grid { gap: 16px; }
 }
 
-/* The site's five links fit down to 1081. Below that they fold into the
-   menu, which is the package's 1080, not landing.css's 960. */
-@media (max-width: 1150px) and (min-width: 1081px) {
-  .landing .navlinks > a { font-size: 0.9375rem; }
-}
-
 @media (max-width: 1080px) {
-  .landing .navlinks > a:not(.btn) { display: none; }
-  body.landing .mm { display: block; }
-  .landing .nav-inner { min-height: 82px; }
-  .landing .navlinks { gap: 14px; }
-  .landing .page-links { justify-content: flex-start; gap: 30px; }
   .landing .hero > .wrap.hero-grid { grid-template-columns: 1.1fr 0.9fr; }
   .landing .woven-brain { width: calc(100% + 24px); margin: 0 -24px 0 0; }
   .landing .hero h1 { font-size: 2.85rem; }
   .landing .hero > .wrap.intro-strip { grid-template-columns: 185px 1fr; gap: 28px; }
-  .landing .brand-lockup .brand-symbol { height: 40px; }
-  .landing .brand-lockup .brand-name { height: 22.5px; }
   .landing .enterprise-grid { gap: 36px; }
   .landing .story { gap: 40px; }
   .landing #transform { gap: 0 40px; }
@@ -578,16 +505,6 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
 }
 
 @media (max-width: 760px) {
-  body.landing { --chapter-gap: 64px; }
-  .landing .wrap { width: calc(100% - 40px); }
-  .landing .nav-inner { min-height: 76px; }
-  .landing .page-navigation { display: none; }
-  /* Six short section links in two columns, to keep the menu short. */
-  .landing .mm-group-page { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
-  .landing .mm-group-page .mm-group-label { grid-column: 1 / -1; }
-  /* Both groups can be taller than a small phone: the panel scrolls. */
-  .landing .mm-panel { max-height: calc(100dvh - var(--anchor-offset, 90px) + 12px); overflow-y: auto; overscroll-behavior: contain; }
-
   .landing .hero > .wrap.hero-grid {
     display: flex;
     flex-direction: column;
@@ -647,9 +564,7 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing .price-card .amt { font-size: 2.8rem; }
   .landing #apply .route-choice { gap: 12px; }
   .landing :is(#apply, #book) .apply-form { padding: 24px; }
-  .landing .foot-grid { grid-template-columns: 1fr 1fr; }
   .landing .foot-grid > .foot-col:last-child { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .landing .foot-bottom { align-items: flex-start; }
 
   /* The drawings stack with their words. */
   .landing .art-review { margin-inline: auto; width: min(500px, 100%); }
@@ -679,24 +594,7 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing .concept-figure figcaption { font-size: 0.875rem; }
 }
 
-/* Phones wider than 390: the lockup at its phone size, clear of Apply
-   and the menu button (QA 19 September, the 391-560 overlap). */
-@media (max-width: 560px) {
-  .landing .brand-lockup { gap: 6px; }
-  .landing .brand-lockup .brand-symbol { height: 35px; }
-  .landing .brand-lockup .brand-name { height: 19px; }
-  .landing .nav-inner,
-  .landing .navlinks { gap: 10px; }
-}
-
 @media (max-width: 390px) {
-  .landing .wrap { width: calc(100% - 36px); }
-  .landing .brand-lockup { gap: 5px; }
-  .landing .brand-lockup .brand-symbol { height: 30px; }
-  .landing .brand-lockup .brand-name { height: 16px; }
-  .landing .navlinks { gap: 8px; }
-  .landing .navlinks > .btn { font-size: 0.875rem; padding: 10px 11px; }
-  .landing .navlinks > .btn .arrow { display: none; }
   .landing .hero h1 { font-size: 2.55rem; }
   .landing .hero-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .landing .hero-cta .btn { width: auto; font-size: 0.9375rem; padding: 12px 10px; min-height: 68px; }
@@ -707,7 +605,6 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing :is(#apply, #book) .apply-form { padding: 22px 18px; }
   .landing .price-card { padding: 24px; }
   .landing .price-card .amt { font-size: 2.6rem; }
-  .landing .foot-grid { grid-template-columns: 1fr; }
   .landing #takeaways .card { grid-template-columns: 105px 1fr; column-gap: 14px; }
   .landing .art-review .art-labels span { font-size: 0.8125rem; padding: 2px 4px; }
   .landing .art-review .art-labels span:nth-child(4) { right: 0; top: 65%; }
@@ -725,8 +622,6 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
 }
 
 @media print {
-  .landing .page-navigation,
-  .landing .motion-setting { display: none; }
   .landing .hero::before { display: none; }
   .landing .hero-copy { background: none; }
   .landing .signal,
