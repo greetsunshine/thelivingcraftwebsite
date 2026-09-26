@@ -22,4 +22,9 @@ export const RESOURCE_CHOICES: ResourceChoice[] = [
     action: 'Use the Rule Placement Audit',
     url: '/resources/rule-placement-audit',
   },
+  {
+    question: 'My agent\u2019s tool call timed out. Did it place the order or not?',
+    action: 'Take the Agent Failure Triage Quiz',
+    url: '/resources/agent-failure-triage-quiz',
+  },
 ];

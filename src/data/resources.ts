@@ -260,6 +260,29 @@ export const resources: Resource[] = [
     url: '/resources/cost-ceiling-workbook',
     publishedAt: '2026-09-16',
   },
+  {
+    id: 'agent-failure-triage-quiz',
+    topic: 'Failure Triage',
+    number: '07',
+    series: 'Agentic system design',
+    title: 'The Agent Failure Triage Quiz',
+    kind: 'Quiz \u00b7 12 questions on one incident \u00b7 feedback on every option',
+    summary:
+      'Twelve questions on one illustrative incident: a purchase order that timed out, and a supplier that received it twice.',
+    description:
+      'A procurement agent orders 1,200 steel brackets at \u20B98,40,000. The call to create_purchase_order times out after 30 seconds with no error, and by 09:20 the supplier holds the same order twice. You triage it one piece of evidence at a time: the client log, then the MCP server\u2019s log, then the tool\u2019s annotation, then what the supplier can and cannot deduplicate. Ten questions test seven takeaways. A timeout is missing information rather than a failure. Retry policy and recovery design are separate decisions. MCP adds hops, and silence at the client says nothing about them. idempotentHint declares and does not enforce, and it defaults to false. An idempotency key belongs to the intended action, is created before the first attempt and is stored outside the model. Where the receiver cannot deduplicate, the server looks before it acts again. And turning retries off hands the same unanswered question to a person with less information. Every wrong option is something a competent team has proposed in a real incident review, and every option explains itself afterwards, including what choosing it would actually cause. Near the end the fix breaks again, because the model re-planned and minted a fresh key. Two further questions check the kit itself. The incident is illustrative and the page says so before the first question.',
+    useFor: [
+      'Tell a timed-out write from a failed one, and say what each one licenses you to do next',
+      'Name the two questions to ask of every write tool your agent can call',
+      'Recognise the four wrong levers a team reaches for after a duplicate order: more attempts, longer backoff, an annotation, an alert',
+      'Check whether the idempotency key in your own system belongs to the action or to the call',
+      'Find out which of the seven takeaways you cannot yet apply, before you audit anything',
+    ],
+    format:
+      'Interactive. Answer in the page; the score, the streak and the missed takeaways update as you go. A short sound marks a correct answer and can be turned off. Nothing is stored, nothing is sent, and there is no download and no sign-up.',
+    url: '/resources/agent-failure-triage-quiz',
+    publishedAt: '2026-09-26',
+  },
 ];
 
 /**

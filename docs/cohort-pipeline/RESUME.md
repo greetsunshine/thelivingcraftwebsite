@@ -8,12 +8,49 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 21 September 2026
-**Branch:** `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
+**Last updated:** 26 September 2026
+**Branch:** `resource/failure-triage-quiz`, off `main`, carrying resource 07 only.
+Before that: `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
 commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
 PR #27 (the thread brain) is superseded by this work. The pipeline work is
 `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
+
+Branch `resource/failure-triage-quiz`, off `main`. Page at
+`/resources/agent-failure-triage-quiz`, content in `src/data/agent-failure-triage-quiz.ts`,
+integrity test in `src/lib/resources/agent-failure-triage-quiz.test.ts`. It is the quiz that
+goes with resource 04, the Agent Failure Triage Kit: ten concept questions over the kit's
+seven takeaways, plus two questions on the kit itself, all on one illustrative procurement
+incident.
+
+**Still owed, and it is one line of code.** `LINKEDIN_EPISODE_4_URL` in the data module is
+`'TODO'`. Until somebody sets it, the pre-read block names *Agentic system design, Episode 4*
+in plain text and links the kit instead, the same rule the Cost-Ceiling Workbook follows for
+Episode 5. Set the constant and the link appears; nothing else changes.
+
+Four things a later session would otherwise rediscover:
+- **The question bank is checked, not trusted.** `quizProblems()` enforces the brief: one
+  correct answer per question, four options, every takeaway tested, at least four question
+  shapes, no bracketed leftovers. The page calls `assertQuiz()` at render, so a broken bank
+  fails the build; `npm test` runs the same check.
+- **It is the one resource page with a forest band.** `templates/tool.css` deliberately
+  keeps the dark linen off a tool's hero, so the band went on the case file instead, with
+  the ivory weave behind the hero. One dark surface per view still holds. Sunil asked for
+  the cohort page's two surfaces here.
+- **The missed-takeaway list is rendered server-side and hidden**, not built in JavaScript.
+  Astro's scoped styles do not reach elements a script creates, so a script-built list
+  silently loses its own CSS. That was the first version.
+- **`min-width: 0` on the question card is load-bearing.** The evidence blocks are
+  `white-space: pre`; without it one long log line widened the page and gave the whole site
+  a horizontal scrollbar on a phone.
+
+No download, no gate, no storage and no network call: answers live in a closure and die with
+the tab. A correct answer plays two short notes from an AudioContext, with a toggle in the
+bar; there is no audio file.
 
 ---
 
