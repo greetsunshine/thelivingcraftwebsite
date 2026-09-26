@@ -390,13 +390,17 @@ const pad = (n: number) => String(n).padStart(2, '0');
           behaviour can change between versions, so re-read it before you rely on this page.
         </p>
         <ul class="quotes">
-          {MCP_SPEC.quotes.map((q) => <li>{q}</li>)}
+          {
+            MCP_SPEC.quotes.map((q) => (
+              <li>
+                {q.text}
+                <span class="qwhere">
+                  <a class="textlink" href={q.url} target="_blank" rel="noopener">{q.where}</a>
+                </span>
+              </li>
+            ))
+          }
         </ul>
-        <p>
-          <a class="textlink" href={MCP_SPEC.url} target="_blank" rel="noopener"
-            >The specification, tools</a
-          >
-        </p>
       </div>
 
       <p class="hero-cta">
@@ -498,7 +502,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
   /* ── the bar ───────────────────────────────────────────────────────────── */
   .scorebar-wrap {
     position: sticky;
-    top: 76px;
+    /* The nav is taller when its links wrap on a narrow screen, so the script
+       measures it and sets --nav-h. The fallback is the desktop height. Same
+       treatment as poc-screen.astro. */
+    top: var(--nav-h, 76px);
     z-index: var(--z-sticky);
     padding: var(--space-3) 0;
     background: var(--surface-sunken);
@@ -556,6 +563,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
   [data-b='none'] .band, [data-b='none'] .r-band { color: var(--text-quiet); }
 
   /* ── the cards ─────────────────────────────────────────────────────────── */
+  /* The bar is sticky, so an anchor that lands at the top of the viewport
+     lands underneath it. Every section a link points at clears both. */
+  #quiz, #result, #case, #takeaways { scroll-margin-top: 140px; }
   #quiz { padding-bottom: 0; }
   .privacy { font-size: var(--size-2); color: var(--text-loud); margin-bottom: var(--space-5); }
   /* minmax(0, 1fr) and the min-width below are load-bearing, not tidying. A
@@ -664,8 +674,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
   }
-  .opt:hover:not(:disabled) { background: var(--surface-hover); }
-  .opt:disabled { cursor: default; }
+  .opt:hover:not(.is-locked) { background: var(--surface-hover); }
+  .opt.is-locked { cursor: default; }
   .ok {
     font-size: var(--size-2);
     font-weight: var(--weight-strong);
@@ -723,6 +733,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .whys li.is-key { color: var(--text-body); }
   .whys li.is-key .wk { color: var(--success); }
   .whys li.is-pick .wk { color: var(--danger); }
+  /* display on a class beats the browser's own [hidden] rule, so the hidden
+     attribute on these spans would do nothing without the line below it. */
+  .tag[hidden] { display: none; }
   .tag {
     display: inline-block;
     font-size: var(--size-1);
@@ -757,6 +770,13 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .r-missed a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
   .r-actions { margin-top: var(--space-6); display: flex; gap: var(--space-3); flex-wrap: wrap; }
 
+  /* ── the close ─────────────────────────────────────────────────────────── */
+  /* global.css centres .final. The closing sections were left-aligned across
+     the site on 19 September, and centred monospace quotes are unreadable
+     anyway, so this one reads left like the rest of the page. */
+  .final { text-align: left; }
+  .final .hero-cta { margin-top: var(--space-6); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
   /* ── the citation ──────────────────────────────────────────────────────── */
   .cite {
     margin-top: var(--space-7);
@@ -769,6 +789,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   .cite .eyebrow { display: block; margin-bottom: var(--space-4); }
   .cite p { font-size: var(--size-2); color: var(--text-quiet); line-height: var(--lh-normal); }
   .quotes { list-style: none; margin: var(--space-4) 0; display: grid; gap: var(--space-3); }
+  .qwhere { display: block; margin-top: var(--space-2); font-family: var(--font-body); font-size: var(--size-1); }
   .quotes li {
     font-family: var(--font-code);
     font-size: var(--size-2);
@@ -802,6 +823,14 @@ const pad = (n: number) => String(n).padStart(2, '0');
   // NOTHING HERE TOUCHES THE NETWORK OR STORAGE. No fetch, no sendBeacon, no
   // localStorage. If you add one, you have broken the line printed above the
   // questions.
+  //
+  // THE IMPORT CARRIES THE PROSE TOO, and that is accepted rather than
+  // overlooked. Vite bundles the whole module, so every question's text ships
+  // twice: once as HTML and once in this script. The bundle is 8 KB over the wire
+  // after compression, in line with the other tools on this site. The alternative is a second copy of the answer key, either in
+  // data attributes or in a rules module beside the questions, and a key that
+  // lives apart from the question it belongs to is the split that goes stale.
+  // One owner, on a page that is prerendered, is the better trade.
   import {
     CONCEPT_ITEMS,
     ITEMS,
@@ -964,7 +993,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
     for (const btn of cardEl.querySelectorAll<HTMLButtonElement>('.opt')) {
       const k = btn.dataset.k!;
-      btn.disabled = true;
+      // aria-disabled, not disabled. A disabled button loses focus to <body>,
+      // so a reader answering by keyboard is thrown back to the top of the page
+      // on every question. The click handler refuses a second answer instead.
+      btn.setAttribute('aria-disabled', 'true');
+      btn.classList.add('is-locked');
       btn.setAttribute('aria-pressed', String(k === key));
       const mark = btn.querySelector('.mark')!;
       if (k === keyOpt.key) {
@@ -1018,9 +1051,24 @@ const pad = (n: number) => String(n).padStart(2, '0');
   for (const cardEl of document.querySelectorAll<HTMLElement>('.qcard')) {
     cardEl.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt');
-      if (btn && !btn.disabled) answer(cardEl, btn.dataset.k!);
+      if (btn && cardEl.dataset.state === 'open') answer(cardEl, btn.dataset.k!);
     });
   }
+
+  // ── the sticky bar sits under the nav, whatever height the nav is ────────
+  //
+  // The nav grows when its links wrap on a narrow screen, so measure it rather
+  // than guess. Same treatment as poc-screen.astro, and the CSS falls back to
+  // the desktop height if this never runs.
+  const navEl = document.querySelector<HTMLElement>('header.nav');
+  const barWrap = document.querySelector<HTMLElement>('.scorebar-wrap');
+  function placeBar(): void {
+    if (navEl && barWrap) {
+      barWrap.style.setProperty('--nav-h', `${Math.round(navEl.getBoundingClientRect().height)}px`);
+    }
+  }
+  placeBar();
+  window.addEventListener('resize', placeBar);
 
   // ── sound toggle ─────────────────────────────────────────────────────────
   const soundBtn = $('sound') as HTMLButtonElement;
@@ -1039,9 +1087,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
       (cardEl.querySelector('.fb') as HTMLElement).hidden = true;
       cardEl.querySelector('.spark')!.classList.remove('go');
       for (const btn of cardEl.querySelectorAll<HTMLButtonElement>('.opt')) {
-        btn.disabled = false;
+        btn.removeAttribute('aria-disabled');
         btn.setAttribute('aria-pressed', 'false');
-        btn.classList.remove('is-right', 'is-picked-wrong', 'is-dim');
+        btn.classList.remove('is-right', 'is-picked-wrong', 'is-dim', 'is-locked');
         btn.querySelector('.mark')!.textContent = '';
       }
       for (const li of cardEl.querySelectorAll<HTMLElement>('.whys li')) {

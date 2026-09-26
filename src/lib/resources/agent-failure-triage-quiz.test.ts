@@ -90,9 +90,21 @@ test('a missed question reports its takeaway, and a kit question reports none', 
   assert.deepEqual(missedTakeaways([]), []);
 });
 
-test('the MCP claim carries a version and the date it was checked', () => {
+test('the MCP claim carries a version, a date and a source per quote', () => {
   assert.match(MCP_SPEC.version, /^\d{4}-\d{2}-\d{2}$/);
   assert.match(MCP_SPEC.checked, /\d{4}$/);
   assert.ok(MCP_SPEC.url.startsWith('https://modelcontextprotocol.io/'));
-  assert.ok(MCP_SPEC.quotes.some((q) => /Default: false/.test(q)));
+  assert.ok(MCP_SPEC.quotes.some((q) => /Default: false/.test(q.text)));
+  // The two quotes are in two different documents, so each one says which.
+  for (const q of MCP_SPEC.quotes) {
+    assert.ok(q.where.length > 10, q.text.slice(0, 40));
+    assert.ok(q.url.startsWith('https://'), q.where);
+  }
+});
+
+test('the top band opens at a perfect score', () => {
+  // Drop a concept question without moving this and a perfect score reports
+  // the band below it. quizProblems() refuses that; this says why.
+  assert.equal(BANDS[0].min, CONCEPT_ITEMS.length);
+  assert.equal(BANDS[BANDS.length - 1].min, 0);
 });

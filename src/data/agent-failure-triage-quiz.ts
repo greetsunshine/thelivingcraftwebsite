@@ -95,16 +95,21 @@ export const CASE_LABEL = 'Illustrative case · not a real client, employer or e
 
 export const CASE_TITLE = 'One order, two purchase orders, no error anywhere';
 
+/**
+ * The one number, and the same number doubled. Declared before the prose that
+ * uses them, because that prose interpolates them: a figure typed twice is a
+ * figure that disagrees with itself after one edit.
+ */
+export const ORDER_VALUE = '₹8,40,000';
+export const DOUBLE_VALUE = '₹16,80,000';
+
 export const CASE_SETTING: string[] = [
   'A procurement agent at a mid-size manufacturer raises purchase orders when stock runs low. A buyer approves the order; the agent places it.',
   'It places every order through one tool, create_purchase_order. That tool sits on an MCP server the platform team runs. MCP (Model Context Protocol) is the standard way a client offers tools to a model. The MCP server calls the supplier’s ordering API.',
-  'On Tuesday at 09:14 the agent orders 1,200 steel brackets at ₹8,40,000. By 09:20 the supplier’s portal shows that same order twice, PO-44812 and PO-44813, ₹16,80,000 committed.',
+  `On Tuesday at 09:14 the agent orders 1,200 steel brackets at ${ORDER_VALUE}. By 09:20 the supplier’s portal shows that same order twice, PO-44812 and PO-44813, ${DOUBLE_VALUE} committed.`,
   'The agent’s own logs say no order was placed. Nothing raised an error. You are on call.',
 ];
 
-/** The one number, used everywhere it appears. */
-export const ORDER_VALUE = '₹8,40,000';
-export const DOUBLE_VALUE = '₹16,80,000';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // The seven takeaways
@@ -430,7 +435,7 @@ export const ITEMS: Item[] = [
       {
         key: 'C',
         text: 'Repeat the call and clean up with a nightly job that cancels the extra order.',
-        why: 'Wrong, and it accepts the ₹8,40,000 commitment overnight. A repair after the fact is not a control, and the supplier may have picked and shipped by then.',
+        why: `Wrong, and it accepts the ${ORDER_VALUE} commitment overnight. A repair after the fact is not a control, and the supplier may have picked and shipped by then.`,
       },
       {
         key: 'D',
@@ -756,10 +761,23 @@ export const MCP_SPEC = {
   version: '2026-07-28',
   checked: '26 September 2026',
   url: 'https://modelcontextprotocol.io/specification/2026-07-28/server/tools',
-  /** Both lines are from that version. The first is the schema, the second the prose. */
+  /**
+   * Each quote names the document it is in, because the two are not in the same
+   * place. The defaults are in the schema; the warning about trusting an
+   * annotation is in the prose. A reader who follows one link and cannot find
+   * the other line is right to stop believing the page.
+   */
   quotes: [
-    'idempotentHint: "If true, calling the tool repeatedly with the same arguments will have no additional effect on its environment." Default: false.',
-    'Clients MUST consider tool annotations to be untrusted unless they come from trusted servers.',
+    {
+      text: 'idempotentHint: "If true, calling the tool repeatedly with the same arguments will have no additional effect on its environment." Default: false.',
+      where: 'schema/2026-07-28/schema.ts, ToolAnnotations',
+      url: 'https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2026-07-28/schema.ts',
+    },
+    {
+      text: 'Clients MUST consider tool annotations to be untrusted unless they come from trusted servers.',
+      where: 'the specification, Tools, Data Types',
+      url: 'https://modelcontextprotocol.io/specification/2026-07-28/server/tools',
+    },
   ],
 } as const;
 
@@ -820,17 +838,52 @@ export const quizProblems = (): string[] => {
   const shapes = new Set(CONCEPT_ITEMS.map((i) => i.shape));
   if (shapes.size < 4) problems.push(`${shapes.size} question shapes, expected at least 4`);
 
-  // Nothing unfinished may ship. Brackets are how a generation prompt survives
-  // into a published page, so they are refused everywhere in the bank.
+  // The bands are written for this many questions. Remove one and a perfect
+  // score would report the band below it, with every other check still green.
+  const top = BANDS[0];
+  if (!top || top.min !== CONCEPT_ITEMS.length) {
+    problems.push(
+      `the top band opens at ${top ? top.min : 'nothing'}, and there are ${CONCEPT_ITEMS.length} concept questions`,
+    );
+  }
+  if (BANDS[BANDS.length - 1]?.min !== 0) problems.push('no band covers a score of zero');
+  for (let i = 1; i < BANDS.length; i++) {
+    if (BANDS[i].min >= BANDS[i - 1].min) problems.push(`the bands are out of order at "${BANDS[i].label}"`);
+  }
+
+  // Nothing unfinished may ship. A bracket is how a generation prompt survives
+  // into a published page, so it is refused in EVERY string this page renders
+  // rather than in the questions alone: the case file, the takeaways, the bands
+  // and the close are copy too.
   const unfinished = /\bTODO\b|\bTBD\b|\[[A-Za-z ]+\]|PLACEHOLDER/;
-  const strings = ITEMS.flatMap((i) => [
-    i.ask,
-    i.hint,
-    i.lands,
-    i.source ?? '',
-    ...(i.evidence?.lines ?? []),
-    ...i.options.flatMap((o) => [o.text, o.why]),
-  ]);
+  const strings = [
+    HEADLINE,
+    SUBTITLE,
+    BRING,
+    DO,
+    LEAVE,
+    CTA,
+    CASE_LABEL,
+    CASE_TITLE,
+    CLOSE_TITLE,
+    EPISODE_LABEL,
+    PRE_READ.body,
+    PRE_READ.episodeFallback,
+    ...INTRO,
+    ...CASE_SETTING,
+    ...CLOSE,
+    ...TAKEAWAYS.flatMap((t) => [t.short, t.body]),
+    ...BANDS.flatMap((b) => [b.label, b.guidance]),
+    ...ITEMS.flatMap((i) => [
+      i.ask,
+      i.hint,
+      i.lands,
+      i.source ?? '',
+      i.evidence?.label ?? '',
+      ...(i.evidence?.lines ?? []),
+      ...i.options.flatMap((o) => [o.text, o.why]),
+    ]),
+  ];
   for (const s of strings) {
     if (unfinished.test(s)) problems.push(`unfinished text in the bank: ${s.slice(0, 60)}`);
   }
