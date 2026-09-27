@@ -27,4 +27,9 @@ export const RESOURCE_CHOICES: ResourceChoice[] = [
     action: 'Take the Agent Failure Triage Quiz',
     url: '/resources/agent-failure-triage-quiz',
   },
+  {
+    question: 'What should my agent do when it hits a limit?',
+    action: 'Use the Token Limit Framework',
+    url: '/resources/token-limit-framework',
+  },
 ];

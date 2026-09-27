@@ -1,0 +1,40 @@
+{
+  "example": {
+    "clean_run": "H16",
+    "unsafe": "H18",
+    "repeated": "D54",
+    "succeeds": "D55",
+    "gives_up": "D56",
+    "amp": "D57",
+    "peak_norm": "D60",
+    "peak_worst": "D61",
+    "quota_norm": "D62",
+    "quota_worst": "D63",
+    "verdict": "D65",
+    "band_norm": "E62",
+    "scope": "D47",
+    "missing_stop": "F83",
+    "total": "D102",
+    "critical": "D103",
+    "decision": "C105",
+    "cp_col": "K",
+    "cp_row_step3": 11
+  },
+  "blank": {
+    "map_clean_run": "H19",
+    "retry_repeated": "D14",
+    "retry_verdict": "D25",
+    "decision": "C20",
+    "stop_missing": "F19",
+    "total": "D17"
+  },
+  "sheets": {
+    "cover": "0 \u00b7 Start here",
+    "map": "1 \u00b7 Workflow Map",
+    "limits": "2 \u00b7 Limits",
+    "retry": "3 \u00b7 Retry Amplifier",
+    "stop": "4 \u00b7 Stop States",
+    "decision": "5 \u00b7 Decision",
+    "example": "6 \u00b7 Worked Example"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "_source": "src/styles/ds/theme.css",
+  "_generated_by": "tools/token-limit-framework/extract_brand.py",
+  "_note": "Do not hand-edit. Every colour and every family here is a production token read out of theme.css. Nothing is invented.",
+  "derived": [],
+  "colors": {
+    "noir": "#183d32",
+    "ember": "#b58a46",
+    "sun": "#183d32",
+    "mist": "#f5f0e6",
+    "berry": "#963d34",
+    "background": "#f5f0e6",
+    "surface": "#fbf8f2",
+    "surface_hover": "#e5ebe1",
+    "text_loud": "#172e26",
+    "text_body": "#172e26",
+    "text_quiet": "#526259",
+    "text_faint": "#c6d4c8",
+    "text_on_invert": "#f5f0e6",
+    "text_on_accent": "#f5f0e6",
+    "accent": "#183d32",
+    "accent_quiet": "#f4e9ce",
+    "accent_ink": "#765523",
+    "accent_ink_strong": "#183d32",
+    "border_hair": "#cbd1c8",
+    "border_field": "#758279",
+    "danger": "#963d34",
+    "danger_quiet": "#f7e8e3",
+    "success": "#215c42",
+    "success_quiet": "#e6efe5",
+    "warning": "#765523",
+    "warning_quiet": "#f4e9ce",
+    "info": "#315d6b",
+    "info_quiet": "#e7eff1"
+  },
+  "fonts": {
+    "display": {
+      "family": "Source Serif 4",
+      "google_font": true
+    },
+    "body": {
+      "family": "Figtree",
+      "google_font": true
+    },
+    "figures": {
+      "family": "Figtree",
+      "google_font": true
+    }
+  },
+  "contrast": {
+    "text_body on surface": 13.61,
+    "text_body on background": 12.71,
+    "text_quiet on surface": 6.1,
+    "text_on_invert on noir": 10.55,
+    "text_body on sun": 1.2,
+    "accent_ink_strong on surface": 11.31,
+    "success on surface": 7.41,
+    "success on success_quiet": 6.67,
+    "warning on surface": 6.4,
+    "warning on warning_quiet": 5.62,
+    "info on info_quiet": 6.19,
+    "text_on_accent on sun": 10.55,
+    "danger on surface": 6.57,
+    "danger on danger_quiet": 5.84
+  }
+}

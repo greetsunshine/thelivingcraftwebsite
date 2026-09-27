@@ -1,0 +1,1544 @@
+---
+/**
+ * /resources/token-limit-framework — the Token Limit Framework, a browser tool.
+ *
+ * The reader types their workflow into the page: the steps and their token
+ * counts, the limits that can refuse the agent, what a retry re-runs, what
+ * stopping leaves behind, and the ten checks. The page works out the retry
+ * amplification, the share of the quota at peak, and the decision — Ready to
+ * scale, Fix first, or Hold — as they type.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE PAGE IS THE RESOURCE. THE WORKBOOK IS THE EXTRA.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Nothing on this page is behind anything. The assessment, the reference
+ * example, Copy and Print all work without giving us a thing, exactly like the
+ * POC Selection Tool and the Agent Authority Review. The .xlsx is the optional
+ * artefact behind a name and an email, the same way those two gate a PDF, and
+ * it goes through the one shared sequence in lib/pipeline/resource-request.ts.
+ *
+ * That ordering is what keeps every sentence in lib/pipeline/resources.ts true,
+ * including the one a failed save shows the visitor: "the page in front of you
+ * is the resource and is not behind this". If the workbook were ever made the
+ * only way to use this tool, that sentence becomes a lie on three other pages
+ * as well, because the string is shared.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * WHAT THE READER TYPES STAYS IN THE BROWSER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The model lives in a closure and dies with the tab. No localStorage (the
+ * Rule Placement Audit is the one approved exception on a public page and it
+ * made its own case), no fetch of the model anywhere, and the download dialog
+ * posts a name and an email and nothing else — not one figure from the sheet.
+ * Copy and Print are produced by the browser.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ONE IMPLEMENTATION, NOT TWO
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The script below IMPORTS the model from src/data/token-limit-framework.ts,
+ * which is the same module the server renders from and the same logic the
+ * spreadsheet in public/downloads/ implements. A module <script> can import
+ * and Vite bundles it; an is:inline script cannot, which is how pair.astro
+ * ended up with a copy of a format that drifted. The data module asserts
+ * itself against the workbook's recalculated figures, so the page, the module
+ * and the .xlsx cannot disagree without failing the first render.
+ */
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { longDate } from '../../data/resources';
+import { RESOURCE_FIELDS } from '../../lib/pipeline/resources';
+import {
+  TITLE,
+  TAGLINE,
+  WHAT_TO_BRING,
+  WHAT_TO_DO,
+  WHAT_YOU_LEAVE_WITH,
+  WHY,
+  CLOSING,
+  PARTS,
+  CHECKS,
+  POLICY_ROWS,
+  LIMIT_PROMPTS,
+  STEP_ROWS,
+  LIMIT_ROWS,
+  SIDE_EFFECTS,
+  YESNO,
+  SCOPES,
+  UNITS,
+  WINDOWS,
+  HANDLING,
+  RETRY_SCOPES,
+  AUTO_MANUAL,
+  STOP_COST,
+  ANSWERS,
+  MAX_SCORE,
+  PLANNING_NOTE,
+  EXAMPLE,
+  EXAMPLE_READING,
+  EXAMPLE_TITLE,
+  EXAMPLE_BANNER,
+  EXAMPLE_INTRO,
+  PUBLISHED_AT,
+  LICENCE_LINE,
+  XLSX_PATH,
+  XLSX_SIZE,
+  RESOURCE_ID,
+  num,
+  pct,
+} from '../../data/token-limit-framework';
+
+export const prerender = true;
+
+const canonical = '/resources/token-limit-framework';
+const url = `${SITE_ORIGIN}${canonical}`;
+const title = `${TITLE} — what your agent should do when a limit refuses it · The Living Craft`;
+// 151 characters.
+const description =
+  'Price one agent run step by step, model how far retries amplify it at peak, and decide: ready to scale, fix first, or hold. Free, in the page, no sign-up.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: TITLE,
+    description,
+    url,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: PUBLISHED_AT,
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    step: PARTS.map((p, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: p.title,
+      text: p.asks,
+      url: `${url}#part-${p.n}`,
+    })),
+  },
+];
+
+const sections = [
+  { id: 'tool', title: 'The tool' },
+  { id: 'example', title: 'Reference example' },
+  { id: 'why', title: 'Why' },
+];
+
+const nameField = RESOURCE_FIELDS.find((f) => f.name === 'name')!;
+const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
+
+const rows = Array.from({ length: STEP_ROWS }, (_, i) => i);
+const limitRows = Array.from({ length: LIMIT_ROWS }, (_, i) => i);
+const exampleSteps = EXAMPLE.steps.filter((s) => s.name !== '');
+const exampleLimits = EXAMPLE.limits.filter((l) => l.name !== '');
+---
+
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design 08</span>
+      </div>
+      <h1>{TITLE}</h1>
+      <p class="lead">{TAGLINE}</p>
+      <p class="hero-note mono">Sunil Mathew · The Living Craft</p>
+    </div>
+  </section>
+
+  <!-- What to bring, what to do, what you leave with -->
+  <section id="opening">
+    <div class="wrap">
+      <dl class="opening">
+        <div class="open-row">
+          <dt class="mono">What to bring</dt>
+          <dd>{WHAT_TO_BRING}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What to do</dt>
+          <dd>{WHAT_TO_DO}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What you leave with</dt>
+          <dd>{WHAT_YOU_LEAVE_WITH}</dd>
+        </div>
+      </dl>
+      <p class="prose-note">
+        Everything here happens in this page. Nothing you type is sent anywhere, and nothing is
+        asked of you to use it.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <section id="tabs-section">
+    <div class="wrap">
+      <div class="tabs" role="tablist" aria-label="Your workflow or the reference example">
+        <button class="tab" role="tab" id="tab-work" aria-selected="true" aria-controls="panel-work" type="button">Your workflow</button>
+        <button class="tab" role="tab" id="tab-example" aria-selected="false" aria-controls="panel-example" type="button">Reference example</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ YOUR WORKFLOW ══════════════════════════════════════════════════ -->
+  <div id="panel-work" role="tabpanel" aria-labelledby="tab-work">
+    <div class="scoring" id="tool">
+      <div class="wrap">
+        <div class="scorebar" id="verdict" data-b="none" role="status" aria-live="polite">
+          <div class="sb-main">
+            <span class="band" id="band">Not started</span>
+            <span class="sb-note" id="note">Name a step to begin. A blank is unknown, not zero.</span>
+          </div>
+          <div class="sb-figs">
+            <span class="sb-fig"><b id="fig-run">—</b><i>tokens per clean run</i></span>
+            <span class="sb-fig"><b id="fig-amp">—</b><i>amplification</i></span>
+            <span class="sb-fig"><b id="fig-quota">—</b><i>quota at peak, worst case</i></span>
+          </div>
+          <div class="sb-prog mono" id="progress">Nothing filled in yet</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="controls-section">
+      <div class="wrap">
+        <div class="controls">
+          <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
+          <button class="btn btn-ghost" id="load-example" type="button">Load the reference example</button>
+          <button class="btn btn-ghost" id="copy" type="button">Copy the assessment</button>
+          <button class="btn btn-ghost" id="print" type="button">Print</button>
+          <button class="btn btn-primary" id="get-xlsx" type="button">Download the workbook</button>
+          <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
+        </div>
+        <noscript>
+          <p class="noscript">
+            This tool works out your assessment in the browser, so it needs JavaScript. The
+            workbook below does the same thing offline, and the reference example further down is
+            filled in end to end.
+          </p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- 01 · the workflow map -->
+    <section id="part-01" class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{PARTS[0].n}</span> {PARTS[0].question}</span>
+          <h2>{PARTS[0].title}</h2>
+        </div>
+        <p class="prose-lead">{PARTS[0].asks}</p>
+        <div class="scroll">
+          <table class="grid entry" id="map-table">
+            <thead>
+              <tr>
+                <th class="c-n">Step</th>
+                <th class="c-name">Step name</th>
+                <th>Model?</th>
+                <th>External API?</th>
+                <th>Side effect</th>
+                <th class="c-num">Input tokens</th>
+                <th class="c-num">Output tokens</th>
+                <th class="c-num">Step tokens</th>
+                <th class="c-num">Cumulative</th>
+                <th>Safe to run twice?</th>
+                <th>Checkpoint after?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((i) => (
+                <tr data-step={i}>
+                  <td class="c-n mono">{i + 1}</td>
+                  <td><input type="text" data-f="name" data-i={i} maxlength="60" placeholder={i === 0 ? 'e.g. Read calendars' : ''} autocomplete="off" aria-label={`Step ${i + 1} name`} /></td>
+                  <td>
+                    <select data-f="model" data-i={i} aria-label={`Step ${i + 1} calls a model`}>
+                      <option value=""></option>
+                      {YESNO.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <select data-f="api" data-i={i} aria-label={`Step ${i + 1} calls an external API`}>
+                      <option value=""></option>
+                      {YESNO.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <select data-f="sideEffect" data-i={i} aria-label={`Step ${i + 1} side effect`}>
+                      <option value=""></option>
+                      {SIDE_EFFECTS.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="input" data-i={i} aria-label={`Step ${i + 1} input tokens`} /></td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="output" data-i={i} aria-label={`Step ${i + 1} output tokens`} /></td>
+                  <td class="c-num calc mono" data-out="step" data-i={i}>—</td>
+                  <td class="c-num calc mono" data-out="cum" data-i={i}>—</td>
+                  <td>
+                    <select data-f="idempotent" data-i={i} aria-label={`Step ${i + 1} is safe to run twice`}>
+                      <option value=""></option>
+                      {YESNO.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <select data-f="checkpoint" data-i={i} aria-label={`Step ${i + 1} saves a checkpoint`}>
+                      <option value=""></option>
+                      {YESNO.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul class="reads">
+          <li><span class="rlabel">Tokens per clean run</span><b class="mono" id="r-run">—</b></li>
+          <li><span class="rlabel">Steps with side effects</span><b class="mono" id="r-side">0</b></li>
+          <li class="watch"><span class="rlabel">Not safe to run twice</span><b class="mono" id="r-unsafe">0</b><i>A retry can repeat these.</i></li>
+        </ul>
+        <p class="mistake"><span class="mono">The mistake it catches</span> {PARTS[0].mistake}</p>
+      </div>
+    </section>
+
+    <!-- 02 · the limits -->
+    <section id="part-02" class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{PARTS[1].n}</span> {PARTS[1].question}</span>
+          <h2>{PARTS[1].title}</h2>
+        </div>
+        <p class="prose-lead">{PARTS[1].asks}</p>
+        <div class="scroll">
+          <table class="grid entry" id="limit-table">
+            <thead>
+              <tr>
+                <th class="c-n">#</th>
+                <th class="c-name">Limit</th>
+                <th>Scope</th>
+                <th class="c-num">Value</th>
+                <th>Unit</th>
+                <th>Window</th>
+                <th>Shared with</th>
+                <th>Refusal signal</th>
+                <th>Current handling</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              {limitRows.map((i) => (
+                <tr data-limit={i}>
+                  <td class="c-n mono">{i + 1}</td>
+                  <td><input type="text" data-l="name" data-i={i} maxlength="80" placeholder={LIMIT_PROMPTS[i] ?? ''} autocomplete="off" aria-label={`Limit ${i + 1} name`} /></td>
+                  <td>
+                    <select data-l="scope" data-i={i} aria-label={`Limit ${i + 1} scope`}>
+                      <option value=""></option>
+                      {SCOPES.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-l="value" data-i={i} aria-label={`Limit ${i + 1} value`} /></td>
+                  <td>
+                    <select data-l="unit" data-i={i} aria-label={`Limit ${i + 1} unit`}>
+                      <option value=""></option>
+                      {UNITS.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <select data-l="window" data-i={i} aria-label={`Limit ${i + 1} window`}>
+                      <option value=""></option>
+                      {WINDOWS.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td><input type="text" data-l="sharedWith" data-i={i} maxlength="80" placeholder={i === 0 ? 'e.g. all agents on this API key' : ''} autocomplete="off" aria-label={`Limit ${i + 1} shared with`} /></td>
+                  <td><input type="text" data-l="signal" data-i={i} maxlength="80" placeholder={i === 0 ? 'e.g. HTTP 429 + Retry-After' : ''} autocomplete="off" aria-label={`Limit ${i + 1} refusal signal`} /></td>
+                  <td>
+                    <select data-l="handling" data-i={i} aria-label={`Limit ${i + 1} current handling`}>
+                      <option value=""></option>
+                      {HANDLING.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td><input type="text" data-l="owner" data-i={i} maxlength="60" autocomplete="off" aria-label={`Limit ${i + 1} owner`} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul class="reads">
+          <li><span class="rlabel">Limits listed</span><b class="mono" id="r-limits">0</b></li>
+          <li class="watch"><span class="rlabel">Shared across workflows</span><b class="mono" id="r-shared">0</b><i>One busy workflow can starve the others.</i></li>
+          <li class="watch"><span class="rlabel">Retried at once, or unhandled</span><b class="mono" id="r-risky">0</b><i>The pattern that amplifies a spike.</i></li>
+        </ul>
+        <p class="mistake"><span class="mono">The mistake it catches</span> {PARTS[1].mistake}</p>
+      </div>
+    </section>
+
+    <!-- 03 · the retry amplifier -->
+    <section id="part-03" class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{PARTS[2].n}</span> {PARTS[2].question}</span>
+          <h2>{PARTS[2].title}</h2>
+        </div>
+        <p class="prose-lead">{PARTS[2].asks}</p>
+
+        <div class="amp">
+          <div class="amp-in">
+            <h3 class="sub">What you set</h3>
+            <label class="fld">
+              <span>Tokens per clean run</span>
+              <input type="number" min="0" step="1" id="a-run" aria-describedby="a-run-n" />
+              <i id="a-run-n">Taken from your workflow map. Type over it to model a different run.</i>
+            </label>
+            <label class="fld">
+              <span>Step most likely to be refused</span>
+              <input type="number" min="1" max={STEP_ROWS} step="1" id="a-step" />
+              <i>The step number from the map above.</i>
+            </label>
+            <label class="fld">
+              <span>What a retry re-runs</span>
+              <select id="a-scope">
+                <option value=""></option>
+                {RETRY_SCOPES.map((v) => <option value={v}>{v}</option>)}
+              </select>
+              <i>The whole task, everything since the last checkpoint, or only the refused call.</i>
+            </label>
+            <label class="fld">
+              <span>Max retries per task</span>
+              <input type="number" min="0" step="1" id="a-max" />
+            </label>
+            <label class="fld">
+              <span>Refused calls count against quota?</span>
+              <select id="a-billed">
+                {YESNO.map((v) => <option value={v} selected={v === 'No'}>{v}</option>)}
+              </select>
+              <i>Most providers don't bill rejected calls. Check yours.</i>
+            </label>
+            <label class="fld">
+              <span>Peak tasks started per minute</span>
+              <input type="number" min="0" step="1" id="a-peak" />
+            </label>
+            <label class="fld">
+              <span>Token-per-minute limit for the shared quota</span>
+              <input type="number" min="0" step="1" id="a-tpm" aria-describedby="a-tpm-n" />
+              <i id="a-tpm-n">Taken from the first limit measured in tokens per minute.</i>
+            </label>
+          </div>
+
+          <div class="amp-out">
+            <h3 class="sub">What it costs</h3>
+            <ul class="reads tall">
+              <li><span class="rlabel">Repeated per failed attempt</span><b class="mono" id="r-rep">—</b><i>Work already paid for that a retry pays for again.</i></li>
+              <li><span class="rlabel">Worst case, eventually succeeds</span><b class="mono" id="r-succ">—</b></li>
+              <li><span class="rlabel">Worst case, gives up</span><b class="mono" id="r-give">—</b><i>Spent with nothing booked.</i></li>
+              <li><span class="rlabel">Amplification</span><b class="mono" id="r-amp">—</b><i>Worst case that succeeds, over one clean run.</i></li>
+            </ul>
+            <h3 class="sub">At peak</h3>
+            <ul class="reads tall">
+              <li><span class="rlabel">Peak demand, normal</span><b class="mono" id="r-pn">—</b></li>
+              <li><span class="rlabel">Peak demand, worst case</span><b class="mono" id="r-pw">—</b></li>
+              <li><span class="rlabel">Quota used, normal</span><b class="mono" id="r-qn">—</b><i id="r-bn"></i></li>
+              <li><span class="rlabel">Quota used, worst case</span><b class="mono" id="r-qw">—</b></li>
+            </ul>
+            <p class="ampverdict" id="amp-verdict" data-b="none">Fill in the seven lines to the left.</p>
+            <p class="prose-note">{PLANNING_NOTE}</p>
+          </div>
+        </div>
+        <p class="mistake"><span class="mono">The mistake it catches</span> {PARTS[2].mistake}</p>
+      </div>
+    </section>
+
+    <!-- 04 · the stop states -->
+    <section id="part-04" class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{PARTS[3].n}</span> {PARTS[3].question}</span>
+          <h2>{PARTS[3].title}</h2>
+        </div>
+        <p class="prose-lead">{PARTS[3].asks}</p>
+        <p class="prose-note" id="stop-empty">
+          Rows appear here as you mark a step Reversible or Irreversible on the workflow map. A
+          step with no side effect leaves nothing behind.
+        </p>
+        <div class="scroll">
+          <table class="grid entry" id="stop-table">
+            <thead>
+              <tr>
+                <th class="c-n">Step</th>
+                <th class="c-name">Step</th>
+                <th>Side effect</th>
+                <th>State left if it stops here</th>
+                <th>What the user sees</th>
+                <th>Clean-up action</th>
+                <th>Automatic or manual?</th>
+                <th>Clean-up owner</th>
+                <th>Resume from here?</th>
+                <th>Stop cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((i) => (
+                <tr data-stop={i} hidden>
+                  <td class="c-n mono">{i + 1}</td>
+                  <td class="calc" data-out="stopname" data-i={i}>—</td>
+                  <td class="calc" data-out="stopside" data-i={i}>—</td>
+                  <td><input type="text" data-s="left" data-i={i} maxlength="120" placeholder="e.g. Room held, no invites sent" autocomplete="off" aria-label={`Step ${i + 1} state left`} /></td>
+                  <td><input type="text" data-s="userSees" data-i={i} maxlength="120" autocomplete="off" aria-label={`Step ${i + 1} what the user sees`} /></td>
+                  <td><input type="text" data-s="cleanup" data-i={i} maxlength="140" placeholder="e.g. Release room hold after 15 min" autocomplete="off" aria-label={`Step ${i + 1} clean-up action`} /></td>
+                  <td>
+                    <select data-s="auto" data-i={i} aria-label={`Step ${i + 1} automatic or manual`}>
+                      <option value=""></option>
+                      {AUTO_MANUAL.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td><input type="text" data-s="owner" data-i={i} maxlength="60" autocomplete="off" aria-label={`Step ${i + 1} clean-up owner`} /></td>
+                  <td>
+                    <select data-s="resume" data-i={i} aria-label={`Step ${i + 1} can resume`}>
+                      <option value=""></option>
+                      {YESNO.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <select data-s="cost" data-i={i} aria-label={`Step ${i + 1} stop cost`}>
+                      <option value=""></option>
+                      {STOP_COST.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul class="reads">
+          <li class="watch"><span class="rlabel">Stop states with no clean-up plan</span><b class="mono" id="r-stops">0</b><i>A side effect with no action or no owner.</i></li>
+        </ul>
+        <p class="mistake"><span class="mono">The mistake it catches</span> {PARTS[3].mistake}</p>
+      </div>
+    </section>
+
+    <!-- 05 · the decision -->
+    <section id="part-05" class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">{PARTS[4].n}</span> {PARTS[4].question}</span>
+          <h2>{PARTS[4].title}</h2>
+        </div>
+        <p class="prose-lead">{PARTS[4].asks}</p>
+        <div class="scroll">
+          <table class="grid entry checks">
+            <thead>
+              <tr>
+                <th class="c-n">#</th>
+                <th class="c-check">Check</th>
+                <th>Answer</th>
+                <th class="c-num">Points</th>
+                <th>From what you filled in</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CHECKS.map((c, i) => (
+                <tr>
+                  <td class={c.critical ? 'c-n mono crit' : 'c-n mono'}>
+                    {c.critical && <span aria-label="critical check">★ </span>}{String(c.n).padStart(2, '0')}
+                  </td>
+                  <td class="c-check">{c.text}</td>
+                  <td>
+                    <select data-c={i} aria-label={`Check ${c.n}`}>
+                      <option value=""></option>
+                      {ANSWERS.map((v) => <option value={v}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td class="c-num calc mono" data-out="pts" data-i={i}>—</td>
+                  <td class="ev mono" data-ev={c.evidence ?? ''}>{c.evidence ? '—' : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="prose-note">★ marks a critical check. One No on a critical check is a Hold, whatever the score.</p>
+        <ul class="reads">
+          <li><span class="rlabel">Total</span><b class="mono" id="r-score">0</b><i>Out of {MAX_SCORE}.</i></li>
+          <li class="watch"><span class="rlabel">Critical checks answered No</span><b class="mono" id="r-crit">0</b></li>
+        </ul>
+
+        <h3 class="sub">Your limit policy</h3>
+        <p class="prose-note">The one-page artefact. Fill this in and take it to your team.</p>
+        <div class="policy">
+          {POLICY_ROWS.map((p) => (
+            <label class="fld">
+              <span>{p.label}</span>
+              <input type="text" data-p={p.key} maxlength="140" autocomplete="off" />
+              <i>{p.note}</i>
+            </label>
+          ))}
+        </div>
+        <p class="mistake"><span class="mono">The mistake it catches</span> {PARTS[4].mistake}</p>
+      </div>
+    </section>
+
+    <!-- the result -->
+    <section id="result">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">The assessment</span>
+          <h2>Ready to scale, fix first, <em>or hold</em>.</h2>
+        </div>
+        <div class="resultcard" id="resultcard" data-b="none">
+          <div class="r-head">
+            <span class="r-band" id="r-band">Not scored yet</span>
+            <span class="r-lead mono" id="r-lead"></span>
+          </div>
+          <p class="r-what" id="r-what">Answer all ten checks to get a decision.</p>
+          <ul class="r-flags" id="r-flags"></ul>
+          <div class="r-out" id="r-out" hidden>
+            <h4>Still to fill in</h4>
+            <ol id="r-outlist"></ol>
+          </div>
+          <div class="r-actions">
+            <button class="btn btn-primary" id="get-xlsx-2" type="button">Download the workbook</button>
+            <button class="btn btn-ghost" id="copy2" type="button">Copy the assessment</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══ REFERENCE EXAMPLE ══════════════════════════════════════════════ -->
+  <div id="panel-example" role="tabpanel" aria-labelledby="tab-example" class="example-panel" hidden>
+    <section id="example">
+      <div class="wrap">
+        <p class="banner">{EXAMPLE_BANNER}</p>
+        <div class="sec-head">
+          <span class="eyebrow">Reference example</span>
+          <h2>{EXAMPLE_TITLE}, <em>and why it does not scale</em>.</h2>
+        </div>
+        <p class="prose-lead">{EXAMPLE_INTRO}</p>
+
+        <div class="scroll">
+          <table class="grid">
+            <thead>
+              <tr><th>Step</th><th>Side effect</th><th class="c-num">In</th><th class="c-num">Out</th><th class="c-num">Step</th><th class="c-num">Cumulative</th><th>Safe twice?</th></tr>
+            </thead>
+            <tbody>
+              {exampleSteps.map((s, i) => (
+                <tr>
+                  <td class="cname">{i + 1} · {s.name}</td>
+                  <td>{s.sideEffect}</td>
+                  <td class="c-num mono">{num(s.input!)}</td>
+                  <td class="c-num mono">{num(s.output!)}</td>
+                  <td class="c-num mono">{num(s.input! + s.output!)}</td>
+                  <td class="c-num mono">{num(exampleSteps.slice(0, i + 1).reduce((t, x) => t + x.input! + x.output!, 0))}</td>
+                  <td>{s.idempotent}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">The limits it runs under</h3>
+        <div class="scroll">
+          <table class="grid">
+            <thead>
+              <tr><th>Limit</th><th>Scope</th><th class="c-num">Value</th><th>Unit</th><th>Window</th><th>Handling</th><th>Owner</th></tr>
+            </thead>
+            <tbody>
+              {exampleLimits.map((l) => (
+                <tr>
+                  <td class="cname">{l.name}</td>
+                  <td>{l.scope}</td>
+                  <td class="c-num mono">{num(l.value!)}</td>
+                  <td>{l.unit}</td>
+                  <td>{l.window}</td>
+                  <td>{l.handling}</td>
+                  <td>{l.owner}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">What the retries cost</h3>
+        <div class="scroll">
+          <table class="grid nums">
+            <thead><tr><th>Reading</th><th class="c-num">Figure</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td class="cname">Tokens per clean run</td><td class="c-num fig mono">{num(EXAMPLE_READING.cleanRun!)}</td><td>Six steps, nothing refused.</td></tr>
+              <tr><td class="cname">Repeated per failed attempt</td><td class="c-num fig mono">{num(EXAMPLE_READING.amp.repeated!)}</td><td>Steps one to three, paid for again.</td></tr>
+              <tr><td class="cname">Worst case, eventually succeeds</td><td class="c-num fig mono">{num(EXAMPLE_READING.amp.worstSucceeds!)}</td><td>Three retries, then the booking is made.</td></tr>
+              <tr><td class="cname">Worst case, gives up</td><td class="c-num fig mono">{num(EXAMPLE_READING.amp.worstGivesUp!)}</td><td>Spent with nothing booked.</td></tr>
+              <tr><td class="cname">Amplification</td><td class="c-num fig mono">{EXAMPLE_READING.amp.amplification!.toFixed(2)}×</td><td>What the retry design costs over one clean run.</td></tr>
+              <tr><td class="cname">Peak demand, worst case</td><td class="c-num fig mono">{num(EXAMPLE_READING.amp.peakWorst!)}</td><td>200 tasks a minute, every one refused at step 4.</td></tr>
+              <tr class="verdict">
+                <td class="cname">Quota used, worst case</td>
+                <td class="c-num fig mono">{pct(EXAMPLE_READING.amp.quotaWorst!)}</td>
+                <td>Against a {num(EXAMPLE_READING.amp.tpm!)} token-per-minute pool shared with every other workflow. {EXAMPLE_READING.amp.verdict}.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">What stopping leaves behind</h3>
+        <div class="scroll">
+          <table class="grid">
+            <thead><tr><th>Step</th><th>State left</th><th>What the user sees</th><th>Clean-up</th><th>Owner</th><th>Stop cost</th></tr></thead>
+            <tbody>
+              {EXAMPLE.stops.map((s, i) => s.left ? (
+                <tr>
+                  <td class="cname">{i + 1} · {EXAMPLE.steps[i].name}</td>
+                  <td>{s.left}</td>
+                  <td>{s.userSees}</td>
+                  <td>{s.cleanup}</td>
+                  <td>{s.owner}</td>
+                  <td>{s.cost}</td>
+                </tr>
+              ) : null)}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">The decision</h3>
+        <div class="excard">
+          <span class="r-band b-hold">{EXAMPLE_READING.decision}</span>
+          <p>
+            It scores <b>{EXAMPLE_READING.score} of {MAX_SCORE}</b>, which on its own would read
+            <i>Ready to scale</i>. One critical check fails, so the answer is
+            <b> {EXAMPLE_READING.decision}</b>. That is the rule the framework exists to enforce:
+            a strong total does not cover a critical gap.
+          </p>
+          <p class="prose-note">
+            Check 4 is No because a retry restarts the whole task. Check 9 is No because
+            worst-case peak demand is {pct(EXAMPLE_READING.amp.quotaWorst!)} of the quota.
+          </p>
+        </div>
+
+        <p class="hero-cta nextrow">
+          <button class="btn btn-primary" id="load-example-2" type="button">Load this example into your workflow</button>
+          <button class="btn btn-ghost" id="to-work" type="button">Back to your workflow</button>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Why this exists -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why this exists</span>
+        <h2>Every layer did the sensible thing. <em>The system still went down.</em></h2>
+      </div>
+      <div class="prose"><p>{WHY}</p></div>
+    </div>
+  </section>
+
+  <!-- Closing -->
+  <section class="final" id="close">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Closing</span>
+        <h2>{CLOSING}</h2>
+      </div>
+      <p class="hero-cta nextrow">
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(PUBLISHED_AT)} · {LICENCE_LINE}</p>
+    </div>
+  </section>
+
+  {/* The workbook request. A native dialog: focus is trapped, Escape closes it,
+      and nothing else on the page needs a script to make that true. */}
+  <dialog class="pdf-dialog" id="xlsx-dialog" aria-labelledby="xlsx-title" data-resource={RESOURCE_ID} data-file={XLSX_PATH}>
+    <form method="dialog" id="xlsx-form" novalidate>
+      <span class="eyebrow"><span class="num">XLSX</span> The workbook</span>
+      <h2 id="xlsx-title">Download the workbook</h2>
+      <p class="pdf-lead">
+        Seven tabs, {XLSX_SIZE}. The blank framework plus the reference example, with every
+        formula in it, so you can run this away from the browser or hand it to a team.
+      </p>
+      <div class="pdf-grid">
+        <label>
+          {nameField.label}
+          <input type="text" name="name" autocomplete={nameField.autocomplete} maxlength={nameField.max} required />
+        </label>
+        <label>
+          {emailField.label}
+          <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
+        </label>
+      </div>
+      <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <p class="pdf-note">
+        Nothing you typed into the page is sent. Your address is used to send you this tool once.
+        It does not start any other email. The assessment above is open either way.
+      </p>
+      <p class="pdf-status" id="xlsx-status" role="status" aria-live="polite"></p>
+      <div class="pdf-actions">
+        <button class="btn btn-primary" id="xlsx-submit" type="submit">Get the workbook</button>
+        <button class="btn btn-ghost" id="xlsx-cancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+</ResourcesLayout>
+
+<script>
+  // A module script, not is:inline, for two reasons: it can import the model,
+  // so the page and the workbook share one implementation; and `astro check`
+  // sees it, which an inline script never does.
+  import {
+    blankModel,
+    readModel,
+    cumulative,
+    stepTokens,
+    isNamed,
+    hasSideEffect,
+    pointsFor,
+    CHECKS,
+    POLICY_ROWS,
+    MAX_SCORE,
+    DECISION_LABEL,
+    EXAMPLE,
+    BANDS,
+    num,
+    pct,
+    type Model,
+    type Answer,
+    type Step,
+    type Limit,
+    type StopState,
+    type Policy,
+  } from '../../data/token-limit-framework';
+
+  // ── the model. A closure, and it dies with the tab. ──────────────────────
+  let model: Model = blankModel();
+
+  const $ = <T extends Element = HTMLElement>(id: string) => document.getElementById(id) as unknown as T;
+  const all = <T extends Element = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];
+
+  const numOrNull = (v: string): number | null => {
+    const t = v.trim();
+    if (t === '') return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  const show = (n: number | null): string => (n === null ? '—' : num(n));
+
+  // Which of the three bands a verdict string is, for styling.
+  const bandKey = (b: string | null): string =>
+    b === BANDS[0] ? 'ok' : b === BANDS[1] ? 'warn' : b === BANDS[2] ? 'bad' : 'none';
+  const decisionKey = (d: string): string =>
+    d === 'Ready to scale' ? 'ok' : d === 'Fix first' ? 'warn' : d === 'Hold' ? 'bad' : 'none';
+
+  // ── reading the DOM into the model ───────────────────────────────────────
+  function collect() {
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f]')) {
+      const i = Number(el.dataset.i);
+      const f = el.dataset.f as keyof Step;
+      const step = model.steps[i];
+      if (!step) continue;
+      if (f === 'input' || f === 'output') step[f] = numOrNull(el.value);
+      else (step[f] as string) = el.value;
+    }
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-l]')) {
+      const i = Number(el.dataset.i);
+      const f = el.dataset.l as keyof Limit;
+      const limit = model.limits[i];
+      if (!limit) continue;
+      if (f === 'value') limit[f] = numOrNull(el.value);
+      else (limit[f] as string) = el.value;
+    }
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-s]')) {
+      const i = Number(el.dataset.i);
+      const f = el.dataset.s as keyof StopState;
+      const stop = model.stops[i];
+      if (!stop) continue;
+      (stop[f] as string) = el.value;
+    }
+    for (const el of all<HTMLSelectElement>('[data-c]')) {
+      model.answers[Number(el.dataset.c)] = el.value as Answer;
+    }
+    for (const el of all<HTMLInputElement>('[data-p]')) {
+      model.policy[el.dataset.p as keyof Policy] = el.value;
+    }
+    model.retry.cleanRunOverride = numOrNull($<HTMLInputElement>('a-run').value);
+    model.retry.refusedStep = numOrNull($<HTMLInputElement>('a-step').value);
+    model.retry.scope = $<HTMLSelectElement>('a-scope').value as Model['retry']['scope'];
+    model.retry.maxRetries = numOrNull($<HTMLInputElement>('a-max').value);
+    model.retry.billed = $<HTMLSelectElement>('a-billed').value as Model['retry']['billed'];
+    model.retry.peakTasks = numOrNull($<HTMLInputElement>('a-peak').value);
+    model.retry.tpmOverride = numOrNull($<HTMLInputElement>('a-tpm').value);
+  }
+
+  // ── writing the model back into the DOM ──────────────────────────────────
+  function fill() {
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f]')) {
+      const step = model.steps[Number(el.dataset.i)];
+      if (!step) continue;
+      const v = step[el.dataset.f as keyof Step];
+      el.value = v === null || v === undefined ? '' : String(v);
+    }
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-l]')) {
+      const limit = model.limits[Number(el.dataset.i)];
+      if (!limit) continue;
+      const v = limit[el.dataset.l as keyof Limit];
+      el.value = v === null || v === undefined ? '' : String(v);
+    }
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-s]')) {
+      const stop = model.stops[Number(el.dataset.i)];
+      if (!stop) continue;
+      el.value = String(stop[el.dataset.s as keyof StopState] ?? '');
+    }
+    for (const el of all<HTMLSelectElement>('[data-c]')) {
+      el.value = model.answers[Number(el.dataset.c)] ?? '';
+    }
+    for (const el of all<HTMLInputElement>('[data-p]')) {
+      el.value = model.policy[el.dataset.p as keyof Policy] ?? '';
+    }
+    // The two linked inputs show the derived value when the reader has not
+    // typed over them, which is what "linked, and you can override it" means.
+    $<HTMLInputElement>('a-run').value = model.retry.cleanRunOverride === null ? '' : String(model.retry.cleanRunOverride);
+    $<HTMLInputElement>('a-step').value = model.retry.refusedStep === null ? '' : String(model.retry.refusedStep);
+    $<HTMLSelectElement>('a-scope').value = model.retry.scope;
+    $<HTMLInputElement>('a-max').value = model.retry.maxRetries === null ? '' : String(model.retry.maxRetries);
+    $<HTMLSelectElement>('a-billed').value = model.retry.billed || 'No';
+    $<HTMLInputElement>('a-peak').value = model.retry.peakTasks === null ? '' : String(model.retry.peakTasks);
+    $<HTMLInputElement>('a-tpm').value = model.retry.tpmOverride === null ? '' : String(model.retry.tpmOverride);
+  }
+
+  // ── the render ───────────────────────────────────────────────────────────
+  function render() {
+    const r = readModel(model);
+    const cum = cumulative(model.steps);
+
+    // 01 · per-row readings
+    model.steps.forEach((s, i) => {
+      const t = stepTokens(s);
+      const stepCell = document.querySelector(`[data-out="step"][data-i="${i}"]`);
+      const cumCell = document.querySelector(`[data-out="cum"][data-i="${i}"]`);
+      if (stepCell) stepCell.textContent = isNamed(s) ? show(t) : '—';
+      if (cumCell) cumCell.textContent = show(cum[i] ?? null);
+    });
+    $('r-run').textContent = show(r.cleanRun);
+    $('r-side').textContent = String(r.sideEffects);
+    $('r-unsafe').textContent = String(r.unsafe);
+    $('r-unsafe').closest('li')?.classList.toggle('hot', r.unsafe > 0);
+
+    // 02
+    $('r-limits').textContent = String(r.limitsSet);
+    $('r-shared').textContent = String(r.shared);
+    $('r-shared').closest('li')?.classList.toggle('hot', r.shared > 0);
+    $('r-risky').textContent = String(r.risky);
+    $('r-risky').closest('li')?.classList.toggle('hot', r.risky > 0);
+
+    // 03 · the placeholders on the two linked inputs say where the value came
+    // from, so an empty box is never mistaken for a missing number.
+    const runIn = $<HTMLInputElement>('a-run');
+    const derivedRun = r.amp.cleanRun !== null && model.retry.cleanRunOverride === null ? r.amp.cleanRun : null;
+    runIn.placeholder = derivedRun === null ? '' : num(derivedRun);
+    const tpmIn = $<HTMLInputElement>('a-tpm');
+    tpmIn.placeholder = r.amp.tpm !== null && model.retry.tpmOverride === null ? num(r.amp.tpm) : '';
+
+    $('r-rep').textContent = show(r.amp.repeated);
+    $('r-succ').textContent = show(r.amp.worstSucceeds);
+    $('r-give').textContent = show(r.amp.worstGivesUp);
+    $('r-amp').textContent = r.amp.amplification === null ? '—' : `${r.amp.amplification.toFixed(2)}×`;
+    $('r-pn').textContent = show(r.amp.peakNormal);
+    $('r-pw').textContent = show(r.amp.peakWorst);
+    $('r-qn').textContent = r.amp.quotaNormal === null ? '—' : pct(r.amp.quotaNormal);
+    $('r-bn').textContent = r.amp.bandNormal ?? '';
+    $('r-qw').textContent = r.amp.quotaWorst === null ? '—' : pct(r.amp.quotaWorst);
+    const av = $('amp-verdict');
+    av.textContent = r.amp.verdict ?? 'Fill in the seven lines to the left.';
+    av.dataset.b = bandKey(r.amp.verdict);
+
+    // 04 · a stop row exists only for a step that leaves something behind
+    let anyStop = false;
+    model.steps.forEach((s, i) => {
+      const row = document.querySelector(`tr[data-stop="${i}"]`) as HTMLTableRowElement | null;
+      if (!row) return;
+      const wanted = hasSideEffect(s);
+      row.hidden = !wanted;
+      if (!wanted) return;
+      anyStop = true;
+      const n = document.querySelector(`[data-out="stopname"][data-i="${i}"]`);
+      const sd = document.querySelector(`[data-out="stopside"][data-i="${i}"]`);
+      if (n) n.textContent = s.name;
+      if (sd) sd.textContent = s.sideEffect;
+      const missing = model.stops[i].cleanup.trim() === '' || model.stops[i].owner.trim() === '';
+      row.classList.toggle('hot', missing);
+    });
+    ($('stop-empty') as HTMLElement).hidden = anyStop;
+    $('r-stops').textContent = String(r.missingStops);
+    $('r-stops').closest('li')?.classList.toggle('hot', r.missingStops > 0);
+
+    // 05
+    model.answers.forEach((a, i) => {
+      const cell = document.querySelector(`[data-out="pts"][data-i="${i}"]`);
+      if (cell) cell.textContent = a === '' ? '—' : String(pointsFor(a));
+    });
+    $('r-score').textContent = String(r.score);
+    $('r-crit').textContent = String(r.critical);
+    $('r-crit').closest('li')?.classList.toggle('hot', r.critical > 0);
+    // Checks 8 and 9 are answered from evidence the page already holds.
+    const evStops = document.querySelector('[data-ev="stops"]');
+    if (evStops) evStops.textContent = `${r.missingStops} with no clean-up plan`;
+    const evQuota = document.querySelector('[data-ev="quota"]');
+    if (evQuota) evQuota.textContent = r.amp.verdict ?? 'not worked out yet';
+
+    // the bar and the result card
+    const key = decisionKey(r.decision);
+    const bar = $('verdict');
+    bar.dataset.b = key;
+    $('band').textContent = r.decision === 'Not scored yet' && r.namedSteps === 0 ? 'Not started' : r.decision;
+    $('note').textContent =
+      r.namedSteps === 0 ? 'Name a step to begin. A blank is unknown, not zero.' : DECISION_LABEL[r.decision];
+    $('fig-run').textContent = show(r.cleanRun);
+    $('fig-amp').textContent = r.amp.amplification === null ? '—' : `${r.amp.amplification.toFixed(2)}×`;
+    $('fig-quota').textContent = r.amp.quotaWorst === null ? '—' : pct(r.amp.quotaWorst);
+    $('progress').textContent =
+      r.outstanding.length === 0
+        ? 'Everything is filled in.'
+        : `${r.outstanding.length} thing${r.outstanding.length === 1 ? '' : 's'} still to fill in`;
+
+    const card = $('resultcard');
+    card.dataset.b = key;
+    $('r-band').textContent = r.decision;
+    $('r-lead').textContent =
+      r.answered === CHECKS.length ? `${r.score} of ${MAX_SCORE}, ${r.critical} critical No` : `${r.answered} of ${CHECKS.length} checks answered`;
+    $('r-what').textContent = DECISION_LABEL[r.decision];
+
+    const flags = $('r-flags');
+    flags.replaceChildren();
+    for (const f of r.flags) {
+      const li = document.createElement('li');
+      li.textContent = f;
+      flags.appendChild(li);
+    }
+    const out = $('r-out') as HTMLElement;
+    const outList = $('r-outlist');
+    outList.replaceChildren();
+    out.hidden = r.outstanding.length === 0;
+    for (const o of r.outstanding) {
+      const li = document.createElement('li');
+      li.textContent = o;
+      outList.appendChild(li);
+    }
+  }
+
+  function update() {
+    collect();
+    render();
+  }
+
+  // ── plain text, for Copy ─────────────────────────────────────────────────
+  function asText(): string {
+    const r = readModel(model);
+    const L: string[] = ['Token Limit Framework — assessment', 'thelivingcraft.ai/resources/token-limit-framework', ''];
+    L.push('WORKFLOW MAP');
+    const cum = cumulative(model.steps);
+    model.steps.forEach((s, i) => {
+      if (!isNamed(s)) return;
+      L.push(
+        `  ${i + 1}. ${s.name} — side effect ${s.sideEffect || 'unset'}, ${show(stepTokens(s))} tokens, cumulative ${show(cum[i] ?? null)}, safe twice ${s.idempotent || 'unset'}, checkpoint ${s.checkpoint || 'unset'}`,
+      );
+    });
+    L.push(`  Tokens per clean run: ${show(r.cleanRun)}`);
+    L.push(`  Steps with side effects: ${r.sideEffects}. Not safe to run twice: ${r.unsafe}.`, '');
+
+    L.push('LIMITS');
+    model.limits.forEach((l, i) => {
+      if (!l.name.trim()) return;
+      L.push(
+        `  ${i + 1}. ${l.name} — ${l.scope || 'scope unset'}, ${l.value === null ? 'value unset' : num(l.value)} ${l.unit} ${l.window}, shared with ${l.sharedWith || 'unset'}, refuses with ${l.signal || 'unset'}, handled by ${l.handling || 'unset'}, owner ${l.owner || 'unset'}`,
+      );
+    });
+    L.push(`  Shared across workflows: ${r.shared}. Retried at once or unhandled: ${r.risky}.`, '');
+
+    L.push('RETRY AMPLIFIER');
+    L.push(`  Refused at step ${model.retry.refusedStep ?? 'unset'}, a retry ${model.retry.scope ? model.retry.scope.toLowerCase() : 'unset'}, max ${model.retry.maxRetries ?? 'unset'} retries, refused calls billed ${model.retry.billed}`);
+    L.push(`  Repeated per failed attempt: ${show(r.amp.repeated)}`);
+    L.push(`  Worst case, eventually succeeds: ${show(r.amp.worstSucceeds)}`);
+    L.push(`  Worst case, gives up: ${show(r.amp.worstGivesUp)}`);
+    L.push(`  Amplification: ${r.amp.amplification === null ? '—' : r.amp.amplification.toFixed(2) + '×'}`);
+    L.push(`  Peak demand, worst case: ${show(r.amp.peakWorst)} against a ${show(r.amp.tpm)} per-minute quota`);
+    L.push(`  Quota used, worst case: ${r.amp.quotaWorst === null ? '—' : pct(r.amp.quotaWorst)}`);
+    L.push(`  Verdict: ${r.amp.verdict ?? 'not worked out yet'}`, '');
+
+    L.push('STOP STATES');
+    model.steps.forEach((s, i) => {
+      if (!hasSideEffect(s)) return;
+      const st = model.stops[i];
+      L.push(`  ${i + 1}. ${s.name} (${s.sideEffect}) — leaves: ${st.left || 'unset'}; user sees: ${st.userSees || 'unset'}; clean-up: ${st.cleanup || 'UNSET'} (${st.auto || 'unset'}); owner: ${st.owner || 'UNSET'}; resume ${st.resume || 'unset'}; stop cost ${st.cost || 'unset'}`);
+    });
+    L.push(`  Stop states with no clean-up plan: ${r.missingStops}`, '');
+
+    L.push('DECISION');
+    CHECKS.forEach((c, i) => {
+      L.push(`  ${c.critical ? '*' : ' '} ${String(c.n).padStart(2, '0')}. ${model.answers[i] || 'unanswered'} — ${c.text}`);
+    });
+    L.push(`  Total: ${r.score} of ${MAX_SCORE}. Critical checks answered No: ${r.critical}.`);
+    L.push(`  ${r.decision} — ${DECISION_LABEL[r.decision]}`, '');
+
+    L.push('YOUR LIMIT POLICY');
+    for (const p of POLICY_ROWS) L.push(`  ${p.label}: ${model.policy[p.key] || 'unset'}`);
+
+    if (r.flags.length) {
+      L.push('', 'WHAT TO LOOK AT');
+      for (const f of r.flags) L.push(`  - ${f}`);
+    }
+    if (r.outstanding.length) {
+      L.push('', 'STILL TO FILL IN');
+      for (const o of r.outstanding) L.push(`  - ${o}`);
+    }
+    L.push('', 'This is a planning bound, not a forecast.');
+    return L.join('\n');
+  }
+
+  // ── wiring ───────────────────────────────────────────────────────────────
+  const panelWork = $('panel-work') as HTMLElement;
+  const panelExample = $('panel-example') as HTMLElement;
+  const tabWork = $<HTMLButtonElement>('tab-work');
+  const tabExample = $<HTMLButtonElement>('tab-example');
+
+  function selectTab(which: 'work' | 'example') {
+    const work = which === 'work';
+    panelWork.hidden = !work;
+    panelExample.hidden = work;
+    tabWork.setAttribute('aria-selected', String(work));
+    tabExample.setAttribute('aria-selected', String(!work));
+  }
+  tabWork.addEventListener('click', () => selectTab('work'));
+  tabExample.addEventListener('click', () => selectTab('example'));
+
+  document.addEventListener('input', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('#panel-work')) update();
+  });
+  document.addEventListener('change', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('#panel-work')) update();
+  });
+
+  $('blank').addEventListener('click', () => {
+    model = blankModel();
+    fill();
+    render();
+    window.scrollTo({ top: (panelWork.offsetTop ?? 0) - 20, behavior: 'smooth' });
+  });
+
+  function loadExample() {
+    model = structuredClone(EXAMPLE);
+    fill();
+    render();
+    selectTab('work');
+    window.scrollTo({ top: (panelWork.offsetTop ?? 0) - 20, behavior: 'smooth' });
+  }
+  $('load-example').addEventListener('click', loadExample);
+  $('load-example-2').addEventListener('click', loadExample);
+  $('to-work').addEventListener('click', () => selectTab('work'));
+
+  const copied = $('copied');
+  async function copyOut() {
+    try {
+      await navigator.clipboard.writeText(asText());
+      copied.textContent = 'Copied.';
+    } catch {
+      copied.textContent = 'Copying is blocked in this browser. Use Print instead.';
+    }
+    window.setTimeout(() => {
+      copied.textContent = '';
+    }, 4000);
+  }
+  $('copy').addEventListener('click', copyOut);
+  $('copy2').addEventListener('click', copyOut);
+  $('print').addEventListener('click', () => window.print());
+
+  // ── the workbook request ─────────────────────────────────────────────────
+  //
+  // The one place on this page that talks to a server, and it sends a name and
+  // an email and nothing else. Not one figure from the assessment travels.
+  //
+  // A FAILED SAVE STILL HANDS OVER THE FILE. Same rule the three PDF routes
+  // follow: the resource was never behind the request, so a database that is
+  // not answering must not cost the visitor the download. Only a refusal about
+  // what THEY typed — a missing field, a bad address, too many attempts —
+  // keeps the dialog open, because that is a thing they can fix.
+  const dialog = $<HTMLDialogElement>('xlsx-dialog');
+  const form = $<HTMLFormElement>('xlsx-form');
+  const status = $('xlsx-status');
+  const submit = $<HTMLButtonElement>('xlsx-submit');
+  const filePath = dialog.dataset.file as string;
+  const resourceId = dialog.dataset.resource as string;
+  let requestKey = '';
+
+  function openDialog() {
+    status.textContent = '';
+    status.dataset.s = '';
+    requestKey = (crypto.randomUUID?.() ?? String(Date.now() + Math.random())).slice(0, 100);
+    dialog.showModal();
+  }
+  $('get-xlsx').addEventListener('click', openDialog);
+  $('get-xlsx-2').addEventListener('click', openDialog);
+  $('xlsx-cancel').addEventListener('click', () => dialog.close());
+
+  function deliver() {
+    const a = document.createElement('a');
+    a.href = filePath;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const name = String(data.get('name') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    if (!name || !email) {
+      status.dataset.s = 'bad';
+      status.textContent = 'A name and an email address are both needed.';
+      return;
+    }
+    submit.disabled = true;
+    status.dataset.s = '';
+    status.textContent = 'Saving your request…';
+
+    let res: Response | null = null;
+    let body: Record<string, unknown> = {};
+    try {
+      res = await fetch('/api/pipeline/resource', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestKey,
+          resource: resourceId,
+          answers: { name, email },
+          botcheck: String(data.get('botcheck') ?? ''),
+          entryPath: window.location.pathname,
+          referrer: document.referrer,
+          search: window.location.search,
+        }),
+      });
+      body = (await res.json()) as Record<string, unknown>;
+    } catch {
+      // The network, not them. They still get the file.
+      submit.disabled = false;
+      status.dataset.s = 'ok';
+      status.textContent =
+        'We could not reach us to save that, so nothing was recorded. The workbook is downloading anyway.';
+      deliver();
+      return;
+    }
+
+    // 400 and 429 are about what they typed or how often. Keep the dialog open.
+    if (res.status === 400 || res.status === 429) {
+      submit.disabled = false;
+      status.dataset.s = 'bad';
+      const errs = body.errors as { message?: string }[] | undefined;
+      status.textContent =
+        errs?.length && errs[0]?.message
+          ? errs.map((x) => x.message).join(' ')
+          : String(body.error ?? 'We could not accept that. Check the two fields and try again.');
+      return;
+    }
+
+    submit.disabled = false;
+    status.dataset.s = 'ok';
+    if (res.ok && body.ok === true) {
+      const delivery = typeof body.delivery === 'string' ? ` ${body.delivery}` : '';
+      status.textContent = `${String(body.confirmation ?? 'Your request is saved.')}${delivery} The workbook is downloading.`;
+    } else {
+      // 503 and anything else: the save did not commit. Say so, hand it over.
+      status.textContent = `${String(body.error ?? 'We could not save that just now.')} The workbook is downloading anyway.`;
+    }
+    deliver();
+  });
+
+  // First paint.
+  fill();
+  render();
+</script>
+
+<style>
+  /* global.css has no .prose measure, so lines run past 130 characters inside
+     the 1180px wrap. Same handful of rules the sibling tool pages carry. */
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .nextrow { justify-content: center; margin-top: var(--space-6); }
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  /* ── the opening ──────────────────────────────────────────────────────── */
+  .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); }
+  .open-row { display: grid; gap: var(--space-1); }
+  @media (min-width: 720px) {
+    .opening { max-width: none; }
+    .open-row { grid-template-columns: 180px 1fr; gap: var(--space-5); align-items: start; }
+  }
+  .open-row dt {
+    font-size: var(--size-1);
+    color: var(--accent-ink-strong);
+    font-weight: var(--weight-medium);
+    padding-top: 3px;
+  }
+  .open-row dd { color: var(--text-body); max-width: var(--measure-prose); }
+
+  /* ── tabs ─────────────────────────────────────────────────────────────── */
+  #tabs-section { padding-bottom: 0; }
+  .tabs { display: flex; gap: var(--space-2); border-bottom: 1px solid var(--border-hair); }
+  .tab {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    padding: var(--space-3) var(--space-4);
+    font: inherit;
+    font-weight: var(--weight-medium);
+    color: var(--text-quiet);
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .tab[aria-selected='true'] { color: var(--text-loud); border-bottom-color: var(--sun); }
+  .tab:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* ── the sticky verdict bar ───────────────────────────────────────────── */
+  .scoring { position: sticky; top: 0; z-index: var(--z-sticky); background: var(--surface-sunken); padding: var(--space-4) 0; }
+  .scorebar {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+    display: grid;
+    gap: var(--space-3);
+    border-left: 6px solid var(--border-hair);
+  }
+  @media (min-width: 900px) {
+    .scorebar { grid-template-columns: 1fr auto; align-items: center; }
+    .sb-prog { grid-column: 1 / -1; }
+  }
+  .scorebar[data-b='ok'] { border-left-color: var(--success); }
+  .scorebar[data-b='warn'] { border-left-color: var(--accent-ink); }
+  .scorebar[data-b='bad'] { border-left-color: var(--danger); }
+  .band { display: block; font-family: var(--font-display); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .scorebar[data-b='ok'] .band { color: var(--success); }
+  .scorebar[data-b='warn'] .band { color: var(--accent-ink); }
+  .scorebar[data-b='bad'] .band { color: var(--danger); }
+  .sb-note { display: block; font-size: var(--size-2); color: var(--text-quiet); margin-top: 2px; }
+  .sb-figs { display: flex; gap: var(--space-5); flex-wrap: wrap; }
+  .sb-fig { display: flex; flex-direction: column; }
+  .sb-fig b { font-family: var(--font-mono); font-size: var(--size-5); color: var(--text-loud); font-feature-settings: var(--font-features); }
+  .sb-fig i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .sb-prog { font-size: var(--size-1); color: var(--text-quiet); }
+
+  /* ── controls ─────────────────────────────────────────────────────────── */
+  #controls-section { padding-top: var(--space-5); padding-bottom: 0; }
+  .controls { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+  .copied { font-size: var(--size-2); color: var(--accent-ink-strong); }
+  .noscript { margin-top: var(--space-4); font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); }
+
+  .qsection { padding-top: var(--space-7); padding-bottom: var(--space-6); }
+
+  /* ── entry tables ─────────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3);
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+  .grid tbody td {
+    padding: 6px var(--space-3);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: middle;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .grid .cname { color: var(--text-body); font-weight: var(--weight-medium); }
+  .entry { min-width: 1080px; }
+  .entry.checks { min-width: 820px; }
+  .c-n { width: 52px; text-align: right; color: var(--text-quiet); }
+  .c-n.crit { color: var(--danger); font-weight: var(--weight-strong); }
+  .c-name { min-width: 190px; }
+  .c-check { min-width: 380px; color: var(--text-body); }
+  .c-num { text-align: right; }
+  .calc { font-family: var(--font-mono); color: var(--text-body); font-feature-settings: var(--font-features); white-space: nowrap; }
+  .ev { font-size: var(--size-1); color: var(--accent-ink-strong); white-space: nowrap; }
+
+  .entry input, .entry select, .fld input, .fld select {
+    width: 100%;
+    font: inherit;
+    font-size: var(--size-2);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: 1px solid var(--border-field);
+    border-radius: 10px;
+    padding: 6px 8px;
+    min-height: 34px;
+  }
+  .entry input[type='number'], .fld input[type='number'] { text-align: right; font-family: var(--font-mono); }
+  .entry input:focus, .entry select:focus, .fld input:focus, .fld select:focus { outline: none; border-color: var(--text-body); }
+  .entry input:focus-visible, .entry select:focus-visible, .fld input:focus-visible, .fld select:focus-visible {
+    outline: var(--focus-w) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .entry input::placeholder { color: var(--text-faint); }
+  /* A row that is missing something the assessment needs. Ink, not a fill, so
+     it reads at a glance without turning the table into a traffic light. */
+  .entry tr.hot td { background: var(--danger-quiet); }
+
+  /* ── readings under a table ───────────────────────────────────────────── */
+  .reads { display: grid; gap: var(--space-2); margin-top: var(--space-5); list-style: none; padding: 0; }
+  .reads li { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+  .reads .rlabel { min-width: 260px; color: var(--text-body); font-weight: var(--weight-medium); font-size: var(--size-3); }
+  .reads b { font-family: var(--font-mono); font-size: var(--size-5); color: var(--text-loud); font-feature-settings: var(--font-features); }
+  .reads i { font-style: normal; font-size: var(--size-2); color: var(--text-quiet); }
+  .reads li.hot b { color: var(--danger); }
+  .reads.tall li { padding: var(--space-1) 0; }
+
+  .mistake {
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    font-size: var(--size-3);
+    color: var(--text-quiet);
+    max-width: 78ch;
+  }
+  .mistake .mono { display: block; font-size: var(--size-1); color: var(--accent-ink-strong); margin-bottom: var(--space-2); }
+
+  /* ── the amplifier ────────────────────────────────────────────────────── */
+  .amp { display: grid; gap: var(--space-6); }
+  @media (min-width: 960px) { .amp { grid-template-columns: 1fr 1fr; gap: var(--space-8); } }
+  .amp .sub:first-child { margin-top: 0; }
+  .fld { display: grid; gap: 4px; margin-bottom: var(--space-4); }
+  .fld > span { font-size: var(--size-3); color: var(--text-body); font-weight: var(--weight-medium); }
+  .fld i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .ampverdict {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-inner);
+    font-family: var(--font-display);
+    font-weight: var(--weight-heavy);
+    font-size: var(--size-5);
+    background: var(--surface-hover);
+    color: var(--text-quiet);
+  }
+  .ampverdict[data-b='ok'] { background: var(--success-quiet); color: var(--success); }
+  .ampverdict[data-b='warn'] { background: var(--accent-quiet); color: var(--accent-ink); }
+  .ampverdict[data-b='bad'] { background: var(--danger-quiet); color: var(--danger); }
+  .ampverdict[data-b='none'] { font-family: var(--font-body); font-weight: var(--weight-normal); font-size: var(--size-3); }
+
+  .policy { display: grid; gap: var(--space-4); }
+  @media (min-width: 760px) { .policy { grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-6); } }
+
+  /* ── the result card ──────────────────────────────────────────────────── */
+  .resultcard {
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lift);
+    padding: var(--space-6);
+    border-top: 6px solid var(--border-hair);
+  }
+  .resultcard[data-b='ok'] { border-top-color: var(--success); }
+  .resultcard[data-b='warn'] { border-top-color: var(--accent-ink); }
+  .resultcard[data-b='bad'] { border-top-color: var(--danger); }
+  .r-head { display: flex; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; }
+  .r-band { font-family: var(--font-display); font-size: var(--size-7); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .resultcard[data-b='ok'] .r-band { color: var(--success); }
+  .resultcard[data-b='warn'] .r-band { color: var(--accent-ink); }
+  .resultcard[data-b='bad'] .r-band { color: var(--danger); }
+  .r-lead { font-size: var(--size-2); color: var(--text-quiet); }
+  .r-what { margin-top: var(--space-3); color: var(--text-body); max-width: var(--measure-prose); }
+  .r-flags { margin-top: var(--space-5); display: grid; gap: var(--space-2); padding-left: var(--space-5); }
+  .r-flags li { color: var(--text-body); font-size: var(--size-3); }
+  .r-out { margin-top: var(--space-5); }
+  .r-out h4 { font-size: var(--size-2); color: var(--accent-ink-strong); font-family: var(--font-mono); font-weight: var(--weight-medium); }
+  .r-out ol { margin-top: var(--space-2); padding-left: var(--space-5); display: grid; gap: 4px; }
+  .r-out li { font-size: var(--size-2); color: var(--text-quiet); }
+  .r-actions { margin-top: var(--space-6); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* ── the reference example ────────────────────────────────────────────── */
+  .banner {
+    display: inline-block;
+    background: var(--accent-quiet);
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    margin-bottom: var(--space-5);
+  }
+  .nums { min-width: 700px; }
+  .fig { color: var(--text-loud); font-size: var(--size-4); font-weight: var(--weight-strong); white-space: nowrap; }
+  .grid tr.verdict td { background: var(--danger-quiet); }
+  .grid tr.verdict .fig { color: var(--danger); }
+  .excard {
+    margin-top: var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-6);
+    border-top: 6px solid var(--danger);
+    max-width: 78ch;
+  }
+  .excard .b-hold { color: var(--danger); display: block; margin-bottom: var(--space-3); }
+  .excard p { color: var(--text-body); }
+
+  /* ── the dialog ───────────────────────────────────────────────────────── */
+  .pdf-dialog {
+    border: 0;
+    padding: 0;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-overlay);
+    max-width: 520px;
+    width: calc(100% - 2rem);
+    background: var(--surface-panel);
+    color: var(--text-body);
+  }
+  .pdf-dialog::backdrop { background: rgba(22, 33, 46, 0.45); }
+  .pdf-dialog form { padding: var(--space-6); }
+  .pdf-dialog .eyebrow { display: block; margin-bottom: var(--space-3); }
+  .pdf-dialog h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
+  .pdf-lead { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-4); }
+  .pdf-grid { display: grid; gap: var(--space-4); }
+  .pdf-dialog label { display: grid; gap: 4px; font-size: var(--size-2); color: var(--text-body); font-weight: var(--weight-medium); }
+  .pdf-dialog input {
+    width: 100%;
+    font: inherit;
+    font-size: var(--size-3);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: 1px solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 10px 12px;
+  }
+  .pdf-dialog input:focus { outline: none; border-color: var(--text-body); }
+  .pdf-dialog input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .pdf-dialog .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .pdf-note { margin-top: var(--space-4); font-size: var(--size-1); color: var(--text-quiet); }
+  .pdf-status { margin-top: var(--space-3); font-size: var(--size-2); min-height: 1.2em; }
+  .pdf-status[data-s='bad'] { color: var(--danger); }
+  .pdf-status[data-s='ok'] { color: var(--accent-ink-strong); }
+  .pdf-actions { margin-top: var(--space-5); display: flex; gap: var(--space-3); }
+  .pdf-dialog button[disabled] { opacity: 0.42; pointer-events: none; }
+
+  /* ── print ────────────────────────────────────────────────────────────── */
+  @media print {
+    .controls, .hero-cta, .r-actions, .pdf-dialog, .tabs, .noscript, #tabs-section { display: none !important; }
+    .scoring { position: static; }
+    .entry { min-width: 0; font-size: 9pt; }
+    .scroll { overflow: visible; }
+  }
+</style>

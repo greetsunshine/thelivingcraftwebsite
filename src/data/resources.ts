@@ -283,6 +283,29 @@ export const resources: Resource[] = [
     url: '/resources/agent-failure-triage-quiz',
     publishedAt: '2026-09-26',
   },
+  {
+    id: 'token-limit-framework',
+    topic: 'Limits and Retries',
+    number: '08',
+    series: 'Agentic system design',
+    title: 'The Token Limit Framework',
+    kind: 'Interactive tool \u00b7 5 steps \u00b7 1 reference example \u00b7 Excel workbook',
+    summary:
+      'Decide what your agent does when it is told no, and find out whether retries alone can exhaust the quota it shares with everything else.',
+    description:
+      'Teams worry about what it costs to stop an agent mid-task. Stopping has a cost you can list and design for. The unbounded cost is an agent that will not stop: retries that restart the task, pay again for steps that already succeeded, and drain a quota shared with every other workflow. This tool takes one workflow through five steps. You map the steps with their token counts, so a retry can be priced from the step it failed on rather than from a single figure for the whole run. You list every limit that can refuse the agent, with its scope, its window, the signal it refuses with, what your code does today and who owns it, because there are usually six or seven and the one that stops you is often shared with a workflow you do not own. You model the amplification at peak: what a failed attempt repeats, the worst case that eventually succeeds, the worst case that gives up with nothing booked, and both as a share of the token-per-minute pool. You define a stop state for every step with a side effect, with the clean-up action and the person who owns it. Then ten checks, four of them critical, scored out of twenty. One No on a critical check is a Hold whatever the total, which is the rule the whole thing exists to enforce. The reference example is a scheduling agent that scores sixteen out of twenty and is still told not to scale, because its retries alone reach 187% of the quota.',
+    useFor: [
+      'Price one run of an agent workflow step by step, so a retry can be costed from the step it failed on',
+      'List every limit that can refuse the agent, with its scope, its owner and what your code does today',
+      'Find out whether your retry design alone can exhaust a quota you share with other workflows',
+      'Give every step with a side effect a stop state, a clean-up action and a named owner',
+      'Leave with a token-limit policy and a decision: ready to scale, fix first, or hold',
+    ],
+    format:
+      'Interactive. Type your workflow in the page; every total, the retry amplification and the decision update as you go. The reference example is on its own tab and can be loaded into your assessment. Copy the assessment or print it without giving anything. The Excel workbook, which does the same thing offline, is offered against a name and an email address.',
+    url: '/resources/token-limit-framework',
+    publishedAt: '2026-09-27',
+  },
 ];
 
 /**

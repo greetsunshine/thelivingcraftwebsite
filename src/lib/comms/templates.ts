@@ -501,6 +501,20 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     actions: [],
     version: RESOURCE_PACKAGE_VERSION,
   },
+  // The only resource whose delivery points at a FILE as well as a page. The
+  // page is still the resource and is still open; the workbook is the optional
+  // artefact, which is why the wording leads with the link.
+  {
+    key: 'resource-token-limit-framework',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Token Limit Framework',
+    body:
+      'Here is the Token Limit Framework you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/token-limit-framework\n\nIt takes one agent workflow through five steps: map the steps with their token counts, list every limit that can refuse the agent, model how far retries amplify spend at peak, define a stop state for every step with a side effect, and score ten checks. It ends with a token-limit policy and a decision: ready to scale, fix first, or hold. The page works everything out as you type and asks for nothing. The Excel workbook does the same thing offline and downloads from that page.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_PACKAGE_VERSION,
+  },
   {
     key: 'resource-template-agent-design-canvas',
     route: 'resource',
