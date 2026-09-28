@@ -233,89 +233,112 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           <h2>Cost one round of each</h2>
         </div>
         <p class="prose-lead">
-          A round costs the same shape of thing whatever sent it back: the steps that run again,
-          the check that re-reads the new attempt, and the extra context the redo carries.
-          Zero is a real answer. Blank is not.
+          Whatever sent the work back, a round costs the same three things: the steps that run
+          again, the check that re-reads the new attempt, and the extra context the redo carries.
+          Add only the paths your workflow actually has. Zero is a real answer; blank is not.
         </p>
 
-        <p class="prose-note tablenote">
-          Set <b>Present?</b> to Yes for every path that exists in your workflow, then cost one
-          round of it. A path set to No is left out of both totals; the scheduling example uses
-          two of the seven.
-        </p>
-        <div class="scroll">
-          <table class="grid entry" id="paths">
-            {/* Explicit widths. Eleven columns sharing a minimum width squeezed
-                the two Yes/No selects to 43px, which after their padding and the
-                native dropdown arrow left no room to draw the word at all. */}
-            <colgroup>
-              <col style="width:200px" /><col style="width:92px" /><col style="width:92px" />
-              <col style="width:104px" /><col style="width:112px" /><col style="width:104px" />
-              <col style="width:112px" /><col style="width:104px" /><col style="width:104px" />
-              <col style="width:184px" /><col style="width:132px" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="c-path">Path</th>
-                <th>Present?</th>
-                <th>Billed?</th>
-                <th class="c-num">Avg rounds<br /><i>per task, normal load</i></th>
-                <th class="c-num">Work repeated</th>
-                <th class="c-num">Review call</th>
-                <th class="c-num">Context growth</th>
-                <th class="c-num">Round cost</th>
-                <th class="c-num">Max rounds<br /><i>blank = no cap</i></th>
-                <th>After the last round…</th>
-                <th>Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PATHS.map((p) => (
-                <tr data-row={p.kind}>
-                  <th scope="row" class="c-path">
-                    {p.custom ? (
-                      <input type="text" data-f="name" data-k={p.kind} maxlength="40" placeholder={p.label} aria-label={`${p.label} name`} />
-                    ) : (
-                      <span class="pname">{p.label}</span>
-                    )}
-                    <i class="pex">{p.examples}</i>
-                  </th>
-                  <td><select data-f="present" data-k={p.kind} aria-label={`${p.label} present`}><option value="No">No</option><option value="Yes">Yes</option></select></td>
-                  <td><select data-f="billed" data-k={p.kind} aria-label={`${p.label} billed`}><option value="Yes">Yes</option><option value="No">No</option></select></td>
-                  <td class="c-num"><input type="number" min="0" step="0.1" data-f="averageRounds" data-k={p.kind} aria-label={`${p.label} average rounds`} /></td>
-                  <td class="c-num"><input type="number" min="0" step="1" data-f="repeated" data-k={p.kind} aria-label={`${p.label} work repeated`} /></td>
-                  <td class="c-num"><input type="number" min="0" step="1" data-f="review" data-k={p.kind} aria-label={`${p.label} review call`} /></td>
-                  <td class="c-num"><input type="number" min="0" step="1" data-f="growth" data-k={p.kind} aria-label={`${p.label} context growth`} /></td>
-                  <td class="c-num calc" data-out="round" data-k={p.kind}>—</td>
-                  <td class="c-num"><input type="number" min="0" step="1" data-f="maxRounds" data-k={p.kind} aria-label={`${p.label} max rounds`} /></td>
-                  <td>
-                    <select data-f="afterLast" data-k={p.kind} aria-label={`${p.label} after the last round`}>
+        {/* ONE CARD PER PATH, NOT ONE ROW.
+            This was an eleven-column table. It needed 1340px to lay out inside
+            a 724px column, so a reader could never see a whole row, and it put
+            three unrelated questions — does this exist, what does a round cost,
+            when does it stop — in one horizontal line. A card asks them one at
+            a time, and a path you do not have takes one line instead of nine
+            empty cells. */}
+        <ul class="cards" id="cards">
+          {PATHS.map((meta) => (
+            <li class="pathcard" data-card={meta.kind} data-present="No" hidden>
+              <div class="pc-head">
+                <div>
+                  {meta.custom ? (
+                    <input class="pc-name" type="text" data-f="name" data-k={meta.kind} maxlength="40"
+                           placeholder={meta.label} aria-label={`${meta.label} name`} />
+                  ) : (
+                    <h3 class="pc-title">{meta.label}</h3>
+                  )}
+                  <p class="pc-ex">{meta.examples}</p>
+                </div>
+                <button class="pc-remove" type="button" data-remove={meta.kind}>Remove</button>
+              </div>
+
+              <p class="pc-facts">
+                <span><b>Bites</b> {meta.bites.toLowerCase()}</span>
+                <span><b>Context grows</b> {meta.growth.toLowerCase()}</span>
+                {meta.custom ? (
+                  <span class="pc-billed">
+                    <b>Attempt billed</b>
+                    <select data-f="billed" data-k={meta.kind} aria-label={`${meta.label} billed`}>
+                      <option value="Yes">Yes</option><option value="No">No</option>
+                    </select>
+                  </span>
+                ) : (
+                  <span><b>Attempt billed</b> {meta.billedByDefault ? 'yes' : 'usually not'}</span>
+                )}
+              </p>
+
+              <div class="pc-q">
+                <p class="pc-ask"><span class="pc-n">1</span> How often does it send work back?</p>
+                <label class="pc-line">
+                  <input type="number" min="0" step="0.1" data-f="averageRounds" data-k={meta.kind}
+                         aria-label={`${meta.label} average rounds per task`} />
+                  <span>rounds per task, on a normal day</span>
+                </label>
+              </div>
+
+              <div class="pc-q">
+                <p class="pc-ask"><span class="pc-n">2</span> What does one round cost?</p>
+                <div class="pc-sum">
+                  <label><span class="op"> </span><span class="lbl">Work repeated</span>
+                    <input type="number" min="0" step="1" data-f="repeated" data-k={meta.kind}
+                           aria-label={`${meta.label} work repeated`} />
+                    <i>steps that run again</i></label>
+                  <label><span class="op">+</span><span class="lbl">Review call</span>
+                    <input type="number" min="0" step="1" data-f="review" data-k={meta.kind}
+                           aria-label={`${meta.label} review call`} />
+                    <i>the checker re-reads the new attempt</i></label>
+                  <label><span class="op">+</span><span class="lbl">Context growth</span>
+                    <input type="number" min="0" step="1" data-f="growth" data-k={meta.kind}
+                           aria-label={`${meta.label} context growth`} />
+                    <i>the note or error carried into the redo</i></label>
+                  <p class="pc-total"><span class="op">=</span><span class="lbl">One round</span>
+                    <b data-out="round" data-k={meta.kind}>—</b><i>tokens</i></p>
+                </div>
+              </div>
+
+              <div class="pc-q">
+                <p class="pc-ask"><span class="pc-n">3</span> When does it stop, and who owns that?</p>
+                <div class="pc-stop">
+                  <label><span>After</span>
+                    <input type="number" min="0" step="1" data-f="maxRounds" data-k={meta.kind}
+                           aria-label={`${meta.label} max rounds`} />
+                    <span>rounds, the agent…</span></label>
+                  <label class="sr-wrap"><span class="sr-only">{meta.label} after the last round</span>
+                    <select data-f="afterLast" data-k={meta.kind}>
                       <option value=""></option>
                       {AFTER_LAST.map((a) => <option value={a}>{a}</option>)}
-                    </select>
-                  </td>
-                  <td><input type="text" data-f="owner" data-k={p.kind} maxlength="40" aria-label={`${p.label} owner`} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </select></label>
+                  <label><span>owned by</span>
+                    <input type="text" data-f="owner" data-k={meta.kind} maxlength="40"
+                           placeholder="a person or a team" aria-label={`${meta.label} owner`} /></label>
+                </div>
+                <p class="pc-hint" data-cap-hint={meta.kind} hidden>
+                  No cap means the worst case has no ceiling, and the tool will say Unbounded.
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
 
-        <h3 class="sub">When each one bites</h3>
-        <div class="scroll">
-          <table class="grid">
-            <thead><tr><th>Path</th><th>When does it bite?</th><th>Does context grow?</th><th>Was the attempt billed?</th></tr></thead>
-            <tbody>
-              {PATHS.filter((p) => !p.custom).map((p) => (
-                <tr>
-                  <td class="cname">{p.label}</td>
-                  <td>{p.bites}</td>
-                  <td>{p.growth}</td>
-                  <td>{p.billed}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div class="adder" id="adder">
+          <p class="addlabel">Add a path your workflow has:</p>
+          <div class="addrow">
+            {PATHS.map((meta) => (
+              <button class="addbtn" type="button" data-add={meta.kind} hidden>
+                + {meta.label}
+              </button>
+            ))}
+          </div>
+          <p class="prose-note" id="allon" hidden>All seven paths are in your workflow.</p>
         </div>
       </div>
     </section>
@@ -533,13 +556,15 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     model.enforcement = $<HTMLSelectElement>('i-enforcement').value as BudgetEnforcement;
     model.pricePerMillion = numOrNull($<HTMLInputElement>('i-price').value);
 
+    // Present is a card that is shown or hidden, not a dropdown: the reader
+    // adds the paths they have rather than answering No seven times.
+    for (const card of all<HTMLElement>('.pathcard')) {
+      rowOf(card.dataset.card as PathKind).present = card.dataset.present === 'Yes';
+    }
     for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f][data-k]')) {
       const row = rowOf(el.dataset.k as PathKind);
       const f = el.dataset.f as string;
       switch (f) {
-        case 'present':
-          row.present = el.value === 'Yes';
-          break;
         case 'billed':
           row.billed = el.value === 'Yes';
           break;
@@ -571,16 +596,19 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     $<HTMLSelectElement>('i-enforcement').value = model.enforcement;
     $<HTMLInputElement>('i-price').value = show(model.pricePerMillion);
 
+    for (const card of all<HTMLElement>('.pathcard')) {
+      card.dataset.present = rowOf(card.dataset.card as PathKind).present ? 'Yes' : 'No';
+    }
     for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f][data-k]')) {
       const row = rowOf(el.dataset.k as PathKind);
       const f = el.dataset.f as string;
-      if (f === 'present') el.value = row.present ? 'Yes' : 'No';
-      else if (f === 'billed') el.value = row.billed ? 'Yes' : 'No';
+      if (f === 'billed') el.value = row.billed ? 'Yes' : 'No';
       else {
         const v = (row as unknown as Record<string, unknown>)[f];
         el.value = v === null || v === undefined ? '' : String(v);
       }
     }
+    showCards();
   }
 
   // ── render ───────────────────────────────────────────────────────────────
@@ -589,13 +617,13 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   function render() {
     const r = read(model);
 
-    // per-row round cost, and greying out the rows marked not present
+    // Each card shows its own round cost, and says so when it has no cap.
     for (const kind of PATH_KINDS) {
       const row = rowOf(kind);
       const cell = document.querySelector(`[data-out="round"][data-k="${kind}"]`);
       if (cell) cell.textContent = row.present ? tokens(roundCost(row)) : '—';
-      const tr = document.querySelector(`tr[data-row="${kind}"]`);
-      if (tr) tr.classList.toggle('off', !row.present);
+      const hint = document.querySelector(`[data-cap-hint="${kind}"]`) as HTMLElement | null;
+      if (hint) hint.hidden = !(row.present && row.maxRounds === null);
     }
 
     // headline 1 — unit economics
@@ -660,6 +688,43 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     } else {
       next.hidden = true;
     }
+  }
+
+  /** A card is visible when its path is in the workflow; otherwise its add
+      button is. Exactly one of the two is on screen for each path. */
+  function showCards() {
+    let hidden = 0;
+    for (const card of all<HTMLElement>('.pathcard')) {
+      const on = card.dataset.present === 'Yes';
+      card.hidden = !on;
+      const btn = document.querySelector(`[data-add="${card.dataset.card}"]`) as HTMLElement | null;
+      if (btn) btn.hidden = on;
+      if (!on) hidden += 1;
+    }
+    ($('allon') as HTMLElement).hidden = hidden > 0;
+    ($('adder') as HTMLElement).classList.toggle('empty', hidden === 0);
+  }
+
+  function setPresent(kind: PathKind, on: boolean) {
+    const card = document.querySelector(`.pathcard[data-card="${kind}"]`) as HTMLElement | null;
+    if (!card) return;
+    card.dataset.present = on ? 'Yes' : 'No';
+    showCards();
+    update();
+    if (on) {
+      // Land on the first thing the new card asks for, so adding a path and
+      // filling it in is one movement.
+      const first = card.querySelector('input, select') as HTMLElement | null;
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first?.focus({ preventScroll: true });
+    }
+  }
+
+  for (const btn of all<HTMLButtonElement>('[data-add]')) {
+    btn.addEventListener('click', () => setPresent(btn.dataset.add as PathKind, true));
+  }
+  for (const btn of all<HTMLButtonElement>('[data-remove]')) {
+    btn.addEventListener('click', () => setPresent(btn.dataset.remove as PathKind, false));
   }
 
   function update() {
@@ -816,6 +881,108 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .grid tbody tr:last-child td, .grid tbody tr:last-child th { border-bottom: 0; }
   .grid .cname { color: var(--text-body); font-weight: var(--weight-medium); }
   .entry { min-width: 1340px; table-layout: fixed; }
+
+  /* ── one card per path ────────────────────────────────────────────────── */
+  .cards { list-style: none; padding: 0; display: grid; gap: var(--space-5); }
+  .pathcard {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5) var(--space-6);
+  }
+  .pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+  .pc-title { font-family: var(--font-heading); font-weight: var(--weight-heading); font-size: var(--size-5); color: var(--text-loud); }
+  .pc-name { font-size: var(--size-4); max-width: 22rem; }
+  .pc-ex { color: var(--text-quiet); font-size: var(--size-2); margin-top: 2px; }
+  .pc-remove {
+    flex: none;
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border-field);
+    border-radius: var(--radius-control);
+    padding: 6px 14px;
+    font: inherit;
+    font-size: var(--size-1);
+    color: var(--text-quiet);
+    cursor: pointer;
+  }
+  .pc-remove:hover { background: var(--surface-hover); color: var(--text-body); }
+  .pc-remove:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .pc-facts {
+    display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-3); padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    font-size: var(--size-1); color: var(--text-quiet);
+  }
+  .pc-facts b { color: var(--accent-ink); font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: var(--tracking-caps); margin-right: 6px; }
+  .pc-billed { display: inline-flex; align-items: center; gap: 6px; }
+  .pc-billed select { width: auto; min-height: 30px; padding: 2px 6px; font-size: var(--size-1); }
+
+  .pc-q { margin-top: var(--space-5); }
+  /* Flex, not an inline badge: on a narrow screen the question wraps, and an
+     inline badge leaves the second line sitting under the number. */
+  .pc-ask {
+    display: flex; gap: var(--space-3); align-items: baseline;
+    font-size: var(--size-3); color: var(--text-body);
+    font-weight: var(--weight-medium); margin-bottom: var(--space-3);
+  }
+  .pc-n {
+    flex: none;
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-hover); color: var(--accent-ink);
+    font-size: var(--size-1); font-weight: var(--weight-strong);
+  }
+  .pc-line { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+  .pc-line input { width: 8rem; }
+  .pc-line span { color: var(--text-quiet); font-size: var(--size-2); }
+
+  /* The three parts add up, and the layout says so. */
+  .pc-sum { display: grid; gap: var(--space-2); max-width: 44rem; }
+  .pc-sum label, .pc-total { display: grid; grid-template-columns: 1.2rem 10.5rem 9rem 1fr; gap: var(--space-3); align-items: center; }
+  .pc-sum .op { font-size: var(--size-4); color: var(--text-quiet); text-align: center; }
+  .pc-sum .lbl { font-size: var(--size-2); color: var(--text-body); }
+  .pc-sum i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .pc-total { padding-top: var(--space-3); border-top: 1px solid var(--border-rule); }
+  .pc-total b { font-size: var(--size-5); font-weight: var(--weight-strong); color: var(--text-loud); text-align: right; font-feature-settings: var(--font-features); }
+  @media (max-width: 620px) {
+    .pc-sum label, .pc-total { grid-template-columns: 1.2rem 1fr; }
+    .pc-sum input, .pc-total b { grid-column: 2; }
+    .pc-sum i { grid-column: 2; }
+  }
+
+  .pc-stop { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: center; }
+  .pc-stop label { display: inline-flex; align-items: center; gap: var(--space-3); }
+  .pc-stop span { font-size: var(--size-2); color: var(--text-quiet); }
+  .pc-stop input[type='number'] { width: 5rem; }
+  .pc-stop input[type='text'] { width: 12rem; }
+  .pc-stop select { width: auto; min-width: 13rem; }
+  .sr-wrap { display: inline-flex; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .pc-hint { margin-top: var(--space-3); font-size: var(--size-1); color: var(--accent-ink); }
+
+  /* ── adding a path ────────────────────────────────────────────────────── */
+  .adder { margin-top: var(--space-6); }
+  .adder.empty .addrow { display: none; }
+  .addlabel { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-3); }
+  .adder.empty .addlabel { display: none; }
+  .addrow { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .addbtn {
+    appearance: none;
+    background: var(--surface-panel);
+    border: 1px dashed var(--border-field);
+    border-radius: var(--radius-control);
+    padding: 10px 18px;
+    font: inherit;
+    font-size: var(--size-2);
+    font-weight: var(--weight-medium);
+    color: var(--text-body);
+    cursor: pointer;
+  }
+  .addbtn:hover { background: var(--surface-hover); border-style: solid; }
+  .addbtn:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
   .tablenote { max-width: 82ch; margin-bottom: var(--space-4); }
   .tablenote b { color: var(--text-body); }
   .c-num { text-align: right; }

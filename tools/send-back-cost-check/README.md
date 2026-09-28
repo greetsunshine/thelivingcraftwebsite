@@ -105,6 +105,16 @@ engine and says so.
   visible.
 - **Nothing leaves the browser.** No `<form>`, no fetch, no localStorage, and
   no email gate. The page is the resource.
+- **The paths are cards, not a table.** They started as an eleven-column table
+  that needed 1340px inside a 724px column, so a reader could never see a whole
+  row, and it put three unrelated questions on one line: does this path exist,
+  what does a round of it cost, and when does it stop. Each card now asks those
+  in order, shows the three parts adding up to the round cost, and a path the
+  workflow does not have takes one button instead of nine empty cells.
+- **`billed` feeds no calculation and is not an input on the fixed paths.**
+  What a refusal costs is already carried by *work repeated*. It is shown as a
+  stated fact on each card, and remains an input only on a custom path, where
+  the reader is the one who knows.
 
 ---
 
