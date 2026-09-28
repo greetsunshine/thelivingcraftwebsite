@@ -39,3 +39,6 @@ design/*.html
 
 # handoff packages ship as a folder plus a zip of the same files
 docs/**/*.zip
+
+# Python bytecode from the workbook builders (scripts/workbook_brand.py is imported)
+__pycache__/

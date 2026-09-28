@@ -526,7 +526,7 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Agent Design Check',
     body:
-      'Here is the Agent Design Check you asked for.\n\nhttps://learning.thelivingcraft.ai/tools/agent-design-check\n\nIt is nineteen questions about a design you already have, scored against rules you can read in full, with the next step for each one. The question list downloads from the page after your name and email address, so a team can work through the check in a design review. Your answers never leave your browser. The text summary of your answers and the print copy are made in your browser, after the same two fields.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Agent Design Check you asked for.\n\nhttps://learning.thelivingcraft.ai/tools/agent-design-check\n\nIt is nineteen questions about a design you already have, checked against rules you can read in full, with the next step for each one. It gives no score. The question list downloads from the page after your name and email address, so a team can work through the check in a design review. Your answers never leave your browser. The text summary of your answers and the print copy are made in your browser, after the same two fields.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
     version: RESOURCE_TOOLS_REVISION,
   },

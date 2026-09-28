@@ -24,10 +24,10 @@ test fails on any function it does not know.
 EVERY INPUT AND RESULT CELL HAS A NAME (a sheet-scoped defined name such as
 q01 or out_outcome), so the test never depends on a row number.
 
-The look is the site's: the colours are design system v1 tokens read from
-src/styles/ds/theme.css, the faces are Figtree and Source Serif 4, and the
-lockup is the PNG pair `npm run build:pdf-assets` makes. A reader without the
-fonts installed sees the spreadsheet's default face instead.
+The look is the site's, from scripts/workbook_brand.py: the colours are
+design system v1 tokens read from src/styles/ds/theme.css, and the lockup is
+the PNG pair `npm run build:pdf-assets` makes. The faces are Figtree and
+Source Serif 4; that module says what a reader without them sees.
 
     npm run tool-downloads
 
@@ -51,57 +51,8 @@ from PIL import Image as PilImage
 
 REPO = Path(__file__).resolve().parents[1]
 
-# ── the brand ─────────────────────────────────────────────────────────────────
-
-THEME = (REPO / "src" / "styles" / "ds" / "theme.css").read_text(encoding="utf-8")
-
-
-def token(name: str) -> str:
-    m = re.search(rf"--{name}:\s*(#[0-9A-Fa-f]{{6}})", THEME)
-    if not m:
-        raise SystemExit(f"theme.css has no --{name}")
-    return m.group(1)[1:].upper()
-
-
-FOREST = token("lc-forest")        # titles, the result's outcome
-IVORY = token("lc-ivory")          # the sheet ground
-PAPER = token("lc-paper")          # section bands
-SOFT = token("lc-soft")            # the result block
-INK = token("lc-ink")              # body text
-MUTED = token("lc-muted")          # notes, anchors
-LINE = token("lc-line")            # rules
-DEEP_GOLD = token("lc-deep-gold")  # labels (text)
-GOLD = token("lc-gold")            # a rule under the title (never text)
-INPUT = token("lc-warning-soft")   # the cells you fill in
-ERROR = token("lc-error")          # a hard gate
-
-DISPLAY = "Source Serif 4"
-BODY = "Figtree"
-
-fill = lambda c: PatternFill("solid", start_color=c, end_color=c)
-font = lambda size=11, bold=False, color=INK, name=BODY, italic=False: Font(name=name, size=size, bold=bold, color=color, italic=italic)
-WRAP = Alignment(wrap_text=True, vertical="top")
-WRAP_C = Alignment(wrap_text=True, vertical="top", horizontal="center")
-HAIR = Side(style="thin", color=LINE)
-UNDER = Border(bottom=HAIR)
-GOLD_RULE = Border(bottom=Side(style="medium", color=GOLD))
-
-
-def lockup_png(height: int = 40) -> io.BytesIO:
-    """The LC mark beside the lettering, as BrandLockup.astro draws it, in one image."""
-    mark = PilImage.open(REPO / "pdf-assets" / "brand" / "lc-mark.png").convert("RGBA")
-    name = PilImage.open(REPO / "pdf-assets" / "brand" / "lc-name.png").convert("RGBA")
-    mark = mark.resize((round(mark.width * height / mark.height), height), PilImage.LANCZOS)
-    nh = round(height * 24 / 44)
-    name = name.resize((round(name.width * nh / name.height), nh), PilImage.LANCZOS)
-    gap = round(height * 8 / 44)
-    out = PilImage.new("RGBA", (mark.width + gap + name.width, height), (0, 0, 0, 0))
-    out.paste(mark, (0, 0), mark)
-    out.paste(name, (mark.width + gap, (height - nh) // 2), name)
-    buf = io.BytesIO()
-    out.save(buf, format="PNG")
-    buf.seek(0)
-    return buf
+# ── the brand: one module, shared with run-cost-workbook.py ───────────────────
+from workbook_brand import *  # noqa: E402,F401,F403
 
 
 def q(s: str) -> str:
@@ -177,16 +128,6 @@ def masthead(ws, title: str, lines: list[str], width_cols: int) -> int:
         put(ws, r, 1, line, f=font(10, color=MUTED), align=Alignment(vertical="top"))
         r += 1
     return r + 1
-
-
-def print_setup(ws):
-    """Landscape, one page wide, as many pages tall as it takes."""
-    ws.page_setup.orientation = "landscape"
-    ws.page_setup.paperSize = ws.PAPERSIZE_A4
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
-    ws.sheet_properties.pageSetUpPr.fitToPage = True
-    ws.print_options.horizontalCentered = True
 
 
 def protect(ws):
@@ -710,7 +651,9 @@ def build_auth(d: dict, out: Path):
 
 def main():
     out_dir = Path(sys.argv[1] if len(sys.argv) > 1 else "downloads")
-    data = json.load(sys.stdin)
+    # UTF-8, whatever the console says: on Windows sys.stdin is cp1252, and
+    # ₹, → and every curly quote from the data modules came out as mojibake.
+    data = json.loads(sys.stdin.buffer.read().decode("utf-8"))
     for key, build in (("poc-screen", build_poc), ("model-selection-tool", build_msel), ("agent-authority-review", build_auth)):
         d = data[key]
         path = out_dir / d["file"]

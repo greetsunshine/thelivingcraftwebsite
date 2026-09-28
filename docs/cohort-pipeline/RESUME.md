@@ -122,10 +122,24 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     probes for a Python that imports openpyxl; the probe must run with no shell, because
     cmd.exe mangles `-c`. Excel COM from PowerShell refuses an Int32 passed through a
     function; cast to `[double]`.
-  - Not fixed, for Sunil: the design check page says "no record of you exists" while its
-    downloads are gated; the design check email says "scored against rules"; the run-cost
-    workbook is still on the old brand; the workbooks name Figtree and Source Serif 4, which
-    a reader's machine may not have, so Excel substitutes a font.
+  - **Five open points, decided the same day** (the user asked for the best decision on each):
+    - *Scored PDF:* kept as the second button. It costs nothing and a reader may want it.
+    - *The six emails:* left unapproved. Approval is a named act by a person in the console,
+      and there is no sending provider yet (D2). Nothing about this work changes that.
+    - *"Scored against rules" in the design check email:* now "checked against rules ... It
+      gives no score". Same revision string: no row at that revision was ever stored.
+    - *Run-cost workbook on the old brand:* rebuilt on the site's brand. The brand for all four
+      tool workbooks now lives once, in `scripts/workbook_brand.py`. Every figure in its
+      reference example is unchanged (checked cell by cell in Excel). It also now prints one
+      page wide (27 pages became 11), and the blank sheet's break-even row no longer shows
+      `#DIV/0!`.
+    - *Fonts:* kept as Figtree and Source Serif 4, after weighing Georgia and Arial. Google
+      Sheets renders both; Excel draws a substitute, and the layout was already checked in
+      Excel on a machine without them. The Rework Cost Check made the same choice.
+  - **A bug found on the way, fixed:** the Python writers read their JSON with Windows'
+    default encoding, so ₹, → and curly quotes in the POC and model selection workbooks
+    (pushed in 9d4b9b9) were mojibake. Both now decode UTF-8, and a test fails on mojibake
+    in any of the four tool workbooks.
 
 ---
 

@@ -65,6 +65,22 @@ test('every formula in the three workbooks uses only what the evaluator understa
   }
 });
 
+// UTF-8 read as cp1252 turns ₹ into "â‚¹" and a curly quote into "â€™". The
+// Python writers once read their JSON that way on Windows, and seven cells in
+// the model selection workbook shipped like it. The run-cost workbook is read
+// here too: it is built by the same kind of pipe.
+test('no text in the four tool workbooks is mojibake', () => {
+  const MOJIBAKE = /â€|â‚|Ã.|Â/;
+  for (const f of ['poc-selection-tool.xlsx', 'model-selection-tool.xlsx', 'agent-authority-review.xlsx', 'agent-run-cost-model.xlsx']) {
+    for (const sheet of book(f).values()) {
+      for (const [at, v] of sheet.values) {
+        if (typeof v === 'string') assert.doesNotMatch(v, MOJIBAKE, `${f} ${sheet.name}!${at}`);
+      }
+      for (const [at, src] of sheet.formulas) assert.doesNotMatch(src, MOJIBAKE, `${f} ${sheet.name}!${at}`);
+    }
+  }
+});
+
 // ── the POC Selection Tool ──────────────────────────────────────────────────
 
 const POC = book('poc-selection-tool.xlsx');

@@ -773,7 +773,10 @@ formulas that compute the total and the verdict. The scored PDF stays as the sec
 `src/lib/resources/tool-workbooks.test.ts` evaluates each committed workbook against the
 page's own read function over every band edge, every hard gate and hundreds of random answer
 sets. **Change a question, an anchor, a weight or a threshold, then run
-`npm run tool-downloads` and commit the workbook**, or `npm test` fails. The Rework Cost
+`npm run tool-downloads` and commit the workbook**, or `npm test` fails. The four tool
+workbooks share one brand module, `scripts/workbook_brand.py`; a writer must not grow its
+own colours again. Both Python writers decode their JSON as UTF-8 on purpose: Windows'
+default turned ₹ into "â‚¹", and a test now fails on that. The Rework Cost
 Check's workbook moved from `public/downloads/` into `downloads/` the same day; it had been
 a plain URL outside the gate.
 

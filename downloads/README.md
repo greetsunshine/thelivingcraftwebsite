@@ -29,6 +29,10 @@ itself, blank and reusable, not the reader's filled-in report. Sunil asked for
 this on 25 September. The scored PDF stays on the three scored tools as the
 second option.
 
+The brand for all four tool workbooks (these three and `agent-run-cost-model.xlsx`) is one
+module, `scripts/workbook_brand.py`: design system colours read from `theme.css`, the
+lockup PNGs, Figtree and Source Serif 4, and the print setup.
+
 `npm run tool-downloads` builds the five files above it. It needs Python with
 `openpyxl` and `Pillow`, and it finds one that runs (`PYTHON`, then `python3`,
 `python`, `py`). Every question, anchor, weight and threshold comes from the
