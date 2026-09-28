@@ -92,6 +92,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       <p class="hero-note mono">
         4 undo levels · 5 questions per step · 3 reference examples · 40 minutes
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
     </div>
   </section>
@@ -225,7 +228,8 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           </span>
           <button class="btn btn-ghost" id="copy" type="button">Copy the sheet</button>
           <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print</button>
-          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+          <button class="btn btn-ghost" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Download your assessment (PDF)</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
 
@@ -302,7 +306,8 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions">
-            <button class="btn btn-primary" id="pdf2" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx2" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf2" type="button" data-gate="pdf">Download your assessment (PDF)</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the sheet</button>
           </div>
         </div>
@@ -459,6 +464,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
@@ -524,7 +530,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     </div>
   </template>
 
-  <ResourceGate resource="agent-authority-review" lead="The PDF carries every step you typed, the owner the rubric named beside each one, the tally and the checks to clear before anything is handed over." manual />
+  <ResourceGate resource="agent-authority-review" lead="The Excel workbook is the tool itself, blank: twelve rows, the five questions, the undo scale and the rubric, with each owner worked out the same way as this page. The PDF carries every step you typed, the owner the rubric named beside each one, the tally and the checks to clear before anything is handed over." manual />
 </ResourcesLayout>
 
 <style>

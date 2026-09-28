@@ -108,7 +108,7 @@ export const resources: Resource[] = [
     number: '02',
     series: 'Agentic system design',
     title: 'The Agent Authority Review',
-    kind: 'Interactive sheet · live owner per step · 3 reference examples',
+    kind: 'Interactive sheet · live owner per step · 3 reference examples · Excel workbook',
     summary:
       'Type the steps of a workflow and find out which ones an agent may own, which it may only suggest on, and which stay as code.',
     description:
@@ -120,7 +120,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The PDF of your assessment and the print copy ask for a name and an email address.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The review itself downloads as a blank Excel workbook, with a worked example on its own sheet. The workbook, the PDF of your assessment and the print copy ask for a name and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
@@ -130,7 +130,7 @@ export const resources: Resource[] = [
     number: '01',
     series: 'Agentic system design',
     title: 'The POC Selection Tool',
-    kind: 'Scored checklist · live score and result',
+    kind: 'Scored checklist · live score and result · Excel workbook',
     summary:
       'Twelve questions that decide whether an agent proof of concept can reach production, scored before you build it.',
     description:
@@ -142,7 +142,7 @@ export const resources: Resource[] = [
       'Answer most of the questions without building anything, using an evaluation set, a person playing the agent, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive, in six steps with a progress bar. Score in the page; the total, the section scores and the outcome update as you go, and nothing is stored. A branded PDF of your scored copy, checked before download, is built against a name and an email address.',
+      'Interactive, in six steps with a progress bar. Score in the page; the total, the section scores and the outcome update as you go, and nothing is stored. The tool itself downloads as a blank Excel workbook that scores the same way, and a branded PDF of your scored copy, checked before download, is the second option. Both ask for a name and an email address.',
     url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },
@@ -152,7 +152,7 @@ export const resources: Resource[] = [
     topic: 'Model Selection',
     series: 'Agentic system design',
     title: 'The Model Selection Tool',
-    kind: 'Interactive tool \u00b7 6 steps \u00b7 27 answers \u00b7 2 reference candidates',
+    kind: 'Interactive tool \u00b7 6 steps \u00b7 27 answers \u00b7 2 reference candidates \u00b7 Excel workbook',
     summary:
       'Score one candidate model for one step of your system, from the model card and your own test runs, and read whether it is fit.',
     description:
@@ -165,7 +165,7 @@ export const resources: Resource[] = [
       'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. A PDF of your scored copy is built against a name and an email address, and checked before it is handed over.',
+      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. The tool itself downloads as a blank Excel workbook that scores the same way. A PDF of your scored copy, checked before it is handed over, is the second option. Both ask for a name and an email address.',
     url: '/resources/model-selection-tool',
     publishedAt: '2026-09-15',
   },
@@ -221,7 +221,7 @@ export const resources: Resource[] = [
     number: '06',
     series: 'Agentic system design',
     title: 'The Rule Placement Audit',
-    kind: 'Browser worksheet · live status per rule · 1 worked example',
+    kind: 'Browser worksheet · live status per rule · 1 worked example · blank worksheet',
     summary:
       'List the rules your agent must never break and find out where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere.',
     description:
@@ -233,7 +233,7 @@ export const resources: Resource[] = [
       'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
     ],
     format:
-      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The CSV and the print copy ask for a name and an email address; your rows never leave the browser. Autosaved in your browser.',
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The blank worksheet, the CSV of your rows and the print copy ask for a name and an email address; your rows never leave the browser. Autosaved in your browser.',
     url: '/resources/rule-placement-audit',
     publishedAt: '2026-09-17',
   },
@@ -302,7 +302,7 @@ export const resources: Resource[] = [
       'Take a per-task token budget to your team with the two numbers that justify it',
     ],
     format:
-      'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing is sent or stored, and there is no sign-up. A scheduling example loads in one click. The same check is also offered as an Excel workbook.',
+      'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing you type is sent or stored. A scheduling example loads in one click. The same check is also offered as an Excel workbook, which asks for a name and an email address.',
     url: '/resources/rework-cost-check',
     publishedAt: '2026-09-28',
   },

@@ -54,6 +54,7 @@
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { longDate } from '../../data/resources';
 import {
@@ -90,7 +91,9 @@ const title = `${TITLE} — the real cost of a task that gets sent back · The L
 const description =
   'Cost every path that sends agent work back — limits, judges, validators, tool errors, reviewers — and get two numbers: typical cost per task and worst case at peak.';
 
-const XLSX = '/downloads/rework-cost-check.xlsx';
+// The workbook is behind the download gate like every other file the site
+// hands out (CLAUDE.md, "The download gate"): downloads/rework-cost-check.xlsx,
+// served by /api/pipeline/download after a name and an email address.
 const PUBLISHED_AT = '2026-09-28';
 
 // The worked example, read through the same module the page and the tests use.
@@ -147,7 +150,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <a class="btn btn-primary" href="#check">Run the Rework Cost Check&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
       </p>
       <p class="hero-note">
-        <a class="textlink" href={XLSX} download>Prefer a spreadsheet? Download the Excel version</a>
+        <button class="textlink" type="button" data-gate="xlsx">Prefer a spreadsheet? Download the Excel version</button>
       </p>
       <ResourceCredit />
     </div>
@@ -659,12 +662,14 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <h2>Stopping has a cost you can list. Not stopping has no ceiling.</h2>
       </div>
       <p class="hero-cta nextrow">
-        <a class="btn btn-ghost" href={XLSX} download>Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">→</span></button>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
       </p>
       <p class="mono faint pubdate">Published {longDate(PUBLISHED_AT)} · Content CC BY 4.0 · Code MIT · © The Living Craft</p>
     </div>
   </section>
+
+  <ResourceGate resource="rework-cost-check" lead="The Excel workbook is the same check, with the worked example on its own sheet and every figure explained." />
 </ResourcesLayout>
 
 <script>
@@ -970,6 +975,8 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .nextrow { justify-content: center; margin-top: var(--space-6); }
   .sub { margin: var(--space-7) 0 var(--space-3); font-size: var(--size-5); font-weight: var(--weight-heading); color: var(--text-loud); }
   .textlink { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  /* The spreadsheet link is a button now (it opens the download gate), drawn as the link it was. */
+  button.textlink { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
 
   /* ── opening ──────────────────────────────────────────────────────────── */
   .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); }

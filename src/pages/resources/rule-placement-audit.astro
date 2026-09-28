@@ -110,6 +110,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
       <p class="hero-note mono">
         {PLACEMENTS.length} placements · {STATUSES.length} statuses · 1 worked example · entries stay in this browser
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="md-hero" type="button" data-gate="md">Download the blank worksheet&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
     </div>
   </section>
@@ -169,7 +172,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           <h2>One row per rule. Tick only what you can <em>point at</em>.</h2>
         </div>
 
-        <p class="privacy mono">Your entries stay in this browser. The CSV and the print copy ask for your name and email first. Your rows are never sent.</p>
+        <p class="privacy mono">Your entries stay in this browser. The blank worksheet, the CSV and the print copy ask for your name and email first. Your rows are never sent.</p>
         <p class="autosave mono" id="autosave" role="status"></p>
 
         <div class="controls" role="group" aria-label="Audit controls">
@@ -177,7 +180,8 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
           <button class="btn btn-ghost" id="copy" type="button">Copy the map</button>
           <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print or save as PDF</button>
-          <button class="btn btn-ghost" id="csv" type="button" data-gate="csv">Download CSV</button>
+          <button class="btn btn-ghost" id="md" type="button" data-gate="md">Download the blank worksheet</button>
+          <button class="btn btn-ghost" id="csv" type="button" data-gate="csv">Download your rows (CSV)</button>
           <button class="btn btn-ghost" id="clear" type="button">Clear all</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
@@ -271,9 +275,10 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions">
-            <button class="btn btn-primary" id="print2" type="button" data-gate="print">Print or save as PDF</button>
+            <button class="btn btn-primary" id="md2" type="button" data-gate="md">Download the blank worksheet</button>
+            <button class="btn btn-ghost" id="print2" type="button" data-gate="print">Print or save as PDF</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the map</button>
-            <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv">Download CSV</button>
+            <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv">Download your rows (CSV)</button>
           </div>
         </div>
       </div>
@@ -463,7 +468,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
       <ul class="rflags" hidden></ul>
     </div>
   </template>
-  <ResourceGate resource="rule-placement-audit" lead="The CSV is your rule map: one row per rule with its setter, reach, placements, status, fix and owner." manual />
+  <ResourceGate resource="rule-placement-audit" lead="The blank worksheet is the audit itself, empty, to fill in with your team: the columns, the placements, the rubric and how to run it. The CSV is your rule map, built in this browser: one row per rule with its setter, reach, placements, status, fix and owner." manual />
 </ResourcesLayout>
 
 <style>
@@ -1155,7 +1160,12 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     say('CSV downloaded.');
   }
-  mountGate({ onDone: (kind) => (kind === 'csv' ? downloadCsv() : say('Opening the print dialogue.')) });
+  mountGate({
+    onDone: (kind) => {
+      if (kind === 'csv') downloadCsv();
+      else if (kind === 'print') say('Opening the print dialogue.');
+    },
+  });
 
   async function copyMap(): Promise<void> {
     try {

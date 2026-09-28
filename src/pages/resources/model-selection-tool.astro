@@ -40,6 +40,8 @@ import {
   STEP_QUESTION,
   STEP_WHY,
   GATES,
+  GATE_ANSWERS,
+  DQ_ANSWERS,
   GATES_CLOSER,
   CRITERIA,
   WEIGHTS_NOTE,
@@ -129,6 +131,9 @@ const STEP_COUNT = steps.length;
       </p>
       <p class="hero-note mono">
         {ANSWER_COUNT} answers · {sections.length} sections · two hard gates · one afternoon
+      </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <ResourceCredit />
     </div>
@@ -300,11 +305,11 @@ const STEP_COUNT = steps.length;
               <p class="why">{g.cost}</p>
               <div class="anchors two" role="group" aria-label={`Gate ${i + 1}: ${g.short}`}>
                 <button type="button" class="anchor" id={`gate${i}v1`} data-k="gate" data-i={i} data-v="1" aria-pressed="false">
-                  <span class="av mono">Passes</span>
+                  <span class="av mono">{GATE_ANSWERS.pass}</span>
                   <span class="at">{g.passes}</span>
                 </button>
                 <button type="button" class="anchor fail" id={`gate${i}v0`} data-k="gate" data-i={i} data-v="0" aria-pressed="false">
-                  <span class="av mono">Fails</span>
+                  <span class="av mono">{GATE_ANSWERS.fail}</span>
                   <span class="at">Not confirmed, or confirmed and it does not meet the line above.</span>
                 </button>
               </div>
@@ -415,11 +420,11 @@ const STEP_COUNT = steps.length;
               <p class="why">{d.why}</p>
               <div class="anchors two" role="group" aria-label={`Disqualifier ${i + 1}: ${d.short}`}>
                 <button type="button" class="anchor" id={`dq${i}v0`} data-k="dq" data-i={i} data-v="0" aria-pressed="false">
-                  <span class="av mono">Did not happen</span>
+                  <span class="av mono">{DQ_ANSWERS.no}</span>
                   <span class="at">Not on any of the ten runs, on any of the four cases.</span>
                 </button>
                 <button type="button" class="anchor fail" id={`dq${i}v1`} data-k="dq" data-i={i} data-v="1" aria-pressed="false">
-                  <span class="av mono">Happened</span>
+                  <span class="av mono">{DQ_ANSWERS.yes}</span>
                   <span class="at">At least once. Write down which run and keep the output as evidence.</span>
                 </button>
               </div>
@@ -465,7 +470,8 @@ const STEP_COUNT = steps.length;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions" role="group" aria-label="Assessment controls">
-            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Download your scored copy (PDF)</button>
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
@@ -644,12 +650,13 @@ const STEP_COUNT = steps.length;
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
 
-  <ResourceGate resource="model-selection-tool" lead="The PDF carries your twenty-seven answers, the weighted score, the outcome and the rows to fix first, and is checked before it is handed over." manual />
+  <ResourceGate resource="model-selection-tool" lead="The Excel workbook is the tool itself, blank: the gates, the twelve behaviours with their weights, the disqualifiers and the rubric, scored the same way as this page. The PDF carries your twenty-seven answers, the weighted score, the outcome and the rows to fix first, and is checked before it is handed over." manual />
 </ResourcesLayout>
 
 <style>
@@ -1752,7 +1759,7 @@ const STEP_COUNT = steps.length;
 
   // ---- the download gate ---------------------------------------------
   // One component, one client, one route: see src/components/ResourceGate.astro.
-  mountGate({ payload: () => state });
+  mountGate({ payload: (kind) => (kind === 'pdf' ? state : undefined) });
 
   update();
   goTo(0, false);

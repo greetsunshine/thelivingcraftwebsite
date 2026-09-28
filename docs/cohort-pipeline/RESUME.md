@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 26 September 2026
+**Last updated:** 28 September 2026
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs`, off `origin/main`, one draft PR against
 `main` for all four tasks from Sunil's call of 25 September (below). PR #31
 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`, below) are merged.
@@ -98,7 +98,34 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     cannot print and is dropped from the cover line; "सुनील 🙂 Zoë" prints "Zoë". A fix is a
     fallback font such as Noto Sans Devanagari.
   - The browser's own print buttons (`data-gate="print"`) are out of scope.
-- [ ] 4. Tool downloads.
+- [x] **4. Tool downloads** (28 September). Sunil: "What needs to be downloaded is not the
+  filled-up report, but rather the tool itself that they can use."
+  - The primary download on poc-screen, model-selection-tool and agent-authority-review is a
+    blank Excel workbook, in the hero and in the result. The scored PDF stays as the second
+    button, labelled as the reader's own copy. Removing it is Sunil's call, not ours.
+  - `npm run tool-downloads` builds three workbooks and two Markdown sheets into
+    `downloads/`: a tsx script dumps the data modules as JSON, a Python writer
+    (`openpyxl`, `Pillow`) draws the sheets. Commit the output.
+  - `src/lib/resources/tool-workbooks.test.ts` reads each committed workbook with a small
+    formula evaluator (`xlsx-eval.ts`) and compares it with `readScores`, `readAssessment`
+    and `readSheet`: band edges, hard gates, blanks, the example sheets and 1,300 random sets.
+    Excel itself gave the same answers through COM on 28 September.
+  - The rule placement audit hands over a blank worksheet and the design check the question
+    list, both as Markdown. Their CSV and text exports are still `local()` and post nothing
+    typed.
+  - The Rework Cost Check (resource 08, merged from `main` into this branch) served its
+    workbook from `public/downloads/`, outside the gate. It is in `downloads/` now, behind
+    the gate, with its own held email.
+  - Six delivery emails changed or were added, at `RESOURCE_TOOLS_REVISION` (the addendum's
+    version plus `+tools-2026-09-28`). None is approved.
+  - Things that cost time: `python3` on Windows is the Store stub, so the build script
+    probes for a Python that imports openpyxl; the probe must run with no shell, because
+    cmd.exe mangles `-c`. Excel COM from PowerShell refuses an Int32 passed through a
+    function; cast to `[double]`.
+  - Not fixed, for Sunil: the design check page says "no record of you exists" while its
+    downloads are gated; the design check email says "scored against rules"; the run-cost
+    workbook is still on the old brand; the workbooks name Figtree and Source Serif 4, which
+    a reader's machine may not have, so Excel substitutes a font.
 
 ---
 

@@ -56,7 +56,7 @@ export const HOW_TO_USE = [
   'For each question, choose the answer that is true today, not the one that is planned. The page moves to the next question for you.',
   'Watch the score bar and the progress bar. Both stay at the top and update as you answer.',
   'Read the result at the end. It gives the outcome and what to fix first.',
-  'Get the PDF of your scored copy at the end.',
+  'Download the tool as an Excel workbook to score the next one offline. The PDF of your scored copy is at the end.',
 ];
 
 export const SECTIONS: ScreenSection[] = [

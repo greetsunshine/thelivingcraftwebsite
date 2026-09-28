@@ -107,6 +107,9 @@ const STEP_COUNT = steps.length;
       <p class="hero-note mono">
         {QUESTION_COUNT} questions · {SECTIONS.length} sections · maximum {MAX_SCORE} · one hard gate
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
     </div>
   </section>
@@ -291,7 +294,8 @@ const STEP_COUNT = steps.length;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions" role="group" aria-label="Assessment controls">
-            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Download your scored copy (PDF)</button>
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
@@ -367,12 +371,13 @@ const STEP_COUNT = steps.length;
       <p class="hero-cta">
         <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
+        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
 
-  <ResourceGate resource="poc-screen" lead="The PDF carries your twelve answers, the score, the outcome and what to fix first, and is checked before it is handed over." manual />
+  <ResourceGate resource="poc-screen" lead="The Excel workbook is the tool itself, blank: the twelve questions, their anchors and the rubric, scored the same way as this page. The PDF carries your twelve answers, the score, the outcome and what to fix first, and is checked before it is handed over." manual />
 </ResourcesLayout>
 
 <style>
@@ -1218,7 +1223,7 @@ const STEP_COUNT = steps.length;
 
   // ---- the download gate ---------------------------------------------
   // One component, one client, one route: see src/components/ResourceGate.astro.
-  mountGate({ payload: () => state });
+  mountGate({ payload: (kind) => (kind === 'pdf' ? state : undefined) });
 
   update();
   goTo(0, false);

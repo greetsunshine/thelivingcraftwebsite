@@ -26,7 +26,8 @@
     "acceptance": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/acceptance.ts",
     "seed": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed.ts",
     "build:kit": "node scripts/build-memory-kit.mjs",
-    "build:pdf-assets": "node scripts/build-pdf-assets.mjs"
+    "build:pdf-assets": "node scripts/build-pdf-assets.mjs",
+    "tool-downloads": "node scripts/build-tool-downloads.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

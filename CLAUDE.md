@@ -755,12 +755,27 @@ bundled into the server function by `includeFiles` in `astro.config.mjs`, and
 workbook has never been produced; its page checks the file exists at render time and says
 so instead of offering a button (until 19 September it was a link to a 404).
 
-**Two tools hand nothing back on purpose.** The Agent Design Check's roadmap row says
+**Two tools never post what the reader typed.** The Agent Design Check's roadmap row says
 "processed in the browser" and the Rule Placement Audit promises "your entries stay in this
-browser". For both, the route's entry is `local()`: the gate records the name and the
-address, returns no file, and the page's `onDone` builds the file from its own state. What
-the reader typed on those two pages is never posted. Do not "simplify" this by posting the
-answers to build the file on the server.
+browser". For the export of the reader's own answers (the audit's `csv`, the check's `txt`),
+the route's entry is `local()`: the gate records the name and the address, returns no file,
+and the page's `onDone` builds the file from its own state. Do not "simplify" this by posting
+the answers to build the file on the server. Since 28 September each also has an `md` entry,
+a blank static sheet (the empty worksheet, the question list), which contains nothing the
+reader typed.
+
+**On a tool page the main download is the tool itself, blank and reusable** (Sunil,
+25 September 2026: "not the filled-up report, but rather the tool itself that they can
+use"). It is the primary button in the hero and in the result, as on the run-cost model.
+The poc-screen, the model selection tool and the authority review hand over an Excel
+workbook built by `npm run tool-downloads` from the same data module the page reads, with
+formulas that compute the total and the verdict. The scored PDF stays as the second button.
+`src/lib/resources/tool-workbooks.test.ts` evaluates each committed workbook against the
+page's own read function over every band edge, every hard gate and hundreds of random answer
+sets. **Change a question, an anchor, a weight or a threshold, then run
+`npm run tool-downloads` and commit the workbook**, or `npm test` fails. The Rework Cost
+Check's workbook moved from `public/downloads/` into `downloads/` the same day; it had been
+a plain URL outside the gate.
 
 **`print` is a kind.** A print button asks first, the request is recorded, then
 `window.print()` opens. It cannot stop Ctrl+P, and it does not claim to; it stops the

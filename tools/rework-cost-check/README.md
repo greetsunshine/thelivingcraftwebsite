@@ -1,6 +1,6 @@
 # Rework Cost Check — build and verification
 
-Builds `public/downloads/rework-cost-check.xlsx`, the spreadsheet twin of
+Builds `downloads/rework-cost-check.xlsx`, the spreadsheet twin of
 the browser tool at `/resources/rework-cost-check`.
 
 **Status: released, 28 September 2026.** Listed in `src/data/resources.ts` as

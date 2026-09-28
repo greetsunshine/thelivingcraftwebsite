@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build public/downloads/rework-cost-check.xlsx.
+"""Build downloads/rework-cost-check.xlsx (behind the download gate; see CLAUDE.md).
 
 Four tabs: Start here, Check, How to find these numbers, Example.
 
@@ -38,7 +38,7 @@ REPO = HERE.parents[1]
 BRAND = json.loads((HERE / "brand.json").read_text(encoding="utf-8"))
 BRAND_DIR = REPO / "public" / "brand"
 BUILD = HERE / ".build"
-OUT = REPO / "public" / "downloads" / "rework-cost-check.xlsx"
+OUT = REPO / "downloads" / "rework-cost-check.xlsx"
 
 TITLE = "Rework Cost Check"
 TAGLINE = "What does one task really cost once limits, judges, validators and reviewers send work back?"
