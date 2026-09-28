@@ -352,16 +352,19 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     enf = f"C{b0 + 2}"
     validate(ws, list(data["budgetEnforcement"]), enf, slot=slot)
     ws.merge_cells(f"A{b0 + 3}:B{b0 + 3}")
-    put(ws, f"A{b0 + 3}", "Blended price per million tokens (optional)", font=F_BODY, align=WRAP_MID)
+    put(ws, f"A{b0 + 3}", "Your price per million tokens (optional)", font=F_BODY, align=WRAP_MID)
     inp(ws, f"C{b0 + 3}", ex.get("pricePerMillion") if filled else None, fmt=MONEYFMT)
     price = f"C{b0 + 3}"
     ws.merge_cells(f"E{b0 + 3}:K{b0 + 3}")
     put(ws, f"E{b0 + 3}",
-        "Optional, and blank in the Example on purpose: a blended rate depends on your provider, "
-        "your tier and your own mix of input and output tokens, so nobody else can supply it. "
-        "Enter yours and the two cost rows below fill in. Your own currency; no symbol is shown.",
+        "Type it in the shaded cell to the left. Everything else on this sheet is in tokens; fill "
+        "this in and the two cost rows below appear. It is blank in the Example on purpose, "
+        "because it is the one figure nobody else can supply: it depends on your provider, your "
+        "tier and your own mix of input and output tokens. One number, not two — if input and "
+        "output are priced differently, average them by the ratio your traces show. Your own "
+        "currency; no symbol is shown.",
         font=F_NOTE, align=WRAP_MID)
-    ws.row_dimensions[b0 + 3].height = 32
+    ws.row_dimensions[b0 + 3].height = 46
 
     # ---- the two headline numbers ----------------------------------------
     h0 = b0 + 5

@@ -354,7 +354,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
       <div class="wrap">
         <div class="sec-head">
           <span class="eyebrow"><span class="num">C</span> Budget</span>
-          <h2>A budget belongs to the task</h2>
+          <h2>One budget for the whole task</h2>
         </div>
         <div class="grid3">
           <label class="fld">
@@ -371,20 +371,23 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
             <i>A per-call budget never sees the rounds add up.</i>
           </label>
           <label class="fld">
-            <span>Blended price per million tokens <em>(optional)</em></span>
-            <input type="number" min="0" step="0.01" id="i-price" inputmode="decimal" aria-describedby="i-price-h" />
+            <span>Your price per million tokens <em>(optional)</em></span>
+            <input type="number" min="0" step="0.01" id="i-price" inputmode="decimal"
+                   placeholder="e.g. 3" aria-describedby="i-price-h" />
             <i id="i-price-h">
-              Everything above is in tokens. Enter your rate and the tool also gives money. Your
-              own currency: it shows no symbol. Blend your input and output rates by the ratio your
-              traces show.
+              <b>Type it in this box.</b> Everything else on this page is in tokens; fill this in
+              and the two money lines below appear. Use your own currency — the tool shows no
+              symbol. One number, not two: if your input and output tokens are priced differently,
+              average them by the ratio your traces show.
             </i>
           </label>
         </div>
         <p class="moneyline" id="moneyline" data-on="no">
           <span class="ml-off">
-            The scheduling example leaves the price blank, because a blended rate is the one figure
-            nobody else can supply: it depends on your provider, your tier and your own mix of
-            input and output tokens. Enter yours and cost per task appears here.
+            <b>No price entered yet, so this stays in tokens.</b> The scheduling example leaves the
+            price blank on purpose: it is the one figure nobody else can supply, because it depends
+            on your provider, your tier and your own mix of input and output tokens. Put your
+            number in <i>Your price per million tokens</i> above and the cost per task appears here.
           </span>
           <span class="ml-on">
             At that rate, a typical task costs <b id="ml-task">—</b>, and a thousand of them cost
@@ -938,6 +941,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .fld > span { font-size: var(--size-3); color: var(--text-body); font-weight: var(--weight-medium); }
   .fld > span em { font-style: normal; color: var(--text-quiet); font-weight: var(--weight-normal); }
   .fld i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .fld i b { color: var(--text-body); }
 
   input[type='number'], input[type='text'], select {
     width: 100%;
@@ -1120,6 +1124,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   }
   .moneyline[data-on='no'] .ml-on, .moneyline[data-on='yes'] .ml-off { display: none; }
   .moneyline[data-on='yes'] { color: var(--text-body); }
+  .moneyline i { font-style: italic; color: var(--text-body); }
   .moneyline b { color: var(--text-loud); font-feature-settings: var(--font-features); }
 
   /* ── the five checks ──────────────────────────────────────────────────── */
