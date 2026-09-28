@@ -69,38 +69,44 @@
         "n": 1,
         "title": "Every path that sends work back is listed",
         "status": "Pass",
-        "reason": "2 paths listed, each with how often it sends work back."
+        "reason": "2 paths listed, each with how often it sends work back.",
+        "action": ""
       },
       {
         "n": 2,
         "title": "Each round is costed as repeated, review and growth",
         "status": "Pass",
-        "reason": "Every present path has all three parts of a round."
+        "reason": "Every present path has all three parts of a round.",
+        "action": ""
       },
       {
         "n": 3,
         "title": "Rounds are capped, and something happens after the last one",
         "status": "Pass",
-        "reason": "Every present path is capped, with a decided outcome and a named owner."
+        "reason": "Every present path is capped, with a decided outcome and a named owner.",
+        "action": ""
       },
       {
         "n": 4,
         "title": "Two numbers: unit economics and availability",
         "status": "Fail",
-        "reason": "Your normal load already exceeds the quota."
+        "reason": "Your normal load already exceeds the quota.",
+        "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."
       },
       {
         "n": 5,
         "title": "The budget belongs to the task, across all its rounds",
         "status": "Pass",
-        "reason": "The budget stops the worst case. Make sure check 3's outcome runs when it does."
+        "reason": "The budget stops the worst case. Make sure check 3's outcome runs when it does.",
+        "action": ""
       }
     ],
     "nextStep": {
       "n": 4,
       "title": "Two numbers: unit economics and availability",
       "status": "Fail",
-      "reason": "Your normal load already exceeds the quota."
+      "reason": "Your normal load already exceeds the quota.",
+      "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."
     }
   }
 }

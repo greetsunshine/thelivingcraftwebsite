@@ -177,8 +177,17 @@ def main() -> int:
         r.check(label, expected, *pair(ex_sheet, ref))
     for c in X["checks"]:
         r.check(f"Check {c['n']} status", c["status"], *pair(ex_sheet, f"F{E['checks_first'] + c['n'] - 1}"))
+    # The next-step cell reads the reason cell, which now carries the action on
+    # a second line, so the expected string is composed the same way.
     nxt = X["nextStep"]
-    r.check("Your next step names check 4", f"Check {nxt['n']} — {nxt['reason']}", *pair(ex_sheet, E["next"]))
+    expected_next = f"Check {nxt['n']} — {nxt['reason']}"
+    if nxt.get("action"):
+        expected_next += f"\nDo this: {nxt['action']}"
+    r.check("Your next step names check 4", expected_next, *pair(ex_sheet, E["next"]))
+    # And the action itself reached the sheet.
+    r.check("Check 4 carries its action", True,
+            *[bool(v and "Cut what a round costs" in str(v))
+              for v in pair(ex_sheet, f"G{E['checks_first'] + 3}")])
     r.print()
 
     # --- the money line ----------------------------------------------------

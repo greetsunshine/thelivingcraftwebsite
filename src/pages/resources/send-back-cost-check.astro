@@ -62,6 +62,7 @@ import {
   BUDGET_ENFORCEMENT,
   blankModel,
   read,
+  STATUS_MEANING,
   tokens,
   percent,
   multipleOf,
@@ -237,8 +238,22 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           Zero is a real answer. Blank is not.
         </p>
 
+        <p class="prose-note tablenote">
+          Set <b>Present?</b> to Yes for every path that exists in your workflow, then cost one
+          round of it. A path set to No is left out of both totals; the scheduling example uses
+          two of the seven.
+        </p>
         <div class="scroll">
           <table class="grid entry" id="paths">
+            {/* Explicit widths. Eleven columns sharing a minimum width squeezed
+                the two Yes/No selects to 43px, which after their padding and the
+                native dropdown arrow left no room to draw the word at all. */}
+            <colgroup>
+              <col style="width:200px" /><col style="width:92px" /><col style="width:92px" />
+              <col style="width:104px" /><col style="width:112px" /><col style="width:104px" />
+              <col style="width:112px" /><col style="width:104px" /><col style="width:104px" />
+              <col style="width:184px" /><col style="width:132px" />
+            </colgroup>
             <thead>
               <tr>
                 <th class="c-path">Path</th>
@@ -342,6 +357,18 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           <span class="eyebrow">The five checks</span>
           <h2>Pass, attention <em>or fail</em></h2>
         </div>
+        <p class="prose-lead">
+          Each check reads your figures and says where you stand, then what to do about it. Work
+          down the list; the one to fix first is called out at the bottom.
+        </p>
+        <dl class="legend">
+          {STATUS_MEANING.map((m) => (
+            <div class="legend-row">
+              <dt><span class={`st st-${m.status.toLowerCase().replace(/\s+/g, '-')}`}>{m.status}</span></dt>
+              <dd>{m.meaning}</dd>
+            </div>
+          ))}
+        </dl>
         <ol class="checks" id="checks">
           {blankChecks.map((c) => (
             <li class="check" data-check={c.n}>
@@ -349,6 +376,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
               <div>
                 <p class="ctitle">{c.n}. {c.title}</p>
                 <p class="creason" data-reason>{c.reason}</p>
+                <p class="caction" data-action hidden><span class="alabel">Do this</span><span data-action-text></span></p>
               </div>
             </li>
           ))}
@@ -613,12 +641,22 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         st.className = `st ${statusClass(c.status)}`;
       }
       if (why) why.textContent = c.reason;
+      // A finding is not an instruction, so the action is shown separately and
+      // only when there is one. A Pass has none.
+      const act = li.querySelector('[data-action]') as HTMLElement | null;
+      const actText = li.querySelector('[data-action-text]') as HTMLElement | null;
+      if (act && actText) {
+        act.hidden = c.action === '';
+        actText.textContent = c.action;
+      }
     }
 
     const next = $('nextstep') as HTMLElement;
     if (r.nextStep) {
       next.hidden = false;
-      $('nextstep-text').textContent = `Check ${r.nextStep.n} — ${r.nextStep.reason}`;
+      const s = r.nextStep;
+      $('nextstep-text').textContent =
+        s.action === '' ? `Check ${s.n} — ${s.reason}` : `Check ${s.n} — ${s.reason} ${s.action}`;
     } else {
       next.hidden = true;
     }
@@ -746,6 +784,10 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     padding: 8px 10px;
     min-height: 40px;
   }
+  /* Inside the table the padding is tighter, because a select there also has
+     to fit the native dropdown arrow inside its column. */
+  .entry input, .entry select { padding: 6px 8px; min-height: 36px; }
+  .entry select { text-overflow: ellipsis; }
   input[type='number'] { text-align: right; font-feature-settings: var(--font-features); }
   input:focus, select:focus { outline: none; border-color: var(--text-body); }
   input:focus-visible, select:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
@@ -773,17 +815,25 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   }
   .grid tbody tr:last-child td, .grid tbody tr:last-child th { border-bottom: 0; }
   .grid .cname { color: var(--text-body); font-weight: var(--weight-medium); }
-  .entry { min-width: 1120px; }
-  .c-path { min-width: 190px; }
+  .entry { min-width: 1340px; table-layout: fixed; }
+  .tablenote { max-width: 82ch; margin-bottom: var(--space-4); }
+  .tablenote b { color: var(--text-body); }
   .c-num { text-align: right; }
   .c-num input { text-align: right; }
   .pname { display: block; color: var(--text-body); font-weight: var(--weight-medium); }
   .pex { display: block; font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
   .calc { color: var(--text-body); font-weight: var(--weight-medium); font-feature-settings: var(--font-features); white-space: nowrap; }
-  /* A path the reader says is not in their workflow is dimmed, not removed:
-     the row still explains what it would have been. */
-  .entry tr.off td, .entry tr.off th { opacity: 0.45; }
-  .entry tr.off input, .entry tr.off select { background: var(--surface-hover); }
+  /* A path the reader says is not in their workflow is MUTED, not dimmed. It
+     used to carry opacity .45, which made the row unreadable and made the
+     example look half-broken rather than deliberately showing two paths of
+     seven. Opacity is never used on text here: --text-quiet is a measured
+     6.1:1 on the panel, and an opacity multiplier throws that away. */
+  .entry tr.off td, .entry tr.off th { background: var(--surface-hover); }
+  .entry tr.off .pname, .entry tr.off .pex { color: var(--text-quiet); }
+  .entry tr.off input, .entry tr.off select { color: var(--text-quiet); }
+  /* The Present? control stays at full strength: it is how the row is switched
+     back on, so it must not look disabled. */
+  .entry tr.off select[data-f='present'] { color: var(--text-body); background: var(--surface-panel); }
 
   /* ── the five checks ──────────────────────────────────────────────────── */
   .checks { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
@@ -814,6 +864,26 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .st-attention { background: var(--accent-quiet); color: var(--accent-ink); }
   .st-fail { background: var(--danger-quiet); color: var(--danger); }
   .st-not-answered { background: var(--surface-hover); color: var(--text-quiet); }
+
+  .legend { display: grid; gap: var(--space-2); max-width: 78ch; margin-bottom: var(--space-5); }
+  .legend-row { display: grid; grid-template-columns: auto 1fr; gap: var(--space-4); align-items: baseline; }
+  .legend dd { color: var(--text-quiet); font-size: var(--size-2); }
+  .caction {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-size: var(--size-2);
+  }
+  .alabel {
+    display: inline-block;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    color: var(--accent-ink);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    margin-right: var(--space-3);
+  }
 
   .nextstep {
     margin-top: var(--space-5);

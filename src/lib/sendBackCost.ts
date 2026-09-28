@@ -339,9 +339,25 @@ export interface CheckResult {
   n: 1 | 2 | 3 | 4 | 5;
   title: string;
   status: Status;
-  /** One line. Shown beside the status word, never colour alone. */
+  /** What is true right now. One line, shown beside the status word. */
   reason: string;
+  /**
+   * What to do about it. Empty on a Pass.
+   *
+   * A finding is not an instruction. "Your normal load already exceeds the
+   * quota" tells a reader where they stand and leaves them to work out the
+   * move; every Attention and every Fail therefore carries the move as well.
+   */
+  action: string;
 }
+
+/** What the three words mean. Printed beside the checks, not left to guess. */
+export const STATUS_MEANING: { status: Status; meaning: string }[] = [
+  { status: 'Pass', meaning: 'Nothing to do here.' },
+  { status: 'Attention', meaning: 'It works today, and something about it will surprise you. Worth fixing.' },
+  { status: 'Fail', meaning: 'This is the one that stops you scaling. Fix it first.' },
+  { status: 'Not answered', meaning: 'The check needs a figure you have not entered yet.' },
+];
 
 const CHECK_TITLES: Record<number, string> = {
   1: 'Every path that sends work back is listed',
@@ -357,7 +373,7 @@ function check1(m: SendBackModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 1 as const, title: CHECK_TITLES[1] };
   if (present.length === 0) {
-    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.' };
+    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.', action: '' };
   }
   const missing = present.filter((p) => !filled(p.averageRounds));
   if (missing.length) {
@@ -365,12 +381,15 @@ function check1(m: SendBackModel): CheckResult {
       ...base,
       status: 'Fail',
       reason: `${missing.map(pathName).join(', ')} ${missing.length === 1 ? 'has' : 'have'} no average rounds. A path you cannot count is a path you cannot cost.`,
+      action:
+        'Count send-backs divided by tasks over a normal week, from your judge verdicts, validation errors, tool errors and review queue.',
     };
   }
   return {
     ...base,
     status: 'Pass',
     reason: `${present.length} path${present.length === 1 ? '' : 's'} listed, each with how often it sends work back.`,
+    action: '',
   };
 }
 
@@ -378,7 +397,7 @@ function check2(m: SendBackModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 2 as const, title: CHECK_TITLES[2] };
   if (present.length === 0) {
-    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.' };
+    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.', action: '' };
   }
   const incomplete = present.filter(
     (p) => !filled(p.repeated) || !filled(p.review) || !filled(p.growth),
@@ -388,6 +407,8 @@ function check2(m: SendBackModel): CheckResult {
       ...base,
       status: 'Fail',
       reason: `${incomplete.map(pathName).join(', ')} ${incomplete.length === 1 ? 'is' : 'are'} missing repeated, review or growth. Zero is a valid answer; blank is not.`,
+      action:
+        'Open one trace that was sent back and read the three figures off it: the tokens of the steps that ran again, the checker\u2019s own call, and how much bigger the redo\u2019s input was.',
     };
   }
   // A judge, validator, tool error or human rejection normally carries the
@@ -399,16 +420,18 @@ function check2(m: SendBackModel): CheckResult {
       ...base,
       status: 'Attention',
       reason: `${noGrowth.map(pathName).join(', ')} ${noGrowth.length === 1 ? 'has' : 'have'} no context growth. Redos usually carry more context. Check this.`,
+      action:
+        'Compare the input tokens of the first attempt with the redo in one trace. If the critique, the error or the rejected draft is carried forward, growth is not zero.',
     };
   }
-  return { ...base, status: 'Pass', reason: 'Every present path has all three parts of a round.' };
+  return { ...base, status: 'Pass', reason: 'Every present path has all three parts of a round.', action: '' };
 }
 
 function check3(m: SendBackModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 3 as const, title: CHECK_TITLES[3] };
   if (present.length === 0) {
-    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.' };
+    return { ...base, status: 'Not answered', reason: 'No path is marked as present yet.', action: '' };
   }
   const uncapped = uncappedPaths(m);
   const undecided = present.filter((p) => p.afterLast === '' || p.afterLast === 'Not decided');
@@ -421,6 +444,9 @@ function check3(m: SendBackModel): CheckResult {
       ...base,
       status: 'Fail',
       reason: `${parts.join('; ')}. Without both, the worst case has no ceiling.`,
+      action: uncapped.length
+        ? 'Set a maximum rounds per task in your orchestrator, and decide what the agent does after the last one: fail and tell the user, hand to a human, ship with a warning, or queue it.'
+        : 'Decide what the agent does after the last round: fail and tell the user, hand to a human, ship with a warning, or queue it.',
     };
   }
   const unowned = present.filter((p) => p.owner.trim() === '');
@@ -429,39 +455,57 @@ function check3(m: SendBackModel): CheckResult {
       ...base,
       status: 'Attention',
       reason: `${unowned.map(pathName).join(', ')} has a cap and an outcome, but nobody owns it.`,
+      action: 'Name the person or team who picks it up when that outcome fires.',
     };
   }
-  return { ...base, status: 'Pass', reason: 'Every present path is capped, with a decided outcome and a named owner.' };
+  return { ...base, status: 'Pass', reason: 'Every present path is capped, with a decided outcome and a named owner.', action: '' };
 }
 
-function check4(m: SendBackModel, r: Pick<Reading, 'typicalShare' | 'worstShare' | 'unbounded'>): CheckResult {
+function check4(r: Pick<Reading, 'typicalShare' | 'worstShare' | 'unbounded'>): CheckResult {
   const base = { n: 4 as const, title: CHECK_TITLES[4] };
   if (r.unbounded) {
     return {
       ...base,
       status: 'Fail',
       reason: 'The worst case is unbounded, so there is no availability number to check.',
+      action: 'Cap every present path first. Until then there is no worst case to compare against the quota.',
     };
   }
   if (r.typicalShare === null || r.worstShare === null) {
-    return { ...base, status: 'Not answered', reason: 'Peak tasks per minute and the quota are needed for this one.' };
+    return { ...base, status: 'Not answered', reason: 'Peak tasks per minute and the quota are needed for this one.', action: '' };
   }
   if (r.typicalShare > 1) {
-    return { ...base, status: 'Fail', reason: 'Your normal load already exceeds the quota.' };
+    return {
+      ...base,
+      status: 'Fail',
+      reason: 'Your normal load already exceeds the quota.',
+      action:
+        'Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge.',
+    };
   }
   if (r.typicalShare <= 0.8 && r.worstShare <= 1) {
-    return { ...base, status: 'Pass', reason: 'Normal load has headroom, and the worst case still fits.' };
+    return { ...base, status: 'Pass', reason: 'Normal load has headroom, and the worst case still fits.', action: '' };
   }
   if (r.typicalShare <= 0.8) {
-    return { ...base, status: 'Attention', reason: 'Normal load has headroom, but the worst case goes over the quota.' };
+    return {
+      ...base,
+      status: 'Attention',
+      reason: 'Normal load has headroom, but the worst case goes over the quota.',
+      action: 'Lower the caps, or add a circuit breaker that stops new work once the refusal rate crosses a threshold, so a bad minute cannot reach the worst case.',
+    };
   }
-  return { ...base, status: 'Attention', reason: 'Normal load is above 80% of the quota. Any spike tips it over.' };
+  return {
+    ...base,
+    status: 'Attention',
+    reason: 'Normal load is above 80% of the quota. Any spike tips it over.',
+    action: 'Get normal load under 80% of the quota: cut the round cost, cut the average rounds, or raise the quota.',
+  };
 }
 
 function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unbounded'>): CheckResult {
   const base = { n: 5 as const, title: CHECK_TITLES[5] };
   if (m.enforcement === '') {
-    return { ...base, status: 'Not answered', reason: 'Say how the budget is enforced.' };
+    return { ...base, status: 'Not answered', reason: 'Say how the budget is enforced.', action: '' };
   }
   if (m.enforcement !== 'Per task, across all rounds') {
     return {
@@ -471,13 +515,20 @@ function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unboun
         m.enforcement === 'Per call only'
           ? 'A per-call budget never sees the rounds add up. The task is what costs money.'
           : 'Nothing stops a task at a token total.',
+      action:
+        'Count tokens against the task, across every round, and stop the task when it crosses the budget. Then make check 3\u2019s outcome run when it does.',
     };
   }
   if (m.budget === null || r.typical === null) {
-    return { ...base, status: 'Not answered', reason: 'Enter a per-task budget to check it against the two totals.' };
+    return { ...base, status: 'Not answered', reason: 'Enter a per-task budget to check it against the two totals.', action: '' };
   }
   if (m.budget < r.typical) {
-    return { ...base, status: 'Fail', reason: 'The budget will cut normal tasks short.' };
+    return {
+      ...base,
+      status: 'Fail',
+      reason: 'The budget will cut normal tasks short.',
+      action: 'Raise the budget above the typical cost per task, or cut the round cost so a normal task fits inside it.',
+    };
   }
   // Unbounded counts as "above the budget": the budget is the only stop there
   // is, which is exactly the case this branch describes.
@@ -487,15 +538,17 @@ function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unboun
       ...base,
       status: 'Pass',
       reason: "The budget stops the worst case. Make sure check 3's outcome runs when it does.",
+      action: '',
     };
   }
   if (r.worst === null) {
-    return { ...base, status: 'Not answered', reason: 'The worst case is not worked out yet.' };
+    return { ...base, status: 'Not answered', reason: 'The worst case is not worked out yet.', action: '' };
   }
   return {
     ...base,
     status: 'Attention',
     reason: 'The budget never binds; your caps are the only stop.',
+    action: 'Set the budget between the typical cost and the worst case, so it actually stops a runaway task.',
   };
 }
 
@@ -541,10 +594,12 @@ export function read(m: SendBackModel): Reading {
     check1(m),
     check2(m),
     check3(m),
-    check4(m, partial),
+    check4(partial),
     check5(m, partial),
   ];
 
+  // The first Fail in check order, else the first Attention. This is the one
+  // line a reader acts on, so it carries the action rather than the finding.
   const nextStep =
     checks.find((c) => c.status === 'Fail') ?? checks.find((c) => c.status === 'Attention') ?? null;
 

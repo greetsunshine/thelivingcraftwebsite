@@ -26,6 +26,7 @@ import {
   blankPath,
   read,
   roundCost,
+  STATUS_MEANING,
   tokens,
   percent,
   multipleOf,
@@ -275,6 +276,102 @@ test('check 5 raises Attention when the budget is above the worst case', () => {
   const c = checkOf(m, 5);
   assert.equal(c.status, 'Attention');
   assert.equal(c.reason, 'The budget never binds; your caps are the only stop.');
+});
+
+// ---------------------------------------------------------------------------
+// Every Attention and every Fail says what to do
+// ---------------------------------------------------------------------------
+//
+// The reason says where you stand; the action says what to change. A check
+// that reports a problem and no move is the thing this whole section exists
+// to avoid.
+
+test('a Pass carries no action, because there is nothing to do', () => {
+  const m = example();
+  for (const c of read(m).checks) {
+    if (c.status === 'Pass') assert.equal(c.action, '', `check ${c.n} should have no action`);
+  }
+});
+
+test('every Attention and every Fail carries an action', () => {
+  // A spread of models, chosen so that between them every branch that can
+  // report a problem does report one.
+  const models: SendBackModel[] = [];
+
+  const budgetTooLow = example();
+  budgetTooLow.budget = 50_000;
+  models.push(budgetTooLow);
+
+  const budgetNeverBinds = example();
+  budgetNeverBinds.budget = 500_000;
+  models.push(budgetNeverBinds);
+
+  const perCall = example();
+  perCall.enforcement = 'Per call only';
+  models.push(perCall);
+
+  const uncapped = example();
+  pathOf(uncapped, 'judge').maxRounds = null;
+  models.push(uncapped);
+
+  const undecided = example();
+  pathOf(undecided, 'judge').afterLast = 'Not decided';
+  models.push(undecided);
+
+  const unowned = example();
+  pathOf(unowned, 'judge').owner = '';
+  models.push(unowned);
+
+  const noGrowth = example();
+  pathOf(noGrowth, 'judge').growth = 0;
+  models.push(noGrowth);
+
+  const noAvg = example();
+  pathOf(noAvg, 'judge').averageRounds = null;
+  models.push(noAvg);
+
+  const noCost = example();
+  pathOf(noCost, 'judge').review = null;
+  models.push(noCost);
+
+  const tightQuota = example();
+  tightQuota.quotaPerMinute = 25_000_000;
+  models.push(tightQuota);
+
+  const roomyQuota = example();
+  roomyQuota.quotaPerMinute = 200_000_000;
+  models.push(roomyQuota);
+
+  const seen = new Set<string>();
+  for (const m of models) {
+    for (const c of read(m).checks) {
+      if (c.status === 'Attention' || c.status === 'Fail') {
+        assert.notEqual(c.action, '', `check ${c.n} is ${c.status} with no action`);
+        seen.add(`${c.n}:${c.status}`);
+      }
+    }
+  }
+  // Every check must have been exercised in at least one failing state, or the
+  // assertion above proves less than it looks like it does.
+  for (const n of [1, 2, 3, 4, 5]) {
+    assert.ok(
+      [...seen].some((k) => k.startsWith(`${n}:`)),
+      `check ${n} was never seen as Attention or Fail`,
+    );
+  }
+});
+
+test('the next step hands over the action, and it is the first Fail', () => {
+  const r = read(example());
+  assert.equal(r.nextStep?.n, 4);
+  assert.match(r.nextStep!.action, /Cut what a round costs/);
+});
+
+test('the status legend covers all four words', () => {
+  assert.deepEqual(
+    STATUS_MEANING.map((s) => s.status),
+    ['Pass', 'Attention', 'Fail', 'Not answered'],
+  );
 });
 
 // ---------------------------------------------------------------------------

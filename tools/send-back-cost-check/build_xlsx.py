@@ -440,6 +440,11 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
     P = ref["P"]
     top = ref["checks_top"]
     put(ws, f"A{top}", "The five checks", font=F_H2)
+    ws.merge_cells(f"C{top}:K{top}")
+    put(ws, f"C{top}",
+        "Pass — nothing to do here.   ·   Attention — it works today, and something about it "
+        "will surprise you.   ·   Fail — this is the one that stops you scaling, fix it first.",
+        font=F_NOTE, align=WRAP_MID)
 
     # The columns here are the paths table's, and they are the wrong widths for
     # a checklist: B is 11 characters, which clips every check title. The block
@@ -475,7 +480,7 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
     PASS, ATT, FAIL = q("Pass"), q("Attention"), q("Fail")
 
     rows = [
-        # (title, status formula, reason formula)
+        # (title, status formula, reason formula, action formula)
         (
             "Every path that sends work back is listed",
             ifchain([(f"{present}=0", NA), (f"{miss_avg}>0", FAIL)], PASS),
@@ -483,6 +488,10 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
                 (f"{present}=0", q("No path is marked as present yet.")),
                 (f"{miss_avg}>0", q("A present path has no average rounds. A path you cannot count is a path you cannot cost.")),
             ], q("Every present path says how often it sends work back.")),
+            ifchain([
+                (f"{present}=0", '""'),
+                (f"{miss_avg}>0", q("Count send-backs divided by tasks over a normal week, from your judge verdicts, validation errors, tool errors and review queue.")),
+            ], '""'),
         ),
         (
             "Each round is costed as repeated, review and growth",
@@ -492,6 +501,11 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
                 (f"{miss_cost}>0", q("A present path is missing repeated, review or growth. Zero is a valid answer; blank is not.")),
                 (f"{zero_growth}>0", q("A judge, validation, tool or human path has no context growth. Redos usually carry more context. Check this.")),
             ], q("Every present path has all three parts of a round.")),
+            ifchain([
+                (f"{present}=0", '""'),
+                (f"{miss_cost}>0", q("Open one trace that was sent back and read the three figures off it: the tokens of the steps that ran again, the checker's own call, and how much bigger the redo's input was.")),
+                (f"{zero_growth}>0", q("Compare the input tokens of the first attempt with the redo in one trace. If the critique, the error or the rejected draft is carried forward, growth is not zero.")),
+            ], '""'),
         ),
         (
             "Rounds are capped, and something happens after the last one",
@@ -502,6 +516,12 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
                 (f"{undecided}>0", q("A present path has no decided outcome after the last round.")),
                 (f"{unowned}>0", q("A path is capped with an outcome, but nobody owns it.")),
             ], q("Every present path is capped, with a decided outcome and a named owner.")),
+            ifchain([
+                (f"{present}=0", '""'),
+                (f"{uncapped}>0", q("Set a maximum rounds per task in your orchestrator, and decide what the agent does after the last one: fail and tell the user, hand to a human, ship with a warning, or queue it.")),
+                (f"{undecided}>0", q("Decide what the agent does after the last round: fail and tell the user, hand to a human, ship with a warning, or queue it.")),
+                (f"{unowned}>0", q("Name the person or team who picks it up when that outcome fires.")),
+            ], '""'),
         ),
         (
             "Two numbers: unit economics and availability",
@@ -518,6 +538,13 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
                 (f'AND({ref["typ_share"]}<=0.8,{ref["wst_share"]}<=1)', q("Normal load has headroom, and the worst case still fits.")),
                 (f'{ref["typ_share"]}<=0.8', q("Normal load has headroom, but the worst case goes over the quota.")),
             ], q("Normal load is above 80% of the quota. Any spike tips it over.")),
+            ifchain([
+                (unb, q("Cap every present path first. Until then there is no worst case to compare against the quota.")),
+                (f'OR({ref["typ_share"]}="",{ref["wst_share"]}="")', '""'),
+                (f'{ref["typ_share"]}>1', q("Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge.")),
+                (f'AND({ref["typ_share"]}<=0.8,{ref["wst_share"]}<=1)', '""'),
+                (f'{ref["typ_share"]}<=0.8', q("Lower the caps, or add a circuit breaker that stops new work once the refusal rate crosses a threshold, so a bad minute cannot reach the worst case.")),
+            ], q("Get normal load under 80% of the quota: cut the round cost, cut the average rounds, or raise the quota.")),
         ),
         (
             "The budget belongs to the task, across all its rounds",
@@ -539,19 +566,32 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
                  q("The budget stops the worst case. Make sure check 3's outcome runs when it does.")),
                 (f'{ref["wst"]}=""', q("The worst case is not worked out yet.")),
             ], q("The budget never binds; your caps are the only stop.")),
+            ifchain([
+                (f'{ref["enf"]}=""', '""'),
+                (f'{ref["enf"]}<>"Per task, across all rounds"', q("Count tokens against the task, across every round, and stop the task when it crosses the budget. Then make check 3's outcome run when it does.")),
+                (f'OR({ref["budget"]}="",{ref["typ"]}="")', '""'),
+                (f'{ref["budget"]}<{ref["typ"]}', q("Raise the budget above the typical cost per task, or cut the round cost so a normal task fits inside it.")),
+                (f'OR({unb},AND({ref["wst"]}<>"",{ref["wst"]}<>"Unbounded",{ref["wst"]}>{ref["budget"]}))', '""'),
+                (f'{ref["wst"]}=""', '""'),
+            ], q("Set the budget between the typical cost and the worst case, so it actually stops a runaway task.")),
         ),
     ]
 
     first = hdr + 1
-    for i, (title, status, reason) in enumerate(rows):
+    for i, (title, status, reason, action) in enumerate(rows):
         r = first + i
-        ws.row_dimensions[r].height = 30
+        ws.row_dimensions[r].height = 46
         put(ws, f"A{r}", i + 1, font=F_BODY, align=CENTER, border=HAIR)
         ws.merge_cells(f"B{r}:E{r}")
         put(ws, f"B{r}", title, font=F_BODY, align=WRAP_MID, border=HAIR)
         calc(ws, f"F{r}", "=" + status, font=F_BODY_B, align=CENTER, border=HAIR)
+        # The reason and the action share one cell, on two lines. A finding is
+        # not an instruction, so the move is spelled out under it; a Pass has
+        # no action and the second line simply does not appear.
         ws.merge_cells(f"G{r}:K{r}")
-        calc(ws, f"G{r}", "=" + reason, font=F_NOTE, align=WRAP_MID)
+        calc(ws, f"G{r}",
+             f'=({reason})&IF(({action})="","",CHAR(10)&"Do this: "&({action}))',
+             font=F_NOTE, align=Alignment(horizontal="left", vertical="top", wrap_text=True))
 
     last = first + len(rows) - 1
     for word, fill, colour in (("Pass", FILL_OK, "success"),
@@ -567,7 +607,8 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
     ws.merge_cells(f"A{nr}:B{nr}")
     put(ws, f"A{nr}", "Your next step", font=F_LABEL, align=LEFT)
     ws.merge_cells(f"C{nr}:K{nr}")
-    ws.row_dimensions[nr].height = 26
+    # Three lines: the finding, then the action. 26px clipped the last of them.
+    ws.row_dimensions[nr].height = 52
     sts, rsn = f"F{first}:F{last}", f"G{first}:G{last}"
     nums = f"A{first}:A{last}"
     calc(ws, f"C{nr}",
@@ -576,7 +617,7 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
          f'IF(COUNTIF({sts},"Attention")>0,'
          f'"Check "&INDEX({nums},MATCH("Attention",{sts},0))&" — "&INDEX({rsn},MATCH("Attention",{sts},0)),'
          f'"Nothing outstanding."))',
-         font=F_BODY, align=WRAP_MID)
+         font=F_BODY, align=Alignment(horizontal="left", vertical="top", wrap_text=True))
 
     return {"first": first, "last": last, "next": f"C{nr}", "bottom": nr}
 
