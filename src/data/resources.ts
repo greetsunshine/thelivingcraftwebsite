@@ -284,11 +284,11 @@ export const resources: Resource[] = [
     publishedAt: '2026-09-26',
   },
   {
-    id: 'send-back-cost-check',
-    topic: 'Send-Back Cost',
+    id: 'rework-cost-check',
+    topic: 'Rework Cost',
     number: '08',
     series: 'Agentic system design',
-    title: 'The Send-Back Cost Check',
+    title: 'The Rework Cost Check',
     kind: 'Interactive tool \u00b7 5 checks \u00b7 1 worked example \u00b7 Excel workbook',
     summary:
       'What one task really costs once limits, judges, validators and reviewers send the work back, and whether your busiest minute fits the quota.',
@@ -303,7 +303,7 @@ export const resources: Resource[] = [
     ],
     format:
       'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing is sent or stored, and there is no sign-up. A scheduling example loads in one click. The same check is also offered as an Excel workbook.',
-    url: '/resources/send-back-cost-check',
+    url: '/resources/rework-cost-check',
     publishedAt: '2026-09-28',
   },
 ];

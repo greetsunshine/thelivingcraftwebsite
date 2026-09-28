@@ -1,5 +1,5 @@
 /**
- * Tests for the Send-Back Cost Check.
+ * Tests for the Rework Cost Check.
  *
  * Run with `npm test`. Node's own test runner, no framework — the repo has no
  * test dependency and this file is not a reason to add one.
@@ -31,15 +31,15 @@ import {
   percent,
   multipleOf,
   money,
-  type SendBackModel,
-  type SendBackPath,
-} from './sendBackCost.ts';
+  type ReworkModel,
+  type ReworkPath,
+} from './reworkCost.ts';
 
 // ---------------------------------------------------------------------------
 // The scheduling agent from section 6. Illustrative, not a real system.
 // ---------------------------------------------------------------------------
 
-function example(): SendBackModel {
+function example(): ReworkModel {
   const m = blankModel();
   m.cleanRun = 43_300;
   m.alwaysOnChecks = 11_500;
@@ -49,7 +49,7 @@ function example(): SendBackModel {
   m.enforcement = 'Per task, across all rounds';
   m.pricePerMillion = null;
 
-  const set = (kind: 'transport' | 'judge', patch: Partial<SendBackPath>) => {
+  const set = (kind: 'transport' | 'judge', patch: Partial<ReworkPath>) => {
     const i = m.paths.findIndex((p) => p.kind === kind);
     m.paths[i] = { ...blankPath(kind), ...patch, kind };
   };
@@ -77,8 +77,8 @@ function example(): SendBackModel {
   return m;
 }
 
-const pathOf = (m: SendBackModel, kind: string) => m.paths.find((p) => p.kind === kind)!;
-const checkOf = (m: SendBackModel, n: number) => read(m).checks.find((c) => c.n === n)!;
+const pathOf = (m: ReworkModel, kind: string) => m.paths.find((p) => p.kind === kind)!;
+const checkOf = (m: ReworkModel, n: number) => read(m).checks.find((c) => c.n === n)!;
 
 // ---------------------------------------------------------------------------
 // Round cost
@@ -310,7 +310,7 @@ test('a Pass carries no action, because there is nothing to do', () => {
 test('every Attention and every Fail carries an action', () => {
   // A spread of models, chosen so that between them every branch that can
   // report a problem does report one.
-  const models: SendBackModel[] = [];
+  const models: ReworkModel[] = [];
 
   const budgetTooLow = example();
   budgetTooLow.budget = 50_000;

@@ -7,10 +7,10 @@
  * both end up rendering the same strings, and verify_xlsx.py asserts that the
  * spreadsheet's own formulas reproduce `reading` below.
  *
- * Run:  node --experimental-strip-types tools/send-back-cost-check/dump_content.ts
+ * Run:  node --experimental-strip-types tools/rework-cost-check/dump_content.ts
  */
-import { HOW_TO_FIND, EXAMPLE, WORKFLOW_INPUTS, EXAMPLE_LABEL } from '../../src/data/send-back-cost-check.ts';
-import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, blankModel, read, roundCost } from '../../src/lib/sendBackCost.ts';
+import { HOW_TO_FIND, EXAMPLE, WORKFLOW_INPUTS, EXAMPLE_LABEL } from '../../src/data/rework-cost-check.ts';
+import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, blankModel, read, roundCost } from '../../src/lib/reworkCost.ts';
 
 const reading = read(EXAMPLE);
 

@@ -1,7 +1,7 @@
-# Send-Back Cost Check — build and verification
+# Rework Cost Check — build and verification
 
-Builds `public/downloads/send-back-cost-check.xlsx`, the spreadsheet twin of
-the browser tool at `/resources/send-back-cost-check`.
+Builds `public/downloads/rework-cost-check.xlsx`, the spreadsheet twin of
+the browser tool at `/resources/rework-cost-check`.
 
 **Status: released, 28 September 2026.** Listed in `src/data/resources.ts` as
 Agentic system design 08, which is also what the sitemap and `/llms.txt` read.
@@ -39,12 +39,12 @@ Worst case per task   = clean run + always-on checks + Σ (max rounds     × rou
 
 | Piece | File |
 |---|---|
-| Every formula and every check rule | `src/lib/sendBackCost.ts` |
-| Unit tests, written from the brief | `src/lib/sendBackCost.test.ts` |
-| Copy and the worked example | `src/data/send-back-cost-check.ts` |
-| The page | `src/pages/resources/send-back-cost-check.astro` |
-| Workbook build | `tools/send-back-cost-check/build_xlsx.py` |
-| Workbook verification | `tools/send-back-cost-check/verify_xlsx.py` |
+| Every formula and every check rule | `src/lib/reworkCost.ts` |
+| Unit tests, written from the brief | `src/lib/reworkCost.test.ts` |
+| Copy and the worked example | `src/data/rework-cost-check.ts` |
+| The page | `src/pages/resources/rework-cost-check.astro` |
+| Workbook build | `tools/rework-cost-check/build_xlsx.py` |
+| Workbook verification | `tools/rework-cost-check/verify_xlsx.py` |
 
 **One implementation, three readers.** The page renders from the module, the
 browser script *imports* it, and the tests assert it. The workbook implements
@@ -60,10 +60,10 @@ module's own output — the expected values in `refs.json` are written by
 python3 -m venv .venv && ./.venv/bin/pip install openpyxl formulas pymupdf pillow
 
 npm test                                                        # 20 unit tests
-./.venv/bin/python tools/send-back-cost-check/extract_brand.py  # tokens -> brand.json
-./.venv/bin/python tools/send-back-cost-check/build_xlsx.py     # -> the .xlsx
-./.venv/bin/python tools/send-back-cost-check/verify_xlsx.py    # recalculate and assert
-./.venv/bin/python tools/send-back-cost-check/render_previews.py  # a PNG per tab
+./.venv/bin/python tools/rework-cost-check/extract_brand.py  # tokens -> brand.json
+./.venv/bin/python tools/rework-cost-check/build_xlsx.py     # -> the .xlsx
+./.venv/bin/python tools/rework-cost-check/verify_xlsx.py    # recalculate and assert
+./.venv/bin/python tools/rework-cost-check/render_previews.py  # a PNG per tab
 ```
 
 `verify_xlsx.py` uses LibreOffice for its second engine
@@ -123,18 +123,18 @@ engine and says so.
 Not published by this work. Paste it when you release the tool.
 
 ```
-Send-Back Cost Check
+Rework Cost Check
 
 Reader question: What does one task really cost when something sends the work back?
 Action verb: Run
 Status: Released 2026-09-28
 Featured in directory: [Yes / No]
-Tool page link: https://learning.thelivingcraft.ai/resources/send-back-cost-check
+Tool page link: https://learning.thelivingcraft.ai/resources/rework-cost-check
 What to bring: One agent workflow; token counts from a handful of traces (or estimates); how often each check or limit sends work back; your peak tasks per minute and your tokens-per-minute quota.
 What to do: List the paths that send work back, cost one round of each, set a cap and a final outcome for each, and add your per-task budget.
 What the reader leaves with: Two numbers — typical cost per task and worst case at peak — plus a Pass / Attention / Fail result on five checks and the next fix to make.
 Fulfilment: Direct link
-Comment keyword: SENDBACK
+Comment keyword: REWORK
 ```
 
 ## Still open

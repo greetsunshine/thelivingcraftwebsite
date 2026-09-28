@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build public/downloads/send-back-cost-check.xlsx.
+"""Build public/downloads/rework-cost-check.xlsx.
 
 Four tabs: Start here, Check, How to find these numbers, Example.
 
 WHERE THE CONTENT COMES FROM. Not from this file. `dump_content.ts` prints the
-words and the worked example out of src/data/send-back-cost-check.ts and
-src/lib/sendBackCost.ts, and this script renders them. Same pattern as
+words and the worked example out of src/data/rework-cost-check.ts and
+src/lib/reworkCost.ts, and this script renders them. Same pattern as
 `npm run workbook`. The workbook therefore cannot drift from the page, and
 verify_xlsx.py asserts that the spreadsheet's own formulas reproduce the
 figures the TypeScript module computes.
@@ -17,7 +17,7 @@ anything newer than 2007, and without the prefix LibreOffice returns #NAME?
 before IFERROR can catch it. Nested IF needs no prefix and no converter can
 mangle it.
 
-Run:  python3 tools/send-back-cost-check/build_xlsx.py
+Run:  python3 tools/rework-cost-check/build_xlsx.py
 """
 from __future__ import annotations
 
@@ -38,9 +38,9 @@ REPO = HERE.parents[1]
 BRAND = json.loads((HERE / "brand.json").read_text(encoding="utf-8"))
 BRAND_DIR = REPO / "public" / "brand"
 BUILD = HERE / ".build"
-OUT = REPO / "public" / "downloads" / "send-back-cost-check.xlsx"
+OUT = REPO / "public" / "downloads" / "rework-cost-check.xlsx"
 
-TITLE = "Send-Back Cost Check"
+TITLE = "Rework Cost Check"
 TAGLINE = "What does one task really cost once limits, judges, validators and reviewers send work back?"
 FOOTER = "© The Living Craft · thelivingcraft.ai · Content CC BY 4.0 · Code MIT"
 LEGEND = "Shaded cells are yours to fill. Everything else calculates."
@@ -440,7 +440,7 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
 
 
 def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
-    """The five checks, as formulas that mirror src/lib/sendBackCost.ts.
+    """The five checks, as formulas that mirror src/lib/reworkCost.ts.
 
     Each one returns a status word and a reason. The status is a WORD first;
     the conditional formatting colours it and never replaces it, which is what
@@ -639,7 +639,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def cover(ws: Worksheet):
+def cover(ws: Worksheet, data: dict):
     ws.sheet_view.showGridLines = False
     widths(ws, {"A": 2.4, "B": 20, "C": 64, "D": 24})
 
@@ -685,13 +685,11 @@ def cover(ws: Worksheet):
         r += 2
 
     put(ws, f"B{r}", "The five checks", font=F_LABEL, align=Alignment(horizontal="left", vertical="top"))
-    for i, t in enumerate([
-        "Every path that sends work back is listed",
-        "Each round is costed as repeated, review and growth",
-        "Rounds are capped, and something happens after the last one",
-        "Two numbers: unit economics and availability",
-        "The budget belongs to the task, across all its rounds",
-    ]):
+    # From the module, like the Check tab. This list was a THIRD hardcoded copy
+    # of the five titles and it still showed the old wording after they were
+    # reworded, which is the whole argument against keeping copies.
+    cover_first = r
+    for i, t in enumerate([data["checkTitles"][str(n)] for n in range(1, 6)]):
         put(ws, f"C{r + i}", f"{i + 1}.  {t}", font=F_BODY)
         ws.row_dimensions[r + i].height = 20
     r += 6
@@ -710,6 +708,7 @@ def cover(ws: Worksheet):
     r += 2
     ws.merge_cells(f"B{r}:D{r}")
     put(ws, f"B{r}", FOOTER, font=F_NOTE)
+    return {"checkTitlesFirst": cover_first}
 
 
 # ---------------------------------------------------------------------------
@@ -828,7 +827,7 @@ def main() -> int:
     ws_guide = wb.create_sheet("How to find these numbers")
     ws_example = wb.create_sheet("Example")
 
-    cover(ws_cover)
+    cover_refs = cover(ws_cover, data)
     ws_cover.sheet_properties.tabColor = rgb("sun")[2:]
 
     ref_blank = check_tab(ws_check, data, filled=False)
@@ -851,6 +850,7 @@ def main() -> int:
     print(f"wrote {OUT.relative_to(REPO)}  ({OUT.stat().st_size:,} bytes)")
 
     refs = {
+        "cover": cover_refs,
         "sheets": {"cover": "Start here", "check": "Check", "paths": "What each path means",
                    "guide": "How to find these numbers", "example": "Example"},
         "example": {**{k: v for k, v in ref_ex.items() if isinstance(v, str)},
@@ -862,6 +862,7 @@ def main() -> int:
                   "checks_first": chk_blank["first"], "checks_last": chk_blank["last"],
                   "next": chk_blank["next"]},
         "expected": data["reading"],
+        "checkTitles": data["checkTitles"],
     }
     (HERE / "refs.json").write_text(json.dumps(refs, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {(HERE / 'refs.json').relative_to(REPO)}")

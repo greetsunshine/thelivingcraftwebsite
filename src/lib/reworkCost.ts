@@ -1,9 +1,9 @@
 /**
- * The Send-Back Cost Check — the whole calculation, in one pure module.
+ * The Rework Cost Check — the whole calculation, in one pure module.
  *
- * Read by /resources/send-back-cost-check (server render and browser script),
- * by src/lib/sendBackCost.test.ts, and mirrored formula for formula by the
- * workbook in tools/send-back-cost-check/. One implementation, three readers.
+ * Read by /resources/rework-cost-check (server render and browser script),
+ * by src/lib/reworkCost.test.ts, and mirrored formula for formula by the
+ * workbook in tools/rework-cost-check/. One implementation, three readers.
  *
  * ───────────────────────────────────────────────────────────────────────────
  * THE IDEA: EVERY PATH THAT SENDS WORK BACK COSTS THE SAME SHAPE OF THING
@@ -259,7 +259,7 @@ export const BUDGET_ENFORCEMENT = [
 ] as const;
 export type BudgetEnforcement = (typeof BUDGET_ENFORCEMENT)[number] | '';
 
-export interface SendBackPath {
+export interface ReworkPath {
   kind: PathKind;
   /** Only meaningful for a custom row; the fixed rows use their label. */
   name: string;
@@ -274,7 +274,7 @@ export interface SendBackPath {
   owner: string;
 }
 
-export interface SendBackModel {
+export interface ReworkModel {
   cleanRun: number | null;
   alwaysOnChecks: number | null;
   peakTasksPerMinute: number | null;
@@ -283,10 +283,10 @@ export interface SendBackModel {
   enforcement: BudgetEnforcement;
   /** Blended price per million tokens, in the reader's own currency. */
   pricePerMillion: number | null;
-  paths: SendBackPath[];
+  paths: ReworkPath[];
 }
 
-export const blankPath = (kind: PathKind): SendBackPath => ({
+export const blankPath = (kind: PathKind): ReworkPath => ({
   kind,
   name: '',
   present: false,
@@ -300,7 +300,7 @@ export const blankPath = (kind: PathKind): SendBackPath => ({
   owner: '',
 });
 
-export const blankModel = (): SendBackModel => ({
+export const blankModel = (): ReworkModel => ({
   cleanRun: null,
   alwaysOnChecks: null,
   peakTasksPerMinute: null,
@@ -311,7 +311,7 @@ export const blankModel = (): SendBackModel => ({
   paths: PATH_KINDS.map(blankPath),
 });
 
-export const pathName = (p: SendBackPath): string =>
+export const pathName = (p: ReworkPath): string =>
   p.name.trim() !== '' ? p.name.trim() : pathMeta(p.kind).label;
 
 // ---------------------------------------------------------------------------
@@ -332,22 +332,22 @@ const addAll = (...values: (number | null)[]): number | null => {
  * One round of this path: the steps that run again, the check that re-reads
  * the new attempt, and the extra input the redo carries.
  */
-export const roundCost = (p: SendBackPath): number | null =>
+export const roundCost = (p: ReworkPath): number | null =>
   addAll(p.repeated, p.review, p.growth);
 
 /** The paths the reader says exist in this workflow. */
-export const presentPaths = (m: SendBackModel): SendBackPath[] =>
+export const presentPaths = (m: ReworkModel): ReworkPath[] =>
   m.paths.filter((p) => p.present);
 
 /** A present path with no cap. Its worst case has no ceiling. */
-export const uncappedPaths = (m: SendBackModel): SendBackPath[] =>
+export const uncappedPaths = (m: ReworkModel): ReworkPath[] =>
   presentPaths(m).filter((p) => p.maxRounds === null);
 
 /** Worst case is Unbounded when any present path can go round for ever. */
-export const isUnbounded = (m: SendBackModel): boolean =>
+export const isUnbounded = (m: ReworkModel): boolean =>
   presentPaths(m).length > 0 && uncappedPaths(m).length > 0;
 
-const baseCost = (m: SendBackModel): number | null =>
+const baseCost = (m: ReworkModel): number | null =>
   addAll(m.cleanRun, m.alwaysOnChecks);
 
 /**
@@ -358,7 +358,7 @@ const baseCost = (m: SendBackModel): number | null =>
  * sends work back. A rate limit sits near zero here on purpose: it bites at
  * peak, not on a normal afternoon.
  */
-export function typicalCostPerTask(m: SendBackModel): number | null {
+export function typicalCostPerTask(m: ReworkModel): number | null {
   const base = baseCost(m);
   if (base === null) return null;
   let total = base;
@@ -377,7 +377,7 @@ export function typicalCostPerTask(m: SendBackModel): number | null {
  * null means an input is missing, Unbounded means a present path has no cap
  * and the question has no numeric answer. Callers must distinguish them.
  */
-export function worstCostPerTask(m: SendBackModel): number | null {
+export function worstCostPerTask(m: ReworkModel): number | null {
   if (isUnbounded(m)) return null;
   const base = baseCost(m);
   if (base === null) return null;
@@ -454,7 +454,7 @@ export const CHECK_WHY: Record<number, string> = {
 
 const filled = (v: number | null): boolean => v !== null;
 
-function check1(m: SendBackModel): CheckResult {
+function check1(m: ReworkModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 1 as const, title: CHECK_TITLES[1] };
   if (present.length === 0) {
@@ -478,7 +478,7 @@ function check1(m: SendBackModel): CheckResult {
   };
 }
 
-function check2(m: SendBackModel): CheckResult {
+function check2(m: ReworkModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 2 as const, title: CHECK_TITLES[2] };
   if (present.length === 0) {
@@ -512,7 +512,7 @@ function check2(m: SendBackModel): CheckResult {
   return { ...base, status: 'Pass', reason: 'Every present path has all three parts of a round.', action: '' };
 }
 
-function check3(m: SendBackModel): CheckResult {
+function check3(m: ReworkModel): CheckResult {
   const present = presentPaths(m);
   const base = { n: 3 as const, title: CHECK_TITLES[3] };
   if (present.length === 0) {
@@ -587,7 +587,7 @@ function check4(r: Pick<Reading, 'typicalShare' | 'worstShare' | 'unbounded'>): 
   };
 }
 
-function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unbounded'>): CheckResult {
+function check5(m: ReworkModel, r: Pick<Reading, 'typical' | 'worst' | 'unbounded'>): CheckResult {
   const base = { n: 5 as const, title: CHECK_TITLES[5] };
   if (m.enforcement === '') {
     return { ...base, status: 'Not answered', reason: 'Choose how your budget is enforced.', action: '' };
@@ -665,7 +665,7 @@ export interface Reading {
   nextStep: CheckResult | null;
 }
 
-export function read(m: SendBackModel): Reading {
+export function read(m: ReworkModel): Reading {
   const unbounded = isUnbounded(m);
   const typical = typicalCostPerTask(m);
   const worst = worstCostPerTask(m);

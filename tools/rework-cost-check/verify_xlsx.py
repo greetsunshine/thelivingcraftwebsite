@@ -7,7 +7,7 @@ computed by a real spreadsheet engine rather than copied from a script.
 THREE THINGS ARE CHECKED, AND THE THIRD IS THE POINT:
   1. the Example tab reproduces the figures in the brief, section 6;
   2. the blank Check tab shows blanks, never errors;
-  3. the workbook and src/lib/sendBackCost.ts agree — the expected values come
+  3. the workbook and src/lib/reworkCost.ts agree — the expected values come
      from refs.json, which build_xlsx.py wrote from the module's own output.
 
 Two engines run where both are available and they have to agree: LibreOffice
@@ -15,7 +15,7 @@ headless, the closest thing on hand to what a reader opens the file in, and the
 `formulas` package, which parses the formulas out of the file itself. One
 engine alone can be wrong in a way that looks like a pass.
 
-Run:  python3 tools/send-back-cost-check/verify_xlsx.py
+Run:  python3 tools/rework-cost-check/verify_xlsx.py
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ import openpyxl
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-XLSX = REPO / "public" / "downloads" / "send-back-cost-check.xlsx"
+XLSX = REPO / "public" / "downloads" / "rework-cost-check.xlsx"
 REFS = json.loads((HERE / "refs.json").read_text(encoding="utf-8"))
 
 SOFFICE_CANDIDATES = [
@@ -228,6 +228,18 @@ def main() -> int:
         b.check(f"Check {n} status", "Not answered", *pair(blank_sheet, f"F{B['checks_first'] + n - 1}"))
     b.print()
 
+    # --- the cover's list of checks must match the module ------------------
+    #
+    # The five titles have been hardcoded in three different places over this
+    # tool's life, and the cover was the last copy to be found still showing
+    # the old wording after a rename. This is the guard against a fourth.
+    t = Report("Cover tab — the five check titles match the module")
+    first = REFS["cover"]["checkTitlesFirst"]
+    for n in range(1, 6):
+        want = f"{n}.  {REFS['checkTitles'][str(n)]}"
+        t.check(f"Check {n} title", want, *pair(REFS["sheets"]["cover"], f"C{first + n - 1}"))
+    t.print()
+
     # --- no error values anywhere -----------------------------------------
     problems = sorted({
         f"{eng}: '{name}'!{coord} = {v.strip()}"
@@ -243,9 +255,9 @@ def main() -> int:
     else:
         print("  ok no error values in any cell of any tab, in either engine")
 
-    passed = r.ok and m.ok and u.ok and b.ok and not problems
+    passed = r.ok and m.ok and u.ok and b.ok and t.ok and not problems
     engines = "2 engines (LibreOffice + formulas)" if have_lo else "1 engine (formulas only)"
-    total = len(r.rows) + len(m.rows) + len(u.rows) + len(b.rows)
+    total = len(r.rows) + len(m.rows) + len(u.rows) + len(b.rows) + len(t.rows)
     print(f"\nEngines: {engines}")
     print(f"{'PASS' if passed else 'FAIL'} — {total} assertions, "
           f"{sum(len(c) for c in lo.values()):,} cells scanned")

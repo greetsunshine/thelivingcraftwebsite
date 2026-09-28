@@ -5,7 +5,7 @@ LibreOffice prints the workbook to PDF, one or more pages per tab, and each
 page is rasterised. Output goes to the scratch directory, not into the repo:
 these are for review, not for publishing.
 
-Run:  python3 tools/send-back-cost-check/render_previews.py [outdir]
+Run:  python3 tools/rework-cost-check/render_previews.py [outdir]
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from pathlib import Path
 import fitz  # pymupdf
 
 HERE = Path(__file__).resolve().parent
-XLSX = HERE.parents[1] / "public" / "downloads" / "send-back-cost-check.xlsx"
+XLSX = HERE.parents[1] / "public" / "downloads" / "rework-cost-check.xlsx"
 SOFFICE = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
 
 

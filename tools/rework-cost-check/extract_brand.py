@@ -7,7 +7,7 @@ bundle and production disagree, production wins. Reading the file means the
 sheet cannot drift from the site, and a renamed token fails here instead of
 shipping a wrong colour.
 
-Run:  python3 tools/send-back-cost-check/extract_brand.py
+Run:  python3 tools/rework-cost-check/extract_brand.py
 """
 from __future__ import annotations
 
@@ -165,7 +165,7 @@ def main() -> int:
 
     brand = {
         "_source": "src/styles/ds/theme.css",
-        "_generated_by": "tools/send-back-cost-check/extract_brand.py",
+        "_generated_by": "tools/rework-cost-check/extract_brand.py",
         "_note": (
             "Do not hand-edit. Every colour and every family here is a "
             "production token read out of theme.css. Nothing is invented."

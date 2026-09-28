@@ -1,6 +1,6 @@
 ---
 /**
- * /resources/send-back-cost-check — the Send-Back Cost Check.
+ * /resources/rework-cost-check — the Rework Cost Check.
  *
  * Five checks from Episode 5. The reader lists the paths that send work back,
  * costs one round of each, caps them, and reads two numbers: what a task costs
@@ -39,10 +39,10 @@
  * ONE IMPLEMENTATION, THREE READERS
  * ═══════════════════════════════════════════════════════════════════════════
  *
- * src/lib/sendBackCost.ts holds every formula and every check rule. This page
+ * src/lib/reworkCost.ts holds every formula and every check rule. This page
  * renders from it, the browser script IMPORTS it, and
- * src/lib/sendBackCost.test.ts asserts the worked example against the brief.
- * The workbook in tools/send-back-cost-check/ implements the same formulas and
+ * src/lib/reworkCost.test.ts asserts the worked example against the brief.
+ * The workbook in tools/rework-cost-check/ implements the same formulas and
  * its own verifier asserts that it agrees with this module.
  *
  * A module <script> can import; an is:inline script cannot, which is how
@@ -50,7 +50,7 @@
  *
  * NOT RELEASED. There is deliberately no row in src/data/resources.ts, which
  * is what /resources, the sitemap and /llms.txt read. The draft registry entry
- * is in tools/send-back-cost-check/README.md.
+ * is in tools/rework-cost-check/README.md.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
@@ -67,14 +67,14 @@ import {
   tokens,
   percent,
   multipleOf,
-} from '../../lib/sendBackCost';
-import { EXAMPLE, EXAMPLE_LABEL, HOW_TO_FIND, WORKFLOW_INPUTS } from '../../data/send-back-cost-check';
+} from '../../lib/reworkCost';
+import { EXAMPLE, EXAMPLE_LABEL, HOW_TO_FIND, WORKFLOW_INPUTS } from '../../data/rework-cost-check';
 
 export const prerender = true;
 
-const canonical = '/resources/send-back-cost-check';
+const canonical = '/resources/rework-cost-check';
 const url = `${SITE_ORIGIN}${canonical}`;
-const TITLE = 'Send-Back Cost Check';
+const TITLE = 'Rework Cost Check';
 const TAGLINE =
   'What does one task really cost once limits, judges, validators and reviewers send work back?';
 
@@ -83,7 +83,7 @@ const title = `${TITLE} — the real cost of a task that gets sent back · The L
 const description =
   'Cost every path that sends agent work back — limits, judges, validators, tool errors, reviewers — and get two numbers: typical cost per task and worst case at peak.';
 
-const XLSX = '/downloads/send-back-cost-check.xlsx';
+const XLSX = '/downloads/rework-cost-check.xlsx';
 const PUBLISHED_AT = '2026-09-28';
 
 // The worked example, read through the same module the page and the tests use.
@@ -137,7 +137,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
       <h1>{TITLE}</h1>
       <p class="lead">{TAGLINE}</p>
       <p class="hero-cta controls">
-        <a class="btn btn-primary" href="#check">Run the Send-Back Cost Check&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="#check">Run the Rework Cost Check&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
       </p>
       <p class="hero-note">
         <a class="textlink" href={XLSX} download>Prefer a spreadsheet? Download the Excel version</a>
@@ -607,15 +607,15 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     percent,
     multipleOf,
     money,
-    type SendBackModel,
+    type ReworkModel,
     type PathKind,
     type AfterLast,
     type BudgetEnforcement,
-  } from '../../lib/sendBackCost';
-  import { buildExample } from '../../data/send-back-cost-check';
+  } from '../../lib/reworkCost';
+  import { buildExample } from '../../data/rework-cost-check';
 
   // The model is a closure and dies with the tab. Nothing is stored or sent.
-  let model: SendBackModel = blankModel();
+  let model: ReworkModel = blankModel();
 
   const $ = <T extends Element = HTMLElement>(id: string) => document.getElementById(id) as unknown as T;
   const all = <T extends Element = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];

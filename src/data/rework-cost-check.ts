@@ -1,19 +1,19 @@
-// Copy and the worked example for /resources/send-back-cost-check.
+// Copy and the worked example for /resources/rework-cost-check.
 //
-// The MATHS is in src/lib/sendBackCost.ts. This file holds only words and the
+// The MATHS is in src/lib/reworkCost.ts. This file holds only words and the
 // example's figures, so changing a sentence is not a change to a formula.
 //
-// The example is also a test fixture: src/lib/sendBackCost.test.ts builds the
+// The example is also a test fixture: src/lib/reworkCost.test.ts builds the
 // same model independently from the brief and asserts the same outputs, and
-// tools/send-back-cost-check/verify_xlsx.py asserts the workbook agrees.
+// tools/rework-cost-check/verify_xlsx.py asserts the workbook agrees.
 
-import { blankModel, blankPath, type SendBackModel, type SendBackPath, type PathKind } from '../lib/sendBackCost.ts';   // explicit .ts: node's type-stripping resolver will not guess it
+import { blankModel, blankPath, type ReworkModel, type ReworkPath, type PathKind } from '../lib/reworkCost.ts';   // explicit .ts: node's type-stripping resolver will not guess it
 
 export const EXAMPLE_LABEL =
   'Illustrative example: a scheduling agent. Not a real system or real figures.';
 
 /** Section 6 of the brief, as a model. */
-export function buildExample(): SendBackModel {
+export function buildExample(): ReworkModel {
   const m = blankModel();
   m.cleanRun = 43_300;
   m.alwaysOnChecks = 11_500;
@@ -23,7 +23,7 @@ export function buildExample(): SendBackModel {
   m.enforcement = 'Per task, across all rounds';
   m.pricePerMillion = null;
 
-  const put = (kind: PathKind, patch: Partial<SendBackPath>) => {
+  const put = (kind: PathKind, patch: Partial<ReworkPath>) => {
     const i = m.paths.findIndex((p) => p.kind === kind);
     m.paths[i] = { ...blankPath(kind), ...patch, kind };
   };
@@ -59,7 +59,7 @@ export function buildExample(): SendBackModel {
   return m;
 }
 
-export const EXAMPLE: SendBackModel = buildExample();
+export const EXAMPLE: ReworkModel = buildExample();
 
 export const WORKFLOW_INPUTS = [
   {
