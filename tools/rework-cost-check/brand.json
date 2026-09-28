@@ -1,6 +1,6 @@
 {
   "_source": "src/styles/ds/theme.css",
-  "_generated_by": "tools/send-back-cost-check/extract_brand.py",
+  "_generated_by": "tools/rework-cost-check/extract_brand.py",
   "_note": "Do not hand-edit. Every colour and every family here is a production token read out of theme.css. Nothing is invented.",
   "derived": [],
   "colors": {
