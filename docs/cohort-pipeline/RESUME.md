@@ -283,11 +283,29 @@ closes at the first block and the after-pulse opens at the close, and all four i
   A is one unbroken block from 00:48 to 01:35. So the natural unit is the block, not the
   topic, and the recommendation is eight block pages rather than five topic pages, built as
   they are taught. That is Sunil's call and it changes how many pages exist.
-- **`check-teaching-pages.mjs` was pinned to the old structure and is fixed.** `clockOf`
-  searched for the literal "Five hours, five blocks", so on an eight-block page it found no
-  clock and reported that rather than comparing anything. It matches the stem now. The four
-  logistics titles are matched by pattern for the same reason: three of them name a count,
-  and "Four things worth your time" became seven.
+- **`check-teaching-pages.mjs` never actually checked anything, and now it does.** This is
+  the one to read before rebuilding any page.
+
+  Run against the two published week 2 pages, unmodified, it reported 7 of 11 failing, and
+  **three of the four passes were vacuous**. Four causes, all of them the checker matching a
+  page shape that does not exist:
+  - `clockOf` searched for the literal "Five hours, five blocks". A topic page says *"Where
+    this topic sits"*, so it found no clock on either page, returned null for both, and
+    "clocks are byte-identical" then passed because `null === null`. With no clock, "every
+    learner card is in the clock" failed for every card.
+  - `runOfShow` expected `<div class="t">`. The pages use `<span class="t">`. Zero rows
+    found, so "run of show is monotonic" passed on an empty list.
+  - `beatRefs` expected `data-ref="#id"`. The pages write `data-ref="id"`. Zero refs, so
+    "run of show and notes column agree heading for heading" passed on an empty list.
+  - It also had no entry for a topic page's four framing cards, which sit outside the clock
+    by design.
+
+  **All four are fixed, and the gate now reports real drift.** Still 7 of 11, but they are
+  findings rather than artefacts: the two clock tables genuinely differ, the notes column is
+  out of clock order, ten run-of-show headings do not match the clock's wording for the same
+  beat, and **both published pages end with a duplicated `</body></html>`**. That is the
+  exact fault the checker's own header says it exists to catch, so it was right to build and
+  it had simply never run.
 - **The `w2-` sqlite target in the reference agent**, described above.
 - **`docs/teaching/notes/teardown-five-questions.md` was NOT revised** and now describes a
   block that no longer runs as five questions. It is the next thing to reconcile.

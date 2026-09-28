@@ -58,11 +58,13 @@ const txt = (s) =>
 
 /** The clock table, from its heading to the end of its body. */
 const clockOf = (html) => {
-  // The heading names the block count, and the block count changes when a
-  // session is restructured. Week 2 went from five blocks to eight on 28
-  // September and this line, pinned to the old wording, silently reported "no
-  // clock" for both pages rather than comparing them. Match the stem.
-  const at = html.search(/Five hours, [a-z]+ blocks/i);
+  // Two page shapes carry a clock and the heading differs. A whole-session page
+  // says "Five hours, N blocks"; a topic page says "Where this topic sits".
+  // This was pinned to the first wording alone, so on the topic pages it found
+  // no clock, returned null for both, and then "clocks are byte-identical"
+  // passed because null === null. Three of the eleven checks were passing
+  // vacuously. Match either.
+  const at = html.search(/Five hours, [a-z]+ blocks|Where this topic sits/i);
   if (at < 0) return null;
   const head = html.indexOf('<thead>', at);
   const end = html.indexOf('</tbody>', head);
@@ -101,9 +103,13 @@ const learnerCards = (html) => {
 
 /** The instructor's run-of-show rows: time plus heading, in document order. */
 const runOfShow = (html) =>
-  [...html.matchAll(/<div class="t">(\d\d:\d\d)<\/div>\s*<div class="b">\s*<h4>([\s\S]*?)<\/h4>/g)].map(
-    (m) => ({ at: m[1], title: txt(m[2]) }),
-  );
+  [
+    // span on the topic pages, div on a whole-session page. Pinned to div, this
+    // found zero rows and the monotonic check passed on an empty list.
+    ...html.matchAll(
+      /<(?:div|span) class="t">(\d\d:\d\d)<\/(?:div|span)>\s*<div class="b">\s*<h4>([\s\S]*?)<\/h4>/g,
+    ),
+  ].map((m) => ({ at: m[1], title: txt(m[2]) }));
 
 /** The instructor's notes cards: id, stated time, heading, in document order. */
 const notesCards = (html) => {
@@ -175,6 +181,11 @@ const LOGISTICS_PATTERNS = [
   /^Five hours, [a-z]+ blocks\b/i,
   /^[A-Z][a-z]+ things before next session$/i,
   /^[A-Z][a-z]+ things worth your time$/i,
+  // A topic page frames itself before the clock starts and closes after it.
+  /^What this topic is for$/i,
+  /^Where this topic sits$/i,
+  /^The line this topic exists to land$/i,
+  /^After this topic, you can now$/i,
 ];
 const LOGISTICS = {
   has: (title) => LOGISTICS_PATTERNS.some((re) => re.test(title)),
@@ -186,7 +197,9 @@ const SCAFFOLD = /^(Decide|Build|Check|Then the part)/;
 const inClock = lClock ? clockHeadings(lClock) : new Set();
 const noteById = new Map(notes.map((n) => [n.id, n.title]));
 const beatRefs = [
-  ...instructor.matchAll(/data-ref="#([a-z0-9-]+)"[\s\S]{0,400}?<h4>([\s\S]*?)<\/h4>/g),
+  // The attribute holds a bare id. With the "#" required this matched nothing
+  // and the heading-agreement check passed on an empty list.
+  ...instructor.matchAll(/data-ref="#?([a-z0-9-]+)"[\s\S]{0,400}?<h4>([\s\S]*?)<\/h4>/g),
 ].map((m) => ({ id: m[1], title: txt(m[2]) }));
 
 const checks = [
