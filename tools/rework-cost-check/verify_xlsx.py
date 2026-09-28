@@ -228,6 +228,38 @@ def main() -> int:
         b.check(f"Check {n} status", "Not answered", *pair(blank_sheet, f"F{B['checks_first'] + n - 1}"))
     b.print()
 
+    # --- the For scale tab prices the reader's OWN task --------------------
+    #
+    # It reads the Check tab, which is blank in the shipped file, so it shows a
+    # dash until somebody fills it in. Filling it here proves the arithmetic,
+    # and these are money figures — worth an assertion rather than a glance.
+    sc = Report("For scale tab — priced from a filled-in Check tab")
+    tmp3 = Path(tempfile.mkdtemp(prefix="sbc-rates-")) / "rates.xlsx"
+    shutil.copy(XLSX, tmp3)
+    wb3 = openpyxl.load_workbook(tmp3)
+    chk = wb3[blank_sheet]
+    r0 = REFS["row0"]
+    chk[B["clean"]] = 43_300
+    chk[B["always"]] = 11_500
+    # One present path: the judge, two rounds of 21,900, which gives the same
+    # 98,600 the worked example lands on.
+    chk[f"B{r0 + 1}"] = "Yes"
+    chk[f"D{r0 + 1}"] = 2
+    chk[f"E{r0 + 1}"] = 8_900
+    chk[f"F{r0 + 1}"] = 11_500
+    chk[f"G{r0 + 1}"] = 1_500
+    chk[f"I{r0 + 1}"] = 3
+    wb3.save(tmp3)
+    lo4 = values_libreoffice(tmp3) if have_lo else values_formulas(tmp3)
+    fo4 = values_formulas(tmp3)
+    sc.check("Check tab typical", 98_600, get(lo4, blank_sheet, B["typ"]), get(fo4, blank_sheet, B["typ"]))
+    for i, rate in enumerate(REFS["rates"]):
+        want = f"{98_600 * rate['input'] / 1_000_000:.2f} – {98_600 * rate['output'] / 1_000_000:.2f}"
+        ref = f"E{5 + i}"
+        sc.check(rate["model"], want,
+                 get(lo4, REFS["sheets"]["rates"], ref), get(fo4, REFS["sheets"]["rates"], ref))
+    sc.print()
+
     # --- the cover's list of checks must match the module ------------------
     #
     # The five titles have been hardcoded in three different places over this
@@ -255,9 +287,9 @@ def main() -> int:
     else:
         print("  ok no error values in any cell of any tab, in either engine")
 
-    passed = r.ok and m.ok and u.ok and b.ok and t.ok and not problems
+    passed = r.ok and m.ok and u.ok and b.ok and t.ok and sc.ok and not problems
     engines = "2 engines (LibreOffice + formulas)" if have_lo else "1 engine (formulas only)"
-    total = len(r.rows) + len(m.rows) + len(u.rows) + len(b.rows) + len(t.rows)
+    total = len(r.rows) + len(m.rows) + len(u.rows) + len(b.rows) + len(t.rows) + len(sc.rows)
     print(f"\nEngines: {engines}")
     print(f"{'PASS' if passed else 'FAIL'} — {total} assertions, "
           f"{sum(len(c) for c in lo.values()):,} cells scanned")

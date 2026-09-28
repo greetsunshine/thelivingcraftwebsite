@@ -283,6 +283,15 @@ export interface ReworkModel {
   enforcement: BudgetEnforcement;
   /** Blended price per million tokens, in the reader's own currency. */
   pricePerMillion: number | null;
+  /**
+   * What to call that currency. A LABEL, never a conversion.
+   *
+   * The tool does no exchange-rate arithmetic and must not look as though it
+   * does: whatever is typed here is printed beside the figures and nothing
+   * else. Free text rather than a list, because a team billed in a currency
+   * that is not on a list of twenty would otherwise have to pick a wrong one.
+   */
+  currency: string;
   paths: ReworkPath[];
 }
 
@@ -308,6 +317,7 @@ export const blankModel = (): ReworkModel => ({
   budget: null,
   enforcement: '',
   pricePerMillion: null,
+  currency: '',
   paths: PATH_KINDS.map(blankPath),
 });
 
@@ -729,6 +739,22 @@ export const percent = (n: number | null): string =>
 export const multipleOf = (n: number | null): string =>
   n === null ? '—' : `${(Math.round(n * 100) / 100).toFixed(2)}×`;
 
-/** Money carries no currency symbol: the reader's price is in their own. */
-export const money = (n: number | null): string =>
-  n === null ? '—' : (Math.round(n * 100) / 100).toFixed(2);
+/**
+ * Money, with whatever the reader calls their currency.
+ *
+ * A symbol sits tight against the figure and a code takes a space, which is
+ * how both are normally written: "₹0.30" but "USD 0.30". Anything containing a
+ * letter is treated as a code.
+ */
+export const money = (n: number | null, currency = ''): string => {
+  if (n === null) return '—';
+  // Grouped, like every other figure here: 24650.00 is harder to read at a
+  // glance than 24,650.00, and money is the number people quote out loud.
+  const figure = (Math.round(n * 100) / 100).toLocaleString('en-GB', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const label = currency.trim();
+  if (label === '') return figure;
+  return /[a-z]/i.test(label) ? `${label} ${figure}` : `${label}${figure}`;
+};

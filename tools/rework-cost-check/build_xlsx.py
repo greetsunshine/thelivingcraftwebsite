@@ -355,6 +355,14 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     put(ws, f"A{b0 + 3}", "Your price per million tokens (optional)", font=F_BODY, align=WRAP_MID)
     inp(ws, f"C{b0 + 3}", ex.get("pricePerMillion") if filled else None, fmt=MONEYFMT)
     price = f"C{b0 + 3}"
+    put(ws, f"A{b0 + 4}", "Currency (optional)", font=F_BODY, align=WRAP_MID)
+    ws.merge_cells(f"A{b0 + 4}:B{b0 + 4}")
+    inp(ws, f"C{b0 + 4}", (ex.get("currency") or None) if filled else None, align=LEFT, font=F_BODY)
+    currency = f"C{b0 + 4}"
+    ws.merge_cells(f"E{b0 + 4}:K{b0 + 4}")
+    put(ws, f"E{b0 + 4}",
+        "A label only, printed beside the two cost rows. Nothing is converted.",
+        font=F_NOTE, align=WRAP_MID)
     ws.merge_cells(f"E{b0 + 3}:K{b0 + 3}")
     put(ws, f"E{b0 + 3}",
         "Type it in the shaded cell to the left. Everything else on this sheet is in tokens; fill "
@@ -367,7 +375,7 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     ws.row_dimensions[b0 + 3].height = 46
 
     # ---- the two headline numbers ----------------------------------------
-    h0 = b0 + 5
+    h0 = b0 + 6
     put(ws, f"A{h0}", "The two numbers", font=F_H2)
 
     base_blank = f'OR({clean}="",{always}="")'
@@ -392,6 +400,7 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
         ("Cost per task", None, MONEYFMT,
          "Blank until a price is entered above. Everything else on this sheet is in tokens."),
         ("Cost per 1,000 tasks", None, MONEYFMT, ""),
+        ("…in", None, None, "Whatever you called your currency."),
     ]
     for i, (label, _f, fmt, note) in enumerate(rows):
         r = h0 + 1 + i
@@ -417,6 +426,7 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     wst_share = f"C{h0 + 8}"
     per_task = f"C{h0 + 9}"
     per_k = f"C{h0 + 10}"
+    cur_echo = f"C{h0 + 11}"
 
     calc(ws, typ, f'=IF({t_blocked},"",{clean}+{always}+SUM({P(H_TCONTRIB)}))', fmt=NUMFMT, font=F_BIG)
     calc(ws, typ_mul, f'=IF(OR({typ}="",{clean}="",{clean}<=0),"",{typ}/{clean})', fmt=MULFMT)
@@ -431,10 +441,12 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     calc(ws, wst_share, f'=IF({unbounded},"Unbounded",IF(OR({wst_peak}="",{quota}="",{quota}<=0),"",{wst_peak}/{quota}))', fmt=PCTFMT)
     calc(ws, per_task, f'=IF(OR({typ}="",{price}=""),"",{typ}*{price}/1000000)', fmt=MONEYFMT)
     calc(ws, per_k, f'=IF({per_task}="","",{per_task}*1000)', fmt=MONEYFMT)
+    calc(ws, cur_echo, f'=IF({per_task}="","",IF({currency}="","your own currency",{currency}))',
+         font=F_BODY, align=LEFT)
 
     return {
         "clean": clean, "always": always, "peak": peak, "quota": quota,
-        "budget": budget, "enf": enf, "price": price,
+        "budget": budget, "enf": enf, "price": price, "currency": currency,
         "typ": typ, "typ_mul": typ_mul, "typ_peak": typ_peak, "typ_share": typ_share,
         "wst": wst, "wst_mul": wst_mul, "wst_peak": wst_peak, "wst_share": wst_share,
         "per_task": per_task, "per_k": per_k,
@@ -796,6 +808,63 @@ def paths_tab(ws: Worksheet, data: dict):
     ws.freeze_panes = "A4"
 
 
+def rates_tab(ws: Worksheet, data: dict, typical_ref: str):
+    """Frontier-model rates, and what this sheet's typical task costs at them.
+
+    Every figure was read off the provider's own pricing page on the date
+    printed here, and each row carries the condition that changes it. The cost
+    is a RANGE — all input to all output — because a single blended rate needs
+    a mix ratio that belongs to the reader, and two of the three double on long
+    context, which is exactly what a growing redo produces.
+
+    `typical_ref` points at the Check tab, so the range prices whatever the
+    reader has actually entered rather than a figure baked in here.
+    """
+    ws.sheet_view.showGridLines = False
+    widths(ws, {"A": 2.4, "B": 24, "C": 13, "D": 13, "E": 24, "F": 62})
+    put(ws, "A1", "For scale: frontier rates", font=F_H1)
+    ws.row_dimensions[1].height = 26
+    ws.merge_cells("B2:F2")
+    put(ws, "B2",
+        "What one typical task on the Check tab would cost at what three frontier models charge. "
+        "It is a range because input and output are priced differently: the low figure is all "
+        "input, the high figure is all output, and real work sits between them, usually nearer "
+        f"the low end. Figures are US dollars. Checked {data['ratesChecked']}.",
+        font=F_LEAD, align=WRAP)
+    ws.row_dimensions[2].height = 46
+
+    hdr = 4
+    for col, h in (("B", "Model"), ("C", "Input per 1M"), ("D", "Output per 1M"),
+                   ("E", "Your typical task"), ("F", "Worth knowing")):
+        put(ws, f"{col}{hdr}", h, font=F_HEAD, fill=FILL_NOIR, align=LEFT)
+    ws.row_dimensions[hdr].height = 20
+
+    r = hdr + 1
+    for rate in data["frontierRates"]:
+        ws.row_dimensions[r].height = 40
+        put(ws, f"B{r}", f"{rate['model']}\n{rate['vendor']}",
+            font=F_BODY, align=Alignment(horizontal="left", vertical="center", wrap_text=True),
+            border=HAIR)
+        put(ws, f"C{r}", rate["input"], font=F_NUM, align=RIGHT, fmt=MONEYFMT, border=HAIR)
+        put(ws, f"D{r}", rate["output"], font=F_NUM, align=RIGHT, fmt=MONEYFMT, border=HAIR)
+        # Priced off the Check tab, so it follows the reader's own figures.
+        calc(ws, f"E{r}",
+             f'=IF({typical_ref}="","—",TEXT({typical_ref}*C{r}/1000000,"0.00")&" – "'
+             f'&TEXT({typical_ref}*D{r}/1000000,"0.00"))',
+             font=F_BODY_B, align=RIGHT, border=HAIR)
+        put(ws, f"F{r}", rate["condition"], font=F_NOTE, align=WRAP_MID, border=HAIR)
+        r += 1
+
+    r += 1
+    ws.merge_cells(f"B{r}:F{r}")
+    put(ws, f"B{r}",
+        "Rates change, and two of these carry a condition that doubles them. Check the provider "
+        "before you quote one: " + "  ·  ".join(x["source"] for x in data["frontierRates"]),
+        font=F_NOTE, align=WRAP)
+    ws.row_dimensions[r].height = 40
+    ws.freeze_panes = "A5"
+
+
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -827,6 +896,7 @@ def main() -> int:
     ws_cover = wb.create_sheet("Start here")
     ws_check = wb.create_sheet("Check")
     ws_paths = wb.create_sheet("What each path means")
+    ws_rates = wb.create_sheet("For scale")
     ws_guide = wb.create_sheet("How to find these numbers")
     ws_example = wb.create_sheet("Example")
 
@@ -838,6 +908,7 @@ def main() -> int:
     ws_check.freeze_panes = "A4"
 
     paths_tab(ws_paths, data)
+    rates_tab(ws_rates, data, f"'{ws_check.title}'!{ref_blank['typ']}")
     guide_tab(ws_guide, data)
 
     ref_ex = check_tab(ws_example, data, filled=True)
@@ -855,6 +926,7 @@ def main() -> int:
     refs = {
         "cover": cover_refs,
         "sheets": {"cover": "Start here", "check": "Check", "paths": "What each path means",
+                   "rates": "For scale",
                    "guide": "How to find these numbers", "example": "Example"},
         "example": {**{k: v for k, v in ref_ex.items() if isinstance(v, str)},
                     "checks_first": chk_ex["first"], "checks_last": chk_ex["last"],
@@ -866,6 +938,8 @@ def main() -> int:
                   "next": chk_blank["next"]},
         "expected": data["reading"],
         "checkTitles": data["checkTitles"],
+        "row0": ROW0,
+        "rates": data["frontierRates"],
     }
     (HERE / "refs.json").write_text(json.dumps(refs, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {(HERE / 'refs.json').relative_to(REPO)}")

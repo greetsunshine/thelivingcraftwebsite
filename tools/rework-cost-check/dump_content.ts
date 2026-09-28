@@ -9,7 +9,14 @@
  *
  * Run:  node --experimental-strip-types tools/rework-cost-check/dump_content.ts
  */
-import { HOW_TO_FIND, EXAMPLE, WORKFLOW_INPUTS, EXAMPLE_LABEL } from '../../src/data/rework-cost-check.ts';
+import {
+  HOW_TO_FIND,
+  EXAMPLE,
+  WORKFLOW_INPUTS,
+  EXAMPLE_LABEL,
+  FRONTIER_RATES,
+  RATES_CHECKED,
+} from '../../src/data/rework-cost-check.ts';
 import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, blankModel, read, roundCost } from '../../src/lib/reworkCost.ts';
 
 const reading = read(EXAMPLE);
@@ -20,6 +27,8 @@ console.log(
       exampleLabel: EXAMPLE_LABEL,
       workflowInputs: WORKFLOW_INPUTS,
       howToFind: HOW_TO_FIND,
+      frontierRates: FRONTIER_RATES,
+      ratesChecked: RATES_CHECKED,
       paths: PATHS,
       checkWhy: CHECK_WHY,
       // The titles come from the module too. build_xlsx.py used to carry its

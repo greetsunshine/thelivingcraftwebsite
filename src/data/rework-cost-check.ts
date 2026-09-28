@@ -22,6 +22,7 @@ export function buildExample(): ReworkModel {
   m.budget = 120_000;
   m.enforcement = 'Per task, across all rounds';
   m.pricePerMillion = null;
+  m.currency = '';
 
   const put = (kind: PathKind, patch: Partial<ReworkPath>) => {
     const i = m.paths.findIndex((p) => p.kind === kind);
@@ -184,3 +185,68 @@ export const HOW_TO_FIND: HowToFind[] = [
     ],
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Frontier-model rates, for scale
+// ---------------------------------------------------------------------------
+//
+// EVERY FIGURE HERE WAS READ OFF THE PROVIDER'S OWN PRICING PAGE ON THE DATE
+// BELOW. None came from memory, and none is a blended rate.
+//
+// Two reasons the shape is what it is.
+//
+// These rot. When this block was written, the pricing table bundled with the
+// tooling used to build it was three months old and already wrong: it listed
+// Opus 5 at $5/$25 as current, while Anthropic's page had moved that to legacy
+// and shipped Opus 5.5 at $4/$20. A rate quoted with no date is a claim that
+// quietly stops being true, so RATES_CHECKED is printed beside them.
+//
+// And a single blended number cannot be honest. Every provider prices input
+// and output differently, and two of the three double their rate on long
+// context — which is precisely the case this tool measures, because a redo
+// carries the previous attempt forward. So the page shows a RANGE, from all
+// input to all output, and never invents a mix ratio on the reader's behalf.
+export const RATES_CHECKED = '28 September 2026';
+
+export interface FrontierRate {
+  vendor: string;
+  model: string;
+  /** USD per million input tokens, at the provider's standard rate. */
+  input: number;
+  /** USD per million output tokens. */
+  output: number;
+  /** The condition that changes the rate. Printed, never silently applied. */
+  condition: string;
+  source: string;
+}
+
+export const FRONTIER_RATES: FrontierRate[] = [
+  {
+    vendor: 'Anthropic',
+    model: 'Claude Opus 5.5',
+    input: 4,
+    output: 20,
+    condition: 'US-only inference costs 1.1×. Fast mode costs 2×.',
+    source: 'https://claude.com/pricing',
+  },
+  {
+    vendor: 'OpenAI',
+    model: 'GPT-6 Astra',
+    input: 10,
+    output: 50,
+    condition: 'Long context costs $20 in and $75 out, so a growing redo can double this.',
+    source: 'https://developers.openai.com/api/docs/pricing',
+  },
+  {
+    vendor: 'Google',
+    model: 'Gemini 3.1 Pro',
+    input: 2,
+    output: 12,
+    condition: 'Prompts over 200k cost $4 in and $18 out.',
+    source: 'https://ai.google.dev/gemini-api/docs/pricing',
+  },
+];
+
+/** What `tokens` costs at a rate per million. */
+export const atRate = (tokens: number, perMillion: number): number =>
+  (tokens * perMillion) / 1_000_000;

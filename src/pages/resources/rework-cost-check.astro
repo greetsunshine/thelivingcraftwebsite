@@ -68,7 +68,14 @@ import {
   percent,
   multipleOf,
 } from '../../lib/reworkCost';
-import { EXAMPLE, EXAMPLE_LABEL, HOW_TO_FIND, WORKFLOW_INPUTS } from '../../data/rework-cost-check';
+import {
+  EXAMPLE,
+  EXAMPLE_LABEL,
+  HOW_TO_FIND,
+  WORKFLOW_INPUTS,
+  FRONTIER_RATES,
+  RATES_CHECKED,
+} from '../../data/rework-cost-check';
 
 export const prerender = true;
 
@@ -356,7 +363,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           <span class="eyebrow"><span class="num">C</span> Budget</span>
           <h2>One budget for the whole task</h2>
         </div>
-        <div class="grid3">
+        <div class="grid4">
           <label class="fld">
             <span>Per-task token budget</span>
             <input type="number" min="0" step="1" id="i-budget" inputmode="numeric" aria-describedby="i-budget-h" />
@@ -369,6 +376,14 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
               {BUDGET_ENFORCEMENT.map((b) => <option value={b}>{b}</option>)}
             </select>
             <i>A per-call budget never sees the rounds add up.</i>
+          </label>
+          <label class="fld">
+            <span>Currency <em>(optional)</em></span>
+            <input type="text" id="i-currency" maxlength="6" placeholder="₹, $, USD…"
+                   autocomplete="off" aria-describedby="i-currency-h" />
+            <i id="i-currency-h">
+              A label only. The tool prints it beside the figures and converts nothing.
+            </i>
           </label>
           <label class="fld">
             <span>Your price per million tokens <em>(optional)</em></span>
@@ -394,6 +409,60 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
             <b id="ml-k">—</b>. That is the everyday figure, not the worst case.
           </span>
         </p>
+
+        {/* Scale, not a price list. Every rate was read off the provider's own
+            page on RATES_CHECKED, and each carries the condition that changes
+            it. The cost is a RANGE — all input to all output — because a
+            single blended figure needs a mix ratio that is the reader's to
+            supply, and two of the three double on long context, which is
+            exactly what a growing redo produces. */}
+        <div class="rates">
+          <h3 class="sub">For scale: the same task at frontier rates</h3>
+          <p class="prose-note">
+            Your typical cost per task, priced at what three frontier models charge. It is a range
+            because input and output are priced differently: the low figure is all input, the high
+            figure is all output, and real work sits between them, usually nearer the low end.
+            Checked {RATES_CHECKED}.
+          </p>
+          <div class="scroll">
+            <table class="grid rateTable">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th class="c-num">Input<br /><i>per 1M</i></th>
+                  <th class="c-num">Output<br /><i>per 1M</i></th>
+                  <th class="c-num">Your typical task</th>
+                  <th>Worth knowing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {FRONTIER_RATES.map((r) => (
+                  <tr>
+                    <td class="cname">
+                      {r.model}
+                      <i class="vendor">{r.vendor}</i>
+                    </td>
+                    <td class="c-num fignum">{r.input.toFixed(2)}</td>
+                    <td class="c-num fignum">{r.output.toFixed(2)}</td>
+                    <td class="c-num rangecell" data-range={r.model}>—</td>
+                    <td class="cond">{r.condition}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="prose-note">
+            Figures are US dollars, which is how all three publish. <b>Rates change, and two of
+            these carry a condition that doubles them</b>, so check the provider before you quote
+            one:{' '}
+            {FRONTIER_RATES.map((r, i) => (
+              <>
+                {i > 0 && ' · '}
+                <a class="textlink" href={r.source} target="_blank" rel="noopener">{r.vendor}</a>
+              </>
+            ))}<span>.</span>
+          </p>
+        </div>
       </div>
     </section>
 
@@ -615,7 +684,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     type AfterLast,
     type BudgetEnforcement,
   } from '../../lib/reworkCost';
-  import { buildExample } from '../../data/rework-cost-check';
+  import { buildExample, FRONTIER_RATES, atRate } from '../../data/rework-cost-check';
 
   // The model is a closure and dies with the tab. Nothing is stored or sent.
   let model: ReworkModel = blankModel();
@@ -641,6 +710,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     model.budget = numOrNull($<HTMLInputElement>('i-budget').value);
     model.enforcement = $<HTMLSelectElement>('i-enforcement').value as BudgetEnforcement;
     model.pricePerMillion = numOrNull($<HTMLInputElement>('i-price').value);
+    model.currency = $<HTMLInputElement>('i-currency').value;
 
     // Present is a card that is shown or hidden, not a dropdown: the reader
     // adds the paths they have rather than answering No seven times.
@@ -681,6 +751,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     $<HTMLInputElement>('i-budget').value = show(model.budget);
     $<HTMLSelectElement>('i-enforcement').value = model.enforcement;
     $<HTMLInputElement>('i-price').value = show(model.pricePerMillion);
+    $<HTMLInputElement>('i-currency').value = model.currency;
 
     for (const card of all<HTMLElement>('.pathcard')) {
       card.dataset.present = rowOf(card.dataset.card as PathKind).present ? 'Yes' : 'No';
@@ -722,15 +793,29 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     const extras: string[] = [];
     if (r.typicalShare !== null) extras.push(`${percent(r.typicalShare)} of quota at peak`);
     if (r.costPerTask !== null)
-      extras.push(`${money(r.costPerTask)} per task · ${money(r.costPerThousand)} per 1,000`);
+      extras.push(
+        `${money(r.costPerTask, model.currency)} per task · ${money(r.costPerThousand, model.currency)} per 1,000`,
+      );
     $('f-typical-extra').textContent = extras.join(' · ');
 
     // A blank price has to have a visible consequence. Without this the box is
     // empty, nothing happens, and it reads as broken rather than optional.
     const ml = $('moneyline');
     ml.dataset.on = r.costPerTask === null ? 'no' : 'yes';
-    $('ml-task').textContent = money(r.costPerTask);
-    $('ml-k').textContent = money(r.costPerThousand);
+    $('ml-task').textContent = money(r.costPerTask, model.currency);
+    $('ml-k').textContent = money(r.costPerThousand, model.currency);
+
+    // The frontier table prices whatever the reader has actually entered.
+    // Always in dollars, because that is the currency the rates are published
+    // in — converting would be arithmetic this tool has no business doing.
+    for (const rate of FRONTIER_RATES) {
+      const cell = document.querySelector(`[data-range="${rate.model}"]`);
+      if (!cell) continue;
+      cell.textContent =
+        r.typical === null
+          ? '—'
+          : `${money(atRate(r.typical, rate.input))} – ${money(atRate(r.typical, rate.output))}`;
+    }
 
     // headline 2 — availability. Unbounded is a word, never a number.
     const worstEl = $('f-worst');
@@ -1126,6 +1211,17 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .moneyline[data-on='yes'] { color: var(--text-body); }
   .moneyline i { font-style: italic; color: var(--text-body); }
   .moneyline b { color: var(--text-loud); font-feature-settings: var(--font-features); }
+
+  .rates { margin-top: var(--space-7); }
+  .rateTable { min-width: 780px; }
+  .rateTable .vendor { display: block; font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .rateTable .cond { font-size: var(--size-1); max-width: 34ch; }
+  .fignum { font-feature-settings: var(--font-features); white-space: nowrap; }
+  .rangecell {
+    color: var(--text-loud); font-weight: var(--weight-strong);
+    white-space: nowrap; font-feature-settings: var(--font-features);
+  }
+  .prose-note b { color: var(--text-body); }
 
   /* ── the five checks ──────────────────────────────────────────────────── */
   .checks { list-style: none; padding: 0; display: grid; gap: var(--space-3); }

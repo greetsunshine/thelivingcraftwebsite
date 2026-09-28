@@ -397,6 +397,15 @@ test('numbers are grouped in thousands, never in lakhs', () => {
   assert.equal(tokens(34_120_000), '34,120,000');
 });
 
+test('money is grouped in thousands and takes a currency label', () => {
+  assert.equal(money(24_650), '24,650.00');
+  assert.equal(money(0.2958), '0.30');
+  // A symbol sits tight; a code takes a space.
+  assert.equal(money(24_650, '₹'), '₹24,650.00');
+  assert.equal(money(0.2958, 'USD'), 'USD 0.30');
+  assert.equal(money(null, '₹'), '—');
+});
+
 test('percentages carry one decimal place', () => {
   assert.equal(percent(1.972), '197.2%');
   assert.equal(percent(0.8), '80.0%');
