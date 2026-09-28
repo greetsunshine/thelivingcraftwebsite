@@ -10,7 +10,7 @@
  * Run:  node --experimental-strip-types tools/send-back-cost-check/dump_content.ts
  */
 import { HOW_TO_FIND, EXAMPLE, WORKFLOW_INPUTS, EXAMPLE_LABEL } from '../../src/data/send-back-cost-check.ts';
-import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, read, roundCost } from '../../src/lib/sendBackCost.ts';
+import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, read, roundCost } from '../../src/lib/sendBackCost.ts';
 
 const reading = read(EXAMPLE);
 
@@ -21,6 +21,7 @@ console.log(
       workflowInputs: WORKFLOW_INPUTS,
       howToFind: HOW_TO_FIND,
       paths: PATHS,
+      checkWhy: CHECK_WHY,
       afterLast: AFTER_LAST,
       budgetEnforcement: BUDGET_ENFORCEMENT,
       example: EXAMPLE,

@@ -63,6 +63,7 @@ import {
   blankModel,
   read,
   STATUS_MEANING,
+  CHECK_WHY,
   tokens,
   percent,
   multipleOf,
@@ -176,16 +177,16 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <div class="heads">
           <div class="head" id="head-typical">
             <span class="hlabel mono">Typical cost per task</span>
-            <b class="hfig" id="f-typical">—</b>
+            <b class="hfig"><span id="f-typical">—</span> <span class="hunit">tokens</span></b>
             <span class="hsub" id="f-typical-sub">—</span>
-            <span class="hnote">Unit economics: what every task costs on a normal day.</span>
+            <span class="hnote">Unit economics: what one task costs on a normal day, counting the rounds that get sent back.</span>
             <span class="hextra" id="f-typical-extra"></span>
           </div>
           <div class="head" id="head-worst" data-s="none">
             <span class="hlabel mono">Worst case at peak</span>
-            <b class="hfig" id="f-worst">—</b>
+            <b class="hfig"><span id="f-worst">—</span> <span class="hunit" id="f-worst-unit">of your quota</span></b>
             <span class="hsub" id="f-worst-sub">—</span>
-            <span class="hnote">Availability: what happens when every loop hits its cap during your busiest minute.</span>
+            <span class="hnote">Availability: the share of your tokens-per-minute quota this workflow would ask for if every loop ran to its cap during your busiest minute.</span>
             <span class="hextra" id="f-worst-extra"></span>
           </div>
         </div>
@@ -257,6 +258,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
                     <h3 class="pc-title">{meta.label}</h3>
                   )}
                   <p class="pc-ex">{meta.examples}</p>
+                  <p class="pc-what">{meta.what}</p>
                 </div>
                 <button class="pc-remove" type="button" data-remove={meta.kind}>Remove</button>
               </div>
@@ -291,15 +293,15 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
                   <label><span class="op"> </span><span class="lbl">Work repeated</span>
                     <input type="number" min="0" step="1" data-f="repeated" data-k={meta.kind}
                            aria-label={`${meta.label} work repeated`} />
-                    <i>steps that run again</i></label>
+                    <i>{meta.repeatedMeans}</i></label>
                   <label><span class="op">+</span><span class="lbl">Review call</span>
                     <input type="number" min="0" step="1" data-f="review" data-k={meta.kind}
                            aria-label={`${meta.label} review call`} />
-                    <i>the checker re-reads the new attempt</i></label>
+                    <i>{meta.reviewMeans}</i></label>
                   <label><span class="op">+</span><span class="lbl">Context growth</span>
                     <input type="number" min="0" step="1" data-f="growth" data-k={meta.kind}
                            aria-label={`${meta.label} context growth`} />
-                    <i>the note or error carried into the redo</i></label>
+                    <i>{meta.growthMeans}</i></label>
                   <p class="pc-total"><span class="op">=</span><span class="lbl">One round</span>
                     <b data-out="round" data-k={meta.kind}>—</b><i>tokens</i></p>
                 </div>
@@ -330,7 +332,11 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         </ul>
 
         <div class="adder" id="adder">
-          <p class="addlabel">Add a path your workflow has:</p>
+          <p class="addlabel">
+            <b>Add a path only if it makes the model do work a second time.</b> That is what this
+            tool counts. A send-back that spends no further tokens — a person editing the output
+            themselves, say — belongs in your process notes, not here.
+          </p>
           <div class="addrow">
             {PATHS.map((meta) => (
               <button class="addbtn" type="button" data-add={meta.kind} hidden>
@@ -398,6 +404,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
               <span class="st st-not-answered" data-st>{c.status}</span>
               <div>
                 <p class="ctitle">{c.n}. {c.title}</p>
+                <p class="cwhy">{CHECK_WHY[c.n]}</p>
                 <p class="creason" data-reason>{c.reason}</p>
                 <p class="caction" data-action hidden><span class="alabel">Do this</span><span data-action-text></span></p>
               </div>
@@ -460,22 +467,82 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <h2>A scheduling agent with <em>a judge on the draft</em></h2>
       </div>
       <p class="prose-lead">
-        A clean run costs 43,300 tokens. A judge reads every draft, which costs 11,500 whether it
-        passes or not, and sends about two in every task back. The rate limit is capped and quiet
-        at normal load. Nothing here has gone wrong.
+        A scheduling agent drafts meeting invitations. Nothing in it is broken, nobody has
+        misconfigured anything, and the numbers below are what it costs on an ordinary Tuesday.
       </p>
+
+      <ol class="walk">
+        <li>
+          <h3>A clean run is 43,300 tokens</h3>
+          <p>
+            Read the request, check calendars, draft the invitation, send it. If nothing sends the
+            work back, that is the whole bill. This is the number most cost models stop at.
+          </p>
+        </li>
+        <li>
+          <h3>A judge reads every draft: 11,500 tokens, every time</h3>
+          <p>
+            Before anything is sent, a model checks the draft against a rubric. It reads the whole
+            output, so its input is large. It runs whether the draft passes or fails, which makes
+            it an always-on check rather than a send-back. Running total: <b>54,800</b>.
+          </p>
+        </li>
+        <li>
+          <h3>The judge sends about two drafts back per task</h3>
+          <p>
+            Each of those rounds costs three things: the drafting step runs again
+            (<b>8,900</b>), the judge re-reads the new draft (<b>11,500</b>), and the critique is
+            carried into the redo so the input is bigger than last time (<b>1,500</b>). One round
+            is <b>21,900</b> tokens, and there are two of them.
+          </p>
+        </li>
+        <li class="walk-key">
+          <h3>So a normal task costs 98,600 tokens, not 43,300</h3>
+          <p>
+            54,800 + 2 × 21,900. That is <b>2.28× the clean run</b>, and it is the everyday
+            number — the one that decides whether the product makes money. At 200 tasks a minute
+            it asks for <b>19,720,000 tokens a minute</b>, which is <b>197.2%</b> of a 10,000,000
+            quota shared with every other workflow on the same key. The workflow is over its
+            quota before anything has gone wrong.
+          </p>
+        </li>
+        <li>
+          <h3>The rate limit is capped and quiet, until it is not</h3>
+          <p>
+            Transport refusals average zero rounds on a normal day: that is a measurement, not a
+            blank. They bite at peak. When they do, this code restarts the task, so
+            <b>16,700</b> tokens of completed work are paid for again on every attempt.
+          </p>
+        </li>
+        <li>
+          <h3>At the cap, one task costs 170,600 tokens</h3>
+          <p>
+            54,800, plus three judge rounds at 21,900, plus three transport rounds at 16,700.
+            That is <b>3.94× a clean run</b>, and across 200 tasks a minute it is
+            <b>34,120,000 tokens a minute</b>, or <b>341.2%</b> of the quota.
+          </p>
+        </li>
+      </ol>
+
       <div class="scroll">
         <table class="grid nums">
           <thead><tr><th>Reading</th><th class="c-num">Figure</th><th>What it means</th></tr></thead>
           <tbody>
-            <tr><td class="cname">Judge, one round</td><td class="c-num fig">{tokens(21900)}</td><td>8,900 repeated + 11,500 review + 1,500 growth.</td></tr>
-            <tr class="hl"><td class="cname">Typical cost per task</td><td class="c-num fig">{tokens(ex.typical)}</td><td><b>{multipleOf(ex.typicalMultiple)}</b> a clean run, on a normal day.</td></tr>
-            <tr><td class="cname">Typical demand at peak</td><td class="c-num fig">{tokens(ex.typicalPeak)}</td><td><b>{percent(ex.typicalShare)}</b> of the quota, before anything goes wrong.</td></tr>
-            <tr><td class="cname">Worst case per task</td><td class="c-num fig">{tokens(ex.worst)}</td><td>{multipleOf(ex.worstMultiple)} a clean run, every loop at its cap.</td></tr>
-            <tr class="bad"><td class="cname">Worst case at peak</td><td class="c-num fig">{tokens(ex.worstPeak)}</td><td><b>{percent(ex.worstShare)}</b> of the quota.</td></tr>
+            <tr><td class="cname">One judge round</td><td class="c-num fig">{tokens(21900)}</td><td>tokens · 8,900 repeated + 11,500 review + 1,500 growth</td></tr>
+            <tr class="hl"><td class="cname">Typical cost per task</td><td class="c-num fig">{tokens(ex.typical)}</td><td>tokens · <b>{multipleOf(ex.typicalMultiple)}</b> a clean run, on a normal day</td></tr>
+            <tr><td class="cname">Typical demand at peak</td><td class="c-num fig">{tokens(ex.typicalPeak)}</td><td>tokens a minute · <b>{percent(ex.typicalShare)}</b> of the quota</td></tr>
+            <tr><td class="cname">Worst case per task</td><td class="c-num fig">{tokens(ex.worst)}</td><td>tokens · {multipleOf(ex.worstMultiple)} a clean run, every loop at its cap</td></tr>
+            <tr class="bad"><td class="cname">Worst case at peak</td><td class="c-num fig">{tokens(ex.worstPeak)}</td><td>tokens a minute · <b>{percent(ex.worstShare)}</b> of the quota</td></tr>
           </tbody>
         </table>
       </div>
+
+      <p class="prose-note">
+        The row that matters is the second one, not the last. A check that only counted rate
+        limits would have reported 8,660,000 a minute, or 87% of quota, and called it survivable.
+        The judge loop is what puts it at 197%, and it does that every single day.
+      </p>
+
       <ul class="exchecks">
         {ex.checks.map((c) => (
           <li>
@@ -486,10 +553,11 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         ))}
       </ul>
       <p class="prose-note">
-        The number that does the damage is the second row, not the last one. Nearly double the
-        quota is where this workflow sits <i>on a normal day</i>, and the judge loop is the reason.
-        A check that only looked at rate limits would have reported 87% and called it survivable.
+        Check 4 fails because normal load is already over the quota. Everything else passes: the
+        paths are listed and costed, both are capped with a decided outcome and a named owner, and
+        the 120,000 budget sits between the typical cost and the worst case, so it binds.
       </p>
+
       <p class="hero-cta nextrow">
         <button class="btn btn-primary" id="load-example-2" type="button">Load this example into the check</button>
       </p>
@@ -628,8 +696,11 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
     // headline 1 — unit economics
     $('f-typical').textContent = r.typical === null ? '—' : `${tokens(r.typical)}`;
+    // A bare "2.28x" means nothing on its own. Say what it is a multiple of.
     $('f-typical-sub').textContent =
-      r.typicalMultiple === null ? '—' : `${multipleOf(r.typicalMultiple)} a clean run`;
+      r.typicalMultiple === null
+        ? 'Tokens for one task, including every round that gets sent back.'
+        : `${multipleOf(r.typicalMultiple)} what one clean run costs — a task that is never sent back.`;
     const extras: string[] = [];
     if (r.typicalShare !== null) extras.push(`${percent(r.typicalShare)} of quota at peak`);
     if (r.costPerTask !== null)
@@ -639,15 +710,22 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     // headline 2 — availability. Unbounded is a word, never a number.
     const worstEl = $('f-worst');
     const head = $('head-worst');
+    const worstUnit = $('f-worst-unit');
     if (r.unbounded) {
       worstEl.textContent = 'Unbounded';
-      $('f-worst-sub').textContent = 'A present path has no cap';
+      worstUnit.textContent = '';
+      $('f-worst-sub').textContent =
+        'A path in your workflow has no cap, so there is no worst case to put a number on.';
       $('f-worst-extra').textContent = '';
       head.dataset.s = 'bad';
     } else {
       worstEl.textContent = r.worstShare === null ? '—' : percent(r.worstShare);
+      worstUnit.textContent = r.worstShare === null ? '' : 'of your quota';
+      // 170,600 on its own is unlabelled. Say it is tokens, and per what.
       $('f-worst-sub').textContent =
-        r.worst === null ? '—' : `${tokens(r.worst)} per task · ${multipleOf(r.worstMultiple)} a clean run`;
+        r.worst === null
+          ? 'The share of your quota this workflow would ask for at its cap.'
+          : `${tokens(r.worst)} tokens for one task at the cap, which is ${multipleOf(r.worstMultiple)} a clean run, across ${tokens(model.peakTasksPerMinute)} tasks a minute.`;
       $('f-worst-extra').textContent = '';
       head.dataset.s =
         r.worstShare === null ? 'none' : r.worstShare > 1 ? 'bad' : r.worstShare > 0.8 ? 'warn' : 'ok';
@@ -816,6 +894,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .head[data-s='warn'] { border-left-color: var(--accent-ink); }
   .head[data-s='bad'] { border-left-color: var(--danger); }
   .hlabel { font-size: var(--size-1); color: var(--text-quiet); }
+  .hunit { font-size: var(--size-3); font-weight: var(--weight-normal); color: var(--text-quiet); }
   .hfig { font-size: var(--size-7); font-weight: var(--weight-strong); color: var(--text-loud); line-height: 1.1; font-feature-settings: var(--font-features); }
   .head[data-s='bad'] .hfig { color: var(--danger); }
   .head[data-s='warn'] .hfig { color: var(--accent-ink); }
@@ -894,6 +973,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .pc-title { font-family: var(--font-heading); font-weight: var(--weight-heading); font-size: var(--size-5); color: var(--text-loud); }
   .pc-name { font-size: var(--size-4); max-width: 22rem; }
   .pc-ex { color: var(--text-quiet); font-size: var(--size-2); margin-top: 2px; }
+  .pc-what { color: var(--text-body); font-size: var(--size-2); margin-top: var(--space-2); max-width: 62ch; }
   .pc-remove {
     flex: none;
     appearance: none;
@@ -941,7 +1021,10 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   /* The three parts add up, and the layout says so. */
   .pc-sum { display: grid; gap: var(--space-2); max-width: 44rem; }
-  .pc-sum label, .pc-total { display: grid; grid-template-columns: 1.2rem 10.5rem 9rem 1fr; gap: var(--space-3); align-items: center; }
+  .pc-sum label, .pc-total { display: grid; grid-template-columns: 1.2rem 10.5rem 9rem 1fr; gap: var(--space-3); align-items: start; }
+  .pc-sum label > input { align-self: start; }
+  .pc-sum .lbl { padding-top: 9px; }
+  .pc-sum i { padding-top: 9px; line-height: var(--lh-snug); }
   .pc-sum .op { font-size: var(--size-4); color: var(--text-quiet); text-align: center; }
   .pc-sum .lbl { font-size: var(--size-2); color: var(--text-body); }
   .pc-sum i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
@@ -966,7 +1049,8 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   /* ── adding a path ────────────────────────────────────────────────────── */
   .adder { margin-top: var(--space-6); }
   .adder.empty .addrow { display: none; }
-  .addlabel { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-3); }
+  .addlabel { font-size: var(--size-2); color: var(--text-quiet); margin-bottom: var(--space-4); max-width: 74ch; }
+  .addlabel b { color: var(--text-body); }
   .adder.empty .addlabel { display: none; }
   .addrow { display: flex; flex-wrap: wrap; gap: var(--space-3); }
   .addbtn {
@@ -1015,7 +1099,21 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     padding: var(--space-4) var(--space-5);
   }
   .ctitle { color: var(--text-body); font-weight: var(--weight-medium); }
-  .creason { color: var(--text-quiet); font-size: var(--size-2); margin-top: 2px; }
+  /* Why the check exists, above what it currently says. A reader who does not
+     know what a check is for answers it carelessly. */
+  .cwhy { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); max-width: 74ch; }
+  .creason {
+    color: var(--text-body); font-size: var(--size-2);
+    margin-top: var(--space-3); padding-top: var(--space-3);
+    border-top: 1px solid var(--border-hair);
+  }
+  .creason::before {
+    content: 'Your sheet says';
+    display: block;
+    font-size: var(--size-1); font-weight: var(--weight-strong);
+    color: var(--text-quiet); text-transform: uppercase;
+    letter-spacing: var(--tracking-caps); margin-bottom: 4px;
+  }
   /* The status is a word. Colour reinforces it and never replaces it. */
   .st {
     display: inline-block;
@@ -1095,6 +1193,22 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .grid tr.hl td { background: var(--accent-quiet); }
   .grid tr.bad td { background: var(--danger-quiet); }
   .grid tr.bad .fig { color: var(--danger); }
+  .walk { list-style: none; padding: 0; display: grid; gap: var(--space-5); max-width: 76ch; margin-bottom: var(--space-7); counter-reset: walk; }
+  .walk li { position: relative; padding-left: var(--space-8); counter-increment: walk; }
+  .walk li::before {
+    content: counter(walk);
+    position: absolute; left: 0; top: 2px;
+    display: grid; place-items: center;
+    width: 30px; height: 30px; border-radius: var(--radius-pill);
+    background: var(--surface-hover); color: var(--accent-ink);
+    font-size: var(--size-2); font-weight: var(--weight-strong);
+  }
+  .walk h3 { font-family: var(--font-heading); font-weight: var(--weight-heading); font-size: var(--size-4); color: var(--text-loud); }
+  .walk p { color: var(--text-quiet); font-size: var(--size-3); margin-top: 4px; }
+  .walk b { color: var(--text-body); font-feature-settings: var(--font-features); }
+  .walk-key h3 { color: var(--danger); }
+  .walk-key::before { background: var(--danger-quiet); color: var(--danger); }
+
   .exchecks { list-style: none; padding: 0; margin-top: var(--space-5); display: grid; gap: var(--space-2); max-width: 82ch; }
   .exchecks li { display: flex; gap: var(--space-3); align-items: baseline; }
   .exn { color: var(--text-quiet); font-size: var(--size-1); }

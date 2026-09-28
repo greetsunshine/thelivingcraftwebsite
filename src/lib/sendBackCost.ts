@@ -73,6 +73,20 @@ export interface PathMeta {
   growth: string;
   /** Was the attempt billed? Copy, not a calculation. */
   billed: string;
+  /** What this path actually is, in plain words. */
+  what: string;
+  /**
+   * What each of the three parts of a round means FOR THIS PATH.
+   *
+   * "Work repeated" means something different for a rate limit than it does
+   * for a judge, and a single column heading cannot say both. A transport
+   * refusal repeats nothing at all if the code retries only the failed call,
+   * and repeats the whole task if it starts over; a judge usually repeats one
+   * drafting step. The reader needs the path's own answer, not the generic one.
+   */
+  repeatedMeans: string;
+  reviewMeans: string;
+  growthMeans: string;
   /** Whether `billed` defaults to Yes on the form. */
   billedByDefault: boolean;
   /**
@@ -90,12 +104,20 @@ export const PATHS: PathMeta[] = [
   {
     kind: 'transport',
     label: 'Transport refusal',
-    examples: '429, 503, timeout',
+    examples: '429 rate limit, 503 unavailable, or a timeout',
     bites: 'At peak only',
     growth: 'No',
     billed: 'Usually not for the refused call itself. The repeated steps are billed.',
     billedByDefault: false,
     expectsGrowth: false,
+    what:
+      'The model or tool API did not answer. This is a failure to reach the service, not a problem with the output.',
+    repeatedMeans:
+      "Depends on what your code does next, and this is the number people get wrong. If it retries only the failed call, nothing is repeated and this is 0. If it restarts the task, it is every step that already succeeded and now runs again.",
+    reviewMeans:
+      "Usually 0. Nothing re-reads a call that never returned.",
+    growthMeans:
+      'Usually 0. The same request is sent again, unchanged.',
     custom: false,
   },
   {
@@ -107,6 +129,14 @@ export const PATHS: PathMeta[] = [
     billed: 'Yes',
     billedByDefault: true,
     expectsGrowth: true,
+    what:
+      'A model or a rubric reads the finished output, decides it is not good enough, and sends it back with feedback.',
+    repeatedMeans:
+      "The steps that produce the output again. Often just the drafting step rather than the whole task.",
+    reviewMeans:
+      "The judge's own call, on the new attempt. It reads the whole output plus its rubric, so its input is usually large. This is the line teams forget.",
+    growthMeans:
+      'The critique carried into the redo, so the next attempt has more input than the one it replaced.',
     custom: false,
   },
   {
@@ -118,6 +148,14 @@ export const PATHS: PathMeta[] = [
     billed: 'Yes',
     billedByDefault: true,
     expectsGrowth: true,
+    what:
+      'The output did not parse, did not match the schema, or tripped a guardrail, so the model has to produce it again.',
+    repeatedMeans:
+      "The step that produced the invalid output.",
+    reviewMeans:
+      "The validator's own cost. It is 0 when the check is code, such as a JSON schema check, rather than a model.",
+    growthMeans:
+      'The error message handed back so the model knows what to fix.',
     custom: false,
   },
   {
@@ -129,6 +167,14 @@ export const PATHS: PathMeta[] = [
     billed: 'Yes',
     billedByDefault: true,
     expectsGrowth: true,
+    what:
+      'A tool the agent called returned an error: not found, permission denied, bad arguments. The agent has to re-plan or try again.',
+    repeatedMeans:
+      "The reasoning steps that run again to work out what to do instead.",
+    reviewMeans:
+      "Usually 0, unless something checks the new plan before it runs.",
+    growthMeans:
+      'The error text and the failed attempt, carried into the next plan.',
     custom: false,
   },
   {
@@ -140,6 +186,14 @@ export const PATHS: PathMeta[] = [
     billed: 'Yes',
     billedByDefault: true,
     expectsGrowth: true,
+    what:
+      'A person reviewing the work sends it back. Their reading costs no tokens; the redo does.',
+    repeatedMeans:
+      "The steps that run again to produce a new version.",
+    reviewMeans:
+      "0. A person reading the output consumes no tokens.",
+    growthMeans:
+      "The reviewer's comments, carried into the redo.",
     custom: false,
   },
   {
@@ -151,6 +205,14 @@ export const PATHS: PathMeta[] = [
     billed: 'You decide',
     billedByDefault: true,
     expectsGrowth: false,
+    what:
+      'Anything else in your system that makes model work happen a second time.',
+    repeatedMeans:
+      "The steps that run again.",
+    reviewMeans:
+      "Whatever re-checks the new attempt, if anything does.",
+    growthMeans:
+      'Whatever extra input the redo carries.',
     custom: true,
   },
   {
@@ -162,6 +224,14 @@ export const PATHS: PathMeta[] = [
     billed: 'You decide',
     billedByDefault: true,
     expectsGrowth: false,
+    what:
+      'Anything else in your system that makes model work happen a second time.',
+    repeatedMeans:
+      "The steps that run again.",
+    reviewMeans:
+      "Whatever re-checks the new attempt, if anything does.",
+    growthMeans:
+      'Whatever extra input the redo carries.',
     custom: true,
   },
 ];
@@ -365,6 +435,21 @@ const CHECK_TITLES: Record<number, string> = {
   3: 'Rounds are capped, and something happens after the last one',
   4: 'Two numbers: unit economics and availability',
   5: 'The budget belongs to the task, across all its rounds',
+};
+
+/**
+ * What each check is protecting against.
+ *
+ * A status and a reason tell a reader where they stand. They do not say why
+ * anybody should care, and a check whose purpose is not obvious gets answered
+ * carelessly. This is the paragraph that makes the check worth answering.
+ */
+export const CHECK_WHY: Record<number, string> = {
+  1: 'A path you have not listed is spend you cannot see. Most teams count their retries and miss the judge entirely, because a judge rejection looks like normal operation rather than a failure.',
+  2: 'A round is three things and teams usually count only the first. The review call and the growing context are what make a judge loop expensive, and neither appears in a retry counter.',
+  3: 'A loop with no cap has no worst case. This is the check that turns "it depends" into a number, and an uncapped path is the single most common finding here.',
+  4: 'One number is not enough, because the two failures are different. Typical cost is what you pay every day and it decides whether the product is viable. Worst case at peak decides whether a bad minute takes the system down.',
+  5: 'Tokens are spent by the task, not by the call. A per-call budget never sees three rounds add up, so it cannot stop the thing that actually runs away.',
 };
 
 const filled = (v: number | null): boolean => v !== null;

@@ -368,17 +368,20 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     w_blocked = f'OR({base_blank},{unbounded},SUM({P(H_WBLOCK)})>0)'
 
     rows = [
-        ("Typical cost per task", f'=IF({t_blocked},"",{clean}+{always}+SUM({P(H_TCONTRIB)}))', NUMFMT,
-         "Unit economics: what every task costs on a normal day."),
-        ("…as a multiple of a clean run", None, MULFMT, ""),
-        ("Typical demand at peak", None, NUMFMT, ""),
-        ("…as a share of the quota", None, PCTFMT, ""),
-        ("Worst case per task", None, NUMFMT,
-         "Availability: every loop at its cap."),
-        ("…as a multiple of a clean run", None, MULFMT, ""),
-        ("Worst case at peak", None, NUMFMT, ""),
-        ("…as a share of the quota", None, PCTFMT, ""),
-        ("Cost per task", None, MONEYFMT, "Only when a price is entered."),
+        ("Typical cost per task (tokens)", None, NUMFMT,
+         "Unit economics: what ONE task costs on a normal day, counting the rounds sent back."),
+        ("…times what one clean run costs", None, MULFMT,
+         "A clean run is a task nothing sent back."),
+        ("Typical demand at peak (tokens per minute)", None, NUMFMT,
+         "Peak tasks per minute × the typical cost above."),
+        ("…as a share of your quota", None, PCTFMT, ""),
+        ("Worst case per task (tokens)", None, NUMFMT,
+         "Availability: ONE task with every loop run to its cap."),
+        ("…times what one clean run costs", None, MULFMT, ""),
+        ("Worst case at peak (tokens per minute)", None, NUMFMT, ""),
+        ("…as a share of your quota", None, PCTFMT,
+         "Over 100% means this workflow alone would ask for more than the pool holds."),
+        ("Cost per task", None, MONEYFMT, "Only when a price is entered. Your own currency."),
         ("Cost per 1,000 tasks", None, MONEYFMT, ""),
     ]
     for i, (label, _f, fmt, note) in enumerate(rows):
@@ -430,7 +433,7 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     }
 
 
-def checks_block(ws: Worksheet, ref: dict) -> dict:
+def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
     """The five checks, as formulas that mirror src/lib/sendBackCost.ts.
 
     Each one returns a status word and a reason. The status is a WORD first;
@@ -580,10 +583,13 @@ def checks_block(ws: Worksheet, ref: dict) -> dict:
     first = hdr + 1
     for i, (title, status, reason, action) in enumerate(rows):
         r = first + i
-        ws.row_dimensions[r].height = 46
+        # Taller: the cell now carries the check AND why it exists.
+        ws.row_dimensions[r].height = 76
         put(ws, f"A{r}", i + 1, font=F_BODY, align=CENTER, border=HAIR)
         ws.merge_cells(f"B{r}:E{r}")
-        put(ws, f"B{r}", title, font=F_BODY, align=WRAP_MID, border=HAIR)
+        put(ws, f"B{r}", f"{title}\n{data['checkWhy'][str(i + 1)]}",
+            font=F_BODY, align=Alignment(horizontal="left", vertical="top", wrap_text=True),
+            border=HAIR)
         calc(ws, f"F{r}", "=" + status, font=F_BODY_B, align=CENTER, border=HAIR)
         # The reason and the action share one cell, on two lines. A finding is
         # not an instruction, so the move is spelled out under it; a Pass has
@@ -734,6 +740,54 @@ def guide_tab(ws: Worksheet, data: dict):
     ws.freeze_panes = "A4"
 
 
+def paths_tab(ws: Worksheet, data: dict):
+    """What each path is, and what its three cost lines mean for it.
+
+    "Work repeated" means something different for a rate limit than for a
+    judge, and one column heading on the Check tab cannot say both. This tab
+    carries the path's own answer.
+    """
+    ws.sheet_view.showGridLines = False
+    widths(ws, {"A": 2.4, "B": 26, "C": 20, "D": 88})
+    put(ws, "A1", "What each path means", font=F_H1)
+    ws.row_dimensions[1].height = 26
+    ws.merge_cells("B2:D2")
+    put(ws, "B2",
+        "Add a path on the Check tab only if it makes the model do work a second time. That is "
+        "what this workbook counts. A send-back that spends no further tokens belongs in your "
+        "process notes, not here.",
+        font=F_LEAD, align=WRAP)
+    ws.row_dimensions[2].height = 32
+
+    r = 4
+    for meta in data["paths"]:
+        if meta["custom"]:
+            continue
+        put(ws, f"B{r}", meta["label"], font=F_BODY_B, align=WRAP)
+        ws.merge_cells(f"C{r}:D{r}")
+        put(ws, f"C{r}", meta["what"], font=F_BODY, align=WRAP)
+        ws.row_dimensions[r].height = max(18, 15 * (1 + len(meta["what"]) // 105))
+        r += 1
+        put(ws, f"C{r}", "Examples", font=F_NOTE, align=WRAP)
+        put(ws, f"D{r}", meta["examples"], font=F_NOTE, align=WRAP)
+        ws.row_dimensions[r].height = 16
+        r += 1
+        for label, key in (("Bites", "bites"), ("Context grows", "growth"), ("Attempt billed", "billed")):
+            put(ws, f"C{r}", label, font=F_NOTE, align=WRAP)
+            put(ws, f"D{r}", meta[key], font=F_NOTE, align=WRAP)
+            ws.row_dimensions[r].height = max(16, 15 * (1 + len(str(meta[key])) // 105))
+            r += 1
+        for label, key in (("Work repeated", "repeatedMeans"),
+                           ("Review call", "reviewMeans"),
+                           ("Context growth", "growthMeans")):
+            put(ws, f"C{r}", label, font=F_LABEL, align=WRAP)
+            put(ws, f"D{r}", meta[key], font=F_NOTE, align=WRAP)
+            ws.row_dimensions[r].height = max(16, 15 * (1 + len(meta[key]) // 105))
+            r += 1
+        r += 1
+    ws.freeze_panes = "A4"
+
+
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -764,6 +818,7 @@ def main() -> int:
     wb.remove(wb.active)
     ws_cover = wb.create_sheet("Start here")
     ws_check = wb.create_sheet("Check")
+    ws_paths = wb.create_sheet("What each path means")
     ws_guide = wb.create_sheet("How to find these numbers")
     ws_example = wb.create_sheet("Example")
 
@@ -771,17 +826,18 @@ def main() -> int:
     ws_cover.sheet_properties.tabColor = rgb("sun")[2:]
 
     ref_blank = check_tab(ws_check, data, filled=False)
-    chk_blank = checks_block(ws_check, ref_blank)
+    chk_blank = checks_block(ws_check, ref_blank, data)
     ws_check.freeze_panes = "A4"
 
+    paths_tab(ws_paths, data)
     guide_tab(ws_guide, data)
 
     ref_ex = check_tab(ws_example, data, filled=True)
-    chk_ex = checks_block(ws_example, ref_ex)
+    chk_ex = checks_block(ws_example, ref_ex, data)
     ws_example.freeze_panes = "A4"
 
     for ws in wb.worksheets:
-        page_setup(ws, fit_height=0 if ws is ws_guide else 1)
+        page_setup(ws, fit_height=0 if ws in (ws_guide, ws_paths) else 1)
         protect(ws)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -789,7 +845,7 @@ def main() -> int:
     print(f"wrote {OUT.relative_to(REPO)}  ({OUT.stat().st_size:,} bytes)")
 
     refs = {
-        "sheets": {"cover": "Start here", "check": "Check",
+        "sheets": {"cover": "Start here", "check": "Check", "paths": "What each path means",
                    "guide": "How to find these numbers", "example": "Example"},
         "example": {**{k: v for k, v in ref_ex.items() if isinstance(v, str)},
                     "checks_first": chk_ex["first"], "checks_last": chk_ex["last"],
