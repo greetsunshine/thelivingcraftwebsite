@@ -288,10 +288,31 @@ closes at the first block and the after-pulse opens at the close, and all four i
   points, the two counters, the move-toward-the-protected-thing rule and the six attack
   routes; it lost the ₹44,000 Friday night to topic 5 and drill 5 entirely.
 
-- **Topics 2 to 6 are the remaining work, and four of them do not exist.** Topic 2 is at
-  outline stage and predates both the rebuild and the checker. Topics 3, 4, 5 and 6 have no
-  pages at all. That is two pairs to rebuild and four to write, at roughly 750 to 900 lines
-  of hand-built HTML each.
+- **Topic 2's pair is rebuilt and republished too, and also passes all eleven.** Learner
+  version 8, instructor version 7. It is cycle B: 01:40 to 02:05, and then it keeps going
+  through the break and lands at 02:20. **The break is bold on its clock on purpose**,
+  because for fifteen minutes it is the only part of the session still doing anything.
+
+  The big change is that the 2:14am question stopped being a discussion. The room sets a
+  real 18-minute timer at 02:00, leaves, and reads its own queue at 02:20. The old beat
+  carried a defect fixed on 11 September, where it asked about code the room had not
+  written yet; that cannot come back, because the code now exists forty minutes before the
+  question. The decision log moved from 00:52 to 01:47, where it is actually built, closing
+  a 115-minute gap between teaching it and building it.
+
+  **"Outline stage" in the README was wrong.** Both pages were complete, including a
+  hand-drawn SVG of the four exits from an ask, which is carried over unchanged. Only the
+  clock was stale.
+
+- **One new preparation item, and it is the only thing the rebuild added to the running
+  cost.** Three prepared queue states for 02:00, one per outcome, for anybody whose gate is
+  not working when the timer is set. Without them a broken build costs that person the
+  02:20 beat entirely, which is the best six minutes in the session.
+
+- **Topics 3, 4, 5 and 6 have no pages at all.** That is four pairs to write from nothing,
+  at roughly 750 to 900 lines of hand-built HTML each. The template is settled now: one
+  generated clock string dropped into both pages, and the eleven checks green before
+  publishing.
 
 - **`check-teaching-pages.mjs` never actually checked anything, and now it does.** This is
   the one to read before rebuilding any page.
