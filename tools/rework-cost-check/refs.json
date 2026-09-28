@@ -1,0 +1,153 @@
+{
+  "cover": {
+    "checkTitlesFirst": 18
+  },
+  "sheets": {
+    "cover": "Start here",
+    "check": "Check",
+    "paths": "What each path means",
+    "rates": "For scale",
+    "guide": "How to find these numbers",
+    "example": "Example"
+  },
+  "example": {
+    "clean": "C5",
+    "always": "C6",
+    "peak": "C7",
+    "quota": "C8",
+    "budget": "C23",
+    "enf": "C24",
+    "price": "C25",
+    "currency": "C26",
+    "typ": "C29",
+    "typ_mul": "C30",
+    "typ_peak": "C31",
+    "typ_share": "C32",
+    "wst": "C33",
+    "wst_mul": "C34",
+    "wst_peak": "C35",
+    "wst_share": "C36",
+    "per_task": "C37",
+    "per_k": "C38",
+    "unbounded": "(SUM(R14:R20)>0)",
+    "checks_first": 42,
+    "checks_last": 46,
+    "next": "C48",
+    "judge_round": "H15",
+    "transport_round": "H14",
+    "judge_cap": "I15"
+  },
+  "blank": {
+    "clean": "C5",
+    "always": "C6",
+    "peak": "C7",
+    "quota": "C8",
+    "budget": "C23",
+    "enf": "C24",
+    "price": "C25",
+    "currency": "C26",
+    "typ": "C29",
+    "typ_mul": "C30",
+    "typ_peak": "C31",
+    "typ_share": "C32",
+    "wst": "C33",
+    "wst_mul": "C34",
+    "wst_peak": "C35",
+    "wst_share": "C36",
+    "per_task": "C37",
+    "per_k": "C38",
+    "unbounded": "(SUM(R14:R20)>0)",
+    "checks_first": 42,
+    "checks_last": 46,
+    "next": "C48"
+  },
+  "expected": {
+    "typical": 98600,
+    "typicalMultiple": 2.277136258660508,
+    "typicalPeak": 19720000,
+    "typicalShare": 1.972,
+    "unbounded": false,
+    "worst": 170600,
+    "worstMultiple": 3.9399538106235568,
+    "worstPeak": 34120000,
+    "worstShare": 3.412,
+    "checks": [
+      {
+        "n": 1,
+        "title": "Every path that sends work back is listed",
+        "status": "Pass",
+        "reason": "2 paths listed, each with how often it sends work back.",
+        "action": ""
+      },
+      {
+        "n": 2,
+        "title": "Each round is costed as repeated, review and growth",
+        "status": "Pass",
+        "reason": "Every present path has all three parts of a round.",
+        "action": ""
+      },
+      {
+        "n": 3,
+        "title": "Every loop has a limit, a decided outcome, and an owner",
+        "status": "Pass",
+        "reason": "Every present path is capped, with a decided outcome and a named owner.",
+        "action": ""
+      },
+      {
+        "n": 4,
+        "title": "Both numbers fit: what you pay daily, and your busiest minute",
+        "status": "Fail",
+        "reason": "Your normal load already exceeds the quota.",
+        "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."
+      },
+      {
+        "n": 5,
+        "title": "One token budget for the whole task, not one per call",
+        "status": "Pass",
+        "reason": "Your budget of 120,000 sits above a normal task (98,600) and below the worst case (170,600), so it stops a runaway task without touching ordinary ones. Confirm the outcome you chose for each path actually runs when it fires.",
+        "action": ""
+      }
+    ],
+    "nextStep": {
+      "n": 4,
+      "title": "Both numbers fit: what you pay daily, and your busiest minute",
+      "status": "Fail",
+      "reason": "Your normal load already exceeds the quota.",
+      "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."
+    }
+  },
+  "checkTitles": {
+    "1": "Every path that sends work back is listed",
+    "2": "Each round is costed as repeated, review and growth",
+    "3": "Every loop has a limit, a decided outcome, and an owner",
+    "4": "Both numbers fit: what you pay daily, and your busiest minute",
+    "5": "One token budget for the whole task, not one per call"
+  },
+  "row0": 14,
+  "rates": [
+    {
+      "vendor": "Anthropic",
+      "model": "Claude Opus 5.5",
+      "input": 4,
+      "output": 20,
+      "condition": "US-only inference costs 1.1\u00d7. Fast mode costs 2\u00d7.",
+      "source": "https://claude.com/pricing"
+    },
+    {
+      "vendor": "OpenAI",
+      "model": "GPT-6 Astra",
+      "input": 10,
+      "output": 50,
+      "condition": "Long context costs $20 in and $75 out, so a growing redo can double this.",
+      "source": "https://developers.openai.com/api/docs/pricing"
+    },
+    {
+      "vendor": "Google",
+      "model": "Gemini 3.1 Pro",
+      "input": 2,
+      "output": 12,
+      "condition": "Prompts over 200k cost $4 in and $18 out.",
+      "source": "https://ai.google.dev/gemini-api/docs/pricing"
+    }
+  ]
+}

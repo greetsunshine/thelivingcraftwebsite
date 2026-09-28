@@ -27,4 +27,9 @@ export const RESOURCE_CHOICES: ResourceChoice[] = [
     action: 'Take the Agent Failure Triage Quiz',
     url: '/resources/agent-failure-triage-quiz',
   },
+  {
+    question: 'What does one task cost once the judge keeps sending it back?',
+    action: 'Use the Rework Cost Check',
+    url: '/resources/rework-cost-check',
+  },
 ];

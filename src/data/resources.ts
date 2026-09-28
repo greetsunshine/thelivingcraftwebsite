@@ -283,6 +283,29 @@ export const resources: Resource[] = [
     url: '/resources/agent-failure-triage-quiz',
     publishedAt: '2026-09-26',
   },
+  {
+    id: 'rework-cost-check',
+    topic: 'Rework Cost',
+    number: '08',
+    series: 'Agentic system design',
+    title: 'The Rework Cost Check',
+    kind: 'Interactive tool \u00b7 5 checks \u00b7 1 worked example \u00b7 Excel workbook',
+    summary:
+      'What one task really costs once limits, judges, validators and reviewers send the work back, and whether your busiest minute fits the quota.',
+    description:
+      'Most agent cost models price a clean run and stop there. Almost nothing runs clean. A rate limit refuses a call, a judge fails the draft, a validator rejects the JSON, a tool errors, a reviewer sends it back — and every one of those costs the same shape of thing: the steps that run again, the check that re-reads the new attempt, and the extra context the redo carries. What differs is when each one bites and whether the attempt was billed. A rate-limit refusal bites at peak and the refused call is usually not billed. A judge rejection bites on every single run, was billed in full, and makes the next attempt larger than the one it replaces. That second family is what sets unit economics, and it is the one teams do not count. This tool lists all five paths plus two of your own, costs one round of each, caps them, and asks what happens after the last round and who owns that outcome. It returns two numbers rather than one: typical cost per task, which is unit economics on a normal day, and worst case at peak, which is availability when every loop runs to its cap in your busiest minute. A present path with no cap returns Unbounded rather than a number, because that is the finding. Five checks then come back Pass, Attention or Fail with a reason, and the tool names the next fix to make. The worked example is a scheduling agent whose clean run is 43,300 tokens and whose real cost is 98,600, because a judge reads every draft and sends two rounds back per task. It sits at 197% of its shared quota before anything has gone wrong.',
+    useFor: [
+      'Cost a task the way it actually runs, with the rounds that get sent back, not just the clean path',
+      'Separate what a judge or validator costs you every day from what a rate limit costs you at peak',
+      'Find the loop in your own system that has no cap, and therefore no worst case',
+      'Decide what the agent does after the last rejection, and name who owns that outcome',
+      'Take a per-task token budget to your team with the two numbers that justify it',
+    ],
+    format:
+      'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing is sent or stored, and there is no sign-up. A scheduling example loads in one click. The same check is also offered as an Excel workbook.',
+    url: '/resources/rework-cost-check',
+    publishedAt: '2026-09-28',
+  },
 ];
 
 /**
