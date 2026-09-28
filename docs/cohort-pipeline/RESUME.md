@@ -159,7 +159,7 @@ New surfaces:
 on the black, ember and sun palette: forest now, ivory ground, Source Serif 4 for h1 and h2,
 6px and 12px radii, a 1px line instead of a shadow. Every colour pair contrast-checked.
 
-## How a guardrail decides — a new topic note, and a week 2 redesign NOT done — 28 September
+## How a guardrail decides — a new topic note — 28 September
 
 **New: [`docs/teaching/notes/guardrail-patterns.md`](../teaching/notes/guardrail-patterns.md).**
 Week 2 builds four controls and every one is a predicate in code. That is the right
@@ -211,23 +211,75 @@ drill 5. That trade does not exist: drill 5 is after-work and frees no live minu
 drill block from 02:20 to 03:20 is full, and anything added there comes out of drill 2,
 drill 3 or the checkpoint. The note now says so.
 
-**A structural redesign of week 2 was designed and then NOT applied. Read this before
-starting it again.** The proposal was build-break cycles instead of one drill block,
-keyboards at 00:45 rather than 02:20, an adversary round where pairs attack each other's
-guards, and an architecture diagram the room grows all day. It is a rewrite, not an edit,
-and it collides with four finished things: the 1555-line instructor notes and their 42
-beats, the eight-item quiz bank keyed to the current block order, the two published
-Artifacts, and the `w2-guarded` and `w2-goodwill` make targets. The instructor notes were
-recovered from a published Artifact on 28 September after being lost, so the same-day cost
-of overwriting them is real.
+## Week 2 rebuilt into build-break cycles — 28 September
 
-Two things from that proposal are worth keeping whatever is decided. **Judge calibration
-belongs to week 3, not week 2** — a judge is a scorer, and teaching a scorer before the
-room can measure whether the scorer is right is the false pass one level up. And **no
-control in week 2 currently gets a counter**, so the session asserts that a wrong refusal
-is invisible in monitoring and then never makes it visible. Two counters in drill 1,
-`guard_allowed_total` and `guard_refused_total`, would land the point instead of stating
-it.
+**The redesign the entry above said was not applied has now been applied.** Sunil asked
+for it after the collision list was put in front of him. The old five-block version is
+intact at `cb26654` if you want to compare, and `git show cb26654:src/content/sessions/week-2.md`
+is the fastest way to read it.
+
+**A note on where this landed.** It was started on a branch `teaching/week-2-redesign` off
+`cb26654`. While it was being written, the working tree was moved to
+`feat/curriculum-and-material-gate` from another session, which added the quiz bank, the
+teaching console and `check:teaching` on top of `cb26654`. This work depends on all three,
+so it was committed there rather than on the now-stale redesign branch. That branch can be
+deleted.
+
+**The shape.** Eight blocks and three build-break cycles instead of five blocks and one
+sixty-minute drill block. Keyboards are live at **00:57 instead of 02:20**. Each cycle
+builds a control and breaks it in the same hour, on the learner's own code.
+
+**The new material.** A sealed prediction at 00:10 opened at 03:52. A three-property
+rubric (locatable, readable, observable) that carries the whole day and forces a counter
+onto every build. Nine control points replacing a three-way show of hands. A 15-minute
+block on model-based checkers. And **the adversary round at 03:25**, where assigned pairs
+try to get ₹5,000 out of each other's guard, which is the only beat in six weeks where a
+participant's work is tested by a peer in real time.
+
+**What was cut, and it is stated in both files rather than left quiet.** The five teardown
+questions became columns three, six and seven of a seven-column policy table plus three
+lines of the 04:19 checkpoint; their answer keys are kept as reference cards because a
+senior room reaches them anyway. The ₹44,000 Friday night shrank from eight minutes to
+four and moved to 03:55, where it frames the teardown. "Nobody is there to approve" stopped
+being a discussion: the room sets an 18-minute approval timer at 02:00, goes to the break,
+and reads its own queue at 02:20. Three outcomes appear in every room and nobody chose a
+wrong one. Drill 5 is dropped, because homework was already over the five hours the public
+page promises.
+
+**Outcome 1 changed and its id changed with it**, `limit-as-data` to `limit-placement`.
+Writing the number in a file is the easy half. The half that costs money is which callers
+the control covers. Nothing had been rated against the old id, so this is a rename rather
+than a migration.
+
+### Two defects found while doing it, both pre-existing
+
+- **Week 2's learner check rendered ONE question under a heading promising eight.** Q4, Q6
+  and Q9 were tagged `judge` while each carried four options and a marked key; the tag was
+  being used to mean "hard". `isSelfServable` drops every `judge` item from `/craft/quiz`,
+  so seven of the eight ids in `quiz:` were dropped silently. The three are `apply` now,
+  `quiz:` lists the four that actually render, and the bank explains the split. **This was
+  not caused by the redesign** and would have reached the room.
+- **Cycle C had no buildable fix.** The learner page said "put a unique constraint in the
+  store" and this repository's ledger is a Python list, so there is no store. It is now a
+  sqlite file with the key as primary key and `INSERT OR IGNORE`, which is standard library
+  and about fifteen lines. **That is a staging dependency and it blocks running the
+  session**: the reference agent needs a `w2-` sqlite path, same rule as `w2-guarded` and
+  `w2-goodwill`.
+
+### Verified
+
+`astro build` completes, `astro check` is 0 errors against the baseline of 0, and 85 tests
+pass. The frontmatter parses, the run of show totals exactly 300 minutes, the before-pulse
+closes at the first block and the after-pulse opens at the close, and all four ids in
+`quiz:` render for a learner.
+
+### Still owed
+
+- **The two published week 2 Artifacts are now behind the files.** `npm run check:teaching`
+  takes the two HTML files and compares them, so run it after republishing.
+- **The `w2-` sqlite target in the reference agent**, described above.
+- **`docs/teaching/notes/teardown-five-questions.md` was NOT revised** and now describes a
+  block that no longer runs as five questions. It is the next thing to reconcile.
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
 
