@@ -57,17 +57,38 @@ topic is the unit of the argument.
     learner    https://claude.ai/code/artifact/e09aa8a7-17b3-40f9-9f71-3c0a476086e9
     instructor https://claude.ai/code/artifact/2d642bdf-1797-4fd9-b929-d5297a57e6a0
 
-    topic 3 · reliability and idempotency                             no pages yet
-    topic 4 · risk trade-offs                                         no pages yet
-    topic 5 · governance · the policy table                           no pages yet
-    topic 6 · choosing a mechanism · when the checker is a model      no pages yet
+    topic 3 · reliability · "The fix that passes and is not a fix"    NEW 28 Sep
+    learner    https://claude.ai/artifact/5rSfHuRqxMh4pnLqxL7xpV
+    instructor https://claude.ai/artifact/XP8Go9f39bum9PKKzasYr2
+
+    topic 4 · risk trade-offs · "The mistake your monitoring…"        NEW 28 Sep
+    learner    https://claude.ai/artifact/8BMPNTrD8XqMnKXHEqp6wk
+    instructor https://claude.ai/artifact/G7szciCpfzwgzJZcwgmUzH
+
+    topic 5 · governance · "The table somebody else can build from"   NEW 28 Sep
+    learner    https://claude.ai/artifact/H6WiABZqtq3kQaCJNnTdfu
+    instructor https://claude.ai/artifact/EHPs9vRK8Q8kz67qRnQf3z
+
+    topic 6 · choosing a mechanism · "When the checker is a model"    NEW 28 Sep
+    learner    https://claude.ai/artifact/2DvAm4iPYCAPqaunNe3xvm
+    instructor https://claude.ai/artifact/D7tcY7EjSGUXcgrGJpk8f2
 
 **Run `npm run check:teaching <learner.html> <instructor.html>` before every republish.**
 It is eleven mechanical checks between a pair: the clock tables byte-identical, both pages
 in clock order, every card and every run-of-show row present in the clock, the two columns
 agreeing heading for heading, every learner heading present on the instructor page, and
-both pages well formed. **Topics 1 and 2 both pass all eleven. Topics 3 to 6 have no
-pages.**
+both pages well formed. **All six pairs pass all eleven, as of 28 September.**
+
+**The clock lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs) and
+nowhere else.** Twelve pages carry it, and twelve copies maintained by hand is twelve
+chances for a row to drift invisibly. Print the block for a topic and paste it into both
+pages of that pair:
+
+    node scripts/teaching-clock.mjs 01:40 01:47 02:00 02:05 02:20
+
+That this matters is not hypothetical. Topics 1 and 2 were built before topics 3 to 6
+existed, and by the time all six were written their clocks disagreed about who owned two
+rows. Both were regenerated and republished from the one table.
 
 Topic 2 was recorded here as "outline stage" and that was wrong. Both its pages were
 complete, including a hand-drawn SVG of the four exits from an ask. Only the clock was

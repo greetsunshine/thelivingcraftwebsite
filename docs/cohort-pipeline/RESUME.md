@@ -309,10 +309,27 @@ closes at the first block and the after-pulse opens at the close, and all four i
   not working when the timer is set. Without them a broken build costs that person the
   02:20 beat entirely, which is the best six minutes in the session.
 
-- **Topics 3, 4, 5 and 6 have no pages at all.** That is four pairs to write from nothing,
-  at roughly 750 to 900 lines of hand-built HTML each. The template is settled now: one
-  generated clock string dropped into both pages, and the eleven checks green before
-  publishing.
+- **Topics 3 to 6 are written and published, so all six pairs now exist and all six pass
+  all eleven checks.** Eight new artifacts; the URLs are in `docs/teaching/README.md`.
+  - **Topic 3, reliability**, is cycle C. The whole topic turns on letting a green result
+    stand for four minutes before breaking it, and it now ends on a built fix rather than
+    handing one forward.
+  - **Topic 4, risk trade-offs, is a thread rather than a block, and it is the only one of
+    the six that is.** Seven minutes of its own. Planted at 00:54 as two counters, paid at
+    01:40 when Meera's refusal increments one and nothing else mentions her, argued at
+    04:32. Its instructor page carries one instruction in bold: do not teach it three
+    times. Explaining it at 00:54 buys agreement and spends the feeling.
+  - **Topic 5, governance**, is the policy table and the horizon. It records where each of
+    the five old teardown questions went.
+  - **Topic 6, choosing a mechanism**, is the 15-minute judge block.
+
+- **The clock now lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs)
+  and nowhere else, and that is not a tidy-up.** Twelve published pages carry the same
+  table. Topics 1 and 2 were built before topics 3 to 6 existed, and by the time all six
+  were written **their clocks disagreed about who owned 02:05 and 03:01**. The checker
+  cannot see that, because it only compares the two pages of one pair. Both were
+  regenerated from the one table and republished. Generate a topic's block with
+  `node scripts/teaching-clock.mjs 01:40 01:47 …` rather than editing a page's table.
 
 - **`check-teaching-pages.mjs` never actually checked anything, and now it does.** This is
   the one to read before rebuilding any page.
