@@ -398,6 +398,32 @@ create unique index if not exists session_prompts_learner_week_phase
   on public.session_prompts (learner_id, week, phase);
 
 -- ---------------------------------------------------------------------------
+-- Session releases — which weeks the room may open, and when Sunil opened them
+-- ---------------------------------------------------------------------------
+-- One row per released week. No row means the week is shut.
+--
+-- WHY THIS IS NOT `status` IN THE SESSION FILE. `status: ready` answers "is the
+-- material written", which is an authoring fact and belongs beside the prose in
+-- git. Releasing a week is a different act: it happens on the evening a session
+-- ends, it is a judgement call, and asking for a commit and a deploy to let
+-- eight people read the page they just sat through is the wrong shape. So the
+-- gate is two conditions, checked in src/lib/craft/release.ts — written AND
+-- released — and only one of them is data.
+--
+-- `week` is the primary key, so releasing twice is a no-op rather than two rows
+-- with two timestamps and no way to say which was the release.
+--
+-- NOT keyed to a learner, on purpose. A week is open to the cohort or it is not.
+-- Per-learner release would mean eight different courses, and the first thing it
+-- would break is the discussion forum, where somebody answers a question about
+-- material the asker cannot see.
+create table if not exists public.session_releases (
+  week        int         primary key check (week between 1 and 6),
+  released_at timestamptz not null default now(),
+  note        text
+);
+
+-- ---------------------------------------------------------------------------
 -- Outcome ratings — the same five statements either side of one session
 -- ---------------------------------------------------------------------------
 -- Two ratings a session: one before the teaching starts, one near the end. Both

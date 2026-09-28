@@ -13,6 +13,22 @@ scaffolding, so that the page renders and the shape is agreed. None of it is
 teaching material yet. While `status: draft`, learners see a short "still being
 written" note instead of this body, so drafting in the open is safe.]
 
+[OWED TO THE RESOURCES PAGE — added 28 September 2026. This week has to own the
+**business case**, one beat, and it is the only module where it fits. The practice
+publishes a whole series on it — the Run-Cost Model at /resources/run-cost-model,
+the Cost-Ceiling Workbook, and the Rework Cost Check — and the curriculum's cost
+content is per-step cost in week 1 and a run budget in week 2. That is engineering
+cost control, not the business case. What is missing is cost per acceptable
+outcome, and the break-even month, including when the answer is never.
+
+M3 already owns capacity and cost under load and the decisions you cannot take
+back, so this is the same conversation one level up and it belongs beside them.
+One beat, not a block, and NOT a seventh week: homework already runs to about
+7h45 against the published ~5 hrs/week.
+
+The line to land is the Run-Cost Model's own: cost per case is the wrong number to
+argue about, and cost per acceptable outcome is the right one.]
+
 [THREAD. This is where the harness lands. Week 1 introduces it as four files:
 the loop, the tool layer, the per-turn context assembly, and the trace. Drill 1
 there ends with an explicit promise. It says week 5 asks what happens to the

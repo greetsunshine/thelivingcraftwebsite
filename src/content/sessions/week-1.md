@@ -115,6 +115,15 @@ after:
   note: Post what you find for the room to read before next session.
 
 reading:
+  - title: Designing agentic systems
+    url: /resources/guides/agentic-system-design
+    note: "Ours. The six decisions an agentic design is made of. This week is decisions 2, 4 and 6 — what the system is for and where it stops, what each tool may do, and what you can see afterwards. Decision 1 is the week 0 pre-work and decisions 3 and 5 are week 2."
+  - title: The Agent Authority Review
+    url: /resources/agent-authority-review
+    note: "Ours. Drill 2 grades tools read, write or irreversible. This tool uses four undo-cost levels on the same judgment, one step of a workflow per row. Run it on your own system."
+  - title: Who may call the tool
+    url: /resources/guides/tool-permissions
+    note: "Ours. Drill 3 as a written argument — permissions live at the tool, not in the prompt, and a tool checks the evidence it was handed."
   - title: Timeouts, retries and backoff with jitter
     url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
     note: AWS Builders' Library. Old, unglamorous, and directly under teardown question 1.
@@ -738,6 +747,15 @@ actions are irreversible. Week 2 is that rule.
 have to change for it to be irreversible. If escalating also emailed the
 customer, it would be. Same function, different grade. **The grade describes what
 the function reaches, not what it is called.**
+
+**Three grades here, four levels in the published tool, and that is deliberate.**
+The Agent Authority Review on our resources page scores the same judgment on four
+undo-cost levels, from "undo in seconds, nobody notices" to "cannot be undone".
+Three is what a room of eight can hold and argue about in fifteen minutes. Four is
+what you want in front of a real workflow, where the difference between "undo in
+seconds" and "undo by Friday with an apology" decides who owns the step. **read**
+and **write** split into the first two levels; **irreversible** is the fourth. Use
+three today and the tool's four on your own system.
 
 **Drill 3 · Check the arguments before you dispatch.** At every step the model
 returns two things: the name of a tool, and the arguments to call it with.

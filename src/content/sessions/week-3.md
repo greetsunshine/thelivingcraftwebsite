@@ -13,6 +13,20 @@ scaffolding, so that the page renders and the shape is agreed. None of it is
 teaching material yet. While `status: draft`, learners see a short "still being
 written" note instead of this body, so drafting in the open is safe.]
 
+[OWED TO THE RESOURCES PAGE — added 28 September 2026. This week has to own
+**re-qualifying against a new model version**, and it is the only week that can.
+The practice publishes a Model Selection Tool at /resources/model-selection-tool:
+twelve behaviours, ten deployment gates, four disqualifiers, scored from ten runs
+on four test cases. docs/teaching/threads.md excludes model choice from the five
+threads on purpose, and that exclusion is right — model choice turns over every
+few months. But an evaluation harness is exactly what makes model choice
+answerable, and the Run-Cost Model already prices "re-qualifying against a new
+model version" as an operating line. So: one beat here, in which the harness they
+just built is pointed at a second model, and the number it returns is the answer
+to a question the syllabus otherwise refuses. That turns a contradiction between
+two published surfaces into a handoff. Do not turn it into a model-comparison
+segment.]
+
 [TERMINOLOGY. Week 1 now claims the bare word **harness** for the agent harness.
 That is the loop, the tool layer, the per-turn context assembly and the trace. So
 in this week, and in the outcomes list, always write **evaluation harness** in
