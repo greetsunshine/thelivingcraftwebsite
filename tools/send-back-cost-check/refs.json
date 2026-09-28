@@ -1,0 +1,106 @@
+{
+  "sheets": {
+    "cover": "Start here",
+    "check": "Check",
+    "guide": "How to find these numbers",
+    "example": "Example"
+  },
+  "example": {
+    "clean": "C5",
+    "always": "C6",
+    "peak": "C7",
+    "quota": "C8",
+    "budget": "C23",
+    "enf": "C24",
+    "price": "C25",
+    "typ": "C28",
+    "typ_mul": "C29",
+    "typ_peak": "C30",
+    "typ_share": "C31",
+    "wst": "C32",
+    "wst_mul": "C33",
+    "wst_peak": "C34",
+    "wst_share": "C35",
+    "per_task": "C36",
+    "per_k": "C37",
+    "unbounded": "(SUM(R14:R20)>0)",
+    "checks_first": 41,
+    "checks_last": 45,
+    "next": "C47",
+    "judge_round": "H15",
+    "transport_round": "H14",
+    "judge_cap": "I15"
+  },
+  "blank": {
+    "clean": "C5",
+    "always": "C6",
+    "peak": "C7",
+    "quota": "C8",
+    "budget": "C23",
+    "enf": "C24",
+    "price": "C25",
+    "typ": "C28",
+    "typ_mul": "C29",
+    "typ_peak": "C30",
+    "typ_share": "C31",
+    "wst": "C32",
+    "wst_mul": "C33",
+    "wst_peak": "C34",
+    "wst_share": "C35",
+    "per_task": "C36",
+    "per_k": "C37",
+    "unbounded": "(SUM(R14:R20)>0)",
+    "checks_first": 41,
+    "checks_last": 45,
+    "next": "C47"
+  },
+  "expected": {
+    "typical": 98600,
+    "typicalMultiple": 2.277136258660508,
+    "typicalPeak": 19720000,
+    "typicalShare": 1.972,
+    "unbounded": false,
+    "worst": 170600,
+    "worstMultiple": 3.9399538106235568,
+    "worstPeak": 34120000,
+    "worstShare": 3.412,
+    "checks": [
+      {
+        "n": 1,
+        "title": "Every path that sends work back is listed",
+        "status": "Pass",
+        "reason": "2 paths listed, each with how often it sends work back."
+      },
+      {
+        "n": 2,
+        "title": "Each round is costed as repeated, review and growth",
+        "status": "Pass",
+        "reason": "Every present path has all three parts of a round."
+      },
+      {
+        "n": 3,
+        "title": "Rounds are capped, and something happens after the last one",
+        "status": "Pass",
+        "reason": "Every present path is capped, with a decided outcome and a named owner."
+      },
+      {
+        "n": 4,
+        "title": "Two numbers: unit economics and availability",
+        "status": "Fail",
+        "reason": "Your normal load already exceeds the quota."
+      },
+      {
+        "n": 5,
+        "title": "The budget belongs to the task, across all its rounds",
+        "status": "Pass",
+        "reason": "The budget stops the worst case. Make sure check 3's outcome runs when it does."
+      }
+    ],
+    "nextStep": {
+      "n": 4,
+      "title": "Two numbers: unit economics and availability",
+      "status": "Fail",
+      "reason": "Your normal load already exceeds the quota."
+    }
+  }
+}

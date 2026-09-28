@@ -1,0 +1,871 @@
+---
+/**
+ * /resources/send-back-cost-check — the Send-Back Cost Check.
+ *
+ * Five checks from Episode 5. The reader lists the paths that send work back,
+ * costs one round of each, caps them, and reads two numbers: what a task costs
+ * on a normal day, and what it costs at peak when every loop runs to its cap.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ONE FORMULA, AND IT IS NOT ABOUT RATE LIMITS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *     round cost = work repeated + review call + context growth
+ *
+ * A 429 and a judge rejection look like different problems and are the same
+ * problem. What differs is when each bites and whether the attempt was billed:
+ * a refusal bites at peak and is usually not billed, a judge bites on every
+ * run and is billed in full, with the critique carried into the redo. The
+ * second family sets unit economics and is the one teams do not count.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * NOTHING LEAVES THE BROWSER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * There is no email gate on this page, by instruction. Four things hold the
+ * privacy claim up:
+ *
+ *   1. NO <form>. The inputs sit in plain divs and tables. A form can be
+ *      submitted by a stray Enter key, and a GET submission puts every figure
+ *      in the query string. No form, no path.
+ *   2. NO fetch, XMLHttpRequest or sendBeacon anywhere in the script. The only
+ *      network activity is the layout's own pageview beacon, which reads a
+ *      path and a referrer and nothing from this page.
+ *   3. No localStorage. The model lives in a closure and dies with the tab.
+ *   4. Nothing typed here is ever put in an href, which is the only thing the
+ *      tracker reads for CTA clicks.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ONE IMPLEMENTATION, THREE READERS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * src/lib/sendBackCost.ts holds every formula and every check rule. This page
+ * renders from it, the browser script IMPORTS it, and
+ * src/lib/sendBackCost.test.ts asserts the worked example against the brief.
+ * The workbook in tools/send-back-cost-check/ implements the same formulas and
+ * its own verifier asserts that it agrees with this module.
+ *
+ * A module <script> can import; an is:inline script cannot, which is how
+ * pair.astro ended up with a copy of a format that drifted.
+ *
+ * NOT RELEASED. There is deliberately no row in src/data/resources.ts, which
+ * is what /resources, the sitemap and /llms.txt read. The draft registry entry
+ * is in tools/send-back-cost-check/README.md.
+ */
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { longDate } from '../../data/resources';
+import {
+  PATHS,
+  AFTER_LAST,
+  BUDGET_ENFORCEMENT,
+  blankModel,
+  read,
+  tokens,
+  percent,
+  multipleOf,
+} from '../../lib/sendBackCost';
+import { EXAMPLE, EXAMPLE_LABEL, HOW_TO_FIND, WORKFLOW_INPUTS } from '../../data/send-back-cost-check';
+
+export const prerender = true;
+
+const canonical = '/resources/send-back-cost-check';
+const url = `${SITE_ORIGIN}${canonical}`;
+const TITLE = 'Send-Back Cost Check';
+const TAGLINE =
+  'What does one task really cost once limits, judges, validators and reviewers send work back?';
+
+const title = `${TITLE} — the real cost of a task that gets sent back · The Living Craft`;
+// 154 characters.
+const description =
+  'Cost every path that sends agent work back — limits, judges, validators, tool errors, reviewers — and get two numbers: typical cost per task and worst case at peak.';
+
+const XLSX = '/downloads/send-back-cost-check.xlsx';
+const PUBLISHED_AT = '2026-09-28';
+
+// The worked example, read through the same module the page and the tests use.
+const ex = read(EXAMPLE);
+
+// The five checks are rendered SERVER-SIDE, empty, and the script fills them.
+// Building them with createElement instead would strip every scoped style:
+// Astro scopes CSS with an attribute it stamps on template elements, and an
+// element made in JavaScript never gets it, so the cards rendered unstyled.
+// This also gives the page a readable no-JavaScript baseline.
+const blankChecks = read(blankModel()).checks;
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: TITLE,
+    description,
+    url,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: PUBLISHED_AT,
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'List every path that sends work back', text: 'Limits, judges, validators, tool errors and human reviewers.' },
+      { '@type': 'HowToStep', position: 2, name: 'Cost one round of each', text: 'Work repeated, plus the review call, plus the context the redo carries.' },
+      { '@type': 'HowToStep', position: 3, name: 'Cap the rounds', text: 'Set a maximum per task and decide what happens after the last one.' },
+      { '@type': 'HowToStep', position: 4, name: 'Read the two numbers', text: 'Typical cost per task for unit economics, worst case at peak for availability.' },
+      { '@type': 'HowToStep', position: 5, name: 'Budget per task', text: 'Across every round, not per call.' },
+    ],
+  },
+];
+
+const sections = [
+  { id: 'check', title: 'The check' },
+  { id: 'how-to-find', title: 'Finding the numbers' },
+  { id: 'example', title: 'Worked example' },
+];
+
+const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
+---
+
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
+  <!-- Hero -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design</span>
+      </div>
+      <h1>{TITLE}</h1>
+      <p class="lead">{TAGLINE}</p>
+      <p class="hero-cta controls">
+        <a class="btn btn-primary" href="#check">Run the Send-Back Cost Check&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </p>
+      <p class="hero-note">
+        <a class="textlink" href={XLSX} download>Prefer a spreadsheet? Download the Excel version</a>
+      </p>
+      <ResourceCredit />
+    </div>
+  </section>
+
+  <!-- What to bring / do / leave with -->
+  <section id="opening">
+    <div class="wrap">
+      <dl class="opening">
+        <div class="open-row">
+          <dt class="mono">What to bring</dt>
+          <dd>One agent workflow. Token counts from a handful of traces, or estimates. How often each check or limit sends work back. Your peak tasks per minute and your tokens-per-minute quota.</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What to do</dt>
+          <dd>List the paths that send work back, cost one round of each, set a cap and a final outcome for each, and add your per-task budget.</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What you leave with</dt>
+          <dd>Two numbers — typical cost per task and worst case at peak — plus a Pass, Attention or Fail on five checks, and the next fix to make.</dd>
+        </div>
+      </dl>
+      <p class="prose-note">
+        Your numbers stay in your browser. Nothing is sent or stored, and there is nothing to sign up for.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ THE CALCULATOR ══════════════════════════════════════════════════ -->
+  <div id="check">
+    <!-- headline -->
+    <div class="scoring">
+      <div class="wrap">
+        <div class="heads">
+          <div class="head" id="head-typical">
+            <span class="hlabel mono">Typical cost per task</span>
+            <b class="hfig" id="f-typical">—</b>
+            <span class="hsub" id="f-typical-sub">—</span>
+            <span class="hnote">Unit economics: what every task costs on a normal day.</span>
+            <span class="hextra" id="f-typical-extra"></span>
+          </div>
+          <div class="head" id="head-worst" data-s="none">
+            <span class="hlabel mono">Worst case at peak</span>
+            <b class="hfig" id="f-worst">—</b>
+            <span class="hsub" id="f-worst-sub">—</span>
+            <span class="hnote">Availability: what happens when every loop hits its cap during your busiest minute.</span>
+            <span class="hextra" id="f-worst-extra"></span>
+          </div>
+        </div>
+        <div class="controls barctl">
+          <button class="btn btn-ghost" id="load-example" type="button">Load the scheduling example</button>
+          <button class="btn btn-ghost" id="clear" type="button">Clear</button>
+          <span class="copied mono" id="said" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+
+    <noscript>
+      <section><div class="wrap">
+        <p class="prose-note">
+          The calculator works everything out in the browser, so it needs JavaScript. The Excel
+          version does the same check offline, and the worked example further down is filled in.
+        </p>
+      </div></section>
+    </noscript>
+
+    <!-- A. the workflow -->
+    <section class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">A</span> The workflow</span>
+          <h2>Four numbers about a normal task</h2>
+        </div>
+        <div class="grid4">
+          {WORKFLOW_INPUTS.map((f) => (
+            <label class="fld">
+              <span>{f.label}</span>
+              <input type="number" min="0" step="1" id={f.id} inputmode="numeric" aria-describedby={`${f.id}-h`} />
+              <i id={`${f.id}-h`}>{f.hint}</i>
+            </label>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- B + C. the paths -->
+    <section class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">B</span> Paths that send work back</span>
+          <h2>Cost one round of each</h2>
+        </div>
+        <p class="prose-lead">
+          A round costs the same shape of thing whatever sent it back: the steps that run again,
+          the check that re-reads the new attempt, and the extra context the redo carries.
+          Zero is a real answer. Blank is not.
+        </p>
+
+        <div class="scroll">
+          <table class="grid entry" id="paths">
+            <thead>
+              <tr>
+                <th class="c-path">Path</th>
+                <th>Present?</th>
+                <th>Billed?</th>
+                <th class="c-num">Avg rounds<br /><i>per task, normal load</i></th>
+                <th class="c-num">Work repeated</th>
+                <th class="c-num">Review call</th>
+                <th class="c-num">Context growth</th>
+                <th class="c-num">Round cost</th>
+                <th class="c-num">Max rounds<br /><i>blank = no cap</i></th>
+                <th>After the last round…</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PATHS.map((p) => (
+                <tr data-row={p.kind}>
+                  <th scope="row" class="c-path">
+                    {p.custom ? (
+                      <input type="text" data-f="name" data-k={p.kind} maxlength="40" placeholder={p.label} aria-label={`${p.label} name`} />
+                    ) : (
+                      <span class="pname">{p.label}</span>
+                    )}
+                    <i class="pex">{p.examples}</i>
+                  </th>
+                  <td><select data-f="present" data-k={p.kind} aria-label={`${p.label} present`}><option value="No">No</option><option value="Yes">Yes</option></select></td>
+                  <td><select data-f="billed" data-k={p.kind} aria-label={`${p.label} billed`}><option value="Yes">Yes</option><option value="No">No</option></select></td>
+                  <td class="c-num"><input type="number" min="0" step="0.1" data-f="averageRounds" data-k={p.kind} aria-label={`${p.label} average rounds`} /></td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="repeated" data-k={p.kind} aria-label={`${p.label} work repeated`} /></td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="review" data-k={p.kind} aria-label={`${p.label} review call`} /></td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="growth" data-k={p.kind} aria-label={`${p.label} context growth`} /></td>
+                  <td class="c-num calc" data-out="round" data-k={p.kind}>—</td>
+                  <td class="c-num"><input type="number" min="0" step="1" data-f="maxRounds" data-k={p.kind} aria-label={`${p.label} max rounds`} /></td>
+                  <td>
+                    <select data-f="afterLast" data-k={p.kind} aria-label={`${p.label} after the last round`}>
+                      <option value=""></option>
+                      {AFTER_LAST.map((a) => <option value={a}>{a}</option>)}
+                    </select>
+                  </td>
+                  <td><input type="text" data-f="owner" data-k={p.kind} maxlength="40" aria-label={`${p.label} owner`} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">When each one bites</h3>
+        <div class="scroll">
+          <table class="grid">
+            <thead><tr><th>Path</th><th>When does it bite?</th><th>Does context grow?</th><th>Was the attempt billed?</th></tr></thead>
+            <tbody>
+              {PATHS.filter((p) => !p.custom).map((p) => (
+                <tr>
+                  <td class="cname">{p.label}</td>
+                  <td>{p.bites}</td>
+                  <td>{p.growth}</td>
+                  <td>{p.billed}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- D + E. budget and price -->
+    <section class="qsection">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow"><span class="num">C</span> Budget</span>
+          <h2>A budget belongs to the task</h2>
+        </div>
+        <div class="grid3">
+          <label class="fld">
+            <span>Per-task token budget</span>
+            <input type="number" min="0" step="1" id="i-budget" inputmode="numeric" aria-describedby="i-budget-h" />
+            <i id="i-budget-h">Blank if there is none.</i>
+          </label>
+          <label class="fld">
+            <span>The budget is enforced…</span>
+            <select id="i-enforcement">
+              <option value=""></option>
+              {BUDGET_ENFORCEMENT.map((b) => <option value={b}>{b}</option>)}
+            </select>
+            <i>A per-call budget never sees the rounds add up.</i>
+          </label>
+          <label class="fld">
+            <span>Blended price per million tokens <em>(optional)</em></span>
+            <input type="number" min="0" step="0.01" id="i-price" inputmode="decimal" aria-describedby="i-price-h" />
+            <i id="i-price-h">Your own currency. The tool shows no symbol.</i>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- the five checks -->
+    <section class="qsection" id="results">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">The five checks</span>
+          <h2>Pass, attention <em>or fail</em></h2>
+        </div>
+        <ol class="checks" id="checks">
+          {blankChecks.map((c) => (
+            <li class="check" data-check={c.n}>
+              <span class="st st-not-answered" data-st>{c.status}</span>
+              <div>
+                <p class="ctitle">{c.n}. {c.title}</p>
+                <p class="creason" data-reason>{c.reason}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p class="nextstep" id="nextstep" hidden><span class="mono">Your next step</span> <span id="nextstep-text"></span></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- how to find these numbers -->
+  <section id="how-to-find">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">How to find these numbers</span>
+        <h2>Where each one lives, <em>in your own system</em></h2>
+      </div>
+      <div class="finds">
+        {HOW_TO_FIND.map((f) => (
+          <details class="find">
+            <summary>{f.title}</summary>
+            <div class="findbody">
+              <ul>{f.points.map((p) => <li set:html={p} />)}</ul>
+            </div>
+          </details>
+        ))}
+      </div>
+      <p class="prose-note">
+        Where a product or a setting is named above, check your provider's docs. Names change.
+      </p>
+    </div>
+  </section>
+
+  <!-- why this exists -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why this exists</span>
+        <h2>Every layer did the sensible thing. <em>The system still went down.</em></h2>
+      </div>
+      <div class="prose">
+        <p>
+          At Google, Sunil saw an outage pattern that began with every layer doing the sensible
+          thing: rate limits refused calls, callers retried, and the retries brought the system
+          down. Agents add more ways to send work back — judges, validators, tool errors and human
+          reviewers — and unlike a rate-limit refusal, those are billed in full and happen on every
+          run.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- the worked example -->
+  <section id="example">
+    <div class="wrap">
+      <p class="banner">{EXAMPLE_LABEL}</p>
+      <div class="sec-head">
+        <span class="eyebrow">Worked example</span>
+        <h2>A scheduling agent with <em>a judge on the draft</em></h2>
+      </div>
+      <p class="prose-lead">
+        A clean run costs 43,300 tokens. A judge reads every draft, which costs 11,500 whether it
+        passes or not, and sends about two in every task back. The rate limit is capped and quiet
+        at normal load. Nothing here has gone wrong.
+      </p>
+      <div class="scroll">
+        <table class="grid nums">
+          <thead><tr><th>Reading</th><th class="c-num">Figure</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td class="cname">Judge, one round</td><td class="c-num fig">{tokens(21900)}</td><td>8,900 repeated + 11,500 review + 1,500 growth.</td></tr>
+            <tr class="hl"><td class="cname">Typical cost per task</td><td class="c-num fig">{tokens(ex.typical)}</td><td><b>{multipleOf(ex.typicalMultiple)}</b> a clean run, on a normal day.</td></tr>
+            <tr><td class="cname">Typical demand at peak</td><td class="c-num fig">{tokens(ex.typicalPeak)}</td><td><b>{percent(ex.typicalShare)}</b> of the quota, before anything goes wrong.</td></tr>
+            <tr><td class="cname">Worst case per task</td><td class="c-num fig">{tokens(ex.worst)}</td><td>{multipleOf(ex.worstMultiple)} a clean run, every loop at its cap.</td></tr>
+            <tr class="bad"><td class="cname">Worst case at peak</td><td class="c-num fig">{tokens(ex.worstPeak)}</td><td><b>{percent(ex.worstShare)}</b> of the quota.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="exchecks">
+        {ex.checks.map((c) => (
+          <li>
+            <span class={`st st-${statusWord(c.status)}`}>{c.status}</span>
+            <span class="exn mono">{c.n}</span>
+            <span class="extext">{c.title}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="prose-note">
+        The number that does the damage is the second row, not the last one. Nearly double the
+        quota is where this workflow sits <i>on a normal day</i>, and the judge loop is the reason.
+        A check that only looked at rate limits would have reported 87% and called it survivable.
+      </p>
+      <p class="hero-cta nextrow">
+        <button class="btn btn-primary" id="load-example-2" type="button">Load this example into the check</button>
+      </p>
+    </div>
+  </section>
+
+  <!-- closing -->
+  <section class="final" id="close">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Closing</span>
+        <h2>Stopping has a cost you can list. Not stopping has no ceiling.</h2>
+      </div>
+      <p class="hero-cta nextrow">
+        <a class="btn btn-ghost" href={XLSX} download>Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      </p>
+      <p class="mono faint pubdate">Published {longDate(PUBLISHED_AT)} · Content CC BY 4.0 · Code MIT · © The Living Craft</p>
+    </div>
+  </section>
+</ResourcesLayout>
+
+<script>
+  // A module script, not is:inline, so it can import the one implementation
+  // of the maths. `astro check` sees it too, which an inline script never does.
+  import {
+    blankModel,
+    read,
+    roundCost,
+    PATH_KINDS,
+    tokens,
+    percent,
+    multipleOf,
+    money,
+    type SendBackModel,
+    type PathKind,
+    type AfterLast,
+    type BudgetEnforcement,
+  } from '../../lib/sendBackCost';
+  import { buildExample } from '../../data/send-back-cost-check';
+
+  // The model is a closure and dies with the tab. Nothing is stored or sent.
+  let model: SendBackModel = blankModel();
+
+  const $ = <T extends Element = HTMLElement>(id: string) => document.getElementById(id) as unknown as T;
+  const all = <T extends Element = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];
+  const rowOf = (k: PathKind) => model.paths.find((p) => p.kind === k)!;
+
+  /** Blank stays blank. Only a real, non-negative number becomes a number. */
+  function numOrNull(raw: string): number | null {
+    const t = raw.trim();
+    if (t === '') return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  }
+
+  // ── DOM → model ──────────────────────────────────────────────────────────
+  function collect() {
+    model.cleanRun = numOrNull($<HTMLInputElement>('i-clean').value);
+    model.alwaysOnChecks = numOrNull($<HTMLInputElement>('i-always').value);
+    model.peakTasksPerMinute = numOrNull($<HTMLInputElement>('i-peak').value);
+    model.quotaPerMinute = numOrNull($<HTMLInputElement>('i-quota').value);
+    model.budget = numOrNull($<HTMLInputElement>('i-budget').value);
+    model.enforcement = $<HTMLSelectElement>('i-enforcement').value as BudgetEnforcement;
+    model.pricePerMillion = numOrNull($<HTMLInputElement>('i-price').value);
+
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f][data-k]')) {
+      const row = rowOf(el.dataset.k as PathKind);
+      const f = el.dataset.f as string;
+      switch (f) {
+        case 'present':
+          row.present = el.value === 'Yes';
+          break;
+        case 'billed':
+          row.billed = el.value === 'Yes';
+          break;
+        case 'averageRounds':
+        case 'repeated':
+        case 'review':
+        case 'growth':
+        case 'maxRounds':
+          (row as unknown as Record<string, number | null>)[f] = numOrNull(el.value);
+          break;
+        case 'afterLast':
+          row.afterLast = el.value as AfterLast;
+          break;
+        default:
+          (row as unknown as Record<string, string>)[f] = el.value;
+      }
+    }
+  }
+
+  // ── model → DOM ──────────────────────────────────────────────────────────
+  const show = (v: number | null) => (v === null ? '' : String(v));
+
+  function fill() {
+    $<HTMLInputElement>('i-clean').value = show(model.cleanRun);
+    $<HTMLInputElement>('i-always').value = show(model.alwaysOnChecks);
+    $<HTMLInputElement>('i-peak').value = show(model.peakTasksPerMinute);
+    $<HTMLInputElement>('i-quota').value = show(model.quotaPerMinute);
+    $<HTMLInputElement>('i-budget').value = show(model.budget);
+    $<HTMLSelectElement>('i-enforcement').value = model.enforcement;
+    $<HTMLInputElement>('i-price').value = show(model.pricePerMillion);
+
+    for (const el of all<HTMLInputElement | HTMLSelectElement>('[data-f][data-k]')) {
+      const row = rowOf(el.dataset.k as PathKind);
+      const f = el.dataset.f as string;
+      if (f === 'present') el.value = row.present ? 'Yes' : 'No';
+      else if (f === 'billed') el.value = row.billed ? 'Yes' : 'No';
+      else {
+        const v = (row as unknown as Record<string, unknown>)[f];
+        el.value = v === null || v === undefined ? '' : String(v);
+      }
+    }
+  }
+
+  // ── render ───────────────────────────────────────────────────────────────
+  const statusClass = (s: string) => `st-${s.toLowerCase().replace(/\s+/g, '-')}`;
+
+  function render() {
+    const r = read(model);
+
+    // per-row round cost, and greying out the rows marked not present
+    for (const kind of PATH_KINDS) {
+      const row = rowOf(kind);
+      const cell = document.querySelector(`[data-out="round"][data-k="${kind}"]`);
+      if (cell) cell.textContent = row.present ? tokens(roundCost(row)) : '—';
+      const tr = document.querySelector(`tr[data-row="${kind}"]`);
+      if (tr) tr.classList.toggle('off', !row.present);
+    }
+
+    // headline 1 — unit economics
+    $('f-typical').textContent = r.typical === null ? '—' : `${tokens(r.typical)}`;
+    $('f-typical-sub').textContent =
+      r.typicalMultiple === null ? '—' : `${multipleOf(r.typicalMultiple)} a clean run`;
+    const extras: string[] = [];
+    if (r.typicalShare !== null) extras.push(`${percent(r.typicalShare)} of quota at peak`);
+    if (r.costPerTask !== null)
+      extras.push(`${money(r.costPerTask)} per task · ${money(r.costPerThousand)} per 1,000`);
+    $('f-typical-extra').textContent = extras.join(' · ');
+
+    // headline 2 — availability. Unbounded is a word, never a number.
+    const worstEl = $('f-worst');
+    const head = $('head-worst');
+    if (r.unbounded) {
+      worstEl.textContent = 'Unbounded';
+      $('f-worst-sub').textContent = 'A present path has no cap';
+      $('f-worst-extra').textContent = '';
+      head.dataset.s = 'bad';
+    } else {
+      worstEl.textContent = r.worstShare === null ? '—' : percent(r.worstShare);
+      $('f-worst-sub').textContent =
+        r.worst === null ? '—' : `${tokens(r.worst)} per task · ${multipleOf(r.worstMultiple)} a clean run`;
+      $('f-worst-extra').textContent = '';
+      head.dataset.s =
+        r.worstShare === null ? 'none' : r.worstShare > 1 ? 'bad' : r.worstShare > 0.8 ? 'warn' : 'ok';
+    }
+    $('head-typical').dataset.s =
+      r.typicalShare === null ? 'none' : r.typicalShare > 1 ? 'bad' : r.typicalShare > 0.8 ? 'warn' : 'ok';
+
+    // The five check rows already exist in the markup, so only their status
+    // word and reason change. Replacing the nodes would drop Astro's scoped
+    // style attribute and the cards would lose every style they have.
+    for (const c of r.checks) {
+      const li = document.querySelector(`.check[data-check="${c.n}"]`);
+      if (!li) continue;
+      const st = li.querySelector('[data-st]') as HTMLElement | null;
+      const why = li.querySelector('[data-reason]') as HTMLElement | null;
+      if (st) {
+        // The status is a WORD first. Colour is added to it, never instead.
+        st.textContent = c.status;
+        st.className = `st ${statusClass(c.status)}`;
+      }
+      if (why) why.textContent = c.reason;
+    }
+
+    const next = $('nextstep') as HTMLElement;
+    if (r.nextStep) {
+      next.hidden = false;
+      $('nextstep-text').textContent = `Check ${r.nextStep.n} — ${r.nextStep.reason}`;
+    } else {
+      next.hidden = true;
+    }
+  }
+
+  function update() {
+    collect();
+    render();
+  }
+
+  // ── wiring ───────────────────────────────────────────────────────────────
+  document.addEventListener('input', (e) => {
+    if ((e.target as HTMLElement).closest('#check')) update();
+  });
+  document.addEventListener('change', (e) => {
+    if ((e.target as HTMLElement).closest('#check')) update();
+  });
+
+  const said = $('said');
+  function announce(text: string) {
+    said.textContent = text;
+    window.setTimeout(() => {
+      said.textContent = '';
+    }, 4000);
+  }
+
+  function loadExample() {
+    model = buildExample();
+    fill();
+    render();
+    announce('Scheduling example loaded.');
+    $('check').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('load-example').addEventListener('click', loadExample);
+  $('load-example-2').addEventListener('click', loadExample);
+
+  $('clear').addEventListener('click', () => {
+    model = blankModel();
+    fill();
+    render();
+    announce('Cleared.');
+  });
+
+  // First paint: the blank state has to render as em dashes, not as zeros.
+  fill();
+  render();
+</script>
+
+<style>
+  /* global.css has no .prose measure, so lines run past 130 characters inside
+     the 1180px wrap. The same handful of rules the sibling tool pages carry. */
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .nextrow { justify-content: center; margin-top: var(--space-6); }
+  .sub { margin: var(--space-7) 0 var(--space-3); font-size: var(--size-5); font-weight: var(--weight-heading); color: var(--text-loud); }
+  .textlink { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ── opening ──────────────────────────────────────────────────────────── */
+  .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); }
+  .open-row { display: grid; gap: var(--space-1); }
+  @media (min-width: 720px) {
+    .opening { max-width: none; }
+    .open-row { grid-template-columns: 180px 1fr; gap: var(--space-5); align-items: start; }
+  }
+  .open-row dt { font-size: var(--size-1); color: var(--accent-ink); font-weight: var(--weight-strong); padding-top: 3px; }
+  .open-row dd { color: var(--text-body); max-width: var(--measure-prose); }
+
+  /* ── the two headline numbers ─────────────────────────────────────────── */
+  /* NOT sticky on a phone. The two cards stack below 860px and the block is
+     then about 760px tall, which on a 812px viewport leaves almost nothing of
+     the form visible. It sticks only where it is one short row. */
+  .scoring { background: var(--surface-sunken); padding: var(--space-4) 0; }
+  @media (min-width: 860px) {
+    .scoring { position: sticky; top: 0; z-index: var(--z-sticky); }
+  }
+  .heads { display: grid; gap: var(--space-4); }
+  @media (min-width: 860px) { .heads { grid-template-columns: 1fr 1fr; } }
+  .head {
+    background: var(--surface-panel);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+    border-left: 4px solid var(--border-hair);
+    display: grid;
+    gap: 2px;
+  }
+  .head[data-s='ok'] { border-left-color: var(--success); }
+  .head[data-s='warn'] { border-left-color: var(--accent-ink); }
+  .head[data-s='bad'] { border-left-color: var(--danger); }
+  .hlabel { font-size: var(--size-1); color: var(--text-quiet); }
+  .hfig { font-size: var(--size-7); font-weight: var(--weight-strong); color: var(--text-loud); line-height: 1.1; font-feature-settings: var(--font-features); }
+  .head[data-s='bad'] .hfig { color: var(--danger); }
+  .head[data-s='warn'] .hfig { color: var(--accent-ink); }
+  .head[data-s='ok'] .hfig { color: var(--success); }
+  .hsub { font-size: var(--size-2); color: var(--text-body); font-feature-settings: var(--font-features); }
+  .hnote { font-size: var(--size-1); color: var(--text-quiet); margin-top: var(--space-2); }
+  .hextra { font-size: var(--size-1); color: var(--accent-ink); font-feature-settings: var(--font-features); }
+  .barctl { margin-top: var(--space-4); }
+  .controls { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+  .copied { font-size: var(--size-2); color: var(--accent-ink); }
+
+  .qsection { padding-top: var(--space-7); padding-bottom: var(--space-5); }
+
+  /* ── fields ───────────────────────────────────────────────────────────── */
+  .grid4, .grid3 { display: grid; gap: var(--space-5); }
+  @media (min-width: 680px) { .grid3 { grid-template-columns: repeat(3, 1fr); } .grid4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 980px) { .grid4 { grid-template-columns: repeat(4, 1fr); } }
+  .fld { display: grid; gap: 4px; align-content: start; }
+  .fld > span { font-size: var(--size-3); color: var(--text-body); font-weight: var(--weight-medium); }
+  .fld > span em { font-style: normal; color: var(--text-quiet); font-weight: var(--weight-normal); }
+  .fld i { font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+
+  input[type='number'], input[type='text'], select {
+    width: 100%;
+    font: inherit;
+    font-size: var(--size-2);
+    color: var(--text-body);
+    background: var(--surface-panel);
+    border: 1px solid var(--border-field);
+    border-radius: var(--radius-field);
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  input[type='number'] { text-align: right; font-feature-settings: var(--font-features); }
+  input:focus, select:focus { outline: none; border-color: var(--text-body); }
+  input:focus-visible, select:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* ── the paths table ──────────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .grid thead th {
+    background: var(--noir);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    padding: var(--space-3);
+    vertical-align: bottom;
+  }
+  .grid thead th i { display: block; font-style: normal; font-weight: var(--weight-normal); opacity: 0.75; }
+  .grid tbody td, .grid tbody th {
+    padding: 6px var(--space-3);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: middle;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    text-align: left;
+  }
+  .grid tbody tr:last-child td, .grid tbody tr:last-child th { border-bottom: 0; }
+  .grid .cname { color: var(--text-body); font-weight: var(--weight-medium); }
+  .entry { min-width: 1120px; }
+  .c-path { min-width: 190px; }
+  .c-num { text-align: right; }
+  .c-num input { text-align: right; }
+  .pname { display: block; color: var(--text-body); font-weight: var(--weight-medium); }
+  .pex { display: block; font-style: normal; font-size: var(--size-1); color: var(--text-quiet); }
+  .calc { color: var(--text-body); font-weight: var(--weight-medium); font-feature-settings: var(--font-features); white-space: nowrap; }
+  /* A path the reader says is not in their workflow is dimmed, not removed:
+     the row still explains what it would have been. */
+  .entry tr.off td, .entry tr.off th { opacity: 0.45; }
+  .entry tr.off input, .entry tr.off select { background: var(--surface-hover); }
+
+  /* ── the five checks ──────────────────────────────────────────────────── */
+  .checks { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+  .check {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .ctitle { color: var(--text-body); font-weight: var(--weight-medium); }
+  .creason { color: var(--text-quiet); font-size: var(--size-2); margin-top: 2px; }
+  /* The status is a word. Colour reinforces it and never replaces it. */
+  .st {
+    display: inline-block;
+    min-width: 92px;
+    text-align: center;
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+  .st-pass { background: var(--success-quiet); color: var(--success); }
+  .st-attention { background: var(--accent-quiet); color: var(--accent-ink); }
+  .st-fail { background: var(--danger-quiet); color: var(--danger); }
+  .st-not-answered { background: var(--surface-hover); color: var(--text-quiet); }
+
+  .nextstep {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    border-left: 4px solid var(--accent-ink);
+    box-shadow: var(--shadow-raise);
+    color: var(--text-body);
+    max-width: 78ch;
+  }
+  .nextstep .mono { display: block; font-size: var(--size-1); color: var(--accent-ink); font-weight: var(--weight-strong); margin-bottom: 4px; }
+
+  /* ── how to find these numbers ────────────────────────────────────────── */
+  .finds { display: grid; gap: var(--space-2); max-width: 82ch; }
+  .find { background: var(--surface-panel); border-radius: var(--radius-inner); box-shadow: var(--shadow-raise); }
+  .find summary {
+    cursor: pointer;
+    padding: var(--space-4) var(--space-5);
+    font-weight: var(--weight-heading);
+    color: var(--text-loud);
+    font-family: var(--font-heading);
+  }
+  .find summary:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: -2px; }
+  .findbody { padding: 0 var(--space-5) var(--space-5); }
+  .findbody ul { padding-left: var(--space-5); display: grid; gap: var(--space-2); }
+  .findbody li { color: var(--text-quiet); font-size: var(--size-2); }
+
+  /* ── worked example ───────────────────────────────────────────────────── */
+  .banner {
+    display: inline-block;
+    background: var(--accent-quiet);
+    color: var(--accent-ink);
+    font-size: var(--size-1);
+    font-weight: var(--weight-strong);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    margin-bottom: var(--space-5);
+  }
+  .nums { min-width: 640px; }
+  .fig { color: var(--text-loud); font-size: var(--size-4); font-weight: var(--weight-strong); white-space: nowrap; font-feature-settings: var(--font-features); }
+  .grid tr.hl td { background: var(--accent-quiet); }
+  .grid tr.bad td { background: var(--danger-quiet); }
+  .grid tr.bad .fig { color: var(--danger); }
+  .exchecks { list-style: none; padding: 0; margin-top: var(--space-5); display: grid; gap: var(--space-2); max-width: 82ch; }
+  .exchecks li { display: flex; gap: var(--space-3); align-items: baseline; }
+  .exn { color: var(--text-quiet); font-size: var(--size-1); }
+  .extext { color: var(--text-body); font-size: var(--size-2); }
+
+  @media print {
+    .controls, .hero-cta, .scoring, .finds { display: none !important; }
+    .entry { min-width: 0; font-size: 9pt; }
+    .scroll { overflow: visible; }
+  }
+</style>
