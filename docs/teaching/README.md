@@ -53,7 +53,7 @@ topic is the unit of the argument.
     learner    https://claude.ai/code/artifact/b6cc3049-8e36-4865-ac75-13c8c30d6331
     instructor https://claude.ai/code/artifact/94a3dee1-5c2f-4fa4-83e3-72beab968ebc
 
-    topic 2 · the human gate · "Who answers at 2am"                   outline, pre-rebuild
+    topic 2 · the human gate · "The guardrail that calls a person"    REBUILT 28 Sep
     learner    https://claude.ai/code/artifact/e09aa8a7-17b3-40f9-9f71-3c0a476086e9
     instructor https://claude.ai/code/artifact/2d642bdf-1797-4fd9-b929-d5297a57e6a0
 
@@ -66,8 +66,12 @@ topic is the unit of the argument.
 It is eleven mechanical checks between a pair: the clock tables byte-identical, both pages
 in clock order, every card and every run-of-show row present in the clock, the two columns
 agreeing heading for heading, every learner heading present on the instructor page, and
-both pages well formed. Topic 1's pair passes all eleven. **Nothing else does yet**, and
-topic 2's pair predates both the rebuild and the checker.
+both pages well formed. **Topics 1 and 2 both pass all eleven. Topics 3 to 6 have no
+pages.**
+
+Topic 2 was recorded here as "outline stage" and that was wrong. Both its pages were
+complete, including a hand-drawn SVG of the four exits from an ask. Only the clock was
+stale.
 
 Fetch the published pages to disk first, because the script reads files rather than URLs.
 
