@@ -41,15 +41,35 @@ all have gone on screen for a paying participant the moment that file flipped to
 
 Week 2 is built and published **one topic at a time**, so each topic is a pair of pages
 rather than a whole session. The topic list and the shared label vocabulary are in
-`threads.md`. Topic 1 of 5, guardrails:
+`threads.md`.
 
-    topic 1 · guardrails · "Where the limit lives"
+**Six topics, not five, since the 28 September rebuild.** The session went to eight blocks
+and three build-break cycles, and the choice of mechanism earned a topic of its own. The
+unit stayed the topic rather than the block, because after the rebuild four of the five
+old topics became single unbroken runs, so blocks and topics now nearly coincide and the
+topic is the unit of the argument.
+
+    topic 1 · guardrails · the limit · "Where the limit lives"        REBUILT 28 Sep
     learner    https://claude.ai/code/artifact/b6cc3049-8e36-4865-ac75-13c8c30d6331
     instructor https://claude.ai/code/artifact/94a3dee1-5c2f-4fa4-83e3-72beab968ebc
 
-    topic 2 · human in the loop · "Who answers at 2am"   (outline stage)
+    topic 2 · the human gate · "Who answers at 2am"                   outline, pre-rebuild
     learner    https://claude.ai/code/artifact/e09aa8a7-17b3-40f9-9f71-3c0a476086e9
     instructor https://claude.ai/code/artifact/2d642bdf-1797-4fd9-b929-d5297a57e6a0
+
+    topic 3 · reliability and idempotency                             no pages yet
+    topic 4 · risk trade-offs                                         no pages yet
+    topic 5 · governance · the policy table                           no pages yet
+    topic 6 · choosing a mechanism · when the checker is a model      no pages yet
+
+**Run `npm run check:teaching <learner.html> <instructor.html>` before every republish.**
+It is eleven mechanical checks between a pair: the clock tables byte-identical, both pages
+in clock order, every card and every run-of-show row present in the clock, the two columns
+agreeing heading for heading, every learner heading present on the instructor page, and
+both pages well formed. Topic 1's pair passes all eleven. **Nothing else does yet**, and
+topic 2's pair predates both the rebuild and the checker.
+
+Fetch the published pages to disk first, because the script reads files rather than URLs.
 
 The same caution applies as for week 1: these are a second surface saying what
 `src/content/sessions/week-2.md` says. The session file is what the site serves and is

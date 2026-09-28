@@ -275,14 +275,24 @@ closes at the first block and the after-pulse opens at the close, and all four i
 
 ### Still owed
 
-- **The two published week 2 Artifact pairs are now behind the files, and the unit of
-  publication has to be decided before they are rebuilt.** The topic-pair model exists
-  because the old topics were scattered: topic 1 ran at 00:25, 00:33, 00:41, 00:44, 01:23,
-  01:31, 01:33, 02:20, 02:33 and 03:37, which is why its page says "00:44 to 01:23 is not a
-  gap in the day, it is somebody else's material". **The cycles are contiguous now.** Cycle
-  A is one unbroken block from 00:48 to 01:35. So the natural unit is the block, not the
-  topic, and the recommendation is eight block pages rather than five topic pages, built as
-  they are taught. That is Sunil's call and it changes how many pages exist.
+- **Topic 1's pair is rebuilt and republished, and it passes all eleven checks.** Learner
+  version 23, instructor version 29, same two URLs. Six topics now, not five: the choice of
+  mechanism earned one of its own. The unit stayed the topic rather than the block, because
+  after the rebuild four of the five old topics became single unbroken runs, so the two
+  nearly coincide and the topic is the unit of the argument. `docs/teaching/README.md` has
+  the list and the per-topic state.
+
+  The pages were built from one generated clock string dropped into both, which is the
+  cheapest way to keep "clocks are byte-identical" true. Topic 1 now covers 00:23, then
+  00:42 to 01:35 unbroken, then the adversary round at 03:25. It gained the nine control
+  points, the two counters, the move-toward-the-protected-thing rule and the six attack
+  routes; it lost the ₹44,000 Friday night to topic 5 and drill 5 entirely.
+
+- **Topics 2 to 6 are the remaining work, and four of them do not exist.** Topic 2 is at
+  outline stage and predates both the rebuild and the checker. Topics 3, 4, 5 and 6 have no
+  pages at all. That is two pairs to rebuild and four to write, at roughly 750 to 900 lines
+  of hand-built HTML each.
+
 - **`check-teaching-pages.mjs` never actually checked anything, and now it does.** This is
   the one to read before rebuilding any page.
 
@@ -307,8 +317,9 @@ closes at the first block and the after-pulse opens at the close, and all four i
   exact fault the checker's own header says it exists to catch, so it was right to build and
   it had simply never run.
 - **The `w2-` sqlite target in the reference agent**, described above.
-- **`docs/teaching/notes/teardown-five-questions.md` was NOT revised** and now describes a
-  block that no longer runs as five questions. It is the next thing to reconcile.
+- **`docs/teaching/notes/teardown-five-questions.md` needs nothing.** An earlier note here
+  said it was stale. That was wrong: it is **week 1's** teardown, for week 1 §4, and the
+  week 2 restructure does not touch it. Checked 28 September.
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
 
