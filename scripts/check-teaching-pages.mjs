@@ -58,7 +58,11 @@ const txt = (s) =>
 
 /** The clock table, from its heading to the end of its body. */
 const clockOf = (html) => {
-  const at = html.indexOf('Five hours, five blocks');
+  // The heading names the block count, and the block count changes when a
+  // session is restructured. Week 2 went from five blocks to eight on 28
+  // September and this line, pinned to the old wording, silently reported "no
+  // clock" for both pages rather than comparing them. Match the stem.
+  const at = html.search(/Five hours, [a-z]+ blocks/i);
   if (at < 0) return null;
   const head = html.indexOf('<thead>', at);
   const end = html.indexOf('</tbody>', head);
@@ -163,12 +167,18 @@ const sorted = (a) => a.every((v, i) => i === 0 || a[i - 1] <= v);
 
 // Logistics cards sit outside the five hours on purpose: the pre-work is before
 // the day and the reading is after it.
-const LOGISTICS = new Set([
-  'Six things to bring',
-  'Five hours, five blocks, nothing longer than an hour',
-  'Five things before next session',
-  'Four things worth your time',
-]);
+// Matched by pattern, not by exact title, for the same reason the clock heading
+// is: three of these four name a count, and a count changes when the session
+// does. "Four things worth your time" became seven on 28 September.
+const LOGISTICS_PATTERNS = [
+  /^Six things to bring$/i,
+  /^Five hours, [a-z]+ blocks\b/i,
+  /^[A-Z][a-z]+ things before next session$/i,
+  /^[A-Z][a-z]+ things worth your time$/i,
+];
+const LOGISTICS = {
+  has: (title) => LOGISTICS_PATTERNS.some((re) => re.test(title)),
+};
 // Drill scaffolding repeats inside every drill card and is deliberately not
 // mirrored on the instructor page, which carries it inside each sequence.
 const SCAFFOLD = /^(Decide|Build|Check|Then the part)/;

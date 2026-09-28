@@ -275,8 +275,19 @@ closes at the first block and the after-pulse opens at the close, and all four i
 
 ### Still owed
 
-- **The two published week 2 Artifacts are now behind the files.** `npm run check:teaching`
-  takes the two HTML files and compares them, so run it after republishing.
+- **The two published week 2 Artifact pairs are now behind the files, and the unit of
+  publication has to be decided before they are rebuilt.** The topic-pair model exists
+  because the old topics were scattered: topic 1 ran at 00:25, 00:33, 00:41, 00:44, 01:23,
+  01:31, 01:33, 02:20, 02:33 and 03:37, which is why its page says "00:44 to 01:23 is not a
+  gap in the day, it is somebody else's material". **The cycles are contiguous now.** Cycle
+  A is one unbroken block from 00:48 to 01:35. So the natural unit is the block, not the
+  topic, and the recommendation is eight block pages rather than five topic pages, built as
+  they are taught. That is Sunil's call and it changes how many pages exist.
+- **`check-teaching-pages.mjs` was pinned to the old structure and is fixed.** `clockOf`
+  searched for the literal "Five hours, five blocks", so on an eight-block page it found no
+  clock and reported that rather than comparing anything. It matches the stem now. The four
+  logistics titles are matched by pattern for the same reason: three of them name a count,
+  and "Four things worth your time" became seven.
 - **The `w2-` sqlite target in the reference agent**, described above.
 - **`docs/teaching/notes/teardown-five-questions.md` was NOT revised** and now describes a
   block that no longer runs as five questions. It is the next thing to reconcile.
