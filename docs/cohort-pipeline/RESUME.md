@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 26 September 2026
+**Last updated:** 28 September 2026
 **Branch:** `resource/failure-triage-quiz`, off `main`, carrying resource 07 only.
 Before that: `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
 commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
@@ -17,6 +17,147 @@ PR #27 (the thread brain) is superseded by this work. The pipeline work is
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
 ---
+
+## Curriculum aligned to the resources, and week 2 wired up — 28 September
+
+Sunil asked for a review of the published curriculum against the topics on `/resources`,
+then for the changes. Ten tools in two series, three toolkit worksheets, four guides and
+four templates on one side; four modules and six weeks on the other. **No session
+referenced any of the 22 resources.** Week 2's reading list pointed at Open Policy Agent
+and the Google SRE book and not at the Rule Placement Audit, which is week 2 topic 1's
+exact subject.
+
+**What changed in the curriculum**
+
+- **Week 2's frontmatter was nearly empty and is now complete** — outcomes, threads, quiz,
+  runOfShow, checkpoints, pair, prework, assignment, after, reading. It was fully written in
+  prose and invisible to every instrument: no pulse, no checkpoints, no check, nothing in
+  session mode, and `assignment: "TBD"` meant no ADR unlocked. That was the single biggest
+  gap on the learner side and it is closed.
+- **`docs/teaching/quiz/week-2.md`** — eight items in the bank's authored format, three with
+  keyed options. All eight are asked, unlike week 1 where the bank holds fifteen and the
+  check asks four, because all eight of these stand on a page with a Submit button.
+- **M2's public copy said "multi-agent orchestration" for weeks 2–4** and the 8 September
+  decision had moved it to week 5, which is M3. Moved in `cohort-copy.ts`, so the page, the
+  JSON-LD Course node, `/api/facts` and `/llms.txt` all corrected at once.
+- **Week 0 gained the question the course never asked** — does this need an agent at all?
+  It is decision 1 of our own six-decisions guide and the course started at decision 2.
+  Pre-work, using the POC Selection Tool and the workflow-or-agent guide, so it costs no
+  live minutes.
+- **Week 1 drill 2 now maps its three tool grades onto the Agent Authority Review's four
+  undo-cost levels.** Two published surfaces were running two scales for one judgment.
+- **Weeks 3 and 5 carry a note each** for whoever writes them: week 3 owes re-qualifying
+  against a new model version, which is where the Model Selection Tool belongs without
+  breaking `threads.md`'s deliberate exclusion of model choice; week 5 owes the business
+  case, one beat, because M3 already owns cost under load.
+- Week 1 and week 2 reading lists now name six of our own resources.
+
+**Still not in the curriculum, and that is the recommendation:** rework cost and model
+selection stay tools only. Publishing a tool is not a promise to teach it, as long as no
+module copy implies otherwise.
+
+## Release a week to the room from the console — 28 September
+
+**`session_releases`, and it needs `supabase/schema.sql` run before the next deploy.**
+One row per released week, `week` as the primary key so releasing twice is a no-op.
+
+The gate is two conditions and only one of them is data: a week opens to a learner when it
+is **written** (`status: ready`, a commit) **and released** (a row, a button). Either alone
+is wrong — released but unwritten shows somebody who paid a page of `[PLACEHOLDER]`;
+written but unreleased hands week 4 to the room during week 2 and spends four sessions of
+prediction-before-reveal in advance. The rule is `src/lib/craft/release.ts` so the learner
+page, the week page and the console cannot disagree.
+
+**When the table is not answering the whole course reads as shut**, which is the opposite of
+every other query here and is deliberate: an unreachable table must not open material Sunil
+has not taught. It is in the health probe list, so the console shows the red banner.
+
+New surfaces:
+
+- **`/craft/material`** — the learner tab. Every week, open or shut, with the outcomes, the
+  block count, the checkpoints, the check and the assignment visible before you click. A
+  shut week shows its title and why it is shut, never its outcomes or its body. In the nav
+  rail as **Material**, and named in the tour spine.
+- **`/craft/admin/sessions`** grew a release control per week, and it refuses to enable for a
+  week that is not written.
+- **`/craft/admin/teaching`** — the instructor page. All seven weeks in full, the quiz bank
+  WITH every key and distractor rationale, and the facilitation notes read from
+  `docs/teaching/notes` at request time, the same mechanism the quiz bank already uses. It
+  is under `/craft/admin`, so the console cookie gates it and a seat code cannot open it.
+
+**And the two published week 2 Artifacts were rebuilt on design system v1.** They were still
+on the black, ember and sun palette: forest now, ivory ground, Source Serif 4 for h1 and h2,
+6px and 12px radii, a 1px line instead of a shadow. Every colour pair contrast-checked.
+
+## How a guardrail decides — a new topic note, and a week 2 redesign NOT done — 28 September
+
+**New: [`docs/teaching/notes/guardrail-patterns.md`](../teaching/notes/guardrail-patterns.md).**
+Week 2 builds four controls and every one is a predicate in code. That is the right
+default and the session never says so, because nothing contrasts with it. The note is the
+contrast: five pattern families, the nine control points, and a five-line rule for
+choosing between them. It answers the question the room asks at 02:40 while writing an
+`if` — why not just ask a model whether this credit looks reasonable?
+
+The real gap it closes is **model-based checkers**, which week 2 does not cover at all.
+LLM-as-judge, classifier guards, critic loops and the grounded verifier. Four points on
+judges: it is a detective control and may not authorise a payment; it is not independent
+of its input, so two models reading one hostile field are one control; an uncalibrated
+judge needs an agreement rate and nobody has one; and it drifts when the provider ships an
+update while every test still passes.
+
+It duplicates nothing. Maker-checker, the six pieces of a gate and the unique-constraint
+argument are already in `week-2-guardrails.md` and the note points at them. Checked
+mechanically, zero shared sentences. `/craft/admin/teaching` matches notes to weeks by a
+`week N` reference in the first 900 characters, so it attaches to week 2 and to no other.
+
+**The learner and instructor pages were updated to match, and the clock did not move.**
+The third of the "three things not to fix today" at 03:15 used to read *"a second agent to
+approve the first one. Week 5."* — six words and a week number for the thing this room is
+most likely to go and build between sessions. It now carries the judge argument in full on
+the learner page, with ticket #8812 asking ₹90,000 because its text claims finance
+pre-approved it. **The block stays at five minutes**, using component 5's device: one
+sentence out loud, then point at the page. The argument is reading, not a beat.
+
+The instructor card gained the sentence to say and one distinction the old line collapsed.
+A model judging one value against a rubric is a scorer, and whether a scorer is any good is
+a measurement, so that is week 3. A second agent with its own loop approving the first is
+orchestration, so that is week 5. The old bullet sent both to week 5.
+
+**The note maps onto the resource shelf, and closed one gap in week 2's reading.** Six of
+the thirteen resources and four guides are this material in public form, and the note says
+which family each serves. *Who may call the tool*
+([`src/content/guides/tool-permissions.md`](../../src/content/guides/tool-permissions.md))
+is drill 1 argued in prose and was not on week 2's reading list, so it is now, making seven
+items against a heading in the notes that still said four. *What to do with uncertain
+evidence* was already there and its note named only the 01:15 confidence card; the same
+guide answers the 03:15 judge bullet, so the note now names both. The evaluation-gates
+worksheet is judge calibration and stays with week 3. The Rework Cost Check, Model
+Selection Tool, Run-Cost Model, Cost-Ceiling Workbook and POC Selection Tool are named as
+deliberately not taught here, because publishing a tool is not a promise to teach it.
+
+**A correction worth recording, because it would cost the next session the same hour.** An
+earlier draft of the patterns note proposed a fifteen-minute beat at 03:05, traded against
+drill 5. That trade does not exist: drill 5 is after-work and frees no live minutes. The
+drill block from 02:20 to 03:20 is full, and anything added there comes out of drill 2,
+drill 3 or the checkpoint. The note now says so.
+
+**A structural redesign of week 2 was designed and then NOT applied. Read this before
+starting it again.** The proposal was build-break cycles instead of one drill block,
+keyboards at 00:45 rather than 02:20, an adversary round where pairs attack each other's
+guards, and an architecture diagram the room grows all day. It is a rewrite, not an edit,
+and it collides with four finished things: the 1555-line instructor notes and their 42
+beats, the eight-item quiz bank keyed to the current block order, the two published
+Artifacts, and the `w2-guarded` and `w2-goodwill` make targets. The instructor notes were
+recovered from a published Artifact on 28 September after being lost, so the same-day cost
+of overwriting them is real.
+
+Two things from that proposal are worth keeping whatever is decided. **Judge calibration
+belongs to week 3, not week 2** — a judge is a scorer, and teaching a scorer before the
+room can measure whether the scorer is right is the false pass one level up. And **no
+control in week 2 currently gets a counter**, so the session asserts that a wrong refusal
+is invisible in monitoring and then never makes it visible. Two counters in drill 1,
+`guard_allowed_total` and `guard_refused_total`, would land the point instead of stating
+it.
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
 
