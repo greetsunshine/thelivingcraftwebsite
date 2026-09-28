@@ -25,21 +25,24 @@
 // THE BRAND, ON PAPER
 // ───────────────────────────────────────────────────────────────────────────
 //
-// The design system of record is .claude/skills/the-living-craft-design. Its
-// print rule is that soft elevation does not print, so every panel here is a
-// flat fill with a small radius and no shadow. The four brand values each keep
-// their one job: noir is the cover band and nothing else, sun marks the chosen
-// answer, ember carries the promotional panel with ink text on it, berry is the
-// hard-gate mark (a failed gate, a disqualifier that happened). The wordmark is
-// the words "The Living Craft" in the display weight beside a sun dot.
+// The brand lives in pdf-writer.ts and nowhere else: the ivory weave cover,
+// the paper inner pages with a weave band, the lockup (the LC mark and the
+// lettering, as BrandLockup.astro draws them), Source Serif 4 for the title
+// and Figtree for everything else, and the colours of design system v1. Read
+// its head before changing how a page looks. What this file decides is which
+// colour marks what:
 //
-// The display face is Figtree, standing in for Sofia Pro, and neither ships as
-// a file in this repo. Helvetica is what this file uses, the fallback the token
-// stack itself names. Standard fonts encode WinAnsi only; `clean()` maps the
-// few glyphs we use and drops the rest. Our own copy must lose nothing to
-// that; a typed name may.
+//   * forest marks the chosen answer and a gate passed, and fills the cohort
+//     panel at the end, with ivory text on it;
+//   * the result sits on a soft green panel (--lc-soft), as the enterprise
+//     facts do on `/`;
+//   * the error red (--lc-error) marks a failed gate and a disqualifier that
+//     happened.
+//
+// A character the embedded fonts cannot draw is dropped by `clean()`. Our own
+// copy must lose nothing to that, and a check says so; a typed name may.
 
-import { PDFDocument, PDFName, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import {
   ANSWER_COUNT,
   CASE_SHAPES,
@@ -64,36 +67,21 @@ import { TOOL_CREDIT, publishedResources } from '../../data/resources';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { COHORT_SIZE, COMMITMENT } from '../../data/offer-display';
 
-// ---------------------------------------------------------------------------
-// Geometry and colour
-// ---------------------------------------------------------------------------
-
-const PAGE = { w: 595.28, h: 841.89 }; // A4, points
-const MARGIN = { top: 64, right: 52, bottom: 60, left: 52 };
-const MEASURE = PAGE.w - MARGIN.left - MARGIN.right;
-const BAND_H = 128; // the cover band on page 1
-
-// Brand values, from tokens/theme.css. Each has one job; see the note above.
-const NOIR = rgb(0, 0, 0);
-const SUN = rgb(1, 0.757, 0.137); // #ffc123
-const EMBER = rgb(0.992, 0.522, 0.286); // #fd8549
-const MIST = rgb(0.945, 0.953, 0.961); // #f1f3f5
-const BERRY = rgb(0.922, 0.078, 0.314); // #eb1450, the mark bar
-const INK = rgb(0.086, 0.129, 0.18); // #16212e
-const QUIET = rgb(0.38, 0.42, 0.47);
-const ON_NOIR_QUIET = rgb(0.64, 0.675, 0.72); // faint text on the black band
-const RULE = rgb(0.86, 0.88, 0.9);
-const DANGER = rgb(0.81, 0.06, 0.27); // #cf0f45, the text bar
-const WHITE = rgb(1, 1, 1);
-
-const clean = (s: string): string =>
-  s
-    .replace(/→/g, '->')
-    .replace(/₹/g, 'INR ')
-    .replace(/[^\x20-\x7e\xa0-\xff–—‘’“”…•]/g, '');
-
-/** True when `clean()` would change nothing. Our own copy must satisfy this. */
-const drawsWhole = (s: string): boolean => clean(s) === s;
+import {
+  ERROR,
+  FOREST,
+  INK,
+  IVORY,
+  MARGIN,
+  MEASURE,
+  MUTED,
+  SOFT,
+  Writer,
+  brandedPages,
+  clean,
+  drawsWhole,
+  openBrandedDoc,
+} from './pdf-writer';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -455,169 +443,6 @@ export function checkModel(model: ModelSelectionPdfModel, input: ModelSelectionP
 // Stage 3: drawing
 // ---------------------------------------------------------------------------
 
-type Colour = ReturnType<typeof rgb>;
-
-class Writer {
-  private doc: PDFDocument;
-  private page!: PDFPage;
-  private y = 0;
-  private pageNo = 0;
-  readonly body: PDFFont;
-  readonly bold: PDFFont;
-  private decorate: (page: PDFPage, pageNo: number) => number;
-
-  constructor(doc: PDFDocument, body: PDFFont, bold: PDFFont, decorate: (page: PDFPage, pageNo: number) => number) {
-    this.doc = doc;
-    this.body = body;
-    this.bold = bold;
-    this.decorate = decorate;
-    this.newPage();
-  }
-
-  private newPage() {
-    this.page = this.doc.addPage([PAGE.w, PAGE.h]);
-    this.pageNo += 1;
-    // The decorator draws the band or the slim header and says where text starts.
-    this.y = this.decorate(this.page, this.pageNo);
-  }
-
-  /** Start a new page unless `height` points still fit on this one. */
-  ensure(height: number) {
-    if (this.y - height < MARGIN.bottom) this.newPage();
-  }
-
-  gap(points: number) {
-    this.y -= points;
-  }
-
-  rule() {
-    this.ensure(8);
-    this.page.drawLine({
-      start: { x: MARGIN.left, y: this.y },
-      end: { x: PAGE.w - MARGIN.right, y: this.y },
-      thickness: 0.6,
-      color: RULE,
-    });
-    this.y -= 10;
-  }
-
-  wrap(text: string, font: PDFFont, size: number, width: number): string[] {
-    const words = clean(text).split(/\s+/).filter(Boolean);
-    const lines: string[] = [];
-    let line = '';
-    for (const w of words) {
-      const probe = line ? `${line} ${w}` : w;
-      if (font.widthOfTextAtSize(probe, size) <= width) line = probe;
-      else {
-        if (line) lines.push(line);
-        line = w;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  heightOf(text: string, font: PDFFont, size: number, width = MEASURE, lh = 1.4): number {
-    return this.wrap(text, font, size, width).length * size * lh;
-  }
-
-  text(
-    text: string,
-    opts: { font?: PDFFont; size?: number; color?: Colour; indent?: number; width?: number; lh?: number } = {},
-  ) {
-    const font = opts.font ?? this.body;
-    const size = opts.size ?? 10;
-    const lh = opts.lh ?? 1.4;
-    const indent = opts.indent ?? 0;
-    const width = opts.width ?? MEASURE - indent;
-    for (const line of this.wrap(text, font, size, width)) {
-      this.ensure(size * lh);
-      this.page.drawText(line, { x: MARGIN.left + indent, y: this.y - size, size, font, color: opts.color ?? INK });
-      this.y -= size * lh;
-    }
-  }
-
-  /** A label in the left gutter and a paragraph beside it, on one baseline. */
-  labelled(
-    label: string,
-    text: string,
-    opts: { size?: number; labelColor?: Colour; gutter?: number; font?: PDFFont; indent?: number; color?: Colour } = {},
-  ) {
-    const size = opts.size ?? 10;
-    const gutter = opts.gutter ?? 30;
-    const indent = opts.indent ?? 0;
-    this.ensure(size * 1.4);
-    this.page.drawText(clean(label), {
-      x: MARGIN.left + indent,
-      y: this.y - size,
-      size,
-      font: this.bold,
-      color: opts.labelColor ?? QUIET,
-    });
-    this.text(text, { size, indent: indent + gutter, font: opts.font, color: opts.color });
-  }
-
-  /** A filled square, used for the chosen anchor. */
-  marker(x: number, yTop: number, size: number, color: Colour) {
-    this.page.drawRectangle({ x, y: yTop - size, width: size, height: size, color });
-  }
-
-  /** A flat panel with a small radius. Print rule: a fill, never a shadow. */
-  panel(height: number, color: Colour, radius = 8) {
-    this.ensure(height);
-    roundedRect(this.page, MARGIN.left, this.y - height, MEASURE, height, radius, color);
-  }
-
-  /** A clickable area over the rectangle, opening `url`. */
-  link(x: number, yTop: number, width: number, height: number, url: string) {
-    const annot = this.doc.context.obj({
-      Type: 'Annot',
-      Subtype: 'Link',
-      Rect: [x, yTop - height, x + width, yTop],
-      Border: [0, 0, 0],
-      A: { Type: 'Action', S: 'URI', URI: PDFString.of(url) },
-    });
-    const ref = this.doc.context.register(annot);
-    const existing = this.page.node.lookup(PDFName.of('Annots'));
-    if (existing && 'push' in existing && typeof (existing as { push: unknown }).push === 'function') {
-      (existing as { push: (r: unknown) => void }).push(ref);
-    } else {
-      this.page.node.set(PDFName.of('Annots'), this.doc.context.obj([ref]));
-    }
-  }
-
-  get cursor() {
-    return this.y;
-  }
-
-  /** Page numbers, drawn last so the total is known. */
-  finish(footer: string) {
-    const pages = this.doc.getPages();
-    pages.forEach((p, i) => {
-      p.drawText(clean(`${footer} · page ${i + 1} of ${pages.length}`), {
-        x: MARGIN.left,
-        y: MARGIN.bottom - 24,
-        size: 7.5,
-        font: this.body,
-        color: QUIET,
-      });
-    });
-  }
-}
-
-function roundedRect(page: PDFPage, x: number, y: number, w: number, h: number, r: number, color: Colour) {
-  const d = `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r} V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
-  // drawSvgPath draws downward from (x, y); hand it the top-left corner.
-  page.drawSvgPath(d, { x, y: y + h, color, borderWidth: 0 });
-}
-
-/** The wordmark: a sun dot and "The Living Craft" in the display weight. */
-function wordmark(page: PDFPage, font: PDFFont, x: number, baseline: number, size: number, color: Colour) {
-  const dot = size * 0.42;
-  page.drawCircle({ x: x + dot / 2, y: baseline + size * 0.3, size: dot / 2, color: SUN });
-  page.drawText('The Living Craft', { x: x + dot + size * 0.45, y: baseline, size, font, color });
-}
-
 /**
  * The checks alone, for the route to run BEFORE the request is saved. A file
  * that would fail a check must not leave a person, a request row and a queued
@@ -637,51 +462,18 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     throw new Error(`PDF check failed: ${failed.map((c) => c.name).join('; ')}`);
   }
 
-  const doc = await PDFDocument.create();
-  doc.setTitle(`${TOOL_NAME} — scored copy`);
-  doc.setAuthor('The Living Craft');
-  doc.setSubject(model.subtitle);
-  doc.setProducer('learning.thelivingcraft.ai');
-  const body = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-
-  // The page decorator. Page 1 carries the black cover band, the one black
-  // area in the document; every later page a slim header with the wordmark.
-  const decorate = (page: PDFPage, pageNo: number): number => {
-    if (pageNo === 1) {
-      page.drawRectangle({ x: 0, y: PAGE.h - BAND_H, width: PAGE.w, height: BAND_H, color: NOIR });
-      wordmark(page, bold, MARGIN.left, PAGE.h - 34, 12, WHITE);
-      const seriesText = clean(model.series);
-      page.drawText(seriesText, {
-        x: PAGE.w - MARGIN.right - body.widthOfTextAtSize(seriesText, 8),
-        y: PAGE.h - 33,
-        size: 8,
-        font: body,
-        color: ON_NOIR_QUIET,
-      });
-      page.drawText(clean(model.title), { x: MARGIN.left, y: PAGE.h - 74, size: 24, font: bold, color: WHITE });
-      page.drawText(clean(model.subtitle), { x: MARGIN.left, y: PAGE.h - 94, size: 9.5, font: body, color: ON_NOIR_QUIET });
-      page.drawText(clean(model.credit), { x: MARGIN.left, y: PAGE.h - 112, size: 8, font: body, color: ON_NOIR_QUIET });
-      return PAGE.h - BAND_H - 28;
-    }
-    wordmark(page, bold, MARGIN.left, PAGE.h - 34, 9, INK);
-    page.drawLine({
-      start: { x: MARGIN.left, y: PAGE.h - 46 },
-      end: { x: PAGE.w - MARGIN.right, y: PAGE.h - 46 },
-      thickness: 0.6,
-      color: RULE,
-    });
-    return PAGE.h - MARGIN.top;
-  };
-
-  const w = new Writer(doc, body, bold, decorate);
+  const { doc, brand } = await openBrandedDoc({ title: `${TOOL_NAME} — scored copy`, subject: model.subtitle });
+  const { body, bold } = brand;
+  // Page 1 is the ivory cover; every later page is paper with a weave band.
+  const decorate = brandedPages(brand, { series: model.series, title: model.title, subtitle: model.subtitle, credit: model.credit });
+  const w = new Writer(doc, brand, decorate);
   const danger = model.result.bandKey === 'gate' || model.result.bandKey === 'dq' || model.result.bandKey === 'stop';
 
   // ---- cover line ---------------------------------------------------------
-  w.text(model.coverLine, { size: 8.5, color: QUIET });
+  w.text(model.coverLine, { size: 8.5, color: MUTED });
   w.gap(14);
 
-  // ---- the result, on a mist panel ----------------------------------------
+  // ---- the result, on a soft green panel (--lc-soft) -----------------------
   const pad16 = 16;
   // Text inside the panel is drawn at `indent: pad16`, so it wraps at this
   // width. The height estimate has to use the same width, or the panel comes
@@ -710,11 +502,11 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     ].reduce((x, y) => x + y, 0) +
     pad16 * 2 +
     10;
-  w.panel(resultH, MIST);
+  w.panel(resultH, SOFT);
   w.gap(pad16);
-  w.text('Result', { font: bold, size: 9, color: QUIET, indent: pad16 });
+  w.text('Result', { font: bold, size: 9, color: MUTED, indent: pad16 });
   w.gap(6);
-  w.text(scoreLine, { font: bold, size: 16, indent: pad16, color: danger ? DANGER : INK });
+  w.text(scoreLine, { font: bold, size: 16, indent: pad16, color: danger ? ERROR : INK });
   w.gap(4);
   w.text(model.result.what, { size: 10, indent: pad16 });
   w.gap(8);
@@ -723,11 +515,11 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
   });
   if (gateLine) {
     w.gap(6);
-    w.text(gateLine, { size: 10, color: DANGER, font: bold, indent: pad16 });
+    w.text(gateLine, { size: 10, color: ERROR, font: bold, indent: pad16 });
   }
   if (dqLine) {
     w.gap(4);
-    w.text(dqLine, { size: 10, color: DANGER, font: bold, indent: pad16 });
+    w.text(dqLine, { size: 10, color: ERROR, font: bold, indent: pad16 });
   }
   w.gap(pad16 + 10);
 
@@ -738,12 +530,12 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.gap(4);
     w.text(
       'Rows scored 0 first, then 1, heaviest weight first. A row scored 1 needs a named cover before it is accepted; a row scored 0 needs a fix or a narrower step.',
-      { size: 9.5, color: QUIET },
+      { size: 9.5, color: MUTED },
     );
     w.gap(6);
     for (const f of model.fixFirst) {
       const line = `${f.short}, scored ${f.score}${f.weight === null ? '' : `, weight ${f.weight}`}. ${f.anchor}${f.evidence ? ` ${f.evidence}` : ''}`;
-      w.labelled(f.num, line, { size: 9.5, gutter: 30, labelColor: f.score === 0 ? DANGER : QUIET });
+      w.labelled(f.num, line, { size: 9.5, gutter: 30, labelColor: f.score === 0 ? ERROR : MUTED });
       w.gap(3);
     }
     w.gap(8);
@@ -760,20 +552,20 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
   w.ensure(70 + 44 + stepHeight);
   w.text('Your answers', { font: bold, size: 13 });
   w.gap(2);
-  w.text('Each row, the answer you chose, and what the other answers would have needed.', { size: 9.5, color: QUIET });
+  w.text('Each row, the answer you chose, and what the other answers would have needed.', { size: 9.5, color: MUTED });
   w.gap(10);
 
   // A · the step
   w.text('A  The step', { font: bold, size: 12 });
-  w.text(model.step.question, { size: 10, color: QUIET });
+  w.text(model.step.question, { size: 10, color: MUTED });
   w.gap(8);
   model.step.options.forEach((o, k) => {
     const chosen = model.step.chosen === k;
-    if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, SUN);
-    w.text(`${o.name}. ${o.cost}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : QUIET });
+    if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, FOREST);
+    w.text(`${o.name}. ${o.cost}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : MUTED });
     w.gap(3);
   });
-  if (model.step.chosen === null) w.text('Not chosen. Section C has no weights until it is.', { size: 9, indent: 38, color: DANGER });
+  if (model.step.chosen === null) w.text('Not chosen. Section C has no weights until it is.', { size: 9, indent: 38, color: ERROR });
   w.gap(10);
 
   // B · deployment gates
@@ -781,7 +573,7 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.heightOf(g.q, bold, 10.5, MEASURE - 24) + w.heightOf(`Passes. ${g.passes}`, body, 9.5, MEASURE - 44) + w.heightOf(`Fails. ${g.cost}`, body, 9.5, MEASURE - 44) + 30;
   w.ensure(44 + gateHeight(model.gates[0]));
   w.text('B  Deployment gates  (hard gate)', { font: bold, size: 12 });
-  w.text('Can this model be deployed where you need it, on the terms you need?', { size: 10, color: QUIET });
+  w.text('Can this model be deployed where you need it, on the terms you need?', { size: 10, color: MUTED });
   w.gap(8);
   for (const g of model.gates) {
     w.ensure(gateHeight(g));
@@ -789,13 +581,13 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.gap(3);
     const passChosen = g.chosen === 1;
     const failChosen = g.chosen === 0;
-    if (passChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, SUN);
-    w.text(`Passes. ${g.passes}`, { size: 9.5, indent: 38, font: passChosen ? bold : body, color: passChosen ? INK : QUIET });
+    if (passChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, FOREST);
+    w.text(`Passes. ${g.passes}`, { size: 9.5, indent: 38, font: passChosen ? bold : body, color: passChosen ? INK : MUTED });
     w.gap(3);
-    if (failChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, BERRY);
-    w.text(`Fails. ${g.cost}`, { size: 9.5, indent: 38, font: failChosen ? bold : body, color: failChosen ? DANGER : QUIET });
+    if (failChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, ERROR);
+    w.text(`Fails. ${g.cost}`, { size: 9.5, indent: 38, font: failChosen ? bold : body, color: failChosen ? ERROR : MUTED });
     w.gap(3);
-    if (g.chosen === null) w.text('Unanswered.', { size: 9, indent: 38, color: DANGER });
+    if (g.chosen === null) w.text('Unanswered.', { size: 9, indent: 38, color: ERROR });
     w.gap(8);
   }
   w.gap(4);
@@ -805,7 +597,7 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.heightOf(c.q, bold, 10.5, MEASURE - 24) + c.anchors.reduce((h, t) => h + w.heightOf(t, body, 9.5, MEASURE - 44) + 4, 0) + 30;
   w.ensure(44 + rowHeight(model.criteria[0]));
   w.text('C  Behaviour under test', { font: bold, size: 12 });
-  w.text('What did ten runs on your own four cases show? Weighted by the step chosen in A.', { size: 10, color: QUIET });
+  w.text('What did ten runs on your own four cases show? Weighted by the step chosen in A.', { size: 10, color: MUTED });
   w.gap(8);
   for (const c of model.criteria) {
     w.ensure(rowHeight(c));
@@ -813,11 +605,11 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.gap(3);
     c.anchors.forEach((t, k) => {
       const chosen = c.chosen === k;
-      if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, SUN);
-      w.text(`${k}  ${t}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : QUIET });
+      if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, FOREST);
+      w.text(`${k}  ${t}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : MUTED });
       w.gap(3);
     });
-    if (c.chosen === null) w.text('Unanswered. Counts as 0.', { size: 9, indent: 38, color: DANGER });
+    if (c.chosen === null) w.text('Unanswered. Counts as 0.', { size: 9, indent: 38, color: ERROR });
     w.gap(8);
   }
   w.gap(4);
@@ -827,7 +619,7 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.heightOf(d.q, bold, 10.5, MEASURE - 24) + w.heightOf(`Did not happen. ${d.why}`, body, 9.5, MEASURE - 44) * 2 + 30;
   w.ensure(44 + dqHeight(model.dq[0]));
   w.text('D  Disqualifiers  (hard gate)', { font: bold, size: 12 });
-  w.text('Did it do the one thing that ends a candidate?', { size: 10, color: QUIET });
+  w.text('Did it do the one thing that ends a candidate?', { size: 10, color: MUTED });
   w.gap(8);
   for (const d of model.dq) {
     w.ensure(dqHeight(d));
@@ -835,13 +627,13 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
     w.gap(3);
     const noChosen = d.chosen === 0;
     const yesChosen = d.chosen === 1;
-    if (noChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, SUN);
-    w.text('Did not happen. Not on any of the ten runs, on any of the four cases.', { size: 9.5, indent: 38, font: noChosen ? bold : body, color: noChosen ? INK : QUIET });
+    if (noChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, FOREST);
+    w.text('Did not happen. Not on any of the ten runs, on any of the four cases.', { size: 9.5, indent: 38, font: noChosen ? bold : body, color: noChosen ? INK : MUTED });
     w.gap(3);
-    if (yesChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, BERRY);
-    w.text(`Happened. ${d.why}`, { size: 9.5, indent: 38, font: yesChosen ? bold : body, color: yesChosen ? DANGER : QUIET });
+    if (yesChosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, ERROR);
+    w.text(`Happened. ${d.why}`, { size: 9.5, indent: 38, font: yesChosen ? bold : body, color: yesChosen ? ERROR : MUTED });
     w.gap(3);
-    if (d.chosen === null) w.text('Unanswered.', { size: 9, indent: 38, color: DANGER });
+    if (d.chosen === null) w.text('Unanswered.', { size: 9, indent: 38, color: ERROR });
     w.gap(8);
   }
 
@@ -851,11 +643,11 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
   w.ensure(60 + model.rubric.slice(0, 2).reduce((h, c) => h + w.heightOf(`${c.name}. ${c.what}`, body, 9.5, MEASURE - 80) + 5, 0));
   w.text('The rubric', { font: bold, size: 13 });
   w.gap(2);
-  w.text('The two gates are checked first and ignore the score. The percentage is the weighted score over the weighted maximum for the step chosen.', { size: 9.5, color: QUIET });
+  w.text('The two gates are checked first and ignore the score. The percentage is the weighted score over the weighted maximum for the step chosen.', { size: 9.5, color: MUTED });
   w.gap(8);
   for (const c of model.rubric) {
     w.ensure(40);
-    w.labelled(c.score, `${c.name}. ${c.what}`, { size: 9.5, gutter: 80, labelColor: c.key === 'gate' || c.key === 'dq' ? DANGER : QUIET });
+    w.labelled(c.score, `${c.name}. ${c.what}`, { size: 9.5, gutter: 80, labelColor: c.key === 'gate' || c.key === 'dq' ? ERROR : MUTED });
     w.gap(5);
   }
   w.gap(8);
@@ -870,39 +662,42 @@ export async function renderModelSelectionPdf(input: ModelSelectionPdfInput): Pr
   w.ensure(60 + caseHeight(model.cases[0]));
   w.text('The four test cases, and which rows each one is the evidence for', { font: bold, size: 13 });
   w.gap(2);
-  w.text('Build each one out of your own work, not out of a benchmark.', { size: 9.5, color: QUIET });
+  w.text('Build each one out of your own work, not out of a benchmark.', { size: 9.5, color: MUTED });
   w.gap(8);
   for (const c of model.cases) {
     w.ensure(caseHeight(c));
-    w.labelled(c.n, c.name, { size: 11, gutter: 30, font: bold, labelColor: QUIET });
+    w.labelled(c.n, c.name, { size: 11, gutter: 30, font: bold, labelColor: MUTED });
     w.text(`How to build it: ${c.build}`, { size: 9.5, indent: 30 });
     w.text(`Right answer: ${c.right}`, { size: 9.5, indent: 30 });
-    w.text(`${c.watchLabel}: ${c.watch}`, { size: 9.5, indent: 30, color: c.failure ? DANGER : INK });
+    w.text(`${c.watchLabel}: ${c.watch}`, { size: 9.5, indent: 30, color: c.failure ? ERROR : INK });
     w.gap(2);
-    w.text(`Evidence for ${c.evidence}`, { size: 8.5, indent: 30, color: QUIET });
+    w.text(`Evidence for ${c.evidence}`, { size: 8.5, indent: 30, color: MUTED });
     w.gap(8);
   }
   w.gap(6);
 
-  // ---- join the cohort, on an ember panel with ink text ---------------------
+  // ---- join the cohort, on a forest panel with ivory text -----------------
+  // Padding on both sides of the text, measured and drawn at one width, so no
+  // line runs to the panel edge on the forest fill.
+  const ctaInner = MEASURE - pad16 * 2;
   const ctaH =
     pad16 * 2 +
-    w.heightOf(model.cta.heading, bold, 15, drawn) +
+    w.heightOf(model.cta.heading, bold, 15, ctaInner) +
     6 +
-    model.cta.lines.reduce((h, l) => h + w.heightOf(l, body, 10, drawn) + 4, 0) +
+    model.cta.lines.reduce((h, l) => h + w.heightOf(l, body, 10, ctaInner) + 4, 0) +
     6 +
-    w.heightOf(`${model.cta.action} ${model.cta.url}`, bold, 10, drawn);
-  w.panel(ctaH, EMBER, 10);
+    w.heightOf(`${model.cta.action} ${model.cta.url}`, bold, 10, ctaInner);
+  w.panel(ctaH, FOREST, 10);
   const panelTop = w.cursor;
   w.gap(pad16);
-  w.text(model.cta.heading, { font: bold, size: 15, indent: pad16 });
+  w.text(model.cta.heading, { font: bold, size: 15, indent: pad16, width: ctaInner, color: IVORY });
   w.gap(6);
   for (const l of model.cta.lines) {
-    w.text(l, { size: 10, indent: pad16 });
+    w.text(l, { size: 10, indent: pad16, width: ctaInner, color: IVORY });
     w.gap(4);
   }
   w.gap(6);
-  w.text(`${model.cta.action} ${model.cta.url}`, { font: bold, size: 10, indent: pad16 });
+  w.text(`${model.cta.action} ${model.cta.url}`, { font: bold, size: 10, indent: pad16, width: ctaInner, color: IVORY });
   // The whole panel is the link, so a reader does not have to hit one line.
   w.link(MARGIN.left, panelTop, MEASURE, ctaH, model.cta.url);
   w.gap(pad16 + 6);

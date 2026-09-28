@@ -20,6 +20,11 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
+import BrandLockup from '../../components/site/BrandLockup.astro';
+// The ivory weave tile the server's PDFs use, with the site's opacity already
+// laid over ivory (npm run build:pdf-assets). Inlined, because the printed cover
+// needs it and a layer with `opacity` makes Chrome print the page as a bitmap.
+import weaveTile from '../../../pdf-assets/brand/ivory-weave.png?inline';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate, TOOL_CREDIT } from '../../data/resources';
 import {
@@ -99,8 +104,9 @@ const sections = [
 
 <ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
   <!-- Print-only cover. The PDF's first page; never shown on screen. -->
-  <div class="cover" aria-hidden="true">
-    <p class="cover-eyebrow mono">The Living Craft · Resources · agentic system design 05</p>
+  <div class="cover" aria-hidden="true" style={`background-image: url(${weaveTile})`}>
+    <div class="cover-lockup"><BrandLockup /></div>
+    <p class="cover-eyebrow">The Living Craft · Resources · agentic system design 05</p>
     <p class="cover-title">{TITLE}</p>
     <p class="cover-sub">{SUBTITLE}</p>
     <p class="cover-meta">{TOOL_CREDIT} · The Living Craft</p>
@@ -555,19 +561,45 @@ const sections = [
   @page { size: A4; margin: 16mm 14mm 18mm; }
   @media print {
     :global(header.nav), :global(footer.site), :global(#ask), .hero, .controls, .nextrow, .copy { display: none !important; }
-    :global(body) { background: #fff; }
+    /* THE BRAND ON PAPER (28 September 2026), the same as the four PDFs the
+       server builds (src/lib/resources/pdf-writer.ts): an ivory weave cover
+       from edge to edge, then paper pages. The weave band and the lockup at
+       the top of each later page are drawn by scripts/build-memory-kit.mjs,
+       in Chrome's header, because only the page margin repeats on every
+       page. Colours and faces are the site's tokens. */
+    /* The margins take the paper too. Chrome paints the page's own background
+       into them only from @page, where a custom property does not resolve, so
+       this is --lc-paper written out. */
+    @page { size: A4; margin: 16mm 14mm 18mm; background: #FBF8F2; }
+    @page :first { margin: 0; }
+    /* Paper, not the site's ivory ground. `body.lc-v5.tool-page` because the
+       V5 layer's body rule (ds/site-v5.css) is more specific than `body`. */
+    :global(html), :global(body.lc-v5.tool-page) { background: var(--surface-panel); }
     :global(main > section) { padding: 0; margin-bottom: 10mm; } /* a margin is truncated at a page break; padding spills into a blank page */
     .cover {
+      position: relative;
+      isolation: isolate;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      min-height: 240mm;
+      height: 297mm;
+      padding: 0 20mm;
       break-after: page;
       gap: 6mm;
+      /* The ivory weave, at the site's 48px tile. The tile already carries
+         --weave-ivory-opacity over --lc-ivory, so no layer needs `opacity`:
+         one did, and Chrome printed the whole cover as a 1.4 MB bitmap. */
+      background-color: var(--surface-page);
+      background-position: 0 0;
+      background-size: 48px 48px;
+      background-repeat: repeat;
     }
-    .cover-eyebrow { font-size: 10pt; color: var(--text-quiet); }
-    .cover-title { font-family: var(--font-display); font-size: 34pt; font-weight: var(--weight-display); color: var(--text-loud); line-height: 1.1; }
-    .cover-sub { font-size: 14pt; color: var(--text-quiet); max-width: 150mm; }
+    .cover-lockup { position: absolute; top: 16mm; left: 20mm; }
+    .cover-lockup :global(.brand-symbol) { height: 15mm; }
+    .cover-lockup :global(.brand-name) { height: 8.2mm; }
+    .cover-eyebrow { font-size: 10pt; font-weight: var(--weight-strong); letter-spacing: 0.035em; text-transform: uppercase; color: var(--accent-ink); }
+    .cover-title { font-family: var(--font-display); font-size: 36pt; font-weight: 400; letter-spacing: -0.02em; color: var(--sun); line-height: 1.1; }
+    .cover-sub { font-size: 14pt; color: var(--text-body); max-width: 150mm; }
     .cover-meta { font-size: 10pt; color: var(--text-quiet); }
     .cover-meta + .cover-meta { margin-top: -4mm; }
     .sec-head { margin-bottom: 6mm; }

@@ -2,11 +2,19 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
 import { readdirSync } from 'node:fs';
+import { relative, sep } from 'node:path';
 
 // The private downloads folder, listed at config time. `includeFiles` takes
 // file paths, not globs, so this is how a new file rides along without a
 // config edit. See downloads/README.md.
 const privateDownloads = readdirSync('downloads').map((f) => `downloads/${f}`);
+
+// The fonts and images the resource PDFs are built from (see pdf-assets/README.md),
+// read at request time by src/lib/resources/pdf-writer.ts. Listed the same way,
+// and recursively, because the folder has two subfolders.
+const pdfAssets = readdirSync('pdf-assets', { recursive: true, withFileTypes: true })
+  .filter((d) => d.isFile())
+  .map((d) => [...relative('.', d.parentPath).split(sep), d.name].join('/'));
 
 // https://astro.build/config
 // Render every route on demand. This keeps page generation, content loading,
@@ -23,7 +31,7 @@ export default defineConfig({
   output: 'server',
   // The private downloads folder rides inside the server function, so the
   // download gate can read a file that no URL can reach. See downloads/README.md.
-  adapter: vercel({ includeFiles: privateDownloads }),
+  adapter: vercel({ includeFiles: [...privateDownloads, ...pdfAssets] }),
   // Vite's dev server serves any file under the project root by URL, which
   // would make /downloads/<file> reachable in development exactly the way
   // the private folder exists to prevent. Production never serves the folder

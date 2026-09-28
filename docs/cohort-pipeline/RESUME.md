@@ -75,7 +75,29 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
       `<body>` and the class on the real one is lost. Comments go in the frontmatter.
     - **BaseLayout is not on SiteHeader.** It had uncommitted edits to the same header on
       26 September; the styles are shared, the markup is not yet.
-- [ ] 3. Branded PDFs.
+- [x] **3. Branded PDFs** (28 September). Sunil: the PDFs should carry "the texture plus the
+  branding", "that ivory texture", "not the green textile one".
+  - **The brand lives once, in `src/lib/resources/pdf-writer.ts`.** Until now only the
+    authority review used that file; the other three renderers each carried a private copy of
+    `Writer`, `clean()`, the colours and a sun-dot wordmark. All four import it now.
+  - Cover: the ivory weave edge to edge, the lockup, a Source Serif 4 title, then a paper sheet
+    for the text. Later pages: paper with a 40pt weave band, a gold rule and a small lockup.
+    `WEAVE_EVERY_PAGE` in pdf-writer.ts puts the full weave on every page if Sunil wants it.
+  - Figtree and Source Serif 4 are embedded and subset (`@pdf-lib/fontkit`); `clean()` and
+    each renderer's "every character can be printed" check test against the embedded fonts.
+    ₹, → and the true minus now print as themselves.
+  - `pdf-assets/` holds the fonts, their OFL licences and the PNGs from
+    `npm run build:pdf-assets` (sharp, devDependency). Bundled by `includeFiles`, like
+    `downloads/`. See `pdf-assets/README.md`.
+  - The memory kit PDF is printed from its page with the same brand, and `build:kit` now runs
+    on Windows (see `downloads/README.md`).
+  - Sizes: poc-screen 12.8 → 116.6 KB, model-selection 16.7 → 122.7 KB, authority review
+    10.5 → 114.2 KB, run-cost 21.8 → 128.8 KB (most of it the two fonts and the lockup),
+    memory kit 517 → 663 KB.
+  - Known limit, not fixed: a name typed in an Indian script (or any script Figtree lacks)
+    cannot print and is dropped from the cover line; "सुनील 🙂 Zoë" prints "Zoë". A fix is a
+    fallback font such as Noto Sans Devanagari.
+  - The browser's own print buttons (`data-gate="print"`) are out of scope.
 - [ ] 4. Tool downloads.
 
 ---

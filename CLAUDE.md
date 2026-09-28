@@ -777,6 +777,14 @@ rows from the view in the same statement, because it is a join, not a copy. **Ru
 `supabase/schema.sql` before deploying this**: the column, the function argument and the
 view are all in it, idempotent.
 
+**Every PDF the gate hands out carries the site's brand** (28 September 2026), from one
+place: `src/lib/resources/pdf-writer.ts` draws the four server-built PDFs, with an ivory weave
+cover, paper pages with a weave band, the lockup, and embedded Figtree and Source Serif 4.
+It reads its fonts and PNGs from `pdf-assets/` at the repo root, bundled by `includeFiles`
+like `downloads/` and never under `public/`. A renderer must not grow its own `Writer`,
+colours or `clean()` again: three of them did, and the brand drifted in four places. The
+memory kit is printed from its page by `npm run build:kit` with the same brand.
+
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,
 unapproved until reviewed. A resource without one still saves; its delivery is recorded
