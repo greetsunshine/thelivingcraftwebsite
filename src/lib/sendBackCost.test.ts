@@ -124,6 +124,15 @@ test('worst case at peak is 34,120,000, or 341.2% of quota', () => {
 // The five checks on the example
 // ---------------------------------------------------------------------------
 
+test('a check title says what it checks, not what it is about', () => {
+  // Check 3 used to read "Rounds are capped, and something happens after the
+  // last one", which does not say what the check tests.
+  const titles = read(example()).checks.map((c) => c.title);
+  assert.equal(titles[2], 'Every loop has a limit, a decided outcome, and an owner');
+  assert.equal(titles[4], 'One token budget for the whole task, not one per call');
+  for (const t of titles) assert.ok(!/something happens/.test(t), `vague title: ${t}`);
+});
+
 test('the example passes checks 1, 2, 3 and 5 and fails check 4', () => {
   const m = example();
   assert.equal(checkOf(m, 1).status, 'Pass');
@@ -262,12 +271,15 @@ test('check 5 fails a per-call budget, because the task is what costs money', ()
   assert.equal(checkOf(m, 5).status, 'Fail');
 });
 
-test('check 5 fails a budget below the typical cost', () => {
+test('check 5 fails a budget below the typical cost, and quotes both figures', () => {
   const m = example();
   m.budget = 50_000; // below 98,600
   const c = checkOf(m, 5);
   assert.equal(c.status, 'Fail');
-  assert.equal(c.reason, 'The budget will cut normal tasks short.');
+  // The reader should not have to go and find the numbers being compared.
+  assert.match(c.reason, /50,000/);
+  assert.match(c.reason, /98,600/);
+  assert.match(c.reason, /cut ordinary work short/);
 });
 
 test('check 5 raises Attention when the budget is above the worst case', () => {
@@ -275,7 +287,9 @@ test('check 5 raises Attention when the budget is above the worst case', () => {
   m.budget = 500_000; // above 170,600, so it never binds
   const c = checkOf(m, 5);
   assert.equal(c.status, 'Attention');
-  assert.equal(c.reason, 'The budget never binds; your caps are the only stop.');
+  assert.match(c.reason, /500,000/);
+  assert.match(c.reason, /170,600/);
+  assert.match(c.reason, /never comes into play/);
 });
 
 // ---------------------------------------------------------------------------

@@ -432,9 +432,9 @@ export const STATUS_MEANING: { status: Status; meaning: string }[] = [
 const CHECK_TITLES: Record<number, string> = {
   1: 'Every path that sends work back is listed',
   2: 'Each round is costed as repeated, review and growth',
-  3: 'Rounds are capped, and something happens after the last one',
-  4: 'Two numbers: unit economics and availability',
-  5: 'The budget belongs to the task, across all its rounds',
+  3: 'Every loop has a limit, a decided outcome, and an owner',
+  4: 'Both numbers fit: what you pay daily, and your busiest minute',
+  5: 'One token budget for the whole task, not one per call',
 };
 
 /**
@@ -448,8 +448,8 @@ export const CHECK_WHY: Record<number, string> = {
   1: 'A path you have not listed is spend you cannot see. Most teams count their retries and miss the judge entirely, because a judge rejection looks like normal operation rather than a failure.',
   2: 'A round is three things and teams usually count only the first. The review call and the growing context are what make a judge loop expensive, and neither appears in a retry counter.',
   3: 'A loop with no cap has no worst case. This is the check that turns "it depends" into a number, and an uncapped path is the single most common finding here.',
-  4: 'One number is not enough, because the two failures are different. Typical cost is what you pay every day and it decides whether the product is viable. Worst case at peak decides whether a bad minute takes the system down.',
-  5: 'Tokens are spent by the task, not by the call. A per-call budget never sees three rounds add up, so it cannot stop the thing that actually runs away.',
+  4: 'One number is not enough, because the two ways this hurts you are different. The typical cost is what you pay every day, and it decides whether the product makes money. The worst case at peak decides whether one bad minute takes the whole system down. A workflow can be fine on one and fatal on the other.',
+  5: 'A task that goes round three times spends three times. A budget checked on each call sees the attempts one at a time and never sees the total, so it cannot stop a task that is running away. To do that, every round has to count against one limit that belongs to the task.',
 };
 
 const filled = (v: number | null): boolean => v !== null;
@@ -590,7 +590,7 @@ function check4(r: Pick<Reading, 'typicalShare' | 'worstShare' | 'unbounded'>): 
 function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unbounded'>): CheckResult {
   const base = { n: 5 as const, title: CHECK_TITLES[5] };
   if (m.enforcement === '') {
-    return { ...base, status: 'Not answered', reason: 'Say how the budget is enforced.', action: '' };
+    return { ...base, status: 'Not answered', reason: 'Choose how your budget is enforced.', action: '' };
   }
   if (m.enforcement !== 'Per task, across all rounds') {
     return {
@@ -598,20 +598,20 @@ function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unboun
       status: 'Fail',
       reason:
         m.enforcement === 'Per call only'
-          ? 'A per-call budget never sees the rounds add up. The task is what costs money.'
-          : 'Nothing stops a task at a token total.',
+          ? 'Your budget is checked on each call, so it sees the attempts one at a time and never sees them add up.'
+          : 'Nothing stops a task once it passes a token total, so a runaway task runs until something else breaks.',
       action:
         'Count tokens against the task, across every round, and stop the task when it crosses the budget. Then make check 3\u2019s outcome run when it does.',
     };
   }
   if (m.budget === null || r.typical === null) {
-    return { ...base, status: 'Not answered', reason: 'Enter a per-task budget to check it against the two totals.', action: '' };
+    return { ...base, status: 'Not answered', reason: 'Enter a per-task budget and this check compares it against both totals above.', action: '' };
   }
   if (m.budget < r.typical) {
     return {
       ...base,
       status: 'Fail',
-      reason: 'The budget will cut normal tasks short.',
+      reason: `Your budget of ${tokens(m.budget)} is below what a normal task costs (${tokens(r.typical)}), so it would cut ordinary work short.`,
       action: 'Raise the budget above the typical cost per task, or cut the round cost so a normal task fits inside it.',
     };
   }
@@ -622,17 +622,23 @@ function check5(m: SendBackModel, r: Pick<Reading, 'typical' | 'worst' | 'unboun
     return {
       ...base,
       status: 'Pass',
-      reason: "The budget stops the worst case. Make sure check 3's outcome runs when it does.",
+      // Concrete, and it does not send the reader off to another check to
+       // find out what it means.
+      // The caveat rides in the finding, not in an action: a Pass means
+       // nothing is wrong, and a "Do this" on a Pass reads as a contradiction.
+      reason: r.unbounded
+        ? `Your budget of ${tokens(m.budget)} is the only thing stopping a task here, because a path has no cap. Confirm the outcome you chose actually runs when the budget fires.`
+        : `Your budget of ${tokens(m.budget)} sits above a normal task (${tokens(r.typical)}) and below the worst case (${tokens(r.worst)}), so it stops a runaway task without touching ordinary ones. Confirm the outcome you chose for each path actually runs when it fires.`,
       action: '',
     };
   }
   if (r.worst === null) {
-    return { ...base, status: 'Not answered', reason: 'The worst case is not worked out yet.', action: '' };
+    return { ...base, status: 'Not answered', reason: 'The worst case is not worked out yet, so there is nothing to compare the budget against.', action: '' };
   }
   return {
     ...base,
     status: 'Attention',
-    reason: 'The budget never binds; your caps are the only stop.',
+    reason: `Your budget of ${tokens(m.budget)} is above even the worst case (${tokens(r.worst)}), so it never comes into play. Your caps are the only thing stopping a task.`,
     action: 'Set the budget between the typical cost and the worst case, so it actually stops a runaway task.',
   };
 }

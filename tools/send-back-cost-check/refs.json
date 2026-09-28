@@ -82,29 +82,29 @@
       },
       {
         "n": 3,
-        "title": "Rounds are capped, and something happens after the last one",
+        "title": "Every loop has a limit, a decided outcome, and an owner",
         "status": "Pass",
         "reason": "Every present path is capped, with a decided outcome and a named owner.",
         "action": ""
       },
       {
         "n": 4,
-        "title": "Two numbers: unit economics and availability",
+        "title": "Both numbers fit: what you pay daily, and your busiest minute",
         "status": "Fail",
         "reason": "Your normal load already exceeds the quota.",
         "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."
       },
       {
         "n": 5,
-        "title": "The budget belongs to the task, across all its rounds",
+        "title": "One token budget for the whole task, not one per call",
         "status": "Pass",
-        "reason": "The budget stops the worst case. Make sure check 3's outcome runs when it does.",
+        "reason": "Your budget of 120,000 sits above a normal task (98,600) and below the worst case (170,600), so it stops a runaway task without touching ordinary ones. Confirm the outcome you chose for each path actually runs when it fires.",
         "action": ""
       }
     ],
     "nextStep": {
       "n": 4,
-      "title": "Two numbers: unit economics and availability",
+      "title": "Both numbers fit: what you pay daily, and your busiest minute",
       "status": "Fail",
       "reason": "Your normal load already exceeds the quota.",
       "action": "Cut what a round costs, lower the average rounds, or raise the quota. The path with the largest average rounds times round cost is the lever; on most workflows that is the judge."

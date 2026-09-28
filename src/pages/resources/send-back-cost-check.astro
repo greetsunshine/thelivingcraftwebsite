@@ -373,9 +373,24 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           <label class="fld">
             <span>Blended price per million tokens <em>(optional)</em></span>
             <input type="number" min="0" step="0.01" id="i-price" inputmode="decimal" aria-describedby="i-price-h" />
-            <i id="i-price-h">Your own currency. The tool shows no symbol.</i>
+            <i id="i-price-h">
+              Everything above is in tokens. Enter your rate and the tool also gives money. Your
+              own currency: it shows no symbol. Blend your input and output rates by the ratio your
+              traces show.
+            </i>
           </label>
         </div>
+        <p class="moneyline" id="moneyline" data-on="no">
+          <span class="ml-off">
+            The scheduling example leaves the price blank, because a blended rate is the one figure
+            nobody else can supply: it depends on your provider, your tier and your own mix of
+            input and output tokens. Enter yours and cost per task appears here.
+          </span>
+          <span class="ml-on">
+            At that rate, a typical task costs <b id="ml-task">—</b>, and a thousand of them cost
+            <b id="ml-k">—</b>. That is the everyday figure, not the worst case.
+          </span>
+        </p>
       </div>
     </section>
 
@@ -706,6 +721,13 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     if (r.costPerTask !== null)
       extras.push(`${money(r.costPerTask)} per task · ${money(r.costPerThousand)} per 1,000`);
     $('f-typical-extra').textContent = extras.join(' · ');
+
+    // A blank price has to have a visible consequence. Without this the box is
+    // empty, nothing happens, and it reads as broken rather than optional.
+    const ml = $('moneyline');
+    ml.dataset.on = r.costPerTask === null ? 'no' : 'yes';
+    $('ml-task').textContent = money(r.costPerTask);
+    $('ml-k').textContent = money(r.costPerThousand);
 
     // headline 2 — availability. Unbounded is a word, never a number.
     const worstEl = $('f-worst');
@@ -1085,6 +1107,20 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   /* The Present? control stays at full strength: it is how the row is switched
      back on, so it must not look disabled. */
   .entry tr.off select[data-f='present'] { color: var(--text-body); background: var(--surface-panel); }
+
+  .moneyline {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+    max-width: 78ch;
+  }
+  .moneyline[data-on='no'] .ml-on, .moneyline[data-on='yes'] .ml-off { display: none; }
+  .moneyline[data-on='yes'] { color: var(--text-body); }
+  .moneyline b { color: var(--text-loud); font-feature-settings: var(--font-features); }
 
   /* ── the five checks ──────────────────────────────────────────────────── */
   .checks { list-style: none; padding: 0; display: grid; gap: var(--space-3); }

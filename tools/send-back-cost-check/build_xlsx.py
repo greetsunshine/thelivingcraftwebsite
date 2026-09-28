@@ -356,7 +356,12 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
     inp(ws, f"C{b0 + 3}", ex.get("pricePerMillion") if filled else None, fmt=MONEYFMT)
     price = f"C{b0 + 3}"
     ws.merge_cells(f"E{b0 + 3}:K{b0 + 3}")
-    put(ws, f"E{b0 + 3}", "Your own currency. The workbook shows no symbol.", font=F_NOTE, align=WRAP_MID)
+    put(ws, f"E{b0 + 3}",
+        "Optional, and blank in the Example on purpose: a blended rate depends on your provider, "
+        "your tier and your own mix of input and output tokens, so nobody else can supply it. "
+        "Enter yours and the two cost rows below fill in. Your own currency; no symbol is shown.",
+        font=F_NOTE, align=WRAP_MID)
+    ws.row_dimensions[b0 + 3].height = 32
 
     # ---- the two headline numbers ----------------------------------------
     h0 = b0 + 5
@@ -381,7 +386,8 @@ def check_tab(ws: Worksheet, data: dict, *, filled: bool) -> dict:
         ("Worst case at peak (tokens per minute)", None, NUMFMT, ""),
         ("…as a share of your quota", None, PCTFMT,
          "Over 100% means this workflow alone would ask for more than the pool holds."),
-        ("Cost per task", None, MONEYFMT, "Only when a price is entered. Your own currency."),
+        ("Cost per task", None, MONEYFMT,
+         "Blank until a price is entered above. Everything else on this sheet is in tokens."),
         ("Cost per 1,000 tasks", None, MONEYFMT, ""),
     ]
     for i, (label, _f, fmt, note) in enumerate(rows):
@@ -485,7 +491,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
     rows = [
         # (title, status formula, reason formula, action formula)
         (
-            "Every path that sends work back is listed",
+            data["checkTitles"]["1"],
             ifchain([(f"{present}=0", NA), (f"{miss_avg}>0", FAIL)], PASS),
             ifchain([
                 (f"{present}=0", q("No path is marked as present yet.")),
@@ -497,7 +503,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
             ], '""'),
         ),
         (
-            "Each round is costed as repeated, review and growth",
+            data["checkTitles"]["2"],
             ifchain([(f"{present}=0", NA), (f"{miss_cost}>0", FAIL), (f"{zero_growth}>0", ATT)], PASS),
             ifchain([
                 (f"{present}=0", q("No path is marked as present yet.")),
@@ -511,7 +517,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
             ], '""'),
         ),
         (
-            "Rounds are capped, and something happens after the last one",
+            data["checkTitles"]["3"],
             ifchain([(f"{present}=0", NA), (f"OR({uncapped}>0,{undecided}>0)", FAIL), (f"{unowned}>0", ATT)], PASS),
             ifchain([
                 (f"{present}=0", q("No path is marked as present yet.")),
@@ -527,7 +533,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
             ], '""'),
         ),
         (
-            "Two numbers: unit economics and availability",
+            data["checkTitles"]["4"],
             ifchain([
                 (unb, FAIL),
                 (f'OR({ref["typ_share"]}="",{ref["wst_share"]}="")', NA),
@@ -550,7 +556,7 @@ def checks_block(ws: Worksheet, ref: dict, data: dict) -> dict:
             ], q("Get normal load under 80% of the quota: cut the round cost, cut the average rounds, or raise the quota.")),
         ),
         (
-            "The budget belongs to the task, across all its rounds",
+            data["checkTitles"]["5"],
             ifchain([
                 (f'{ref["enf"]}=""', NA),
                 (f'{ref["enf"]}<>"Per task, across all rounds"', FAIL),

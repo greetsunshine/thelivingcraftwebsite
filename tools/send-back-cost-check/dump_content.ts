@@ -10,7 +10,7 @@
  * Run:  node --experimental-strip-types tools/send-back-cost-check/dump_content.ts
  */
 import { HOW_TO_FIND, EXAMPLE, WORKFLOW_INPUTS, EXAMPLE_LABEL } from '../../src/data/send-back-cost-check.ts';
-import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, read, roundCost } from '../../src/lib/sendBackCost.ts';
+import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, blankModel, read, roundCost } from '../../src/lib/sendBackCost.ts';
 
 const reading = read(EXAMPLE);
 
@@ -22,6 +22,10 @@ console.log(
       howToFind: HOW_TO_FIND,
       paths: PATHS,
       checkWhy: CHECK_WHY,
+      // The titles come from the module too. build_xlsx.py used to carry its
+      // own copy of all five, which is exactly the duplication that drifts the
+      // first time one of them is reworded.
+      checkTitles: Object.fromEntries(read(blankModel()).checks.map((c) => [c.n, c.title])),
       afterLast: AFTER_LAST,
       budgetEnforcement: BUDGET_ENFORCEMENT,
       example: EXAMPLE,
