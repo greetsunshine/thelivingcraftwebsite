@@ -3,7 +3,7 @@ week: 1
 title: "The harness"
 module: M1
 summary: 'Draw the map: what an agent actually is as a system, and where it breaks before you have written a line of it.'
-status: draft
+status: ready
 assignment: "One boundary you drew, and the alternative you rejected"
 
 # The five, word for word. Rated at 00:05 and again at 04:52 — "the same five

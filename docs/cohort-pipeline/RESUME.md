@@ -18,6 +18,76 @@ PR #27 (the thread brain) is superseded by this work. The pipeline work is
 
 ---
 
+## Every published teaching page is on design system v1, and week 1 has its own title — 28 September
+
+Five Artifacts were still on the black, ember and sun palette after the two week 2 sheets
+were done. All five are converted now, so no learner-facing page is on the retired system.
+
+| Page | What changed |
+| --- | --- |
+| Week 2 topic 1, instructor | Tokens only |
+| Week 2 topic 1, learner | Tokens only |
+| Week 2 topic 2, learner | Tokens only |
+| Week 2 topic 2, instructor | Tokens only |
+| Week 1, learner | Tokens, plus the title |
+
+**The conversion is a script, not a hand edit** —
+`swap.py` in the session scratchpad holds the whole mapping and prints what it did not
+recognise. Three things it does that a find-and-replace would get wrong, and any future
+page needs the same three:
+
+- **`--ink-3` is the on-dark muted colour and some pages use it on paper.** Mapped to
+  `#C6D4C8`, it is about 1.4:1 on `--paper-1` and the hidden amount marker on every failure
+  card disappears. Those uses go to `#758279`, the control line.
+- **The heading rule split in two.** `h1, h2, h3, h4` at weight 800 became `h1, h2` in
+  Source Serif 4 at 400 plus `h3, h4` in Figtree at 700. Dropping h3 and h4 from the rule
+  without writing a second one also drops `margin: 0`, which returns the browser's default
+  margins and breaks every card.
+- **`--sun` is forest green now, so ink text on it is about 1.2:1.** Every `summary`, jump
+  link and pressed button on those pages carries `color: #F5F0E6` instead.
+
+**Week 1's learner page was titled "The money leaves anyway" and its session is titled
+"The harness".** It is now `Week 1 · The harness` in the tab and `The harness` as the h1;
+the old line's promise was already the first sentence of the sub-heading, so nothing was
+lost. Sunil asked for titles a learner can match to a week.
+
+**That page is shared as "anyone with the link" and the share is pinned to the old
+version.** Viewers keep seeing the pre-conversion page until the pin is moved from the
+page's Share menu. Nobody but Sunil can move it.
+
+**Weeks 1 and 2 are `status: ready`.** That is the written half of the release gate; neither
+is released, because `session_releases` does not exist in production yet.
+
+**`npm run check:teaching` is new** (`scripts/check-teaching-pages.mjs`). Eleven mechanical
+checks between a learner page and its instructor page: the two clock tables byte-identical,
+both pages in clock order, the run of show monotonic, every card and row present in the
+clock, both instructor columns agreeing heading for heading, every learner heading present
+on the instructor page, and both pages well-formed. It takes two saved HTML files. Building
+week 2's pair cost four rounds of one defect — an index going stale behind the content —
+and every one of those four was mechanical.
+
+### Two things are blocked, and both are Sunil's
+
+- **`supabase/schema.sql` has not been run and I cannot run it.** `.env.local` holds
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` and nothing else. The service-role key
+  reaches the REST API, which cannot execute DDL, and there is no Postgres connection
+  string anywhere in the repo or the environment; the Supabase CLI is installed and not
+  linked. Run the whole file, it is idempotent. Until then `/craft/material` shows every
+  week shut and the console shows the red table banner.
+- **The timetable cannot be set without real dates.** `learnerCohort.startsOn` is
+  `'October 2026'`, a month. `startsAt` and `endsAt` are unset on every session file, and
+  they must be full ISO 8601 with an offset because the cohort sits in three time zones.
+  Nothing derives from `taughtOn`. Until weeks 1 and 2 have a date, a time and an offset,
+  there is no before-pulse, no checkpoint window, no knowledge check and no ADR clock.
+  Inventing them is inventing a fact.
+
+**`src/content/sessions/week-2.md` is being rewritten in parallel and is uncommitted.** The
+day is now eight blocks and three cycles (A the limit, B maker-checker, C pay once) where it
+was five topics, and the clock moved: the four checkpoints are `00:46 / 02:02 / 03:18 /
+04:19`, not `01:02 / 01:59 / 03:20 / 04:15`. **The five published week 2 Artifacts are all
+built against the old clock and now disagree with the session file.** They were not touched
+beyond the palette, because the restructure is a content decision and not mine to finish.
+
 ## Curriculum aligned to the resources, and week 2 wired up — 28 September
 
 Sunil asked for a review of the published curriculum against the topics on `/resources`,
