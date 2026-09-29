@@ -474,6 +474,39 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
 
 /* ══ Breakpoints, in the package's order ════════════════════════════════ */
 
+
+/* ── the ivory cloth in place of the green linen (29 September 2026) ─────
+   Sunil: the cream woven cloth goes "only in the landing page wherever the
+   green texture currently exists". On `/` that was two surfaces, the price
+   panel and the footer, plus the chat's small marks (AskWidget.astro). They
+   become light, so the colours that were written for a dark surface are
+   re-pointed here, on the surface itself, and everything inside follows:
+   ink for text, forest for secondary text and the button, the plain line
+   for rules. --lc-muted is not used on the cloth; see --texture-ivory-cloth
+   in ds/theme.css for the contrast. Every other page keeps flat forest. */
+.landing .price-card,
+.landing footer.site {
+  --text-on-invert: var(--lc-ink);
+  --hero-eyebrow: var(--lc-forest);
+  --hero-muted: var(--lc-forest);
+  --hero-rule: var(--lc-line);
+  --hero-primary-bg: var(--lc-forest);
+  --hero-primary-bg-hover: var(--lc-forest-hover);
+  --hero-primary-fg: var(--lc-ivory);
+  --hero-focus: var(--lc-forest);
+  --landing-focus: var(--lc-forest);
+  --footer-ink: var(--lc-ink);
+  --footer-muted: var(--lc-forest);
+  --footer-rule: var(--lc-control-line);
+  --footer-link-hover: var(--lc-ink);
+  --footer-focus: var(--lc-forest);
+  background: var(--texture-ivory-cloth);
+  color: var(--lc-ink);
+}
+/* A light panel on the light page needs an edge, as every other panel has. */
+.landing .price-card { box-shadow: 0 0 0 var(--border-w-hair) var(--lc-line); }
+.landing footer.site { border-top: var(--border-w-hair) solid var(--lc-line); }
+
 @media (min-width: 1450px) {
   .landing .woven-brain { margin-right: -45px; }
 }

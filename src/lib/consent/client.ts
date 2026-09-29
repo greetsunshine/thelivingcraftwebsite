@@ -184,7 +184,10 @@ function footerLink() {
   const b = el('button', 'lc-consent-footer', 'Cookie choices');
   b.type = 'button';
   b.dataset.consentOpen = '';
-  privacy.after(document.createTextNode(' · '), b);
+  // A flex row spaces its own items; only an inline run of links needs the dot.
+  const flexRow = getComputedStyle(privacy.parentElement ?? privacy).display.includes('flex');
+  if (flexRow) privacy.after(b);
+  else privacy.after(document.createTextNode(' · '), b);
 }
 
 export function mountConsent() {

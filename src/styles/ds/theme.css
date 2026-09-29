@@ -271,9 +271,12 @@
      19 September: "the buttons do not need the texture"). --sun itself
      stays a flat colour, for borders, text and strokes.
 
-     SINCE 25 SEPTEMBER THE LINEN IS DRAWN ON `/` ONLY. Every other page
-     gets flat colour from the `body:not(.landing)` rule after this block.
-     The values here are what `/` still draws. --- */
+     SINCE 25 SEPTEMBER THE LINEN IS DRAWN ON `/` ONLY, and since 29
+     September `/` draws the ivory cloth in its place (--texture-ivory-cloth
+     below, landing-v5.css). So nothing draws the linen today: every other
+     page gets flat colour from the `body:not(.landing)` rule after this
+     block. The tokens stay because the `/` rules and the Ask widget still
+     name them. --- */
   --texture-linen: url('/textures/linen-forest.webp');
   --texture-forest:
     linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
@@ -287,6 +290,22 @@
   --texture-footer:
     linear-gradient(rgba(16, 42, 34, 0.45), rgba(16, 42, 34, 0.45)),
     var(--texture-linen) center / cover no-repeat var(--lc-dark-forest);
+
+  /* --- texture: the ivory cloth (29 September). Sunil's instruction: on `/`,
+     wherever the green linen was, draw this cream woven cloth instead. It is
+     a photograph (public/textures/ivory-cloth.webp, 1200x800, 122 KB, from
+     his supplied image), so like the linen it is a whole `background` value:
+     an ivory overlay, the cloth stretched to cover, and flat ivory if the
+     image fails.
+
+     THE OVERLAY IS A CONTRAST CONTROL. The darkest 5% of the cloth averages
+     #D0B893. With ivory at 0.35 over it, ink reads 9.1:1 and forest 7.6:1 on
+     those pixels, so text on the cloth is ink or forest, never --lc-muted
+     (4.0:1 there, which fails AA). Used only by landing-v5.css and the Ask
+     widget, both under `.landing`. --- */
+  --texture-ivory-cloth:
+    linear-gradient(rgba(245, 240, 230, 0.35), rgba(245, 240, 230, 0.35)),
+    url('/textures/ivory-cloth.webp') center / cover no-repeat var(--lc-ivory);
 
   /* --- texture: the ivory weave (V5, 19 September). The one textile ground
      on a light page, behind the opening section and nowhere else. A whole
