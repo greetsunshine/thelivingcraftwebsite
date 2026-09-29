@@ -227,10 +227,13 @@ const schema: unknown[] = [
           <dt>Written by</dt>
           <dd>{d.author}</dd>
         </div>
-        <div>
-          <dt>Reviewed by</dt>
-          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
-        </div>
+        {/* The reviewer is shown once there is one; an empty review is not announced (29 September 2026). */}
+        {d.reviewedBy && (
+          <div>
+            <dt>Reviewed by</dt>
+            <dd>{d.reviewedBy}</dd>
+          </div>
+        )}
         <div>
           <dt>Last revised</dt>
           <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>

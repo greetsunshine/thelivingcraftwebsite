@@ -224,23 +224,9 @@ const schema = [
       </div>
     </div>
 
-    <aside class="pending">
-      <h3>Facts this page is waiting on</h3>
-      <ul>
-        <li>
-          Live hours, delivery format and how many sessions an enterprise group runs.
-          <span class="who">Sunil to approve the scope before publication</span>
-        </li>
-        <li>
-          Fees, payment schedule, cancellation and rescheduling terms.
-          <span class="who">Sunil with finance; nothing is published until agreed</span>
-        </li>
-        <li>
-          Contracting entity and the terms a purchase order would sit under.
-          <span class="who">The owner — the same facts <a href="/terms">terms</a> is waiting on</span>
-        </li>
-      </ul>
-    </aside>
+    {/* 29 September 2026: the internal list of facts this page was waiting on,
+        and the "Written ... Pending approval" line, were removed at the owner's
+        request. They were notes for the team, not for a visitor. */}
   </section>
 
   {/* ── next step ────────────────────────────────────────────────────────── */}
@@ -259,7 +245,6 @@ const schema = [
       <p>
         You can also write directly to
         <a class="textlink" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>.
-        No response-time commitment is published, because none has been agreed.
       </p>
     </div>
     <div class="cta-row">
@@ -270,10 +255,6 @@ const schema = [
     <p class="individual">
       For individual learning,
       <a class="textlink" href="/#apply" data-cta="form" data-cta-placement="enterprise-close">{cohortCtaLabel().replace(/^Explore/, 'explore')}</a>.
-    </p>
-    <p class="revised">
-      Written <time datetime="2026-09-11">11 September 2026</time>. Scope and terms
-      pending Sunil’s factual approval.
     </p>
   </section>
 </PracticeLayout>

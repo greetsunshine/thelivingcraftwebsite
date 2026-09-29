@@ -105,10 +105,6 @@ const schema: unknown[] = [
         }
         <a class="btn btn-ghost" href="/resources/">All resources</a>
       </div>
-      <p class="hero-note">
-        {count === 1 ? 'One resource is published.' : `${count} resources are published.`} Nothing
-        is listed here before it is written.
-      </p>
     </div>
   </section>
 
@@ -140,10 +136,13 @@ const schema: unknown[] = [
             </p>
 
             <dl class="meta">
-              <div>
-                <dt>Reviewed by</dt>
-                <dd>{r.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
-              </div>
+              {/* The reviewer is shown once there is one; an empty review is not announced (29 September 2026). */}
+              {r.reviewedBy && (
+                <div>
+                  <dt>Reviewed by</dt>
+                  <dd>{r.reviewedBy}</dd>
+                </div>
+              )}
               <div>
                 <dt>Companion file</dt>
                 {/* The only download this page names, and the anchor naming it
@@ -203,18 +202,11 @@ const schema: unknown[] = [
 
   <section class="wrap band">
     <div class="sec-head">
-      <p class="eyebrow">What is not here</p>
-      <h2>Planned, and <em>not written</em></h2>
+      <p class="eyebrow">Related</p>
+      <h2>The same idea in <em>two other shapes</em></h2>
     </div>
 
     <div class="prose stack">
-      <p>
-        More worksheets are planned, on the questions these three keep running into: what to do
-        with an uncertain result, how to decide where work should run, what to measure once a
-        system is live. They are briefs at this stage rather than written documents, so there is
-        nothing to link and no date to give. They will appear here when they are written, and
-        not before.
-      </p>
       <p>
         The <a class="textlink" href="/resources/templates/">templates</a> and the
         <a class="textlink" href="/resources/guides/">guides</a> are the same idea in two other

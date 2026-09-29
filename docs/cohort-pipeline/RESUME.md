@@ -372,6 +372,24 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     choice); `--measure-prose` (65ch gives about 90 characters a line in Figtree, which
     is long but site-wide).
 
+- [x] **13. Internal wording removed from the public pages** (29 September). The owner:
+  "internal wordings. These should not be anywhere on the website". A text scan of every
+  page (all 39 in the sitemap, plus the 404 page) found and removed:
+  - "Written 11 September 2026. Pending Sunil's factual approval" and its variants on
+    /about, /programmes, /programmes/enterprise, /advisory, /contact,
+    /communication-preferences and /tools.
+  - The "Facts this page is waiting on" asides, with owner notes such as "Sunil to
+    approve", "The owner to decide" and "Sunil and Alchemy", on the same pages.
+  - "Reviewed by: Not yet reviewed" on the four guides, four templates, three worksheets
+    and /toolkit. A reviewer appears again once `reviewedBy` is set.
+  - Planning notes ("further clusters are planned", "nothing is listed here before it is
+    written", "briefs at this stage") on /resources, the guides and templates indexes and
+    /toolkit, and /tools' whole "Not published" section about an unbuilt second tool.
+  - "None has been agreed", "under discussion" and "pending a verified sending domain"
+    sentences on /advisory, /contact, /programmes/enterprise and /privacy.
+  - **Rule from now on:** approval status, owner to-dos and plans go in code comments or
+    in this file, never in rendered copy.
+
 ---
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
