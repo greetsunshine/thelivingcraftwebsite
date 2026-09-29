@@ -1,0 +1,2421 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Week 2 · Instructor notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;1,400&family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* The Living Craft design system. Light-only by design: white cards on a mist
+   ground with one black hero per view. Every colour painted explicitly. */
+:root{
+  --noir:#183D32;--ember:#B58A46;--sun:#183D32;--mist:#F5F0E6;--berry:#963D34;
+  --paper-1:#FBF8F2;--paper-2:#E5EBE1;
+  --ink-1:#172E26;--ink-2:#526259;--ink-3:#C6D4C8;--ink-invert:#F5F0E6;
+  --line-hair:#CBD1C8;--accent-hover:#244F41;--danger:#963D34;--danger-quiet:#F7E8E3;
+  --font-body:"Figtree","Avenir Next","Helvetica Neue",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --s1:12px;--s2:13px;--s3:15px;--s4:17px;--s5:20px;--s6:26px;--s7:34px;
+  --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--sp6:32px;--sp7:48px;--sp8:72px;
+  --r-inner:12px;--r-panel:12px;--r-card:12px;--r-shell:12px;--r-pill:6px;
+  --shadow-raise:0 0 0 1px #CBD1C8;
+  --shadow-lift:0 0 0 1px #758279;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--mist);color:var(--ink-1);font-family:var(--font-body);
+  font-size:var(--s3);line-height:1.55;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2{margin:0;font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;font-weight:400;letter-spacing:-.01em;line-height:1.14;text-wrap:balance}
+h3,h4{margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.18;text-wrap:balance}
+p{margin:0}
+a{color:var(--ink-1)}
+:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.shell{max-width:1000px;margin:0 auto;padding:var(--sp6) var(--sp4) var(--sp8);
+  display:flex;flex-direction:column;gap:var(--sp6)}
+.mono{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em}
+.quiet{color:var(--ink-2)}
+
+/* hero — the one black surface */
+.hero{background:var(--noir);color:var(--ink-invert);border-radius:var(--r-shell);
+  padding:var(--sp8) var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.hero .mono{color:var(--ink-3)}
+.hero h1{font-size:clamp(32px,5.5vw,54px);max-width:15ch}
+.hero .lead{font-size:var(--s4);color:#C6D4C8;max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:var(--sp5) var(--sp7);padding-top:var(--sp4);
+  border-top:1px solid rgba(255,255,255,.14)}
+.facts div{display:flex;flex-direction:column;gap:var(--sp1)}
+.facts .v{font-size:var(--s5);font-weight:700;letter-spacing:-.02em}
+
+/* ── side-by-side teaching mode ───────────────────────────────────────────
+   On by default: a script adds body.split on load, and the rule below turns
+   .teach into a two-column grid with the notes column pinned to the viewport.
+   It only applies from 1200px up, so a laptop in a narrow window and a phone
+   both fall back to .teach{display:contents} — run the room first, then the
+   notes, as ordinary children of .shell. The button turns it off on purpose. */
+.teach{display:contents}
+.pane{display:flex;flex-direction:column;gap:var(--sp6);min-width:0}
+
+.panehead{display:flex;flex-direction:column;gap:var(--sp1)}
+.panehead .k{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.panehead h2{font-size:var(--s6)}
+.panehead p{color:var(--ink-2);font-size:var(--s2)}
+
+.railbtn{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em;
+  border:1px solid var(--line-hair);background:var(--paper-1);color:var(--ink-2);
+  border-radius:var(--r-pill);padding:8px 16px;cursor:pointer;margin-left:auto;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1),color 160ms cubic-bezier(.22,.61,.36,1)}
+.railbtn:hover{background:var(--paper-2);color:var(--ink-1)}
+.railbtn[aria-pressed="true"]{background:var(--sun);color:#F5F0E6;border-color:var(--sun)}
+
+@media (min-width:1200px){
+  body.split .shell{max-width:1720px}
+  body.split .shell > :not(.teach){width:100%;max-width:1000px;align-self:center}
+  body.split .teach{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:var(--sp5);align-items:start}
+  body.split .pane-ref{position:sticky;top:var(--sp3);gap:var(--sp5);
+    max-height:calc(100vh - var(--sp5));overflow-y:auto;overscroll-behavior:contain;
+    padding:var(--sp2) var(--sp3) var(--sp6) 0;scrollbar-width:thin}
+  body.split .pane-ref .card{padding:var(--sp5)}
+  body.split .pane-ref .card h3{font-size:var(--s5)}
+  body.split .pane-script .beat{grid-template-columns:56px 1fr}
+}
+
+/* the beat you are on, and the reference it opened */
+.beat[data-ref]{cursor:pointer;border-radius:var(--r-inner);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+body.split .beat[data-ref]:hover{background:var(--paper-2)}
+body.split .beat.here .t{color:var(--ink-1);font-weight:700}
+body.split .beat.here{background:var(--paper-2)}
+.pane-ref .card.lit{box-shadow:0 0 0 2px var(--sun)}
+
+/* jump rail — clickable, therefore sun */
+.rail{display:flex;flex-wrap:wrap;gap:var(--sp2);align-items:center}
+.rail .lab{color:var(--ink-2);margin-right:var(--sp2)}
+.rail a{font-family:var(--font-mono);font-size:var(--s1);text-decoration:none;
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 16px;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1),transform 90ms cubic-bezier(.22,.61,.36,1)}
+.rail a:hover{background:var(--accent-hover)}
+.rail a:active{transform:translateY(1px)}
+
+/* the topic strip — the one ember card */
+.beats{background:var(--ember);color:var(--ink-1);border-radius:var(--r-card);
+  padding:var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.beats h2{font-size:var(--s6)}
+.bar{display:flex;gap:3px;height:14px;border-radius:var(--r-pill);overflow:hidden}
+.bar span{background:rgba(22,33,46,.82);border-radius:var(--r-pill)}
+.beatlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:var(--sp4);margin:0;padding:0;list-style:none}
+.beatlist li{background:rgba(255,255,255,.55);border-radius:var(--r-inner);
+  padding:var(--sp4);display:flex;flex-direction:column;gap:var(--sp2)}
+.beatlist .t{font-weight:700;font-size:var(--s4);letter-spacing:-.02em}
+.beatlist p{font-size:var(--s2)}
+
+/* section heads */
+.head{display:flex;flex-direction:column;gap:var(--sp2);scroll-margin-top:var(--sp5)}
+.head h2{font-size:var(--s7)}
+.head .k{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.head p{color:var(--ink-2);max-width:64ch}
+
+/* cards */
+.card{background:var(--paper-1);border-radius:var(--r-card);box-shadow:var(--shadow-raise);
+  padding:var(--sp6);display:flex;flex-direction:column;gap:var(--sp4);
+  scroll-margin-top:var(--sp5);transition:box-shadow 160ms cubic-bezier(.22,.61,.36,1)}
+.card:hover{box-shadow:var(--shadow-lift)}
+.card h3{font-size:var(--s6)}
+.card h4{font-size:var(--s4);letter-spacing:-.015em}
+.card p,.card li{font-size:var(--s3)}
+.card ul,.card ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.tag{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  background:var(--paper-2);color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px}
+.tag.warn{background:var(--danger-quiet);color:var(--danger)}
+hr.hair{border:0;border-top:1px solid var(--line-hair);margin:var(--sp2) 0;width:100%}
+
+/* code */
+pre{margin:0;background:var(--paper-2);border-radius:var(--r-inner);padding:var(--sp4);
+  overflow-x:auto;font-family:var(--font-mono);font-size:var(--s1);line-height:1.6}
+code{font-family:var(--font-mono);font-size:.92em}
+p code,li code,td code{background:var(--paper-2);border-radius:6px;padding:1px 5px}
+
+/* the expandable answer key — summary is clickable, so it is sun */
+details{border-radius:var(--r-inner);background:var(--paper-2);padding:var(--sp3)}
+summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:var(--sp2);
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 18px;
+  font-family:var(--font-mono);font-size:var(--s1);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--accent-hover)}
+summary .chev{transition:transform 160ms cubic-bezier(.22,.61,.36,1)}
+details[open] summary .chev{transform:rotate(90deg)}
+.dbody{display:flex;flex-direction:column;gap:var(--sp4);padding:var(--sp4) var(--sp2) var(--sp2)}
+.dbody p,.dbody li{font-size:var(--s3)}
+.dbody ul,.dbody ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+
+/* tables */
+.scroller{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:460px}
+th,td{text-align:left;padding:var(--sp3) var(--sp4);vertical-align:top;font-size:var(--s2)}
+th{font-family:var(--font-mono);font-size:var(--s1);font-weight:500;color:var(--ink-2);
+  border-bottom:1px solid var(--line-hair)}
+td{border-bottom:1px solid var(--line-hair)}
+tr:last-child td{border-bottom:0}
+
+blockquote{margin:0;padding-left:var(--sp4);border-left:3px solid var(--ember);
+  color:var(--ink-1);font-size:var(--s4);line-height:1.45}
+
+.pairs{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  letter-spacing:-.01em;color:var(--ink-2);background:var(--paper-2);
+  border-radius:var(--r-pill);padding:5px 12px}
+.head .pairs{margin-top:var(--sp2)}
+body.split .pane-ref .card.lit .pairs{background:var(--sun);color:#F5F0E6}
+.qmeta{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.opt{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp1)}
+.ok{font-weight:700}
+
+/* run of show — scannable while teaching */
+.beat{display:grid;grid-template-columns:64px 1fr;gap:var(--sp4);align-items:start}
+.beat+.beat{border-top:1px solid var(--line-hair);padding-top:var(--sp4)}
+.beat .t{font-family:var(--font-mono);font-size:var(--s2);color:var(--ink-2);padding-top:2px}
+.beat .b{display:flex;flex-direction:column;gap:var(--sp2)}
+.beat h4{font-size:var(--s4);letter-spacing:-.015em}
+.beat p,.beat li{font-size:var(--s3)}
+.beat ul,.beat ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.beat pre{font-size:var(--s1)}
+.qbadge{font-family:var(--font-mono);font-size:var(--s1);background:var(--paper-2);
+  color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px;align-self:flex-start}
+.qbadge.spend{background:var(--danger-quiet);color:var(--danger)}
+footer{color:var(--ink-2);font-size:var(--s2)}
+
+@media (max-width:620px){.beat{grid-template-columns:1fr;gap:var(--sp2)}}
+@media (max-width:720px){
+  .hero{padding:var(--sp7) var(--sp5);border-radius:var(--r-card)}
+  .card{padding:var(--sp5)}
+  .beats{padding:var(--sp5)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  body{background:#fff}
+  .teach{display:contents}
+  .railbtn,.rail{display:none}
+  .pane-ref{position:static;max-height:none;overflow:visible}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .hero{background:#fff;color:#000}
+  .hero .lead,.hero .mono{color:#333}
+  .beats{background:#fff;border:1px solid #ccc}
+  summary{display:none}
+  details{background:#fff;padding:0}
+}
+</style>
+
+<script>
+/* Side by side is the default. Set before the markup below is parsed, so the
+   page never flashes one column first. The CSS only honours it from 1200px. */
+document.body.classList.add('split');
+</script>
+
+
+<style>
+/* ---------- the six topics, each one collapsible ---------- */
+details.topic { margin: 0; }
+details.topic > summary {
+  display: flex; align-items: baseline; gap: 14px; width: 100%;
+  background: var(--paper-1); color: var(--ink-1);
+  border-radius: 12px; box-shadow: 0 0 0 1px #CBD1C8;
+  padding: 20px 24px; font-family: inherit; font-size: 17px; font-weight: 700;
+  letter-spacing: -0.015em; cursor: pointer; list-style: none;
+}
+details.topic > summary::-webkit-details-marker { display: none; }
+details.topic > summary:hover { box-shadow: 0 0 0 1px #758279; }
+details.topic > summary:focus-visible { outline: 2px solid #963D34; outline-offset: 2px; }
+details.topic > summary .num {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px;
+  font-weight: 500; color: #F5F0E6; background: #183D32;
+  border-radius: 6px; padding: 4px 9px; flex: none;
+}
+details.topic > summary .when {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px;
+  font-weight: 400; color: #526259; margin-left: auto; text-align: right;
+}
+details.topic > summary .caret { flex: none; color: #526259; font-size: 13px; }
+details.topic[open] > summary { border-radius: 12px 12px 0 0; box-shadow: 0 0 0 1px #758279; }
+details.topic[open] > summary .caret { transform: rotate(90deg); }
+details.topic > summary .caret { display: inline-block; transition: transform 160ms; }
+.topicbody {
+  display: flex; flex-direction: column; gap: 24px;
+  padding: 24px 0 8px;
+}
+@media (max-width: 620px) {
+  details.topic > summary { flex-wrap: wrap; padding: 16px 18px; }
+  details.topic > summary .when { margin-left: 0; width: 100%; text-align: left; }
+}
+@media print {
+  details.topic > summary { box-shadow: none; border: 1px solid #ccc; }
+  details.topic > .topicbody { display: flex !important; }
+}
+
+/* ---------- side by side, inside a collapsible ----------
+   The per-topic pages put .teach directly under .shell, so the stock rule
+   `body.split .shell > :not(.teach)` clamps everything else to 1000px and lets
+   .teach go wide. Here .teach is two levels down, inside details > .topicbody,
+   so that rule would clamp the whole topic instead. Undo it for the topics and
+   re-declare the grid at the depth it actually sits. */
+@media (min-width: 1200px) {
+  body.split .shell > details.topic { width: 100%; max-width: none; align-self: stretch; }
+  body.split .topicbody > .teach {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp5);
+    align-items: start;
+  }
+  body.split .topicbody .pane-ref {
+    position: sticky;
+    top: var(--sp3);
+    gap: var(--sp5);
+    max-height: calc(100vh - var(--sp5));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--sp2) var(--sp3) var(--sp6) 0;
+    scrollbar-width: thin;
+  }
+  body.split .topicbody .pane-ref .card { padding: var(--sp5); }
+  body.split .topicbody .pane-ref .card h3 { font-size: var(--s5); }
+  body.split .topicbody .pane-script .beat { grid-template-columns: 56px 1fr; }
+}
+/* A beat only looks clickable where the script is wired to it. */
+.beat[data-ref] { cursor: pointer; }
+</style>
+
+
+<div class="shell">
+
+<header class="hero">
+  <div class="mono">The Living Craft · week 2 · M2 · instructor's copy</div>
+  <h1>Guardrails</h1>
+  <p class="lead">All seven topics on one page, numbered 0 to 6, collated the way week 1 is, with each topic collapsible so you can work through them one at a time. Source of truth is <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>; the clock is generated by <span class="mono">scripts/teaching-clock.mjs</span> and is the same table the learner page carries.</p>
+  <div class="facts">
+    <div><span class="mono">Topics</span><span class="v">7, numbered 0 to 6</span></div>
+    <div><span class="mono">Blocks</span><span class="v">8</span></div>
+    <div><span class="mono">Cycles</span><span class="v">3, build then break</span></div>
+    <div><span class="mono">Keyboards live</span><span class="v">00:57</span></div>
+    <div><span class="mono">Question bank</span><span class="v">10, eight asked</span></div>
+    <div><span class="mono">Session status</span><span class="v">draft</span></div>
+  </div>
+</header>
+
+<div class="head" id="today">
+  <span class="k">the opening · 00:00 to 00:15</span>
+  <h2>What today is for</h2>
+  <p>Last week they watched a tool that pays out money with nothing in front of it. Today they put things in front of it, and then they watch them fail. <strong>Every guardrail you add moves a failure. It does not delete one.</strong> That sentence is the week, and by 03:25 the room has watched it happen five times.</p>
+  <h3>You will rate yourself on these five, twice</h3>
+  <p>00:05 and 04:52, same words both times. Read them from the learner page rather than paraphrasing, because the two sets of numbers only mean the same thing if the words do.</p>
+  <p><strong>Expect high scores on 1 and 3 at 00:05</strong>, and say nothing about it. Almost everyone believes their limits are already in config and their payments already run once. Both are tested against a keyboard today. A score that drops at 04:52 is the result you want, and announcing that in advance spends it.</p>
+  <p>Say that evaluation is deliberately not among the five, and name week 3. A participant who cannot find a topic assumes it is missing from the course rather than scheduled.</p>
+  <h3>Six topics, in their own order</h3>
+  <p>The seven below are in topic order rather than clock order, because a topic is an argument and an argument reads better in one piece. Five of the six numbered topics are a single unbroken run on the clock. <strong>Topic 4 is not, and its page carries one instruction in bold: do not teach it three times.</strong></p>
+  <p><strong>Topic 0 is new on 29 September and nothing on the clock moved for it.</strong> Its three beats at 00:15, 00:31 and 00:37 have always run. They were filed as "shared", which meant they belonged to no topic, so when the six pages were built they landed on none of them and a learner met topic 1 with no definition of a guardrail above it. The beats now have a page.</p>
+</div>
+
+<nav class="rail" aria-label="Jump to a topic">
+  <span class="lab mono">Topics</span>
+  <a href="#t0">0 · the frame</a><a href="#t1">1 · the limit</a><a href="#t2">2 · the gate</a><a href="#t3">3 · reliability</a><a href="#t4">4 · risk</a><a href="#t5">5 · governance</a><a href="#t6">6 · mechanism</a>
+  <span class="lab mono" style="margin-left:var(--sp4)">Before the day</span>
+  <a href="#prep">what to prepare</a>
+  <button type="button" id="splitbtn" class="railbtn" aria-pressed="true">Side by side</button>
+</nav>
+
+<section class="beats" id="clock">
+  <h2>Five hours, eight blocks</h2>
+  <p><strong>Three build-break cycles, not one drill block.</strong> Each cycle builds a control and breaks it in the same hour, on the room's own code. Keyboards are live at 00:57 rather than 02:20, and the adversary round at 03:25 is what the earlier blocks are compressed to pay for.</p>
+  <div class="scroller"><table>
+<thead>
+  <tr><th>time</th><th>what happens</th><th>whose</th></tr>
+</thead>
+<tbody>
+  <tr class="quiet" style="color:#526259"><td>00:00</td><td>The night the money left</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:10</td><td>One sealed prediction</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:15</td><td>Two decision records on screen</td><td>block 1, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:23</td><td>The check, working</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:31</td><td>Three properties, and your own control fails one</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:37</td><td>The map, six kinds</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:42</td><td>Where a control can stand</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:46</td><td>Checkpoint 1</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:48</td><td>What did the check have to know</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:54</td><td>Build the limit, and count what it does</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:09</td><td>One refusal message, read out loud</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:12</td><td>A second team pays without asking</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:20</td><td>Move it to the dispatch</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:25</td><td>The row looks complete, and it is not</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:30</td><td>The rule this cycle exists to land</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:35</td><td>Stand up, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:40</td><td>It refuses ₹8,400 that is genuinely owed</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:47</td><td>Build the gate, and the record</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:00</td><td>Set the timer</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:02</td><td>Checkpoint 2</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:05</td><td>Break, fifteen minutes</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:20</td><td>What the break did</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:26</td><td>Pay once, then watch your fix fail</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:55</td><td>The fix that holds</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:01</td><td>Where did the failure move</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:05</td><td>When the checker is a model</td><td>topic 6</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:18</td><td>Checkpoint 3</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:20</td><td>Stand up, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:25</td><td>The adversary round</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:55</td><td>Forty thousand a month</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:59</td><td>The policy table</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:19</td><td>Checkpoint 4</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:20</td><td>The quiz</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:32</td><td>The two mistakes, and their prices</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:39</td><td>Who is allowed to say what a system may do</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:50</td><td>Close</td><td>shared</td></tr>
+</tbody>
+  </table></div>
+  <p><strong>This table is generated.</strong> Twelve published pages carry it, so it lives in <span class="mono">scripts/teaching-clock.mjs</span> and nowhere else. Change a time there and rebuild, rather than editing a page.</p>
+</section>
+
+<div class="head" id="prep">
+  <span class="k">before the day · eleven items, in the order to do them</span>
+  <h2>What to prepare</h2>
+  <p><strong>Rewritten 29 September.</strong> The previous version of this list was four noun phrases — "the <code>w2-</code> sqlite path", "three prepared queue states", "ticket #8812 does not exist". None of them said who does what, where, or how you know it is finished, so the list read as a set of regrets rather than a set of tasks. Every item below names the action, the file, the size, the test that says it is done, and what breaks in the room if it is not.</p>
+  <p>The full state of each topic is on its own state card. This is the whole list in one place, in three groups, in the order to work through them.</p>
+</div>
+
+<article class="card" id="prep-blocking">
+  <span class="tag warn">group 1 · blocks the session</span>
+  <h3>Build these, or cut the beat and say so</h3>
+  <h4>1 · The <code>w2-</code> sqlite path, for 02:55</h4>
+  <ul>
+    <li><strong>Do this.</strong> Add a file-backed <code>paid</code> table to the reference agent. The idempotency key is the primary key. The write is <code>INSERT OR IGNORE</code>.</li>
+    <li><strong>Where.</strong> A new <code>src/store.py</code>, called from <code>src/guarded.py</code>. Its own make target, <code>make w2-paid-once</code>, changing nothing an earlier week prints.</li>
+    <li><strong>Size.</strong> Standard library, about fifteen lines.</li>
+    <li><strong>Done when.</strong> You run the same ticket from two terminals at once, the ledger shows one credit, and the second terminal prints the row it found rather than failing.</li>
+    <li><strong>If it is missing.</strong> 02:55 is a description instead of a build, and cycle C ends on a demonstrated problem with no demonstrated answer. That is the worst shape a build-break cycle can end in, because the room leaves believing the problem has no fix.</li>
+  </ul>
+  <hr class="hair">
+  <h4>2 · Three prepared queue states, for 02:00</h4>
+  <ul>
+    <li><strong>Do this.</strong> Write three small files, one per outcome the break produces: approved by somebody, timed out and took the default, still pending.</li>
+    <li><strong>Where.</strong> <code>fixtures/w2-queue/approved.json</code>, <code>timed-out.json</code>, <code>pending.json</code>.</li>
+    <li><strong>Size.</strong> Three files, about ten lines each.</li>
+    <li><strong>Done when.</strong> Somebody whose gate does not run can load one file and read their own 02:20 debrief off it.</li>
+    <li><strong>If it is missing.</strong> Anybody whose build broke at 01:47 loses the 02:20 debrief entirely. Six minutes, and the best six in the session.</li>
+  </ul>
+  <hr class="hair">
+  <h4>3 · <code>make retry</code>, checked against the new key</h4>
+  <ul>
+    <li><strong>Do this.</strong> Run it. Confirm it still delivers the same ticket three times and prints one total the room can read at a glance.</li>
+    <li><strong>Done when.</strong> The figure it prints matches the figure the pre-work asked people to write down.</li>
+    <li><strong>If it is missing.</strong> The pre-work told them to write down a number and cycle C opens by comparing it to a new one. If the command changed, the two numbers were never comparable and the opening does not work.</li>
+  </ul>
+</article>
+
+<article class="card" id="prep-decide">
+  <span class="tag">group 2 · decide before the day</span>
+  <h3>Either answer is fine. Not deciding is the failure.</h3>
+  <h4>4 · Ticket #8812 and a judge path, for 03:05</h4>
+  <ul>
+    <li><strong>The choice.</strong> Read the case off the page, or build a ticket with that text and a judge the dispatch can call.</li>
+    <li><strong>What building it buys.</strong> You run it twice and the room watches the verdict change, which is much stronger than describing it and is the probe the block turns on.</li>
+    <li><strong>What it costs.</strong> A ticket fixture and a judge path, neither of which exists, plus real model calls in a room on a twenty-a-day allowance.</li>
+    <li><strong>Recommendation.</strong> Read it off the page this cohort. Build it before the next one, and move the run-it-twice into the block rather than the probe.</li>
+  </ul>
+  <hr class="hair">
+  <h4>5 · The refusal-sample worked example, for 04:32</h4>
+  <ul>
+    <li><strong>The choice.</strong> Show a ten-line sketch of how you sample refusals and re-read them, or keep naming it and showing nothing.</li>
+    <li><strong>Why it is open.</strong> Inventing a sketch implies a practice we have not run. Showing nothing leaves the block naming a thing to build with no shape.</li>
+    <li><strong>Recommendation.</strong> Show the sketch and label it a sketch in the same sentence. A senior room can tell the difference and will say so if you do not.</li>
+  </ul>
+  <hr class="hair">
+  <h4>6 · The EU AI Act Article 14 hook, for 04:39</h4>
+  <ul>
+    <li><strong>The choice.</strong> Say it in the room, or leave it out.</li>
+    <li><strong>Before you say it.</strong> Read Article 14 and the application dates in Article 113 in the primary text. It is a dated regulatory claim and trade press is not a source for one.</li>
+    <li><strong>Either way.</strong> It stays out of the session file.</li>
+  </ul>
+</article>
+
+<article class="card" id="prep-small">
+  <span class="tag">group 3 · small, and each buys back minutes</span>
+  <h3>Worth an hour between them</h3>
+  <ul>
+    <li><strong>7 · A blank seven-column policy table, for 03:59.</strong> Pairs currently copy the columns off the page. Paste a blank into chat at 03:58 instead. Saves about two of the eleven minutes, and eleven is tight.</li>
+    <li><strong>8 · A one-line counter summary at the end of a run.</strong> About three lines in the reference agent. It prints allowed and refused per tool, which makes 01:12 and 01:40 sharper because the room reads one line rather than hunting a terminal.</li>
+  </ul>
+</article>
+
+<article class="card" id="prep-hour">
+  <span class="tag">group 4 · in the hour before you teach</span>
+  <h3>Three things that have no file and fail loudest</h3>
+  <ul>
+    <li><strong>9 · Pick the two decision records for 00:15.</strong> Read last week's submissions and choose two: one with a real policy in it, one that is all wishes. Name the two people and ask them beforehand. Without this the first beat of the day has nothing on screen.</li>
+    <li><strong>10 · Assign the four adversary pairs for 03:25, by name.</strong> Write them down before the day. Pairs that choose pick somebody whose approach they already understand, which is the one thing the round exists to prevent.</li>
+    <li><strong>11 · Pick the 01:09 screen while you circulate.</strong> Choose one whose refusal message does name the file. A public miss there costs you the rest of the cycle.</li>
+  </ul>
+  <p class="quiet">Item 9 also carries a dependency worth checking the night before: 00:31 works because pre-work item 6 asked the room the three property questions on paper. If the answers are the old one-sentence version, that beat becomes a definition read off a slide.</p>
+</article>
+
+
+<details class="topic" id="t0">
+  <summary><span class="num">0</span><span>The frame &#183; What a guardrail is</span><span class="when">00:15, 00:31 and 00:37 &#183; 19 minutes</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t0-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p><strong>These three beats are not new. Their page is.</strong> They were filed as "shared" on the clock, which meant they belonged to no topic, so when the six topic pages were built they landed on none of them. A learner opening topic 1 met "put a limit outside the function it constrains" with no definition of a guardrail anywhere above it. Nothing on the clock moved on 29 September; the beats got a home.</p>
+  <p><strong>The weak version is a taxonomy lecture, and it will lose this room in four minutes.</strong> Eight senior engineers do not need to be told that controls exist. What they do not have is a position for each control on one path, and a test that separates a control from a belief. That is the whole topic.</p>
+  <p><strong>The order is deliberate and it is worth defending if somebody asks.</strong> Topic 1's working demo at 00:23 sits between the first beat and the second. They judge a refusal message with no rubric, and the rubric arrives at 00:31. Reversing those two turns the sharpest beat in block 1 into a slide.</p>
+</div>
+
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+<article class="card">
+  <span class="tag">Block 1 · 00:15, then 00:31 and 00:37</span>
+
+  <div class="beat" data-ref="t0-r-records"><span class="t">00:15</span><div class="b">
+    <h4>Two decision records on screen</h4>
+    <span class="pairs">Whole room · 8 min · first 60 seconds alone and silent</span>
+    <p><strong>Pick the two records before the day and ask both people beforehand.</strong> One with a real policy in it, one that is all wishes. Reading a record cold in front of its author is the one thing that will cost you the room this early.</p>
+    <p>Put the question up and take 60 seconds of silence: <em>which sentence in my own record could a machine enforce tonight, exactly as written?</em> Written, alone. Do not take answers yet.</p>
+    <p>Then read the two records. Ask the room to find, in each, the sentence that is a policy and the sentence that is a wish.</p>
+    <p class="quiet">Do not give the definition first. The room produces the distinction from two real records in about three minutes, and produced is worth four times read.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t0-r-props"><span class="t">00:31</span><div class="b">
+    <h4>Three properties, and your own control fails one</h4>
+    <span class="pairs">Whole room · 6 min · four answers out loud</span>
+    <p>Open by naming what they just did. <strong>They judged a refusal message against three questions at 00:23 and nobody gave them a rubric.</strong> Now the rubric.</p>
+    <p><strong>Locatable · readable · observable.</strong> Put all three up at once, one line each, and do not expand on them.</p>
+    <p>Then the question, and it is the beat: <em>which of the three does your own control fail?</em> Take four answers by name. Item 6 of the pre-work asked them exactly these three questions before they had the words, so the answers already exist on paper.</p>
+    <p><strong>It is almost always the third, and say so only after the fourth answer.</strong> Saying it first turns four honest answers into agreement.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t0-r-map"><span class="t">00:37</span><div class="b">
+    <h4>The map, six kinds</h4>
+    <span class="pairs">Whole room · 5 min · built on the board, 60 seconds written first</span>
+    <p>Sixty seconds, written, alone: <em>how many distinct kinds of guardrail can you name?</em> Most people write two or three.</p>
+    <p><strong>Build the table on the board from the room. Do not read it off the page.</strong> Sort by what each one stands between, because the names vary by vendor and the position does not.</p>
+    <p><strong>Say one sentence about why an agent needs these, and only one.</strong> The words are: <em>an agent chooses its own arguments and its own next action, so the call site you would normally review does not exist.</em> The long version is on the learner page. Point at it and move on — five minutes does not hold that argument.</p>
+    <p class="quiet">Close by marking the three they build today and the three they do not, and name the week that owns each. A participant who cannot find a topic assumes it is missing from the course rather than scheduled.</p>
+  </div></div>
+</article>
+
+</div>
+<div class="pane pane-ref" id="t0-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t0-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · new 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nobody has said which of the six kinds to reach for first</td><td>Topic 1, at 00:42 — nine places, and the answer arrives as a ₹5,000 loss rather than as advice</td></tr>
+      <tr><td>The limit and the human gate share a column and nothing separates them</td><td>Topic 2, at 01:40 — the ₹8,400 a limit refused and a gate would have paid</td></tr>
+      <tr><td>"Observable" is asserted and nothing counts anything yet</td><td>Topic 1, at 00:54 — two counters, and at 01:12 one of them fails to move</td></tr>
+      <tr><td>Input and output are named and never taught</td><td>Week 4. Say the week out loud at 00:37</td></tr>
+      <tr><td>Nothing says what to do when the control itself is a model</td><td>Topic 6, at 03:05. Do not open it here, and see the confidence card in topic 1</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t0-r-records">
+  <span class="pairs">&#8596; 00:15 · two decision records, predicted before they are read</span>
+  <h3>Two decision records on screen</h3>
+  <h4 class="quiet" style="font-weight:700">Most records last week had four wishes and one policy</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>A policy has a number in it and a person who owns the number. A wish has the word "should" and no number.</strong> That is the whole test and it fits on one line of the board.</p>
+      <ul>
+        <li><em>Policy.</em> "No credit above ₹1,200 without a second approver. Owner: the payments lead." A machine runs it tonight and tells you how often it fired.</li>
+        <li><em>Wish.</em> "Credits should be reviewed where the amount is unusually large." Nothing can run it, because nobody has said what unusually large is.</li>
+      </ul>
+      <p><strong>The ratio is the beat, not the examples.</strong> Count the wishes and the policies in the two records out loud. Four to one is the usual answer and it is the session in one line: today is the work of turning one wish into one policy, and then finding out what the policy broke.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Both are policies. One is just less specific."</strong> Usually from somebody who writes standards for a living, and they are half right.</p>
+      <p><em>What is right.</em> A wish is a real statement of intent and a governance document full of them is not worthless. It is the input to a policy.</p>
+      <p><em>What is wrong.</em> Nothing stands between the decision and the action until somebody supplies the number. The wish cannot refuse anything, so by this session's definition it is not a guardrail.</p>
+      <p><strong>Probe.</strong> Who, by role, would supply the number for that sentence, and when did anybody last ask them? The answer is almost always "nobody has".</p>
+    </div>
+  </details>
+  <p class="quiet">Do not let this run past eight minutes. The pull is to work through every sentence in both records. Two examples of each is the whole beat.</p>
+</article>
+
+<article class="card" id="t0-r-props">
+  <span class="pairs">&#8596; 00:31 · three properties, and the one they fail</span>
+  <h3>Three properties, and your own control fails one</h3>
+  <h4 class="quiet" style="font-weight:700">A control nobody counts cannot be told apart from a broken one</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>Property</th><th>The test</th><th>What it is without it</th></tr></thead>
+        <tbody>
+          <tr><td>Locatable</td><td>Name the line of code where it runs</td><td>A belief. Two people describe one control and mean different files</td></tr>
+          <tr><td>Readable</td><td>Somebody who did not write it can state the rule</td><td>A secret. Only the author can change it safely, and the author leaves</td></tr>
+          <tr><td>Observable</td><td>Say how many times it fired last week</td><td>A guess. A control that never fires and one that is switched off look identical</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>The third is the one to spend the time on.</strong> Both failure modes produce silence, and a dashboard cannot tell them apart. That sentence is what the two counters at 00:54 exist to answer, and 01:12 is where it costs ₹5,000.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"We have logs, so it is observable."</strong> Common, and it comes from good teams.</p>
+      <p><em>What is right.</em> The event is recorded, so the information exists somewhere.</p>
+      <p><em>What is wrong.</em> Observable means you can state the number without running a query you have to invent first. A log line you could grep is not a count anybody looks at, and nobody greps for the absence of something.</p>
+      <p><strong>Probe.</strong> How many times did your rule fire last week? If the answer needs a query written on the spot, the property is not held. Ask for the number, not for the method.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Extension probe, for the person who has all three</summary>
+    <div class="dbody">
+      <p><em>You have a count. Is it a rate?</em> A refusal count on its own cannot show a control going wrong, because a fall in refusals and a fall in traffic look the same. That is the argument for two counters at 00:54, arriving early and from a participant rather than from you.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t0-r-map">
+  <span class="pairs">&#8596; 00:37 · six kinds, sorted by what they stand between</span>
+  <h3>The map, six kinds</h3>
+  <h4 class="quiet" style="font-weight:700">A room that believes "guardrail" means one thing puts a person in front of everything</h4>
+  <details>
+    <summary><span class="chev">›</span> The six, and the order to build them on the board</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>Kind</th><th>Stands between</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td>Input</td><td>the world and the model</td><td>Week 4</td></tr>
+          <tr><td>The limit</td><td>the decision and the action</td><td>Topic 1, 00:48</td></tr>
+          <tr><td>The human gate</td><td>the decision and the action</td><td>Topic 2, 01:40</td></tr>
+          <tr><td>State</td><td>the action and the record</td><td>Topic 3, 02:26</td></tr>
+          <tr><td>Resource</td><td>the loop and your money</td><td>Drill 4, at home</td></tr>
+          <tr><td>Output</td><td>the model and the customer</td><td>Week 4</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Two of them share a column and that is not an error.</strong> The limit and the human gate both stand between the decision and the action. They differ in what happens when the rule is met: one refuses, one asks. Say it in one sentence and hand the argument to topic 2, which opens on ₹8,400 that a limit refused.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"The system prompt is a guardrail."</strong> Somebody says it in every room, and the instinct behind it is correct.</p>
+      <p><em>What is right.</em> The prompt does change behaviour, measurably, and it is the cheapest lever in the system.</p>
+      <p><em>What is wrong.</em> Nothing stands between the model's decision and the ledger. The model can decide not to follow it, and there is no line of code that refuses. Apply the three properties from six minutes ago: a prompt is locatable and readable, and it is never observable, because nothing counts the times it was ignored.</p>
+      <p><strong>Probe.</strong> How many times did your prompt instruction fail last week? Nobody can answer, and that is the answer.</p>
+      <p class="quiet">Do not let this become the injection argument. That is week 4 and the room is already carrying it from week 1.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Why an agent needs these, if somebody pushes</summary>
+    <div class="dbody">
+      <p>The one sentence for the room is on the script card. If somebody pushes, three rows and no more, then point at the learner page.</p>
+      <ul>
+        <li><strong>No call site.</strong> A person wrote the arguments in ordinary code and you can open the file. The model writes them here, partly from text a customer sent. Week 1's ₹5,000 went to account 9999 because the model picked the id.</li>
+        <li><strong>No path until it runs.</strong> The set of actions is chosen while the run happens, so there is nothing to review in advance.</li>
+        <li><strong>No repeatability.</strong> Same input, possibly a different tool call. A control tested once has a pass rate rather than a behaviour.</li>
+      </ul>
+      <p><strong>The third is the one this room underweights and it is the one to say slowly.</strong> Every test, review and runbook they have written assumes the same input produces the same steps.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t0-r-figures">
+  <span class="pairs">&#8596; 00:37 · the two drawings on the learner page</span>
+  <h3>So what is a guardrail</h3>
+  <p><strong>A guardrail is anything that stands between what your agent decides to do and what actually happens.</strong> Say it in those words, because the learner page carries it in those words. The test is whether it is on the path: if the action can reach the world without passing through your control, your control is advice.</p>
+  <p>Two figures are on the learner page and neither is a slide. The first puts the six kinds on one request path. The second is the comparison to run on the board if the room pushes on why an agent is different.</p>
+<div class="figwrap"><figure>
+<svg viewBox="0 0 980 290" role="img" aria-label="One request path with five nodes — ticket text, the model, the tool call, the ledger, the customer — and six guardrail positions marked on it. Input stands between the ticket text and the model. The limit and the human gate stand between the model and the tool call. State stands between the tool call and the ledger. Output stands between the ledger and the customer. Resource stands on the loop that returns from the tool call to the model. Three are built in this session and three are not.">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)">
+    <line x1="120" y1="169" x2="204" y2="169"/>
+    <line x1="314" y1="169" x2="464" y2="169"/>
+    <line x1="574" y1="169" x2="658" y2="169"/>
+    <line x1="768" y1="169" x2="852" y2="169"/>
+    <path d="M 520 200 V 226 Q 520 232 514 232 H 270 Q 264 232 264 226 V 206"/>
+  </g>
+  <g fill="#E5EBE1" stroke="#758279" stroke-width="1">
+    <rect x="16" y="140" width="104" height="58" rx="8"/>
+    <rect x="210" y="140" width="104" height="58" rx="8"/>
+    <rect x="470" y="140" width="104" height="58" rx="8"/>
+    <rect x="664" y="140" width="104" height="58" rx="8"/>
+    <rect x="858" y="140" width="104" height="58" rx="8"/>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="13" fill="currentColor" text-anchor="middle">
+    <text x="68" y="166">Ticket</text><text x="68" y="184">text</text>
+    <text x="262" y="175">The model</text>
+    <text x="522" y="166">The tool</text><text x="522" y="184">call</text>
+    <text x="716" y="175">The ledger</text>
+    <text x="910" y="166">The</text><text x="910" y="184">customer</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1" opacity="0.45">
+    <line x1="348" y1="110" x2="348" y2="147"/>
+    <line x1="616" y1="110" x2="616" y2="147"/>
+    <line x1="162" y1="132" x2="162" y2="147"/>
+    <line x1="424" y1="132" x2="424" y2="147"/>
+    <line x1="810" y1="132" x2="810" y2="147"/>
+  </g>
+  <g>
+    <rect x="345.5" y="149" width="5" height="40" rx="2" fill="#183D32"/>
+    <rect x="421.5" y="149" width="5" height="40" rx="2" fill="#183D32"/>
+    <rect x="613.5" y="149" width="5" height="40" rx="2" fill="#183D32"/>
+    <rect x="159.5" y="149" width="5" height="40" rx="2" fill="#FBF8F2" stroke="#758279" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <rect x="807.5" y="149" width="5" height="40" rx="2" fill="#FBF8F2" stroke="#758279" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <rect x="389.5" y="222" width="5" height="20" rx="2" fill="#FBF8F2" stroke="#758279" stroke-width="1.5" stroke-dasharray="3 2"/>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="12" font-weight="700" fill="currentColor" text-anchor="middle">
+    <text x="348" y="104">The limit</text>
+    <text x="616" y="104">State</text>
+    <text x="162" y="126">Input</text>
+    <text x="424" y="126">The human gate</text>
+    <text x="810" y="126">Output</text>
+    <text x="392" y="256">Resource</text>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="11" fill="#526259" text-anchor="middle">
+    <text x="162" y="214">week 4</text>
+    <text x="810" y="214">week 4</text>
+    <text x="392" y="272">drill 4, at home</text>
+    <text x="600" y="250">the next turn</text>
+  </g>
+</svg>
+<figcaption><strong>Six kinds, one request path.</strong> A filled bar is a control you build today. An outlined bar is one another week owns. Nothing here is about which control is best. It is about the fact that they stand in different places, so choosing one is choosing what it can still see and what it can still stop.</figcaption>
+</figure></div>
+  <p class="quiet">The filled bars are the three they build today. If you draw this on the board, draw the five boxes and the arrows first and let the room place the bars. It takes ninety seconds and it is better than the picture.</p>
+</article>
+
+<article class="card" id="t0-r-enterprise">
+  <span class="pairs">&#8596; reference · at enterprise scale</span>
+  <span class="tag">not a beat · the learner page carries it in full</span>
+  <h3>What firms already running this use</h3>
+  <p><strong>This is reading, not a block, and there is no room for it in nineteen minutes.</strong> It is on the learner page because a senior room will ask what the industrial version is called, and an instructor who cannot name three options per slot sounds like somebody selling a hand-rolled answer.</p>
+  <p><strong>Three rules if it comes up live.</strong> Name three or more per slot, never one. Say what each costs. Give no recommendation, because the right answer depends on what they already run and you do not know that.</p>
+  <h4>The limit, as policy outside the code</h4>
+  <ul>
+    <li><strong>Open Policy Agent</strong>, policies in Rego. Costs a new language, a sidecar or library per service, and a bundle distribution path you build and monitor.</li>
+    <li><strong>AWS Verified Permissions</strong>, policies in Cedar. Costs one cloud, a per-request charge on a path that already costs money, and a store that is not a file you can read offline.</li>
+    <li><strong>LaunchDarkly</strong>, holding the numbers as targeted values. Costs a per-seat subscription and a third party in the request path. Built for flags, so the refusal reason and the audit line are still yours.</li>
+    <li><strong>A JSON file in your own repository</strong>, which is the 00:54 build. Costs a deploy per change and has no history beyond git. It is free and readable, and it is where most teams should start.</li>
+  </ul>
+  <h4>The human gate, once the wait outlives the process</h4>
+  <ul>
+    <li><strong>Temporal</strong>, durable timer plus a signal. Costs a cluster or Temporal Cloud, and a genuinely new programming model.</li>
+    <li><strong>AWS Step Functions</strong>, task token held across the wait. Costs a state machine per flow outside your codebase, and the token has a maximum lifetime.</li>
+    <li><strong>The maker-checker screen in Finacle or FLEXCUBE</strong>, where the bank already runs one. Costs nothing new to run, and you inherit their queue, their roles, their latency and their release train.</li>
+    <li><strong>A pending table and a cron job</strong>, which is the 01:47 build. You own the timer, the retry, the escalation and the duplicate approval. Correct at one process, and week 5's material at forty.</li>
+  </ul>
+  <h4>Input and output, which are week 4 and named here only so you know they exist</h4>
+  <ul>
+    <li><strong>NVIDIA NeMo Guardrails</strong>. Costs rails written in Colang, another language to maintain, and latency on every turn.</li>
+    <li><strong>Guardrails AI</strong>. Python only, and the stock validators do not know your domain.</li>
+    <li><strong>Amazon Bedrock Guardrails</strong>. Costs per request, and it only sees traffic that goes through Bedrock.</li>
+    <li><strong>Azure AI Content Safety</strong>. Costs per call, and it is a second policy surface to keep in step with your own.</li>
+  </ul>
+  <p><strong>The line to land if this comes up.</strong> Not one product in the last group would have stopped week 1's ₹5,000, because that failure was not about the text. Buying an input guard and calling the problem solved is the most expensive mistake available in this space.</p>
+</article>
+
+<article class="card" id="t0-r-why">
+  <span class="pairs">&#8596; reference · the learner page's long version</span>
+  <h3>Why an agent needs these and a batch job does not</h3>
+  <p><strong>Reference, and deliberately not a beat.</strong> It is four minutes of argument and block 1 does not have four minutes. The learner page carries it in full with a prediction in front of it, so it works as reading. Say the one sentence at 00:37 and point at the page.</p>
+  <p>If you are asked to run it live, the three rows are in the answer key on the map card above, and the figure the learner page uses is the second one — ordinary code beside an agent, the same ledger underneath both, and the middle row is the difference.</p>
+<div class="figwrap"><figure>
+<svg viewBox="0 0 980 320" role="img" aria-label="Two paths side by side. In ordinary code, your caller passes fixed arguments to issue_credit with account 4471 and amount 1200, then writes to the ledger, and the call site can be read. In an agent, ticket text written outside your company reaches the model, the model chooses issue_credit with account 9999 and amount 5000 while it runs, and that writes to the same ledger. There is no call site to read.">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <line x1="490" y1="16" x2="490" y2="304" stroke="#CBD1C8" stroke-width="1"/>
+  <g font-family="Figtree, sans-serif" font-size="13" font-weight="700" fill="currentColor">
+    <text x="16" y="30">Ordinary code</text>
+    <text x="510" y="30">An agent</text>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)">
+    <line x1="240" y1="100" x2="240" y2="128"/>
+    <line x1="240" y1="186" x2="240" y2="214"/>
+    <line x1="737" y1="100" x2="737" y2="128"/>
+    <line x1="737" y1="186" x2="737" y2="214"/>
+  </g>
+  <g fill="#E5EBE1" stroke="#758279" stroke-width="1">
+    <rect x="110" y="48" width="260" height="52" rx="8"/>
+    <rect x="110" y="134" width="260" height="52" rx="8"/>
+    <rect x="110" y="220" width="260" height="52" rx="8"/>
+    <rect x="607" y="48" width="260" height="52" rx="8"/>
+    <rect x="607" y="134" width="260" height="52" rx="8"/>
+    <rect x="607" y="220" width="260" height="52" rx="8"/>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="13" fill="currentColor" text-anchor="middle">
+    <text x="240" y="80">Your caller, in your repository</text>
+    <text x="240" y="158" font-family="JetBrains Mono, monospace" font-size="12">issue_credit(4471, 1200)</text>
+    <text x="240" y="252">The ledger</text>
+    <text x="737" y="70">Ticket text, written by</text>
+    <text x="737" y="88">somebody outside your company</text>
+    <text x="737" y="158" font-family="JetBrains Mono, monospace" font-size="12">issue_credit(9999, 5000)</text>
+    <text x="737" y="252">The ledger</text>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="11" fill="#526259">
+    <text x="252" y="118">a person wrote these values</text>
+    <text x="252" y="204">one place to review</text>
+    <text x="749" y="118">the model picks the tool and the values</text>
+    <text x="749" y="204">a different pair every run</text>
+  </g>
+  <g font-family="Figtree, sans-serif" font-size="12" fill="currentColor" text-anchor="middle">
+    <text x="240" y="300">One call site. Review it once.</text>
+    <text x="737" y="300">No call site. Nothing to review in advance.</text>
+  </g>
+</svg>
+<figcaption><strong>What an agent takes away.</strong> Both sides write to the same ledger. The difference is on the middle row: on the left a person chose 4471 and 1200 and you can open the file and read it. On the right the model chose 9999 and 5000 while the run was happening, partly from text a customer sent. Week 1 paid that ₹5,000.</figcaption>
+</figure></div>
+</article>
+
+<article class="card" id="t0-r-close">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <p><strong>A control you cannot point at, state, or count is not a control.</strong></p>
+  <p>If somebody leaves with one sentence from these nineteen minutes, that is the one. Do not paraphrase it on the day; it is on the ember card on the learner page in those words, and 01:12 is where it costs ₹5,000.</p>
+</article>
+
+<article class="card" id="t0-r-checkpoint">
+  <span class="pairs">&#8596; 00:46 · the shared checkpoint, and which lines are this topic's</span>
+  <h3>After this topic, you can now</h3>
+  <p>Checkpoint 1 at 00:46 is shared between this topic and topic 1. These are the lines this topic owns, and they are the ones to read out if you are short of time:</p>
+  <ul>
+    <li>Say what a guardrail is in one sentence, without using the word "guardrail"</li>
+    <li>Name three things an agent takes away that ordinary software gave you for free</li>
+    <li>Tell a policy from a wish, using the number-and-owner test</li>
+    <li>Name which of the six kinds a given control is, and what it stands between</li>
+    <li>Score a control you have written against locatable, readable and observable</li>
+    <li><strong>Say why a control nobody can count cannot be told apart from a broken one</strong></li>
+  </ul>
+  <p><strong>The last line is the rated one.</strong> One number from 1 to 5 in chat, on that line only. Read the counts, never a mean. A 2 means go slower, and two people at 2 disappear inside an average of 3.4.</p>
+</article>
+
+<article class="card" id="t0-r-state">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag">state · checked 2026-09-29</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4>Ready</h4>
+  <ul>
+    <li>No build, no make target and no model calls. Nothing in this topic can fail from a missing key or an exhausted quota.</li>
+    <li>Both figures are on the learner page and print correctly in the page's print stylesheet.</li>
+  </ul>
+  <h4>Still open, and the first one blocks the beat</h4>
+  <ul>
+    <li><strong>The two decision records for 00:15 are not chosen.</strong> Read last week's submissions, pick one with a real policy and one that is all wishes, and ask both people beforehand. Without this the beat has nothing on screen. It is item 9 of <em>What to prepare</em>.</li>
+    <li><strong>Pre-work item 6 has to have landed.</strong> 00:31 works because they already answered the three questions on paper. If the answers are the old one-sentence version, the beat becomes a definition read off a slide. Check the submissions the night before.</li>
+    <li><strong>"Your own system" still has no stored answer.</strong> The phrase is defined in prose and nowhere else, so nothing can quote a learner's own control back at them at 00:31.</li>
+  </ul>
+</article>
+
+</div>
+</div><!-- /teach -->
+
+  </div>
+</details>
+
+
+<details class="topic" id="t1">
+  <summary><span class="num">1</span><span>The limit &#183; Where the limit lives</span><span class="when">00:23 to 01:35, plus the adversary round at 03:25</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t1-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p>The weak version is "do not hard-code magic numbers", which everybody in the room learned fifteen years ago. Teach it as that and you lose them by 00:35.</p>
+  <p><strong>The claim changed on 28 September and it is stronger now.</strong> Outcome 1 used to be about writing the limit as data. Most of this room already does that. The half that costs money is which callers the control covers, and the ₹5,000 at 01:12 is what takes it from them.</p>
+  <p>The test is not "can I find the number". It is <strong>"which callers does my control stand in front of, and which does it miss"</strong>. That is why 00:42 offers nine places rather than three, and why 03:25 exists at all.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Block 1 · this topic holds 00:23, then 00:42</span>
+
+  <div class="beat" data-ref="t1-r-refusal"><span class="t">00:23</span><div class="b">
+    <h4>The check, working</h4>
+    <span class="pairs">Whole room · 8 min · first 90 seconds alone and silent</span>
+    <p><strong>Do not run anything yet.</strong> Put the question up and take 90 seconds of silence: <em>the refusal line is about to print. What three facts does it have to contain to be useful to you at 2am?</em> Three lines on paper, alone. Take two out loud and do not comment on either.</p>
+    <p>Then type <code>make w2-guarded</code>, which is <code>make weird-mock</code> with this week's policy file in place. <strong>Deterministic brain, no key, identical trace on eight screens.</strong></p>
+    <p class="quiet"><strong>Do not type <code>make run</code> or <code>make weird</code> here.</strong> Neither passes <code>--mock</code>, so both reach a real model the moment a key is set, which every person now has. That is three requests off a twenty-a-day allowance and eight different traces in a room meant to be reading one.</p>
+    <pre>▸ tool  issue_credit(account_id='9999', amount=5000) -&gt; REFUSED
+        rule: no credit to an account that does not exist
+        decided by: data/policy.json -&gt; tools.issue_credit</pre>
+    <p class="quiet">Success first. The room sees it working and names what it is looking at before anything breaks.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-stand"><span class="t">00:42</span><div class="b">
+    <h4>Where a control can stand</h4>
+    <span class="pairs">Pairs · 4 min · 90 seconds in writing before the table</span>
+    <p><strong>This replaced a three-way show of hands on 28 September.</strong> The old vote offered three places, so a third of the room got the answer by guessing. Nine places and a written prediction is a real commitment.</p>
+    <p>Ask it in these words: <em>there are nine places in the request path where a control could run. Which one covers the most callers?</em></p>
+    <p>Put the nine up, take the predictions, and <strong>leave them on the board until 01:12</strong>. Do not say which is right. 01:12 settles it with money and 01:30 states the rule.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag">Block 2 · Cycle A · 00:48 to 01:35, unbroken</span>
+
+  <div class="beat" data-ref="t1-r-four"><span class="t">00:48</span><div class="b">
+    <h4>What did the check have to know</h4>
+    <span class="pairs">Whole room · 6 min</span>
+    <p>Ask the room to list it before you show anything. Take four or five answers, write them on the board unedited, then map them onto the four.</p>
+    <p><strong>Which action · can it be undone · what is the limit · what has already happened.</strong></p>
+    <p>The beat lands on the cost column. Three are free. The fourth needs a store that survives a restart, which is cycle C at 02:26.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-build"><span class="t">00:54</span><div class="b">
+    <h4>Build the limit, and count what it does</h4>
+    <span class="pairs">Alone · 18 min · 3 decide, 15 build</span>
+    <p>Decide, then build, then check. <strong>Enforce the three minutes of writing before anybody types.</strong> This is the build where an assistant produces a working answer to a question the person never asked.</p>
+    <p><strong>The counters are new and they are not instrumentation.</strong> Two of them, allowed and refused, tagged with the tool and the rule. At 01:12 the goodwill tool pays ₹5,000 and their refused counter does not move, which teaches "the check was never called" far better than a trace does.</p>
+    <p class="qbadge">No model calls. This build costs nothing against their 20 a day.</p>
+    <p><strong>At 01:02, look at the room.</strong> If half are still deciding the file shape rather than writing the check, paste <code>data/policy.json</code> into chat and say you are handing it over. Not earlier, and not to individuals.</p>
+  </div></div>
+
+  <div class="beat"><span class="t">01:09</span><div class="b">
+    <h4>One refusal message, read out loud</h4>
+    <span class="pairs">Whole room · 3 min</span>
+    <p>Pick a person and read their refusal message. Ask the room whether it names the file. That is the 00:23 beat, closed, against their own code.</p>
+    <p class="quiet">Pick the screen in advance while circulating, and pick one that does name the file. A public miss here costs you the rest of the cycle. No reference card.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-goodwill"><span class="t">01:12</span><div class="b">
+    <h4>A second team pays without asking</h4>
+    <span class="pairs">Pairs · 8 min · 4 to write, 4 to hear</span>
+    <p>Put the setup on screen. Do not put the cause on screen.</p>
+    <p>Three weeks on, another team adds <code>apply_goodwill_credit</code>. Twenty lines, same ledger. <strong>Say the words "they added it to the agent's tool list".</strong> If the room believes the new tool sits in another service, the only correct answer becomes the resource of record and you lose the argument about the dispatch. Both arguments are coming. This one is first.</p>
+    <p>Then ask: <em>account 9999 still does not exist. What does it get paid?</em> Both standing questions in writing before anything is revealed.</p>
+    <p><strong>Then point at their counters, and at the predictions still on the board.</strong> That is the beat.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-move"><span class="t">01:20</span><div class="b">
+    <h4>Move it to the dispatch</h4>
+    <span class="pairs">Alone · 5 min</span>
+    <p>Circulate and look at one thing only: whether the counters came with the check. About a third of the room leaves them in the tool, which produces a guard at the dispatch and a count of a code path nothing calls any more.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-row"><span class="t">01:25</span><div class="b">
+    <h4>The row looks complete, and it is not</h4>
+    <span class="pairs">Whole room · 5 min · the sharpest beat in the topic</span>
+    <p><strong>No longer optional.</strong> In the old shape this was the fourth thing in a fifty-minute block and got cut when the block ran long. It is now what cycle A exists for, so protect it.</p>
+    <p>Admit first that the dispatch refused the new tool for having no row, and never looked at the account. Then: <em>somebody writes a row for it. Reversible false, a ceiling of ₹5,000, a named owner. It looks complete. What happens to account 9999?</em></p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-rule"><span class="t">01:30</span><div class="b">
+    <h4>The rule this cycle exists to land</h4>
+    <span class="pairs">Whole room · 5 min</span>
+    <p><strong>New beat.</strong> Without it the room leaves believing the dispatch is the answer, which is what the old shape taught by accident.</p>
+    <p>Point at the nine places from 00:42 and at the two the control has now occupied. Then say it: <em>move the control toward the thing being protected, not toward the thing being controlled.</em></p>
+    <p><strong>Say the cost out loud in the same breath.</strong> The ledger belongs to another team, so the strongest placement is the one they cannot ship alone. A senior room spots that in ten seconds and resents being sold past it.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag">Block 6 · the adversary round · 03:25 to 03:55</span>
+
+  <div class="beat" data-ref="t1-r-adversary"><span class="t">03:25</span><div class="b">
+    <h4>The adversary round</h4>
+    <span class="pairs">Pairs, assigned by name · 30 min · 3 rules, 10 attack, 4 write, 10 report, 3 predictions</span>
+    <p><strong>New block, and the reason the rest of the day is compressed.</strong> It is the only beat in six weeks where a participant's work is tested by a peer in real time, and it is where this topic's answer is actually examined.</p>
+    <p><strong>Assign the pairs. Do not let them choose.</strong> Pairs that choose pick somebody whose approach they already understand.</p>
+    <p><strong>Say, before they start, that most systems in this room will pay out.</strong> This is the single most important facilitation decision in the block. Without that sentence it reads as a test somebody fails in public. With it, it reads as what a guard looks like before anybody has attacked it.</p>
+    <p>Circulate during the attack. You are looking for the stuck pair, not the winning one. A stuck pair has almost always gone for the ticket text, which is week 4 and will not be stopped by anything built today. Point them at boundary values and second callers.</p>
+  </div></div>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t1-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t1-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · rebuilt 2026-09-28</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Over the limit still means "no", so an honest ₹8,400 is refused</td><td>Topic 2, at 01:40 — that refusal is its opening</td></tr>
+      <tr><td>Nothing remembers what was already paid</td><td>Topic 3, at 02:26 — named here as the expensive fourth fact</td></tr>
+      <tr><td>A model could judge instead of a ceiling</td><td>Topic 6, at 03:05 — and the answer is that it may widen a hard limit, never replace it</td></tr>
+      <tr><td>The owner column has no process behind it</td><td>Topic 5, at 03:59 — it becomes column seven of the policy table</td></tr>
+      <tr><td>A ceiling is per call, so four calls under it still drain an account</td><td><strong>Nowhere.</strong> Route 3 of the adversary round, and nothing this week defends against it. Say so if a pair finds it.</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t1-r-refusal">
+  <span class="pairs">&#8596; 00:23 · the refusal, predicted before it is shown</span>
+  <h3>The check, working</h3>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <ol>
+        <li><strong>What was refused.</strong> The call and its arguments, not the word "refused" on its own. Everybody writes some version of this.</li>
+        <li><strong>Why.</strong> The rule, in a sentence a person can read at 2am. About half the room.</li>
+        <li><strong>Where the rule is written.</strong> The file, and the key inside it. Rare.</li>
+      </ol>
+      <p><strong>Say out loud how few people wrote the third.</strong> That gap is the reason this topic exists, and it is more convincing from their own paper than from you. The first two tell somebody what happened. Only the third tells them where to go, and going somewhere is the only thing that shortens the outage.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Somebody will ask why it refuses on the account, not the ceiling</summary>
+    <div class="dbody">
+      <p>The checks run in order: missing row, reversible, does the account exist, is the amount a number, is it positive, then the ceiling. Account 9999 fails at the third, so the run never reaches the ceiling.</p>
+      <pre>issue_credit(account_id='9999', amount=5000)  -&gt; no credit to an account that does not exist
+issue_credit(account_id='4471', amount=5000)  -&gt; 5000 is over the ceiling of 1200
+issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
+      <p><strong>The order is deliberate.</strong> On this data every ceiling refusal is the refusal of an honest customer, and that is 01:40's opening. Showing it here spends it. Confirm in one sentence and move on.</p>
+    </div>
+  </details>
+  <p class="quiet">The line about the model claiming a credit while the ledger says ₹0 is not this topic. Name it in ten seconds, say the customer has been told nothing, and say week 4 owns it.</p>
+</article>
+
+<article class="card" id="t1-r-stand">
+  <span class="pairs">&#8596; 00:42 · nine places, and a written prediction</span>
+  <h3>Where a control can stand</h3>
+  <h4 class="quiet" style="font-weight:700">The later you place it, the more callers it covers and the less it knows</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer, and when to give it</summary>
+    <div class="dbody">
+      <p>The resource of record. It is the last point that can still prevent and the first that covers a caller nobody has written yet.</p>
+      <p><strong>Do not say so at 00:42.</strong> Most rooms predict the dispatch, which is the best answer available to them and is not right. One or two predict the ledger. Name those people at 01:12, once the failure has made the argument.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Ingress, because it stops the whole run."</strong> What is right: it does, and it is the cheapest place to refuse. What is wrong is that at ingress you know almost nothing. You have a ticket, not an amount, not a tool and not an account.</p>
+      <p>That trade, between how much you can prevent and how much you know, is the shape of the whole table. <strong>Probe:</strong> name a control that can only live at ingress. Rate limiting and authentication. Both real, neither about money.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Why the build targets the dispatch and not the ledger</summary>
+    <div class="dbody">
+      <p>Be straight about this, because a sharp room asks. <strong>The ledger in this repository is a Python list.</strong> There is no service and no boundary, so a ledger check would sit in the same file as the thing it guards, which is the in-tool check with a different name on it.</p>
+      <p>The build targets the dispatch, which is the strongest thing that is real in this codebase. The ledger version is column three of the policy table at 03:59, at forty processes, with a payments service that exists. <strong>Say the limitation out loud rather than letting them find it.</strong></p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-four">
+  <span class="pairs">&#8596; 00:48 · what did the check have to know</span>
+  <h3>What did the check have to know</h3>
+  <h4 class="quiet" style="font-weight:700">None of the four facts come from the model</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Rooms arrive expecting the check to consult a confidence score, and a check built on a confidence score is built on the one thing that moves every quarter.</p>
+      <p>If somebody proposes it, take it seriously for 60 seconds and close it properly. A confidence number is not comparable across models, not comparable across two prompts on one model, and <strong>there is nobody you can name who owns it</strong>. That third reason is the argument.</p>
+      <p class="quiet">This is the same instinct 03:05 answers from the other side. Do not run the judge argument here, and do not run this one there.</p>
+    </div>
+  </details>
+  <h4>Why the second fact is there</h4>
+  <p>A fair question the table does not answer, and the second bullet is the one to give.</p>
+  <ul>
+    <li>It decides whether the check runs at all. A ceiling in front of <code>lookup_account</code> costs latency and protects nothing.</li>
+    <li>It decides whether prevention is required or detection is enough. If an action can be undone there is an afterwards, and a dashboard with an alert is a legitimate answer. If it cannot, the only place a control can exist is before the call.</li>
+    <li>It is what makes the rule writable. "Ask a human before an irreversible action" cannot be written until something in the code knows which actions are irreversible.</li>
+  </ul>
+</article>
+
+<article class="card" id="t1-r-build">
+  <span class="pairs">&#8596; 00:54 · the build, and the two counters</span>
+  <h3>Build the limit, and count what it does</h3>
+  <details>
+    <summary><span class="chev">›</span> A working answer</summary>
+    <div class="dbody">
+      <p>One shape, and not the only one. Anything that puts the numbers outside the tool and reads them at the dispatch is a pass.</p>
+      <pre>data/policy.json
+  "on_missing_row": "refuse"
+  "issue_credit": {
+    "reversible": false,
+    "ceiling": 1200,
+    "owner": "payments-lead"
+  }
+
+agent.py, before  res = fn(**args)
+  rule = POLICY.get(act)
+  if rule is None:
+      return refuse(f"{act} has no policy row")
+  if not rule.reversible and args.get("amount", 0) &gt; rule.ceiling:
+      return refuse(f"{args['amount']} over ceiling {rule.ceiling} "
+                    f"[data/policy.json:{act}]")</pre>
+      <p>The account-existence check is deliberately not a field. See <a href="#t1-r-row">two kinds of rule</a>. If a room puts it in the row, that is a good mistake and it is worth two minutes at 01:25.</p>
+      <p><strong>What a good answer has that a passing one does not:</strong> the refusal string names the file and the row. That is the third fact from 00:23, built rather than described.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The counters, and why two</summary>
+    <div class="dbody">
+      <pre>GUARD_ALLOWED[act] += 1
+GUARD_REFUSED[(act, rule_name)] += 1</pre>
+      <p><strong>Two, not one.</strong> A refusal count on its own cannot produce a rate, and the rate is the only number that shows a control has gone wrong. Tag the refused counter with the rule as well as the tool, because "the ceiling fired" and "the missing-row rule fired" are different events and the room needs to tell them apart at 01:12.</p>
+      <p>Expect pushback that this is instrumentation rather than the drill. <strong>It is the drill.</strong> The counter that does not move at 01:12 is the sharpest thing in the cycle.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> What they will get wrong</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>They uncomment the block in <code>tools.py</code>, then move the numbers to a constant at the top of the same file.</strong> The numbers are data and the check is still in the tool. Ask them the goodwill question again.</li>
+        <li><strong>The policy file sits in the module that imports it</strong>, so changing a limit is still a code change. Ask who owns the file. If the answer is "the repo", it is not out yet.</li>
+        <li><strong>No answer for a missing row.</strong> Most people hit a <code>KeyError</code> and treat it as a bug rather than a policy. "Crash" is defensible and "I did not notice" is not.</li>
+        <li><strong>One counter, not two.</strong> Ask them to compute a refusal rate from it.</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Extension probe, for anyone finished early</summary>
+    <div class="dbody">
+      <p><em>Add a second business unit with its own ceiling, without copying the file.</em> They reach for inheritance, or a default with overrides. Either is fine. What matters is that they hit the question of who owns an override, which is column seven of the 03:59 table.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-goodwill">
+  <span class="pairs">&#8596; 01:12 · another team adds one tool</span>
+  <h3>A second team pays without asking</h3>
+  <h4 class="quiet" style="font-weight:700">₹5,000, three weeks after they fixed it, and the counter never moved</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>What went wrong.</strong> The check protects <code>issue_credit</code>. It does not protect the ledger, and the ledger holds the money. Every tool added later is a new chance to forget.</p>
+      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point.</p>
+      <p><strong>Then the counter, and this is new on 28 September.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from 00:31 paid off in their own code.</p>
+      <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and 01:30 is where it is said properly.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer, and what is right about it</summary>
+    <div class="dbody">
+      <p><strong>"Code review would have caught it."</strong> The most common answer, and about a third of the time it comes from the most senior person in the room.</p>
+      <p><em>What is right.</em> Review genuinely does catch this, sometimes. Dismissing it costs you that person for the rest of the cycle.</p>
+      <p><em>What is wrong.</em> It depends on a reviewer knowing your check exists, on a different team, three weeks later, on a twenty-line pull request that looks like a copy of an existing tool. Ask the room to put a number on how often that holds. Nobody says 100%. Then ask what the number has to be for a payment path.</p>
+      <p><strong>Probe.</strong> How many code paths in your own system can move money or change a customer record? "Not sure" is the finding, and it is the usual answer.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-move">
+  <span class="pairs">&#8596; 01:20 · move it to the dispatch</span>
+  <h3>Move it to the dispatch</h3>
+  <p>Five minutes, and the only thing to watch is whether the counters moved with the check. A control and its counter are one thing. Leaving the counter behind gives a guard at the dispatch and a count of a dead path, which is a worse state than having no counter at all, because it reads as evidence.</p>
+</article>
+
+<article class="card" id="t1-r-row">
+  <span class="pairs">&#8596; 01:25 · the follow-up, and the sharpest beat in the topic</span>
+  <h3>The row looks complete, and it is not</h3>
+  <h4 class="quiet" style="font-weight:700">Two kinds of rule, and only one belongs in the row</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer, and why it matters</summary>
+    <div class="dbody">
+      <p><strong>It gets paid.</strong> The row looks complete and never says the account has to exist, so ₹5,000 goes to an account that does not exist, through a dispatch check everybody had just agreed was right.</p>
+      <p>Then say what happened, slowly. <strong>We moved the check out of the tool so nobody had to remember it. Then we put a rule inside the row that somebody has to remember.</strong> Same failure, one level up, hiding in a file that felt safe because it was data.</p>
+      <p>Two minutes of silence after that is not wasted.</p>
+    </div>
+  </details>
+  <h4>Two kinds of rule</h4>
+  <div class="scroller"><table>
+    <thead><tr><th>Kind</th><th>Where it lives</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Invariant</strong><br>true of every irreversible action</td><td>In the checker, not as a field. Nobody can switch it off, and nobody has to switch it on.</td><td>The target must exist. The amount must be a number. The amount must be positive.</td></tr>
+      <tr><td><strong>Limit</strong><br>genuinely different per tool</td><td>In the row, with an owner</td><td>The ceiling. Who may change it. What happens when nobody approves.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>The test to hand them:</strong> could a reasonable person want this switched off for one tool? If yes it is a limit and belongs in the row. If no it is an invariant, and putting it in the row is a bug you find later, with money.</p>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Add an <code>account_must_exist: true</code> field to the row."</strong> What is right: they have spotted the missing rule. What is wrong: they have put it back in the place the beat just took it out of, and now there is a tool somewhere with that field set to false.</p>
+      <p>Ask who would set it to false, and why. Somebody always has a reason, and the reason is always a test environment.</p>
+      <p class="quiet"><code>src/policy.py</code> is written this way, with the reason in a comment. It was not until 2026-09-08: it had the account check as a row field, which is exactly this bug, and it was found by somebody reading the material rather than by anybody running it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-rule">
+  <span class="pairs">&#8596; 01:30 · the rule this cycle exists to land</span>
+  <h3>The rule this cycle exists to land</h3>
+  <blockquote>Move the control toward the thing being protected, not toward the thing being controlled.</blockquote>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Defence in depth is two copies of one rule in two places and it is correct.</p>
+      <p>What is required is naming which copy is authoritative, because two copies that drift are worse than one. The dispatch gives a fast, specific refusal message. The resource of record gives coverage. Keep both and write down which one you trust.</p>
+      <p><strong>Probe.</strong> Your ledger constraint refuses and your dispatch check allows. Which one is the bug?</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-adversary">
+  <span class="pairs">&#8596; 03:25 · the adversary round</span>
+  <h3>The adversary round</h3>
+  <h4 class="quiet" style="font-weight:700">Six routes exist. Expect four in a room of eight.</h4>
+  <details>
+    <summary><span class="chev">›</span> The six routes</summary>
+    <div class="dbody">
+      <ol>
+        <li><strong>A second caller.</strong> A new tool with no row is refused, so write one. The row does not say the account must exist. 01:25 used as a weapon.</li>
+        <li><strong>A caller outside the agent.</strong> Anything that writes to the ledger without passing the dispatch. 01:30 from the attacking side.</li>
+        <li><strong>Two credits under the ceiling.</strong> ₹1,200 four times is ₹4,800 and no single call is over the limit.</li>
+        <li><strong>The same ticket from a second process</strong>, against any pair who has not reached 02:55.</li>
+        <li><strong>The approval path.</strong> Submit, then approve it yourself. Whoever skipped the requester-and-approver check at 01:47 is open here.</li>
+        <li><strong>The ticket text.</strong> It works, and it is week 4.</li>
+      </ol>
+      <p><strong>Route 3 is worth the most time in the report-out.</strong> Nothing in the session defends against it and nobody expects that. A ceiling is per call. The thing you care about is per account, per day, and no control built today has that shape.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer, and the injection sentence</summary>
+    <div class="dbody">
+      <p><strong>"We could not get in, so their guard is fine."</strong> What is right: they tried. What is wrong: ten minutes of two people is not evidence. Ask what they did not try, and the honest answer is usually routes 3 and 5.</p>
+      <p><strong>Then the sentence that must be said, and do not soften it.</strong> If your attack was a line in the ticket text, you have found week 1's injection two weeks early. Do not patch the prompt tonight. The answer you will reach for is a line in the system prompt telling the model to ignore instructions in ticket text. That is the wrong shape of answer, and week 4 will break it live.</p>
+      <p>Naming the date is what stops it festering. Week 4 opens by asking who tried anyway, so a room that tried is a better week 4.</p>
+    </div>
+  </details>
+  <p class="quiet">Findings only in the report-out. Never names, never a screen. The scoreboard is one number: how many systems paid out.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t1-quiz">
+  <span class="k">04:20 · three of the eight asked in the room</span>
+  <h2>Question bank — the limit</h2>
+  <p>They go into the quiz mixed with the other topics, never grouped. Sorting by topic lets people answer from the heading instead of from the problem. Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The three from this topic</h3>
+  <hr class="hair">
+  <h4>Q2 · What a check inside the tool does not protect</h4>
+  <p class="qmeta">apply · renders on the learner check</p>
+  <p>Your ceiling is inside <code>issue_credit</code> and it works. Which of these still pays an account that does not exist?</p>
+  <ul class="opt">
+    <li>a. A retry of the same ticket</li>
+    <li>b. A new tool written by another team <span class="ok">— correct</span></li>
+    <li>c. A model that returns a string instead of a number</li>
+    <li>d. A ticket with an attacker's note in the account record</li>
+  </ul>
+  <p class="qmeta">a is topic 3, c was week 1 drill 3, d is week 4. All three are real and none is this question. That is the point of mixing them.</p>
+  <hr class="hair">
+  <h4>Q4 · When a limit is genuinely outside the function</h4>
+  <p class="qmeta">apply · retagged from <code>judge</code> on 28 September, and b splits the room</p>
+  <p>Which of these means the limit is genuinely outside the function?</p>
+  <ul class="opt">
+    <li>a. It is a module-level constant rather than a literal</li>
+    <li>b. It is in a config file the program imports</li>
+    <li>c. Somebody who cannot write Python can read it and change it, and the system records that they did <span class="ok">— correct</span></li>
+    <li>d. It is passed in as an argument</li>
+  </ul>
+  <p class="qmeta">b is the one to take up. A config file in the repository is still changed by a deploy, by somebody who can open a pull request.</p>
+  <hr class="hair">
+  <h4>Q1 · The four facts a check needs</h4>
+  <p class="qmeta">recall · held back for the room, not on the check page</p>
+  <p>Name the four facts a check needs before it can refuse an action.</p>
+  <p class="qmeta ok">Which action · can it be undone · what is the limit · what has already happened.</p>
+  <p class="qmeta">Held back because 00:48 now asks the room for these out loud, so a radio button afterwards adds nothing.</p>
+</article>
+
+<article class="card" id="t1-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>Move the control toward the thing being protected, not toward the thing being controlled.</blockquote>
+  <p>If a person leaves with one sentence from this topic, that is the one. Everything else is that sentence with a price attached. ₹5,000 is what a check in the wrong place costs three weeks later. The adversary round is what it costs in ten minutes, with somebody watching.</p>
+  <p class="quiet">It is on the learner page too, on the ember card. Do not paraphrase it on the day.</p>
+</article>
+
+<article class="card" id="t1-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same six lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p>These six are on the learner page. They are not a separate checkpoint on the day: they fold into the 00:46 and 02:02 checkpoints with the other topics' lines. Read them in the same words.</p>
+  <ul>
+    <li>Read a refusal and say which rule refused it, and which file that rule is in</li>
+    <li>Name the four facts a check needs before it can refuse an action, and say which one needs a store</li>
+    <li>Explain why a check inside a tool does not protect the ledger</li>
+    <li>Tell an invariant from a limit, using the switched-off-for-one-tool test</li>
+    <li>Say which of the nine control points your own limit runs at, and which callers it misses</li>
+    <li><strong>Say why a control nobody can count cannot be told apart from a broken one</strong></li>
+  </ul>
+  <p><strong>The number in chat goes on the last line, at 00:46.</strong> A low number is the honest answer rather than a bad one. Say that before you ask, or you will get fours.</p>
+</article>
+
+<article class="card" id="t1-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4>Ready, and pushed to the reference agent</h4>
+  <div class="scroller"><table>
+    <thead><tr><th>What</th><th>Where</th><th>Run it</th></tr></thead>
+    <tbody>
+      <tr><td>The limits, as data</td><td><code>data/policy.json</code></td><td>&#8212;</td></tr>
+      <tr><td>The checker, with invariants split from limits</td><td><code>src/policy.py</code></td><td>&#8212;</td></tr>
+      <tr><td>The guarded run for 00:23</td><td><code>src/guarded.py</code></td><td><code>make w2-guarded</code></td></tr>
+      <tr><td>The second tool for 01:12</td><td><code>src/goodwill_demo.py</code></td><td><code>make w2-goodwill</code></td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>The check lives in <code>src/guarded.py</code> and not in <code>agent.py</code>.</strong> <code>agent.py</code> is deliberately left exactly as week 1 ended, with no check at all, because putting the check into the dispatch <em>is</em> the build at 00:54. A demo that has already done it takes the build away.</p>
+  <h4 class="quiet">Still open, and the first one blocks the session</h4>
+  <ul>
+    <li><strong>Cycle C has no buildable fix yet.</strong> Not this topic, but it blocks the day. The reference agent needs a <code>w2-</code> sqlite path for 02:55: a file, a <code>paid</code> table with the key as primary key, <code>INSERT OR IGNORE</code>. Standard library, about fifteen lines. Until it exists, 02:55 is a description rather than a build.</li>
+    <li><strong>Topics 3, 4, 5 and 6 have no pages.</strong> Topic 2 is at outline stage. This is the only pair rebuilt for the new structure.</li>
+    <li><strong>"Your own system" still has no stored answer.</strong> The phrase is defined in prose on the learner page and nowhere else, so nothing can quote a learner's own system back at them.</li>
+    <li><strong>Week 1's clock still disagrees with itself.</strong> <code>week-1-script.md</code> says 250 minutes; the learner file says a five-hour day. Week 2 is built on the five-hour shape, so this does not block teaching.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<details class="topic" id="t2">
+  <summary><span class="num">2</span><span>The human gate &#183; The guardrail that calls a person</span><span class="when">01:40 to 02:05, and through the break to 02:20</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t2-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p>Change "no" to "ask". Then find out who answers. The second half is the part most teams skip, and it is where this topic spends its time.</p>
+  <p><strong>The biggest change on 28 September is that the 2:14am question stopped being a discussion.</strong> The room sets a real 18-minute timer at 02:00, goes to the break, and reads its own queue at 02:20. Three outcomes appear in every room of eight, and none of them is a guess. That is worth more than the eight minutes of pair discussion it replaced, and it costs no teaching time at all because the break does the work.</p>
+  <p>The old beat had a known defect, fixed on 2026-09-11, where it asked about code the room had not written yet. That defect cannot come back: the code now exists by 02:00, forty minutes before the question is asked.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Block 3 · Cycle B · 01:40 to 02:05, then the break does the rest</span>
+
+  <div class="beat" data-ref="t2-r-refused"><span class="t">01:40</span><div class="b">
+    <h4>It refuses ₹8,400 that is genuinely owed</h4>
+    <span class="pairs">Pairs · 7 min · both answers in writing</span>
+    <p>Moved from 01:15. It now opens cycle B, seven minutes before the build it motivates, instead of sitting fifty minutes ahead of it.</p>
+    <p>Setup and trace on screen. The standing two questions, in writing, before anything is read out.</p>
+    <p><strong>Say maker-checker early and out loud.</strong> This is the highest-value move in the topic. For anyone who has shipped in a bank, an NBFC or a payments company it converts the whole thing from a new agent problem into something they already believe and have been audited on. Ask for a show of hands on who has built one. In this cohort it will not be a small number.</p>
+    <p><strong>Point at the counter.</strong> Meera's refusal incremented <code>guard_refused_total</code>, and that single number is the only trace of her anywhere. They built it at 00:54. That is the wrong-refusal cost arriving 170 minutes before 04:32, and it costs ten seconds to say.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-gate"><span class="t">01:47</span><div class="b">
+    <h4>Build the gate, and the record</h4>
+    <span class="pairs">Alone · 13 min · 3 deciding, 10 building</span>
+    <p><strong>This merges two beats that were 115 minutes apart.</strong> The decision log was taught at 00:52 and built at 02:35. They are one thing: a gate that worked leaves one field different in one row.</p>
+    <p>Enforce the three minutes of writing before anybody types. Then circulate and look at one thing only: whether the gate is before the dispatch or inside the tool. Cycle A settled that 40 minutes ago and perhaps a third of the room will still put it inside the tool, because that is where the assistant puts it.</p>
+    <p><strong>Add the approver check to individuals while circulating</strong>, not to the room. "Your gate asks. Who is allowed to answer, and where does your code check that?" Almost nobody has one, twenty minutes after agreeing that the proposer cannot be the approver.</p>
+    <p class="qbadge">No model calls. This build costs nothing against their 20 a day.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-timer"><span class="t">02:00</span><div class="b">
+    <h4>Set the timer</h4>
+    <span class="pairs">Whole room · 2 min · then everybody leaves</span>
+    <p><strong>New beat, and it replaces a discussion with an experiment.</strong> Say it plainly and say nothing else.</p>
+    <p><em>Everybody set your approval timeout to 18 minutes, and submit one ₹44,000 approval request before you stand up. Then nobody watches the queue.</em></p>
+    <p><strong>Eighteen, not fifteen.</strong> You want it to fire while people are drifting back rather than while the room is empty, so the early returners watch it happen.</p>
+    <p><strong>Say nothing about what will happen.</strong> Do not say "this will be interesting". The whole value is that they have not predicted it.</p>
+  </div></div>
+
+  <div class="beat"><span class="t">02:05</span><div class="b">
+    <h4>Break, fifteen minutes</h4>
+    <span class="pairs">Whole room · 15 min · you leave too</span>
+    <p>Do not stay in the room answering questions about the gate. The experiment needs nobody watching the queue, and that includes you.</p>
+    <p class="quiet">No reference card. The instruction is the whole of it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-break"><span class="t">02:20</span><div class="b">
+    <h4>What the break did</h4>
+    <span class="pairs">Whole room · 6 min · they open their own queue</span>
+    <p>Ask one question and then stop talking: <em>open your own queue. What happened to the ₹44,000?</em></p>
+    <p>Count the three outcomes on screen. All three appear in a room of eight.</p>
+    <p><strong>Say plainly that nobody in the room chose a wrong answer.</strong> Every one of the three is somebody's production behaviour tonight. The difference is not correctness. It is whether the person who wrote the code ever asked the question.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag warn">If you are running late</span>
+  <h3>What to cut, in this order</h3>
+  <p class="quiet">Decide this before the day rather than in the moment. In the moment the build is the easiest thing to shorten, and it is the thing that must not move.</p>
+  <ol>
+    <li><strong>The three-phrase table at 01:40.</strong> It is already reading on the learner page. Keep the spoken sentence about cost per use and drop the table.</li>
+    <li><strong>The six-path table at 02:20.</strong> Also reading. Point at the page.</li>
+    <li><strong>Two minutes off the 02:20 debrief</strong>, taking the counts and skipping the attention-cost paragraph, which 04:32 repeats anyway.</li>
+    <li><strong>Nothing in the build, and never the timer.</strong> If the timer does not get set at 02:00 the whole topic loses its best beat and there is no way to recover it later in the day.</li>
+  </ol>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t2-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t2-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · rebuilt 2026-09-28</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>The paused run lives in memory and dies with the process</td><td>Cycle C at 02:26, and properly in week 5</td></tr>
+      <tr><td>Nothing stops the same approved request paying twice</td><td>Cycle C at 02:55</td></tr>
+      <tr><td>The approval could be granted by a model instead of a person</td><td>Topic 6 at 03:05, and the answer is no</td></tr>
+      <tr><td>The threshold has no owner and no change path</td><td>Topic 5 at 03:59, column seven</td></tr>
+      <tr><td>A gate approved by somebody who stopped reading</td><td><strong>Nowhere.</strong> It is named at 02:20 and no control in this course detects it. Say so.</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t2-r-refused">
+  <span class="pairs">&#8596; 01:40 · the refusal that opens cycle B</span>
+  <h3>It refuses ₹8,400 that is genuinely owed</h3>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <p>The ceiling was set by looking at what a normal case costs. One month, because a double charge is one month. Nobody asked what a <em>legitimate</em> case costs at the top end, and seven months of a billing error is one honest customer.</p>
+      <p>The control is that over the limit has to mean <em>ask</em>, not <em>no</em>. A limit with one outcome is a wall; with two it is a gate.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"Raise the ceiling."</strong> What is right: the number genuinely is wrong. What is wrong: a higher wall is still a wall, and the next honest case sits just above the new number. Ask which number they would choose, then ask for the case that sits ₹1 over it. Do this once and the room stops proposing numbers.</p>
+      <p><strong>Probe.</strong> "Your ceiling is one month of the plan. Name the honest case that is twenty times the plan." Eleven months of a double charge on a ₹4,000 plan is 03:55, so a pair that gets there has walked into the teardown on its own. Let them.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The confidence question, which somebody always asks</summary>
+    <div class="dbody">
+      <p>Every vendor's documentation offers routing on low model confidence. Do not wave it away. Say why not, and then say what replaces it, because a rejection with no replacement is the weakest thing a teaching page can do.</p>
+      <ul>
+        <li><strong>Why not.</strong> A self-reported number is more generated tokens. Not comparable across models, not comparable across two prompts on one model, and nobody in the organisation owns it. Worst of all it is uncorrelated with what matters: week 1's injected ticket paid ₹2,50,000 with complete confidence.</li>
+        <li><strong>What replaces it.</strong> The model expresses uncertainty by calling <code>escalate</code>. That call lands in the trace, is countable per week and per ticket type, and can be checked afterwards against whether a person agreed it needed looking at.</li>
+        <li><strong>Where uncertainty does belong.</strong> In the record, and in week 3's harness as sampling variance measured by code. A test-time instrument, not a runtime gate.</li>
+      </ul>
+      <p class="quiet"><strong>This card owns the confidence half. 03:05 owns the judge half.</strong> They are one instinct answered from two sides. Do not run 03:05's argument here, and do not run this one there.</p>
+    </div>
+  </details>
+  <blockquote>A limit with one outcome is a wall. A limit with two outcomes is a gate.</blockquote>
+</article>
+
+<article class="card" id="t2-r-gate">
+  <span class="pairs">&#8596; 01:47 · the gate, and the record, in one build</span>
+  <h3>Build the gate, and the record</h3>
+  <h4>The decision log, and the field that changes everything</h4>
+  <p>Do not give them the format. Ask for it: <em>nine months from now, somebody asks why account 4471 was credited ₹1,200 on 14 March. What one line do you want to find?</em> Two minutes, alone, nobody reads out until the six-field line is on screen.</p>
+  <pre>decided_by=policy          a rule decided, no person involved
+decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
+  <p>Cover the last field and ask what else it could say. Somebody reaches "a person" inside thirty seconds, and that is the whole reveal. <strong>One field changed and the guardrail behind it changed completely.</strong></p>
+  <details>
+    <summary><span class="chev">›</span> The answer key for the build</summary>
+    <div class="dbody">
+      <p>The gate sits at the dispatch, beside cycle A's limit. Irreversible, plus over the limit, means do not call the function.</p>
+      <p><strong>Write the decision row first, then ask, then act on the answer.</strong> The order matters and almost nobody gets it right unprompted. A row written only after approval loses the request entirely when the process dies while waiting.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>An <code>input()</code> call, or a blocking sleep loop, standing in for the approval.</strong> What is right: it makes the pause real, and for thirteen minutes that is enough. What is wrong is what it hides. A process blocked on a prompt holds the run open for hours and cannot survive a restart. Name it, say it is the right shortcut for today, and hand the real version to week 5.</p>
+      <p>Most people also write a line describing the model's reasoning into the log: a prompt, a completion, a confidence number. What is right is the instinct that a stranger needs to know why. What is wrong is the source. The model's stated reasoning is not evidence of anything, and week 1 watched it claim a credit that never happened.</p>
+      <p><strong>Probe.</strong> "Your log says <code>decided_by=human:priya.n</code>. Nine months later Priya has left. What still proves she was allowed to approve ₹8,400?" The answer is a record of the permission at the time, not a lookup of the permission today.</p>
+    </div>
+  </details>
+  <h4>Who is allowed to answer</h4>
+  <p>The identity half of maker-checker, and the line almost nobody writes without being told. <strong>Put it in a constraint, not in a branch.</strong> In a branch somebody changes it for a test environment in six months and does not change it back.</p>
+  <h4>The shape of an ask</h4>
+  <p>The four exits are drawn on the learner page. Point at it rather than redrawing. The fourth exit is the one their timer is about to take, which is why the figure sits inside this build rather than before it.</p>
+  <blockquote>A gate that worked leaves one field different in one row. If that field does not exist, neither does the gate.</blockquote>
+</article>
+
+<article class="card" id="t2-r-timer">
+  <span class="pairs">&#8596; 02:00 · the experiment that runs through the break</span>
+  <h3>Set the timer</h3>
+  <p><strong>New beat. It is the best two minutes in the session and it is easy to spoil.</strong></p>
+  <details>
+    <summary><span class="chev">›</span> How to run it, and the one fallback you need ready</summary>
+    <div class="dbody">
+      <p>Eighteen minutes, not fifteen. You want it to fire while people are drifting back rather than while the room is empty.</p>
+      <p><strong>Say nothing about what will happen.</strong> No "this will be interesting", no raised eyebrow. The value is entirely in them not having predicted it.</p>
+      <p><strong>If somebody's gate is not working by 02:00</strong>, give them a prepared queue state to open at 02:20 rather than letting them sit out the debrief. Have three files ready, one per outcome. This is the one place in the day where a broken build costs somebody the next beat entirely, so prepare the three files before the session rather than improvising.</p>
+      <p>There is nothing to reveal on this card. The reveal is their own queue, twenty minutes later.</p>
+    </div>
+  </details>
+  <blockquote>Whatever your code does when the approver is absent is your policy, whether or not anybody chose it.</blockquote>
+</article>
+
+<article class="card" id="t2-r-break">
+  <span class="pairs">&#8596; 02:20 · their own queue, read back</span>
+  <h3>What the break did</h3>
+  <h4>2:14am is one of six paths</h4>
+  <p>Theirs is the only one taken live. The other five are reading on the learner page. Point at the table rather than walking it.</p>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <p>Three behaviours, and all three appear in a room of eight: it waited, it refused, it paid. Count them on screen.</p>
+      <p>All three are a policy. The failure is not picking the wrong one. The failure is that two of the three are usually whatever the code happens to do, chosen by nobody.</p>
+      <p><strong>A room that has produced all three has made the argument for you</strong>, and this is much stronger than the discussion it replaced, because it is their own code and they watched it happen.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"Mine waited, which is correct."</strong> What is right: waiting is often correct. What is wrong: waiting with no upper bound is not a rule, it is the absence of one. Ask what happens at hour six.</p>
+      <p><strong>Probe.</strong> "Your rule is 30 seconds, then refuse. Four items are waiting. Does the fifth wait 30 seconds, or does it see a queue nobody is reading and refuse immediately?" Queue depth as an input to the gate's own decision is new for most rooms.</p>
+    </div>
+  </details>
+  <h4>The cost that no dashboard will ever show you</h4>
+  <p>The attention cost belongs here rather than at 04:32, because the room has just watched a queue go unread for fifteen minutes. First request read, tenth skimmed, fiftieth approved before the sentence finishes. Volume, not carelessness.</p>
+  <p>Then the headcount number: 6% of 40,000 disputes is 2,400 approvals a month, about 110 a working day. <strong>An engineer choosing a percentage has just committed somebody else's headcount.</strong></p>
+  <details>
+    <summary><span class="chev">›</span> The time-zone path, and why it is not a footnote</summary>
+    <div class="dbody">
+      <p>For a team in Bengaluru serving customers in the United States, the queue fills at 2am IST, which is 4:30pm Eastern, the customer's busiest hour. So "nobody is awake" and "the customer is waiting" are the same moment, and they pull in opposite directions.</p>
+      <p><strong>A rota across time zones is an architecture decision, not an HR one</strong>, and it gets made by whoever set the timeout at 01:47.</p>
+      <p>Ask how many in the room serve customers in a time zone that is not theirs. The hands make the argument better than the paragraph does.</p>
+      <p class="quiet">Do not reach for an alert-fatigue statistic. Every source says a quarter to two-thirds of alerts go uninvestigated, and every source is a blog citing an unnamed survey. Use "hands up if you have ever muted an alert channel" instead.</p>
+    </div>
+  </details>
+  <blockquote>You did not choose what your gate does at 2am. You watched it choose.</blockquote>
+</article>
+
+<article class="card" id="t2-r-map">
+  <span class="tag">Reference · the vocabulary</span>
+  <h3>Three phrases, and which one this is</h3>
+  <p>Name it as <strong>human in the loop</strong>, early and out loud. HITL is what they will find in every vendor's documentation and in every audit conversation, so the page owns the term rather than leaving them to map it themselves.</p>
+  <p>The point to land: <strong>you want as much "in command" as you can get</strong>, because it is the only one of the three that scales. Then close the loop back to week 1. Choosing between the three is the reversibility question again.</p>
+  <p>A room that has this trio stops saying "we have a human in the loop" as though it were one thing, which is the phrase that hides the most in a design review.</p>
+  <h4>Why the two action guardrails are different</h4>
+  <p><strong>The limit asks: is this allowed?</strong> Code decides. Same answer every time, no elapsed time, nothing per use. A million times a day is fine.</p>
+  <p><strong>The human gate asks: does somebody agree?</strong> A person decides. Not the same answer every time, minutes or hours of elapsed time, and every single use spends somebody's attention.</p>
+  <p>Land it as one sentence: <em>a limit costs nothing to use, a human gate has a budget, and it is somebody else's.</em> If the room takes one thing from this topic, this is it, and it is also what stops them putting a gate in front of everything.</p>
+</article>
+
+<article class="card" id="t2-r-stack">
+  <span class="tag">Reference · on the stack</span>
+  <h3>The six pieces, and the two you build today</h3>
+  <p>Week 1's page says out loud that this course is not a tour of frameworks, and that line is the positioning. So the stack arrives as decisions with costs. <strong>Say the framing once: the tool is never the answer, the trade is.</strong> Then never recommend one by name.</p>
+  <details>
+    <summary><span class="chev">›</span> The one build-or-buy argument worth having</summary>
+    <div class="dbody">
+      <p>A pending table you write, against a durable execution engine. Give both sides honestly; this room contains people who have been burned each way.</p>
+      <ul>
+        <li><strong>Write it yourself.</strong> Two columns and a status. No new dependency and you understand every line. You will then write retries, timeouts, visibility and a way to find stuck items, and you will write them worse than a product does.</li>
+        <li><strong>Buy the engine.</strong> Retries, history, timers and replay on day one. It is now in the path of every run, your team learns its model, and its outage is your outage.</li>
+      </ul>
+      <p>What settles it is not technical. <strong>How many workflows will this team run in two years?</strong> One is a table. Twenty is an engine. Nobody knows, which is why it is an architecture decision rather than a preference. Name categories, not a product.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-scale">
+  <span class="tag">Reference · at enterprise scale</span>
+  <h3>Maker-checker is the phrase this room already owns</h3>
+  <p>The person who makes an entry cannot be the person who checks it. Anybody here who has shipped in a bank, an NBFC or a payments company has built this, argued about it, and been audited on it. <strong>Use the word early.</strong></p>
+  <p>Somebody will then ask why two people, and what the second one adds. <strong>The full reasoning, including what changes once the maker is an agent, is the Maker-checker card at the foot of <span class="mono">week-2-guardrails.md</span>.</strong> Do not pre-empt it. It is a much better answer to a question than it is a statement.</p>
+  <p class="quiet">The short version, if you need it live: against error a second person helps because their mistakes are uncorrelated with the first person's. Against intent a second person helps because they have no reason to go along with it. Only the second needs the identities to differ, which is why it is written as an identity rule.</p>
+</article>
+
+<article class="card" id="t2-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A limit costs nothing to use. A human gate spends somebody's attention every single time, and it stops being a guardrail the moment they stop reading.</blockquote>
+  <p>Everything else is that sentence with a price attached. The ₹8,400 is what a wall costs when a gate was needed. Their own timer at 02:20 is what happens when nobody chose the default. The 110 a day is the bill.</p>
+</article>
+
+<article class="card" id="t2-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same seven lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p>These seven are on the learner page. The number in chat goes on the last line, <strong>at 02:02, before the timer has fired</strong>. That ordering is deliberate: they commit to an answer about their own code and find out twenty minutes later whether they were right.</p>
+  <p>If the numbers are low, say so and tell them the next fifteen minutes will settle it. Do not extend the block.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t2-quiz">
+  <span class="k">04:20 · two of the eight asked in the room</span>
+  <h2>Question bank — the human gate</h2>
+  <p>They go into the quiz mixed with the other topics, never grouped. Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The two from this topic</h3>
+  <hr class="hair">
+  <h4>Q3 · The gate at 2:14am</h4>
+  <p class="qmeta">judge · scored on whether there is a number in the answer · held back for the room</p>
+  <p>Your gate asks a person for anything over ₹1,200 that cannot be undone. It is 2:14am, four items are waiting, and there is no human. What is your policy?</p>
+  <p class="qmeta ok">Any of wait, refuse or allow, <strong>with a number attached</strong>. "Waits 30 seconds, then escalates to the on-call queue and refuses" is a pass. "It waits" is not, and neither is "it alerts somebody".</p>
+  <p class="qmeta">Mark on the number, not on the choice. All three behaviours are defensible and the failure this tests is a policy nobody chose. After the 02:20 debrief most of the room can answer this about their own code rather than in the abstract, which is new.</p>
+  <hr class="hair">
+  <h4>Q6 · What fires a human gate</h4>
+  <p class="qmeta">apply · retagged from <code>judge</code> on 28 September · renders on the learner check</p>
+  <p>Which of these is the right trigger for calling a person?</p>
+  <ul class="opt">
+    <li>a. The model's confidence is below a threshold you tuned</li>
+    <li>b. The action cannot be undone and the request is over its limit <span class="ok">— correct</span></li>
+    <li>c. The ticket text is unusually long or badly written</li>
+    <li>d. The customer asked for a human</li>
+  </ul>
+  <p class="qmeta">a is in every vendor's documentation as pattern three of three, and it is the reason this question is in the bank. d is a real product requirement and not a guardrail, and the distinction is one senior engineers get wrong in design reviews. c is a proxy for confidence wearing different clothes.</p>
+  <p class="qmeta ok">The line to land: it fires on the consequence, not on the confidence. Week 1's poisoned ticket paid ₹2,50,000 with complete confidence.</p>
+</article>
+
+<article class="card" id="t2-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4>Settled, and still true after the rebuild</h4>
+  <ul>
+    <li><strong>No success-first demo and no new <code>make</code> target.</strong> A working gate looks like nothing happening, so there is nothing to demonstrate. The concept lands on the <code>decided_by</code> field inside the build. A <code>w2-gated</code> target would also take the build away, which is the rule at the top of the reference agent's Makefile.</li>
+    <li><strong>The EU AI Act stays off every page.</strong> Article 14 requires human oversight for high-risk systems and the obligations became enforceable in August 2026. It is current, checkable and on-brand, and it is a dated regulatory claim. Read Article 14 and the application dates in Article 113 in the primary text before saying it in the room, and keep it out of the session file either way.</li>
+    <li><strong>No alert-fatigue statistic anywhere.</strong> Every source is a blog citing an unnamed survey. The show of hands replaces it.</li>
+    <li><strong>Product names for commodity pieces only.</strong> The pending-store row names the category and no product, because that is the row where the trade is build against buy.</li>
+  </ul>
+  <h4 class="quiet">Still open</h4>
+  <ul>
+    <li><strong>The three prepared queue states for 02:00 do not exist yet.</strong> One file per outcome, for anybody whose gate is not working when the timer is set. This is the only new preparation the rebuild added, and without it a broken build costs somebody the 02:20 beat entirely.</li>
+    <li><strong>"Your own system" still has no stored answer.</strong> Nothing can quote a learner's own system back at them.</li>
+    <li><strong>Topics 3, 4, 5 and 6 have no pages.</strong> This and topic 1 are the only pairs rebuilt for the new structure.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<details class="topic" id="t3">
+  <summary><span class="num">3</span><span>Reliability &#183; The fix that passes and is not a fix</span><span class="when">02:26 to 03:05</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t3-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p>This is week 3 seeded a week early, and <strong>it only works if you let the green result stand for a moment.</strong> The room stops the double payment inside one running program, <span class="mono">make retry</span> shows one credit, and then the same ticket from a second terminal pays twice again. They feel green and wrong a week before they have the words for it.</p>
+  <p><strong>Do not use the word "evaluation" on the day.</strong> Name the feeling and say week 3 is where it gets a method. Week 3 opens on this terminal rather than on a new example, so the handover is the point of the whole cycle.</p>
+  <p><strong>What changed on 28 September.</strong> The old shape stopped at the false pass and handed the fix forward. That leaves the room with a demonstrated problem and no demonstrated answer, which is a bad place to spend a week. The constraint is now built at 02:55, and they watch the second terminal refuse.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Block 4 · Cycle C · 02:26 to 03:05</span>
+
+  <div class="beat" data-ref="t3-r-payonce"><span class="t">02:26</span><div class="b">
+    <h4>Pay once, then watch your fix fail</h4>
+    <span class="pairs">2 min deciding · 15 alone · 4 for check one · 8 for check two</span>
+    <p><strong>The decide step is the real content.</strong> Ask it in these words: <em>what makes two payment requests the same? The ticket, the account, the amount, or all three?</em> Two minutes in writing. Their answer decides whether a customer with two genuine disputes is paid once or twice.</p>
+    <p><strong>At 02:43, let it work.</strong> Run <code>make retry</code>, see one credit, and say "it works" and mean it. Do not smile knowingly. The beat at 02:47 is worth nothing if the room suspects a trap four minutes earlier.</p>
+    <p><strong>At 02:47, the second terminal.</strong> Have somebody share their screen rather than doing it yourself, so the room watches a peer's system pay twice rather than yours.</p>
+    <p class="qbadge">No model calls. This cycle costs nothing against their 20 a day.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-fix"><span class="t">02:55</span><div class="b">
+    <h4>The fix that holds</h4>
+    <span class="pairs">Alone · 6 min</span>
+    <p>Six minutes, and the middle line is the entire lesson. They are not asking whether the key is there. They are inserting it and letting the insert report whether they were first.</p>
+    <p><strong>Then run the second terminal again and let them see it refuse.</strong> The false pass at 02:47 is much easier to sit with once the room has watched the real fix hold.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-moved"><span class="t">03:01</span><div class="b">
+    <h4>Where did the failure move</h4>
+    <span class="pairs">Whole room · 4 min</span>
+    <p>Build the table live from their answers. Do not display it finished. Fill the first two columns fast and spend the time on the third.</p>
+    <p>Shortened from ten minutes to four on 28 September, because the room has now produced all four rows itself rather than being walked through them.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag warn">If you are running late</span>
+  <h3>What to cut, in this order</h3>
+  <ol>
+    <li><strong>Two minutes off the 03:01 table.</strong> It is in full on the learner page. Point at it and take the third column only.</li>
+    <li><strong>The second run of the second terminal at 02:55.</strong> Describe it rather than running it. You lose a little.</li>
+    <li><strong>Nothing at 02:47.</strong> That eight minutes is the week 3 handover and there is no substitute for watching it.</li>
+  </ol>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t3-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t3-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag warn">staging · this blocks the session</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <p><strong>The one thing that stops you running cycle C as written.</strong> The reference agent's ledger is a Python list, so there is no store to put a constraint in. Cycle C needs a <code>w2-</code> sqlite path: a file, a <code>paid</code> table with the key as primary key, and <code>INSERT OR IGNORE</code>. Standard library, no service, about fifteen lines. Same rule as <code>w2-guarded</code> and <code>w2-goodwill</code>: its own target, its own module, and it does not change what any earlier week prints.</p>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing tells them the test was lying</td><td>Week 3. That is the whole handover.</td></tr>
+      <tr><td>The key is per ticket, so one dispute refunded twice legitimately is refused</td><td>Named in the probe, not fixed. The key is the dispute, not the ticket.</td></tr>
+      <tr><td>Two writes to two different stores still cannot be made atomic</td><td>Quiz Q10, and topic 5's policy table</td></tr>
+      <tr><td>A ceiling is per call, so four calls under it still drain an account</td><td><strong>Nowhere.</strong> Route 3 of the adversary round.</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t3-r-payonce">
+  <span class="pairs">&#8596; 02:26 · the build, and the false pass</span>
+  <h3>Pay once, then watch your fix fail</h3>
+  <h4>What makes two requests the same</h4>
+  <p>The decide step carries more than the build does, so protect the two minutes.</p>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <p><strong>The ticket id alone is the answer that holds.</strong> The account plus the amount is the interesting near-miss: it is stable across runs and too stable, because a customer legitimately owed two identical ₹1,200 refunds receives one.</p>
+      <p>The key is derived from the dispute identity and chosen by the caller, not minted per run. <strong>A fresh <code>uuid4()</code> at the start of a run is the most common wrong answer</strong> and it fails exactly when it is needed: a new run mints a new key, the provider sees two distinct requests, it pays twice.</p>
+    </div>
+  </details>
+  <h4>The one case the test never covered</h4>
+  <details>
+    <summary><span class="chev">›</span> How to run 02:43 and 02:47</summary>
+    <div class="dbody">
+      <p>The keys live in a Python list, the list dies with the process, and <code>make retry</code> passed because all three deliveries ran inside one program. That is the one case that was never the problem.</p>
+      <p><strong>Let the green stand at 02:43.</strong> Say "it works" without irony. If the room suspects a trap, the reveal at 02:47 becomes a puzzle they were braced for rather than a result about their own judgment.</p>
+      <p><strong>Have somebody else share their screen at 02:47.</strong> A peer's system paying twice lands differently from yours doing it.</p>
+      <p>Then say the line and stop talking for a few seconds: <em>your test passed and proved nothing, and nothing in the room told you.</em></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"Check the history before paying."</strong> The instinct is right and the placement is wrong. History is empty on a redelivered run. This is week 1's answer repeated, and it is worth showing rather than telling: ask them to run the second terminal.</p>
+      <p><strong>Probe.</strong> "Your key is the ticket id. The same ticket is legitimately refunded twice, three months apart. What now?" The key is the dispute, not the ticket, and most rooms have to be pushed to see the difference.</p>
+    </div>
+  </details>
+  <blockquote>Your test passed and proved nothing, and nothing in the room told you.</blockquote>
+</article>
+
+<article class="card" id="t3-r-fix">
+  <span class="pairs">&#8596; 02:55 · the constraint</span>
+  <h3>The fix that holds</h3>
+  <h4>Why a read then a write loses</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <pre>db.execute("CREATE TABLE IF NOT EXISTS paid (key TEXT PRIMARY KEY)")
+cur = db.execute("INSERT OR IGNORE INTO paid VALUES (?)", (key,))
+if cur.rowcount == 0:
+    return refuse(f"already paid: {key}")</pre>
+      <p>The middle line is the beat. They are not asking whether the key is there. They are inserting it and letting the insert report whether they were first.</p>
+      <p>A read followed by a write has a window between the two, and two processes find it. A constraint has no window, because the database serialises the inserts.</p>
+      <p><strong>Then run the second terminal again.</strong> Let them see it refuse.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"A lock would also work."</strong> It would, and saying otherwise is wrong. What is right: mutual exclusion is the property they need. What is wrong is the cost and the failure mode. A lock needs a holder, a timeout, and an answer for the process that dies holding it. A unique constraint needs none of those because the database already solved it.</p>
+      <p><strong>Probe.</strong> "What releases your lock when the process is killed between the acquire and the write?" There is no comfortable answer, and that is the point.</p>
+    </div>
+  </details>
+  <blockquote>You did not write a better check. You moved the check to something that cannot be raced.</blockquote>
+</article>
+
+<article class="card" id="t3-r-moved">
+  <span class="pairs">&#8596; 03:01 · the table, built from their answers</span>
+  <h3>Where did the failure move</h3>
+  <details>
+    <summary><span class="chev">›</span> The answer key, and the order to fill it in</summary>
+    <div class="dbody">
+      <p>Four rows: a ceiling refuses an honest ₹8,400; a check in the tool misses the next tool; a human gate means nobody approves at 2am; a key in memory pays twice from a second process.</p>
+      <p><strong>Fill the first two columns fast, from the room. Spend the time on the third.</strong> That is the column they cannot produce for their own systems yet, and it is the capability the checkpoint tests.</p>
+    </div>
+  </details>
+  <blockquote>A check does not remove a failure. It moves it. Your job is to know where it moved to, and to have chosen that place.</blockquote>
+</article>
+
+<article class="card" id="t3-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>Your test passed and proved nothing, and nothing in the room told you.</blockquote>
+  <p>Everything else is that sentence with a mechanism attached. The Python list is why it passed. The second terminal is how they found out. The unique key is the fix, and week 3 is the method that would have found it without somebody standing over their shoulder.</p>
+</article>
+
+<article class="card" id="t3-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same five lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p>The number in chat goes on the last line, at 03:18. It is this week's step in the AI-written-code thread and it escalates across the cohort. <strong>Set it as a live instruction rather than a reflection:</strong> ask them to give this build to their assistant and watch where it puts the check. It is almost always inside the function.</p>
+  <p>If the numbers are low, do not extend the session. Say it is the after-work they should do first. The adversary round is about to test the same capability with somebody else's code, which is a better teacher than another three minutes here.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t3-quiz">
+  <span class="k">04:20 · one of the eight asked in the room</span>
+  <h2>Question bank — reliability</h2>
+  <p>Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The one from this topic</h3>
+  <hr class="hair">
+  <h4>Q5 · The test that passed and proved nothing</h4>
+  <p class="qmeta">apply · a written answer, so it is asked in the room and not on the check page</p>
+  <p><code>make retry</code> delivers the same ticket three times and your fix now shows one credit. Which case is still broken?</p>
+  <p class="qmeta ok">The same ticket from a second process, or after a restart. Anything that does not share the process.</p>
+  <p class="qmeta">Accept any answer naming a second process, a restart, two consumers, or another deployment. <strong>Do not accept "add more tests"</strong>, which is the instinct week 3 exists to correct. This question carries the week 3 handover, and a learner who gets it has understood that a passing test is not evidence.</p>
+</article>
+
+<article class="card" id="t3-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4 class="quiet">Still open, and the first one blocks the session</h4>
+  <ul>
+    <li><strong>The <code>w2-</code> sqlite path does not exist.</strong> Described on the scope card above. Until it does, 02:55 is a description rather than a build, and the cycle ends on a demonstrated problem with no demonstrated answer.</li>
+    <li><strong><code>make retry</code> needs checking against the new key.</strong> It delivered the same ticket three times for week 1's drill. Confirm it still does, and that it prints a total the room can read at a glance.</li>
+    <li><strong>Topics 4, 5 and 6 pages.</strong> Written on 28 September alongside this one; check the README for current state.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<details class="topic" id="t4">
+  <summary><span class="num">4</span><span>Risk trade-offs &#183; The mistake your monitoring will never show you</span><span class="when">00:54, 01:40 and 04:32 — a thread, not a block</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t4-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p><strong>This is the only one of the six that stays scattered, and it is scattered on purpose.</strong> The cost of being wrong in each direction cannot be taught in one sitting, because the whole point is that one of the two directions is invisible. The room has to feel it three times before the argument lands.</p>
+  <p>Planted at 00:54 as two counters. Paid once at 01:40, when Meera's refusal increments one of them and nothing else in the system mentions her. Argued at 04:32.</p>
+  <p><strong>What changed on 28 September.</strong> This used to be an assertion at 04:09: a wrong refusal is invisible, take my word for it. The two counters make it demonstrable instead. By 04:32 the room has watched their own counter go up by one for a customer nobody was ever going to hear about again.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Planted at 00:54, paid at 01:40, argued at 04:32</span>
+
+  <div class="beat" data-ref="t4-r-counters"><span class="t">00:54</span><div class="b">
+    <h4>Build the limit, and count what it does</h4>
+    <span class="pairs">Inside cycle A's build · this topic is two lines of it</span>
+    <p>Cycle A owns this beat. Two lines of it are this topic: the allowed counter and the refused counter.</p>
+    <p><strong>Expect pushback that counters are instrumentation rather than the drill.</strong> The answer is that a refusal count on its own cannot produce a rate, and a rate is the only number that shows a control has gone wrong in the refusing direction.</p>
+    <p>Do not explain this topic here. One sentence, and it lands properly at 04:32.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-meera"><span class="t">01:40</span><div class="b">
+    <h4>It refuses ₹8,400 that is genuinely owed</h4>
+    <span class="pairs">Inside cycle B's opening · this topic is ten seconds of it</span>
+    <p>Topic 2 owns this beat and uses Meera to argue for a gate. That is the right fix.</p>
+    <p><strong>Add ten seconds.</strong> Point at the counter and say that the number going up by one is the only trace of Meera anywhere in the system. No page, no alert, no ticket.</p>
+    <p>Then stop. Do not open the asymmetry here. It is 170 minutes early and it costs topic 2 its momentum.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-two"><span class="t">04:32</span><div class="b">
+    <h4>The two mistakes, and their prices</h4>
+    <span class="pairs">Whole room · 7 min · the topic arrives</span>
+    <p>Put the four-row table up and take the last row from the room rather than reading it.</p>
+    <p><strong>Then ask the question the counters set up:</strong> what would that counter have to become for you to see the cost rather than the count? The answer is a sample of refused cases re-read by a person, and almost nobody builds it.</p>
+    <p>Close on the upward sentence, which is already on the learner page. <strong>Do not add a fourth idea.</strong> Seven minutes, three sentences, and the horizon is next.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag warn">The one way this topic goes wrong</span>
+  <h3>Do not teach it three times</h3>
+  <p>The temptation at 00:54 and 01:40 is to explain why the counters matter. <strong>Resist it both times.</strong> The argument at 04:32 works because the room has two concrete memories and no framing yet, so the framing lands on evidence they already hold.</p>
+  <p>If you explain it at 00:54 you get agreement and no feeling. At 04:32 there is then nothing left to say.</p>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t4-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t4-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · written 2026-09-28</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing samples the refused cases</td><td><strong>Nowhere in this course.</strong> Named at 04:32 as the thing that has to be built. Say so.</td></tr>
+      <tr><td>No method for choosing a threshold from the two costs</td><td>Week 3, once there is a way to measure either of them</td></tr>
+      <tr><td>The counters are in memory and die with the process</td><td>Cycle C makes exactly that point about a different store, and nobody connects the two. <strong>Connect it if a pair does.</strong></td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t4-r-counters">
+  <span class="pairs">&#8596; 00:54 · two lines inside cycle A's build</span>
+  <h3>Build the limit, and count what it does</h3>
+  <details>
+    <summary><span class="chev">›</span> Why two, and what to say if somebody asks for one</summary>
+    <div class="dbody">
+      <pre>GUARD_ALLOWED[act] += 1
+GUARD_REFUSED[(act, rule_name)] += 1</pre>
+      <p>A refusal count on its own cannot produce a rate. Ask anybody who built one counter to compute a refusal rate from it, and the question answers itself.</p>
+      <p>The tag on the refused counter is the rule, not just the tool, because "the ceiling fired" and "the missing-row rule fired" are different events with different costs. The room needs to tell them apart at 01:12, when the goodwill tool pays and the counter does not move.</p>
+      <p><strong>This is also the third property from 00:31 arriving as code</strong>, and it cuts both ways. A control nobody can count cannot be told apart from a broken one. A control that fires too often looks exactly like a control that is working hard.</p>
+    </div>
+  </details>
+  <blockquote>A refusal count with no allow count is not a measurement. It is a number.</blockquote>
+</article>
+
+<article class="card" id="t4-r-meera">
+  <span class="pairs">&#8596; 01:40 · ten seconds inside cycle B's opening</span>
+  <h3>It refuses ₹8,400 that is genuinely owed</h3>
+  <p>Topic 2 owns the beat and the fix. This topic owns one observation, and it is worth exactly ten seconds.</p>
+  <p><strong>The counter going up by one is the only trace of Meera anywhere.</strong> No page, no alert, no ticket, no queue entry. If the room had not built the counter 46 minutes ago there would be nothing at all.</p>
+  <p class="quiet"><strong>Then stop.</strong> The asymmetry is 170 minutes early here and opening it costs topic 2 its momentum. Every room that has been given the full argument at 01:40 has had a flatter 04:32.</p>
+  <blockquote>A wrong payment leaves ₹5,000 in a ledger. A wrong refusal leaves a number you only have because somebody told you to build it.</blockquote>
+</article>
+
+<article class="card" id="t4-r-two">
+  <span class="pairs">&#8596; 04:32 · the topic arrives</span>
+  <h3>The two mistakes, and their prices</h3>
+  <details>
+    <summary><span class="chev">›</span> The answer key, and the row to take from the room</summary>
+    <div class="dbody">
+      <p>Four rows: what it costs, where it shows up, who tells you, what you do about it. <strong>Take the fourth row from the room rather than reading it.</strong></p>
+      <p>The answer they reach is that a wrong payment makes you tighten the check, and a wrong refusal never makes you loosen it, because you never find out. Every signal pushes one way and none pushes back.</p>
+      <p><strong>That asymmetry is why most teams tighten the check and never learn what it cost them.</strong> It is not carelessness and it is not a failure of rigour. It is that the feedback only arrives from one direction.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The question the counters set up, and the honest answer</summary>
+    <div class="dbody">
+      <p>Ask: <em>what would that counter have to become for you to see the cost rather than the count?</em></p>
+      <p>The honest answer is <strong>a sample of refused cases, re-read by a person</strong>. It is the only one of the two mistakes that has to be built rather than observed, almost nobody builds it, and nothing in this course builds it either. Say that plainly.</p>
+      <p>The weaker answers worth accepting on the way: a follow-up on customers a rule turned away, or a count of refusals by rule that somebody actually reads each week. Both are better than nothing and neither tells you whether the refusal was wrong.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The third cost, and whose it is</summary>
+    <div class="dbody">
+      <p>A human gate works only while the person is still reading it. First request read, tenth skimmed, fiftieth approved before the sentence finishes. Volume, not carelessness.</p>
+      <p><strong>That cost belongs to topic 2 and it is made at 02:20</strong>, when the room has just watched a queue go unread for fifteen minutes. Reference it here in one sentence rather than making it again.</p>
+      <h4>The sentence that travels upward</h4>
+      <p>It is already on the learner page, word for word. Read it rather than paraphrasing. <strong>Do not add a fourth idea.</strong> Seven minutes, three sentences, and topic 5's horizon is next.</p>
+    </div>
+  </details>
+  <blockquote>"We added validation" does not survive a board meeting. "Here is what being wrong costs us in each direction" does.</blockquote>
+</article>
+
+<article class="card" id="t4-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>One of your two mistakes is in the ledger. The other one is a customer who went quiet, and nothing you own will ever mention them.</blockquote>
+  <p>Everything else is that sentence with an instrument attached. The two counters are the smallest thing that makes half of it visible. A sample re-read by a person is what makes the other half visible, and it has to be built.</p>
+</article>
+
+<article class="card" id="t4-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same five lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p>The last line is on the 04:19 checkpoint and it is <strong>not rated</strong>. That is deliberate: the room is mid-argument and the quiz is one minute away, and this is the line the whole day circles rather than one they can score honestly in thirty seconds.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t4-quiz">
+  <span class="k">04:20 · one of the eight asked in the room</span>
+  <h2>Question bank — risk trade-offs</h2>
+  <p>Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The one from this topic</h3>
+  <hr class="hair">
+  <h4>Q7 · The mistake your monitoring will never show you</h4>
+  <p class="qmeta">judge · a written answer, asked in the room</p>
+  <p>Your check is now tighter. Which of the two mistakes will your monitoring show you, and which will you never see?</p>
+  <p class="qmeta ok">The wrong payment is in the ledger and is visible. <strong>The wrong refusal is invisible</strong>: one customer, one complaint, nothing on a dashboard.</p>
+  <p class="qmeta"><strong>What a strong answer adds</strong> is what they would have to build to see it at all: a count of refusals by rule, a sample of refused cases re-read by a person, or a follow-up on the customers a rule turned away. Without one of those, "we tightened the check and nothing broke" is a sentence with no evidence under it.</p>
+  <p class="qmeta">After 28 September most of the room has the first of those three, because they built it at 00:54. Push them to the second.</p>
+</article>
+
+<article class="card" id="t4-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4 class="quiet">Still open</h4>
+  <ul>
+    <li><strong>The counters have no display.</strong> They increment and the room reads them off a terminal. A one-line summary printed at the end of a run would make 01:12 and 01:40 sharper, and it is about three lines in the reference agent.</li>
+    <li><strong>No worked example of a refusal sample.</strong> 04:32 names it as the thing to build and shows nothing. A ten-line sketch would help, and inventing one risks implying a practice we have not tested. Left out on purpose; decide before the day.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<details class="topic" id="t5">
+  <summary><span class="num">5</span><span>Governance &#183; The table somebody else can build from</span><span class="when">03:55 to 04:20, and the horizon at 04:39</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t5-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p>Everything before now was a control. This is the record of who is allowed to change one, and the test is not tidiness. <strong>It is whether a stranger can build from it without asking a question.</strong></p>
+  <p><strong>What changed on 28 September.</strong> The teardown was five questions in pairs followed by ten minutes in the room, then a six-column table. It is now a four-minute frame and a seven-column table, and the questions live inside the columns. The adversary round took the time, and the trade was made on purpose: a pair filling column three has to answer question 1 to fill it.</p>
+  <p><strong>Two columns are new and they are the ones that make it teach.</strong> Column three is one of the nine control points from 00:42. Column four is invariant, limit or tuning, which is the 01:25 test. Without those two the table records what they already decided; with them it makes them decide something.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Block 7 and block 8 · 03:55 to 04:20, then 04:39</span>
+
+  <div class="beat" data-ref="t5-r-frame"><span class="t">03:55</span><div class="b">
+    <h4>Forty thousand a month</h4>
+    <span class="pairs">Whole room · 4 min · 60 seconds alone first</span>
+    <p>Moved here from 01:33 and shortened from eight minutes to four. It was always pointing at the teardown, and at 01:33 the room had no built gate to feel it against. At 03:55 they have one, and the 02:20 timer has already shown them what an unattended queue does.</p>
+    <p><strong>Say the words "this is a constructed teaching case"</strong> before you start.</p>
+    <p>Sixty seconds alone in writing, then two answers out loud. Somebody always gets it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-table"><span class="t">03:59</span><div class="b">
+    <h4>The policy table</h4>
+    <span class="pairs">Pairs · 11 min to write, swap at 04:10 for 9 to review</span>
+    <p>Set it with one question: <em>could another engineer build from your table without asking you a single question?</em> That is review question 4 and it is the one that decides whether the artefact is finished.</p>
+    <p>Say that the written comment matters more than the number when you set the review, or you get eights with nothing attached. <strong>Nothing is summed.</strong></p>
+    <p><strong>Collect the tables.</strong> They are the input to the week 6 review, and a pair that knows they will be read writes differently.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-horizon"><span class="t">04:39</span><div class="b">
+    <h4>Who is allowed to say what a system may do</h4>
+    <span class="pairs">Whole room · 11 min</span>
+    <p>The argument: almost nothing they did today was code, and none of it was a model. Those decisions used to belong to compliance, or to nobody, and they are moving to engineering because they are now enforced by code that engineers write.</p>
+    <p>Bring two or three items from the field notes and <strong>say where each came from</strong>. A vendor blog and a regulator's own text are both "a link", and only one is safe to repeat to a board.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag warn">If you are running late</span>
+  <h3>What to cut, in this order</h3>
+  <ol>
+    <li><strong>Two minutes off the 03:55 frame.</strong> It is in full on the learner page, and the sentence that matters is "the guard made the record worse".</li>
+    <li><strong>Two minutes off the review at 04:10.</strong> Three questions instead of four, dropping number two.</li>
+    <li><strong>Nothing from the 11 minutes of writing.</strong> The table is the artefact of the week and a rushed one is worth nothing in week 6.</li>
+  </ol>
+  <p>If the adversary round overran, take the time from the frame rather than from the writing, and say out loud that you are doing it.</p>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t5-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t5-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · written 2026-09-28</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>The table describes one system and nothing enforces it</td><td>Week 6, as a policy for a team rather than a habit for a person</td></tr>
+      <tr><td>Nothing checks that an owner named in column seven agreed to be one</td><td><strong>Nowhere.</strong> Say so if a pair asks; it is the honest gap.</td></tr>
+      <tr><td>Two writes to two stores still cannot be made atomic</td><td>Quiz Q10, held back for the room</td></tr>
+      <tr><td>The five teardown questions no longer get a room discussion</td><td>Their answer keys are reference cards in <span class="mono">week-2-guardrails.md</span>. Run one if a pair goes there.</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t5-r-frame">
+  <span class="pairs">&#8596; 03:55 · the Friday night, at scale</span>
+  <h3>Forty thousand a month</h3>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <p>Somebody pays it by hand. Nobody ships a code change, a review, a merge and a deploy at 11pm on a Friday for one refund.</p>
+      <p><strong>Then the part that matters.</strong> The guard did not stop the payment, it moved the payment to a path you cannot see. The largest refund of the month is now the one with no row in the decision log, no rule attached, and no record of who approved. <strong>The guard made the record worse.</strong></p>
+      <p>A limit needs three things and they wrote one. A value. An owner, named as a role. And a way to move it that leaves a record. The third is column seven of the table they are about to write.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"We would have an on-call override."</strong> What is right: they have understood that the system needs a fast path. What is wrong: an override with no record cannot answer a regulator, and it is the second-worst of the three options. Ask what the override writes, and to where.</p>
+      <p><strong>Probe.</strong> "What is the fastest anybody can change the most expensive limit you enforce? Give it in hours. Then say what people do when they need it faster." The second half is where the real answer is.</p>
+    </div>
+  </details>
+  <blockquote>Every bit of friction you take out of the change path is a control you now have to rebuild on purpose.</blockquote>
+</article>
+
+<article class="card" id="t5-r-table">
+  <span class="pairs">&#8596; 03:59 · the artefact of the week</span>
+  <h3>The policy table</h3>
+  <h4>Reviewing another pair's</h4>
+  <details>
+    <summary><span class="chev">›</span> What to watch for while they write</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>Column three filled in as "the dispatch" for every row.</strong> That is cycle A remembered at half strength. Ask what a second team's tool would do to that row. It is the fastest way to find out whether 01:30 landed.</li>
+        <li><strong>Column four filled in as "limit" for every row.</strong> Ask which of their rules they would be willing to let somebody switch off for one tool.</li>
+        <li><strong>"TBD" in column six.</strong> That is the 2:14am failure written down in advance. Use that sentence when you see one, and you will see several.</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The five teardown questions, and where each one went</summary>
+    <div class="dbody">
+      <p>They were twelve minutes of pair argument plus ten in the room. The adversary round took that time. Where each landed:</p>
+      <div class="scroller"><table>
+        <thead><tr><th>Question</th><th>Now</th></tr></thead>
+        <tbody>
+          <tr><td>Q1 · policy across forty processes</td><td>Column three, and the first line of the 04:19 checkpoint</td></tr>
+          <tr><td>Q2 · who can move the number, how fast</td><td>Column seven, set up by the 03:55 frame</td></tr>
+          <tr><td>Q3 · the approval queue as a capacity plan</td><td>The second line of the 04:19 checkpoint, and topic 2's 02:20 debrief</td></tr>
+          <tr><td>Q4 · whose key is it</td><td>The third line of the 04:19 checkpoint</td></tr>
+          <tr><td>Q5 · the credit landed, the log write failed</td><td><strong>Quiz Q10, held back for the room.</strong> The one with no other home.</td></tr>
+        </tbody>
+      </table></div>
+      <p>All five answer keys survive as reference cards at the foot of <span class="mono">week-2-guardrails.md</span>. About half of rooms reach at least one while arguing about column three, so have them to hand.</p>
+    </div>
+  </details>
+  <blockquote>Another engineer should be able to build from your table without asking you a question.</blockquote>
+</article>
+
+<article class="card" id="t5-r-horizon">
+  <span class="pairs">&#8596; 04:39 · the horizon</span>
+  <h3>Who is allowed to say what a system may do</h3>
+  <details>
+    <summary><span class="chev">›</span> Sourcing discipline, and one hook still unverified</summary>
+    <div class="dbody">
+      <p>Bring two or three items from the field notes and say where each came from.</p>
+      <p><strong>The EU AI Act hook is attractive and is not cleared.</strong> Article 14 requires human oversight for high-risk systems, and the high-risk obligations became enforceable in August 2026. It is current, checkable and exactly on-brand. Read Article 14 and the application dates in Article 113 in the primary text before saying it in the room, and keep it out of the session file either way.</p>
+      <p>Week 1's lesson was that citing trade press for a regulatory claim is worse than saying nothing.</p>
+    </div>
+  </details>
+  <blockquote>A coding assistant will write the check in 30 seconds. It has no view on what the number should be, and it will not tell you that it has no view.</blockquote>
+</article>
+
+<article class="card" id="t5-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>Another engineer should be able to build from your table without asking you a question.</blockquote>
+  <p>Everything else is that sentence with a consequence attached. The ₹44,000 is what a number with no change path costs once. The seven columns are what a stranger needs.</p>
+</article>
+
+<article class="card" id="t5-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same five lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p><strong>Not rated.</strong> Four lines and no number in chat at 04:19: they are mid-argument and the quiz is one minute away. Three of the four lines are the teardown questions that lost their room slot, so if the room stalls on any of them the answer keys are the reference cards.</p>
+  <p>The last line belongs to topic 4 and it is the one the whole day has been circling.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t5-quiz">
+  <span class="k">04:20 · two of the eight asked in the room</span>
+  <h2>Question bank — governance</h2>
+  <p>Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The two from this topic</h3>
+  <hr class="hair">
+  <h4>Q8 · One row of your own policy table</h4>
+  <p class="qmeta">judge · not scored, and it is the same question the homework asks</p>
+  <p>One row of the policy table for your own system, all seven columns. <strong>Which cell could you not fill?</strong></p>
+  <p class="qmeta">Columns three and seven are where the gaps are, and <strong>"I could not fill the last one" is the correct answer for most of the room.</strong> That is the finding rather than a failure. Column three is the more interesting gap: a row that says "the dispatch" for every action is cycle A remembered at half strength.</p>
+  <hr class="hair">
+  <h4>Q10 · The credit landed and the log write failed</h4>
+  <p class="qmeta">judge · held back for the room, not on the check page</p>
+  <p>Two records disagree. Which one is true, what do you tell the regulator, and what would have had to exist last Monday for this to be answerable at all?</p>
+  <p class="qmeta ok">The ledger is true. It is the system of record and the log is a record about it. Write the intent row first, in the same transaction as the claim, then call the payments service, then mark the row complete.</p>
+  <p class="qmeta">Held back because it needs an argument rather than four options. <strong>Of the five teardown questions this is the one with no other home</strong>, so run it if you have four spare minutes anywhere after 03:55.</p>
+</article>
+
+<article class="card" id="t5-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4 class="quiet">Still open</h4>
+  <ul>
+    <li><strong>No blank seven-column template exists.</strong> Pairs write it from the page. A printable or pasteable blank would save two of the eleven minutes, and eleven is tight.</li>
+    <li><strong>The week 6 collection has no mechanism.</strong> The tables are collected on the day and the page says they feed week 6. Nothing stores them, so it is a physical or chat collection until the submissions surface takes them.</li>
+    <li><strong>The EU AI Act hook is unverified.</strong> Described on the horizon card. Keep it out of the session file either way.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<details class="topic" id="t6">
+  <summary><span class="num">6</span><span>Choosing a mechanism &#183; When the checker is a model</span><span class="when">03:05 to 03:20</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t6-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p>Every control the room built today is a predicate in code. That is the right default and nothing before this block contrasts with it, so the room leaves believing either that predicates are the only mechanism or that a model would have been cleverer. Both are wrong and this fifteen minutes is the correction.</p>
+  <p><strong>It exists because of one question a room of eight senior engineers always asks</strong>, usually around 02:40 while they are writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
+  <p><strong>Placement is deliberate.</strong> Straight after cycle C, when they have built three controls by hand and are at their most tempted to replace them with something cleverer.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script · what to do, in order</span><h3>Run of show</h3></div>
+
+
+<article class="card">
+  <span class="tag">Block 5 · 03:05 to 03:20</span>
+
+  <div class="beat" data-ref="t6-r-judge"><span class="t">03:05</span><div class="b">
+    <h4>When the checker is a model</h4>
+    <span class="pairs">Pairs 5 min · whole room 4 · the rule 4 · checkpoint 2</span>
+    <p>Put the case on screen and <strong>say nothing else</strong>. The standing two questions, in writing, before any discussion.</p>
+    <p>At 03:10, the reveal: the judge read the same field the agent read. Then rerun #8812 and get a different verdict, which is the second problem and the one nobody expects.</p>
+    <p>At 03:14, the five-line rule. Say where the two halves go: whether a judge is any good is a measurement, which is week 3; a second agent with its own loop is orchestration, which is week 5.</p>
+    <p class="qbadge">No model calls unless you run #8812 live. If you do, that is two requests against the day's allowance and it is worth it for the different verdict.</p>
+  </div></div>
+</article>
+
+<article class="card">
+  <span class="tag warn">One thing not to do here</span>
+  <h3>Do not run the confidence argument</h3>
+  <p>The 01:40 card owns self-reported model confidence. This block owns a second model as judge. <strong>They are one instinct answered from two sides</strong>, and running both is the same twenty minutes twice.</p>
+  <p>If somebody raises confidence here, say it was settled at 01:40 and give the one-line version: nobody in the organisation owns that number.</p>
+</article>
+
+
+</div>
+<div class="pane pane-ref" id="t6-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference · the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+
+<article class="card" id="t6-r-scope">
+  <span class="pairs">&#8596; the whole topic · read before you teach it</span>
+  <span class="tag">scope · written 2026-09-28</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nobody can tell whether their judge is any good</td><td>Week 3. It needs a labelled set and an agreement rate.</td></tr>
+      <tr><td>The injected ticket text still works</td><td>Week 4, and the adversary round hands it forward at 03:52</td></tr>
+      <tr><td>A second agent approving the first</td><td>Week 5. Orchestration, not scoring.</td></tr>
+      <tr><td>Classifier thresholds, and what a confusion matrix costs</td><td><strong>Nowhere in this course.</strong> Named in the families table and no further.</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t6-r-judge">
+  <span class="pairs">&#8596; 03:05 · the case, and the rule</span>
+  <h3>When the checker is a model</h3>
+  <h4>What went wrong</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer key</summary>
+    <div class="dbody">
+      <p>The judge read the same attacker-controlled field as the agent. It is not a second opinion, it is the same opinion with a different prompt. <strong>Two models reading one hostile field are one control, not two.</strong></p>
+      <p>Then rerun #8812 and get a different verdict. A guard with a pass rate rather than a behaviour is a guard nobody can write a runbook for.</p>
+      <p>The control is a deterministic ceiling underneath the judge. <strong>A model may widen what gets through a hard limit. It may never be the limit.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
+    <div class="dbody">
+      <p><strong>"Fix the judge prompt. Tell it to ignore instructions in ticket text."</strong> Most pairs get here, and it is the most common wrong answer in the field.</p>
+      <p>What is right: they have identified the mechanism correctly, which is that text became instruction. What is wrong is the shape of the answer. <strong>Do not settle it.</strong> Say plainly that week 4 will break that line live, and give the date. Naming the date is what stops it festering, and the adversary round twenty minutes later will hand them another go at it.</p>
+      <p><strong>Probe.</strong> "Your judge is right 94% of the time. You process 40,000 disputes a month. How many wrong verdicts is that, and which direction are they in?" 2,400, and nobody knows the direction, because nobody measured the two separately.</p>
+    </div>
+  </details>
+  <h4>The rule for choosing</h4>
+  <details>
+    <summary><span class="chev">›</span> The five lines, and the one that gets argued with</summary>
+    <div class="dbody">
+      <ol>
+        <li>Can a rule express it? A predicate or a store constraint. Stop.</li>
+        <li>Fuzzy but checkable against evidence you hold? Compare to the tool result.</li>
+        <li>Fuzzy with no evidence? A classifier if the taxonomy is fixed, a model if not.</li>
+        <li>Irreversible? A model may never be the only control.</li>
+        <li>Volume makes a human gate unaffordable? The threshold is wrong, or the action should not be automated yet.</li>
+      </ol>
+      <p><strong>Line 4 is the one that gets argued with.</strong> It is not a claim that models are unreliable. It is that a probabilistic control in front of an action with no afterwards gives you a failure rate you cannot bound and cannot explain to anybody afterwards. Say it that way and the argument stops.</p>
+    </div>
+  </details>
+  <blockquote>A model may widen what gets through a hard limit, and it may never be the limit.</blockquote>
+</article>
+
+<article class="card" id="t6-r-families">
+  <span class="tag">Reference · the catalogue</span>
+  <h3>The five families, and where each one belongs</h3>
+  <p>The room has used one family all day. The table on the learner page names the other four so that "guardrail" stops meaning one mechanism. <strong>Point at it, do not walk it.</strong> Four minutes is the whole budget and the rule matters more than the taxonomy.</p>
+  <details>
+    <summary><span class="chev">›</span> The strongest model-based pattern, and why it is not the judge</summary>
+    <div class="dbody">
+      <p><strong>The grounded verifier.</strong> Do not ask a model whether the answer is reasonable. Ask whether it matches what the tool returned. The truth is then external to the model and the check degrades to a comparison rather than an opinion.</p>
+      <p>The reference agent already carries the case for it and nobody has drawn attention to it: at 00:23 the model closed the ticket claiming a credit while the ledger said ₹0. That is one comparison between two values the system already holds, and nothing in the course builds it. Week 4 owns it.</p>
+      <p class="quiet">If a room has time and interest, this is the extension worth giving them. It is the one pattern in the family that is cheap, deterministic in its comparison, and unavailable to the attacker.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Critic loops, if somebody proposes one</summary>
+    <div class="dbody">
+      <p>A model reviewing its own output shares every blind spot with the thing it is reviewing. It improves format and catches arithmetic. It does not catch a decision the model was confidently wrong about, which is the failure class that matters here.</p>
+      <p>The maker-checker card from topic 2 already has the answer in a better form: two judgments only help when they are independent, and a critic is the same model with a different prompt.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t6-r-line">
+  <span class="pairs">&#8596; the close of the topic · same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A model may widen what gets through a hard limit, and it may never be the limit.</blockquote>
+  <p>Everything else is that sentence with a mechanism attached. The ₹90,000 is what it costs when the judge and the agent read the same field.</p>
+</article>
+
+<article class="card" id="t6-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic · same five lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  <p>The number in chat goes on the last line at 03:18, and that line is shared with topic 3 because the checkpoint covers both. <strong>Watch for a room that gets the selection rule wrong here</strong>, because it means the five lines were heard as a taxonomy rather than as an order of preference.</p>
+</article>
+
+
+</div>
+</div><!-- /teach -->
+<div class="head" id="t6-quiz">
+  <span class="k">04:20 · one of the eight asked in the room</span>
+  <h2>Question bank — choosing a mechanism</h2>
+  <p>Full keys and distractor rationale are in <span class="mono">docs/teaching/quiz/week-2.md</span>.</p>
+</div>
+
+<article class="card">
+  <h3>The one from this topic</h3>
+  <hr class="hair">
+  <h4>Q9 · The judge that read the ticket</h4>
+  <p class="qmeta">apply · new on 28 September, and the one to watch · renders on the learner check</p>
+  <p>You replace your ₹1,200 ceiling with a second model asked "is this credit reasonable?". It correctly allows an honest ₹8,400 that the ceiling refused. It then allows ₹90,000 on a ticket whose text says finance pre-approved it. What is the fix?</p>
+  <ul class="opt">
+    <li>a. Tell the judge, in its prompt, to ignore instructions found in ticket text</li>
+    <li>b. Keep the judge and put a deterministic ceiling underneath it <span class="ok">— correct</span></li>
+    <li>c. Use two judges and require both to agree</li>
+    <li>d. Raise the judge's confidence threshold</li>
+  </ul>
+  <p class="qmeta"><strong>c is the subtle one and it is worth a minute.</strong> Two judges reading the same attacker-written field are not independent, so they agree. Two of something correlated is one control. a is the answer most of the field gives, and week 4 breaks it. d is wrong for a reason worth naming: there is no threshold, because the judge returns a verdict rather than a calibrated probability.</p>
+  <p class="qmeta ok">A room that has just spent fifteen minutes here should get this. A room that gets it wrong has not taken the selection rule.</p>
+</article>
+
+<article class="card" id="t6-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state · checked 2026-09-28</span>
+  <h3>What is ready, and what is still open</h3>
+  <h4 class="quiet">Still open</h4>
+  <ul>
+    <li><strong>Ticket #8812 does not exist in the reference agent.</strong> The case is read off the page rather than run, which is enough for the beat. If you want the different-verdict demonstration live, it needs a ticket with that text and a judge path, and neither exists. <strong>Decide before the day</strong>, because "run it again and watch it change" is much stronger than describing it.</li>
+    <li><strong>No agreement-rate example.</strong> The 94% figure in the probe is illustrative and the room will ask where a real number comes from. The honest answer is week 3, and say so rather than inventing one.</li>
+  </ul>
+</article>
+
+
+  </div>
+</details>
+
+
+<div class="head" id="close">
+  <span class="k">the close · 04:50 to 05:00</span>
+  <h2>How the day ends</h2>
+  <p><strong>04:52, the same five statements</strong>, then one question out loud: who scored themselves lower than at 00:05? Hands up. Say why that is the good result, and that it means they found something in their own system today. If you skip this, the second rating reads as a test rather than as a finding.</p>
+  <p><strong>This session should produce more dropped scores than any other week</strong>, and the rebuild makes that more likely rather than less. Statement 1 is now about placement, and the adversary round exists to show them a caller they did not cover. If the hands are few, ask who got money out of somebody else's system, then ask whether their own would have held against the same route.</p>
+  <p><strong>04:56, two lines in chat</strong>, both answered by everybody. Keep the second one. "The thing I am still fuzzy on is ______" is what week 3 opens with, and it is the only place that input exists.</p>
+</div>
+
+<footer>
+  The Living Craft · week 2 · all six topics · instructor's copy, not for the room
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var body = document.body;
+  var btn = document.getElementById('splitbtn');
+  var beats = [].slice.call(document.querySelectorAll('.beat[data-ref]'));
+  var wide = matchMedia('(min-width:1200px)');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* data-ref holds a bare id. An earlier version of this script passed it
+     straight to querySelector, which read it as an element name, matched
+     nothing and silently did nothing on every click. Strip a leading # so
+     both spellings work. */
+  function cardFor(beat) {
+    var ref = (beat.getAttribute('data-ref') || '').replace(/^#/, '');
+    return ref ? document.getElementById(ref) : null;
+  }
+
+  /* The nearest reference column, because a collated page has six of them. */
+  function paneFor(el) {
+    return el ? el.closest('.pane-ref') : null;
+  }
+
+  function lightUp(beat) {
+    var card = cardFor(beat);
+    if (!card) return;
+    var pane = paneFor(card);
+    var scope = pane || document;
+    var was = scope.querySelector('.card.lit');
+    if (was) was.classList.remove('lit');
+    card.classList.add('lit');
+
+    var here = document.querySelector('.beat.here');
+    if (here && here !== beat) here.classList.remove('here');
+    beat.classList.add('here');
+
+    var behaviour = reduce ? 'auto' : 'smooth';
+    if (pane && body.classList.contains('split') && wide.matches &&
+        pane.scrollHeight > pane.clientHeight) {
+      var top = card.getBoundingClientRect().top
+              - pane.getBoundingClientRect().top + pane.scrollTop;
+      pane.scrollTo({ top: Math.max(0, top - 8), behavior: behaviour });
+    } else {
+      card.scrollIntoView({ behavior: behaviour, block: 'start' });
+    }
+  }
+
+  beats.forEach(function (beat) {
+    beat.addEventListener('click', function (e) {
+      if (e.target.closest('a, summary, button, pre, code')) return;
+      lightUp(beat);
+    });
+  });
+
+  function setSplit(on) {
+    body.classList.toggle('split', on);
+    if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on) {
+      [].forEach.call(document.querySelectorAll('.card.lit'), function (c) {
+        c.classList.remove('lit');
+      });
+    }
+  }
+  if (btn) {
+    btn.addEventListener('click', function () {
+      setSplit(!body.classList.contains('split'));
+    });
+  }
+  setSplit(wide.matches);
+})();
+</script>
+
+
+</body></html>

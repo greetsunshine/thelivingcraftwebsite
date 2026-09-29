@@ -44,8 +44,16 @@ import { getQuizItems } from '../../../lib/craft/quiz';
 import { dayPlan } from '../../../lib/craft/schedule';
 import { releases as sessionReleases } from '../../../lib/craft/release';
 import { renderMarkdown } from '../../../lib/craft/markdown';
+import { topics as topicPages } from '../../../lib/craft/teaching-pages';
 
 const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - b.data.week);
+// The instructor topic pages this week has stored, if any. Keyed by week so the
+// markup below can read them without a second await inside the map.
+const topicsByWeek = new Map(
+  await Promise.all(
+    sessions.map(async (w) => [w.data.week, await topicPages(w.data.week, 'instructor')] as const),
+  ),
+);
 const bank = await getQuizItems();
 const releaseRows = await sessionReleases();
 const releasedWeeks = new Set((releaseRows ?? []).map((r) => r.week));
@@ -152,6 +160,23 @@ const notesCount = noteFiles.length;
           the learner's copy ↗
         </a>
       </header>
+      {(topicsByWeek.get(w.data.week) ?? []).length > 0 && (
+        <nav class="tp-nav">
+          <span class="tp-lab mono">Topic pages</span>
+          {(topicsByWeek.get(w.data.week) ?? []).map((t) => (
+            <a
+              class="tp mono"
+              href={`/craft/admin/teaching/${w.data.week}/topic-${t.n}`}
+              target="_blank"
+              rel="noopener"
+              title={t.title}
+            >
+              {t.n} · {t.title.replace(/^.*?·\s*/, '')}
+            </a>
+          ))}
+        </nav>
+      )}
+
 
       <p class="muted summary">{w.data.summary}</p>
 
@@ -384,4 +409,13 @@ const notesCount = noteFiles.length;
   .prose :global(table) {
     font-size: 12px;
   }
+
+  /* The instructor topic pages, one chip each, under the week's header. */
+  .tp-nav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 14px; }
+  .tp-lab { color: var(--ink-2); margin-right: 4px; }
+  .tp {
+    text-decoration: none; background: var(--paper-2); color: var(--ink-1);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; line-height: 1.3;
+  }
+  .tp:hover { background: var(--sun); color: #F5F0E6; }
 </style>

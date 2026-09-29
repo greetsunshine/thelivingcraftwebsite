@@ -13,6 +13,7 @@ import { dayPlan } from '../../lib/craft/schedule';
 import { inlineCode } from '../../lib/craft/text';
 import { threadLabel, WEIGHT_LABEL } from '../../lib/craft/threads';
 import { releasedWeeks, isOpen, shutBecause } from '../../lib/craft/release';
+import { topics as topicPages } from '../../lib/craft/teaching-pages';
 
 export const prerender = false;
 
@@ -48,6 +49,10 @@ const { Content } = await render(session);
 const released = await releasedWeeks();
 const open = isOpen(session.data.week, session.data.status, released);
 const shut = shutBecause(session.data.week, session.data.status, released);
+
+// The week's topic pages, if this week has any. Five of the six do not yet, and
+// an empty list renders nothing rather than an empty panel.
+const weekTopics = open ? await topicPages(session.data.week, 'learner') : [];
 
 // The day as one ordered list — blocks, checkpoints and the two pair offsets
 // merged by dayPlan() rather than by this page, so the console and /craft/live
@@ -114,6 +119,31 @@ const isExternal = (url: string) => !url.startsWith('/');
                   {outcomes.map((o) => (
                     <li>
                       <span class="o-stem mono">Right now, I could</span> {o.text}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
+            {weekTopics.length > 0 && (
+              <section class="panel">
+                <h2 class="p-title">The topics</h2>
+                <p class="p-note">
+                  One page each, and each one is the argument in one piece rather than in clock
+                  order. Start with topic 0. Write on them — every page asks you to commit to an
+                  answer before it shows you one.
+                </p>
+                <ol class="topiclist">
+                  {weekTopics.map((t) => (
+                    <li>
+                      <a class="row hoverable" href={`/craft/week-${session.data.week}/topic-${t.n}`}>
+                        <span class="klabel accent tp-n">{t.n}</span>
+                        <span class="body">
+                          <span class="t">{t.title}</span>
+                          <span class="s mono">{t.when}</span>
+                        </span>
+                        <span class="arrow">&#8594;</span>
+                      </a>
                     </li>
                   ))}
                 </ol>
@@ -385,6 +415,16 @@ const isExternal = (url: string) => !url.startsWith('/');
   .m-pair-review .m-label { color: var(--clay); }
 
   /* --- reading and threads --------------------------------------------- */
+  /* The topic list. `row hoverable` comes from craft.css, so this only adds the
+     numbering column and the spacing between rows. */
+  .topiclist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .topiclist .row { display: flex; align-items: baseline; gap: 16px; text-decoration: none; }
+  .topiclist .tp-n { flex: none; min-width: 1.5em; }
+  .topiclist .body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .topiclist .body .t { font-weight: 600; }
+  .topiclist .body .s { font-size: 13px; color: var(--muted, #526259); }
+  .topiclist .arrow { flex: none; color: var(--muted, #526259); }
+
   .reads { list-style: none; margin: 0; padding: 0; }
   .reads li {
     display: flex;
