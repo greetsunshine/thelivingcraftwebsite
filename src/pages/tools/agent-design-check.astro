@@ -106,6 +106,7 @@
  */
 import '../../styles/templates/tool.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import {
@@ -396,6 +397,11 @@ const schema: unknown[] = [
     else on the page. Using the tool creates no lead record, which is the
     roadmap's requirement and is true by construction — there is no endpoint to
     create one with.
+
+    29 September 2026: the shared closing row (ClosingCta) follows the list, at
+    Sunil's request of 28 September for a cohort call to action at the foot of
+    every tool. It adds two links and the gated questions download. It adds no
+    field, so the no-sales-form rule above still holds.
   */}
   <section class="wrap adc-after" aria-labelledby="after-h">
     <h2 id="after-h">If a question here landed</h2>
@@ -421,6 +427,9 @@ const schema: unknown[] = [
         the immediate problem rather than the practice of making them.
       </li>
     </ul>
+    <ClosingCta note={false}>
+      <button slot="download" class="btn btn-ghost" type="button" data-gate="md">Download the questions&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+    </ClosingCta>
   </section>
   <ResourceGate resource="agent-design-check" lead="The questions are the check itself, blank: all nineteen, with what each answer leads to. The text file is the summary of your nineteen answers, built in your browser; your answers are not sent." manual />
 </PracticeLayout>

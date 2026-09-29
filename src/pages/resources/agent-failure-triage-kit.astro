@@ -14,6 +14,7 @@
 // links somewhere a visitor cannot open is worse than one that does not link
 // there yet.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -436,12 +437,10 @@ const schema = [
       <div class="prose">
         <p>{FINAL_BODY}</p>
       </div>
-      <div class="nextrow">
-        <a class="btn btn-primary" href="/resources/agent-authority-review">
-          The Agent Authority Review&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="btn" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-      </div>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="print">Print or save as PDF</button>
+        <a slot="links" href="/resources/agent-authority-review">The Agent Authority Review</a>
+      </ClosingCta>
       <p class="prose-note">
         {REPO_URL ? (
           <>

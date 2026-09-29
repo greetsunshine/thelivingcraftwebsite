@@ -31,6 +31,7 @@
 // imports that module too (Vite bundles it), so the bar, every computed line,
 // the result and (on the server) the PDF all read one set of formulas.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -557,11 +558,9 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
           specification that made the cheap option good.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow">↓</span></button>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>

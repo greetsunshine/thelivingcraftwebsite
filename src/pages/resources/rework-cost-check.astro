@@ -53,6 +53,7 @@
  * is in tools/rework-cost-check/README.md.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -661,10 +662,9 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <span class="eyebrow">Closing</span>
         <h2>Stopping has a cost you can list. Not stopping has no ceiling.</h2>
       </div>
-      <p class="hero-cta nextrow">
-        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">→</span></button>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(PUBLISHED_AT)} · Content CC BY 4.0 · Code MIT · © The Living Craft</p>
     </div>
   </section>

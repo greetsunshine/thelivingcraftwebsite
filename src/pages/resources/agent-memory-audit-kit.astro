@@ -18,6 +18,7 @@
 // data module asserts them, and the page prints the counts from the arrays
 // rather than from a literal, so a wrong count cannot survive a build.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import BrandLockup from '../../components/site/BrandLockup.astro';
@@ -350,10 +351,9 @@ const sections = [
         <p>{CLOSE_BODY}</p>
         <p>{CLOSE_CTA}</p>
       </div>
-      <p class="hero-cta nextrow">
-        <a class="btn btn-primary" href="/#apply" data-apply>Apply for a seat&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-      </p>
+      <ClosingCta note={false}>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate={DOWNLOADS.zip} data-download="zip">Download full kit (ZIP)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · {LICENCE_LINE}</p>
     </div>
   </section>

@@ -48,6 +48,7 @@
 // flattens it without this page knowing. A reader who turns sound off or asks
 // for less motion loses nothing they need.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
@@ -403,12 +404,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
         </ul>
       </div>
 
-      <p class="hero-cta">
-        <a class="btn btn-ghost" href={PRE_READ.kitUrl}
-          >The Agent Failure Triage Kit&nbsp;<span class="arrow" aria-hidden="true">→</span></a
-        >
-        <a class="btn btn-ghost" href="/resources">All resources</a>
-      </p>
+      <ClosingCta>
+        <a slot="links" href={PRE_READ.kitUrl}>The Agent Failure Triage Kit</a>
+      </ClosingCta>
       <p class="pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>

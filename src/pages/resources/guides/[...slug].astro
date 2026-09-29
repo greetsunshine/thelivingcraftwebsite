@@ -42,6 +42,7 @@
 //    rather than adding the content to justify it.
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import ClosingCta from '../../../components/site/ClosingCta.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 
 export const prerender = false;
@@ -225,6 +226,14 @@ const schema: unknown[] = [
         </aside>
       )
     }
+
+    {/* The shared closing row, at Sunil's request of 28 September 2026: every
+        tool and resource page ends in a cohort call to action. A guide has no
+        download, so the row carries the two cohort links only. */}
+    <aside class="cluster onward" aria-labelledby="onward-h">
+      <h2 id="onward-h">If you would rather practise this with someone</h2>
+      <ClosingCta />
+    </aside>
   </article>
 </PracticeLayout>
 

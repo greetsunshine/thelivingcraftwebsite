@@ -37,6 +37,7 @@
  * file exists and, while it does not, says so instead of offering a button.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { existsSync } from 'node:fs';
@@ -45,13 +46,11 @@ import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { longDate } from '../../data/resources';
 import {
   ANSWERS,
-  APPLY_URL,
   ATTEMPT_FIELDS,
   BLANK_BOUNDARIES,
   BREAK_EVEN_NOTE,
   CAVEATS,
   CEILING_FIELDS,
-  COHORT_CTA,
   COHORT_HEADING,
   DOWNLOAD_FILE,
   DOWNLOAD_PENDING,
@@ -813,12 +812,17 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
           production.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href={APPLY_URL} data-apply>
-          {COHORT_CTA}&nbsp;<span class="arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-      </p>
+      <ClosingCta note={false}>
+        <Fragment slot="download">
+          {workbookReady ? (
+            <button class="btn btn-ghost" type="button" data-gate="xlsx" data-download="cost-ceiling-workbook">
+              {PRIMARY_CTA}&nbsp;<span class="arrow" aria-hidden="true">↓</span>
+            </button>
+          ) : (
+            <span class="hero-note mono pending">{DOWNLOAD_PENDING}</span>
+          )}
+        </Fragment>
+      </ClosingCta>
       <p class="mono faint pubdate">
         Published {longDate(PUBLISHED_ON)} · free to use, to change and to pass on
       </p>

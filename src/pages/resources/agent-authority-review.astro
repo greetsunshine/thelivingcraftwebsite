@@ -20,6 +20,7 @@
 // the tally in the bar, the result, the copied sheet and the PDF all read one
 // rubric: readRow() and readSheet().
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
@@ -461,11 +462,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           managers and architects who ship to production.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
-      </p>
+      <ClosingCta note={false}>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>

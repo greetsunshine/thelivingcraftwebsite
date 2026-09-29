@@ -33,6 +33,7 @@
 // its bound: one key, only what the reader typed, every read and write in
 // try/catch, and the page works with storage blocked.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -401,9 +402,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           reads. That row is the one to open the repository for.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="md">Download the blank worksheet&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>

@@ -8,9 +8,10 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 28 September 2026
+**Last updated:** 29 September 2026
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs`, off `origin/main`, one draft PR against
-`main` for all four tasks from Sunil's call of 25 September (below). PR #31
+`main` for the four tasks from Sunil's call of 25 September and a fifth from his call of
+28 September (below). The PR is ready for review, no longer a draft. PR #31
 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`, below) are merged.
 The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
@@ -140,6 +141,42 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     default encoding, so ₹, → and curly quotes in the POC and model selection workbooks
     (pushed in 9d4b9b9) were mojibake. Both now decode UTF-8, and a test fails on mojibake
     in any of the four tool workbooks.
+  - **Still open from task 4:** the download gate's fixed wording says "Your copy" and "What
+    you typed into the tool goes into the file" for every file, including the blank
+    workbooks, where neither is true. The fix is in `ResourceGate.astro`: pick the wording
+    by file type. Not made yet.
+- [x] **5. Closing cohort CTA on every tool and resource page** (29 September). Sunil, call
+  of 28 September: "At the bottom of each of the tools or any of the resources that we give,
+  there should be a CTA that takes them to, you know, join or explore."
+  - **One component, `src/components/site/ClosingCta.astro`.** "Explore the cohort" to `/`
+    (primary), "Apply" to `/#apply`, a `download` slot for the page's own gated button, a
+    `links` slot for quiet links, then "All resources". One optional line about the cohort,
+    whose one figure (the week count) comes from `facts.ts`. Hidden in print. The row had
+    been written by hand on each page, in three different wordings.
+  - On 22 pages: the eleven tools and kits under `/resources`, `/tools/agent-design-check`,
+    the three worksheets, the four templates and the four guides (the last two through their
+    one dynamic route each). Out of scope: `/`, `/caio`, `/assessment`, `/latest`, `/craft`,
+    and the index pages `/resources` and `/tools`.
+  - The worksheets and templates carried "two links onward, no pitch". Sunil's request
+    reverses that; each comment says so with the date. Their onward text is unchanged.
+  - **Measured.** Both links carry `data-cta` (`cohort` or `form`) and
+    `data-cta-placement="resource-close"`. `Track.astro` sends `cta_click` for any
+    `[data-cta]` before its older rules. Until now a link to `/` sent nothing. The Apply
+    link keeps `data-apply`, which the memory kit and the cost-ceiling workbook already
+    listen for.
+  - **`/api/track` now accepts `/tools/` as well as `/resources/`.** Without it, every event
+    from the design check, its page views included, was dropped with a 204. That page
+    already told readers their page view was counted. `/craft` still cannot match.
+  - The cost-ceiling workbook still has no file, and its closing row says so instead of
+    showing a button, as its hero does. `COHORT_CTA` and `APPLY_URL` in its data module
+    were dead once the row moved and are gone.
+  - Checked on `npm run dev` at 1440 and 390px on all 22 pages: the row renders once, no
+    sideways scroll, every download in it opens the gate, "Explore the cohort" lands on `/`
+    and Apply on `/#apply` with the form in view, and each click sends one `cta_click` with
+    the page's path, `to` and `placement`. Hidden in print. Google Tag Manager loads on the
+    same 12 of the 22 pages as on production. Playwright cannot read a `sendBeacon` body, so
+    the test wraps `Blob` to read it; an async read lost events to the navigation and looked
+    like a bug for one run.
 
 ---
 

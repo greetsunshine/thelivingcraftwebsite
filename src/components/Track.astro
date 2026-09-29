@@ -119,6 +119,20 @@ const { region = null } = Astro.props;
         return;
       }
 
+      // The closing row on every tool and resource page (ClosingCta.astro).
+      // A link to `/` matches none of the rules below, so without this the
+      // console could not show whether that row converts. `to` is the link's
+      // own label for where it goes ('cohort' or 'form'); the page is the
+      // event's path, as for every other event.
+      var cta = e.target && e.target.closest ? e.target.closest('[data-cta]') : null;
+      if (cta) {
+        send('cta_click', {
+          to: cta.getAttribute('data-cta'),
+          placement: cta.getAttribute('data-cta-placement') || 'unknown',
+        });
+        return;
+      }
+
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
       if (!a) return;
 

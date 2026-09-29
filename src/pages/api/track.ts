@@ -53,11 +53,19 @@ const TYPES = new Set([
  */
 const PATHS = new Set(['/', '/caio', '/assessment']);
 
-/** The one prefix that is allowed, alongside the exact paths above. */
-const TRACKED_PREFIX = '/resources/';
+/**
+ * The prefixes that are allowed, alongside the exact paths above.
+ *
+ * `/tools/` joined on 29 September 2026. The Agent Design Check lives there and
+ * carries the same closing cohort row as every resource page; without the
+ * prefix its clicks, and its page views, were dropped here with a 204. The page
+ * already told its readers that "the page view itself is counted", which was
+ * not true until now. `/tools/` cannot reach `/craft`.
+ */
+const TRACKED_PREFIXES = ['/resources/', '/tools/'];
 
 const isTracked = (path: string): boolean =>
-  PATHS.has(path) || (path.startsWith(TRACKED_PREFIX) && !path.includes('..'));
+  PATHS.has(path) || (TRACKED_PREFIXES.some((p) => path.startsWith(p)) && !path.includes('..'));
 
 // 204 with no body: the browser sends this with sendBeacon or keepalive and
 // never reads a response. Returning JSON nobody parses is just bytes.

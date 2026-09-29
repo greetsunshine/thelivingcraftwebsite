@@ -803,6 +803,14 @@ like `downloads/` and never under `public/`. A renderer must not grow its own `W
 colours or `clean()` again: three of them did, and the brand drifted in four places. The
 memory kit is printed from its page by `npm run build:kit` with the same brand.
 
+**Every tool and resource page ends in the shared closing row**,
+[src/components/site/ClosingCta.astro](src/components/site/ClosingCta.astro) (Sunil,
+28 September 2026, for conversion). It holds "Explore the cohort" to `/`, "Apply" to
+`/#apply`, the page's own download in the `download` slot (still a `data-gate` button,
+never a file link), and "All resources". Do not write that row out on a page again: it
+had drifted into three wordings when each page owned it. Its links carry `data-cta`, which
+is how `Track.astro` counts a click on a link to `/`.
+
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,
 unapproved until reviewed. A resource without one still saves; its delivery is recorded
