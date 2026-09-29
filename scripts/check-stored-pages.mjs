@@ -53,8 +53,14 @@ for (const week of modules) {
   try {
     execFileSync('node', ['scripts/build-teaching-pages.mjs', String(week)], { stdio: 'pipe' });
   } catch (e) {
+    // The HEAD of stderr, not the tail. A node stack ends in loader frames and a
+    // version banner, so `slice(-3)` printed "at async asyncRunEntryPointWith-
+    // ESMLoader" and hid the one line that says what went wrong. This check
+    // exists to be read by somebody who was not here when it broke.
+    const lines = String(e.stderr ?? e).trim().split('\n');
+    const useful = lines.filter((l) => !/^\s+at /.test(l) && !/^Node\.js v/.test(l)).slice(0, 6);
     console.log(`  FAIL   week ${week} — the generator threw`);
-    console.log(`         ${String(e.stderr ?? e).trim().split('\n').slice(-3).join('\n         ')}`);
+    console.log(`         ${(useful.length ? useful : lines.slice(0, 6)).join('\n         ')}`);
     failed += 1;
     continue;
   }
