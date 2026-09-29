@@ -37,9 +37,19 @@ export interface Props {
   schema?: unknown[];
   /** Series anchors for the nav — passed in because the series are data-driven. */
   sections?: { id: string; title: string }[];
+  /**
+   * The id of the section on this page that says how to use it, for the
+   * footer's "How to use this" link. Omitted, the link is not drawn.
+   *
+   * Until 29 September 2026 the footer linked every page to `#how`, which only
+   * the cost-ceiling workbook had, so the link went nowhere on nine pages (the
+   * outreach readiness handoff, item 3). A page names its own section now, and
+   * a page with no such section gets no link rather than an empty destination.
+   */
+  howTo?: string;
 }
 
-const { title, description, canonical, schema, sections = [] } = Astro.props;
+const { title, description, canonical, schema, sections = [], howTo } = Astro.props;
 // `lc-v5` and not `lc-v5-read` on <body>: a tool takes V5's chrome and ground,
 // and keeps the design system's working heading and 16px workspace.
 const year = new Date().getFullYear();
@@ -74,7 +84,7 @@ const year = new Date().getFullYear();
           <div class="foot-col">
             <h2>Resources</h2>
             {sections.map((s) => <a href={`#${s.id}`}>{s.title}</a>)}
-            <a href="#how">How to use these</a>
+            {howTo && <a href={`#${howTo}`}>How to use this</a>}
           </div>
           <div class="foot-col">
             <h2>The practice</h2>

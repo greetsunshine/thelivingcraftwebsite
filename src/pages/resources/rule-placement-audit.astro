@@ -34,6 +34,7 @@
 // try/catch, and the page works with storage blocked.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -98,7 +99,7 @@ const schema = [
 const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/rule-placement-audit" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/rule-placement-audit" schema={schema} howTo="about">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -115,6 +116,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
         <button class="btn btn-ghost" id="md-hero" type="button" data-gate="md">Download the blank worksheet&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

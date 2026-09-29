@@ -49,6 +49,7 @@
 // for less motion loses nothing they need.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
@@ -115,6 +116,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   description={description}
   canonical="/resources/agent-failure-triage-quiz"
   schema={schema}
+  howTo="about"
 >
   <!-- Hero. The ivory weave sits behind it and nowhere else. -->
   <section class="hero weave" id="top" style="border-top:0">
@@ -130,6 +132,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         answers stay in this browser
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

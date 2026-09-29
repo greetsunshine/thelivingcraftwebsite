@@ -146,7 +146,7 @@ def label_row(ws, row: int, text: str, cols: int, *, bg=PAPER):
     ws.row_dimensions[row].height = 22
 
 
-def read_me(wb, title: str, credit: str, url: str, blocks: list[tuple[str, list[str]]]):
+def read_me(wb, title: str, credit: str, url: str, cohort: tuple[str, str], blocks: list[tuple[str, list[str]]]):
     ws = wb.create_sheet("Read me")
     ground(ws, 6, 200)
     ws.column_dimensions["A"].width = 110
@@ -160,6 +160,16 @@ def read_me(wb, title: str, credit: str, url: str, blocks: list[tuple[str, list[
             put(ws, r, 1, text, f=font(11), align=WRAP)
             r += 1
         r += 1
+    # The cohort, last, on forest with ivory text, as the run-cost workbook and
+    # the PDFs end. Outreach readiness handoff, 28 September 2026: every file a
+    # reader keeps carries the invitation and a working application address.
+    invitation, apply_url = cohort
+    put(ws, r, 1, "The Living Craft cohort", f=font(13, True, IVORY, name=DISPLAY), bg=FOREST)
+    r += 1
+    put(ws, r, 1, invitation, f=font(11, color=IVORY), bg=FOREST, align=WRAP)
+    r += 1
+    c = put(ws, r, 1, f"Apply at {apply_url}", f=Font(name=BODY, size=11, bold=True, color=IVORY, underline="single"), bg=FOREST)
+    c.hyperlink = apply_url
     protect(ws)
     return ws
 
@@ -286,6 +296,7 @@ def build_poc(d: dict, out: Path):
         d["toolName"],
         d["credit"],
         d["pageUrl"],
+        (d["cohort"], d["applyUrl"]),
         [
             ("What this tool is for", d["purpose"]),
             ("How to run it", d["howToRun"]),
@@ -472,6 +483,7 @@ def build_msel(d: dict, out: Path):
         d["toolName"],
         d["credit"],
         d["pageUrl"],
+        (d["cohort"], d["applyUrl"]),
         [
             ("What this tool is for", d["purpose"]),
             ("How to run it", d["howToRun"]),
@@ -626,6 +638,7 @@ def build_auth(d: dict, out: Path):
         d["toolName"],
         d["credit"],
         d["pageUrl"],
+        (d["cohort"], d["applyUrl"]),
         [
             ("What this tool is for", d["purpose"]),
             ("The five questions, asked for every step", [f"{x['n']}. {x['name']}: {x['ask']}" for x in d["questions"]]),

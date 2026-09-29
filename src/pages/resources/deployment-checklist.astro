@@ -45,6 +45,7 @@
 //    without the script: a reader can print from their own browser menu.
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../data/facts';
 import {
@@ -165,6 +166,7 @@ const schema: unknown[] = [
           ))
         }
       </nav>
+      <CohortIntroLink />
     </header>
 
     {/* The live region the print button announces into. */}
@@ -335,7 +337,7 @@ const schema: unknown[] = [
         <a class="textlink" href="/contact/"> say so</a> — an awkward case is the most useful
         thing anybody sends.
       </p>
-      <ClosingCta note={false}>
+      <ClosingCta>
         <button slot="download" class="btn btn-ghost" type="button" data-gate="csv">Download {file}&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </ClosingCta>
     </aside>

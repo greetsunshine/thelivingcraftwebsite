@@ -56,6 +56,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
 import ClosingCta from '../../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 import { blankTemplateText, resolveTokens as resolve, templateFilenames, workedTemplateText } from '../../../lib/resources/template-text';
@@ -251,6 +252,7 @@ const schema: unknown[] = [
         <span class="sep" aria-hidden="true">·</span>
         <a href="#using">How to use it</a>
       </p>
+      <CohortIntroLink />
     </header>
 
     {/* The live region every copy button announces into. */}
@@ -437,7 +439,7 @@ const schema: unknown[] = [
         The <a class="textlink" href="/programmes/">open cohort</a> is where this is practised on
         a system you build, with the reviews run in the room.
       </p>
-      <ClosingCta note={false}>
+      <ClosingCta>
         <button slot="download" class="btn btn-ghost" type="button" data-gate="md" data-variant="blank">Download {blankFile}&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </ClosingCta>
     </aside>

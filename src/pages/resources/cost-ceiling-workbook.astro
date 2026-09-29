@@ -38,6 +38,7 @@
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { existsSync } from 'node:fs';
@@ -162,6 +163,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
   description={META_DESCRIPTION}
   canonical={PATH}
   schema={schema}
+  howTo="how"
 >
   {/* ══ 1 · Header ═══════════════════════════════════════════════════════ */}
   <section class="hero" id="top" style="border-top:0">
@@ -184,6 +186,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
       </p>
       <p class="hero-note mono">{SUPPORTING_LINE}</p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

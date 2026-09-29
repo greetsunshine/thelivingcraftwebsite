@@ -177,6 +177,47 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     same 12 of the 22 pages as on production. Playwright cannot read a `sendBeacon` body, so
     the test wraps `Blob` to read it; an async read lost events to the navigation and looked
     like a bug for one run.
+- [x] **6. Outreach readiness: the website items in Alchemy's Ein handoff** (29 September).
+  Source: `docs/2026-09-28_Outreach_Readiness-20260929T045849Z-1-001/` in the main checkout,
+  `04-website-Ein-handoff.html` and `website-cta-audit.csv`. **Not committed**: it is 67 MB,
+  mostly video, and it is Alchemy's package, not ours.
+  - *Item 1, the chat label.* "Ask about the cohort" on `/` and the resource pages; `/caio`,
+    `/assessment` and `/latest` keep "Ask about the practice". The launcher's accessible name
+    and the panel's first line now say it is an automated assistant, not Sunil.
+    **Open with Sunil:** `/` now shows two controls with that label, the chat and the human
+    enquiry form ("Ask about the cohort", CohortPage.astro). They do different things.
+  - *Item 2, contextual CTAs.* `CohortIntroLink.astro`, one text line under each of the 22
+    pages' introductions, counted as `resource-intro`. The closing row's line is now the
+    handoff's own per-page wording plus one sentence built from facts.ts
+    (`src/data/resource-cohort-copy.ts`). Print shows that line with the full application
+    address in place of the buttons.
+  - *Item 3, the nine broken `#how` links.* ResourcesLayout linked every page's footer to
+    `#how`, which only the cost-ceiling workbook had. It takes `howTo` now; each page names
+    its real section; the memory kit has none and gets no link. The three stepped tools show
+    their Start step before following the link.
+  - *Generated files* ("contextual cohort copy plus a working application URL"): the
+    authority review PDF gained the cohort panel the other three already had; the template
+    Markdown (both variants), the two blank sheets, the three tool workbooks, the rework
+    workbook and the design check's text summary end with the invitation and the address.
+    The memory kit PDF and ZIP were rebuilt from the page, so they carry the print line.
+    Worksheet CSVs do not: a CSV row is not a place for a sentence.
+  - `cohort.liveHours = 30` joined facts.ts; `/` read "30" as typed text in three places and
+    now reads the field. `cohort-copy.ts` still types it once, in an FAQ answer: that module
+    cannot import facts.ts without a cycle.
+  - `tools/rework-cost-check/build_xlsx.py` now runs its dump with `tsx`, because the dump
+    reads the invitation module. Every value in the workbook was diffed in Excel before and
+    after: only the three new cover cells changed.
+  - **Not done, and not ours to do:** items 4 and 5 (the D03 and D07 caption promises, and the
+    offer facts with Sunil and finance), the email nurture modules (no approved consent
+    wording, and no provider), every provider, persistence and delivery test in the handoff's
+    test table, and the video and D08 to D12 work.
+  - **Date-aware copy is by way of facts.ts.** The handoff wants no "October" invitation after
+    enrolment closes. There is no closing date to test against, so the sentence names
+    `cohort.startsOn`; closing enrolment means changing that field, or switching to
+    `EVERGREEN_SENTENCE` in resource-cohort-copy.ts.
+  - The chat pill still passes over the step pips and "Start scoring" on the three stepped
+    tools at 390px while the reader scrolls. It covers nothing on a result or an application
+    button. Its corner position is Sunil's decision of 16 September.
 
 ---
 

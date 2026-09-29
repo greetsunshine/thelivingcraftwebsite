@@ -271,3 +271,8 @@ A change to the prompt, the model or a tool’s scope goes through a review that
 *Why it matters:* Those three change behaviour without changing anything a test was written against. A prompt edit that widens what the system will attempt is a change to the design, and it should leave the same trace a code change does — otherwise the record of why the system behaves as it does has a hole in it exactly where the behaviour was decided.
 
 *Example:* Widening the refund tool from "within the policy window" to "within the window, or where a manager has approved" is a design change with a record, not a configuration tweak.
+
+
+---
+
+Take your unanswered design questions into practical work and review. Explore The Living Craft’s October 2026 cohort: 30 live hours with Sunil Mathew, plus independent work. Apply at https://learning.thelivingcraft.ai/#apply

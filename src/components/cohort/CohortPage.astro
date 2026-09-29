@@ -166,7 +166,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     <p class="route-kicker">Open cohort</p>
     <h2>Join the open cohort</h2>
     <p>{FORMS.application.intro}</p>
-    <p class="route-fact">30 live hours with Sunil, plus independent work.</p>
+    <p class="route-fact">{cohort.liveHours} live hours with Sunil, plus independent work.</p>
     <p>Joining as an individual — self-funded or exploring employer support.</p>
     <p class="route-small">An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</p>
     <p class="route-small">
@@ -557,7 +557,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
       <div class="signature quote-attrib">— Sunil Mathew</div>
       <p class="scope-label">Open cohort</p>
       <p class="after-quote">
-        That is what the 30 live hours are for. You bring a design decision from your own
+        That is what the {cohort.liveHours} live hours are for. You bring a design decision from your own
         work. He shows you how he would examine it, and what evidence would settle it.
       </p>
     </div>
@@ -606,7 +606,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
   <div class="commit">
     <div class="commit-copy">
       <p class="body-copy">
-        The programme includes 30 live hours with Sunil, plus independent work.
+        The programme includes {cohort.liveHours} live hours with Sunil, plus independent work.
         Confirm the session schedule, independent-work commitment, attendance support
         and access arrangements before joining.
       </p>

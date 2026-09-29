@@ -30,7 +30,9 @@ import {
 } from '../../data/authority-review';
 
 import { publishedResources } from '../../data/resources';
-import { ERROR, FOREST, INK, LINE, MARGIN, MEASURE, MUTED, Writer, brandedPages, openBrandedDoc } from './pdf-writer';
+import { cohort } from '../../data/facts';
+import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
+import { ERROR, FOREST, INK, IVORY, LINE, MARGIN, MEASURE, MUTED, Writer, brandedPages, openBrandedDoc } from './pdf-writer';
 
 export interface AuthorityPdfInput {
   rows: SheetRow[];
@@ -265,6 +267,41 @@ export async function renderAuthorityReviewPdf(input: AuthorityPdfInput): Promis
 
   w.gap(8);
   w.text(PROTOCOL_FINDING, { size: 9.5, color: MUTED });
+  w.gap(14);
+
+  // ---- the cohort, on a forest panel with ivory text ----------------------
+  // The other three scored PDFs end this way; this one did not until the
+  // outreach readiness handoff of 28 September 2026 asked for "contextual
+  // cohort copy plus a working application URL" in every generated PDF. The
+  // words are the page's closing line, and the facts come from facts.ts.
+  const cta = {
+    heading: 'The Living Craft cohort',
+    lines: [cohortInvitationFor('/resources/agent-authority-review'), `${cohort.admission}. Applying commits you to nothing.`],
+    action: `Apply at ${APPLY_URL}`,
+  };
+  const pad = 16;
+  const inner = MEASURE - pad * 2;
+  const ctaH =
+    pad * 2 +
+    w.heightOf(cta.heading, bold, 15, inner) +
+    6 +
+    cta.lines.reduce((h, l) => h + w.heightOf(l, body, 10, inner) + 4, 0) +
+    6 +
+    w.heightOf(cta.action, bold, 10, inner);
+  w.ensure(ctaH + 12);
+  w.panel(ctaH, FOREST, 10);
+  const panelTop = w.cursor;
+  w.gap(pad);
+  w.text(cta.heading, { font: bold, size: 15, indent: pad, width: inner, color: IVORY });
+  w.gap(6);
+  for (const l of cta.lines) {
+    w.text(l, { size: 10, indent: pad, width: inner, color: IVORY });
+    w.gap(4);
+  }
+  w.gap(6);
+  w.text(cta.action, { font: bold, size: 10, indent: pad, width: inner, color: IVORY });
+  w.link(MARGIN.left, panelTop, MEASURE, ctaH, APPLY_URL);
+  w.gap(pad + 6);
 
   w.finish(`${TOOL_NAME} · The Living Craft · free to use and to pass on`);
   return doc.save();

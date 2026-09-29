@@ -15,6 +15,7 @@
 // there yet.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -95,6 +96,7 @@ const schema = [
   description={description}
   canonical="/resources/agent-failure-triage-kit"
   schema={schema}
+  howTo="use"
 >
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
@@ -113,6 +115,7 @@ const schema = [
         3 failure classes · 4 ordered questions · 12 failure-injection tests · 45 minutes
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

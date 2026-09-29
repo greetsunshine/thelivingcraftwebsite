@@ -43,6 +43,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
 import ClosingCta from '../../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../../components/site/CohortIntroLink.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 
 export const prerender = false;
@@ -200,6 +201,7 @@ const schema: unknown[] = [
           <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
         </div>
       </dl>
+      <CohortIntroLink />
     </header>
 
     {/* .prose is load-bearing — see note 3 at the top of this file. */}

@@ -69,3 +69,8 @@ One row per rule. Mark each placement column with an x when it applies.
 A rule written in the prompt is one input among many. The model weighs it against the user’s message, the retrieved data and everything else in the context. Most of the time it complies. Some of the time it does not, and nothing in the system notices. A critic model checking the step is the same thing twice: a second weighing, with the same blind spots.
 
 Code does not weigh. There are two places to put a rule in code. A filter before the model removes what the model must never choose before it sees the inputs: if the blocked restaurants are not in the candidate list, the model cannot recommend one. A check after the model tests the answer or the action against the rule before it reaches the user or runs. When more than one agent can act, put the check at the tool or data boundary, so it holds whichever agent asked.
+
+
+---
+
+Put hard rules where the system can enforce them. Explore The Living Craft’s October 2026 cohort: 30 live hours with Sunil Mathew, plus independent work. Apply at https://learning.thelivingcraft.ai/#apply

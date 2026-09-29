@@ -10,9 +10,11 @@
  * This component is the only place the row is written.
  *
  * WHAT IT DRAWS, in this order:
- *   1. At most one short line about the cohort (`note`). Its one figure, the
- *      week count, comes from facts.ts. Never type an offer fact here, and no
- *      scarcity: no seats left, no countdown.
+ *   1. At most one short line about the cohort (`note`). By default it is the
+ *      page's own line from the outreach readiness handoff (28 September 2026),
+ *      then one sentence whose date, hours and name come from facts.ts, both
+ *      from src/data/resource-cohort-copy.ts. Never type an offer fact here,
+ *      and no scarcity: no seats left, no countdown.
  *   2. "Explore the cohort" to `/`, the primary button.
  *   3. "Apply" to `/#apply`. The cohort CTA is always Apply. Never "Buy now",
  *      "Join now" or "Enrol".
@@ -27,10 +29,12 @@
  * `data-apply`, which two pages (the memory kit and the cost-ceiling workbook)
  * already listen for to send `cohort_apply_click`.
  *
- * NOT PRINTED. A button row on paper is noise; it is hidden in print, as the
- * tool pages already hide `.hero-cta`.
+ * PRINTED AS ONE LINE. A button row on paper is noise, so the row is hidden in
+ * print, as the tool pages already hide `.hero-cta`. In its place a print-only
+ * line carries the same invitation and the full application address, because
+ * a printed page cannot follow a link (handoff: "include print footer").
  */
-import { cohort } from '../../data/facts';
+import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
 
 export interface Props {
   /** The one line about the cohort. `false` when the page's own prose already says it. */
@@ -39,9 +43,8 @@ export interface Props {
   placement?: string;
 }
 
-const DEFAULT_NOTE = `The Living Craft is a ${cohort.weeks}-week live cohort where you practise this on a system you build.`;
-
-const { note = DEFAULT_NOTE, placement = 'resource-close' } = Astro.props;
+const invitation = cohortInvitationFor(Astro.url.pathname);
+const { note = invitation, placement = 'resource-close' } = Astro.props;
 const hasDownload = Astro.slots.has('download');
 const hasLinks = Astro.slots.has('links');
 ---
@@ -62,6 +65,7 @@ const hasLinks = Astro.slots.has('links');
     <a href="/resources">All resources</a>
   </p>
 </div>
+<p class="lc-closing-print">{invitation} Apply at {APPLY_URL}</p>
 
 <style>
   /* Left-aligned, like the closing sections since 19 September. global.css
@@ -108,9 +112,21 @@ const hasLinks = Astro.slots.has('links');
       justify-content: center;
     }
   }
+  .lc-closing-print {
+    display: none;
+  }
   @media print {
     .lc-closing-cta {
       display: none !important;
+    }
+    .lc-closing-print {
+      display: block !important;
+      margin-top: 12pt;
+      padding-top: 6pt;
+      border-top: 0.5pt solid var(--line, #cbd1c8);
+      font-size: 9pt;
+      text-align: left;
+      color: #172e26;
     }
   }
 </style>

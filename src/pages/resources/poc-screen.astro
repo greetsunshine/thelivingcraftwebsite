@@ -25,6 +25,7 @@
 // summary, the copied scorecard and the PDF all read one rubric.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -91,7 +92,7 @@ const STEP_COUNT = steps.length;
 
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema} howTo="how">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -112,6 +113,7 @@ const STEP_COUNT = steps.length;
         <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -178,7 +180,7 @@ const STEP_COUNT = steps.length;
               {PURPOSE.map((p) => <li>{p}</li>)}
             </ul>
           </div>
-          <div class="about-col">
+          <div class="about-col" id="how">
             <span class="eyebrow"><span class="num">02</span> How to use it</span>
             <ol class="steps">
               {HOW_TO_USE.map((p) => <li>{p}</li>)}
@@ -1004,6 +1006,14 @@ const STEP_COUNT = steps.length;
     if (i === LAST) return 'Result';
     return `${SECTIONS[i - 1].letter} ${SECTIONS[i - 1].name}`;
   }
+
+  // The footer's "How to use this" points at #how, which sits in the Start
+  // step. From any other step that section is hidden, so show the Start step
+  // first; the browser then follows the link as usual.
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest?.('a[href="#how"]');
+    if (a && step !== 0) goTo(0, false);
+  });
 
   function goTo(i: number, move = true) {
     step = Math.max(0, Math.min(LAST, i));

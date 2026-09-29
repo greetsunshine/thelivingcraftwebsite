@@ -809,7 +809,12 @@ memory kit is printed from its page by `npm run build:kit` with the same brand.
 `/#apply`, the page's own download in the `download` slot (still a `data-gate` button,
 never a file link), and "All resources". Do not write that row out on a page again: it
 had drifted into three wordings when each page owned it. Its links carry `data-cta`, which
-is how `Track.astro` counts a click on a link to `/`.
+is how `Track.astro` counts a click on a link to `/`. Its line of copy, and the one-line
+`CohortIntroLink.astro` under each page's introduction, come from
+[src/data/resource-cohort-copy.ts](src/data/resource-cohort-copy.ts): the outreach
+readiness handoff's per-page wording, then one sentence built from facts.ts. Every file a
+reader keeps (PDFs, workbooks, Markdown sheets, the design check's summary) ends with the
+same invitation and the full application address.
 
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,

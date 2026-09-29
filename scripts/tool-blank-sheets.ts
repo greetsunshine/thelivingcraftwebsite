@@ -20,6 +20,11 @@ import * as rpa from '../src/data/rule-placement-audit';
 import * as adc from '../src/data/agent-design-check';
 import { TOOL_CREDIT } from '../src/data/resources';
 import { SITE_ORIGIN } from '../src/data/facts';
+import { APPLY_URL, cohortInvitationFor } from '../src/data/resource-cohort-copy';
+
+// The last line of each sheet: the page's cohort invitation and the full
+// application address (outreach readiness handoff, 28 September 2026).
+const cohortFooter = (path: string) => ['', '---', '', `${cohortInvitationFor(path)} Apply at ${APPLY_URL}`];
 
 const outDir = process.argv[2] ?? 'downloads';
 const cell = (s: string) => s.replace(/\|/g, '\\|');
@@ -77,6 +82,7 @@ const audit = [
   '## Why placement matters',
   '',
   ...rpa.WHY.flatMap((p) => [p, '']),
+  ...cohortFooter('/resources/rule-placement-audit'),
 ].join('\n');
 
 // ── the Agent Design Check: the question list ───────────────────────────────
@@ -118,6 +124,7 @@ const check = [
       ];
     }),
   ]),
+  ...cohortFooter('/tools/agent-design-check'),
 ].join('\n');
 
 for (const [name, body] of [

@@ -22,6 +22,7 @@ import * as msel from '../src/data/model-selection-tool';
 import * as auth from '../src/data/authority-review';
 import { TOOL_CREDIT } from '../src/data/resources';
 import { SITE_ORIGIN } from '../src/data/facts';
+import { APPLY_URL, cohortInvitationFor } from '../src/data/resource-cohort-copy';
 
 const url = (path: string) => `${SITE_ORIGIN}${path}`;
 
@@ -31,6 +32,8 @@ const out = {
     toolName: poc.TOOL_NAME,
     credit: TOOL_CREDIT,
     pageUrl: url('/resources/poc-screen'),
+    cohort: cohortInvitationFor('/resources/poc-screen'),
+    applyUrl: APPLY_URL,
     purpose: poc.PURPOSE,
     howToRun: poc.HOW_TO_RUN,
     sections: poc.SECTIONS.map((s) => ({
@@ -50,6 +53,8 @@ const out = {
     toolName: msel.TOOL_NAME,
     credit: TOOL_CREDIT,
     pageUrl: url('/resources/model-selection-tool'),
+    cohort: cohortInvitationFor('/resources/model-selection-tool'),
+    applyUrl: APPLY_URL,
     purpose: msel.PURPOSE,
     howToRun: msel.HOW_TO_RUN,
     stepQuestion: msel.STEP_QUESTION,
@@ -73,6 +78,8 @@ const out = {
     headline: auth.HEADLINE,
     credit: TOOL_CREDIT,
     pageUrl: url('/resources/agent-authority-review'),
+    cohort: cohortInvitationFor('/resources/agent-authority-review'),
+    applyUrl: APPLY_URL,
     purpose: auth.PURPOSE,
     questions: auth.FIVE_QUESTIONS.map((q) => ({ n: q.n, name: q.name, ask: q.ask, column: q.column })),
     evidence: auth.EVIDENCE_CHOICES.map((c) => ({ value: c.value, label: c.label })),

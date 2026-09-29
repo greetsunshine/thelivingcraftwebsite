@@ -21,6 +21,7 @@
 // rubric: readRow() and readSheet().
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
@@ -75,7 +76,7 @@ const schema = [
 const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((r) => r.key === 'stop')!];
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema} howTo="about">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -97,6 +98,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
         <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

@@ -54,6 +54,7 @@
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -137,7 +138,7 @@ const sections = [
 const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 ---
 
-<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -154,6 +155,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <button class="textlink" type="button" data-gate="xlsx">Prefer a spreadsheet? Download the Excel version</button>
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 

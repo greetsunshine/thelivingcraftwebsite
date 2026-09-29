@@ -63,6 +63,13 @@ export const practitioner = {
 export const cohort = {
   name: 'The Living Craft',
   weeks: 6,
+  /**
+   * Contact hours with Sunil, live. Six weeks at about five hours. The cohort
+   * page typed "30 live hours" into its own copy until 29 September 2026; the
+   * outreach readiness handoff's CTA line needs the same figure, so it lives
+   * here now and both read it.
+   */
+  liveHours: 30,
   seats: 8,
   startsOn: 'October 2026',
   commitment: '~5 hrs / week',

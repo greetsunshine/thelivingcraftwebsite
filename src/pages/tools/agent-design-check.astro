@@ -107,6 +107,8 @@
 import '../../styles/templates/tool.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
+import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import {
@@ -177,6 +179,7 @@ const schema: unknown[] = [
           Worked out in this page. No sign-in, no score, and nothing you type is sent
           anywhere.
         </p>
+        <CohortIntroLink />
       </div>
     </section>
 
@@ -366,7 +369,7 @@ const schema: unknown[] = [
     */}
     <div class="wrap">
       <p class="sr-only" id="adc-live" role="status" aria-live="polite"></p>
-      <div id="adc-result"></div>
+      <div id="adc-result" data-cohort={cohortInvitationFor('/tools/agent-design-check')} data-apply-url={APPLY_URL}></div>
 
       {/*
         Clipboard fallback. Revealed only when the clipboard API refuses or is
@@ -427,7 +430,7 @@ const schema: unknown[] = [
         the immediate problem rather than the practice of making them.
       </li>
     </ul>
-    <ClosingCta note={false}>
+    <ClosingCta>
       <button slot="download" class="btn btn-ghost" type="button" data-gate="md">Download the questions&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
     </ClosingCta>
   </section>
@@ -827,7 +830,14 @@ const schema: unknown[] = [
     // the copy both call it, so the two can never disagree.
 
     function summary(): string {
-      return summaryText(answers, { origin: window.location.origin, now: new Date() });
+      const holder = document.getElementById('adc-result');
+      const invitation = holder?.dataset.cohort;
+      const applyUrl = holder?.dataset.applyUrl;
+      return summaryText(answers, {
+        origin: window.location.origin,
+        now: new Date(),
+        cohort: invitation && applyUrl ? { invitation, applyUrl } : undefined,
+      });
     }
 
     function download(): void {
