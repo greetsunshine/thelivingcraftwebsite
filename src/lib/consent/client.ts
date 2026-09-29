@@ -97,9 +97,9 @@ function build(onSave: (c: Consent) => void): { root: HTMLElement; open: (focus:
   title.id = 'lc-consent-title';
   title.tabIndex = -1;
   const body = el('p', 'lc-consent-body');
-  body.append(
-    'I would like to use analytics (Google Analytics, Microsoft Clarity) and advertising tags (Meta, LinkedIn, Apollo.io). None of them loads unless you say yes. The site works the same either way. ',
-  );
+  // The owner's wording (29 September 2026). The tags are named under
+  // Choose, and in full behind the link.
+  body.append('This site uses analytics. None of them load unless you say yes. The site works the same either way. ');
   const more = el('a', 'lc-consent-link', 'What each one does');
   more.href = '/privacy#tags';
   body.append(more);

@@ -35,8 +35,13 @@ export interface Props {
   brandHref?: string;
   /** A descriptor beside the lockup: "Resources", "Fractional CAIO". */
   sub?: string;
-  /** The page's one action, on the right of the bar and in the menu. */
-  action?: { label: string; href: string };
+  /**
+   * The page's one action, on the right of the bar and in the menu. `short` is
+   * what the bar shows below 560px, where the full label used to wrap to three
+   * lines beside the lockup ("Explore / the / cohort"). The menu always shows
+   * the full label.
+   */
+  action?: { label: string; href: string; short?: string };
   /** Links to sections of THIS page. They fill the "On this page" row. */
   pageLinks?: Link[];
   /** Links to OTHER pages that belong with this one, at the left of the row. */
@@ -90,8 +95,15 @@ const hasRow = pageLinks.length > 0 || related.length > 0;
       }
       {
         action && (
-          <a class="btn btn-primary" href={action.href}>
-            {action.label}
+          <a class="btn btn-primary nav-action" href={action.href}>
+            {action.short ? (
+              <Fragment>
+                <span class="act-long">{action.label}</span>
+                <span class="act-short">{action.short}</span>
+              </Fragment>
+            ) : (
+              action.label
+            )}
             <span class="arrow" aria-hidden="true">→</span>
           </a>
         )

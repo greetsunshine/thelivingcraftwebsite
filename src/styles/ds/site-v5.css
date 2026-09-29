@@ -446,12 +446,35 @@
    underline), the design system's rule for any header. */
 
 /* A long action on a phone. `/`'s action is "Apply"; an inner page's can be
-   "Request a scope call", which at 390px ran under the lockup. Below 560px
-   the lockup keeps its size and the label wraps to two lines instead. */
+   "Explore the cohort" or "Request a scope call". Below 560px those wrapped to
+   two or three lines beside the lockup. Since 29 September 2026 the header
+   takes a `short` label (SiteHeader.astro) and shows it on one line here, in
+   the same compact button as `/`'s phone "Apply": 14px, 44px tall, no arrow.
+   A label with no short form still wraps rather than running under the lockup. */
+.lc-v5 .navlinks > .nav-action .act-short { display: none; }
 @media (max-width: 560px) {
   .lc-v5 .nav-inner > .brand-lockup { flex: none; }
   .lc-v5 .navlinks { min-width: 0; }
   .lc-v5 .navlinks > .btn { min-width: 0; white-space: normal; text-align: center; line-height: 1.2; }
+  .lc-v5 .navlinks > .btn.nav-action {
+    flex: none; /* never squeezed narrower than its one-line label */
+    white-space: nowrap;
+    font-size: 0.875rem;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+  .lc-v5 .navlinks > .nav-action .arrow { display: none; }
+  .lc-v5 .navlinks > .nav-action .act-long { display: none; }
+  .lc-v5 .navlinks > .nav-action .act-short { display: inline; }
+}
+/* A 320px phone: the lockup, a one-line label and the menu fit only with
+   tighter spacing. The lockup keeps its size; the gaps and padding give. */
+@media (max-width: 360px) {
+  .lc-v5 .nav-inner { gap: 6px; }
+  .lc-v5 .navlinks { gap: 6px; }
+  /* !important only to beat the 390px rule above, which needs it for `/`. */
+  .lc-v5 .navlinks > .btn.nav-action { padding: 10px 9px !important; }
+  .lc-v5 .mm-toggle { width: 40px; }
 }
 
 /* Links in the page row that go to ANOTHER page ("Field notes", "AI
