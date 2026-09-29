@@ -10,7 +10,7 @@
 // That is the whole point of an instructor page.
 
 import type { APIRoute } from 'astro';
-import { topicPage } from '../../../../../lib/craft/teaching-pages';
+import { topicPage, missingPage } from '../../../../../lib/craft/teaching-pages';
 
 export const prerender = false;
 
@@ -22,7 +22,12 @@ export const GET: APIRoute = async ({ params }) => {
   }
 
   const html = await topicPage(week, n, 'instructor');
-  if (!html) return new Response(null, { status: 404 });
+  if (!html) {
+    return new Response(missingPage(week, 'instructor'), {
+      status: 404,
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
+    });
+  }
 
   return new Response(html, {
     headers: {
