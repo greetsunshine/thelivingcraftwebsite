@@ -1,22 +1,35 @@
 ---
 // The privacy policy.
 //
-// Written from the code rather than from a template, and that is the only
-// reason it is worth publishing. Every claim below names the file that makes it
-// true, so the next person to change a data path can find the sentence that has
-// to change with it:
+// Written from the code and from what the live site actually loads, rather
+// than from a template. Every claim below names the file (or the place) that
+// makes it true, so the next person to change a data path can find the sentence
+// that has to change with it:
 //
 //   visitor identification      src/lib/admin/visitor.ts
-//   what a visit records        src/pages/api/track.ts
-//   enquiries                   src/pages/api/lead.ts
+//   what a visit records        src/components/Track.astro, src/pages/api/track.ts
+//   enquiries and applications  src/pages/api/lead.ts, src/lib/pipeline/forms.ts
+//   downloads (the gate)        src/pages/api/pipeline/download.ts, src/lib/pipeline/resources.ts
+//   where a visitor came from   src/lib/pipeline/attribution.ts
 //   assistant transcripts       src/pages/api/ask.ts
 //   seats and intake            src/lib/craft/learners.ts, src/lib/craft/intake.ts
 //   bookings and invites        src/lib/booking/store.ts, src/lib/booking/google.ts
 //   retention and erasure       supabase/schema.sql (admin_purge)
+//   the audit's autosave        src/pages/resources/rule-placement-audit.astro
+//   third-party tags            the Google Tag Manager container GTM-P4DRQLB8
+//                               (src/data/site.ts), loaded by the layouts that
+//                               render <GoogleTagManager />
+//
+// THE THIRD-PARTY TAGS LIVE IN THE GTM CONSOLE, NOT IN THIS REPOSITORY. On 29
+// September 2026 the live site was observed loading Google Analytics 4
+// (G-S2XJ61GXDD) and Microsoft Clarity (yin1xnh55d) through the container.
+// The Meta Pixel and Conversions API, the LinkedIn Insight Tag and the
+// Apollo.io tag are listed at the owner's instruction of the same day and were
+// NOT yet observed firing. Whoever adds or removes a tag in GTM changes this
+// page in the same week.
 //
 // IF YOU CHANGE WHAT IS COLLECTED, CHANGE THIS PAGE IN THE SAME COMMIT. A
-// privacy policy that has drifted from the system is worse than none, and this
-// practice sells the discipline it would be failing.
+// privacy policy that has drifted from the system is worse than none.
 import PolicyLayout from '../layouts/PolicyLayout.astro';
 import { CONTACT_EMAIL } from '../data/site';
 import { canonical } from '../data/facts';
@@ -37,10 +50,27 @@ export const prerender = false;
 
 const title = 'Privacy — The Living Craft';
 const description =
-  'What this site collects, why, who else processes it, how long it is kept, and how to have it deleted. Written from the code, not from a template.';
+  'What this site collects, which analytics and advertising tags it uses, who else receives data, how long it is kept, and how to have it deleted.';
 
 // One date, one place. Shown in the header and in the closing section.
-const UPDATED = '14 September 2026';
+const UPDATED = '29 September 2026';
+
+// The interactive tools and kits that load no tag manager, so none of the
+// third-party tags below (ResourcesLayout, and tagManager={false} on the
+// design check). Keep this list in step with those layouts.
+const TAG_FREE_TOOLS = [
+  'the POC Selection Tool',
+  'the Model Selection Tool',
+  'the Agent Authority Review',
+  'the Run-Cost Model',
+  'the Cost-Ceiling Workbook',
+  'the Rework Cost Check',
+  'the Rule Placement Audit',
+  'the Agent Memory Audit Kit',
+  'the Agent Failure Triage Kit',
+  'the Agent Failure Triage Quiz',
+  'the Agent Design Check',
+];
 ---
 
 <PolicyLayout title={title} description={description} canonical={canonical('/privacy')} label="Privacy">
@@ -49,10 +79,9 @@ const UPDATED = '14 September 2026';
       <span class="eyebrow"><span class="num">01</span> Privacy</span>
       <h1>What this site knows about you</h1>
       <p class="lead">
-        This practice sells judgement about how AI systems handle data. A vague privacy policy
-        would be an argument against hiring me. So this one names the fields, the retention
-        windows and every company involved, and it is written from the code rather than from a
-        template.
+        This practice sells judgement about how AI systems handle data. So this page names the
+        fields, the tags, the companies involved and how long things are kept. It is written from
+        the code and from what the live site actually loads.
       </p>
       <p class="stamp">Last updated {UPDATED}</p>
     </div>
@@ -63,77 +92,157 @@ const UPDATED = '14 September 2026';
       <div class="summary">
         <h2>The short version</h2>
         <ul>
-          <li>I never sell or share your details, and there is no advertising or cross-site tracking anywhere on this site.</li>
-          <li>Visitor counts are measured with an identifier that is rebuilt from scratch every midnight, so nobody can be followed from one day to the next.</li>
-          <li>Your raw IP address is never written down.</li>
-          <li>If you fill in a form, book a call, or talk to the assistant, I keep what you typed, because that is the enquiry.</li>
-          <li>Ask me to delete it and it is deleted, not archived or flagged.</li>
-          <li>This page measures nothing at all. No counter, no analytics, nothing.</li>
+          <li>Most public pages load Google Analytics and Microsoft Clarity. They may also load advertising tags from Meta and LinkedIn, and a tag from Apollo.io. Each is described below.</li>
+          <li>These tags set cookies, and Clarity can record how you move through a page.</li>
+          <li>The interactive tools, this page and the course area load none of them.</li>
+          <li>If you fill in a form, download a file, book a call or talk to the assistant, I keep what you gave, because that is the request.</li>
+          <li>I do not sell or rent your details to anybody.</li>
+          <li>Ask me to delete what I hold and it is deleted, not archived or flagged.</li>
         </ul>
       </div>
 
       <h2>Who is responsible</h2>
       <p>
         Sunil Mathew, operating as The Living Craft, from Bangalore, India. Under India's Digital
-        Personal Data Protection Act that makes me the Data Fiduciary for everything described
-        here, and you the Data Principal. There is no team. The person who answers a deletion
-        request is the person who wrote this page.
+        Personal Data Protection Act 2023, that makes me the Data Fiduciary for everything described
+        here, and you the Data Principal.
+      </p>
+      <p>
+        A small number of people help me run the website and its marketing. They can read the
+        records described below in my operator console, and they work under my instructions. I
+        answer privacy requests myself.
       </p>
       <p>
         Reach me at <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
-      <h2>What is collected, and when</h2>
+      <h2>Analytics and advertising tags</h2>
+      <p>
+        Most public pages load Google Tag Manager. It is a container: it loads the tags below, and
+        it is where they are switched on and off. These companies receive data directly from your
+        browser, including your IP address, because that is how a browser fetches anything.
+      </p>
+
+      <h3>Where they run, and where they do not</h3>
+      <p>
+        They run on the cohort page, the Fractional CAIO and AI Readiness Assessment pages, the
+        field notes, and the reading pages: About, Programmes, Advisory, Contact, the resource and
+        tool index pages, the worksheets, the templates and the guides.
+      </p>
+      <p>They do not run on:</p>
+      <ul>
+        <li>the interactive tools and kits: {TAG_FREE_TOOLS.join(', ')}</li>
+        <li>this page and the terms page</li>
+        <li>the page that manages a booked call</li>
+        <li>the course area and anything else behind a sign-in</li>
+      </ul>
+      <p>
+        The tools are kept free of them on purpose. Several of them promise that what you type stays
+        in your browser, and a session-recording tag on the same page would break that promise.
+      </p>
+
+      <h3>Google Analytics</h3>
+      <p>
+        Counts visits and tells me which pages are read, where visitors came from, and roughly where
+        they are, from their IP address. It sets the cookies <code>_ga</code> and
+        <code>_ga_S2XJ61GXDD</code>, which last up to two years and let Google recognise the same
+        browser when it returns. Google keeps the data for the period set in my account, at most
+        14 months.
+      </p>
+
+      <h3>Microsoft Clarity</h3>
+      <p>
+        Records how visitors use a page: scrolling, clicks, mouse movement and what was on the
+        screen. I use it to see where a page confuses people. It sets <code>_clck</code> (one
+        year) and <code>_clsk</code> (one day) on this site, and Microsoft sets its own cookies,
+        such as <code>MUID</code> and <code>CLID</code>, on its own domains.
+      </p>
+      <p>
+        Clarity is designed to hide what you type into form fields. Text shown on the page can
+        still appear in a recording, and that includes a conversation with the assistant once it
+        is on screen. Microsoft keeps recordings for 30 days and summary data for up to 13 months.
+      </p>
+
+      <h3>Meta Pixel and Meta Conversions API</h3>
+      <p>
+        Meta runs Facebook and Instagram. The Meta Pixel tells Meta that a browser visited a page or
+        took an action here, such as submitting a form. I use this to measure whether advertising
+        brings people to the site, and to show adverts to people who have visited. It sets the
+        cookie <code>_fbp</code>, which lasts about three months.
+      </p>
+      <p>
+        The Conversions API sends the same kind of event from a server instead of from your
+        browser. It can include your email address or phone number in hashed form. Hashing is a
+        one-way scramble: Meta uses it to match the event to a Meta account, not to read the
+        address.
+      </p>
+
+      <h3>LinkedIn Insight Tag</h3>
+      <p>
+        Tells LinkedIn that a LinkedIn member visited or took an action here. I use it to measure
+        LinkedIn adverts, to see the kinds of roles and companies that visit, and to show adverts
+        to people who have visited. LinkedIn sets its own cookies. It says it removes direct
+        identifiers within seven days and keeps the rest for up to 180 days.
+      </p>
+
+      <h3>Apollo.io</h3>
+      <p>
+        Apollo.io keeps a database of businesses and business contacts. Its tag tells Apollo which
+        pages were visited and from which network. Apollo uses that to work out which companies
+        visited, and it may match a visit to people in its database. I use it to see which
+        organisations are interested in this work. Apollo sets its own cookie.
+      </p>
+
+      <h3>Asking first</h3>
+      <p>
+        Today these tags load when a page opens. There is not yet a banner that asks before they
+        run. Until there is, you can block them yourself: most browsers can block third-party
+        cookies, and a content blocker stops the tags from loading at all. Google publishes an
+        opt-out browser add-on for Google Analytics. Meta and LinkedIn let you turn off adverts
+        based on other websites in your account's advert settings. Blocking them does not change
+        how any part of this site works for you.
+      </p>
+
+      <h2>What this site records itself</h2>
 
       <h3>When you read a page</h3>
       <p>
-        Three pages keep a first-party record of visits: the cohort page, the Fractional CAIO page,
-        and the AI Readiness Assessment page. The field notes and resources pages send the same
-        signal, but the server accepts only those three addresses and discards the rest, so nothing
-        is stored for them.
+        This site keeps its own simple record of visits on the cohort page, the Fractional CAIO
+        page, the AI Readiness Assessment page, and every page under <code>/resources/</code> and
+        <code>/tools/</code>. Nothing is recorded by this site's own code on this page, on the
+        field notes, on the other reading pages, or behind a sign-in.
       </p>
-      <p>
-        Nothing at all is recorded on this page, or on any page behind a sign-in. The course area
-        carries no counter of any kind.
-      </p>
-      <p>Each recorded visit holds:</p>
+      <p>Each recorded event holds:</p>
       <ul>
-        <li>which of the three pages, and what happened on it — a view, opening the assistant, starting a form, following a link between the pages</li>
-        <li>the <em>host</em> you arrived from, such as <code>linkedin.com</code>, never the full link and never its query string</li>
-        <li>your country, taken from the hosting layer, and your region only if it is in the page address</li>
+        <li>which page, and what happened on it: a view, opening the assistant or asking it something, starting or sending a form, following a link to another part of the practice or to the cohort (with which button it was), downloading a file, or first using a calculator</li>
+        <li>the <em>host</em> you arrived from, such as <code>linkedin.com</code>, never the full link</li>
+        <li>your country, from the hosting layer, and your region only if it is in the page address</li>
         <li>whether the device is a phone or a computer</li>
         <li>a visitor identifier, described next</li>
       </ul>
       <p>
-        <strong>The visitor identifier is deliberately short-lived.</strong> It is a cryptographic
-        hash of your IP address, your browser's user-agent string, a secret held on the server, and
-        <em>today's date</em>. Because the date is part of it, the identifier changes at midnight
-        UTC and the same person returning next week is an unrelated row. This is not a limitation I
-        have chosen not to lift. It means following someone across days is not reconstructible from
-        what is stored, by me or by anyone who obtained the database.
+        <strong>This identifier is deliberately short-lived.</strong> It is a cryptographic hash of
+        your IP address, your browser's user-agent string, a secret held on the server, and
+        <em>today's date</em>. Because the date is part of it, it changes at midnight UTC, and the
+        same person returning next week is an unrelated row. The raw IP address is used to compute
+        the hash and is never written to storage by this site. Automated crawlers are dropped
+        before anything is recorded.
       </p>
       <p>
-        The raw IP address is used to compute that hash and is never written to storage. Automated
-        crawlers are identified and dropped before anything is recorded.
+        This short-lived identifier is this site's own. The Google Analytics and Clarity cookies
+        described above do recognise a returning browser, for as long as those cookies last.
       </p>
 
       <h3>When you submit an enquiry or application</h3>
       <p>
-        The forms on the cohort, CAIO and assessment pages collect your name, work email, job title,
-        company, and whatever you write in the message field. Applications also carry the region you
-        were shown pricing for.
+        Submissions are emailed to me through a form-delivery service, and written to my own
+        database so that I have a searchable history. That second copy also records whether the
+        email went through, because a failed delivery used to be invisible.
       </p>
-      <p>
-        Submissions are emailed to me through a form-delivery service, and separately written to my
-        own database so that I have a searchable history. That second copy also records whether the
-        email actually went through, because a failed delivery used to be invisible and meant
-        someone believed they had applied when I had never seen it.
-      </p>
-
       <p>
         The three routes into the programme ask for these fields, and nothing else on those
-        pages collects personal details. No file upload is offered anywhere on this site,
-        and you are asked more than once not to send confidential company material.
+        pages collects personal details. No file upload is offered anywhere on this site, and you
+        are asked not to send confidential company material.
       </p>
       {
         routes.map((route) => (
@@ -147,106 +256,125 @@ const UPDATED = '14 September 2026';
         ))
       }
       <p>
-        You are shown a reference when a submission is saved. Nothing on this site looks a
-        record up by that reference, so it cannot be used to reach anybody's details,
-        including yours. No card details are collected anywhere on this site, and there is
-        nothing to pay to apply.
+        With each submission I also keep where your visit came from: the campaign tags in the
+        address you arrived on (such as <code>utm_source</code>), the host of the site that sent
+        you, and the page you started on. That tells me which posts and pages bring people here.
+        No cookie is used for this. Only the visit that produced the submission is counted.
+      </p>
+      <p>
+        Records are grouped by email address. A download and a later application from the same
+        address sit under one person. You are shown a reference when a submission is saved.
+        Nothing on this site looks a record up by that reference. No card details are collected
+        anywhere on this site, and there is nothing to pay to apply.
+      </p>
+
+      <h3>When you download a file</h3>
+      <p>
+        Every file on the resource pages asks for your name and email address first: the
+        workbooks, the PDFs, the worksheets, the templates and the print copies. I keep your name,
+        your email address, which resource and which file you asked for, when, and where your
+        visit came from, as described above.
+      </p>
+      <p>
+        A download is not permission to market to you. It starts no email sequence. The address is
+        used to send you that resource once, when email sending is switched on. Today no email is
+        sent by machine at all.
+      </p>
+      <p>
+        When a file is built from your own answers, such as a scored PDF, your answers go into the
+        file and are not stored. Two tools never send what you type anywhere: the Rule Placement
+        Audit and the Agent Design Check build their files in your browser.
       </p>
 
       <h3>When you tick the marketing box</h3>
       <p>The forms carry one optional tick box, in these words:</p>
       <blockquote><p>{MARKETING_CONSENT.wording}</p></blockquote>
       <p>
-        It starts unticked and nothing depends on it. Your application is treated exactly the
-        same either way. A receipt confirming that your request was saved is not marketing,
-        and it is never treated as permission to send you anything else.
+        It starts unticked and nothing depends on it. Your application is treated the same either
+        way. A receipt confirming that your request was saved is not marketing.
       </p>
       <p>
-        What you agreed to is stored with the words you were shown, under a version label. If
-        that sentence is ever reworded it becomes a new version, and your record keeps
-        pointing at the wording above. So the answer to "what did I agree to" is always the
-        sentence that was actually on your screen.
+        What you agreed to is stored with the words you were shown, under a version label. If that
+        sentence is ever reworded, it becomes a new version, and your record keeps pointing at the
+        words above.
       </p>
       <p>
-        No follow-up email is being sent today. The sequence is built and switched off,
-        pending a verified sending domain and a monitored reply mailbox. If you tick the box
-        now, the permission is recorded and nothing is sent until that is in place.
+        No follow-up email is sent today. The sequence is built and switched off, pending a
+        verified sending domain and a monitored reply mailbox.
       </p>
 
       <h3>When you talk to the assistant</h3>
       <p>
-        The question-and-answer assistant on the public pages is built on a Claude model from
-        Anthropic. Your question and its answer are sent to Anthropic in order to produce a reply,
-        and both are stored here along with which page you asked from, your country, and some
-        counters about how the answer was produced.
+        The assistant on the public pages is automated. It is a Claude model from Anthropic, not
+        Sunil. Your question and its answer are sent to Anthropic to produce the reply. Both are
+        stored here with the page you asked from, your country, and some counters about how the
+        answer was produced.
       </p>
       <p>
-        A short session identifier ties the messages of one conversation together. It lives in the
-        browser tab's memory, is never written to your device, and is gone when you close the tab.
+        A short session identifier ties one conversation together. It lives in the browser tab's
+        memory, is never written to your device, and is gone when you close the tab.
       </p>
       <p>
-        I read these. They are the most useful thing on this site, because they are people telling
-        me unprompted what my own pages failed to explain. Please do not type anything confidential
-        into a chat box on a stranger's website, here or anywhere.
+        I read these conversations. They show me what my pages fail to explain. Please do not type
+        anything confidential into a chat box on any website, including this one.
       </p>
 
       <h3>When you book a call</h3>
       <p>
-        Booking a discovery or scope call records your name, email address, company, job title,
-        anything you write in the notes field, your timezone, and the time you chose.
+        Booking a discovery, scope or cohort call records your name, email address, company, job
+        title, anything you write in the notes field, your timezone, and the time you chose.
       </p>
       <p>
-        The booking is then created as an event in my Google Calendar with you as an invited guest,
-        which is what sends you the invitation and the video link. That means your name, your email
-        address and your notes are passed to Google as part of the event. Moving or cancelling the
-        call updates that same event. Cancelling removes it from both calendars.
+        The booking is created as an event in my Google Calendar with you as a guest, which sends
+        you the invitation and the video link. So your name, email address and notes are passed to
+        Google as part of the event. Cancelling removes it from both calendars.
       </p>
       <p>
-        The link in your invitation that lets you reschedule carries a secret. Only a cryptographic
-        hash of it is stored here, so the database never holds anything that could open somebody
-        else's booking. Please do not forward that invitation.
+        The link in your invitation that lets you reschedule carries a secret. Only a hash of it is
+        stored here. Please do not forward that invitation.
       </p>
 
       <h3>If you join the cohort</h3>
       <p>
-        Participants get an access code for the course area. I store your name, email, which cohort
-        you are in, and a cryptographic hash of that code. <strong>The code itself is never
+        Participants get an access code for the course area. I store your name, email, which
+        cohort you are in, and a hash of that code. <strong>The code itself is never
         stored</strong>, so a copy of the database does not let anyone sign in as you.
       </p>
       <p>
-        The pre-cohort questionnaire stores your answers against your seat. Those answers are read
-        by me and used to plan the sessions. They are not shared with the other participants.
+        The pre-cohort questionnaire and the work you do in the course area are stored against your
+        seat. I read them and use them to plan the sessions. What you post in the cohort's
+        discussion forum is visible to the other participants; everything else is not.
       </p>
 
       <h2>Cookies and what is stored in your browser</h2>
-      <p>
-        There are no advertising cookies, no analytics cookies and no third-party trackers on this
-        site. Nothing is written to local storage or session storage anywhere, on any page.
-      </p>
-      <p>Two cookies exist, and only after a deliberate sign-in:</p>
+      <p>On the pages where the tags above run, they set their own cookies:</p>
       <ul>
-        <li>one that keeps you signed in to the course area, if you hold a seat</li>
-        <li>one that keeps me signed in to my own operator console</li>
+        <li>Google Analytics: <code>_ga</code> and <code>_ga_S2XJ61GXDD</code>, up to two years</li>
+        <li>Microsoft Clarity: <code>_clck</code> (one year) and <code>_clsk</code> (one day), plus Microsoft's own cookies on its domains, and one session-storage entry, <code>_cltk</code>, which is cleared when the tab closes</li>
+        <li>Meta: <code>_fbp</code>, about three months</li>
+        <li>LinkedIn and Apollo.io: their own cookies, described in their policies</li>
+      </ul>
+      <p>This site's own code writes very little:</p>
+      <ul>
+        <li>one cookie that keeps you signed in to the course area, if you hold a seat</li>
+        <li>one cookie that keeps me signed in to my operator console</li>
+        <li>on the Rule Placement Audit only, your rows are saved in your own browser's local storage, so that closing the tab does not lose them. They are never sent to me, and clearing your browser's site data removes them</li>
       </ul>
       <p>
-        Both are signed, both are marked HttpOnly so that no script on the page can read them, both
-        are sent only over HTTPS, and both are restricted to this site. Neither one identifies you
-        to anybody else.
+        Both sign-in cookies are signed, marked HttpOnly so that no script can read them, sent only
+        over HTTPS, and restricted to this site.
       </p>
 
       <h2>Who else processes it</h2>
-      <p>
-        A one-person practice runs on other people's infrastructure. This is the complete list, and
-        each entry says what actually reaches them.
-      </p>
+      <p>Each entry says what reaches them.</p>
       <dl class="parties">
         <div>
           <dt>Vercel</dt>
-          <dd>Hosts the site and runs its server code. Sees every request, and supplies the country your visit is recorded with. Vercel also provides its own aggregate traffic and performance counters, which run on the five public pages — the three above plus the field notes and the resources pages — and on neither this page nor anything behind a sign-in.</dd>
+          <dd>Hosts the site and runs its server code. Sees every request, and supplies the country a visit is recorded with. Vercel also keeps its own aggregate traffic counts on the public pages, including the tools, but not on this page or behind a sign-in.</dd>
         </div>
         <div>
           <dt>Supabase</dt>
-          <dd>The database behind everything described above. Reachable only with a server-side key that never reaches a browser.</dd>
+          <dd>The database behind everything this site records. Reachable only with a server-side key that never reaches a browser.</dd>
         </div>
         <div>
           <dt>Web3Forms</dt>
@@ -258,17 +386,36 @@ const UPDATED = '14 September 2026';
         </div>
         <div>
           <dt>Google</dt>
-          <dd>Calendar only, and only when you book a call. Receives the event, your name, your email address and your notes, and sends you the invitation.</dd>
+          <dd>Tag Manager and Analytics, as described above. Calendar, only when you book a call: it receives the event, your name, your email address and your notes.</dd>
+        </div>
+        <div>
+          <dt>Microsoft</dt>
+          <dd>Clarity, as described above.</dd>
+        </div>
+        <div>
+          <dt>Meta</dt>
+          <dd>The Meta Pixel and Conversions API, as described above.</dd>
+        </div>
+        <div>
+          <dt>LinkedIn</dt>
+          <dd>The Insight Tag, as described above.</dd>
+        </div>
+        <div>
+          <dt>Apollo.io</dt>
+          <dd>Its website tag, as described above.</dd>
         </div>
         <div>
           <dt>GitHub</dt>
-          <dd>Holds the site's source and the drafts of published research. No personal data from this site is sent there.</dd>
+          <dd>Holds the site's source code. No personal data from this site is sent there.</dd>
         </div>
       </dl>
       <p>
-        These are service providers, not partners with a commercial interest in you. Nothing here is
-        an advertising network, a data broker, or an enrichment service, and your details are never
-        sold, rented or traded.
+        Meta and LinkedIn are advertising networks, and Apollo.io is a business-contact database.
+        I do not sell, rent or trade your details to them or to anybody else.
+      </p>
+      <p>
+        Several of these companies process data outside India, mostly in the United States. The
+        Act allows that, except to countries the Government of India restricts.
       </p>
 
       <h2>How long it is kept</h2>
@@ -278,14 +425,14 @@ const UPDATED = '14 September 2026';
         </thead>
         <tbody>
           <tr>
-            <td>Page visits</td>
+            <td>This site's visit records</td>
             <td>180 days</td>
             <td>The identifier has already rotated daily, so an old row answers no question worth keeping it for.</td>
           </tr>
           <tr>
             <td>Assistant conversations</td>
             <td>365 days</td>
-            <td>These carry text you typed. A year is long enough to see what my pages keep failing to explain, and not longer.</td>
+            <td>These carry text you typed. A year is long enough to see what my pages keep failing to explain.</td>
           </tr>
           <tr>
             <td>Enquiries and applications</td>
@@ -293,55 +440,82 @@ const UPDATED = '14 September 2026';
             <td>A real enquiry must not be lost to an automated job. There is a copy in my inbox either way.</td>
           </tr>
           <tr>
-            <td>Booked calls</td>
+            <td>Download requests</td>
             <td>Until you ask me to delete it</td>
-            <td>A record of a conversation that happened. Cancelled bookings are kept as cancelled rather than erased.</td>
+            <td>It records what you asked for and that you gave your address for it.</td>
           </tr>
           <tr>
-            <td>Seats and questionnaire answers</td>
+            <td>Booked calls</td>
             <td>Until you ask me to delete it</td>
-            <td>A participant record outlasts the six weeks. Withdrawn seats are kept deliberately.</td>
+            <td>A record of a conversation. Cancelled bookings are kept as cancelled rather than erased.</td>
+          </tr>
+          <tr>
+            <td>Seats and course work</td>
+            <td>Until you ask me to delete it</td>
+            <td>A participant record outlasts the cohort. Withdrawn seats are kept deliberately.</td>
+          </tr>
+          <tr>
+            <td>Google Analytics</td>
+            <td>At most 14 months</td>
+            <td>The period set in my account, within Google's limit.</td>
+          </tr>
+          <tr>
+            <td>Microsoft Clarity</td>
+            <td>30 days; summaries 13 months</td>
+            <td>Microsoft's own limits for recordings and for summary data.</td>
+          </tr>
+          <tr>
+            <td>Meta, LinkedIn, Apollo.io</td>
+            <td>Their own policies</td>
+            <td>Each company sets its own period. Follow the links below.</td>
           </tr>
         </tbody>
       </table>
       <p>
         The first two windows are enforced by the database itself, with a floor that refuses a
-        window shorter than thirty days rather than silently accepting one. That guard exists so a
-        mistyped number cannot empty a table while looking like a policy.
+        window shorter than thirty days, so a mistyped number cannot empty a table.
+      </p>
+      <p>
+        The companies' own policies:
+        <a class="ftext-link" href="https://policies.google.com/privacy" rel="noopener">Google</a>,
+        <a class="ftext-link" href="https://www.microsoft.com/en-us/privacy/privacystatement" rel="noopener">Microsoft</a>,
+        <a class="ftext-link" href="https://www.facebook.com/privacy/policy/" rel="noopener">Meta</a>,
+        <a class="ftext-link" href="https://www.linkedin.com/legal/privacy-policy" rel="noopener">LinkedIn</a>,
+        <a class="ftext-link" href="https://www.apollo.io/privacy-policy" rel="noopener">Apollo.io</a>.
       </p>
 
       <h2>Your rights, and what happens when you use them</h2>
       <p>
-        Under the Digital Personal Data Protection Act you can ask for a copy of what I hold about
-        you, ask me to correct it, ask me to delete it, and nominate someone to act for you.
-        Email <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and say
-        which. I reply myself, and I aim to do it within thirty days.
+        Under the Act you can ask for a summary of what I hold about you, ask me to correct or
+        complete it, ask me to delete it, withdraw a consent you gave, and nominate someone to act
+        for you. Email <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and
+        say which. I reply myself, and I aim to do it within thirty days. If you are not satisfied
+        with my answer, you can complain to the Data Protection Board of India.
       </p>
       <p>
         <strong>Deletion means deletion.</strong> The row is removed from the database, not flagged
-        as hidden or moved to an archive. Deleting a participant also deletes their questionnaire
-        answers. Deleting a booking cancels the calendar event first, so it disappears from your
-        calendar as well as mine.
+        as hidden or moved to an archive. Deleting a person also removes their download requests.
+        Deleting a participant also deletes their questionnaire answers and course work. Deleting a
+        booking cancels the calendar event first.
       </p>
-      <p>
-        Two honest limits. Emails you sent me, and the email copy of any form you submitted, live in
-        my ordinary mail account and have to be deleted there as a separate step. And the page-visit
-        counter holds nothing that can be linked back to you by design, so there is no way for me to
-        find <em>your</em> rows in it, and nothing there to return or delete.
-      </p>
+      <p>Three honest limits:</p>
+      <ul>
+        <li>Emails you sent me, and the email copy of any form you submitted, live in my mail account and are deleted there as a separate step.</li>
+        <li>This site's own visit records hold nothing that links back to you, so there is nothing of yours in them to return or delete.</li>
+        <li>Google, Microsoft, Meta, LinkedIn and Apollo.io hold their data against a cookie or an account, not against your name in my records. Clearing your cookies breaks that link. For anything more, tell me and I will use what their tools allow, or contact them directly through the links above.</li>
+      </ul>
 
       <h2>What this site does not do</h2>
       <ul>
-        <li>No advertising, no advertising cookies, no remarketing, no conversion pixels.</li>
-        <li>No selling, renting or sharing of your details with anyone outside the list above.</li>
-        <li>No profiling, scoring or automated decisions about you. Applications are read by me.</li>
-        <li>No tracking across other websites, and no attempt to recognise you across days.</li>
-        <li>No email newsletter, so there is no list to be added to without asking.</li>
+        <li>No selling, renting or trading of your details.</li>
+        <li>No automated decisions about you. Applications are read by me.</li>
+        <li>No marketing email without the tick box above, and none at all is being sent today.</li>
+        <li>No third-party tags on the interactive tools, on this page, or behind a sign-in.</li>
       </ul>
 
       <h2>Children</h2>
       <p>
-        This is a professional programme for practising senior engineers, and it is not intended for
+        This is a professional programme for practising engineers, and it is not intended for
         anyone under 18. I do not knowingly collect anything from a child. If you believe a child
         has sent me something, write to me and I will delete it.
       </p>
@@ -350,21 +524,18 @@ const UPDATED = '14 September 2026';
       <p>
         Everything is served over HTTPS. The database refuses every key except one held on the
         server, which is never sent to a browser. Access codes and reschedule links are stored only
-        as cryptographic hashes, so the stored form cannot be used to sign in or to open a booking.
-        The operator console is password-gated and excluded from search engines.
+        as hashes. The operator console is password-gated and excluded from search engines.
       </p>
       <p>
-        No system is perfectly secure, and a practice that claimed otherwise would be telling you
-        something false on its privacy page. If you find a problem here, write to me and I will fix
-        it and tell you what happened.
+        No system is perfectly secure. If you find a problem here, write to me and I will fix it
+        and tell you what happened.
       </p>
 
       <h2>Changes to this page</h2>
       <p>
-        This page is versioned alongside the code it describes, and it is expected to change when
-        the site does. The date at the top is the date it last changed. There is no archive of
-        earlier versions, and material changes will be noted here rather than announced by email,
-        because there is no mailing list to announce them on.
+        This page is versioned alongside the code it describes, and it changes when the site does.
+        The date at the top is the date it last changed. There is no archive of earlier versions,
+        and changes are noted here rather than announced by email.
       </p>
 
       <div class="closing">

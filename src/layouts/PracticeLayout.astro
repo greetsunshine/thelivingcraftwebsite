@@ -55,9 +55,20 @@ export interface Props {
   noindex?: boolean;
   /** A page-template class for the body element, e.g. 'tool-page' (see styles/templates). */
   bodyClass?: string;
+  /**
+   * Load Google Tag Manager, and so every tag in the container (Google
+   * Analytics, Microsoft Clarity and the advertising tags). Default on.
+   *
+   * A page that promises "nothing you type is sent anywhere" passes false.
+   * Clarity records what happens on a page, clicks included, and a tag added
+   * in the GTM console later can capture anything; CLAUDE.md's rule is that
+   * such a page must not load the container at all. The first-party beacon
+   * (Track) stays: it sends a path and a referrer, never content.
+   */
+  tagManager?: boolean;
 }
 
-const { title, description, canonical, schema, noindex = false, bodyClass } = Astro.props;
+const { title, description, canonical, schema, noindex = false, bodyClass, tagManager = true } = Astro.props;
 
 // Every page here wears the V5 chrome (`lc-v5`). A reading page also takes V5's
 // reading type (`lc-v5-read`); a tool page does not, so it keeps the design
@@ -68,11 +79,11 @@ const isTool = bodyClass === 'tool-page';
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <GoogleTagManager />
+    {tagManager && <GoogleTagManager />}
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
   <body class:list={['lc-v5', !isTool && 'lc-v5-read', bodyClass]}>
-    <GoogleTagManagerNoscript />
+    {tagManager && <GoogleTagManagerNoscript />}
     <a class="skip" href="#main">Skip to content</a>
 
     <SiteHeader action={{ label: 'Explore the cohort', href: '/' }} talk />

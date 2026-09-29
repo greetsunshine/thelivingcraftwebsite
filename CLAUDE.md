@@ -1314,7 +1314,15 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     later in the GTM console can capture anything. The audit page sits on
     `ResourcesLayout`, which carries no tag manager; do not add one there, and do not
     move the page onto a layout that has one. The first-party beacon stays, because it
-    sends a path and a referrer and never content.
+    sends a path and a referrer and never content. A page on `PracticeLayout` that makes
+    the same promise passes `tagManager={false}`; the Agent Design Check does, since
+    29 September 2026.
+  - **The container's tags are listed on `/privacy`, and a tag added in the GTM console
+    is a change to that page.** On 29 September 2026 the live container loaded Google
+    Analytics 4 and Microsoft Clarity. The Meta Pixel and Conversions API, the LinkedIn
+    Insight Tag and the Apollo.io tag are described there at the owner's instruction and
+    were not yet firing. There is no consent banner: the page says so, and it must keep
+    saying so until one exists.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an

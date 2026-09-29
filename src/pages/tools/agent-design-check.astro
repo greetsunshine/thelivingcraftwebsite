@@ -147,7 +147,10 @@ const schema: unknown[] = [
 ];
 ---
 
-<PracticeLayout bodyClass="tool-page" title={title} description={description} canonical={path} schema={schema}>
+{/* tagManager={false}: this page says "nothing you type is sent anywhere", and
+    Google Tag Manager loads Microsoft Clarity, which records clicks. Removed on
+    29 September 2026, when the privacy page was rewritten to list the tags. */}
+<PracticeLayout bodyClass="tool-page" title={title} description={description} canonical={path} schema={schema} tagManager={false}>
   <div class="adc" id="adc" data-state="rest">
     {/* In .wrap, like the hero below it. Outside one, the trail sat flush
         against the left edge of the screen. */}

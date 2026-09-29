@@ -239,6 +239,32 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     "Scored by Zoë". `byLine()` in pdf-writer.ts now drops the line instead. A real fix for
     Indian scripts is not possible with pdf-lib: it does no text shaping, so even an embedded
     Devanagari font would draw conjuncts and vowel signs in the wrong places.
+- [x] **8. The privacy page** (29 September). The user asked for `/privacy` to cover this
+  branch's changes and five tags: Google Analytics, Microsoft Clarity, Meta CAPI, the
+  LinkedIn pixel and the Apollo pixel.
+  - The old page said "no third-party trackers", "no analytics cookies" and "no conversion
+    pixels". The live site already loaded Google Analytics and Clarity through GTM, so it
+    was false before this work started.
+  - What production loads was recorded on 29 September with Playwright on seven pages:
+    Google Analytics 4 (`G-S2XJ61GXDD`) and Microsoft Clarity (`yin1xnh55d`) on every page
+    with the container, with the cookies `_ga`, `_ga_S2XJ61GXDD`, `_clck`, `_clsk` and
+    Microsoft's own. **No Meta, LinkedIn or Apollo request was seen.** The page describes
+    them because the owner asked; whoever adds them in GTM must make them match it.
+  - **The Meta Conversions API has no code path in this repository.** It runs from a
+    server, so it is configured somewhere else, if at all. The page describes the usual
+    shape (events from a server, identifiers hashed).
+  - The page now also covers the download gate, the attribution kept with a submission,
+    the first-party record on `/resources/` and `/tools/`, the automated assistant, the
+    cohort call, the audit's local storage, the team that reads the console, transfers
+    outside India, and the right to complain to the Data Protection Board.
+  - **The Agent Design Check no longer loads the container** (`tagManager={false}` on
+    `PracticeLayout`). It promises that nothing typed is sent anywhere, and Clarity records
+    clicks.
+  - **Open, and it matters for 1 October:** there is no consent banner. The tags load when a
+    page opens, and the page says so. Advertising tags (Meta, LinkedIn, Apollo) switched on
+    without asking first are the weakest point under the DPDP Act. A banner with Google's
+    Consent Mode, and the tags held until a visitor agrees, is the fix; `attribution.ts`
+    already waits for the same signal.
 
 ---
 

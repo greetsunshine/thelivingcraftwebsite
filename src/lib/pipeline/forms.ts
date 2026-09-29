@@ -230,7 +230,9 @@ export const FORMS: Record<Route, FormDefinition> = {
    */
   enquiry: {
     route: 'enquiry',
-    title: 'Ask about the cohort',
+    // The page's label since 29 September 2026: the automated chat is "Ask about
+    // the cohort", and two controls with one name would be a trap.
+    title: 'Write to Sunil about the cohort',
     intro:
       'Ask anything about fit, the commitment, the schedule or employer funding. This is not an application.',
     action: 'Send your question',
