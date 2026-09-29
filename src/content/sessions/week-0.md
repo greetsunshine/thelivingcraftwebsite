@@ -3,7 +3,6 @@ week: 0
 title: "Before we begin"
 summary: "Get the reference agent running, then tell Sunil where you are starting from."
 status: ready
-topics: []
 ---
 
 Welcome aboard. There is about 45 minutes of prep to do on your own, then we meet
@@ -174,7 +173,38 @@ environment is the single most important thing you can do before we meet.
 
 ---
 
-## 2 · Your intake
+## 2 · The question the course does not ask again
+
+*About 20 minutes, and it is reading plus one written answer.*
+
+Week 1 opens with an agent that already exists, and every week after it assumes
+you are building one. **So the first decision gets made before the course starts,
+and this is where you make it.**
+
+Read [When a workflow is enough](/resources/guides/workflow-or-agent). It is one
+of our own guides and it argues one thing: an agent is a decision about control
+flow, not about capability. The test is whether you can write the steps down
+before the request arrives. If you can, a workflow is enough, and it will be
+cheaper, faster and easier to explain to an auditor.
+
+Then take your own candidate system through
+[The POC Selection Tool](/resources/poc-screen). It asks whether the thing you
+have in mind is the right first agent to build at all.
+
+**Bring one written answer to the kickoff.**
+
+> For the system you are bringing to this cohort: could you write its steps down
+> before the request arrives?
+>
+> If yes, say what an agent would add that a workflow would not.
+
+**"A workflow is enough" is a correct answer and it is not a problem.** Several
+people in every cohort arrive with a workflow wearing an agent's clothes, and
+finding that out in week 0 is worth more than finding it out in week 6. You will
+still build the reference agent with us, because the failures it shows you are the
+failures your workflow has too, one layer down.
+
+## 3 · Your intake
 
 *~20 minutes. The most valuable thing you will do this week.*
 

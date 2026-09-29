@@ -30,10 +30,10 @@
 
 | | Count | |
 |---|---|---|
-| Done, and done right | **71** | was 14 |
+| Done, and done right | **74** | was 14 |
 | Built, but contradicts the spec | **0** | was 7 — all fixed |
 | Specified, not yet built | **1** | was 10 |
-| Content gaps (writing, not engineering) | **2** | was 5 |
+| Content gaps (writing, not engineering) | **2** | was 5 — both now weeks 3–6 only |
 
 **Every engineering item in the spec is now built except one** — reading opens. Since the
 audit the surfaces are also responsive, the agent is docked to the bottom of every `/craft`
@@ -313,6 +313,21 @@ Friday", that is the cut feature returning under a new name.**
 
 ---
 
+### Added 28 September — releasing a week, and two pages that show all of them
+
+- [x] **`session_releases` and `src/lib/craft/release.ts`.** A week opens to a learner when
+      it is written AND released. `status` stays an authoring fact in git; release is data,
+      written from the console, because it happens on the evening a session ends. An
+      unreachable table reads as nothing released, which is the safe direction and is why the
+      table is in the health probe list. **Needs `supabase/schema.sql` run.**
+- [x] **`/craft/material`.** The learner's index of all seven weeks, gated per week, with
+      what is inside each open one. In the rail as *Material* and named in the tour spine.
+- [x] **`/craft/admin/teaching`.** Every week in full for the instructor, the quiz bank with
+      every key and distractor rationale, and the notes from `docs/teaching/notes` read at
+      request time. Gated on the console cookie, never a seat code.
+
+---
+
 ## 2 · Built, but contradicts the spec
 
 **None outstanding.** All seven items from the first audit are fixed — see *Fixed in this
@@ -335,12 +350,23 @@ The spec flags this (§11) as the binding constraint on the whole design, and it
 **Nothing in section 1 does much until this is done** — the room views have one question
 to distribute.
 
-- [ ] **The quiz bank contains one item.** `docs/teaching/quiz/week-1.md` holds `item-01`.
-      Week 1 needs about fifteen; weeks 2–6 need a file each. The format, the parser, the
-      answer-key split and both room views are finished and waiting on content.
-- [ ] **Weeks 2–6 have no session body.** `status: draft`, placeholder text, and
+- [ ] **Weeks 3–6 have no session body.** `status: draft`, placeholder text, and
       `assignment: "TBD"`. The quiz items and ADR prompts are extractions from these, so
-      this is the actual first domino.
+      this is still the first domino — for four weeks rather than five.
+- [ ] **Weeks 3–6 have no quiz bank.** A file each under `docs/teaching/quiz/`. The format,
+      the parser, the answer-key split and both room views have been finished and waiting on
+      content since 9 September.
+
+**Closed 28 September:**
+- ~~The quiz bank contains one item~~ — week 1 holds fifteen and week 2 holds eight, all
+  eight of week 2's asked on the learner check. Parsed and verified against the parser's own
+  regexes rather than by eye.
+- ~~Week 2 has no session body~~ — written in full, and on 28 September its frontmatter was
+  completed too: outcomes, threads, quiz, runOfShow, checkpoints, pair, prework, assignment,
+  after and reading. **That gap was invisible and expensive**: the prose had been finished
+  for days while every instrument read the week as empty, so no pulse, no checkpoints, no
+  check, nothing in session mode, and `assignment: "TBD"` meant no ADR unlocked. A written
+  week is not a wired week, and only the frontmatter says which.
 
 **Closed since the last pass:**
 - ~~Questions aren't organised by week~~ — the bank is now one file per week and items

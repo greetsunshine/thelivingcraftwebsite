@@ -24,6 +24,7 @@ import SessionPrompt from '../../components/craft/SessionPrompt.astro';
 import { liveSession } from '../../lib/craft/live';
 import { blockAt } from '../../lib/craft/schedule';
 import { offerKind } from '../../lib/craft/tour';
+import { releasedWeeks, isOpen } from '../../lib/craft/release';
 import Logo from '../../components/site/Logo.astro';
 
 // Gated: never prerender. A static file under dist/ would be served without the
@@ -33,6 +34,10 @@ export const prerender = false;
 const learner = Astro.locals.learner!;
 
 const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - b.data.week);
+// The Sessions list said "Ready" from `status` alone, which is half the gate.
+// A week that is written and not yet released is not open, and the page itself
+// now says so — see the note in [slug].astro.
+const released = await releasedWeeks();
 
 // Surfaced on this page rather than only inside week 0, because an unsubmitted
 // intake is the one outstanding task a learner has before the cohort starts and
@@ -431,8 +436,12 @@ if (familiarityDue) {
                       {s.data.module ? `${s.data.module} · ${moduleOf(s.data.module)?.title}` : 'Pre-work'}
                     </span>
                   </span>
-                  <span class={`pill state ${s.data.status === 'ready' ? 'live' : ''}`}>
-                    {s.data.status === 'ready' ? 'Ready' : 'In progress'}
+                  <span class={`pill state ${isOpen(s.data.week, s.data.status, released) ? 'live' : ''}`}>
+                    {isOpen(s.data.week, s.data.status, released)
+                      ? 'Open'
+                      : s.data.status === 'ready'
+                        ? 'Not released yet'
+                        : 'In progress'}
                   </span>
                 </a>
               ))

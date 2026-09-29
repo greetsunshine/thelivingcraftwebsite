@@ -42,6 +42,7 @@ import {
 import { allDrafts, allReviews } from '../../../lib/craft/pairs';
 import { listLearners } from '../../../lib/craft/learners';
 import { getLearnerItems } from '../../../lib/craft/quiz';
+import { releases as sessionReleases } from '../../../lib/craft/release';
 import { itemsForCheck } from '../../../lib/craft/checks';
 import { threadLabel, WEIGHT_LABEL } from '../../../lib/craft/threads';
 import { inlineCode } from '../../../lib/craft/text';
@@ -144,6 +145,12 @@ const weeks = ordered.map((s) => {
   };
 });
 
+// Which weeks the room can open. null means the table is not answering, which is
+// a different thing from "nothing released" and has to read differently.
+const releaseRows = await sessionReleases();
+const releaseTableDown = releaseRows === null;
+const releasedAt = new Map((releaseRows ?? []).map((r) => [r.week, r.releasedAt]));
+
 const anyTimetable = ordered.some((s) => s.data.startsAt || s.data.endsAt);
 ---
 
@@ -184,6 +191,40 @@ const anyTimetable = ordered.some((s) => s.data.startsAt || s.data.endsAt);
           the learner's copy ↗
         </a>
       </header>
+
+      {w.data.week > 0 && (
+        <div class="rel" data-week={w.data.week}>
+          <span class="label">Released to the room</span>
+          {releaseTableDown ? (
+            <p class="rel-down">
+              <code>session_releases</code> is not answering, so every week reads as shut to
+              learners. Run <code>supabase/schema.sql</code>.
+            </p>
+          ) : (
+            <div class="rel-row">
+              <button
+                type="button"
+                class={`rel-btn ${releasedAt.has(w.data.week) ? 'is-open' : ''}`}
+                data-open={releasedAt.has(w.data.week) ? 'true' : 'false'}
+                disabled={w.data.status !== 'ready'}
+              >
+                {releasedAt.has(w.data.week) ? 'Open — shut it again' : 'Shut — release it'}
+              </button>
+              <span class="rel-state mono">
+                {releasedAt.has(w.data.week)
+                  ? `released ${new Date(releasedAt.get(w.data.week)!).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                  : w.data.status === 'ready'
+                    ? 'written, not released'
+                    : 'not written yet — a release would show a placeholder'}
+              </span>
+            </div>
+          )}
+          <p class="rel-note muted">
+            Releasing opens this week on <code>/craft/material</code> and its own page. Both gates
+            have to pass: written here in the repo, released here in the console.
+          </p>
+        </div>
+      )}
 
       <p class="muted summary">{w.data.summary}</p>
 
@@ -599,6 +640,57 @@ const anyTimetable = ordered.some((s) => s.data.startsAt || s.data.endsAt);
     margin-bottom: 3px;
   }
 
+  /* The release control. Forest fill means clickable, per the design system, so
+     an open week is a filled button and a shut one is an outline. */
+  .rel {
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-panel, 12px);
+    background: var(--paper-2, #FBF8F2);
+  }
+  .rel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .rel-btn {
+    font: inherit;
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: var(--radius-control, 6px);
+    border: 1px solid var(--control-line, #758279);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .rel-btn:hover:not(:disabled) {
+    background: var(--paper, #FBF8F2);
+  }
+  .rel-btn.is-open {
+    background: var(--control-primary-bg, #183D32);
+    border-color: var(--control-primary-bg, #183D32);
+    color: var(--text-on-accent, #F5F0E6);
+  }
+  .rel-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .rel-state {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .rel-note,
+  .rel-down {
+    margin: 8px 0 0;
+    font-size: 12px;
+  }
+  .rel-btn[data-busy='true'] {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
   @media (max-width: 640px) {
     .m-checkpoint {
       margin-left: -10px;
@@ -609,3 +701,40 @@ const anyTimetable = ordered.some((s) => s.data.startsAt || s.data.endsAt);
     }
   }
 </style>
+
+<script>
+  // One handler for every week. The reply says what the state IS afterwards, so
+  // the row redraws from the server's answer rather than from an assumption
+  // about what the click did.
+  document.querySelectorAll('.rel').forEach((box) => {
+    const week = Number((box as HTMLElement).dataset.week);
+    const btn = box.querySelector<HTMLButtonElement>('.rel-btn');
+    const state = box.querySelector<HTMLElement>('.rel-state');
+    if (!btn || !state || !week) return;
+
+    btn.addEventListener('click', async () => {
+      const open = btn.dataset.open !== 'true';
+      btn.dataset.busy = 'true';
+      try {
+        const res = await fetch('/api/craft/admin/release', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ week, open }),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          state.textContent = body.error ?? 'that did not save';
+          return;
+        }
+        btn.dataset.open = body.open ? 'true' : 'false';
+        btn.classList.toggle('is-open', body.open);
+        btn.textContent = body.open ? 'Open — shut it again' : 'Shut — release it';
+        state.textContent = body.open ? 'released just now' : 'written, not released';
+      } catch {
+        state.textContent = 'that did not save';
+      } finally {
+        btn.dataset.busy = 'false';
+      }
+    });
+  });
+</script>

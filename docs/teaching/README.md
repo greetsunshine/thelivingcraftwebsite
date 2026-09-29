@@ -41,15 +41,88 @@ all have gone on screen for a paying participant the moment that file flipped to
 
 Week 2 is built and published **one topic at a time**, so each topic is a pair of pages
 rather than a whole session. The topic list and the shared label vocabulary are in
-`threads.md`. Topic 1 of 5, guardrails:
+`threads.md`.
 
-    topic 1 · guardrails · "Where the limit lives"
+**Six topics, not five, since the 28 September rebuild.** The session went to eight blocks
+and three build-break cycles, and the choice of mechanism earned a topic of its own. The
+unit stayed the topic rather than the block, because after the rebuild four of the five
+old topics became single unbroken runs, so blocks and topics now nearly coincide and the
+topic is the unit of the argument.
+
+    topic 1 · guardrails · the limit · "Where the limit lives"        REBUILT 28 Sep
     learner    https://claude.ai/code/artifact/b6cc3049-8e36-4865-ac75-13c8c30d6331
     instructor https://claude.ai/code/artifact/94a3dee1-5c2f-4fa4-83e3-72beab968ebc
 
-    topic 2 · human in the loop · "Who answers at 2am"   (outline stage)
+    topic 2 · the human gate · "The guardrail that calls a person"    REBUILT 28 Sep
     learner    https://claude.ai/code/artifact/e09aa8a7-17b3-40f9-9f71-3c0a476086e9
     instructor https://claude.ai/code/artifact/2d642bdf-1797-4fd9-b929-d5297a57e6a0
+
+    topic 3 · reliability · "The fix that passes and is not a fix"    NEW 28 Sep
+    learner    https://claude.ai/artifact/5rSfHuRqxMh4pnLqxL7xpV
+    instructor https://claude.ai/artifact/XP8Go9f39bum9PKKzasYr2
+
+    topic 4 · risk trade-offs · "The mistake your monitoring…"        NEW 28 Sep
+    learner    https://claude.ai/artifact/8BMPNTrD8XqMnKXHEqp6wk
+    instructor https://claude.ai/artifact/G7szciCpfzwgzJZcwgmUzH
+
+    topic 5 · governance · "The table somebody else can build from"   NEW 28 Sep
+    learner    https://claude.ai/artifact/H6WiABZqtq3kQaCJNnTdfu
+    instructor https://claude.ai/artifact/EHPs9vRK8Q8kz67qRnQf3z
+
+    topic 6 · choosing a mechanism · "When the checker is a model"    NEW 28 Sep
+    learner    https://claude.ai/artifact/2DvAm4iPYCAPqaunNe3xvm
+    instructor https://claude.ai/artifact/D7tcY7EjSGUXcgrGJpk8f2
+
+**Week 2 also has one collated pair, the same shape week 1 uses.** All six topics on one
+learner page and one instructor page, each topic in a collapsible so you can work through
+them one at a time. The six topic pairs above stay: they are what you open to teach or
+read one topic, and the collated pair is what you open to see the week.
+
+    week 2 · all six topics, collated                                 NEW 29 Sep
+    learner    https://claude.ai/artifact/Q1r2bp8wuXJtm8U6v31tLU
+    instructor https://claude.ai/artifact/UvW3uzMHXznXU95oWHkA98
+
+The collated pages are **generated from the six topic pairs**, so the six are the source
+and the collated pair is the view. The collated instructor page keeps the two-column
+side-by-side layout, one `.teach` grid per topic inside its collapsible.
+
+**The script the instructor pages embed is [`scripts/teaching-pane.js`](../../scripts/teaching-pane.js).**
+It runs the Side-by-side toggle and lights the reference card behind whichever beat you
+click. It is in the repo because it was broken in all seven published pages at once and
+nothing could see it: the old version passed a bare id to `querySelector`, which read it
+as an element name and matched nothing, so clicking a beat did nothing. A dead link and a
+working one are the same HTML, so `check:teaching` cannot catch it. Check by hand after a
+rebuild, or check that every `data-ref` has a matching `id` on the page. Change a topic, rebuild its pair, then rebuild the
+collated pair. The clock in all fourteen pages comes from `scripts/teaching-clock.mjs`.
+
+**Run `npm run check:teaching <learner.html> <instructor.html>` before every republish.**
+It is eleven mechanical checks between a pair: the clock tables byte-identical, both pages
+in clock order, every card and every run-of-show row present in the clock, the two columns
+agreeing heading for heading, every learner heading present on the instructor page, and
+both pages well formed. **All six pairs pass all eleven, as of 28 September.**
+
+**The collated pair runs the same command with `--by-topic`**, which swaps six of the
+eleven checks. The clock-order and run-of-show checks describe a page that claims to be a
+run of show, and a page organised by topic does not; in their place it checks that neither
+page has duplicate ids, that six collapsible topics exist, and that both pages carry the
+same topics in the same order. Nine checks, all passing.
+
+**The clock lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs) and
+nowhere else.** Twelve pages carry it, and twelve copies maintained by hand is twelve
+chances for a row to drift invisibly. Print the block for a topic and paste it into both
+pages of that pair:
+
+    node scripts/teaching-clock.mjs 01:40 01:47 02:00 02:05 02:20
+
+That this matters is not hypothetical. Topics 1 and 2 were built before topics 3 to 6
+existed, and by the time all six were written their clocks disagreed about who owned two
+rows. Both were regenerated and republished from the one table.
+
+Topic 2 was recorded here as "outline stage" and that was wrong. Both its pages were
+complete, including a hand-drawn SVG of the four exits from an ask. Only the clock was
+stale.
+
+Fetch the published pages to disk first, because the script reads files rather than URLs.
 
 The same caution applies as for week 1: these are a second surface saying what
 `src/content/sessions/week-2.md` says. The session file is what the site serves and is

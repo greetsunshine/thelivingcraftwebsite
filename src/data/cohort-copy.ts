@@ -140,6 +140,14 @@ export interface ModuleDetail {
  * titles typed out in both files, which typechecks perfectly while the page
  * goes stale the moment a title changes in facts.ts.
  *
+ * MULTI-AGENT MOVED FROM M2 TO M3 ON 28 SEPTEMBER 2026, and the copy now says so.
+ * The 8 September decision in docs/teaching/threads.md (bridge 5) put multi-agent
+ * orchestration in week 5, which is M3, and RAG in week 3, which is M2 — and
+ * recorded that the public copy would not change. It had to: M2 named a topic M3
+ * delivers, so an applicant reading "weeks 2-4" was told the wrong weeks. This is
+ * the only definition of the modules, so the fix reaches the page, the JSON-LD
+ * Course node, /api/facts and /llms.txt at once.
+ *
  * The prose lives here and not in facts.ts on purpose. facts.ts is the
  * structured offer — the fields a crawler and the assistant read. A paragraph
  * of page copy is not one of those, which is why `cohortModules()` below hands
@@ -156,13 +164,13 @@ export const MODULES: ModuleDetail[] = [
     id: 'M2',
     weeks: 'Weeks 2–4',
     title: "Agentic systems you'd put your name on",
-    body: 'Multi-agent orchestration, RAG, and tool boundaries. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft. Demos are easy. Systems you would run in production are not.',
+    body: 'Tool boundaries, guardrails and retrieval. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft. Demos are easy. Systems you would run in production are not.',
   },
   {
     id: 'M3',
     weeks: 'Week 5',
     title: 'Scale, consistency & the irreversible trade-offs',
-    body: 'Reading the CAP trade-off in real systems. Capacity and cost under load. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
+    body: 'Multi-agent orchestration, and what happens to a harness when one loop is no longer enough. Reading the CAP trade-off in real systems. Capacity and cost under load. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
   },
   {
     id: 'M4',

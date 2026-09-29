@@ -30,6 +30,9 @@ const TABLES = [
   'submissions',
   'quiz_responses',
   'session_prompts',
+  // Which weeks the room may open. Unreachable means the whole course reads as
+  // unreleased, which is the safe direction and the one worth a banner.
+  'session_releases',
   'outcome_ratings',
   'checkpoint_ratings',
   'pair_drafts',

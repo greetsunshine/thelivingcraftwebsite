@@ -12,6 +12,7 @@ import { learnerCohort as cohort } from '../../data/learner-cohort';
 import { dayPlan } from '../../lib/craft/schedule';
 import { inlineCode } from '../../lib/craft/text';
 import { threadLabel, WEIGHT_LABEL } from '../../lib/craft/threads';
+import { releasedWeeks, isOpen, shutBecause } from '../../lib/craft/release';
 
 export const prerender = false;
 
@@ -33,6 +34,20 @@ const module = session.data.module
   ? cohort.modules.find((m) => m.id === session.data.module)
   : undefined;
 const { Content } = await render(session);
+
+// THE RELEASE GATE, and this page has to ask it as well as /craft/material.
+//
+// Written and released are two conditions and only one of them is in this file
+// (src/lib/craft/release.ts says why). Until 29 September this page checked
+// `status` alone, so a week that was finished but not yet taught served its
+// whole body to anybody who typed the URL — and the dashboard linked to it. The
+// index said "not released yet" and the page disagreed, which is the wrong way
+// round for two surfaces to differ.
+//
+// Week 0 is always open; it is the pre-work.
+const released = await releasedWeeks();
+const open = isOpen(session.data.week, session.data.status, released);
+const shut = shutBecause(session.data.week, session.data.status, released);
 
 // The day as one ordered list — blocks, checkpoints and the two pair offsets
 // merged by dayPlan() rather than by this page, so the console and /craft/live
@@ -72,8 +87,8 @@ const isExternal = (url: string) => !url.startsWith('/');
       <p class="lead">{session.data.summary}</p>
 
       <div class="head-row">
-        <span class={`pill ${session.data.status === 'ready' ? 'live' : ''}`}>
-          {session.data.status === 'ready' ? 'Ready' : 'In progress'}
+        <span class={`pill ${open ? 'live' : ''}`}>
+          {open ? 'Open' : shut === 'unwritten' ? 'In progress' : 'Not released yet'}
         </span>
         {
           session.data.recordingUrl && (
@@ -85,7 +100,7 @@ const isExternal = (url: string) => !url.startsWith('/');
       </div>
 
       {
-        session.data.status === 'ready' ? (
+        open ? (
           <Fragment>
             {outcomes.length > 0 && (
               <section class="panel" data-tour="session-outcomes">
@@ -215,12 +230,21 @@ const isExternal = (url: string) => !url.startsWith('/');
           </Fragment>
         ) : (
           <div class="panel marked quiet">
-            <p class="klabel">Still being written</p>
-            <p class="muted">
-              This session has not been written up yet. It will appear here before the week it is
-              taught. The material is prepared close to the cohort on purpose. That way it reflects
-              what is true in the field now, rather than what was true when the page was built.
-            </p>
+            <p class="klabel">{shut === 'unwritten' ? 'Still being written' : 'Not released yet'}</p>
+            {shut === 'unwritten' ? (
+              <p class="muted">
+                This session has not been written up yet. It will appear here before the week it is
+                taught. The material is prepared close to the cohort on purpose. That way it
+                reflects what is true in the field now, rather than what was true when the page was
+                built.
+              </p>
+            ) : (
+              <p class="muted">
+                This session is written and has not been taught yet. It opens on the evening the
+                session runs. Every session asks you to predict something before it shows you the
+                answer, and reading ahead spends those predictions in advance.
+              </p>
+            )}
             <p class="muted">
               If you need the shape of it sooner, email{' '}
               <a class="inline-link" href={`mailto:${practitioner.email}`}>{practitioner.email}</a>.
