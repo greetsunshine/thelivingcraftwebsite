@@ -374,8 +374,8 @@ const sections = [
      characters inside the 1180px wrap. */
   .prose { max-width: var(--measure-prose); }
   .prose p + p { margin-top: var(--space-4); }
-  .final .prose { max-width: none; }
-  .final .prose p + p { max-width: var(--measure-prose); margin-left: auto; margin-right: auto; }
+  /* The closing section is left-aligned at the prose measure by tool.css
+     (29 September 2026); the centring rules that were here are gone. */
 
   .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
@@ -436,7 +436,7 @@ const sections = [
   .grid tbody tr:last-child td { border-bottom: 0; }
   .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
   .fields .cname { font-size: var(--size-1); word-break: break-word; }
-  .ftype { color: var(--text-faint); font-size: var(--size-1); font-family: var(--font-mono); }
+  .ftype { color: var(--text-quiet); font-size: var(--size-1); font-family: var(--font-mono); }
   .tag {
     display: inline-block;
     font-family: var(--font-mono);
@@ -448,8 +448,8 @@ const sections = [
     margin-right: var(--space-2);
     vertical-align: 1px;
   }
-  .tn { color: var(--text-faint); }
-  .tfn { display: block; font-size: 11px; color: var(--text-faint); font-weight: var(--weight-regular); margin-top: 2px; }
+  .tn { color: var(--text-quiet); }
+  .tfn { display: block; font-size: 11px; color: var(--text-quiet); font-weight: var(--weight-regular); margin-top: 2px; }
   .tests .then { color: var(--text-body); }
 
   /* ── invariants ───────────────────────────────────────────────────────── */
@@ -518,7 +518,7 @@ const sections = [
     box-shadow: var(--shadow-raise);
     padding: var(--space-4) var(--space-5);
   }
-  .qn { color: var(--text-faint); font-size: var(--size-1); padding-top: 3px; }
+  .qn { color: var(--text-quiet); font-size: var(--size-1); padding-top: 3px; }
   .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
   .qflag { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
   .flaglbl { color: var(--danger); font-size: 11px; margin-right: var(--space-2); }

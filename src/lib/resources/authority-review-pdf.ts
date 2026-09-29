@@ -32,7 +32,7 @@ import {
 import { publishedResources } from '../../data/resources';
 import { cohort } from '../../data/facts';
 import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
-import { ERROR, FOREST, INK, IVORY, LINE, MARGIN, MEASURE, MUTED, Writer, brandedPages, openBrandedDoc } from './pdf-writer';
+import { ERROR, FOREST, INK, IVORY, LINE, MARGIN, MEASURE, MUTED, Writer, brandedPages, byLine, openBrandedDoc } from './pdf-writer';
 
 export interface AuthorityPdfInput {
   rows: SheetRow[];
@@ -115,7 +115,7 @@ export async function renderAuthorityReviewPdf(input: AuthorityPdfInput): Promis
   // ---- cover line (the headline and subtitle are on the cover) -----------
   w.text(
     [
-      input.name ? `Assessed by ${input.name}` : null,
+      byLine('Assessed by', input.name),
       dateLine || null,
       'learning.thelivingcraft.ai/resources/agent-authority-review',
     ]

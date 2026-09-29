@@ -149,7 +149,9 @@ const schema: unknown[] = [
 
 <PracticeLayout bodyClass="tool-page" title={title} description={description} canonical={path} schema={schema}>
   <div class="adc" id="adc" data-state="rest">
-    <nav aria-label="Breadcrumb">
+    {/* In .wrap, like the hero below it. Outside one, the trail sat flush
+        against the left edge of the screen. */}
+    <nav class="wrap" aria-label="Breadcrumb">
       <ol class="crumbs">
         <li><a href="/">Home</a></li>
         <li class="sep" aria-hidden="true">/</li>
@@ -655,6 +657,7 @@ const schema: unknown[] = [
       const downloadBtn = el('button', 'btn btn-ghost', 'Download your summary (text file)');
       downloadBtn.type = 'button';
       downloadBtn.dataset.gate = 'txt';
+      downloadBtn.dataset.own = '';
       const copyBtn = el('button', 'btn btn-ghost', 'Copy the summary');
       copyBtn.type = 'button';
       copyBtn.addEventListener('click', () => {
@@ -663,6 +666,7 @@ const schema: unknown[] = [
       const printBtn = el('button', 'btn btn-ghost', 'Print or save as PDF');
       printBtn.type = 'button';
       printBtn.dataset.gate = 'print';
+      printBtn.dataset.own = '';
       exportRow.append(questionsBtn, downloadBtn, copyBtn, printBtn);
       panel.append(exportRow);
       panel.append(
@@ -1287,9 +1291,11 @@ const schema: unknown[] = [
     color: var(--text-loud);
   }
   .clear-one:disabled {
-    /* Faint is legitimate here: it is an inert control, not text to read, and
-       its name is on the button for anyone browsing the page. */
-    color: var(--text-faint);
+    /* An inert control, so WCAG sets no contrast minimum. It used to be
+       --text-faint, which is the on-forest colour and read 1.45:1 on paper,
+       effectively invisible. Quiet ink, dimmed, still reads as disabled. */
+    color: var(--text-quiet);
+    opacity: 0.55;
     cursor: default;
   }
 

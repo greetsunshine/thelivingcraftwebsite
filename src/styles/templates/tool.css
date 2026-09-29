@@ -60,3 +60,11 @@
   .tool-page .hero { padding: var(--space-6) 0 var(--space-4); }
   .tool-page .hero h1 { font-size: 2.2rem; }
 }
+
+/* The closing section reads left, like every closing section on the site since
+   19 September. global.css still centres `.final` for /caio, /assessment and
+   /latest; on a tool page that centred the heading and the prose above a
+   left-aligned button row (ClosingCta), which read as a mistake. The quiz and
+   the memory kit had already overridden it page by page; this is the rule. */
+.final { text-align: left; }
+.final .prose { max-width: var(--measure-prose); }

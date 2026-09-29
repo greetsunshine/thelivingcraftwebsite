@@ -780,6 +780,11 @@ default turned ₹ into "â‚¹", and a test now fails on that. The Rework Cost
 Check's workbook moved from `public/downloads/` into `downloads/` the same day; it had been
 a plain URL outside the gate.
 
+**A control that hands over the reader's own answers carries `data-own`.** The gate then
+says "Your copy" and that what they typed goes into the file; without it, the gate says
+the file is the same for everyone. Put it on a scored PDF, a CSV of the reader's rows, or a
+print of a filled tool. Never on a blank workbook, a worksheet or a template.
+
 **`print` is a kind.** A print button asks first, the request is recorded, then
 `window.print()` opens. It cannot stop Ctrl+P, and it does not claim to; it stops the
 button from being a download that skipped the gate.

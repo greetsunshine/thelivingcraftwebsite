@@ -374,6 +374,24 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
     .ask[data-launcher='header'] { top: calc(var(--anchor-offset, 76px) + 4px); bottom: auto; }
   }
 
+  /* Out of the way while it would sit on a control. Outreach readiness
+     handoff, 28 September 2026: "No popup should cover a tool result or
+     application button." The pill keeps its corner (Sunil, 16 September); the
+     script below moves it down out of view while a link, button or field is
+     under that corner, and brings it back when the reader scrolls on. Keyboard
+     focus always brings it back, so it is never unreachable. */
+  .ask-toggle { transition: background 0.2s, transform 0.2s, opacity 0.2s; }
+  .ask[data-tucked]:not([data-open]) .ask-toggle {
+    transform: translateY(calc(100% + 32px));
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ask[data-tucked]:not([data-open]) .ask-toggle:focus-visible {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .ask-toggle, .ask-form button, .ask-chip { transition: none; }
     .ask-log :global(.ask-thinking span) { animation: none; opacity: 0.6; }
@@ -696,6 +714,63 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
         var q = t.getAttribute('data-q');
         if (q) ask(q);
       });
+    }
+
+    // Tuck the floating pill away while a control sits under its corner (see
+    // the `data-tucked` rule in the styles). Measured on `.ask` itself, not on
+    // the pill: a transform moves the pill but not its parent's box, so the
+    // box is always where the pill sits when it is showing, sticky bar or not.
+    if (ownToggle && root.getAttribute('data-launcher') === 'floating') {
+      var queued = 0;
+      var CONTROL = 'a[href], button, input, select, textarea, summary, label, [role="button"], [tabindex]:not([tabindex="-1"])';
+      var covering = function (): boolean {
+        var home = root!.getBoundingClientRect();
+        if (!home.width || !home.height) return false;
+        // A grid every 12px or so, so a small control (a 20px remove button)
+        // cannot hide between two sample points.
+        var xs: number[] = [];
+        var ys: number[] = [];
+        for (var gx = home.left + 2; gx <= home.right - 2; gx += Math.max(8, (home.width - 4) / Math.ceil((home.width - 4) / 12))) xs.push(gx);
+        for (var gy = home.top + 2; gy <= home.bottom - 2; gy += Math.max(8, (home.height - 4) / Math.ceil((home.height - 4) / 12))) ys.push(gy);
+        for (var x of xs) {
+          for (var y of ys) {
+            for (var el of document.elementsFromPoint(x, y)) {
+              if (root!.contains(el)) continue;
+              if (el.closest(CONTROL)) return true;
+              break; // the first thing under the pill is not a control
+            }
+          }
+        }
+        return false;
+      };
+      var check = function () {
+        queued = 0;
+        if (!panel.hidden) return;
+        if (covering()) root!.setAttribute('data-tucked', '');
+        else root!.removeAttribute('data-tucked');
+      };
+      var soon = function () {
+        if (!queued) queued = requestAnimationFrame(check);
+      };
+      check();
+      window.addEventListener('scroll', soon, { passive: true });
+      window.addEventListener('resize', soon);
+      window.addEventListener('load', soon);
+      // The page can move under a still pill: fonts load, a tool changes step,
+      // a result appears. Check again when the page's size changes, and just
+      // after any click or typing, once the page has had time to redraw.
+      if ('ResizeObserver' in window) new ResizeObserver(soon).observe(document.body);
+      var later = function () {
+        setTimeout(soon, 400);
+      };
+      document.addEventListener('click', later, true);
+      document.addEventListener('input', later, true);
+      // And once a second, for anything the events above do not see (a tool's
+      // own script moving a row after load). A few dozen hit tests a second
+      // is nothing, and it stops while the tab is in the background.
+      setInterval(function () {
+        if (!document.hidden) soon();
+      }, 1000);
     }
   })();
 </script>

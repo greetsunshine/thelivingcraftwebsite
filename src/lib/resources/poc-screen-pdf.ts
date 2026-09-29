@@ -63,6 +63,7 @@ import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { COHORT_SIZE, COMMITMENT } from '../../data/offer-display';
 
 import {
+  byLine,
   ERROR,
   FOREST,
   INK,
@@ -151,7 +152,7 @@ export function buildModel(input: PocPdfInput): PocPdfModel {
     subtitle: 'Can this agent proof of concept reach production? Twelve questions, scored before you build.',
     series: meta ? `${meta.series} · ${meta.number}` : 'Resources',
     coverLine: [
-      input.name ? `Scored by ${clean(input.name)}` : null,
+      byLine('Scored by', input.name),
       dateLine || null,
       'learning.thelivingcraft.ai/resources/poc-screen',
     ]

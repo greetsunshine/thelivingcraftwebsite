@@ -87,6 +87,7 @@ import { COHORT_SIZE, COMMITMENT } from '../../data/offer-display';
 import type { PdfCheck } from './poc-screen-pdf';
 
 import {
+  byLine,
   ERROR,
   FOREST,
   INK,
@@ -217,7 +218,7 @@ export function buildModel(input: RunCostPdfInput): RunCostPdfModel {
     subtitle: 'Four ways to do the same job, costed over one period, with the operating lines most business cases leave out.',
     series: meta ? `${meta.series} · ${meta.number}` : 'Resources',
     coverLine: [
-      input.name ? `Modelled by ${clean(input.name)}` : null,
+      byLine('Modelled by', input.name),
       dateLine || null,
       'learning.thelivingcraft.ai/resources/run-cost-model',
     ]

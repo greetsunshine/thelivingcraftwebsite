@@ -18,10 +18,18 @@
 // come from RESOURCE_FIELDS, the same definition the server validates against,
 // so a field cannot be required in the browser and optional on the server.
 //
-// What it says is fixed on purpose: the answers go into the file and are not
-// stored; the address is used to send this resource once and starts no other
-// email. That last sentence is the promise the marketing view depends on
-// (`consented = false`), and no page may reword it.
+// What it says is fixed on purpose: the address is used to send this resource
+// once and starts no other email. That sentence is the promise the marketing
+// view depends on (`consented = false`), and no page may reword it.
+//
+// WHOSE FILE IT IS depends on the button, and the dialog says which. A control
+// that hands over the reader's own answers (a scored PDF, a CSV of their rows,
+// a print of a filled tool) carries `data-own`, and the dialog reads "Your
+// copy" and "What you typed into the tool goes into the file and is not
+// stored". Any other control hands over the same file for everyone (a blank
+// workbook, a worksheet, a template), and the dialog says that instead. Until
+// 29 September 2026 every file was called "your copy", which was false for the
+// blank tools that became the main download on 28 September.
 import { RESOURCE_FIELDS } from '../lib/pipeline/resources';
 
 interface Props {
@@ -40,7 +48,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
 
 <dialog class="gate" id="gate-dialog" aria-labelledby="gate-title" data-resource={resource} data-manual={manual ? '' : undefined}>
   <form method="dialog" id="gate-form" novalidate>
-    <span class="eyebrow"><span class="num" id="gate-kind">File</span> Your copy</span>
+    <span class="eyebrow"><span class="num" id="gate-kind">File</span> <span id="gate-whose">Download</span></span>
     <h2 id="gate-title">Get the file</h2>
     <p class="gate-lead">{lead} It is built against a name and an email address.</p>
     <div class="gate-grid">
@@ -55,8 +63,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     </div>
     <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <p class="gate-note">
-      What you typed into the tool goes into the file and is not stored. Your address is used to
-      send you this resource once. It does not start any other email.
+      <span id="gate-note-own" hidden>What you typed into the tool goes into the file and is not stored.</span>
+      <span id="gate-note-same">This file is the same for everyone. Nothing you typed goes into it.</span>
+      Your address is used to send you this resource once. It does not start any other email.
     </p>
     <p class="gate-status" id="gate-status" role="status" aria-live="polite"></p>
     <ul class="gate-checks mono" id="gate-checks" hidden></ul>
@@ -72,6 +81,24 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   import { mountGate } from '../lib/resources/gate-client';
   const dialog = document.getElementById('gate-dialog');
   if (dialog && !dialog.hasAttribute('data-manual')) mountGate();
+
+  // Say whose file this is before the dialog opens: capture phase, so it runs
+  // ahead of the gate's own click handler. See WHOSE FILE IT IS above.
+  const whose = document.getElementById('gate-whose');
+  const noteOwn = document.getElementById('gate-note-own');
+  const noteSame = document.getElementById('gate-note-same');
+  document.addEventListener(
+    'click',
+    (e) => {
+      const control = (e.target as Element | null)?.closest?.('[data-gate]');
+      if (!control || !whose || !noteOwn || !noteSame) return;
+      const own = control.hasAttribute('data-own');
+      whose.textContent = own ? 'Your copy' : 'Download';
+      noteOwn.hidden = !own;
+      noteSame.hidden = own;
+    },
+    true,
+  );
 </script>
 
 <style>

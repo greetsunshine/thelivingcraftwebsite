@@ -6,23 +6,32 @@
 // line is the handoff's wording; the cohort sentence is built from facts.ts,
 // so the start date, the hours and the name cannot drift from the offer.
 //
-// DATE-AWARE BY WAY OF facts.ts, NOT BY A CLOCK. The handoff asks that no
-// "October" invitation stays live after enrolment closes. There is no closing
-// date in facts.ts to test against, and guessing one would be inventing a fact.
-// So the sentence names `cohort.startsOn`: when the next cohort is set there,
-// every page moves with it. Until then, closing enrolment means editing that
-// one field, or switching COHORT_SENTENCE to EVERGREEN_SENTENCE below.
+// DATE-AWARE. The handoff asks that no "October" invitation stays live after
+// enrolment closes. `cohort.applicationsCloseOn` in facts.ts is that date, and
+// it is null until somebody decides it. While it is null, or before it, the
+// pages name `cohort.startsOn`; from that day on, every page served switches
+// to the evergreen line. Files built ahead of time (the workbooks, the blank
+// sheets, the memory kit PDF) keep the words they were built with: rebuild
+// them when the date passes.
 import { cohort, practitioner, SITE_ORIGIN } from './facts';
 
 /** The absolute application address, for print and for files people keep. */
 export const APPLY_URL = `${SITE_ORIGIN}/#apply`;
 
-/** The cohort sentence that follows each page's own line. */
+/** The cohort sentence while applications are open. */
 export const COHORT_SENTENCE = `Explore The Living Craft’s ${cohort.startsOn} cohort: ${cohort.liveHours} live hours with ${practitioner.name}, plus independent work.`;
 
-/** The handoff's wording for after enrolment closes. Not used while it is open. */
+/** The handoff's wording for after enrolment closes. */
 export const EVERGREEN_SENTENCE =
   'Build a working agentic system and develop the reasoning behind it. Explore The Living Craft and enquire about a future cohort.';
+
+/** Whether applications for `cohort.startsOn` are still open on `now`. */
+export const applicationsOpen = (now: Date = new Date()): boolean => {
+  const closes = cohort.applicationsCloseOn;
+  if (!closes) return true;
+  const end = new Date(`${closes}T23:59:59+05:30`); // the end of that day in India
+  return Number.isNaN(end.getTime()) || now <= end;
+};
 
 /** The line for a page the table below does not name. */
 const GENERIC_LINE = 'Build a working agentic system and develop the reasoning behind it.';
@@ -58,7 +67,8 @@ export const cohortLineFor = (path: string): string =>
   LINES[path.replace(/\/+$/, '') || '/'] ?? GENERIC_LINE;
 
 /** The whole invitation for one page: its line, then the cohort sentence. */
-export const cohortInvitationFor = (path: string): string => `${cohortLineFor(path)} ${COHORT_SENTENCE}`;
+export const cohortInvitationFor = (path: string, now: Date = new Date()): string =>
+  applicationsOpen(now) ? `${cohortLineFor(path)} ${COHORT_SENTENCE}` : EVERGREEN_SENTENCE;
 
 /** The short line under a page's introduction (handoff item 2). */
 export const INTRO_LINE = 'From The Living Craft, a live cohort on designing agentic systems.';

@@ -182,9 +182,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           <button class="btn btn-primary" id="add" type="button">Add a rule</button>
           <button class="btn btn-ghost" id="example" type="button">Load the worked example</button>
           <button class="btn btn-ghost" id="copy" type="button">Copy the map</button>
-          <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print or save as PDF</button>
+          <button class="btn btn-ghost" id="print" type="button" data-gate="print" data-own>Print or save as PDF</button>
           <button class="btn btn-ghost" id="md" type="button" data-gate="md">Download the blank worksheet</button>
-          <button class="btn btn-ghost" id="csv" type="button" data-gate="csv">Download your rows (CSV)</button>
+          <button class="btn btn-ghost" id="csv" type="button" data-gate="csv" data-own>Download your rows (CSV)</button>
           <button class="btn btn-ghost" id="clear" type="button">Clear all</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
@@ -279,9 +279,9 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
           </div>
           <div class="r-actions">
             <button class="btn btn-primary" id="md2" type="button" data-gate="md">Download the blank worksheet</button>
-            <button class="btn btn-ghost" id="print2" type="button" data-gate="print">Print or save as PDF</button>
+            <button class="btn btn-ghost" id="print2" type="button" data-gate="print" data-own>Print or save as PDF</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the map</button>
-            <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv">Download your rows (CSV)</button>
+            <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv" data-own>Download your rows (CSV)</button>
           </div>
         </div>
       </div>

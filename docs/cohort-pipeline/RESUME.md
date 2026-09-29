@@ -141,10 +141,8 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     default encoding, so ₹, → and curly quotes in the POC and model selection workbooks
     (pushed in 9d4b9b9) were mojibake. Both now decode UTF-8, and a test fails on mojibake
     in any of the four tool workbooks.
-  - **Still open from task 4:** the download gate's fixed wording says "Your copy" and "What
-    you typed into the tool goes into the file" for every file, including the blank
-    workbooks, where neither is true. The fix is in `ResourceGate.astro`: pick the wording
-    by file type. Not made yet.
+  - **The gate's wording, fixed in task 7:** it said "Your copy" and "What you typed into the
+    tool goes into the file" for every file, including the blank workbooks. See task 7.
 - [x] **5. Closing cohort CTA on every tool and resource page** (29 September). Sunil, call
   of 28 September: "At the bottom of each of the tools or any of the resources that we give,
   there should be a CTA that takes them to, you know, join or explore."
@@ -184,8 +182,8 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   - *Item 1, the chat label.* "Ask about the cohort" on `/` and the resource pages; `/caio`,
     `/assessment` and `/latest` keep "Ask about the practice". The launcher's accessible name
     and the panel's first line now say it is an automated assistant, not Sunil.
-    **Open with Sunil:** `/` now shows two controls with that label, the chat and the human
-    enquiry form ("Ask about the cohort", CohortPage.astro). They do different things.
+    The human enquiry form on `/` had the same label; it is "Write to Sunil about the
+    cohort" since task 7.
   - *Item 2, contextual CTAs.* `CohortIntroLink.astro`, one text line under each of the 22
     pages' introductions, counted as `resource-intro`. The closing row's line is now the
     handoff's own per-page wording plus one sentence built from facts.ts
@@ -202,8 +200,7 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     The memory kit PDF and ZIP were rebuilt from the page, so they carry the print line.
     Worksheet CSVs do not: a CSV row is not a place for a sentence.
   - `cohort.liveHours = 30` joined facts.ts; `/` read "30" as typed text in three places and
-    now reads the field. `cohort-copy.ts` still types it once, in an FAQ answer: that module
-    cannot import facts.ts without a cycle.
+    now reads the field. Since task 7 the FAQ answer in `cohort-copy.ts` reads it too.
   - `tools/rework-cost-check/build_xlsx.py` now runs its dump with `tsx`, because the dump
     reads the invitation module. Every value in the workbook was diffed in Excel before and
     after: only the three new cover cells changed.
@@ -211,13 +208,37 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     offer facts with Sunil and finance), the email nurture modules (no approved consent
     wording, and no provider), every provider, persistence and delivery test in the handoff's
     test table, and the video and D08 to D12 work.
-  - **Date-aware copy is by way of facts.ts.** The handoff wants no "October" invitation after
-    enrolment closes. There is no closing date to test against, so the sentence names
-    `cohort.startsOn`; closing enrolment means changing that field, or switching to
-    `EVERGREEN_SENTENCE` in resource-cohort-copy.ts.
-  - The chat pill still passes over the step pips and "Start scoring" on the three stepped
-    tools at 390px while the reader scrolls. It covers nothing on a result or an application
-    button. Its corner position is Sunil's decision of 16 September.
+  - The date switch and the chat pill's overlap were settled in task 7.
+- [x] **7. The remaining open items** (29 September). The user asked for them fixed.
+  - **The gate says whose file it is.** A button that hands over the reader's own answers
+    carries `data-own` (the four scored PDFs, the audit's CSV and print, the authority
+    review's print, the design check's summary and print). Its dialog says "Your copy" and
+    "What you typed into the tool goes into the file and is not stored". Every other file
+    says "Download" and "This file is the same for everyone. Nothing you typed goes into
+    it." The sentence about sending the resource once is unchanged on both.
+  - **One label, one job, on `/`.** The chat keeps "Ask about the cohort"; the human form is
+    "Write to Sunil about the cohort".
+  - **The chat pill moves out of the way.** It keeps Sunil's corner. While a link, button,
+    field or label sits under that corner it slides down out of view, and it comes back when
+    the reader scrolls on or tabs to it. Checked while scrolling seven pages at 390 and
+    1440px: while it shows, it covers no control.
+  - **The closing date.** `cohort.applicationsCloseOn` is in facts.ts and is `null`, because
+    nobody has decided it. Set it to an ISO date and, from the end of that day in India,
+    every page served uses the handoff's evergreen line instead of the October one. Files
+    built ahead of time (workbooks, blank sheets, the kit PDF) must be rebuilt then.
+  - **30 live hours** is one number, in `src/data/cohort-hours.ts`, read by facts.ts and by
+    `cohort-copy.ts` (which cannot import facts.ts). The literal email bodies in
+    `lib/comms/templates.ts` still say 30: they are frozen by design and hashed on approval.
+  - **Older leftovers:** the `--text-faint` text on paper on the memory kit, the triage kit and
+    the design check is now `--text-quiet`; the design check's breadcrumb sits inside the
+    page width; the closing section on tool pages is left-aligned (`tool.css`), so the
+    heading no longer centres above a left-aligned button row; the run-cost model prints a
+    currency symbol against the number ("₹52.78") and keeps the space after a code ("INR
+    52.78").
+  - **A name that cannot print whole is left off a PDF.** "सुनील 🙂 Zoë" used to print as
+    "Scored by Zoë". `byLine()` in pdf-writer.ts now drops the line instead. A real fix for
+    Indian scripts is not possible with pdf-lib: it does no text shaping, so even an embedded
+    Devanagari font would draw conjuncts and vowel signs in the wrong places.
 
 ---
 

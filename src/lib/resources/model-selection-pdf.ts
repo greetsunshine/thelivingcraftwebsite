@@ -68,6 +68,7 @@ import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { COHORT_SIZE, COMMITMENT } from '../../data/offer-display';
 
 import {
+  byLine,
   ERROR,
   FOREST,
   INK,
@@ -178,7 +179,7 @@ export function buildModel(input: ModelSelectionPdfInput): ModelSelectionPdfMode
     subtitle: 'Is this model fit for this step? One candidate, one step, scored from your own test runs.',
     series: meta ? `${meta.series} · ${meta.number}` : 'Resources',
     coverLine: [
-      input.name ? `Scored by ${clean(input.name)}` : null,
+      byLine('Scored by', input.name),
       dateLine || null,
       'learning.thelivingcraft.ai/resources/model-selection-tool',
     ]

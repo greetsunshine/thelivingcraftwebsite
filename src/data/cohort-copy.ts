@@ -8,6 +8,8 @@
 // and an ESM cycle here fails at module-evaluation time with "cannot access
 // before initialization" rather than at type-check time.
 
+import { LIVE_HOURS } from './cohort-hours';
+
 export interface Explores {
   title: string;
   body: string;
@@ -287,7 +289,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     q: 'How much independent work is involved?',
-    a: 'Independent work is additional to the 30 live hours. Its amount and interval will be confirmed before joining.',
+    a: `Independent work is additional to the ${LIVE_HOURS} live hours. Its amount and interval will be confirmed before joining.`,
   },
   {
     q: 'What are the dates and fees?',

@@ -475,10 +475,8 @@ const schema = [
      paragraph past 130 characters a line. */
   .prose { max-width: var(--measure-prose); }
   .prose p + p { margin-top: var(--space-4); }
-  /* The closing section centres its text against the full wrap, as the other
-     three resource pages do. A measure there left-shifts the block inside its
-     own centred column, which reads as a mistake. */
-  .final .prose { max-width: none; }
+  /* The closing section is left-aligned at the prose measure by tool.css
+     (29 September 2026), so it no longer needs a rule of its own here. */
 
   .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
@@ -531,7 +529,7 @@ const schema = [
     content: counter(beat, decimal-leading-zero);
     font-family: var(--font-mono);
     font-size: var(--size-1);
-    color: var(--text-faint);
+    color: var(--text-quiet);
   }
   .beatbody { color: var(--text-body); }
   .beatbody em { font-style: normal; color: var(--danger); font-weight: var(--weight-medium); }
@@ -590,12 +588,12 @@ const schema = [
   /* The ordering is the lesson, so the first question is marked as the one
      that runs before anything else rather than merely listed first. */
   ol.tree li.first { border-left: 3px solid var(--danger); }
-  .qn { color: var(--text-faint); font-size: var(--size-2); font-weight: var(--weight-medium); padding-top: 2px; }
+  .qn { color: var(--text-quiet); font-size: var(--size-2); font-weight: var(--weight-medium); padding-top: 2px; }
   ol.tree li.first .qn { color: var(--danger); }
   .qbody { display: flex; flex-direction: column; gap: var(--space-2); }
   .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
   .qyes { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }
-  .yeslbl { font-size: var(--size-1); color: var(--text-faint); }
+  .yeslbl { font-size: var(--size-1); color: var(--text-quiet); }
   .qyes b { font-size: var(--size-2); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
   ol.tree li.first .qyes b { color: var(--danger); }
   .qthen { color: var(--text-quiet); font-size: var(--size-2); }
@@ -626,7 +624,7 @@ const schema = [
   }
   .grid tbody tr:last-child td { border-bottom: 0; }
   .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
-  .play .wrong { color: var(--text-faint); }
+  .play .wrong { color: var(--text-quiet); }
   .play .right { color: var(--text-body); }
   .budgets .auto { white-space: normal; min-width: 150px; font-weight: var(--weight-medium); }
   .budgets .auto.yes { color: var(--text-body); }

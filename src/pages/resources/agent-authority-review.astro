@@ -230,9 +230,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             ))}
           </span>
           <button class="btn btn-ghost" id="copy" type="button">Copy the sheet</button>
-          <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print</button>
+          <button class="btn btn-ghost" id="print" type="button" data-gate="print" data-own>Print</button>
           <button class="btn btn-ghost" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
-          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Download your assessment (PDF)</button>
+          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf" data-own>Download your assessment (PDF)</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
 
@@ -310,7 +310,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           </div>
           <div class="r-actions">
             <button class="btn btn-primary" id="xlsx2" type="button" data-gate="xlsx">Download the tool (Excel)</button>
-            <button class="btn btn-ghost" id="pdf2" type="button" data-gate="pdf">Download your assessment (PDF)</button>
+            <button class="btn btn-ghost" id="pdf2" type="button" data-gate="pdf" data-own>Download your assessment (PDF)</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the sheet</button>
           </div>
         </div>

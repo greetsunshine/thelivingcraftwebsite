@@ -824,7 +824,10 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     `cohort-call` meeting type in meetings.ts.
 
     V4/V5 moved it BELOW the application and put the short written enquiry
-    back under it, folded, as "Ask about the cohort". The widget's empty and
+    back under it, folded. It was headed "Ask about the cohort" until 29
+    September 2026, when the chat launcher took that label (outreach readiness
+    handoff, item 1); two controls with one name and two different results is
+    a trap, so the human route now says who reads it. The widget's empty and
     failure copy therefore points UP, not down (`formAt="above"`, Sunil,
     20 September): the application is the form a reader sees first here. The
     folded enquiry stays as the shorter way to ask a question.
@@ -840,8 +843,8 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
   <BookingWidget type="cohort-call" heading="Book a call about the cohort" formAt="above" />
 
   <details class="cohort-question" id="cohort-question">
-    <summary>Ask about the cohort<span class="plus" aria-hidden="true">+</span></summary>
-    <RouteForm route="enquiry" id="enquiry-form" heading="Ask about the cohort" />
+    <summary>Write to Sunil about the cohort<span class="plus" aria-hidden="true">+</span></summary>
+    <RouteForm route="enquiry" id="enquiry-form" heading="Write to Sunil about the cohort" />
   </details>
 </section>
 

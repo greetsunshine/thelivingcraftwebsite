@@ -150,6 +150,23 @@ export const clean = (s: string): string => {
 /** True when `clean()` would change nothing: every character has a glyph in the embedded fonts. */
 export const drawsWhole = (s: string): boolean => clean(s) === s;
 
+/**
+ * "Scored by <name>", or null when the name cannot be printed whole.
+ *
+ * Figtree covers Latin only, so a name typed in Devanagari, Tamil or any other
+ * script loses those characters in clean(): "सुनील 🙂 Zoë" printed as
+ * "Scored by Zoë", a name that is not the reader's. A missing line is honest
+ * and a wrong name is not, so a name that does not draw whole is left out.
+ * Embedding a font for each Indian script would not fix it either: pdf-lib does
+ * no text shaping, so conjuncts and vowel signs would draw in the wrong places.
+ */
+export const byLine = (label: string, name: string | null | undefined): string | null => {
+  const n = (name ?? '').trim();
+  if (!n) return null;
+  const c = clean(n).trim();
+  return c && drawsWhole(n.replace(/\s+/g, ' ')) ? `${label} ${c}` : null;
+};
+
 // ---------------------------------------------------------------------------
 // The document and its brand
 // ---------------------------------------------------------------------------
