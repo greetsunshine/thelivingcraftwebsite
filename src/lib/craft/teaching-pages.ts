@@ -189,6 +189,39 @@ ${script}
 </body></html>`;
 }
 
+/**
+ * The page an ADMIN gets for a week with nothing stored.
+ *
+ * The learner routes answer a missing week with an empty 404 on purpose: a
+ * learner who guesses a URL should learn nothing from it. That reasoning does
+ * not carry to the console, and shipping it there was a mistake — week 1 had no
+ * stored pages, the preview link was rendered for it anyway, and the result was
+ * a blank browser window with nothing to act on.
+ *
+ * So the console gets the reason and the command. Still a 404, because the page
+ * genuinely is not there.
+ */
+export function missingPage(week: number, audience: Audience): string {
+  return `<!doctype html><html><head><meta charset="utf-8">
+<title>Week ${week} has no stored pages</title>
+<meta name="robots" content="noindex, nofollow"></head>
+<body style="margin:0;background:#F5F0E6;color:#172E26;font:16px/1.6 Figtree,system-ui,sans-serif">
+<div style="max-width:640px;margin:0 auto;padding:64px 20px">
+  <p style="font:500 12px/1 ui-monospace,monospace;color:#526259;letter-spacing:.08em;text-transform:uppercase">Admin preview</p>
+  <h1 style="font:400 34px/1.15 'Source Serif 4',Georgia,serif;margin:12px 0 16px">Week ${week} has no stored ${audience} pages</h1>
+  <p>Nothing is broken. A week only has topic pages once its collated pair has been
+  built and stored, and five of the six weeks have not reached that point.</p>
+  <p>To give this week its pages, build the pair from the week's content module and
+  put it where the routes look:</p>
+  <pre style="background:#E5EBE1;border-radius:12px;padding:16px;overflow-x:auto;font:13px/1.6 ui-monospace,monospace">node scripts/build-teaching-pages.mjs ${week}
+cp dist-teaching/week-${week}-learner.html    docs/teaching/pages/
+cp dist-teaching/week-${week}-instructor.html docs/teaching/pages/</pre>
+  <p>Then commit and deploy. No code changes: the routes read whatever is in
+  <code>docs/teaching/pages</code>.</p>
+  <p style="margin-top:32px"><a href="/craft/admin/teaching" style="color:#183D32">Back to the console</a></p>
+</div></body></html>`;
+}
+
 /** The whole week on one page, as stored, optionally marked as a preview. */
 export async function collatedPage(
   week: number,

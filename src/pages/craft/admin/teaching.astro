@@ -161,9 +161,15 @@ const notesCount = noteFiles.length;
             admin preview instead, which always renders and says on the page
             that it is a preview. The live URL is beside it, and is honest about
             being reachable only once the week is open. */}
-        <a class="view mono" href={`/craft/admin/preview/${w.data.week}`} target="_blank" rel="noopener">
-          preview the learner's copy ↗
-        </a>
+        {(topicsByWeek.get(w.data.week) ?? []).length > 0 ? (
+          <a class="view mono" href={`/craft/admin/preview/${w.data.week}`} target="_blank" rel="noopener">
+            preview the learner's copy ↗
+          </a>
+        ) : (
+          <span class="view mono muted" title="Build the pair with scripts/build-teaching-pages.mjs and store it in docs/teaching/pages">
+            no stored pages
+          </span>
+        )}
         {w.released && (
           <a class="view mono" href={`/craft/${w.id}`} target="_blank" rel="noopener">
             the live page ↗

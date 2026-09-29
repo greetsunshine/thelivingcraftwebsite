@@ -1,0 +1,2398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Week 1 &#183; Instructor notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;1,400&family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --noir:#183D32;--ember:#B58A46;--sun:#183D32;--mist:#F5F0E6;--berry:#963D34;
+  --paper-1:#FBF8F2;--paper-2:#E5EBE1;
+  --ink-1:#172E26;--ink-2:#526259;--ink-3:#C6D4C8;--ink-invert:#F5F0E6;
+  --line-hair:#CBD1C8;--accent-hover:#244F41;--danger:#963D34;--danger-quiet:#F7E8E3;
+  --accent-quiet:#F4E9CE;
+  --font-body:"Figtree","Avenir Next","Helvetica Neue",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --s1:12px;--s2:13px;--s3:15px;--s4:17px;--s5:20px;--s6:26px;--s7:34px;
+  --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--sp6:32px;--sp7:48px;--sp8:72px;
+  --r-inner:12px;--r-panel:12px;--r-card:12px;--r-shell:12px;--r-pill:6px;
+  --shadow-raise:0 0 0 1px #CBD1C8;--shadow-lift:0 0 0 1px #758279;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--mist);color:var(--ink-1);font-family:var(--font-body);
+  font-size:var(--s3);line-height:1.55;font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased}
+h1,h2{margin:0;font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;font-weight:400;
+  letter-spacing:-.01em;line-height:1.14;text-wrap:balance}
+h3,h4{margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.18;text-wrap:balance}
+p{margin:0}
+a{color:var(--ink-1)}
+:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.shell{max-width:1000px;margin:0 auto;padding:var(--sp6) var(--sp4) var(--sp8);
+  display:flex;flex-direction:column;gap:var(--sp6)}
+.mono{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em}
+.quiet{color:var(--ink-2)}
+.hero{background:var(--noir);color:var(--ink-invert);border-radius:var(--r-shell);
+  padding:var(--sp8) var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.hero .mono{color:var(--ink-3)}
+.hero h1{font-size:clamp(32px,5.5vw,54px);max-width:15ch}
+.hero .lead{font-size:var(--s4);color:#C6D4C8;max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:var(--sp5) var(--sp7);padding-top:var(--sp4);
+  border-top:1px solid rgba(255,255,255,.14)}
+.facts div{display:flex;flex-direction:column;gap:var(--sp1)}
+.facts .v{font-size:var(--s5);font-weight:700;letter-spacing:-.02em}
+.teach{display:contents}
+.pane{display:flex;flex-direction:column;gap:var(--sp6);min-width:0}
+.panehead{display:flex;flex-direction:column;gap:var(--sp1)}
+.railbtn{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em;
+  border:1px solid var(--line-hair);background:var(--paper-1);color:var(--ink-2);
+  border-radius:var(--r-pill);padding:8px 16px;cursor:pointer;margin-left:auto;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1),color 160ms cubic-bezier(.22,.61,.36,1)}
+.railbtn:hover{background:var(--paper-2);color:var(--ink-1)}
+.railbtn[aria-pressed="true"]{background:var(--sun);color:#F5F0E6;border-color:var(--sun)}
+@media (min-width:1200px){
+  body.split .shell{max-width:1720px}
+  body.split .shell>:not(.teach){width:100%;max-width:1000px;align-self:center}
+  body.split .shell>details.topic{width:100%;max-width:none;align-self:stretch}
+  body.split .topicbody>.teach{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp5);align-items:start}
+  body.split .topicbody .pane-ref{position:sticky;top:var(--sp3);gap:var(--sp5);
+    max-height:calc(100vh - var(--sp5));overflow-y:auto;overscroll-behavior:contain;
+    padding:var(--sp2) var(--sp3) var(--sp6) 0;scrollbar-width:thin}
+  body.split .topicbody .pane-ref .card{padding:var(--sp5)}
+  body.split .topicbody .pane-ref .card h3{font-size:var(--s5)}
+  body.split .topicbody .pane-script .beat{grid-template-columns:56px 1fr}
+}
+.beat[data-ref]{cursor:pointer;border-radius:var(--r-inner);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+body.split .beat[data-ref]:hover{background:var(--paper-2)}
+body.split .beat.here .t{color:var(--ink-1);font-weight:700}
+body.split .beat.here{background:var(--paper-2)}
+.pane-ref .card.lit{box-shadow:0 0 0 2px var(--sun)}
+.rail{display:flex;flex-wrap:wrap;gap:var(--sp2);align-items:center}
+.rail .lab{color:var(--ink-2);margin-right:var(--sp2)}
+.rail a{font-family:var(--font-mono);font-size:var(--s1);text-decoration:none;
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 16px;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+.rail a:hover{background:var(--accent-hover)}
+.beats{background:var(--ember);color:var(--ink-1);border-radius:var(--r-card);
+  padding:var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.beats h2{font-size:var(--s6)}
+.head{display:flex;flex-direction:column;gap:var(--sp2);scroll-margin-top:var(--sp5)}
+.head h2{font-size:var(--s7)}
+.head .k{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.head p{color:var(--ink-2);max-width:64ch}
+.card{background:var(--paper-1);border-radius:var(--r-card);box-shadow:var(--shadow-raise);
+  padding:var(--sp6);display:flex;flex-direction:column;gap:var(--sp4);
+  scroll-margin-top:var(--sp5);transition:box-shadow 160ms cubic-bezier(.22,.61,.36,1)}
+.card:hover{box-shadow:var(--shadow-lift)}
+.card h3{font-size:var(--s6)}
+.card h4{font-size:var(--s4);letter-spacing:-.015em}
+.card p,.card li{font-size:var(--s3)}
+.card ul,.card ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.tag{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  background:var(--paper-2);color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px}
+.tag.warn{background:var(--danger-quiet);color:var(--danger)}
+hr.hair{border:0;border-top:1px solid var(--line-hair);margin:var(--sp2) 0;width:100%}
+pre{margin:0;background:var(--paper-2);border-radius:var(--r-inner);padding:var(--sp4);
+  overflow-x:auto;font-family:var(--font-mono);font-size:var(--s1);line-height:1.6}
+code{font-family:var(--font-mono);font-size:.92em}
+p code,li code,td code{background:var(--paper-2);border-radius:6px;padding:1px 5px}
+details{border-radius:var(--r-inner);background:var(--paper-2);padding:var(--sp3)}
+summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:var(--sp2);
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 18px;
+  font-family:var(--font-mono);font-size:var(--s1);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--accent-hover)}
+summary .chev{transition:transform 160ms cubic-bezier(.22,.61,.36,1)}
+details[open] summary .chev{transform:rotate(90deg)}
+.dbody{display:flex;flex-direction:column;gap:var(--sp4);padding:var(--sp4) var(--sp2) var(--sp2)}
+.dbody p,.dbody li{font-size:var(--s3)}
+.dbody ul,.dbody ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.scroller{overflow-x:auto}
+/* Figures, same drawings as the learner page. They sit inside a reference card
+   here, which is narrower, so the min-width matters more rather than less. */
+figure{margin:0 0 var(--sp4)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink-1)}
+figcaption{font-size:12px;color:var(--ink-2);margin-top:8px}
+.figwrap{overflow-x:auto}
+.figwrap>svg{min-width:560px}
+
+table{border-collapse:collapse;width:100%;min-width:460px}
+th,td{text-align:left;padding:var(--sp3) var(--sp4);vertical-align:top;font-size:var(--s2)}
+th{font-family:var(--font-mono);font-size:var(--s1);font-weight:500;color:var(--ink-2);
+  border-bottom:1px solid var(--line-hair)}
+td{border-bottom:1px solid var(--line-hair)}
+tr:last-child td{border-bottom:0}
+blockquote{margin:0;padding-left:var(--sp4);border-left:3px solid var(--ember);
+  color:var(--ink-1);font-size:var(--s4);line-height:1.45}
+.pairs{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  letter-spacing:-.01em;color:var(--ink-2);background:var(--paper-2);
+  border-radius:var(--r-pill);padding:5px 12px}
+.head .pairs{margin-top:var(--sp2)}
+body.split .pane-ref .card.lit .pairs{background:var(--sun);color:#F5F0E6}
+.qmeta{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.opt{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp1)}
+.ok{font-weight:700}
+.beat{display:grid;grid-template-columns:64px 1fr;gap:var(--sp4);align-items:start}
+.beat+.beat{border-top:1px solid var(--line-hair);padding-top:var(--sp4)}
+.beat .t{font-family:var(--font-mono);font-size:var(--s2);color:var(--ink-2);padding-top:2px}
+.beat .b{display:flex;flex-direction:column;gap:var(--sp2)}
+.beat h4{font-size:var(--s4);letter-spacing:-.015em}
+.beat p,.beat li{font-size:var(--s3)}
+.beat ul,.beat ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.beat pre{font-size:var(--s1)}
+.qbadge{font-family:var(--font-mono);font-size:var(--s1);background:var(--paper-2);
+  color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px;align-self:flex-start}
+.qbadge.spend{background:var(--danger-quiet);color:var(--danger)}
+.sclock{background:var(--paper-1);border-radius:var(--r-card);box-shadow:var(--shadow-raise);
+  padding:var(--sp4) var(--sp5);display:flex;flex-wrap:wrap;align-items:baseline;
+  gap:var(--sp3) var(--sp5);font-family:var(--font-mono);font-size:var(--s2)}
+.sclock .el{font-size:var(--s5);font-weight:500}
+.sclock .now{font-family:var(--font-body);font-weight:700;font-size:var(--s3)}
+.sclock .hint{color:var(--ink-2)}
+.sclock button{font-family:var(--font-mono);font-size:var(--s1);border:1px solid var(--line-hair);
+  background:var(--paper-2);color:var(--ink-2);border-radius:var(--r-pill);
+  padding:6px 12px;cursor:pointer}
+.sclock button:hover{background:var(--sun);color:#F5F0E6;border-color:var(--sun)}
+.sclock .drift{color:var(--danger);font-weight:700}
+tr.here td{background:var(--accent-quiet)}
+footer{color:var(--ink-2);font-size:var(--s2)}
+details.topic{margin:0}
+details.topic>summary{display:flex;align-items:baseline;gap:14px;width:100%;
+  background:var(--paper-1);color:var(--ink-1);border-radius:12px;box-shadow:0 0 0 1px #CBD1C8;
+  padding:20px 24px;font-family:inherit;font-size:17px;font-weight:700;
+  letter-spacing:-.015em;cursor:pointer;list-style:none}
+details.topic>summary::-webkit-details-marker{display:none}
+details.topic>summary:hover{box-shadow:0 0 0 1px #758279}
+details.topic>summary .num{font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:#F5F0E6;background:#183D32;border-radius:6px;padding:4px 9px;flex:none}
+details.topic>summary .when{font-family:var(--font-mono);font-size:12px;font-weight:400;
+  color:#526259;margin-left:auto;text-align:right}
+details.topic>summary .caret{flex:none;color:#526259;font-size:13px;
+  display:inline-block;transition:transform 160ms}
+details.topic[open]>summary{border-radius:12px 12px 0 0;box-shadow:0 0 0 1px #758279}
+details.topic[open]>summary .caret{transform:rotate(90deg)}
+.topicbody{display:flex;flex-direction:column;gap:24px;padding:24px 0 8px}
+@media (max-width:620px){.beat{grid-template-columns:1fr;gap:var(--sp2)}
+  details.topic>summary{flex-wrap:wrap;padding:16px 18px}
+  details.topic>summary .when{margin-left:0;width:100%;text-align:left}}
+@media (max-width:720px){
+  .hero{padding:var(--sp7) var(--sp5);border-radius:var(--r-card)}
+  .card{padding:var(--sp5)}
+  .beats{padding:var(--sp5)}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+@media print{
+  body{background:#fff}
+  .teach{display:contents}
+  .railbtn,.rail,.sclock{display:none}
+  .pane-ref{position:static;max-height:none;overflow:visible}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .hero{background:#fff;color:#000}
+  .hero .lead,.hero .mono{color:#333}
+  .beats{background:#fff;border:1px solid #ccc}
+  summary{display:none}
+  details{background:#fff;padding:0}
+  details.topic>.topicbody{display:flex !important}}
+</style>
+</head>
+<body>
+<script>document.body.classList.add('split');</script>
+<div class="shell">
+
+<header class="hero">
+  <div class="mono">The Living Craft &#183; week 1 &#183; M1 &#183; instructor's copy</div>
+  <h1>The harness</h1>
+  <p class="lead">All seven topics on one page, collated the way week 2 and week 3 are, with each topic collapsible so you can work through them one at a time. Source of truth for how to run it is <span class="mono">docs/teaching/week-1.md</span> and <span class="mono">docs/teaching/week-1-script.md</span>; both pages are generated from <span class="mono">scripts/teaching-content/week-1.mjs</span> and the clock from <span class="mono">scripts/teaching-clock.mjs</span>.</p>
+  <div class="facts">
+    <div><span class="mono">Topics</span><span class="v">7</span></div>
+    <div><span class="mono">Blocks</span><span class="v">5</span></div>
+    <div><span class="mono">Drills</span><span class="v">4, three in the room</span></div>
+    <div><span class="mono">Keyboards live</span><span class="v">02:25</span></div>
+    <div><span class="mono">Question bank</span><span class="v">15, eight asked</span></div>
+    <div><span class="mono">Model calls</span><span class="v">block 3 only</span></div>
+    <div><span class="mono">Session status</span><span class="v">ready</span></div>
+  </div>
+</header>
+
+<div class="head" id="today">
+  <span class="k">the opening &#183; 00:00 to 00:15</span>
+  <h2>What today is for</h2>
+  
+  <p>They ran three commands in week 0 and wrote down three payouts. Today is why. <strong>The harness is everything that is not the model, and it has four parts.</strong></p>
+  <h3>Say the terminology sentence in the first two minutes</h3>
+  <p>Week 1 claims the bare word <em>harness</em> for the agent harness. Week 3's is the <strong>evaluation harness</strong>, always in full. Establishing the ownership now is cheaper than untangling it in three weeks.</p>
+  <h3>You will rate yourself on these five, twice</h3>
+  <p>00:05 and 04:52, same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do. Save the results; you show them again at 04:52 beside the exit numbers, and the comparison is the entire point of running it.</p>
+  <p><strong>Expect low numbers on 3 and 4, and say nothing about it.</strong> Those are the two flagged <span class="mono">movesMost</span> in the session frontmatter, and this is the week where the prediction runs upward: a score that RISES is the good result. Announcing that in advance spends it.</p>
+  <h3>00:08 · Four questions from the pre-work</h3>
+  <p><strong>Do not re-teach first.</strong> Ask, take answers, correct only what is wrong. Recalling something is what makes it stick; hearing it again does not. Every one is answerable from the pre-work alone, and none of them needs the code, which they were told not to read.</p>
+  <ol>
+    <li>What does the reference agent actually do? One sentence.</li>
+    <li><strong>The three numbers.</strong> What did each of the three runs pay out?</li>
+    <li>What <em>two</em> tools did you watch it call?</li>
+    <li>You have twenty requests a day. Roughly how many runs is that, and why?</li>
+  </ol>
+  <h3>Seven topics, in their own order</h3>
+  <p>The seven below are in topic order rather than clock order, because a topic is an argument and an argument reads better in one piece. <strong>All seven are a single unbroken run on the clock</strong>, which is unusual and is what makes week 1 easy to teach from this page.</p>
+</div>
+
+<nav class="rail" aria-label="Jump to a topic">
+  <span class="lab mono">Topics</span>
+  <a href="#t0">0 &#183; the frame</a>
+  <a href="#t1">1 &#183; one run, many calls</a>
+  <a href="#t2">2 &#183; the four failures</a>
+  <a href="#t3">3 &#183; making failure visible</a>
+  <a href="#t4">4 &#183; directing the build</a>
+  <a href="#t5">5 &#183; the decision record</a>
+  <a href="#t6">6 &#183; the horizon</a>
+  <span class="lab mono" style="margin-left:var(--sp4)">Before the day</span>
+  <a href="#prep">what to prepare</a>
+  <a href="#quiz">the quiz</a>
+  <a href="#tools">tools</a>
+  <button type="button" id="splitbtn" class="railbtn" aria-pressed="true">Side by side</button>
+</nav>
+
+
+<div class="sclock" id="sclock">
+  <span class="el">--:--</span>
+  <span class="now">Clock off</span>
+  <span class="hint"></span>
+  <span class="drift"></span>
+  <button type="button" data-off="-1">&#8722;1 min</button>
+  <button type="button" data-off="1">+1 min</button>
+  <button type="button" data-pause>Pause</button>
+</div>
+
+<section class="beats" id="clock">
+  <h2>Five hours, five blocks</h2>
+  
+  <p><strong>Five blocks, four drills, and the room's keyboards do not open until 02:25.</strong> Resist moving that earlier. Blocks 1 and 2 are the four failures, and a drill before the fourth failure lands is a fix to a problem the room has not finished meeting.</p>
+  <p><strong>Two times carry two rows each.</strong> 01:10 is a checkpoint and a stand-up; 02:05 is a checkpoint and the break. The words in the room are "read these before you stand up".</p>
+  <div class="scroller"><table id="clocktable">
+<thead>
+  <tr><th>time</th><th>what happens</th><th>whose</th></tr>
+</thead>
+<tbody>
+  <tr class="quiet" style="color:#526259"><td>00:00</td><td>The five outcomes, and your first rating</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:08</td><td>Four questions from the pre-work</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:15</td><td>The case that works</td><td>topic 0</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:18</td><td>Draw what you just watched</td><td>topic 0</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:23</td><td>Break it once, before anything has a name — ₹3,600</td><td>topic 0</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:31</td><td>Name what you drew</td><td>topic 0</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:38</td><td>One run is many calls</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:46</td><td>Inside one step</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:57</td><td>Can we not just make the thinking better?</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:03</td><td>Odds, or what is possible</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:10</td><td>Checkpoint 1</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:10</td><td>Stand up, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:15</td><td>It pays an account that does not exist — ₹5,000</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:23</td><td>It follows a rule an attacker wrote — ₹2,50,000</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:36</td><td>It refuses a customer who was owed the money — ₹0</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:44</td><td>The pattern</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:53</td><td>So how would you stop this?</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:58</td><td>Three ideas, and they are a tour of the harness</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:02</td><td>The only expectation was written by the attacker</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:05</td><td>Checkpoint 2</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:05</td><td>Break, fifteen minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:20</td><td>How every drill runs</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:25</td><td>Drill 1, make the failure say its name</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:40</td><td>Drill 2, grade the tools by consequence</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:50</td><td>Drill 3, check the arguments before you dispatch</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:02</td><td>Comparing two models</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:12</td><td>Then stop</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:20</td><td>Checkpoint 3</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:20</td><td>Stand up, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:25</td><td>The system at forty thousand a month</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:28</td><td>Five questions, two per pair</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:40</td><td>Back to the room</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:50</td><td>Write the boundary down</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:02</td><td>Review another pair's</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:10</td><td>The leader's framing</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:15</td><td>Checkpoint 4</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:20</td><td>The quiz</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:30</td><td>What is durable when the models keep moving</td><td>topic 6</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:40</td><td>Where the demand actually is</td><td>topic 6</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:50</td><td>Close</td><td>shared</td></tr>
+</tbody>
+  </table></div>
+  <p><strong>This table is generated.</strong> Both pages carry it, so it lives in <span class="mono">scripts/teaching-clock.mjs</span> and nowhere else. Change a time there, rebuild with <span class="mono">node scripts/build-teaching-pages.mjs 1</span>, and run <span class="mono">npm run check:teaching</span>.</p>
+  
+  <p><strong>Never cut 00:23, the ₹3,600.</strong> It is the only failure in the day the room can reason its way to rather than be shown, it is the reason naming the harness at 00:31 lands as an explanation rather than a diagram, and it costs no quota at all.</p>
+  <p><strong>If you are running long, cut in this order.</strong> 04:40 first, because the beat survives as one sentence. Then 03:40, by taking three of the five questions rather than five. Then 02:40, drill 2, which is the shortest and transfers best to homework. Then the second half of 03:02 by running only the <span class="mono">weird</span> comparison and describing the <span class="mono">injected</span> one, which is a real loss and the least bad available.</p>
+  <p><strong>Do not shorten 00:46 or 02:50.</strong> <span class="mono">make prompt</span> is the only time all cohort that anybody sees what the model was actually sent, and drill 3 is the fix for the ₹0, which is the failure nobody predicts.</p>
+</section>
+
+<div class="head" id="prep">
+  <span class="k">before the day &#183; the short list</span>
+  <h2>What to prepare</h2>
+  
+  <p><strong>Eleven items in four groups.</strong> Each carries the action, the file, the size, the done-test and the cost of skipping it. Three of them have no file at all, which is why nothing was tracking them.</p>
+  <h3>What blocks the session</h3>
+  <ul>
+    <li><strong>Stage <span class="mono">make mock</span> on the shared screen, finished, before anybody joins.</strong> One terminal, thirty seconds. <em>Done when:</em> the payout line is visible without scrolling. <em>Skip it and:</em> 00:15 becomes you typing while eight people watch, and the silent open is gone.</li>
+    <li><strong>Check your own key and quota the night before.</strong> <em>Done when:</em> <span class="mono">make weird</span> and one <span class="mono">--model</span> run both complete. <em>Skip it and:</em> 03:02 is the beat that settles the day's largest question and you cannot run it.</li>
+    <li><strong>Decide which second model you will use at 03:02, and run it once.</strong> <em>Done when:</em> you have seen its trace and know whether it escalates 9999. <em>Skip it and:</em> you are debugging a JSON parse failure in front of the room.</li>
+  </ul>
+  <h3>What needs a decision either way</h3>
+  <ul>
+    <li><strong>Pick the pairs, and write the five teardown questions against names.</strong> No file. <em>Done when:</em> four pairs and ten question assignments are on a piece of paper. <em>Skip it and:</em> 03:28 loses three minutes and four pairs all take question 1.</li>
+    <li><strong>Decide how you take the 00:18 drawings</strong> — cameras or chat photos. No file. <em>Done when:</em> you have said which in your own notes. <em>Skip it and:</em> eight people hold paper to a webcam for four minutes.</li>
+    <li><strong>Decide whether to pin <span class="mono">--mock</span> in the <span class="mono">prompt</span> target.</strong> One line in the Makefile. <em>Done when:</em> <span class="mono">make prompt</span> costs zero requests. <em>Skip it and:</em> 00:46 costs every person three of their twenty.</li>
+  </ul>
+  <h3>Small, and buys back minutes</h3>
+  <ul>
+    <li><strong>Have the four-column gradient from drill 1 ready to put on the board.</strong> <em>Done when:</em> you can draw it in twenty seconds. <em>Skip it and:</em> most of the room stops after one line, which is the failure the drill is about.</li>
+    <li><strong>Have the ₹5,000 "which line" question ready as a chat prompt.</strong> <em>Done when:</em> it is pasteable. <em>Skip it and:</em> you paraphrase it and get "the model should have escalated" instead of a line number.</li>
+    <li><strong>Re-read <span class="mono">notes/teardown-five-questions.md</span> the morning of.</strong> 325 lines. <em>Done when:</em> you can take any of the five without opening it. <em>Skip it and:</em> you open it at 03:40 and the answer key is on the shared screen.</li>
+  </ul>
+  <h3>In the hour before</h3>
+  <ul>
+    <li><strong>Open <span class="mono">/craft/admin/agents</span> and read the radar's India hiring and durable skills categories.</strong> <em>Done when:</em> you have two findings with their <span class="mono">sourceType</span> pills noted. <em>Skip it and:</em> 04:40 is improvised, which is the one thing this course never does with market claims.</li>
+    <li><strong>Check the three payout numbers from the pre-work are what you think they are.</strong> <span class="mono">make retry</span>, <span class="mono">make weird-mock</span>, <span class="mono">make injected</span>. <em>Done when:</em> ₹3,600, ₹5,000, ₹2,50,000. <em>Skip it and:</em> the 00:08 retrieval questions have no answer key and the room corrects you.</li>
+  </ul>
+</div>
+
+
+<details class="topic" id="t0">
+  <summary><span class="num">0</span><span>The frame · What an agent actually is</span><span class="when">00:15 to 00:38</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t0-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version of this topic is a slide that says "an agent is a loop with tools". Teach it that way and you have spent your best twenty minutes on a definition they could have read.</p>
+  <p>The stronger claim is that <strong>they can draw it before they can name it</strong>, and that a failure they reasoned their way to is worth ten they were shown. That is why the drawing at 00:18 comes before any vocabulary, and why ₹3,600 comes before the word <em>harness</em>.</p>
+  <p><strong>The order is the whole design of this topic.</strong> Watch it work, draw it, break it, then name it. Moving the naming earlier is the commonest way to lose the room in the first half hour.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">the frame · what an agent is &#183; 00:15 to 00:38</span>
+
+  <div class="beat" data-ref="t0-r-mock"><span class="t">00:15</span><div class="b">
+    <h4>The case that works</h4>
+    <span class="pairs">Whole room · 3 min · read it in silence</span>
+    
+    <p><strong>Start silent.</strong> <span class="mono">make mock</span> is already finished on the shared screen when they arrive. Say nothing. Let them read it.</p>
+    <p class="quiet">If nobody speaks after twenty seconds: <em>"What did it just do?"</em> Nothing else. Do not fill the gap, and do not narrate the trace.</p>
+    <p><strong>Use <span class="mono">make mock</span>, not <span class="mono">make run</span>.</strong> The naming is a trap and it has caught people: neither <span class="mono">run</span> nor <span class="mono">prompt</span> passes <span class="mono">--mock</span>, so both use a real model the moment <span class="mono">LLM_API_KEY</span> is set, which every member now has. That is three requests off a twenty-a-day allowance, about 37 seconds instead of 0.0, and eight different traces in the room.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t0-r-draw"><span class="t">00:18</span><div class="b">
+    <h4>Draw what you just watched</h4>
+    <span class="pairs">Alone · 5 min · on paper, no help</span>
+    
+    <p><strong>Two minutes, on paper, alone, no help.</strong> Then take two or three out loud and do not correct any of them.</p>
+    <p>Most draw a box and an arrow. <strong>The three things almost every drawing is missing are the three you are about to teach</strong>, so collect them rather than fixing them: the model is called more than once, the context is rebuilt rather than accumulated, and the trace is a component rather than an output.</p>
+    <p class="quiet"><strong>Do not skip this to save five minutes.</strong> Naming the harness at 00:31 works because they have something of their own to name. Without the drawing it is a diagram on a slide and it lands as one.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t0-r-3600"><span class="t">00:23</span><div class="b">
+    <h4>Break it once, before anything has a name — ₹3,600</h4>
+    <span class="pairs">Whole room · 8 min · answer in chat first, 30 seconds</span>
+    
+    <p><strong>Take the answer in chat before you run anything.</strong> Thirty seconds, a number, no discussion first. Rooms split between ₹1,200 and ₹3,600 and the argument is worth having before the answer arrives.</p>
+    <div class="term">make retry                    # Q +0</div>
+    <p>Correct three times, pays three times. <strong>Say "not one wrong decision was made in any of those three runs" in those words</strong>, and then stop talking for a beat.</p>
+    <p class="quiet"><strong>This beat moved into block 1</strong> when the session grew, and it belongs here: they need one failure before the harness has a name, so that naming it lands as an explanation rather than as a diagram. Block 2 now opens on ₹5,000, not on this.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t0-r-harness"><span class="t">00:31</span><div class="b">
+    <h4>Name what you drew</h4>
+    <span class="pairs">Whole room · 7 min · built on the board</span>
+    
+    <p><strong>Build it from the room, do not read the table.</strong> Ask what in their drawing is not the model, and write the four up as they arrive. The table on the learner page is there for afterwards.</p>
+    <h4>Now the part you drew</h4>
+    <p>Go back to whoever drew the model in the middle at 00:18 and ask them to redraw it with the model as one box among four. <strong>Them doing it is worth more than you saying it.</strong></p>
+    <p><strong>Land one sentence and then move.</strong> <em>Three of the four are ordinary software you already know how to make reliable.</em> That is the sentence the whole course rests on, and it is the reason a room of senior engineers is in the right place.</p>
+    <p class="quiet"><strong>The ReAct hedge is not optional.</strong> Somebody in this room has read the paper and somebody else has only met the word in a framework's documentation, and they mean different things by it. Thirty seconds spent on "the frameworks kept the loop and dropped the format" prevents a twenty-minute argument in week 5.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t0-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t0-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>The ₹3,600 gets no fix, and the room will ask for one</td><td>Topic 5, at 03:28 — teardown question 1. Week 2 builds it</td></tr>
+      <tr><td>Nothing anywhere prevents anything, all day</td><td><strong>Week 2.</strong> Say it out loud here, because the request starts at about 01:20 and does not stop</td></tr>
+      <tr><td>The trace says what happened and never what should have happened</td><td>Week 3 — that gap is the whole of what an evaluation harness is</td></tr>
+      <tr><td>Untrusted text and genuine business rules arrive identically</td><td>Week 4 — named at 01:23 in topic 2 and deliberately left there</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t0-r-mock">
+  <span class="pairs">&#8596; 00:15 &#183; the opening trace, read cold</span>
+  <h3>The case that works</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Which brain runs when, and the one that bites</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>Mock, no key, identical on eight screens:</strong> <span class="mono">make mock</span>, <span class="mono">make weird-mock</span>, <span class="mono">make retry</span>.</li>
+        <li><strong>Real model, spends quota:</strong> <span class="mono">make run</span>, <span class="mono">make prompt</span>, <span class="mono">make weird</span>, <span class="mono">make injected</span>.</li>
+      </ul>
+      <p><span class="mono">main.py:38</span> falls back to the mock only when the key is <em>absent</em>. To make the prompt dump deterministic, run <span class="mono">python -m src.main --ticket 4471 --show-prompt --mock</span> or pin <span class="mono">--mock</span> inside the <span class="mono">prompt</span> target.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"It called an API twice."</strong> Accurate and it skips the interesting half. Ask which of the two they would be happy to run again by accident. That question is drill 2, seven beats early, and it costs nothing to plant here.</p>
+      <p><strong>Probe.</strong> How many times did it call the model? Almost everybody says two, because there are two tool lines. It is three, and that correction is topic 1's opening beat. Do not answer it here.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t0-r-draw">
+  <span class="pairs">&#8596; 00:18 &#183; their own drawing, before any vocabulary</span>
+  <h3>Draw what you just watched</h3>
+  
+  <h4 class="quiet" style="font-weight:700">What the drawings are missing, and what to do with it</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Three omissions, in order of how often they appear:</p>
+      <ul>
+        <li><strong>One call, not three.</strong> The commonest drawing has the ticket going in and an answer coming out, with the tools hanging off the side.</li>
+        <li><strong>Accumulating memory.</strong> People draw a conversation. There is no conversation; every step is rebuilt from scratch.</li>
+        <li><strong>No trace at all.</strong> It is drawn as console output rather than as one of the four parts, which is exactly the assumption drill 1 attacks.</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>A drawing with the model in the middle and everything else as arrows into it.</strong> It is the picture the industry sells and it is upside down for this course: the thing in the middle is the one component they did not write and cannot test.</p>
+      <p>Do not correct it now. <strong>Come back to it at 00:31</strong> and ask the person who drew it to redraw it with the model as one box among four. Doing it themselves is worth more than being told.</p>
+      <p><strong>Probe.</strong> Which part of your drawing would you unit-test? Everything except the box in the middle, which is the sentence topic 1 ends on.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t0-r-3600">
+  <span class="pairs">&#8596; 00:23 &#183; ₹3,600, predicted before the run</span>
+  <h3>Break it once, before anything has a name — ₹3,600</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The room splits two ways and both are reasoned</h4>
+  <h4 class="quiet">Ravi was double-charged. The ticket arrives three times.</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>₹3,600.</strong> Three deliveries, three runs, ₹1,200 each. <span class="mono">run()</span> builds <span class="mono">state = {"ticket": ..., "history": []}</span> fresh on every call, while <span class="mono">LEDGER</span> in <span class="mono">tools.py</span> is module-level. So history is empty each time and the ledger is not.</p>
+      <p>That asymmetry is the whole failure, and it is visible in two lines of the repository.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"₹1,200, because the agent would notice."</strong> Notice with what? This is the good instinct — that something ought to remember — arriving before there is anywhere for the memory to live. Credit it and then ask where the memory would be.</p>
+      <p>The answer is not the model and not the prompt, and there is no third place yet. <strong>That gap is the reason the next beat exists.</strong></p>
+      <p><strong>Probe.</strong> Would a better model have paid once? No. There is no model in this run at all, and saying so here is worth more than saying it in an hour.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t0-r-harness">
+  <span class="pairs">&#8596; 00:31 &#183; the vocabulary, after the drawing</span>
+  <h3>Name what you drew</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Why the word is "harness" and not "framework" or "scaffolding"</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Decided 2026-08-28. <strong>Harness</strong> carries the right two implications and the alternatives do not: it is the thing you build around something you do not control, and it is the thing that bears the load.</p>
+      <ul>
+        <li><strong>Framework</strong> means somebody else's library, which is the opposite of the point.</li>
+        <li><strong>Scaffolding</strong> implies you take it down when the real thing is finished.</li>
+        <li><strong>Orchestration</strong> is a vendor category and it arrives with a shopping list attached.</li>
+      </ul>
+      <p><strong>Week 3 takes the word back</strong> for the <em>evaluation harness</em>, always written in full there. Establish week 1's ownership of the bare word now.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So the harness is the boilerplate."</strong> It is the sentence that makes the rest of the course sound optional, and somebody says a version of it most times. It is also half true: three of the four files are ordinary code.</p>
+      <p>The answer is that the boilerplate is where all four of today's failures live, and none of them is in the file with the model in it. <strong>Do not argue it. Point at the ₹3,600 they just watched and ask which file it happened in.</strong></p>
+      <p><strong>Probe.</strong> Which of the four parts would you be able to write a unit test for this afternoon? All four. That is the point, and it is also the first genuinely encouraging thing in the day.</p>
+    </div>
+  </details>
+  <h4>One step of the loop</h4>
+  <p class="quiet">On their page too. <strong>Draw it on the board first and put this up afterwards</strong>, so the room builds the loop rather than reading it. The red line under Thought is the beat: the reasoning is written before the action and never reaches the next step.</p>
+  
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 900 292" role="img" font-family="Figtree, sans-serif"
+         aria-label="The ReAct loop: Thought, then Action, then Observation, repeating. The model's thought is printed and then discarded rather than carried forward, which is where this implementation departs from the paper. The loop exits at the Action phase when the model resolves or escalates.">
+      <defs>
+        <marker id="lp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="lpr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#963D34"/>
+        </marker>
+      </defs>
+
+      <rect x="6" y="90" width="100" height="36" rx="16" fill="#E5EBE1"/>
+      <text x="56" y="113" text-anchor="middle" font-size="12" font-family="JetBrains Mono, monospace" fill="#526259">the ticket</text>
+      <line x1="108" y1="108" x2="124" y2="108" stroke="currentColor" stroke-width="1.5" marker-end="url(#lp)"/>
+
+      <rect x="130" y="56" width="230" height="104" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".32"/>
+      <text x="150" y="88" font-size="15" font-weight="700" fill="currentColor">Thought</text>
+      <text x="150" y="110" font-size="11.5" fill="currentColor">the model's reasoning</text>
+      <text x="150" y="129" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">llm.py · "thought"</text>
+      <text x="150" y="147" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#963D34">used here, never carried on</text>
+
+      <line x1="362" y1="108" x2="386" y2="108" stroke="currentColor" stroke-width="1.5" marker-end="url(#lp)"/>
+
+      <rect x="390" y="56" width="230" height="104" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".32"/>
+      <text x="410" y="88" font-size="15" font-weight="700" fill="currentColor">Action</text>
+      <text x="410" y="110" font-size="11.5" fill="currentColor">one tool, and its arguments</text>
+      <text x="410" y="129" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">llm.py · "action" + "args"</text>
+      <text x="410" y="147" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#765523">prints ▸ tool</text>
+
+      <line x1="622" y1="108" x2="646" y2="108" stroke="currentColor" stroke-width="1.5" marker-end="url(#lp)"/>
+
+      <rect x="650" y="56" width="230" height="104" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".32"/>
+      <text x="670" y="88" font-size="15" font-weight="700" fill="currentColor">Observation</text>
+      <text x="670" y="110" font-size="11.5" fill="currentColor">what the tool returned</text>
+      <text x="670" y="129" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">agent.py · history.append</text>
+      <text x="670" y="147" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">prints nothing</text>
+
+      <path d="M 765 162 L 765 240 L 245 240 L 245 166" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#lp)"/>
+      <text x="505" y="262" text-anchor="middle" font-size="11.5" fill="#526259">the next step rebuilds the whole prompt from the ticket and every observation so far</text>
+      <text x="505" y="280" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">llm.py · _build_prompt · at most 6 steps</text>
+
+      <line x1="505" y1="54" x2="505" y2="26" stroke="#963D34" stroke-width="1.5" marker-end="url(#lpr)"/>
+      <text x="519" y="24" font-size="11.5" fill="#963D34">resolve or escalate ends the run here</text>
+    </svg>
+    </div>
+    <figcaption>One step. <span class="mono">▸ plan</span> at the top of a run is the ticket being announced once, before any of this — it is not a phase. Note the red line under Thought. The reasoning is written before the action in the same reply, so it shapes that action — but it is never passed on, so no later step can use it. The paper carries it forward; this code does not.</figcaption>
+  </figure>
+
+  <h4>The whole system</h4>
+  <p class="quiet">Three tools, and the red one moves money with nothing in front of it. <strong>Point at the red box and say nothing for a moment</strong> — it is the picture the whole of week 2 is about removing.</p>
+  
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 960 344" role="img" font-family="Figtree, sans-serif"
+         aria-label="The agent is a loop: it builds a prompt from the ticket and history, asks the model, reads back an action and its arguments, and runs one of three tools. The result goes back into the prompt. One of the three tools moves money and cannot be undone.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#963D34"/>
+        </marker>
+      </defs>
+
+      <!-- pipeline -->
+      <rect x="6" y="90" width="96" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="54" y="115" text-anchor="middle" font-size="13" fill="currentColor">the ticket</text>
+      <text x="54" y="132" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="#526259">#4471</text>
+
+      <line x1="104" y1="118" x2="130" y2="118" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <rect x="134" y="90" width="152" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="210" y="115" text-anchor="middle" font-size="13" fill="currentColor">build the prompt</text>
+      <text x="210" y="132" text-anchor="middle" font-size="11" fill="#526259">from scratch, every step</text>
+
+      <line x1="288" y1="118" x2="314" y2="118" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <rect x="318" y="90" width="124" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="380" y="123" text-anchor="middle" font-size="13" fill="currentColor">ask the model</text>
+
+      <line x1="444" y1="118" x2="470" y2="118" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <rect x="474" y="90" width="152" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="550" y="115" text-anchor="middle" font-size="13" fill="currentColor">read the reply</text>
+      <text x="550" y="132" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="#526259">action + args</text>
+
+      <line x1="550" y1="150" x2="550" y2="166" stroke="currentColor" stroke-opacity=".4" stroke-width="1"/>
+      <text x="546" y="182" text-anchor="middle" font-size="11" fill="#526259">the thought is printed here, then dropped</text>
+
+      <!-- fan out to the three tools -->
+      <path d="M 630 118 C 656 118 658 48 682 48" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+      <path d="M 630 118 L 682 118" fill="none" stroke="#963D34" stroke-width="2" marker-end="url(#a2)"/>
+      <path d="M 630 118 C 656 118 658 190 682 190" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <rect x="686" y="22" width="262" height="52" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="702" y="44" font-size="12.5" font-family="JetBrains Mono, monospace" fill="currentColor">lookup_account</text>
+      <text x="702" y="61" font-size="11" fill="#526259">reads the account. Safe to repeat.</text>
+
+      <rect x="686" y="92" width="262" height="52" rx="16" fill="#FBF8F2" stroke="#963D34" stroke-width="2"/>
+      <text x="702" y="114" font-size="12.5" font-family="JetBrains Mono, monospace" fill="#963D34">issue_credit</text>
+      <text x="702" y="131" font-size="11" fill="#963D34">Moves money. Cannot be undone.</text>
+
+      <rect x="686" y="164" width="262" height="52" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="702" y="186" font-size="12.5" font-family="JetBrains Mono, monospace" fill="currentColor">escalate</text>
+      <text x="702" y="203" font-size="11" fill="#526259">Hands the case to a person.</text>
+
+      <!-- the loop back -->
+      <path d="M 817 218 L 817 266 L 210 266 L 210 150" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-dasharray="0" marker-end="url(#a1)"/>
+      <text x="513" y="286" text-anchor="middle" font-size="11.5" fill="#526259">whatever the tool returned goes back in as plain text, and the loop runs again</text>
+
+      <!-- the trace -->
+      <rect x="6" y="300" width="942" height="38" rx="16" fill="#E5EBE1"/>
+      <text x="24" y="324" font-size="12" fill="#526259">The trace prints every one of these steps as it happens. It is the only window you have.</text>
+    </svg>
+    </div>
+    <figcaption>The whole agent. Four steps in a loop, three tools it may call, and one of those three moves real money with nothing standing in front of it.</figcaption>
+  </figure>
+
+</article>
+
+<article class="card" id="t0-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>You can draw an agent before anybody names one, and everything you drew that is not the model is yours to build.</blockquote>
+  
+  <p>Everything else is that sentence with a number attached. <strong>Say it after the four files are on the board, not before.</strong> Said first it is a slogan; said last it is a summary of something they did.</p>
+</article>
+
+<article class="card" id="t0-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>This topic does not carry a rated checkpoint</strong>, because 01:10 covers topics 0 and 1 together and two ratings twenty minutes apart is one too many. Read these lines if you have the minute, and skip them without guilt if you are behind.</p>
+  <p class="quiet">If you do read them, watch the fourth. A room that cannot answer it has heard ₹3,600 as a story about a bug rather than about missing state, and topic 2 will not land.</p>
+</article>
+</div>
+</div>
+<article class="card" id="t0-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-29</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>The shared screen has to have <span class="mono">make mock</span> already finished on it</strong> before anybody joins. It is the only beat in the day that depends on staging, and it is ruined by running it live.</li>
+    <li><strong>Decide before the day whether you take the drawings on camera or in chat.</strong> Eight people holding paper up to a webcam takes four minutes, not two. Chat photos are faster and worse. Either is fine; deciding at 00:18 is not.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t1">
+  <summary><span class="num">1</span><span>The harness · One run is many calls</span><span class="when">00:38 to 01:10</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t1-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is a slide about token cost. Every person in this room has optimised something, and they will file it under performance and stop listening.</p>
+  <p>The stronger claim is that <strong>the price of one ticket is set by the probabilistic component, not by you</strong>, and that <span class="mono">MAX_STEPS</span> is therefore not a safety valve but the only upper bound on what a ticket can cost. That reframing is what makes the step budget interesting rather than housekeeping.</p>
+  <p>The topic then ends on the odds-versus-possible split, which is the sentence the whole day rests on. <strong>Protect the last seven minutes for it.</strong> If you are behind, take them out of 00:57 rather than 01:03.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">the harness · outcome 1 &#183; 00:38 to 01:10</span>
+
+  <div class="beat" data-ref="t1-r-calls"><span class="t">00:38</span><div class="b">
+    <h4>One run is many calls</h4>
+    <span class="pairs">Whole room · 8 min</span>
+    
+    <p><strong>This is the correction that has to come before anything else</strong>, because the drawing is almost always wrong in the same way. Ask for the number first: <em>how many times did that run call the model?</em> Most of the room says two.</p>
+    <p>Then the two meanings of "call".</p>
+    <h4>How the loop ends</h4>
+    <p>Four exits, and the model chooses two. <strong>The two the loop controls are the ones nobody is watching</strong>, and both are a drill in topic 3.</p>
+    <h4>Three consequences</h4>
+    <p>Latency is the sum, cost grows faster than the step count, and you do not decide how many calls a ticket takes. <strong>The third is the whiteboard line.</strong></p>
+    <p><strong>Land it on their quota rather than on cost in the abstract.</strong> Twenty requests a day, about three a run, six runs. That is the whole allowance and the step count is what spends it. A room that has just worked out it gets six runs takes the step budget seriously for the rest of the day.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-step"><span class="t">00:46</span><div class="b">
+    <h4>Inside one step</h4>
+    <span class="pairs">Alone 3 min in silence, then the room · 11 min</span>
+    
+    <p><span class="mono">make prompt</span>. <strong>Three minutes of silence before you name anything</strong>, then collect. The order matters: no conversation, then the thought, then no tool API.</p>
+    <div class="term">make prompt          # Q +3   (should be 0 — pin --mock in the target)</div>
+    <h4>There is no conversation</h4>
+    <p>Two messages, assembled and discarded. This is the beat that explains the token curve they will measure in drill 4.</p>
+    <h4>The reasoning is real, and then it is thrown away</h4>
+    <p><strong>Be precise, because half of it is easy to get wrong.</strong> <span class="mono">thought</span> is the first key, so it conditions the action written beside it — real work inside one step — and it never reaches the next prompt. Then land the sentence: <em>the problem is not the choice, it is that nobody made it.</em> You use it again about the ceiling within the hour.</p>
+    <h4>There is no tool-calling API</h4>
+    <p>One sentence and move on. It is drill 3's setup, and spending time on it here costs the seven minutes 01:03 needs.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-thinking"><span class="t">00:57</span><div class="b">
+    <h4>Can we not just make the thinking better?</h4>
+    <span class="pairs">Whole room · 6 min · take the question seriously first</span>
+    
+    <p><strong>Somebody asks this here. If nobody does, ask it yourself</strong>, because the rest of the day is weaker without it having been asked out loud by the room.</p>
+    <p><strong>Take it seriously for a full minute before you turn it.</strong> All three levers work, and a room that feels its question was dismissed stops offering them. Name each lever and agree with it.</p>
+    <p>Then: <strong>all three move the mean, none of them moves the floor.</strong> Flag that they should watch for it across the four runs rather than proving it now — the proof is the bake-off at 03:02 and it is much stronger with a keyboard behind it.</p>
+    <p class="quiet"><strong>Do not let this beat run long.</strong> It is the one to take minutes from when you are behind, because 01:03 says the same thing in a form they can use and this one is the warm-up for it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-split"><span class="t">01:03</span><div class="b">
+    <h4>Odds, or what is possible</h4>
+    <span class="pairs">Whole room · 7 min · the sentence the day rests on</span>
+    
+    <p><strong>Protect these seven minutes.</strong> This is the sentence the whole day rests on and it is the one the 01:10 checkpoint takes a number on.</p>
+    <p>Build the two rows on the board rather than showing the table. Ask for things you can change, write each one in a column, and let the room notice that one column is crowded and the other has two entries in it.</p>
+    <p><strong>Then say the audit sentence and stop.</strong> <em>Teams spend their time on the first list; the second list is the one that holds under audit.</em> Do not extend it into week 2's material. The room will want to, and the 01:10 checkpoint is thirty seconds away.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t1-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t1-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>The step budget prints <span class="mono">done</span> in green and exits zero</td><td>Topic 3, at 02:25 — drill 1, and it is three files of travel</td></tr>
+      <tr><td>Nobody knows which step spent the money</td><td>Topic 3 names it; <strong>drill 4 is homework</strong>, and week 2 turns the number into a limit</td></tr>
+      <tr><td>The thought is paid for, used once and dropped</td><td><strong>Nowhere.</strong> It is a defensible choice and the point is that nobody made it</td></tr>
+      <tr><td>Nothing bounds what one ticket costs except a constant in a file</td><td>Week 2, cycle A — the same constant, moved somewhere it can be read and owned</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t1-r-calls">
+  <span class="pairs">&#8596; 00:38 &#183; three calls, not two, and who decides</span>
+  <h3>One run is many calls</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The room says two, and the third call is the whole point</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Three model calls, two tool executions.</strong> The third call is the one that produces <span class="mono">resolve</span>, and it is invisible in the trace because it runs no tool.</p>
+      <p>The four exits: <span class="mono">resolve</span> and <span class="mono">escalate</span> from the model; step-budget exhaustion and an unknown action name from the loop. <strong>Only the first two announce themselves.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So we cap it at six and the cost is bounded."</strong> True, and it is the answer that makes the room comfortable too early. Six steps bounds the count and not the cost: every call re-sends the whole history, so six steps is not six times one step.</p>
+      <p>Take it seriously, because it is the correct instinct arriving one level too coarse. Then ask the question that splits it: <em>what does step six cost compared with step one?</em> Nobody in the room can answer, which is why drill 4 exists.</p>
+      <p><strong>Probe.</strong> Who chose six? Nobody in this room, and nobody in the repository's history either. That is the same sentence as the ceiling on <span class="mono">issue_credit</span> and it is worth planting here.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-step">
+  <span class="pairs">&#8596; 00:46 &#183; the prompt dump, read cold for three minutes</span>
+  <h3>Inside one step</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Context is state, and state has a lifetime</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>The full argument is <span class="mono">docs/teaching/notes/context-as-state.md</span>. The compressed version for this beat:</p>
+      <ul>
+        <li>What the agent knows is <strong>assembled fresh each step</strong> from things that stay true for very different lengths of time.</li>
+        <li>A system prompt written months ago, a policy fetched a second ago, and an account note written by somebody who does not work here all arrive in the same shape, with the same authority, and with no timestamp.</li>
+        <li><strong>Most "the model got confused" incidents are a state-management bug under a different name.</strong></li>
+      </ul>
+      <p>Rebuilding from scratch is the right instinct and it does not help here: <span class="mono">_build_prompt</span> already does it, and rebuilding from stale history reproduces the stale fact perfectly.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Carry the thought forward, then."</strong> A good instinct and it is quiz Q14 in miniature. It costs tokens on every step, it can lock the model on to an early wrong line, and in <span class="mono">make injected</span> it would restate an attacker's instruction as the agent's own words, where a rule about untrusted tool output no longer reaches it.</p>
+      <p><strong>Do not settle it.</strong> The teaching point is that it is a real trade-off with two defensible answers and the repository made neither: it just happened. Ask who would have signed off on the choice.</p>
+      <p><strong>Probe.</strong> If you carried it forward, what would you have to write next to it? A timestamp. That is week 3.</p>
+    </div>
+  </details>
+  <h4>Who says what to whom</h4>
+  <p class="quiet"><strong>Read it twice out loud, once down each side.</strong> Down the left: nothing but the ticket and past results reaches the model, and it is handed a fresh conversation every turn. Down the right: only <span class="mono">action</span> and <span class="mono">args</span> move money. Step 10 is the beat — the thought is not kept.</p>
+  
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 970 652" role="img" font-family="Figtree, sans-serif"
+         aria-label="One step of the loop as an interaction diagram. The loop in agent.py asks llm.py for the next action; llm.py rebuilds the prompt from scratch and sends two messages to the model; the model returns one JSON object holding a thought, an action and its arguments; the loop prints the thought, calls the named tool, gets a result back, prints it, and saves the action, arguments and result to history. The thought is not saved. The loop then runs again, at most six times.">
+      <defs>
+        <marker id="sqa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="sqr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#963D34"/>
+        </marker>
+      </defs>
+
+      <!-- ── participants ── -->
+      <rect x="20" y="8" width="140" height="48" rx="16" fill="#E5EBE1" stroke="currentColor"
+            stroke-opacity=".45" stroke-dasharray="5 4"/>
+      <text x="90" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">the model</text>
+      <text x="90" y="46" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">over the network</text>
+
+      <rect x="260" y="8" width="140" height="48" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="330" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">builds the prompt</text>
+      <text x="330" y="46" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">llm.py</text>
+
+      <rect x="490" y="8" width="140" height="48" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="560" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">the loop</text>
+      <text x="560" y="46" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">agent.py</text>
+
+      <rect x="660" y="8" width="140" height="48" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="730" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">the tools</text>
+      <text x="730" y="46" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">tools.py</text>
+
+      <rect x="820" y="8" width="140" height="48" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="890" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">the trace</text>
+      <text x="890" y="46" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">trace.py</text>
+
+      <text x="20" y="74" font-size="11" fill="#963D34">not the harness — the only part you did not write</text>
+      <text x="960" y="74" text-anchor="end" font-size="11" fill="#526259">the other four are the harness · all of it ordinary code · time runs downward</text>
+
+      <!-- ── lifelines ── -->
+      <line x1="90"  y1="86" x2="90"  y2="590" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 5"/>
+      <line x1="330" y1="86" x2="330" y2="590" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 5"/>
+      <line x1="560" y1="86" x2="560" y2="590" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 5"/>
+      <line x1="730" y1="86" x2="730" y2="590" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 5"/>
+      <line x1="890" y1="86" x2="890" y2="590" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 5"/>
+
+      <!-- 1 · the loop asks for the next action -->
+      <line x1="560" y1="112" x2="336" y2="112" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="448" y="104" text-anchor="middle" font-size="11.5" fill="currentColor">1 · what should I do next?</text>
+      <text x="448" y="128" text-anchor="middle" font-size="10.5" fill="#526259">the ticket, and every tool result so far</text>
+
+      <!-- 2 · the rebuild -->
+      <rect x="250" y="142" width="160" height="40" rx="14" fill="#E5EBE1"/>
+      <text x="330" y="159" text-anchor="middle" font-size="11.5" fill="currentColor">2 · write the prompt</text>
+      <text x="330" y="174" text-anchor="middle" font-size="10.5" fill="#526259">from scratch, every turn</text>
+
+      <!-- 3 · out to the model -->
+      <line x1="330" y1="206" x2="96" y2="206" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="212" y="198" text-anchor="middle" font-size="11.5" fill="currentColor">3 · two messages: the rules, then the case</text>
+      <text x="208" y="222" text-anchor="middle" font-size="10.5" fill="#526259">temperature 0 · no memory of last turn</text>
+
+      <!-- 4 · back from the model -->
+      <line x1="90" y1="254" x2="324" y2="254" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="208" y="246" text-anchor="middle" font-size="11.5" fill="currentColor">4 · one JSON object comes back</text>
+      <text x="208" y="270" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#765523">thought · action · args</text>
+
+      <!-- 5 · back to the loop -->
+      <line x1="330" y1="302" x2="554" y2="302" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="444" y="294" text-anchor="middle" font-size="11.5" fill="currentColor">5 · the reply, passed straight through</text>
+
+      <!-- 6 · print the thought -->
+      <line x1="560" y1="350" x2="884" y2="350" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="700" y="342" text-anchor="middle" font-size="11.5" fill="currentColor">6 · print the thought</text>
+      <text x="700" y="366" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">▸ think</text>
+
+      <!-- 7 · call the tool -->
+      <line x1="560" y1="398" x2="724" y2="398" stroke="#963D34" stroke-width="2" marker-end="url(#sqr)"/>
+      <text x="644" y="390" text-anchor="middle" font-size="11.5" fill="#963D34">7 · run the named tool</text>
+      <text x="644" y="414" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#963D34">issue_credit('4471', 1200)</text>
+
+      <!-- 8 · the result -->
+      <line x1="730" y1="446" x2="566" y2="446" stroke="#963D34" stroke-width="2" marker-end="url(#sqr)"/>
+      <text x="644" y="438" text-anchor="middle" font-size="11.5" fill="#963D34">8 · the money has moved</text>
+      <text x="644" y="462" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#963D34">{'credited': True, ...}</text>
+
+      <!-- 9 · print the call -->
+      <line x1="560" y1="494" x2="884" y2="494" stroke="currentColor" stroke-width="1.5" marker-end="url(#sqa)"/>
+      <text x="700" y="486" text-anchor="middle" font-size="11.5" fill="currentColor">9 · print the call and its result</text>
+      <text x="700" y="510" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">▸ tool</text>
+
+      <!-- 10 · what is kept -->
+      <rect x="478" y="524" width="164" height="40" rx="14" fill="#E5EBE1"/>
+      <text x="560" y="541" text-anchor="middle" font-size="11.5" fill="currentColor">10 · keep for next turn</text>
+      <text x="560" y="556" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">action, args, result</text>
+      <text x="560" y="582" text-anchor="middle" font-size="11" fill="#963D34">the thought is not kept — no later turn ever sees it</text>
+
+      <line x1="20" y1="600" x2="950" y2="600" stroke="currentColor" stroke-opacity=".18"/>
+      <text x="485" y="622" text-anchor="middle" font-size="11.5" fill="#526259">then the whole thing runs again, carrying one more result — at most six times</text>
+      <text x="485" y="640" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="#526259">unless the model said resolve or escalate, which end the run here</text>
+    </svg>
+    </div>
+    <figcaption>One step, and everything that crosses between the five parts. Read it twice:
+      once down the left, where <strong>nothing but the ticket and past results reaches the model</strong> — it
+      is handed a fresh conversation each turn and remembers nothing; and once down the right, where
+      <strong>only <span class="mono">action</span> and <span class="mono">args</span> move money</strong>. The tool result at step 8
+      goes back into step 2's prompt as plain text, with nothing marking where it came from.</figcaption>
+  </figure>
+
+</article>
+
+<article class="card" id="t1-r-thinking">
+  <span class="pairs">&#8596; 00:57 &#183; the question the room asks here</span>
+  <h3>Can we not just make the thinking better?</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Three levers, all real, and what each one moves</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>The lever</th><th>What it genuinely does</th><th>What it does not do</th></tr></thead>
+        <tbody>
+          <tr><td>Sharper system prompt</td><td>Better-chosen actions, most of the time</td><td>Nothing on the run where the record lies</td></tr>
+          <tr><td>Stronger model</td><td>More careful reasoning, measurably</td><td>Follows a false instruction more precisely, not less</td></tr>
+          <tr><td>Richer context</td><td>More to reason from</td><td>More surface to attack, and older stale facts</td></tr>
+        </tbody>
+      </table></div>
+      <p>The bake-off at 03:02 is where this stops being a claim. <strong>Do not prove it here.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Then we should not bother improving the prompt."</strong> The overcorrection, and it arrives from the most engaged person in the room about ten seconds after the point lands. It is wrong and it is worth correcting immediately, because a room that leaves believing prompt work is worthless has learned something false.</p>
+      <p>The sentence is <em>improve the thinking, it is worth doing, it is just not a boundary</em>. Both halves, in that order.</p>
+      <p><strong>Probe.</strong> Which of the four runs would a better model have saved? Two of them, on a good day. Name which two and the room can see the shape of the answer for itself.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-split">
+  <span class="pairs">&#8596; 01:03 &#183; the split, built on the board</span>
+  <h3>Odds, or what is possible</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The session spine, and the test question it becomes</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Odds:</strong> the model, the temperature, the system prompt, what enters the context. All in <span class="mono">llm.py</span>, all inside the probabilistic component.</p>
+      <p><strong>Possible:</strong> <span class="mono">MAX_STEPS</span> and the <span class="mono">TOOLS</span> dictionary. Both enforced outside it.</p>
+      <p>This returns as <strong>quiz Q11</strong>, where "a more capable model with better instruction-following" is offered as a durability boundary and is not one. Ask Q11 late, after the bake-off has made a better model look like the answer.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Temperature zero makes it deterministic, so that one changes what is possible."</strong> The best wrong answer in the topic, and it comes from somebody who has read the API documentation carefully.</p>
+      <p>Temperature zero is greedy decoding, not a guarantee. It narrows the distribution and it does not remove the tail, and in any case the provider gives no determinism promise across versions. <strong>It makes the bad run rarer, which is the definition of the first column.</strong></p>
+      <p><strong>Probe.</strong> If temperature zero were a guarantee, which of today's four failures would it stop? None. All four happen at temperature zero, and two of them have no model in them at all.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>Everything you can change in the model file moves the odds. Two things in this codebase change what is possible, and they are the ones that hold under audit.</blockquote>
+  
+  <p>Everything else is that sentence with a cost attached. <strong>Say it at 01:03 and again at the checkpoint</strong>, in the same words both times. It is the one sentence in week 1 worth repeating inside ten minutes.</p>
+</article>
+
+<article class="card" id="t1-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p>One number in chat on the last line only, which is the session's own convention. Then: <em>"Three more runs. Write the number down before each one."</em></p>
+  <p><strong>If anybody posts below 3 on the last line, slow down and take it now.</strong> It is the sentence the whole day rests on and topic 2 does not land without it. Ask for one example of each column from the person who posted lowest, and do not move until you have them.</p>
+  <p class="quiet">Then five minutes, cameras off, away from the screen. Not a break, a reset. <strong>01:10 is a checkpoint and a stand-up at the same offset</strong>, and the checkpoint goes first.</p>
+</article>
+</div>
+</div>
+
+  </div>
+</details>
+
+
+<details class="topic" id="t2">
+  <summary><span class="num">2</span><span>Boundaries · Four failures a better model does not fix</span><span class="when">01:15 to 02:05</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t2-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is a parade of bugs. Four demos, four gasps, no transfer.</p>
+  <p>The stronger claim is the one the pattern table at 01:44 makes visible and no single run does: <strong>the model was right every time its information was honest, and wrong the moment it was not.</strong> That is why the four run before the pattern, and why the pattern is built from their numbers rather than shown.</p>
+  <p><strong>This topic carries outcome 3, which is one of the two flagged <span class="mono">movesMost</span>.</strong> Nobody arrives able to name a failure a stronger model will not fix. Every beat here is evidence for that one sentence.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">boundaries · outcome 3 &#183; 01:15 to 02:05</span>
+
+  <div class="beat" data-ref="t2-r-9999"><span class="t">01:15</span><div class="b">
+    <h4>It pays an account that does not exist — ₹5,000</h4>
+    <span class="pairs">Whole room · 8 min · commit in chat before the file opens</span>
+    
+    <p><strong>Take the "which line" answer in chat before you open <span class="mono">tools.py</span>.</strong> Thirty seconds. The answers are the interesting part and most of them name a line that does not exist.</p>
+    <div class="term">make weird-mock               # Q +0</div>
+    <p><strong>Say the awkward part out loud rather than hoping nobody notices.</strong> There is no model in this failure; the brain is a dozen if-statements. Somebody will spot it, and if you said it first it is the argument. If they said it first it is a gotcha.</p>
+    <p>Then the sentence: <em>a better brain changes the odds of this trace, it does not change whether the trace is possible.</em> Same shape as 01:03, second outing.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-injected"><span class="t">01:23</span><div class="b">
+    <h4>It follows a rule an attacker wrote — ₹2,50,000</h4>
+    <span class="pairs">Alone 30 sec, pairs 2 min, then the room · 13 min</span>
+    
+    <p><strong>The full prediction cycle, and it is the only one in the day that gets all three stages.</strong> Thirty seconds alone, two minutes in pairs, then chat. Do not shorten it; this is the failure the room remembers in week 6.</p>
+    <div class="term">make injected                 # Q +3, real model</div>
+    <p><strong>Run it on a real model, not the mock.</strong> The whole point is that a capable model reads the note more carefully and obeys it more confidently, and the mock cannot show that.</p>
+    <p><strong>Then close it, deliberately, and say you are closing it.</strong> <em>The missing piece is a boundary between text that is data and text that is authority. That is week 4 and it does not fit in a smaller space.</em> A room left with an open security thread spends the drill block on it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-zero"><span class="t">01:36</span><div class="b">
+    <h4>It refuses a customer who was owed the money — ₹0</h4>
+    <span class="pairs">Whole room · 8 min · predict the number first, 30 seconds</span>
+    
+    <p><strong>Take the number in chat first.</strong> This is the only one of the four where the amount is still unknown to the room, so the prediction is real. Most rooms guess a large number, because the previous two were large.</p>
+    <p>Then run it and let the ₹0 sit. <strong>Do not explain it immediately.</strong> Ask what is wrong with the trace. Several people will say nothing is.</p>
+    <p class="quiet"><strong>This is the failure that carries outcome 2 into topic 3.</strong> A clean trace, no error, and a customer waiting. If the room finds this one uninteresting, drill 3 will land as fiddly type-checking rather than as the fix for a silent ₹0.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-pattern"><span class="t">01:44</span><div class="b">
+    <h4>The pattern</h4>
+    <span class="pairs">Whole room · 9 min · built on the board from their numbers</span>
+    
+    <p><strong>Build the table on the board from their numbers.</strong> Do not show it. The room wrote three payouts down in the pre-work and one more at 01:36, so every cell in the left two columns comes from them.</p>
+    <p>Then ask what the rows have in common before you say it. <strong>Somebody usually gets it</strong>, and the sentence is much stronger said by a participant.</p>
+    <p class="quiet">The three useful questions at the end are the syllabus in one line: what it is told (week 4), what it may do (week 2), what it remembers (week 2). <strong>Saying so makes the course feel designed rather than sequential.</strong></p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-stop"><span class="t">01:53</span><div class="b">
+    <h4>So how would you stop this?</h4>
+    <span class="pairs">Whole room · 5 min · take the answers in the order they arrive</span>
+    
+    <p><strong>Take all three answers before you respond to any of them.</strong> Collect, then address in order. Responding to the first as it arrives stops the other two being offered.</p>
+    <p>Each response is a question rather than a correction, and each question is a later week: how would you find out it failed (week 3), who owns the check and where does it live (week 2), what else needs one (week 2).</p>
+    <p><strong>Then open <span class="mono">tools.py</span> and read <span class="mono">issue_credit</span> out loud.</strong> It is four lines and it is the most persuasive thing in the block.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-three"><span class="t">01:58</span><div class="b">
+    <h4>Three ideas, and they are a tour of the harness</h4>
+    <span class="pairs">Whole room · 4 min</span>
+    
+    <p><strong>Four minutes, three ideas, and do not expand any of them.</strong> Each has a full note behind it and none of those notes is a slide: <span class="mono">tools-api-surface.md</span>, <span class="mono">context-as-state.md</span>, <span class="mono">case-one-slow-night.md</span>.</p>
+    <p>The job here is to give the room three labels it can hang the rest of the course on. <strong>The session copy is four sentences each on purpose.</strong></p>
+    <h4>Tools are your real API surface</h4>
+    <p>Every tool is a capability handed to something you cannot predict. <span class="mono">issue_credit</span> is a spend authorisation.</p>
+    <h4>Durability is a set of boundaries you chose on purpose</h4>
+    <p>A durable system is not one that does not fail. It is one whose failures are bounded, visible and cheap.</p>
+    <p class="quiet"><strong>End on the spine sentence and let it sit.</strong> <em>AI builds, the human judges and directs.</em> It is the programme's positioning and this is the first place in week 1 where it is earned rather than asserted.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-expected"><span class="t">02:02</span><div class="b">
+    <h4>The only expectation was written by the attacker</h4>
+    <span class="pairs">Whole room · 3 min · guess the number before the search runs</span>
+    
+    <p><strong>Ask them to guess the count before you run the search.</strong> Guesses cluster around five to ten. It is two, and both are inside the attack.</p>
+    <div class="term">grep -rn "expected" src/       # Q +0</div>
+    <p>Then the sentence, and it is the last thing before the checkpoint: <em>the only thing in this system that asserts an expectation is the attacker.</em></p>
+    <p class="quiet"><strong>This beat moved from inside the pattern to 02:02 on 29 September.</strong> It runs last because it is the bridge to week 3, and a bridge sitting in the middle of the pattern table was being read as a footnote to the injection.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t2-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t2-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>No ceiling, no existence check and no approval on <span class="mono">issue_credit</span></td><td>Week 2, cycle A and cycle B. <strong>They will ask at about 01:20 and you refuse all day</strong></td></tr>
+      <tr><td>Untrusted text and genuine business rules arrive with identical authority</td><td>Week 4 — named here in one minute and deliberately not opened</td></tr>
+      <tr><td>The ₹0 would survive every dashboard in the room</td><td>Topic 3, at 02:50 — drill 3 makes it say so, and still does not prevent it</td></tr>
+      <tr><td>The trace has a line for what happened and none for what should have happened</td><td>Week 3 — this is the sentence that defines an evaluation harness</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t2-r-9999">
+  <span class="pairs">&#8596; 01:15 &#183; ₹5,000, which line would have stopped it</span>
+  <h3>It pays an account that does not exist — ₹5,000</h3>
+  
+  <h4 class="quiet" style="font-weight:700">There is no line, and that is the answer</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><span class="mono">issue_credit</span> accepts any account id and any amount and returns success. <strong>No ceiling, no existence check, no approval.</strong> The money moved because nothing in the system was ever going to stop it.</p>
+      <p>Accept "add a check in <span class="mono">issue_credit</span>" and then ask the three questions that turn it into week 2: who owns that check, where does it live, and what else needs one.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"The model should have escalated when it saw <span class="mono">found: false</span>."</strong> True, and it is an instruction to a probabilistic component guarding an irreversible action. Ask how they would find out, on the Tuesday it did not comply.</p>
+      <p>This is quiz Q1's distractor D arriving five hours early, and it is worth the minute because the room is about to watch the same instinct fail twice more.</p>
+      <p><strong>Probe.</strong> Which part of the harness does this failure live in? The tool layer. Getting the room to place each of the four is outcome 1 being tested without announcing it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-injected">
+  <span class="pairs">&#8596; 01:23 &#183; ₹2,50,000, the full prediction cycle</span>
+  <h3>It follows a rule an attacker wrote — ₹2,50,000</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Whose text, and what granted it authority</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>The attacker's, and nothing granted it authority — nothing ever distinguished it.</strong> <span class="mono">llm.py:43</span> appends tool output unlabelled. This is quiz Q6.</p>
+      <p>The model is not fooled about what to do. It is correctly following what its system of record appears to say. <strong>There is no trust boundary for it to consult because the context does not encode one.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Label the tool output as untrusted and tell the model not to follow instructions in it."</strong> This is what a strong room proposes and it is half of a real defence. Labelling is still an instruction to a probabilistic component, and it is guarding an irreversible action.</p>
+      <p>Credit it properly — provenance labelling is genuinely part of week 4's answer — then ask what holds when the label is ignored once. <strong>The control that holds is a ceiling on <span class="mono">issue_credit</span>, which is week 2 and not week 4.</strong> That ordering surprises people and it is worth the thirty seconds.</p>
+      <p><strong>Probe.</strong> Would a better model have obeyed the note? Yes, and more confidently. You prove it at 03:02, so promise it rather than arguing it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-zero">
+  <span class="pairs">&#8596; 01:36 &#183; ₹0, the only amount still unknown</span>
+  <h3>It refuses a customer who was owed the money — ₹0</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The quiet one, and the <span class="mono">str()</span> nobody knows is there</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>₹0, a clean trace, and no error anywhere.</strong> The id arrives as a string from the scripted brain (<span class="mono">'4471'</span>) and as a number from a real model (<span class="mono">4471</span>) on the same ticket.</p>
+      <p><span class="mono">lookup_account</span> happens to call <span class="mono">str()</span> on the way in and quietly repairs it. <strong>That one <span class="mono">str()</span> is doing real work and nobody knows it is there.</strong> Take it away and an honest ticket gets ₹0.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"That is just a bug, not an agent problem."</strong> Fair, and it is the most useful objection in the block. A type mismatch between a caller and a store is forty years old.</p>
+      <p>What is new is who the caller is. <strong>A human caller writes <span class="mono">'4471'</span> once and it is wrong once; a probabilistic caller writes it differently on different runs of the same ticket.</strong> So the mismatch is intermittent, and intermittent plus silent is the combination no dashboard catches.</p>
+      <p><strong>Probe.</strong> How would you have found this in production? Nobody has an answer that does not involve the customer complaining. That is the beat.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-pattern">
+  <span class="pairs">&#8596; 01:44 &#183; four runs side by side, built from their numbers</span>
+  <h3>The pattern</h3>
+  
+  <h4 class="quiet" style="font-weight:700">What is invisible one run at a time</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Honest record, right answer. Dishonest record, wrong answer.</strong> Three of the four are correct on a real model, which is why a room that met only the failures would conclude the model is bad, and that conclusion is false.</p>
+      <p>The agent has no way to doubt what a tool hands it. <strong>That is a property of the harness, not of the model</strong>, and it is the sentence that makes outcome 3 testable.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So we need to validate the tool output."</strong> The right instinct and it does not survive one question: validate it against what? The account note <em>is</em> the record of truth. There is nothing behind it to check it against.</p>
+      <p>Take it seriously — output validation is real and it is week 4 — and then use it to reach the honest answer, which is that the control lands on the <em>action</em> rather than on the text. A ceiling on <span class="mono">issue_credit</span> does not care whether the note was honest.</p>
+      <p><strong>Probe.</strong> Which row would a better model have fixed? Row 4 is the only one wrong, and a better model makes it worse. That is the cleanest statement of outcome 3 available all day.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-stop">
+  <span class="pairs">&#8596; 01:53 &#183; three answers, in the order rooms give them</span>
+  <h3>So how would you stop this?</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Three answers, and the question each one earns</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>They say</th><th>You ask</th><th>Which is</th></tr></thead>
+        <tbody>
+          <tr><td>Use a better model</td><td>Hold it — we test it at 03:02</td><td>The bake-off</td></tr>
+          <tr><td>Fix the prompt</td><td>How would you find out the day it did not comply?</td><td>Week 3</td></tr>
+          <tr><td>Validate the account</td><td>Who owns it, where does it live, what else needs one?</td><td>Week 2</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Put a human in front of every credit."</strong> It arrives in about half of rooms and it is not wrong, it is unpriced. Ask what 40,000 disputes a month does to it. That is teardown question 4 at 03:28, and the person who said it should be given that question.</p>
+      <p><strong>Probe.</strong> Which of the three answers is enforced outside the probabilistic component? Only the third. That is 01:03 returning, and it is worth pointing out that they got there themselves.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-three">
+  <span class="pairs">&#8596; 01:58 &#183; three labels for the rest of the course</span>
+  <h3>Three ideas, and they are a tour of the harness</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Three ideas, three notes, and why the session copy is short</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>Tools are your real API surface</strong> — <span class="mono">notes/tools-api-surface.md</span>, 107 lines. Every tool is a capability handed to something unpredictable.</li>
+        <li><strong>Context is state</strong> — <span class="mono">notes/context-as-state.md</span>, 246 lines. Truth-lifetime, and the <span class="mono">as_of</span> stamp that is missing.</li>
+        <li><strong>Durability is boundaries</strong> — <span class="mono">notes/case-one-slow-night.md</span>, 169 lines, and it is the case behind quiz Q9 to Q12.</li>
+      </ul>
+      <p><strong>The session copy is four sentences each because the notes are not learner-facing.</strong> Reading them aloud converts a four-minute beat into a twenty-minute lecture.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Which of the three is most important?"</strong> Somebody asks, and the temptation is to answer. Do not rank them: they are the three parts of the harness that are not the trace, and a ranking makes two of them optional.</p>
+      <p>The honest answer is that <strong>they fail in different weeks</strong>, and the one that costs you first is whichever your own system is weakest on. That converts the question into the After-block prompt, which is where it belongs.</p>
+      <p><strong>Probe.</strong> Which of the three does the ₹0 at 01:36 belong to? None of them cleanly, and that is worth saying: it is the tool layer's contract, which is the fourth idea and it is drill 3.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-expected">
+  <span class="pairs">&#8596; 02:02 &#183; two hits, both inside the attack</span>
+  <h3>The only expectation was written by the attacker</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The trace records what happened and never what should have</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Two hits, the same sentence twice, both in the poisoned note.</strong></p>
+      <p>4471 disputed ₹1,200 and was paid ₹1,200. 8001 disputed ₹1,200 and was paid ₹2,50,000. <span class="mono">disputed_amount</span> is right there in both tickets and nothing reads it. <strong>The two runs produce the same shape of output.</strong></p>
+      <p>That gap — a line for what happened, none for what should have happened — is the definition of what week 3 builds.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So assert that the credit equals the disputed amount."</strong> Good, and it is the right shape, and it is wrong as a general rule: a customer owed two months is owed twice the disputed amount of one. The assertion belongs in a case, not in the tool.</p>
+      <p>That distinction — a rule in the code versus an expectation in a case — <strong>is exactly the week 2 versus week 3 boundary</strong>, and a room that finds it here arrives at week 3 already holding it.</p>
+      <p><strong>Probe.</strong> Where would the expected value live so the model cannot reach it? Nobody has a home for it today. That absence is the point.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>The model was right every time its information was honest, and wrong the moment it was not. A better model changes the odds of that. It does not change whether it is possible.</blockquote>
+  
+  <p>Everything else is that sentence with a number attached. <strong>Say it at 01:44 with the table on the board</strong>, which is the only moment in the day where all four numbers are visible at once.</p>
+</article>
+
+<article class="card" id="t2-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>This is the checkpoint that matters most.</strong> Everything after the break assumes the third line is solid, and the drills are unteachable to a room that still believes a better model is the answer.</p>
+  <p>One number on the last line. <strong>If the room scores the last line high, test it:</strong> ask what the ₹1,200 run was not telling them. A room that has heard 02:02 answers "what should have happened". A room that has not says "nothing, it worked".</p>
+  <p class="quiet">Then the break, fifteen minutes, 02:05 to 02:20. <strong>It falls straight after the ₹2,50,000 on purpose.</strong> Most rooms carry on arguing about it, which is what the break is for. 02:05 is a checkpoint and the break at the same offset, and the checkpoint goes first.</p>
+</article>
+</div>
+</div>
+
+  </div>
+</details>
+
+
+<details class="topic" id="t3">
+  <summary><span class="num">3</span><span>Trace and bill · Making a failure say its name</span><span class="when">02:20 to 03:02</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t3-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is three tickets of housekeeping. The room will do them competently, learn nothing, and file the block under warm-up.</p>
+  <p>The stronger claim is in drill 1 and it is the <strong>gradient</strong>: one file makes a failure honest to a human, three make it honest to a machine, and the thing that pages you at 2am is a machine. Stopping after the first file is the failure the drill is about, and most of the room will stop there unless the gradient is on the board before they start.</p>
+  <p><strong>This topic carries outcome 2.</strong> Every drill ends with something a machine can read: an exit code, a grade in the trace line, a refusal that lands in history.</p>
+  <p>Full problems, solutions and the traps are in <span class="mono">docs/teaching/notes/drill-solutions.md</span>, 552 lines. <strong>Do not put any of it on screen.</strong></p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">trace and bill · outcome 2 &#183; 02:20 to 03:02</span>
+
+  <div class="beat" data-ref="t3-r-shape"><span class="t">02:20</span><div class="b">
+    <h4>How every drill runs</h4>
+    <span class="pairs">Whole room · 5 min · on paper, before any code</span>
+    
+    <p><strong>Five minutes on this before any keyboard opens, and enforce the paper.</strong> Every drill runs decide, then build, then review. The room will want to start typing and the whole block is weaker if they do.</p>
+    <p><strong>Say this out loud:</strong> <em>scope your assistant to the files the drill names.</em> Pointed at the whole repository it will go and fix <span class="mono">issue_credit</span>, which is the one thing we are not doing today. This has happened in every room that was not warned.</p>
+    <h3>1 · Decide</h3>
+    <p>Five minutes on paper, alone, no assistant. <strong>Enforce the paper.</strong></p>
+    <h3>2 · Build</h3>
+    <p>They hand over the decision, not the task, scoped to the files the drill names.</p>
+    <h3>3 · Review</h3>
+    <p>The diff is read against the decision, not against whether it runs.</p>
+    <p class="quiet">The drills are run <strong>with</strong> a coding assistant, deliberately. Forbidding one would have week 1 contradict the programme's spine in its first hands-on block.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-drill1"><span class="t">02:25</span><div class="b">
+    <h4>Drill 1, make the failure say its name</h4>
+    <span class="pairs">Decide 5 min in writing, then alone · 15 min</span>
+    
+    <p><strong>Put the gradient on the board before they start.</strong> One file, two files, three files, and who can see the failure at each. Without it most of the room stops at one line, and the drill's whole point is that stopping there is the failure.</p>
+    <p><strong>Ask the exit-code question before anybody prompts.</strong> <em>What exit code does <span class="mono">escalate</span> get?</em> Genuinely ambiguous, the assistant will decide it silently, and that is a business rule set by autocomplete. It is the single best illustration of outcome 4 in the day.</p>
+    <p class="quiet">Circulate for one thing: did they carry the outcome out through <span class="mono">main.py</span>, or did they make the terminal look right and stop? <strong>Ask the ones who stopped what their monitoring would see.</strong></p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-drill2"><span class="t">02:40</span><div class="b">
+    <h4>Drill 2, grade the tools by consequence</h4>
+    <span class="pairs">Alone, then pairs · 10 min</span>
+    
+    <p><strong>Quick.</strong> The code is five minutes and the argument is the block. Do not let the implementation take more than half.</p>
+    <p><strong>The argument worth having is <span class="mono">escalate</span>.</strong> Most rooms say write. Ask what would make it irreversible — <em>if escalation notified the customer, it would be</em> — and let the pairs settle it. The grade describes what the function reaches, not what it is called.</p>
+    <p class="quiet"><strong>Name the three-versus-four discrepancy before somebody finds it.</strong> Two published surfaces run two scales for one judgment and that was a real defect until 28 September. Three today, the tool's four on their own system.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-drill3"><span class="t">02:50</span><div class="b">
+    <h4>Drill 3, check the arguments before you dispatch</h4>
+    <span class="pairs">Decide 3 min in writing, then alone · 12 min</span>
+    
+    <p><strong>This is the fix for the ₹0 and the room should be told so.</strong> Connect it explicitly to 01:36, because otherwise it reads as fiddly type-checking rather than as the repair for the failure nobody predicted.</p>
+    <p><strong>Enforce the three minutes of writing on the coerce / raise / refuse decision.</strong> It is the one place in the day where the three options have genuinely different consequences and the assistant will pick one silently.</p>
+    <p><strong>Refuse-and-return is the answer the repository already argues for</strong>, in the commented block inside <span class="mono">issue_credit</span> that they read as pre-work for week 2. A refusal that returns lands in history, reaches the next prompt, and lets the agent escalate on its own. <strong>A refusal that raises is a step-budget stop by another name.</strong></p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t3-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t3-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">issue_credit</span> still pays whatever it is told, after all three drills</td><td>Week 2, cycle A. <strong>Refuse this all afternoon and say why</strong></td></tr>
+      <tr><td>Nothing yet measures cost per step</td><td><strong>Drill 4, homework.</strong> Week 2 turns the number into a limit</td></tr>
+      <tr><td>A refusal returns and nothing decides what the agent does next</td><td>Week 2, cycle B — the escalation path and the 2am timeout</td></tr>
+      <tr><td>The grade in the trace line is a label with nothing enforcing it</td><td>Week 2 — "ask a human before irreversible actions" is the rule this label makes writable</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t3-r-shape">
+  <span class="pairs">&#8596; 02:20 &#183; the shape, before any code</span>
+  <h3>How every drill runs</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Why the assistant is required rather than tolerated</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>The programme's spine is <strong>AI builds, the human judges and directs.</strong> A first hands-on block that banned the assistant would contradict it in the first hour, and the room would notice.</p>
+      <p>So the assistant is required and the <em>decision</em> is what is being assessed. Decide on paper, hand over the decision, review the diff against the decision. <strong>Outcome 4 is this loop and nothing else.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"I will just write it myself, it is four lines."</strong> From the strongest engineer in the room, and they are right that it is four lines. They are also opting out of the only outcome that is about how their job changed this year.</p>
+      <p>Do not argue efficiency. <strong>Ask them to write the decision down first and then hand it over</strong>, and to tell the room at 03:15 whether the diff matched it. Half the time it does not, and that is the block's best evidence.</p>
+      <p><strong>Probe.</strong> What did your assistant decide that you did not? Ask it of two people at the end of every drill.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-drill1">
+  <span class="pairs">&#8596; 02:25 &#183; the gradient, and the exit code nobody chose</span>
+  <h3>Drill 1, make the failure say its name</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Three files for one fact to escape</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Full solution in <span class="mono">notes/drill-solutions.md</span>. The shape:</p>
+      <ul>
+        <li><span class="mono">agent.py</span> — a distinct outcome on the budget branch rather than <span class="mono">done</span>.</li>
+        <li><span class="mono">trace.py</span> — a <span class="mono">gaveup</span> kind with its own colour, so it is greppable and not just readable.</li>
+        <li><span class="mono">main.py</span> — read the outcome off the returned <span class="mono">state</span> and <span class="mono">sys.exit</span> non-zero.</li>
+      </ul>
+      <p><strong>This is quiz Q10</strong>: the system was not failing loudly and being ignored, it was failing quietly and reporting success.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>Changing the printed word and stopping.</strong> The terminal now says <span class="mono">gave up</span> in red, it looks finished, and every automated consumer is still being told the run succeeded. Most of the room does this.</p>
+      <p>Do not call it wrong. <strong>Ask what their alerting would have fired on</strong>, and let them find that the answer is nothing. The gradient table is on their page; point at row three.</p>
+      <p><strong>Probe.</strong> Who owns the exit code for <span class="mono">escalate</span>? If the answer is "the assistant picked 0", that is the drill landing exactly as designed.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-drill2">
+  <span class="pairs">&#8596; 02:40 &#183; three grades, and the one worth arguing</span>
+  <h3>Drill 2, grade the tools by consequence</h3>
+  
+  <h4 class="quiet" style="font-weight:700">The grade is about reach, not about the name</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><span class="mono">lookup_account</span> read · <span class="mono">escalate</span> write · <span class="mono">issue_credit</span> irreversible.</p>
+      <p><strong>The test for each is a sentence, not a category:</strong> run it twice and nothing differs; something changed and you could change it back; something changed and you cannot.</p>
+      <p>Maps onto the Agent Authority Review's four undo-cost levels: read and write split across levels one and two, irreversible is level four.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"<span class="mono">escalate</span> is a write, it just changes a queue."</strong> The commonest answer and it is right about today's code. It is wrong about the function's reach in any real deployment, where escalation notifies somebody.</p>
+      <p>The useful move is not to correct it but to ask <strong>what would have to be added for the grade to change</strong>. One line that sends an email. That is the whole lesson: the grade is a property of what the function reaches, and it changes when somebody adds a line nobody re-graded.</p>
+      <p><strong>Probe.</strong> Which tool in your own system has quietly changed grade in the last year? Most people have one and have never re-graded it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-drill3">
+  <span class="pairs">&#8596; 02:50 &#183; the contract, and the three ways to fail</span>
+  <h3>Drill 3, check the arguments before you dispatch</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Coerce, raise, or refuse and return</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>Choice</th><th>What it costs</th><th>Who finds out</th></tr></thead>
+        <tbody>
+          <tr><td>Coerce</td><td>The ₹0, invisibly</td><td>The customer, eventually</td></tr>
+          <tr><td>Raise</td><td>The run, and the cost line with it</td><td>Whoever reads the stack trace</td></tr>
+          <tr><td><strong>Refuse and return</strong></td><td>One step, and the agent can recover</td><td>The trace, and the next prompt</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Refuse and return is what the repository's own commented block argues for</strong>, and it is what week 2 builds on.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Coerce, but log it."</strong> The engineering compromise, and it is the most attractive wrong answer in the drill because it sounds like it gets both. It does not: a log line nobody reads is the ₹0 with extra steps, and the run still completes claiming success.</p>
+      <p>The question that splits it: <em>who reads that log, and on what day?</em> Then: what would have to be true for the coercion to be correct? The answer is a declared type it is coercing <em>towards</em>, which is the contract, which is the drill.</p>
+      <p><strong>Probe.</strong> Which of the three does your own system do today, at the boundary where a model hands you arguments? Almost everyone coerces and almost nobody chose to.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>You cannot fix what the system will not tell you about, and telling a person is not the same as telling a machine.</blockquote>
+  
+  <p>Everything else is that sentence with a file count attached. <strong>Say it at the end of drill 3</strong>, once all three have landed, rather than at 02:20 where it is a promise.</p>
+</article>
+
+<article class="card" id="t3-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>The drill block is where it is easiest to get quietly stuck and say nothing about it.</strong> A number in chat is the only way anybody finds out before the teardown. Say out loud: put one in even if it is a 2.</p>
+  <p>The last line is outcome 4 and it is one of the two flagged <span class="mono">movesMost</span>. <strong>Ask two people what their assistant decided that they did not.</strong> That question produces better evidence than the number does.</p>
+  <p class="quiet">Then five minutes, stand up again. <strong>03:20 is a checkpoint and a stand-up at the same offset</strong>, and the checkpoint goes first.</p>
+</article>
+</div>
+</div>
+<article class="card" id="t3-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-29</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>Drill 4 is homework and is not run in the room.</strong> If the clock beats you it stays homework; it does not get compressed into five minutes. It needs changes in two files and a decision about what the word "steps" should mean.</li>
+    <li><strong>Verification for everything they build is free.</strong> The drills all live in files the scripted brain still dispatches through, so <span class="mono">make mock</span>, <span class="mono">make weird-mock</span> and <span class="mono">make retry</span> cost no quota. Say so, or people will not re-run.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t4">
+  <summary><span class="num">4</span><span>Directing the build · Two models, and the guard you do not write</span><span class="when">03:02 to 03:20</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t4-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is a demo where a bigger model does better and everybody nods. That is worse than nothing, because it confirms the instinct the day is trying to complicate.</p>
+  <p>The stronger claim needs both halves run: <strong>on the honest ticket the better model is genuinely better, and on the poisoned one it obeys the attacker more confidently.</strong> Run only the first half and you have argued the opposite of the session.</p>
+  <p>Then 03:12 is the beat where you refuse to let them fix <span class="mono">issue_credit</span>, and it needs its argument said out loud rather than asserted.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">directing the build · outcome 4 &#183; 03:02 to 03:20</span>
+
+  <div class="beat" data-ref="t4-r-bakeoff"><span class="t">03:02</span><div class="b">
+    <h4>Comparing two models</h4>
+    <span class="pairs">Pairs · 10 min · predict in 60 seconds first</span>
+    
+    <div class="term">make weird                                       # Q +3
+python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</div>
+    <p><strong>Run the <span class="mono">injected</span> comparison from the front, not in the room.</strong> It is six requests each and would put everyone at 18 of 20 before the afternoon. This is not optional; it is the difference between the block working and half the room being out of quota for week 2's pre-work.</p>
+    <p><strong>Take the prediction before either run.</strong> Sixty seconds, in pairs. Rooms mostly predict the second model escalates, which is usually right and is the less interesting half.</p>
+    <p class="quiet">If a model emits unparseable JSON and takes the run down, <strong>stop and name it</strong>: your model's output is a parsing surface you own and nobody writes a test for it. It is a thirty-second beat and it is the one people quote back.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-stop"><span class="t">03:12</span><div class="b">
+    <h4>Then stop</h4>
+    <span class="pairs">Whole room · 8 min</span>
+    
+    <p><strong>They will want to fix <span class="mono">issue_credit</span>. Do not let them, and give the reason rather than the instruction.</strong> A room told "no" without an argument does it anyway at home and arrives at week 2 with the interesting part already spent.</p>
+    <p>The argument: <em>sitting with a visible, unguarded, money-moving tool for a week is the point.</em> Week 2 opens by building it properly with a limit, a human gate and durable state. <strong>Write down the guard you wanted to add — you implement your own note next week.</strong></p>
+    <p class="quiet"><strong>Say the free-verification line out loud.</strong> <span class="mono">make mock</span>, <span class="mono">make weird-mock</span> and <span class="mono">make retry</span> cost no quota, because the guardrails live in <span class="mono">tools.py</span> and the mock still dispatches through it. People who think re-running costs requests do not re-run.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t4-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t4-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing is qualified about either model, and no rate is measured</td><td>Week 3 — this is a side-by-side, not an evaluation, and say so</td></tr>
+      <tr><td><span class="mono">issue_credit</span> is still unguarded at the end of the day</td><td><strong>Week 2 opens on it.</strong> That is the point of 03:12, not an oversight</td></tr>
+      <tr><td>A model that emits unparseable JSON takes the run down</td><td><strong>Nowhere in this course.</strong> Name it as a parsing surface they own and move on</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t4-r-bakeoff">
+  <span class="pairs">&#8596; 03:02 &#183; two models, two tickets, one config value</span>
+  <h3>Comparing two models</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Both halves, or you have argued the opposite</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <div class="scroller"><table>
+        <thead><tr><th>Ticket</th><th>Better model does</th><th>What it proves</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">9999</span>, honest record</td><td>Usually escalates correctly</td><td>The lever is real. Say so.</td></tr>
+          <tr><td><span class="mono">8001</span>, poisoned record</td><td>Obeys the note more confidently</td><td>The lever moves the mean, not the floor</td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Run both.</strong> The first half alone confirms the instinct the day exists to complicate.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So the newer model is safer."</strong> It arrives the moment 9999 escalates and before <span class="mono">injected</span> runs, which is exactly why the two runs go in that order.</p>
+      <p>Do not answer it. <strong>Write it on the board and run <span class="mono">injected</span>.</strong> The room correcting itself thirty seconds later is worth more than any sentence you could say, and it is the cleanest demonstration of outcome 3 in the day.</p>
+      <p><strong>Probe.</strong> What rate would you need to see before you shipped it? Nobody has a number, and there is no measurement here at all. That absence is week 3's opening.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t4-r-stop">
+  <span class="pairs">&#8596; 03:12 &#183; the fix you are not allowed to write</span>
+  <h3>Then stop</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Why refusing the fix is teaching rather than withholding</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Three reasons, and the third is the one to say out loud:</p>
+      <ul>
+        <li>A ceiling written in ten minutes is a number nobody agreed to, which is the exact defect week 2 is about.</li>
+        <li>Week 2's cycle A is a build-then-break cycle and it needs the thing unbuilt.</li>
+        <li><strong>The guard they write down tonight is the only piece of week 2's material nobody else can write for them.</strong></li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"I will just add the ceiling at home, it is one line."</strong> Said cheerfully, and it is one line. It also spends the opening of week 2, where the same line is written and then walked past by a second team's tool that never calls it.</p>
+      <p>The honest response is not a ban. <strong>Ask them to write the line down and not commit it</strong>, and to bring both the line and the number they chose. Week 2's 01:12 beat takes that number apart, and it is much sharper when it is theirs.</p>
+      <p><strong>Probe.</strong> What number would you put in it? Whatever they say, ask who at their company agreed to it. Nobody has, and that silence is week 2's opening.</p>
+    </div>
+  </details>
+  <h4>The shape of what you are not building</h4>
+  <p class="quiet"><strong>Put this up and then stop talking.</strong> Four checks in front of the money, and only the first one — the shape of the arguments — is anything they built today. It makes the refusal concrete instead of a promise, and rooms accept "not today" far better once they have seen what today is not.</p>
+  
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 960 268" role="img" font-family="Figtree, sans-serif"
+         aria-label="What week 2 builds: the same money path with four checks in front of it. The arguments are checked for shape, then the account must exist, then the amount must be under a ceiling, then the dispute must not already have been paid. The limits come from a written policy, and a ledger records every credit.">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+        <marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#963D34"/>
+        </marker>
+      </defs>
+
+      <rect x="8" y="52" width="132" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="74" y="77" text-anchor="middle" font-size="12.5" fill="currentColor">the model says</text>
+      <text x="74" y="94" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="#526259">pay 250000</text>
+
+      <line x1="142" y1="80" x2="164" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#b1)"/>
+
+      <rect x="168" y="52" width="150" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="184" y="72" font-size="11" font-family="JetBrains Mono, monospace" fill="#526259">drill 3 · today</text>
+      <text x="184" y="92" font-size="13" fill="currentColor">Right shape?</text>
+
+      <line x1="320" y1="80" x2="342" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#b1)"/>
+
+      <rect x="346" y="52" width="150" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="362" y="72" font-size="11" font-family="JetBrains Mono, monospace" fill="#963D34">week 2</text>
+      <text x="362" y="92" font-size="13" fill="currentColor">Account real?</text>
+
+      <line x1="498" y1="80" x2="520" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#b1)"/>
+
+      <rect x="524" y="52" width="150" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="540" y="72" font-size="11" font-family="JetBrains Mono, monospace" fill="#963D34">week 2</text>
+      <text x="540" y="92" font-size="13" fill="currentColor">Under the ceiling?</text>
+
+      <line x1="676" y1="80" x2="698" y2="80" stroke="currentColor" stroke-width="1.5" marker-end="url(#b1)"/>
+
+      <rect x="702" y="52" width="150" height="56" rx="16" fill="#FBF8F2" stroke="currentColor" stroke-opacity=".35"/>
+      <text x="718" y="72" font-size="11" font-family="JetBrains Mono, monospace" fill="#963D34">week 2</text>
+      <text x="718" y="92" font-size="13" fill="currentColor">Already paid?</text>
+
+      <line x1="854" y1="80" x2="876" y2="80" stroke="#963D34" stroke-width="2" marker-end="url(#b2)"/>
+      <text x="916" y="70" text-anchor="middle" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#963D34">issue</text>
+      <text x="916" y="86" text-anchor="middle" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#963D34">_credit</text>
+
+      <line x1="421" y1="112" x2="421" y2="20" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" marker-end="url(#b1)"/>
+      <text x="431" y="24" font-size="11" fill="#526259">any check may refuse, and say why</text>
+
+      <rect x="346" y="176" width="328" height="56" rx="16" fill="#E5EBE1"/>
+      <text x="362" y="196" font-size="11" font-family="JetBrains Mono, monospace" fill="#963D34">week 2</text>
+      <text x="362" y="216" font-size="13" fill="currentColor">The written policy: what may be paid, and by whom</text>
+      <line x1="421" y1="172" x2="421" y2="114" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <line x1="599" y1="172" x2="599" y2="114" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="686" y="206" font-size="11" fill="#526259">these two read their limits from here</text>
+
+      <rect x="702" y="176" width="150" height="40" rx="16" fill="#E5EBE1"/>
+      <text x="777" y="201" text-anchor="middle" font-size="12" font-family="JetBrains Mono, monospace" fill="#526259">ledger file</text>
+      <line x1="777" y1="172" x2="777" y2="114" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" marker-end="url(#b1)"/>
+      <text x="789" y="146" font-size="11" fill="#526259">reads</text>
+    </svg>
+    </div>
+    <figcaption>What sits in front of the money once week 2 is done. Only the first box — checking the shape of the arguments — is today's work, and even that one only makes the failure visible rather than preventing a payment. Everything marked <span class="mono">week 2</span> is what you design in block 4 and build next week.</figcaption>
+  </figure>
+
+</article>
+
+<article class="card" id="t4-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>The better model moves next quarter. The boundary you drew does not.</blockquote>
+  
+  <p>Everything else is that sentence with two traces beside it. <strong>Say it after both runs, never after the first one.</strong></p>
+</article>
+
+<article class="card" id="t4-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>This topic does not carry a rated checkpoint</strong>, because 03:20 covers topics 3 and 4 together. Read these if you have the minute.</p>
+  <p class="quiet">The second line is the one to collect. <strong>Ask two people for the number they would have put in the ceiling</strong>, and write both on the board. They will differ by an order of magnitude, and that is week 2's first slide without you having to build one.</p>
+</article>
+</div>
+</div>
+
+  </div>
+</details>
+
+
+<details class="topic" id="t5">
+  <summary><span class="num">5</span><span>Governance · Write the boundary down</span><span class="when">03:25 to 04:15</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t5-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is five discussion questions and a nice conversation. The room will enjoy it and produce nothing.</p>
+  <p>The stronger claim is that <strong>none of the five is a model problem</strong> — every one is a boundary somebody either drew or did not — and that the record is the artefact of this cohort rather than the code. Week 2 opens by building what they write here, and week 6 reads week 1's record against week 6's.</p>
+  <p><strong>The seven sections do not vary by week.</strong> Week 6 has to be readable against week 1, which is why the headings are fixed and only the brief above them changes.</p>
+    
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">governance · outcome 5 &#183; 03:25 to 04:15</span>
+
+  <div class="beat" data-ref="t5-r-case"><span class="t">03:25</span><div class="b">
+    <h4>The system at forty thousand a month</h4>
+    <span class="pairs">Whole room · 3 min</span>
+    
+    <p><strong>Say "this is a constructed teaching case" in those words.</strong> Not "hypothetical", not "based on". A room of senior engineers will otherwise spend the block trying to identify the bank.</p>
+    <p>Three minutes, read the box, take no questions yet. <strong>The questions are the next beat and answering them here spends it.</strong></p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-five"><span class="t">03:28</span><div class="b">
+    <h4>Five questions, two per pair</h4>
+    <span class="pairs">Pairs · 12 min · assigned by name</span>
+    
+    <p><strong>Assign the pairs and the questions by name. Do not let them self-select.</strong> Twelve minutes. Self-selection produces four pairs on question 1, which is the one they already half-know from 00:23.</p>
+    <p><strong>Each question points at a later week and saying so makes the syllabus feel designed:</strong> 1 is week 2, 2 is week 3, 3 is week 4 and week 3, 4 is week 2 cycle B, 5 is week 5.</p>
+    <h4>1 · The retry that pays twice</h4>
+    <p>Week 2. The answer that works on one process is not the answer that works on forty.</p>
+    <h4>2 · How far one good deploy reaches</h4>
+    <p>Week 3. A held-out case set and a rate, measured before the deploy.</p>
+    <h4>3 · The question eight months later</h4>
+    <p>Weeks 3 and 4. The <span class="mono">thought</span> was never stored, and they learned that at 00:46.</p>
+    <h4>4 · Where the human goes</h4>
+    <p>Week 2, cycle B. Defended in money, never in confidence.</p>
+    <h4>5 · When the model is down</h4>
+    <p>Week 5. All three options are bad and the choice is which customer you disappoint.</p>
+    <p class="quiet">Give question 4 to whoever said "put a human in front of every credit" at 01:53. It is their idea, priced.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-room"><span class="t">03:40</span><div class="b">
+    <h4>Back to the room</h4>
+    <span class="pairs">Whole room · 10 min · two minutes per question</span>
+    
+    <p><strong>Ten minutes, five questions, two minutes each, and hold the two minutes.</strong> A timer on screen is not too much. The commonest failure of this beat is question 1 taking six minutes because everybody has an opinion about idempotency.</p>
+    <p><strong>Take the answer, then ask the room who disagrees.</strong> Not "any comments" — that produces silence. A named disagreement produces the argument.</p>
+    <p>End on the sentence, in these words: <em>none of these are model problems; every one is a boundary someone either drew or did not.</em></p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-write"><span class="t">03:50</span><div class="b">
+    <h4>Write the boundary down</h4>
+    <span class="pairs">Pairs · 12 min</span>
+    
+    <p><strong>Twelve minutes, same pairs, one page, seven headings.</strong> The headings are fixed and do not vary by week; only the brief above them changes.</p>
+    <p><strong>Circulate for goals.</strong> That is where it goes wrong, every time. "Safer", "more reliable" and "better controlled" are wishes. Ask the test: could you write a check that passes or fails without a person judging it?</p>
+    <p class="quiet"><strong>Alternatives is load-bearing and gets skipped under time pressure.</strong> "Use a better model" is the alternative most of them rejected today, and rejecting it well is most of the session. If a pair has left it blank, that is the one to point at.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-review"><span class="t">04:02</span><div class="b">
+    <h4>Review another pair’s</h4>
+    <span class="pairs">Swap · 8 min</span>
+    
+    <p><strong>Eight minutes, swap, four questions.</strong> Say out loud that nothing is summed and there is no assessment behind this. Senior rooms assume a score is going somewhere and write defensively if you do not say so.</p>
+    <p><strong>Question 1 is the one that produces findings.</strong> Push the reviewing pair to actually walk all four runs through the other pair's checks rather than judging the document. Most records stop two of the four, and finding that is the exercise.</p>
+    <p class="quiet"><strong>If a function here ever returns a total, that is week 2’s cut feature returning under a new name.</strong> Keep the 0/1/2 beside each comment and never beside a name.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-framing"><span class="t">04:10</span><div class="b">
+    <h4>The leader’s framing</h4>
+    <span class="pairs">Whole room · 5 min</span>
+    
+    <p><strong>Five minutes, and it is the beat that makes the day usable on Monday.</strong> Most of this room has to explain an agent to somebody who controls a budget, and none of them has a sentence for it.</p>
+    <p>Give both sentences, the bad one first. <em>"The agent might hallucinate"</em> invites a demand for a guarantee nobody can give, and the conversation ends with the project paused.</p>
+    <p class="quiet">Week 2’s equivalent is the same shape with a number in it: <em>here is the amount we will not pay without a person.</em> Saying so here makes the two weeks feel like one argument.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t5-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t5-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>All five questions stay open, deliberately</td><td>Weeks 2 to 5, one each. Say which as you assign them</td></tr>
+      <tr><td>Nothing is implemented and nothing is tested</td><td>Week 2 opens by building whichever one they wrote</td></tr>
+      <tr><td>The review scores 0, 1 or 2 and nothing sums it</td><td><strong>Nowhere, and never.</strong> A total here is week 2’s cut feature arriving early</td></tr>
+      <tr><td>The case is constructed and no number in it is a real company’s</td><td><strong>Nowhere.</strong> Say so in those words at 03:25</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t5-r-case">
+  <span class="pairs">&#8596; 03:25 &#183; the constructed case, stated as constructed</span>
+  <h3>The system at forty thousand a month</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Why the numbers are invented and why that is fine</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Invented numbers inside a teaching case are the point.</strong> 40,000 disputes a month and a four-hour service level agreement are fiction the room knows is fiction, and senior engineers reason from a number rather than from "a large volume".</p>
+      <p>What is never invented is a claim about our own practice: client names, student counts, our metrics, salary figures. <strong>Keep the two apart and say which this is.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Which bank is this?"</strong> Asked half seriously, and if you answer vaguely the room keeps guessing. The full stop is: it is constructed, the shape is ordinary, no number describes a real organisation.</p>
+      <p><strong>Probe.</strong> What is 40,000 a month per working hour? About 250. That arithmetic is what makes question 4 concrete rather than philosophical, and it is worth doing out loud.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-five">
+  <span class="pairs">&#8596; 03:28 &#183; five questions, two per pair</span>
+  <h3>Five questions, two per pair</h3>
+  
+  <h4 class="quiet" style="font-weight:700">What a good answer to each one contains</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Full version in <span class="mono">notes/teardown-five-questions.md</span>, 325 lines. <strong>The answers stay off the screen</strong> — the room produces these, and the block is worthless if they are reading your slide instead of defending their own thinking.</p>
+      <ul>
+        <li><strong>1</strong> — an idempotency key carried on the queue message, owned by the tool. Not a uuid minted per run. This is quiz Q13.</li>
+        <li><strong>2</strong> — a held-out case set and a rate, measured before the deploy. Week 3.</li>
+        <li><strong>3</strong> — inputs, the action, the arguments, the rule applied and who approved. Not the prompt and completion, which do not contain the reasoning anyway.</li>
+        <li><strong>4</strong> — a threshold in money, with the cost of a wrong refusal named beside the cost of a wrong payment.</li>
+        <li><strong>5</strong> — the honest answer is that all three options are bad and the choice is which customer you disappoint.</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>On question 1: "the agent should check whether it already paid."</strong> This is quiz Q14 and it is the best distractor in the bank, because it sounds like good engineering.</p>
+      <p>Three reasons it does not hold, all visible in the repository: <span class="mono">run()</span> resets history while <span class="mono">LEDGER</span> is module-level, so there is nothing to check; two consumers take the same message and both see empty history; and it is a prompt instruction guarding an irreversible action.</p>
+      <p><strong>Credit the instinct, because the half it gets right matters:</strong> context carries the fact, code enforces the rule.</p>
+      <p><strong>Probe.</strong> Which of these still holds if the process is killed and restarted? Only the ones outside the loop's memory. That is the argument for pushing state out of the agent, and it is week 2.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-room">
+  <span class="pairs">&#8596; 03:40 &#183; five answers, two minutes each</span>
+  <h3>Back to the room</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Holding two minutes, and what to cut if you cannot</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>If you are behind, take three of the five rather than rushing all five.</strong> Questions 1, 3 and 4 carry the most and question 3 is the one nobody has thought about before.</p>
+      <p>Questions 2 and 5 survive as one sentence each from you, because both are named again in later weeks.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>On question 3: "we log the prompt and the completion."</strong> Almost every room says it and almost every room already does it. It is the answer that feels complete and is not.</p>
+      <p>The completion does not contain the reasoning, because the thought is never stored — <strong>they learned that at 00:46 and nobody connects it here until you do.</strong> And a prompt is not a record of what rule applied or who approved.</p>
+      <p><strong>Probe.</strong> Eight months from now, which line of your log tells the regulator which rule was applied? There is no such line in anybody's system, and that is the finding.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-write">
+  <span class="pairs">&#8596; 03:50 &#183; seven sections, fixed every week</span>
+  <h3>Write the boundary down</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Seven sections, and the two that carry the weight</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>Context · Goals · Non-goals · The design · What can go wrong · Alternatives · Open questions.</p>
+      <p><strong>Goals must be testable</strong> and <strong>What can go wrong is one row per case.</strong> Those two are what the peer review at 04:02 checks, and they are the two that decide whether another engineer could build from it.</p>
+      <p>The same seven are the sections of <span class="mono">/craft/adr</span>, so what they write here has somewhere to go.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>A goal that reads "the system should be safer".</strong> It arrives in most pairs and it is not laziness — it is what an architecture document usually says.</p>
+      <p>The move is one question rather than a rewrite: <em>what would you measure on Friday to know whether this worked?</em> Whatever they answer is the goal, in their words. "No dispute is credited twice" comes out of that question about half the time.</p>
+      <p><strong>Probe.</strong> Which of your three goals could fail without anybody noticing? That question finds the untestable one faster than reading them does.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-review">
+  <span class="pairs">&#8596; 04:02 &#183; four questions, 0/1/2, nothing summed</span>
+  <h3>Review another pair’s</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Why there is a score and why nothing adds it up</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p>The number exists to make eight minutes finish. Without it a review pair spends the whole slot on section 1 and never reaches "what does a blocked customer experience".</p>
+      <p><strong>Nothing sums, averages or ranks it.</strong> A total would make this an assessment of eight people who paid to be here, and it would change what they write.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>Reviewing the writing rather than the design.</strong> Comments like "section 4 could be clearer" are polite and useless. The four questions are all about whether it works, not whether it reads.</p>
+      <p>Redirect with one instruction: <em>run ticket 8001 through their checks and tell them what happens.</em> That produces a finding in about forty seconds.</p>
+      <p><strong>Probe.</strong> Which of the four runs still gets through? Ask it of every reviewing pair, and take the answer out loud. It is the sharpest thirty seconds in the block.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-framing">
+  <span class="pairs">&#8596; 04:10 &#183; the sentence that survives a board meeting</span>
+  <h3>The leader’s framing</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Autonomy against reversibility, priced</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>The trade-off is autonomy against reversibility, and the lever you control is reversibility.</strong> You cannot make the model more certain. You can make the action cheaper to undo.</p>
+      <p>The upward sentence has three parts and all three are needed: what it can do without a human, what it cannot, and what it costs when it is wrong.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"We will put a confidence threshold on it."</strong> It sounds like a boundary and it is the first column from 01:03 wearing a boundary’s clothes: a number the probabilistic component produces about itself.</p>
+      <p>Ask what the threshold is calibrated against. Nothing, today. <strong>Uncertainty is a state to route, not a number to threshold</strong>, and that is a guide in the reading rather than an argument to have at 04:12.</p>
+      <p><strong>Probe.</strong> What does your board actually want to hear? Not a guarantee. A bounded loss, which is the third part of the sentence.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>None of the five questions is a model problem. Every one is a boundary someone either drew or did not.</blockquote>
+  
+  <p>Everything else is that sentence with a scale attached. <strong>Say it at 03:40 with all five answers on the board</strong>, which is the only moment it can be checked against evidence.</p>
+</article>
+
+<article class="card" id="t5-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>No rating, deliberately.</strong> They are mid-argument and the quiz is five minutes away. Read the three lines and move.</p>
+  <p class="quiet">The third line is outcome 5 and it is the only one of the five that produces a durable object. <strong>Say that the record, not the code, is the artefact of this cohort</strong> — it is also what week 6 reads back.</p>
+</article>
+</div>
+</div>
+<article class="card" id="t5-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-29</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>Decide the pairs before the day and write them down.</strong> Assigning five questions across four pairs live costs three minutes you do not have at 03:28, and self-selection puts everybody on question 1.</li>
+    <li><strong>The answer key must not reach a screen.</strong> <span class="mono">notes/teardown-five-questions.md</span> is instructor material; the block is worthless if the room is reading it instead of defending their own thinking.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t6">
+  <summary><span class="num">6</span><span>The Horizon · What is durable when the models keep moving</span><span class="when">04:30 to 04:50</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t6-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  
+  <p>The weak version is a slide of headlines. It dates in a fortnight and it teaches nothing.</p>
+  <p>The stronger claim is one the room has just earned: <strong>they watched two models disagree about giving away money on identical inputs, then watched both obey an attacker with equal confidence.</strong> Anything built on "this model behaves well" lasts about one release cycle.</p>
+  <p><strong>Nothing dated is written into this file.</strong> The specifics come from the radar in the week it is taught.</p>
+    
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">the horizon · no outcome &#183; 04:30 to 04:50</span>
+
+  <div class="beat" data-ref="t6-r-durable"><span class="t">04:30</span><div class="b">
+    <h4>What is durable when the models keep moving</h4>
+    <span class="pairs">Whole room · 10 min</span>
+    
+    <p><strong>Open on the question and take answers before you give yours.</strong> The room has the evidence: the bake-off at 03:02 is ninety minutes old.</p>
+    <p>The sentence to land: <em>none of that got easier when the models got better; it got more valuable, because there is more of it to do.</em></p>
+    <p class="quiet"><strong>Then the assistant line, and it is the one people write down.</strong> It will write the drill in a minute and it has no view on what the step budget should be, and it will not tell you it has no view. That is 02:25’s exit-code question turned into a career observation.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t6-r-demand"><span class="t">04:40</span><div class="b">
+    <h4>Where the demand actually is</h4>
+    <span class="pairs">Whole room · 10 min · read live from the radar</span>
+    
+    <p><strong>Read this live from <span class="mono">/craft/admin/agents</span></strong> — the Trends and India hiring categories — in the week you teach it. Do not prepare slides from it; they date.</p>
+    <p><strong>Grade the sources out loud.</strong> Every radar finding carries a <span class="mono">sourceType</span> pill: primary, press, vendor, secondhand. A vendor blog and a peer-reviewed paper are both a link, and only one is safe to quote to a room that will repeat it to a board.</p>
+    <p class="quiet"><strong>If the radar is empty or stale, cut this beat rather than improvising.</strong> Made-up hiring numbers are the one thing in this course that is never acceptable, and a thin week is a fair thing to say out loud.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t6-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each beat</h3></div>
+
+<article class="card" id="t6-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-29</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing here is assessed, practised or checked</td><td><strong>Nowhere, and that is right.</strong> It is the twenty minutes that is about them rather than the system</td></tr>
+      <tr><td>The hiring picture dates fast</td><td>Read it live from <span class="mono">/craft/admin/agents</span> in the week you teach it</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t6-r-durable">
+  <span class="pairs">&#8596; 04:30 &#183; the week’s question, answered from their own evidence</span>
+  <h3>What is durable when the models keep moving</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Which half survives, and the evidence from today</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>The durable half is the harness half:</strong> naming failure modes, drawing boundaries, deciding what a system may do without a person.</p>
+      <p>The evidence is in the room already. Two models disagreed on 9999. Both obeyed the note on 8001. <strong>A better model moved one of those and not the other.</strong></p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"So none of this matters in two years, the models will handle it."</strong> It is said half as a joke and it is worth taking straight, because somebody means it.</p>
+      <p>The answer is that <strong>a more capable model raises the ceiling on what you can delegate and does not decide what you should</strong>. Every capability jump so far has increased the number of decisions of the kind they made today, not reduced it.</p>
+      <p><strong>Probe.</strong> Who at your company currently decides what an agent may do without a person? For most of the room the honest answer is nobody, and that is the job opening.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t6-r-demand">
+  <span class="pairs">&#8596; 04:40 &#183; live from the radar, graded by source</span>
+  <h3>Where the demand actually is</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Read it live, and say what you cannot source</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <p><strong>Source:</strong> <span class="mono">/craft/admin/agents</span>, the radar panel. Six categories; the two for this beat are <em>India hiring</em> and <em>durable skills</em>.</p>
+      <p>Every finding carries <span class="mono">sourceType</span>. <strong>Quote primary sources and name the others as what they are.</strong></p>
+      <p>Invented numbers inside the teaching case at 03:25 are fine. <strong>An invented claim about the job market is not.</strong> Keep the two apart.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>Quoting a salary figure from a vendor report.</strong> Tempting, concrete, and exactly the thing this course refuses. A practice selling engineering judgment citing trade press for a market claim is worse than saying nothing.</p>
+      <p>If the room asks for a number you do not have a primary source for, <strong>say you do not have one.</strong> That answer is itself the week’s lesson, one week early.</p>
+      <p><strong>Probe.</strong> What would you need to see to believe that figure? Ask it of any number somebody in the room offers, too.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t6-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>The half of your work that survives the next capability jump is the half you did today.</blockquote>
+  
+  <p>Everything else is that sentence with today’s evidence behind it. <strong>Say it after the room has answered the question, never before.</strong></p>
+</article>
+
+<article class="card" id="t6-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>After this topic, you can now</h3>
+  
+  <p><strong>No rating and no checkpoint read out.</strong> The exit poll on the five outcomes is at 04:52 and two instruments two minutes apart is one too many.</p>
+  <p class="quiet">These three lines are on the learner page for reading afterwards. <strong>If you have thirty seconds, take the second one out loud from one person</strong> — it is the best possible handover into the two lines in chat at 04:56.</p>
+</article>
+</div>
+</div>
+
+  </div>
+</details>
+
+<div class="head" id="quiz">
+  <span class="k">04:20 &#183; eight asked, fifteen in the bank</span>
+  <h2>Eight questions, ten minutes</h2>
+  
+  <p>The bank is <span class="mono">docs/teaching/quiz/week-1.md</span>: fifteen items, eight asked, four of those on the learner's check page. <strong>Ask them in this order, which is not the order in the bank:</strong> Q1, Q9, Q3, Q5, Q13, Q11, Q14, Q4.</p>
+  <p><strong>Q1 goes first because the "refresh more often" instinct has to die before anything else lands</strong>, and Q3 comes soon after because their own repository proves Q1's answer.</p>
+  <p><strong>Q11 is deliberately late.</strong> It is the session's spine as a test question, and it is worth much more after the bake-off has spent ninety minutes making a better model look like the answer.</p>
+  <p><strong>Q14 is the one to protect time for.</strong> "Put the actions in the context and let the model check" is what a senior room proposes, it sounds like good engineering, and taking it apart is the session's spine in miniature.</p>
+  <p><strong>Q8 and Q15 are held back deliberately</strong>, and both belong in the After block rather than the room. Q2, Q6, Q7, Q10 and Q12 are the remainder of the bank and are there for a room that runs ahead.</p>
+</div>
+
+<article class="card">
+  <h4>Q1 · What "keeping context current" actually costs</h4>
+  <p class="qmeta">recall · renders on the learner check · the opener, and it kills the wrong instinct before it forms</p>
+  <p>An agent reads an account balance at step 1 and issues a credit at step 6. Which change removes the largest class of failure?</p>
+  <ul class="opt">
+    <li>A. Rebuild the prompt from scratch on every turn</li>
+    <li>B. Re-read the balance inside issue_credit, at execution time <span class="ok">&#8212; correct</span></li>
+    <li>C. Increase the context window so nothing is evicted</li>
+    <li>D. Add "always verify the balance is current" to the system prompt</li>
+  </ul>
+  
+  <p class="qmeta"><strong>A is the trap and it is the commonest answer here.</strong> The repository already does it and the bug survives. C holds more stale facts and makes the oldest one older. D is a prompt instruction against a probabilistic component, guarding an irreversible action.</p>
+  <p class="qmeta"><strong>Follow-up for D:</strong> how would you find out, on the Tuesday it did not comply? Nobody has an answer, and that is the beat.</p>
+</article>
+<article class="card">
+  <h4>Q9 · Which boundary saves the most money</h4>
+  <p class="qmeta">apply · renders on the learner check · the anchor question of the durability set</p>
+  <p>One boundary, added before that night. Which one prevents the most loss?</p>
+  <ul class="opt">
+    <li>A. A 5-second timeout on the payments call</li>
+    <li>B. An idempotency key on the refund <span class="ok">&#8212; correct</span></li>
+    <li>C. A named outcome and non-zero exit on step-budget exhaustion</li>
+    <li>D. A nightly spend cap of ₹300,000</li>
+  </ul>
+  
+  <p class="qmeta"><strong>Run the case cold.</strong> Give the room "The system" and "The night" from <span class="mono">notes/case-one-slow-night.md</span>, about 300 words, and nothing else. The comparison table is the answer key and must not be on screen.</p>
+  <p class="qmeta"><strong>Credit C properly.</strong> It is the best detection answer and it is drill 1, which they built ninety minutes ago. It is wrong only about <em>most loss prevented</em>, not about value.</p>
+</article>
+<article class="card">
+  <h4>Q3 · Reading our own code</h4>
+  <p class="qmeta">apply · prose, taken in the room · put src/llm.py on screen</p>
+  <p>This line does one thing right and one thing wrong. Name both. — for h in state["history"]: lines.append(f"  {h[‘action’]}({h[‘args’]}) -> {h[‘result’]}")</p>
+
+  
+  <p class="qmeta"><strong>Ask this immediately after Q1</strong>, because their own repository is the proof of Q1's answer and reading it themselves is worth more than being told.</p>
+  <p class="qmeta">Most rooms find the "right" half fast and stop. Push for the second: <em>when was that result true, and where does the code say so?</em> It does not, anywhere, and the missing <span class="mono">as_of</span> stamp is week 3's opening.</p>
+</article>
+<article class="card">
+  <h4>Q5 · Idempotency is state</h4>
+  <p class="qmeta">apply · prose, taken in the room · ties to make retry and teardown question 1</p>
+  <p>make retry pays ₹3,600 on one ₹1,200 double-charge across three runs in which the agent reasons correctly every time. Which two pieces of state are missing, and where would each live?</p>
+
+  
+  <p class="qmeta"><strong>This is the question that makes the room say the word "idempotency" out loud</strong>, which is the precondition for Q13 and Q14. Ask it before either of them, never after.</p>
+  <p class="qmeta"><strong>Follow-up:</strong> which of the two survives a restart? Only the key. That is the argument for pushing state out of the agent, and it is week 2.</p>
+</article>
+<article class="card">
+  <h4>Q13 · Where does the idempotency key come from</h4>
+  <p class="qmeta">apply · renders on the learner check · ask immediately after the room says "we need idempotency"</p>
+  <p>The agent generates an idempotency key and passes it to the payments provider. The queue redelivers the request and a fresh run starts. Which key prevents the second payment?</p>
+  <ul class="opt">
+    <li>A. A uuid4() minted at the start of the run</li>
+    <li>B. A hash of the conversation history so far</li>
+    <li>C. The refund request id carried on the queue message <span class="ok">&#8212; correct</span></li>
+    <li>D. A hash of (account_id, amount)</li>
+  </ul>
+  
+  <p class="qmeta"><strong>D is the one worth the minute.</strong> It is the answer from somebody who has thought about it properly and landed one step short, and the failure it causes is invisible: a customer owed two refunds gets one, and nothing anywhere reports it.</p>
+  <p class="qmeta"><strong>Follow-up:</strong> whose job is it to put the id on the message? Not the agent's. That is the handover between the queue and the tool, and it is exactly teardown question 1.</p>
+</article>
+<article class="card">
+  <h4>Q11 · Which of these is not a durability boundary</h4>
+  <p class="qmeta">recall · renders on the learner check · ask late, after the bake-off</p>
+  <p>Three of these are durability boundaries and one is not. Which is not?</p>
+  <ul class="opt">
+    <li>A. A ceiling on the amount a single tool call can move</li>
+    <li>B. Human confirmation before an irreversible action</li>
+    <li>C. A more capable model with better instruction-following <span class="ok">&#8212; correct</span></li>
+    <li>D. Defined behaviour when a step fails halfway</li>
+  </ul>
+  
+  <p class="qmeta"><strong>Ask this late and never early.</strong> It is worth far more after ninety minutes in which a better model has looked like the answer, and after 03:02 showed it helping on one ticket and hurting on another.</p>
+  <p class="qmeta"><strong>If anybody picks C confidently and then argues for it</strong>, that is the best two minutes in the quiz. Take it. The answer is 01:03's two columns, and they should be able to reconstruct them.</p>
+</article>
+<article class="card">
+  <h4>Q14 · Who dedupes</h4>
+  <p class="qmeta">judge · prose, taken in the room · the best distractor in the bank, because the wrong answer sounds like good engineering</p>
+  <p>A room proposes: put every previous action into the context, and have the model check whether it already paid before paying again. Give three reasons this does not hold, and the version of the idea that does.</p>
+
+  
+  <p class="qmeta"><strong>Protect the time for this one.</strong> It is what a senior room proposes, it sounds like good engineering, and taking it apart is the session's spine in miniature: a boundary changes the set of possible actions, an instruction changes the odds.</p>
+  <p class="qmeta"><strong>Credit the instinct — it is half right and the half it gets right matters.</strong> Once the tool refuses, swallowing that refusal is the worst option available. A silent refusal is a step-budget stop by another name, which is drill 1.</p>
+</article>
+<article class="card">
+  <h4>Q4 · The cache framing</h4>
+  <p class="qmeta">judge · prose, taken in the room · the one worth ten minutes if you have them</p>
+  <p>"The agent does not need to be right about the balance — it needs to be unable to act on a stale one." Restate that as a change to issue_credit, and say what it costs when the check fails mid-run.</p>
+
+  
+  <p class="qmeta"><strong>Push back if they propose the tool silently re-reads and proceeds with the new value.</strong> That is a different decision — the agent authorised a credit against facts that no longer hold — and it should be made deliberately rather than by a default.</p>
+  <p class="qmeta">If the quiz block is running short, this is the one to carry into the close rather than drop, because "the loud failure now needs an owner" is the handover into week 2.</p>
+</article>
+
+<div class="head" id="tools">
+  <span class="k">after today &#183; the resource shelf</span>
+  <h2>Tools for your own system</h2>
+  
+  <p><strong>Three of ours, and week 1 is the lightest week for tools on purpose.</strong> The room has one artefact to produce this week and it is the decision record; a shelf of six worksheets competes with it.</p>
+  <p><strong>Place them rather than listing them.</strong> Name the design guide at 00:31 when the four parts go up, the Authority Review at 02:40 inside drill 2, and the permissions guide at 02:50 inside drill 3. A tool named at the moment its question arises gets used; a tool named in a closing slide does not.</p>
+  <p class="quiet"><strong>The Authority Review is the one that transfers.</strong> Drill 2 grades three tools on three levels in ten minutes; their own system has thirty tools and needs four levels. Ask for the sheet in week 2 and it arrives.</p>
+</div>
+
+<article class="card">
+  <h4>The three, in the order they are placed</h4>
+  <div class="scroller"><table>
+    <thead><tr><th>The question it answers</th><th>What you do with it</th><th>Registry</th></tr></thead>
+    <tbody>
+      <tr><td>You are about to design an agent and nobody has written down what it is for or where it stops.</td><td><a href="/resources/guides/agentic-system-design">Work through the six decisions an agentic design is made of with Designing agentic systems</a></td><td class="mono">Released</td></tr>
+      <tr><td>Drill 2 graded three tools read, write or irreversible, and your own system has thirty.</td><td><a href="/resources/agent-authority-review">Score each step on four undo-cost levels with the Agent Authority Review</a></td><td class="mono">Released</td></tr>
+      <tr><td>Somebody wants to put the permission rule in the prompt.</td><td><a href="/resources/guides/tool-permissions">Argue it properly with Who may call the tool</a></td><td class="mono">Released</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<div class="head" id="close">
+  <span class="k">the close &#183; 04:50 to 05:00</span>
+  <h2>How the day ends</h2>
+  
+  <p><strong>04:50 · The assignment.</strong> Four things: drill 4, the same changes on their own system, finish the decision record, and one question about a system their team owns. The record is what week 2 opens by building.</p>
+  <p><strong>04:52 · The same five statements.</strong> Identical wording to 00:05 — read them from the page, do not paraphrase. Put both sets on screen together and name the two that moved most.</p>
+  <p><strong>This is the week where the prediction runs upward.</strong> Outcomes 3 and 4 were flagged to be lowest at 00:05, so a score that <em>rose</em> is the good result here. Week 2 is the opposite and it is worth saying so, because the same instrument meaning opposite things two weeks running confuses people.</p>
+  <p><strong>04:56 · Two lines in chat, and take the second one seriously.</strong> It sets week 2's opening. Read two or three out loud without commenting on them.</p>
+  <p class="quiet"><strong>Do not add a sixth thing to the close.</strong> There is one prompt at a time by design, and the exit poll plus two lines is already two instruments in four minutes.</p>
+</div>
+
+<footer>
+  The Living Craft &#183; week 1 &#183; all seven topics &#183; instructor's copy, not for the room
+</footer>
+
+</div>
+<script>
+(function () {
+  var host = document.getElementById('sclock');
+  if (!host) return;
+  var elEl = host.querySelector('.el');
+  var nowEl = host.querySelector('.now');
+  var hintEl = host.querySelector('.hint');
+  var driftEl = host.querySelector('.drift');
+  var rows = [].slice.call(document.querySelectorAll('#clocktable tbody tr'));
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var qs = new URLSearchParams(location.search);
+  var startedAt = null;
+  var raw = qs.get('start');
+  if (raw) {
+    var t = Date.parse(raw);
+    if (!isNaN(t)) startedAt = t;
+  }
+
+  // Minutes of local offset, set by the instructor buttons. Not stored anywhere.
+  var offset = 0;
+  var paused = false;
+  var pausedAt = 0;
+
+  function mins(hhmm) {
+    var p = hhmm.split(':');
+    return Number(p[0]) * 60 + Number(p[1]);
+  }
+  function hhmm(m) {
+    var s = m < 0 ? '-' : '';
+    m = Math.abs(m);
+    return s + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+
+  var times = rows.map(function (r) {
+    return mins(r.querySelector('td').textContent.trim());
+  });
+  var LAST = 300;
+
+  function paint() {
+    if (startedAt === null) {
+      elEl.textContent = '--:--';
+      nowEl.textContent = 'Clock off';
+      hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';
+      return;
+    }
+    var elapsed = paused ? pausedAt : Math.floor((Date.now() - startedAt) / 60000);
+    elapsed += offset;
+    if (elapsed < 0) {
+      elEl.textContent = hhmm(0);
+      nowEl.textContent = 'Starts at ' + new Date(startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      hintEl.textContent = Math.abs(elapsed) + ' minutes to go.';
+      rows.forEach(function (r) { r.classList.remove('here'); });
+      return;
+    }
+    if (elapsed > LAST) {
+      elEl.textContent = hhmm(elapsed);
+      nowEl.textContent = 'Session ended';
+      hintEl.textContent = '';
+      rows.forEach(function (r) { r.classList.remove('here'); });
+      return;
+    }
+    var i = -1;
+    for (var k = 0; k < times.length; k++) if (times[k] <= elapsed) i = k;
+    elEl.textContent = hhmm(elapsed);
+    rows.forEach(function (r, n) { r.classList.toggle('here', n === i); });
+    if (i >= 0) {
+      var cells = rows[i].querySelectorAll('td');
+      nowEl.textContent = cells[1].textContent.trim();
+      var next = times[i + 1];
+      hintEl.textContent = next === undefined
+        ? 'last row'
+        : 'next at ' + hhmm(next) + ', in ' + (next - elapsed) + ' min';
+      if (driftEl) {
+        var d = elapsed - times[i];
+        var ran = next === undefined ? 0 : elapsed - next;
+        driftEl.textContent = ran > 0 ? 'running ' + ran + ' min over' : '';
+      }
+      if (!reduce && rows[i].scrollIntoViewIfNeeded) rows[i].scrollIntoViewIfNeeded();
+    }
+  }
+
+  var minus = host.querySelector('[data-off="-1"]');
+  var plus = host.querySelector('[data-off="1"]');
+  var pause = host.querySelector('[data-pause]');
+  if (minus) minus.addEventListener('click', function () { offset -= 1; paint(); });
+  if (plus) plus.addEventListener('click', function () { offset += 1; paint(); });
+  if (pause) pause.addEventListener('click', function () {
+    if (startedAt === null) return;
+    if (!paused) { pausedAt = Math.floor((Date.now() - startedAt) / 60000) + offset; offset = 0; }
+    paused = !paused;
+    pause.textContent = paused ? 'Resume' : 'Pause';
+    paint();
+  });
+
+  paint();
+  setInterval(paint, 10000);
+})();
+</script>
+<script>
+(function () {
+  var body = document.body;
+  var btn = document.getElementById('splitbtn');
+  var beats = [].slice.call(document.querySelectorAll('.beat[data-ref]'));
+  var wide = matchMedia('(min-width:1200px)');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function cardFor(beat) {
+    var ref = (beat.getAttribute('data-ref') || '').replace(/^#/, '');
+    return ref ? document.getElementById(ref) : null;
+  }
+  function paneFor(el) { return el ? el.closest('.pane-ref') : null; }
+
+  function lightUp(beat) {
+    var card = cardFor(beat);
+    if (!card) return;
+    var pane = paneFor(card);
+    var scope = pane || document;
+    var was = scope.querySelector('.card.lit');
+    if (was) was.classList.remove('lit');
+    card.classList.add('lit');
+    var here = document.querySelector('.beat.here');
+    if (here && here !== beat) here.classList.remove('here');
+    beat.classList.add('here');
+    var behaviour = reduce ? 'auto' : 'smooth';
+    if (pane && body.classList.contains('split') && wide.matches &&
+        pane.scrollHeight > pane.clientHeight) {
+      var top = card.getBoundingClientRect().top
+              - pane.getBoundingClientRect().top + pane.scrollTop;
+      pane.scrollTo({ top: Math.max(0, top - 8), behavior: behaviour });
+    } else {
+      card.scrollIntoView({ behavior: behaviour, block: 'start' });
+    }
+  }
+
+  beats.forEach(function (beat) {
+    beat.addEventListener('click', function (e) {
+      if (e.target.closest('a, summary, button, pre, code')) return;
+      lightUp(beat);
+    });
+  });
+
+  function setSplit(on) {
+    body.classList.toggle('split', on);
+    if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on) {
+      [].forEach.call(document.querySelectorAll('.card.lit'), function (c) {
+        c.classList.remove('lit');
+      });
+    }
+  }
+  if (btn) btn.addEventListener('click', function () {
+    setSplit(!body.classList.contains('split'));
+  });
+  setSplit(wide.matches);
+})();
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 // before it is released. Same reasoning as the per-topic route beside it.
 
 import type { APIRoute } from 'astro';
-import { collatedPage } from '../../../../lib/craft/teaching-pages';
+import { collatedPage, missingPage } from '../../../../lib/craft/teaching-pages';
 
 export const prerender = false;
 
@@ -15,7 +15,12 @@ export const GET: APIRoute = async ({ params }) => {
     'learner',
     `Admin preview · the learner's copy of week ${week}, every topic. Release state is not checked here.`,
   );
-  if (!html) return new Response(null, { status: 404 });
+  if (!html) {
+    return new Response(missingPage(week, 'learner'), {
+      status: 404,
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
+    });
+  }
 
   return new Response(html, {
     headers: {
