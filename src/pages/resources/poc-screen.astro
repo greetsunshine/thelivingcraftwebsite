@@ -951,6 +951,17 @@ const STEP_COUNT = steps.length;
   }
 
   /* ── print: every step, in order, as a scorecard ──────────────────────── */
+  /* A phone: the question card sits inside the tool's shell, and the answer
+     cards inside the question card. At 390px that nesting left each answer
+     about 250px of text width. The shell's inner gutter and the card padding
+     both step down, so an answer keeps close to 300px (UI/UX audit, 29
+     September 2026). */
+  @media (max-width: 560px) {
+    .inner { padding: 0 var(--space-3); }
+    .item { padding: var(--space-4); }
+    .anchor { padding: var(--space-3) var(--space-4); }
+  }
+
   @media print {
     .tool.js .step { display: block; }
     .scorebar-wrap { position: static; }

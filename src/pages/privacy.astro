@@ -114,8 +114,24 @@ const TAG_FREE_TOOLS = [
           <li>Ask me to delete what I hold and it is deleted, not archived or flagged.</li>
         </ul>
       </div>
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc-title" id="toc-title">On this page</p>
+        <ol>
+          <li><a href="#who-is-responsible">Who is responsible</a></li>
+          <li><a href="#tags">Analytics and advertising tags</a></li>
+          <li><a href="#what-this-site-records-itself">What this site records itself</a></li>
+          <li><a href="#cookies-and-what-is-stored-in-your-browser">Cookies and what is stored in your browser</a></li>
+          <li><a href="#who-else-processes-it">Who else processes it</a></li>
+          <li><a href="#how-long-it-is-kept">How long it is kept</a></li>
+          <li><a href="#your-rights-and-what-happens-when-you-use-them">Your rights, and what happens when you use them</a></li>
+          <li><a href="#what-this-site-does-not-do">What this site does not do</a></li>
+          <li><a href="#children">Children</a></li>
+          <li><a href="#security">Security</a></li>
+          <li><a href="#changes-to-this-page">Changes to this page</a></li>
+        </ol>
+      </nav>
 
-      <h2>Who is responsible</h2>
+      <h2 id="who-is-responsible">Who is responsible</h2>
       <p>
         Sunil Mathew, operating as The Living Craft, from Bangalore, India. Under India's Digital
         Personal Data Protection Act 2023, that makes me the Data Fiduciary for everything described
@@ -239,7 +255,7 @@ const TAG_FREE_TOOLS = [
         your account's advert settings.
       </p>
 
-      <h2>What this site records itself</h2>
+      <h2 id="what-this-site-records-itself">What this site records itself</h2>
 
       <h3>When you read a page</h3>
       <p>
@@ -415,7 +431,7 @@ const TAG_FREE_TOOLS = [
         discussion forum is visible to the other participants; everything else is not.
       </p>
 
-      <h2>Cookies and what is stored in your browser</h2>
+      <h2 id="cookies-and-what-is-stored-in-your-browser">Cookies and what is stored in your browser</h2>
       <p>If you allow them, the tags above set their own cookies:</p>
       <ul>
         <li>Google Analytics: <code>_ga</code> and <code>_ga_S2XJ61GXDD</code>, up to two years</li>
@@ -436,7 +452,7 @@ const TAG_FREE_TOOLS = [
         over HTTPS, and restricted to this site.
       </p>
 
-      <h2>Who else processes it</h2>
+      <h2 id="who-else-processes-it">Who else processes it</h2>
       <p>Each entry says what reaches them.</p>
       <dl class="parties">
         <div>
@@ -489,7 +505,7 @@ const TAG_FREE_TOOLS = [
         Act allows that, except to countries the Government of India restricts.
       </p>
 
-      <h2>How long it is kept</h2>
+      <h2 id="how-long-it-is-kept">How long it is kept</h2>
       <table class="retention">
         <thead>
           <tr><th>What</th><th>Kept for</th><th>Why that long</th></tr>
@@ -555,7 +571,7 @@ const TAG_FREE_TOOLS = [
         <a class="ftext-link" href="https://www.apollo.io/privacy-policy" rel="noopener">Apollo.io</a>.
       </p>
 
-      <h2>Your rights, and what happens when you use them</h2>
+      <h2 id="your-rights-and-what-happens-when-you-use-them">Your rights, and what happens when you use them</h2>
       <p>
         Under the Act you can ask for a summary of what I hold about you, ask me to correct or
         complete it, ask me to delete it, withdraw a consent you gave, and nominate someone to act
@@ -576,7 +592,7 @@ const TAG_FREE_TOOLS = [
         <li>Google, Microsoft, Meta, LinkedIn and Apollo.io hold their data against a cookie or an account, not against your name in my records. Clearing your cookies breaks that link. For anything more, tell me and I will use what their tools allow, or contact them directly through the links above.</li>
       </ul>
 
-      <h2>What this site does not do</h2>
+      <h2 id="what-this-site-does-not-do">What this site does not do</h2>
       <ul>
         <li>No selling, renting or trading of your details.</li>
         <li>No automated decisions about you. Applications are read by me.</li>
@@ -584,14 +600,14 @@ const TAG_FREE_TOOLS = [
         <li>No third-party tags before you say yes, and none at all on the interactive tools, on this page, or behind a sign-in.</li>
       </ul>
 
-      <h2>Children</h2>
+      <h2 id="children">Children</h2>
       <p>
         This is a professional programme for practising engineers, and it is not intended for
         anyone under 18. I do not knowingly collect anything from a child. If you believe a child
         has sent me something, write to me and I will delete it.
       </p>
 
-      <h2>Security</h2>
+      <h2 id="security">Security</h2>
       <p>
         Everything is served over HTTPS. The database refuses every key except one held on the
         server, which is never sent to a browser. Access codes and reschedule links are stored only
@@ -602,12 +618,14 @@ const TAG_FREE_TOOLS = [
         and tell you what happened.
       </p>
 
-      <h2>Changes to this page</h2>
+      <h2 id="changes-to-this-page">Changes to this page</h2>
       <p>
         This page is versioned alongside the code it describes, and it changes when the site does.
         The date at the top is the date it last changed. There is no archive of earlier versions,
         and changes are noted here rather than announced by email.
       </p>
+
+      <p class="to-top"><a href="#toc-title">Back to the contents</a></p>
 
       <div class="closing">
         <p>
@@ -774,5 +792,52 @@ const TAG_FREE_TOOLS = [
   @media (max-width: 620px) {
     .parties > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
     .retention td:first-child, .retention td:nth-child(2) { white-space: normal; }
+  }
+
+  /* Bullets. The reset strips list markers, and without them the lists read
+     as loose indented paragraphs (UI/UX audit, 29 September 2026). */
+  .policy ul { list-style: disc; padding-left: 1.1em; }
+  .policy li::marker { color: var(--text-quiet); }
+  .policy .toc ol { list-style: none; padding-left: 0; }
+
+  /* The contents list. A policy this long needs a way to the section a reader
+     came for, and back up. Two columns where there is room, one on a phone. */
+  .toc {
+    margin: 0 0 var(--space-7);
+    padding-top: var(--space-4);
+    border-top: var(--border-w-hair) solid var(--border-hair);
+  }
+  .toc-title {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: var(--weight-strong);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 var(--space-3);
+  }
+  .toc ol {
+    columns: 2;
+    column-gap: var(--space-7);
+    margin: 0;
+  }
+  .toc li { break-inside: avoid; margin: 0; }
+  .toc a {
+    display: inline-block;
+    padding: 6px 0;
+    color: var(--text-body);
+    text-decoration: underline;
+    text-decoration-color: var(--border-field);
+    text-underline-offset: 4px;
+  }
+  .toc a:hover { text-decoration-color: currentColor; }
+  .policy h2[id], .toc-title { scroll-margin-top: var(--anchor-offset, 96px); }
+  .to-top {
+    margin: var(--space-2) 0 0;
+    font-size: var(--size-2);
+  }
+  .to-top a { color: var(--text-quiet); text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 720px) {
+    .toc ol { columns: 1; }
   }
 </style>

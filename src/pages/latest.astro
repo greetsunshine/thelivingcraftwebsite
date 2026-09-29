@@ -248,7 +248,9 @@ const schema = [
   .note > p {
     font-size: 16px;
     color: var(--ink-soft);
-    max-width: 74ch;
+    /* 64ch, about 80 characters a line. At 74ch these ran 94 to 99, too long
+       to track back to the start of the next line (UI/UX audit, 29 Sep 2026). */
+    max-width: 64ch;
   }
 
   .note-meta {

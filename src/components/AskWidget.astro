@@ -722,7 +722,10 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
     // box is always where the pill sits when it is showing, sticky bar or not.
     if (ownToggle && root.getAttribute('data-launcher') === 'floating') {
       var queued = 0;
-      var CONTROL = 'a[href], button, input, select, textarea, summary, label, [role="button"], [tabindex]:not([tabindex="-1"])';
+      // A form's error line counts as a control too (UI/UX audit, 29
+      // September 2026): on a phone the pill covered "3 answers need a change
+      // before this can be sent" under the application form's Continue button.
+      var CONTROL = 'a[href], button, input, select, textarea, summary, label, [role="button"], [tabindex]:not([tabindex="-1"]), .form-status:not(:empty), .rf-err:not([hidden])';
       var covering = function (): boolean {
         var home = root!.getBoundingClientRect();
         if (!home.width || !home.height) return false;

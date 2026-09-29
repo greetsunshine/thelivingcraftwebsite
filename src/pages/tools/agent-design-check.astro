@@ -1181,9 +1181,17 @@ const schema: unknown[] = [
        it in normal flow so the notes below sit where they are written. */
     display: block;
     margin-bottom: var(--space-4);
+    /* A fieldset draws its first legend ON its top edge. With the card's edge
+       drawn as a ring, the question sat half outside the card, its first line
+       cut by the card's top line (UI/UX audit, 29 September 2026). A floated
+       legend is not treated that way: it is laid out inside the padding like
+       any other block, and the notes below clear it. */
+    float: left;
+    width: 100%;
   }
 
   .q-notes {
+    clear: both;
     max-width: var(--measure-prose);
     margin-bottom: var(--space-5);
     display: flex;

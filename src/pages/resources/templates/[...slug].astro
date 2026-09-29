@@ -539,6 +539,14 @@ const schema: unknown[] = [
   .jump .sep {
     color: var(--text-quiet);
   }
+  /* On a phone the list wraps, and a separator dot started the next line
+     ("· Test the boundary"). Below 720px the dots go and the gap does their
+     job (UI/UX audit, 29 September 2026). */
+  @media (max-width: 720px) {
+    .jump { column-gap: var(--space-5); row-gap: var(--space-2); }
+    .jump .sep { display: none; }
+    .jump a { padding-block: 4px; }
+  }
 
   /* ── the two sheets ─────────────────────────────────────────────────────── */
 
@@ -832,6 +840,7 @@ const schema: unknown[] = [
     font-size: var(--size-3);
     line-height: var(--lh-normal);
     color: var(--text-quiet);
+    max-width: 64ch; /* ran to 100 characters a line on a laptop */
   }
 
   .tpl .using .prose h2 {

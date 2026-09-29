@@ -446,7 +446,11 @@ const description =
       padding-block: var(--space-7);
     }
   }
-  @media (max-width: 720px) {
+  /* Stacked from 900px, not 720px. Between the two, the answer column was
+     too narrow for titles such as "Take the Agent Failure Triage Quiz", which
+     wrapped right-aligned under their own arrow (UI/UX audit, 29 September
+     2026). Stacked, the answer reads as the next line of the question. */
+  @media (max-width: 900px) {
     .routes .detail-row {
       flex-direction: column;
       gap: var(--space-2);

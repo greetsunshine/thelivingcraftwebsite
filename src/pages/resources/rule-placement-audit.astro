@@ -782,8 +782,16 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
   @media (max-width: 600px) {
     .srow-grid { grid-template-columns: 1fr; }
     .fld.span2, .fld.span4, .fld.span6 { grid-column: span 1; }
-    .srow-head { grid-template-columns: 32px 1fr 32px; }
-    .srow-head .status, .srow-head .mv-group { grid-column: 2; justify-self: start; }
+    /* The rule is the row's main text. It takes the whole line on a phone
+       (it was about 215px wide at 390px, and cut the rule off after a few
+       words); its status goes under it, and the move and remove buttons
+       share the last line (UI/UX audit, 29 September 2026). */
+    .srow-head { grid-template-columns: 32px 1fr auto; row-gap: var(--space-2); }
+    .srow-head .rn { grid-row: 1; }
+    .srow-head .f-rule { grid-column: 2 / -1; grid-row: 1; }
+    .srow-head .status { grid-column: 2 / -1; grid-row: 2; justify-self: start; }
+    .srow-head .mv-group { grid-column: 2; grid-row: 3; justify-self: start; }
+    .srow-head .rm { grid-column: 3; grid-row: 3; }
   }
 
   /* ── print: the rule map on one page ──────────────────────────────────── */

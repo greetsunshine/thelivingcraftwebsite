@@ -876,7 +876,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   .cundo[data-lvl='R3'] { color: var(--danger); }
   .excaveat { margin-top: var(--space-3); font-size: var(--size-1); color: var(--text-quiet); }
   .notyet-head { margin: var(--space-6) 0 var(--space-3); font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-medium); color: var(--accent-ink); }
-  .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; margin-bottom: var(--space-3); }
+  .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 66ch; margin-bottom: var(--space-3); } /* was 82ch: 107 to 114 characters a line */
   .notyet strong { color: var(--text-body); }
 
   /* ── protocol ─────────────────────────────────────────────────────────── */
@@ -911,8 +911,14 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   @media (max-width: 600px) {
     .srow-grid { grid-template-columns: 1fr; }
     .fld.span2, .fld.span3, .fld.span4 { grid-column: span 1; }
-    .srow-head { grid-template-columns: 32px 1fr 32px; }
-    .srow-head .owner { grid-column: 2; justify-self: start; }
+    /* The step's name takes the whole line on a phone (it was about 215px
+       wide at 390px); the owner and the remove button share the next line
+       (UI/UX audit, 29 September 2026). */
+    .srow-head { grid-template-columns: 32px 1fr auto; row-gap: var(--space-2); }
+    .srow-head .rn { grid-row: 1; }
+    .srow-head .f-step { grid-column: 2 / -1; grid-row: 1; }
+    .srow-head .owner { grid-column: 2; grid-row: 2; justify-self: start; }
+    .srow-head .rm { grid-column: 3; grid-row: 2; }
   }
 
   /* ── print: the assessment is meant to go into a room on paper ────────── */

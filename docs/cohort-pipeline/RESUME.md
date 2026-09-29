@@ -350,6 +350,28 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     Analytics with consent, and the first-party log only on `/`, `/resources/*` and
     `/tools/*`, as the privacy page says.
 
+- [x] **12. UI/UX pass over every public page** (29 September). The user asked for a
+  thorough desktop, tablet and phone review with fixes. 41 pages were captured at 1440,
+  1024, 768 and 390px (1,248 slices, 30 interactive states) and measured at six widths
+  (overflow, targets, contrast, text size, line length, headings, focus). A parallel
+  review workflow failed on a session limit, so the review was done directly.
+  - Fixed: a branded 404 page (`src/pages/404.astro`; production showed Astro's dark
+    default); the design check's questions sat half outside their cards (a fieldset
+    draws its first legend on its edge); contents lists and bullets on /privacy and
+    /terms; 44px touch targets on the tools for touch screens only (`tool.css`,
+    `pointer: coarse`); full-width rule and step names on phones in the rule audit and
+    the authority review; less nested padding in the POC and model selection tools on
+    phones; 11px labels raised to 12px; the longest lines shortened (/latest, the
+    authority review, the rework check, the templates); the hub's question rows stacked
+    below 900px; no orphaned separator dots in the worksheet and template link lists; a
+    "swipe sideways" note over the memory kit's wide tables; the chat pill moves away
+    from a form's error line.
+  - Checked by an element-by-element dump of all 41 pages at four widths, before and
+    after: `/` did not change.
+  - Left alone on purpose: `/`'s hero buttons and footer on a phone (the V5 package's
+    choice); `--measure-prose` (65ch gives about 90 characters a line in Figtree, which
+    is long but site-wide).
+
 ---
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch

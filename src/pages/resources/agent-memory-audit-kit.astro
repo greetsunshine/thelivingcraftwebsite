@@ -180,7 +180,8 @@ const sections = [
         <h2>Every field exists because <em>a real failure needed it</em>.</h2>
       </div>
       <p class="prose-lead">{SCHEMA_INTRO}</p>
-      <div class="scroll">
+      <p class="scroll-hint" aria-hidden="true">The table is wider than the screen. Swipe it sideways for every column.</p>
+      <div class="scroll" tabindex="0" role="region" aria-label="The schema, one row per field">
         <table class="grid fields">
           <thead>
             <tr>
@@ -263,7 +264,8 @@ const sections = [
         <h2>Each one is a way memory <em>hurts a real user</em>.</h2>
       </div>
       <p class="prose-lead">{TESTS_INTRO}</p>
-      <div class="scroll">
+      <p class="scroll-hint" aria-hidden="true">The table is wider than the screen. Swipe it sideways for every column.</p>
+      <div class="scroll" tabindex="0" role="region" aria-label="The failure tests, one row per test">
         <table class="grid tests">
           <thead>
             <tr>
@@ -412,6 +414,14 @@ const sections = [
 
   /* ── tables ───────────────────────────────────────────────────────────── */
   .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  .scroll:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  /* The schema and the tests tables are 760px and 980px wide. On a narrower
+     screen they scroll inside their box, and nothing said so: the cut-off
+     column read as the end of the table (UI/UX audit, 29 September 2026). */
+  .scroll-hint { display: none; font-size: var(--size-1); color: var(--text-quiet); margin: 0 0 var(--space-2); }
+  @media (max-width: 1080px) {
+    .scroll-hint { display: block; }
+  }
   table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
   .fields { min-width: 760px; }
   .tests { min-width: 980px; }
@@ -440,7 +450,7 @@ const sections = [
   .tag {
     display: inline-block;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px; /* was 11px; 12px is the site's floor (UI/UX audit, 29 September 2026) */
     color: var(--accent-ink-strong);
     background: var(--accent-quiet);
     border-radius: var(--radius-pill);
@@ -521,7 +531,7 @@ const sections = [
   .qn { color: var(--text-quiet); font-size: var(--size-1); padding-top: 3px; }
   .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
   .qflag { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
-  .flaglbl { color: var(--danger); font-size: 11px; margin-right: var(--space-2); }
+  .flaglbl { color: var(--danger); font-size: 12px; margin-right: var(--space-2); }
 
   /* ── the decision table ───────────────────────────────────────────────── */
   dl.outcomes { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); max-width: 860px; }
@@ -610,6 +620,7 @@ const sections = [
     .three, ol.inv, ol.inv li, ol.qs li, .qgroup, .outcome, tr, .codeblock { break-inside: avoid; }
     .three, ol.inv, ol.qs li, .outcome { box-shadow: none; border: 1px solid var(--border-hair); }
     table.grid, .scroll { overflow: visible !important; }
+    .scroll-hint { display: none !important; }
     .fields, .tests, .decide { min-width: 0 !important; font-size: 9pt; }
     .grid tbody td { font-size: 9pt; padding: 2mm 3mm; }
     .grid thead th { font-size: 8pt; }
