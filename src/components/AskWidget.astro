@@ -142,17 +142,6 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
       var(--texture-forest);
   }
   .ask-avatar--lg { width: 36px; height: 36px; background-size: 19px 19px, auto, cover; }
-  /* On `/` the green linen became the ivory cloth (29 September), so the
-     marks that drew it draw the cloth, with a forest glyph and forest text.
-     The launcher pill itself stays flat forest, like every button; the
-     cloth circle sits inside it as the agent's face. */
-  :global(.landing) .ask-avatar,
-  :global(.landing) .ask-log :global(.ask-msg.bot)::before {
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23183D32' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.7a7.9 7.9 0 0 1-8.5 7.9 9 9 0 0 1-3.7-.8L4 20.2l1.4-3.9a7.7 7.7 0 0 1-1.9-5 8 8 0 0 1 8.5-7.7 8 8 0 0 1 8.5 8.1z'/%3E%3C/svg%3E") center / 16px 16px no-repeat,
-      var(--texture-ivory-cloth);
-  }
-  :global(.landing) .ask-avatar--lg { background-size: 19px 19px, auto, cover; }
   .ask[data-open='true'] .ask-toggle { display: none; }
   /* Header launcher: the panel drops from under the sticky header on the
      right, where the button that opened it is. --anchor-offset is the
@@ -267,11 +256,6 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
     border-radius: var(--radius-inner);
     border-bottom-right-radius: var(--space-1);
   }
-  :global(.landing) .ask-log :global(.ask-msg.user) {
-    background: var(--texture-ivory-cloth);
-    color: var(--lc-ink);
-    box-shadow: 0 0 0 var(--border-w-hair) var(--lc-line);
-  }
   .ask-log :global(.ask-msg.err) { color: var(--danger); }
 
   .ask-prompts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-1) 0 0 38px; }
@@ -295,9 +279,6 @@ const label = COHORT_SURFACES.has(surface) ? 'Ask about the cohort' : 'Ask about
     background: var(--texture-forest);
     animation: askPulse 1.3s ease-in-out infinite;
   }
-  /* Five pixels wide: a texture is invisible at that size, so on `/` these
-     are flat forest rather than a request for the cloth image. */
-  :global(.landing) .ask-log :global(.ask-thinking span) { background: var(--lc-forest); }
   .ask-log :global(.ask-thinking span:nth-child(2)) { animation-delay: 0.18s; }
   .ask-log :global(.ask-thinking span:nth-child(3)) { animation-delay: 0.36s; }
   @keyframes askPulse {

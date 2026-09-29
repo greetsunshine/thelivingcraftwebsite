@@ -289,21 +289,6 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     if one is added. There are none in the container today.
   - Not built: a server-side record of each consent. The Act puts the burden of proving
     consent on the fiduciary; today the only record is the visitor's own cookie.
-- [x] **10. The ivory cloth on `/`** (29 September). Sunil supplied a photograph of cream woven
-  cloth: "I want this to be implemented only in the landing page wherever the green texture
-  currently exists." On `/` that was the price panel, the footer and the chat's small marks.
-  - `public/textures/ivory-cloth.webp` (1200x800, 122 KB) and `--texture-ivory-cloth` in
-    theme.css: the cloth under an ivory overlay at 0.35. On the cloth's darkest threads
-    ink reads 9.1:1 and forest 7.6:1; `--lc-muted` would be 4.0:1, so it is not used there.
-  - The rules are at the end of `landing-v5.css`: they re-point the dark-surface colours on
-    those two surfaces to ink and forest, and give each a hairline edge. The chat's avatar
-    and the visitor's message bubble draw the cloth with a forest glyph and ink text.
-  - Checked at 1440 and 390px: `/` draws the cloth on five elements and the linen on none;
-    `/about` and `/caio` draw neither and keep flat forest footers.
-  - It sits against the outreach handoff of 29 September, which says "never place enlarged
-    fabric photographs behind copy". Sunil's instruction is the later and the owner's.
-  - The outreach handoff (revised package `...094812Z`) was being read when this came in;
-    its page copy, attribution question and event list are not implemented yet.
 
 ---
 

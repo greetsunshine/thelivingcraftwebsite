@@ -1404,15 +1404,9 @@ before changing a colour.
   drawing a flat colour; renaming them is 57 edits across 26 files. To put the course area
   back on the linen, narrow that one selector. Contrast on flat forest: ivory 10.55:1,
   on-dark-muted 7.79:1.
-- **`/` draws the ivory cloth where it drew the green linen** (Sunil, 29 September 2026:
-  "only in the landing page wherever the green texture currently exists"). That is the
-  price panel, the footer and the chat's small marks. The rules are at the end of
-  `landing-v5.css`, which re-points the dark-surface colours on those surfaces to ink and
-  forest; the token is `--texture-ivory-cloth` (`public/textures/ivory-cloth.webp`, a
-  photograph of cream woven cloth, 122 KB). **Text on the cloth is ink or forest, never
-  `--lc-muted`**, which is 4.0:1 on its darkest threads. So no page draws the linen now;
-  the tokens' `:root` values still hold it (`linen-forest.webp`, 83.5 KB) because rules
-  still name them.
+- **`/` is the one page that still draws the dark green linen**, on its price panel and
+  footer. The tokens' `:root` values are the linen: file
+  `public/textures/linen-forest.webp` (83.5 KB), which no other page now fetches.
   **Buttons, and a pressed or selected button, are flat forest everywhere, `/` included**:
   `var(--control-primary-bg)`, hover `var(--control-primary-bg-hover)` (Sunil,
   19 September: "the buttons do not need the texture"). `--sun` stays a flat colour for
