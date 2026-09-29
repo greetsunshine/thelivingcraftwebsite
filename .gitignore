@@ -39,3 +39,6 @@ design/*.html
 
 # handoff packages ship as a folder plus a zip of the same files
 docs/**/*.zip
+
+# teaching pages are built products; they ship as published Artifacts
+dist-teaching/
