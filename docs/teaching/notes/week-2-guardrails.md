@@ -62,6 +62,115 @@ Read this before running the session if you have run the old one.
 
 ---
 
+## What to prepare, and by when
+
+**Rewritten 29 September 2026.** The previous version of this list was four
+noun phrases — "the `w2-` sqlite path", "three prepared queue states",
+"ticket #8812 does not exist". None of them said who does what, where, or how
+you know it is finished, so the list read as a set of regrets rather than a set
+of tasks. Every item below names the action, the file, the size, the test that
+says it is done, and what breaks in the room if it is not.
+
+Three groups, and they are in the order to work through them: what blocks the
+session, what needs a decision either way, and what you do in the hour before
+you teach.
+
+### Blocks the session. Build these, or cut the beat and say so.
+
+**1 · The `w2-` sqlite path, for 02:55.** Topic 3's fix.
+
+- *Do this.* Add a file-backed `paid` table to the reference agent. The
+  idempotency key is the primary key. The write is `INSERT OR IGNORE`.
+- *Where.* A new `src/store.py`, called from `src/guarded.py`. Give it its own
+  make target, `make w2-paid-once`, and change nothing an earlier week prints.
+- *Size.* Standard library, about fifteen lines.
+- *Done when.* You run the same ticket from two terminals at once and the ledger
+  shows one credit. The second terminal prints the row it found rather than
+  failing.
+- *If it is missing.* 02:55 is a description instead of a build, and cycle C
+  ends on a demonstrated problem with no demonstrated answer. That is the worst
+  shape a build-break cycle can end in, because the room leaves believing the
+  problem has no fix.
+
+**2 · Three prepared queue states, for 02:00.** Topic 2's break.
+
+- *Do this.* Write three small files, one per outcome the break produces:
+  approved by somebody, timed out and took the default, still pending.
+- *Where.* `fixtures/w2-queue/approved.json`, `timed-out.json`, `pending.json`
+  in the reference agent.
+- *Size.* Three files, about ten lines each.
+- *Done when.* Somebody whose gate does not run can load one file and read their
+  own 02:20 debrief off it.
+- *If it is missing.* Anybody whose build broke at 01:47 loses the 02:20 debrief
+  entirely. That is six minutes, and it is the best six minutes in the session.
+
+**3 · `make retry`, checked against the new key.** Topic 3's opening.
+
+- *Do this.* Run it. Confirm it still delivers the same ticket three times, and
+  that it prints one total the room can read at a glance.
+- *Done when.* The figure it prints matches the figure the pre-work asked people
+  to write down.
+- *If it is missing.* The pre-work told them to write down a number. Cycle C
+  opens by comparing that number to a new one. If the command changed, the two
+  numbers were never comparable and the opening does not work.
+
+### Decide before the day. Either answer is fine. Not deciding is the failure.
+
+**4 · Ticket #8812 and a judge path, for 03:05.** Topic 6.
+
+- *The choice.* Read the case off the page, or build a ticket with that text and
+  a judge the dispatch can call.
+- *What building it buys.* You run it twice and the room watches the verdict
+  change. That is much stronger than describing it, and it is the probe the
+  block turns on.
+- *What it costs.* A ticket fixture and a judge path, neither of which exists
+  today, plus real model calls in a room on a twenty-a-day allowance.
+- *Recommendation.* Read it off the page this cohort. Build it before the next
+  one, and put the run twice into the block rather than into the probe.
+
+**5 · The refusal-sample worked example, for 04:32.** Topic 4.
+
+- *The choice.* Show a ten-line sketch of how you sample refusals and re-read
+  them, or keep naming it and showing nothing.
+- *Why it is open.* Inventing a sketch implies a practice we have not run.
+  Showing nothing leaves the block naming a thing to build with no shape.
+- *Recommendation.* Show the sketch and label it as a sketch in the same
+  sentence. A senior room can tell the difference and will say so if you do not.
+
+**6 · The EU AI Act Article 14 hook.** Topic 5's horizon.
+
+- *The choice.* Say it in the room, or leave it out.
+- *Before you say it.* Read Article 14 and the application dates in Article 113
+  in the primary text. This is a dated regulatory claim and trade press is not a
+  source for it.
+- *Either way.* It stays out of the session file. See the hard rules in
+  `CLAUDE.md`.
+
+### Small, and each one buys back minutes.
+
+**7 · A blank seven-column policy table, for 03:59.** Pairs currently copy the
+columns off the page. Paste a blank into chat at 03:58 instead. Saves about two
+of the eleven minutes, and eleven is tight.
+
+**8 · A one-line counter summary at the end of a run.** About three lines in the
+reference agent. It prints allowed and refused per tool. It makes 01:12 and
+01:40 sharper, because the room reads one line instead of hunting a terminal.
+
+### In the hour before you teach.
+
+**9 · Pick the two decision records for 00:15.** Read last week's submissions and
+choose two: one with a real policy in it, one that is all wishes. Name the two
+people and ask them beforehand. Without this the beat has nothing on screen.
+
+**10 · Assign the four adversary pairs for 03:25, by name.** Write them down
+before the day. Pairs that choose pick somebody whose approach they already
+understand, which is the one thing the round is meant to prevent.
+
+**11 · Pick the 01:09 screen while you circulate.** Choose one whose refusal
+message does name the file. A public miss there costs you the rest of the cycle.
+
+---
+
 ## ₹5,000, to an account that does not exist
 
 **00:00 · 3 min · whole room**

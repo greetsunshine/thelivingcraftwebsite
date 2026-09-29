@@ -556,16 +556,23 @@ Two rules, and they are the reason the file is worth having:
   was written and wrong a week later is worse than none. Move the checkbox, adjust the
   counts in the summary table, and add a changelog row.
 
-**Schema is ahead of production right now.** Not yet applied: the `discussion_replies`
-table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
-`resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table, `session_releases`, `outcome_ratings`,
-`checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the three walkthrough columns on `learners`
-(`tour_completed_at`, `tour_offers`, `tour_offered_at`); the `doubts.answer_source`
-and `submissions.status` columns, and the `feedback_responses` table. **Run
-[supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
-idempotent. Shipping code ahead of its schema shows up as the console's "table is not
-answering" banner rather than a crash, which is survivable and confusing. Clear this
-paragraph once it has been run.
+**The schema is applied. Production ran [supabase/schema.sql](supabase/schema.sql) in
+full on 29 September 2026**, and all nine tables the code was waiting on answer:
+`session_releases`, `discussion_replies`, `session_prompts`, `outcome_ratings`,
+`checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `feedback_responses` and
+`resource_requests`. The rule that put this paragraph here still stands: **run the whole
+file before any deploy that needs a new table**, because shipping code ahead of its schema
+shows up as the console's "table is not answering" banner rather than as a crash, which is
+survivable and confusing.
+
+**Re-running is only safe because of one guard, and it is easy to delete by accident.**
+`create or replace function` replaces a function whose argument list is IDENTICAL, and
+creates a second one beside it otherwise. Adding `p_kind` to `resource_request_submit` on
+19 September did exactly that, and the bare-name `revoke all on function` at the foot of
+the file then failed with *function name is not unique* — which, in the SQL Editor's single
+implicit transaction, rolled back all 3,235 lines and applied nothing. Both writing
+functions now drop every overload of their own name by `oid::regprocedure` immediately
+before the `create`. **If either function grows a parameter, keep the guard.**
 
   Every page under `/craft` goes through
   [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro), **including sign-in and office hours**.

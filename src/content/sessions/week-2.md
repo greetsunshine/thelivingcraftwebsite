@@ -3,7 +3,7 @@ week: 2
 title: "Guardrails"
 module: M2
 summary: "Three controls built, each one broken by the next. Then somebody else tries to get money out of yours."
-status: draft
+status: ready
 
 # THE FIVE OUTCOMES. Rated at 00:05 and again at 04:52, same words both times.
 #
@@ -160,6 +160,28 @@ Today you put things in front of it, and then you watch them fail.
 what actually happens.** There are six kinds. You build three of them today and
 measure a fourth at home.
 
+### Why an agent needs these and a batch job does not
+
+A nightly batch job that credits refunds also moves money, and nobody wraps it in
+six kinds of control. Three things are different here. Each one removes a
+protection you have relied on for years without naming it.
+
+| What ordinary software has | What an agent has instead | What that costs you |
+|---|---|---|
+| A person or a caller chose the arguments, and you can read the call site | The model chose them, partly from text somebody outside your company wrote. There is no call site to read | Week 1 paid ₹5,000 to account 9999 because the model picked the account id |
+| The set of actions in a run is fixed when you compile it | The set of actions is chosen while it runs, from the tool list, in an order nobody wrote down | You cannot review the path in advance, because there is no path until it runs |
+| Run it twice on the same input and you get the same steps | Run it twice on the same input and you may get a different tool call | A control you tested once has a pass rate, not a behaviour |
+
+Read the third row twice. It is the one this room underweights. Every test,
+every code review and every runbook you have written assumes the same input
+produces the same steps. An agent removes that assumption. A guardrail is what
+you put in its place.
+
+**So a guardrail is not a nicety here.** It is the only part of the request path
+whose behaviour you can still state in advance.
+
+### The six kinds
+
 | The guardrail | It stands between | What it stops | When |
 |---|---|---|---|
 | **Input** | the world and the model | Text somebody else wrote, arriving as if it were your instructions | Week 4 |
@@ -297,6 +319,14 @@ then is the point, so answer honestly rather than safely.
 
 *00:15 to 00:48 — 33 minutes.*
 
+This block is the frame for the whole day. It answers four questions, in this
+order. What is a rule a machine can enforce? What does a guardrail look like
+when it works? What makes one real rather than decorative? And how many kinds
+are there? Cycle A starts the moment those four are answered.
+
+**Nothing here is a definition read off a slide.** You commit to an answer
+first, every time, and the answer arrives afterwards.
+
 ### Your own writing, first
 
 *00:15 · Whole room, 8 minutes.*
@@ -395,7 +425,14 @@ a control that is broken. That is why every build today ends with a counter.
 *00:37 · Whole room, 5 minutes, built on the board.*
 
 Six kinds of guardrail, sorted by what each one stands between. The table at the
-top of this page has them. Build it from the room rather than reading it.
+top of this page has them, with the week that owns each one. Build it from the
+room rather than reading it.
+
+One sentence goes up before the table, and it answers the question a senior room
+is already holding. **An agent chooses its own arguments and its own next
+action, so the call site you would normally review does not exist.** The long
+version is *Why an agent needs these* at the top of this page. Read it tonight
+rather than now.
 
 The reason this beat exists: a room that believes "guardrail" means one thing
 puts a person in front of everything. Six kinds is the whole correction.

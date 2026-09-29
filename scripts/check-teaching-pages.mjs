@@ -42,10 +42,19 @@ import { readFileSync } from 'node:fs';
 // topics on one page have not collided on an id.
 const args = process.argv.slice(2);
 const byTopic = args.includes('--by-topic');
-const [learnerPath, instructorPath] = args.filter((a) => a !== '--by-topic');
+// How many collapsible topics the consolidated pages should hold. Week 2 has
+// seven; week 3 has six. It was hard-wired to week 2's count, which meant the
+// check failed on a correct week 3 pair and would have been "fixed" by editing
+// the number, breaking week 2 the same day. Default stays 7 so every command
+// written before week 3 existed keeps its meaning.
+const topicsArg = args.find((a) => a.startsWith('--topics='));
+const wantTopics = topicsArg ? Number(topicsArg.slice('--topics='.length)) : 7;
+const [learnerPath, instructorPath] = args.filter(
+  (a) => a !== '--by-topic' && !a.startsWith('--topics='),
+);
 if (!learnerPath || !instructorPath) {
   console.error(
-    'usage: node scripts/check-teaching-pages.mjs [--by-topic] <learner.html> <instructor.html>',
+    'usage: node scripts/check-teaching-pages.mjs [--by-topic] [--topics=N] <learner.html> <instructor.html>',
   );
   process.exit(2);
 }
@@ -202,6 +211,14 @@ const LOGISTICS_PATTERNS = [
   /^Six topics, in their own order$/i,
   /^How the day ends$/i,
   /^What to prepare$/i,
+  // Topic 0's three reading cards. They sit outside the clock on purpose: the
+  // definition and the why are four minutes of argument that block 1 has no
+  // room for, and the named-products card is reference a room only reaches if
+  // it asks. Exact titles rather than a pattern, so a real beat losing its
+  // clock row cannot hide behind them.
+  /^So what is a guardrail$/i,
+  /^Why an agent needs these and a batch job does not$/i,
+  /^What firms already running this use$/i,
 ];
 const LOGISTICS = {
   has: (title) => LOGISTICS_PATTERNS.some((re) => re.test(title)),
@@ -271,8 +288,13 @@ const topicChecks = [
     duplicateIds(instructor).length === 0,
     () => duplicateIds(instructor),
   ],
-  ['six collapsible topics on the learner page', topicIds(learner).length === 6,
-    () => [`found ${topicIds(learner).length}`]],
+  // Seven since 29 September: topic 0 carries the three block-1 framing beats
+  // that were filed as "shared" and so belonged to no topic page at all.
+  [
+    `${wantTopics} collapsible topics on the learner page`,
+    topicIds(learner).length === wantTopics,
+    () => [`found ${topicIds(learner).length}`],
+  ],
   [
     'both pages carry the same topics, in the same order',
     topicIds(learner).join(',') === topicIds(instructor).join(','),

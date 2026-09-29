@@ -1642,6 +1642,41 @@ create trigger tasks_touch before update on public.tasks
 -- about. On the (vanishingly rare) collision this raises pipeline_reference_taken
 -- before writing anything and the caller retries with a fresh candidate.
 
+-- DROP EVERY OVERLOAD FIRST, and this is load-bearing rather than tidiness.
+--
+-- `create or replace function` only replaces a function whose argument list is
+-- IDENTICAL. Add a parameter -- `p_kind` arrived with the download gate on
+-- 19 September -- and it creates a SECOND function of the same name beside the
+-- first instead of replacing it. Two overloads then make the bare-name
+-- `revoke all on function` below ambiguous, and re-running this file fails at
+-- the last statement with:
+--
+--   ERROR: function name "public.pipeline_submit" is not unique
+--
+-- In the SQL Editor a multi-statement script is one implicit transaction, so
+-- that failure rolls back the whole file and nothing applies. An idempotent
+-- schema that stops being idempotent the first time a signature changes is
+-- worse than one that never claimed to be.
+--
+-- Dropping by oid::regprocedure covers every overload whatever its arguments,
+-- including ones written by an older version of this file that nobody has a
+-- copy of any more. No cascade: these functions are called over RPC and nothing
+-- in the database depends on them, so a dependency here would be a surprise
+-- worth failing on. Both are recreated in the next statement, inside the same
+-- transaction, so there is no window where the API cannot call them.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = 'pipeline_submit'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
+
 create or replace function public.pipeline_submit(
   p_request_key            text,
   p_reference              text,
@@ -3034,6 +3069,41 @@ create trigger resource_requests_touch before update on public.resource_requests
 -- and the unique index on people.normalised_email does the rest. A second
 -- implementation of that rule in SQL is how a+cohort@x.com becomes two people
 -- on one path and one person on another.
+
+-- DROP EVERY OVERLOAD FIRST, and this is load-bearing rather than tidiness.
+--
+-- `create or replace function` only replaces a function whose argument list is
+-- IDENTICAL. Add a parameter -- `p_kind` arrived with the download gate on
+-- 19 September -- and it creates a SECOND function of the same name beside the
+-- first instead of replacing it. Two overloads then make the bare-name
+-- `revoke all on function` below ambiguous, and re-running this file fails at
+-- the last statement with:
+--
+--   ERROR: function name "public.resource_request_submit" is not unique
+--
+-- In the SQL Editor a multi-statement script is one implicit transaction, so
+-- that failure rolls back the whole file and nothing applies. An idempotent
+-- schema that stops being idempotent the first time a signature changes is
+-- worse than one that never claimed to be.
+--
+-- Dropping by oid::regprocedure covers every overload whatever its arguments,
+-- including ones written by an older version of this file that nobody has a
+-- copy of any more. No cascade: these functions are called over RPC and nothing
+-- in the database depends on them, so a dependency here would be a surprise
+-- worth failing on. Both are recreated in the next statement, inside the same
+-- transaction, so there is no window where the API cannot call them.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = 'resource_request_submit'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
 
 create or replace function public.resource_request_submit(
   p_request_key      text,
