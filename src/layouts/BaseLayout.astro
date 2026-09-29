@@ -12,7 +12,7 @@ import GoogleTagManager from '../components/GoogleTagManager.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
 import BrandLockup from '../components/site/BrandLockup.astro';
-import FooterSummary from '../components/site/FooterSummary.astro';
+import SiteFooter from '../components/site/SiteFooter.astro';
 import MobileMenu from '../components/site/MobileMenu.astro';
 import TalkToSunilLink from '../components/site/TalkToSunilLink.astro';
 import Analytics from '@vercel/analytics/astro';
@@ -28,7 +28,6 @@ export interface Props {
 }
 
 const { title, description, canonical, schema, region = null } = Astro.props;
-const year = new Date().getFullYear();
 
 /* The site's own sections, in the header and the phone menu (V4/V5). The
    page's own sections moved to the "On this page" bar under it. */
@@ -109,58 +108,13 @@ const PAGE_NAV = [
     </main>
 
     <!-- Footer -->
-    <footer class="site">
-      <div class="wrap">
-        <div class="foot-grid">
-          <div>
-            <span class="brand-tile" role="img" aria-label="The Living Craft">
-              <img class="brand-symbol" src="/brand/lc-mark-keyed.webp" width="163" height="104" alt="" decoding="async" loading="lazy" />
-              <img class="brand-name" src="/brand/lc-name.webp" width="364" height="57" alt="" decoding="async" loading="lazy" />
-            </span>
-            <FooterSummary />
-          </div>
-          <div class="foot-col">
-            <h2>Programme</h2>
-            <a href="/#fit">Who it is for</a>
-            <a href="/#curriculum">What the work explores</a>
-            <a href="/#commitment">The commitment</a>
-            <a href="/#apply">Apply for the open cohort</a>
-            <a href="/#team">Learning for a team</a>
-          </div>
-          <div class="foot-col">
-            <h2>Also by Sunil</h2>
-            <a href="/caio">Fractional CAIO retainer <span aria-hidden="true">→</span></a>
-            <a href="/assessment">AI Readiness Assessment <span aria-hidden="true">→</span></a>
-            <a href="/resources">Resources · free tools <span aria-hidden="true">→</span></a>
-            <a href="/latest">Field notes · agentic AI <span aria-hidden="true">→</span></a>
-          </div>
-          <div class="foot-col">
-            <h2>Connect</h2>
-            <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
-            <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
-          </div>
-          <div class="foot-col">
-            <h2>Explore</h2>
-            <a href="/resources">Resources</a>
-            <a href="/tools">Tools</a>
-            <a href="/programmes/enterprise">Enterprise learning</a>
-          </div>
-        </div>
-        <div class="foot-bottom">
-          <span>© {year} The Living Craft · Sunil Mathew</span>
-          <span class="foot-legal">
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
-            <a href="/communication-preferences">Email preferences</a>
-          </span>
-          {/* The one pause for all motion on this page: the hero brain's loop
-              and the drawings' single trace. It is what satisfies WCAG 2.2.2
-              for a loop longer than five seconds. The choice lasts for this
-              page view only; nothing is stored. */}
-          <button type="button" class="motion-setting" data-pause-motion aria-pressed="false">Pause motion</button>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter>
+      {/* The one pause for all motion on this page: the hero brain's loop
+          and the drawings' single trace. It is what satisfies WCAG 2.2.2
+          for a loop longer than five seconds. The choice lasts for this
+          page view only; nothing is stored. */}
+      <button slot="controls" type="button" class="motion-setting" data-pause-motion aria-pressed="false">Pause motion</button>
+    </SiteFooter>
 
     <Track region={region} />
     <AskWidget surface="/" region={region} />

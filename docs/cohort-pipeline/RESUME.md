@@ -390,6 +390,28 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   - **Rule from now on:** approval status, owner to-dos and plans go in code comments or
     in this file, never in rendered copy.
 
+- [x] **14. One shared footer on every public page** (29 September). The footer review
+  of 29 September: "one shared footer on every page. Same labels, order and
+  destinations." Seven layouts drew seven footers; now every public layout renders
+  `SiteFooter.astro`. Three columns, from the review's table: Learning (cohort overview,
+  Apply, Learning for teams), Explore (Resources, Try the tools, Field notes), About &
+  contact (About Sunil, Advisory, the address, LinkedIn). One sentence under the mark:
+  "Practical learning in agentic systems and architecture." One bottom strip:
+  © · Privacy · Terms · Email preferences, plus the consent script's "Cookie choices" and,
+  on `/` only, the Pause motion control (a named slot).
+  - **The white tile is gone, and the name is text.** The lockup's lettering is dark ink
+    and cannot sit on forest; recolouring the artwork is forbidden. The footer shows the
+    mark on its own small paper (Logo.astro) beside "The Living Craft" in ivory serif.
+    Every header still draws the full lockup.
+  - **The band was already solid green** (25 September); nothing changed there.
+  - **Task 12's footer summary (FooterSummary.astro) is superseded and deleted.** The
+    Apply link keeps `data-cta-placement="footer"`, so the handoff's footer CTA event
+    still fires.
+  - Tablet: the brand block across the top and the three columns under it. Phone: one
+    column, links padded to 38px targets, the strip as a list. The footer keeps 100px
+    clear at the bottom on a page with the floating chat pill.
+  - Not touched: `/craft`, the console and `/book/[id]`, which are gated or private.
+
 ---
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch

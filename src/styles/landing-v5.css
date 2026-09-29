@@ -298,18 +298,8 @@
 .landing .cohort-question { max-width: 860px; margin: 28px 0 0; }
 .landing .cohort-question .apply-form { margin: 12px 0 28px; }
 
-/* ── footer ───────────────────────────────────────────────────────────────
-   The footer itself is in ds/site-v5.css. These two rules lay out `/`'s own
-   last column, "Explore", as one row, so they stay with `/`. */
-.landing .foot-grid > .foot-col:last-child {
-  grid-column: 2 / -1;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 28px;
-}
-.landing .foot-col:last-child h2 { margin-bottom: 0; }
+/* ── footer: ds/site-v5.css. `/` has no footer rule of its own since the
+   shared footer of 29 September. ─────────────────────────────────────── */
 
 /* ── the brain: fibre travel and junction light on one 8-second loop ─────── */
 .landing .brain-art .signal { stroke-dasharray: 0.13 0.87; stroke-dashoffset: 1; opacity: 0; }
@@ -564,7 +554,6 @@ html[data-motion='paused'] body.landing .concept-figure .art-junction { animatio
   .landing .price-card .amt { font-size: 2.8rem; }
   .landing #apply .route-choice { gap: 12px; }
   .landing :is(#apply, #book) .apply-form { padding: 24px; }
-  .landing .foot-grid > .foot-col:last-child { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 12px; }
 
   /* The drawings stack with their words. */
   .landing .art-review { margin-inline: auto; width: min(500px, 100%); }

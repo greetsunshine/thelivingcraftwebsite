@@ -21,7 +21,7 @@ import '../styles/global.css';
 import '../styles/ds/site-v5.css';
 import SeoHead from '../components/SeoHead.astro';
 import SiteHeader from '../components/site/SiteHeader.astro';
-import BrandLockup from '../components/site/BrandLockup.astro';
+import SiteFooter from '../components/site/SiteFooter.astro';
 
 export interface Props {
   title: string;
@@ -32,7 +32,6 @@ export interface Props {
 }
 
 const { title, description, canonical, label } = Astro.props;
-const year = new Date().getFullYear();
 // The current policy is marked by SiteHeader (aria-current), in the row under
 // the header. There is no action button here: a policy page asks nothing.
 // <body> takes `lc-v5` (V5's chrome) and `lc-v5-read` (V5's reading type):
@@ -62,34 +61,6 @@ const year = new Date().getFullYear();
       <slot />
     </main>
 
-    <footer class="site">
-      <div class="wrap">
-        <div class="foot-grid">
-          <div>
-            <BrandLockup tile />
-            <p class="muted">
-              A teaching and consulting practice in agentic systems architecture, run by one person
-              from Bangalore.
-            </p>
-          </div>
-          <div class="foot-col">
-            <h2>The practice</h2>
-            <a href="/">The Living Craft · cohort →</a>
-            <a href="/caio">Fractional CAIO retainer →</a>
-            <a href="/assessment">AI Readiness Assessment →</a>
-            <a href="/latest">Field notes · agentic AI →</a>
-          </div>
-          <div class="foot-col">
-            <h2>Connect</h2>
-            <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
-            <a href="https://linkedin.com/in/sunil-mathew-466615a" target="_blank" rel="noopener">LinkedIn</a>
-          </div>
-        </div>
-        <div class="foot-bottom">
-          <span>© {year} The Living Craft · Sunil Mathew</span>
-          <span class="mono">{label}</span>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter />
   </body>
 </html>

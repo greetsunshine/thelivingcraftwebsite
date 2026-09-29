@@ -429,7 +429,6 @@
   .landing .hero > .wrap.hero-grid { gap: 0; }
   .landing .hero-cta { gap: 12px; }
   .landing .hero-cta .btn { padding-inline: 16px; }
-  .landing .foot-col:last-child { grid-column: 2 / -1; }
   .landing .commit { gap: 36px; }
 }
 
@@ -444,7 +443,6 @@
   .landing .band,
   .landing .transform { padding-block: 64px; }
   .landing .modules { gap: 32px; }
-  .landing .foot-col:last-child { grid-column: auto; }
   .landing #takeaways .cards3 { gap: 24px; }
   .landing .price-card { gap: 24px 40px; padding: 32px; }
 }

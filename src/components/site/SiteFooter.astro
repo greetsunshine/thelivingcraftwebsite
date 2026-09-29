@@ -1,60 +1,83 @@
 ---
 /**
- * The wider site's footer.
+ * The one footer, on every public page.
  *
- * Grouped as the roadmap asks — "programmes, resources, company/contact and
- * privacy/terms" — and it follows the same rule as the nav above it: a
- * destination that does not exist yet is shown as plain text, never as a link.
- * A footer full of links to pages that are being written is how a small
- * practice looks bigger than it is, and this audience notices.
+ * SOURCE. The footer review of 29 September 2026: "one shared footer on every
+ * page. Same labels, order and destinations." Before this, seven layouts drew
+ * seven footers. The home page listed Resources twice and two team-learning
+ * routes under two labels, and the resource pages listed the page's own
+ * sections. A reader met a different footer on every page.
  *
- * The only live destinations today are the ones that genuinely exist: the
- * cohort page, the two consulting surfaces, field notes, and the contact
- * routes. Everything else is marked pending and turns into a link in the same
- * commit that creates its page.
+ * THREE QUESTIONS, THREE COLUMNS. The review names what a reader asks at the
+ * foot of a page: how can I learn with Sunil, can I explore his approach
+ * first, and how do I ask a question. Learning, Explore, About & contact.
+ * "Cohort" opens the programme overview; "Apply" goes straight to the form.
+ * Those are two different needs, so they are two links.
  *
- * SINCE 25 SEPTEMBER it is `/`'s footer in markup and in style: `footer.site`,
- * `.foot-grid`, `.foot-col` with an h2, `.foot-bottom`, all styled once in
- * ds/site-v5.css. The words did not change.
+ * NOT HERE, ON PURPOSE. The CAIO and assessment pages are reached from the
+ * advisory journey and do not sit beside the cohort. No sales banner, booking
+ * widget or newsletter form: the page above already carries its own action.
+ * The programme summary and the two route links of the 29 September outreach
+ * handoff (FooterSummary.astro) are gone; the review replaced the paragraph
+ * with one sentence, and the two routes live in the Learning column.
+ *
+ * THE MARK WITHOUT THE TILE. The review asks for "no white rectangle around
+ * the logo". The lockup's lettering is dark ink and vanishes on forest, and
+ * recolouring the artwork is forbidden. So the footer shows the mark alone,
+ * on the small cream paper the artwork already carries, with the name set in
+ * ivory type beside it. The header of every page still draws the full lockup.
+ *
+ * SOLID GREEN. The band is flat dark forest since the plain-green change of
+ * 25 September (theme.css restates --footer-bg on <body>). Nothing here
+ * reintroduces a texture.
+ *
+ * Layout and colour come from ds/site-v5.css (`footer.site`). The slot
+ * `controls` takes `/`'s "Pause motion" button and nothing else.
  */
-import BrandLockup from './BrandLockup.astro';
-import FooterSummary from './FooterSummary.astro';
+import Logo from './Logo.astro';
 
 const year = new Date().getFullYear();
 
 interface Item {
   href: string;
   label: string;
-  built: boolean;
+  /** Opens in a new tab: only the one link that leaves the site. */
+  external?: boolean;
+  /** The first-party CTA attributes, for the one link that is an application. */
+  cta?: boolean;
 }
 
-const PROGRAMMES: Item[] = [
-  { href: '/', label: 'Agentic systems cohort', built: true },
-  { href: '/programmes/enterprise/', label: 'Learning for a team', built: true },
-  { href: '/caio', label: 'Fractional CAIO retainer', built: true },
-  { href: '/assessment', label: 'AI readiness assessment', built: true },
-];
+interface Column {
+  heading: string;
+  items: Item[];
+}
 
-const RESOURCES: Item[] = [
-  { href: '/resources/guides/', label: 'Guides', built: true },
-  { href: '/latest', label: 'Field notes', built: true },
-  { href: '/resources/templates/', label: 'Templates', built: true },
-  // The three open resources from the 11 September addendum. `built: true`
-  // because all four routes were curled and returned 200 before this line was
-  // written — which is the whole of what the flag asserts.
-  //
-  // Footer only, deliberately. The header's order is the roadmap's — "Programmes,
-  // Advisory, Resources, Tools, About" — and a sixth destination there would be a
-  // change to that plan rather than a page going live. /toolkit is reached from
-  // the Resources hub, from each resource page and from the sitemap.
-  { href: '/toolkit/', label: 'Toolkit', built: true },
-  { href: '/tools/agent-design-check/', label: 'Agent design check', built: true },
-];
-
-const PRACTICE: Item[] = [
-  { href: '/about/', label: 'About Sunil', built: true },
-  { href: '/advisory/', label: 'Advisory', built: true },
-  { href: '/contact/', label: 'Contact', built: true },
+const COLUMNS: Column[] = [
+  {
+    heading: 'Learning',
+    items: [
+      { href: '/programmes/', label: 'Agentic systems cohort' },
+      { href: '/#apply', label: 'Apply for the cohort', cta: true },
+      { href: '/programmes/enterprise/', label: 'Learning for teams' },
+    ],
+  },
+  {
+    heading: 'Explore',
+    items: [
+      { href: '/resources/', label: 'Resources' },
+      { href: '/tools/', label: 'Try the tools' },
+      { href: '/latest', label: 'Field notes' },
+    ],
+  },
+  {
+    heading: 'About & contact',
+    items: [
+      { href: '/about/', label: 'About Sunil' },
+      { href: '/advisory/', label: 'Advisory' },
+      { href: 'mailto:apply@thelivingcraft.ai', label: 'apply@thelivingcraft.ai' },
+      { href: 'https://linkedin.com/in/sunil-mathew-466615a', label: 'Sunil on LinkedIn', external: true },
+    ],
+  },
 ];
 ---
 
@@ -62,56 +85,41 @@ const PRACTICE: Item[] = [
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <BrandLockup tile />
-        <FooterSummary />
+        <a class="foot-mark" href="/" aria-label="The Living Craft, home">
+          <Logo />
+          <span class="foot-name" aria-hidden="true">The Living Craft</span>
+        </a>
+        <p class="foot-line">Practical learning in agentic systems and architecture.</p>
       </div>
 
-      <div class="foot-col">
-        <h2>Programmes</h2>
-        {
-          PROGRAMMES.map((i) =>
-            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
-          )
-        }
-      </div>
-
-      <div class="foot-col">
-        <h2>Resources</h2>
-        {
-          RESOURCES.map((i) =>
-            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
-          )
-        }
-      </div>
-
-      <div class="foot-col">
-        <h2>Practice</h2>
-        {
-          PRACTICE.map((i) =>
-            i.built ? <a href={i.href}>{i.label}</a> : <span class="pending">{i.label}</span>,
-          )
-        }
-        <a href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
-      </div>
+      {
+        COLUMNS.map((c) => (
+          <div class="foot-col">
+            <h2>{c.heading}</h2>
+            {c.items.map((i) => (
+              <a
+                href={i.href}
+                target={i.external ? '_blank' : undefined}
+                rel={i.external ? 'noopener' : undefined}
+                data-cta={i.cta ? 'form' : undefined}
+                data-cta-placement={i.cta ? 'footer' : undefined}
+              >
+                {i.label}
+              </a>
+            ))}
+          </div>
+        ))
+      }
     </div>
 
     <div class="foot-bottom">
-      <span>© {year} The Living Craft · Sunil Mathew</span>
       <span class="foot-legal">
+        <span>© {year} The Living Craft</span>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
         <a href="/communication-preferences">Email preferences</a>
       </span>
+      <slot name="controls" />
     </div>
   </div>
 </footer>
-
-<style>
-  /* The footer's layout and colours are `/`'s, from ds/site-v5.css
-     (`footer.site`), since 25 September. Only the unwritten-page mark is
-     this component's own. */
-  .foot-col .pending {
-    color: var(--footer-muted);
-    font-size: 0.875rem;
-  }
-</style>

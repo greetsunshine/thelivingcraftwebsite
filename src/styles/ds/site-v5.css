@@ -33,8 +33,9 @@
 
    WHAT IS NOT HERE. The cohort's hero, chapters, drawings, price panel and
    forms stay in landing.css and landing-v5.css. The eleven drawings belong to
-   the cohort page's own sections and appear nowhere else. So do the footer's
-   "Explore" row rules, which place one specific column of `/`'s footer.
+   the cohort page's own sections and appear nowhere else. The footer is the
+   shared SiteFooter.astro on every public page since 29 September, so no
+   layout carries a footer rule of its own any more.
 
    BEFORE CHANGING ANYTHING HERE, re-run the `/` regression: every element's
    box and computed style at 1440, 1024 and 390px, before and after. A lifted
@@ -164,23 +165,28 @@
     repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--lc-gold) 20%, transparent) 5px 6px);
 }
 :is(.landing, .lc-v5) .foot-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 36px; }
-:is(.landing, .lc-v5) footer.site .brand-tile {
+/* The brand block: the mark on its own small paper, the name in ivory type,
+   one sentence under them. No tile round the pair (footer review,
+   29 September 2026): the lockup's dark lettering cannot sit on forest and
+   the artwork may not be recoloured, so the name is set as text here. */
+:is(.landing, .lc-v5) .foot-mark {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  background: var(--surface-page);
-  border-radius: 3px;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--footer-ink);
+  text-decoration: none;
 }
-/* The second selector in each tile rule is BrandLockup's tile on an inner
-   footer. It also carries .brand-lockup, whose header sizes would otherwise
-   win, so it needs the longer selector to take the footer's sizes. */
-:is(.landing, .lc-v5) .brand-tile .brand-symbol,
-.lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { display: block; height: 45px; width: auto; }
-:is(.landing, .lc-v5) .brand-tile .brand-name,
-.lc-v5 footer.site .brand-lockup.brand-tile .brand-name { display: block; height: 25px; width: auto; }
-:is(.landing, .lc-v5) footer.site .foot-grid .muted { color: var(--footer-muted); font-size: 1rem; line-height: 1.62; max-width: 32ch; }
+:is(.landing, .lc-v5) .foot-mark .lc-mark { height: 40px; }
+:is(.landing, .lc-v5) .foot-name {
+  font-family: var(--font-display, 'Source Serif 4', Georgia, serif);
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+:is(.landing, .lc-v5) .foot-mark:hover .foot-name { text-decoration: underline; text-underline-offset: 4px; }
+:is(.landing, .lc-v5) .foot-line { margin: 16px 0 0; color: var(--footer-muted); font-size: 1rem; line-height: 1.62; max-width: 32ch; }
 :is(.landing, .lc-v5) .foot-col { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 :is(.landing, .lc-v5) .foot-col h2 {
   font-family: var(--font-body);
@@ -203,7 +209,9 @@
   font-size: 0.875rem;
   color: var(--footer-muted);
 }
-:is(.landing, .lc-v5) .foot-legal { gap: 24px; }
+/* One strip: "© 2026 The Living Craft · Privacy · Terms · Email preferences". */
+:is(.landing, .lc-v5) .foot-legal { gap: 12px; align-items: center; }
+:is(.landing, .lc-v5) .foot-legal > * + *::before { content: '·'; margin-right: 12px; color: var(--footer-muted); }
 :is(.landing, .lc-v5) .foot-legal a { color: var(--footer-muted); text-decoration: underline; text-underline-offset: 4px; }
 
 /* The sticky Apply bar keeps clear of a phone's home indicator. */
@@ -239,11 +247,6 @@
   :is(.landing, .lc-v5) .wrap { width: calc(100% - 48px); }
   :is(.landing, .lc-v5-read) .lead { font-size: 1.25rem; }
   :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1.3fr 1fr; }
-  :is(.landing, .lc-v5) footer.site .brand-tile { padding: 10px; }
-  :is(.landing, .lc-v5) .brand-tile .brand-symbol,
-  .lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { height: 40px; }
-  :is(.landing, .lc-v5) .brand-tile .brand-name,
-  .lc-v5 footer.site .brand-lockup.brand-tile .brand-name { height: 22px; }
 }
 
 @media (max-width: 760px) {
@@ -257,11 +260,12 @@
   :is(.landing, .lc-v5-read) .eyebrow { margin-bottom: 16px; }
   :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr 1fr; gap: 36px 24px; }
   :is(.landing, .lc-v5) .foot-grid > div:first-child { grid-column: 1 / -1; }
-  :is(.landing, .lc-v5) footer.site .foot-grid .muted { max-width: 50ch; }
-  :is(.landing, .lc-v5) .brand-tile .brand-symbol,
-  .lc-v5 footer.site .brand-lockup.brand-tile .brand-symbol { height: 48px; }
-  :is(.landing, .lc-v5) .brand-tile .brand-name,
-  .lc-v5 footer.site .brand-lockup.brand-tile .brand-name { height: 26.5px; }
+  :is(.landing, .lc-v5) .foot-line { max-width: 50ch; }
+  /* Stacked links on a touch screen: each link is a 38px target with 4px
+     between, instead of 22px lines 12px apart. */
+  :is(.landing, .lc-v5) .foot-col { gap: 4px; }
+  :is(.landing, .lc-v5) .foot-col h2 { margin-bottom: 4px; }
+  :is(.landing, .lc-v5) .foot-col a { display: inline-block; padding: 8px 0; }
   :is(.landing, .lc-v5) .foot-bottom { flex-direction: column; gap: 18px; }
 }
 
@@ -354,6 +358,19 @@
 /* ── footer ─────────────────────────────────────────────────────────────── */
 :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1.35fr 1fr 1fr 1fr; }
 :is(.landing, .lc-v5) footer.site::before { height: 8px; }
+:is(.landing, .lc-v5) .foot-name { white-space: nowrap; }
+/* The floating chat pill sits over the page's bottom-right corner. On a page
+   that has it, the footer ends 100px above the edge, so the pill covers
+   padding and never a link. Below 520px AskWidget pads <body> instead. */
+@media (min-width: 521px) {
+  :is(body.landing, body.lc-v5):has(.ask[data-launcher='floating']) footer.site { padding-bottom: 100px; }
+}
+/* Tablet: the brand block across the top, the three columns under it. Four
+   columns in 720px wrapped the name and the email address. */
+@media (max-width: 960px) {
+  :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr 1fr 1fr; }
+  :is(.landing, .lc-v5) .foot-grid > div:first-child { grid-column: 1 / -1; }
+}
 :is(.landing, .lc-v5) .foot-bottom { align-items: center; flex-wrap: wrap; }
 :is(.landing, .lc-v5) .motion-setting {
   min-height: 44px;
@@ -430,6 +447,14 @@
   :is(.landing, .lc-v5) .navlinks > .btn { font-size: 0.875rem; padding: 10px 11px; }
   :is(.landing, .lc-v5) .navlinks > .btn .arrow { display: none; }
   :is(.landing, .lc-v5) .foot-grid { grid-template-columns: 1fr; }
+}
+
+/* A phone: the bottom strip as a short list, without the separators, which
+   otherwise start a wrapped line with a lone dot. */
+@media (max-width: 560px) {
+  :is(.landing, .lc-v5) .foot-legal { flex-direction: column; align-items: flex-start; gap: 0; }
+  :is(.landing, .lc-v5) .foot-legal > * + *::before { content: none; }
+  :is(.landing, .lc-v5) .foot-legal > :is(a, button) { padding: 8px 0; }
 }
 
 @media print {
