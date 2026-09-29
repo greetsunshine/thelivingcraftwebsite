@@ -49,6 +49,15 @@ create index if not exists events_created_idx on public.events (created_at desc)
 create index if not exists events_type_created_idx on public.events (type, created_at desc);
 create index if not exists events_path_idx on public.events (path);
 
+-- One row per event id (outreach readiness handoff, 29 September 2026:
+-- "Deduplicate by event/request ID"). The browser gives every beacon an id and
+-- the server gives its two saved events one built from the record's own id, so
+-- a beacon sent twice, or a save reported twice, is stored once. Rows from
+-- before 29 September carry no id and are outside the index.
+create unique index if not exists events_event_id_uidx
+  on public.events ((meta ->> 'event_id'))
+  where meta ? 'event_id';
+
 -- ---------------------------------------------------------------------------
 -- Leads — what people entered, from either path
 -- ---------------------------------------------------------------------------
@@ -1412,6 +1421,17 @@ create table if not exists public.attributions (
   created_at          timestamptz not null default now()
 );
 
+-- Added 29 September 2026 (the revised outreach readiness handoff). Additive.
+--   first_landing_path, first_referrer_host: the page and the host of the FIRST
+--     arrival, beside its five tags. Until now only the submitting visit had a
+--     page and a host, so "where did they first land" could not be answered.
+--   self_reported_detail: the optional line under "How did you first hear about
+--     The Living Craft?". `self_reported` holds the chosen option's code; the
+--     detail is kept apart from it so a count by option stays a clean count.
+alter table public.attributions add column if not exists first_landing_path   text;
+alter table public.attributions add column if not exists first_referrer_host  text;
+alter table public.attributions add column if not exists self_reported_detail text;
+
 create index if not exists attributions_session_source_idx on public.attributions (session_source, session_captured_at desc);
 create index if not exists attributions_first_source_idx on public.attributions (first_source);
 
@@ -1895,8 +1915,9 @@ begin
   insert into public.attributions (
     submission_id,
     first_source, first_medium, first_campaign, first_content, first_term,
+    first_landing_path, first_referrer_host,
     session_source, session_medium, session_campaign, session_content, session_term,
-    entry_path, referrer_host, self_reported, tracking_permission,
+    entry_path, referrer_host, self_reported, self_reported_detail, tracking_permission,
     first_captured_at, session_captured_at
   ) values (
     v_submission_id,
@@ -1905,6 +1926,8 @@ begin
     nullif(p_attribution ->> 'first_campaign', ''),
     nullif(p_attribution ->> 'first_content', ''),
     nullif(p_attribution ->> 'first_term', ''),
+    nullif(p_attribution ->> 'first_landing_path', ''),
+    nullif(p_attribution ->> 'first_referrer_host', ''),
     nullif(p_attribution ->> 'session_source', ''),
     nullif(p_attribution ->> 'session_medium', ''),
     nullif(p_attribution ->> 'session_campaign', ''),
@@ -1913,6 +1936,7 @@ begin
     nullif(p_attribution ->> 'entry_path', ''),
     nullif(p_attribution ->> 'referrer_host', ''),
     nullif(p_attribution ->> 'self_reported', ''),
+    nullif(p_attribution ->> 'self_reported_detail', ''),
     coalesce((p_attribution ->> 'tracking_permission')::boolean, false),
     nullif(p_attribution ->> 'first_captured_at', '')::timestamptz,
     coalesce(nullif(p_attribution ->> 'session_captured_at', '')::timestamptz, now())
@@ -2924,6 +2948,11 @@ create table if not exists public.resource_requests (
 alter table public.resource_requests
   add column if not exists kind text not null default 'email';
 
+-- The first arrival's page and host, beside its tags. Same columns and reason
+-- as on public.attributions (29 September 2026).
+alter table public.resource_requests add column if not exists first_landing_path  text;
+alter table public.resource_requests add column if not exists first_referrer_host text;
+
 create index if not exists resource_requests_person_idx
   on public.resource_requests (person_id, requested_at desc);
 
@@ -3075,6 +3104,7 @@ begin
       request_key, person_id, resource_id, resource_version, is_test, kind,
       resource_id_dimension,
       first_source, first_medium, first_campaign, first_content, first_term,
+      first_landing_path, first_referrer_host,
       session_source, session_medium, session_campaign, session_content, session_term,
       entry_path, referrer_host, self_reported, tracking_permission,
       first_captured_at, session_captured_at
@@ -3091,6 +3121,8 @@ begin
       nullif(p_attribution ->> 'first_campaign', ''),
       nullif(p_attribution ->> 'first_content', ''),
       nullif(p_attribution ->> 'first_term', ''),
+      nullif(p_attribution ->> 'first_landing_path', ''),
+      nullif(p_attribution ->> 'first_referrer_host', ''),
       nullif(p_attribution ->> 'session_source', ''),
       nullif(p_attribution ->> 'session_medium', ''),
       nullif(p_attribution ->> 'session_campaign', ''),

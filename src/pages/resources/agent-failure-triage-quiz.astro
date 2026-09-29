@@ -50,6 +50,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { publishedResources, longDate } from '../../data/resources';
@@ -117,6 +118,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   canonical="/resources/agent-failure-triage-quiz"
   schema={schema}
   howTo="about"
+  tool="agent-failure-triage-quiz"
 >
   <!-- Hero. The ivory weave sits behind it and nowhere else. -->
   <section class="hero weave" id="top" style="border-top:0">
@@ -208,7 +210,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <div class="sb-text">
             <span class="band" id="sb-band">Not started</span>
             <span class="sb-note" id="sb-note" role="status" aria-live="polite"
-              >Answer question one. Nothing is stored and nothing is sent.</span
+              >Answer question one. Your answers are not stored and not sent.</span
             >
           </div>
           <div class="sb-right">
@@ -348,6 +350,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
             <button class="btn btn-ghost" id="restart" type="button">Start again</button>
           </div>
         </div>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -840,6 +843,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     correctOf,
     missedTakeaways,
   } from '../../data/agent-failure-triage-quiz';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
 
@@ -941,10 +945,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
     $('sb-band').textContent = done === 0 ? 'Not started' : finished ? band.label : 'In progress';
     $('sb-note').textContent =
       done === 0
-        ? 'Answer question one. Nothing is stored and nothing is sent.'
+        ? 'Answer question one. Your answers are not stored and not sent.'
         : finished
           ? band.guidance
           : `${conceptTotal - conceptDone} concept questions to go.`;
+
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every concept question is answered. The event names the quiz and
+    // nothing else: no answer and no score leaves the page.
+    if (finished) markUsefulResult('agent-failure-triage-quiz');
+    else clearUsefulResult();
 
     const streakEl = $('streak');
     streakEl.hidden = streak < 2;

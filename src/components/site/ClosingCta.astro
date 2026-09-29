@@ -34,17 +34,27 @@
  * line carries the same invitation and the full application address, because
  * a printed page cannot follow a link (handoff: "include print footer").
  */
-import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
+import { APPLY_URL, closingResultNoteFor, cohortInvitationFor } from '../../data/resource-cohort-copy';
 
 export interface Props {
   /** The one line about the cohort. `false` when the page's own prose already says it. */
   note?: string | false;
   /** Where this row sits, recorded with the click. */
   placement?: string;
+  /**
+   * The page's content is itself the useful result (a kit, a guide, a
+   * template, a worksheet). The line is then the revised handoff's "after the
+   * useful result" sentence, with the cohort's facts, from
+   * `closingResultNoteFor()`. A tool leaves this off: its useful-result line
+   * sits under the result (ResultCohortNote.astro), and this row keeps the
+   * page's own line from the 28 September audit.
+   */
+  result?: boolean;
 }
 
 const invitation = cohortInvitationFor(Astro.url.pathname);
-const { note = invitation, placement = 'resource-close' } = Astro.props;
+const { result = false } = Astro.props;
+const { note = result ? closingResultNoteFor(Astro.url.pathname) : invitation, placement = 'resource-close' } = Astro.props;
 const hasDownload = Astro.slots.has('download');
 const hasLinks = Astro.slots.has('links');
 ---

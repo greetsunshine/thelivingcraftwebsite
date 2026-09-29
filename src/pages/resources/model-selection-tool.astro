@@ -29,6 +29,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -116,7 +117,7 @@ const STEP_COUNT = steps.length;
 
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/model-selection-tool" schema={schema} howTo="how">
+<ResourcesLayout title={title} description={description} canonical="/resources/model-selection-tool" schema={schema} howTo="how" tool="model-selection-tool">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -478,6 +479,7 @@ const STEP_COUNT = steps.length;
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -1422,11 +1424,14 @@ const STEP_COUNT = steps.length;
     type Assessment,
   } from '../../data/model-selection-tool';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
 
   let state: Assessment = blankAssessment();
+  /** True while the answers on screen are a loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   // ---- the steps ----------------------------------------------------------
 
@@ -1669,6 +1674,12 @@ const STEP_COUNT = steps.length;
     renderResult(r, line);
     updateProgress();
 
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every row has an answer. A loaded example shows the line and records
+    // nothing: the reader did not reach that result.
+    if (r.complete) markUsefulResult('model-selection-tool', { example: fromExample });
+    else clearUsefulResult();
+
     for (const key of ['gate', 'dq', 'fit', 'cover', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
     }
@@ -1715,6 +1726,7 @@ const STEP_COUNT = steps.length;
       const i = Number(b.dataset.i);
       const v = Number(b.dataset.v);
       const wasBlank = valueOf({ k, i }) === null;
+      fromExample = false;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       if (k === 'profile') state.profile = state.profile === v ? null : v;
       else if (k === 'gate') state.gates[i] = state.gates[i] === v ? null : v;
@@ -1729,6 +1741,7 @@ const STEP_COUNT = steps.length;
     const sel = document.getElementById(`own${k}`) as HTMLSelectElement | null;
     sel?.addEventListener('change', () => {
       state.own[k] = Number(sel.value);
+      fromExample = false;
       update();
     });
   });
@@ -1745,6 +1758,7 @@ const STEP_COUNT = steps.length;
   }
 
   $('blank').addEventListener('click', () => {
+    fromExample = false;
     load(blankAssessment());
     goTo(1);
   });
@@ -1753,6 +1767,7 @@ const STEP_COUNT = steps.length;
     b.addEventListener('click', () => {
       const ex = EXAMPLES.find((e) => e.id === b.dataset.example);
       if (!ex) return;
+      fromExample = true;
       load(ex.assessment);
       goTo(LAST);
     });

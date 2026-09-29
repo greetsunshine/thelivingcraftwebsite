@@ -10,7 +10,10 @@
 //   what a visit records        src/components/Track.astro, src/pages/api/track.ts
 //   enquiries and applications  src/pages/api/lead.ts, src/lib/pipeline/forms.ts
 //   downloads (the gate)        src/pages/api/pipeline/download.ts, src/lib/pipeline/resources.ts
-//   where a visitor came from   src/lib/pipeline/attribution.ts
+//   where a visitor came from   src/lib/pipeline/attribution.ts,
+//                               src/lib/pipeline/touch-client.ts (the two
+//                               cookies, written only with an analytics yes)
+//   the named events            src/lib/analytics/events.ts, context.ts
 //   assistant transcripts       src/pages/api/ask.ts
 //   seats and intake            src/lib/craft/learners.ts, src/lib/craft/intake.ts
 //   bookings and invites        src/lib/booking/store.ts, src/lib/booking/google.ts
@@ -43,6 +46,7 @@ import { canonical } from '../data/facts';
 import { FORMS } from '../lib/pipeline/forms';
 import { MARKETING_CONSENT } from '../lib/pipeline/consent';
 import { CONSENT_COOKIE, CONSENT_DAYS } from '../lib/consent/consent';
+import { FIRST_TOUCH_COOKIE, SESSION_TOUCH_COOKIE } from '../lib/pipeline/attribution';
 import ConsentBanner from '../components/ConsentBanner.astro';
 
 // The field lists are read from the form definitions rather than retyped. A
@@ -205,11 +209,12 @@ const TAG_FREE_TOOLS = [
 
       <h3 id="choices">Asking first</h3>
       <p>
-        None of these tags loads until you say yes. The first time you open a page that uses them,
-        a banner asks. You can accept all, reject all, or choose:
+        None of these tags loads until you say yes. The first time you open a page here, a banner
+        asks. On the interactive tools the answer is saved for the rest of the site, and none of
+        these tags loads on those tools either way. You can accept all, reject all, or choose:
       </p>
       <ul>
-        <li><strong>Analytics:</strong> Google Analytics and Microsoft Clarity.</li>
+        <li><strong>Analytics:</strong> Google Analytics and Microsoft Clarity, and this site's own two cookies that remember where your visit began (described under <a class="ftext-link" href="#came-from">where your visit came from</a>).</li>
         <li><strong>Advertising:</strong> Meta, LinkedIn and Apollo.io. They load through the same container as the analytics tags, so they only run when analytics is also on.</li>
       </ul>
       <p>
@@ -245,7 +250,9 @@ const TAG_FREE_TOOLS = [
       </p>
       <p>Each recorded event holds:</p>
       <ul>
-        <li>which page, and what happened on it: a view, opening the assistant or asking it something, starting or sending a form, following a link to another part of the practice or to the cohort (with which button it was), downloading a file, or first using a calculator</li>
+        <li>which page, and what happened on it: a view, opening the assistant or asking it something, starting a form, a field the form refused (which field and why, never what you typed), following a link to another part of the practice or to the cohort (with which button it was), starting to use a tool, reaching a tool's result, or receiving a file you asked for. The tool events name the tool and nothing you entered into it</li>
+        <li>a random identifier for that one event, so that an event sent twice is stored once</li>
+        <li>whether it came from the live site or a test copy of it, and your answer in the cookie banner at the time</li>
         <li>the <em>host</em> you arrived from, such as <code>linkedin.com</code>, never the full link</li>
         <li>your country, from the hosting layer, and your region only if it is in the page address</li>
         <li>whether the device is a phone or a computer</li>
@@ -287,10 +294,41 @@ const TAG_FREE_TOOLS = [
         ))
       }
       <p>
-        With each submission I also keep where your visit came from: the campaign tags in the
-        address you arrived on (such as <code>utm_source</code>), the host of the site that sent
-        you, and the page you started on. That tells me which posts and pages bring people here.
-        No cookie is used for this. Only the visit that produced the submission is counted.
+        When a submission or a download request is saved, the server also records that it was
+        saved, with an opaque record number and no personal details. That is how I count
+        applications without counting button presses.
+      </p>
+      <p>
+        The forms ask one optional question, "How did you first hear about The Living Craft?", with
+        a list of answers and a short line for anything to add. That answer is kept beside your
+        submission and apart from the campaign tags below. It is never sent to an analytics tag.
+      </p>
+      <h4 id="came-from">Where your visit came from</h4>
+      <p>
+        With each submission and each download request I also keep where your visit came from:
+        the campaign tags in the address you arrived on (such as <code>utm_source</code>), the
+        host of the site that sent you, and the page you started on. That tells me which posts and
+        pages bring people here.
+      </p>
+      <p>
+        <strong>If you have not allowed analytics</strong>, no cookie is used for this, and only
+        the page the form is on is counted. If you arrived on a guide and applied on the cohort
+        page, I see the cohort page and not the guide.
+      </p>
+      <p>
+        <strong>If you have allowed analytics</strong>, this site writes two small cookies of its
+        own on the page where you arrive from another site, a link or a bookmark:
+      </p>
+      <ul>
+        <li><code>{SESSION_TOUCH_COOKIE}</code> holds how this visit began. It is deleted when you close the browser, and the next arrival replaces it.</li>
+        <li><code>{FIRST_TOUCH_COOKIE}</code> holds how your first visit began. It is written once and kept for 400 days.</li>
+      </ul>
+      <p>
+        Each holds the campaign tags, the page, the host of the site that sent you and the date.
+        Neither holds an identifier, your IP address or anything you typed, and moving between
+        pages of this site never changes them. They are read only when you send a form or ask for
+        a file, and only while your answer in the banner is still yes. Turning analytics off
+        deletes them.
       </p>
       <p>
         Records are grouped by email address. A download and a later application from the same
@@ -388,6 +426,7 @@ const TAG_FREE_TOOLS = [
       <p>This site's own code writes very little:</p>
       <ul>
         <li><code>{CONSENT_COOKIE}</code>, which remembers your answer in the cookie banner for {CONSENT_DAYS} days. It holds the two answers and the date, and nothing that identifies you</li>
+        <li>only if you allowed analytics: <code>{SESSION_TOUCH_COOKIE}</code> (until the browser closes) and <code>{FIRST_TOUCH_COOKIE}</code> (400 days), which remember where a visit began, as described under <a class="ftext-link" href="#came-from">where your visit came from</a></li>
         <li>one cookie that keeps you signed in to the course area, if you hold a seat</li>
         <li>one cookie that keeps me signed in to my operator console</li>
         <li>on the Rule Placement Audit only, your rows are saved in your own browser's local storage, so that closing the tab does not lose them. They are never sent to me, and clearing your browser's site data removes them</li>

@@ -13,6 +13,7 @@ import type { APIRoute } from 'astro';
 import { record } from '../../lib/admin/supabase';
 import { clean, countryOf, deviceOf, referrerHost, visitorHash } from '../../lib/admin/visitor';
 import { checkRate } from '../../lib/agent/ratelimit';
+import { eventContext } from '../../lib/analytics/context';
 
 export const prerender = false;
 
@@ -27,9 +28,27 @@ const TYPES = new Set([
   'pageview',
   'ask_open', // the Q&A widget was opened
   'ask_question', // a question was actually asked
-  'apply_start', // first keystroke in an application form
-  'apply_submit', // form submitted (successfully or not — see meta.ok)
-  'cta_click', // a cross-surface link was followed
+  'apply_start', // first keystroke in an application form (until 29 Sep 2026; now form_started)
+  'apply_submit', // the /caio and /assessment forms: submitted (see meta.ok)
+  'cta_click', // a link to /caio, /assessment or a booking (cohort links: cohort_cta_clicked)
+
+  // The revised outreach readiness handoff, 29 September 2026: "Track
+  // form_started, application_saved, resource_requested,
+  // requested_delivery_confirmed, tool_started, useful_result_completed and
+  // cohort_cta_clicked as distinct events." Five of the seven come from the
+  // browser and are listed here. `application_saved` and `resource_requested`
+  // are NOT: the server writes them after the commit, and a browser must not
+  // be able to claim either one. See src/lib/analytics/events.ts.
+  'form_started', // first focus in one of the three route forms (meta.form)
+  'tool_started', // first use of a tool's working area (meta.tool)
+  'useful_result_completed', // a tool's result became complete (meta.tool)
+  'cohort_cta_clicked', // a link to the cohort or its application (meta.to, meta.placement)
+  'requested_delivery_confirmed', // the requested file reached the browser (meta.resource, meta.kind)
+
+  // Sent by RouteForm.astro since 10 September and dropped here until 29
+  // September, because nobody had added them. Both carry categories only.
+  'form_error', // a field was refused (meta.form, meta.field, meta.code; never the value)
+  'owner_notified', // the inbox copy of a saved submission (meta.delivered)
 
   // The resource pages. Added for /resources/cost-ceiling-workbook, which is
   // the first page here with a tool on it rather than only a document.
@@ -94,6 +113,15 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     const path = String(body.path ?? '');
     if (!isTracked(path)) return noContent();
 
+    // The browser's own fields, then two the server decides: which deployment
+    // this is and what the visitor had answered on the cookie banner. They are
+    // written last so a browser cannot claim either one.
+    const sent = body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta) ? (body.meta as Record<string, unknown>) : {};
+    const meta: Record<string, unknown> = { ...sent, ...eventContext(request) };
+    // A repeated beacon carries the same id, and a unique index on
+    // `meta->>'event_id'` (supabase/schema.sql) stores it once.
+    if (typeof meta.event_id === 'string') meta.event_id = meta.event_id.slice(0, 64);
+
     await record('events', {
       type,
       path,
@@ -103,7 +131,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       device,
       visitor: await visitorHash(request, clientAddress ?? 'unknown'),
       // Small, bounded, and never rendered as markup by the console.
-      meta: body.meta && typeof body.meta === 'object' ? body.meta : null,
+      meta,
     });
   } catch {
     // Malformed body, Supabase down, anything — swallow it.

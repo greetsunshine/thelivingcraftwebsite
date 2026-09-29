@@ -22,15 +22,19 @@
  * NOTHING LEAVES THE BROWSER
  * ═══════════════════════════════════════════════════════════════════════════
  *
- * There is no email gate on this page, by instruction. Four things hold the
- * privacy claim up:
+ * The check itself has no email gate, by instruction. The workbook download
+ * has one since 28 September 2026, like every file on the site (CLAUDE.md,
+ * the download gate). Four things hold the privacy claim about the figures up:
  *
  *   1. NO <form>. The inputs sit in plain divs and tables. A form can be
  *      submitted by a stray Enter key, and a GET submission puts every figure
  *      in the query string. No form, no path.
  *   2. NO fetch, XMLHttpRequest or sendBeacon anywhere in the script. The only
- *      network activity is the layout's own pageview beacon, which reads a
- *      path and a referrer and nothing from this page.
+ *      network activity is the layout's own beacon, which reads a path and a
+ *      referrer and nothing from this page. Since 29 September 2026 it also
+ *      sends two named moments, the first use and the five checks all having
+ *      a verdict (`tool_started`, `useful_result_completed`). Each carries the
+ *      tool's name and nothing typed.
  *   3. No localStorage. The model lives in a closure and dies with the tab.
  *   4. Nothing typed here is ever put in an href, which is the only thing the
  *      tracker reads for CTA clicks.
@@ -55,6 +59,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -138,7 +143,7 @@ const sections = [
 const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 ---
 
-<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening">
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening" tool="rework-cost-check">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -177,7 +182,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         </div>
       </dl>
       <p class="prose-note">
-        Your numbers stay in your browser. Nothing is sent or stored, and there is nothing to sign up for.
+        Your numbers stay in your browser. They are not sent or stored, and the check needs no sign-up. The workbook download asks for your name and email address first.
       </p>
     </div>
   </section>
@@ -505,6 +510,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           ))}
         </ol>
         <p class="nextstep" id="nextstep" hidden><span class="mono">Your next step</span> <span id="nextstep-text"></span></p>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -692,9 +698,12 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     type BudgetEnforcement,
   } from '../../lib/reworkCost';
   import { buildExample, FRONTIER_RATES, atRate } from '../../data/rework-cost-check';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   // The model is a closure and dies with the tab. Nothing is stored or sent.
   let model: ReworkModel = blankModel();
+  /** True while the figures on screen are the loaded example, not the reader's own. */
+  let fromExample = false;
 
   const $ = <T extends Element = HTMLElement>(id: string) => document.getElementById(id) as unknown as T;
   const all = <T extends Element = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];
@@ -874,6 +883,15 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
       }
     }
 
+    // The cohort line under the five checks, and `useful_result_completed`,
+    // once every check has a verdict. The loaded example shows the line and
+    // records nothing: the reader did not reach that result.
+    if (r.checks.every((c) => c.status !== 'Not answered')) {
+      markUsefulResult('rework-cost-check', { example: fromExample });
+    } else {
+      clearUsefulResult();
+    }
+
     const next = $('nextstep') as HTMLElement;
     if (r.nextStep) {
       next.hidden = false;
@@ -929,10 +947,14 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   // ── wiring ───────────────────────────────────────────────────────────────
   document.addEventListener('input', (e) => {
-    if ((e.target as HTMLElement).closest('#check')) update();
+    if (!(e.target as HTMLElement).closest('#check')) return;
+    fromExample = false;
+    update();
   });
   document.addEventListener('change', (e) => {
-    if ((e.target as HTMLElement).closest('#check')) update();
+    if (!(e.target as HTMLElement).closest('#check')) return;
+    fromExample = false;
+    update();
   });
 
   const said = $('said');
@@ -945,6 +967,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   function loadExample() {
     model = buildExample();
+    fromExample = true;
     fill();
     render();
     announce('Scheduling example loaded.');
@@ -955,6 +978,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   $('clear').addEventListener('click', () => {
     model = blankModel();
+    fromExample = false;
     fill();
     render();
     announce('Cleared.');

@@ -152,19 +152,23 @@ const description =
 ---
 
 <PracticeLayout title={title} description={description} canonical="/resources/" schema={schema}>
+  {/* Hero copy: the revised outreach readiness package (29 September 2026),
+      public-copy/website/resources.md. Its button goes to the application;
+      the guides and field notes stay beside it, because this page is also the
+      way into them. */}
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">Resources</p>
-      <h1>Start from the question <em>in front of you</em></h1>
+      <p class="eyebrow">Resources from The Living Craft</p>
+      <h1>Practise one <em>production decision</em></h1>
       <p class="credential">
-        Most of these questions arrive at the same moment — when a language model stops
-        recommending and starts doing. Each one below has one page that answers it, and
-        only pages that have actually been written appear here.
+        Use a focused exercise to examine cost, authority, memory or recovery. Take the result
+        into a design discussion, then decide what evidence or change is needed next.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="/resources/guides/"
-          >Browse the guides&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+        <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero"
+          >Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a
         >
+        <a class="btn btn-ghost" href="/resources/guides/">Browse the guides</a>
         <a class="btn btn-ghost" href="/latest">Field notes</a>
       </div>
       <p class="hero-note">{guidesNote} Nothing is listed here before it is written.</p>

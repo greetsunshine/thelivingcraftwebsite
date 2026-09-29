@@ -35,6 +35,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -99,7 +100,7 @@ const schema = [
 const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/rule-placement-audit" schema={schema} howTo="about">
+<ResourcesLayout title={title} description={description} canonical="/resources/rule-placement-audit" schema={schema} howTo="about" tool="rule-placement-audit">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -284,6 +285,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
             <button class="btn btn-ghost" id="csv2" type="button" data-gate="csv" data-own>Download your rows (CSV)</button>
           </div>
         </div>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -865,6 +867,7 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
     csvOf,
   } from '../../data/rule-placement-audit';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -1117,6 +1120,15 @@ const statusOfKey = (k: string) => STATUSES.find((s) => s.key === k)!;
       }
     });
     $('r-fix').hidden = n === 0;
+
+    // The cohort line under the map, and `useful_result_completed`, once a rule
+    // has its text and at least one place it is enforced. Rows from the worked
+    // example show the line and record nothing. The event carries the tool's
+    // name only: the rows themselves never leave this browser.
+    const placed = (r: (typeof rows)[number]) => r.rule.trim() !== '' && r.placements.length > 0;
+    if (rows.some((r) => !r.example && placed(r))) markUsefulResult('rule-placement-audit');
+    else if (rows.some(placed)) markUsefulResult('rule-placement-audit', { example: true });
+    else clearUsefulResult();
   }
 
   // ── the actions ────────────────────────────────────────────────────────

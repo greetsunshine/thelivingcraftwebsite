@@ -27,18 +27,31 @@
 //
 // The narrow widening, and it is narrow:
 //
-//   * A first-party cookie, not localStorage. Same-site, HttpOnly-irrelevant
-//     (the server writes and reads it), 400 days, holding five short strings
-//     and a date. No identifier, no hash of anything, nothing that survives
-//     clearing site data.
-//   * WRITTEN ONLY WITH TRACKING PERMISSION. There is no consent mechanism on
-//     this site yet, so `permitted` is false at every call site today and this
-//     cookie is never written. First touch stays unknown.
+//   * Two first-party cookies, not localStorage. Each holds five short tags,
+//     a page path, a bare host and a date. No identifier, no hash of
+//     anything, nothing that survives clearing site data.
+//       lc_first  the first arrival. 400 days. Written once, never replaced.
+//       lc_last   how this visit began. A session cookie: it goes when the
+//                 browser closes, and each new arrival from outside replaces it.
+//   * WRITTEN ONLY WITH ANALYTICS PERMISSION. Since 29 September 2026 the site
+//     has a consent banner (src/lib/consent/). The browser writes both cookies
+//     (touch-client.ts) on the page where somebody ARRIVED, and only once they
+//     have said yes to analytics. The server reads them only when the
+//     `lc_consent` cookie sent with the request still says yes. With no answer,
+//     or a no, the row is what it was before the banner: this visit only, and
+//     first touch unknown.
 //
-// That is not a stub. It is the correct behaviour and it satisfies acceptance
-// case E07 — "no invented person or hidden tracking linkage" — by construction
-// rather than by promise. When a consent control exists, one flag turns this
-// on and the mechanism is already the shape the brief asked for.
+// WHY THE BROWSER WRITES THEM, AND ON ARRIVAL. Until 29 September the design
+// was for the server to write lc_first when a form was submitted. But the
+// submitting request is almost never the arrival. Somebody lands on a
+// worksheet from a LinkedIn post, reads it, and applies on `/`. The request
+// that applies has our own page as its referrer and no tags, so a first touch
+// written then would say "direct" for every campaign visitor. Only the page
+// they landed on knows where they came from.
+//
+// That still satisfies acceptance case E07 ("no invented person or hidden
+// tracking linkage"). Nothing is written without permission, and nothing is
+// joined across records to guess.
 //
 // UNKNOWN STAYS UNKNOWN. The brief says it twice. A visitor with no referrer
 // and no campaign tags is `direct`; a visitor whose referrer we could not parse
@@ -63,11 +76,11 @@
 //     referrer is the worksheet, on our domain, so it never becomes a source.
 //     Without that, an applicant who arrived from LinkedIn would be filed as
 //     having come from us.
-//   * FIRST TOUCH IS WRITTEN ONCE OR NEVER, and today it is never, because
-//     `permitted` is false at every call site. So the honest record of that
-//     journey is TWO rows, each carrying the session that produced it: the
-//     resource request holds the post's UTMs, the application holds whatever
-//     the application's own visit carried, and neither claims to be the other.
+//   * FIRST TOUCH IS WRITTEN ONCE OR NEVER, and only with permission. Without
+//     it, the honest record of that journey is TWO rows, each carrying the
+//     request that produced it, and neither claims to be the other. With it,
+//     the application's row carries the arrival's tags through lc_last,
+//     because the worksheet and the application were one visit.
 //
 // COPYING THE RESOURCE REQUEST'S SOURCE ONTO A LATER APPLICATION WOULD BE THE
 // FAILURE, not the fix. It requires joining the two by email address, which
@@ -107,6 +120,10 @@ export interface Attribution {
   first_campaign: string | null;
   first_content: string | null;
   first_term: string | null;
+  /** The page of the first arrival. Null unless lc_first was read with permission. */
+  first_landing_path: string | null;
+  /** The external host that sent the first arrival, or null for none. */
+  first_referrer_host: string | null;
   session_source: string | null;
   session_medium: string | null;
   session_campaign: string | null;
@@ -114,7 +131,10 @@ export interface Attribution {
   session_term: string | null;
   entry_path: string | null;
   referrer_host: string | null;
+  /** The option chosen under "How did you first hear about The Living Craft?" (a code). */
   self_reported: string | null;
+  /** The optional line under that question. Kept apart from the code. */
+  self_reported_detail: string | null;
   tracking_permission: boolean;
   first_captured_at: string | null;
   session_captured_at: string;
@@ -299,51 +319,96 @@ export const canonicalResourceId = (value: string | null | undefined): string | 
 
 export const FIRST_TOUCH_COOKIE = 'lc_first';
 
+/** How this visit began. A session cookie; see the head of this file. */
+export const SESSION_TOUCH_COOKIE = 'lc_last';
+
 /** 400 days — the ceiling browsers cap a Set-Cookie max-age at anyway. */
 export const FIRST_TOUCH_MAX_AGE = 400 * 24 * 60 * 60;
 
-interface FirstTouch extends Source {
+/** One arrival: its five tags, the page it landed on, the host that sent it, and when. */
+export interface Touch extends Source {
   at: string;
+  path: string | null;
+  referrer: string | null;
 }
 
 /**
- * Read the cookie, and refuse to be surprised by it.
+ * Read either cookie, and refuse to be surprised by it.
  *
  * Everything in here arrives from the visitor's own browser and may have been
- * edited by hand. So each field is re-clipped on the way out: this is a value
+ * edited by hand. So each field is re-clipped on the way out. This is a value
  * we are about to write into our own table beside real evidence, and the fact
- * that we wrote it originally is not a reason to trust it now.
+ * that a script of ours wrote it is not a reason to trust it now. The path goes
+ * through `entryPath()` again, so a hand-edited cookie cannot carry a query.
  */
-export function readFirstTouch(raw: string | undefined): FirstTouch | null {
+export function readTouch(raw: string | undefined): Touch | null {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(decodeURIComponent(raw)) as Partial<FirstTouch>;
-    const at = clip(parsed.at);
+    const parsed = JSON.parse(decodeURIComponent(raw)) as Partial<Record<keyof Touch, unknown>>;
+    const text = (v: unknown) => (typeof v === 'string' ? clip(v) : null);
+    const at = text(parsed.at);
     if (!at || Number.isNaN(Date.parse(at))) return null;
+    const referrer = text(parsed.referrer);
     return {
-      source: clip(parsed.source),
-      medium: clip(parsed.medium),
-      campaign: clip(parsed.campaign),
-      content: clip(parsed.content),
-      term: clip(parsed.term),
+      source: text(parsed.source),
+      medium: text(parsed.medium),
+      campaign: text(parsed.campaign),
+      content: normalisePostId(text(parsed.content)),
+      term: text(parsed.term),
       at,
+      path: entryPath(text(parsed.path) ?? ''),
+      referrer: referrer && /^[a-z0-9.-]+$/i.test(referrer) ? referrer.toLowerCase() : null,
     };
   } catch {
     return null;
   }
 }
 
-export const serialiseFirstTouch = (source: Source, at: string): string =>
-  encodeURIComponent(JSON.stringify({ ...source, at }));
+export const serialiseTouch = (touch: Touch): string => encodeURIComponent(JSON.stringify(touch));
+
+/**
+ * The arrival this page view represents, or null when it is not an arrival.
+ *
+ * A page reached from another page of ours, with no tags, is a step inside a
+ * visit, not the start of one: its referrer is our own host. Everything else
+ * is an arrival. That means tags in the address, another site's referrer, or
+ * no referrer at all (a typed address, a bookmark, an app that strips it),
+ * which is `direct`. The browser calls this on every page; see touch-client.ts.
+ */
+export function arrivalTouch(input: {
+  search: string;
+  referrer: string;
+  path: string;
+  selfHost: string;
+  at: string;
+}): Touch | null {
+  const tagged = sourceFromQuery(input.search);
+  const hasTags = Boolean(tagged.source || tagged.medium || tagged.campaign || tagged.content || tagged.term);
+  const host = referrerHost(input.referrer, input.selfHost);
+  // A referrer that is present but gave no host is our own site, or one we
+  // could not read. Either way it is not somewhere this visit came from.
+  if (!hasTags && input.referrer && !host) return null;
+  return { ...derive(tagged, host), at: input.at, path: entryPath(input.path), referrer: host };
+}
 
 /**
  * Assemble the row.
  *
- * `permitted` gates only the FIRST-TOUCH half. This visit's source is derived
- * from the request that is already in front of us — a query string and a
- * referrer header the browser sent unprompted — and recording it stores nothing
- * on the visitor's machine and follows them nowhere. It is the persistence that
- * needs permission, not the observation.
+ * `permitted` is the visitor's analytics answer on the cookie banner, read from
+ * the `lc_consent` cookie sent with this request. It gates the two stored
+ * touches and nothing else. Without it, this visit's source is derived from the
+ * request itself: a query string and a referrer header the browser sent
+ * unprompted. Recording that stores nothing on the visitor's machine and
+ * follows them nowhere. It is the persistence that needs permission, not the
+ * observation.
+ *
+ * With permission, "this visit" is lc_last: the page the visit began on, not
+ * the page the form happens to sit on. The request's own fields are the
+ * fallback when that cookie is missing, for example when the visitor said yes
+ * on a later page than the one they arrived on.
+ *
+ * The server never writes either cookie. First touch comes only from the
+ * arrival the browser saw, so a submission can never invent one.
  */
 export function buildAttribution(input: {
   search: string;
@@ -351,41 +416,41 @@ export function buildAttribution(input: {
   path: string;
   selfHost: string;
   selfReported?: string | null;
+  selfReportedDetail?: string | null;
   permitted: boolean;
   storedFirstTouch?: string;
+  storedSessionTouch?: string;
   /** The register code of the resource this interaction is about. See `resource_id`. */
   resourceId?: string | null;
-}): { row: Attribution; writeFirstTouch: Source | null } {
+}): { row: Attribution } {
+  const first = input.permitted ? readTouch(input.storedFirstTouch) : null;
+  const visit = input.permitted ? readTouch(input.storedSessionTouch) : null;
+
   const host = referrerHost(input.referrer, input.selfHost);
-  const session = derive(sourceFromQuery(input.search), host);
-
-  const stored = input.permitted ? readFirstTouch(input.storedFirstTouch) : null;
-
-  // Only worth persisting once. A second write would overwrite March with
-  // September and turn a first touch into a most-recent touch, which is the
-  // one thing this column must never become.
-  const writeFirstTouch = input.permitted && !stored ? session : null;
+  const session: Source = visit ?? derive(sourceFromQuery(input.search), host);
 
   return {
     row: {
       resource_id: canonicalResourceId(input.resourceId),
-      first_source: stored?.source ?? writeFirstTouch?.source ?? null,
-      first_medium: stored?.medium ?? writeFirstTouch?.medium ?? null,
-      first_campaign: stored?.campaign ?? writeFirstTouch?.campaign ?? null,
-      first_content: stored?.content ?? writeFirstTouch?.content ?? null,
-      first_term: stored?.term ?? writeFirstTouch?.term ?? null,
+      first_source: first?.source ?? null,
+      first_medium: first?.medium ?? null,
+      first_campaign: first?.campaign ?? null,
+      first_content: first?.content ?? null,
+      first_term: first?.term ?? null,
+      first_landing_path: first?.path ?? null,
+      first_referrer_host: first?.referrer ?? null,
       session_source: session.source,
       session_medium: session.medium,
       session_campaign: session.campaign,
       session_content: session.content,
       session_term: session.term,
-      entry_path: entryPath(input.path),
-      referrer_host: host,
+      entry_path: visit ? visit.path : entryPath(input.path),
+      referrer_host: visit ? visit.referrer : host,
       self_reported: clip(input.selfReported),
+      self_reported_detail: clip(input.selfReportedDetail),
       tracking_permission: input.permitted,
-      first_captured_at: stored?.at ?? (writeFirstTouch ? new Date().toISOString() : null),
-      session_captured_at: new Date().toISOString(),
+      first_captured_at: first?.at ?? null,
+      session_captured_at: visit?.at ?? new Date().toISOString(),
     },
-    writeFirstTouch,
   };
 }

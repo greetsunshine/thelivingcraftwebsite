@@ -72,9 +72,22 @@ const schema: unknown[] = [
       </ol>
     </nav>
 
+    {/* Heading and lede: the revised outreach readiness package (29 September
+        2026), public-copy/website/templates.md. The description of the four
+        templates stays as the second paragraph.
+
+        The last line said "There is nothing to sign up for and no address to
+        leave". That stopped being true on 19 September, when every download
+        began asking for a name and an email address (CLAUDE.md, the download
+        gate). Reading and copying a template is still open. */}
     <header class="i-head">
-      <p class="eyebrow">Resources</p>
-      <h1>Templates</h1>
+      <p class="eyebrow">Engineering templates</p>
+      <h1>Make the reasoning reusable</h1>
+      <p class="lede">
+        Record the assumptions, evidence and owner behind one design decision. Use a released
+        template to support a conversation, then revisit the record when the system or its
+        operating context changes.
+      </p>
       <p class="lede">
         Four artefacts for the week you have to run a design review, write down a decision, or
         ask your employer to fund a place. Each one is a blank you can take into the next
@@ -82,8 +95,13 @@ const schema: unknown[] = [
         a heading.
       </p>
       <p class="no-gate">
-        Copy them, download them, print them. There is nothing to sign up for and no address
-        to leave.
+        Read them and copy them here. Downloading or printing one asks for your name and email
+        address first, and sends you nothing else.
+      </p>
+      <p class="i-cta">
+        <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero"
+          >Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+        >
       </p>
     </header>
 
@@ -171,6 +189,13 @@ const schema: unknown[] = [
     font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
     color: var(--text-loud);
     margin: var(--space-3) 0 var(--space-4);
+  }
+  .i-head .lede + .lede {
+    margin-top: var(--space-3);
+  }
+  /* The package's one button, under the lede. */
+  .i-cta {
+    margin-top: var(--space-5);
   }
   /* The one promise this section makes about itself. Quiet, and directly under
      the lede where somebody scanning for a catch will look. */

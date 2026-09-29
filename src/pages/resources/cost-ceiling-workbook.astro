@@ -39,6 +39,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { existsSync } from 'node:fs';
@@ -164,6 +165,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
   canonical={PATH}
   schema={schema}
   howTo="how"
+  tool="cost-ceiling-workbook"
 >
   {/* ══ 1 · Header ═══════════════════════════════════════════════════════ */}
   <section class="hero" id="top" style="border-top:0">
@@ -252,7 +254,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
 
       <p class="prose-lead">
         Every value below is an invented teaching value. Change any of them and every figure
-        recalculates as you type. Nothing is stored and nothing is sent anywhere, so a refresh
+        recalculates as you type. Your figures are not stored and not sent anywhere, so a refresh
         puts the example back.
       </p>
 
@@ -619,6 +621,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
             are NOT live: announcing forty figures per keystroke is why people
             turn screen readers off on pages like this. */}
         <p class="sr-only" id="calcLive" role="status" aria-live="polite"></p>
+        <ResultCohortNote />
       </div>
     </div>
   </section>
@@ -1210,6 +1213,7 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
     outputs,
     type WorkbookInputs,
   } from '../../lib/costCeiling';
+  import { markUsefulResult } from '../../lib/analytics/events';
 
   const root = document.getElementById('calc');
 
@@ -1362,6 +1366,10 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
       }
       readAll();
       render();
+      // The figures are the reader's own from the first change, and the
+      // calculator always shows a complete result. So the first change is
+      // `useful_result_completed` (sent once per page view).
+      markUsefulResult('cost-ceiling-workbook');
     };
 
     for (const el of inputs) {
@@ -1486,6 +1494,9 @@ const workbookReady = existsSync(join(process.cwd(), 'downloads', DOWNLOAD_FILE)
     }
 
     render();
+    // The page opens on the worked example, which is already a complete
+    // result: show the cohort line under it, and record nothing.
+    markUsefulResult('cost-ceiling-workbook', { example: true });
   }
 
   // ── the two events that are not about the calculator ───────────────────

@@ -12,6 +12,10 @@
 // never break a page or a form submission. If the endpoint is down the site
 // behaves exactly as it did before this file existed.
 //
+// The beacon sets no cookie. The one cookie-writing script here is the
+// attribution capture below, and it writes only after an analytics yes on the
+// cookie banner (29 September 2026).
+//
 // Most events are captured by delegation rather than by editing pages, so
 // adding a section or a link does not mean remembering to instrument it.
 
@@ -22,6 +26,14 @@ export interface Props {
 
 const { region = null } = Astro.props;
 ---
+
+{/* Where a visit began, remembered only with an analytics yes: see
+    src/lib/pipeline/touch-client.ts. A bundled script, unlike the beacon
+    below, because it shares its rules with the server in attribution.ts. */}
+<script>
+  import { mountTouchCapture } from '../lib/pipeline/touch-client';
+  mountTouchCapture();
+</script>
 
 <script is:inline data-region={region}>
   (function () {
@@ -34,14 +46,30 @@ const { region = null } = Astro.props;
       return p === '' ? '/' : p;
     }
 
-    function send(type, meta) {
+    // One id per event, so a beacon that arrives twice is stored once. The
+    // server keeps it in `meta.event_id` behind a unique index (handoff of 29
+    // September 2026: "Deduplicate by event/request ID").
+    function eventId() {
       try {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      } catch (e) {
+        /* plain http has no randomUUID; fall through */
+      }
+      return 'e-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function send(type, meta) {
+      var id = eventId();
+      try {
+        var withId = {};
+        if (meta) for (var k in meta) withId[k] = meta[k];
+        withId.event_id = id;
         var body = JSON.stringify({
           type: type,
           path: surface(),
           referrer: document.referrer || null,
           region: region,
-          meta: meta || null,
+          meta: withId,
         });
 
         // sendBeacon survives the page being closed mid-navigation, which is
@@ -60,9 +88,27 @@ const { region = null } = Astro.props;
       } catch (e) {
         /* analytics never surfaces to a visitor */
       }
+      return id;
     }
 
     window.lcTrack = send;
+
+    // The same event, to Google Tag Manager's data layer, but only once the
+    // container has loaded with consent (src/lib/consent/client.ts sets
+    // lcTagsLoaded). Before that, a push would wait in the queue and reach the
+    // container after the visitor agreed, which is a pre-consent event sent late.
+    function both(type, meta) {
+      var id = send(type, meta);
+      try {
+        if (window.lcTagsLoaded && Array.isArray(window.dataLayer)) {
+          var row = { event: type, event_id: id };
+          if (meta) for (var k in meta) row[k] = meta[k];
+          window.dataLayer.push(row);
+        }
+      } catch (e) {
+        /* same rule as send() */
+      }
+    }
 
     // The lead ledger. Web3Forms is still the delivery path and is posted from
     // the page exactly as before — this only records what happened, including
@@ -87,22 +133,49 @@ const { region = null } = Astro.props;
 
     // --- delegated events, so new markup is instrumented for free -----------
 
-    // First interaction with an application form. Fires once per page: the
-    // useful signal is "started and did not finish", and a per-field event
-    // would drown it.
-    var started = false;
+    // First interaction with an application form: `form_started`, named as in
+    // the handoff of 29 September 2026 (it was `apply_start` until then). Fires
+    // once per form per page: the useful signal is "started and did not
+    // finish", and a per-field event would drown it. The route says which form.
+    var startedForms = {};
     document.addEventListener(
       'focusin',
       function (e) {
-        if (started) return;
         var el = e.target;
-        if (el && el.closest && el.closest('form.apply-form')) {
-          started = true;
-          send('apply_start', null);
-        }
+        var form = el && el.closest ? el.closest('form.apply-form') : null;
+        if (!form) return;
+        var key = form.getAttribute('data-route') || form.id || 'form';
+        if (startedForms[key]) return;
+        startedForms[key] = true;
+        both('form_started', { form: key });
       },
       true,
     );
+
+    // First use of a tool: `tool_started`. A page marks its working area with
+    // `data-tool="<resource id>"`. Typing, choosing, or pressing one of its
+    // buttons counts; a download button (`data-gate`) and a link do not,
+    // because neither is using the tool. Once per page view.
+    var toolStarted = false;
+    function toolUse(e) {
+      if (toolStarted) return;
+      var el = e.target;
+      if (!el || !el.closest) return;
+      var area = el.closest('[data-tool]');
+      if (!area) return;
+      // The download dialog, an application form and the cookie banner can sit
+      // inside the area. Typing a name into the gate is not using the tool.
+      if (el.closest('dialog, form.apply-form, .lc-consent')) return;
+      if (e.type === 'click') {
+        var b = el.closest('button');
+        if (!b || !area.contains(b) || b.hasAttribute('data-gate')) return;
+      }
+      toolStarted = true;
+      both('tool_started', { tool: area.getAttribute('data-tool') });
+    }
+    document.addEventListener('input', toolUse, true);
+    document.addEventListener('change', toolUse, true);
+    document.addEventListener('click', toolUse, true);
 
     // Movement along the assessment -> CAIO -> cohort spine, plus jumps to the
     // application form. This is the funnel the practice is built around, and
@@ -119,14 +192,17 @@ const { region = null } = Astro.props;
         return;
       }
 
-      // The closing row on every tool and resource page (ClosingCta.astro).
-      // A link to `/` matches none of the rules below, so without this the
-      // console could not show whether that row converts. `to` is the link's
-      // own label for where it goes ('cohort' or 'form'); the page is the
-      // event's path, as for every other event.
+      // Every marked cohort link: the closing row on every tool and resource
+      // page (ClosingCta.astro), the line under each introduction, the line
+      // after a useful result and the hub pages' opening buttons. A link to
+      // `/` matches none of the rules below, so without the mark the console
+      // could not show whether those convert. `to` is the link's own label for
+      // where it goes ('cohort' or 'form'); the page is the event's path, as
+      // for every other event. It is `cohort_cta_clicked` since the handoff of
+      // 29 September 2026; it was `cta_click` until then.
       var cta = e.target && e.target.closest ? e.target.closest('[data-cta]') : null;
       if (cta) {
-        send('cta_click', {
+        both('cohort_cta_clicked', {
           to: cta.getAttribute('data-cta'),
           placement: cta.getAttribute('data-cta-placement') || 'unknown',
         });
@@ -136,10 +212,15 @@ const { region = null } = Astro.props;
       var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
       if (!a) return;
 
+      // Moving to a consulting surface stays `cta_click`. A jump to the cohort
+      // application is a cohort link, marked or not, so it is counted under
+      // the handoff's name; `#scope` is the assessment's own form.
       var href = a.getAttribute('href') || '';
       if (href.indexOf('/caio') === 0 || href.indexOf('/assessment') === 0) {
         send('cta_click', { to: href.split('?')[0].split('#')[0] });
-      } else if (href.indexOf('#apply') > -1 || href.indexOf('#scope') > -1) {
+      } else if (href.indexOf('#apply') > -1) {
+        both('cohort_cta_clicked', { to: 'form', placement: 'unmarked' });
+      } else if (href.indexOf('#scope') > -1) {
         send('cta_click', { to: 'form' });
       }
     });

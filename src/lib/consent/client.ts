@@ -197,10 +197,17 @@ export function mountConsent() {
   const banner = build((c) => {
     const prior = readConsent();
     writeConsent(c);
-    if (!gtmId) return; // /privacy: the choice is saved and nothing loads here
+    // The attribution capture (src/lib/pipeline/touch-client.ts) waits for
+    // this: an arrival is written only once the answer is a yes.
+    document.dispatchEvent(new CustomEvent('lc:consent', { detail: c }));
     const withdrawn = (prior?.analytics && !c.analytics) || (prior?.advertising && !c.advertising);
+    // Cleared on every page, /privacy included: the site's own attribution
+    // cookies can exist where no tag ever loads.
     if (withdrawn) {
       clearCookies([...(c.analytics ? [] : ANALYTICS_COOKIE_PREFIXES), ...(c.advertising ? [] : ADVERTISING_COOKIE_PREFIXES)]);
+    }
+    if (!gtmId) return; // /privacy: the choice is saved and nothing loads here
+    if (withdrawn) {
       if (w.lcTagsLoaded) {
         gtag('consent', 'update', modeFor(c));
         location.reload();
@@ -222,9 +229,13 @@ export function mountConsent() {
     banner.open(true);
   });
 
-  if (gtmId) {
+  // A page that loads no tags but still asks (ConsentBanner's `ask`): the
+  // answer is saved for the site, and nothing loads here either way.
+  const ask = Boolean(document.querySelector('meta[name="lc-consent-ask"]'));
+
+  if (gtmId || ask) {
     footerLink();
-    if (before) loadTags(gtmId, before);
-    else banner.open(false);
+    if (!before) banner.open(false);
+    else if (gtmId) loadTags(gtmId, before);
   }
 }

@@ -50,6 +50,13 @@ export const practitioner = {
   role: 'Fractional Chief AI Officer · Agentic & systems architecture instructor',
   location: 'Bengaluru, India',
   companies: ['Google', 'Amazon', 'Walmart'],
+  /**
+   * Years of engineering experience. Sunil's own figure: he says it in the
+   * first person on `/` ("I have spent 26 years building and leading
+   * engineering"), and two answers below already state it. A field since 29
+   * September 2026, when /about took the revised outreach package's line.
+   */
+  yearsExperience: 26,
   email: CONTACT_EMAIL,
   linkedin: 'https://linkedin.com/in/sunil-mathew-466615a',
   sameAs: ['https://linkedin.com/in/sunil-mathew-466615a'],

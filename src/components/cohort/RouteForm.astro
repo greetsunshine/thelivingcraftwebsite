@@ -379,27 +379,45 @@ const renderField = (field: Field) => {
   /* The saved state replaces the form rather than sitting under it. Leaving a
      filled-in form on screen beside "we have received this" invites a second
      submit, and the reference is the thing they need to be able to see. */
-  .rf-saved {
+  :global(.rf-saved) {
     background: var(--surface-panel);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raise);
     padding: var(--space-6);
     max-width: 620px;
   }
-  .rf-saved h3 {
+  :global(.rf-saved h3) {
     font-size: var(--size-6);
     font-weight: var(--weight-heavy);
     color: var(--text-loud);
     letter-spacing: var(--tracking-display);
     margin-bottom: var(--space-3);
   }
-  .rf-saved p {
+  :global(.rf-saved p) {
     font-size: var(--size-4);
     color: var(--text-body);
     line-height: var(--lh-normal);
     max-width: var(--measure-prose);
   }
-  .rf-ref {
+  :global(.rf-saved .rf-kicker) {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-bottom: var(--space-2);
+  }
+  :global(.rf-saved .rf-next) {
+    margin-top: var(--space-4);
+  }
+  :global(.rf-next a) {
+    color: var(--accent-ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  :global(.rf-saved .rf-ref) {
     margin-top: var(--space-5);
     padding-top: var(--space-4);
     border-top: var(--border-w-hair) solid var(--border-hair);
@@ -407,7 +425,7 @@ const renderField = (field: Field) => {
     font-size: var(--size-3);
     color: var(--text-quiet);
   }
-  .rf-ref b {
+  :global(.rf-ref b) {
     color: var(--text-loud);
     font-weight: var(--weight-medium);
     letter-spacing: var(--tracking-mono);
@@ -600,16 +618,53 @@ const renderField = (field: Field) => {
       }
     };
 
+    /**
+     * The saved panel. Built only from a server answer that says the row was
+     * committed, so "Thank you for applying" can never appear over an
+     * application that was not stored (the revised outreach readiness
+     * handoff, 29 September 2026: "show 'Thank you for applying' only after
+     * the application is persisted").
+     */
     const saved = (reference: string, confirmation: string) => {
+      const words = definition.saved;
       const panel = document.createElement('div');
       panel.className = 'rf-saved';
       panel.setAttribute('role', 'status');
       panel.innerHTML = `
+        <p class="rf-kicker" hidden></p>
         <h3>Received</h3>
-        <p></p>
-        <p class="rf-ref">Your reference: <b></b></p>`;
-      panel.querySelector('p')!.textContent = confirmation;
+        <p class="rf-confirm"></p>
+        <p class="rf-ref">Your reference: <b></b></p>
+        <p class="rf-next" hidden><a></a></p>`;
+      panel.querySelector('.rf-confirm')!.textContent = confirmation;
       panel.querySelector('.rf-ref b')!.textContent = reference;
+      if (words) {
+        const kicker = panel.querySelector<HTMLElement>('.rf-kicker')!;
+        kicker.textContent = words.kicker;
+        kicker.hidden = false;
+        panel.querySelector('h3')!.textContent = words.heading;
+        if (words.link) {
+          const next = panel.querySelector<HTMLElement>('.rf-next')!;
+          const a = next.querySelector('a')!;
+          a.textContent = `${words.link.label} →`;
+          a.href = words.link.href;
+          next.hidden = false;
+        }
+      }
+
+      // The handoff's `application_saved`, for the tag container. The server
+      // has already recorded the authoritative one after the commit; this is
+      // the same fact, pushed only because the server said so, and only when
+      // the container is loaded with consent. It carries the route and nothing
+      // else: no reference, so no analytics row can be joined to a person.
+      try {
+        const w = window as Window & { lcTagsLoaded?: boolean; dataLayer?: unknown[] };
+        if (w.lcTagsLoaded && Array.isArray(w.dataLayer)) {
+          w.dataLayer.push({ event: route === 'application' ? 'application_saved' : 'enquiry_saved', form: route });
+        }
+      } catch {
+        /* measurement never affects the person */
+      }
 
       form.replaceWith(panel);
       (panel as HTMLElement).setAttribute('tabindex', '-1');

@@ -60,9 +60,11 @@ export function parseConsent(raw: string | null | undefined): Consent | null {
 
 /**
  * Cookies the tags set on this site's own domain, by name prefix, so they can
- * be deleted when a category is turned off. Cookies a company sets on its own
+ * be deleted when a category is turned off. `lc_first` and `lc_last` are the
+ * site's own attribution cookies (src/lib/pipeline/touch-client.ts), written
+ * only with an analytics yes, so turning analytics off removes them too. Cookies a company sets on its own
  * domain (Microsoft's MUID, LinkedIn's bcookie) cannot be reached from here;
  * the privacy page says so.
  */
-export const ANALYTICS_COOKIE_PREFIXES = ['_ga', '_gid', '_gat', '_clck', '_clsk'];
+export const ANALYTICS_COOKIE_PREFIXES = ['_ga', '_gid', '_gat', '_clck', '_clsk', 'lc_first', 'lc_last'];
 export const ADVERTISING_COOKIE_PREFIXES = ['_fbp', '_fbc', '_gcl', 'li_', 'lms_', '_uet', 'ln_or'];

@@ -1,6 +1,7 @@
 // The cohort invitation on the tool and resource pages, in one place.
 //
 // Source: the outreach readiness handoff of 28 September 2026 (Alchemy),
+// revised on 29 September (the second half of this file),
 // `website-cta-audit.csv`, column `proposed_copy`. Each resource page gets one
 // line about what the reader just did, then one sentence about the cohort. The
 // line is the handoff's wording; the cohort sentence is built from facts.ts,
@@ -72,3 +73,94 @@ export const cohortInvitationFor = (path: string, now: Date = new Date()): strin
 
 /** The short line under a page's introduction (handoff item 2). */
 export const INTRO_LINE = 'From The Living Craft, a live cohort on designing agentic systems.';
+
+// ───────────────────────────────────────────────────────────────────────────
+// The revised handoff of 29 September 2026
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Source: `04-website-Ein-handoff.html` and `public-copy/website/*.md` in the
+// revised outreach readiness package. It adds three things to the per-page
+// lines above: one positioning line, a programme summary for the footer, and
+// one sentence "after the useful result" on tools, guides and templates.
+
+/** The positioning line on every page of the revised package. */
+export const POSITIONING = 'Build agentic systems that hold up in production.';
+
+/** The month the cohort starts, from facts.ts ("October 2026" gives "October"). */
+const START_MONTH = cohort.startsOn.split(' ')[0];
+
+/**
+ * The label of a button that leads to the application.
+ *
+ * The handoff's home page button is "Explore the October cohort". A month in a
+ * button is a dated invitation, and a dated invitation must not outlive
+ * enrolment. So it follows the same switch as the invitation line above.
+ */
+export const cohortCtaLabel = (now: Date = new Date()): string =>
+  applicationsOpen(now) ? `Explore the ${START_MONTH} cohort` : 'Explore the cohort';
+
+/**
+ * The footer's programme summary. The handoff: "A solid deep-green footer holds
+ * the programme summary, distinct application/team routes and legal/preferences
+ * links." The hours and the name come from facts.ts.
+ */
+export const PROGRAMME_SUMMARY = `Practical building and review with ${practitioner.name}. ${cohort.liveHours} live hours plus independent work.`;
+
+/** The second half of the "after the useful result" sentence. It is the same on every page. */
+const USEFUL_RESULT_CLOSE = 'Build the wider reasoning through practical work and review in The Living Craft cohort.';
+
+/**
+ * What the reader has just examined, by topic. The handoff: "For memory, refer
+ * to scope and correction; for cost, to budgets and recovery; for authority, to
+ * permission at execution; for triage, to evidence after uncertainty."
+ *
+ * Nothing here says the reader can apply the whole toolkit to their own
+ * system. The handoff forbids that until the offer is confirmed.
+ */
+const TOPIC_SENTENCE = {
+  memory:
+    'You have examined one operating decision: what an agent may remember, how far that memory reaches, and how a wrong memory is corrected.',
+  cost: 'You have examined one operating decision: what the system may spend, and how it recovers when it reaches that budget.',
+  authority:
+    'You have examined one operating decision: whether the agent holds permission at the moment it executes an action.',
+  triage:
+    'You have examined one operating decision: what evidence the system needs before it acts after an uncertain result.',
+  general: 'You have examined one operating decision.',
+} as const;
+
+type Topic = keyof typeof TOPIC_SENTENCE;
+
+/** Which topic each page belongs to. A page not named here gets the general sentence. */
+const TOPICS: Record<string, Topic> = {
+  '/resources/agent-memory-audit-kit': 'memory',
+  '/resources/run-cost-model': 'cost',
+  '/resources/cost-ceiling-workbook': 'cost',
+  '/resources/cost-ceiling-worksheet': 'cost',
+  '/resources/rework-cost-check': 'cost',
+  '/resources/agent-authority-review': 'authority',
+  '/resources/rule-placement-audit': 'authority',
+  '/resources/guides/tool-permissions': 'authority',
+  '/resources/agent-failure-triage-kit': 'triage',
+  '/resources/agent-failure-triage-quiz': 'triage',
+  '/resources/guides/uncertain-evidence': 'triage',
+};
+
+/**
+ * The sentence after the useful result, for one page. It names no date and no
+ * figure, so it stays true after applications close.
+ */
+export const usefulResultFor = (path: string): string =>
+  `${TOPIC_SENTENCE[TOPICS[path.replace(/\/+$/, '') || '/'] ?? 'general']} ${USEFUL_RESULT_CLOSE}`;
+
+/**
+ * The same sentence with the cohort's facts in it, for the closing row of a
+ * page whose content is the useful result: a kit, a guide, a template or a
+ * worksheet. There the foot of the page IS "after the useful result", so one
+ * line does both jobs instead of two lines saying nearly the same thing.
+ * After applications close it drops the date and becomes `usefulResultFor()`.
+ */
+export const closingResultNoteFor = (path: string, now: Date = new Date()): string => {
+  const topic = TOPIC_SENTENCE[TOPICS[path.replace(/\/+$/, '') || '/'] ?? 'general'];
+  if (!applicationsOpen(now)) return `${topic} ${USEFUL_RESULT_CLOSE}`;
+  return `${topic} Build the wider reasoning through practical work and review in The Living Craft’s ${cohort.startsOn} cohort: ${cohort.liveHours} live hours with ${practitioner.name}, plus independent work.`;
+};

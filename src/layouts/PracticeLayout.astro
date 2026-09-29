@@ -37,6 +37,7 @@ import SiteFooter from '../components/site/SiteFooter.astro';
 import StickyApplyBar from '../components/site/StickyApplyBar.astro';
 import Track from '../components/Track.astro';
 import GoogleTagManager from '../components/GoogleTagManager.astro';
+import ConsentBanner from '../components/ConsentBanner.astro';
 import GoogleTagManagerNoscript from '../components/GoogleTagManagerNoscript.astro';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
@@ -79,7 +80,7 @@ const isTool = bodyClass === 'tool-page';
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {tagManager && <GoogleTagManager />}
+    {tagManager ? <GoogleTagManager /> : <ConsentBanner ask />}
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
   <body class:list={['lc-v5', !isTool && 'lc-v5-read', bodyClass]}>

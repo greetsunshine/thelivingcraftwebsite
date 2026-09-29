@@ -5,17 +5,27 @@
 // load the container, and by /privacy (without `gtm`) so a visitor can change
 // the choice there. Anything with `data-consent-open` reopens it.
 //
+// `ask` (29 September 2026) is for the pages that never load the container:
+// the tools on ResourcesLayout and the agent design check. The banner asks
+// there as it does everywhere else, and a yes still loads nothing on that
+// page. It exists because outreach links land on those tools, and the site's
+// own attribution cookies (src/lib/pipeline/touch-client.ts) can only record
+// an arrival on the page where it happened, and only after a yes.
+//
 // The rules are in src/lib/consent/consent.ts. The short form: nothing loads
 // until the visitor says yes to analytics, and saying no is one click, the
 // same size as saying yes.
 export interface Props {
   /** The container id. Absent on a page that only lets you change the choice. */
   gtm?: string;
+  /** Ask on a first visit even though this page loads no tags. */
+  ask?: boolean;
 }
-const { gtm } = Astro.props;
+const { gtm, ask = false } = Astro.props;
 ---
 
 {gtm && <meta name="lc-tags" content={gtm} />}
+{ask && !gtm && <meta name="lc-consent-ask" content="1" />}
 
 <script>
   import { mountConsent } from '../lib/consent/client';

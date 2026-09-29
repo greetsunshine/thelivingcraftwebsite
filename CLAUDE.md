@@ -505,7 +505,9 @@ table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
 `resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table, `outcome_ratings`,
 `checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the three walkthrough columns on `learners`
 (`tour_completed_at`, `tour_offers`, `tour_offered_at`); the `doubts.answer_source`
-and `submissions.status` columns, and the `feedback_responses` table. **Run
+and `submissions.status` columns, and the `feedback_responses` table; and (29 September)
+`first_landing_path`, `first_referrer_host` and `self_reported_detail` on `attributions`, the
+first two on `resource_requests`, and the unique `events_event_id_uidx`. **Run
 [supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
 idempotent. Shipping code ahead of its schema shows up as the console's "table is not
 answering" banner rather than a crash, which is survivable and confusing. Clear this
@@ -1340,6 +1342,25 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     cookie, `lc_consent`, 180 days; bump `CONSENT_VERSION` when the tag list or its
     purposes change, and everybody is asked again. Never reintroduce Google's own GTM
     snippet in a layout: it loads the container before anybody is asked.
+  - **The banner also asks on the tool pages, and a yes still loads nothing there**
+    (29 September 2026). ResourcesLayout and `tagManager={false}` render
+    `<ConsentBanner ask />`. The reason is attribution: outreach links land on tools,
+    and the site's own two cookies, `lc_first` (400 days, written once) and `lc_last`
+    (session, how this visit began), can only record an arrival on the page where it
+    happened, and only after an **analytics** yes ([src/lib/pipeline/touch-client.ts](src/lib/pipeline/touch-client.ts)).
+    The server reads them only when the `lc_consent` cookie on that request still says
+    yes, and never writes them. Turning analytics off deletes them. A tool page still
+    never loads the container.
+  - **Seven named events, from the revised outreach handoff** (29 September 2026):
+    `form_started`, `tool_started`, `useful_result_completed`, `cohort_cta_clicked`,
+    `requested_delivery_confirmed` from the browser, and `application_saved`,
+    `resource_requested` from the SERVER after the commit. Never let a browser send
+    either of the last two. Every beacon carries an `event_id`, a unique index stores it
+    once, and `/api/track` adds `env` and the banner answer. A tool marks its working
+    area with `data-tool` (ResourcesLayout's `tool` prop) and calls
+    `markUsefulResult()` ([src/lib/analytics/events.ts](src/lib/analytics/events.ts))
+    when its result is complete; a loaded example passes `{ example: true }` and
+    records nothing. The events carry a tool or resource name, never what was typed.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an

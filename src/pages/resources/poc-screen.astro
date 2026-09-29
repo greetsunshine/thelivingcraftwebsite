@@ -26,6 +26,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -92,7 +93,7 @@ const STEP_COUNT = steps.length;
 
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema} howTo="how">
+<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema} howTo="how" tool="poc-screen">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -302,6 +303,7 @@ const STEP_COUNT = steps.length;
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -981,11 +983,14 @@ const STEP_COUNT = steps.length;
     readScores,
   } from '../../data/poc-screen';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
 
   let state: (number | null)[] = new Array(QUESTION_COUNT).fill(null);
+  /** True while the answers on screen are the loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   // ---- the steps ----------------------------------------------------------
 
@@ -1163,6 +1168,12 @@ const STEP_COUNT = steps.length;
     renderResult(r, line);
     updateProgress();
 
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every question has an answer. The loaded example shows the line and
+    // records nothing: the reader did not reach that result.
+    if (r.complete) markUsefulResult('poc-screen', { example: fromExample });
+    else clearUsefulResult();
+
     for (const key of ['gate', 'go', 'narrow', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
     }
@@ -1203,6 +1214,7 @@ const STEP_COUNT = steps.length;
       const q = Number(b.dataset.q);
       const v = Number(b.dataset.v);
       const wasBlank = state[q] === null;
+      fromExample = false;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       state[q] = state[q] === v ? null : v;
       update();
@@ -1212,12 +1224,14 @@ const STEP_COUNT = steps.length;
 
   $('blank').addEventListener('click', () => {
     state = new Array(QUESTION_COUNT).fill(null);
+    fromExample = false;
     update();
     goTo(1);
   });
 
   $('example').addEventListener('click', () => {
     state = EXAMPLE.slice();
+    fromExample = true;
     update();
     goTo(LAST);
   });

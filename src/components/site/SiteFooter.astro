@@ -18,6 +18,7 @@
  * ds/site-v5.css. The words did not change.
  */
 import BrandLockup from './BrandLockup.astro';
+import FooterSummary from './FooterSummary.astro';
 
 const year = new Date().getFullYear();
 
@@ -62,10 +63,7 @@ const PRACTICE: Item[] = [
     <div class="foot-grid">
       <div class="foot-brand">
         <BrandLockup tile />
-        <p class="muted">
-          Build a working agentic system, and develop the ability to explain its design,
-          examine its behaviour and guide the decisions behind it.
-        </p>
+        <FooterSummary />
       </div>
 
       <div class="foot-col">

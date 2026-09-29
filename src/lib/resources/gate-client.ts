@@ -14,6 +14,8 @@
 // Nothing here is stored in the browser. The name and address live in the
 // form fields for the life of the dialog and nowhere else.
 
+import { lcEvent } from '../analytics/events';
+
 export type GateKind = 'pdf' | 'xlsx' | 'zip' | 'json' | 'csv' | 'md' | 'txt' | 'print';
 
 /**
@@ -193,6 +195,18 @@ export function mountGate(opts: GateOptions = {}) {
           new CustomEvent<DownloadDetail>(DOWNLOAD_EVENT, { detail: { resource, kind, variant } }),
         );
         opts.onDone?.(kind, variant);
+        // The handoff's `requested_delivery_confirmed` (29 September 2026): the
+        // file is in the reader's hands, not merely asked for. It is sent only
+        // from here, after the server answered and the file was handed over,
+        // because "a click is not a download receipt". `saved` says whether the
+        // request row itself committed; `resource_requested` is the server's
+        // own event for that. No name and no address go with it.
+        lcEvent('requested_delivery_confirmed', {
+          resource,
+          kind,
+          variant,
+          saved: body.saved === true,
+        });
       };
 
       if (kind === 'print') {

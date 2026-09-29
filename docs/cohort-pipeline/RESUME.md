@@ -294,6 +294,61 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   the chat's small marks). The user then asked for those surfaces to be plain green. The
   cloth is reverted and the plain-green rule in `theme.css` now covers `/` too, so no page
   draws the linen. The "Cookie choices" footer fix from that commit stays.
+- [x] **11. The revised outreach handoff** (29 September). Source:
+  `docs/2026-09-28_Outreach_Readiness-20260929T094812Z-1-001/` in the main checkout,
+  `04-website-Ein-handoff.html`, `public-copy/website/*.md`, `website-cta-audit.csv` and
+  `05-email-and-resource-routing.html`. **Not committed**, like the first package.
+  - *Page copy.* The package's heading, lead and button on `/`, `/programmes`,
+    `/programmes/enterprise`, `/resources`, `/tools`, `/resources/guides`,
+    `/resources/templates`, `/about`, `/advisory`, the application section on `/` and the
+    application's saved panel. Figures come from facts.ts (`practitioner.yearsExperience = 26`
+    is new). Where the package's label would be wrong it was kept as it was, and the page
+    says why in a comment: `/programmes` compares three routes, so it is not labelled "The
+    Living Craft cohort", and the apply section holds the team route too.
+  - **One tension, flagged not resolved.** The home button is now "Explore the October
+    cohort" (the package's words), where CLAUDE.md says the cohort CTA is Apply. The header,
+    the price card and the form still say Apply. Sunil's call.
+  - *After the useful result.* `ResultCohortNote.astro` under the result of the nine tools
+    and the design check, shown only once the result is complete. It is the package's
+    sentence with a topic for memory, cost, authority and triage (`usefulResultFor()`). On
+    the kits, guides, templates and worksheets the page IS the result, so the closing row's
+    line is that sentence with the facts (`<ClosingCta result>`), not a second line.
+  - *The question.* "How did you first hear about The Living Craft?" is a choice with the
+    package's seven answers plus an optional line, on all three routes. Stored as
+    `attributions.self_reported` (a code) and `self_reported_detail`, apart from the tags.
+  - *Attribution through the form.* With an analytics yes, the browser writes `lc_first`
+    and `lc_last` on the page where a visitor arrives, and the server reads them with the
+    form. Without it, nothing changes. Unit tests in `src/lib/pipeline/attribution.test.ts`.
+    **The banner now asks on the tool pages too** (`<ConsentBanner ask />`), and a yes still
+    loads no tag there: an arrival on a tool could not be remembered otherwise.
+  - *Events.* The seven names, a unique `event_id`, and `env` and the banner answer added
+    by the server. The console funnel reads them. Two leftovers found and fixed on the way:
+    `form_error` and `owner_notified` were sent by the form and dropped by `/api/track`
+    since 10 September, and the funnel's "Submitted it" read `apply_submit`, which the
+    cohort form never sends.
+  - *Footer.* The package's programme summary and two routes, in the three core footers.
+  - *Found and made true:* the tools hub, the templates hub and the Rework Cost Check still
+    said nothing asked for an address. Every download has asked since 19 September.
+  - **Schema:** three columns on `attributions`, two on `resource_requests`, one unique
+    index on `events`. Additive. The code works before it is run: the old save function
+    ignores the new keys, and the console reads attribution with `select('*')`.
+  - Checked on `npm run dev`, every third-party request aborted: 64 browser checks, 0
+    failures (copy at 1440 and 390px, the footers, the banner and both cookies on a tool,
+    the posted form with a fake server, a 503 with no thank-you, the POC tool's events and
+    line, the quiz, the gate's delivery event, the design check). The earlier consent run
+    now fails its two "no banner on a tool page" checks, which is this change. `astro
+    check` 0 errors, `npm test` 105/105, `npm run build` passes.
+  - **Not done, and why.** The nurture workflow, the preference and unsubscribe pages, the
+    marketing tick on the download gate and the new email copy: the package defers them
+    (SYNC-12) and the wording is a draft for Sunil. The application receipt email keeps its
+    approved 10 September words, which already promise no offer. `/caio`, `/assessment`,
+    `/latest` and `/contact` rows: outside the core journeys. The package's page layout
+    (the three-step diagram beside every hero, 18–20px body) was not adopted: V5 is Sunil's
+    source of truth for the look, and the package's own design rules (ivory hero, solid
+    green footer, no fabric behind copy) already hold. Cohort links on the reading pages
+    that `/api/track` does not cover (`/about`, `/programmes`, the hubs) reach Google
+    Analytics with consent, and the first-party log only on `/`, `/resources/*` and
+    `/tools/*`, as the privacy page says.
 
 ---
 

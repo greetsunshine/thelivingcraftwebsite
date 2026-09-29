@@ -33,6 +33,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -121,7 +122,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
         : `${a.filled}/19 lines set`;
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/run-cost-model" schema={schema} howTo="how">
+<ResourcesLayout title={title} description={description} canonical="/resources/run-cost-model" schema={schema} howTo="how" tool="run-cost-model">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -483,6 +484,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
             <button class="btn btn-ghost" id="blank" type="button">New model</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -1169,6 +1171,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     type SharedKey,
   } from '../../data/run-cost-model';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -1415,6 +1418,13 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     for (const o of OUTCOMES) {
       document.getElementById(`cut-${o.key}`)?.classList.toggle('active', r.outcome?.key === o.key);
     }
+
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every line is filled and the model has an outcome. The page opens on the
+    // worked example: that shows the line and records nothing, until the
+    // reader changes a figure and the model becomes theirs.
+    if (r.outcome) markUsefulResult('run-cost-model', { example });
+    else clearUsefulResult();
 
     updateProgress();
   }

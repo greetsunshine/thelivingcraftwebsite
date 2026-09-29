@@ -22,6 +22,7 @@
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
 import ClosingCta from '../../components/site/ClosingCta.astro';
 import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
@@ -76,7 +77,7 @@ const schema = [
 const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((r) => r.key === 'stop')!];
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema} howTo="about">
+<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema} howTo="about" tool="agent-authority-review">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -314,6 +315,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             <button class="btn btn-ghost" id="copy2" type="button">Copy the sheet</button>
           </div>
         </div>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -957,6 +959,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     type UndoLevel,
   } from '../../data/authority-review';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -964,6 +967,8 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     v === null ? '-' : (choices.find((c) => c.value === v)?.label ?? v);
 
   let rows: SheetRow[] = Array.from({ length: START_ROWS }, blankRow);
+  /** True while the sheet on screen is a loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   const rowsEl = $('rows');
   const tpl = document.getElementById('row-tpl') as HTMLTemplateElement;
@@ -1012,6 +1017,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       input.value = r[key];
       input.addEventListener('input', () => {
         rows[indexOf(card)][key] = input.value;
+        fromExample = false;
         update();
       });
     };
@@ -1033,6 +1039,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           else if (f === 'judgment') row.judgment = next as JudgmentAnswer | null;
           else if (f === 'undo') row.undo = next as UndoLevel | null;
           else row.repeat = next as RepeatAnswer | null;
+          fromExample = false;
           update();
         });
       }
@@ -1171,6 +1178,15 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     ($('add') as HTMLButtonElement).disabled = rows.length >= MAX_ROWS;
 
     renderResult(read);
+
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every step on the sheet has an owner. A loaded example shows the line
+    // and records nothing: the reader did not reach that result.
+    if (read.total > 0 && read.decided === read.total) {
+      markUsefulResult('agent-authority-review', { example: fromExample });
+    } else {
+      clearUsefulResult();
+    }
   }
 
   // ---- controls -----------------------------------------------------------
@@ -1179,6 +1195,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
 
   $('blank').addEventListener('click', () => {
     rows = Array.from({ length: START_ROWS }, blankRow);
+    fromExample = false;
     rebuild();
     scrollToSheet();
     (rowsEl.querySelector('.f-step') as HTMLInputElement | null)?.focus({ preventScroll: true });
@@ -1196,6 +1213,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       const ex = exampleById(b.dataset.load!);
       if (!ex) return;
       rows = exampleRows(ex);
+      fromExample = true;
       rebuild();
       scrollToSheet();
     });
