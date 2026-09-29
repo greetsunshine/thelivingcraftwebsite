@@ -241,7 +241,8 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     Devanagari font would draw conjuncts and vowel signs in the wrong places.
 - [x] **8. The privacy page** (29 September). The user asked for `/privacy` to cover this
   branch's changes and five tags: Google Analytics, Microsoft Clarity, Meta CAPI, the
-  LinkedIn pixel and the Apollo pixel.
+  LinkedIn pixel and the Apollo pixel. The same day the owner replaced Meta CAPI with the
+  Meta Pixel; the page describes the pixel only.
   - The old page said "no third-party trackers", "no analytics cookies" and "no conversion
     pixels". The live site already loaded Google Analytics and Clarity through GTM, so it
     was false before this work started.
@@ -250,9 +251,10 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     with the container, with the cookies `_ga`, `_ga_S2XJ61GXDD`, `_clck`, `_clsk` and
     Microsoft's own. **No Meta, LinkedIn or Apollo request was seen.** The page describes
     them because the owner asked; whoever adds them in GTM must make them match it.
-  - **The Meta Conversions API has no code path in this repository.** It runs from a
-    server, so it is configured somewhere else, if at all. The page describes the usual
-    shape (events from a server, identifiers hashed).
+  - **No Meta Conversions API.** The owner chose the Meta Pixel instead on 29 September.
+    The page now promises that nothing goes to Meta from this site's servers and that no
+    name or email reaches Meta. Adding the Conversions API later means changing that page
+    first, and it would sit outside the consent banner's reach.
   - The page now also covers the download gate, the attribution kept with a submission,
     the first-party record on `/resources/` and `/tools/`, the automated assistant, the
     cohort call, the audit's local storage, the team that reads the console, transfers

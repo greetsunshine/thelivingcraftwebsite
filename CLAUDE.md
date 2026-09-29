@@ -1319,9 +1319,14 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     29 September 2026.
   - **The container's tags are listed on `/privacy`, and a tag added in the GTM console
     is a change to that page.** On 29 September 2026 the live container loaded Google
-    Analytics 4 and Microsoft Clarity. The Meta Pixel and Conversions API, the LinkedIn
-    Insight Tag and the Apollo.io tag are described there at the owner's instruction and
-    were not yet firing.
+    Analytics 4 and Microsoft Clarity. The Meta Pixel, the LinkedIn Insight Tag and the
+    Apollo.io tag are described there at the owner's instruction and were not yet firing.
+    **Meta is the pixel only, never the Conversions API** (owner's decision, 29 September
+    2026): a server-side feed cannot be held back by the consent banner, and the page
+    promises that nothing goes to Meta from this site's servers. **The pixel must run with
+    Meta's automatic advanced matching switched off** (Events Manager, the pixel's
+    settings): it is on by default, it reads email and phone fields from forms and sends
+    them hashed, and the privacy page promises it does not.
   - **Nothing in the container loads without consent** (29 September 2026). The consent
     banner ([src/lib/consent/](src/lib/consent/), `ConsentBanner.astro`) is now the only
     loader of Google Tag Manager: `GoogleTagManager.astro` renders it, and
@@ -1330,9 +1335,8 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     The **advertising** answer reaches the container as Google Consent Mode
     (`ad_storage`, `ad_user_data`, `ad_personalization`) and as the data-layer variable
     `lc_consent_advertising`. **Every advertising tag added in the GTM console (Meta,
-    LinkedIn, Apollo.io) must require `ad_storage`** under its consent settings, and a
-    Meta Conversions API set up anywhere must send only for visitors with advertising
-    allowed. The code cannot enforce that half; the console must. The choice is one
+    LinkedIn, Apollo.io) must require `ad_storage`** under its consent settings. The code
+    cannot enforce that half; the console must. The choice is one
     cookie, `lc_consent`, 180 days; bump `CONSENT_VERSION` when the tag list or its
     purposes change, and everybody is asked again. Never reintroduce Google's own GTM
     snippet in a layout: it loads the container before anybody is asked.

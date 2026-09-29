@@ -26,10 +26,14 @@
 // THE THIRD-PARTY TAGS LIVE IN THE GTM CONSOLE, NOT IN THIS REPOSITORY. On 29
 // September 2026 the live site was observed loading Google Analytics 4
 // (G-S2XJ61GXDD) and Microsoft Clarity (yin1xnh55d) through the container.
-// The Meta Pixel and Conversions API, the LinkedIn Insight Tag and the
-// Apollo.io tag are listed at the owner's instruction of the same day and were
-// NOT yet observed firing. Whoever adds or removes a tag in GTM changes this
-// page in the same week.
+// The Meta Pixel, the LinkedIn Insight Tag and the Apollo.io tag are listed at
+// the owner's instruction of the same day and were NOT yet observed firing.
+// Whoever adds or removes a tag in GTM changes this page in the same week.
+//
+// NO META CONVERSIONS API. The owner decided on 29 September 2026 to use the
+// Meta Pixel only. The Conversions API sends events from a server, where the
+// consent banner cannot reach it, and it would carry hashed email addresses.
+// If it is ever added, this page needs a paragraph for it first.
 //
 // IF YOU CHANGE WHAT IS COLLECTED, CHANGE THIS PAGE IN THE SAME COMMIT. A
 // privacy policy that has drifted from the system is worse than none.
@@ -170,7 +174,7 @@ const TAG_FREE_TOOLS = [
         is on screen. Microsoft keeps recordings for 30 days and summary data for up to 13 months.
       </p>
 
-      <h3>Meta Pixel and Meta Conversions API</h3>
+      <h3>Meta Pixel</h3>
       <p>
         Meta runs Facebook and Instagram. The Meta Pixel tells Meta that a browser visited a page or
         took an action here, such as submitting a form. I use this to measure whether advertising
@@ -178,10 +182,9 @@ const TAG_FREE_TOOLS = [
         cookie <code>_fbp</code>, which lasts about three months.
       </p>
       <p>
-        The Conversions API sends the same kind of event from a server instead of from your
-        browser. It can include your email address or phone number in hashed form. Hashing is a
-        one-way scramble: Meta uses it to match the event to a Meta account, not to read the
-        address. Like the pixel, it is only for visitors who allowed advertising.
+        The pixel runs in your browser, and only if you allowed advertising. Nothing is sent to
+        Meta from this site's servers. The pixel is set up without Meta's "advanced matching",
+        so it does not send Meta your name, email address or phone number from a form.
       </p>
 
       <h3>LinkedIn Insight Tag</h3>
@@ -423,7 +426,7 @@ const TAG_FREE_TOOLS = [
         </div>
         <div>
           <dt>Meta</dt>
-          <dd>The Meta Pixel and Conversions API, as described above.</dd>
+          <dd>The Meta Pixel, as described above.</dd>
         </div>
         <div>
           <dt>LinkedIn</dt>
