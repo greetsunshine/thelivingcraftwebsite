@@ -102,6 +102,25 @@ export async function topics(week: number, audience: Audience = 'learner'): Prom
 }
 
 /**
+ * A bar saying this is a preview, injected straight after the page wrapper.
+ *
+ * WHY IT EXISTS AT ALL. The admin preview shows a learner page for a week the
+ * room cannot open yet. Without a mark on it, the reviewer's own memory is the
+ * only thing distinguishing "what eight people can see" from "what they cannot",
+ * and that is the state that ends with somebody saying a week is live when it is
+ * shut. It is also a plain link back to the console.
+ *
+ * Styles are inline. This is injected into a document that owns its stylesheet
+ * and knows nothing about ours, so a class name here would be a guess.
+ */
+function previewBar(note: string, back: string): string {
+  return `<div style="position:sticky;top:0;z-index:99;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#963D34;color:#FBF8F2;padding:10px 16px;border-radius:8px;margin-bottom:20px;font:500 13px/1.4 Figtree,system-ui,sans-serif">
+  <span>${note}</span>
+  <a href="${back}" style="color:#FBF8F2;text-decoration:underline">Back to the console</a>
+</div>`;
+}
+
+/**
  * One topic, as a complete HTML document.
  *
  * Everything before the page wrapper is kept verbatim — the doctype, the fonts,
@@ -115,6 +134,7 @@ export async function topicPage(
   week: number,
   n: number,
   audience: Audience = 'learner',
+  preview?: string,
 ): Promise<string | null> {
   const html = await source(week, audience);
   if (!html) return null;
@@ -161,6 +181,7 @@ export async function topicPage(
 </header>`;
 
   return `${head}${wrapper}
+${preview ? previewBar(preview, '/craft/admin/teaching') : ''}
 ${heading}
 ${body}
 </div>
@@ -168,7 +189,17 @@ ${script}
 </body></html>`;
 }
 
-/** The whole week on one page, exactly as stored. */
-export async function collatedPage(week: number, audience: Audience = 'learner'): Promise<string | null> {
-  return source(week, audience);
+/** The whole week on one page, as stored, optionally marked as a preview. */
+export async function collatedPage(
+  week: number,
+  audience: Audience = 'learner',
+  preview?: string,
+): Promise<string | null> {
+  const html = await source(week, audience);
+  if (!html || !preview) return html;
+  const wrapper = audience === 'learner' ? '<div class="page">' : '<div class="shell">';
+  const at = html.indexOf(wrapper);
+  if (at < 0) return html;
+  const cut = at + wrapper.length;
+  return html.slice(0, cut) + '\n' + previewBar(preview, '/craft/admin/teaching') + html.slice(cut);
 }
