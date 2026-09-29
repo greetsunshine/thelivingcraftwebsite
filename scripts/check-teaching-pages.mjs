@@ -34,9 +34,19 @@
 
 import { readFileSync } from 'node:fs';
 
-const [learnerPath, instructorPath] = process.argv.slice(2);
+// --by-topic switches to the consolidated shape: one learner page and one
+// instructor page holding all six topics, each in a collapsible, in TOPIC order
+// rather than clock order. The clock-order and run-of-show checks are about a
+// page that claims to be a run of show, so they do not apply there; what does
+// apply is that the two pages agree, that six topics are on both, and that six
+// topics on one page have not collided on an id.
+const args = process.argv.slice(2);
+const byTopic = args.includes('--by-topic');
+const [learnerPath, instructorPath] = args.filter((a) => a !== '--by-topic');
 if (!learnerPath || !instructorPath) {
-  console.error('usage: node scripts/check-teaching-pages.mjs <learner.html> <instructor.html>');
+  console.error(
+    'usage: node scripts/check-teaching-pages.mjs [--by-topic] <learner.html> <instructor.html>',
+  );
   process.exit(2);
 }
 
@@ -186,6 +196,12 @@ const LOGISTICS_PATTERNS = [
   /^Where this topic sits$/i,
   /^The line this topic exists to land$/i,
   /^After this topic, you can now$/i,
+  // The consolidated pages frame the whole session before the clock starts.
+  /^What today is for$/i,
+  /^Five hours, [a-z]+ blocks$/i,
+  /^Six topics, in their own order$/i,
+  /^How the day ends$/i,
+  /^What to prepare$/i,
 ];
 const LOGISTICS = {
   has: (title) => LOGISTICS_PATTERNS.some((re) => re.test(title)),
@@ -202,9 +218,22 @@ const beatRefs = [
   ...instructor.matchAll(/data-ref="#?([a-z0-9-]+)"[\s\S]{0,400}?<h4>([\s\S]*?)<\/h4>/g),
 ].map((m) => ({ id: m[1], title: txt(m[2]) }));
 
-const checks = [
-  ['both pages have a clock', !!lClock && !!iClock],
-  ['clocks are byte-identical', lClock === iClock],
+/** Ids are page-unique, and six topics on one page is six chances to collide. */
+const duplicateIds = (html) => {
+  const seen = new Set();
+  const dupes = new Set();
+  for (const m of html.matchAll(/\bid="([^"]+)"/g)) {
+    if (seen.has(m[1])) dupes.add(m[1]);
+    seen.add(m[1]);
+  }
+  return [...dupes];
+};
+
+/** The collapsible topic sections, in document order. */
+const topicIds = (html) =>
+  [...html.matchAll(/<details class="topic" id="(t\d+)"/g)].map((m) => m[1]);
+
+const pairChecks = [
   [
     'learner page runs in clock order',
     sorted(timed(lCards.filter((c) => !LOGISTICS.has(c.title)))),
@@ -229,6 +258,32 @@ const checks = [
         .filter((b) => noteById.has(b.id) && noteById.get(b.id) !== b.title)
         .map((b) => `${b.id}: "${b.title}" vs "${noteById.get(b.id)}"`),
   ],
+];
+
+const topicChecks = [
+  [
+    'learner page has no duplicate ids',
+    duplicateIds(learner).length === 0,
+    () => duplicateIds(learner),
+  ],
+  [
+    'instructor page has no duplicate ids',
+    duplicateIds(instructor).length === 0,
+    () => duplicateIds(instructor),
+  ],
+  ['six collapsible topics on the learner page', topicIds(learner).length === 6,
+    () => [`found ${topicIds(learner).length}`]],
+  [
+    'both pages carry the same topics, in the same order',
+    topicIds(learner).join(',') === topicIds(instructor).join(','),
+    () => [topicIds(learner).join(','), topicIds(instructor).join(',')],
+  ],
+];
+
+const checks = [
+  ['both pages have a clock', !!lClock && !!iClock],
+  ['clocks are byte-identical', lClock === iClock],
+  ...(byTopic ? topicChecks : pairChecks),
   [
     'every learner heading exists on the instructor page',
     [...headings(learner, false)].filter(

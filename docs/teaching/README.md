@@ -73,11 +73,30 @@ topic is the unit of the argument.
     learner    https://claude.ai/artifact/2DvAm4iPYCAPqaunNe3xvm
     instructor https://claude.ai/artifact/D7tcY7EjSGUXcgrGJpk8f2
 
+**Week 2 also has one collated pair, the same shape week 1 uses.** All six topics on one
+learner page and one instructor page, each topic in a collapsible so you can work through
+them one at a time. The six topic pairs above stay: they are what you open to teach or
+read one topic, and the collated pair is what you open to see the week.
+
+    week 2 · all six topics, collated                                 NEW 29 Sep
+    learner    https://claude.ai/artifact/Q1r2bp8wuXJtm8U6v31tLU
+    instructor https://claude.ai/artifact/UvW3uzMHXznXU95oWHkA98
+
+The collated pages are **generated from the six topic pairs**, so the six are the source
+and the collated pair is the view. Change a topic, rebuild its pair, then rebuild the
+collated pair. The clock in all fourteen pages comes from `scripts/teaching-clock.mjs`.
+
 **Run `npm run check:teaching <learner.html> <instructor.html>` before every republish.**
 It is eleven mechanical checks between a pair: the clock tables byte-identical, both pages
 in clock order, every card and every run-of-show row present in the clock, the two columns
 agreeing heading for heading, every learner heading present on the instructor page, and
 both pages well formed. **All six pairs pass all eleven, as of 28 September.**
+
+**The collated pair runs the same command with `--by-topic`**, which swaps six of the
+eleven checks. The clock-order and run-of-show checks describe a page that claims to be a
+run of show, and a page organised by topic does not; in their place it checks that neither
+page has duplicate ids, that six collapsible topics exist, and that both pages carry the
+same topics in the same order. Nine checks, all passing.
 
 **The clock lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs) and
 nowhere else.** Twelve pages carry it, and twelve copies maintained by hand is twelve

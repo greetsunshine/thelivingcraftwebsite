@@ -323,6 +323,24 @@ closes at the first block and the after-pulse opens at the close, and all four i
     the five old teardown questions went.
   - **Topic 6, choosing a mechanism**, is the 15-minute judge block.
 
+- **Week 2 now has a collated pair as well, the shape week 1 uses — 29 September.** All
+  six topics on one learner page and one instructor page, each topic in a collapsible.
+  Learner `Q1r2bp8wuXJtm8U6v31tLU`, instructor `UvW3uzMHXznXU95oWHkA98`. The six topic
+  pairs stay: they are what you open to teach one topic, and the collated pair is what you
+  open to see the week.
+
+  **The collated pages are generated from the six pairs**, so the pairs are the source and
+  the collated pair is the view. They are in topic order rather than clock order, because a
+  topic is an argument and an argument reads better in one piece; the clock at the top
+  gives the other reading.
+
+  `check:teaching` gained **`--by-topic`** for them. Six of the eleven checks describe a
+  page that claims to be a run of show, and a topic-ordered page does not, so they are
+  swapped for three that do apply: no duplicate ids on either page, six collapsible topics
+  present, and both pages carrying the same topics in the same order. Duplicate ids are the
+  real hazard, because six topic pages merged onto one is six chances for `id="r-scope"` to
+  collide.
+
 - **The clock now lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs)
   and nowhere else, and that is not a tidy-up.** Twelve published pages carry the same
   table. Topics 1 and 2 were built before topics 3 to 6 existed, and by the time all six
