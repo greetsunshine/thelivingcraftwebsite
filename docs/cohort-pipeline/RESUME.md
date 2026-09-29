@@ -289,6 +289,11 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     if one is added. There are none in the container today.
   - Not built: a server-side record of each consent. The Act puts the burden of proving
     consent on the fiduciary; today the only record is the visitor's own cookie.
+- [x] **10. Plain green on `/` as well** (29 September). Commit `604f012` put an ivory-cloth
+  photograph Sunil supplied where `/` drew the green linen (the price panel, the footer and
+  the chat's small marks). The user then asked for those surfaces to be plain green. The
+  cloth is reverted and the plain-green rule in `theme.css` now covers `/` too, so no page
+  draws the linen. The "Cookie choices" footer fix from that commit stays.
 
 ---
 

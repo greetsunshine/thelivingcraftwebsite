@@ -247,8 +247,8 @@
 .landing .detail-row .dk { font-family: var(--font-body); font-size: 1rem; letter-spacing: 0; font-weight: var(--weight-strong); color: var(--text-loud); }
 .landing .detail-row .dv { font-weight: 400; text-align: left; }
 
-/* The price panel: forest on the linen. Ivory 6.25:1 and on-dark-muted
-   4.62:1 on the lightest 5% of the texture. */
+/* The price panel: flat forest since 29 September (it was forest on the
+   linen). Ivory 10.55:1 and on-dark-muted 7.79:1. */
 .landing .price-card {
   display: grid;
   grid-template-columns: 1fr 1fr;

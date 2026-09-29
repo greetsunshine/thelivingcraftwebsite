@@ -1394,19 +1394,20 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Flat forest green on every page except `/`** (Sunil, 25 September 2026: remove "that
+- **Flat forest green on every page, `/` included** (Sunil, 25 September 2026: remove "that
   green woven design" from the inner pages and use "the plain green that exists in the main
-  site"). Dark green surfaces still take `var(--texture-forest)`
-  (`var(--texture-forest-hover)` for a hover) and footers `var(--footer-bg)`. One rule in
-  `theme.css`, `body:not(.landing)`, points those tokens at the flat `--lc-forest`,
-  `--lc-forest-hover` and `--lc-dark-forest`. That covers the public inner pages, the
-  tool pages, `/craft` and `/craft/admin`. The tokens keep the name "texture" while
-  drawing a flat colour; renaming them is 57 edits across 26 files. To put the course area
-  back on the linen, narrow that one selector. Contrast on flat forest: ivory 10.55:1,
+  site"; `/` followed on 29 September, after an ivory-cloth photograph was tried there for
+  part of a day and replaced with plain green). Dark green surfaces still take
+  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover) and footers
+  `var(--footer-bg)`. One rule in `theme.css`, on `body`, points those tokens at the flat
+  `--lc-forest`, `--lc-forest-hover` and `--lc-dark-forest`. That covers `/`, the public
+  inner pages, the tool pages, `/craft` and `/craft/admin`. The tokens keep the name "texture" while
+  drawing a flat colour; renaming them is 57 edits across 26 files. To put `/` back on the
+  linen, change that selector to `body:not(.landing)`. Contrast on flat forest: ivory 10.55:1,
   on-dark-muted 7.79:1.
-- **`/` is the one page that still draws the dark green linen**, on its price panel and
-  footer. The tokens' `:root` values are the linen: file
-  `public/textures/linen-forest.webp` (83.5 KB), which no other page now fetches.
+- **No page draws the dark green linen now.** The tokens' `:root` values still hold it
+  (`public/textures/linen-forest.webp`, 83.5 KB), and the `body` rule overrides them
+  everywhere.
   **Buttons, and a pressed or selected button, are flat forest everywhere, `/` included**:
   `var(--control-primary-bg)`, hover `var(--control-primary-bg-hover)` (Sunil,
   19 September: "the buttons do not need the texture"). `--sun` stays a flat colour for

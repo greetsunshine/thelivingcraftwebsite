@@ -271,9 +271,9 @@
      19 September: "the buttons do not need the texture"). --sun itself
      stays a flat colour, for borders, text and strokes.
 
-     SINCE 25 SEPTEMBER THE LINEN IS DRAWN ON `/` ONLY. Every other page
-     gets flat colour from the `body:not(.landing)` rule after this block.
-     The values here are what `/` still draws. --- */
+     SINCE 29 SEPTEMBER NO PAGE DRAWS THE LINEN. The `body` rule after this
+     block points these tokens at flat colours on every page, `/` included.
+     The values here are what that rule overrides. --- */
   --texture-linen: url('/textures/linen-forest.webp');
   --texture-forest:
     linear-gradient(rgba(24, 61, 50, 0.55), rgba(24, 61, 50, 0.55)),
@@ -352,17 +352,19 @@
   --control-primary-bg-hover: var(--accent-hover);
 }
 
-/* Flat green on every page except `/` (Sunil, 25 September 2026). On the
-   call he asked to remove "that green woven design" from the inner pages and
-   use "the plain green that exists in the main site", which is the flat
-   forest of the buttons.
+/* Flat green on every page (Sunil, 25 September 2026; `/` since 29
+   September). On the call of 25 September he asked to remove "that green
+   woven design" from the inner pages and use "the plain green that exists in
+   the main site", which is the flat forest of the buttons. `/` kept the linen
+   until 29 September. It then drew an ivory cloth photograph for part of a
+   day, and the instruction that followed was to make those surfaces plain
+   green too. So this rule now covers every <body>, `/` included, the course
+   area and the console, and no page draws the linen.
 
-   Only `/` renders `body.landing` (BaseLayout), so `/` keeps the linen by
-   construction and nothing on it changes. The course area and the console
-   are included. Leaving them on the linen is one change to this selector.
+   To give `/` its linen back, change the selector to `body:not(.landing)`.
 
    The cost of doing it here: three tokens named "texture" now draw a flat
-   colour everywhere but `/`. Renaming them means editing 57 uses across
+   colour everywhere. Renaming them means editing 57 uses across
    26 files, and one rule is easier to review and to take back. Each value is
    still a whole `background` value. A flat colour is legal in the last layer
    of a list, and every layered use puts the token last.
@@ -374,8 +376,8 @@
    Contrast on the flat colours is higher than on the linen. Ivory 10.55:1
    and on-dark-muted 7.79:1 on forest; 8.15 and 6.02 on the hover forest;
    13.43 and 9.92 on dark forest. The linen gave 6.27 and 4.63 on forest.
-   The pages also stop fetching linen-forest.webp (83.5 KB). */
-body:not(.landing) {
+   No page fetches linen-forest.webp (83.5 KB) any more. */
+body {
   --texture-forest: var(--lc-forest);
   --texture-forest-hover: var(--lc-forest-hover);
   --texture-footer: var(--lc-dark-forest);
