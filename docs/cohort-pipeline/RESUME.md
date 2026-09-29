@@ -397,8 +397,7 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   Apply, Learning for teams), Explore (Resources, Try the tools, Field notes), About &
   contact (About Sunil, Advisory, the address, LinkedIn). One sentence under the mark:
   "Practical learning in agentic systems and architecture." One bottom strip:
-  © · Privacy · Terms · Email preferences, plus the consent script's "Cookie choices" and,
-  on `/` only, the Pause motion control (a named slot).
+  © · Privacy · Terms · Email preferences, plus the consent script's "Cookie choices".
   - **The white tile is gone, and the name is text.** The lockup's lettering is dark ink
     and cannot sit on forest; recolouring the artwork is forbidden. The footer shows the
     mark on its own small paper (Logo.astro) beside "The Living Craft" in ivory serif.
@@ -411,6 +410,12 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     column, links padded to 38px targets, the strip as a list. The footer keeps 100px
     clear at the bottom on a page with the floating chat pill.
   - Not touched: `/craft`, the console and `/book/[id]`, which are gated or private.
+- [x] **15. The "Pause motion" control is gone** (29 September). Sunil: "let the motion
+  always be there. Remove pause motion option." The button, its script branch and its
+  styles are removed. The OS reduced-motion setting still stops the brain and the
+  drawings, because that is a system accessibility setting, not a site control. Known
+  cost: WCAG 2.2.2 asks for an on-page pause for a loop longer than five seconds, and
+  the page no longer has one.
 
 ---
 
