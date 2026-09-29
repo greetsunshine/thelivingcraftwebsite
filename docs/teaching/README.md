@@ -83,7 +83,16 @@ read one topic, and the collated pair is what you open to see the week.
     instructor https://claude.ai/artifact/UvW3uzMHXznXU95oWHkA98
 
 The collated pages are **generated from the six topic pairs**, so the six are the source
-and the collated pair is the view. Change a topic, rebuild its pair, then rebuild the
+and the collated pair is the view. The collated instructor page keeps the two-column
+side-by-side layout, one `.teach` grid per topic inside its collapsible.
+
+**The script the instructor pages embed is [`scripts/teaching-pane.js`](../../scripts/teaching-pane.js).**
+It runs the Side-by-side toggle and lights the reference card behind whichever beat you
+click. It is in the repo because it was broken in all seven published pages at once and
+nothing could see it: the old version passed a bare id to `querySelector`, which read it
+as an element name and matched nothing, so clicking a beat did nothing. A dead link and a
+working one are the same HTML, so `check:teaching` cannot catch it. Check by hand after a
+rebuild, or check that every `data-ref` has a matching `id` on the page. Change a topic, rebuild its pair, then rebuild the
 collated pair. The clock in all fourteen pages comes from `scripts/teaching-clock.mjs`.
 
 **Run `npm run check:teaching <learner.html> <instructor.html>` before every republish.**

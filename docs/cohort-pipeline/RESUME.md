@@ -341,6 +341,22 @@ closes at the first block and the after-pulse opens at the close, and all four i
   real hazard, because six topic pages merged onto one is six chances for `id="r-scope"` to
   collide.
 
+- **Two defects in the instructor pages, found by Sunil noticing the collated page had no
+  columns — 29 September.** Both are fixed and all seven instructor pages are republished.
+  - **The collated instructor page had lost the side-by-side layout.** The consolidator
+    stripped the `.pane` wrappers and stacked the script and reference columns. It now
+    emits one `.teach` grid per topic inside the collapsible, with the stock rule
+    `body.split .shell > :not(.teach)` undone for `details.topic`, because `.teach` sits
+    two levels down there rather than directly under `.shell`.
+  - **The worse one: clicking a beat did nothing, on all six topic pages.** The script
+    called `querySelector` on a bare id, which reads `r-payonce` as an element name,
+    matches nothing and returns null. It came from pairing topic 2's original script, which
+    used `data-ref="#b1"`, with rebuilt markup that uses `data-ref="r-payonce"`. **Nothing
+    in `check:teaching` can see this**, because a dead link and a working one are the same
+    HTML. The script is now [`scripts/teaching-pane.js`](../../scripts/teaching-pane.js),
+    it strips a leading `#`, and a rebuild is checked by confirming every `data-ref` has a
+    matching `id`. All 23 beat links resolve.
+
 - **The clock now lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs)
   and nowhere else, and that is not a tidy-up.** Twelve published pages carry the same
   table. Topics 1 and 2 were built before topics 3 to 6 existed, and by the time all six
