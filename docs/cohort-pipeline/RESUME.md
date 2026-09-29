@@ -260,11 +260,33 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   - **The Agent Design Check no longer loads the container** (`tagManager={false}` on
     `PracticeLayout`). It promises that nothing typed is sent anywhere, and Clarity records
     clicks.
-  - **Open, and it matters for 1 October:** there is no consent banner. The tags load when a
-    page opens, and the page says so. Advertising tags (Meta, LinkedIn, Apollo) switched on
-    without asking first are the weakest point under the DPDP Act. A banner with Google's
-    Consent Mode, and the tags held until a visitor agrees, is the fix; `attribution.ts`
-    already waits for the same signal.
+  - The consent banner the page asked for was built in task 9.
+- [x] **9. The cookie consent banner** (29 September). The user asked for it after task 8.
+  - **Google Tag Manager now loads only after a yes to analytics.** The banner
+    (`src/lib/consent/`, `src/components/ConsentBanner.astro`) is the container's only
+    loader; `GoogleTagManager.astro` renders it, so no layout changed. The `<noscript>`
+    iframe is gone: a browser without JavaScript cannot be asked.
+  - Accept all, Reject all and Choose, with Accept and Reject the same size and colour.
+    Choose shows two boxes: analytics (Google Analytics, Clarity) and advertising (Meta,
+    LinkedIn, Apollo.io). Advertising rides inside the same container, so on its own it
+    loads nothing; the banner says so.
+  - The answer is one cookie, `lc_consent` (`v1.a1.m0.2026-09-29`), 180 days. A stale
+    version counts as no answer. "Cookie choices" is added beside the footer's Privacy link
+    on every page with the container, and /privacy has a button. Turning a category off
+    deletes the tags' cookies on this domain and reloads the page.
+  - A corner card, not a bar, so it does not cover the cohort page's Apply buttons on a
+    laptop. On a phone it covers the hero buttons until a choice is made; the header's
+    Apply stays visible.
+  - Checked on `npm run dev` with every third-party request aborted: first visit, reject,
+    accept, analytics only, advertising only, withdraw from the footer (tag cookies deleted,
+    an unrelated cookie kept), Escape, tag-free pages, /privacy, JavaScript off and a stale
+    version. 35 checks, 0 failures.
+  - **For whoever works in the GTM console:** every advertising tag must require
+    `ad_storage`, and Clarity should require `analytics_storage`. Until that is done,
+    somebody who allows analytics but not advertising would still get an advertising tag,
+    if one is added. There are none in the container today.
+  - Not built: a server-side record of each consent. The Act puts the burden of proving
+    consent on the fiduciary; today the only record is the visitor's own cookie.
 
 ---
 

@@ -1321,8 +1321,21 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     is a change to that page.** On 29 September 2026 the live container loaded Google
     Analytics 4 and Microsoft Clarity. The Meta Pixel and Conversions API, the LinkedIn
     Insight Tag and the Apollo.io tag are described there at the owner's instruction and
-    were not yet firing. There is no consent banner: the page says so, and it must keep
-    saying so until one exists.
+    were not yet firing.
+  - **Nothing in the container loads without consent** (29 September 2026). The consent
+    banner ([src/lib/consent/](src/lib/consent/), `ConsentBanner.astro`) is now the only
+    loader of Google Tag Manager: `GoogleTagManager.astro` renders it, and
+    `GoogleTagManagerNoscript.astro` renders nothing, because a browser without
+    JavaScript cannot say yes. The container loads only after a yes to **analytics**.
+    The **advertising** answer reaches the container as Google Consent Mode
+    (`ad_storage`, `ad_user_data`, `ad_personalization`) and as the data-layer variable
+    `lc_consent_advertising`. **Every advertising tag added in the GTM console (Meta,
+    LinkedIn, Apollo.io) must require `ad_storage`** under its consent settings, and a
+    Meta Conversions API set up anywhere must send only for visitors with advertising
+    allowed. The code cannot enforce that half; the console must. The choice is one
+    cookie, `lc_consent`, 180 days; bump `CONSENT_VERSION` when the tag list or its
+    purposes change, and everybody is asked again. Never reintroduce Google's own GTM
+    snippet in a layout: it loads the container before anybody is asked.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an

@@ -18,7 +18,10 @@
 //   the audit's autosave        src/pages/resources/rule-placement-audit.astro
 //   third-party tags            the Google Tag Manager container GTM-P4DRQLB8
 //                               (src/data/site.ts), loaded by the layouts that
-//                               render <GoogleTagManager />
+//                               render <GoogleTagManager />, and only after a
+//                               yes in the consent banner
+//   the consent banner          src/lib/consent/consent.ts, client.ts,
+//                               src/components/ConsentBanner.astro
 //
 // THE THIRD-PARTY TAGS LIVE IN THE GTM CONSOLE, NOT IN THIS REPOSITORY. On 29
 // September 2026 the live site was observed loading Google Analytics 4
@@ -35,6 +38,8 @@ import { CONTACT_EMAIL } from '../data/site';
 import { canonical } from '../data/facts';
 import { FORMS } from '../lib/pipeline/forms';
 import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+import { CONSENT_COOKIE, CONSENT_DAYS } from '../lib/consent/consent';
+import ConsentBanner from '../components/ConsentBanner.astro';
 
 // The field lists are read from the form definitions rather than retyped. A
 // field added to a form then appears here on the next deploy, which is the only
@@ -92,7 +97,8 @@ const TAG_FREE_TOOLS = [
       <div class="summary">
         <h2>The short version</h2>
         <ul>
-          <li>Most public pages load Google Analytics and Microsoft Clarity. They may also load advertising tags from Meta and LinkedIn, and a tag from Apollo.io. Each is described below.</li>
+          <li>Most public pages can load Google Analytics and Microsoft Clarity, and advertising tags from Meta, LinkedIn and Apollo.io. Each is described below.</li>
+          <li>None of them loads until you say yes in the cookie banner. Saying no is one click, and the site works the same either way.</li>
           <li>These tags set cookies, and Clarity can record how you move through a page.</li>
           <li>The interactive tools, this page and the course area load none of them.</li>
           <li>If you fill in a form, download a file, book a call or talk to the assistant, I keep what you gave, because that is the request.</li>
@@ -116,11 +122,12 @@ const TAG_FREE_TOOLS = [
         Reach me at <a class="ftext-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
-      <h2>Analytics and advertising tags</h2>
+      <h2 id="tags">Analytics and advertising tags</h2>
       <p>
-        Most public pages load Google Tag Manager. It is a container: it loads the tags below, and
-        it is where they are switched on and off. These companies receive data directly from your
-        browser, including your IP address, because that is how a browser fetches anything.
+        Most public pages can load Google Tag Manager. It is a container: it loads the tags below,
+        and it is where they are switched on and off. It loads only after you allow analytics in
+        the cookie banner. When it does, these companies receive data directly from your browser,
+        including your IP address, because that is how a browser fetches anything.
       </p>
 
       <h3>Where they run, and where they do not</h3>
@@ -174,7 +181,7 @@ const TAG_FREE_TOOLS = [
         The Conversions API sends the same kind of event from a server instead of from your
         browser. It can include your email address or phone number in hashed form. Hashing is a
         one-way scramble: Meta uses it to match the event to a Meta account, not to read the
-        address.
+        address. Like the pixel, it is only for visitors who allowed advertising.
       </p>
 
       <h3>LinkedIn Insight Tag</h3>
@@ -193,14 +200,35 @@ const TAG_FREE_TOOLS = [
         organisations are interested in this work. Apollo sets its own cookie.
       </p>
 
-      <h3>Asking first</h3>
+      <h3 id="choices">Asking first</h3>
       <p>
-        Today these tags load when a page opens. There is not yet a banner that asks before they
-        run. Until there is, you can block them yourself: most browsers can block third-party
-        cookies, and a content blocker stops the tags from loading at all. Google publishes an
-        opt-out browser add-on for Google Analytics. Meta and LinkedIn let you turn off adverts
-        based on other websites in your account's advert settings. Blocking them does not change
-        how any part of this site works for you.
+        None of these tags loads until you say yes. The first time you open a page that uses them,
+        a banner asks. You can accept all, reject all, or choose:
+      </p>
+      <ul>
+        <li><strong>Analytics:</strong> Google Analytics and Microsoft Clarity.</li>
+        <li><strong>Advertising:</strong> Meta, LinkedIn and Apollo.io. They load through the same container as the analytics tags, so they only run when analytics is also on.</li>
+      </ul>
+      <p>
+        If you reject, or close the page without answering, nothing on this list loads. Your
+        answer is kept in one cookie, <code>{CONSENT_COOKIE}</code>, for {CONSENT_DAYS} days. After
+        that, or when this list of tags changes, you are asked again.
+      </p>
+      <p>
+        You can change your answer at any time with "Cookie choices" at the foot of those pages, or
+        with the button below. Turning a category off deletes the cookies its tags set on this
+        site and reloads the page. Cookies a company set on its own domain, such as Microsoft's,
+        can only be removed in your browser or with that company.
+      </p>
+      <p>
+        <button type="button" class="consent-open" data-consent-open>Change your cookie choices</button>
+      </p>
+      <ConsentBanner />
+      <p>
+        You can also block them yourself: most browsers can block third-party cookies, and a
+        content blocker stops the tags from loading at all. Google publishes an opt-out add-on for
+        Google Analytics. Meta and LinkedIn let you turn off adverts based on other websites in
+        your account's advert settings.
       </p>
 
       <h2>What this site records itself</h2>
@@ -347,7 +375,7 @@ const TAG_FREE_TOOLS = [
       </p>
 
       <h2>Cookies and what is stored in your browser</h2>
-      <p>On the pages where the tags above run, they set their own cookies:</p>
+      <p>If you allow them, the tags above set their own cookies:</p>
       <ul>
         <li>Google Analytics: <code>_ga</code> and <code>_ga_S2XJ61GXDD</code>, up to two years</li>
         <li>Microsoft Clarity: <code>_clck</code> (one year) and <code>_clsk</code> (one day), plus Microsoft's own cookies on its domains, and one session-storage entry, <code>_cltk</code>, which is cleared when the tab closes</li>
@@ -356,6 +384,7 @@ const TAG_FREE_TOOLS = [
       </ul>
       <p>This site's own code writes very little:</p>
       <ul>
+        <li><code>{CONSENT_COOKIE}</code>, which remembers your answer in the cookie banner for {CONSENT_DAYS} days. It holds the two answers and the date, and nothing that identifies you</li>
         <li>one cookie that keeps you signed in to the course area, if you hold a seat</li>
         <li>one cookie that keeps me signed in to my operator console</li>
         <li>on the Rule Placement Audit only, your rows are saved in your own browser's local storage, so that closing the tab does not lose them. They are never sent to me, and clearing your browser's site data removes them</li>
@@ -510,7 +539,7 @@ const TAG_FREE_TOOLS = [
         <li>No selling, renting or trading of your details.</li>
         <li>No automated decisions about you. Applications are read by me.</li>
         <li>No marketing email without the tick box above, and none at all is being sent today.</li>
-        <li>No third-party tags on the interactive tools, on this page, or behind a sign-in.</li>
+        <li>No third-party tags before you say yes, and none at all on the interactive tools, on this page, or behind a sign-in.</li>
       </ul>
 
       <h2>Children</h2>
@@ -684,6 +713,21 @@ const TAG_FREE_TOOLS = [
   }
 
   .closing p { margin: 0; color: var(--text-quiet); }
+
+  /* The control that reopens the consent banner. A real button, styled as the
+     site's quiet secondary action. */
+  .consent-open {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border-field);
+    background: transparent;
+    color: var(--text-body);
+    font: inherit;
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+  }
+  .consent-open:hover { background: var(--surface-hover); }
 
   @media (max-width: 620px) {
     .parties > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
