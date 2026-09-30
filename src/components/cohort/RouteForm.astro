@@ -57,6 +57,7 @@
  * rather than a flat branch and a stepped branch that could drift apart.
  */
 import { FORMS, type Route, type Field } from '../../lib/pipeline/forms';
+import RoleField from '../RoleField.astro';
 import { MARKETING_CONSENT } from '../../lib/pipeline/consent';
 import { APPLY_ACCESS_KEY, isApplyConfigured } from '../../data/site';
 
@@ -149,6 +150,32 @@ const renderField = (field: Field) => {
                 const field = fieldByName.get(name);
                 if (!field) return null;
                 const { fieldId, hintId, errId, describedBy } = renderField(field);
+
+                // The role: a select with an "Other" that opens a text box.
+                // RoleField draws both labels; the hint and the error keep the
+                // ids the script looks up, so the errors land where they do
+                // for every other field.
+                if (field.kind === 'choice' && field.freeText) {
+                  return (
+                    <RoleField id={fieldId} name={field.name} required={field.required} labelClass="full" describedBy={describedBy}>
+                      <span slot="label" class="rf-label">
+                        {field.label}
+                        {!field.required && <span class="rf-opt"> (optional)</span>}
+                      </span>
+                      <Fragment slot="after">
+                        {field.hint && (
+                          <span class="rf-hint" id={hintId}>
+                            {field.hint}
+                          </span>
+                        )}
+                        <span class="rf-err" id={errId} hidden />
+                      </Fragment>
+                      <span slot="other-label" class="rf-label">
+                        Your role, in your words
+                      </span>
+                    </RoleField>
+                  );
+                }
 
                 return (
                   <label class={isFullWidth(field.kind) ? 'full' : undefined} for={fieldId}>

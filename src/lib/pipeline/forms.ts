@@ -22,6 +22,8 @@
 //     record with its own wording and version (consent.ts), and folding it in
 //     here would let a copy edit silently change what someone agreed to.
 
+import { ROLE_MAX, ROLE_OPTIONS } from '../../data/audience-roles';
+
 /** A route is what somebody wants, not which form they filled in. */
 export type Route = 'application' | 'enquiry' | 'enterprise';
 
@@ -38,6 +40,13 @@ export interface Field {
   hint?: string;
   /** For kind: 'choice'. The stored value is the `value`, never the label. */
   options?: { value: string; label: string }[];
+  /**
+   * For kind: 'choice'. A typed value is accepted as well as a listed one.
+   * The role field: its select carries an "Other" option that reveals a text
+   * box, and the typed words are posted as the value (RoleField.astro). The
+   * server then checks length only, because there is no list to check against.
+   */
+  freeText?: boolean;
   /** Rows for a textarea. Affects nothing but the shape of the box. */
   rows?: number;
   /** HTML autocomplete token, so a browser can fill it. */
@@ -123,13 +132,18 @@ const organisation = (required: boolean): Field => ({
   autocomplete: 'organization',
 });
 
+// A choice since 29 September 2026 (Sunil: "ask for role there also", with
+// the ten options in audience-roles.ts and a way to type one). It was a text
+// box. The stored value is the label, or the typed words after "Other".
 const role = (required: boolean): Field => ({
   name: 'role',
   label: 'Your role',
-  kind: 'text',
+  kind: 'choice',
   required,
-  max: 200,
+  max: ROLE_MAX,
   hint: required ? undefined : 'Optional.',
+  options: ROLE_OPTIONS.map((o) => ({ value: o, label: o })),
+  freeText: true,
   autocomplete: 'organization-title',
 });
 
@@ -472,7 +486,7 @@ export function validate(
       continue;
     }
 
-    if (field.kind === 'choice' && !field.options?.some((o) => o.value === cleaned)) {
+    if (field.kind === 'choice' && !field.freeText && !field.options?.some((o) => o.value === cleaned)) {
       errors.push({ field: field.name, code: 'not_an_option', message: messageFor(field, 'not_an_option') });
       continue;
     }

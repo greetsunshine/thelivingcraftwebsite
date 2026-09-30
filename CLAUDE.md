@@ -723,7 +723,14 @@ did before it existed.
 
 ## The download gate — every file a resource page hands out
 **Decided 19 September 2026.** Every download option on every public tool and resource
-page asks for a name and an email address first, and every ask is one row in one table.
+page asks for a name, a role and an email address first, and every ask is one row in one
+table. (The role was added on 29 September 2026, Sunil: "wherever name and email are being
+asked for, ask for role there also". The list is [src/data/audience-roles.ts](src/data/audience-roles.ts),
+rendered by [src/components/RoleField.astro](src/components/RoleField.astro) on every form
+that asks for a name and an email: the three pipeline routes, this gate, the two consulting
+enquiry forms and the booking widget. "Other" opens a text box, and the typed words are what
+is stored. `resource_request_submit()` gained `p_role`, which is a new signature, so the
+schema drops the old function before creating the new one.)
 This reverses the V4 addendum's *"anonymous resource views/downloads are events, not
 people"*, on Sunil's instruction. It also reversed two tool-specific briefs (the Rule
 Placement Audit's "no capture", the Agent Design Check's "download without login"); both

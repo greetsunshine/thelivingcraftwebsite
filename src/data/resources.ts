@@ -98,7 +98,7 @@ export const resources: Resource[] = [
       'Show a team which of their operating assumptions, such as escalation rate, review minutes and upkeep, are doing the real work in the number',
     ],
     format:
-      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name and an email address. The same model is offered as an Excel workbook with an instruction beside every line, behind the same name and email address.',
+      'Interactive, in nine steps with a progress bar. The reference example is loaded when you arrive; change any figure or start from a blank model. Every total, the leading option and the break-even months update as you type, and nothing is stored. A branded PDF of your model, checked before download, is built against a name, a role and an email address. The same model is offered as an Excel workbook with an instruction beside every line, behind the same name, role and email address.',
     url: '/resources/run-cost-model',
     publishedAt: '2026-09-14',
   },
@@ -120,7 +120,7 @@ export const resources: Resource[] = [
       'Find the action in your own system that cannot be undone and has never had a named owner',
     ],
     format:
-      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The review itself downloads as a blank Excel workbook, with a worked example on its own sheet. The workbook, the PDF of your assessment and the print copy ask for a name and an email address.',
+      'Interactive. Type your steps and answer in the page; the owner of each step and the tally update as you go. Copy the sheet without giving anything. The review itself downloads as a blank Excel workbook, with a worked example on its own sheet. The workbook, the PDF of your assessment and the print copy ask for a name, a role and an email address.',
     url: '/resources/agent-authority-review',
     publishedAt: '2026-09-14',
   },
@@ -142,7 +142,7 @@ export const resources: Resource[] = [
       'Answer most of the questions without building anything, using an evaluation set, a person playing the agent, deliberate tool failures, or a shadow run',
     ],
     format:
-      'Interactive, in six steps with a progress bar. Score in the page; the total, the section scores and the outcome update as you go, and nothing is stored. The tool itself downloads as a blank Excel workbook that scores the same way, and a branded PDF of your scored copy, checked before download, is the second option. Both ask for a name and an email address.',
+      'Interactive, in six steps with a progress bar. Score in the page; the total, the section scores and the outcome update as you go, and nothing is stored. The tool itself downloads as a blank Excel workbook that scores the same way, and a branded PDF of your scored copy, checked before download, is the second option. Both ask for a name, a role and an email address.',
     url: '/resources/poc-screen',
     publishedAt: '2026-09-13',
   },
@@ -165,7 +165,7 @@ export const resources: Resource[] = [
       'Record the decision so the next deprecation notice is a Tuesday rather than a project',
     ],
     format:
-      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. The tool itself downloads as a blank Excel workbook that scores the same way. A PDF of your scored copy, checked before it is handed over, is the second option. Both ask for a name and an email address.',
+      'Interactive, in six steps. Choose the step and answer in the page; the weighted score, the section totals and the outcome update as you go, and the page moves to the next row for you. Two reference candidates can be loaded from the first step. The tool itself downloads as a blank Excel workbook that scores the same way. A PDF of your scored copy, checked before it is handed over, is the second option. Both ask for a name, a role and an email address.',
     url: '/resources/model-selection-tool',
     publishedAt: '2026-09-15',
   },
@@ -188,7 +188,7 @@ export const resources: Resource[] = [
       'Run three failure injections against a production agent on a Monday morning',
     ],
     format:
-      'Page, with the triage tree, every table and a worked rejection record. Print or save as PDF asks for a name and an email address, then opens the print dialogue. Nothing on the page is scored.',
+      'Page, with the triage tree, every table and a worked rejection record. Print or save as PDF asks for a name, a role and an email address, then opens the print dialogue. Nothing on the page is scored.',
     url: '/resources/agent-failure-triage-kit',
     publishedAt: '2026-09-16',
   },
@@ -211,7 +211,7 @@ export const resources: Resource[] = [
       'Find the correction in your system that changed more than the instance it was made on',
     ],
     format:
-      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Each asks for a name and an email address.',
+      'Page, with the schema, the questions, the tests and the decision table. Downloads: the full kit as a ZIP (PDF, schema, examples, harness) and the PDF alone. Each asks for a name, a role and an email address.',
     url: '/resources/agent-memory-audit-kit',
     publishedAt: '2026-09-17',
   },
@@ -233,7 +233,7 @@ export const resources: Resource[] = [
       'Hand a one-page rule map to the team with the owner and the fix beside each flagged row',
     ],
     format:
-      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The blank worksheet, the CSV of your rows and the print copy ask for a name and an email address; your rows never leave the browser. Autosaved in your browser.',
+      'Interactive. Type your rules and tick placements in the page; the status of each rule and the map update as you go. Copy the map without giving anything. The blank worksheet, the CSV of your rows and the print copy ask for a name, a role and an email address; your rows never leave the browser. Autosaved in your browser.',
     url: '/resources/rule-placement-audit',
     publishedAt: '2026-09-17',
   },
@@ -256,7 +256,7 @@ export const resources: Resource[] = [
       'Write down every boundary with its enforcement point, its stop behaviour and its owner',
     ],
     format:
-      'Page with a live calculator that stores and sends nothing, plus an Excel workbook that asks for a name and an email address before it downloads.',
+      'Page with a live calculator that stores and sends nothing, plus an Excel workbook that asks for a name, a role and an email address before it downloads.',
     url: '/resources/cost-ceiling-workbook',
     publishedAt: '2026-09-16',
   },
@@ -302,7 +302,7 @@ export const resources: Resource[] = [
       'Take a per-task token budget to your team with the two numbers that justify it',
     ],
     format:
-      'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing you type is sent or stored. A scheduling example loads in one click. The same check is also offered as an Excel workbook, which asks for a name and an email address.',
+      'Interactive. Type your figures in the page; both totals, the five checks and the next step update as you go. Nothing you type is sent or stored. A scheduling example loads in one click. The same check is also offered as an Excel workbook, which asks for a name, a role and an email address.',
     url: '/resources/rework-cost-check',
     publishedAt: '2026-09-28',
   },
@@ -576,7 +576,7 @@ export const NO_SCORE =
  * rule 3.
  */
 export const NO_GATE =
-  'The page is the resource. Everything is here to read and fill in. The file and the print copy ask for your name and email address first, and use them to send you this resource once.';
+  'The page is the resource. Everything is here to read and fill in. The file and the print copy ask for your name, role and email address first, and use them to send you this resource once.';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LC-R01 · Cost-ceiling worksheet

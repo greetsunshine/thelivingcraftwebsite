@@ -85,6 +85,7 @@ import { RESOURCES, resources, type LongformResource, type Resource } from '../.
 import type { Attribution } from './attribution';
 import { canonicalResourceId } from './attribution';
 import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './forms';
+import { ROLE_MAX, ROLE_OPTIONS } from '../../data/audience-roles';
 
 
 // ---------------------------------------------------------------------------
@@ -185,15 +186,15 @@ export function resolveResource(value: unknown): ResourceLookup {
 }
 
 // ---------------------------------------------------------------------------
-// The two fields, and the validation that is not written twice
+// The three fields, and the validation that is not written twice
 // ---------------------------------------------------------------------------
 //
-// Two fields and no more. The addendum calls this an "optional email request",
-// and every extra box is a question somebody has to answer to read a worksheet
-// that is already open on the screen in front of them. A role, an organisation
-// or a funding route here would be qualification data collected under cover of
-// a download, which is the sort of thing the brief's own copy tells applicants
-// we do not do.
+// Name, email and role. Until 29 September 2026 this was two fields, and the
+// note here argued against a third: a role asked for under cover of a download
+// is qualification data. Sunil reversed that on 29 September ("wherever name
+// and email are being asked for, ask for role there also"), so the role is
+// asked here with the same list every other form uses (audience-roles.ts). It
+// is written to `people.role` on a new person and never overwrites a known one.
 //
 // A NAME IS REQUIRED because `people.name` is `not null` — there is one people
 // table and a resource request must not be able to write a row the application
@@ -216,6 +217,16 @@ export const RESOURCE_FIELDS: Field[] = [
     max: 200,
     hint: 'A personal address is fine. We send the worksheet and nothing else.',
     autocomplete: 'email',
+  },
+  {
+    name: 'role',
+    label: 'Your role',
+    kind: 'choice',
+    required: true,
+    max: ROLE_MAX,
+    options: ROLE_OPTIONS.map((o) => ({ value: o, label: o })),
+    freeText: true,
+    autocomplete: 'organization-title',
   },
 ];
 
@@ -330,6 +341,7 @@ export async function saveResourceRequest(
       p_request_key: input.requestKey,
       p_resource_id: resourceId,
       p_name: input.values.name ?? null,
+      p_role: input.values.role ?? null,
       p_normalised_email: normaliseEmail(original),
       p_original_email: original,
       p_resource_version: input.resource.version,

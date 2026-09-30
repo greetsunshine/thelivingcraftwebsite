@@ -142,8 +142,9 @@ export function mountGate(opts: GateOptions = {}) {
     const data = new FormData(form);
     const name = String(data.get('name') ?? '').trim();
     const email = String(data.get('email') ?? '').trim();
-    if (!name || !email) {
-      say('Both fields are needed.', 'err');
+    const role = String(data.get('role') ?? '').trim();
+    if (!name || !email || !role) {
+      say('All three fields are needed.', 'err');
       return;
     }
 
@@ -166,7 +167,7 @@ export function mountGate(opts: GateOptions = {}) {
           kind,
           variant: variant ?? undefined,
           requestKey,
-          answers: { name, email },
+          answers: { name, email, role },
           botcheck: String(data.get('botcheck') ?? ''),
           payload: opts.payload ? opts.payload(kind, variant) : undefined,
           search: location.search,

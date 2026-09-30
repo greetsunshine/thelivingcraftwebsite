@@ -14,9 +14,11 @@
 //      needs no script of its own: this component mounts the gate itself.
 //
 // The dialog is a native <dialog>: focus is trapped, Escape closes it, and
-// nothing else on the page needs a script to make that true. The two fields
-// come from RESOURCE_FIELDS, the same definition the server validates against,
-// so a field cannot be required in the browser and optional on the server.
+// nothing else on the page needs a script to make that true. The name and the
+// email come from RESOURCE_FIELDS, the same definition the server validates
+// against, so a field cannot be required in the browser and optional on the
+// server. The role is the shared RoleField, whose list is the one the server
+// definition reads too (audience-roles.ts).
 //
 // What it says is fixed on purpose: the address is used to send this resource
 // once and starts no other email. That sentence is the promise the marketing
@@ -31,6 +33,7 @@
 // 29 September 2026 every file was called "your copy", which was false for the
 // blank tools that became the main download on 28 September.
 import { RESOURCE_FIELDS } from '../lib/pipeline/resources';
+import RoleField from './RoleField.astro';
 
 interface Props {
   /** The resource id the request is recorded against. */
@@ -50,7 +53,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   <form method="dialog" id="gate-form" novalidate>
     <span class="eyebrow"><span class="num" id="gate-kind">File</span> <span id="gate-whose">Download</span></span>
     <h2 id="gate-title">Get the file</h2>
-    <p class="gate-lead">{lead} It is built against a name and an email address.</p>
+    <p class="gate-lead">{lead} It is built against a name, a role and an email address.</p>
     <div class="gate-grid">
       <label>
         {nameField.label}
@@ -60,6 +63,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         {emailField.label}
         <input type="email" name="email" autocomplete={emailField.autocomplete} maxlength={emailField.max} required />
       </label>
+      {/* The role, since 29 September 2026 (Sunil: "ask for role there also"). */}
+      <RoleField id="gate-role" required labelClass="gate-full" />
     </div>
     <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <p class="gate-note">
@@ -122,7 +127,9 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   .gate h2 { font-size: var(--size-6); margin: 0 0 var(--space-3); }
   .gate-lead { margin: 0 0 var(--space-5); }
   .gate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-  .gate label {
+  .gate :global(.gate-full) { grid-column: 1 / -1; }
+  /* :global, because RoleField's two labels and its text box are another component's markup. */
+  .gate :global(label) {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
@@ -130,7 +137,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     font-size: var(--size-1);
     color: var(--text-quiet);
   }
-  .gate input {
+  .gate :global(input),
+  .gate :global(select) {
     font-family: var(--font-body);
     font-size: var(--size-3);
     color: var(--text-body);
@@ -141,8 +149,8 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     height: var(--control-h);
     width: 100%;
   }
-  .gate input:focus { outline: none; border-color: var(--text-body); }
-  .gate input:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .gate :global(input:focus), .gate :global(select:focus) { outline: none; border-color: var(--text-body); }
+  .gate :global(input:focus-visible), .gate :global(select:focus-visible) { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
   .gate .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
   .gate-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
   .gate-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }

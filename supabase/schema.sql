@@ -3004,7 +3004,9 @@ select
        and c.purpose = 'marketing'
      order by c.obtained_at desc
      limit 1
-  ), false)                                          as consented
+  ), false)                                          as consented,
+  -- Last, because CREATE OR REPLACE VIEW only accepts a new column at the end.
+  p.role
 from public.resource_requests r
 join public.people p on p.person_id = r.person_id
 where r.is_test = false;
@@ -3038,6 +3040,11 @@ create trigger resource_requests_touch before update on public.resource_requests
 -- implementation of that rule in SQL is how a+cohort@x.com becomes two people
 -- on one path and one person on another.
 
+-- 29 September 2026: p_role was added. A new parameter is a new signature, and
+-- CREATE OR REPLACE would leave the old ten-argument function beside it; a call
+-- by name would then match both and fail as "not unique". Drop the old one.
+drop function if exists public.resource_request_submit(text, text, text, text, text, text, jsonb, boolean, text, text);
+
 create or replace function public.resource_request_submit(
   p_request_key      text,
   p_resource_id      text,
@@ -3048,7 +3055,8 @@ create or replace function public.resource_request_submit(
   p_attribution      jsonb       default '{}'::jsonb,
   p_is_test          boolean     default false,
   p_actor            text        default 'public_form',
-  p_kind             text        default 'email'
+  p_kind             text        default 'email',
+  p_role             text        default null
 )
 returns table (
   request_id      uuid,
@@ -3081,8 +3089,8 @@ begin
   end if;
 
   -- 2 -- Person, by normalised email and nothing else.
-  insert into public.people (name, normalised_email, original_email)
-  values (p_name, p_normalised_email, p_original_email)
+  insert into public.people (name, normalised_email, original_email, role)
+  values (p_name, p_normalised_email, p_original_email, nullif(btrim(coalesce(p_role, '')), ''))
   on conflict (normalised_email) do nothing
   returning people.person_id into v_person_id;
 

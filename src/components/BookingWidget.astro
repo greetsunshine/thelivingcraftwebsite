@@ -17,6 +17,7 @@
 // State lives in a closure and dies with the tab. No localStorage, no cookie,
 // nothing written to the client — the site-wide rule holds here too.
 import { meetingType } from '../data/meetings';
+import RoleField from './RoleField.astro';
 
 export interface Props {
   /** A key from src/data/meetings.ts. */
@@ -146,7 +147,7 @@ const retryCopy =
               <label>Name<input name="name" type="text" required autocomplete="name" /></label>
               <label>Work email<input name="email" type="email" required autocomplete="email" /></label>
               <label>Company<input name="company" type="text" autocomplete="organization" /></label>
-              <label>Title<input name="role" type="text" placeholder="e.g. CTO, Head of Data" /></label>
+              <RoleField id={`${uid}-role`} required />
             </>
           )
         }
@@ -293,7 +294,8 @@ const retryCopy =
   .booker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
   .booker-full { grid-column: 1 / -1; }
 
-  .booker-grid label {
+  /* :global, because RoleField's labels and text box are another component's markup. */
+  .booker-grid :global(label) {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
@@ -303,7 +305,8 @@ const retryCopy =
     color: var(--text-quiet);
   }
 
-  .booker-grid input,
+  .booker-grid :global(input),
+  .booker-grid :global(select),
   .booker-grid textarea {
     font: inherit;
     font-family: var(--font-body);
@@ -315,7 +318,8 @@ const retryCopy =
     padding: var(--space-3) var(--space-4);
   }
 
-  .booker-grid input:focus-visible,
+  .booker-grid :global(input:focus-visible),
+  .booker-grid :global(select:focus-visible),
   .booker-grid textarea:focus-visible {
     outline: var(--focus-w) solid var(--focus-ring);
     outline-offset: var(--focus-offset);
@@ -489,10 +493,13 @@ const retryCopy =
 
       // Only asked for on the public widget. Inside the gate the seat already
       // says who this is, so there is nothing here to validate.
+      // The form is novalidate, so the select's `required` is checked here,
+      // beside the name and the email, or an empty role would post.
       var name = field('input[name="name"]');
       var email = field('input[name="email"]');
-      if (mode === 'public' && (!name || !email)) {
-        errorEl.textContent = 'A name and an email address, and the time is yours.';
+      var role = field('select[name="role"]');
+      if (mode === 'public' && (!name || !email || !role)) {
+        errorEl.textContent = 'A name, an email address and your role, and the time is yours.';
         return;
       }
 
@@ -511,7 +518,7 @@ const retryCopy =
           name: name,
           email: email,
           company: field('input[name="company"]'),
-          role: field('input[name="role"]'),
+          role: field('select[name="role"]'),
           notes: field('textarea[name="notes"]'),
           timezone: zone,
           botcheck: whoStep.querySelector('input[name="botcheck"]').checked,

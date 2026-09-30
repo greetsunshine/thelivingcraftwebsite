@@ -501,7 +501,7 @@ export async function buildExport(
         let q = client
           .from('resource_requests_marketing')
           .select(
-            'request_id, requested_at, person_id, name, email, resource_id, kind, resource_version, delivery_state, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, consented',
+            'request_id, requested_at, person_id, name, email, resource_id, kind, resource_version, delivery_state, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, consented, role',
           )
           .order('requested_at', { ascending: false })
           .limit(limit);

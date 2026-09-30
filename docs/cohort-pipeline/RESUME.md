@@ -410,6 +410,34 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     column, links padded to 38px targets, the strip as a list. The footer keeps 100px
     clear at the bottom on a page with the floating chat pill.
   - Not touched: `/craft`, the console and `/book/[id]`, which are gated or private.
+- [x] **16. A role question on every form that asks for a name and an email** (29
+  September). Sunil: "Wherever currently name and email are being asked for, ask for role
+  there also", with ten options and a way to type one. One list
+  (`src/data/audience-roles.ts`), one component (`src/components/RoleField.astro`): a
+  select, and a text box that opens on "Other". The typed words are copied into the select
+  as a hidden option, so every form posts one `role` value however it reads its fields.
+  Where it is asked: the application, enquiry and enterprise routes (the `role` field is
+  now a `choice` with `freeText`), the download gate (a third field, required; this
+  reverses the "two fields and no more" note in `resources.ts`), the CAIO and assessment
+  enquiry forms, and the booking widget. Not the chat handoff: the agent asks in
+  conversation, not with a form.
+  - **Schema, run before deploying:** `resource_request_submit()` gained `p_role`. A new
+    parameter is a new signature, so `schema.sql` drops the ten-argument function first.
+    The `resource_requests_marketing` view gained `role` as its last column, and the
+    requests page and the CSV export read it.
+  - Also fixed on the way: `/tools` had no space between its last section and the
+    footer. Its sections had no vertical padding at all; the "Written …" line removed in
+    task 13 had been the only thing holding the footer off.
+  - **How it landed (30 September).** The change was found in the worktree, uncommitted,
+    written the evening before and not by the session that committed it. It was read line by
+    line, driven in a browser (the gate on a worksheet at 1440 and 390, the application
+    form, the CAIO form, the booking widget's who step) and committed with two additions:
+    the booking widget's who step now checks the role beside the name and the email (the
+    form is `novalidate`, so the select's `required` alone let an empty role post), and
+    every public sentence that said a download asks for "a name and an email address" now
+    says "a name, a role and an email address": `/privacy`, `/resources`, `/toolkit`,
+    `/tools`, the design check, the templates index, five resource pages and the format
+    lines in `src/data/resources.ts`.
 - [x] **15. The "Pause motion" control is gone** (29 September). Sunil: "let the motion
   always be there. Remove pause motion option." The button, its script branch and its
   styles are removed. The OS reduced-motion setting still stops the brain and the

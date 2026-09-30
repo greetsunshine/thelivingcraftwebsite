@@ -93,7 +93,7 @@ const schema: unknown[] = [
         </div>
         <p class="hero-note">
           Using the check needs no sign-in and no email, and gives no score. Nothing you type about
-          your architecture leaves your browser. Downloading a file asks for your name and email
+          your architecture leaves your browser. Downloading a file asks for your name, role and email
           address first.
         </p>
       </div>
@@ -225,6 +225,14 @@ const schema: unknown[] = [
 </PracticeLayout>
 
 <style>
+  /* Section rhythm. The other practice pages take theirs from a page template
+     (brand.css, programme.css); this hub has none, and global.css's `.wrap`
+     zeroes the vertical padding `section` would give. Until 29 September the
+     dropped "Written …" line's own margin was the only space above the footer. */
+  section.wrap {
+    padding-block: 88px;
+  }
+
   /* The lead card is the page's one action. It gets the extra weight; the
      areas card beside it is a list, not a destination, so it is a plain card
      with no `.go`. Shadow only — never a border and a shadow together. */

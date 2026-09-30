@@ -2,6 +2,7 @@
 import AssessmentLayout from '../layouts/AssessmentLayout.astro';
 import { APPLY_ACCESS_KEY, CONTACT_EMAIL } from '../data/site';
 import BookingWidget from '../components/BookingWidget.astro';
+import RoleField from '../components/RoleField.astro';
 import { SITE_ORIGIN, assessment, faqFor, regulatory } from '../data/facts';
 
 // Static, board-facing landing page for the AI Readiness Assessment.
@@ -315,7 +316,7 @@ const schema = [
         <div class="form-grid">
           <label for="f-name">Name<input id="f-name" name="name" type="text" required autocomplete="name" /></label>
           <label for="f-email">Work email<input id="f-email" name="email" type="email" required autocomplete="email" /></label>
-          <label for="f-role">Title<input id="f-role" name="role" type="text" placeholder="e.g. CEO, CTO, Board member" /></label>
+          <RoleField id="f-role" required />
           <label for="f-company">Company<input id="f-company" name="company" type="text" /></label>
           <label class="full" for="f-segment">What kind of organisation?
             <select id="f-segment" name="segment">
