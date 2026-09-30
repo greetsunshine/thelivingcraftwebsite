@@ -38,6 +38,9 @@ export const GET: APIRoute = async ({ params }) => {
     n,
     'learner',
     `Admin preview · the learner's copy of week ${week}, topic ${n}. Release state is not checked here.`,
+    // Keep the topic chips inside the preview. The live URL 404s for exactly
+    // the unreleased week this route exists to show.
+    `/craft/admin/preview/${week}`,
   );
   if (!html) {
     return new Response(missingPage(week, 'learner'), {

@@ -4,11 +4,17 @@ title: "The harness"
 module: M1
 summary: 'Draw the map: what an agent actually is as a system, and where it breaks before you have written a line of it.'
 status: ready
-assignment: "One boundary you drew, and the alternative you rejected"
 
-# The five, word for word. Rated at 00:05 and again at 04:52 — "the same five
-# statements, in the same words, so that the two sets of numbers mean the same
-# thing". Each completes "Right now, I could…".
+# THE FIVE OUTCOMES. Rated at 00:05 and again at 04:52, same words both times.
+#
+# `movesMost` is on 3 and 4 because the session predicts the room scores those
+# LOW at 00:05 and higher at 04:52 — the opposite direction from week 2, where a
+# score that drops is the good result. Nobody arrives able to name a failure a
+# better model will not fix, and nobody arrives having reviewed a coding
+# assistant against a decision they wrote first. A score that RISES is the good
+# result here, and that prediction is what the delta gets checked against.
+#
+# Each completes "Right now, I could…".
 outcomes:
   - id: harness
     text: draw the four parts of an agent harness and say which part a given failure lives in
@@ -23,7 +29,9 @@ outcomes:
   - id: record
     text: "write a decision record: the boundary I drew, the alternative I rejected, and what would change my mind"
 
-# Week 1's row from docs/teaching/threads.md.
+# Week 1's row from docs/teaching/threads.md. Trace and bill is the only thread
+# this week BUILDS. Everything else is named and handed on, which is why
+# prevention is deliberately absent from the outcomes.
 threads:
   - { id: trace-and-bill, weight: builds }
   - { id: boundaries, weight: named }
@@ -32,15 +40,15 @@ threads:
   - { id: state, weight: named }
   - { id: multi-agent, weight: named }
 
-# The items this week's check asks, in order.
+# FIFTEEN RUN IN THE ROOM. FOUR RENDER ON THE CHECK PAGE, and those four are
+# what this list holds. `isSelfServable` in src/lib/craft/quiz.ts drops any item
+# without options and a key, so listing the other eleven here would silently
+# render nothing. The other eleven are prose — "sort these six into four
+# buckets", "give three reasons this does not hold" — and they are answered in
+# the room or in the decision record.
 #
-# Four, not the whole bank of fifteen. These are the ones that can stand on a
-# page with a Submit button and no instructor: multiple choice, with a key.
-# The other eleven are prose — "sort these six into four buckets", "give three
-# reasons this does not hold" — and they are answered in the room or in the
-# decision record, which is where docs/teaching/quiz/week-1.md says to use them.
-#
-# Reorder or extend this freely; the ids are stable and the bank is the source.
+# The bank is docs/teaching/quiz/week-1.md. Reorder or extend this freely; the
+# ids are stable and the bank is the source.
 quiz:
   - w1-q1
   - w1-q9
@@ -50,21 +58,24 @@ quiz:
 # Offsets from startsAt, never wall-clock. The first `block` is 00:15, which is
 # what closes the before-rating — not 00:00, when the session opens.
 runOfShow:
-  - { at: "00:00", kind: opening, label: Opening, detail: the five outcomes, your first confidence rating, four questions from the pre-work }
-  - { at: "00:15", kind: block, label: 1 · The Concept, detail: it works, you draw it, then it loses ₹3,600 and what you drew gets its name }
-  - { at: "01:10", kind: standup, label: Stand up, detail: five minutes, cameras off }
-  - { at: "01:15", kind: block, label: 2 · The Problem, detail: three more failures, then the pattern under all four }
-  - { at: "02:05", kind: break, label: Break, detail: fifteen minutes }
-  - { at: "02:20", kind: block, label: 3 · The Drill, detail: three drills in the room, hands on keyboards }
-  - { at: "03:20", kind: standup, label: Stand up, detail: five minutes again }
-  - { at: "03:25", kind: block, label: 4 · The Teardown, detail: the same agent at enterprise scale, then write a boundary down }
-  - { at: "04:20", kind: quiz, label: Quiz, detail: eight questions in chat, deliberately mixed up }
-  - { at: "04:30", kind: block, label: 5 · The Horizon, detail: which half of your work survives the next capability jump }
-  - { at: "04:50", kind: close, label: Close, detail: the assignment, the same rating again, two lines in chat }
+  - { at: "00:00", label: "Opening", kind: opening, detail: "The five outcomes, your first confidence rating, four questions from the pre-work" }
+  - { at: "00:15", label: "1 · The Concept", kind: block, detail: "It works, you draw it, then it loses ₹3,600 and what you drew gets its name" }
+  - { at: "01:10", label: "Stand up", kind: standup, detail: "Five minutes, cameras off" }
+  - { at: "01:15", label: "2 · The Problem", kind: block, detail: "Three more failures, then the pattern under all four" }
+  - { at: "02:05", label: "Break", kind: break, detail: "Fifteen minutes, straight after the ₹2,50,000" }
+  - { at: "02:20", label: "3 · The Drill", kind: block, detail: "Three drills in the room, hands on keyboards, then two models side by side" }
+  - { at: "03:20", label: "Stand up", kind: standup, detail: "Five minutes again" }
+  - { at: "03:25", label: "4 · The Teardown", kind: block, detail: "The same agent at forty thousand disputes a month, then write a boundary down" }
+  - { at: "04:20", label: "The quiz", kind: quiz, detail: "Eight questions in chat, mixed on purpose" }
+  - { at: "04:30", label: "5 · The Horizon", kind: block, detail: "Which half of your work survives the next capability jump" }
+  - { at: "04:50", label: "Close", kind: close, detail: "The assignment, the same five statements again, two lines in chat" }
 
 # Printed in place by the session page, and asked in the room by /craft/live.
 # The number is always on the LAST item — "put one number in chat on the last
 # one only". The 04:15 checkpoint asks for no number at all, on purpose.
+#
+# 01:10 is a checkpoint AND a stand-up. dayPlan() sorts the checkpoint first,
+# because the words in the room are "read these before you stand up".
 checkpoints:
   - at: "01:10"
     items:
@@ -92,18 +103,23 @@ checkpoints:
       - Write a boundary down in a form somebody else could actually implement
 
 # Inside the teardown block, not entries in the run of show.
+# reviewAt was 04:05 until 29 September and the arithmetic never supported it:
+# the draft opens at 03:50 and runs twelve minutes. 04:02 is what the instructor
+# script has run all along.
 pair:
   draftAt: "03:50"
-  reviewAt: "04:05"
+  reviewAt: "04:02"
 
 prework:
   minutes: 45
   items:
-    - Run `make run`. Confirm you get a clean trace without the grey `no LLM_API_KEY found` notice above it. Mock mode is fine for setup, but block 3 puts two models side by side and mock mode ignores the model flag completely. Today is the day the key has to work.
-    - Have a second model name ready that your key can reach. Any two will do, as long as one config change swaps between them.
-    - Run `make retry`, `make weird-mock` and `make injected` — the three from week 0. Do not fix anything. Write down what each one paid out. You will be asked for the three numbers in the first ten minutes.
-    - Note your daily quota before you arrive. On the Google AI Studio free tier it is 20 requests per day, per model, and one agent run is about three requests. That is roughly six runs a day. If you use them up the night before, you will be borrowing a neighbour's key by block 3.
-    - Be ready to say, in one sentence, what in this codebase would have stopped each of the three. A half-formed answer is the right answer to arrive with — you have not read the code yet, and you are not meant to have.
+    - "Run `make run`. Confirm you get a clean trace without the grey `no LLM_API_KEY found` notice above it. Mock mode is fine for setup, but block 3 puts two models side by side and mock mode ignores the model flag completely. Today is the day the key has to work."
+    - "Have a second model name ready that your key can reach. Any two will do, as long as one config change swaps between them."
+    - "Run `make retry`, `make weird-mock` and `make injected` — the three from week 0. Do not fix anything. Write down what each one paid out. You will be asked for the three numbers at 00:08."
+    - "Note your daily quota before you arrive. On the Google AI Studio free tier it is 20 requests per day, per model, and one agent run is about three requests. That is roughly six runs a day. If you use them up the night before, you will be borrowing a neighbour's key by block 3."
+    - "Be ready to say, in one sentence, what in this codebase would have stopped each of the three. A half-formed answer is the right answer to arrive with — you have not read the code yet, and you are not meant to have."
+
+assignment: "One boundary you drew, and the alternative you rejected"
 
 after:
   hours: 2
@@ -138,38 +154,78 @@ reading:
     note: An example of a tool interface changing under you. That is the argument for owning the boundary rather than inheriting it.
 ---
 
-We start with an agent that works. We break it in front of you four different
-ways. We fix what can honestly be fixed in an afternoon. Then we put a system on
-the table that cannot be fixed in an afternoon.
+In week 0 you ran three commands and wrote down what each one paid out. Today you
+find out why, and the answer is never a fault in the model.
+
+**The harness is everything in your agent that is not the model: the loop, the
+tool layer, the context built for each step, and the trace.** There are four
+parts. You watch all four fail today, and you fix what can honestly be fixed in
+an afternoon. Then a system goes on the table that cannot be fixed in an
+afternoon, and that one is block 4.
+
+### Why you draw the map before you fix anything
+
+Most rooms want to start with the fix. It is the wrong order here, for two
+reasons that are worth stating before the day argues them.
+
+**A fix you cannot locate in a part is a fix nobody can review.** "We added a
+check" is not reviewable. "We added a check in the tool layer, which covers the
+callers of that one function and nothing else" is. The parts are what turn an
+opinion into something a second engineer can agree or disagree with.
+
+**The words are the contract for the other five weeks.** Week 2 puts controls
+between the parts. Week 3 writes down what the trace should have said. Week 4
+splits the context into text that is data and text that is authority. Week 5
+asks what happens to the loop when one loop is no longer enough. Every one of
+those sentences is meaningless until today.
+
+So nothing gets prevented today. Three drills make a failure visible, named or
+measurable, and none of them stops anything happening. That is deliberate, and
+it is the one thing in this session that reliably frustrates a senior room.
+
+### The four parts
+
+| The part | What it holds | What goes wrong there | Owned by |
+|---|---|---|---|
+| **The loop** | the stopping condition, and how many times round it goes | a run that gave up and reported success | **Block 1**, then drill 1 |
+| **The tool layer** | every action the agent is able to take, and what each one reaches | an action with no ceiling, called with arguments nobody checked | **Block 2**, then drills 2 and 3, then week 2 |
+| **The context** | what the model is told, rebuilt from scratch on every single step | a fact that went stale, or somebody else's text arriving as an instruction | **Block 1**, then weeks 3 and 4 |
+| **The trace** | the only reason you can see that any of it happened | a failure nothing counted, and a cost nobody attributed to a step | **Drills 1 and 4** |
+
+Four parts, four files, one loop. The reference agent is small enough to hold in
+your head at once, and every failure in the next six weeks lands on it.
 
 **By the end of this session you will be able to:**
 
-1. **Draw the harness.** The harness is everything in the system that is not the
-   model: the loop and its stopping condition, the tool layer, the context built
-   for each turn, and the trace. You will be able to say which of those four
-   parts a given failure lives in.
-2. **Read a trace and say where the money went.** Which step spent what, and
-   which line you would put on a dashboard.
-3. **Name the four failures that survive a better model.** A stale read. A
-   repeated side effect. Untrusted text arriving as trusted input. An argument
-   nobody checked. You will also name the boundary that stops each one.
-4. **Direct a coding assistant against a decision you made first.** Then review
-   what it wrote against that decision, not against whether it runs.
-5. **Write a decision record.** One boundary you drew, the alternative you
-   rejected, and what would have to be true for you to change your mind.
+1. *The harness.* **Draw the four parts and place a failure in one of them.**
+   The loop and its stopping condition, the tool layer, the context assembled for
+   each step, and the trace. Given a failure, say which part it lives in.
+2. *Trace and bill.* **Read a trace and say where the money went.** Which step
+   spent what, and which single line you would put on a dashboard on Monday.
+3. *Boundaries.* **Name the four failures that survive a better model.** A stale
+   read. A repeated side effect. Untrusted text arriving as trusted input. An
+   argument nobody checked. Then name the boundary that stops each one.
+4. *Directing the build.* **Give a coding assistant a decision, not a task.**
+   Then review what it wrote against that decision, rather than against whether
+   it runs.
+5. *Governance.* **Write a decision record.** One boundary you drew, the
+   alternative you rejected, and what would have to be true for you to change
+   your mind. Another engineer should be able to build from it.
 
 The first three are the architecture. The fourth is how the work actually gets
 done now. The fifth is the thing you will still be able to show someone in a
 year.
 
-**You will rate yourself against these five, twice.** Once at 00:05, before
-anything has been taught. Again at 04:52, on the same five statements, in the
-same words, scored 1 to 5. Nobody sees your first number but you. The two sets go
-on screen together at the end. We are looking at how much you moved, not at the
-score itself.
+Prevention is deliberately not on that list. You will want to put a ceiling on
+`issue_credit` from about 01:20 onwards, and you are asked not to. Week 2 is
+where every one of those guards gets built, and it is worth more after a week of
+looking at the thing unguarded.
 
-These are the words used all three times, so that the two sets of numbers mean
-the same thing:
+**You will rate yourself against these five, twice.** Once at 00:05 before
+anything has been taught, and again at 04:52. Same five statements, same words,
+scored 1 to 5. Nobody sees your first number but you. Both sets go on screen
+together at the end. We are looking at how much you moved, not at the score
+itself. These are the words used all three times:
 
 > **Right now, I could…**
 >
@@ -179,7 +235,12 @@ the same thing:
 > 4. direct a coding assistant against a decision I made first, and review what it wrote against that decision
 > 5. write a decision record: the boundary I drew, the alternative I rejected, and what would change my mind
 
-Expect low numbers on 3 and 4. Those are the two that move most.
+Expect low numbers on 3 and 4 at 00:05. Nobody arrives able to name a failure a
+stronger model will not fix, because the industry answer to every failure so far
+has been a stronger model. And almost nobody has reviewed an assistant's diff
+against a decision they wrote down first. Those two should be higher at 04:52. A
+score that rises is the result this session is looking for, and it is the other
+way round from next week.
 
 Anyone can show you the agent loop. This session is about what the loop *is*. In
 week 6 your own architecture goes under review. You want to argue from a model of
@@ -187,60 +248,89 @@ how these systems work, not from a framework's documentation.
 
 ## Before the session
 
-_~45 minutes._
+*45 minutes.*
 
-- [ ] Run `make run`. Confirm you get a clean trace **without** the grey
+- [ ] **Run `make run`.** Confirm you get a clean trace **without** the grey
       `no LLM_API_KEY found` notice above it. Mock mode is fine for setup. But
       block 3 puts two models side by side, and mock mode ignores the model flag
       completely. Today is the day the key has to work.
-- [ ] Have a **second model name** ready that your key can reach. Any two will
+- [ ] **Have a second model name ready** that your key can reach. Any two will
       do, as long as one config change swaps between them.
-- [ ] Run `make retry`, `make weird-mock` and `make injected`. These are the
+- [ ] **Run `make retry`, `make weird-mock` and `make injected`.** These are the
       three from week 0. Do not fix anything. **Write down what each one paid
-      out.** You will be asked for the three numbers in the first ten minutes.
-- [ ] Note your daily quota before you arrive. On the Google AI Studio free tier
-      it is **20 requests per day, per model**. One agent run is about three
+      out.** You are asked for the three numbers at 00:08, and the whole of block
+      2 is built on you having them.
+- [ ] **Note your daily quota before you arrive.** On the Google AI Studio free
+      tier it is **20 requests per day, per model**. One agent run is about three
       requests. That is roughly six runs a day. If you use them up the night
       before, you will be borrowing a neighbour's key by block 3.
-- [ ] Be ready to say, in one sentence, **what in this codebase would have
-      stopped each of the three**. A half-formed answer is the right answer to
+- [ ] **Be ready to say, in one sentence, what in this codebase would have
+      stopped each of the three.** A half-formed answer is the right answer to
       arrive with. You have not read the code yet, and you are not meant to have.
 
 ## The day, and where the stops are
 
-**Five hours.** Five teaching blocks, one fifteen-minute break, and two
-five-minute stand-ups where you leave the screen completely. Nothing runs for
-more than an hour without a stop. This is a remote room, and an hour is about as
-long as anyone holds attention through a screen.
+**Five hours.** Five teaching blocks, one break of fifteen minutes, and two
+stand-ups where you leave the screen. Nothing runs for more than 60 minutes
+without a stop. This is a remote room, and an hour is about as long as anyone
+holds attention through a screen.
 
-| time  |                      | what happens                                                                      |
-| ----- | -------------------- | --------------------------------------------------------------------------------- |
-| 00:00 | opening              | the five outcomes, your first confidence rating, four questions from the pre-work |
-| 00:15 | **1 · The Concept**  | it works, you draw it, then it loses ₹3,600 and what you drew gets its name       |
-| 01:10 | stand up             | five minutes, cameras off                                                         |
-| 01:15 | **2 · The Problem**  | three more failures, then the pattern under all four                              |
-| 02:05 | break                | fifteen minutes                                                                   |
-| 02:20 | **3 · The Drill**    | three drills in the room, hands on keyboards                                      |
-| 03:20 | stand up             | five minutes again                                                                |
-| 03:25 | **4 · The Teardown** | the same agent at enterprise scale, then write a boundary down                    |
-| 04:20 | quiz                 | eight questions in chat, deliberately mixed up                                    |
-| 04:30 | **5 · The Horizon**  | which half of your work survives the next capability jump                         |
-| 04:50 | close                | the assignment, the same rating again, two lines in chat                          |
+| time | | what happens |
+|---|---|---|
+| 00:00 | opening | the five outcomes, your first rating, four questions from the pre-work |
+| 00:15 | **1 · The Concept** | 55 minutes. It works, you draw it, then it loses ₹3,600 |
+| 01:10 | stand up | five minutes, cameras off |
+| 01:15 | **2 · The Problem** | 50 minutes. Three more failures, then the pattern under all four |
+| 02:05 | break | fifteen minutes, straight after the ₹2,50,000 |
+| 02:20 | **3 · The Drill** | 60 minutes. Three drills, then two models side by side |
+| 03:20 | stand up | five minutes again |
+| 03:25 | **4 · The Teardown** | 50 minutes. Forty thousand disputes a month, then write a boundary down |
+| 04:20 | quiz | eight questions in chat |
+| 04:30 | **5 · The Horizon** | 20 minutes. Which half of your work survives the next model |
+| 04:50 | close | the assignment, the same rating again, two lines in chat |
 
-**After every block there is a checkpoint.** It is a short list of things you
-should now be able to do, printed here in its place. If one of them is not true
-for you, say so at the time rather than at the end. It is a signal to slow down.
-It is not a test of you.
+Every block ends with a checkpoint. If one of its lines is not true for you, say
+so at the time. It is a signal to slow down. It is not a test of you.
 
-At 00:05 you rate yourself 1 to 5 against the five outcomes above. At 04:52 you
-rate yourself against the identical five. Nobody sees the first number but you.
-The two sets go on screen together at the end.
+## Opening
+
+*00:00 to 00:15.*
+
+**00:05 · Your first rating, 3 minutes.** Five numbers in chat, one line each,
+against the five statements above. Nobody sees them but you. They are saved and
+shown beside your 04:52 numbers at the end.
+
+**00:08 · Four questions from the pre-work, 7 minutes.** Nothing is re-taught
+first. You are asked, you answer, and only what is wrong gets corrected.
+Recalling something is what makes it stick. Hearing it again does not.
+
+> 1. What does the reference agent actually do? One sentence.
+> 2. What did each of your three runs pay out? Three numbers.
+> 3. Which two tools did you watch it call?
+> 4. You have twenty requests a day. Roughly how many runs is that, and why?
+
+Every one is answerable from the pre-work alone. None of them needs the code, and
+you were told not to read it.
 
 ## 1 · The Concept
 
-_00:15 to 01:10 — ~55 minutes._
+*00:15 to 01:10 — 55 minutes.*
 
-We start with the case that works.
+This block is the frame for the whole day. It answers four questions, in this
+order. What is the smallest thing that counts as an agent? Why did a system that
+reasoned correctly three times still pay three times? What are the parts of it,
+and which file is each one in? And how many times does one ticket go round the
+loop? Block 2 starts the moment those four are answered.
+
+**Nothing here is a definition read off a slide.** You commit to an answer first,
+every time, and the answer arrives afterwards.
+
+### The case that works
+
+*00:15 · Whole room, 3 minutes. Read it in silence.*
+
+The run is already finished on the shared screen when you arrive. Nobody says
+anything for the first twenty seconds. The first words of the day are yours.
 
 ```
 ▸ plan  ticket #4471 — Billing dispute — charged twice for Pro...
@@ -266,15 +356,30 @@ Two tool calls. A customer disputes a charge. Something investigates. Something
 takes a consequential action. Then it stops. That is an agent. There is no more
 to the definition than this.
 
+### Draw what you just watched
+
+*00:18 · Alone, 5 minutes. On paper, no help.*
+
+Two minutes drawing, then two or three go up on the shared screen. Most people
+draw a box and an arrow.
+
+Do not look anything up and do not name anything yet. The drawing is the point,
+and the gap between what you drew and what is actually there is what the next
+twenty minutes are made of.
+
 ### Break it once, before anything has a name — ₹3,600
+
+*00:23 · Whole room, 8 minutes. Answer in chat first, 30 seconds.*
 
 We break it before a single thing gets its proper name. A framework lands far
 better as the answer to a question you already have. Handing out vocabulary in
 advance does not work as well.
 
-_Answer first, in chat, thirty seconds._ Ravi really was double-charged and is
-owed ₹1,200. The queue delivers his ticket, times out, and delivers it again.
-Later a support engineer re-runs it by hand. **How much does he get paid?**
+Ravi really was double-charged and is owed ₹1,200. The queue delivers his ticket,
+times out, and delivers it again. Later a support engineer re-runs it by hand.
+Answer alone, in chat, before anything runs:
+
+> **How much does Ravi get paid?**
 
 Rooms split between ₹1,200 and ₹3,600. The argument is worth having before the
 answer arrives.
@@ -291,9 +396,12 @@ This is the only one of today's four failures you can reason your way to. That i
 why it comes first. You get to work it out rather than be shown it. The other
 three stay in block 2, where they work as surprises.
 
-You will want to know *why* it did not remember. That is the next thing we do,
-and the answer is not a fault in the model. So we read those opening lines
-closely and name what we are looking at.
+### Name what you drew
+
+*00:31 · Whole room, 7 minutes, built on the board.*
+
+You will want to know *why* it did not remember. The answer is not a fault in the
+model, so we read those opening lines closely and name what we are looking at.
 
 **An agent is a control loop over an unreliable oracle.** An oracle here is
 something you ask a question and get an answer from, without being able to check
@@ -316,21 +424,33 @@ speaking ReAct before any of the prose was. Two words to watch. `▸ plan` at th
 top of a run is the ticket being announced once, before the loop starts, so it is
 not a phase. And what the code calls a tool *result* is the **observation**.
 
-**How the loop ends.** The model can end it two ways. It emits `resolve` when it
-believes the case is closed. It emits `escalate` when it hands the case to a
-person. Any other action, such as `lookup_account` or `issue_credit`, is a step,
-and the loop goes round again with that observation added.
+Now the part you drew. **Everything in that drawing that is not the model is the
+harness.** That means the loop and its stopping condition, the tool layer, the
+context assembled for each step, and the trace that lets you see any of it. The
+table at the top of this page has the four parts. Build it from the room rather
+than reading it.
 
-If the model does neither, the loop ends the run itself, in two more ways. It
-stops after `MAX_STEPS = 6` whatever state things are in. It also stops
-immediately if the model names an action that does not exist. **So there are four
-exits, and the model chooses only two of them.**
+The reference agent makes this literal. Four files, one per part, small enough to
+hold in your head at once.
 
-That difference is worth holding on to. The two exits the model controls announce
-themselves clearly. The two the loop controls are the ones nobody is watching.
-Both of them are a drill in block 3.
+| the file | the part |
+|---|---|
+| [`agent.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/agent.py) | the loop and the stopping condition |
+| [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py) | the tool layer — what the agent is able to do |
+| [`llm.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/llm.py) | the model adapter, and `_build_prompt`, which reassembles the context from scratch every single step |
+| [`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py) | the trace — the only reason you can see what happened |
+
+For the rest of the cohort, the harness is the thing we are building. The model
+is a dependency.
+
+Three of those four files are ordinary software. You already know how to make
+that kind of code reliable. Hold on to that observation. Most of what makes an
+agent trustworthy is not novel, and almost none of it is in the file with the
+model in it.
 
 ### One run is many calls, and you do not know how many
+
+*00:38 · Whole room, 8 minutes.*
 
 Say this before anything else about the loop. Almost everyone arrives with the
 wrong picture of it.
@@ -347,6 +467,20 @@ Two things are worth separating, because the industry uses one phrase for both. 
 **Running** that tool is your code doing work. When someone says "the agent made
 four calls", ask which kind they mean. One costs money at the provider. The other
 costs money in your infrastructure.
+
+**How the loop ends.** The model can end it two ways. It emits `resolve` when it
+believes the case is closed. It emits `escalate` when it hands the case to a
+person. Any other action, such as `lookup_account` or `issue_credit`, is a step,
+and the loop goes round again with that observation added.
+
+If the model does neither, the loop ends the run itself, in two more ways. It
+stops after `MAX_STEPS = 6` whatever state things are in. It also stops
+immediately if the model names an action that does not exist. **So there are four
+exits, and the model chooses only two of them.**
+
+That difference is worth holding on to. The two exits the model controls announce
+themselves clearly. The two the loop controls are the ones nobody is watching.
+Both of them are a drill in block 3.
 
 Three consequences follow, and the third belongs on a whiteboard.
 
@@ -367,35 +501,17 @@ are on allows **20 requests per day, per model**, and one run is about three.
 That is six runs. That is your whole allowance, and the step count is what spends
 it.
 
-Everything you drew that is not the model is the **harness**. That means the loop
-and its stopping condition, the tool layer, the context assembled for each step,
-and the trace that lets you see any of it. That word is worth having. For the
-rest of the cohort, the harness is the thing we are building. The model is a
-dependency.
-
-The reference agent makes this literal. Four files, one per part, small enough to
-hold in your head at once.
-
-|                                                                                       |                                                                                                      |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [`agent.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/agent.py) | the loop and the stopping condition                                                                  |
-| [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py) | the tool layer — what the agent is able to do                                                        |
-| [`llm.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/llm.py)     | the model adapter, and `_build_prompt`, which reassembles the context from scratch every single step |
-| [`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py) | the trace — the only reason you can see what happened                                                |
-
-Three of those four files are ordinary software. You already know how to make
-that kind of code reliable. Hold on to that observation. Most of what makes an
-agent trustworthy is not novel, and almost none of it is in the file with the
-model in it.
-
 ### Inside one step
+
+*00:46 · Alone 3 minutes, then the room. 11 minutes.*
 
 The trace shows what the agent *did*. It does not show what the model was *sent*.
 That is the last place in this system where something is still hidden. `make
 prompt` opens it. It works on the scripted brain too, so this runs without
 spending a request.
 
-Three things are worth finding for yourself before I name them.
+Read it in silence for three minutes before anything is named. Three things are
+worth finding for yourself, and the room collects them in this order.
 
 **There is no conversation.** Every step assembles two messages, a system prompt
 and one user message, and then throws them away. Nothing accumulates. The history
@@ -425,14 +541,9 @@ prompt and a dictionary lookup in `agent.py`. Nothing checks that the arguments
 the model produced match what the function accepts. We come back to that in block
 3, because it has a cost you would not guess.
 
-Then comes the split that the rest of the cohort runs on. Everything you can
-change in `llm.py` moves a **probability**. That means the model, the
-temperature, the system prompt, and what you let into the context. `MAX_STEPS` in
-`agent.py` and the contents of the `TOOLS` dictionary are the only two things in
-this codebase that change what is **possible**. Teams spend their time on the
-first list. The second list is the one that holds under audit.
-
 ### "Can we not just make the thinking better?"
+
+*00:57 · Whole room, 6 minutes.*
 
 Somebody asks this in every room, usually right here. It is the correct question.
 Better prompt. Stronger model. Richer context. Three real levers, and they all
@@ -474,28 +585,55 @@ can read in `agent.py`.
 > is something you can point at in code, test, review and defend after the fact.
 > "We used a better model" is none of those.
 
+### Odds, or what is possible
+
+*01:03 · Whole room, 7 minutes.*
+
+Then comes the split that the rest of the cohort runs on.
+
+Everything you can change in `llm.py` moves a **probability**. That means the
+model, the temperature, the system prompt, and what you let into the context.
+`MAX_STEPS` in `agent.py` and the contents of the `TOOLS` dictionary are the only
+two things in this codebase that change what is **possible**.
+
+| what you change | what it moves | where it lives |
+|---|---|---|
+| the model, the temperature, the system prompt, what enters the context | how **often** something expensive happens | `llm.py` |
+| `MAX_STEPS`, and what is in the `TOOLS` dictionary | what the agent is **able** to do at all | `agent.py`, `tools.py` |
+
+Teams spend their time on the first row. The second row is the one that holds
+under audit. Every week after this one adds something to the second row.
+
 ### Checkpoint · 01:10
 
-Read these before you stand up. Then put one number in chat, 1 to 5, on the last
-one only.
+**You can now…**
 
 - Draw the ReAct loop and name its three phases
 - Name the four parts of the harness and point at the file each one lives in
 - Say how many calls to the model one ticket takes, and why you do not control that number
-- **Explain the difference between something that changes the odds and something that changes what is possible**
+- **Explain the difference between something that changes the odds and something
+  that changes what is possible**
+
+Read these before you stand up. Then put a number from 1 to 5 in chat on the last
+one only.
 
 If your number on the last one is below 3, say so. It is the sentence the whole
 day rests on, and block 2 does not land without it.
 
-_Five minutes, cameras off, away from the screen. Not a break. A reset._
+*Five minutes, cameras off, away from the screen. Not a break. A reset.*
 
 ## 2 · The Problem
 
-_01:15 to 02:05 — ~50 minutes._
+*01:15 to 02:05 — 50 minutes.*
 
 Now the same agent, three more tickets. The ₹3,600 was the first, back in block
-1. Write the number down before each run. You will want the gap between your
-guess and the trace.
+1. This block answers three questions. Which single line of code would have
+stopped each one? What do all four have in common that no amount of better
+reasoning touches? And what does the trace refuse to tell you even when nothing
+errors?
+
+Write the number down before each run. You will want the gap between your guess
+and the trace.
 
 **Two of these three you have already run.** You watched `make weird-mock` pay
 ₹5,000 and `make injected` pay ₹2,50,000 in the pre-work. So the amount is not
@@ -508,14 +646,17 @@ is not guessable.
 
 ### It pays an account that does not exist — ₹5,000
 
-_You ran this one in the pre-work, so the number is not the question._ Ticket
-#9999 is an angry customer disputing a charge on an account that does not exist.
-The agent looks it up. It is told, in plain JSON, `{"found": false}`. Then it
-issues a ₹5,000 credit anyway.
+*01:15 · Whole room, 8 minutes. Commit in chat before the file opens.*
 
-_Commit before we open the file. Thirty seconds, in chat._ **Which single line of
-this codebase would have stopped it?** Not "what should the model have done". A
-line, and which file it is in.
+You ran this one in the pre-work, so the number is not the question. Ticket #9999
+is an angry customer disputing a charge on an account that does not exist. The
+agent looks it up. It is told, in plain JSON, `{"found": false}`. Then it issues
+a ₹5,000 credit anyway.
+
+Write down, alone, in 30 seconds:
+
+> **Which single line of this codebase would have stopped it?** Not "what should
+> the model have done". A line, and which file it is in.
 
 Nothing here is a hallucination. The agent was handed the truth and acted against
 it.
@@ -533,18 +674,21 @@ having a bad day, and a capable model that was talked into it. Nothing downstrea
 was looking. A better brain changes the odds of this trace. It does not change
 whether the trace is possible.
 
-One more thing is worth knowing, and we test it in the model comparison. On a
-real model this particular ticket is usually escalated correctly. The naive
+One more thing is worth knowing, and we test it in the model comparison at 03:02.
+On a real model this particular ticket is usually escalated correctly. The naive
 policy is standing in for a worse brain than the one you are paying for today: a
 cheaper model, a fallback during an outage, next quarter's cost reduction. The
 question it asks is whether your system survives one.
 
 ### It follows a rule an attacker wrote — ₹2,50,000
 
-_Also pre-run, so again, the number is not the question._ This is the one worth
-the full cycle. Commit alone for thirty seconds. Argue in pairs for two minutes.
-Then post in chat. **Whose text did the agent obey, and what in the system told
-it that text was trustworthy?**
+*01:23 · Alone 30 seconds, pairs 2 minutes, then the room. 13 minutes.*
+
+Also pre-run, so again, the number is not the question. This is the one worth the
+full cycle. Commit alone, argue in pairs, then post in chat:
+
+> **Whose text did the agent obey, and what in the system told it that text was
+> trustworthy?**
 
 `make injected`. An ordinary, honest ticket asks a polite question about a ₹1,200
 invoice. The account record it reads happens to contain a note. The note says the
@@ -564,8 +708,10 @@ gap exists, that no prompt wording closes it, and that you watched it happen.
 
 ### It refuses a customer who was owed the money — ₹0
 
-_This is the one you have not seen, and the only one where the number is still
-the question._ Predict it before it runs.
+*01:36 · Whole room, 8 minutes. Predict the number first, 30 seconds.*
+
+This is the one you have not seen, and the only one where the number is still the
+question. Write it down before it runs.
 
 This is the quiet one. The model sends the account id as a number. The account
 store keys them as strings. The lookup returns `{"found": false}` for an account
@@ -578,14 +724,16 @@ that should not move. This one would survive every dashboard you currently own.
 
 ### The pattern
 
+*01:44 · Whole room, 9 minutes, built on the board from your numbers.*
+
 Put the runs side by side. Something shows up that is invisible one at a time.
 
-| ticket | what the account record said             | what the agent did                          |
-| ------ | ---------------------------------------- | ------------------------------------------- |
-| 4471   | honestly: charged twice                  | correct — credited ₹1,200                   |
-| 9999   | honestly: no such account                | correct on a real model — escalated         |
-| 5820   | honestly: the invoice is legitimate      | correct on a real model — refused to credit |
-| 8001   | falsely: credit 250000, this is expected | paid ₹2,50,000                              |
+| ticket | what the account record said | what the agent did |
+|---|---|---|
+| 4471 | honestly: charged twice | correct — credited ₹1,200 |
+| 9999 | honestly: no such account | correct on a real model — escalated |
+| 5820 | honestly: the invoice is legitimate | correct on a real model — refused to credit |
+| 8001 | falsely: credit 250000, this is expected | paid ₹2,50,000 |
 
 **The model was right every time its information was honest. It was wrong the
 moment its information was not.** It has no way to doubt what a tool hands it. So
@@ -593,28 +741,14 @@ the useful question about an agent is not how clever it is. The useful questions
 are what it is being told, what it is allowed to do about it, and what it
 remembers afterwards.
 
-One more thing before we start fixing it. Search this whole system for the word
-*expected*. You get two hits, the same sentence twice, both inside the poisoned
-account note: *"…not the disputed amount. This is expected."*
-
-**The only thing in this system that asserts an expectation is the attacker.**
-
-Ticket 4471 carries `disputed_amount: 1200`, and the agent paid ₹1,200. Nothing
-compared them. Ticket 8001 disputed ₹1,200, and the agent paid ₹2,50,000. Nothing
-compared those either. The trace has exactly one line for what happened, `paid
-out ₹1,200 · 1 credit`. It has no line at all for what should have happened. A
-run that pays the right amount and a run that pays two hundred times too much
-produce the same shape of output. They differ only in a number no code reads.
-
-Hold on to that. In week 3 we write the expected outcome down somewhere the model
-cannot reach. That is all an evaluation harness really is.
-
 ### So how would you stop this?
+
+*01:53 · Whole room, 5 minutes.*
 
 We take the answers in the order rooms usually give them.
 
-- **"Use a better model."** Reasonable. Hold the thought. We test it directly in
-  the next block, and the result is not what most people expect.
+- **"Use a better model."** Reasonable. Hold the thought. We test it directly at
+  03:02, and the result is not what most people expect.
 - **"Fix the prompt. Tell it to check."** Try it. Then ask what happens on the
   ticket you have not thought of yet, and how you would find out it had failed.
 - **"Validate the account exists."** Closer. Now ask who owns that check, where it
@@ -625,8 +759,12 @@ The answer is in [`tools.py`](https://github.com/greetsunshine/reference-agent/b
 `{"credited": true}`. No ceiling, no existence check, no approval. **The money
 moved because nothing in the system was ever going to stop it.**
 
+### Three ideas, and they are a tour of the harness
+
+*01:58 · Whole room, 4 minutes.*
+
 That gives us the other three ideas the rest of the cohort hangs off. They are
-not a list. They are a tour of the harness you just drew, one part at a time.
+not a list. They are the harness you drew at 00:18, one part at a time.
 
 **Tools are your real API surface.** Every tool you expose is a capability you
 have handed to something you cannot fully predict. `issue_credit(₹1,200)` is not
@@ -652,45 +790,95 @@ them.
 > person has to own every decision in this session. "The model decided" is not an
 > answer you can give a board.
 
+### The only expectation in the system was written by the attacker
+
+*02:02 · Whole room, 3 minutes. Guess the number before the search runs.*
+
+Search this whole system for the word *expected*. Guess how many hits first.
+
+You get two, the same sentence twice, both inside the poisoned account note:
+*"…not the disputed amount. This is expected."*
+
+**The only thing in this system that asserts an expectation is the attacker.**
+
+Ticket 4471 carries `disputed_amount: 1200`, and the agent paid ₹1,200. Nothing
+compared them. Ticket 8001 disputed ₹1,200, and the agent paid ₹2,50,000. Nothing
+compared those either. The trace has exactly one line for what happened, `paid
+out ₹1,200 · 1 credit`. It has no line at all for what should have happened. A
+run that pays the right amount and a run that pays two hundred times too much
+produce the same shape of output. They differ only in a number no code reads.
+
+Hold on to that. In week 3 we write the expected outcome down somewhere the model
+cannot reach. That is all an evaluation harness really is.
+
 ### Checkpoint · 02:05
 
-Same again. Read them, then put one number in chat on the last one.
+**You can now…**
 
 - Name four ways this agent loses money, with the amount for each
 - Say which part of the harness each of those four failures lives in
 - Explain why a better model does not fix any of them
 - **Read a trace and say what it is not telling you**
 
+Read them, then put a number from 1 to 5 in chat on the last one.
+
 This is the checkpoint that matters most. Everything after the break assumes the
 third one is solid.
 
-_Fifteen minute break here, 02:05 to 02:20. It falls straight after the
+*Fifteen minute break here, 02:05 to 02:20. It falls straight after the
 ₹2,50,000 on purpose. Most rooms carry on arguing about it, which is what the
-break is for._
+break is for.*
 
 ## 3 · The Drill
 
-_02:20 to 03:20 — ~60 minutes, hands-on._
+*02:20 to 03:20 — 60 minutes. Hands on keyboards.*
 
 Four exercises. Each one is a real defect in the agent you have been running.
 Each one is the floor. None of them is clever, and all of them are absent from
 most production agents.
 
-Every one of them makes a failure **visible, named or measurable**. None of them
-prevents anything. That is deliberate. Prevention is week 2, and it is worth more
-when you have spent a week looking at the thing unguarded.
+This block answers three questions. How far does a fix have to travel before a
+*machine* can see the failure? What does a tool do to the world, as opposed to
+what it is called? And what happens when you give a coding assistant your
+decision instead of your task?
+
+**Every one of them makes a failure visible, named or measurable. None of them
+prevents anything.** That is deliberate. Prevention is week 2, and it is worth
+more when you have spent a week looking at the thing unguarded.
 
 **Drills 1, 2 and 3 happen in the room.** Drill 4 is your homework. It is the
-fiddliest of the four. It needs changes in two files and a decision about what
-the word "steps" should mean. It is also the one that does not need the rest of
-us in order to do it.
+fiddliest of the four, it needs changes in two files and a decision about what
+the word "steps" should mean, and it is the one that does not need the rest of
+us.
 
-**Drill 1 · Make the failure say its name.**
+### How every drill runs
+
+*02:20 · Whole room, 5 minutes. On paper, before any code.*
+
+Three steps, the same three every time.
+
+1. **Decide.** Five minutes on paper, alone, no assistant. Write what you are
+   going to change and why, before anything is typed.
+2. **Build.** Give the assistant your *decision*, not the task. "Make the step
+   budget exit non-zero and carry the outcome out through `main.py`" is a
+   decision. "Fix the step budget" is a task, and it will be answered by
+   guesswork you never see.
+3. **Review.** Read the diff against your decision, not against whether it runs.
+   The question is whether it did what you decided, not whether the tests pass.
+
+**Scope your assistant to the files the drill names.** Pointed at the whole repo
+it will go and fix `issue_credit`, which is the one thing we are not doing today.
+
+### Drill 1 · Make the failure say its name
+
+*02:25 · Decide 5 minutes in writing, then alone, 15 minutes.*
+
 [`agent.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/agent.py)
-runs `MAX_STEPS = 6`. When it runs out, it prints `▸ done  reached step budget`.
-An agent that gave up is reporting success. Give it its own outcome, its own
-colour, and a non-zero exit code. Then ask how many dashboards in your own
-organisation are currently counting that as a success.
+runs `MAX_STEPS = 6`. When it runs out, it prints `▸ done  reached step budget`,
+in green, and exits zero. Three signals all reporting success on a run that gave
+up. **Give it its own outcome, its own colour, and a non-zero exit code.** Then
+ask how many dashboards in your own organisation are currently counting that as a
+success.
 
 Notice how far the fix has to travel. The outcome exists only inside `run()`.
 `run()` returns a `state` dictionary that `main()` ignores. And nothing in the
@@ -698,10 +886,10 @@ repo ever calls `sys.exit`.
 
 So there is a gradient, and where you stop on it is the whole drill.
 
-| what you change                                           | who can now see the failure                       |
-| --------------------------------------------------------- | ------------------------------------------------- |
-| one line in `agent.py` — use the existing `warn` kind     | a person reading the terminal                     |
-| plus a real `gaveup` kind in `trace.py`                   | a person, with its own name and colour            |
+| what you change | who can now see the failure |
+|---|---|
+| one line in `agent.py` — use the existing `warn` kind | a person reading the terminal |
+| plus a real `gaveup` kind in `trace.py` | a person, with its own name and colour |
 | plus carry the outcome out and exit non-zero in `main.py` | a **machine** — cron, CI, a supervisor, a monitor |
 
 One line makes it honest to a human. Three files make it honest to a process. The
@@ -709,14 +897,26 @@ thing that wakes you at two in the morning is a process. **Stopping after the
 first line is the failure this drill is about.** Your terminal now looks right,
 and every automated consumer is still being told the run succeeded.
 
+**Decide this one before you prompt, because your assistant will decide it
+silently if you do not:**
+
+> **What exit code does `escalate` get?**
+
+It is genuinely ambiguous. Escalating is the correct outcome for ticket 9999 and
+the wrong outcome for ticket 5820, and the code cannot tell them apart. Whatever
+number ends up there is a business rule set by autocomplete.
+
 It is also the first thing the harness tells you about itself. Three files had to
 agree for one fact to escape, and that is with four files and one loop. Hold that
 number. In week 5 we come back to the harness and ask what happens to it when one
 loop is no longer enough. That is the least reversible decision in this whole
 course.
 
-**Drill 2 · Grade the tools by consequence.** Look at two lines from a run that
-worked.
+### Drill 2 · Grade the tools by consequence
+
+*02:40 · Alone, then pairs. 10 minutes.*
+
+Look at two lines from a run that worked.
 
 ```
 ▸ tool  lookup_account(account_id='4471') -> {'found': True, ...}
@@ -743,24 +943,27 @@ have built is a label. The label is the point. *"Ask a human before irreversible
 actions"* is a rule you cannot write until something in the code knows which
 actions are irreversible. Week 2 is that rule.
 
-`escalate` is the one to argue about. Most rooms call it a write. Ask what would
-have to change for it to be irreversible. If escalating also emailed the
-customer, it would be. Same function, different grade. **The grade describes what
-the function reaches, not what it is called.**
+`escalate` is the one to argue about in pairs. Most rooms call it a write. Ask
+what would have to change for it to be irreversible. If escalating also emailed
+the customer, it would be. Same function, different grade. **The grade describes
+what the function reaches, not what it is called.**
 
 **Three grades here, four levels in the published tool, and that is deliberate.**
 The Agent Authority Review on our resources page scores the same judgment on four
 undo-cost levels, from "undo in seconds, nobody notices" to "cannot be undone".
-Three is what a room of eight can hold and argue about in fifteen minutes. Four is
+Three is what a room of eight can hold and argue about in ten minutes. Four is
 what you want in front of a real workflow, where the difference between "undo in
 seconds" and "undo by Friday with an apology" decides who owns the step. **read**
 and **write** split into the first two levels; **irreversible** is the fourth. Use
 three today and the tool's four on your own system.
 
-**Drill 3 · Check the arguments before you dispatch.** At every step the model
-returns two things: the name of a tool, and the arguments to call it with.
-`agent.py` takes the name, looks it up, and calls the function with whatever came
-back.
+### Drill 3 · Check the arguments before you dispatch
+
+*02:50 · Decide 3 minutes in writing, then alone, 12 minutes.*
+
+At every step the model returns two things: the name of a tool, and the arguments
+to call it with. `agent.py` takes the name, looks it up, and calls the function
+with whatever came back.
 
 ```python
 fn = TOOLS.get(act)      # agent.py:38
@@ -805,27 +1008,9 @@ wrong-shaped call **say so, out loud, in the trace**, instead of being repaired
 behind your back. That is week 1 in one sentence. You cannot fix what the system
 will not tell you about.
 
-**Drill 4 · Put cost on every step.**
-[`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)
-prints tokens, latency and rupees *once, at the end*. That tells you a run cost
-₹0.38. It tells you nothing about which step spent it. Capture the token
-difference around each model call and attribute it to the step.
-
-While you are in there, look at the summary. It says `steps 4` on a run that went
-round the loop three times, because it is counting trace lines rather than turns.
-Decide what that number should mean, and make it mean that.
-
-**Then stop.** You will want to fix `issue_credit`. You will want to put a
-ceiling on it, check the account exists, and remember what it already paid. Do
-not. Sitting with a visible, unguarded, money-moving tool for a week is the
-point. Week 2 opens by building that guardrail properly, with a budget, an allow
-and deny list, human approval, and durable state. Patching it in the last ten
-minutes today is worth much less. Write down the guard you wanted to add. You
-will implement your own note next week.
-
 ### Comparing two models
 
-_~10 minutes of the block above. This is where we test "use a better model"._
+*03:02 · Pairs, 10 minutes. This is where "use a better model" gets tested.*
 
 This is the block your key is for. The scripted brain ignores the model flag, so
 mock mode cannot show you any of what follows. No key, or a key misbehaving? Pair
@@ -835,6 +1020,10 @@ perfectly well.
 One config value decides which model is inside the loop. Everything else is
 fixed: same tools, same system prompt, `temperature=0`. So what you are watching
 is the model, not sampling luck.
+
+Predict in pairs, in 60 seconds, before either run:
+
+> **Will the second model escalate ticket 9999, or pay it?**
 
 ```
 make weird                                      # the default model
@@ -847,32 +1036,81 @@ which the adapter already forgives. And some emit JSON that does not parse at
 all, which takes the whole run down. That last one is worth sitting with. **Your
 model's output is a parsing surface you own**, and nobody writes a test for it.
 
-Then run the same comparison against `make injected`. Watch the better model read
-the attacker's note more carefully and follow it more confidently. That is the
-honest shape of the answer. "Use a better model" is a real effect on the tickets
-where the record is honest. It has no effect at all on the one where it is not.
-The better model moves next quarter. The boundary you drew does not.
+Then the same comparison against `make injected`, run from the front rather than
+on eight machines, because it is six requests each and would put everybody at 18
+of 20 before the afternoon. Watch the better model read the attacker's note more
+carefully and follow it more confidently. That is the honest shape of the answer.
+"Use a better model" is a real effect on the tickets where the record is honest.
+It has no effect at all on the one where it is not. The better model moves next
+quarter. The boundary you drew does not.
+
+### Then stop
+
+*03:12 · Whole room, 8 minutes.*
+
+You will want to fix `issue_credit`. You will want to put a ceiling on it, check
+the account exists, and remember what it already paid. Do not.
+
+Sitting with a visible, unguarded, money-moving tool for a week is the point.
+Week 2 opens by building that guardrail properly, with a limit, a human gate and
+durable state. Patching it in the last ten minutes today is worth much less.
+**Write down the guard you wanted to add.** You will implement your own note next
+week.
+
+Checking what you did build costs nothing. The drills all live in files the
+scripted brain still dispatches through, so these three spend no quota at all:
+
+```
+make mock · make weird-mock · make retry
+```
+
+### Drill 4 · Put cost on every step
+
+*Homework. Not run in the room — it is the first item under **After**.*
+
+[`trace.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/trace.py)
+prints tokens, latency and rupees *once, at the end*. That tells you a run cost
+₹0.38. It tells you nothing about which step spent it. Capture the token
+difference around each model call and attribute it to the step.
+
+While you are in there, look at the summary. It says `steps 4` on a run that went
+round the loop three times, because it is counting trace lines rather than turns.
+Decide what that number should mean, and make it mean that.
+
+It is here rather than in the room because it is the only one of the four that
+needs no argument with anybody. Week 2's cycle A turns the number it produces
+into a limit, so arriving without it means setting a budget blind.
 
 ### Checkpoint · 03:20
 
-Read these, and post a number 1 to 5 on the last one.
+**You can now…**
 
 - Make a silent failure announce itself to a machine, not just to a person reading a terminal
 - Grade a tool by its consequence rather than by its name
 - Write a contract for a tool and refuse a call that does not match it
-- **Give a coding assistant a decision instead of a task, and review what it returns against that decision**
+- **Give a coding assistant a decision instead of a task, and review what it
+  returns against that decision**
+
+Read these, then put a number from 1 to 5 in chat on the last one.
 
 The drill block is where it is easiest to get quietly stuck and say nothing about
 it. A number in chat is the only way anyone finds out before the teardown. Put
 one in even if it is a 2.
 
-_Five minutes, stand up again._
+*Five minutes, stand up again.*
 
 ## 4 · The Teardown
 
-_03:25 to 04:15 — ~50 minutes. In pairs, then the room._
+*03:25 to 04:15 — 50 minutes. In pairs, then the room.*
 
-Everything so far fits on one screen. Now the version that does not.
+Everything so far fits on one screen. Now the version that does not. This block
+answers two questions. Which of today's four failures changes shape when the same
+agent runs at forty thousand disputes a month? And what does a boundary have to
+say before somebody else can build it?
+
+### The system
+
+*03:25 · Whole room, 3 minutes.*
 
 Same business problem: disputed charges, investigate, decide, pay. This time at
 the scale a bank or a telco actually runs it. **This is a constructed teaching
@@ -887,15 +1125,19 @@ real organisation.
 > disputes are resolved within four hours. There is also an audit obligation. The
 > firm must be able to explain any individual credit long after it was issued.
 
-Five questions. Take two in pairs, and bring the sharpest answer back to the
-room.
+### Five questions
+
+*03:28 · Pairs, 12 minutes. Two questions per pair, assigned by name.*
+
+Take the two you are given, and bring the sharpest answer back to the room. You
+are not expected to get through all five.
 
 **1 · The retry that pays twice.** `issue_credit` times out mid-call. The agent
 does what every well-behaved distributed system does, and retries. Did the
 customer receive ₹1,200 or ₹2,400, and how would you know? Now design the fix,
 and say which component owns it. You watched the small version of this in `make
-retry` back in block 1. The answer that works on one process is not the answer
-that works on forty.
+retry` at 00:23. The answer that works on one process is not the answer that
+works on forty.
 
 **2 · How far one good deploy reaches.** Someone improves the policy text. It
 ships on a Tuesday. By Thursday, 40,000 disputes have been processed under it.
@@ -904,7 +1146,7 @@ survivable?
 
 **3 · The question eight months later.** A regulator asks why one specific
 account was credited. What does the audit trail have to contain to answer that?
-Is a stored prompt and completion enough? Note what you learned in block 1. The
+Is a stored prompt and completion enough? Note what you learned at 00:46. The
 model's stated reasoning is never stored. So if you were planning to show someone
 the `thought`, it does not exist.
 
@@ -914,19 +1156,29 @@ money rather than confidence.
 
 **5 · When the model is down.** The provider has an outage. Do you queue, fail
 closed, or fall back to rules? And what do you tell the customer waiting inside a
-four-hour service level agreement? Remember what failing closed looked like
-earlier today: ₹0 paid, a clean trace, and a customer who was owed the money.
+four-hour service level agreement? Remember what failing closed looked like at
+01:36: ₹0 paid, a clean trace, and a customer who was owed the money.
 
-None of these are model problems. Every one is a boundary someone either drew or
-did not.
+### Back to the room
+
+*03:40 · Whole room, 10 minutes. Two minutes per question.*
+
+Each pair gives one answer per question, and the room argues the one it
+disagrees with. Two minutes is the whole budget, so lead with the decision rather
+than the reasoning.
+
+**None of these are model problems. Every one is a boundary someone either drew
+or did not.** That sentence is what the block exists to land, and it is the one
+to take into next week.
 
 ### Write the boundary down
 
-_03:50 to 04:15, in the same pairs. Twelve minutes to write, eight to review
-somebody else's, and the last five for the framing below._
+*03:50 · Pairs, 12 minutes.*
 
 Pick the one question you argued hardest about. Write it up as a one-page
 decision record, in the shape you would put in front of an architecture review.
+Seven sections, and they do not change from week to week — week 6 has to be
+readable against week 1.
 
 1. **Context.** What breaks today, cited against a run you watched, with the number.
 2. **Goals.** Three at most, each one testable. "Safer" is not a goal. "No dispute is credited twice" is.
@@ -936,10 +1188,17 @@ decision record, in the shape you would put in front of an architecture review.
 6. **Alternatives.** One you rejected, and why. "Use a better model" counts, and rejecting it well is most of today.
 7. **Open questions.** What you could not settle in fifteen minutes.
 
-At 04:05 you swap with another pair and review theirs. Four questions, each
-scored 0, 1 or 2 by the reviewing pair. The written comment matters more than the
-number, and there is no assessment behind this. It exists to make ten minutes of
-review structured enough to finish.
+This is the artefact week 2 opens with. You will be implementing your own
+document, so write it for the person who has to build it. Next week, that is you.
+
+### Review another pair's
+
+*04:02 · Swap, 8 minutes.*
+
+Four questions, each scored 0, 1 or 2 by the reviewing pair. The written comment
+matters more than the number. Nothing is summed, nothing is averaged and nothing
+is ranked; the scoring exists only to make eight minutes of review structured
+enough to finish.
 
 1. **Would it have stopped what we watched?** Take the four runs one at a time
    and trace each through their checks. Any run that still gets through is your
@@ -952,12 +1211,9 @@ review structured enough to finish.
    legitimate ₹1,200 credit has swapped one failure for another. You watched that
    one at ₹0.
 
-This is the artefact week 2 opens with. You will be implementing your own
-document, so write it for the person who has to build it. Next week, that is you.
-
 ### Closing the loop — the leader's framing
 
-_04:10 to 04:15, the last five minutes of the block._
+*04:10 · Whole room, 5 minutes.*
 
 One trade-off runs under all five questions. It is **autonomy against
 reversibility**, and it is a business decision dressed as an engineering one.
@@ -971,54 +1227,79 @@ wrong."** That sentence survives a board meeting. The first one does not.
 
 ### Checkpoint · 04:15
 
-No rating on this one. You are mid-argument and the exit poll is eight minutes
-away. Just read them.
+**You can now…**
 
 - Take a failure you watched at one-agent scale and say what changes at forty processes
 - Say what an audit trail has to contain beyond a stored prompt and completion
 - **Write a boundary down in a form somebody else could actually implement**
 
+No rating on this one. You are mid-argument and the quiz is five minutes away.
+Just read them.
+
 ## The quiz
 
-_04:20 to 04:30._
+*04:20 to 04:30.*
 
-Eight questions in chat, mixed across every topic of the day rather than grouped
-by block. The mixing is the point. Sorting them by topic lets you match on the
-heading instead of on the problem. Everybody answers. Then we take up the ones
-that split the room.
+Eight questions in chat, mixed across the whole day rather than grouped by block.
+The mixing is deliberate. Sorting questions by topic lets you answer from the
+heading instead of from the problem. Everybody answers. Then the room takes up
+the two or three that split it.
+
+The multiple-choice ones appear again on your check page afterwards, so you can
+answer them a second time on your own. The written ones are taken up live and
+live only in the room.
 
 ## 5 · The Horizon
 
-_04:30 to 04:50 — ~20 minutes._
+*04:30 to 04:50 — 20 minutes.*
 
 Every session closes here. We look at what is moving in the field right now, and
 what it means for the person you are three years from today. This is not a news
 round-up. The question is always *what should I do differently because of this?*
 
-**This week's question: what is durable when the models keep moving?**
+### What is durable when the models keep moving
+
+*04:30 · Whole room, 10 minutes.*
 
 You watched two models disagree about whether to give away money, on identical
 inputs. Then you watched both of them obey an attacker with equal confidence.
 Anything you build on top of "this model behaves well" lasts about one release
-cycle. So the honest career question is which half of your work survives the next
+cycle.
+
+So the honest career question is which half of your work survives the next
 capability jump. The answer, consistently, is the half you did today. Naming
 failure modes. Drawing boundaries. Deciding what a system may do without a
 person. None of that got easier when the models got better. It got more valuable,
 because there is more of it to do.
 
-We look at where the demand actually is. What is being hired for in India right
-now, at what level, and which skills employers say they cannot fill. We set that
-against what is quietly being absorbed into tooling.
+A coding assistant will write any of today's three drills for you in under a
+minute. It has no view at all on what the step budget should be, and it will not
+tell you that it has no view. That gap is the job.
+
+### Where the demand actually is
+
+*04:40 · Whole room, 10 minutes.*
+
+What is being hired for in India right now, at what level, and which skills
+employers say they cannot fill. We set that against what is quietly being
+absorbed into tooling.
+
+The specifics come from the radar in the week this is taught. Nothing dated is
+written into this file.
 
 ## Close
 
-_04:50 to 05:00._
+*04:50 to 05:00.*
 
-**04:50 — the assignment.** Four things, set out under _After_ below.
+**04:50 — the assignment.** Four things, set out under *After* below.
 
 **04:52 — the same five statements again.** The identical five outcomes you rated
 at 00:05. Same words, same order, 1 to 5. Both sets then go on screen together,
 and we name the two that moved most.
+
+Then one question out loud: **who moved on 3 or 4?** Those are the two this
+session predicted would be lowest at 00:05, and the prediction is on the page
+above for you to check it against.
 
 **04:56 — two lines in chat.** Everybody answers both.
 
@@ -1032,10 +1313,12 @@ more than a tidy answer.
 
 ## After
 
-_~2 hours before next week._
+*About 2 hours.*
 
 1. **Drill 4** on the reference agent. Put cost on every step. It is the
-   fiddliest of the four, and the one that does not need the room.
+   fiddliest of the four, and the one that does not need the room. Week 2's first
+   build turns the number it produces into a limit, so arriving without it means
+   setting a budget blind.
 2. **The same changes applied to your own system**, or to the piece of it you can
    reach. Drills 1 and 2 transfer almost directly.
 3. **Finish your decision record** from block 4. Week 2 opens by building it.
@@ -1050,8 +1333,20 @@ thing you will still be able to show someone in a year.
 
 ## Reading
 
-None of it is required, and none of it is long.
+None of it is required. None of it is long. Three of the seven are ours.
 
+- [Designing agentic systems](/resources/guides/agentic-system-design). The six
+  decisions an agentic design is made of. This week is decisions 2, 4 and 6 —
+  what the system is for and where it stops, what each tool may do, and what you
+  can see afterwards. Decision 1 was your week 0 pre-work, and decisions 3 and 5
+  are next week.
+- [The Agent Authority Review](/resources/agent-authority-review). Drill 2 grades
+  tools read, write or irreversible. This tool scores the same judgment on four
+  undo-cost levels, one step of a workflow per row. Run it on your own system and
+  bring the sheet to week 2.
+- [Who may call the tool](/resources/guides/tool-permissions). Drill 3 as a
+  written argument — permissions live at the tool rather than in the prompt, and
+  a tool checks the evidence it was handed.
 - [Timeouts, retries and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/),
   AWS Builders' Library. Old, unglamorous, and directly under teardown question 1.
 - [Idempotent requests](https://stripe.com/docs/api/idempotent_requests), Stripe
