@@ -1,0 +1,44 @@
+# Ticks the communications worker on a deployment that Vercel's cron does not
+# reach: the staging preview. Vercel runs vercel.json crons on production
+# deployments only, so the branch preview needs another clock, and this is it.
+#
+# One HTTP call. The endpoint does the work (plan every due follow-up, then
+# sweep the outbox) and is safe to call from two clocks at once; see the
+# header of src/lib/comms/drip.ts.
+#
+# Needs two repository secrets:
+#   COMMS_WORKER_URL     e.g. https://<preview>.vercel.app/api/comms/worker
+#   COMMS_WORKER_SECRET  the same value as the deployment's COMMS_WORKER_SECRET
+# Without them the job exits early and says so.
+#
+# GitHub schedules are best effort and can run late by minutes. That is fine
+# here: a follow-up due at 10:00 that goes at 10:14 is still the day-2 message.
+
+name: Comms worker (staging)
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call the worker
+        env:
+          URL: ${{ secrets.COMMS_WORKER_URL }}
+          SECRET: ${{ secrets.COMMS_WORKER_SECRET }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$SECRET" ]; then
+            echo "COMMS_WORKER_URL or COMMS_WORKER_SECRET is not set; nothing to call."
+            exit 0
+          fi
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $SECRET" "$URL")
+          echo "HTTP $code"
+          cat /tmp/out.json; echo
+          [ "$code" = "200" ]

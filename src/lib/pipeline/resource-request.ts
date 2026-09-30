@@ -85,6 +85,7 @@ import { checkRate } from '../agent/ratelimit';
 import { record } from '../admin/supabase';
 import { deviceOf } from '../admin/visitor';
 import { analyticsAllowed, consentFromHeader, eventContext } from '../analytics/context';
+import { startDripFromRequest } from '../comms/drip-runtime';
 
 const REFUSED = 'We could not accept that request. The page is the resource either way.';
 
@@ -243,6 +244,26 @@ export async function handleResourceRequest(
     });
     await recordDelivery(saved.requestId, outcome);
     deliveryState = outcome.state;
+
+    // The follow-ups (30 September 2026). Only with the marketing box ticked
+    // on THIS request; the words the box carried are in consent.ts and the
+    // record is written before anything else. Never for a repeat under the
+    // same key, which this branch already excludes.
+    const followUp = await startDripFromRequest({
+      personId: saved.personId,
+      requestId: saved.requestId,
+      requestResourceId: resourceIdOf(resource),
+      consented: body.marketingConsent === true,
+    });
+    console.log(
+      JSON.stringify({
+        resource_follow_up: {
+          request_id: saved.requestId,
+          opened: followUp.opened,
+          detail: followUp.opened ? followUp.nextSendAt : followUp.why,
+        },
+      }),
+    );
 
     // The authoritative saved event: server-side, after the commit, carrying an
     // opaque id and the resource code and nothing else. Backend totals survive

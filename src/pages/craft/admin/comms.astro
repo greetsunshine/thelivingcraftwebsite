@@ -58,6 +58,7 @@ import {
   MAX_ATTEMPTS,
 } from '../../../lib/comms/outbox';
 import { PACKAGE_ACTIVATION, PACKAGE_VERSION } from '../../../lib/comms/templates';
+import { dripSequenceRows, dripTemplateStatuses } from '../../../lib/comms/drip-console';
 
 const admin = Astro.locals.admin;
 const roles = admin?.roles ?? [];
@@ -75,6 +76,7 @@ const [launch, inbox, counts, templates, outbox, sequences, failures] = await Pr
   sequenceRows(admin, 100),
   outboxRows(admin, { states: ['unknown', 'failed', 'bounced', 'complained'], limit: 100 }),
 ]);
+const [drips, dripTemplates] = await Promise.all([dripSequenceRows(admin, 200), dripTemplateStatuses(admin)]);
 
 const checks = preconditions();
 const here = Astro.url.pathname;
@@ -549,6 +551,183 @@ const STATE_NOTE: Record<string, string> = {
                       </>
                     )}
                     {s.state === 'stopped' && <span class="quiet small">Terminal.</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+
+  <!-- ==================== Resource follow-ups ==================== -->
+  <section class="admin-section" id="commsDrips" aria-labelledby="commsDripsHead">
+    <div class="section-head">
+      <div>
+        <h2 id="commsDripsHead">Resource follow-ups</h2>
+        <p>
+          One sequence per person who ticked the marketing box on a download. From calendar day 2 the
+          planner picks one resource per step from the routing catalogue, never the one they asked for
+          and never one already sent, and the sweep sends it. The state column uses the brief's words;
+          the store keeps four states and a reason.
+        </p>
+      </div>
+      {
+        maySweep && (
+          <div class="toolbar">
+            <button class="btn" type="button" data-comms="drip.run">Run the follow-ups</button>
+          </div>
+        )
+      }
+    </div>
+    <p class="act-status mono" role="status" aria-live="polite"></p>
+
+    {
+      drips.state !== 'ok' ? (
+        <PipelinePanel
+          state={drips.state}
+          reason={drips.reason}
+          label="The follow-up sequences"
+          capability="read.people"
+          retry={here}
+        />
+      ) : drips.value.length === 0 ? (
+        <div class="card empty">
+          No follow-up sequence has been opened. One opens when somebody ticks the marketing box on a
+          download gate.
+        </div>
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Started</th>
+                <th scope="col">Person</th>
+                <th scope="col">Asked for</th>
+                <th scope="col">State</th>
+                <th scope="col">Sent</th>
+                <th scope="col">Next send</th>
+                <th scope="col">Failures</th>
+                <th scope="col" />
+              </tr>
+            </thead>
+            <tbody>
+              {drips.value.map((d) => (
+                <tr>
+                  <td class="mono nowrap">{when(d.startedAt)}</td>
+                  <td>
+                    {d.personName ?? <span class="faint">no name</span>}
+                    <div class="faint mono" style="font-size:12px">{d.recipient}</div>
+                    {d.role && <div class="faint" style="font-size:12px">{d.role}</div>}
+                  </td>
+                  <td>
+                    {d.resourceTitle}
+                    <div class="faint mono" style="font-size:12px">{d.resourceId}</div>
+                  </td>
+                  <td>
+                    <span class={`pill ${d.view === 'active' ? '' : 'warn'}`}>{d.view}</span>
+                    {d.reason && <div class="quiet small">{d.reason}</div>}
+                  </td>
+                  <td>
+                    {d.sent.length ? d.sent.map((s) => <div class="small">{s.step}. {s.title}</div>) : <span class="faint">none yet</span>}
+                  </td>
+                  <td class="mono nowrap">{d.state === 'active' ? when(d.nextSendAt) : '—'}</td>
+                  <td>
+                    {d.failures.length ? (
+                      d.failures.map((f) => (
+                        <div class="small">
+                          {f.state}: {f.error ?? 'no detail'}
+                        </div>
+                      ))
+                    ) : (
+                      <span class="faint">none</span>
+                    )}
+                  </td>
+                  <td class="nowrap">
+                    {mayManage && d.state === 'active' && (
+                      <>
+                        <button class="btn small" type="button" data-comms="sequence.pause" data-id={d.sequenceId}>Pause</button>
+                        <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={d.sequenceId}>Stop</button>
+                      </>
+                    )}
+                    {mayManage && d.state === 'paused' && (
+                      <>
+                        <button class="btn small" type="button" data-comms="sequence.resume" data-id={d.sequenceId}>Resume</button>
+                        <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={d.sequenceId}>Stop</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    <h3 style="margin-top: var(--space-6)">The follow-up wordings</h3>
+    <p class="muted small">
+      One per catalogue module, plus the unsubscribe confirmation. Assembled from the resource register
+      and the outreach package's subject and CTA lines; none is approved until somebody approves it
+      here, and nothing is sent from an unapproved wording. LC-T10 and LC-T11 are inactive in the
+      catalogue and cannot be selected whatever their approval.
+    </p>
+    {
+      mayApprove && (
+        <div class="toolbar">
+          <button class="btn" type="button" data-comms="templates.load-drip">Load the follow-up wordings into the store</button>
+        </div>
+      )
+    }
+    {
+      dripTemplates.state !== 'ok' ? (
+        <PipelinePanel
+          state={dripTemplates.state}
+          reason={dripTemplates.reason}
+          label="The follow-up wordings"
+          capability="read.dashboard"
+          retry={here}
+        />
+      ) : (
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Module</th>
+                <th scope="col">Subject</th>
+                <th scope="col">Status</th>
+                <th scope="col" />
+              </tr>
+            </thead>
+            <tbody>
+              {dripTemplates.value.map((t) => (
+                <tr>
+                  <td>
+                    {t.title}
+                    <div class="faint mono" style="font-size:12px">
+                      {t.key}
+                      {!t.active && ' · inactive'}
+                    </div>
+                  </td>
+                  <td>
+                    {t.subject}
+                    <details>
+                      <summary class="small">Read the wording</summary>
+                      <pre class="small" style="white-space:pre-wrap">{t.body}</pre>
+                    </details>
+                  </td>
+                  <td>
+                    <span class={`pill ${t.approved ? '' : 'warn'}`}>{t.approved ? 'approved' : t.stored ? 'not approved' : 'not loaded'}</span>
+                    <div class="quiet small">{t.note}</div>
+                  </td>
+                  <td class="nowrap">
+                    {mayApprove && t.stored && !t.approved && (
+                      <button class="btn small primary" type="button" data-comms="template.approve" data-key={t.key} data-version={t.version}>Approve</button>
+                    )}
+                    {mayApprove && t.approved && (
+                      <button class="btn small danger" type="button" data-comms="template.revoke" data-key={t.key} data-version={t.version}>Revoke</button>
+                    )}
                   </td>
                 </tr>
               ))}

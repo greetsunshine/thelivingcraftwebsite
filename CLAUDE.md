@@ -831,6 +831,20 @@ readiness handoff's per-page wording, then one sentence built from facts.ts. Eve
 reader keeps (PDFs, workbooks, Markdown sheets, the design check's summary) ends with the
 same invitation and the full application address.
 
+**The gate also carries an unticked marketing box (30 September 2026), and that box is
+what starts the resource follow-ups.** Ticked, the request writes a `consents` row and opens
+a `comms_sequences` row with route `resource`; from calendar day 2 a planner recommends one
+other resource per step, never the one asked for and never one already sent, until the
+catalogue is used up or the person stops it. The design is in the header of
+[src/lib/comms/drip.ts](src/lib/comms/drip.ts); the operator's note is
+[src/lib/comms/README.md](src/lib/comms/README.md); the catalogue is data in
+[src/data/resource-routing.ts](src/data/resource-routing.ts). Two things to hold: **the
+planner queues one message per due step and no more**, so a resource added tomorrow can be
+recommended without touching a row; and **nothing sends without a ticked box, an approved
+wording, a signed unsubscribe link and `COMMS_DISPATCH=on`**, the same gates as everything
+else in stage 4. The wording on the box is the application form's `mkt-2026-09-10`; its use
+on a download surface awaits Sunil's confirmation.
+
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,
 unapproved until reviewed. A resource without one still saves; its delivery is recorded

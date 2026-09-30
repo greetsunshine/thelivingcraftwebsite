@@ -76,6 +76,9 @@
  * that sentence forbids, and it would also put a resource delivery inside
  * `nurtureFor('enquiry')`'s reach the first time somebody changed a filter.
  */
+// With the extension, so `node --test` can load this module directly.
+import { dripTemplateFor } from './drip-templates.ts';
+
 export type TemplateRoute = 'application' | 'enquiry' | 'enterprise' | 'resource';
 export type TemplatePurpose = 'transactional' | 'marketing';
 
@@ -270,7 +273,7 @@ export const NURTURE_OFFSETS = [2, 5, 9] as const;
  * `resource-`), so there is nothing to disambiguate.
  */
 export const templateFor = (key: string): PackageTemplate | undefined =>
-  TEMPLATES.find((t) => t.key === key) ?? RESOURCE_TEMPLATES.find((t) => t.key === key);
+  TEMPLATES.find((t) => t.key === key) ?? RESOURCE_TEMPLATES.find((t) => t.key === key) ?? dripTemplateFor(key);
 
 /** The templates for one route, receipt first, then the nurture steps in order. */
 export const templatesForRoute = (route: TemplateRoute): PackageTemplate[] =>

@@ -34,6 +34,7 @@
 // blank tools that became the main download on 28 September.
 import { RESOURCE_FIELDS } from '../lib/pipeline/resources';
 import RoleField from './RoleField.astro';
+import { MARKETING_CONSENT } from '../lib/pipeline/consent';
 
 interface Props {
   /** The resource id the request is recorded against. */
@@ -66,6 +67,15 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
       {/* The role, since 29 September 2026 (Sunil: "ask for role there also"). */}
       <RoleField id="gate-role" required labelClass="gate-full" />
     </div>
+    {/* Marketing permission (30 September 2026): unticked, separate, optional.
+        The words and their version come from consent.ts, so the record can
+        say what was shown. Ticking it opens the resource follow-ups; leaving
+        it sends the resource and nothing else. Reusing the application form's
+        wording on this surface awaits Sunil's confirmation. */}
+    <label class="gate-tick" for="gate-consent">
+      <input type="checkbox" id="gate-consent" name="marketing_consent" value="yes" />
+      <span>{MARKETING_CONSENT.wording}</span>
+    </label>
     <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <p class="gate-note">
       <span id="gate-note-own" hidden>What you typed into the tool goes into the file and is not stored.</span>
@@ -151,6 +161,25 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
   }
   .gate :global(input:focus), .gate :global(select:focus) { outline: none; border-color: var(--text-body); }
   .gate :global(input:focus-visible), .gate :global(select:focus-visible) { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  .gate .gate-tick {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    font-family: var(--font-body);
+    font-size: var(--size-2);
+    color: var(--text-body);
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  .gate .gate-tick input[type="checkbox"] {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    padding: 0;
+    accent-color: var(--control-primary-bg, #183d32);
+  }
   .gate .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
   .gate-note { margin: var(--space-4) 0 0; font-size: var(--size-2); color: var(--text-quiet); }
   .gate-status { margin: var(--space-3) 0 0; font-size: var(--size-2); min-height: 1.4em; }

@@ -17,7 +17,7 @@
  * differently: RouteForm adds a hint and an error line with ids, the
  * consulting forms use plain text. The default is "Your role".
  */
-import { ROLE_MAX, ROLE_OPTIONS, ROLE_OTHER } from '../data/audience-roles';
+import { ROLE_MAX, ROLE_OPTIONS, ROLE_OTHER, ROLE_QUESTION } from '../data/audience-roles';
 
 interface Props {
   /** The id of the select. The text box is `${id}-other`. */
@@ -35,7 +35,7 @@ const { id, name = 'role', required = false, labelClass, describedBy } = Astro.p
 ---
 
 <label class={labelClass} for={id}>
-  <slot name="label">Your role</slot>
+  <slot name="label">{ROLE_QUESTION}</slot>
   <select
     id={id}
     name={name}

@@ -46,9 +46,10 @@
 // sending none, so `available()` is a hard gate in eligibility.ts rather than a
 // warning on a screen.
 
-import { db } from '../admin/supabase';
-import { env } from '../admin/env';
-import { MARKETING_CONSENT } from '../pipeline/consent';
+// With extensions, so `node --test` can load this module directly.
+import { db } from '../admin/supabase.ts';
+import { env } from '../admin/env.ts';
+import { MARKETING_CONSENT } from '../pipeline/consent.ts';
 
 const enc = new TextEncoder();
 

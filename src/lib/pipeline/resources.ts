@@ -85,7 +85,7 @@ import { RESOURCES, resources, type LongformResource, type Resource } from '../.
 import type { Attribution } from './attribution';
 import { canonicalResourceId } from './attribution';
 import { EMAIL_RE, normaliseEmail, tidy, type Field, type FieldError } from './forms';
-import { ROLE_MAX, ROLE_OPTIONS } from '../../data/audience-roles';
+import { ROLE_MAX, ROLE_OPTIONS, roleCodeFor } from '../../data/audience-roles';
 
 
 // ---------------------------------------------------------------------------
@@ -342,6 +342,7 @@ export async function saveResourceRequest(
       p_resource_id: resourceId,
       p_name: input.values.name ?? null,
       p_role: input.values.role ?? null,
+      p_role_code: roleCodeFor(input.values.role),
       p_normalised_email: normaliseEmail(original),
       p_original_email: original,
       p_resource_version: input.resource.version,

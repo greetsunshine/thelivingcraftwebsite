@@ -54,6 +54,8 @@ import {
   stopSequence,
 } from '../../../../lib/comms/outbox';
 import { PACKAGE_VERSION } from '../../../../lib/comms/templates';
+import { loadDripTemplates } from '../../../../lib/comms/drip-console';
+import { runCommsWorker } from '../../../../lib/comms/drip-runtime';
 
 export const prerender = false;
 
@@ -81,6 +83,8 @@ const CAPABILITY_FOR_ACTION: Record<string, Capability> = {
   'message.reconcile': 'manage.sequence',
   'suppression.add': 'manage.sequence',
   'dispatch.run': 'send.approved',
+  'drip.run': 'send.approved',
+  'templates.load-drip': 'approve.template',
 };
 
 const clean = (v: unknown, max: number): string | null => {
@@ -273,6 +277,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
           `Dispatch sweep: ${result.dueConsidered} due, ${result.wouldSend} would send, ${result.cancelled} cancelled, ${result.held} held, ${result.sent} sent.`,
         );
         return json({ ok: result.ok, result }, result.ok ? 200 : 503);
+      }
+
+      // ---- the resource follow-ups (30 September 2026) --------------------
+      case 'templates.load-drip': {
+        const result = await loadDripTemplates();
+        await audit('message_template', null, `Loaded the follow-up wordings: ${result.detail}`);
+        return json({ ok: result.ok, detail: result.detail }, result.ok ? 200 : 503);
+      }
+
+      case 'drip.run': {
+        // One worker tick by hand: plan every due follow-up, then the sweep.
+        // The same function the cron calls, with the same guarantees.
+        const result = await runCommsWorker();
+        const p = result.planner;
+        await audit(
+          'comms_sequence',
+          null,
+          `Follow-up run: ${p ? `${p.considered} due, ${p.planned} planned, ${p.completed} completed, ${p.skipped} skipped` : 'no store'}; sweep ${result.sweep.dueConsidered} due, ${result.sweep.sent} sent, ${result.sweep.held} held.`,
+        );
+        return json({ ok: true, result: { note: result.note, planner: p, sweep: result.sweep } }, 200);
       }
 
       default:

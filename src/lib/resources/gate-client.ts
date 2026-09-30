@@ -168,6 +168,8 @@ export function mountGate(opts: GateOptions = {}) {
           variant: variant ?? undefined,
           requestKey,
           answers: { name, email, role },
+          // The marketing box. A boolean; the words come from consent.ts on the server.
+          marketingConsent: data.get('marketing_consent') === 'yes',
           botcheck: String(data.get('botcheck') ?? ''),
           payload: opts.payload ? opts.payload(kind, variant) : undefined,
           search: location.search,

@@ -410,6 +410,46 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
     column, links padded to 38px targets, the strip as a list. The footer keeps 100px
     clear at the bottom on a page with the floating chat pill.
   - Not touched: `/craft`, the console and `/book/[id]`, which are gated or private.
+- [x] **17. Resource follow-ups: the drip, built on stage 4** (30 September). The brief:
+  capture name, email, role, resource, consent and source; send the resource at once; from
+  day 2 recommend other resources, never the one asked for or one already sent; stop on
+  exhaustion, unsubscribe, withdrawn consent, bounce or complaint. What landed:
+  - **The gate** has an unticked marketing box (the `mkt-2026-09-10` wording, reused; Sunil
+    to confirm it on this surface). Ticked, it writes a `consents` row (source
+    `resource-gate`) and opens a `comms_sequences` row with route `resource`. Unticked, only
+    the resource goes. `people.role_code` holds the stable role code beside the label.
+  - **The planner** (`src/lib/comms/drip.ts`, pure) runs one step ahead of the existing
+    sweep: it leases a due sequence, picks the next resource from the catalogue
+    (`src/data/resource-routing.ts`, the package's matrix as data), queues one message under
+    `drip:<sequence>:<step>`, records it in `comms_drip_sends`, and sets the next slot.
+    The sweep then sends it through every existing gate. Two workers at once cannot
+    double-send: the lease and the idempotency key are both in the database.
+  - **The worker** is `GET|POST /api/comms/worker` with a bearer secret. `vercel.json`
+    cron (production only, every ten minutes); `.github/workflows/comms-worker.yml` for the
+    staging preview (needs `COMMS_WORKER_URL` and `COMMS_WORKER_SECRET` as repo secrets).
+  - **The provider seam is filled**: `src/lib/comms/providers/resend.ts` behind
+    `COMMS_PROVIDER=resend`, with `Idempotency-Key` and RFC 8058 headers. The webhook is
+    `/api/comms/webhook/resend`, signature-verified, de-duplicated, one-way tolerant; a hard
+    bounce or complaint suppresses for everything and stops the sequence.
+  - **Retries now happen.** Until today a failed message got `next_attempt_at` and could
+    never return to the queue. The schema's one-way rule has a second door
+    (`sending → queued` with a back-off and a reason), bounded at five attempts.
+  - **The email as sent** is the approved text plus the footer appended at dispatch
+    (`html.ts`): identity, contact, postal address, preferences link, signed unsubscribe.
+    No link, no send. The HTML part is a rendering of the same words.
+  - **Console**: a *Resource follow-ups* section on `/craft/admin/comms`: every sequence
+    with the person, role, resource, sends, next send, state in the brief's words, failures;
+    the 23 wordings with approve/revoke; "Run the follow-ups".
+  - **Tests**: 34 new, `npm test` 146 pass. Selection, DST, planner with the memory store,
+    concurrency, retry plan, provider outcomes, webhook signature, tokens, rendering.
+  - **Not decided by us, all placeholders** (`.env.example`, `src/lib/comms/README.md`):
+    the provider (D2), from-address, sending domain, reply mailbox, postal address, the
+    interval after day 2 (`COMMS_DRIP_INTERVAL_DAYS`, default 3), the role affinities per
+    module (proposed in data), the 18 module bodies assembled from the register (unapproved),
+    double opt-in (not built), open tracking (off), the unsubscribe confirmation email (off).
+  - **Schema, run before deploying:** `people.role_code`, a new `resource_request_submit()`
+    signature (the eleven-argument one is dropped), four columns on `comms_sequences`,
+    `comms_drip_sends`, three `comms_events` types, the retry door.
 - [x] **16. A role question on every form that asks for a name and an email** (29
   September). Sunil: "Wherever currently name and email are being asked for, ask for role
   there also", with ten options and a way to type one. One list

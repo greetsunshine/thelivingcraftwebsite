@@ -95,6 +95,9 @@
 - [x] Authenticated, deduplicated, out-of-order-tolerant provider callbacks
 - [x] Communications screen — inbox, outbox, templates, sequence history, failures
 - [ ] Dispatch enabled **(blocked: D2, sender verification, reply mailbox)**
+- [x] Resource follow-ups (30 September): consent box on the gate, catalogue as data, one-step-ahead planner with a lease and an idempotency key, scheduled worker, Resend adapter and webhook, transient retries, rendered email with the footer at dispatch, console section, 34 tests
+- [ ] Follow-up wordings approved (23 rows, `LC-OUTREACH-2026-09-29`) **(blocked: Sunil's review)**
+- [ ] The interval after day 2, the role affinities and the gate's consent wording **(blocked: owner decisions)**
 
 ### 5 · Administration
 
