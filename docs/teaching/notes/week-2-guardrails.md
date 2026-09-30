@@ -1383,7 +1383,7 @@ block in the day, and a room that skipped the break attacks worse.
 
 ---
 
-## 03:18 · Three tiers of checker, and what each one costs in time
+## 03:18 · Layered defence: the tiered gateway, and its latency tax
 
 **It is the narrative that opens red-teaming**, and it is the thing this room is
 most likely to go and build between sessions.
@@ -1454,11 +1454,11 @@ instinct answered from two sides. Running both is the same twenty minutes twice.
 
 ---
 
-### The three tiers, 5 minutes, after the reveal
+### The tiered gateway, 5 minutes, after the reveal
 
 **Sequence.** Ask for the predicted multiple first, in writing: *your check took this many milliseconds at 00:54; how many times slower is a model?* Take three numbers. Then the tier table on the learner page: rules in the process, small classifiers, a model as judge. Then the cascade: stop at the cheapest tier that can decide. Then in-band against out-of-band in one sentence, tied to the undo question from 00:48. Close on a latency budget written per endpoint, because teardown question 4 uses it.
 
-**The answer key.** Orders of magnitude, not promises: well under a millisecond, milliseconds to tens of milliseconds, hundreds of milliseconds and often more. **Do not quote vendor latency figures as fact.** A payment's checks stay in-band whatever they cost, because nothing takes a payment back. A chat reply can run a slow judge out-of-band, because a stream can be stopped.
+**The answer key.** The learner page prints the ranges the field quotes: tier 1 deterministic rules under 5 ms, tier 2 fast ML classifiers 15 to 40 ms, tier 3 specialised guardrail models 100 to 300 ms, and an in-band latency tax of 50 to 300 ms. **Always say "ranges the field quotes".** The room's own timer is the number that counts. A payment's checks stay in-band whatever they cost, because nothing takes a payment back. A chat reply can run a slow judge out-of-band, because a stream can be stopped.
 
 **The expected wrong answer, and what is right about it.** "Run everything out-of-band, so nobody waits." Right for text a person reads. Wrong for an action with no afterwards.
 

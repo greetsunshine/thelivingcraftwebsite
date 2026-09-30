@@ -318,7 +318,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   <tr class="quiet" style="color:#526259"><td>03:09</td><td>Checkpoint 3</td><td>shared</td></tr>
   <tr class="quiet" style="color:#526259"><td>03:09</td><td>Topic 3 quiz and takeaway</td><td>topic 3</td></tr>
   <tr class="quiet" style="color:#526259"><td>03:13</td><td>Short break, five minutes</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:18</td><td>Three tiers of checker, and what each one costs in time</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:18</td><td>Layered defence: the tiered gateway, and its latency tax</td><td>topic 4</td></tr>
   <tr class="quiet" style="color:#526259"><td>03:31</td><td>Hands-on lab: the adversary round</td><td>topic 4</td></tr>
   <tr class="quiet" style="color:#526259"><td>04:01</td><td>Topic 4 quiz and takeaway</td><td>topic 4</td></tr>
   <tr class="quiet" style="color:#526259"><td>04:05</td><td>Recall: every control, and where its failure moved</td><td>close, shared</td></tr>
@@ -822,7 +822,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
 </svg>
 <figcaption><strong>What an agent takes away.</strong> Both sides write to the same ledger. The difference is on the middle row: on the left a person chose 4471 and 1200 and you can open the file and read it. On the right the model chose 9999 and 5000 while the run was happening, partly from text a customer sent. Week 1 paid that ₹5,000.</figcaption>
 </figure></div>
-  <h4>Three planes, and where the six kinds sit</h4>
+  <h4>Three execution planes, and where the six kinds sit</h4>
   <p><strong>Say the three planes only after the room has built the six kinds.</strong> Input, output, operational. The room has usually met this vocabulary in a vendor document, so name it, and map the six onto it in one minute. The point to land: a tool call is output that acts, which is why today lives inside the output plane.</p>
   <h4>The threats each plane meets</h4>
   <p>Reading on the learner page. If somebody asks why injection is not today, the answer is the second row: today's ceiling caps what an injected instruction can cost, and week 4 is where the text itself is handled. <strong>Do not open the injection argument here.</strong></p>
@@ -1070,11 +1070,12 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
         <tr><td></td><td>Instructor, retrying the model until the output validates</td><td>Open source, on top of Pydantic. Each failed validation is another model call, so a strict schema costs tokens and time.</td></tr>
         <tr><td></td><td>Outlines, constraining generation to the schema</td><td>Open source. It needs control of decoding, which most hosted APIs do not give you, so it suits models you run yourself.</td></tr>
         <tr><td></td><td>Guidance, templating the output token by token</td><td>Open source. Strong control of structure, and one more templating language for the team to learn.</td></tr>
+        <tr><td></td><td>TypeChat, using TypeScript types as the schema</td><td>Open source, from Microsoft. Natural for a TypeScript team, and a second schema language if your tools are written in Python.</td></tr>
         <tr><td>Finding and masking personal data, such as a PAN or a phone number</td><td>Microsoft Presidio</td><td>Open source. Its recognisers are tuned for common formats, so Indian identifiers such as PAN or a masked Aadhaar need recognisers you write and test.</td></tr>
         <tr><td></td><td>Amazon Comprehend, PII detection</td><td>A charge per unit of text, and your text leaves your process for AWS. Check where it is processed against the DPDP Act before you use it.</td></tr>
         <tr><td></td><td>Google Cloud Sensitive Data Protection</td><td>A charge by volume inspected, and the same question about where the data goes. Strong on masking, and one more cloud in the path.</td></tr>
         <tr><td>Input and output guards, which are week 4 and named so you know they exist</td><td>NVIDIA NeMo Guardrails</td><td>Rails written in Colang, which is another language to maintain, and added latency on every turn.</td></tr>
-        <tr><td></td><td>Guardrails AI</td><td>Python only. The stock validators do not know your domain, so anything specific is a validator you write and then test.</td></tr>
+        <tr><td></td><td>Guardrails AI, validators defined in its RAIL spec</td><td>Python only. The stock validators do not know your domain, so anything specific is a validator you write and then test.</td></tr>
         <tr><td></td><td>Amazon Bedrock Guardrails</td><td>A charge per request, and it only sees traffic that goes through Bedrock. A tool your agent calls directly is not covered.</td></tr>
         <tr><td></td><td>Azure AI Content Safety</td><td>A charge per call, and a second policy surface to keep in step with your own.</td></tr>
       </tbody>
@@ -1274,7 +1275,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
       <p><strong>Probe.</strong> "Your log says <code>decided_by=human:priya.n</code>. Nine months later Priya has left. What still proves she was allowed to approve ₹8,400?" The answer is a record of the permission at the time, not a lookup of the permission today.</p>
     </div>
   </details>
-  <h4>Log the reason, not the person</h4>
+  <h4>Anonymised audit logging: the reason, not the person</h4>
   <p>Say it in one sentence while circulating: the row holds ids and the rule, never the ticket text. <strong>Wrong answer worth catching:</strong> "we will mask the name before we write it". Right instinct, and masking is a control you then have to test. Not writing the field at all needs no test.</p>
   <h4>Who is allowed to answer</h4>
   <p>The identity half of maker-checker, and the line almost nobody writes without being told. <strong>Put it in a constraint, not in a branch.</strong> In a branch somebody changes it for a test environment in six months and does not change it back.</p>
@@ -1376,7 +1377,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
       <p>The weaker answers worth accepting on the way: a follow-up on customers a rule turned away, or a count of refusals by rule that somebody actually reads each week. Both are better than nothing and neither tells you whether the refusal was wrong.</p>
     </div>
   </details>
-  <h4>Tuning the refusals before they block anybody</h4>
+  <h4>Tuning false-positive rates</h4>
   <p>Reading on the learner page. The one sentence to say: <strong>a new check runs in shadow mode on last week's traffic before it blocks anyone.</strong> It is the cheapest answer to the wrong refusal nobody sees, and topic 2's quiz asks it.</p>
   <h4>The sentence that travels upward</h4>
   <p>It is on the learner page, word for word. Read it rather than paraphrasing. <strong>Do not add a fourth idea.</strong> This is reading, not a segment: point at it in one sentence and move to the topic quiz.</p>
@@ -1717,12 +1718,12 @@ if cur.rowcount == 0:
   <span class="tag">guardrails · adversarial testing &#183; 03:18 to 04:05</span>
 
   <div class="beat" data-ref="t4-r-judge"><span class="t">03:18</span><div class="b">
-    <h4>Three tiers of checker, and what each one costs in time</h4>
+    <h4>Layered defence: the tiered gateway, and its latency tax</h4>
     <span class="pairs">The narrative &#183; pairs 5 minutes, then whole room 8</span>
     
     <p>Put the case on screen and <strong>say nothing else</strong>. The standing two questions, in writing, before any discussion.</p>
     <p><strong>At 03:23, the reveal</strong>: the judge read the same field the agent read. Then rerun #8812 and get a different verdict, which is the second problem and the one nobody expects.</p>
-    <p><strong>At 03:26, the three tiers.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at 04:15 uses it.</p>
+    <p><strong>At 03:26, the tiered gateway.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at 04:15 uses it.</p>
     <p>Say where the two halves go: whether a judge is any good is a measurement, which is week 3; a second agent with its own loop is orchestration, which is week 5. The five-line order and the five families are reading on the learner page.</p>
     <p class="qbadge">No model calls unless you run #8812 live. If you do, that is two requests against the day's allowance and it is worth it for the different verdict.</p>
   </div></div>
@@ -1766,7 +1767,7 @@ if cur.rowcount == 0:
 
 <article class="card" id="t4-r-judge">
   <span class="pairs">&#8596; 03:18 &#183; &#8596; 03:18 · the case, and the rule</span>
-  <h3>Three tiers of checker, and what each one costs in time</h3>
+  <h3>Layered defence: the tiered gateway, and its latency tax</h3>
   
   <h4>What went wrong</h4>
   <details>
@@ -1817,15 +1818,15 @@ if cur.rowcount == 0:
       <p>The maker-checker card from topic 2 already has the answer in a better form: two judgments only help when they are independent, and a critic is the same model with a different prompt.</p>
     </div>
   </details>
-  <h4>Three tiers of checker</h4>
+  <h4>Layered defence: the tiered gateway pattern</h4>
   <details>
     <summary><span class="chev">›</span> The answer key, and the multiple to expect</summary>
     <div class="dbody">
-      <p>Rules in the process: well under a millisecond. Small classifiers: milliseconds to tens of milliseconds. A model as judge: hundreds of milliseconds and often more. The room's own timer is tier 1. <strong>Do not quote vendor latency figures as fact.</strong> Say "orders of magnitude, measure yours".</p>
+      <p>The learner page prints the ranges the field quotes: under 5 ms, 15 to 40 ms, 100 to 300 ms. <strong>Say "ranges the field quotes" every time, never "this is what it costs".</strong> The room's own timer is tier 1 and is far below 5 ms. That gap is the point.</p>
       <p>The cascade is the five-line order written as cost: stop at the cheapest tier that can decide.</p>
     </div>
   </details>
-  <h4>In-band or out-of-band</h4>
+  <h4>In-band or out-of-band: the latency tax</h4>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
     <div class="dbody">
@@ -1833,7 +1834,7 @@ if cur.rowcount == 0:
       <p><strong>Probe.</strong> "Your reply streams while the judge runs. The judge fails at 400 ms and the customer has read half the answer. What do you show them, and what do you log?"</p>
     </div>
   </details>
-  <h4>A latency budget</h4>
+  <h4>Latency budgeting</h4>
   <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at 04:15 asks for one.</p>
   <h4>The order to choose in</h4>
   <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>

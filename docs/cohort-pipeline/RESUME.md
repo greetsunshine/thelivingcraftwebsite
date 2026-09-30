@@ -67,12 +67,14 @@ a dev server, because that needs a seat code or the console password.
 class** (Sunil's list: three execution planes, in-band against out-of-band, a tiered gateway,
 latency budgets, false-positive tuning, audit logs without personal data, named tools). Net
 zero on the clock: the 01:09 read-out folded into the lab's check step, the lab gained a
-timer, 03:18 became "Three tiers of checker, and what each one costs in time", and teardown
+timer, 03:18 became "Layered defence: the tiered gateway, and its latency tax", and teardown
 question 4 became a latency budget. Prompt injection, PII leakage and groundedness are named
 in a threat table at 00:37 and point to weeks 3 and 4, which `threads.md` gives them.
 `threads.md` now records guardrail latency as week 2's. **Vendor latency figures are
 deliberately not printed as fact**; the pages give orders of magnitude and have each learner
 measure their own.
+
+**Remapped to the learners' guardrail list, same evening.** The pages now use its terms: input, output and operational/system guardrails with the checks it names; in-band (synchronous blocking) with its latency tax; out-of-band; the tiered gateway pattern; latency budgeting; false-positive rates and refusal fatigue; anonymised audit logging; and every tool it names, including TypeChat and Guardrails AI's RAIL spec. Its latency ranges are printed, labelled "ranges the field quotes", beside each learner's own measured number. No change to the clock's times.
 
 **Still open, and it blocks the day.** `make w2-paid-once` and the three queue fixtures do not
 exist in the reference agent (preparation items 1 and 2). That repo has uncommitted work from
