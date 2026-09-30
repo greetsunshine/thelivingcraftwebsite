@@ -296,7 +296,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
           null,
           `Follow-up run: ${p ? `${p.considered} due, ${p.planned} planned, ${p.completed} completed, ${p.skipped} skipped` : 'no store'}; sweep ${result.sweep.dueConsidered} due, ${result.sweep.sent} sent, ${result.sweep.held} held.`,
         );
-        return json({ ok: true, result: { note: result.note, planner: p, sweep: result.sweep } }, 200);
+        const detail = p
+          ? `Follow-ups: ${p.considered} due, ${p.planned} planned, ${p.completed} completed, ${p.skipped} skipped. Sweep: ${result.sweep.dueConsidered} due, ${result.sweep.sent} sent, ${result.sweep.held} held, ${result.sweep.cancelled} cancelled. ${result.sweep.note}`
+          : result.note;
+        return json({ ok: true, detail, result: { note: result.note, planner: p, sweep: result.sweep } }, 200);
       }
 
       default:
