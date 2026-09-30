@@ -135,6 +135,15 @@ export async function topicPage(
   n: number,
   audience: Audience = 'learner',
   preview?: string,
+  /**
+   * Where the topic chips point. Defaults to the live URL for the audience.
+   *
+   * The admin preview serves LEARNER pages from under /craft/admin, so its
+   * chips must not point at /craft/week-N/topic-M: that is the live URL, and it
+   * 404s for exactly the unreleased week the preview exists to show. Without
+   * this the preview's own navigation dead-ends on the first click.
+   */
+  linkBase?: string,
 ): Promise<string | null> {
   const html = await source(week, audience);
   if (!html) return null;
@@ -180,9 +189,62 @@ export async function topicPage(
   <h1>${title.replace(/^.*?·\s*/, '')}</h1>
 </header>`;
 
+  // THE RAIL, AND WHY THE BUTTON IN IT IS NOT DECORATION.
+  //
+  // On the published per-topic instructor pages the rail sat between the hero
+  // and the content, and it carried `#splitbtn` — the Side by side toggle. The
+  // collated page puts that rail inside `.shell`, above the first topic, so
+  // slicing a topic out of it left the toggle behind and the instructor with no
+  // way to ask for two columns. The layout itself still works, because `.teach`
+  // is a direct child of `.shell` here exactly as it was on the original pages;
+  // what went missing was the control.
+  //
+  // scripts/teaching-pane.js already guards `if (btn)`, which is why nothing
+  // threw and why this was invisible rather than loud.
+  //
+  // The topic chips are new. The published pages had no way to get from one
+  // topic to the next without going back to the README, and a rail that exists
+  // anyway is the cheap place to fix that.
+  //
+  // The instructor stylesheet defines .rail, .lab and .railbtn. The LEARNER one
+  // does not — it is a handout and never had a rail — so that version is styled
+  // inline, the same reasoning as the preview bar above: a class name would be a
+  // guess about a stylesheet this code does not own.
+  const base =
+    linkBase ?? (audience === 'learner' ? `/craft/week-${week}` : `/craft/admin/teaching/${week}`);
+  const here = audience === 'instructor';
+  const chip = here
+    ? ''
+    : 'display:inline-block;padding:4px 10px;border-radius:6px;background:#E5EBE1;color:#172E26;text-decoration:none;font:500 13px/1.3 Figtree,system-ui,sans-serif';
+  const chips = all
+    .map((x) =>
+      x.n === n
+        ? here
+          ? `<span class="lab mono" aria-current="page">${x.n}</span>`
+          : `<span aria-current="page" style="${chip};background:#183D32;color:#F5F0E6">${x.n}</span>`
+        : here
+          ? `<a href="${base}/topic-${x.n}">${x.n}</a>`
+          : `<a href="${base}/topic-${x.n}" style="${chip}">${x.n}</a>`,
+    )
+    .join(here ? '' : '\n  ');
+
+  const rail = here
+    ? `
+<nav class="rail" aria-label="Topics in week ${week}">
+  <span class="lab mono">Week ${week} · topic ${n}</span>
+  ${chips}
+  <button type="button" id="splitbtn" class="railbtn" aria-pressed="true">Side by side</button>
+</nav>`
+    : `
+<nav aria-label="Topics in week ${week}" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:20px">
+  <span style="font:500 12px/1 ui-monospace,monospace;color:#526259;margin-right:4px">Week ${week} · topic ${n}</span>
+  ${chips}
+</nav>`;
+
   return `${head}${wrapper}
 ${preview ? previewBar(preview, '/craft/admin/teaching') : ''}
 ${heading}
+${rail}
 ${body}
 </div>
 ${script}

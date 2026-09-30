@@ -2,180 +2,151 @@
 
 *Instructor material for week 2, Guardrails. Not learner-facing.*
 
-**Rebuilt 28 September 2026 for the new structure.** The session was five blocks
-with one sixty-minute drill block at 02:20. It is now eight blocks and three
-build-break cycles, with keyboards live at 00:57. Every answer key, wrong answer
-and probe from the 11 September version is carried forward; what changed is the
-clock, the order and six new beats. The old structure is in git at `cb26654` if
-you want to compare.
+**Every section below is one row of the clock, in clock order.** Each heading
+starts with its offset and carries the row's name exactly as `ROWS_W2` in
+`scripts/teaching-clock.mjs` prints it. The sections with no offset are the ones
+outside the five hours: preparation, pre-work, after-work and the reference
+cards at the end.
 
-**Recovered 28 September 2026.** This file was written on 11 September and was
-lost before it was committed. The published instructor Artifact was the only
-copy, and this was rebuilt from it. The Artifact is built from this file, so
-edit here first and republish after. `/craft/admin/teaching` reads this
-directory at request time, which is how the notes reach the console without a
-second copy existing.
-
-The learner prose is in [`../../../src/content/sessions/week-2.md`](../../../src/content/sessions/week-2.md),
-the quiz bank with every key is in [`../quiz/week-2.md`](../quiz/week-2.md), and
+The pages are built from
+[`scripts/teaching-content/week-2.mjs`](../../../scripts/teaching-content/week-2.mjs).
+The learner summary is in
+[`src/content/sessions/week-2.md`](../../../src/content/sessions/week-2.md), the
+question bank with every key is in [`../quiz/week-2.md`](../quiz/week-2.md), and
 the pattern families are in [`guardrail-patterns.md`](guardrail-patterns.md).
+`/craft/admin/teaching` reads this directory at request time, so these notes
+reach the console without a second copy.
 
-**No argument on this page is made anywhere else.** Three things do appear in
-both this file and the learner page, and each is deliberate: the sentence you
-say out loud, which has to match the page word for word; the two tables the room
-builds live and then re-reads afterwards, which are the invariant-and-limit
-table and the failure-moved table; and the decision log line. Everything else
-here is facilitation and appears only here. If you find a third copy of an
-argument, one of them is wrong.
+**No argument here is made anywhere else.** Three things appear both here and on
+the learner page, on purpose: the sentence you say out loud, which has to match
+the page word for word; the tables the room builds live and re-reads afterwards;
+and the decision log line.
 
-**Each beat carries the six things the notes contract asks for:** the run time,
-the sequence, the answer key, the expected wrong answer and what is right about
-it, one extension probe, and the single line the beat exists to land.
+**Each segment carries the six things the notes contract asks for:** the run
+time, the sequence, the answer key, the expected wrong answer and what is right
+about it, one extension probe, and the single line the segment exists to land.
 
-## What changed, and why, in one place
+## What changed on 30 September, and why
 
-Read this before running the session if you have run the old one.
+The session was rebuilt against `docs/teaching/generation-prompt.md`, written the
+same day. **Four topics now, and a fixed close.** Nothing that is still taught
+was shortened. What moved and what was cut:
 
-- **Three build-break cycles replace one drill block.** They build a control and
-  break it inside the same hour, on their own code. The old shape taught four
-  failures for fifty minutes and then built for sixty, so the failure and the
-  fix were an hour apart.
-- **The failure order changed and the pairing is preserved.** The goodwill
-  credit now opens the breaking, because cycle A is about placement and that
-  failure is the placement argument. The row that looks complete still comes
-  straight after it, because failure 3 only works once failure 2 has just been
-  celebrated. The ₹8,400 moved to 01:40, where it now motivates the build that
-  follows it instead of sitting fifty minutes ahead of it.
-- **The ₹44,000 Friday night moved to 03:55** and became the frame for the
-  teardown, which is where it was always pointing.
-- **"Nobody is there to approve" is no longer a discussion.** They set an
-  18-minute timer at 02:00 and go to the break. It fires with nobody watching.
-  At 02:20 they read their own queue. Three outcomes appear in every room.
-- **The five teardown questions became columns** in a seven-column policy table.
-  Their answer keys are still here as reference cards, because you will be asked.
-- **Drill 5 is dropped.** Homework was over the five hours the public page
-  promises, and the regression case from the adversary round is worth more. Its
-  question 3 survives as a written after-work item.
-- **Six new beats:** the sealed prediction, the three properties, the nine
-  control points, the two counters, the model-as-checker block, and the
-  adversary round.
+| Change | Why |
+|---|---|
+| **Topic 0, the frame, is the first 27 minutes of topic 1** | The prompt cuts a topic with no hands-on lab. The frame had none, and it was always the opening of the limit |
+| **Every topic ends on a three-question quiz and a written takeaway** | 01:35, 02:30, 03:09 and 04:01, four minutes each. One question in each comes from earlier material, quoted word for word |
+| **The adversary round and the judge are one topic, red-teaming** | The judge had no lab. It is the narrative that opens the round: a checker that reads what the attacker wrote |
+| **Governance is no longer a topic** | Its five questions are the architectural teardown at 04:15. The policy table is built there as one row on the board, and the full table is the assignment |
+| **"Who is allowed to say what a system may do" is cut from the room** | Eleven minutes. Week 6 owns who decides. The card is kept under Reference |
+| **"The two mistakes, and their prices" is reading inside topic 2** | Seven minutes. It is planted at 00:54 and 01:44, and the room reads it at 02:24 beside the queue it describes |
+| **"Where did the failure move" is the recall at 04:05** | The same table, asked with notes closed instead of walked through |
+| **The in-room policy table draft and its peer review are gone** | Twenty minutes. The teardown builds one row and the after-work builds the rest. `pair:` is removed from the session file, so `/craft/pair` opens nothing for week 2 |
+| **Checkpoint 1 moved from 00:46 to 01:35** | A checkpoint closes its topic. It now covers all of topic 1 |
+| **Revised again the same day against the learners' expected topics** | The learners expect the three execution planes, in-band against out-of-band, a tiered gateway, latency budgets, shadow-mode tuning, anonymised audit logs and named tools. All now appear: planes and a threat table at 00:37, a timer in the 00:54 lab, three tiers and a latency budget at 03:18, shadow mode at 02:24, a personal-data rule on the decision log at 01:51, a latency question in the teardown, and three new named-product slots. The 01:09 read-out (3 min) folded into the lab's check step to pay for it. Prompt injection, PII leakage and groundedness are named with their threat and point to weeks 3 and 4, which build their defences |
+| **The two five-minute rests are called short breaks** | They are a rest with cameras off, not a discussion, so "pair discussion" would describe the wrong thing |
+
+**What the rebuild costs.** Governance lost its own twenty-five minutes of
+writing, and the in-room peer review of another pair's table is gone. The
+teardown recovers the five questions, not the review. That is the trade the
+prompt's close forces, and it is the one to revisit first if the close proves
+too long.
 
 ---
 
 ## What to prepare, and by when
 
-**Rewritten 29 September 2026.** The previous version of this list was four
-noun phrases — "the `w2-` sqlite path", "three prepared queue states",
-"ticket #8812 does not exist". None of them said who does what, where, or how
-you know it is finished, so the list read as a set of regrets rather than a set
-of tasks. Every item below names the action, the file, the size, the test that
-says it is done, and what breaks in the room if it is not.
+The same eleven items are on the instructor page's *What to prepare* card, built
+from the module. Change them here first. Three groups, in the order to work
+through them.
 
-Three groups, and they are in the order to work through them: what blocks the
-session, what needs a decision either way, and what you do in the hour before
-you teach.
+### Blocks the session. Build these, or cut the segment and say so.
 
-### Blocks the session. Build these, or cut the beat and say so.
+**1 · `make w2-paid-once`, for 03:03.** Topic 3's fix.
 
-**1 · The `w2-` sqlite path, for 02:55.** Topic 3's fix.
-
-- *Do this.* Add a file-backed `paid` table to the reference agent. The
-  idempotency key is the primary key. The write is `INSERT OR IGNORE`.
-- *Where.* A new `src/store.py`, called from `src/guarded.py`. Give it its own
-  make target, `make w2-paid-once`, and change nothing an earlier week prints.
+- *Do this.* Add a file-backed `paid` table to the reference agent. The key is
+  the primary key. The write is `INSERT OR IGNORE`.
+- *Where.* A new `src/store.py`, called from `src/guarded.py`, with its own make
+  target. It changes nothing an earlier week prints.
 - *Size.* Standard library, about fifteen lines.
-- *Done when.* You run the same ticket from two terminals at once and the ledger
-  shows one credit. The second terminal prints the row it found rather than
-  failing.
-- *If it is missing.* 02:55 is a description instead of a build, and cycle C
-  ends on a demonstrated problem with no demonstrated answer. That is the worst
-  shape a build-break cycle can end in, because the room leaves believing the
-  problem has no fix.
+- *Done when.* The same ticket from two terminals at once leaves one credit, and
+  the second terminal prints the row it found.
+- *If it is missing.* 03:03 becomes a description instead of a build, and topic
+  3 ends on a problem with no demonstrated answer.
 
-**2 · Three prepared queue states, for 02:00.** Topic 2's break.
+**2 · Three prepared queue states, for 02:24.** Topic 2's read-back.
 
-- *Do this.* Write three small files, one per outcome the break produces:
-  approved by somebody, timed out and took the default, still pending.
-- *Where.* `fixtures/w2-queue/approved.json`, `timed-out.json`, `pending.json`
-  in the reference agent.
-- *Size.* Three files, about ten lines each.
-- *Done when.* Somebody whose gate does not run can load one file and read their
-  own 02:20 debrief off it.
-- *If it is missing.* Anybody whose build broke at 01:47 loses the 02:20 debrief
-  entirely. That is six minutes, and it is the best six minutes in the session.
+- *Do this.* Three small files, one per outcome: approved, timed out and took the
+  default, still pending.
+- *Where.* `fixtures/w2-queue/approved.json`, `timed-out.json`, `pending.json`.
+- *Done when.* Somebody whose gate does not run can read their own 02:24
+  read-back off one file.
+- *If it is missing.* Anybody whose build broke at 01:51 loses the best six
+  minutes of the day.
 
-**3 · `make retry`, checked against the new key.** Topic 3's opening.
+**3 · `make retry`, checked against the pre-work.** Topic 3's opening.
 
-- *Do this.* Run it. Confirm it still delivers the same ticket three times, and
-  that it prints one total the room can read at a glance.
-- *Done when.* The figure it prints matches the figure the pre-work asked people
-  to write down.
-- *If it is missing.* The pre-work told them to write down a number. Cycle C
-  opens by comparing that number to a new one. If the command changed, the two
-  numbers were never comparable and the opening does not work.
+- *Done when.* It delivers the same ticket three times and prints the figure the
+  pre-work asked people to write down.
 
 ### Decide before the day. Either answer is fine. Not deciding is the failure.
 
-**4 · Ticket #8812 and a judge path, for 03:05.** Topic 6.
+**4 · Ticket #8812 and a judge path, for 03:18.** Read the case off the page, or
+build a ticket and a judge the dispatch can call. Building it lets the room watch
+the verdict change on a second run. *Recommendation:* read it off the page this
+cohort and build it before the next.
 
-- *The choice.* Read the case off the page, or build a ticket with that text and
-  a judge the dispatch can call.
-- *What building it buys.* You run it twice and the room watches the verdict
-  change. That is much stronger than describing it, and it is the probe the
-  block turns on.
-- *What it costs.* A ticket fixture and a judge path, neither of which exists
-  today, plus real model calls in a room on a twenty-a-day allowance.
-- *Recommendation.* Read it off the page this cohort. Build it before the next
-  one, and put the run twice into the block rather than into the probe.
-
-**5 · The refusal-sample worked example, for 04:32.** Topic 4.
-
-- *The choice.* Show a ten-line sketch of how you sample refusals and re-read
-  them, or keep naming it and showing nothing.
-- *Why it is open.* Inventing a sketch implies a practice we have not run.
-  Showing nothing leaves the block naming a thing to build with no shape.
-- *Recommendation.* Show the sketch and label it as a sketch in the same
-  sentence. A senior room can tell the difference and will say so if you do not.
-
-**6 · The EU AI Act Article 14 hook.** Topic 5's horizon.
-
-- *The choice.* Say it in the room, or leave it out.
-- *Before you say it.* Read Article 14 and the application dates in Article 113
-  in the primary text. This is a dated regulatory claim and trade press is not a
-  source for it.
-- *Either way.* It stays out of the session file. See the hard rules in
-  `CLAUDE.md`.
+**5 · The refusal-sample sketch, for the 02:24 reading.** Show a ten-line sketch
+of sampling refusals and re-reading them, labelled a sketch in the same sentence,
+or name it and show nothing. *Recommendation:* show it and call it a sketch.
 
 ### Small, and each one buys back minutes.
 
-**7 · A blank seven-column policy table, for 03:59.** Pairs currently copy the
-columns off the page. Paste a blank into chat at 03:58 instead. Saves about two
-of the eleven minutes, and eleven is tight.
+**6 · A blank one-row policy table, for 04:18.** Paste it into chat before the
+teardown pairs start.
 
-**8 · A one-line counter summary at the end of a run.** About three lines in the
-reference agent. It prints allowed and refused per tool. It makes 01:12 and
-01:40 sharper, because the room reads one line instead of hunting a terminal.
+**7 · A one-line counter summary at the end of a run.** About three lines in the
+reference agent. It makes 01:12 and 01:44 sharper.
 
 ### In the hour before you teach.
 
-**9 · Pick the two decision records for 00:15.** Read last week's submissions and
-choose two: one with a real policy in it, one that is all wishes. Name the two
-people and ask them beforehand. Without this the beat has nothing on screen.
+**8 · Pick the two decision records for 00:15**, one with a real policy and one
+that is all wishes, and ask both people beforehand.
 
-**10 · Assign the four adversary pairs for 03:25, by name.** Write them down
-before the day. Pairs that choose pick somebody whose approach they already
-understand, which is the one thing the round is meant to prevent.
+**9 · Write the four adversary pairs for 03:31, by name.**
+
+**10 · Write the four teardown pairs for 04:19, by name**, and which two questions
+each takes. Mix them from 03:31, so nobody defends the design they just attacked.
 
 **11 · Pick the 01:09 screen while you circulate.** Choose one whose refusal
-message does name the file. A public miss there costs you the rest of the cycle.
+message names the file.
+
+**On names.** The pages name pairs by number, not by person. The seat list lives
+only in the production learners table, and names do not go into committed
+teaching pages. Items 9 and 10 are where the names are written, on the day.
 
 ---
 
-## ₹5,000, to an account that does not exist
+## The shape, and what to protect if you run late
 
-**00:00 · 3 min · whole room**
+Six blocks: the opening, four topics and the close. One break of fifteen minutes
+and two short breaks of five. **The longest run without a break is 00:15 to 01:39,
+84 minutes**, because topic 1 has no seam that survives an interruption. Watch the
+room at about 01:15 and take two minutes if you need to.
 
-Tell it as a scene, not as a recap. Ticket #9999 arrives at 11:04 on a Tuesday
+**If you are running late, cut in this order.** The 01:20 move, and let them do it
+after the session. Two minutes off the report-out at 03:48. The teardown's fourth
+and fifth questions, taken as a show of hands.
+
+**Never cut these, in this order of protection.** 02:55, the second terminal. 01:25,
+the row that looks complete. 03:09's checkpoint and the injection sentence at about
+04:00. The four topic quizzes and the 04:55 rating.
+
+---
+
+## 00:00 · The night the money left
+
+Tell it as a scene, not as a summary. Ticket #9999 arrives at 11:04 on a Tuesday
 night. The agent does the sensible thing and looks the account up first. The
 account does not exist, and it has been told so in plain JSON in a field called
 `found`. One step later it credits ₹5,000 to it, then closes the ticket with a
@@ -193,23 +164,19 @@ turn the room spends the morning believing the session is about validation,
 which is something they learned fifteen years ago, and you lose them by 00:35.
 
 This is the highest leverage three minutes in the day. Tell them five things
-will go wrong before 03:25 and that not one of them is the model failing. Every
+will go wrong before 03:31 and that not one of them is the model failing. Every
 one is their own rule working exactly as written. Do not say which five.
 
-**The line this beat lands.** Adding the check is the easy part. It is not what today is about.
+**The line this segment lands.** Adding the check is the easy part. It is not what today is about.
 
 ---
 
-## Five things you can do by the end
-
-**00:03 · 5 min · whole room**
+### Five things you can do by the end, at 00:05
 
 The rating is the spine of the close, so the words have to be identical all
 three times. Read them from the learner page rather than paraphrasing.
 
-**Statement 1 changed on 28 September** and it is worth knowing why, because the
-old one under-sold the day. It used to be "write a limit as data outside the
-function it constrains". Writing the number in a file is the easy half and most
+**Statement 1 is about placement, and it is worth knowing why.** Writing the number in a file is the easy half and most
 of this room already does it. The half that costs money is which callers the
 control covers, which is what the goodwill tool takes from them at 01:12. The
 statement now asks for placement.
@@ -217,23 +184,21 @@ statement now asks for placement.
 Expect high scores on statements 1 and 3. Almost everyone believes their limits
 are already in config and their payments already run once. Both are tested
 against a keyboard today. Say nothing about that now. A score that drops at
-04:52 is the result you want, and announcing it in advance spends it.
+04:55 is the result you want, and announcing it in advance spends it.
 
 Say that evaluation is deliberately not among the five outcomes, and that week 3
 has it. A participant who cannot find a topic assumes it is missing from the
 course rather than scheduled.
 
-**The line this beat lands.** Anyone can add an if statement. This session is about where it sits and who
+**The line this segment lands.** Anyone can add an if statement. This session is about where it sits and who
 agreed to the number inside it.
 
 ---
 
-## One sealed prediction
+## 00:10 · One sealed prediction
 
-**00:10 · 5 min · alone, in chat**
-
-**New beat, and it is the cheapest thing in the session.** It costs five minutes
-at 00:10 and three at 03:52, and it converts the adversary round from an
+**It is the cheapest thing in the session.** It costs five minutes
+at 00:10 and three at 03:58, and it converts the adversary round from an
 exercise into a result about each person's own judgment.
 
 **Say this, in these words.**
@@ -242,36 +207,34 @@ exercise into a result about each person's own judgment.
 > build? Yes or no, and by which route.
 
 In chat, one line each, and **do not read any of them out**. Say explicitly that
-nobody will see them until 03:52. A prediction somebody expects to be read
+nobody will see them until 03:58. A prediction somebody expects to be read
 aloud is a prediction written for the room.
 
 ### The answer key, which is not an answer
 
 There is no correct answer at 00:10. What you are collecting is the
 distribution, and you want it on the record before the room has built anything.
-Copy the lines somewhere you can put them on screen at 03:52.
+Copy the lines somewhere you can put them on screen at 03:58.
 
 ### The expected wrong answer, and what is right about it
 
 Most of the room writes "yes", because the framing of the question implies it.
 What is right: they are correctly reading the session. What matters is the
 second half of their answer, the route. Almost nobody names the route that
-actually gets used against them, and that gap is the whole beat. A few people
-write "no", and those are the ones to watch at 03:52.
+actually gets used against them, and that gap is the whole segment. A few people
+write "no", and those are the ones to watch at 03:58.
 
 ### Extension probe
 
 For anybody who finishes early: "How confident are you, as a percentage?" The
 confident-and-wrong group is the one this session exists for, and a number makes
-them findable at 03:52.
+them findable at 03:58.
 
-**The line this beat lands.** You will be wrong about your own system in a way you can measure in four hours.
+**The line this segment lands.** You will be wrong about your own system in a way you can measure in four hours.
 
 ---
 
-## What is a policy — exercise
-
-**00:15 · 8 min · 60s alone first**
+## 00:15 · Two decision records on screen
 
 Trimmed from ten minutes to eight. The cut is the board-building of all seven
 checks; take four, not seven, and move on.
@@ -294,7 +257,7 @@ beside each. The learner page has all seven if the room stalls.
 > 1  Could another engineer build that check without asking you anything? Yes or no.
 > 2  If not, what would they have to ask you?
 
-60 seconds, alone, in writing. Question 2 is the beat. Take four or five answers
+60 seconds, alone, in writing. Question 2 is the segment. Take four or five answers
 out loud and almost every one is how much and who decides, which is the number
 and the owner. They have derived the answer to the card's own heading, so do not
 state it first.
@@ -314,8 +277,8 @@ a reasonable person could want a different number per tool.
 That distinction is 01:25's material arriving from the room's own list, which is
 the best possible way for it to arrive. A policy has a number in it and a person
 who owns the number. A wish has the word "should" and no number. That is the
-whole test, and they apply it to their own code at 00:54 and to another pair's
-table at 04:10.
+whole test, and they apply it to their own code at 00:54 and to the policy
+table row at 04:15.
 
 Most records will have four wishes and one policy. Say the ratio out loud. It is
 not a criticism of the person who wrote it. It is the normal state of a design
@@ -327,19 +290,17 @@ rest of the cohort.
 "Ask a human before anything irreversible", offered as a policy. It has no
 number and no owner, and it is also the sentence week 1 ended on. What is right
 is the instinct. What is missing is who, how long you wait, and what happens
-when they do not answer. Park it and point at 01:40.
+when they do not answer. Park it and point at 01:44.
 
 **Probe.** "Your check says refund up to one month. Whose signature is on the
 word month?"
 
-**The line this beat lands.** Most records had four wishes and one policy. That ratio is the session in one
+**The line this segment lands.** Most records had four wishes and one policy. That ratio is the session in one
 line.
 
 ---
 
-## The example: one check, working
-
-**00:23 · 8 min · 90s alone and silent**
+## 00:23 · The check, working
 
 **Set it up.** The run is about to print a refusal and they have not seen it yet.
 
@@ -358,17 +319,17 @@ facts, one per line, so the room can mark its own paper against the screen.
 - **Why.** The rule, in a sentence a person can read at 2am. About half the room.
 - **Where the rule is written.** The file, and the key inside it. Rare.
 
-Say out loud how few people wrote the third. That gap is the reason cycle A
+Say out loud how few people wrote the third. That gap is the reason topic 1
 exists, and it is more convincing from their own paper than from you. The first
 two tell somebody what happened. Only the third tells them where to go, and
 going somewhere is the only thing that shortens the outage.
 
 A fourth answer is worth accepting if it comes: what would have to change for it
 to pass. That is the Friday-night failure arriving early. Park it, say you will
-come back at 03:55, and actually come back to it.
+come back at 04:15, and actually come back to it.
 
 The last line, the model says it credited and the ledger says ₹0, is not this
-beat. The mock brain closes every run with the same canned sentence and this one
+segment. The mock brain closes every run with the same canned sentence and this one
 is false. Name it in ten seconds, say the customer has been told nothing, and
 say week 4 owns it.
 
@@ -385,22 +346,20 @@ issue_credit(account_id='4471', amount=1200) -> allowed
 ```
 
 The order is deliberate. On this data every ceiling refusal is the refusal of an
-honest customer, and that is 01:40's opening. Showing it at 00:23 spends it.
+honest customer, and that is 01:44's opening. Showing it at 00:23 spends it.
 Confirm in one sentence, run the three lines if you want, and do not let it
 become the ₹8,400 argument ninety minutes early.
 
-**The line this beat lands.** A refusal that names its rule says what happened. A refusal that names the file
+**The line this segment lands.** A refusal that names its rule says what happened. A refusal that names the file
 says where to go.
 
 ---
 
-## Three properties, and your own control fails one
+## 00:31 · Three properties, and your own control fails one
 
-**00:31 · 6 min · whole room**
-
-**New beat.** It is the one instrument that carries the whole day, and it is
+**It is the one instrument that carries the whole day**, and it is
 placed here rather than at 00:15 for a specific reason: the room has just judged
-a refusal message against three criteria without being given any. This beat
+a refusal message against three criteria without being given any. This segment
 names what they were already doing.
 
 The three words are on the learner page with their one-line definitions. Put
@@ -417,7 +376,7 @@ Then one question out loud, four answers taken:
 It is almost always the third, and the count in the room is the useful artefact.
 Ask for a show of hands on each of the three and write the numbers down. You
 will use "observable" three more times today, at 00:54 when they add counters,
-at 01:12 when the refused counter does not move, and at 04:32 when the wrong
+at 01:12 when the refused counter does not move, and at 01:44 when the wrong
 refusal turns out to be the invisible one.
 
 The argument for the third property, in one sentence: a control nobody counts
@@ -434,16 +393,14 @@ and most monitoring stacks blur it.
 **Probe.** "Your ceiling fired 400 times last month and 3 times this month.
 Which of those two is the incident?"
 
-**The line this beat lands.** A control nobody can count cannot be told apart from a broken one.
+**The line this segment lands.** A control nobody can count cannot be told apart from a broken one.
 
 ---
 
-## One sentence, then the map
+## 00:37 · The map, six kinds
 
-**00:37 · 5 min · whole room, built on the board**
-
-Moved from 00:08. It reads better after they have seen one control working than
-before they have seen anything.
+It reads better after they have seen one control working than before they have
+seen anything.
 
 **Set it up.** One sentence first, and do not elaborate on it. The definition is
 doing work precisely because it is narrow.
@@ -457,7 +414,7 @@ That second question is why the definition earns its place. Answering it gives
 six guardrails instead of one, and the room can produce most of them. Build the
 map from their answers. Do not show it finished.
 
-Why this beat exists at all. Rooms arrive believing "guardrails" is one thing,
+Why this segment exists at all. Rooms arrive believing "guardrails" is one thing,
 and a room that believes that puts a human in front of everything. Six kinds,
 sorted by what each stands between, is the whole correction, and it takes five
 minutes.
@@ -465,7 +422,7 @@ minutes.
 ### The answer key
 
 Input, the limit, the human gate, state, resource, output. Three are built
-today. Resource is drill 4 at home. Input and output are week 4.
+today. Resource is lab 4 at home. Input and output are week 4.
 
 ### The wrong answer worth spending time on, and one probe
 
@@ -478,19 +435,21 @@ Supply the two they missed rather than fishing, and say which week owns them.
 is input, which nothing today builds, and saying so now stops the itch becoming
 a side project this week.
 
-**The line this beat lands.** Six kinds, sorted by what each stands between. A room that thinks guardrail
+**The line this segment lands.** Six kinds, sorted by what each stands between. A room that thinks guardrail
 means one thing puts a person in front of everything.
 
 ---
 
-## Where a control can stand
+### Then the three planes, one minute
 
-**00:42 · 4 min · pairs, predict first**
+After the six are on the board, name the field's grouping: input, output, operational. Map the six onto it. The line to land: **a tool call is output that acts**, which is why today lives inside the output plane. The threat table on the learner page says which week builds each control. Do not open the injection argument here; today's ceiling caps what an injected instruction can cost, and week 4 handles the text.
 
-**New beat, and it replaces the old show of hands.** The old version offered
-three places and took a vote. This offers nine and takes a prediction. The
-change matters because the old vote's answer, the ledger, was one of only three
-options, so a third of the room got it by guessing.
+---
+
+## 00:42 · Where a control can stand
+
+**Nine places and a prediction, not a vote.** A vote between three places lets a
+third of the room guess the answer, the ledger, without reasoning to it.
 
 **Say this, in these words.**
 
@@ -508,14 +467,14 @@ with money and 01:30 states the rule.
 Most rooms say the dispatch, which is the best answer available to them and is
 not the right one. One or two say the ledger. Name them at 01:12, not now.
 
-### Why the drill builds the dispatch and not the ledger
+### Why the lab builds the dispatch and not the ledger
 
 Be straight about this, because a sharp room asks. The ledger in this repository
 is a Python list. There is no service and no boundary, so a ledger check would
 sit in the same file as the thing it guards, which is the in-tool check with a
-different name on it. The drill builds the dispatch check, which is the
+different name on it. The lab builds the dispatch check, which is the
 strongest thing that is real in this codebase. The ledger version is the policy
-table's third column at 03:59, at forty processes, with a payments service that
+table's third column at 04:15, at forty processes, with a payments service that
 actually exists. Say the limitation out loud rather than letting them find it.
 
 ### The wrong answer worth spending time on, and one probe
@@ -529,65 +488,13 @@ can prevent and how much you know, is the shape of the whole table.
 **Probe.** "Name a control that can only live at ingress." Rate limiting and
 authentication. Both are real, and neither is about money.
 
-**The line this beat lands.** The later you place a control, the more callers it covers and the less it knows.
+**The line this segment lands.** The later you place a control, the more callers it covers and the less it knows.
 
 ---
 
-## Checkpoint · you can now…
+## 00:48 · What did the check have to know
 
-**00:46 · 2 min**
-
-Five lines, and a number in chat on the last one only.
-
-If two or more people put a 2 or below on "why a control nobody can count cannot
-be told apart from a broken one", do not move on. Take one control somebody
-names from their own system and ask how they would notice it silently stopping.
-Ninety seconds of that is worth more than the first ninety seconds of cycle A,
-because the counters they are about to build are the thing that line pays for.
-
-There is no stand-up here. The first one is at 01:35, after cycle A, and the gap
-from 00:15 to 01:35 is the longest unbroken stretch in the day. Watch the room
-at about 01:15 and take two minutes if you need to.
-
----
-
-## Cycle A, B and C · how to run a build-break cycle
-
-**00:48 to 03:05 · the shape all three share**
-
-Every cycle is the same four moves. Say the shape once, at 00:48, and then never
-explain it again.
-
-1. **Decide**, in writing, before anybody types.
-2. **Build**, alone, on the keyboard.
-3. **Break**, as a puzzle. Setup and result on screen, cause withheld.
-4. **Name where the failure moved to.**
-
-**The two questions never change.** They are the same two all cohort, and by
-week 4 the room reaches for them unasked.
-
-> **What went wrong?**
->
-> **Which single control would have prevented it?**
-
-Both in writing, in pairs, before anything is read out.
-
-**The order of the two failures in cycle A is not arbitrary.** The goodwill
-credit settles the 00:42 prediction with money. The row that looks complete then
-undoes the fix they have just been congratulated on. Keep them in that order.
-Failure 2 only works because failure 1 has just been celebrated.
-
-**The line this beat lands.** Not one of today's failures is the model failing. Every one is their own
-rule, working exactly as written.
-
----
-
-## Component 1 · the four facts a check needs
-
-**00:48 · 6 min · whole room**
-
-Moved from 00:33. It now sits immediately before the build it describes rather
-than fifteen minutes before the break.
+It sits immediately before the build it describes.
 
 **Say this, in these words.**
 
@@ -600,8 +507,8 @@ Take four or five answers out loud before the table goes up.
 | Fact | Comes from | Cost |
 |---|---|---|
 | Which action | the dispatch already has it | free |
-| Can it be undone | week 1, drill 2 | free |
-| What is the limit | a file. This cycle. | free |
+| Can it be undone | week 1's second lab | free |
+| What is the limit | a file. This topic. | free |
 | What has already happened | a store that survives a restart | expensive |
 
 Say it explicitly: not one of the four comes from the model. Rooms arrive
@@ -613,12 +520,12 @@ confidence score is built on the one thing that moves every quarter.
 "How confident the model was." Take it seriously for 60 seconds and then close
 it properly. A confidence number is not comparable across models, not comparable
 across two prompts on one model, and there is nobody you can name who owns it.
-That third reason is the argument. Note that this is the same instinct as 03:05,
+That third reason is the argument. Note that this is the same instinct as 03:18,
 answered from the other side, and do not run the judge argument here.
 
 **Probe.** "Which of the four is expensive, and why?" The fourth, because it
-needs a store that survives a restart. That is cycle C, and it is why cycle C is
-a separate cycle.
+needs a store that survives a restart. That is topic 3, and it is why topic 3 is
+a topic of its own.
 
 ### Why fact 2 decides everything else
 
@@ -635,15 +542,44 @@ one to give.
   action" cannot be written until something in the code knows which actions are
   irreversible.
 
-**The line this beat lands.** The grade tells you which kind of control is even available to you.
+**The line this segment lands.** The grade tells you which kind of control is even available to you.
 
 ---
 
-## Build the limit, and count what it does
+### How every hands-on lab runs, said once here
 
-**00:54 · 3 min deciding, 15 min alone**
+Every hands-on lab is the same four moves. Say the shape once, at 00:48, and then never
+explain it again.
 
-Moved from 02:20. **Gained the counters**, which are new on 28 September.
+1. **Decide**, in writing, before anybody types.
+2. **Build**, alone, on the keyboard.
+3. **Break**, as a puzzle. Setup and result on screen, cause withheld.
+4. **Name where the failure moved to.**
+
+**The two questions never change.** They are the same two all cohort, and by
+week 4 the room reaches for them unasked.
+
+> **What went wrong?**
+>
+> **Which single control would have prevented it?**
+
+Both in writing, in pairs, before anything is read out.
+
+**The order of the two failures in topic 1 is not arbitrary.** The goodwill
+credit settles the 00:42 prediction with money. The row that looks complete then
+undoes the fix they have just been congratulated on. Keep them in that order.
+Failure 2 only works because failure 1 has just been celebrated.
+
+**The line this segment lands.** Not one of today's failures is the model failing. Every one is their own
+rule, working exactly as written.
+
+---
+
+## 00:54 · Hands-on lab: build the limit, and count what it does
+
+**A timer joined the lab on 30 September.** Two minutes: time the check on each call and print the milliseconds at the end of the run. Every learner needs their own number, because 03:18 compares it with a model. Do not supply the number.
+
+**The counters are half of this lab.**
 
 **Say this, in these words.**
 
@@ -651,7 +587,7 @@ Moved from 02:20. **Gained the counters**, which are new on 28 September.
 > What is in one row?
 > What happens when a tool has no row?
 
-Two minutes in writing before anybody types. The third question is the drill.
+Two minutes in writing before anybody types. The third question is the lab.
 
 ### A working answer
 
@@ -677,7 +613,7 @@ them. If a room puts it in the row, that is a good mistake and worth two
 minutes at 01:25.
 
 Three files change: the policy file, the dispatch, and whatever loads the file
-at start-up. Say that out loud. It was three files in week 1's drill 1 as well,
+at start-up. Say that out loud. It was three files in week 1's first lab as well,
 and the repeat is the point.
 
 What a good answer has that a passing one does not: the refusal string names the
@@ -699,8 +635,8 @@ counter is the rule, not just the tool, because "the ceiling fired" and "the
 missing-row rule fired" are different events and the room will need to tell them
 apart at 01:12.
 
-Expect pushback that this is instrumentation rather than the drill. It is the
-drill. At 01:12 the goodwill tool pays ₹5,000 and **their refused counter does
+Expect pushback that this is instrumentation rather than the lab. It is the
+lab. At 01:12 the goodwill tool pays ₹5,000 and **their refused counter does
 not move**, which is a far sharper way to learn that the check was never called
 than reading it in a trace.
 
@@ -721,7 +657,17 @@ At **01:02**, if half the room is still deciding the file shape rather than
 writing the check, paste the policy file into chat. Not earlier, and not to
 individuals.
 
-### One refusal message, read out loud
+### Extension probe, for anyone finished early
+
+Add a second business unit with its own ceiling, without copying the file. They
+reach for inheritance, or a default with overrides. Either is fine. What matters
+is that they hit the question of who owns an override, which is question 2 of
+the 04:15 teardown.
+
+**The line this segment lands.** A limit inside a function is a limit somebody has to remember. A limit in data
+is a limit with an owner.
+
+### At 01:10 · one refusal message, on one screen
 
 At **01:09**, one person's screen goes up and their refusal message is read to
 the room. One question: does it name the file? That closes the 00:23 question
@@ -729,26 +675,14 @@ against their own code, 46 minutes later.
 
 Pick the screen in advance while circulating, and pick one that does name the
 file. A room that hears a working example reads its own output differently. A
-public miss here costs you the rest of the cycle.
-
-### Extension probe, for anyone finished early
-
-Add a second business unit with its own ceiling, without copying the file. They
-reach for inheritance, or a default with overrides. Either is fine. What matters
-is that they hit the question of who owns an override, which is column seven of
-the 03:59 table.
-
-**The line this beat lands.** A limit inside a function is a limit somebody has to remember. A limit in data
-is a limit with an owner.
+public miss here costs you the rest of the topic.
 
 ---
 
-## Break it, take one · a second piece of code pays without asking
+## 01:12 · A second team pays without asking
 
-**01:12 · 8 min · pairs**
-
-Moved from 01:23. It is now the first failure rather than the second, because
-cycle A is about placement and this is the placement argument.
+It is the first failure, because topic 1 is about placement and this is the
+placement argument.
 
 **Say this, in these words.**
 
@@ -785,30 +719,25 @@ reviewer, and what they would have had to already know.
 customer record?" If the answer is "not sure", that is the finding, and it is
 the same answer most rooms give.
 
-**The line this beat lands.** Every new tool is a new chance for somebody to forget.
+**The line this segment lands.** Every new tool is a new chance for somebody to forget.
 
 ---
 
-## Move it
-
-**01:20 · 5 min · alone**
+## 01:20 · Move it to the dispatch
 
 Move the check to the dispatch, and move the counters with it. Circulate and
 look at one thing only: whether the counters came too. About a third of the room
 leaves them behind in the tool, which produces a guard at the dispatch and a
 count of a code path nothing calls any more.
 
-**The line this beat lands.** A control and its counter are one thing, and they move together.
+**The line this segment lands.** A control and its counter are one thing, and they move together.
 
 ---
 
-## Break it, take two · the row looks complete, and it is not
+## 01:25 · The row looks complete, and it is not
 
-**01:25 · 5 min · whole room, and the sharpest in the day**
-
-Moved from 01:31. No longer optional. In the old shape this was the fourth thing
-in a fifty-minute block and got cut when the block ran long. It is now the beat
-cycle A exists for, so protect it.
+**Protect this segment.** It is what topic 1 exists for, and it is the first
+thing that gets cut when a block runs long.
 
 **Say this, in these words.**
 
@@ -837,30 +766,28 @@ invariant, and putting it in the row is a bug you find later, with money.
 
 `src/policy.py` is written this way, with the reason in a comment. It was not
 until 2026-09-08: it had the account check as a row field, which is exactly the
-bug this beat is about, and it was found by somebody reading the material rather
+bug this segment is about, and it was found by somebody reading the material rather
 than by anybody running it.
 
 ### The wrong answer worth spending time on, and one probe
 
 "Add an `account_must_exist: true` field to the row." What is right: they have
 spotted the missing rule. What is wrong: they have put it back in the place the
-beat just took it out of, and now there is a tool somewhere with that field set
+segment just took it out of, and now there is a tool somewhere with that field set
 to false. Ask who would set it to false, and why. Somebody always has a reason,
 and the reason is always a test environment.
 
 **Probe.** "Name one rule in your own policy config that should never have been
 configurable."
 
-**The line this beat lands.** A rule in a field is a rule somebody can switch off.
+**The line this segment lands.** A rule in a field is a rule somebody can switch off.
 
 ---
 
-## The rule this cycle exists to land
+## 01:30 · The rule this cycle exists to land
 
-**01:30 · 5 min · whole room**
-
-**New beat.** Without it the room leaves cycle A believing the dispatch is the
-answer, which is what the old shape taught by accident.
+**Without this segment the room leaves topic 1 believing the dispatch is the
+answer.** An earlier version of this session taught exactly that, by accident.
 
 Go back to the nine places on the board from 00:42. Point at the two the control
 has now occupied.
@@ -893,28 +820,62 @@ trust.
 **Probe.** "Your ledger constraint refuses and your dispatch check allows. Which
 one is the bug?"
 
-**The line this beat lands.** The later you place a control, the more callers it covers.
+**The line this segment lands.** The later you place a control, the more callers it covers.
 
 ---
 
-## Stand up
+## 01:35 · Checkpoint 1
 
-**01:35 · 5 min**
+**2 min · everybody, a number in chat on the last line only**
 
-The first break of the day, and it comes 80 minutes in. That is the longest
-unbroken stretch in the session and it is deliberate: cycle A does not have a
-seam that survives an interruption.
+Three lines, the same words as the learner page's "✅ You can now" card for
+topic 1. **Read the counts, never a mean.** A 2 means go slower, and two people
+at 2 disappear inside an average of 3.4.
 
-Cameras off, away from the screen, and say the word "five" rather than "a few".
+If two or more put a 2 or below on the last line, *why a control nobody can count
+cannot be told apart from a broken one*, do not move on. Take one control somebody
+names from their own system and ask how they would notice it silently stopping.
+
+**The line this segment lands.** A low number is information, not failure.
 
 ---
 
-## It refuses ₹8,400 that is genuinely owed
+## 01:35 · Topic 1 quiz and takeaway
 
-**01:40 · 7 min · pairs**
+**4 min · alone, in writing · 40 seconds a question, then one line**
 
-Moved from 01:15. It now opens cycle B, seven minutes before the build it
-motivates, instead of sitting fifty minutes ahead of it.
+**Sequence.** Straight after checkpoint 1. Three questions on screen one at a
+time: Q11, Q12 and Q13 in `../quiz/week-2.md`. Answers in writing before any
+reveal. Then everybody writes one line: *the one caller in your own system that
+your current limit does not stand in front of.*
+
+**Read Q13's quote out loud before the question.** It is week 1's decision
+record, section 4, word for word. Nobody in the room goes and looks it up.
+
+**The answer key** is in the bank, and on the instructor page's topic quiz card.
+It is not repeated here.
+
+**The expected wrong answer, and what is right about it.** Q11, the dispatch. It
+is what most of the room built twenty minutes ago, and it covers every tool the
+agent calls. It stops at the agent's edge.
+
+**Probe, if the room is ahead.** "Your batch job and your agent both write
+credits. Which one would you rather have no check on, and why?"
+
+**The line this segment lands.** You finish a topic by writing, not by nodding.
+
+---
+
+## 01:39 · Short break, five minutes
+
+Cameras off, away from the screen. Say the word "five" rather than "a few". It
+comes 84 minutes in, the longest stretch of the day, on purpose.
+
+---
+
+## 01:44 · It refuses ₹8,400 that is genuinely owed
+
+It opens topic 2, seven minutes before the build it motivates.
 
 **Say this, in these words.**
 
@@ -933,7 +894,7 @@ The control: over the limit has to mean **ask**, not **no**. A limit with one
 outcome is a wall. A limit with two outcomes is a gate.
 
 **Say maker-checker early and out loud.** This is the highest-value move in the
-cycle. For anyone who has shipped in a bank, an NBFC or a payments company it
+topic. For anyone who has shipped in a bank, an NBFC or a payments company it
 converts the whole thing from a new agent problem into something they already
 believe and have been audited on. Ask for a show of hands on who has built one.
 In this cohort it will not be a small number.
@@ -945,7 +906,7 @@ answer to a question than it is a statement.
 
 **Point at the counter again.** Meera's refusal incremented `guard_refused`, and
 that single number is the only trace of her anywhere in the system. Nobody is
-paged. That is the wrong-refusal cost arriving 170 minutes before 04:32, and it
+paged. It is the wrong-refusal cost, and the reading at 02:24 comes back to it. It
 costs ten seconds to say.
 
 ### The wrong answer worth spending time on, and one probe
@@ -957,7 +918,7 @@ sits ₹1 over it. Do this once and the room stops proposing numbers.
 
 **Probe.** "Your ceiling is one month of the plan. Name the honest case that is
 twenty times the plan." Eleven months of a double charge on a ₹4,000 plan is
-03:55, so a pair that gets there has walked into the teardown on its own. Let
+04:15, so a pair that gets there has walked into the teardown on its own. Let
 them.
 
 ### The confidence question, which somebody always asks
@@ -977,19 +938,17 @@ checked afterwards against whether a person agreed it needed looking at.
 *Where uncertainty does belong.* In the record, and in week 3's harness as
 sampling variance measured by code. A test-time instrument, not a runtime gate.
 
-**This card owns the confidence half and 03:05 owns the judge half.** They are
-one instinct answered from two sides. Do not run 03:05's argument here, and do
+**This card owns the confidence half and 03:18 owns the judge half.** They are
+one instinct answered from two sides. Do not run 03:18's argument here, and do
 not run this one there.
 
-**The line this beat lands.** A limit with one outcome is a wall. A limit with two outcomes is a gate.
+**The line this segment lands.** A limit with one outcome is a wall. A limit with two outcomes is a gate.
 
 ---
 
-## Build the gate, and the record
+## 01:51 · Hands-on lab: build the gate, and the record
 
-**01:47 · 13 min · alone**
-
-Merges the old 02:35 gate drill with the old 00:52 decision-log beat. They were
+Merges the old 02:35 gate lab with the old 00:52 decision-log segment. They were
 115 minutes apart and they are one thing: **a gate that worked leaves one field
 different in one row.**
 
@@ -1002,7 +961,7 @@ Three minutes in writing. Then the second question, and push for a number:
 
 ### The answer key for the build
 
-The gate sits at the dispatch, beside cycle A's limit. Irreversible, plus over
+The gate sits at the dispatch, beside topic 1's limit. Irreversible, plus over
 the limit, means do not call the function.
 
 **Write the decision row first, then ask, then act on the answer.** The order
@@ -1010,7 +969,7 @@ matters and almost nobody gets it right unprompted. A row written only after
 approval loses the request entirely when the process dies while waiting.
 
 While circulating, look at one thing only: whether the gate is before the
-dispatch or inside the tool. Cycle A settled this 40 minutes ago, and perhaps a
+dispatch or inside the tool. Topic 1 settled this 40 minutes ago, and perhaps a
 third of the room will still put it inside the tool, because that is where the
 assistant puts it.
 
@@ -1043,6 +1002,10 @@ what but under which rule. The decision. And who decided.
 Say the retention point in one sentence: the trace is for them, today, and they
 throw it away. The decision log is for a stranger, in nine months, and they keep
 it for years. Different reader, different file, different retention.
+
+### Log the reason, not the person
+
+The decision log is kept for years, so it must not become a second copy of customers' personal data. The row holds the account id, the rule and the decision, never the ticket text, the name or the phone number. **Wrong answer:** "we will mask the name before we write it". Right instinct, and masking is a control you then have to test. Not writing the field needs no test.
 
 ### Who is allowed to answer
 
@@ -1089,20 +1052,18 @@ architecture decision rather than a preference. **Name categories, not a
 product.** Naming a specific engine turns a trade-off into a recommendation,
 which is the line the positioning does not cross.
 
-**The line this beat lands.** A gate that worked leaves one field different in one row.
+**The line this segment lands.** A gate that worked leaves one field different in one row.
 
 ---
 
-## Set the timer
+## 02:04 · Set the timer
 
-**02:00 · 2 min · whole room**
-
-**New beat, and it replaces a discussion with an experiment.** The old session
-asked the room what their code does at 2:14am. This makes it happen.
+**It replaces a discussion with an experiment.** Asking the room what their code
+does at 2:14am gets guesses. This makes it happen.
 
 **Say this, in these words.**
 
-> Everybody set your approval timeout to 18 minutes, and submit one ₹44,000 approval request before you stand up. Then nobody watches the queue.
+> Everybody set your approval timeout to 18 minutes, and submit one ₹44,000 approval request before the break. Then nobody watches the queue.
 
 ### How to run it
 
@@ -1112,51 +1073,48 @@ those who return early watch it happen.
 
 Say nothing about what will happen. Do not say "this will be interesting".
 
-**If somebody's gate is not working by 02:00**, give them a prepared queue state
-to open at 02:20 rather than letting them sit out the debrief. Have three files
+**If somebody's gate is not working by 02:04**, give them a prepared queue state
+to open at 02:24 rather than letting them sit out the debrief. Have three files
 ready, one per outcome. This is the one place in the day where a broken build
-costs somebody the next beat entirely.
+costs somebody the next segment entirely.
 
-### The answer key, which arrives at 02:20
+### The answer key, which arrives at 02:24
 
 There is nothing to reveal here. The reveal is their own queue.
 
-**The line this beat lands.** Whatever your code does when the approver is absent is your policy, whether or
+**The line this segment lands.** Whatever your code does when the approver is absent is your policy, whether or
 not anybody chose it.
 
 ---
 
-## Checkpoint · you can now…
+## 02:06 · Checkpoint 2
 
-**02:02 · 3 min, then the break**
+**3 min, then the break · a number in chat on the last line only**
 
-Five lines, and a number in chat on the last one only.
+Three lines, and they are the three lines of topic 2's "✅ You can now" card.
+**Every one is taught by 02:06**, which is why the card has no line about the
+approval queue's headcount: that is at 02:24.
 
-**This checkpoint interleaves cycles A and B rather than testing each in turn.**
-That is deliberate. Mixed retrieval is harder and it is what makes the two stick
-as one idea rather than two topics.
+The last line, what your code does at 2am with a number in it, is about to be
+tested by the timer rather than by the checkpoint. If the numbers are low, say so
+and tell them the next fifteen minutes will settle it.
 
-The last line, what your code does at 2:14am with a number in it, is about to be
-tested by the timer rather than by the checkpoint. If the numbers are low, say
-so and tell them the next fifteen minutes will settle it.
+**The line this segment lands.** Commit to an answer about your own code, then
+watch it.
 
 ---
 
-## Break
-
-**02:05 · 15 min · timers running**
+## 02:09 · Break, fifteen minutes
 
 Do not stay in the room answering questions about the gate. The experiment needs
 nobody watching the queue, including you.
 
 ---
 
-## What the break did
+## 02:24 · What the break did
 
-**02:20 · 6 min · whole room**
-
-**New beat.** The single most memorable six minutes in the redesigned session,
-and it costs no teaching time because the break did the work.
+**The single most memorable six minutes in the session**, and it costs no
+teaching time because the break did the work.
 
 **Say this, in these words.**
 
@@ -1198,7 +1156,7 @@ rooms, and it is the bridge to the policy table's sixth column.
 For a team in Bengaluru serving customers in the United States, the queue fills
 at 2am IST, which is 4:30pm Eastern, the customer's busiest hour. A rota across
 time zones is an architecture decision, not an HR one, and it gets made by
-whoever set the timeout at 01:47. Ask how many in the room serve customers in a
+whoever set the timeout at 01:51. Ask how many in the room serve customers in a
 time zone that is not theirs. The hands make the argument better than the
 paragraph does.
 
@@ -1206,15 +1164,75 @@ Do not use an alert-fatigue statistic. Every source says a quarter to two-thirds
 of alerts go uninvestigated, and every source is a blog citing an unnamed
 survey. Use "hands up if you have ever muted an alert channel" instead.
 
-**The line this beat lands.** You did not choose what your gate does at 2am. You watched it choose.
+**The line this segment lands.** You did not choose what your gate does at 2am. You watched it choose.
 
 ---
 
-## Pay once, then watch your fix fail
+### The two mistakes, and their prices · reading on the learner page
 
-**02:26 · 2 min deciding, 15 min alone, then 12 min of checking**
+**Reading on the learner page, not a segment.** It sits beside the queue it
+describes. Point at it in one sentence at the end of the read-back.
 
-Moved from 02:55. The decide step is the real content.
+One trade-off under the whole day: the wrong payment against the wrong refusal.
+A wrong payment costs ₹5,000 and is visible in the ledger. A wrong refusal costs
+one customer, one complaint, and nothing you can see in a dashboard. That
+asymmetry is why most teams tighten the check and never find out what it cost
+them.
+
+**This is where the counters pay off, and it is new.** In the old session this
+was an assertion. Now they built `guard_refused` at 00:54 and watched it tick
+once for Meera at 01:44. Ask what that counter would have to become for them to
+see the cost rather than just the count. The answer is a sample of refused cases
+re-read by a person, which is the only one of the two mistakes that needs to be
+built rather than observed.
+
+Then the third cost, which no dashboard shows either: a human gate works only
+while the person is still reading it. First request read, tenth skimmed,
+fiftieth approved before the sentence finishes. Volume, not carelessness.
+
+Close on the upward sentence, which is already on the learner page. Do not add a
+fourth idea here.
+
+**The line this segment lands.** "Here is the amount we will not pay without a person, here is what being wrong
+costs in each direction, and here is who can move that number." That survives a
+board meeting. "We added validation" does not.
+
+---
+
+### Tuning the refusals · reading on the learner page
+
+Precision is how many refusals deserved it. Recall is how many deserving requests were caught. **A new check runs in shadow mode on last week's traffic before it blocks anyone.** Say that one sentence. Q15 in the topic quiz asks it.
+
+---
+
+## 02:30 · Topic 2 quiz and takeaway
+
+**4 min · alone, in writing · 40 seconds a question, then one line**
+
+**Sequence.** Straight after the queue read-back, with the three outcomes still on
+screen. Q14, Q15 and Q16 in the bank. Then one line: *what a system you own does
+at 2am when the approver is asleep, and whether anybody chose it.*
+
+**Read Q16's quote out loud first.** It is the second of the four facts from
+00:48, word for word.
+
+**The answer key** is in the bank and on the instructor page's quiz card.
+
+**The expected wrong answer, and what is right about it.** Q14, "it waits". It is
+what most gates did during the break, and waiting is often correct. What is
+missing is the upper bound.
+
+**Probe.** "Your gate refused at 30 seconds. The customer was owed the money.
+Which row in your decision log tells you, next week, that it happened?"
+
+**The line this segment lands.** Whatever your code does when the approver is
+absent is your policy.
+
+---
+
+## 02:34 · Hands-on lab: pay once, then watch your fix fail
+
+The decide step is the real content.
 
 **Say this, in these words.**
 
@@ -1223,11 +1241,11 @@ Moved from 02:55. The decide step is the real content.
 Two minutes in writing. Their answer decides whether a customer with two genuine
 disputes is paid once or twice.
 
-**This drill is week 3 seeded a week early, and it only works if you let the
-green result stand for a moment.** The room stops the double payment inside one
+**This lab is week 3 planted a week early, and it only works if you let the
+passing result stand for a moment.** The room stops the double payment inside one
 running program, `make retry` shows one credit, and then the same ticket from a
-second terminal pays twice again. They feel green and wrong a week before they
-have the words for it.
+second terminal pays twice again. They watch a pass and a failure inside four
+minutes, a week before they have the words for it.
 
 **Do not use the word "evaluation" here.** Name the feeling and say week 3 is
 where it gets a method. Week 3 opens on this terminal rather than on a new
@@ -1244,10 +1262,10 @@ minted per run. A fresh `uuid4()` at the start of a run is the most common wrong
 answer and it fails exactly when it is needed: a new run mints a new key, the
 provider sees two distinct requests, it pays twice.
 
-**Check part one, at 02:43.** `make retry` pays ₹1,200 once. Let it stand. Say
+**Check part one, at 02:51.** `make retry` pays ₹1,200 once. Let it stand. Say
 "it works" and mean it.
 
-**Check part two, at 02:47.** A second terminal. It pays again. The keys live in
+**Check part two, at 02:55.** A second terminal. It pays again. The keys live in
 a Python list, the list dies with the process, and `make retry` passed because
 all three deliveries ran inside one program, which is the one case that was
 never the problem.
@@ -1261,23 +1279,20 @@ and it is worth showing rather than telling: ask them to run the second terminal
 **Probe.** "Your key store is now a table. Two processes take the same message
 at the same moment. Which one pays?" The answer needs a single serialisation
 point. **In the old shape this was named and handed to week 5. It is now built,
-at 02:55.**
+at 03:03.**
 
-**The line this beat lands.** Your test passed and proved nothing, and nothing in the room told you.
+**The line this segment lands.** Your test passed and proved nothing, and nothing in the room told you.
 
 ---
 
-## The fix that holds
+## 03:03 · The fix that holds
 
-**02:55 · 6 min · alone**
-
-**New beat.** The old session stopped at the false pass and handed the fix
-forward. Stopping there leaves the room with a demonstrated problem and no
+**The fix is built, not described.** Stopping at the false pass leaves the room with a demonstrated problem and no
 demonstrated answer, which is a bad place to spend a week.
 
 **Staging dependency, and it is the one thing that blocks running this
 session.** The reference agent's ledger is a Python list, so there is no store
-to put a constraint in. Cycle C needs a `w2-` sqlite path: a file, a `paid`
+to put a constraint in. Topic 3 needs a `w2-` sqlite path: a file, a `paid`
 table with the key as primary key, and `INSERT OR IGNORE`. Standard library, no
 service, about fifteen lines. Same rule as `w2-guarded` and `w2-goodwill`: its
 own target, its own module, and it does not change what any earlier week prints.
@@ -1291,14 +1306,14 @@ if cur.rowcount == 0:
     return refuse(f"already paid: {key}")
 ```
 
-The middle line is the beat. They are not asking whether the key is there. They
+The middle line is the segment. They are not asking whether the key is there. They
 are inserting it and letting the insert report whether they were first.
 
 A read followed by a write has a window between the two, and two processes find
 it. A constraint has no window, because the database serialises the inserts.
 
 Then run the second terminal again. It refuses. **Let them see that**, because
-the false pass at 02:47 is much easier to sit with once the room has watched the
+the false pass at 02:55 is much easier to sit with once the room has watched the
 real fix hold.
 
 ### The wrong answer worth spending time on, and one probe
@@ -1314,50 +1329,64 @@ killed between the acquire and the write.
 twice, three months apart. What now?" The key is the dispute, not the ticket,
 and most rooms have to be pushed to see the difference.
 
-**The line this beat lands.** You did not write a better check. You moved the check to something that cannot
+**The line this segment lands.** You did not write a better check. You moved the check to something that cannot
 be raced.
 
 ---
 
-## Where did the failure move?
+## 03:09 · Checkpoint 3
 
-**03:01 · 4 min · whole room**
+**2 min · a number in chat on the last line only**
 
-Moved from 01:49 and shortened from ten minutes to four, because the room has
-now produced the rows itself rather than being walked through them.
+Three lines. The last is the week's line in the AI-written-code thread, and it
+escalates across the cohort: **review AI-written code for where it put the check,
+not whether the check passes.** Week 1 was directing an assistant against a
+decision made first. Week 3 is the cases it chose, not the result it reported.
 
-**Say this, in these words.**
+If the numbers are low on it, do not extend the session. Say it is the after-work
+to do first. The adversary round tests the same thing with somebody else's code.
 
-> Take the control you just added. Where did the failure move to?
-
-Ask it once per row as you build the table. Build it live from their answers. Do
-not display it finished.
-
-### The answer key, and the order to fill it in
-
-| What you added | What it fixed | Where the failure went |
-|---|---|---|
-| a ceiling | pays too much | refuses an honest ₹8,400 |
-| a check in the tool | this tool overpaying | the next tool nobody checked |
-| a human gate | nobody approves alone | nobody approves at all at 2am |
-| a key in memory | pays twice on retry | pays twice from a second process |
-
-Fill the first two columns fast, from the room. Spend the time on the third.
-That is the column they cannot produce for their own systems yet, and it is the
-capability the checkpoint tests.
-
-**The line this beat lands.** A check does not remove a failure. It moves it. Your job is to know where it
-moved to, and to have chosen that place.
+**The line this segment lands.** Where the check sits matters more than whether
+it passes.
 
 ---
 
-## When the checker is a model
+## 03:09 · Topic 3 quiz and takeaway
 
-**03:05 · 15 min · pairs, then whole room**
+**4 min · alone, in writing · 40 seconds a question, then one line**
 
-**New block.** In the old session this was six words and a week number, in a
-bullet at 03:15, for the thing this room is most likely to go and build between
-sessions.
+**Sequence.** Straight after checkpoint 3. Q17, Q18 and Q19 in the bank. Then one
+line: *one test in your own system that passes inside one process and has never
+been run from two.*
+
+**Read Q19's quote out loud first.** It is week 1's teardown question 1, word for
+word, and the room could not answer it last week.
+
+**The answer key** is in the bank and on the instructor page's quiz card.
+
+**The expected wrong answer, and what is right about it.** Q18, "concurrency". Two
+processes at the same instant is a real case. But the second terminal paid a
+minute later with no overlap at all, and that is the finding.
+
+**Probe.** "Which test in your own CI runs everything inside one process, and
+has never been run as two?"
+
+**The line this segment lands.** A second process is enough to break a fix that
+lives in memory.
+
+---
+
+## 03:13 · Short break, five minutes
+
+Cameras off again. **Protect it.** The next thirty minutes are the densest social
+block in the day, and a room that skipped the break attacks worse.
+
+---
+
+## 03:18 · Three tiers of checker, and what each one costs in time
+
+**It is the narrative that opens red-teaming**, and it is the thing this room is
+most likely to go and build between sessions.
 
 ### The setup, 5 minutes, pairs
 
@@ -1418,46 +1447,37 @@ and nobody knows the direction, because nobody measured it separately.
 
 ### One thing not to do here
 
-Do not run the confidence argument. The 01:40 card owns it, and the two are one
+Do not run the confidence argument. The 01:44 card owns it, and the two are one
 instinct answered from two sides. Running both is the same twenty minutes twice.
 
-**The line this beat lands.** A model may widen what gets through a hard limit, and it may never be the limit.
+**The line this segment lands.** A model may widen what gets through a hard limit, and it may never be the limit.
 
 ---
 
-## Checkpoint · you can now…
+### The three tiers, 5 minutes, after the reveal
 
-**03:18 · 2 min, then the stand-up**
+**Sequence.** Ask for the predicted multiple first, in writing: *your check took this many milliseconds at 00:54; how many times slower is a model?* Take three numbers. Then the tier table on the learner page: rules in the process, small classifiers, a model as judge. Then the cascade: stop at the cheapest tier that can decide. Then in-band against out-of-band in one sentence, tied to the undo question from 00:48. Close on a latency budget written per endpoint, because teardown question 4 uses it.
 
-Five lines, and a number in chat on the last one only.
+**The answer key.** Orders of magnitude, not promises: well under a millisecond, milliseconds to tens of milliseconds, hundreds of milliseconds and often more. **Do not quote vendor latency figures as fact.** A payment's checks stay in-band whatever they cost, because nothing takes a payment back. A chat reply can run a slow judge out-of-band, because a stream can be stopped.
 
-The last line is the week's bolded accountability line, and it escalates across
-the cohort: **review AI-written code for where it put the check, not whether the
-check passes.** Week 1 was directing an assistant against a decision made first.
-Week 3 is the cases it chose, not the colour of the result.
+**The expected wrong answer, and what is right about it.** "Run everything out-of-band, so nobody waits." Right for text a person reads. Wrong for an action with no afterwards.
 
-If the numbers are low on it, do not extend the session. Say it is the after-work
-they should do first, and move. The adversary round is about to test the same
-capability with somebody else's code, which is a better teacher than another
-three minutes here.
+**Probe.** "Your reply streams while the judge runs. The judge fails at 400 ms and the customer has read half the answer. What do you show them, and what do you log?"
 
-Take the stand-up. The next thirty minutes are the densest social block in the
-day and a room that skipped the break attacks worse.
+**The line this segment lands.** Stop at the cheapest tier that can decide, and never let an out-of-band check guard something you cannot take back.
 
 ---
 
-## The adversary round
+## 03:31 · Hands-on lab: the adversary round
 
-**03:25 · 30 min · pairs, assigned by name**
-
-**New block, and the reason the rest of the day is compressed.** Everything
+**The reason the rest of the day is compressed.** Everything
 before it is a control the room was shown how to break. This is the first one
-they break without being led, on somebody else's code, and it is the only beat
+they break without being led, on somebody else's code, and it is the only segment
 in six weeks where a participant's work is tested by a peer in real time.
 
 ### Why it earns thirty minutes
 
-It does four jobs that would otherwise need four beats. It tests the 01:30
+It does four jobs that would otherwise need four segments. It tests the 01:30
 placement rule against an attacker rather than against a slide. It produces the
 regression cases week 4 asks for. It pays off the 00:10 prediction, which is the
 confident-and-wrong signal. And it hands the injection itch to them with the
@@ -1466,7 +1486,7 @@ week 4 date attached, at the moment they are most motivated to go and fix it.
 **What it displaced, and say so if anybody asks.** The five teardown questions
 were a twelve-minute pair argument followed by ten minutes in the room. They are
 now columns three, six and seven of the policy table, plus three lines of the
-04:19 checkpoint. Their answer keys are still in this file, below, because you
+04:40 checkpoint. Their answer keys are still in this file, below, because you
 will be asked at least two of them.
 
 ### The rules, 3 minutes
@@ -1509,9 +1529,9 @@ in a room of eight.
 3. **Two credits under the ceiling.** ₹1,200 four times is ₹4,800 and no single
    call is over the limit. Almost nobody defends against a total.
 4. **The same ticket from a second process**, against any pair who did not get
-   to the sqlite fix at 02:55.
+   to the sqlite fix at 03:03.
 5. **The approval path.** Submit, then approve it yourself. Whoever skipped the
-   requester-and-approver check at 01:47 is open here.
+   requester-and-approver check at 01:51 is open here.
 6. **The ticket text.** It works, and it is week 4.
 
 Route 3 is the one worth the most time in the report-out, because nothing in the
@@ -1565,205 +1585,273 @@ attack from one pair has survived one attack from one pair.
 **Probe.** "Which of the six routes works against your own system at work, right
 now?" Do not take an answer out loud. It is the after-work.
 
-**The line this beat lands.** Your guard has not been tested until somebody who did not build it has tried
+**The line this segment lands.** Your guard has not been tested until somebody who did not build it has tried
 to get past it.
 
 ---
 
-## Forty thousand a month · the frame
+## 04:01 · Topic 4 quiz and takeaway
 
-**03:55 · 4 min · whole room**
+**4 min · alone, in writing · 40 seconds a question, then one line**
 
-The ₹44,000 Friday night, moved here from 01:33 and shortened from eight minutes
-to four. It was always pointing at the teardown, and at 01:33 the room had no
-built gate to feel it against. At 03:55 they have one, and the 02:20 timer has
-already shown them what an unattended queue does.
+**Sequence.** Straight after the injection sentence. Q20, Q21 and Q22 in the
+bank. Then one line: *which of the six routes would work against a system you
+own, right now.*
 
-Say the case is constructed and that no client, product or number here describes
-a real organisation.
+**Read Q22's quote out loud first.** It is the 01:30 rule, word for word. Q22 is
+the one worth the discussion, because it ties the round back to the rule.
 
-**Say this, in these words.**
+**The answer key** is in the bank and on the instructor page's quiz card.
 
-> The refund has to go out tonight. Your check says no. What actually happens?
+**The expected wrong answer, and what is right about it.** Q20, the idempotency
+key. The instinct that repeated requests are the problem is right. Four different
+disputes are four different requests.
 
-Sixty seconds alone, in writing, then two answers out loud. Somebody always gets
-it.
+**Probe.** "Write the one control that would stop route 3. What does it have to
+count, and over what window?"
+
+**The line this segment lands.** A ceiling is per call. The risk is per account
+per day.
+
+---
+
+## 04:05 · Recall: every control, and where its failure moved
+
+**10 min · alone, notes closed, 6 minutes · then pairs, 4 minutes**
+
+**Sequence.** Say "notes closed" twice. Six minutes alone, in writing: *list every
+control the agent gained today. For each one, what failure does it prevent, and
+where did the failure move to?* Then four minutes with their pair, marking every
+control one of them has and the other does not. Then take the third column from the
+room, one row at a time. **Do not display the table.**
 
 ### The answer key
 
-Somebody pays it by hand. Nobody ships a code change, a review, a merge and a
-deploy at 11pm on a Friday for one refund.
+| What you added | What it fixed | Where the failure went |
+|---|---|---|
+| a ceiling | pays too much | refuses an honest ₹8,400 |
+| a check in the tool | this tool overpaying | the next tool nobody checked |
+| a human gate | nobody approves alone | nobody approves at all at 2am |
+| a key in memory | pays twice on retry | pays twice from a second process |
 
-Then the part that matters: **the guard did not stop the payment, it moved the
-payment to a path you cannot see.** The largest refund of the month is now the
-one with no row in the decision log, no rule attached, and no record of who
-approved. The guard made the record worse.
+A fifth row is worth accepting if it comes: the paid table fixed a second process,
+and the failure moved to a key chosen wrongly.
 
-A limit needs three things and they wrote one. A value. An owner, named as a
-role. And a way to move it that leaves a record. The third is where the real
-decision is, and it is not fast against safe: a fast path that writes an audit
-row is perfectly possible. The slow path just hands you the record free, from
-git.
+### The expected wrong answer, and what is right about it
 
-That third thing is column seven of the table they are about to write.
+"The paid table fixed it, so that row has no third column." The constraint does
+hold from any number of processes. But every control has a third column, and a
+control you believe has none is one you have stopped watching.
 
-### The wrong answer worth spending time on, and one probe
+**Probe.** "Which row in your own system has an empty third column, and is it
+empty because nothing moved or because nobody looked?"
 
-"We would have an on-call override." What is right: they have understood that
-the system needs a fast path. What is wrong: an override with no record cannot
-answer a regulator, and it is the second-worst of the three options. Ask what
-the override writes, and to where.
+**The line this segment lands.** A check does not remove a failure. It moves it.
+Your job is to know where it moved to, and to have chosen that place.
+
+---
+
+## 04:15 · Architectural teardown: the agent at forty thousand a month
+
+**25 min · whole room 4 · pairs 10 · whole room 11**
+
+**Sequence.**
+
+1. **04:15, the scene, 4 minutes.** Say "this is a constructed teaching case"
+   first. The ₹44,000 owed on a Friday night, the ceiling in the repository,
+   nobody on the queue. Sixty seconds alone: *the refund has to go out tonight.
+   Your check says no. What actually happens?* Two answers out loud.
+2. **04:19, pairs, 10 minutes.** The drawing of the agent at the close goes up and
+   stays up. Each pair takes two of the five questions, assigned by name
+   (preparation item 10): pair 1 takes 1 and 2, pair 2 takes 3 and 4, pair 3 takes
+   5 and 1, pair 4 takes 2 and 3.
+3. **04:29, the room, 11 minutes.** One question at a time, 90 seconds a pair.
+   Write each answer into the `issue_credit` row of the policy table on the board.
+
+**The five questions**, each with its full key in the reference cards at the end
+of this file:
+
+| # | Question | Fills | Reference card |
+|---|---|---|---|
+| 1 | Where does the ceiling live for forty processes, and fail open or closed? | which control point | Where does the policy live for forty processes? |
+| 2 | Who can move the ceiling, through what, and how fast? | who owns the number | Who can move the number, and how fast? |
+| 3 | 110 approvals a working day: who does them, and what happens at 400 deep? | when it is crossed | The approval queue is a capacity plan |
+| 4 | The chat has 150 ms for checks. Which stay in-band, and what takes a reply back? | when it is crossed | the 03:18 tiers, above |
+| 5 | The credit landed and the log write failed. Which record is true? | nothing, and saying so is the key | The credit landed and the log write failed |
+
+### The scene · the answer key
+
+Somebody pays it by hand. **The guard did not stop the payment, it moved the
+payment to a path you cannot see.** The largest refund of the month is now the one
+with no row in the decision log, no rule and no approver. A limit needs a value, an
+owner named as a role, and a way to move it that leaves a record.
+
+### The row the room usually builds
+
+| action | undo cost | which control point | invariant, limit or tuning | limit | when it is crossed | who owns the number |
+|---|---|---|---|---|---|---|
+| issue_credit | cannot be undone | resource of record | limit | ₹1,200 or one month of the plan | ask on-call, refuse after 30 seconds | payments lead, through the admin screen, with an audit row |
+
+"TBD" in the sixth column is the 2am failure written down in advance. Use that
+sentence when you see one.
+
+### The expected wrong answer, and what is right about it
+
+"We would have an on-call override." It is right that the system needs a fast
+path. An override with no record cannot answer a regulator. Ask what the override
+writes, and to where.
 
 **Probe.** "What is the fastest anybody can change the most expensive limit you
 enforce? Give it in hours. Then say what people do when they need it faster."
-The second half is where the real answer is.
 
-**The line this beat lands.** Every bit of friction you take out of the change path is a control you now have
-to rebuild on purpose.
-
----
-
-## The artefact · your policy table
-
-**03:59 · 20 min · 11 to write, 9 to review**
-
-**Seven columns now, not six.** Columns three and four are new and they are what
-makes the table teach rather than record.
-
-| column | what it holds | where it came from |
-|---|---|---|
-| action | the tool | week 1 |
-| undo cost | can it be undone | week 1, drill 2 |
-| **which control point** | one of the nine | 00:42 and 01:30 |
-| **invariant, limit or tuning** | who may switch it off | 01:25 |
-| limit | the number | 00:54 |
-| when it is crossed | ask, refuse, and the timeout | 01:47 |
-| who owns the number | a role, and the change path | 03:55 |
-
-**Say this, in these words.**
-
-> Could another engineer build from your table without asking you a single question?
-
-That is the fourth review question and it is the one that decides whether the
-artefact is finished.
-
-### What to watch for while they write
-
-- **Column three filled in as "the dispatch" for every row.** That is cycle A
-  remembered at half strength. Ask what a second team's tool would do to that
-  row. It is the fastest way to find out whether 01:30 landed.
-- **Column four filled in as "limit" for every row.** Ask which of their rules
-  they would be willing to let somebody switch off for one tool.
-- **"TBD" in column six.** That is the 2:14am failure, written down in advance.
-  Use that sentence when you see one, and you will see several.
-
-### Reviewing another pair's, scored 0, 1 or 2 each
-
-Four questions. The written comment matters more than the number, and say so
-when you set it, or you get eights with nothing attached. **Nothing is summed.**
-
-1. Walk the four rows from the 03:01 table through their policy table. Anything
-   that still gets through is the finding. This is the highest-value question
-   and it is first on purpose.
-2. Does every row have a number? "Reasonable" is a wish.
-3. Is the control point the strongest one available to them?
-4. Could you build from this without asking a question? If not, mark the cell.
-
-Collect the tables. They are the input to the week 6 review, and a pair that
-knows they will be read writes differently.
-
-**The line this beat lands.** Another engineer should be able to build from your table without asking you a
-question.
+**The line this segment lands.** Every bit of friction you take out of the change
+path is a control you now have to rebuild on purpose.
 
 ---
 
-## Checkpoint · can you still answer these tomorrow?
+## 04:40 · Checkpoint 4
 
-**04:19 · 1 min · not rated**
+**1 min · not rated**
 
-Four lines, no number in chat. They are mid-argument and the quiz is one minute
-away.
-
-Three of the four lines are the teardown questions that lost their room slot to
-the adversary round. If the room stalls on any of them, the answer keys are the
-five reference cards below.
+Four lines, no number in chat. They are the teardown's questions 1, 3, 4 and 5,
+asked as "can you still answer these tomorrow?" If the room stalls on one, the key
+is its reference card.
 
 ---
 
-## The quiz
+## 04:40 · The quiz
 
-**04:20 · 12 min · everybody answers**
+**10 min · everybody answers**
 
 **Say this, in these words.**
 
 > Eight questions, one at a time, about 40 seconds each. Nobody's score is shared.
 
-Say the second sentence once and you get honest answers rather than careful
-ones. The quiz is retrieval practice, not an assessment.
+**The order:** week 1 Q11, then this week's Q4, Q6, Q2, then week 1 Q13, then Q9,
+Q3 and Q7. Six from today, two from week 1, mixed so nobody can answer from a
+heading. Q4, Q6, Q2 and Q9 also render on the learner's check page afterwards.
 
-**The bank holds ten, you run eight in the room, and four of those also render
-on the learner's check page.** That changed on 28 September.
+**Do not take up the ones everybody got right.** Mark as they come in, then spend
+the time on the two or three that split the room. Q4 and Q6 usually do: the config
+file that still needs a deploy, and routing on model confidence. **Q9 is the one to
+watch**, because a room that has just watched the judge at 03:18 should get it.
 
-Q1, the four facts, is held back because the new cycle A covers it at 00:48 with
-the room's own answers. Q10, the ledger and the log disagreeing, is held back
-because it needs an argument rather than a radio button.
+**The expected wrong answer, and what is right about it.** Week 1's Q13, a
+`uuid4()` minted per run. After topic 3 it should be rare. If it is not, the 02:34
+decide step did not land, and two minutes now is worth more than a slide in week 3.
 
-**And a defect was fixed that is worth knowing about**, because it was invisible
-from this side. Q4, Q6 and Q9 were tagged `judge` while each carried four
-options and a marked key. `isSelfServable` drops every `judge` item from
-`/craft/quiz`, so `quiz:` listed eight ids, seven were dropped without a word,
-and week 2's check page rendered **one** question under a heading promising
-eight. The three are `apply` now and `quiz:` lists the four that render. Nothing
-about what you do in the room changes.
+**Probe.** "Which of today's eight would you get wrong about your own system at
+work?"
 
-Do not take up the ones everybody got right. Mark as they come in, then spend
-the remaining minutes on the two or three that actually split the room.
-Questions 4 and 6 are the usual splitters: the config file that still needs a
-deploy, and routing on model confidence. **Q9 is the new one to watch**, because
-a room that has just spent fifteen minutes on the judge should get it, and a
-room that gets it wrong has not taken the selection rule.
-
-**The line this beat lands.** Mixed on purpose. Sorting questions by topic lets people answer from the heading
-instead of from the problem.
+**The line this segment lands.** Mixed on purpose. Sorting by topic lets people
+answer from the heading instead of from the problem.
 
 ---
 
-## The two mistakes, and their prices
+## 04:50 · Takeaway, said out loud
 
-**04:32 · 7 min · whole room**
+**5 min · alone 1 minute to write · then each person, 30 seconds, in seat order**
 
-Moved from 04:09. It now opens the horizon rather than closing the teardown,
-because it is the bridge from what they built to what a board asks about it.
+**Sequence.** Everybody writes one sentence: *I can now ___, and I will use it on
+___ at work.* Then each person says it. **Do not respond to each one.** Write down
+the first blank as you hear it.
 
-One trade-off under the whole day: the wrong payment against the wrong refusal.
-A wrong payment costs ₹5,000 and is visible in the ledger. A wrong refusal costs
-one customer, one complaint, and nothing you can see in a dashboard. That
-asymmetry is why most teams tighten the check and never find out what it cost
-them.
+### What each topic was meant to teach
 
-**This is where the counters pay off, and it is new.** In the old session this
-was an assertion. Now they built `guard_refused` at 00:54 and watched it tick
-once for Meera at 01:40. Ask what that counter would have to become for them to
-see the cost rather than just the count. The answer is a sample of refused cases
-re-read by a person, which is the only one of the two mistakes that needs to be
-built rather than observed.
+Compare what was said with these four lines, the same words as each topic's ember
+card.
 
-Then the third cost, which no dashboard shows either: a human gate works only
-while the person is still reading it. First request read, tenth skimmed,
-fiftieth approved before the sentence finishes. Volume, not carelessness.
+1. Move the control toward the thing being protected, not toward the thing being controlled.
+2. A limit costs nothing to use. A human gate spends somebody's attention every single time, and it stops being a guardrail the moment they stop reading.
+3. Your test passed and proved nothing, and nothing in the room told you.
+4. Your guard has not been tested until somebody who did not build it has tried to get past it.
 
-Close on the upward sentence, which is already on the learner page. Do not add a
-fourth idea here.
+A topic nobody names is the one to open week 3 on.
 
-**The line this beat lands.** "Here is the amount we will not pay without a person, here is what being wrong
-costs in each direction, and here is who can move that number." That survives a
-board meeting. "We added validation" does not.
+### The expected wrong answer, and what is right about it
+
+"I can now add guardrails to my agent." It is true. It names no control, no number
+and no place. Ask one question back: which one, and where does it sit? Then move on.
+
+**Probe.** None. Five minutes has no room for one.
+
+**The line this segment lands.** A capability you can name is one you can use on
+Monday.
 
 ---
 
-## Who is allowed to say what a system may do?
+## 04:55 · Close
 
-**04:39 · 11 min · whole room**
+**Say this, in these words.**
+
+> Who scored themselves lower than at 00:05?
+
+Hands up, out loud. Say why that is the good result, and that it means they
+found something in their own system today. If you skip this, the second rating
+reads as a test rather than as a finding.
+
+**This session should produce more dropped scores than any other week**, and the
+redesign makes that more likely rather than less. Statement 1 is now about
+placement, and the adversary round exists to show them a caller they did not
+cover. Say so if the hands are few: ask who got money out of somebody else's
+system, and then ask whether their own would have held against the same route.
+
+Two lines in chat at 04:57, both answered by everybody. Keep the second line.
+"The thing I am still fuzzy on is ______" is what week 3 opens with, and it is
+the only place that input exists.
+
+---
+
+## After the session · five things
+
+**There is no fifth lab.** The regression case from the adversary round is
+worth more to week 4 than making the ceiling reload. Its question 3, what the agent does with a malformed policy file
+mid-run, survives as written item 4, because it splits rooms and week 3 opens
+near it.
+
+**Item 2 is the new one and item 5 is the one to chase.** Item 2 turns the
+adversary round into something week 4 can use: a security fix with no case
+behind it survives exactly one deploy. Item 5 is the only item that sends
+somebody into a production system they own with a question they have never asked
+it, and the surprises it produces are the best material week 3 can open on. Ask
+for both in the channel before next session rather than at the start of week 3.
+
+---
+
+## Before the session · six things to bring
+
+**pre-work · 45 min**
+
+**Item 6 asks three
+questions about that rule: which line enforces it, whether a colleague could
+state it without reading code, and how many times it fired last week.
+
+Those are the three properties from 00:31, asked before the room has the words
+for them. The segment at 00:31 works because they have already answered it. If you
+only get the old one-sentence answers, 00:31 loses its opening and becomes a
+definition read off a slide.
+
+Expect the third question to be unanswerable for most of the room. That is the
+finding, and say so rather than treating it as incomplete homework.
+
+---
+
+## Reference cards
+
+Nothing below is a segment in the current run of show. Each one was, in the old
+five-block shape, and each is either folded into a build, moved to the learner
+page as reading, or turned into a column or a checkpoint line. They are kept in
+full because a senior room reaches them anyway, and an answer key you have to
+reconstruct live is an answer key you get wrong.
+
+Where a card was cut rather than moved, its header says so and says what it
+lost.
+
+---
+
+## Reference · who is allowed to say what a system may do
+
+**Cut from the room on 30 September.** It was eleven minutes at 04:20, and the close from generation-prompt.md §5 needed the time. Week 6 owns who decides what a system may do. Keep this card for the day somebody asks.
 
 The argument: almost nothing they did today was code, and none of it was a
 model. They chose a number, decided who may change it, decided what happens when
@@ -1789,121 +1877,14 @@ saying it in the room, and keep it out of the session file either way. Week 1's
 lesson was that citing trade press for a regulatory claim is worse than saying
 nothing.
 
-**The line this beat lands.** A coding assistant will write the check in 30 seconds. It has no view on what
+**The line this segment lands.** A coding assistant will write the check in 30 seconds. It has no view on what
 the number should be, and it will not tell you that it has no view.
 
 ---
 
-## Two numbers and two lines
+## Reference · The two action guardrails, and why the difference matters
 
-**04:50 · 10 min**
-
-**Say this, in these words.**
-
-> Who scored themselves lower than at 00:05?
-
-Hands up, out loud. Say why that is the good result, and that it means they
-found something in their own system today. If you skip this, the second rating
-reads as a test rather than as a finding.
-
-**This session should produce more dropped scores than any other week**, and the
-redesign makes that more likely rather than less. Statement 1 is now about
-placement, and the adversary round exists to show them a caller they did not
-cover. Say so if the hands are few: ask who got money out of somebody else's
-system, and then ask whether their own would have held against the same route.
-
-Two lines in chat at 04:56, both answered by everybody. Keep the second line.
-"The thing I am still fuzzy on is ______" is what week 3 opens with, and it is
-the only place that input exists.
-
----
-
-## Five things before next session
-
-**set at 04:50 · about 2 hours**
-
-**Drill 5 was dropped on 28 September.** The week already asked for five hours
-live plus 45 minutes of pre-work against a public page promising about five
-hours a week, and the regression case is worth more than making the ceiling
-reload. Its question 3, what the agent does with a malformed policy file
-mid-run, survives as written item 4, because it splits rooms and week 3 opens
-near it.
-
-**Item 2 is the new one and item 5 is the one to chase.** Item 2 turns the
-adversary round into something week 4 can use: a security fix with no case
-behind it survives exactly one deploy. Item 5 is the only item that sends
-somebody into a production system they own with a question they have never asked
-it, and the surprises it produces are the best material week 3 can open on. Ask
-for both in the channel before next session rather than at the start of week 3.
-
----
-
-## Six things to bring
-
-**pre-work · 45 min**
-
-**Item 6 changed on 28 September.** It used to ask for one sentence about the
-smallest rule their system enforces and the file it lives in. It now asks three
-questions about that rule: which line enforces it, whether a colleague could
-state it without reading code, and how many times it fired last week.
-
-Those are the three properties from 00:31, asked before the room has the words
-for them. The beat at 00:31 works because they have already answered it. If you
-only get the old one-sentence answers, 00:31 loses its opening and becomes a
-definition read off a slide.
-
-Expect the third question to be unanswerable for most of the room. That is the
-finding, and say so rather than treating it as incomplete homework.
-
----
-
-## Five hours, eight blocks, nothing longer than 47 minutes
-
-**the shape, and what to protect if you run late**
-
-Eight blocks, one break, two stand-ups. The longest block is cycle A at 47
-minutes, and the longest unbroken stretch is 00:15 to 01:35.
-
-**If you are running late, cut in this order.**
-
-1. **The 01:20 move-it step.** Five minutes. Tell them where it goes and let
-   them do it in the after-work. You lose the muscle memory, not the idea.
-2. **The 03:01 failure-moved table.** Four minutes, and the learner page has it
-   in full. Point at the page.
-3. **Two minutes off the 03:42 report-out.** Six pairs at ninety seconds rather
-   than two minutes.
-
-**Never cut these, in this order of protection.**
-
-1. **02:47, the second terminal.** It is the week 3 handover and there is no
-   substitute for watching it.
-2. **01:25, the row that looks complete.** It is what cycle A exists for.
-3. **03:18's checkpoint and the 03:52 injection sentence.** Both are obligations
-   to other weeks, and a week that drops them costs week 4 its opening.
-4. **The 04:52 rating.** Without the second number the first one was pointless.
-
-**If the adversary round overruns**, take the time from 03:55's frame rather
-than from the report-out. The frame is four minutes of prose the learner page
-already carries in full.
-
----
-
-## Reference cards
-
-Nothing below is a beat in the current run of show. Each one was, in the old
-five-block shape, and each is either folded into a build, moved to the learner
-page as reading, or turned into a column or a checkpoint line. They are kept in
-full because a senior room reaches them anyway, and an answer key you have to
-reconstruct live is an answer key you get wrong.
-
-Where a card was cut rather than moved, its header says so and says what it
-lost.
-
----
-
-## The two action guardrails, and why the difference matters
-
-**Reference. Not a beat any more.** It was three minutes at 00:12 and the new block 1 has no room for it. The learner page carries the trio in cycle B as reading. Say the one sentence about cost per use at 01:40, where it belongs, and point at the page for the rest.
+**Reference. Not a segment any more.** Topic 1 has no room for it. The learner page carries the trio in topic 2 as reading. Say the one sentence about cost per use at 01:44, where it belongs, and point at the page for the rest.
 
 **Set it up.** Point at the two bars sitting in the same place on the map you have just drawn.
 
@@ -1919,16 +1900,16 @@ has a budget, and it is somebody else's. Everything in the teardown is a
 consequence of that row: the threshold, the timeout, what appears on the
 approval screen, and how many items arrive per day.
 
-If the room takes one thing from this beat, it is that sentence, and it is also
+If the room takes one thing from this segment, it is that sentence, and it is also
 what stops them putting a gate in front of everything — which is the failure
 this week is really about.
 
 ### Three phrases you will meet, and which one is which
 
-Reading on the learner page. One sentence here is enough, and 01:47 is where the
+Reading on the learner page. One sentence here is enough, and 01:51 is where the
 gate gets named properly. The trio is worth naming at all because it places two
 things they have already built.  PhrasePerson involvedWhere they met it  Human
-in commandBefore, onceThe limit, cycle A Human in the loop · HITLDuring, every
+in commandBefore, onceThe limit, topic 1 Human in the loop · HITLDuring, every
 timeCycle B Human on the loopAfterThe trace and the decision log, week 1   The
 point to land: you want as much "in command" as you can get, because it is the
 only one of the three that scales. A rule set once serves a million requests.
@@ -1937,14 +1918,12 @@ reversibility question again. A room that has this trio stops saying "we have a
 human in the loop" as though it were one thing, which is the phrase that hides
 the most in a design review.
 
-**The line this beat lands.** A limit costs nothing to use. A human gate has a budget, and it is somebody
+**The line this segment lands.** A limit costs nothing to use. A human gate has a budget, and it is somebody
 else's.
 
 ---
 
----
-
-## Component 3 · the tool contract, with two new columns
+## Reference · Component 3 · the tool contract, with two new columns
 
 **Reference. Folded into the 00:54 build.** The two new columns are now four of the six fields in the policy row they write, so the table has become the thing rather than a slide about the thing. The five minutes of writing about their own system moved to the after-work, where it is item 3. Keep this card for the worked example below, which is the best one in the file for the owner column.
 
@@ -1953,16 +1932,16 @@ else's.
 > Pick two things your own system does without asking anybody first. What is the limit on each, and who owns that number?
 
 Five minutes, alone, on paper. Tell them to keep it: it is the first two rows of
-the 03:59 table.
+the 04:15 table.
 
 The table on its own does not earn eight minutes. They graded tools in week 1
 and watched a limit refuse at 00:23. A table holding both is a slide, and it
-would be the only beat in block 1 with nothing to commit to. So the table is
+would be the only segment in topic 1 with nothing to commit to. So the table is
 three minutes and the other five are theirs.
 
 What comes out of those five minutes is the first two rows of the policy table
-at 03:59, and the same table the homework asks them to finish. Nobody starts
-block 4 from a blank page.
+at 04:15, and the same table the homework asks them to finish. Nobody starts
+the teardown from a blank page.
 
 ### Now do it for your own system
 
@@ -1976,17 +1955,15 @@ provider sees a function name and a JSON shape. Whether that function reaches a
 ledger, an email or a Python list is knowledge that exists only inside your
 organisation.
 
-**The line this beat lands.** The contract now carries policy, not just shape.
+**The line this segment lands.** The contract now carries policy, not just shape.
 
 ---
 
----
+## Reference · Component 5 · the shape of an ask
 
-## Component 5 · the shape of an ask
+**Reference, and it stays reading.** One sentence at 01:51 while they build the gate, then point at the learner page. The four exits are what their timeout decision at 01:51 actually chooses between, so it reads better beside the build than before it.
 
-**Reference, and it stays reading.** One sentence at 01:47 while they build the gate, then point at the learner page. The four exits are what their timeout decision at 01:47 actually chooses between, so it reads better beside the build than before it.
-
-No new beat. Both failures have landed by now, and this is the mechanism under
+No new segment. Both failures have landed by now, and this is the mechanism under
 both of them. One sentence out loud, then point at the diagram on the learner
 page so they can see the exit they have not written.
 
@@ -2009,18 +1986,16 @@ somebody always does.
 The consequence, not the confidence. Ask a person only about an action that
 cannot be undone. Reads run free, and calling a person about everything is the
 failure rather than the safe choice. The 110-a-day number in the teardown is the
-proof. The full confidence argument is on the 01:40 card, where it is usually
+proof. The full confidence argument is on the 01:44 card, where it is usually
 asked. Do not run it twice.
 
-**The line this beat lands.** Four exits. You write three of them. The fourth writes itself.
+**The line this segment lands.** Four exits. You write three of them. The fourth writes itself.
 
 ---
 
----
+## Reference · Component 6 · the six pieces of a working gate
 
-## Component 6 · the six pieces of a working gate
-
-**01:47 · reference for the drill**
+**01:51 · reference for the lab**
 
 They build the first and the last. The table exists so they know what the other
 four cost before somebody asks them to buy one, which is usually the week after
@@ -2036,16 +2011,14 @@ Does the agent wait, or does the run stop and start again later? Waiting is
 simple and holds a process open for hours. Stopping means the paused run is now
 something you store, find and restart. Where does a paused run live? It is
 state. In memory it dies with the process and the customer's approval dies with
-it. That is cycle C arriving twenty minutes early, so hand it forward rather
+it. That is topic 3 arriving twenty minutes early, so hand it forward rather
 than solving it here.
 
 ---
 
----
+## Reference · Where does the policy live for forty processes?
 
-## Where does the policy live for forty processes?
-
-**Reference. No room slot.** This is now column three of the policy table and the first line of the 04:19 checkpoint. Run it if a pair goes there, which about half of rooms do while arguing about the control point.
+**Reference. No room slot.** This is question 1 of the teardown at 04:15 and the first line of the 04:40 checkpoint. Run it if a pair goes there, which about half of rooms do while arguing about the control point.
 
 **Set it up.** Forty processes across four business units, all enforcing the same ceiling.
 
@@ -2054,7 +2027,7 @@ than solving it here.
 > Where does that number live — a file in each deployment, or one service everybody calls?
 > And when that service is down, do you fail open or fail closed?
 
-Make them say which of block 2’s four failures each choice hands them.
+Make them say which of topic 1's failures each choice hands them.
 
 ### The key
 
@@ -2091,11 +2064,9 @@ holds together.
 
 ---
 
----
+## Reference · Who can move the number, and how fast?
 
-## Who can move the number, and how fast?
-
-**Reference. No room slot.** This is now column seven of the policy table, and 03:55 sets it up. Run it if somebody asks who owns an override.
+**Reference. No room slot.** This is question 2 of the teardown at 04:15. Run it if somebody asks who owns an override.
 
 **Say this, in these words.**
 
@@ -2119,11 +2090,9 @@ more than the ceremony.
 
 ---
 
----
+## Reference · The approval queue is a capacity plan
 
-## The approval queue is a capacity plan
-
-**Reference. No room slot.** This is now the second line of the 04:19 checkpoint. The 110-a-day number is worth saying out loud even if you do not run the card, because it is the only place the session prices a human gate.
+**Reference. No room slot.** This is now the second line of the 04:40 checkpoint. The 110-a-day number is worth saying out loud even if you do not run the card, because it is the only place the session prices a human gate.
 
 **Set it up.** They set the threshold so that 6% of 40,000 disputes a month need a person.
 
@@ -2164,11 +2133,9 @@ differently across Diwali.
 
 ---
 
----
+## Reference · Whose key is it?
 
-## Whose key is it?
-
-**Reference. No room slot.** This is now the third line of the 04:19 checkpoint, and route 5 of the adversary round reaches the same idea from the attacking side.
+**Reference. No room slot.** This is now the third line of the 04:40 checkpoint, and route 5 of the adversary round reaches the same idea from the attacking side.
 
 **Set it up.** A repeated request has to pay once, and that needs a key both sides agree on.
 
@@ -2199,11 +2166,9 @@ somebody reaches for it.
 
 ---
 
----
+## Reference · The credit landed and the log write failed
 
-## The credit landed and the log write failed
-
-**Reference. No room slot, and this is the one that lost the most.** It is Q10 in the bank, held back for the room. Of the five teardown questions this is the one with no other home, so run it if you have four spare minutes anywhere after 03:55.
+**Reference. No room slot, and this is the one that lost the most.** It is Q10 in the bank, held back for the room. Of the five teardown questions this is the one with no other home, so run it if you have four spare minutes anywhere after 04:15.
 
 **Set it up.** The credit reached the ledger. The write to the decision log failed.
 
@@ -2241,11 +2206,9 @@ the other leaves a promise unkept, and they need different handling.
 
 ---
 
----
+## Reference · Maker-checker — the reasoning
 
-## Maker-checker — the reasoning
-
-Do not deliver this as a segment. The word goes in at 01:40 in one sentence and
+Do not deliver this as a segment. The word goes in at 01:44 in one sentence and
 a show of hands. This card is for the question that follows it, which in a room
 of eight senior engineers is usually some version of why two people, and what
 does the second one actually add? Answer that well and the rest of the topic is
