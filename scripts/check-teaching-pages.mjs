@@ -219,6 +219,16 @@ const LOGISTICS_PATTERNS = [
   /^So what is a guardrail$/i,
   /^Why an agent needs these and a batch job does not$/i,
   /^What firms already running this use$/i,
+  // The six-part shape (generation-prompt.md §4 and §5). Each of these frames a
+  // topic or the session rather than taking a clock row of its own: the agent
+  // table and the "how the session closes" card come before a time, the scale
+  // part is reading unless a week times it, and the takeaway and "you can now"
+  // close a topic after its last row.
+  /^What the agent can do now$/i,
+  /^How the session closes$/i,
+  /^At enterprise scale$/i,
+  /^✅ You can now$/i,
+  /^Your takeaway$/i,
 ];
 const LOGISTICS = {
   has: (title) => LOGISTICS_PATTERNS.some((re) => re.test(title)),

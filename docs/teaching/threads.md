@@ -12,7 +12,8 @@ week before starting.
     2  Evidence          how you know it works, and who set the pass bar
     3  Trace and bill    observability, cost per run, the audit answer later
     4  Untrusted input   it reads text an attacker can write
-    5  State             the same request arrives twice; memory outlives a process
+    5  State             the same request arrives twice; what the system
+                          remembers between sessions, and who may correct it
     6  Retrieval         what gets fetched into the context, and on whose say-so
     7  Multi-agent       what happens when one loop is no longer enough
 
@@ -32,17 +33,19 @@ systems problems that agents made urgent for a wider group of people.
 
 | | W1 | W2 | W3 | W4 | W5 | W6 |
 |---|---|---|---|---|---|---|
-| 1 Boundaries | ○ | ● | | | ◐ | ◐ |
+| 1 Boundaries | ○ | ● | | ◐ | ◐ | ◐ |
 | 2 Evidence | ○ | ○ | ● | ◐ | ◐ | ◐ |
-| 3 Trace and bill | ● | ◐ | ◐ | | ◐ | ◐ |
+| 3 Trace and bill | ● | ◐ | ◐ | ◐ | ◐ | ● |
 | 4 Untrusted input | ○ | | ◐ | ● | | ◐ |
 | 5 State | ○ | ● | | | ● | ◐ |
-| 6 Retrieval | | | ● | | | ◐ |
+| 6 Retrieval | | | ● | | ◐ | ◐ |
 | 7 Multi-agent | ○ | | | | ● | ◐ |
 
 Every `◐` and `○` in that table is an obligation on a week that has not been
-written yet. The five sections below are the ones that were missing entirely
-when the arc was first drawn, and what each week now owes to close them.
+written yet. The six bridges below are what each week owes to close a gap. The
+first five were found by reading this file against itself. Bridge 6 was found by
+reading the six weeks against the field and ignoring the plan, which is the only
+one of the six that moved material between weeks.
 
 Row order here is the order the matrix prints on screen, which is
 `THREADS` in [src/lib/craft/threads.ts](../../src/lib/craft/threads.ts). The two
@@ -185,6 +188,207 @@ loop. Two consequences for whoever writes those weeks:
 
 ---
 
+## Bridge 6 · The arc read against the industry — decided 2026-09-29
+
+The first five bridges each closed a gap found by reading this file against
+itself. This one comes from reading the six weeks against what an architect or an
+engineering leader is expected to be sound on across the field, with the plan
+deliberately set aside first. Ten domains came out of that: system shape, tool and
+interface design, context, memory and state, retrieval, evaluation, security,
+cost and capacity, human control, and governance.
+
+**The arc covers eight of the ten well.** Two were genuinely absent and three
+were present only as fragments. Seven decisions follow. The first two move
+material between weeks, and §7 was added later the same day when Sunil asked
+where MCP should actually live.
+
+### 1 · The business case moves from week 5 to week 6
+
+The 28 September note put it in week 5 as one beat, on the argument that M3
+already owns cost under load. That was right about the subject and wrong about
+the room's attention: week 5 was already carrying multi-agent orchestration, the
+CAP trade-off, capacity under load and the irreversible decisions, and a business
+case beat was the fifth thing in a five-hour session.
+
+**Week 6 is a review with no new material, and "would you fund this, and what is
+the cost per acceptable outcome" is the right frame for reviewing somebody's
+architecture.** It costs week 6 about twenty minutes and it frees week 5.
+
+The line to land is unchanged and is the Run-Cost Model's own: cost per case is
+the wrong number to argue about, and cost per acceptable outcome is the right one.
+
+### 2 · Week 5 becomes multi-agent and memory
+
+**Agent memory had no owner anywhere in the six weeks.** Thread 5 has always said
+"memory outlives a process" and every week read that as idempotency. What a system
+remembers about a person between sessions, how that memory is scoped, when it
+expires and what happens when somebody corrects it, was taught nowhere. The
+practice publishes an Agent Memory Audit Kit at /resources/agent-memory-audit-kit,
+which is twelve audit questions and seven runnable failure tests on exactly that,
+and no session referenced it. That is the same defect the 28 September review
+found for model selection.
+
+**Week 5 is now one argument rather than five topics: one loop is no longer
+enough, and what the system remembers.** Decomposition and memory are the same
+question asked twice, because the moment there are two loops the question of what
+each one knows about the other stops being rhetorical.
+
+CAP and capacity under load compress to a beat each. That is the cost, and it is
+real: M3's public copy names both. Neither is removed and neither is a block.
+
+**Thread 5's wording changed with this**, at the top of this file, so that the
+next person to read the row sees memory named rather than implied.
+
+### 3 · Retrieval quality gets a named home, and the home is week 5
+
+Week 3 uses retrieval as the device that makes evaluation necessary, and that
+works. It then leaves chunking, re-ranking, hybrid search and freshness
+explicitly unfixed **and named no week**, which is the exact thing the teaching
+standard says makes a participant assume a topic is missing rather than
+scheduled.
+
+It lands beside memory in week 5, and the join is not a convenience: what gets
+retrieved and what gets remembered are both answers to "what is the system shown,
+and on whose say-so". Week 5 gets `◐` on retrieval in the matrix.
+
+**This is a beat and not a block.** Week 5 cannot teach retrieval properly either,
+and saying which resource does is better than a silent deferral.
+
+### 4 · Week 4 owes one beat on production monitoring
+
+Week 3 builds the evidence you gather before a release. Nothing in the six weeks
+covers what you watch afterwards, how drift shows up, or what a regression in the
+wild looks like. The practice's own deployment checklist opens on the question the
+course could not answer: **who would notice if this silently stopped working?**
+
+Week 4 ends on attacks the room found in its own system, and "how would you know
+this had happened in production" is the next sentence rather than a new subject.
+Ten minutes at the close. Week 4 gains `◐` on trace and bill.
+
+### 5 · The ownership question stays in week 2
+
+**Partly superseded by §7 below, added the same day.** §5 said MCP did not need a
+block. That was right about week 2 and wrong about the course: MCP now has a topic
+in week 4, and what stays in week 2 is one question rather than the subject.
+
+Week 2's topic 1 already puts nine control points on screen and asks which one
+covers the most callers. One further question against the same table: **which of
+these nine do you own, and which does a vendor change under you?**
+
+That question belongs here because it is about placement, which is topic 1's
+whole argument. It is not about MCP and must not become about MCP. The named
+protocol is week 4's.
+
+Week 2 is written, taught and published, so this is an obligation on its next
+revision rather than a change made today. The topic 1 pair has to be rebuilt when
+it lands.
+
+### 6 · Regulatory depth stays out of the cohort — a decision, not an omission
+
+CLAUDE.md treats regulated-industry depth as a core differentiator, and it names
+DPDP, RBI, IRDAI, SEBI, NIST AI RMF, ISO 42001 and the EU AI Act. Those appear on
+`/caio` and `/assessment` and almost nowhere in the six weeks.
+
+**That stays true on purpose.** The cohort sells engineering judgement, the
+consulting surfaces sell regulatory depth, and a compliance segment would dilute
+both. Week 6's governance block is the one place it is touched, at the level of
+who owns a decision rather than which framework names it.
+
+If a room asks, the honest answer is that this is the assessment's subject and not
+the cohort's. Do not improvise a framework tour.
+
+### 7 · MCP gets a topic, and it is week 4 — added 2026-09-29
+
+Sunil asked where MCP should actually be covered, having read §5. It needs more
+than one question, and the reason it had not landed anywhere is that **MCP is not
+one topic**. It has four faces and they do not belong in one week.
+
+| Face | What it really is | Turnover |
+|---|---|---|
+| The protocol: transports, tools, resources, the spec | Mechanics | High. Changed in July 2026 |
+| Tool boundary design: granularity, schemas, hints | Architecture | Low |
+| The boundary you did not write, changing under you | Risk and ownership | Low |
+| A server holding your credentials, returning text into your context | Security | Low |
+
+The list at the top of this file already excludes frameworks and protocols
+because they turn over every few months. **Face one is exactly that and stays out
+of live minutes.** The other three are not, and they are what this audience is
+actually asked about.
+
+**The decision: week 4, one topic, about forty minutes, framed as "the boundary
+you did not write".**
+
+Five reasons, and the third is the one that decides it.
+
+1. Week 4 owns untrusted input `●` and is the only week whose frame is already
+   somebody else's text arriving inside your system.
+2. An MCP server is the cleanest real instance of the shape that week teaches:
+   code you did not write, running with your credentials, putting text into your
+   context. That is indirect injection with a supply chain attached.
+3. **Week 4 is the least loaded of the three unwritten weeks.** Prompt injection
+   is one coherent topic for five hours. Giving week 4 two still leaves it lighter
+   than week 5, which took memory and retrieval the same morning.
+4. Week 3 hands week 4 the regression-case discipline, so an MCP finding becomes a
+   case before the week ends. That link is already bridge 1's obligation.
+5. The field note that matters most here is a security sentence:
+   *"Statelessness moves MCP authorization to the application layer."* It moved to
+   somebody in the room.
+
+**The cost, stated rather than hidden.** Prompt injection gets roughly four blocks
+instead of five.
+
+**The risk in this placement, and the fix.** Teaching MCP inside the security week
+can leave a room believing MCP is dangerous, which is vendor-deck-grade and the
+anti-hype rule bites. **The topic is not "MCP security".** It is the boundary you
+did not write, and one beat inside it is about adoption rather than risk: when is
+inheriting somebody's tool surface the right call, and what do you need from them
+before it is.
+
+**Where the other three faces go.**
+
+- **Protocol mechanics into week 0 pre-work and week 1's reading.** No live
+  minutes. Week 1 already links the stateless note, framed as a tool interface
+  changing under you.
+- **The ownership question stays in week 2**, as §5 now says.
+- **The Agent Failure Triage Quiz becomes week 4's pre-work.** It is Released,
+  twelve questions on one incident, and it already carries three MCP takeaways:
+  MCP adds hops, silence at the client says nothing about them, and
+  `idempotentHint` declares rather than enforces and defaults to false. That is a
+  published resource doing part of the topic for free, and pointing a session at
+  it is the same fix the 28 September review applied elsewhere.
+- **Week 5 gets it as a consequence, not a topic.** Two loops share a tool
+  surface, and an MCP gateway is the shape that question takes.
+
+**Rejected, and why.** A seventh week or a standalone MCP session, because this
+file excludes protocols on turnover grounds and homework already runs to about
+7h45 against a published ~5 hrs/week. Week 1, because the room has no threat model
+yet and week 1 is taught. Week 5, because it absorbed two topics the same day.
+
+**Before week 4 is written, refresh the MCP evidence.** The three field notes date
+from the 2026-07-28 spec and `latest.json` was last refreshed on 15 August 2026.
+A protocol that changed once in July can change again. `npm run gather` on the MCP
+topic specifically is the check.
+
+Week 4 gains `◐` on boundaries in the matrix, which was blank.
+
+### What this bridge did not change
+
+- **Week 3 stays as it is.** Evaluation read against the ten domains is the
+  highest-leverage week of the six, and the angle it takes, rates rather than
+  verdicts and a grader that is itself a component, is the half the field
+  consistently skips.
+- **No public copy changed.** M3 still names multi-agent, CAP, capacity and the
+  irreversible decisions, and all four remain. M4 still names design, failure
+  modes, evaluation strategy and governance. Memory and the business case are
+  additive rather than a promise broken, so `cohort-copy.ts` is untouched.
+  **Naming memory in M3 is worth considering and needs Sunil**, because it is a
+  selling point currently given away for free.
+- **The latency of guardrails has a home now: week 2, 30 September.** Each learner
+  times their own check at 00:54, and 03:18 prices three tiers of checker, sets a
+  latency budget per endpoint, and decides in-band against out-of-band. The rest
+  is still absent and not decided: streaming, partial results, and what a person
+  sees while a forty-second loop runs.
+
 ## Topic labels
 
 Every outcome in every week carries a topic label, so a participant can see which
@@ -205,6 +409,10 @@ covers something none of these names cover, and add it here at the same time.
     Security and prompt injection untrusted text, exfiltration, containment
     Context engineering           what the model is shown each turn, and compaction
     Retrieval                     documents in the loop, and grading the answer
+    Agent memory                  what is remembered between sessions, its scope,
+                                  its expiry, and who may correct it
+    The business case             cost per acceptable outcome, the break-even
+                                  month, and when the answer is never
     Multi-agent orchestration     more than one loop, and who is in charge
     Risk trade-offs               the cost of being wrong in each direction
 
@@ -212,7 +420,8 @@ Which week uses which is set by the coverage table above. Two rules:
 
 **Guardrails is an umbrella, not one topic.** Six kinds, sorted by what each stands
 between: input, the limit, the human gate, state, resource, output. Week 2 builds
-two of them and the map is drawn at the top of week 2's second topic. When a week
+three of them (the limit, the human gate and state), and the map is drawn at
+00:37 in week 2's topic 1. When a week
 teaches a guardrail, say which of the six it is, because the room's instinct is
 to treat "guardrail" as one thing and then put a human in front of everything.
 
