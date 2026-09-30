@@ -82,7 +82,7 @@ runOfShow:
   - { at: "03:03", label: "The fix that holds", kind: block }
   - { at: "03:09", label: "Topic 3 quiz and takeaway", kind: block }
   - { at: "03:13", label: "Short break, five minutes", kind: standup, detail: "Cameras off again" }
-  - { at: "03:18", label: "Three tiers of checker, and what each one costs in time", kind: block, detail: "Topic 4 · Red-teaming" }
+  - { at: "03:18", label: "Layered defence: the tiered gateway, and its latency tax", kind: block, detail: "Topic 4 · Red-teaming" }
   - { at: "03:31", label: "Hands-on lab: the adversary round", kind: block, detail: "Another pair tries to get ₹5,000 out of your system" }
   - { at: "04:01", label: "Topic 4 quiz and takeaway", kind: block }
   - { at: "04:05", label: "Recall: every control, and where its failure moved", kind: block, detail: "Notes closed" }

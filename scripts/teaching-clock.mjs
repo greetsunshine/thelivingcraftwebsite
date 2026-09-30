@@ -122,7 +122,7 @@ export const ROWS_W2 = [
   ['03:09', 'Checkpoint 3', 'shared'],
   ['03:09', 'Topic 3 quiz and takeaway', 'topic 3'],
   ['03:13', 'Short break, five minutes', 'shared'],
-  ['03:18', 'Three tiers of checker, and what each one costs in time', 'topic 4'],
+  ['03:18', 'Layered defence: the tiered gateway, and its latency tax', 'topic 4'],
   ['03:31', 'Hands-on lab: the adversary round', 'topic 4'],
   ['04:01', 'Topic 4 quiz and takeaway', 'topic 4'],
   ['04:05', 'Recall: every control, and where its failure moved', 'close, shared'],

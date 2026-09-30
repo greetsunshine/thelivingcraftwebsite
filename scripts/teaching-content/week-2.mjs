@@ -545,15 +545,15 @@ Write the number, then the names you have.</span>
   <p><strong>The reason this segment exists.</strong> A room that believes "guardrail" means one thing puts a person in front of everything. Six kinds is the whole correction, and the cost of getting it wrong is in topic 2: a human gate spends somebody's attention every single time it fires, and a limit costs nothing to use.</p>
   <p><strong>Two of the six share a column, and that is not an error.</strong> The limit and the human gate both stand between the decision and the action. They differ in what happens when the rule is met: one refuses and one asks. Topic 2 opens on ₹8,400 that a limit refused and a gate would have paid.</p>
   <p>One sentence goes up before the table, and it is the answer to the question this room is already holding. <strong>An agent chooses its own arguments and its own next action, so the call site you would normally review does not exist.</strong> The long version is <em>Why an agent needs these</em> below. Read it tonight rather than now.</p>
-  <h4>Three planes, and where the six kinds sit</h4>
-  <p>The field often groups guardrails by <strong>execution plane</strong>: where in the request a check runs. Three planes, and your six kinds fall into them. Build the map first. Then read this.</p>
+  <h4>Three execution planes, and where the six kinds sit</h4>
+  <p>The field defines guardrails as <strong>runtime policy enforcement and validation placed around a model or an agent</strong>, so the system stays secure, predictable, compliant and fast enough. It groups them by <strong>execution plane</strong>: where in the request a check runs. Build the map first. Then read this.</p>
   <div class="tw">
     <table>
-      <thead><tr><th>Plane</th><th>Where it runs</th><th>Kinds from the map</th><th>Typical checks</th><th>Built</th></tr></thead>
+      <thead><tr><th>Plane</th><th>Where it runs</th><th>Kinds from the map</th><th>What it checks</th><th>Built</th></tr></thead>
       <tbody>
-        <tr><td><strong>Input</strong></td><td>before the model is called</td><td>input</td><td>what the request is for, text trying to give instructions, personal data to mask, topics out of scope, a token budget per request</td><td>Week 4</td></tr>
-        <tr><td><strong>Output</strong></td><td>after the model answers, before a person or a tool acts on it</td><td>output, and the three action kinds</td><td>arguments that match the tool's schema, a claim that matches the evidence, no personal data leaking out, and for a tool call: the limit, the human gate, paying once</td><td><strong>Today</strong>, for actions. Week 3 measures groundedness. Week 4 the text</td></tr>
-        <tr><td><strong>Operational</strong></td><td>around the whole system</td><td>resource</td><td>cost per run, rate limits, circuit breakers, a fallback model, a latency budget</td><td>Lab 4 at home, today's timer, and week 5</td></tr>
+        <tr><td><strong>Input guardrails</strong><br>pre-LLM</td><td>before the model is called</td><td>input</td><td>intent classification, prompt injection detection, masking personal data (PII, and health data or PHI), topic scope, an input token budget</td><td>Week 4</td></tr>
+        <tr><td><strong>Output guardrails</strong><br>post-LLM</td><td>after the model answers, before a person reads it or a tool acts on it</td><td>output, and the three action kinds</td><td>JSON and schema compliance, groundedness (is the claim backed by evidence), personal data leaking out, brand tone, toxic text, and for a tool call: the limit, the human gate, paying once</td><td><strong>Today</strong>, for actions. Week 3 measures groundedness. Week 4 the text</td></tr>
+        <tr><td><strong>Operational and system guardrails</strong></td><td>around the whole system</td><td>resource</td><td>rate limits, circuit breakers, model fallback routing, token throttling, a maximum latency budget, cost per run</td><td>Lab 4 at home, today's timer, and week 5</td></tr>
       </tbody>
     </table>
   </div>
@@ -564,11 +564,11 @@ Write the number, then the names you have.</span>
     <table>
       <thead><tr><th>Threat</th><th>What happens</th><th>The control</th><th>Built</th></tr></thead>
       <tbody>
-        <tr><td><strong>Direct prompt injection</strong></td><td>A user types text meant to override your instructions</td><td>An input classifier, and a limit the text cannot argue with</td><td>Week 4, and today's limit</td></tr>
-        <tr><td><strong>Indirect prompt injection</strong></td><td>Text inside data the agent reads, such as week 1's account note, acts as an instruction. ₹2,50,000 in week 1</td><td>Keep untrusted data apart from instructions, and give the agent no privilege the text could use</td><td>Week 4. Today's ceiling caps what it can cost</td></tr>
-        <tr><td><strong>Leaking data or personal details</strong></td><td>A reply or a log carries a PAN, a phone number or a secret</td><td>Find and mask personal data on the way in and on the way out</td><td>Week 4. Today: keep it out of your decision log</td></tr>
-        <tr><td><strong>An ungrounded claim</strong></td><td>The agent says it credited ₹5,000 and the ledger says ₹0. You saw this at 00:23</td><td>Compare the claim with what the tool returned</td><td>Week 3 measures it. Week 4 builds the check</td></tr>
-        <tr><td><strong>Tool and agent misuse</strong></td><td>The agent calls a tool with wrong or dangerous arguments</td><td>Schema checks on arguments, a limit, a human gate for anything you cannot undo, paying once</td><td><strong>Today</strong>, and week 1's argument check</td></tr>
+        <tr><td><strong>Direct prompt injection</strong></td><td>A user types text meant to override your instructions: a jailbreak</td><td>Input classifiers, rules that spot known attack patterns, and "sandwiching" the user's text between system instructions. Behind all three, a limit the text cannot argue with</td><td>Week 4, and today's limit</td></tr>
+        <tr><td><strong>Indirect prompt injection</strong></td><td>Text inside data the agent reads, such as week 1's account note or a retrieved document, acts as an instruction. ₹2,50,000 in week 1</td><td>Keep untrusted data apart from instructions, clean retrieved context, and give the agent no privilege the text could use</td><td>Week 4. Today's ceiling caps what it can cost</td></tr>
+        <tr><td><strong>Data exfiltration and PII leakage</strong></td><td>A reply or a log carries a PAN, a phone number, a secret or source code</td><td>Find personal data with patterns and entity extraction (Microsoft Presidio), and replace it with reversible tokens so the real value never reaches the model</td><td>Week 4. Today: keep it out of your decision log</td></tr>
+        <tr><td><strong>Hallucination and ungrounded output</strong></td><td>The agent says it credited ₹5,000 and the ledger says ₹0. You saw this at 00:23</td><td>A groundedness check: does the retrieved evidence support the claim? Scored by an entailment model, or by comparing the claim with what the tool returned</td><td>Week 3 measures it. Week 4 builds the check</td></tr>
+        <tr><td><strong>Tool and agent misuse</strong></td><td>The agent calls a tool with wrong or dangerous arguments</td><td>Strict schema checks on arguments (Pydantic, TypeChat), a limit, and a human-in-the-loop approval for anything that changes state and cannot be undone</td><td><strong>Today</strong>, and week 1's argument check</td></tr>
       </tbody>
     </table>
   </div>
@@ -820,7 +820,7 @@ software gives you for free.</span>
 </svg>
 <figcaption><strong>What an agent takes away.</strong> Both sides write to the same ledger. The difference is on the middle row: on the left a person chose 4471 and 1200 and you can open the file and read it. On the right the model chose 9999 and 5000 while the run was happening, partly from text a customer sent. Week 1 paid that ₹5,000.</figcaption>
 </figure></div>
-  <h4>Three planes, and where the six kinds sit</h4>
+  <h4>Three execution planes, and where the six kinds sit</h4>
   <p><strong>Say the three planes only after the room has built the six kinds.</strong> Input, output, operational. The room has usually met this vocabulary in a vendor document, so name it, and map the six onto it in one minute. The point to land: a tool call is output that acts, which is why today lives inside the output plane.</p>
   <h4>The threats each plane meets</h4>
   <p>Reading on the learner page. If somebody asks why injection is not today, the answer is the second row: today's ceiling caps what an injected instruction can cost, and week 4 is where the text itself is handled. <strong>Do not open the injection argument here.</strong></p>` },
@@ -1228,6 +1228,7 @@ paid out ₹5,000 · 1 credit
             { product: 'Instructor, retrying the model until the output validates', cost: 'Open source, on top of Pydantic. Each failed validation is another model call, so a strict schema costs tokens and time.' },
             { product: 'Outlines, constraining generation to the schema', cost: 'Open source. It needs control of decoding, which most hosted APIs do not give you, so it suits models you run yourself.' },
             { product: 'Guidance, templating the output token by token', cost: 'Open source. Strong control of structure, and one more templating language for the team to learn.' },
+            { product: 'TypeChat, using TypeScript types as the schema', cost: 'Open source, from Microsoft. Natural for a TypeScript team, and a second schema language if your tools are written in Python.' },
           ],
         },
         {
@@ -1242,7 +1243,7 @@ paid out ₹5,000 · 1 credit
           slot: 'Input and output guards, which are week 4 and named so you know they exist',
           options: [
             { product: 'NVIDIA NeMo Guardrails', cost: 'Rails written in Colang, which is another language to maintain, and added latency on every turn.' },
-            { product: 'Guardrails AI', cost: 'Python only. The stock validators do not know your domain, so anything specific is a validator you write and then test.' },
+            { product: 'Guardrails AI, validators defined in its RAIL spec', cost: 'Python only. The stock validators do not know your domain, so anything specific is a validator you write and then test.' },
             { product: 'Amazon Bedrock Guardrails', cost: 'A charge per request, and it only sees traffic that goes through Bedrock. A tool your agent calls directly is not covered.' },
             { product: 'Azure AI Content Safety', cost: 'A charge per call, and a second policy surface to keep in step with your own.' },
           ],
@@ -1519,8 +1520,8 @@ ______________________________________________</div>
       <p>One field changed, and the guardrail behind it is a different kind of guardrail. <strong>A gate that worked leaves one field different in one row.</strong> If that field does not exist in your system, neither does the gate.</p>
     </div>
   </details>
-  <h4>Log the reason, not the person</h4>
-  <p>The decision log is kept for years, so it must not become a second copy of your customers' personal data. <strong>Record the account id, the rule and the decision. Do not record the ticket text, the customer's name or their phone number.</strong> Somebody who needs those can look them up under their own access, and that lookup is logged too.</p>
+  <h4>Anonymised audit logging: the reason, not the person</h4>
+  <p>This is what the field calls <strong>anonymised threat logging</strong>: record why a request was refused and which rule it broke, and strip personal data from the audit store. The decision log is kept for years, so it must not become a second copy of your customers' personal data. <strong>Record the account id, the rule and the decision. Do not record the ticket text, the customer's name or their phone number.</strong> Somebody who needs those can look them up under their own access, and that lookup is logged too.</p>
   <h4>Who is allowed to answer</h4>
   <p>Your gate asks. <strong>Check that the approver is not the requester.</strong> That is the identity half of maker-checker, and it is the line almost nobody writes without being told.</p>
   <p>Put it somewhere it cannot be edited by accident. In a branch it is a rule somebody changes in six months for a test environment and forgets to change back. In a constraint it is not negotiable.</p>
@@ -1632,7 +1633,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
       <p><strong>Probe.</strong> "Your log says <code>decided_by=human:priya.n</code>. Nine months later Priya has left. What still proves she was allowed to approve ₹8,400?" The answer is a record of the permission at the time, not a lookup of the permission today.</p>
     </div>
   </details>
-  <h4>Log the reason, not the person</h4>
+  <h4>Anonymised audit logging: the reason, not the person</h4>
   <p>Say it in one sentence while circulating: the row holds ids and the rule, never the ticket text. <strong>Wrong answer worth catching:</strong> "we will mask the name before we write it". Right instinct, and masking is a control you then have to test. Not writing the field at all needs no test.</p>
   <h4>Who is allowed to answer</h4>
   <p>The identity half of maker-checker, and the line almost nobody writes without being told. <strong>Put it in a constraint, not in a branch.</strong> In a branch somebody changes it for a test environment in six months and does not change it back.</p>
@@ -1762,9 +1763,9 @@ Here is what it costs us when we are wrong in each
 direction. Here is who can move that number, and how
 long it takes.</span></div>
   <p>"We added validation" does not survive the same meeting, and it is what most engineering teams say instead.</p>
-  <h4>Tuning the refusals before they block anybody</h4>
-  <p>A check that refuses too often is not safe. It is broken in the other direction, and people start routing around it. Two measures tell you where you stand. <strong>Precision:</strong> of the requests your check refused, how many deserved it? <strong>Recall:</strong> of the requests that deserved refusing, how many did it catch?</p>
-  <p><strong>Change a check in shadow mode first.</strong> The new rule runs beside the old one on real traffic, writes what it would have done, and blocks nothing. Run last week's disputes through the ₹800 ceiling you are about to ship, count the honest refunds it would have refused, and only then switch it to blocking.</p>`,
+  <h4>Tuning false-positive rates</h4>
+  <p>A check that refuses too often is not safe. It is broken in the other direction. The field calls the result <strong>refusal fatigue</strong>: people stop trusting the system and start routing around it. Two measures tell you where you stand. <strong>Precision:</strong> of the requests your check refused, how many deserved it? <strong>Recall:</strong> of the requests that deserved refusing, how many did it catch?</p>
+  <p><strong>Change a check in shadow mode first.</strong> The new rule runs beside the old one on real traffic, or is replayed against historical traffic logs, writes what it would have done, and blocks nothing. Run last week's disputes through the ₹800 ceiling you are about to ship, count the honest refunds it would have refused, and only then switch it to blocking.</p>`,
         script: `
     <p>Ask one question and then stop talking: <em>open your own queue. What happened to the ₹44,000?</em></p>
     <p>Count the three outcomes on screen. All three appear in a room of eight.</p>
@@ -1817,7 +1818,7 @@ long it takes.</span></div>
       <p>The weaker answers worth accepting on the way: a follow-up on customers a rule turned away, or a count of refusals by rule that somebody actually reads each week. Both are better than nothing and neither tells you whether the refusal was wrong.</p>
     </div>
   </details>
-  <h4>Tuning the refusals before they block anybody</h4>
+  <h4>Tuning false-positive rates</h4>
   <p>Reading on the learner page. The one sentence to say: <strong>a new check runs in shadow mode on last week's traffic before it blocks anyone.</strong> It is the cheapest answer to the wrong refusal nobody sees, and topic 2's quiz asks it.</p>
   <h4>The sentence that travels upward</h4>
   <p>It is on the learner page, word for word. Read it rather than paraphrasing. <strong>Do not add a fourth idea.</strong> This is reading, not a segment: point at it in one sentence and move to the topic quiz.</p>
@@ -2209,7 +2210,7 @@ if cur.rowcount == 0:
     beats: [
       {
         at: '03:18', part: 'narrative',
-        title: "Three tiers of checker, and what each one costs in time",
+        title: "Layered defence: the tiered gateway, and its latency tax",
         mode: "pairs 5 minutes, then whole room 8",
         learner: `
   <p>Read the setup. Commit to both answers in writing, in pairs, before you open anything.</p>
@@ -2239,24 +2240,25 @@ The judge allows it.</span></div>
       <p>The control is a deterministic ceiling underneath the judge. A model may widen what gets through a hard limit. It may never be the limit.</p>
     </div>
   </details>
-  <h4>Three tiers of checker</h4>
+  <h4>Layered defence: the tiered gateway pattern</h4>
   <p>Predict first, alone, in writing. Your timer from 00:54 gave you a number for one check. <strong>How many times slower is a model asked the same question?</strong> Write a multiple, then read on.</p>
   <div class="tw">
     <table>
-      <thead><tr><th>Tier</th><th>What decides</th><th>Order of magnitude</th><th>Good for</th><th>Examples</th></tr></thead>
+      <thead><tr><th>Tier</th><th>What decides</th><th>Commonly quoted cost</th><th>Good for</th><th>Examples</th></tr></thead>
       <tbody>
-        <tr><td><strong>1 · Rules</strong></td><td>Code in your own process</td><td>well under a millisecond. Your 00:54 number</td><td>anything a rule can state: limits, schemas, allow and deny lists</td><td>your ceiling, a schema check, a regular expression</td></tr>
-        <tr><td><strong>2 · Small classifiers</strong></td><td>A small model or a lookup of similar known attacks</td><td>milliseconds to tens of milliseconds</td><td>fuzzy checks with a fixed set of labels</td><td>a topic or injection classifier, a check against a vector store of known attacks</td></tr>
-        <tr><td><strong>3 · A model as judge</strong></td><td>A general model, or a model trained for safety</td><td>hundreds of milliseconds, often more</td><td>judgement across a long conversation, and policy nobody can state as a rule</td><td>Llama Guard, a judge prompt</td></tr>
+        <tr><td><strong>1 · Deterministic rules</strong></td><td>Code in your own process</td><td>under 5 ms. Your 00:54 number is far below that</td><td>anything a rule can state: limits, hard schema checks, allow and deny lists</td><td>your ceiling, a schema check, a regular expression, an exact match, a blocked IP list</td></tr>
+        <tr><td><strong>2 · Fast ML classifiers</strong></td><td>A small model, or a lookup of text similar to known attacks</td><td>15 to 40 ms</td><td>fuzzy checks with a fixed set of labels</td><td>a BERT- or DeBERTa-sized classifier, a vector store of known injection text</td></tr>
+        <tr><td><strong>3 · Specialised guardrail models</strong></td><td>A compact safety model, or a general model as judge</td><td>100 to 300 ms, and more for a large judge</td><td>judgement across a long conversation, and policy nobody can state as a rule</td><td>Llama Guard, an LLM-as-a-judge prompt</td></tr>
       </tbody>
     </table>
   </div>
-  <p>These are orders of magnitude, not promises. <strong>Measure your own.</strong> The answer most rooms reach: a model judge costs something like a thousand times your ceiling check, and it can still be argued with.</p>
-  <p><strong>Run them as a cascade.</strong> Tier 1 first, and most requests stop there. Tier 2 only for what tier 1 cannot state. Tier 3 only for what is left. The cost of the day is set by how much traffic reaches tier 3.</p>
-  <h4>In-band or out-of-band</h4>
-  <p><strong>In-band</strong> means the check runs before anything happens, and the request waits for it. Nothing unchecked gets through, and every request pays the time. <strong>Out-of-band</strong> means the reply goes out and the check runs beside it. Nobody waits, and when the check fails you need a way to take the reply back: stop the stream, or undo what was done.</p>
-  <p>So the choice follows the undo question from 00:48. <strong>A payment cannot be taken back, so its checks are in-band, whatever they cost in time.</strong> A chat reply can be stopped mid-stream, so a slow judge on it can run out-of-band.</p>
-  <h4>A latency budget</h4>
+  <p>Those are ranges the field quotes, not a benchmark of your system. <strong>Your own timer is the number that counts.</strong> The answer most rooms reach: a model judge costs something like a thousand times your ceiling check, and it can still be argued with.</p>
+  <p><strong>Run the tiers as a cascade.</strong> Tier 1 first, and most requests stop there. Tier 2 only for what tier 1 cannot state. Tier 3 only for what is left. That keeps the latency low and the coverage wide, and the cost of the day is set by how much traffic reaches tier 3.</p>
+  <h4>In-band or out-of-band: the latency tax</h4>
+  <p><strong>In-band, or synchronous blocking:</strong> every request passes through the checks, often in a proxy or a sidecar, before anything happens. No unchecked output reaches a person or a tool. Every request pays a <strong>latency tax</strong>, commonly quoted as 50 to 300 ms depending on the checks.</p>
+  <p><strong>Out-of-band, or asynchronous:</strong> the reply streams to the person while the checks run beside it. Nobody waits. When a check fails mid-stream, you need a fast way to take the reply back: close the stream, or run a compensating action that undoes what was done.</p>
+  <p>So the choice follows the undo question from 00:48. <strong>A payment cannot be taken back, so its checks are in-band, whatever the tax.</strong> A chat reply can be stopped mid-stream, so a slow judge on it can run out-of-band.</p>
+  <h4>Latency budgeting</h4>
   <p>Give each endpoint a written budget for guardrail time. For example: <em>no more than 150 ms of checks on an interactive reply</em>. A tier 3 judge alone does not fit inside that, so it goes out-of-band or onto a sample. The budget turns "is this check worth it?" into arithmetic somebody can review.</p>
   <h4>The order to choose in</h4>
   <p>Five lines, in order. Stop at the first one that applies.</p>
@@ -2296,7 +2298,7 @@ The judge allows it.</span></div>
         script: `
     <p>Put the case on screen and <strong>say nothing else</strong>. The standing two questions, in writing, before any discussion.</p>
     <p><strong>At 03:23, the reveal</strong>: the judge read the same field the agent read. Then rerun #8812 and get a different verdict, which is the second problem and the one nobody expects.</p>
-    <p><strong>At 03:26, the three tiers.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at 04:15 uses it.</p>
+    <p><strong>At 03:26, the tiered gateway.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at 04:15 uses it.</p>
     <p>Say where the two halves go: whether a judge is any good is a measurement, which is week 3; a second agent with its own loop is orchestration, which is week 5. The five-line order and the five families are reading on the learner page.</p>
     <p class="qbadge">No model calls unless you run #8812 live. If you do, that is two requests against the day's allowance and it is worth it for the different verdict.</p>`,
         ref: { id: 't4-r-judge', pairs: "&#8596; 03:18 · the case, and the rule", html: `
@@ -2349,15 +2351,15 @@ The judge allows it.</span></div>
       <p>The maker-checker card from topic 2 already has the answer in a better form: two judgments only help when they are independent, and a critic is the same model with a different prompt.</p>
     </div>
   </details>
-  <h4>Three tiers of checker</h4>
+  <h4>Layered defence: the tiered gateway pattern</h4>
   <details>
     <summary><span class="chev">›</span> The answer key, and the multiple to expect</summary>
     <div class="dbody">
-      <p>Rules in the process: well under a millisecond. Small classifiers: milliseconds to tens of milliseconds. A model as judge: hundreds of milliseconds and often more. The room's own timer is tier 1. <strong>Do not quote vendor latency figures as fact.</strong> Say "orders of magnitude, measure yours".</p>
+      <p>The learner page prints the ranges the field quotes: under 5 ms, 15 to 40 ms, 100 to 300 ms. <strong>Say "ranges the field quotes" every time, never "this is what it costs".</strong> The room's own timer is tier 1 and is far below 5 ms. That gap is the point.</p>
       <p>The cascade is the five-line order written as cost: stop at the cheapest tier that can decide.</p>
     </div>
   </details>
-  <h4>In-band or out-of-band</h4>
+  <h4>In-band or out-of-band: the latency tax</h4>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
     <div class="dbody">
@@ -2365,7 +2367,7 @@ The judge allows it.</span></div>
       <p><strong>Probe.</strong> "Your reply streams while the judge runs. The judge fails at 400 ms and the customer has read half the answer. What do you show them, and what do you log?"</p>
     </div>
   </details>
-  <h4>A latency budget</h4>
+  <h4>Latency budgeting</h4>
   <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at 04:15 asks for one.</p>
   <h4>The order to choose in</h4>
   <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>` },
