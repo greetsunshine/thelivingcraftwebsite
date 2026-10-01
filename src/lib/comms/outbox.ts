@@ -59,6 +59,13 @@ import type { Identity } from '../admin/staff';
 // A second declaration of it here is how two screens start disagreeing about
 // what 'unavailable' means.
 import type { Answer } from '../admin/pipeline-queries';
+import { env } from '../admin/env';
+import { commsEvent } from './analytics';
+import { materialise } from './html';
+import { providerFor, type DeliveryOutcome } from './providers/index';
+import { retryPlan, MAX_ATTEMPTS as RETRY_MAX } from './retry';
+import { senderFromEnv } from './sender';
+import { signToken, unsubscribeUrl } from './unsubscribe';
 import {
   checkEligibility,
   dispatchSwitch,
@@ -87,7 +94,7 @@ import { available as unsubscribeAvailable } from './unsubscribe';
 // ---------------------------------------------------------------------------
 
 /** Bounded retries. The count lives on the row; the ceiling lives here. */
-export const MAX_ATTEMPTS = 5;
+export const MAX_ATTEMPTS = RETRY_MAX;
 
 /** How many due messages one sweep will consider. Bounded so a backlog cannot become a burst. */
 export const SWEEP_LIMIT = 50;
@@ -170,11 +177,9 @@ export const idempotencyKey = (parts: {
 // THE SEAM
 // ---------------------------------------------------------------------------
 
-export type DeliveryOutcome =
-  | { kind: 'sent'; provider: string; providerMessageId: string }
-  | { kind: 'failed'; reason: string; permanent: boolean }
-  | { kind: 'unknown'; provider: string; providerMessageId: string | null; reason: string }
-  | { kind: 'disabled'; reason: string };
+// The outcome type lives with the adapters (providers/index.ts) and is
+// re-exported here so that nothing outside stage 4 has to know that.
+export type { DeliveryOutcome } from './providers/index';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -203,22 +208,61 @@ export type DeliveryOutcome =
  *
  * Until then: a hard `disabled`, before anything is read, built or signed.
  */
-async function deliver(_message: OutboxRow): Promise<DeliveryOutcome> {
+async function deliver(message: OutboxRow): Promise<DeliveryOutcome> {
   const sw = dispatchSwitch();
   if (!sw.enabled) return { kind: 'disabled', reason: sw.reason };
 
-  // Reachable only if every precondition in eligibility.ts passed, which
-  // includes COMMS_PROVIDER being set — so this is "the flag moved but nobody
-  // wrote the adapter". It fails permanently and loudly rather than looping,
-  // because a send that silently does nothing is the worst of the three
-  // outcomes: the console would show messages leaving and nobody receiving
-  // them.
-  return {
-    kind: 'failed',
-    permanent: true,
-    reason:
-      'Dispatch is enabled but no provider adapter is implemented in deliver(). Nothing was sent. Implement the adapter or set COMMS_DISPATCH off.',
-  };
+  // 30 September 2026: the adapter. COMMS_PROVIDER names it; providers/index.ts
+  // holds the registry. Reachable only when every precondition passed.
+  const adapter = providerFor(env('COMMS_PROVIDER'));
+  if (!adapter) {
+    return {
+      kind: 'failed',
+      permanent: true,
+      reason: `No adapter is registered for COMMS_PROVIDER=${env('COMMS_PROVIDER') || '(unset)'}. Nothing was sent.`,
+    };
+  }
+
+  const sender = senderFromEnv();
+  if (sender.missing.length) {
+    // About us, not the recipient: the 'sender' precondition keeps the switch
+    // off while this is true, so this branch is belt and braces.
+    return { kind: 'failed', permanent: false, reason: `The sender is not configured. ${sender.missing.join(' ')}` };
+  }
+
+  // 1. The action links, minted here and nowhere earlier.
+  const token = message.person_id ? await signToken(message.person_id) : null;
+  const links = { unsubscribe: token ? unsubscribeUrl(sender.origin, token) : null };
+
+  // 2. The text with the footer, and the HTML rendering of the same words.
+  //    Null means a marketing body with no unsubscribe link: never sent.
+  const built = materialise({ subject: message.subject, body: message.body, purpose: message.purpose }, links, sender.footer);
+  if (!built) {
+    return { kind: 'failed', permanent: false, reason: 'No unsubscribe link could be signed for a marketing message, so it was not sent.' };
+  }
+
+  // 3. RFC 8058 one-click unsubscribe, for the mail client's own control.
+  const headers: Record<string, string> = {};
+  if (links.unsubscribe) {
+    headers['List-Unsubscribe'] = `<${links.unsubscribe}>`;
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  }
+
+  return adapter.send({
+    messageId: message.message_id,
+    to: message.recipient,
+    from: sender.from,
+    replyTo: sender.replyTo,
+    subject: message.subject,
+    text: built.text,
+    html: built.html,
+    headers,
+    tags: {
+      purpose: message.purpose,
+      template: message.template_key.replace(/[^a-z0-9_-]/gi, '-'),
+      step: message.sequence_step === null ? 'none' : String(message.sequence_step),
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -429,7 +473,7 @@ export async function queueForSubmission(req: QueueRequest): Promise<QueueOutcom
   }
 
   // ── One active sequence per person ─────────────────────────────────────
-  const { data: live, error: liveErr } = await client
+  const { data: liveRow, error: liveErr } = await client
     .from('comms_sequences')
     .select('sequence_id, route, state')
     .eq('person_id', req.personId)
@@ -444,6 +488,15 @@ export async function queueForSubmission(req: QueueRequest): Promise<QueueOutcom
       review: null,
       note: failed('sequence record', liveErr),
     };
+  }
+
+  // A resource follow-up sequence gives way to any pipeline route: the person
+  // has now asked about the programme, and the cohort wording is the one that
+  // answers that. Stopped, not paused: it does not restart afterwards.
+  let live = liveRow;
+  if (live && live.route === 'resource') {
+    await stopSequence(String(live.sequence_id), `superseded by ${req.route}`, client);
+    live = null;
   }
 
   if (live) {
@@ -702,6 +755,8 @@ export async function runDispatchSweep(opts: { limit?: number; now?: Date } = {}
     .select('*')
     .eq('state', 'queued')
     .lte('scheduled_for', now.toISOString())
+    // A message waiting on a back-off is queued and not yet due again.
+    .or(`next_attempt_at.is.null,next_attempt_at.lte.${now.toISOString()}`)
     .order('scheduled_for', { ascending: true })
     .limit(Math.min(opts.limit ?? SWEEP_LIMIT, SWEEP_LIMIT));
 
@@ -919,6 +974,21 @@ async function recordOutcome(
         provider_message_id: outcome.providerMessageId,
       })
       .eq('message_id', message.message_id);
+    // Counted, with ids only. A resource delivery and a follow-up are the
+    // two the brief asks to see; the twelve are not counted here.
+    if (message.template_key.startsWith('recommend-')) {
+      await commsEvent('drip_sent', `sent:${message.message_id}`, {
+        message_id: message.message_id,
+        sequence_id: message.sequence_id,
+        resource_id: message.template_key.replace(/^recommend-/, '').toUpperCase(),
+        step: message.sequence_step,
+      });
+    } else if (message.template_key.startsWith('resource-')) {
+      await commsEvent('resource_delivery_sent', `sent:${message.message_id}`, {
+        message_id: message.message_id,
+        resource_id: message.template_key.replace(/^resource-/, ''),
+      });
+    }
     return 'Handed to the provider.';
   }
 
@@ -937,25 +1007,38 @@ async function recordOutcome(
   }
 
   const attempts = message.attempts + 1;
-  const giveUp = outcome.permanent || attempts >= MAX_ATTEMPTS;
+  const plan = retryPlan(attempts, outcome.permanent, now);
+
+  if (!plan.giveUp) {
+    // THE RETRY DOOR. Back to the queue with the back-off and the reason; the
+    // schema's one-way rule admits exactly this descent and refuses it without
+    // both fields. The sweep will not pick it up before next_attempt_at.
+    const { error } = await client
+      .from('comms_messages')
+      .update({
+        state: 'queued',
+        last_error: outcome.reason.slice(0, 500),
+        next_attempt_at: plan.nextAttemptAt,
+      })
+      .eq('message_id', message.message_id);
+    if (!error) return `Failed. Attempt ${attempts} of ${MAX_ATTEMPTS}; retrying at ${plan.nextAttemptAt}.`;
+    // The door refused (an older schema, or a provider reference): fall
+    // through and give up, which is the safe direction.
+  }
+
   await client
     .from('comms_messages')
     .update({
       state: 'failed',
       failed_at: at,
       last_error: outcome.reason.slice(0, 500),
-      next_attempt_at: giveUp ? null : new Date(now.getTime() + backoffMs(attempts)).toISOString(),
+      next_attempt_at: null,
       alerted_at: message.alerted_at ?? at,
     })
     .eq('message_id', message.message_id);
 
-  return giveUp
-    ? `Failed permanently after ${attempts} attempt${attempts === 1 ? '' : 's'}. It is in the failure queue and needs a person.`
-    : `Failed. Attempt ${attempts} of ${MAX_ATTEMPTS}.`;
+  return `Failed permanently after ${attempts} attempt${attempts === 1 ? '' : 's'}. It is in the failure queue and needs a person.`;
 }
-
-/** 2, 4, 8, 16 minutes. Bounded by MAX_ATTEMPTS, never unbounded. */
-const backoffMs = (attempt: number): number => Math.min(2 ** attempt, 16) * 60_000;
 
 // ---------------------------------------------------------------------------
 // Sequence control

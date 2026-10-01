@@ -7,7 +7,7 @@
  * both end up rendering the same strings, and verify_xlsx.py asserts that the
  * spreadsheet's own formulas reproduce `reading` below.
  *
- * Run:  node --experimental-strip-types tools/rework-cost-check/dump_content.ts
+ * Run:  npx tsx tools/rework-cost-check/dump_content.ts
  */
 import {
   HOW_TO_FIND,
@@ -18,6 +18,7 @@ import {
   RATES_CHECKED,
 } from '../../src/data/rework-cost-check.ts';
 import { PATHS, AFTER_LAST, BUDGET_ENFORCEMENT, CHECK_WHY, blankModel, read, roundCost } from '../../src/lib/reworkCost.ts';
+import { APPLY_URL, cohortInvitationFor } from '../../src/data/resource-cohort-copy.ts';
 
 const reading = read(EXAMPLE);
 
@@ -25,6 +26,8 @@ console.log(
   JSON.stringify(
     {
       exampleLabel: EXAMPLE_LABEL,
+      cohort: cohortInvitationFor('/resources/rework-cost-check'),
+      applyUrl: APPLY_URL,
       workflowInputs: WORKFLOW_INPUTS,
       howToFind: HOW_TO_FIND,
       frontierRates: FRONTIER_RATES,

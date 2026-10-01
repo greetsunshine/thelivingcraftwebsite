@@ -127,6 +127,7 @@ const kindLabel = (k: string) => KIND_LABEL[k] ?? k;
                 <td>
                   {r.name ?? <span class="faint">no name</span>}
                   <div class="faint mono" style="font-size:12px">{r.email}</div>
+                  {r.role && <div class="faint" style="font-size:12px">{r.role}</div>}
                 </td>
                 <td class="mono">
                   {r.resource_id}

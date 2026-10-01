@@ -48,6 +48,7 @@ import '../../styles/templates/programme.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { EXPLORES } from '../../data/cohort-copy';
+import { cohortCtaLabel } from '../../data/resource-cohort-copy';
 
 const title = 'Enterprise learning for a team — The Living Craft';
 const description =
@@ -88,23 +89,28 @@ const schema = [
     </nav>
   </div>
 
+  {/* Hero copy: the revised outreach readiness package (29 September 2026),
+      public-copy/website/enterprise.md. "Discuss your team's need" goes to the
+      team form, which lives on the cohort page at /#team (see the header of
+      this file: there is no second enterprise form). The size and the
+      separate-purchase facts moved to the note under the buttons. */}
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">Enterprise learning</p>
-      <h1>A programme for <em>one team</em></h1>
+      <p class="eyebrow">For engineering teams</p>
+      <h1>Give your team a clearer path from <em>experiment to operation</em></h1>
       <p class="credential">
-        An enterprise programme normally brings <strong>8–10 participants</strong>
-        together with a schedule agreed for the group. It begins with your learning
-        objective, the experience of the people taking part and your industry context.
-        It is a separate purchase and a separate scoping conversation from the open
-        cohort.
+        Start with the decisions your team needs to make, the systems it works on and the
+        evidence it needs. A scoping conversation establishes the learning need, context and
+        appropriate next step.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="/#team">Start the team conversation&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="/#team">Discuss your team’s need&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>
       </div>
       <p class="hero-note">
-        An enquiry is a conversation, not an application and not an order.
+        An enterprise programme normally brings <strong>8–10 participants</strong> together, on a
+        schedule agreed for the group. It is a separate purchase from the open cohort. An enquiry
+        is a conversation, not an application and not an order.
       </p>
     </div>
   </section>
@@ -218,23 +224,9 @@ const schema = [
       </div>
     </div>
 
-    <aside class="pending">
-      <h3>Facts this page is waiting on</h3>
-      <ul>
-        <li>
-          Live hours, delivery format and how many sessions an enterprise group runs.
-          <span class="who">Sunil to approve the scope before publication</span>
-        </li>
-        <li>
-          Fees, payment schedule, cancellation and rescheduling terms.
-          <span class="who">Sunil with finance; nothing is published until agreed</span>
-        </li>
-        <li>
-          Contracting entity and the terms a purchase order would sit under.
-          <span class="who">The owner — the same facts <a href="/terms">terms</a> is waiting on</span>
-        </li>
-      </ul>
-    </aside>
+    {/* 29 September 2026: the internal list of facts this page was waiting on,
+        and the "Written ... Pending approval" line, were removed at the owner's
+        request. They were notes for the team, not for a visitor. */}
   </section>
 
   {/* ── next step ────────────────────────────────────────────────────────── */}
@@ -253,21 +245,26 @@ const schema = [
       <p>
         You can also write directly to
         <a class="textlink" href="mailto:apply@thelivingcraft.ai">apply@thelivingcraft.ai</a>.
-        No response-time commitment is published, because none has been agreed.
       </p>
     </div>
     <div class="cta-row">
-      <a class="btn btn-primary" href="/#team">Start the team conversation&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-primary" href="/#team">Discuss your team’s need&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
       <a class="btn btn-ghost" href="/programmes/">Compare all three routes</a>
     </div>
-    <p class="revised">
-      Written <time datetime="2026-09-11">11 September 2026</time>. Scope and terms
-      pending Sunil’s factual approval.
+    {/* The package's line for a reader who came here for themselves. */}
+    <p class="individual">
+      For individual learning,
+      <a class="textlink" href="/#apply" data-cta="form" data-cta-placement="enterprise-close">{cohortCtaLabel().replace(/^Explore/, 'explore')}</a>.
     </p>
   </section>
 </PracticeLayout>
 
 <style>
+  .individual {
+    margin-top: var(--space-4);
+    color: var(--text-body);
+  }
+
   .intro {
     margin-bottom: var(--space-6);
   }

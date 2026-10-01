@@ -84,13 +84,24 @@ const schema: unknown[] = [
       </ol>
     </nav>
 
+    {/* Heading and lede: the revised outreach readiness package (29 September
+        2026), public-copy/website/guides.md. The sentence on how each guide is
+        built stays, because it tells a reader what to expect. */}
     <header class="i-head">
-      <p class="eyebrow">Resources</p>
-      <h1>Guides</h1>
+      <p class="eyebrow">Engineering guides</p>
+      <h1>Understand the decision behind the pattern</h1>
       <p class="lede">
-        Design questions that arrive the moment a language model stops recommending and starts
-        doing. Each guide opens with the answer, says who it is for, works through an example,
-        is explicit about what the argument rests on, and ends with what it does not cover.
+        Start with a concrete problem, inspect a worked example and choose a next action. Good
+        guidance makes assumptions, trade-offs and sources visible.
+      </p>
+      <p class="lede">
+        Each guide opens with the answer, says who it is for, works through an example, is
+        explicit about what the argument rests on, and ends with what it does not cover.
+      </p>
+      <p class="i-cta">
+        <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero"
+          >Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+        >
       </p>
     </header>
 
@@ -152,12 +163,6 @@ const schema: unknown[] = [
       )
     }
 
-    <p class="note">
-      {count === 1 ? 'One guide is published.' : `${count} guides are published.`} Further clusters
-      — evaluating agent behaviour, reliability and cost, and running a design review — are
-      planned and are not written yet. Nothing appears on this page until it has been written and
-      is ready to be read.
-    </p>
   </div>
 </PracticeLayout>
 
@@ -174,6 +179,13 @@ const schema: unknown[] = [
     font-size: clamp(var(--size-7), 4.4vw, var(--size-8));
     color: var(--text-loud);
     margin: var(--space-3) 0 var(--space-4);
+  }
+  .i-head .lede + .lede {
+    margin-top: var(--space-3);
+  }
+  /* The package's one button, under the lede. */
+  .i-cta {
+    margin-top: var(--space-5);
   }
 
   .cluster + .cluster {

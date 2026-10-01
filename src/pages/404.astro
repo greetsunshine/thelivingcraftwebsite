@@ -1,0 +1,75 @@
+---
+/**
+ * The page any missing address returns, and what `Astro.rewrite('/404')`
+ * shows for an unknown guide, template or course week.
+ *
+ * Until 29 September 2026 there was no page here, so production answered a
+ * wrong link with Astro's own default: a dark, monospace "404: Not Found" with
+ * no header, no footer and no way back. That is the first screen somebody sees
+ * after following an old campaign link or a mistyped address, and it looked
+ * like a broken site rather than a missing page.
+ *
+ * It is a practice page like /contact: the site's header and footer, the same
+ * programme template, and routes to the places people are usually looking for.
+ * `noindex`, because a missing page must never be a search result. The status
+ * stays 404: Astro sets it for this route, and it is restated below for the
+ * rewrites.
+ */
+import '../styles/templates/programme.css';
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+
+Astro.response.status = 404;
+
+const title = 'Page not found — The Living Craft';
+const description = 'This address does not lead to a page. The routes below lead to the cohort, the resources and the practice.';
+---
+
+<PracticeLayout bodyClass="programme-page" title={title} description={description} noindex>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Page not found</p>
+      <h1>This address does not lead to <em>a page</em></h1>
+      <p class="credential">
+        The link may be old, or the address may have a typing mistake. Nothing you did caused
+        this. The routes below lead to what most people are looking for.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/">The cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/resources/">Resources</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Where to go</p>
+      <h2>Pick the page <em>you were looking for</em></h2>
+    </div>
+    <div class="panel routes">
+      <div class="detail-row">
+        <span class="dk">The live cohort on designing agentic systems</span>
+        <span class="dv"><a class="textlink" href="/">The cohort page</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">A tool, a worksheet or a template</span>
+        <span class="dv"><a class="textlink" href="/resources/">Resources</a> · <a class="textlink" href="/tools/">Tools</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">A written guide</span>
+        <span class="dv"><a class="textlink" href="/resources/guides/">Guides</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Learning for a team</span>
+        <span class="dv"><a class="textlink" href="/programmes/enterprise/">Enterprise learning</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">The fractional CAIO retainer or the readiness assessment</span>
+        <span class="dv"><a class="textlink" href="/caio">Fractional CAIO</a> · <a class="textlink" href="/assessment">AI Readiness</a></span>
+      </div>
+      <div class="detail-row">
+        <span class="dk">Something else</span>
+        <span class="dv"><a class="textlink" href="/contact/">Contact</a></span>
+      </div>
+    </div>
+  </section>
+</PracticeLayout>

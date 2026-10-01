@@ -22,15 +22,19 @@
  * NOTHING LEAVES THE BROWSER
  * ═══════════════════════════════════════════════════════════════════════════
  *
- * There is no email gate on this page, by instruction. Four things hold the
- * privacy claim up:
+ * The check itself has no email gate, by instruction. The workbook download
+ * has one since 28 September 2026, like every file on the site (CLAUDE.md,
+ * the download gate). Four things hold the privacy claim about the figures up:
  *
  *   1. NO <form>. The inputs sit in plain divs and tables. A form can be
  *      submitted by a stray Enter key, and a GET submission puts every figure
  *      in the query string. No form, no path.
  *   2. NO fetch, XMLHttpRequest or sendBeacon anywhere in the script. The only
- *      network activity is the layout's own pageview beacon, which reads a
- *      path and a referrer and nothing from this page.
+ *      network activity is the layout's own beacon, which reads a path and a
+ *      referrer and nothing from this page. Since 29 September 2026 it also
+ *      sends two named moments, the first use and the five checks all having
+ *      a verdict (`tool_started`, `useful_result_completed`). Each carries the
+ *      tool's name and nothing typed.
  *   3. No localStorage. The model lives in a closure and dies with the tab.
  *   4. Nothing typed here is ever put in an href, which is the only thing the
  *      tracker reads for CTA clicks.
@@ -53,7 +57,11 @@
  * is in tools/rework-cost-check/README.md.
  */
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 import { longDate } from '../../data/resources';
 import {
@@ -90,7 +98,9 @@ const title = `${TITLE} — the real cost of a task that gets sent back · The L
 const description =
   'Cost every path that sends agent work back — limits, judges, validators, tool errors, reviewers — and get two numbers: typical cost per task and worst case at peak.';
 
-const XLSX = '/downloads/rework-cost-check.xlsx';
+// The workbook is behind the download gate like every other file the site
+// hands out (CLAUDE.md, "The download gate"): downloads/rework-cost-check.xlsx,
+// served by /api/pipeline/download after a name and an email address.
 const PUBLISHED_AT = '2026-09-28';
 
 // The worked example, read through the same module the page and the tests use.
@@ -133,7 +143,7 @@ const sections = [
 const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 ---
 
-<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections}>
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening" tool="rework-cost-check">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -147,9 +157,10 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <a class="btn btn-primary" href="#check">Run the Rework Cost Check&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
       </p>
       <p class="hero-note">
-        <a class="textlink" href={XLSX} download>Prefer a spreadsheet? Download the Excel version</a>
+        <button class="textlink" type="button" data-gate="xlsx">Prefer a spreadsheet? Download the Excel version</button>
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -171,7 +182,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         </div>
       </dl>
       <p class="prose-note">
-        Your numbers stay in your browser. Nothing is sent or stored, and there is nothing to sign up for.
+        Your numbers stay in your browser. They are not sent or stored, and the check needs no sign-up. The workbook download asks for your name, role and email address first.
       </p>
     </div>
   </section>
@@ -499,6 +510,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
           ))}
         </ol>
         <p class="nextstep" id="nextstep" hidden><span class="mono">Your next step</span> <span id="nextstep-text"></span></p>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -658,13 +670,14 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
         <span class="eyebrow">Closing</span>
         <h2>Stopping has a cost you can list. Not stopping has no ceiling.</h2>
       </div>
-      <p class="hero-cta nextrow">
-        <a class="btn btn-ghost" href={XLSX} download>Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the Excel version&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(PUBLISHED_AT)} · Content CC BY 4.0 · Code MIT · © The Living Craft</p>
     </div>
   </section>
+
+  <ResourceGate resource="rework-cost-check" lead="The Excel workbook is the same check, with the worked example on its own sheet and every figure explained." />
 </ResourcesLayout>
 
 <script>
@@ -685,9 +698,12 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
     type BudgetEnforcement,
   } from '../../lib/reworkCost';
   import { buildExample, FRONTIER_RATES, atRate } from '../../data/rework-cost-check';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   // The model is a closure and dies with the tab. Nothing is stored or sent.
   let model: ReworkModel = blankModel();
+  /** True while the figures on screen are the loaded example, not the reader's own. */
+  let fromExample = false;
 
   const $ = <T extends Element = HTMLElement>(id: string) => document.getElementById(id) as unknown as T;
   const all = <T extends Element = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];
@@ -867,6 +883,15 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
       }
     }
 
+    // The cohort line under the five checks, and `useful_result_completed`,
+    // once every check has a verdict. The loaded example shows the line and
+    // records nothing: the reader did not reach that result.
+    if (r.checks.every((c) => c.status !== 'Not answered')) {
+      markUsefulResult('rework-cost-check', { example: fromExample });
+    } else {
+      clearUsefulResult();
+    }
+
     const next = $('nextstep') as HTMLElement;
     if (r.nextStep) {
       next.hidden = false;
@@ -922,10 +947,14 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   // ── wiring ───────────────────────────────────────────────────────────────
   document.addEventListener('input', (e) => {
-    if ((e.target as HTMLElement).closest('#check')) update();
+    if (!(e.target as HTMLElement).closest('#check')) return;
+    fromExample = false;
+    update();
   });
   document.addEventListener('change', (e) => {
-    if ((e.target as HTMLElement).closest('#check')) update();
+    if (!(e.target as HTMLElement).closest('#check')) return;
+    fromExample = false;
+    update();
   });
 
   const said = $('said');
@@ -938,6 +967,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   function loadExample() {
     model = buildExample();
+    fromExample = true;
     fill();
     render();
     announce('Scheduling example loaded.');
@@ -948,6 +978,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
   $('clear').addEventListener('click', () => {
     model = blankModel();
+    fromExample = false;
     fill();
     render();
     announce('Cleared.');
@@ -970,6 +1001,8 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .nextrow { justify-content: center; margin-top: var(--space-6); }
   .sub { margin: var(--space-7) 0 var(--space-3); font-size: var(--size-5); font-weight: var(--weight-heading); color: var(--text-loud); }
   .textlink { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  /* The spreadsheet link is a button now (it opens the download gate), drawn as the link it was. */
+  button.textlink { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
 
   /* ── opening ──────────────────────────────────────────────────────────── */
   .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); }
@@ -1238,7 +1271,7 @@ const statusWord = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
   .ctitle { color: var(--text-body); font-weight: var(--weight-medium); }
   /* Why the check exists, above what it currently says. A reader who does not
      know what a check is for answers it carelessly. */
-  .cwhy { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); max-width: 74ch; }
+  .cwhy { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); max-width: 64ch; } /* was 74ch: 102 characters a line */
   .creason {
     color: var(--text-body); font-size: var(--size-2);
     margin-top: var(--space-3); padding-top: var(--space-3);

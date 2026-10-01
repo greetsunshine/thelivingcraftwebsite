@@ -38,8 +38,6 @@ export const LINKEDIN_EPISODE_5_URL: string = 'TODO';
 export const hasLinkedInPost = (): boolean =>
   LINKEDIN_EPISODE_5_URL !== 'TODO' && LINKEDIN_EPISODE_5_URL.startsWith('https://');
 
-/** The cohort application. The anchor on the cohort page, as every other resource uses. */
-export const APPLY_URL = '/#apply';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Section 1 — the header
@@ -509,7 +507,8 @@ export const COHORT_HEADING = 'Build agentic systems that hold up in production'
 export const cohortLine = (startsOn: string): string =>
   `The next Living Craft cohort for senior engineering leaders and architects starts in ${startsOn}.`;
 
-export const COHORT_CTA = 'Apply to the cohort';
+// The closing buttons are not written here. Since 29 September 2026 every tool
+// and resource page ends in src/components/site/ClosingCta.astro.
 
 // ═══════════════════════════════════════════════════════════════════════════
 // The neighbours

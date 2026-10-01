@@ -458,9 +458,9 @@ export async function buildExport(
       case 'attributions': {
         let q = client
           .from('attributions')
-          .select(
-            'submission_id, first_source, first_medium, first_campaign, first_content, first_term, session_source, session_medium, session_campaign, session_content, session_term, entry_path, referrer_host, self_reported, tracking_permission, first_captured_at, session_captured_at',
-          )
+          // Every column: three were added on 29 September 2026, and a named
+          // list fails as a whole on a database that has not run schema.sql.
+          .select('*')
           .order('session_captured_at', { ascending: false })
           .limit(limit);
         if (from) q = q.gte('session_captured_at', from);
@@ -475,6 +475,8 @@ export async function buildExport(
           'first_campaign',
           'first_content',
           'first_term',
+          'first_landing_path',
+          'first_referrer_host',
           'session_source',
           'session_medium',
           'session_campaign',
@@ -483,6 +485,7 @@ export async function buildExport(
           'entry_path',
           'referrer_host',
           'self_reported',
+          'self_reported_detail',
           'tracking_permission',
           'first_captured_at',
           'session_captured_at',
@@ -498,7 +501,7 @@ export async function buildExport(
         let q = client
           .from('resource_requests_marketing')
           .select(
-            'request_id, requested_at, person_id, name, email, resource_id, kind, resource_version, delivery_state, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, consented',
+            'request_id, requested_at, person_id, name, email, resource_id, kind, resource_version, delivery_state, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, consented, role',
           )
           .order('requested_at', { ascending: false })
           .limit(limit);

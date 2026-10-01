@@ -22,10 +22,14 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PDFDocument } from 'pdf-lib';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const ROOT = resolve(new URL('..', import.meta.url).pathname);
+// fileURLToPath, not `.pathname`: on Windows a URL's pathname is "/D:/…", which
+// path functions read as a folder named "D:" on the current drive.
+const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/[\\/]$/, '');
 const KIT = join(ROOT, 'kits', 'agent-memory-audit-kit');
 const OUT = join(ROOT, 'downloads');
 const ROUTE = '/resources/agent-memory-audit-kit';
@@ -96,7 +100,23 @@ try {
   await page.send('Page.navigate', { url: `${base}${ROUTE}` });
   await loaded;
   // Fonts arrive after load. A PDF printed before they do falls back to Helvetica.
-  await page.send('Runtime.evaluate', { expression: 'document.fonts.ready.then(() => true)', awaitPromise: true });
+  // `fonts.ready` alone can resolve too early: the print-only cover and the
+  // print sizes ask for their faces only once the page is laid out for print.
+  // So lay it out for print first and ask for each face the print uses by name.
+  // (Do not judge this by the font names inside the PDF: Chrome labels the web
+  // fonts it embeds with system names such as ArialMT. Look at the pages.)
+  await page.send('Emulation.setEmulatedMedia', { media: 'print' });
+  const faces = await page.send('Runtime.evaluate', {
+    expression: `(async () => {
+      const want = ['400 16px Figtree', '700 16px Figtree', '400 16px "Source Serif 4"'];
+      await Promise.all(want.map((f) => document.fonts.load(f)));
+      await document.fonts.ready;
+      return want.filter((f) => !document.fonts.check(f));
+    })()`,
+    awaitPromise: true,
+    returnByValue: true,
+  });
+  if (faces.result.value?.length) fail(`fonts did not load: ${faces.result.value.join(', ')}; is the page able to reach Google Fonts?`);
   // The page must be the current one. A dev server that answered before it
   // had rebuilt once printed a cover with last week's byline, so read the
   // cover back and refuse to print anything that disagrees with resources.ts.
@@ -109,33 +129,79 @@ try {
     expression: `document.querySelectorAll('a[href^="/"]').forEach((a) => { a.href = new URL(a.getAttribute('href'), ${JSON.stringify(SITE_ORIGIN)}).href; }); true`,
   });
 
+  // The brand on paper, as the four server-built PDFs carry it
+  // (src/lib/resources/pdf-writer.ts): every page after the cover has a band of
+  // the ivory weave across the top with the lockup on it, and a gold rule
+  // under it. Chrome repeats only the page margins, so the band is the header
+  // template. The images are the PNGs `npm run build:pdf-assets` makes from the
+  // site's own artwork; a template cannot fetch, so they are inlined. The cover
+  // page has no margin (`@page :first`), so neither band nor footer shows there.
+  const png = (f) => `data:image/png;base64,${readFileSync(join(ROOT, 'pdf-assets', 'brand', f)).toString('base64')}`;
+  const header =
+    '<div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;width:100%;height:13mm;margin:-4mm 0 0;' +
+    `background:#F5F0E6 url(${png('ivory-weave.png')}) 0 0 / 48px 48px repeat;border-bottom:0.6pt solid #B58A46;` +
+    'display:flex;align-items:center;gap:1.5mm;padding:0 14mm;box-sizing:border-box;">' +
+    `<img src="${png('lc-mark-header.png')}" style="height:6.5mm;width:auto" alt="">` +
+    `<img src="${png('lc-name-header.png')}" style="height:3.5mm;width:auto" alt=""></div>`;
+  // Figtree is the site's reading face; a template cannot load it, so it is
+  // named first and falls back to the system sans. #526259 is --lc-muted.
   const footer =
-    '<div style="width:100%;font-family:Inter,Helvetica,Arial,sans-serif;font-size:7.5px;color:#5C5345;padding:0 14mm;display:flex;justify-content:space-between;">' +
+    '<div style="width:100%;font-family:Figtree,Helvetica,Arial,sans-serif;font-size:7.5px;color:#526259;padding:0 14mm;display:flex;justify-content:space-between;">' +
     `<span>Agent Memory Audit Kit · Built by ${TOOL_AUTHOR} · The Living Craft · CC BY 4.0 / MIT</span>` +
     '<span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>';
-  const { data } = await page.send('Page.printToPDF', {
-    printBackground: true,
-    preferCSSPageSize: true,
-    displayHeaderFooter: true,
-    headerTemplate: '<span></span>',
-    footerTemplate: footer,
-    marginTop: 0.55,
-    marginBottom: 0.7,
-    marginLeft: 0.55,
-    marginRight: 0.55,
-    transferMode: 'ReturnAsBase64',
-  });
+  // Printed twice and joined. Chrome draws the header on every page it prints,
+  // even one with no margin, so the weave band landed on top of the cover. The
+  // cover is printed alone without header or footer; the rest with them.
+  const print = async (pageRanges, withChrome) =>
+    Buffer.from(
+      (
+        await page.send('Page.printToPDF', {
+          printBackground: true,
+          preferCSSPageSize: true,
+          displayHeaderFooter: withChrome,
+          headerTemplate: withChrome ? header : '<span></span>',
+          footerTemplate: withChrome ? footer : '<span></span>',
+          marginTop: 0.55,
+          marginBottom: 0.7,
+          marginLeft: 0.55,
+          marginRight: 0.55,
+          pageRanges,
+          transferMode: 'ReturnAsBase64',
+        })
+      ).data,
+      'base64',
+    );
+  const coverPdf = await PDFDocument.load(await print('1', false));
+  const restPdf = await PDFDocument.load(await print('2-', true));
+  const joined = await PDFDocument.create();
+  for (const [src, n] of [[coverPdf, 1], [restPdf, restPdf.getPageCount()]]) {
+    const pages = await joined.copyPages(src, [...Array(n).keys()]);
+    pages.forEach((pg) => joined.addPage(pg));
+  }
+  joined.setTitle(coverPdf.getTitle() ?? '');
+  joined.setAuthor('The Living Craft');
   mkdirSync(OUT, { recursive: true });
-  writeFileSync(PDF, Buffer.from(data, 'base64'));
+  writeFileSync(PDF, await joined.save());
   await browser.send('Target.closeTarget', { targetId });
   browser.close();
 } finally {
+  // On Windows Chrome still holds its profile for a moment after kill(), and
+  // deleting it then fails with EPERM. Wait for the exit, and let rmSync retry.
+  const exited = new Promise((res) => chrome.once('exit', res));
   chrome.kill();
-  rmSync(profile, { recursive: true, force: true });
+  await Promise.race([exited, new Promise((res) => setTimeout(res, 5_000))]);
+  try {
+    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch (e) {
+    // Chrome's child processes can outlive the main one on Windows. A profile
+    // left in the temp folder is harmless; a build aborted over it is not.
+    console.warn(`build-memory-kit: left ${profile} behind (${e.code})`);
+  }
   if (server) server.kill();
 }
 
-const pages = (readFileSync(PDF, 'latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+// pdf-lib writes compressed object streams, so count through it, not a regex.
+const pages = (await PDFDocument.load(readFileSync(PDF))).getPageCount();
 console.log(`pdf   ${rel(PDF)}  ${kb(PDF)} KB, ${pages} pages`);
 
 // ── the schema, on its own URL ─────────────────────────────────────────────
@@ -147,11 +213,17 @@ console.log(`json  ${rel(SCHEMA_OUT)}  ${kb(SCHEMA_OUT)} KB`);
   const stage = mkdtempSync(join(tmpdir(), 'memkit-zip-'));
   const dir = join(stage, 'agent-memory-audit-kit');
   const skip = (src) => /(^|\/)(\.venv|__pycache__|\.pytest_cache|[^/]*\.egg-info|dist|\.gitignore)(\/|$)|\.pyc$/.test(src);
-  cpSync(KIT, dir, { recursive: true, filter: (src) => !skip(src.slice(KIT.length)) });
+  // `skip` matches "/" separators; Windows hands cpSync's filter backslashes.
+  cpSync(KIT, dir, { recursive: true, filter: (src) => !skip(src.slice(KIT.length).replaceAll('\\', '/')) });
   cpSync(PDF, join(dir, 'agent-memory-audit-kit.pdf'));
   rmSync(ZIP, { force: true });
-  // -X drops macOS extended attributes; -r recurses; -q is quiet.
-  execFileSync('zip', ['-r', '-X', '-q', ZIP, 'agent-memory-audit-kit'], { cwd: stage });
+  // -X drops macOS extended attributes; -r recurses; -q is quiet. Windows has
+  // no `zip`, but its own tar.exe (bsdtar) writes a zip when -a sees ".zip".
+  if (process.platform === 'win32') {
+    execFileSync(join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-a', '-c', '-f', ZIP, 'agent-memory-audit-kit'], { cwd: stage });
+  } else {
+    execFileSync('zip', ['-r', '-X', '-q', ZIP, 'agent-memory-audit-kit'], { cwd: stage });
+  }
   rmSync(stage, { recursive: true, force: true });
   const listing = execFileSync('unzip', ['-Z1', ZIP], { encoding: 'utf8' }).trim().split('\n');
   const bad = listing.filter((p) => skip(p));

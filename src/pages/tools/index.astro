@@ -22,7 +22,7 @@
  * The other is sequenced behind rubric approval in the roadmap's own words —
  * "After rubric approval, package the same method as Claude and Codex
  * architecture-review skills" — so it appears as inert text with the condition
- * named, exactly as SiteNav renders an unbuilt destination. Two rules meet here
+ * named, exactly as SiteHeader renders an unbuilt destination. Two rules meet here
  * and agree: "do not publish empty hubs merely to fill the navigation", and the
  * house rule against inventing anything. No date, no waitlist, no "coming soon".
  *
@@ -67,21 +67,34 @@ const schema: unknown[] = [
 
     <section class="hero">
       <div class="wrap">
-        <p class="eyebrow">Tools</p>
-        <h1>Try the method <em>before</em> you talk to anybody</h1>
+        {/* Hero copy: the revised outreach readiness package (29 September
+            2026), public-copy/website/tools.md. The package says the exercise
+            stays useful on its own, so the tool keeps a button of its own
+            beside the one to the application.
+
+            The note under the buttons was "Ungated. There is no lead record
+            created by using anything on this page." That stopped being true on
+            19 September, when every download began asking for a name and an
+            email address (CLAUDE.md, the download gate). Using the check is
+            still ungated; taking a file away is not. */}
+        <p class="eyebrow">Practical tools</p>
+        <h1>Make the operating assumptions <em>visible</em></h1>
         <p class="credential">
-          The same questions a design review would ask, in a form you can work through on
-          your own. <strong>No sign-in, no email, no score</strong> — and nothing you type
-          about your architecture leaves your browser.
+          Work through one design decision and inspect the result. Keep the exercise useful on its
+          own. When you want to connect those decisions through practical building and review,
+          explore The Living Craft.
         </p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="/tools/agent-design-check/"
-            >Open the agent design check&nbsp;<span class="arrow" aria-hidden="true">→</span></a
+          <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero"
+            >Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a
           >
+          <a class="btn btn-ghost" href="/tools/agent-design-check/">Open the agent design check</a>
           <a class="btn btn-ghost" href="/resources/guides">Read the guides</a>
         </div>
         <p class="hero-note">
-          Ungated. There is no lead record created by using anything on this page.
+          Using the check needs no sign-in and no email, and gives no score. Nothing you type about
+          your architecture leaves your browser. Downloading a file asks for your name, role and email
+          address first.
         </p>
       </div>
     </section>
@@ -174,46 +187,6 @@ const schema: unknown[] = [
       </div>
     </section>
 
-    {/* ── the one that is not built ────────────────────────────────────────── */}
-    <section class="wrap">
-      <div class="sec-head">
-        <p class="eyebrow">Not published</p>
-        <h2>Architecture review <em>skill</em></h2>
-      </div>
-      <div class="prose stack">
-        <p>
-          The roadmap plans a second tool: the same method packaged as an architecture-review
-          skill for Claude and for Codex, reviewing only material you select and returning
-          referenced observations, questions, limitations and next actions — never executing
-          or modifying your code.
-        </p>
-        <p>
-          <strong>It is not built, and this is not a link.</strong> It is sequenced behind
-          approval of the rubric the checker above uses, because the skill would package that
-          same rubric and there is no point versioning a method twice. Each host also has to
-          be verified on its own; no compatibility claim will be made across the two before
-          it has been tested on both.
-        </p>
-      </div>
-      <aside class="pending">
-        <h3>What has to happen first</h3>
-        <ul>
-          <li>
-            Rubric approval — the {QUESTIONS.length} questions, their explanations and every
-            next step read and signed off.
-            <span class="who">Sunil</span>
-          </li>
-          <li>
-            A sample input and its report, plus usage guidance and a version on the rubric.
-            <span class="who">Part of the package, not a follow-up</span>
-          </li>
-          <li>
-            Independent verification on each host.
-            <span class="who">No cross-host claim before both are tested</span>
-          </li>
-        </ul>
-      </aside>
-    </section>
 
     {/* ── where to go next ─────────────────────────────────────────────────── */}
     <section class="wrap">
@@ -247,14 +220,19 @@ const schema: unknown[] = [
           <span class="go">Advisory<span class="arrow" aria-hidden="true">→</span></span>
         </a>
       </div>
-      <p class="revised">
-        Written <time datetime="2026-09-11">11 September 2026</time>.
-      </p>
     </section>
   </div>
 </PracticeLayout>
 
 <style>
+  /* Section rhythm. The other practice pages take theirs from a page template
+     (brand.css, programme.css); this hub has none, and global.css's `.wrap`
+     zeroes the vertical padding `section` would give. Until 29 September the
+     dropped "Written …" line's own margin was the only space above the footer. */
+  section.wrap {
+    padding-block: 88px;
+  }
+
   /* The lead card is the page's one action. It gets the extra weight; the
      areas card beside it is a list, not a destination, so it is a plain card
      with no `.go`. Shadow only — never a border and a shadow together. */

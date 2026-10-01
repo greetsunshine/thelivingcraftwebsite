@@ -26,14 +26,30 @@ const visitors = daily.reduce((n, d) => n + Number(d.visitors), 0);
 const busiest = daily.reduce((best, d) => (Number(d.views) > Number(best.views) ? d : best), daily[0]);
 
 const stepOf = (type: string) => steps.find((s) => s.type === type)?.visitors ?? 0;
+/** For the two events the SERVER writes after a commit. They carry no visitor hash, so count rows. */
+const countOf = (type: string) => Number(steps.find((s) => s.type === type)?.events ?? 0);
 
+// The seven events of the revised outreach readiness handoff (29 September
+// 2026), in the order a visitor meets them, with the older steps between.
+// Two were renamed that day: `apply_start` is now `form_started`, and a cohort
+// link is `cohort_cta_clicked` rather than `cta_click`. The old form name is
+// added in, so a range that crosses the rename keeps its first half.
+// `cta_click` is not: it still counts links to /caio, /assessment and the
+// booking widget, and adding it would count those as cohort links.
+// "Submitted it" read `apply_submit`, which the cohort form has never sent;
+// the step is now the server's `application_saved`, which is a stored row.
 const FUNNEL = [
   { label: 'Landed on a page', value: stepOf('pageview') },
-  { label: 'Followed a cross-page CTA', value: stepOf('cta_click') },
+  { label: 'Started a tool', value: stepOf('tool_started') },
+  { label: 'Reached a tool’s result', value: stepOf('useful_result_completed') },
+  { label: 'Requested a resource (saved, server)', value: countOf('resource_requested') },
+  { label: 'Received the requested file', value: stepOf('requested_delivery_confirmed') },
+  { label: 'Followed a cohort link', value: stepOf('cohort_cta_clicked') },
+  { label: 'Followed a link to the consulting pages or a booking', value: stepOf('cta_click') },
   { label: 'Opened the assistant', value: stepOf('ask_open') },
   { label: 'Asked it something', value: stepOf('ask_question') },
-  { label: 'Started an application form', value: stepOf('apply_start') },
-  { label: 'Submitted it', value: stepOf('apply_submit') },
+  { label: 'Started an application form', value: stepOf('form_started') + stepOf('apply_start') },
+  { label: 'Application saved (server)', value: countOf('application_saved') },
 ];
 
 // A country code alone is a lookup task for the reader. Only the three that

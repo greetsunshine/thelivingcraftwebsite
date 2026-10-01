@@ -20,6 +20,9 @@
 // the tally in the bar, the result, the copied sheet and the PDF all read one
 // rubric: readRow() and readSheet().
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
@@ -74,7 +77,7 @@ const schema = [
 const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((r) => r.key === 'stop')!];
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/agent-authority-review" schema={schema} howTo="about" tool="agent-authority-review">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -92,7 +95,11 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       <p class="hero-note mono">
         4 undo levels · 5 questions per step · 3 reference examples · 40 minutes
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -224,8 +231,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             ))}
           </span>
           <button class="btn btn-ghost" id="copy" type="button">Copy the sheet</button>
-          <button class="btn btn-ghost" id="print" type="button" data-gate="print">Print</button>
-          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+          <button class="btn btn-ghost" id="print" type="button" data-gate="print" data-own>Print</button>
+          <button class="btn btn-ghost" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+          <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf" data-own>Download your assessment (PDF)</button>
           <span class="copied mono" id="copied" role="status" aria-live="polite"></span>
         </div>
 
@@ -302,10 +310,12 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions">
-            <button class="btn btn-primary" id="pdf2" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx2" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf2" type="button" data-gate="pdf" data-own>Download your assessment (PDF)</button>
             <button class="btn btn-ghost" id="copy2" type="button">Copy the sheet</button>
           </div>
         </div>
+        <ResultCohortNote />
       </div>
     </section>
   </div>
@@ -456,10 +466,9 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           managers and architects who ship to production.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-      </p>
+      <ClosingCta note={false}>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
@@ -524,7 +533,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     </div>
   </template>
 
-  <ResourceGate resource="agent-authority-review" lead="The PDF carries every step you typed, the owner the rubric named beside each one, the tally and the checks to clear before anything is handed over." manual />
+  <ResourceGate resource="agent-authority-review" lead="The Excel workbook is the tool itself, blank: twelve rows, the five questions, the undo scale and the rubric, with each owner worked out the same way as this page. The PDF carries every step you typed, the owner the rubric named beside each one, the tally and the checks to clear before anything is handed over." manual />
 </ResourcesLayout>
 
 <style>
@@ -867,7 +876,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   .cundo[data-lvl='R3'] { color: var(--danger); }
   .excaveat { margin-top: var(--space-3); font-size: var(--size-1); color: var(--text-quiet); }
   .notyet-head { margin: var(--space-6) 0 var(--space-3); font-family: var(--font-mono); font-size: var(--size-1); font-weight: var(--weight-medium); color: var(--accent-ink); }
-  .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 82ch; margin-bottom: var(--space-3); }
+  .notyet { font-size: var(--size-2); color: var(--text-quiet); max-width: 66ch; margin-bottom: var(--space-3); } /* was 82ch: 107 to 114 characters a line */
   .notyet strong { color: var(--text-body); }
 
   /* ── protocol ─────────────────────────────────────────────────────────── */
@@ -902,8 +911,14 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
   @media (max-width: 600px) {
     .srow-grid { grid-template-columns: 1fr; }
     .fld.span2, .fld.span3, .fld.span4 { grid-column: span 1; }
-    .srow-head { grid-template-columns: 32px 1fr 32px; }
-    .srow-head .owner { grid-column: 2; justify-self: start; }
+    /* The step's name takes the whole line on a phone (it was about 215px
+       wide at 390px); the owner and the remove button share the next line
+       (UI/UX audit, 29 September 2026). */
+    .srow-head { grid-template-columns: 32px 1fr auto; row-gap: var(--space-2); }
+    .srow-head .rn { grid-row: 1; }
+    .srow-head .f-step { grid-column: 2 / -1; grid-row: 1; }
+    .srow-head .owner { grid-column: 2; grid-row: 2; justify-self: start; }
+    .srow-head .rm { grid-column: 3; grid-row: 2; }
   }
 
   /* ── print: the assessment is meant to go into a room on paper ────────── */
@@ -950,6 +965,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     type UndoLevel,
   } from '../../data/authority-review';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -957,6 +973,8 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     v === null ? '-' : (choices.find((c) => c.value === v)?.label ?? v);
 
   let rows: SheetRow[] = Array.from({ length: START_ROWS }, blankRow);
+  /** True while the sheet on screen is a loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   const rowsEl = $('rows');
   const tpl = document.getElementById('row-tpl') as HTMLTemplateElement;
@@ -1005,6 +1023,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       input.value = r[key];
       input.addEventListener('input', () => {
         rows[indexOf(card)][key] = input.value;
+        fromExample = false;
         update();
       });
     };
@@ -1026,6 +1045,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
           else if (f === 'judgment') row.judgment = next as JudgmentAnswer | null;
           else if (f === 'undo') row.undo = next as UndoLevel | null;
           else row.repeat = next as RepeatAnswer | null;
+          fromExample = false;
           update();
         });
       }
@@ -1164,6 +1184,15 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
     ($('add') as HTMLButtonElement).disabled = rows.length >= MAX_ROWS;
 
     renderResult(read);
+
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every step on the sheet has an owner. A loaded example shows the line
+    // and records nothing: the reader did not reach that result.
+    if (read.total > 0 && read.decided === read.total) {
+      markUsefulResult('agent-authority-review', { example: fromExample });
+    } else {
+      clearUsefulResult();
+    }
   }
 
   // ---- controls -----------------------------------------------------------
@@ -1172,6 +1201,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
 
   $('blank').addEventListener('click', () => {
     rows = Array.from({ length: START_ROWS }, blankRow);
+    fromExample = false;
     rebuild();
     scrollToSheet();
     (rowsEl.querySelector('.f-step') as HTMLInputElement | null)?.focus({ preventScroll: true });
@@ -1189,6 +1219,7 @@ const RUBRIC_DISPLAY = [...RUBRIC.filter((r) => r.key !== 'stop'), RUBRIC.find((
       const ex = exampleById(b.dataset.load!);
       if (!ex) return;
       rows = exampleRows(ex);
+      fromExample = true;
       rebuild();
       scrollToSheet();
     });

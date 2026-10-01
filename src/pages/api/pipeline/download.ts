@@ -157,6 +157,9 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
         return { file: { bytes: out.bytes, filename: 'poc-selection-tool-scored.pdf', contentType: PDF }, checks: out.checks };
       },
     } satisfies Download<(number | null)[]>,
+    // The tool itself, blank (Sunil, 25 September: "not the filled-up report,
+    // but rather the tool itself"). Built by `npm run tool-downloads`.
+    xlsx: staticFile('poc-selection-tool.xlsx', XLSX),
   },
   'agent-authority-review': {
     pdf: {
@@ -167,6 +170,7 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
         contentType: PDF,
       }),
     } satisfies Download<SheetRow[]>,
+    xlsx: staticFile('agent-authority-review.xlsx', XLSX),
   },
   'run-cost-model': {
     pdf: {
@@ -195,6 +199,7 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
         return { file: { bytes: out.bytes, filename: 'model-selection-tool-scored.pdf', contentType: PDF }, checks: out.checks };
       },
     } satisfies Download<Assessment>,
+    xlsx: staticFile('model-selection-tool.xlsx', XLSX),
   },
   'agent-memory-audit-kit': {
     zip: staticFile('agent-memory-audit-kit.zip', ZIP),
@@ -204,8 +209,14 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
   'cost-ceiling-workbook': {
     xlsx: staticFile('cost-ceiling-workbook.xlsx', XLSX),
   },
-  'rule-placement-audit': { csv: local() },
-  'agent-design-check': { txt: local() },
+  // Two kinds each. The blank file (`md`) is static: the same bytes for
+  // everyone, carrying nothing anybody typed. The visitor's own export stays
+  // `local()`, built in the browser, so both pages' promise still holds.
+  'rule-placement-audit': { csv: local(), md: staticFile('rule-placement-audit-worksheet.md', MD) },
+  'agent-design-check': { txt: local(), md: staticFile('agent-design-check-questions.md', MD) },
+  // Published 28 September with a plain link under public/; behind the gate
+  // since, like every other file (CLAUDE.md, "The download gate").
+  'rework-cost-check': { xlsx: staticFile('rework-cost-check.xlsx', XLSX) },
   'lc-r01': { csv: worksheetCsv('lc-r01') },
   'lc-r02': { csv: worksheetCsv('lc-r02') },
   'lc-r03': { csv: worksheetCsv('lc-r03') },

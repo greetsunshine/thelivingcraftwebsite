@@ -418,6 +418,12 @@ export interface AttributionRow {
   referrer_host: string | null;
   self_reported: string | null;
   tracking_permission: boolean;
+  // Added 29 September 2026. Optional because a database that has not run
+  // supabase/schema.sql since then has no such columns, and `select('*')`
+  // below simply leaves them out.
+  first_landing_path?: string | null;
+  first_referrer_host?: string | null;
+  self_reported_detail?: string | null;
 }
 
 export interface ConsentRow {
@@ -523,9 +529,10 @@ export async function leadDetail(
     if (submissions[0]) {
       const { data, error } = await client
         .from('attributions')
-        .select(
-          'first_source, first_medium, first_campaign, session_source, session_medium, session_campaign, session_content, entry_path, referrer_host, self_reported, tracking_permission',
-        )
+        // Every column, not a list. Three were added on 29 September 2026, and a
+        // named list that includes them fails as a whole on a database that has
+        // not been migrated, which would hide the attribution that does exist.
+        .select('*')
         .eq('submission_id', submissions[0].submission_id)
         .maybeSingle();
       // Same reason as the four above. A null attribution is drawn as "nothing

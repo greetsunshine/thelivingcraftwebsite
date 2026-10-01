@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/comms/worker",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

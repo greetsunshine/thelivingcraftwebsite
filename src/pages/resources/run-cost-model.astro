@@ -31,6 +31,9 @@
 // imports that module too (Vite bundles it), so the bar, every computed line,
 // the result and (on the server) the PDF all read one set of formulas.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -119,7 +122,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
         : `${a.filled}/19 lines set`;
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/run-cost-model" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/run-cost-model" schema={schema} howTo="how" tool="run-cost-model">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -137,6 +140,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
         {ARMS.length} options · {SECTIONS.length} sections · {INPUT_COUNT} lines · reference example loaded
       </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -214,7 +218,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
               {PURPOSE.map((p) => <li>{p}</li>)}
             </ul>
           </div>
-          <div class="about-col">
+          <div class="about-col" id="how">
             <span class="eyebrow"><span class="num">02</span> How to use it</span>
             <ol class="steps">
               {HOW_TO_USE.map((p) => <li>{p}</li>)}
@@ -476,10 +480,11 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
             </ol>
           </div>
           <div class="r-actions" role="group" aria-label="Model controls">
-            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf" data-own>Get the PDF</button>
             <button class="btn btn-ghost" id="blank" type="button">New model</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -557,11 +562,9 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
           specification that made the cheap option good.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-        <button class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow">↓</span></button>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download Excel version&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
@@ -1168,6 +1171,7 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     type SharedKey,
   } from '../../data/run-cost-model';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -1196,6 +1200,14 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     if (i === LAST) return 'Result';
     return `${SECTIONS[i - 1].num} ${SECTIONS[i - 1].name}`;
   }
+
+  // The footer's "How to use this" points at #how, which sits in the Start
+  // step. From any other step that section is hidden, so show the Start step
+  // first; the browser then follows the link as usual.
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest?.('a[href="#how"]');
+    if (a && step !== 0) goTo(0, false);
+  });
 
   function goTo(i: number, move = true) {
     step = Math.max(0, Math.min(LAST, i));
@@ -1406,6 +1418,13 @@ const breakEvenNote = (a: (typeof ex.arms)[number]) =>
     for (const o of OUTCOMES) {
       document.getElementById(`cut-${o.key}`)?.classList.toggle('active', r.outcome?.key === o.key);
     }
+
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every line is filled and the model has an outcome. The page opens on the
+    // worked example: that shows the line and records nothing, until the
+    // reader changes a figure and the model becomes theirs.
+    if (r.outcome) markUsefulResult('run-cost-model', { example });
+    else clearUsefulResult();
 
     updateProgress();
   }

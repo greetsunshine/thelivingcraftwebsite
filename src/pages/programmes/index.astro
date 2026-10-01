@@ -49,6 +49,7 @@ import {
   FEES_NOTE,
 } from '../../data/offer-display';
 import { EXPLORES } from '../../data/cohort-copy';
+import { cohort, practitioner } from '../../data/facts';
 
 const title = 'Programmes — The Living Craft';
 const description =
@@ -56,19 +57,29 @@ const description =
 ---
 
 <PracticeLayout bodyClass="programme-page" title={title} description={description} canonical="/programmes/">
+  {/* Hero copy: the revised outreach readiness package (29 September 2026),
+      public-copy/website/programme.md. Its primary button goes to the
+      application (/#apply); this page's own action stays beside it. */}
+  {/* The package's label for this page is "The Living Craft cohort". It is not
+      used here: this page compares three routes, one of which is a team
+      programme and not the cohort. The hours in the lead are the open
+      cohort's, which is who the lead addresses. */}
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Programmes</p>
-      <h1>Three routes into <em>the same work</em></h1>
+      <h1>Build the system. <em>Defend the operating decisions.</em></h1>
       <p class="credential">
-        An individual applies to the open cohort. An employer can fund that same
-        individual place. A team is a separate enterprise programme with its own
-        schedule and its own scoping conversation. What you do is the same in every
-        case: build a working agentic system and practise explaining the decisions
-        behind it.
+        Work with {practitioner.name} through practical building, evaluation and continuous
+        feedback. Connect a working agentic system to the reasoning behind its reliability, cost
+        and recovery. {cohort.liveHours} live hours plus independent work.
+      </p>
+      <p class="credential">
+        An individual applies to the open cohort. An employer can fund that same individual
+        place. A team is a separate enterprise programme with its own schedule and its own
+        scoping conversation.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="/">Explore the open cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero">Explore your fit&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/programmes/enterprise/">Learning for a team</a>
       </div>
       <p class="hero-note">{COMMITMENT} {COHORT_SIZE}</p>
@@ -206,15 +217,9 @@ const description =
       <p>{FEES_NOTE}</p>
     </div>
 
-    <aside class="pending">
-      <h3>Facts this page is waiting on</h3>
-      <ul>
-        <li>
-          The enterprise programme’s hours, delivery format and commercial terms.
-          <span class="who">Sunil for scope, finance for terms</span>
-        </li>
-      </ul>
-    </aside>
+    {/* 29 September 2026: the internal list of facts this page was waiting on,
+        and the "Written ... Pending approval" line, were removed at the owner's
+        request. They were notes for the team, not for a visitor. */}
   </section>
 
   {/* ── next step ────────────────────────────────────────────────────────── */}
@@ -247,10 +252,6 @@ const description =
       Advising a team through a live design decision is a different thing again —
       see <a class="textlink" href="/advisory/">advisory</a>, or
       <a class="textlink" href="/contact/">contact</a> for which route goes where.
-    </p>
-    <p class="revised">
-      Written <time datetime="2026-09-11">11 September 2026</time>. Pending Sunil’s
-      factual approval.
     </p>
   </section>
 </PracticeLayout>

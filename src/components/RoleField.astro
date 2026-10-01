@@ -1,0 +1,130 @@
+---
+/**
+ * The role question, on every form that asks for a name and an email.
+ *
+ * A <select> with the ten options from audience-roles.ts, and a text box that
+ * appears when "Other" is chosen. The text box has NO name: what is typed is
+ * copied into the select as a hidden option and selected, so every form posts
+ * one `role` value however it reads its fields (FormData, a field lookup, or
+ * a JSON body). Without JavaScript the select still posts, and "Other" is what
+ * is stored.
+ *
+ * The behaviour is one document-level script, wired by `data-other-choice` and
+ * `data-other-for`, so a form that includes this component needs no script of
+ * its own. Astro sends the script once per page however many fields there are.
+ *
+ * The label's words come through slots because each form draws its labels
+ * differently: RouteForm adds a hint and an error line with ids, the
+ * consulting forms use plain text. The default is "Your role".
+ */
+import { ROLE_MAX, ROLE_OPTIONS, ROLE_OTHER, ROLE_QUESTION } from '../data/audience-roles';
+
+interface Props {
+  /** The id of the select. The text box is `${id}-other`. */
+  id: string;
+  /** The posted field name. */
+  name?: string;
+  required?: boolean;
+  /** Class on both labels: 'full' on a two-column grid, for example. */
+  labelClass?: string;
+  /** For the select's aria-describedby, when the form draws a hint or an error. */
+  describedBy?: string;
+}
+
+const { id, name = 'role', required = false, labelClass, describedBy } = Astro.props;
+---
+
+<label class={labelClass} for={id}>
+  <slot name="label">{ROLE_QUESTION}</slot>
+  <select
+    id={id}
+    name={name}
+    required={required}
+    autocomplete="organization-title"
+    aria-describedby={describedBy || undefined}
+    data-other-choice
+  >
+    <option value="">Choose one</option>
+    {ROLE_OPTIONS.map((o) => <option value={o}>{o}</option>)}
+  </select>
+  <slot name="after" />
+</label>
+<label class:list={[labelClass, 'other-role']} for={`${id}-other`} data-other-for={id} hidden>
+  <slot name="other-label">Your role, in your words</slot>
+  <input id={`${id}-other`} type="text" maxlength={ROLE_MAX} autocomplete="organization-title" data-other-value={ROLE_OTHER} />
+</label>
+
+<style is:global>
+  /* Every form gives its labels a display value, which would beat [hidden]. */
+  [data-other-for][hidden] {
+    display: none !important;
+  }
+</style>
+
+<script>
+  // One listener set for every role field on the page.
+  const OTHER = 'Other';
+
+  const selectFor = (label: HTMLElement): HTMLSelectElement | null =>
+    document.getElementById(label.dataset.otherFor ?? '') as HTMLSelectElement | null;
+
+  const companionFor = (select: HTMLSelectElement): HTMLElement | null =>
+    document.querySelector<HTMLElement>(`[data-other-for="${CSS.escape(select.id)}"]`);
+
+  /** The hidden option that carries the typed words, made on first use. */
+  const typedOption = (select: HTMLSelectElement): HTMLOptionElement => {
+    let o = select.querySelector<HTMLOptionElement>('option[data-typed]');
+    if (!o) {
+      o = document.createElement('option');
+      o.dataset.typed = '';
+      o.hidden = true;
+      select.append(o);
+    }
+    return o;
+  };
+
+  const inOtherMode = (select: HTMLSelectElement): boolean =>
+    select.value === OTHER || select.selectedOptions[0]?.hasAttribute('data-typed') === true;
+
+  const sync = (select: HTMLSelectElement, focus: boolean) => {
+    const companion = companionFor(select);
+    if (!companion) return;
+    const input = companion.querySelector<HTMLInputElement>('input');
+    const other = inOtherMode(select);
+    companion.hidden = !other;
+    if (other) {
+      if (focus) input?.focus();
+    } else {
+      if (input) input.value = '';
+      select.querySelector('option[data-typed]')?.remove();
+    }
+  };
+
+  /** Copy the typed words into the select, or fall back to "Other" when the box is empty. */
+  const carry = (input: HTMLInputElement) => {
+    const label = input.closest<HTMLElement>('[data-other-for]');
+    const select = label && selectFor(label);
+    if (!select) return;
+    const text = input.value.trim().slice(0, Number(input.maxLength) || 200);
+    if (text) {
+      const o = typedOption(select);
+      o.value = text;
+      o.textContent = text;
+      o.selected = true;
+    } else {
+      select.querySelector('option[data-typed]')?.remove();
+      select.value = OTHER;
+    }
+  };
+
+  document.addEventListener('change', (e) => {
+    const select = (e.target as Element | null)?.closest?.('select[data-other-choice]') as HTMLSelectElement | null;
+    if (select) sync(select, true);
+  });
+  document.addEventListener('input', (e) => {
+    const input = e.target as HTMLInputElement | null;
+    if (input?.closest('[data-other-for]')) carry(input);
+  });
+  // A page restored from history can come back with "Other" already chosen.
+  document.querySelectorAll<HTMLSelectElement>('select[data-other-choice]').forEach((s) => sync(s, false));
+</script>

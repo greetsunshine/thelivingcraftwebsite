@@ -22,10 +22,18 @@
  *
  *   * Job titles, levels, tenure, team sizes, user counts, revenue figures,
  *     named clients, employer endorsements, awards or press mentions. The
- *     verified claim is exactly: "engineering and leadership experience from
- *     Google, Amazon, Walmart and startups". Everything past that full stop is
- *     unsourced until Sunil confirms it, and an About page is the single
- *     easiest place on a website to launder an unchecked number into a fact.
+ *     verified claims are exactly: "engineering and leadership experience from
+ *     Google, Amazon, Walmart and startups", and 26 years of engineering
+ *     experience in total, which Sunil states himself on `/` and which comes
+ *     from facts.ts. Everything past that is unsourced until Sunil confirms
+ *     it, and an About page is the single easiest place on a website to
+ *     launder an unchecked number into a fact.
+ *
+ *     The hero since 29 September 2026 is the revised outreach readiness
+ *     package's copy: "26 years of engineering experience, including lessons
+ *     from building scalable systems at Google, Amazon and Walmart". The
+ *     package lists Sunil as the owner of its facts; "scalable systems" is its
+ *     wording, not a figure, and adds no number.
  *   * A first-person workplace anecdote written on his behalf. The review
  *     notes on his own campaign posts say it twice — "illustrative scenario,
  *     no personal incident asserted". Inventing a story he then has to live
@@ -45,6 +53,7 @@
 import '../styles/templates/brand.css';
 import PracticeLayout from '../layouts/PracticeLayout.astro';
 import { COMMITMENT } from '../data/offer-display';
+import { practitioner } from '../data/facts';
 
 const title = 'About Sunil Mathew — The Living Craft';
 const description =
@@ -54,23 +63,19 @@ const description =
 <PracticeLayout bodyClass="brand-page" title={title} description={description} canonical="/about/">
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">About</p>
-      <h1>About <em>Sunil Mathew</em></h1>
+      <p class="eyebrow">{practitioner.name}</p>
+      <h1>Engineering experience, brought into <em>practical learning</em></h1>
       <p class="credential">
-        Sunil Mathew teaches the design of agentic systems and advises engineering teams
-        making those decisions. He brings engineering and leadership experience from
-        <strong>Google, Amazon, Walmart and startups</strong>. His focus is the reasoning
-        behind a system’s design and the evidence that helps a team make its next
-        decision.
+        {practitioner.name} brings {practitioner.yearsExperience} years of engineering
+        experience, including lessons from building scalable systems at
+        <strong>Google, Amazon and Walmart</strong>. At The Living Craft, he teaches through
+        practical building, design reasoning, evaluation and continuous feedback.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="/programmes/">See the programmes&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="/#apply" data-cta="form" data-cta-placement="hub-hero">Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/programmes/">See the programmes</a>
         <a class="btn btn-ghost" href="/advisory/">Advisory</a>
       </div>
-      <p class="hero-note">
-        This page states what can be sourced. Where a fact is outstanding it is named
-        rather than filled in.
-      </p>
     </div>
   </section>
 
@@ -176,7 +181,7 @@ const description =
     <div class="panel facts">
       <div class="detail-row">
         <span class="dk">Experience</span>
-        <span class="dv">Engineering and leadership at Google, Amazon, Walmart and startups</span>
+        <span class="dv">{practitioner.yearsExperience} years of engineering. Engineering and leadership at Google, Amazon, Walmart and startups</span>
       </div>
       <div class="detail-row">
         <span class="dk">Based</span>
@@ -202,23 +207,9 @@ const description =
       </div>
     </div>
 
-    <aside class="pending">
-      <h3>Not stated on this page, and why</h3>
-      <ul>
-        <li>
-          Job titles, levels, tenure and team scope at each employer.
-          <span class="who">Sunil to confirm what may be stated publicly</span>
-        </li>
-        <li>
-          Current work — the products and engagements he is building now.
-          <span class="who">Sunil to approve a description before it is published</span>
-        </li>
-        <li>
-          Client names, project outcomes, learner counts and any numeric result.
-          <span class="who">None are claimed; none will be added without a source</span>
-        </li>
-      </ul>
-    </aside>
+    {/* 29 September 2026: the internal list of facts this page was waiting on,
+        and the "Written ... Pending approval" line, were removed at the owner's
+        request. They were notes for the team, not for a visitor. */}
   </section>
 
   {/* ── next step ────────────────────────────────────────────────────────── */}
@@ -252,18 +243,16 @@ const description =
       A specific question that fits neither?
       <a class="textlink" href="/contact/">Contact</a> lists which route goes where.
     </p>
-    <p class="revised">
-      Written <time datetime="2026-09-11">11 September 2026</time>. Pending Sunil’s
-      factual approval.
-    </p>
   </section>
 </PracticeLayout>
 
 <style>
-  /* The hero's own lede is .credential, which global.css already sizes and
-     colours for the noir shell. Everything below is page-local. */
+  /* The hero's own lede is .credential, which global.css sizes. The hero is
+     ivory since 25 September (V5 on the inner pages), so the names in it are
+     ink, not the ivory they were on the forest shell. Everything below is
+     page-local. */
   .hero .credential strong {
-    color: var(--text-on-invert);
+    color: var(--text-loud);
   }
 
   .intro {

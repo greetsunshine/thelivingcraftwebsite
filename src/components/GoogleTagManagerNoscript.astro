@@ -1,16 +1,9 @@
 ---
-// Body half of Google Tag Manager, placed immediately after the opening
-// <body> tag per Google's own instructions. Always paired with
-// GoogleTagManager.astro's <head> script — never render one without the other.
-import { GTM_CONTAINER_ID } from '../data/site';
+// Renders nothing, on purpose, since 29 September 2026.
+//
+// This was Google Tag Manager's <noscript> iframe. It loaded the container for
+// a browser with JavaScript switched off, and such a browser cannot see the
+// consent banner, so it could never say yes. Loading tags for somebody who was
+// never asked is what the banner exists to stop. The file stays so the layouts
+// that render it did not have to change. See src/lib/consent/consent.ts.
 ---
-
-<noscript>
-  <iframe
-    src={`https://www.googletagmanager.com/ns.html?id=${GTM_CONTAINER_ID}`}
-    height="0"
-    width="0"
-    style="display:none;visibility:hidden"
-    title="Google Tag Manager"
-  ></iframe>
-</noscript>

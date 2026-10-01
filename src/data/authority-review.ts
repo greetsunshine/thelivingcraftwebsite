@@ -34,7 +34,7 @@ export const HOW_TO_USE = [
   'Type each step of the workflow into the sheet, one per row. Decide nothing yet. The first guess about owners is usually wrong and it biases everything after it.',
   'For every row, fill Evidence and Undo cost first. Only then answer Judgment and Repeat.',
   'Watch the owner beside each step and the tally in the bar at the top. Both update as you answer.',
-  'Read the result at the end. Then copy the sheet, print it, or get the PDF of your assessment.',
+  'Read the result at the end. Download the review as an Excel workbook to run it on the next workflow. You can also copy the sheet, print it, or get the PDF of your assessment.',
 ];
 
 // ---------------------------------------------------------------------------
@@ -329,6 +329,31 @@ export interface RowRead {
  * The step name and the free-text fields do not change the owner. Three
  * answers do, and a row with any of the three missing is `incomplete`.
  */
+/**
+ * The two warnings a row can carry, and the four outcomes of a sheet. Named
+ * here so the page, the PDF and the downloadable workbook print one wording
+ * (scripts/tool-workbooks-data.ts reads them).
+ */
+export const ROW_FLAGS = {
+  assumed: 'The input is assumed, not checked. Every check after this step is for show until the input is confirmed.',
+  irreversible: 'Cannot be undone. This step needs a named owner. Put the name in the hard limit.',
+} as const;
+
+/** The undo levels on which an agent may act alone, where engineers can disagree (the agent rule). */
+export const AGENT_UNDO_LEVELS: readonly UndoLevel[] = ['R0', 'R1'];
+/** The level that cannot be undone: the row needs a named owner. */
+export const IRREVERSIBLE_UNDO: UndoLevel = 'R3';
+
+/** The owner printed beside a row that is missing one of its three answers. */
+export const NOT_DECIDED = 'Not decided';
+
+export const SHEET_OUTCOME_NAMES = {
+  none: 'Not started',
+  progress: 'In progress',
+  stop: 'Stop before any handover',
+  decided: 'Authority decided',
+} as const;
+
 export function readRow(row: SheetRow): RowRead {
   const missing: RowRead['missing'] = [];
   if (row.undo === null) missing.push('undo');
@@ -336,21 +361,15 @@ export function readRow(row: SheetRow): RowRead {
   if (row.repeat === null) missing.push('repeat');
 
   const flags: string[] = [];
-  if (row.checked === 'guessed') {
-    flags.push(
-      'The input is assumed, not checked. Every check after this step is for show until the input is confirmed.',
-    );
-  }
-  if (row.undo === 'R3') {
-    flags.push('Cannot be undone. This step needs a named owner. Put the name in the hard limit.');
-  }
+  if (row.checked === 'guessed') flags.push(ROW_FLAGS.assumed);
+  if (row.undo === IRREVERSIBLE_UNDO) flags.push(ROW_FLAGS.irreversible);
 
-  if (missing.length) return { key: 'incomplete', owner: 'Not decided', missing, flags };
+  if (missing.length) return { key: 'incomplete', owner: NOT_DECIDED, missing, flags };
 
   let key: OwnerKey;
   if (row.repeat === 'unknown') key = 'stop';
   else if (row.judgment === 'one') key = 'code';
-  else if (row.undo === 'R0' || row.undo === 'R1') key = 'agent';
+  else if (AGENT_UNDO_LEVELS.includes(row.undo!)) key = 'agent';
   else key = 'suggest';
 
   return { key, owner: ruleFor(key)!.owner, missing: [], flags };
@@ -408,7 +427,7 @@ export function readSheet(rows: SheetRow[]): SheetRead {
     if (read.key === 'agent' && r.undo) {
       if (!agentCeiling || UNDO_LEVELS.indexOf(r.undo) > UNDO_LEVELS.indexOf(agentCeiling)) agentCeiling = r.undo;
     }
-    if (r.undo === 'R3') irreversible.push(i);
+    if (r.undo === IRREVERSIBLE_UNDO) irreversible.push(i);
     if (r.checked === 'guessed') assumed.push(i);
     if (read.key === 'stop') stopped.push(i);
   }
@@ -420,20 +439,20 @@ export function readSheet(rows: SheetRow[]): SheetRead {
   if (total === 0) {
     outcome = {
       key: 'none',
-      name: 'Not started',
+      name: SHEET_OUTCOME_NAMES.none,
       what: 'Type the first step of your workflow to begin. Each row needs three answers: undo cost, judgment and repeat.',
     };
   } else if (decided < total) {
     const left = total - decided;
     outcome = {
       key: 'progress',
-      name: 'In progress',
+      name: SHEET_OUTCOME_NAMES.progress,
       what: `${plural(left, 'step is', 'steps are')} not decided yet. A step is decided once undo cost, judgment and repeat are all answered.`,
     };
   } else if (stopped.length) {
     outcome = {
       key: 'stop',
-      name: 'Stop before any handover',
+      name: SHEET_OUTCOME_NAMES.stop,
       what: `${plural(stopped.length, 'step has', 'steps have')} an unknown repeat cost. Until you can say what a second run does, nothing on this sheet is safe to hand to an agent. Answer question 5 on ${stopped.length === 1 ? 'that row' : 'those rows'} first.`,
     };
   } else {
@@ -446,7 +465,7 @@ export function readSheet(rows: SheetRow[]): SheetRead {
         ? `On ${plural(counts.suggest, 'step', 'steps')} the agent suggests and a named person approves.`
         : 'No step needs a human approval path.',
     ];
-    outcome = { key: 'decided', name: 'Authority decided', what: parts.join(' ') };
+    outcome = { key: 'decided', name: SHEET_OUTCOME_NAMES.decided, what: parts.join(' ') };
   }
 
   return { total, decided, counts, agentCeiling, irreversible, assumed, stopped, outcome, rows: reads };

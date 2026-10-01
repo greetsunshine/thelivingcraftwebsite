@@ -8,13 +8,495 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 30 September 2026
-**Branch:** `resource/failure-triage-quiz`, off `main`, carrying resource 07 only.
-Before that: `feat/landing-refinement` (PR #31), now targeting `main` directly. It carries every
-commit of `cta-book-now-rework` (PR #18), which is closed as included. PR #14 is merged.
-PR #27 (the thread brain) is superseded by this work. The pipeline work is
-`feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc` (PR #6).
+**Last updated:** 1 October 2026
+**Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
+merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
+the four tasks from Sunil's call of 25 September and the later ones below. PR #31
+(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are merged. The
+pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
+(PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Before PR #37 reaches `main` — 1 October
+
+A push to `main` deploys production, so these happen in this order:
+
+1. [x] **Done 1 October.** Production ran `supabase/schema.sql` in full from this branch.
+   A check query confirmed `people.role_code`, `attributions.first_landing_path`,
+   `comms_drip_sends`, `events_event_id_uidx` and the `p_role_code` argument all exist.
+2. [x] **Done 1 October.** The Vercel team is on Pro, which allows the ten-minute cron in
+   `vercel.json`. It stays.
+3. Set `COMMS_WORKER_SECRET` in Vercel production. Without it the cron gets a 401 every ten
+   minutes, which is harmless. Nothing sends until `COMMS_DISPATCH=on`.
+4. A review approval on PR #37, then merge.
+
+## Four tasks from Sunil's call, 25 September — `feat/plain-green-v5-pages-branded-pdfs`
+
+One branch, one draft PR, at least one commit per task. The brief was meant to be
+`docs/site-tasks-2026-09-25.md`, but that file was never written, and the decision on
+26 September was to go on without it. The task names come from the PR title.
+
+- [x] **1. Plain green on every page except `/`.** One rule in `src/styles/ds/theme.css`,
+  `body:not(.landing)`, points `--texture-forest`, `--texture-forest-hover`,
+  `--texture-footer` and `--footer-bg` at flat forest. `/` keeps the linen. A before/after
+  diff of every element's computed background on `/` matched at 1440px and 390px. `/craft`
+  and `/craft/admin` are included; narrowing the selector puts them back. Two things that
+  will cost an hour if forgotten:
+  - `--footer-bg` has to be restated in the override. A custom property is resolved where
+    it is declared, so `body` inherits the linen that `:root` already resolved.
+  - The signed-in `/craft` pages return 503 in local dev without Supabase, even with
+    `CRAFT_DEV_BYPASS=1`. They were checked by resolving the tokens under `CraftLayout` on
+    `/craft/login`, not by rendering the dashboard.
+  - **Open with Sunil:** the triage quiz's case file (resource 07) was given the linen on
+    26 September because he asked for the cohort page's surfaces there. This rule turns it
+    flat like every other inner page. The ivory weave behind its hero is untouched: it is
+    not green, and he named the green one. If he wants the case file woven again, that is
+    a one-page exception he has to ask for.
+- [x] **2. V5 look on the inner pages** (three commits, 26 September). Sunil: "all the tool
+  pages and internal sites have to be redesigned to match the actual site". The shared part of
+  V5 moved out of landing.css and landing-v5.css into `src/styles/ds/site-v5.css`; `/` imports
+  it through landing.css and still resolves every rule the same way. Inner pages opt in with
+  two body classes (`lc-v5` for the chrome, `lc-v5-read` for reading type) and draw
+  `SiteHeader.astro`. CLAUDE.md, *V5 on the inner pages*, has the rules.
+  - [x] Step 1, the nine tools on ResourcesLayout. Tools take `lc-v5` only: V5's header,
+    ground, width and footer, and they keep tool.css's working heading and workspace.
+  - [x] Step 2, PracticeLayout: the hubs, worksheets, guides, templates, about, advisory,
+    contact, programmes, toolkit and email preferences (`lc-v5 lc-v5-read`), and
+    `/tools/agent-design-check` (`lc-v5` only). SiteNav.astro is gone; SiteFooter now draws
+    `/`'s footer. The practice header is sticky now, as `/`'s is. `/about` had a page-scoped
+    rule painting its hero's `<strong>` in ivory for the old forest hero; it is ink now.
+  - [x] Step 3, `/caio`, `/assessment`, `/latest`, `/privacy`, `/terms`. Their anchor links
+    moved to the "On this page" row and their cross-links ("AI Readiness", "Fractional CAIO")
+    to the left of it. Policy pages have no action button, as before, and still no analytics.
+    Long actions ("Request a scope call") wrap to two lines on phones instead of running under
+    the lockup, which `/`'s short "Apply" never had to handle.
+  - Out of scope, said in the PR: `/craft`, `/craft/admin` and `/book/[id]`.
+  - Checked on all 31 pages at 1440 and 390px: status 200, no sideways scroll, and Google Tag
+    Manager on exactly the pages that had it before. A contrast sweep found two page-scoped
+    rules written for the old forest hero (`/about`, `/latest`), both fixed. It also found
+    `--text-faint` (#C6D4C8, 1.45:1) used as text on paper in three tool pages this work did
+    not touch: agent-memory-audit-kit, agent-failure-triage-kit, agent-design-check. Not fixed
+    here; it predates this branch.
+  - Things that cost time and will again:
+    - **`/` is checked element by element**, not by eye: a before/after dump of every element's
+      box and 27 computed properties at 1440, 1024 and 390px. It must show zero differences.
+      One exception is expected: after the split, 79,000 pixels at 1440px changed by 1/255 in
+      colour under the hero's wash. No computed style changed, and restoring the weave literal
+      did not remove it, so it is rasterisation, not layout.
+    - **A JSX comment between `</head>` and `<body>` switches V5 off.** Astro opens an implicit
+      `<body>` and the class on the real one is lost. Comments go in the frontmatter.
+    - **BaseLayout is not on SiteHeader.** It had uncommitted edits to the same header on
+      26 September; the styles are shared, the markup is not yet.
+- [x] **3. Branded PDFs** (28 September). Sunil: the PDFs should carry "the texture plus the
+  branding", "that ivory texture", "not the green textile one".
+  - **The brand lives once, in `src/lib/resources/pdf-writer.ts`.** Until now only the
+    authority review used that file; the other three renderers each carried a private copy of
+    `Writer`, `clean()`, the colours and a sun-dot wordmark. All four import it now.
+  - Cover: the ivory weave edge to edge, the lockup, a Source Serif 4 title, then a paper sheet
+    for the text. Later pages: paper with a 40pt weave band, a gold rule and a small lockup.
+    `WEAVE_EVERY_PAGE` in pdf-writer.ts puts the full weave on every page if Sunil wants it.
+  - Figtree and Source Serif 4 are embedded and subset (`@pdf-lib/fontkit`); `clean()` and
+    each renderer's "every character can be printed" check test against the embedded fonts.
+    ₹, → and the true minus now print as themselves.
+  - `pdf-assets/` holds the fonts, their OFL licences and the PNGs from
+    `npm run build:pdf-assets` (sharp, devDependency). Bundled by `includeFiles`, like
+    `downloads/`. See `pdf-assets/README.md`.
+  - The memory kit PDF is printed from its page with the same brand, and `build:kit` now runs
+    on Windows (see `downloads/README.md`).
+  - Sizes: poc-screen 12.8 → 116.6 KB, model-selection 16.7 → 122.7 KB, authority review
+    10.5 → 114.2 KB, run-cost 21.8 → 128.8 KB (most of it the two fonts and the lockup),
+    memory kit 517 → 663 KB.
+  - Known limit, not fixed: a name typed in an Indian script (or any script Figtree lacks)
+    cannot print and is dropped from the cover line; "सुनील 🙂 Zoë" prints "Zoë". A fix is a
+    fallback font such as Noto Sans Devanagari.
+  - The browser's own print buttons (`data-gate="print"`) are out of scope.
+- [x] **4. Tool downloads** (28 September). Sunil: "What needs to be downloaded is not the
+  filled-up report, but rather the tool itself that they can use."
+  - The primary download on poc-screen, model-selection-tool and agent-authority-review is a
+    blank Excel workbook, in the hero and in the result. The scored PDF stays as the second
+    button, labelled as the reader's own copy. Removing it is Sunil's call, not ours.
+  - `npm run tool-downloads` builds three workbooks and two Markdown sheets into
+    `downloads/`: a tsx script dumps the data modules as JSON, a Python writer
+    (`openpyxl`, `Pillow`) draws the sheets. Commit the output.
+  - `src/lib/resources/tool-workbooks.test.ts` reads each committed workbook with a small
+    formula evaluator (`xlsx-eval.ts`) and compares it with `readScores`, `readAssessment`
+    and `readSheet`: band edges, hard gates, blanks, the example sheets and 1,300 random sets.
+    Excel itself gave the same answers through COM on 28 September.
+  - The rule placement audit hands over a blank worksheet and the design check the question
+    list, both as Markdown. Their CSV and text exports are still `local()` and post nothing
+    typed.
+  - The Rework Cost Check (resource 08, merged from `main` into this branch) served its
+    workbook from `public/downloads/`, outside the gate. It is in `downloads/` now, behind
+    the gate, with its own held email.
+  - Six delivery emails changed or were added, at `RESOURCE_TOOLS_REVISION` (the addendum's
+    version plus `+tools-2026-09-28`). None is approved.
+  - Things that cost time: `python3` on Windows is the Store stub, so the build script
+    probes for a Python that imports openpyxl; the probe must run with no shell, because
+    cmd.exe mangles `-c`. Excel COM from PowerShell refuses an Int32 passed through a
+    function; cast to `[double]`.
+  - **Five open points, decided the same day** (the user asked for the best decision on each):
+    - *Scored PDF:* kept as the second button. It costs nothing and a reader may want it.
+    - *The six emails:* left unapproved. Approval is a named act by a person in the console,
+      and there is no sending provider yet (D2). Nothing about this work changes that.
+    - *"Scored against rules" in the design check email:* now "checked against rules ... It
+      gives no score". Same revision string: no row at that revision was ever stored.
+    - *Run-cost workbook on the old brand:* rebuilt on the site's brand. The brand for all four
+      tool workbooks now lives once, in `scripts/workbook_brand.py`. Every figure in its
+      reference example is unchanged (checked cell by cell in Excel). It also now prints one
+      page wide (27 pages became 11), and the blank sheet's break-even row no longer shows
+      `#DIV/0!`.
+    - *Fonts:* kept as Figtree and Source Serif 4, after weighing Georgia and Arial. Google
+      Sheets renders both; Excel draws a substitute, and the layout was already checked in
+      Excel on a machine without them. The Rework Cost Check made the same choice.
+  - **A bug found on the way, fixed:** the Python writers read their JSON with Windows'
+    default encoding, so ₹, → and curly quotes in the POC and model selection workbooks
+    (pushed in 9d4b9b9) were mojibake. Both now decode UTF-8, and a test fails on mojibake
+    in any of the four tool workbooks.
+  - **The gate's wording, fixed in task 7:** it said "Your copy" and "What you typed into the
+    tool goes into the file" for every file, including the blank workbooks. See task 7.
+- [x] **5. Closing cohort CTA on every tool and resource page** (29 September). Sunil, call
+  of 28 September: "At the bottom of each of the tools or any of the resources that we give,
+  there should be a CTA that takes them to, you know, join or explore."
+  - **One component, `src/components/site/ClosingCta.astro`.** "Explore the cohort" to `/`
+    (primary), "Apply" to `/#apply`, a `download` slot for the page's own gated button, a
+    `links` slot for quiet links, then "All resources". One optional line about the cohort,
+    whose one figure (the week count) comes from `facts.ts`. Hidden in print. The row had
+    been written by hand on each page, in three different wordings.
+  - On 22 pages: the eleven tools and kits under `/resources`, `/tools/agent-design-check`,
+    the three worksheets, the four templates and the four guides (the last two through their
+    one dynamic route each). Out of scope: `/`, `/caio`, `/assessment`, `/latest`, `/craft`,
+    and the index pages `/resources` and `/tools`.
+  - The worksheets and templates carried "two links onward, no pitch". Sunil's request
+    reverses that; each comment says so with the date. Their onward text is unchanged.
+  - **Measured.** Both links carry `data-cta` (`cohort` or `form`) and
+    `data-cta-placement="resource-close"`. `Track.astro` sends `cta_click` for any
+    `[data-cta]` before its older rules. Until now a link to `/` sent nothing. The Apply
+    link keeps `data-apply`, which the memory kit and the cost-ceiling workbook already
+    listen for.
+  - **`/api/track` now accepts `/tools/` as well as `/resources/`.** Without it, every event
+    from the design check, its page views included, was dropped with a 204. That page
+    already told readers their page view was counted. `/craft` still cannot match.
+  - The cost-ceiling workbook still has no file, and its closing row says so instead of
+    showing a button, as its hero does. `COHORT_CTA` and `APPLY_URL` in its data module
+    were dead once the row moved and are gone.
+  - Checked on `npm run dev` at 1440 and 390px on all 22 pages: the row renders once, no
+    sideways scroll, every download in it opens the gate, "Explore the cohort" lands on `/`
+    and Apply on `/#apply` with the form in view, and each click sends one `cta_click` with
+    the page's path, `to` and `placement`. Hidden in print. Google Tag Manager loads on the
+    same 12 of the 22 pages as on production. Playwright cannot read a `sendBeacon` body, so
+    the test wraps `Blob` to read it; an async read lost events to the navigation and looked
+    like a bug for one run.
+- [x] **6. Outreach readiness: the website items in Alchemy's Ein handoff** (29 September).
+  Source: `docs/2026-09-28_Outreach_Readiness-20260929T045849Z-1-001/` in the main checkout,
+  `04-website-Ein-handoff.html` and `website-cta-audit.csv`. **Not committed**: it is 67 MB,
+  mostly video, and it is Alchemy's package, not ours.
+  - *Item 1, the chat label.* "Ask about the cohort" on `/` and the resource pages; `/caio`,
+    `/assessment` and `/latest` keep "Ask about the practice". The launcher's accessible name
+    and the panel's first line now say it is an automated assistant, not Sunil.
+    The human enquiry form on `/` had the same label; it is "Write to Sunil about the
+    cohort" since task 7.
+  - *Item 2, contextual CTAs.* `CohortIntroLink.astro`, one text line under each of the 22
+    pages' introductions, counted as `resource-intro`. The closing row's line is now the
+    handoff's own per-page wording plus one sentence built from facts.ts
+    (`src/data/resource-cohort-copy.ts`). Print shows that line with the full application
+    address in place of the buttons.
+  - *Item 3, the nine broken `#how` links.* ResourcesLayout linked every page's footer to
+    `#how`, which only the cost-ceiling workbook had. It takes `howTo` now; each page names
+    its real section; the memory kit has none and gets no link. The three stepped tools show
+    their Start step before following the link.
+  - *Generated files* ("contextual cohort copy plus a working application URL"): the
+    authority review PDF gained the cohort panel the other three already had; the template
+    Markdown (both variants), the two blank sheets, the three tool workbooks, the rework
+    workbook and the design check's text summary end with the invitation and the address.
+    The memory kit PDF and ZIP were rebuilt from the page, so they carry the print line.
+    Worksheet CSVs do not: a CSV row is not a place for a sentence.
+  - `cohort.liveHours = 30` joined facts.ts; `/` read "30" as typed text in three places and
+    now reads the field. Since task 7 the FAQ answer in `cohort-copy.ts` reads it too.
+  - `tools/rework-cost-check/build_xlsx.py` now runs its dump with `tsx`, because the dump
+    reads the invitation module. Every value in the workbook was diffed in Excel before and
+    after: only the three new cover cells changed.
+  - **Not done, and not ours to do:** items 4 and 5 (the D03 and D07 caption promises, and the
+    offer facts with Sunil and finance), the email nurture modules (no approved consent
+    wording, and no provider), every provider, persistence and delivery test in the handoff's
+    test table, and the video and D08 to D12 work.
+  - The date switch and the chat pill's overlap were settled in task 7.
+- [x] **7. The remaining open items** (29 September). The user asked for them fixed.
+  - **The gate says whose file it is.** A button that hands over the reader's own answers
+    carries `data-own` (the four scored PDFs, the audit's CSV and print, the authority
+    review's print, the design check's summary and print). Its dialog says "Your copy" and
+    "What you typed into the tool goes into the file and is not stored". Every other file
+    says "Download" and "This file is the same for everyone. Nothing you typed goes into
+    it." The sentence about sending the resource once is unchanged on both.
+  - **One label, one job, on `/`.** The chat keeps "Ask about the cohort"; the human form is
+    "Write to Sunil about the cohort".
+  - **The chat pill moves out of the way.** It keeps Sunil's corner. While a link, button,
+    field or label sits under that corner it slides down out of view, and it comes back when
+    the reader scrolls on or tabs to it. Checked while scrolling seven pages at 390 and
+    1440px: while it shows, it covers no control.
+  - **The closing date.** `cohort.applicationsCloseOn` is in facts.ts and is `null`, because
+    nobody has decided it. Set it to an ISO date and, from the end of that day in India,
+    every page served uses the handoff's evergreen line instead of the October one. Files
+    built ahead of time (workbooks, blank sheets, the kit PDF) must be rebuilt then.
+  - **30 live hours** is one number, in `src/data/cohort-hours.ts`, read by facts.ts and by
+    `cohort-copy.ts` (which cannot import facts.ts). The literal email bodies in
+    `lib/comms/templates.ts` still say 30: they are frozen by design and hashed on approval.
+  - **Older leftovers:** the `--text-faint` text on paper on the memory kit, the triage kit and
+    the design check is now `--text-quiet`; the design check's breadcrumb sits inside the
+    page width; the closing section on tool pages is left-aligned (`tool.css`), so the
+    heading no longer centres above a left-aligned button row; the run-cost model prints a
+    currency symbol against the number ("₹52.78") and keeps the space after a code ("INR
+    52.78").
+  - **A name that cannot print whole is left off a PDF.** "सुनील 🙂 Zoë" used to print as
+    "Scored by Zoë". `byLine()` in pdf-writer.ts now drops the line instead. A real fix for
+    Indian scripts is not possible with pdf-lib: it does no text shaping, so even an embedded
+    Devanagari font would draw conjuncts and vowel signs in the wrong places.
+- [x] **8. The privacy page** (29 September). The user asked for `/privacy` to cover this
+  branch's changes and five tags: Google Analytics, Microsoft Clarity, Meta CAPI, the
+  LinkedIn pixel and the Apollo pixel. The same day the owner replaced Meta CAPI with the
+  Meta Pixel; the page describes the pixel only.
+  - The old page said "no third-party trackers", "no analytics cookies" and "no conversion
+    pixels". The live site already loaded Google Analytics and Clarity through GTM, so it
+    was false before this work started.
+  - What production loads was recorded on 29 September with Playwright on seven pages:
+    Google Analytics 4 (`G-S2XJ61GXDD`) and Microsoft Clarity (`yin1xnh55d`) on every page
+    with the container, with the cookies `_ga`, `_ga_S2XJ61GXDD`, `_clck`, `_clsk` and
+    Microsoft's own. **No Meta, LinkedIn or Apollo request was seen.** The page describes
+    them because the owner asked; whoever adds them in GTM must make them match it.
+  - **No Meta Conversions API.** The owner chose the Meta Pixel instead on 29 September.
+    The page now promises that nothing goes to Meta from this site's servers and that no
+    name or email reaches Meta. Adding the Conversions API later means changing that page
+    first, and it would sit outside the consent banner's reach.
+  - The page now also covers the download gate, the attribution kept with a submission,
+    the first-party record on `/resources/` and `/tools/`, the automated assistant, the
+    cohort call, the audit's local storage, the team that reads the console, transfers
+    outside India, and the right to complain to the Data Protection Board.
+  - **The Agent Design Check no longer loads the container** (`tagManager={false}` on
+    `PracticeLayout`). It promises that nothing typed is sent anywhere, and Clarity records
+    clicks.
+  - The consent banner the page asked for was built in task 9.
+- [x] **9. The cookie consent banner** (29 September). The user asked for it after task 8.
+  - **Google Tag Manager now loads only after a yes to analytics.** The banner
+    (`src/lib/consent/`, `src/components/ConsentBanner.astro`) is the container's only
+    loader; `GoogleTagManager.astro` renders it, so no layout changed. The `<noscript>`
+    iframe is gone: a browser without JavaScript cannot be asked.
+  - Accept all, Reject all and Choose, with Accept and Reject the same size and colour.
+    Choose shows two boxes: analytics (Google Analytics, Clarity) and advertising (Meta,
+    LinkedIn, Apollo.io). Advertising rides inside the same container, so on its own it
+    loads nothing; the banner says so.
+  - The answer is one cookie, `lc_consent` (`v1.a1.m0.2026-09-29`), 180 days. A stale
+    version counts as no answer. "Cookie choices" is added beside the footer's Privacy link
+    on every page with the container, and /privacy has a button. Turning a category off
+    deletes the tags' cookies on this domain and reloads the page.
+  - A corner card, not a bar, so it does not cover the cohort page's Apply buttons on a
+    laptop. On a phone it covers the hero buttons until a choice is made; the header's
+    Apply stays visible.
+  - Checked on `npm run dev` with every third-party request aborted: first visit, reject,
+    accept, analytics only, advertising only, withdraw from the footer (tag cookies deleted,
+    an unrelated cookie kept), Escape, tag-free pages, /privacy, JavaScript off and a stale
+    version. 35 checks, 0 failures.
+  - **For whoever works in the GTM console:** every advertising tag must require
+    `ad_storage`, and Clarity should require `analytics_storage`. Until that is done,
+    somebody who allows analytics but not advertising would still get an advertising tag,
+    if one is added. There are none in the container today.
+  - Not built: a server-side record of each consent. The Act puts the burden of proving
+    consent on the fiduciary; today the only record is the visitor's own cookie.
+- [x] **10. Plain green on `/` as well** (29 September). Commit `604f012` put an ivory-cloth
+  photograph Sunil supplied where `/` drew the green linen (the price panel, the footer and
+  the chat's small marks). The user then asked for those surfaces to be plain green. The
+  cloth is reverted and the plain-green rule in `theme.css` now covers `/` too, so no page
+  draws the linen. The "Cookie choices" footer fix from that commit stays.
+- [x] **11. The revised outreach handoff** (29 September). Source:
+  `docs/2026-09-28_Outreach_Readiness-20260929T094812Z-1-001/` in the main checkout,
+  `04-website-Ein-handoff.html`, `public-copy/website/*.md`, `website-cta-audit.csv` and
+  `05-email-and-resource-routing.html`. **Not committed**, like the first package.
+  - *Page copy.* The package's heading, lead and button on `/`, `/programmes`,
+    `/programmes/enterprise`, `/resources`, `/tools`, `/resources/guides`,
+    `/resources/templates`, `/about`, `/advisory`, the application section on `/` and the
+    application's saved panel. Figures come from facts.ts (`practitioner.yearsExperience = 26`
+    is new). Where the package's label would be wrong it was kept as it was, and the page
+    says why in a comment: `/programmes` compares three routes, so it is not labelled "The
+    Living Craft cohort", and the apply section holds the team route too.
+  - **One tension, flagged not resolved.** The home button is now "Explore the October
+    cohort" (the package's words), where CLAUDE.md says the cohort CTA is Apply. The header,
+    the price card and the form still say Apply. Sunil's call.
+  - *After the useful result.* `ResultCohortNote.astro` under the result of the nine tools
+    and the design check, shown only once the result is complete. It is the package's
+    sentence with a topic for memory, cost, authority and triage (`usefulResultFor()`). On
+    the kits, guides, templates and worksheets the page IS the result, so the closing row's
+    line is that sentence with the facts (`<ClosingCta result>`), not a second line.
+  - *The question.* "How did you first hear about The Living Craft?" is a choice with the
+    package's seven answers plus an optional line, on all three routes. Stored as
+    `attributions.self_reported` (a code) and `self_reported_detail`, apart from the tags.
+  - *Attribution through the form.* With an analytics yes, the browser writes `lc_first`
+    and `lc_last` on the page where a visitor arrives, and the server reads them with the
+    form. Without it, nothing changes. Unit tests in `src/lib/pipeline/attribution.test.ts`.
+    **The banner now asks on the tool pages too** (`<ConsentBanner ask />`), and a yes still
+    loads no tag there: an arrival on a tool could not be remembered otherwise.
+  - *Events.* The seven names, a unique `event_id`, and `env` and the banner answer added
+    by the server. The console funnel reads them. Two leftovers found and fixed on the way:
+    `form_error` and `owner_notified` were sent by the form and dropped by `/api/track`
+    since 10 September, and the funnel's "Submitted it" read `apply_submit`, which the
+    cohort form never sends.
+  - *Footer.* The package's programme summary and two routes, in the three core footers.
+  - *Found and made true:* the tools hub, the templates hub and the Rework Cost Check still
+    said nothing asked for an address. Every download has asked since 19 September.
+  - **Schema:** three columns on `attributions`, two on `resource_requests`, one unique
+    index on `events`. Additive. The code works before it is run: the old save function
+    ignores the new keys, and the console reads attribution with `select('*')`.
+  - Checked on `npm run dev`, every third-party request aborted: 64 browser checks, 0
+    failures (copy at 1440 and 390px, the footers, the banner and both cookies on a tool,
+    the posted form with a fake server, a 503 with no thank-you, the POC tool's events and
+    line, the quiz, the gate's delivery event, the design check). The earlier consent run
+    now fails its two "no banner on a tool page" checks, which is this change. `astro
+    check` 0 errors, `npm test` 105/105, `npm run build` passes.
+  - **Not done, and why.** The nurture workflow, the preference and unsubscribe pages, the
+    marketing tick on the download gate and the new email copy: the package defers them
+    (SYNC-12) and the wording is a draft for Sunil. The application receipt email keeps its
+    approved 10 September words, which already promise no offer. `/caio`, `/assessment`,
+    `/latest` and `/contact` rows: outside the core journeys. The package's page layout
+    (the three-step diagram beside every hero, 18–20px body) was not adopted: V5 is Sunil's
+    source of truth for the look, and the package's own design rules (ivory hero, solid
+    green footer, no fabric behind copy) already hold. Cohort links on the reading pages
+    that `/api/track` does not cover (`/about`, `/programmes`, the hubs) reach Google
+    Analytics with consent, and the first-party log only on `/`, `/resources/*` and
+    `/tools/*`, as the privacy page says.
+
+- [x] **12. UI/UX pass over every public page** (29 September). The user asked for a
+  thorough desktop, tablet and phone review with fixes. 41 pages were captured at 1440,
+  1024, 768 and 390px (1,248 slices, 30 interactive states) and measured at six widths
+  (overflow, targets, contrast, text size, line length, headings, focus). A parallel
+  review workflow failed on a session limit, so the review was done directly.
+  - Fixed: a branded 404 page (`src/pages/404.astro`; production showed Astro's dark
+    default); the design check's questions sat half outside their cards (a fieldset
+    draws its first legend on its edge); contents lists and bullets on /privacy and
+    /terms; 44px touch targets on the tools for touch screens only (`tool.css`,
+    `pointer: coarse`); full-width rule and step names on phones in the rule audit and
+    the authority review; less nested padding in the POC and model selection tools on
+    phones; 11px labels raised to 12px; the longest lines shortened (/latest, the
+    authority review, the rework check, the templates); the hub's question rows stacked
+    below 900px; no orphaned separator dots in the worksheet and template link lists; a
+    "swipe sideways" note over the memory kit's wide tables; the chat pill moves away
+    from a form's error line.
+  - Checked by an element-by-element dump of all 41 pages at four widths, before and
+    after: `/` did not change.
+  - Left alone on purpose: `/`'s hero buttons and footer on a phone (the V5 package's
+    choice); `--measure-prose` (65ch gives about 90 characters a line in Figtree, which
+    is long but site-wide).
+
+- [x] **13. Internal wording removed from the public pages** (29 September). The owner:
+  "internal wordings. These should not be anywhere on the website". A text scan of every
+  page (all 39 in the sitemap, plus the 404 page) found and removed:
+  - "Written 11 September 2026. Pending Sunil's factual approval" and its variants on
+    /about, /programmes, /programmes/enterprise, /advisory, /contact,
+    /communication-preferences and /tools.
+  - The "Facts this page is waiting on" asides, with owner notes such as "Sunil to
+    approve", "The owner to decide" and "Sunil and Alchemy", on the same pages.
+  - "Reviewed by: Not yet reviewed" on the four guides, four templates, three worksheets
+    and /toolkit. A reviewer appears again once `reviewedBy` is set.
+  - Planning notes ("further clusters are planned", "nothing is listed here before it is
+    written", "briefs at this stage") on /resources, the guides and templates indexes and
+    /toolkit, and /tools' whole "Not published" section about an unbuilt second tool.
+  - "None has been agreed", "under discussion" and "pending a verified sending domain"
+    sentences on /advisory, /contact, /programmes/enterprise and /privacy.
+  - **Rule from now on:** approval status, owner to-dos and plans go in code comments or
+    in this file, never in rendered copy.
+
+- [x] **14. One shared footer on every public page** (29 September). The footer review
+  of 29 September: "one shared footer on every page. Same labels, order and
+  destinations." Seven layouts drew seven footers; now every public layout renders
+  `SiteFooter.astro`. Three columns, from the review's table: Learning (cohort overview,
+  Apply, Learning for teams), Explore (Resources, Try the tools, Field notes), About &
+  contact (About Sunil, Advisory, the address, LinkedIn). One sentence under the mark:
+  "Practical learning in agentic systems and architecture." One bottom strip:
+  © · Privacy · Terms · Email preferences, plus the consent script's "Cookie choices".
+  - **The white tile is gone, and the name is text.** The lockup's lettering is dark ink
+    and cannot sit on forest; recolouring the artwork is forbidden. The footer shows the
+    mark on its own small paper (Logo.astro) beside "The Living Craft" in ivory serif.
+    Every header still draws the full lockup.
+  - **The band was already solid green** (25 September); nothing changed there.
+  - **Task 12's footer summary (FooterSummary.astro) is superseded and deleted.** The
+    Apply link keeps `data-cta-placement="footer"`, so the handoff's footer CTA event
+    still fires.
+  - Tablet: the brand block across the top and the three columns under it. Phone: one
+    column, links padded to 38px targets, the strip as a list. The footer keeps 100px
+    clear at the bottom on a page with the floating chat pill.
+  - Not touched: `/craft`, the console and `/book/[id]`, which are gated or private.
+- [x] **17. Resource follow-ups: the drip, built on stage 4** (30 September). The brief:
+  capture name, email, role, resource, consent and source; send the resource at once; from
+  day 2 recommend other resources, never the one asked for or one already sent; stop on
+  exhaustion, unsubscribe, withdrawn consent, bounce or complaint. What landed:
+  - **The gate** has an unticked marketing box (the `mkt-2026-09-10` wording, reused; Sunil
+    to confirm it on this surface). Ticked, it writes a `consents` row (source
+    `resource-gate`) and opens a `comms_sequences` row with route `resource`. Unticked, only
+    the resource goes. `people.role_code` holds the stable role code beside the label.
+  - **The planner** (`src/lib/comms/drip.ts`, pure) runs one step ahead of the existing
+    sweep: it leases a due sequence, picks the next resource from the catalogue
+    (`src/data/resource-routing.ts`, the package's matrix as data), queues one message under
+    `drip:<sequence>:<step>`, records it in `comms_drip_sends`, and sets the next slot.
+    The sweep then sends it through every existing gate. Two workers at once cannot
+    double-send: the lease and the idempotency key are both in the database.
+  - **The worker** is `GET|POST /api/comms/worker` with a bearer secret. `vercel.json`
+    cron (production only, every ten minutes); `.github/workflows/comms-worker.yml` for the
+    staging preview (needs `COMMS_WORKER_URL` and `COMMS_WORKER_SECRET` as repo secrets).
+  - **The provider seam is filled**: `src/lib/comms/providers/resend.ts` behind
+    `COMMS_PROVIDER=resend`, with `Idempotency-Key` and RFC 8058 headers. The webhook is
+    `/api/comms/webhook/resend`, signature-verified, de-duplicated, one-way tolerant; a hard
+    bounce or complaint suppresses for everything and stops the sequence.
+  - **Retries now happen.** Until today a failed message got `next_attempt_at` and could
+    never return to the queue. The schema's one-way rule has a second door
+    (`sending → queued` with a back-off and a reason), bounded at five attempts.
+  - **The email as sent** is the approved text plus the footer appended at dispatch
+    (`html.ts`): identity, contact, postal address, preferences link, signed unsubscribe.
+    No link, no send. The HTML part is a rendering of the same words.
+  - **Console**: a *Resource follow-ups* section on `/craft/admin/comms`: every sequence
+    with the person, role, resource, sends, next send, state in the brief's words, failures;
+    the 23 wordings with approve/revoke; "Run the follow-ups".
+  - **Tests**: 34 new, `npm test` 146 pass. Selection, DST, planner with the memory store,
+    concurrency, retry plan, provider outcomes, webhook signature, tokens, rendering.
+  - **Not decided by us, all placeholders** (`.env.example`, `src/lib/comms/README.md`):
+    the provider (D2), from-address, sending domain, reply mailbox, postal address, the
+    interval after day 2 (`COMMS_DRIP_INTERVAL_DAYS`, default 3), the role affinities per
+    module (proposed in data), the 18 module bodies assembled from the register (unapproved),
+    double opt-in (not built), open tracking (off), the unsubscribe confirmation email (off).
+  - **Schema, run before deploying:** `people.role_code`, a new `resource_request_submit()`
+    signature (the eleven-argument one is dropped), four columns on `comms_sequences`,
+    `comms_drip_sends`, three `comms_events` types, the retry door.
+- [x] **16. A role question on every form that asks for a name and an email** (29
+  September). Sunil: "Wherever currently name and email are being asked for, ask for role
+  there also", with ten options and a way to type one. One list
+  (`src/data/audience-roles.ts`), one component (`src/components/RoleField.astro`): a
+  select, and a text box that opens on "Other". The typed words are copied into the select
+  as a hidden option, so every form posts one `role` value however it reads its fields.
+  Where it is asked: the application, enquiry and enterprise routes (the `role` field is
+  now a `choice` with `freeText`), the download gate (a third field, required; this
+  reverses the "two fields and no more" note in `resources.ts`), the CAIO and assessment
+  enquiry forms, and the booking widget. Not the chat handoff: the agent asks in
+  conversation, not with a form.
+  - **Schema, run before deploying:** `resource_request_submit()` gained `p_role`. A new
+    parameter is a new signature, so `schema.sql` drops the ten-argument function first.
+    The `resource_requests_marketing` view gained `role` as its last column, and the
+    requests page and the CSV export read it.
+  - Also fixed on the way: `/tools` had no space between its last section and the
+    footer. Its sections had no vertical padding at all; the "Written …" line removed in
+    task 13 had been the only thing holding the footer off.
+  - **How it landed (30 September).** The change was found in the worktree, uncommitted,
+    written the evening before and not by the session that committed it. It was read line by
+    line, driven in a browser (the gate on a worksheet at 1440 and 390, the application
+    form, the CAIO form, the booking widget's who step) and committed with two additions:
+    the booking widget's who step now checks the role beside the name and the email (the
+    form is `novalidate`, so the select's `required` alone let an empty role post), and
+    every public sentence that said a download asks for "a name and an email address" now
+    says "a name, a role and an email address": `/privacy`, `/resources`, `/toolkit`,
+    `/tools`, the design check, the templates index, five resource pages and the format
+    lines in `src/data/resources.ts`.
+- [x] **15. The "Pause motion" control is gone** (29 September). Sunil: "let the motion
+  always be there. Remove pause motion option." The button, its script branch and its
+  styles are removed. The OS reduced-motion setting still stops the brain and the
+  drawings, because that is a system accessibility setting, not a site control. Known
+  cost: WCAG 2.2.2 asks for an on-page pause for a loop longer than five seconds, and
+  the page no longer has one.
 
 ---
 
@@ -1003,6 +1485,7 @@ Four things a later session would otherwise rediscover:
   keeps the dark linen off a tool's hero, so the band went on the case file instead, with
   the ivory weave behind the hero. One dark surface per view still holds. Sunil asked for
   the cohort page's two surfaces here.
+  Since the plain-green task (above), the band is flat forest, like every page but `/`.
 - **The missed-takeaway list is rendered server-side and hidden**, not built in JavaScript.
   Astro's scoped styles do not reach elements a script creates, so a script-built list
   silently loses its own CSS. That was the first version.

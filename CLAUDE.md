@@ -248,15 +248,21 @@ Do not inline either one here.
       are not. A founding-rate scarcity line reached "Live experience" that way once and
       was cut on 16 September 2026.
     - `/india|/dubai|/australia` remain compatibility redirects only.
-  - **The look is the V5 illustrated package of 19 September, and it is `/` only.**
+  - **The look is the V5 illustrated package of 19 September. Its chrome is shared; its cohort
+    sections are `/` only.** Since 25 September the parts that are not about the cohort live in
+    [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css): the header and "On this page" row, the
+    phone menu, the 1200px container, the ivory ground and weave, the reading type, the buttons and
+    the footer. `/` reads that file too, so there is one copy. See *V5 on the inner pages* below.
     [src/styles/landing.css](src/styles/landing.css) (the refinement base) and
     [src/styles/landing-v5.css](src/styles/landing-v5.css) (the V4 and V5 layers, loaded after it)
-    are imported by `BaseLayout` alone and scoped under `body.landing`. Seven `.chapter` wrappers,
+    keep the cohort's own sections. They are imported by `BaseLayout` alone and scoped under
+    `body.landing`; landing.css imports site-v5.css on its first line. Seven `.chapter` wrappers,
     **no printed section numbers**, and no divider ornament between sections (the knot
     divider was removed on 19 September). The hero is ivory with the line-drawn brain ([WovenBrain.astro](src/components/cohort/WovenBrain.astro), the
     package's `brain-lines.svg`), which **loops**; eleven drawings come from
-    [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **One footer
-    "Pause motion" control** stops both, for this page view only; nothing is stored. Chat is the
+    [ConceptFigure.astro](src/components/cohort/ConceptFigure.astro) and trace once. **There is no
+    on-page pause** (Sunil, 29 September 2026: "let the motion always be there"); only the OS
+    reduced-motion setting stops them. Nothing is stored. Chat is the
     floating launcher, bottom right. The header carries the site's sections, Apply (never the
     package's "Enquire") and an "On this page" row; the menu takes over below 1080px. **The V5 package is the
     source of truth for this page's look.** Re-check against it with a side-by-side render.
@@ -574,6 +580,11 @@ implicit transaction, rolled back all 3,235 lines and applied nothing. Both writ
 functions now drop every overload of their own name by `oid::regprocedure` immediately
 before the `create`. **If either function grows a parameter, keep the guard.**
 
+**This branch's schema is applied too.** Production ran the whole file again on 1 October
+2026, from PR #37's copy: `people.role_code`, the attribution columns,
+`events_event_id_uidx`, the `p_role_code` argument, `comms_drip_sends` and the comms
+changes all answer.
+
   Every page under `/craft` goes through
   [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro), **including sign-in and office hours**.
   Two props drop the rail and the agent dock, for two different reasons: `learner` is
@@ -783,7 +794,14 @@ did before it existed.
 
 ## The download gate — every file a resource page hands out
 **Decided 19 September 2026.** Every download option on every public tool and resource
-page asks for a name and an email address first, and every ask is one row in one table.
+page asks for a name, a role and an email address first, and every ask is one row in one
+table. (The role was added on 29 September 2026, Sunil: "wherever name and email are being
+asked for, ask for role there also". The list is [src/data/audience-roles.ts](src/data/audience-roles.ts),
+rendered by [src/components/RoleField.astro](src/components/RoleField.astro) on every form
+that asks for a name and an email: the three pipeline routes, this gate, the two consulting
+enquiry forms and the booking widget. "Other" opens a text box, and the typed words are what
+is stored. `resource_request_submit()` gained `p_role`, which is a new signature, so the
+schema drops the old function before creating the new one.)
 This reverses the V4 addendum's *"anonymous resource views/downloads are events, not
 people"*, on Sunil's instruction. It also reversed two tool-specific briefs (the Rule
 Placement Audit's "no capture", the Agent Design Check's "download without login"); both
@@ -818,12 +836,35 @@ bundled into the server function by `includeFiles` in `astro.config.mjs`, and
 workbook has never been produced; its page checks the file exists at render time and says
 so instead of offering a button (until 19 September it was a link to a 404).
 
-**Two tools hand nothing back on purpose.** The Agent Design Check's roadmap row says
+**Two tools never post what the reader typed.** The Agent Design Check's roadmap row says
 "processed in the browser" and the Rule Placement Audit promises "your entries stay in this
-browser". For both, the route's entry is `local()`: the gate records the name and the
-address, returns no file, and the page's `onDone` builds the file from its own state. What
-the reader typed on those two pages is never posted. Do not "simplify" this by posting the
-answers to build the file on the server.
+browser". For the export of the reader's own answers (the audit's `csv`, the check's `txt`),
+the route's entry is `local()`: the gate records the name and the address, returns no file,
+and the page's `onDone` builds the file from its own state. Do not "simplify" this by posting
+the answers to build the file on the server. Since 28 September each also has an `md` entry,
+a blank static sheet (the empty worksheet, the question list), which contains nothing the
+reader typed.
+
+**On a tool page the main download is the tool itself, blank and reusable** (Sunil,
+25 September 2026: "not the filled-up report, but rather the tool itself that they can
+use"). It is the primary button in the hero and in the result, as on the run-cost model.
+The poc-screen, the model selection tool and the authority review hand over an Excel
+workbook built by `npm run tool-downloads` from the same data module the page reads, with
+formulas that compute the total and the verdict. The scored PDF stays as the second button.
+`src/lib/resources/tool-workbooks.test.ts` evaluates each committed workbook against the
+page's own read function over every band edge, every hard gate and hundreds of random answer
+sets. **Change a question, an anchor, a weight or a threshold, then run
+`npm run tool-downloads` and commit the workbook**, or `npm test` fails. The four tool
+workbooks share one brand module, `scripts/workbook_brand.py`; a writer must not grow its
+own colours again. Both Python writers decode their JSON as UTF-8 on purpose: Windows'
+default turned ₹ into "â‚¹", and a test now fails on that. The Rework Cost
+Check's workbook moved from `public/downloads/` into `downloads/` the same day; it had been
+a plain URL outside the gate.
+
+**A control that hands over the reader's own answers carries `data-own`.** The gate then
+says "Your copy" and that what they typed goes into the file; without it, the gate says
+the file is the same for everyone. Put it on a scored PDF, a CSV of the reader's rows, or a
+print of a filled tool. Never on a blank workbook, a worksheet or a template.
 
 **`print` is a kind.** A print button asks first, the request is recorded, then
 `window.print()` opens. It cannot stop Ctrl+P, and it does not claim to; it stops the
@@ -839,6 +880,41 @@ capabilities the export checks. Erasing a person on `/craft/admin/leads` removes
 rows from the view in the same statement, because it is a join, not a copy. **Run
 `supabase/schema.sql` before deploying this**: the column, the function argument and the
 view are all in it, idempotent.
+
+**Every PDF the gate hands out carries the site's brand** (28 September 2026), from one
+place: `src/lib/resources/pdf-writer.ts` draws the four server-built PDFs, with an ivory weave
+cover, paper pages with a weave band, the lockup, and embedded Figtree and Source Serif 4.
+It reads its fonts and PNGs from `pdf-assets/` at the repo root, bundled by `includeFiles`
+like `downloads/` and never under `public/`. A renderer must not grow its own `Writer`,
+colours or `clean()` again: three of them did, and the brand drifted in four places. The
+memory kit is printed from its page by `npm run build:kit` with the same brand.
+
+**Every tool and resource page ends in the shared closing row**,
+[src/components/site/ClosingCta.astro](src/components/site/ClosingCta.astro) (Sunil,
+28 September 2026, for conversion). It holds "Explore the cohort" to `/`, "Apply" to
+`/#apply`, the page's own download in the `download` slot (still a `data-gate` button,
+never a file link), and "All resources". Do not write that row out on a page again: it
+had drifted into three wordings when each page owned it. Its links carry `data-cta`, which
+is how `Track.astro` counts a click on a link to `/`. Its line of copy, and the one-line
+`CohortIntroLink.astro` under each page's introduction, come from
+[src/data/resource-cohort-copy.ts](src/data/resource-cohort-copy.ts): the outreach
+readiness handoff's per-page wording, then one sentence built from facts.ts. Every file a
+reader keeps (PDFs, workbooks, Markdown sheets, the design check's summary) ends with the
+same invitation and the full application address.
+
+**The gate also carries an unticked marketing box (30 September 2026), and that box is
+what starts the resource follow-ups.** Ticked, the request writes a `consents` row and opens
+a `comms_sequences` row with route `resource`; from calendar day 2 a planner recommends one
+other resource per step, never the one asked for and never one already sent, until the
+catalogue is used up or the person stops it. The design is in the header of
+[src/lib/comms/drip.ts](src/lib/comms/drip.ts); the operator's note is
+[src/lib/comms/README.md](src/lib/comms/README.md); the catalogue is data in
+[src/data/resource-routing.ts](src/data/resource-routing.ts). Two things to hold: **the
+planner queues one message per due step and no more**, so a resource added tomorrow can be
+recommended without touching a row; and **nothing sends without a ticked box, an approved
+wording, a signed unsubscribe link and `COMMS_DISPATCH=on`**, the same gates as everything
+else in stage 4. The wording on the box is the application form's `mkt-2026-09-10`; its use
+on a download surface awaits Sunil's confirmation.
 
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,
@@ -1118,6 +1194,41 @@ prospect.
   tool, toast). Reach for these before writing page-scoped versions. **Never give them unprefixed
   names**: `.field`, `.tabs`, `.choice`, `.badge` are already page-scoped names on the resource pages.
   `/design-system` renders every component in every state (noindex, unlinked).
+- **V5 on the inner pages** (Sunil, 25 September 2026: "all the tool pages and internal sites
+  have to be redesigned to match the actual site"). Three pieces, and a page uses all three:
+  - [src/styles/ds/site-v5.css](src/styles/ds/site-v5.css), imported straight after `global.css`.
+    Its rules were cut out of landing.css and landing-v5.css, kept in their order, and given the
+    prefix `:is(.landing, .lc-v5)` or `:is(.landing, .lc-v5-read)`. An `:is()` list is as
+    specific as its most specific member, so `/` resolves every rule exactly as before.
+  - Two body classes. **`lc-v5`** takes the chrome: header, page row, menu, 1200px container,
+    ivory ground with the weave behind the opening, footer. **`lc-v5-read`** adds the reading
+    type, 18px body, 48px buttons and the 3px focus ring. **Tool pages take `lc-v5` only**:
+    the design system keeps "branded storytelling out of dense working areas", so a tool keeps
+    the working heading and 16px workspace of `templates/tool.css`.
+  - [src/components/site/SiteHeader.astro](src/components/site/SiteHeader.astro) draws `/`'s
+    header markup, so the same rules style it. In-page links go in `pageLinks` (the "On this
+    page" row); links to other pages go in `related`, at the left of that row. It replaced
+    `SiteNav.astro` and the headers written out in each layout.
+  - **`/` does not use SiteHeader yet.** BaseLayout had uncommitted work on 26 September that
+    changes the same header, so its markup was left alone: the styles exist once, the markup
+    twice. Move BaseLayout onto SiteHeader once that work lands.
+  - **Who is on it.** ResourcesLayout (the nine tools), PracticeLayout (hubs, worksheets,
+    guides, templates, about, advisory, contact, programmes, toolkit, email preferences, and
+    `/tools/agent-design-check` as a tool), CaioLayout, AssessmentLayout, NotesLayout and
+    PolicyLayout. **Not** `/craft`, `/craft/admin` or `/book/[id]`: the course area and the
+    console have their own stylesheets, and the booking page was not in the brief. Pulling one
+    in is a body class, an import and a `<SiteHeader>`.
+  - **What each layout keeps.** Its own words, footer columns and action label; ResourcesLayout
+    and PolicyLayout still load no Google Tag Manager, and PolicyLayout still no analytics of
+    any kind. GTM lives in the layouts that had it, never in SiteHeader.
+  - **Check `/` after touching site-v5.css**: compare every element's box and computed style at
+    1440, 1024 and 390px before and after. Moving a rule in the order changes `/` silently.
+  - **Every inner hero is ivory now, not forest.** A page-scoped rule written for the old dark
+    hero still paints ivory text or adds the old shell's padding, and wins on specificity.
+    `/about` lost its employer names and `/latest` gained 76px above its eyebrow that way until
+    both were fixed. When moving a page onto V5, check contrast on the rendered page.
+  - **Never put a JSX comment between `</head>` and `<body>`** in a layout. Astro then opens an
+    implicit `<body>` and the real one's class is lost, which switches the whole V5 layer off.
 - **Design system:** [src/styles/global.css](src/styles/global.css) — imported by every *public* layout. Reuse its
   classes (`hero`, `proofbar`, `cards3/card`, `sec-head`, `eyebrow`, `experience`/`statband`,
   `price-card`, `detail-row`, `faq`, `apply-form`, footer) before inventing new ones.
@@ -1298,7 +1409,51 @@ answer that module gives on purpose, so a broken read looked exactly like an hon
     later in the GTM console can capture anything. The audit page sits on
     `ResourcesLayout`, which carries no tag manager; do not add one there, and do not
     move the page onto a layout that has one. The first-party beacon stays, because it
-    sends a path and a referrer and never content.
+    sends a path and a referrer and never content. A page on `PracticeLayout` that makes
+    the same promise passes `tagManager={false}`; the Agent Design Check does, since
+    29 September 2026.
+  - **The container's tags are listed on `/privacy`, and a tag added in the GTM console
+    is a change to that page.** On 29 September 2026 the live container loaded Google
+    Analytics 4 and Microsoft Clarity. The Meta Pixel, the LinkedIn Insight Tag and the
+    Apollo.io tag are described there at the owner's instruction and were not yet firing.
+    **Meta is the pixel only, never the Conversions API** (owner's decision, 29 September
+    2026): a server-side feed cannot be held back by the consent banner, and the page
+    promises that nothing goes to Meta from this site's servers. **The pixel must run with
+    Meta's automatic advanced matching switched off** (Events Manager, the pixel's
+    settings): it is on by default, it reads email and phone fields from forms and sends
+    them hashed, and the privacy page promises it does not.
+  - **Nothing in the container loads without consent** (29 September 2026). The consent
+    banner ([src/lib/consent/](src/lib/consent/), `ConsentBanner.astro`) is now the only
+    loader of Google Tag Manager: `GoogleTagManager.astro` renders it, and
+    `GoogleTagManagerNoscript.astro` renders nothing, because a browser without
+    JavaScript cannot say yes. The container loads only after a yes to **analytics**.
+    The **advertising** answer reaches the container as Google Consent Mode
+    (`ad_storage`, `ad_user_data`, `ad_personalization`) and as the data-layer variable
+    `lc_consent_advertising`. **Every advertising tag added in the GTM console (Meta,
+    LinkedIn, Apollo.io) must require `ad_storage`** under its consent settings. The code
+    cannot enforce that half; the console must. The choice is one
+    cookie, `lc_consent`, 180 days; bump `CONSENT_VERSION` when the tag list or its
+    purposes change, and everybody is asked again. Never reintroduce Google's own GTM
+    snippet in a layout: it loads the container before anybody is asked.
+  - **The banner also asks on the tool pages, and a yes still loads nothing there**
+    (29 September 2026). ResourcesLayout and `tagManager={false}` render
+    `<ConsentBanner ask />`. The reason is attribution: outreach links land on tools,
+    and the site's own two cookies, `lc_first` (400 days, written once) and `lc_last`
+    (session, how this visit began), can only record an arrival on the page where it
+    happened, and only after an **analytics** yes ([src/lib/pipeline/touch-client.ts](src/lib/pipeline/touch-client.ts)).
+    The server reads them only when the `lc_consent` cookie on that request still says
+    yes, and never writes them. Turning analytics off deletes them. A tool page still
+    never loads the container.
+  - **Seven named events, from the revised outreach handoff** (29 September 2026):
+    `form_started`, `tool_started`, `useful_result_completed`, `cohort_cta_clicked`,
+    `requested_delivery_confirmed` from the browser, and `application_saved`,
+    `resource_requested` from the SERVER after the commit. Never let a browser send
+    either of the last two. Every beacon carries an `event_id`, a unique index stores it
+    once, and `/api/track` adds `env` and the banner answer. A tool marks its working
+    area with `data-tool` (ResourcesLayout's `tool` prop) and calls
+    `markUsefulResult()` ([src/lib/analytics/events.ts](src/lib/analytics/events.ts))
+    when its result is complete; a loaded example passes `{ example: true }` and
+    records nothing. The events carry a tool or resource name, never what was typed.
 - **The no-backend rule has been widened once, deliberately.** It was: `/api/*`
   routes for the Q&A agent and the facts endpoint, no database. It is now those
   plus **Supabase for the admin console** — because a lead history that outlives an
@@ -1353,19 +1508,39 @@ before changing a colour.
 - **Gold is never text on the site now.** It is 2.76:1 on ivory and 3.82:1 on flat forest,
   and 2.27:1 on the lightest threads of the linen texture. On the dark hero the eyebrow is
   on-dark-muted `#C6D4C8`, and the h1's emphasised words are ivory serif italic.
-- **Dark green linen texture on the dark green surfaces, never on buttons**: hero
-  shells, footer bands, the price panel, table headers, code blocks and marks take
-  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover). **Buttons, and a
-  pressed or selected button, are flat forest**: `var(--control-primary-bg)`, hover
-  `var(--control-primary-bg-hover)` (Sunil, 19 September: "the buttons do not need the
-  texture"). `--sun` stays a flat colour for borders, text and strokes. Tokens `--texture-forest` and `--texture-footer`
-  in `theme.css`, file `public/textures/linen-forest.webp` (83.5 KB). Each token is a
-  whole `background` value (overlay, linen, flat fallback colour), and so is
-  `--footer-bg`: use them only in `background:`, never as a colour. **The overlay opacity
-  is a contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
+- **Flat forest green on every page, `/` included** (Sunil, 25 September 2026: remove "that
+  green woven design" from the inner pages and use "the plain green that exists in the main
+  site"; `/` followed on 29 September, after an ivory-cloth photograph was tried there for
+  part of a day and replaced with plain green). Dark green surfaces still take
+  `var(--texture-forest)` (`var(--texture-forest-hover)` for a hover) and footers
+  `var(--footer-bg)`. One rule in `theme.css`, on `body`, points those tokens at the flat
+  `--lc-forest`, `--lc-forest-hover` and `--lc-dark-forest`. That covers `/`, the public
+  inner pages, the tool pages, `/craft` and `/craft/admin`. The tokens keep the name "texture" while
+  drawing a flat colour; renaming them is 57 edits across 26 files. To put `/` back on the
+  linen, change that selector to `body:not(.landing)`. Contrast on flat forest: ivory 10.55:1,
+  on-dark-muted 7.79:1.
+- **No page draws the dark green linen now.** The tokens' `:root` values still hold it
+  (`public/textures/linen-forest.webp`, 83.5 KB), and the `body` rule overrides them
+  everywhere.
+  **Buttons, and a pressed or selected button, are flat forest everywhere, `/` included**:
+  `var(--control-primary-bg)`, hover `var(--control-primary-bg-hover)` (Sunil,
+  19 September: "the buttons do not need the texture"). `--sun` stays a flat colour for
+  borders, text and strokes. Each token is a whole `background` value (overlay, linen,
+  flat fallback colour on `/`; one flat colour elsewhere), and so is `--footer-bg`: use
+  them only in `background:`, never as a colour. **On `/` the overlay opacity is a
+  contrast control** (forest 0.55, dark forest 0.45, the smallest that keep ivory and
   on-dark-muted above 4.5:1 on the lightest 5% of pixels). Lowering it fails AA. A layered
   background, such as an icon drawn on a textured circle, puts the icon first and the
-  texture after it, and any `background-size` must give one size per layer.
+  token last, because a flat colour is only legal in the last layer.
+  **`--footer-bg` is restated in the override** because a custom property is resolved
+  where it is declared: the `:root` one already holds the linen, and `body` inherits
+  that resolved value. A new token defined as `var(--texture-…)` on `:root` needs the
+  same line.
+- **The ivory weave is the one light texture**, on `/` and every page on the V5 layer (25 September
+  2026). `--weave-ivory` (a whole `background` value) and `--weave-ivory-opacity` (0.64) in
+  `theme.css` draw it on the `::before` of the opening section only: `/`'s hero and every inner
+  page's `.hero`, a tool's working heading included. V5: "Full-width ivory fabric is limited to
+  the hero." Never put it behind body text further down a page.
 - **Type**: Source Serif 4 at weight 400 for h1, h2 and the pull quote · Figtree for
   everything else, including h3, h4 and labels · eyebrows are Figtree bold, 12px,
   **uppercase**, +0.12em. JetBrains Mono is gone from the public pages; digits stay

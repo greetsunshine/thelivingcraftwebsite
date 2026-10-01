@@ -1,0 +1,70 @@
+---
+/**
+ * One sentence about the cohort, placed straight after a page's useful result.
+ *
+ * SOURCE. The revised outreach readiness handoff, 29 September 2026: "After the
+ * useful result: 'You have examined one operating decision. Build the wider
+ * reasoning through practical work and review in The Living Craft cohort.'
+ * CTA: Explore the cohort." With a topic for four kinds of page (memory, cost,
+ * authority, triage), from `usefulResultFor()` in resource-cohort-copy.ts.
+ *
+ * TWO MODES.
+ *   * On a tool, it waits. It renders hidden and appears when the page's
+ *     script calls `markUsefulResult()` (src/lib/analytics/events.ts), which is
+ *     the moment the result is complete. That call also records
+ *     `useful_result_completed`. A sentence about "what you have examined" is
+ *     not true above an empty result.
+ *   * On a kit, a guide or a template, the useful part is the page itself.
+ *     `always` shows it from the start, after that content.
+ *
+ * It is a text line with a link, not a button row. The closing row at the foot
+ * of the page (ClosingCta.astro) is the page's full invitation; this one stays
+ * quiet so the result above it stays the loudest thing. The link goes where
+ * the handoff sends it (`/#apply`) and is counted as `resource-result`.
+ * Hidden in print: the closing row prints its own line with the address.
+ */
+import { usefulResultFor } from '../../data/resource-cohort-copy';
+
+export interface Props {
+  /** Show it from the start. For pages whose content is the useful result. */
+  always?: boolean;
+}
+
+const { always = false } = Astro.props;
+const sentence = usefulResultFor(Astro.url.pathname);
+---
+
+<p class="lc-result-cohort" data-useful-result={always ? 'always' : 'wait'} hidden={!always}>
+  {sentence}
+  <a href="/#apply" data-cta="form" data-cta-placement="resource-result">Explore the cohort<span aria-hidden="true">&nbsp;→</span></a>
+</p>
+
+<style>
+  .lc-result-cohort {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    max-width: var(--measure-prose, 62ch);
+    border-left: 3px solid var(--lc-gold, #b58a46); /* a rule, never text: gold is 2.76:1 on ivory */
+    background: var(--surface-panel, #fbf8f2);
+    border-radius: 0 var(--radius-inner, 6px) var(--radius-inner, 6px) 0;
+    color: var(--text-body);
+    font-size: var(--size-3, 1rem);
+    line-height: 1.55;
+    text-align: left;
+  }
+  .lc-result-cohort[hidden] {
+    display: none;
+  }
+  .lc-result-cohort a {
+    color: var(--text-loud);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+  @media print {
+    .lc-result-cohort {
+      display: none !important;
+    }
+  }
+</style>

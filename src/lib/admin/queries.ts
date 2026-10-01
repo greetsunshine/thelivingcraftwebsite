@@ -297,6 +297,8 @@ export interface ResourceRequestRow {
   entry_path: string | null;
   referrer_host: string | null;
   consented: boolean;
+  /** From people.role, since 29 September 2026. Null on rows saved before then. */
+  role: string | null;
 }
 
 /**

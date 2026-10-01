@@ -1,19 +1,15 @@
 ---
-// Head snippet, placed as high in <head> as possible per Google's own
-// instructions. Pairs with GoogleTagManagerNoscript.astro, which carries the
-// matching <body> half — the two must always ship together.
+// Google Tag Manager, behind the visitor's consent.
+//
+// Until 29 September 2026 this was Google's own snippet, which requested the
+// container as soon as the page opened. It now renders the consent banner, and
+// the banner's script requests the container only after a yes to analytics.
+// Read src/lib/consent/consent.ts for the rules.
+//
+// Layouts still render this in <head> and GoogleTagManagerNoscript in <body>,
+// so no layout changed when consent arrived.
 import { GTM_CONTAINER_ID } from '../data/site';
+import ConsentBanner from './ConsentBanner.astro';
 ---
 
-<script is:inline define:vars={{ id: GTM_CONTAINER_ID }}>
-  (function (w, d, s, l, i) {
-    w[l] = w[l] || [];
-    w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-    var f = d.getElementsByTagName(s)[0],
-      j = d.createElement(s),
-      dl = l != 'dataLayer' ? '&l=' + l : '';
-    j.async = true;
-    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
-    f.parentNode.insertBefore(j, f);
-  })(window, document, 'script', 'dataLayer', id);
-</script>
+<ConsentBanner gtm={GTM_CONTAINER_ID} />

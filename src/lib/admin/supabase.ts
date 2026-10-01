@@ -56,6 +56,9 @@ export async function record(
     // Code, not message. `leads` holds a name, an address and free text, and a
     // Postgres error quotes the value it rejected. Same rule as
     // src/lib/pipeline/errors.ts, which is where the helper lives.
+    // 23505 is a unique violation. On `events` it is the event-id index
+    // refusing a beacon it already holds: the deduplication working, not a fault.
+    if (error && error.code === '23505' && table === 'events') return;
     if (error) console.error(`record(${table}) failed:`, error.code ?? 'unknown');
   } catch (err) {
     console.error(`record(${table}) threw:`, err instanceof Error ? err.name : 'unknown');

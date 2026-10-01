@@ -66,12 +66,7 @@
 // says, rather than an implied promise that mail is on its way.
 
 import type { APIContext } from 'astro';
-import {
-  buildAttribution,
-  FIRST_TOUCH_COOKIE,
-  FIRST_TOUCH_MAX_AGE,
-  serialiseFirstTouch,
-} from './attribution';
+import { buildAttribution, FIRST_TOUCH_COOKIE, SESSION_TOUCH_COOKIE } from './attribution';
 import {
   deliveryLine,
   queueResourceDelivery,
@@ -89,6 +84,8 @@ import type { FieldError } from './forms';
 import { checkRate } from '../agent/ratelimit';
 import { record } from '../admin/supabase';
 import { deviceOf } from '../admin/visitor';
+import { analyticsAllowed, consentFromHeader, eventContext } from '../analytics/context';
+import { startDripFromRequest } from '../comms/drip-runtime';
 
 const REFUSED = 'We could not accept that request. The page is the resource either way.';
 
@@ -204,15 +201,15 @@ export async function handleResourceRequest(
   // what is NOT sent anywhere: the address, the name, anything typed. The
   // addendum: "No personal details in analytics URLs or payloads."
   //
-  // `permitted` is false because no consent control exists on this site, so
-  // first touch stays unknown — see the head of attribution.ts. That is
-  // deliberate and it is what V4-E01 depends on being honest about: an
-  // internal referral from a worksheet to the cohort page must never overwrite
-  // an external first source, and the safest way to guarantee that is to hold
-  // no first source at all until somebody has agreed to it.
-  const trackingPermitted = false;
+  // `permitted` is the visitor's analytics answer on the cookie banner (29
+  // September 2026). Only a yes lets the two stored arrivals be read; see the
+  // head of attribution.ts. V4-E01 still holds: an internal referral from a
+  // worksheet to the cohort page can never overwrite an external first source,
+  // because the server never writes one and the browser writes it only on an
+  // arrival from outside.
+  const trackingPermitted = analyticsAllowed(consentFromHeader(request.headers.get('cookie')));
 
-  const { row: attribution, writeFirstTouch } = buildAttribution({
+  const { row: attribution } = buildAttribution({
     search: typeof body.search === 'string' ? body.search : '',
     referrer: typeof body.referrer === 'string' ? body.referrer : '',
     path: typeof body.entryPath === 'string' ? body.entryPath : '/',
@@ -220,6 +217,7 @@ export async function handleResourceRequest(
     selfReported: null,
     permitted: trackingPermitted,
     storedFirstTouch: cookies.get(FIRST_TOUCH_COOKIE)?.value,
+    storedSessionTouch: cookies.get(SESSION_TOUCH_COOKIE)?.value,
     resourceId: resourceIdOf(resource),
   });
 
@@ -231,20 +229,6 @@ export async function handleResourceRequest(
   }
 
   // ---- after the commit ---------------------------------------------------
-
-  if (writeFirstTouch) {
-    cookies.set(
-      FIRST_TOUCH_COOKIE,
-      serialiseFirstTouch(writeFirstTouch, new Date().toISOString()),
-      {
-        path: '/',
-        maxAge: FIRST_TOUCH_MAX_AGE,
-        sameSite: 'lax',
-        httpOnly: true,
-        secure: url.protocol === 'https:',
-      },
-    );
-  }
 
   // Queue the delivery only for a genuinely new request. A repeat under the
   // same key must not produce a second email — "repeated submit sends no
@@ -261,6 +245,26 @@ export async function handleResourceRequest(
     await recordDelivery(saved.requestId, outcome);
     deliveryState = outcome.state;
 
+    // The follow-ups (30 September 2026). Only with the marketing box ticked
+    // on THIS request; the words the box carried are in consent.ts and the
+    // record is written before anything else. Never for a repeat under the
+    // same key, which this branch already excludes.
+    const followUp = await startDripFromRequest({
+      personId: saved.personId,
+      requestId: saved.requestId,
+      requestResourceId: resourceIdOf(resource),
+      consented: body.marketingConsent === true,
+    });
+    console.log(
+      JSON.stringify({
+        resource_follow_up: {
+          request_id: saved.requestId,
+          opened: followUp.opened,
+          detail: followUp.opened ? followUp.nextSendAt : followUp.why,
+        },
+      }),
+    );
+
     // The authoritative saved event: server-side, after the commit, carrying an
     // opaque id and the resource code and nothing else. Backend totals survive
     // a visitor declining analytics, which is what the reporting controls
@@ -270,7 +274,15 @@ export async function handleResourceRequest(
         type: 'resource_requested',
         path: attribution.entry_path ?? '/',
         referrer_host: attribution.referrer_host,
-        meta: { request_id: saved.requestId, resource_id: resourceIdOf(resource) },
+        meta: {
+          request_id: saved.requestId,
+          resource_id: resourceIdOf(resource),
+          kind,
+          // The handoff's deduplication key and its two context fields
+          // (29 September 2026). See src/lib/analytics/context.ts.
+          event_id: `requested:${saved.requestId}`,
+          ...eventContext(request),
+        },
       });
     }
   }

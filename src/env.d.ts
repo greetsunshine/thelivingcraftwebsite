@@ -43,6 +43,7 @@ declare namespace App {
 // anyway: every call site guards, because a page that renders without analytics
 // is fine and a page that throws because analytics is missing is not.
 interface Window {
-  lcTrack?: (type: string, meta?: Record<string, unknown> | null) => void;
+  /** Returns the event's id, which the server uses to store a repeated beacon once. */
+  lcTrack?: (type: string, meta?: Record<string, unknown> | null) => string | void;
   lcLead?: (payload: Record<string, unknown>) => void;
 }

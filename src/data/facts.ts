@@ -17,6 +17,7 @@
 import { EXPLORES, cohortModules } from './cohort-copy';
 import { regions, type Region } from './regions';
 import { CONTACT_EMAIL } from './site';
+import { LIVE_HOURS } from './cohort-hours';
 
 /** Canonical host. The apex + www are unattached today; learning. is what serves. */
 export const SITE_ORIGIN = 'https://learning.thelivingcraft.ai';
@@ -49,6 +50,13 @@ export const practitioner = {
   role: 'Fractional Chief AI Officer · Agentic & systems architecture instructor',
   location: 'Bengaluru, India',
   companies: ['Google', 'Amazon', 'Walmart'],
+  /**
+   * Years of engineering experience. Sunil's own figure: he says it in the
+   * first person on `/` ("I have spent 26 years building and leading
+   * engineering"), and two answers below already state it. A field since 29
+   * September 2026, when /about took the revised outreach package's line.
+   */
+  yearsExperience: 26,
   email: CONTACT_EMAIL,
   linkedin: 'https://linkedin.com/in/sunil-mathew-466615a',
   sameAs: ['https://linkedin.com/in/sunil-mathew-466615a'],
@@ -63,7 +71,24 @@ export const practitioner = {
 export const cohort = {
   name: 'The Living Craft',
   weeks: 6,
+  /**
+   * Contact hours with Sunil, live. Six weeks at about five hours. The cohort
+   * page typed "30 live hours" into its own copy until 29 September 2026; the
+   * outreach readiness handoff's CTA line needs the same figure, so every
+   * surface reads it here. The number itself is in cohort-hours.ts, because
+   * cohort-copy.ts needs it and cannot import this file.
+   */
+  liveHours: LIVE_HOURS,
   seats: 8,
+  /**
+   * The day applications for the cohort named in `startsOn` close, as an ISO
+   * date ('2026-10-05'), or null while no date has been decided. NULL IS THE
+   * TRUTH TODAY: nobody has set one, and a guessed date would be an invented
+   * fact. Once set, the resource pages stop inviting readers to the October
+   * cohort on that day and switch to an evergreen line
+   * (resource-cohort-copy.ts), as the outreach readiness handoff asks.
+   */
+  applicationsCloseOn: null as string | null,
   startsOn: 'October 2026',
   commitment: '~5 hrs / week',
   format: 'Live online (Bangalore: hybrid — in person or online)',
