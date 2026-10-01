@@ -815,7 +815,7 @@ fourth way to collect an address is the drift this section exists to stop.
 - [src/components/ResourceGate.astro](src/components/ResourceGate.astro) — the dialog.
   Render it once per page with `resource="<id>"` and a one-sentence `lead`. Its fields come
   from `RESOURCE_FIELDS`, the definition the server validates against. Its wording (used to
-  send this resource once; starts no other email) is fixed and no page may reword it.
+  send this resource once; starts no other email unless the marketing box is ticked) is fixed and no page may reword it.
 - [src/lib/resources/gate-client.ts](src/lib/resources/gate-client.ts) — the browser half.
   Any control with `data-gate="pdf|xlsx|zip|json|csv|md|txt|print"` opens the dialog
   (`data-variant` for a template's blank or worked copy; `data-resource` on a page that

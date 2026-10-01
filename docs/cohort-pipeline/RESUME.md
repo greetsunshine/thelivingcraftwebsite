@@ -19,7 +19,27 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
-## Before PR #37 reaches `main` — 1 October
+## PR #37 merged 1 October, 15:38 UTC — what is still open
+
+PR #37 merged without a review approval, and production deployed it. Its `eval` check was
+red because every probe got "The assistant is briefly unavailable", so it measured nothing.
+The live Ask widget returned the same message after the deploy. Find the cause in the Vercel
+logs (`ASK DOWN`) or the Anthropic console before anything else here.
+
+- The download dialog said "does not start any other email" directly under the marketing
+  box that starts the follow-up sequence. The fix makes the sentence conditional on the tick.
+- Four findings in the drip planner and the webhook handler stay open. They matter only once
+  `COMMS_DISPATCH=on`, so fix them before turning dispatch on:
+  - `drip.ts` treats a duplicate outbox key as "skip" without calling `schedule()`, so a crash
+    between queueing and scheduling leaves the sequence stuck for good.
+  - `drip.ts` calls `recordSend` after an outbox insert that failed for a reason other than a
+    duplicate key, so a resource nobody received is marked as sent.
+  - `drip-store.ts` returns `['*']` when the sent list cannot be read, and `recommend()` does
+    not treat `'*'` as "everything", so a resource can be sent twice.
+  - `webhooks.ts` records the event before the outbox has the Resend id, answers 200, and
+    rejects the retry as a duplicate, so a bounce in that window never suppresses the address.
+
+## Before PR #37 reached `main` — 1 October
 
 A push to `main` deploys production, so these happen in this order:
 
@@ -30,7 +50,7 @@ A push to `main` deploys production, so these happen in this order:
    `vercel.json`. It stays.
 3. Set `COMMS_WORKER_SECRET` in Vercel production. Without it the cron gets a 401 every ten
    minutes, which is harmless. Nothing sends until `COMMS_DISPATCH=on`.
-4. A review approval on PR #37, then merge.
+4. A review approval on PR #37, then merge. **Merged without an approval, 1 October.**
 
 ## Four tasks from Sunil's call, 25 September — `feat/plain-green-v5-pages-branded-pdfs`
 
