@@ -23,12 +23,9 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 A push to `main` deploys production, so these happen in this order:
 
-1. **Run `supabase/schema.sql` on production, the whole file.** The 29 September run used
-   main's file, so this branch's additions are missing: `people.role_code`, three
-   attribution columns, `events_event_id_uidx`, the `p_role` and `p_role_code` arguments,
-   the `comms_sequences` columns, `comms_drip_sends`, three `comms_events` types and the
-   retry rule. Without them every gated download still returns its file, but no request
-   is saved.
+1. [x] **Done 1 October.** Production ran `supabase/schema.sql` in full from this branch.
+   A check query confirmed `people.role_code`, `attributions.first_landing_path`,
+   `comms_drip_sends`, `events_event_id_uidx` and the `p_role_code` argument all exist.
 2. **Confirm the Vercel plan allows the ten-minute cron in `vercel.json`.** Hobby allows
    daily jobs only. On Hobby, remove the `crons` entry and let
    `.github/workflows/comms-worker.yml` keep the clock instead.

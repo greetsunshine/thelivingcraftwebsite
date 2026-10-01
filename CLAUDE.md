@@ -580,14 +580,10 @@ implicit transaction, rolled back all 3,235 lines and applied nothing. Both writ
 functions now drop every overload of their own name by `oid::regprocedure` immediately
 before the `create`. **If either function grows a parameter, keep the guard.**
 
-**This branch's schema is NOT applied yet** (`feat/plain-green-v5-pages-branded-pdfs`,
-PR #37). The 29 September run used main's file. Still to run: `people.role_code`;
-`first_landing_path`, `first_referrer_host` and `self_reported_detail` on
-`attributions`, the first two on `resource_requests`; the unique `events_event_id_uidx`; the
-`p_role` and `p_role_code` arguments on `resource_request_submit`; four columns on
-`comms_sequences`, the `comms_drip_sends` table, three `comms_events` types and the
-`sending → queued` retry rule. Run the whole file before this branch reaches `main`, then
-delete this paragraph.
+**This branch's schema is applied too.** Production ran the whole file again on 1 October
+2026, from PR #37's copy: `people.role_code`, the attribution columns,
+`events_event_id_uidx`, the `p_role_code` argument, `comms_drip_sends` and the comms
+changes all answer.
 
   Every page under `/craft` goes through
   [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro), **including sign-in and office hours**.
