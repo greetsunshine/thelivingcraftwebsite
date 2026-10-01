@@ -21,8 +21,11 @@
 // definition reads too (audience-roles.ts).
 //
 // What it says is fixed on purpose: the address is used to send this resource
-// once and starts no other email. That sentence is the promise the marketing
-// view depends on (`consented = false`), and no page may reword it.
+// once and starts no other email unless the reader ticks the marketing box.
+// Until 1 October 2026 it said "does not start any other email" with no
+// condition, directly under a box that starts the follow-up sequence, so a
+// tick was recorded beside a sentence that denied it. That sentence is the
+// promise the marketing view depends on, and no page may reword it.
 //
 // WHOSE FILE IT IS depends on the button, and the dialog says which. A control
 // that hands over the reader's own answers (a scored PDF, a CSV of their rows,
@@ -80,7 +83,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
     <p class="gate-note">
       <span id="gate-note-own" hidden>What you typed into the tool goes into the file and is not stored.</span>
       <span id="gate-note-same">This file is the same for everyone. Nothing you typed goes into it.</span>
-      Your address is used to send you this resource once. It does not start any other email.
+      Your address is used to send you this resource once. It starts no other email unless you tick the box above.
     </p>
     <p class="gate-status" id="gate-status" role="status" aria-live="polite"></p>
     <ul class="gate-checks mono" id="gate-checks" hidden></ul>
