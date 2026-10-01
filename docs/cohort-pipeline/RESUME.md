@@ -26,9 +26,8 @@ A push to `main` deploys production, so these happen in this order:
 1. [x] **Done 1 October.** Production ran `supabase/schema.sql` in full from this branch.
    A check query confirmed `people.role_code`, `attributions.first_landing_path`,
    `comms_drip_sends`, `events_event_id_uidx` and the `p_role_code` argument all exist.
-2. **Confirm the Vercel plan allows the ten-minute cron in `vercel.json`.** Hobby allows
-   daily jobs only. On Hobby, remove the `crons` entry and let
-   `.github/workflows/comms-worker.yml` keep the clock instead.
+2. [x] **Done 1 October.** The Vercel team is on Pro, which allows the ten-minute cron in
+   `vercel.json`. It stays.
 3. Set `COMMS_WORKER_SECRET` in Vercel production. Without it the cron gets a 401 every ten
    minutes, which is harmless. Nothing sends until `COMMS_DISPATCH=on`.
 4. A review approval on PR #37, then merge.
