@@ -121,6 +121,14 @@ const SPINE: Tour = {
     },
     {
       id: 'modules',
+      target: 'nav-material',
+      title: 'Everything you can read',
+      body:
+        'Every week in one list, with what is inside each one. A week opens after it has been taught, because every session asks you to predict something before it shows you the answer.',
+      placement: 'right',
+    },
+    {
+      id: 'nav-modules',
       target: 'nav-modules',
       title: 'The sessions',
       body:

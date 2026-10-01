@@ -1,0 +1,1950 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Week 3 &#183; Instructor notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;1,400&family=Figtree:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --noir:#183D32;--ember:#B58A46;--sun:#183D32;--mist:#F5F0E6;--berry:#963D34;
+  --paper-1:#FBF8F2;--paper-2:#E5EBE1;
+  --ink-1:#172E26;--ink-2:#526259;--ink-3:#C6D4C8;--ink-invert:#F5F0E6;
+  --line-hair:#CBD1C8;--accent-hover:#244F41;--danger:#963D34;--danger-quiet:#F7E8E3;
+  --accent-quiet:#F4E9CE;
+  --font-body:"Figtree","Avenir Next","Helvetica Neue",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --s1:12px;--s2:13px;--s3:15px;--s4:17px;--s5:20px;--s6:26px;--s7:34px;
+  --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--sp6:32px;--sp7:48px;--sp8:72px;
+  --r-inner:12px;--r-panel:12px;--r-card:12px;--r-shell:12px;--r-pill:6px;
+  --shadow-raise:0 0 0 1px #CBD1C8;--shadow-lift:0 0 0 1px #758279;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--mist);color:var(--ink-1);font-family:var(--font-body);
+  font-size:var(--s3);line-height:1.55;font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased}
+h1,h2{margin:0;font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;font-weight:400;
+  letter-spacing:-.01em;line-height:1.14;text-wrap:balance}
+h3,h4{margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.18;text-wrap:balance}
+p{margin:0}
+a{color:var(--ink-1)}
+:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.shell{max-width:1000px;margin:0 auto;padding:var(--sp6) var(--sp4) var(--sp8);
+  display:flex;flex-direction:column;gap:var(--sp6)}
+.mono{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em}
+.quiet{color:var(--ink-2)}
+.hero{background:var(--noir);color:var(--ink-invert);border-radius:var(--r-shell);
+  padding:var(--sp8) var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.hero .mono{color:var(--ink-3)}
+.hero h1{font-size:clamp(32px,5.5vw,54px);max-width:15ch}
+.hero .lead{font-size:var(--s4);color:#C6D4C8;max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:var(--sp5) var(--sp7);padding-top:var(--sp4);
+  border-top:1px solid rgba(255,255,255,.14)}
+.facts div{display:flex;flex-direction:column;gap:var(--sp1)}
+.facts .v{font-size:var(--s5);font-weight:700;letter-spacing:-.02em}
+.teach{display:contents}
+.pane{display:flex;flex-direction:column;gap:var(--sp6);min-width:0}
+.panehead{display:flex;flex-direction:column;gap:var(--sp1)}
+.railbtn{font-family:var(--font-mono);font-size:var(--s1);letter-spacing:-.01em;
+  border:1px solid var(--line-hair);background:var(--paper-1);color:var(--ink-2);
+  border-radius:var(--r-pill);padding:8px 16px;cursor:pointer;margin-left:auto;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1),color 160ms cubic-bezier(.22,.61,.36,1)}
+.railbtn:hover{background:var(--paper-2);color:var(--ink-1)}
+.railbtn[aria-pressed="true"]{background:var(--sun);color:#F5F0E6;border-color:var(--sun)}
+@media (min-width:1200px){
+  body.split .shell{max-width:1720px}
+  body.split .shell>:not(.teach){width:100%;max-width:1000px;align-self:center}
+  body.split .shell>details.topic{width:100%;max-width:none;align-self:stretch}
+  body.split .topicbody>.teach{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp5);align-items:start}
+  body.split .topicbody .pane-ref{position:sticky;top:var(--sp3);gap:var(--sp5);
+    max-height:calc(100vh - var(--sp5));overflow-y:auto;overscroll-behavior:contain;
+    padding:var(--sp2) var(--sp3) var(--sp6) 0;scrollbar-width:thin}
+  body.split .topicbody .pane-ref .card{padding:var(--sp5)}
+  body.split .topicbody .pane-ref .card h3{font-size:var(--s5)}
+  body.split .topicbody .pane-script .beat{grid-template-columns:56px 1fr}
+}
+.beat[data-ref]{cursor:pointer;border-radius:var(--r-inner);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+body.split .beat[data-ref]:hover{background:var(--paper-2)}
+body.split .beat.here .t{color:var(--ink-1);font-weight:700}
+body.split .beat.here{background:var(--paper-2)}
+.pane-ref .card.lit{box-shadow:0 0 0 2px var(--sun)}
+.rail{display:flex;flex-wrap:wrap;gap:var(--sp2);align-items:center}
+.rail .lab{color:var(--ink-2);margin-right:var(--sp2)}
+.rail a{font-family:var(--font-mono);font-size:var(--s1);text-decoration:none;
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 16px;
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+.rail a:hover{background:var(--accent-hover)}
+.beats{background:var(--ember);color:var(--ink-1);border-radius:var(--r-card);
+  padding:var(--sp7);display:flex;flex-direction:column;gap:var(--sp5)}
+.beats h2{font-size:var(--s6)}
+.head{display:flex;flex-direction:column;gap:var(--sp2);scroll-margin-top:var(--sp5)}
+.head h2{font-size:var(--s7)}
+.head .k{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.head p{color:var(--ink-2);max-width:64ch}
+.card{background:var(--paper-1);border-radius:var(--r-card);box-shadow:var(--shadow-raise);
+  padding:var(--sp6);display:flex;flex-direction:column;gap:var(--sp4);
+  scroll-margin-top:var(--sp5);transition:box-shadow 160ms cubic-bezier(.22,.61,.36,1)}
+.card:hover{box-shadow:var(--shadow-lift)}
+.card h3{font-size:var(--s6)}
+.card h4{font-size:var(--s4);letter-spacing:-.015em}
+.card p,.card li{font-size:var(--s3)}
+.card ul,.card ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.tag{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  background:var(--paper-2);color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px}
+.tag.warn{background:var(--danger-quiet);color:var(--danger)}
+hr.hair{border:0;border-top:1px solid var(--line-hair);margin:var(--sp2) 0;width:100%}
+pre{margin:0;background:var(--paper-2);border-radius:var(--r-inner);padding:var(--sp4);
+  overflow-x:auto;font-family:var(--font-mono);font-size:var(--s1);line-height:1.6}
+code{font-family:var(--font-mono);font-size:.92em}
+p code,li code,td code{background:var(--paper-2);border-radius:6px;padding:1px 5px}
+details{border-radius:var(--r-inner);background:var(--paper-2);padding:var(--sp3)}
+summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:var(--sp2);
+  background:var(--sun);color:#F5F0E6;border-radius:var(--r-pill);padding:8px 18px;
+  font-family:var(--font-mono);font-size:var(--s1);
+  transition:background 160ms cubic-bezier(.22,.61,.36,1)}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--accent-hover)}
+summary .chev{transition:transform 160ms cubic-bezier(.22,.61,.36,1)}
+details[open] summary .chev{transform:rotate(90deg)}
+.dbody{display:flex;flex-direction:column;gap:var(--sp4);padding:var(--sp4) var(--sp2) var(--sp2)}
+.dbody p,.dbody li{font-size:var(--s3)}
+.dbody ul,.dbody ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.scroller{overflow-x:auto}
+/* Figures, same drawings as the learner page. They sit inside a reference card
+   here, which is narrower, so the min-width matters more rather than less. */
+figure{margin:0 0 var(--sp4)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink-1)}
+figcaption{font-size:12px;color:var(--ink-2);margin-top:8px}
+.figwrap{overflow-x:auto}
+.figwrap>svg{min-width:560px}
+
+table{border-collapse:collapse;width:100%;min-width:460px}
+th,td{text-align:left;padding:var(--sp3) var(--sp4);vertical-align:top;font-size:var(--s2)}
+th{font-family:var(--font-mono);font-size:var(--s1);font-weight:500;color:var(--ink-2);
+  border-bottom:1px solid var(--line-hair)}
+td{border-bottom:1px solid var(--line-hair)}
+tr:last-child td{border-bottom:0}
+blockquote{margin:0;padding-left:var(--sp4);border-left:3px solid var(--ember);
+  color:var(--ink-1);font-size:var(--s4);line-height:1.45}
+.pairs{align-self:flex-start;font-family:var(--font-mono);font-size:var(--s1);
+  letter-spacing:-.01em;color:var(--ink-2);background:var(--paper-2);
+  border-radius:var(--r-pill);padding:5px 12px}
+.head .pairs{margin-top:var(--sp2)}
+body.split .pane-ref .card.lit .pairs{background:var(--sun);color:#F5F0E6}
+.qmeta{font-family:var(--font-mono);font-size:var(--s1);color:var(--ink-2)}
+.opt{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp1)}
+.ok{font-weight:700}
+.beat{display:grid;grid-template-columns:64px 1fr;gap:var(--sp4);align-items:start}
+.beat+.beat{border-top:1px solid var(--line-hair);padding-top:var(--sp4)}
+.beat .t{font-family:var(--font-mono);font-size:var(--s2);color:var(--ink-2);padding-top:2px}
+.beat .b{display:flex;flex-direction:column;gap:var(--sp2)}
+.beat h4{font-size:var(--s4);letter-spacing:-.015em}
+.beat p,.beat li{font-size:var(--s3)}
+.beat ul,.beat ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:var(--sp2)}
+.beat pre{font-size:var(--s1)}
+.qbadge{font-family:var(--font-mono);font-size:var(--s1);background:var(--paper-2);
+  color:var(--ink-2);border-radius:var(--r-pill);padding:5px 12px;align-self:flex-start}
+.qbadge.spend{background:var(--danger-quiet);color:var(--danger)}
+.sclock{background:var(--paper-1);border-radius:var(--r-card);box-shadow:var(--shadow-raise);
+  padding:var(--sp4) var(--sp5);display:flex;flex-wrap:wrap;align-items:baseline;
+  gap:var(--sp3) var(--sp5);font-family:var(--font-mono);font-size:var(--s2)}
+.sclock .el{font-size:var(--s5);font-weight:500}
+.sclock .now{font-family:var(--font-body);font-weight:700;font-size:var(--s3)}
+.sclock .hint{color:var(--ink-2)}
+.sclock button{font-family:var(--font-mono);font-size:var(--s1);border:1px solid var(--line-hair);
+  background:var(--paper-2);color:var(--ink-2);border-radius:var(--r-pill);
+  padding:6px 12px;cursor:pointer}
+.sclock button:hover{background:var(--sun);color:#F5F0E6;border-color:var(--sun)}
+.sclock .drift{color:var(--danger);font-weight:700}
+tr.here td{background:var(--accent-quiet)}
+footer{color:var(--ink-2);font-size:var(--s2)}
+details.topic{margin:0}
+details.topic>summary{display:flex;align-items:baseline;gap:14px;width:100%;
+  background:var(--paper-1);color:var(--ink-1);border-radius:12px;box-shadow:0 0 0 1px #CBD1C8;
+  padding:20px 24px;font-family:inherit;font-size:17px;font-weight:700;
+  letter-spacing:-.015em;cursor:pointer;list-style:none}
+details.topic>summary::-webkit-details-marker{display:none}
+details.topic>summary:hover{box-shadow:0 0 0 1px #758279}
+details.topic>summary .num{font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:#F5F0E6;background:#183D32;border-radius:6px;padding:4px 9px;flex:none}
+details.topic>summary .when{font-family:var(--font-mono);font-size:12px;font-weight:400;
+  color:#526259;margin-left:auto;text-align:right}
+details.topic>summary .caret{flex:none;color:#526259;font-size:13px;
+  display:inline-block;transition:transform 160ms}
+details.topic[open]>summary{border-radius:12px 12px 0 0;box-shadow:0 0 0 1px #758279}
+details.topic[open]>summary .caret{transform:rotate(90deg)}
+.topicbody{display:flex;flex-direction:column;gap:24px;padding:24px 0 8px}
+@media (max-width:620px){.beat{grid-template-columns:1fr;gap:var(--sp2)}
+  details.topic>summary{flex-wrap:wrap;padding:16px 18px}
+  details.topic>summary .when{margin-left:0;width:100%;text-align:left}}
+@media (max-width:720px){
+  .hero{padding:var(--sp7) var(--sp5);border-radius:var(--r-card)}
+  .card{padding:var(--sp5)}
+  .beats{padding:var(--sp5)}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+@media print{
+  body{background:#fff}
+  .teach{display:contents}
+  .railbtn,.rail,.sclock{display:none}
+  .pane-ref{position:static;max-height:none;overflow:visible}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .hero{background:#fff;color:#000}
+  .hero .lead,.hero .mono{color:#333}
+  .beats{background:#fff;border:1px solid #ccc}
+  summary{display:none}
+  details{background:#fff;padding:0}
+  details.topic>.topicbody{display:flex !important}}
+</style>
+</head>
+<body>
+<script>document.body.classList.add('split');</script>
+<div class="shell">
+
+<header class="hero">
+  <div class="mono">The Living Craft &#183; week 3 &#183; M2 &#183; instructor's copy</div>
+  <h1>Evidence</h1>
+  <p class="lead">All five topics on one page, each one collapsible so you can work through them one at a time. The argument behind every segment is in <span class="mono">docs/teaching/notes/week-3-evidence.md</span>, whose sections run in clock order. Both pages are generated from <span class="mono">scripts/teaching-content/week-3.mjs</span> and the clock from <span class="mono">scripts/teaching-clock.mjs</span>.</p>
+  <div class="facts">
+    <div><span class="mono">Topics</span><span class="v">5</span></div>
+    <div><span class="mono">Hands-on labs</span><span class="v">5, first at 00:36</span></div>
+    <div><span class="mono">Question bank</span><span class="v">25, eight asked at the close</span></div>
+    <div><span class="mono">Teardown</span><span class="v">28 min, five questions</span></div>
+    <div><span class="mono">Model calls</span><span class="v">none</span></div>
+    <div><span class="mono">Session status</span><span class="v">draft</span></div>
+  </div>
+</header>
+
+<div class="head" id="today">
+  <span class="k">the opening &#183; 00:00 to 00:15</span>
+  <h2>What today is for</h2>
+  
+  <p>At 02:55 last week they made the same ticket pay once. Then a second terminal paid Ravi again and there were no words for it yet. Today that moment is a test suite, and the suite passes. <strong>A pass is a claim about the cases you chose. It is not a claim about your system.</strong></p>
+  <h3>Say the terminology sentence in the first two minutes</h3>
+  <p>Week 1 claims the bare word <em>harness</em> for the agent harness. Today's thing is the <strong>evaluation harness</strong>, always in full, on both pages and out loud. If you shorten it once at 00:36 the room spends the next hour unsure which one you mean.</p>
+  <h3>You will rate yourself on these five, twice</h3>
+  <p>00:05 and 04:55, same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do.</p>
+  <p><strong>Expect high scores on 1 and 2 at 00:05, and say nothing about it.</strong> Almost everyone believes they have tests and that a passing run is a result. A score that drops at 04:55 is the result you want, and announcing that in advance spends it.</p>
+  <h3>One sealed prediction</h3>
+  <p>00:10, written, folded, opened at 04:50. <em>Your team's evaluation suite passes on every run for three weeks. Write down the most likely reason, in one line.</em></p>
+  <p>Most rooms write "the tests are shallow", which is a conclusion and names no action. The answer the day argues for is a question: <strong>how many times has any case in it ever failed?</strong> Do not say so until 04:50.</p>
+  <h3>Five topics, in clock order</h3>
+  <p>Five, not six, and the arithmetic is on the preparation card. The old topics 1 and 2 merged, because a case set and a run count together are what an evaluation harness is.</p>
+</div>
+
+<div class="head" id="agentnow">
+  <span class="k">what this week adds to the agent &#183; every row is proved by running something</span>
+  <h2>What the agent can do now</h2>
+  <p>Six things the agent gains today, and the command that proves each one. If a row cannot be proven by running something, it does not belong in this table.</p>
+  <div class="scroller"><table>
+    <thead><tr><th>Capability</th><th>At 00:00 today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
+    <tbody>
+      <tr><td>A case set in four classes</td><td>seven cases, one class</td><td>eight cases, four classes</td><td class="mono">src/w3_cases.py</td><td class="mono">make w3-eval</td></tr>
+      <tr><td>A result that is a rate</td><td>one run, pass or fail</td><td>twenty runs, a rate per case and per class</td><td class="mono">src/w3_harness.py</td><td class="mono">make w3-wobble</td></tr>
+      <tr><td>A rule read from a document</td><td>a number in policy.json</td><td>seven clauses, retrieved and scored</td><td class="mono">src/w3_docs.py</td><td class="mono">make w3-search</td></tr>
+      <tr><td>A grader on the retrieval</td><td>nothing reads the clause</td><td>the clause is graded against the case</td><td class="mono">src/w3_cases.py</td><td class="mono">make w3-grade</td></tr>
+      <tr><td>A grader with a number on it</td><td>no grader</td><td>7 of 10 against labels a person wrote</td><td class="mono">src/w3_agree.py</td><td class="mono">make w3-agree</td></tr>
+      <tr><td>A measured context budget</td><td>untested</td><td>the cliff located at 100 characters</td><td class="mono">src/w3_trim.py</td><td class="mono">make w3-trim</td></tr>
+    </tbody>
+  </table></div>
+  
+</div>
+
+<nav class="rail" aria-label="Jump to a topic">
+  <span class="lab mono">Topics</span>
+  <a href="#t1">1 &#183; evaluation</a>
+  <a href="#t2">2 &#183; retrieval</a>
+  <a href="#t3">3 &#183; grading</a>
+  <a href="#t4">4 &#183; release gates</a>
+  <a href="#t5">5 &#183; context</a>
+  <span class="lab mono" style="margin-left:var(--sp4)">Before the day</span>
+  <a href="#prep">what to prepare</a>
+  <a href="#closing">the close</a>
+  <a href="#quiz">the quiz</a>
+  <a href="#tools">tools</a>
+  <button type="button" id="splitbtn" class="railbtn" aria-pressed="true">Side by side</button>
+</nav>
+
+
+<div class="sclock" id="sclock">
+  <span class="el">--:--</span>
+  <span class="now">Clock off</span>
+  <span class="hint"></span>
+  <span class="drift"></span>
+  <button type="button" data-off="-1">&#8722;1 min</button>
+  <button type="button" data-off="1">+1 min</button>
+  <button type="button" data-pause>Pause</button>
+</div>
+
+<section class="beats" id="clock">
+  <h2>Five hours, five blocks and a full hour to close</h2>
+  
+  <p><strong>Five topics, six parts each.</strong> The narrative, the concept, components and design, a hands-on lab, what firms at enterprise scale use, and a three-question quiz. Keyboards are live at 00:36.</p>
+  <div class="scroller"><table id="clocktable">
+<thead>
+  <tr><th>time</th><th>what happens</th><th>whose</th></tr>
+</thead>
+<tbody>
+  <tr class="quiet" style="color:#526259"><td>00:00</td><td>Opening: what today is for</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:05</td><td>The first self-rating</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:10</td><td>One sealed prediction</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:15</td><td>Last week the fix passed and proved nothing</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:21</td><td>What an evaluation harness is</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:27</td><td>Four classes of case, and what each one costs</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:36</td><td>Lab: write the case your tests cannot fail</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:54</td><td>At enterprise scale: who runs evaluations, and the cost</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>00:57</td><td>Topic quiz: evaluation</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:00</td><td>Evaluation: you can now, and your takeaway</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:01</td><td>Pair discussion: which class is your suite missing</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:06</td><td>The rule is in a document now</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:11</td><td>What retrieval-augmented generation is</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:16</td><td>Two failures, and one word for both</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:23</td><td>Lab: build the retrieval grader</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:37</td><td>At enterprise scale: retrieval in regulated work</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:40</td><td>Topic quiz: retrieval</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:43</td><td>Retrieval: you can now, and your takeaway</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:45</td><td>It cites the wrong clause and scores full marks</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:50</td><td>What model-based grading is</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>01:55</td><td>The failure a grader cannot see</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:02</td><td>Lab: measure how far your grader agrees with you</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:16</td><td>At enterprise scale: who grades at volume</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:19</td><td>Topic quiz: model-based grading</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:22</td><td>Model-based grading: you can now, and your takeaway</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:24</td><td>Break</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:39</td><td>Forty thousand disputes, and what you sample</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:44</td><td>What a release gate is</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:49</td><td>Who owns the pass bar</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>02:56</td><td>Lab: write one row of the gate table</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:10</td><td>At enterprise scale: evaluation platforms</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:13</td><td>Topic quiz: release gates</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:16</td><td>Release gates: you can now, and your takeaway</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:18</td><td>Pair discussion: who owns your pass bar</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:23</td><td>Cut the policy text and watch the answers fail</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:28</td><td>What context engineering is</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:33</td><td>Why the curve falls off a cliff</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:40</td><td>Lab: find your own cliff</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:54</td><td>At enterprise scale: context budgets in production</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>03:57</td><td>Topic quiz: context engineering</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:00</td><td>Context engineering: you can now, and your takeaway</td><td>topic 5</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:02</td><td>Recall: every control the agent gained today</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:12</td><td>Architectural teardown</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:40</td><td>End-of-week quiz</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:50</td><td>Takeaway, said out loud</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td>04:55</td><td>The same five statements again</td><td>close, shared</td></tr>
+</tbody>
+  </table></div>
+  <p><strong>This table is generated.</strong> Both pages carry it, so it lives in <span class="mono">scripts/teaching-clock.mjs</span> and nowhere else. Change a time there, rebuild with <span class="mono">node scripts/build-teaching-pages.mjs 3</span>, and run <span class="mono">npm run check:teaching</span>.</p>
+  
+  <p><strong>Never cut 00:15 or 01:45.</strong> Those two carry the week: a suite that passes over a live bug, and an answer that is right to the rupee under the wrong clause. Neither survives being described.</p>
+  <p><strong>If you are running long, cut in this order.</strong> The 03:54 enterprise-scale table first, because the room can read it. Then four minutes off the 03:40 lab. Then the second pair discussion at 03:18. <strong>Do not cut the teardown at 04:12</strong>, and do not shorten it below twenty minutes: five questions in fifteen minutes is five opinions rather than five answers.</p>
+  <p><strong>Do not shorten a lab below ten minutes.</strong> A lab cut in half produces something that does not run, which is worse than not starting.</p>
+</section>
+
+<div class="head" id="prep">
+  <span class="k">before the day &#183; the short list</span>
+  <h2>What to prepare</h2>
+  
+  <p>Twelve items in four groups. Each topic’s own state card has the rest. <strong>Four of these have no file, and they are the ones that fail loudest.</strong></p>
+  <h3>The reference agent, the day before</h3>
+  <ul>
+    <li><strong>Pull <code>main</code> and run all eight <code>w3-</code> targets once.</strong> About four minutes end to end. <em>Done when</em> every one prints and none asks for a key. <em>Without it</em> you find a broken target in front of eight people at 00:15.</li>
+    <li><strong>Check <code>data/policy-docs.json</code> has seven clauses.</strong> <em>Done when</em> <code>make w3-search</code> prints <code>GOOD-2.1 (score 6), GOOD-2.2 (score 5)</code>. <em>Without it</em> the one-point gap at 01:06 is not one point, and that number is the segment.</li>
+    <li><strong>Confirm weeks 1 and 2 still print what their published pages show.</strong> <em>Done when</em> <code>w2-guarded</code> still refuses on the account rather than the ceiling and <code>retry</code> still ends at ₹3,600.</li>
+  </ul>
+  <h3>Things with no file, and they break the room hardest</h3>
+  <ul>
+    <li><strong>Assign the five teardown questions, by name, before the day.</strong> <em>Done when</em> the list is in your notes and not in your head. <em>Without it</em> the teardown opens with silence and you lose four of its twenty-eight minutes.</li>
+    <li><strong>Assign the lab pairs, by name, before the day.</strong> <em>Done when</em> the list exists. Pairs that choose each other pick somebody whose approach they already understand.</li>
+    <li><strong>Pick the screen for 00:54 while circulating during the 00:36 lab.</strong> <em>Done when</em> you have a name, and that person’s new case is genuinely in a class their suite lacked.</li>
+    <li><strong>Decide what you say if nobody brought last week’s regression cases.</strong> <em>Done when</em> you have the fallback ready: the room uses C7 and writes a second one against it. <em>Without it</em> the adversarial column is empty all session.</li>
+  </ul>
+  <h3>Prepared material</h3>
+  <ul>
+    <li><strong>A blank thirteen-column gate table for 02:56</strong>, pasted into chat. <em>Done when</em> it prints on one landscape sheet. <em>Without it</em> pairs copy thirteen column names off the page and ten minutes becomes six.</li>
+    <li><strong>The architecture diagram, as the agent stands at the close</strong>, for 04:12. It stays on screen for all twenty-eight minutes. <em>Without it</em> the teardown is five abstract questions.</li>
+    <li><strong>Five prepared case sets for the 02:02 lab</strong>, from <code>src/w3_agree.py</code>, for anybody whose own system is not reachable.</li>
+  </ul>
+  <h3>Still open, and worth deciding before the day</h3>
+  <ul>
+    <li><strong>There is no cross-process store in the reference agent.</strong> <code>w3-falsepass</code> models two processes with two paid sets inside one program, which is honest and is not the same as two terminals. <em>Decide</em> whether you run two terminals live at 00:15.</li>
+    <li><strong>The run-to-run variation is a seeded stand-in for a model.</strong> Both pages say so. <em>Decide</em> whether you also run <code>make chaos</code> from week 1 for thirty seconds, which is real variation from a real model and six requests off everybody’s twenty. It is the only live model call anywhere in the session.</li>
+  </ul>
+</div>
+
+
+<details class="topic" id="t1">
+  <summary><span class="num">1</span><span>LLM evaluation (evals)</span><span class="when">00:15 to 01:00</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t1-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p class="lede"><strong>What does a passing test prove about a system that answers differently every time?</strong></p>
+  
+  <p>The weak version is "write more tests", which everybody in this room learned fifteen years ago. Teach it that way and you lose them by 00:30.</p>
+  <p>The stronger claim is that <strong>a suite is a list of situations somebody thought of</strong>, so the only interesting question about any suite is which class of situation is missing. The percentage is not the artefact. The list is.</p>
+  <p><strong>This topic carries outcomes 1 and 2</strong>, because the old week taught them apart and that was an accident of how it grew. A case set and a run count together are what an evaluation harness is.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">evaluation framework &#183; 00:15 to 01:00</span>
+
+  <div class="beat" data-ref="t1-r-false"><span class="t">00:15</span><div class="b">
+    <h4>Last week the fix passed and proved nothing</h4>
+    <span class="pairs">The narrative &#183; Whole room · 6 min · both answers in writing before the reveal</span>
+    
+    <p><strong>Put the result table on screen and stop there.</strong> Do not scroll to the second half of the output; <span class="mono">make w3-falsepass</span> prints the reveal below it.</p>
+    <p>Both standing questions in writing before anything is revealed.</p>
+    <p><strong>Then say it slowly.</strong> The suite did not lie. It answered the question it was asked, and the question had one process in it. <strong>Two minutes of silence after that is not wasted.</strong></p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-concept"><span class="t">00:21</span><div class="b">
+    <h4>What an evaluation harness is</h4>
+    <span class="pairs">The concept &#183; Whole room · 6 min</span>
+    
+    <p>One sentence, then the three numbers. <strong>Land on the middle row.</strong> The per-class figure is the one nobody builds and the only one that makes a missing class visible.</p>
+    <p class="quiet">If somebody asks why not a single score: ask them which case they would fix on the strength of it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-classes"><span class="t">00:27</span><div class="b">
+    <h4>Four classes of case, and what each one costs</h4>
+    <span class="pairs">Components and design &#183; Whole room · 9 min · ninety seconds alone and silent first</span>
+    
+    <p><strong>Ask for the kinds, not the cases.</strong> Ninety seconds on paper, alone. Take two answers out loud and do not comment on either.</p>
+    <p>Rooms produce two or three of the four and almost never all four. <strong>Spend the time on incomplete</strong>, which is the class where a system with two outcomes has to invent a third at the worst possible moment.</p>
+    <p class="quiet"><strong>Say why the last two are rare rather than treating it as a gap in the room.</strong> They need you to have been attacked already. That is also why last week's bypasses are the pre-work.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-lab"><span class="t">00:36</span><div class="b">
+    <h4>Lab: write the case your tests cannot fail</h4>
+    <span class="pairs">Hands-on lab &#183; Pairs · 18 min · 3 decide, 13 build, 2 check</span>
+    
+    <p><strong>Enforce the three minutes of writing before anybody types.</strong> This is the lab where an assistant produces a working answer to a question the person never asked.</p>
+    <p><strong>Circulate for one thing: is the new case in a class they lacked, or is it an ordinary case with a new number in it?</strong> The second is the commonest outcome and it feels like progress. Ask which class it is in. If they cannot say, it is ordinary.</p>
+    <p class="qbadge">No model calls. This lab costs nothing against their 20 a day.</p>
+    <p><strong>At 00:48, pick the screen for 00:54</strong> while you are still walking the room.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-atscale"><span class="t">00:54</span><div class="b">
+    <h4>At enterprise scale: who runs evaluations, and the cost</h4>
+    <span class="pairs">whole room · 3 min</span>
+    <p><strong>Point at the table, do not walk it.</strong> Three minutes is the whole budget and there is no recommendation to give.</p>
+    <p>Land on the last line: none of the five tells you which class is missing.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t1-r-quiz"><span class="t">00:57</span><div class="b">
+    <h4>Topic quiz: evaluation</h4>
+    <span class="pairs">alone, in writing · 3 min</span>
+    <p><strong>Read the week 2 quote aloud before question three.</strong> Nobody goes and looks it up in a live room; they guess or sit quiet.</p>
+    <p>Question three is the one to slow down on. It is this topic in one question.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t1-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="t1-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-30</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing grades why an answer was right</td><td>Topic 2, at 01:23 — the retrieval grader</td></tr>
+      <tr><td>No threshold exists, so a rate means nothing yet</td><td>Topic 4, at 02:56 — it becomes two columns of the gate table</td></tr>
+      <tr><td>The adversarial class depends on last week’s bypasses, which some people will not have brought</td><td><strong>Nowhere.</strong> The fallback is the repository’s own C7. Say so rather than letting the column sit empty</td></tr>
+      <tr><td>The run count that settles one case does not settle another</td><td><strong>Nowhere.</strong> There is no number. You watch the rate, and on the adversarial case it is still moving at fifty</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t1-r-false">
+  <span class="pairs">&#8596; 00:15 &#183; a suite that passes over a live bug</span>
+  <h3>Last week the fix passed and proved nothing</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Nobody was careless, and that is the point</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <pre>delivery 1 · process A · ledger: 1 credit, ₹1,200
+delivery 2 · process A · ledger: 1 credit, ₹1,200   &lt;- the paid set remembers
+delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never heard of it</pre>
+      <p><strong>What went wrong.</strong> Nothing inside the suite. The paid set is in memory and a second process has its own.</p>
+      <p><strong>The control.</strong> One case, one field. C8 differs from C2 by <code>processes: 2</code>.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer, and what is right about it</summary>
+    <div class="dbody">
+      <p><strong>"The test was badly written."</strong> About a third of rooms, usually from the person who writes the best tests.</p>
+      <p><em>What is right.</em> C2 is a weaker case than it looks, and noticing that is the skill.</p>
+      <p><em>What is wrong.</em> It frames the failure as carelessness, which makes it somebody else's problem. Nobody was careless. The case matched the fix, the fix matched the case, and both were written the same afternoon by the same person.</p>
+      <p><strong>Extension question.</strong> How many of your own cases were written the same day as the code they test? "Most of them" is the answer and it is the finding.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-concept">
+  <span class="pairs">&#8596; 00:21 &#183; one sentence, then the three numbers</span>
+  <h3>What an evaluation harness is</h3>
+  
+  <p>Rooms accept the definition quickly. The three numbers are where the work is, and <strong>the per-class figure is the one to spend the time on</strong>.</p>
+  <details>
+    <summary><span class="chev">›</span> Why an average is refused here</summary>
+    <div class="dbody">
+      <p>Same rule the console already holds for checkpoint answers. An average hides the case that matters, and the case that matters today pays ₹2,50,000. If a learner builds one, ask which case they would fix on the strength of it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-classes">
+  <span class="pairs">&#8596; 00:27 &#183; four classes, predicted before the list</span>
+  <h3>Four classes of case, and what each one costs</h3>
+  
+  <h4>The failure this part is really about</h4>
+  <p>The same framing is on their page. Take the written answer before revealing it.</p>
+  <h4 class="quiet" style="font-weight:700">Rooms bring one class and believe they brought four</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>Ordinary</strong> arrives every time. It is what a specification produces.</li>
+        <li><strong>Difficult</strong> arrives most of the time, described as "edge cases".</li>
+        <li><strong>Incomplete</strong> almost never arrives, and it is the one to spend time on.</li>
+        <li><strong>Adversarial</strong> arrives only from people who have been attacked.</li>
+      </ul>
+      <p>Ask for an example of each before accepting a count of four.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Happy path and error path."</strong> Two classes doing the work of four, and the merge loses exactly the two that matter. Incomplete evidence and a deliberately written input both land in "error path", and they need opposite responses: one hands over, the other refuses.</p>
+      <p>Take it seriously, because most of the room arrived with it. Then split it with a question rather than a correction: <em>what does your error path do when the evidence is merely absent rather than wrong?</em></p>
+      <p><strong>Extension question.</strong> Which class needs you to have been attacked already? Adversarial.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-lab">
+  <span class="pairs">&#8596; 00:36 &#183; the lab, and the field people leave out</span>
+  <h3>Lab: write the case your tests cannot fail</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Starting state: seven cases in one class. Check: make w3-eval</h4>
+  <details>
+    <summary><span class="chev">›</span> A working answer, in full</summary>
+    <div class="dbody">
+      <pre>MISSING = {
+    "id": "C8", "klass": "ordinary", "ticket": "4471",
+    "deliveries": 2, "processes": 2,
+    "what": "The same ticket twice, two processes — still pays once",
+    "expect": {"outcome": "already paid", "paid": 1200.0, "clause": "BILL-3.1"},
+}</pre>
+      <p>Uncommenting it takes the suite from 7 of 7 to 7 of 8. The system did not change between those two results. The case set did.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> What they will get wrong</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>The case asserts over the model's sentence.</strong> Ask what the system already holds that would settle the same question.</li>
+        <li><strong>An ordinary case with a new number in it.</strong> Ask which class. If they cannot say, it is ordinary.</li>
+        <li><strong>The case passes the first time.</strong> Say the line from the page.</li>
+        <li><strong>No answer for a repeated delivery.</strong> Ask what a second process has that a second iteration does not.</li>
+      </ul>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t1-r-atscale">
+  <span class="pairs">&#8596; 00:54 &#183; three or more named options a slot, no recommendation</span>
+  <h3>At enterprise scale: who runs evaluations, and the cost</h3>
+  <h4>At enterprise scale</h4>
+  <p class="lede">Who runs the cases when there are four hundred of them and a release every day?</p>
+  <p>Five real answers. No recommendation, because the right one is decided by where your data may sit rather than by a feature.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
+      <tbody>
+        <tr><td>Holds the cases and runs them</td><td>Braintrust</td><td>Hosted, per seat and per logged run. Fastest to start, and your cases and traces sit on somebody else’s infrastructure</td></tr>
+        <tr><td></td><td>LangSmith</td><td>Hosted, per trace, with a self-hosted tier on the enterprise plan. The self-hosted tier is what a bank asks for and it is priced accordingly</td></tr>
+        <tr><td></td><td>Weights &amp; Biases Weave</td><td>Hosted, per seat. Strongest if the team already runs W&amp;B, and an odd fit if it does not</td></tr>
+        <tr><td></td><td>Promptfoo</td><td>Open source, runs in your own CI. Costs engineer time rather than licence, and nobody maintains it for you</td></tr>
+        <tr><td></td><td>Databricks Agent Evaluation</td><td>Bundled if your data already lives there. Cheapest on paper, and it decides your platform for you</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<article class="card" id="t1-r-quiz">
+  <span class="pairs">&#8596; 00:57 &#183; three questions, one from earlier material</span>
+  <h3>Topic quiz: evaluation</h3>
+  <h4>Question 1 &#183; this topic</h4>
+  <p>Your suite of seven cases passes. What is that evidence about?</p>
+  <p><strong>The answer.</strong> <p><strong>The seven situations somebody thought of.</strong> It is not evidence about the system.</p></p>
+  <p><strong>The likely wrong answer.</strong> "It is evidence the system works."</p>
+  <p><strong>What is right about it.</strong> Ask which case would have to fail before they would believe otherwise. If there is no such case, the suite is not evidence about anything.</p>
+  <h4>Question 2 &#183; this topic</h4>
+  <p>Your per-class figure shows ordinary 12/12, difficult 4/4, incomplete 2/2, and the adversarial row empty. Which is worse: an empty row, or a row at 40%?</p>
+  <p><strong>The answer.</strong> <p><strong>The empty row.</strong> A row at 40% is a number somebody will act on. An empty row reads as nothing to see, and it means the class was never tested at all.</p></p>
+  <p><strong>The likely wrong answer.</strong> "40%, because it is failing."</p>
+  <p><strong>What is right about it.</strong> A failing row is working as designed: it found something. The instinct to fix the visible number is right, and here it is pointed at the wrong row.</p>
+  <h4>Question 3 &#183; from earlier</h4>
+  <blockquote>Week 2’s third outcome: <em>"make the same request pay only once, and show that it still holds from a second process."</em></blockquote>
+  <p>You wrote a case for that fix last week and it passed. Which of the four classes was it in, and why is that the class most likely to miss?</p>
+  <p><strong>The answer.</strong> <p><strong>Ordinary.</strong> It is the case the feature was built for, so it was written from the fix rather than against it, and a case written from the fix passes by construction.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Difficult, because concurrency is hard."</p>
+  <p><strong>What is right about it.</strong> Concurrency genuinely is hard, and that instinct is why the case felt thorough. The case was not difficult: it ran one delivery through one process, which is the simplest path there is.</p>
+</article>
+
+<article class="card" id="t1-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A pass is a claim about the cases you chose. It is not a claim about your system.</blockquote>
+  
+  <p>Everything else is that sentence with a price attached. The ₹2,400 is what a case set with one process costs on the Monday after the fix shipped.</p>
+</article>
+
+<article class="card" id="t1-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>✅ You can now</h3>
+  
+  <p>One number in chat, on the last line only. <strong>Watch for a room that scores the last line high</strong>, because it means 00:15 was heard as a story about the reference agent rather than about their own suite.</p>
+  <h4>Your takeaway</h4>
+  <p>Write one line in your own words: what did a passing suite mean to you this morning, and what does it mean now?</p>
+  
+</article>
+</div>
+</div>
+<article class="card" id="t1-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-30</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>There is no genuine cross-process store in the reference agent.</strong> <span class="mono">w3-falsepass</span> models two processes with two paid sets inside one program, which is honest and is not the same as two terminals. <strong>Decide before the day</strong> whether you run two terminals live.</li>
+    <li><strong>The adversarial class depends on the pre-work.</strong> If nobody brought last week’s bypasses, the fallback is C7 plus one written against it. Have that sentence ready rather than improvising it.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t2">
+  <summary><span class="num">2</span><span>Retrieval-augmented generation (RAG)</span><span class="when">01:06 to 01:43</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t2-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p class="lede"><strong>When the rule comes out of a document, what does a wrong answer actually mean?</strong></p>
+  
+  <p>The weak version is "RAG can retrieve the wrong thing", which the room knows.</p>
+  <p>The stronger claim is that <strong>once the rule arrives by retrieval, one wrong answer holds two failures with different fixes</strong>, and the grader every suite already has cannot see either of them.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">retrieval &#183; 01:06 to 01:43</span>
+
+  <div class="beat" data-ref="t2-r-search"><span class="t">01:06</span><div class="b">
+    <h4>The rule is in a document now</h4>
+    <span class="pairs">The narrative &#183; Whole room · 5 min</span>
+    
+    <p><span class="mono">make w3-search</span>. Put the two new trace lines on screen and land on the gap: <strong>one point</strong>.</p>
+    <p><strong>Somebody will ask whether the account note is the attack.</strong> Yes, and it is not this week's attack. The note does not raise the amount, it raises a clause. Confirm in one sentence, name week 4, move on.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-concept"><span class="t">01:11</span><div class="b">
+    <h4>What retrieval-augmented generation is</h4>
+    <span class="pairs">The concept &#183; Whole room · 5 min</span>
+    
+    <p>One sentence, then the three steps. <strong>Say why the search is lexical before anybody asks</strong>, because somebody will inside a minute.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-two"><span class="t">01:16</span><div class="b">
+    <h4>Two failures, and one word for both</h4>
+    <span class="pairs">Components and design &#183; Pairs · 7 min · written first</span>
+    
+    <p>Ask for every distinct reason an answer could now be wrong. <strong>Take answers before putting the two up</strong>, because rooms reliably produce three or four items that collapse into those two.</p>
+    <p><strong>Stop properly on "the model hallucinated" when it comes up</strong>, and it will. The card beside this segment has the full argument.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-lab"><span class="t">01:23</span><div class="b">
+    <h4>Lab: build the retrieval grader</h4>
+    <span class="pairs">Hands-on lab &#183; Alone · 14 min · 3 decide, 9 build, 2 check</span>
+    
+    <p><strong>The second decide question is the whole lab</strong>, so say it in those words: a clause id from the model's prose is a claim, from the retrieval step it is a fact.</p>
+    <p><strong>Circulate for the grader that cannot fail.</strong> About one person in eight asserts the top-scoring clause rather than the governing clause, which makes the grader agree with the retrieval by construction. Name it as the case-that-cannot-fail defect one level up.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-atscale"><span class="t">01:37</span><div class="b">
+    <h4>At enterprise scale: retrieval in regulated work</h4>
+    <span class="pairs">whole room · 3 min</span>
+    <p>Three minutes, point at it. <strong>The line to land is the order of the questions</strong>: where may it sit, then how fast is it, and not the other way round.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t2-r-quiz"><span class="t">01:40</span><div class="b">
+    <h4>Topic quiz: retrieval</h4>
+    <span class="pairs">alone, in writing · 3 min</span>
+    <p><strong>Read the week 1 quote aloud before question three.</strong> It is the sentence topic 5 needs at 03:23.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t2-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="t2-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-30</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing grades the wording sent to the customer</td><td>Topic 3, at 02:02 — and a model grader is reached for last rather than first</td></tr>
+      <tr><td>Retrieval quality itself is untouched: no chunking, no re-ranking, no hybrid search</td><td><strong>Week 5</strong>, as a segment beside agent memory. What is retrieved and what is remembered are one question</td></tr>
+      <tr><td>The account note that raises the wrong clause is not defended against</td><td>Week 4 — and the case written at 00:36 is what week 4 collects</td></tr>
+      <tr><td>The query is the ticket plus the account note, and nobody chose that</td><td>Topic 5, at 03:23 — what goes into the context is the input being tuned</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t2-r-search">
+  <span class="pairs">&#8596; 01:06 &#183; the one-point gap</span>
+  <h3>The rule is in a document now</h3>
+  
+  <h4 class="quiet" style="font-weight:700">GOOD-2.1 carries the cap. GOOD-2.2 does not. One point apart.</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <pre>search_policy(...) -> GOOD-2.1 (score 6), GOOD-2.2 (score 5)
+GOOD-2.1  a goodwill credit is capped at 2000
+GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
+      <p>Acting on GOOD-2.2 leaves the agent with the only figure it has, which the customer wrote: ₹2,50,000.</p>
+      <p><strong>The note did not raise the amount. It raised a clause.</strong> That distinction is why this is week 3 material and not week 4 material.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-concept">
+  <span class="pairs">&#8596; 01:11 &#183; three steps, and where the failure lives</span>
+  <h3>What retrieval-augmented generation is</h3>
+  
+  <p>Step 1 is week 4's, step 2 is today's, step 3 is where most rooms assume the problem is. <strong>Take a show of hands on which step they would look at first</strong>, and most say step 3.</p>
+</article>
+
+<article class="card" id="t2-r-two">
+  <span class="pairs">&#8596; 01:16 &#183; two failures, and the word to stop using</span>
+  <h3>Two failures, and one word for both</h3>
+  
+  <h4>The word to stop using today</h4>
+  <p><strong>Hallucination.</strong> On the 01:06 run the model asserted something a retrieved clause actually said. The clause was the wrong one. Nothing was invented, and the learner page says so in the same words.</p>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p>It is the most expensive habit in this room's vocabulary.</p>
+      <p><em>What is right.</em> Something was asserted that was not supported. That is a real observation.</p>
+      <p><em>What is wrong.</em> It names no component and no fix, and it sends an engineer to the prompt, which is the one place the fix is not.</p>
+      <p><strong>Extension question.</strong> Take the last incident your team called a hallucination. Which of the two was it? Rooms split, and the split is the point.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-lab">
+  <span class="pairs">&#8596; 01:23 &#183; the lab, and the grader that cannot fail</span>
+  <h3>Lab: build the retrieval grader</h3>
+  
+  <h4>Starting state and how you check it</h4>
+  <h4 class="quiet" style="font-weight:700">Starting state: grade_retrieval, switched off. Check: make w3-wobble</h4>
+  <details>
+    <summary><span class="chev">›</span> What they will get wrong</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>A regular expression for the clause id over the answer text.</strong> It works today and it reads the model's claim. Ask what happens when the model names a clause it did not retrieve.</li>
+        <li><strong>They replace the outcome grader instead of keeping it.</strong> Two graders, both reported.</li>
+        <li><strong>They assert the top-scoring clause.</strong> The grader then agrees with the retrieval by construction and can never fail.</li>
+        <li><strong>The case stores the clause and the harness never passes it through.</strong> Their rate does not move and they conclude the grader passed. Ask for one deliberate failure.</li>
+      </ul>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t2-r-atscale">
+  <span class="pairs">&#8596; 01:37 &#183; three or more named options a slot, no recommendation</span>
+  <h3>At enterprise scale: retrieval in regulated work</h3>
+  <h4>At enterprise scale</h4>
+  <p class="lede">Where does the policy corpus actually sit, once it holds personal data?</p>
+  <p>Five real answers, and the order they are usually ruled out in is legal before technical.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
+      <tbody>
+        <tr><td>Holds and searches the corpus</td><td>Elasticsearch</td><td>Licence plus the cluster. Mature, and the team you already have can run it</td></tr>
+        <tr><td></td><td>OpenSearch</td><td>Apache-licensed fork, no licence fee, and you own the operational burden</td></tr>
+        <tr><td></td><td>pgvector on PostgreSQL</td><td>Nearly free if Postgres is already there. Slower above a few million vectors, and one fewer system to get past architecture review</td></tr>
+        <tr><td></td><td>Azure AI Search</td><td>Per hour, and it arrives with an India datacentre answer already written</td></tr>
+        <tr><td></td><td>Pinecone</td><td>Per pod, fastest to stand up, and the hardest of the five to site inside India</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<article class="card" id="t2-r-quiz">
+  <span class="pairs">&#8596; 01:40 &#183; three questions, one from earlier material</span>
+  <h3>Topic quiz: retrieval</h3>
+  <h4>Question 1 &#183; this topic</h4>
+  <p>search_policy returns GOOD-2.1 at score 6 and GOOD-2.2 at score 5. GOOD-2.1 caps a goodwill credit at ₹2,000 and GOOD-2.2 names no figure. What does the one-point gap decide?</p>
+  <p><strong>The answer.</strong> <p><strong>Whether the customer is paid ₹2,000 or ₹2,50,000.</strong> And the gap is one point because somebody wrote the account note to make it one point.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Nothing, because the agent still has the ceiling."</p>
+  <p><strong>What is right about it.</strong> It is the right instinct from last week, and here there is no ceiling in the path. The cap lives in the clause, so losing the clause loses the cap.</p>
+  <h4>Question 2 &#183; this topic</h4>
+  <p>Your retrieval grader reads a clause id. Where should it read it from?</p>
+  <ul class="opt">
+    <li>A. The sentence the agent wrote to the customer</li>
+    <li>B. The result the retrieval step returned <span class="ok">&#8212; correct</span></li>
+    <li>C. Whichever clause scored highest</li>
+    <li>D. The case’s expected clause</li>
+  </ul>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> A is the model’s claim, and the model can name a clause it never retrieved. C makes the grader agree with the retrieval by construction, so it can never fail. D compares the case with itself.</p></p>
+  <p><strong>The likely wrong answer.</strong> C, because it sounds like reading the real answer.</p>
+  <p><strong>What is right about it.</strong> It does read something real. It reads the retrieval’s own output and calls it the verdict, which is the case-that-cannot-fail defect one level up.</p>
+  <h4>Question 3 &#183; from earlier</h4>
+  <blockquote>Week 1 named the four parts of the agent harness: <em>"the loop, the tool layer, the context built for each step, and the trace."</em></blockquote>
+  <p>A retrieved clause touches two of the four. Name them.</p>
+  <p><strong>The answer.</strong> <p><strong>The tool layer returns it, and the context built for each step puts it in front of the model.</strong> That is why a clause is subject to everything context is subject to, including being cut, which is topic 5.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Retrieval is its own part."</p>
+  <p><strong>What is right about it.</strong> It feels like a fifth part because it is new this week. Naming it as one hides the thing that matters, which is that a retrieved clause is context.</p>
+</article>
+
+<article class="card" id="t2-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A right answer reached under the wrong rule is a wrong answer that has not been paid for yet.</blockquote>
+  <p>The ₹2,000 is correct, and it is correct because one clause won by a single point with nothing watching.</p>
+</article>
+
+<article class="card" id="t2-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>✅ You can now</h3>
+  <p>One number in chat on the last line. <strong>A room that keeps saying hallucination after this</strong> has not taken the two-failure distinction, and it will cost them at 01:55.</p>
+  <h4>Your takeaway</h4>
+  <p>Write one line: which of the two failures has your own system had, and how did you find out?</p>
+  
+</article>
+</div>
+</div>
+<article class="card" id="t2-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-30</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>The seven clauses are tuned so that the governing clause wins on every case.</strong> Editing one word of <span class="mono">data/policy-docs.json</span> can change which clause wins, and the whole week runs on those margins. Run <span class="mono">make w3-search</span> after any edit and check the gap is still one point.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t3">
+  <summary><span class="num">3</span><span>Model-based grading (LLM-as-judge)</span><span class="when">01:45 to 02:22</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t3-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p class="lede"><strong>A grader is a component, so what is its failure rate?</strong></p>
+  
+  <p>The weak version is "LLM-as-judge is unreliable", which the room has read.</p>
+  <p>The stronger claim is that <strong>a grader is a component with a failure rate</strong>, the rate is measurable against labels a person wrote, and the measurement usually shows the expensive grader missing something a cheap one already caught.</p>
+  <p><strong>Open on the honest case for a model grader, not on its faults</strong>, or the room hears a warning instead of a method.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">evaluation framework &#183; 01:45 to 02:22</span>
+
+  <div class="beat" data-ref="t3-r-marks"><span class="t">01:45</span><div class="b">
+    <h4>It cites the wrong clause and scores full marks</h4>
+    <span class="pairs">The narrative &#183; Whole room · 5 min · written answer before the reveal</span>
+    
+    <p><span class="mono">make w3-grade</span>. Take the written answer before revealing why the second run is a problem.</p>
+    <p><strong>Give the concrete case or it sounds like pedantry.</strong> A Pro-to-Team upgrade mid-month, billed twice for the Pro charge: the duplicate is ₹1,200 and the ceiling is ₹4,000.</p>
+    <p><strong>Then the harder sentence.</strong> Every passing run of that case up to today carries no information about the clause. Saying that in a release meeting is harder than adding the grader.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-concept"><span class="t">01:50</span><div class="b">
+    <h4>What model-based grading is</h4>
+    <span class="pairs">The concept &#183; Whole room · 5 min</span>
+    
+    <p><strong>Open on the honest case.</strong> A room that hears "judges are unreliable" first will not build one, and then will use one anyway without measuring it.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-agree"><span class="t">01:55</span><div class="b">
+    <h4>The failure a grader cannot see</h4>
+    <span class="pairs">Components and design &#183; Whole room · 7 min</span>
+    
+    <p><span class="mono">make w3-agree</span>. <strong>Say the two directions before the number</strong>, because the number means nothing without them.</p>
+    <p><strong>Then the pattern, then the point, in that order.</strong> The two it let through are both the wrong-clause failure, and the grader built thirty minutes ago catches both for nothing.</p>
+    <p>Put the four lines up and <strong>point at them rather than walking them</strong>. Land on line 2.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-lab"><span class="t">02:02</span><div class="b">
+    <h4>Lab: measure how far your grader agrees with you</h4>
+    <span class="pairs">Hands-on lab &#183; Pairs · 14 min · 2 decide, 10 build, 2 check</span>
+    
+    <p><strong>Watch for one thing: whether they labelled before they graded.</strong> It is the single most important thing in the block. Ask to see the labels written down before the grader ran.</p>
+    <p><strong>Ask where the five answers came from.</strong> A set built to be instructive tells you nothing about production.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-atscale"><span class="t">02:16</span><div class="b">
+    <h4>At enterprise scale: who grades at volume</h4>
+    <span class="pairs">whole room · 3 min</span>
+    <p>Three minutes. <strong>Land on the in-house row</strong>, because it is the one teams dismiss and the one that is usually right here.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t3-r-quiz"><span class="t">02:19</span><div class="b">
+    <h4>Topic quiz: model-based grading</h4>
+    <span class="pairs">alone, in writing · 3 min</span>
+    <p><strong>Question three is the sharpest in the week.</strong> Read the week 2 quote aloud first, then let somebody argue for yes before giving the distinction.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t3-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="t3-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-30</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing calibrates the grader over time</td><td><strong>Nowhere in this course.</strong> A grader validated once stays validated on paper while the provider ships an update</td></tr>
+      <tr><td>The agreement rate has no threshold</td><td>Topic 4, at 02:56 — grader validation is a column, and so is who accepts the gap</td></tr>
+      <tr><td>A second agent reviewing the first is a different thing entirely</td><td>Week 5 — that is orchestration, and week 2 already sent it there</td></tr>
+      <tr><td>Five labels is too few to trust and it is what fits in ten minutes</td><td><strong>Nowhere.</strong> Say so. The method is right and the sample is a classroom sample</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t3-r-marks">
+  <span class="pairs">&#8596; 01:45 &#183; right to the rupee, wrong clause</span>
+  <h3>It cites the wrong clause and scores full marks</h3>
+  
+  <h4 class="quiet" style="font-weight:700">Same ledger, same rupees, two different decisions</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer, and the distinction to teach</summary>
+    <div class="dbody">
+      <pre>seed s0 · BILL-3.1 · paid ₹1,200   outcome PASS  retrieval PASS
+seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
+      <p>BILL-3.2 allows ₹1,200 because one month of a Pro plan is ₹1,200, so the ledger is identical.</p>
+      <p><strong>Give the case concretely.</strong> A Pro-to-Team upgrade mid-month, billed twice for the Pro charge. The duplicated charge is ₹1,200 and the ceiling is ₹4,000.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"It paid the right amount, so this is a logging problem."</strong> A serious answer from a serious person.</p>
+      <p><em>What is right.</em> Nothing is owed to anybody today and there is no incident. On a production Friday this is correctly not an escalation.</p>
+      <p><em>What is wrong.</em> The clause decides the figure. The two agree only while one month of the plan happens to equal the duplicated charge, which is a coincidence in the data.</p>
+      <p><strong>Extension question.</strong> What do you tell the release meeting about last month's passing runs?</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-concept">
+  <span class="pairs">&#8596; 01:50 &#183; the honest case for a model grader</span>
+  <h3>What model-based grading is</h3>
+  
+  <p>The sentence to land: <strong>a model grader has a failure rate, and until you measure it you have added a number to the report and no evidence to the system.</strong></p>
+</article>
+
+<article class="card" id="t3-r-agree">
+  <span class="pairs">&#8596; 01:55 &#183; seventy per cent, and what the misses have in common</span>
+  <h3>The failure a grader cannot see</h3>
+  
+  <h4>Reach for graders in this order, and stop at the first one that works</h4>
+  <p>Four lines, and the room gets them as a table on their own page. <strong>Point at it rather than walking it.</strong></p>
+  <h4 class="quiet" style="font-weight:700">The expensive grader misses what the cheap one already caught</h4>
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <pre>agreement 7/10 = 70%
+  passed what you failed: 2 (A3, A4)   both "wrong clause"
+  failed what you passed: 1 (A2)       a phrase list, not a meaning</pre>
+      <p><strong>Two directions first.</strong> On a payment path, passing what you failed costs more, because a pass releases money.</p>
+      <p><strong>Then the pattern, then the point.</strong> Both misses are the wrong-clause failure, and <code>grade_retrieval</code> catches both for nothing.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"70% is not good enough, we need 95%."</strong> The commonest response and the wrong shape of question.</p>
+      <p><em>What is right.</em> A grader that disagrees three times in ten is not usable as a release gate on its own.</p>
+      <p><em>What is wrong.</em> There is no threshold for a grader in the abstract. <strong>A grader at 95% that misses one class entirely is worse than one at 70% whose misses you can name.</strong></p>
+      <p><strong>Extension question.</strong> Who wrote the labels? If the answer is "the model wrote them", there is no agreement rate. There is a model agreeing with itself.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-lab">
+  <span class="pairs">&#8596; 02:02 &#183; the lab, and the order that has to hold</span>
+  <h3>Lab: measure how far your grader agrees with you</h3>
+  
+  <h4>Starting state and how you check it</h4>
+  <h4 class="quiet" style="font-weight:700">Label first, then grade. Reversed, the number means nothing.</h4>
+  <details>
+    <summary><span class="chev">›</span> What they will get wrong</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>They label after running the grader.</strong> The one to catch.</li>
+        <li><strong>Five answers chosen to be interesting.</strong> Ask where they came from.</li>
+        <li><strong>They report agreement and not the two directions.</strong></li>
+        <li><strong>They threshold the grader's own confidence score.</strong> Week 2's argument: not comparable, and nobody owns it.</li>
+      </ul>
+      <p><strong>Say the sample-size limitation out loud.</strong> Do not let the room leave thinking five is the method.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t3-r-atscale">
+  <span class="pairs">&#8596; 02:16 &#183; three or more named options a slot, no recommendation</span>
+  <h3>At enterprise scale: who grades at volume</h3>
+  <h4>At enterprise scale</h4>
+  <p class="lede">A thousand answers a month need a label. Who writes them?</p>
+  <p>Five real answers, and for an Indian GCC the cheapest of the five is often the first one.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
+      <tbody>
+        <tr><td>Produces the labels</td><td>An in-house review queue</td><td>Salary, and the policy knowledge is already in the building. Slowest to scale and the most accurate on your own rules</td></tr>
+        <tr><td></td><td>Labelbox</td><td>Per seat plus per label. Good tooling, and your policy has to be taught to somebody outside</td></tr>
+        <tr><td></td><td>Surge AI</td><td>Per label, managed workforce. Fastest to add volume, and the highest cost per label of the three</td></tr>
+        <tr><td></td><td>Amazon SageMaker Ground Truth</td><td>Per object, with an option to route to your own workforce. Cheap if you already run on AWS</td></tr>
+        <tr><td></td><td>A model grader with a published agreement rate</td><td>Near-zero per label, and the labelled set it was validated against is the real cost</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<article class="card" id="t3-r-quiz">
+  <span class="pairs">&#8596; 02:19 &#183; three questions, one from earlier material</span>
+  <h3>Topic quiz: model-based grading</h3>
+  <h4>Question 1 &#183; this topic</h4>
+  <p>You need to check a property of an answer. In what order do you reach for a grader?</p>
+  <p><strong>The answer.</strong> <p><strong>An assertion over state you hold. Then a comparison between two things you hold. Then a model grader, with an agreement rate beside it.</strong> And if nobody has written labels, you have no grader.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Whichever is quickest to write."</p>
+  <p><strong>What is right about it.</strong> Speed is a real constraint and the model grader often is quickest to write. It is the slowest to trust, because it is the only one of the three that needs a labelled set before it means anything.</p>
+  <h4>Question 2 &#183; this topic</h4>
+  <p>Your model grader agrees with your labels 7 times in 10. What is that number?</p>
+  <ul class="opt">
+    <li>A. A mark for the grader, and it needs to be higher</li>
+    <li>B. The sentence "three answers in ten, this verdict is wrong, and here is which three" <span class="ok">&#8212; correct</span></li>
+    <li>C. A confidence threshold to route on</li>
+    <li>D. Evidence the grader is unusable</li>
+  </ul>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> A treats a measurement as a score. C is week 2’s confidence argument returning. D is too fast: a grader at 70% whose misses are all one kind is more useful than one at 95% whose misses are scattered.</p></p>
+  <p><strong>The likely wrong answer.</strong> D, because 70% sounds unusable.</p>
+  <p><strong>What is right about it.</strong> It would be unusable as a release gate on its own, which is correct. What makes it usable is that the three it gets wrong are nameable.</p>
+  <h4>Question 3 &#183; from earlier</h4>
+  <blockquote>Week 2’s rule for choosing a mechanism, line four: <em>"Is the action irreversible? A model may never be the only control."</em></blockquote>
+  <p>The grader you built this hour is a model. Does it break that rule?</p>
+  <p><strong>The answer.</strong> <p><strong>No.</strong> Week 2’s rule is about a control standing in front of an irreversible action. A grader reads an answer after the fact and authorises nothing. It is a detective control, not an authorising one.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Yes, so we should not use it."</p>
+  <p><strong>What is right about it.</strong> Checking the new thing against last week’s rule is exactly right and should be encouraged. It collapses two jobs. Ask what the grader can cause to happen: nothing. Then ask what the ceiling can stop: a payment.</p>
+</article>
+
+<article class="card" id="t3-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A grader is a component with a failure rate, so it needs a number and the number needs somebody’s labels.</blockquote>
+  <p>The 70% is not a mark. It is a sentence naming which three are wrong.</p>
+</article>
+
+<article class="card" id="t3-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>✅ You can now</h3>
+  <p>One number in chat on the last line. <strong>The last line is the week’s instalment of the AI-review thread</strong>, and it escalates across the six weeks. Read it out rather than letting it sit on the page.</p>
+  <h4>Your takeaway</h4>
+  <p>Write one line: which grader would you reach for first in your own system, and which were you reaching for out of habit?</p>
+  
+</article>
+</div>
+</div>
+<article class="card" id="t3-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-30</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>Five labels is the classroom sample and the page says so.</strong> If a room pushes on it, agree and point at the homework. Do not defend five.</li>
+    <li><strong>Nothing in the course calibrates a grader over time.</strong> Say so when it comes up rather than implying week 5 covers it.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t4">
+  <summary><span class="num">4</span><span>Release gates and AI governance</span><span class="when">02:39 to 03:16</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t4-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p class="lede"><strong>Who decided the pass bar, and what does failing it stop?</strong></p>
+  
+  <p>The weak version is "you need a quality bar", which nobody disputes.</p>
+  <p>The stronger claim is that <strong>a threshold with no owner and no stated consequence is not a gate, it is a number somebody typed</strong>, and it behaves exactly as week 2's ceiling did.</p>
+  <p>Draw that parallel out loud. The room spent last week discovering that a ceiling nobody agreed to is a policy nobody agreed to. This is the same defect in the evidence layer.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">governance &#183; 02:39 to 03:16</span>
+
+  <div class="beat" data-ref="t4-r-sample"><span class="t">02:39</span><div class="b">
+    <h4>Forty thousand disputes, and what you sample</h4>
+    <span class="pairs">The narrative &#183; Whole room · 5 min · sixty seconds alone first</span>
+    
+    <p>Put the arithmetic on screen and let them check it. <strong>Label it illustrative, in that word, out loud as well as on the page.</strong></p>
+    <p><strong>The answer to land is that a sample and a written set do different jobs.</strong> Sampling finds what nobody imagined; the written set holds the class production has least of.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-concept"><span class="t">02:44</span><div class="b">
+    <h4>What a release gate is</h4>
+    <span class="pairs">The concept &#183; Whole room · 5 min</span>
+    
+    <p>One sentence, then the four parts and what most rows are missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and leave it there.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-owner"><span class="t">02:49</span><div class="b">
+    <h4>Who owns the pass bar</h4>
+    <span class="pairs">Components and design &#183; Whole room · 7 min</span>
+    
+    <p>Three things to check, and the first is nearly universal. <strong>Take the written answer on the 92% question</strong> before revealing it, because the room will name a senior person and the answer is the junior one.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-lab"><span class="t">02:56</span><div class="b">
+    <h4>Lab: write one row of the gate table</h4>
+    <span class="pairs">Hands-on lab &#183; Pairs, then swap · 14 min · 10 write, 4 review</span>
+    
+    <p>Paste the blank thirteen-column table into chat rather than having pairs copy the column names off the page. Ten minutes is tight and copying costs four of them.</p>
+    <p><strong>Nothing sums.</strong> If anybody produces a total out of 26, that is the cut feature returning under a new name.</p>
+    <p class="quiet">Somebody will ask whether a platform does this. The 03:10 table answers it. Give no recommendation.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-atscale"><span class="t">03:10</span><div class="b">
+    <h4>At enterprise scale: evaluation platforms</h4>
+    <span class="pairs">whole room · 3 min</span>
+    <p>Three minutes. <strong>Land on the ordering</strong> rather than on any one product. Give no recommendation.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t4-r-quiz"><span class="t">03:13</span><div class="b">
+    <h4>Topic quiz: release gates</h4>
+    <span class="pairs">alone, in writing · 3 min</span>
+    <p><strong>Read the week 2 quote aloud before question three.</strong> The answer is the decision owner column, and what changed is who the owner is.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t4-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="t4-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-30</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing monitors the requirement after release</td><td><strong>Week 4, at its close</strong> — ten minutes on which signal would have moved, who reads it, and what they do at 3am</td></tr>
+      <tr><td>Labelling sampled production traffic is priced and not solved</td><td><strong>Nowhere.</strong> It costs minutes of somebody who knows the policy, which is why it is a line in the Run-Cost Model</td></tr>
+      <tr><td>The table has thirteen columns and no total, on purpose</td><td>Never. A total across requirements is the same mistake as the overall rate at 00:21</td></tr>
+      <tr><td>Who is allowed to move a release date is assumed and not decided</td><td>Week 6 — evaluation strategy is a standing review heading and this table is what it reviews</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t4-r-sample">
+  <span class="pairs">&#8596; 02:39 &#183; the arithmetic, and the tempting answer</span>
+  <h3>Forty thousand disputes, and what you sample</h3>
+  
+  <details>
+    <summary><span class="chev">›</span> Answer key</summary>
+    <div class="dbody">
+      <pre>40 cases × 20 runs = 800 runs × 3 calls = 2,400 × ₹0.38 ≈ ₹912 a pass</pre>
+      <p><strong>The good answer stratifies:</strong> sample the ordinary traffic, keep every hand-written case, and run the hand-written ones more times because they sit on narrow margins.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Sample production and stop maintaining cases."</strong> Attractive, because real traffic feels more honest than a fixture.</p>
+      <p><em>What is right.</em> Production contains failures nobody imagined, and a hand-written set never will.</p>
+      <p><em>What is wrong.</em> Production traffic has no labels, and the class you most need is the class production has least of.</p>
+      <p><strong>Extension question.</strong> What does one labelled case cost, in minutes of a person who knows the policy? Multiply by the sample size.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t4-r-concept">
+  <span class="pairs">&#8596; 02:44 &#183; four parts, and the two that are missing</span>
+  <h3>What a release gate is</h3>
+  
+  <p>The distinction to land: <strong>a row with a requirement and a number is a dashboard. A gate has a reason and a name.</strong></p>
+</article>
+
+<article class="card" id="t4-r-owner">
+  <span class="pairs">&#8596; 02:49 &#183; three things to check, and who is accountable</span>
+  <h3>Who owns the pass bar</h3>
+  
+  <h4>The failure this part is really about</h4>
+  <p>The same framing is on their page. Take the written answer before revealing it.</p>
+  <h4>Three things to check on the row you are reviewing</h4>
+  <p>The same three are on their page, because the reviewing pair needs them as much as you do.</p>
+  <details>
+    <summary><span class="chev">›</span> The 92% answer, and the argument</summary>
+    <div class="dbody">
+      <p><strong>Whoever shipped.</strong> Accountability with no named owner lands on the most junior person on the path.</p>
+      <p><strong>The wrong answer worth taking seriously.</strong> "The person who said it was fine on the call." <em>What is right:</em> morally, yes. <em>What is wrong:</em> nothing recorded it, so there is no artefact, and in a review eight months later the call did not happen.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t4-r-lab">
+  <span class="pairs">&#8596; 02:56 &#183; the lab, and the two columns that matter</span>
+  <h3>Lab: write one row of the gate table</h3>
+  
+  <h4>Starting state and how you check it</h4>
+  <h4 class="quiet" style="font-weight:700">Most rows arrive with a threshold, a result, and nobody’s name</h4>
+  <details>
+    <summary><span class="chev">›</span> What to watch for while they write</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>A threshold with no reason.</strong> Nearly universal. Ask where 95 came from.</li>
+        <li><strong>A team name in the decision owner column.</strong> A team cannot accept a risk.</li>
+        <li><strong>Grader validation blank, or filled with the grader's own output.</strong> This is the column that separates a gate from a dashboard.</li>
+      </ul>
+      <p><strong>Say in advance that "I could not find out who owns this" is a pass.</strong> Otherwise people invent a name.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t4-r-atscale">
+  <span class="pairs">&#8596; 03:10 &#183; three or more named options a slot, no recommendation</span>
+  <h3>At enterprise scale: evaluation platforms</h3>
+  <h4>At enterprise scale</h4>
+  <p class="lede">What actually stops a release when the bar is not met?</p>
+  <p>Five real answers, running from cheapest and fastest to strongest and slowest. No team picks on engineering grounds alone.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
+      <tbody>
+        <tr><td>Blocks the release</td><td>GitHub Actions with a required check</td><td>Included if you are already there. The bar lives in a YAML file any engineer can edit, which reads as such to an auditor</td></tr>
+        <tr><td></td><td>GitLab CI with a protected environment</td><td>The same, plus an approval tied to a named group. One more thing to administer</td></tr>
+        <tr><td></td><td>Jenkins with a promotion gate</td><td>Free, and the maintenance is a person. Common in Indian banks because it predates the rest</td></tr>
+        <tr><td></td><td>ServiceNow change request</td><td>Per seat, slow on purpose, and it is what your risk function already recognises</td></tr>
+        <tr><td></td><td>A maker-checker screen in Finacle or FLEXCUBE</td><td>Already licensed in most Indian banks. The strongest audit answer of the five, and the furthest from the engineer who found the problem</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<article class="card" id="t4-r-quiz">
+  <span class="pairs">&#8596; 03:13 &#183; three questions, one from earlier material</span>
+  <h3>Topic quiz: release gates</h3>
+  <h4>Question 1 &#183; this topic</h4>
+  <p>Of the thirteen columns in the gate table, which two carry the weight, and which is nearly always empty when a row arrives?</p>
+  <p><strong>The answer.</strong> <p><strong>Grader validation and decision owner carry the weight.</strong> Grader validation is the one nearly always empty, or filled with the grader’s own output.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Result and threshold."</p>
+  <p><strong>What is right about it.</strong> They are the two people look at, which is exactly why they are not the two that carry the weight. A result with no validated grader behind it is a number about nothing.</p>
+  <h4>Question 2 &#183; this topic</h4>
+  <p>A gate-table row says the threshold is 95%. What is the next question?</p>
+  <ul class="opt">
+    <li>A. Is 95% high enough for a payment path?</li>
+    <li>B. Who chose 95, and what did they compare it against? <span class="ok">&#8212; correct</span></li>
+    <li>C. What is the current rate?</li>
+    <li>D. How many runs is it measured over?</li>
+  </ul>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> C and D are real questions and both come second. A invites an argument about the number with nobody in the room who can move it.</p></p>
+  <p><strong>The likely wrong answer.</strong> D, because a rate with no run count is meaningless.</p>
+  <p><strong>What is right about it.</strong> That is topic 1’s lesson applied correctly, and it is the right second question. It is second because a threshold with no author is not a gate at all.</p>
+  <h4>Question 3 &#183; from earlier</h4>
+  <blockquote>Week 2’s fifth outcome: <em>"write one row of a policy table someone else could build from, marking it an invariant, a limit or a tuning number, with an owner."</em></blockquote>
+  <p>Which column of this week’s gate table is that owner column, and what changed about what the owner owns?</p>
+  <p><strong>The answer.</strong> <p><strong>The decision owner column.</strong> Last week the owner owned a number, which is the ceiling. This week the owner accepts a risk, which is what happens when the requirement fails. Those are different people in most organisations.</p></p>
+  <p><strong>The likely wrong answer.</strong> "It is the same column and the same person."</p>
+  <p><strong>What is right about it.</strong> It is the same column, and noticing the continuity is right. The person changes: owning a threshold and accepting the consequence of missing it are different jobs.</p>
+</article>
+
+<article class="card" id="t4-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>A threshold with no owner and no stated consequence is not a gate. It is a number somebody typed.</blockquote>
+  <p>Last week: a ceiling nobody agreed to is a policy nobody agreed to. This week: the same defect in the evidence layer, and harder to see.</p>
+</article>
+
+<article class="card" id="t4-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>✅ You can now</h3>
+  <p>One number in chat on the last line.</p>
+  <h4>Your takeaway</h4>
+  <p>Write one line: name the requirement in your own system that nothing currently tests, and who would have to accept the risk on it.</p>
+  
+</article>
+</div>
+</div>
+<article class="card" id="t4-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-30</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>A blank thirteen-column table has to be ready to paste before the day.</strong> Without it, pairs copy thirteen column names off the page and ten minutes becomes six.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+
+<details class="topic" id="t5">
+  <summary><span class="num">5</span><span>Context engineering</span><span class="when">03:23 to 04:00</span><span class="caret">&#8250;</span></summary>
+  <div class="topicbody">
+<div class="head" id="t5-purpose">
+  <span class="k">read this before you teach it</span>
+  <h2>What this topic is for</h2>
+  <p class="lede"><strong>What happens to the answers when you cut what the model is shown?</strong></p>
+  
+  <p>The weak version is "context windows are limited, so prune", which every engineer here has done.</p>
+  <p>The stronger claim is that <strong>pruning has a zone where it looks free, the zone ends at once rather than sloping, and you cannot find the edge by reading the prompt</strong>. You find it by running the cases.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">context engineering &#183; 03:23 to 04:00</span>
+
+  <div class="beat" data-ref="t5-r-curve"><span class="t">03:23</span><div class="b">
+    <h4>Cut the policy text and watch the answers fail</h4>
+    <span class="pairs">The narrative &#183; Whole room · 5 min · predict in one written line first</span>
+    
+    <p><strong>Take the written prediction first.</strong> One line, what shape is the curve. Then <span class="mono">make w3-trim</span>.</p>
+    <p>Show the table and hold the explanation for 03:33. The room should sit with the 180 row for a moment.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-concept"><span class="t">03:28</span><div class="b">
+    <h4>What context engineering is</h4>
+    <span class="pairs">The concept &#183; Whole room · 5 min</span>
+    
+    <p>One sentence, then the four rows. <strong>Land on the third row.</strong> The account note is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-cliff"><span class="t">03:33</span><div class="b">
+    <h4>Why the curve falls off a cliff</h4>
+    <span class="pairs">Components and design &#183; Whole room · 7 min</span>
+    
+    <p><strong>Give the three readings in order.</strong> Trimming improved a number. The zone ends at once. Below the cliff a sort order decides. The third is the coldest sentence in the session and it is worth saying slowly.</p>
+    <p><strong>Close on the durable rule</strong>, because it is the part that does not depend on any of these numbers.</p>
+    <p class="quiet">Two papers support the shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-lab"><span class="t">03:40</span><div class="b">
+    <h4>Lab: find your own cliff</h4>
+    <span class="pairs">Hands-on lab &#183; Alone · 14 min · 2 decide, 10 build, 2 check</span>
+    
+    <p><strong>Circulate for the person who trims their own prompt without running anything.</strong> That is the habit this whole topic exists to replace.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-atscale"><span class="t">03:54</span><div class="b">
+    <h4>At enterprise scale: context budgets in production</h4>
+    <span class="pairs">whole room · 3 min</span>
+    <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+  </div></div>
+
+  <div class="beat" data-ref="t5-r-quiz"><span class="t">03:57</span><div class="b">
+    <h4>Topic quiz: context engineering</h4>
+    <span class="pairs">alone, in writing · 3 min</span>
+    <p><strong>Read the week 1 quote aloud before question three.</strong> Watch for "we confirmed the paper" and take it apart.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="t5-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="t5-r-scope">
+  <span class="pairs">&#8596; the whole topic &#183; read before you teach it</span>
+  <span class="tag">scope &#183; written 2026-09-30</span>
+  <h3>What this topic leaves broken on purpose</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Nothing tells you the safe budget in advance</td><td><strong>Nowhere.</strong> You measure it. That is the whole point of the lab</td></tr>
+      <tr><td>Nothing measures grader or model drift over time</td><td><strong>Nowhere in this course.</strong> A grader validated once stays validated on paper</td></tr>
+      <tr><td>Compaction across a run that will not fit is untouched</td><td>Week 5 — and 03:23 is the seed of it</td></tr>
+      <tr><td>The retriever here is lexical, so the numbers are this retriever’s</td><td>Never fixed here. The shape is what transfers, not the thresholds</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<article class="card" id="t5-r-curve">
+  <span class="pairs">&#8596; 03:23 &#183; the curve, shown before it is explained</span>
+  <h3>Cut the policy text and watch the answers fail</h3>
+  
+  <p>Most predictions are a straight line downwards. <strong>Nobody predicts that one row goes up.</strong> Do not explain it here; 03:33 is where the three readings go.</p>
+</article>
+
+<article class="card" id="t5-r-concept">
+  <span class="pairs">&#8596; 03:28 &#183; four things in one window</span>
+  <h3>What context engineering is</h3>
+  
+  <p>The sentence to land: <strong>only one of the four rows is chosen by you at the moment it matters.</strong></p>
+</article>
+
+<article class="card" id="t5-r-cliff">
+  <span class="pairs">&#8596; 03:33 &#183; the mechanism, and the sourcing</span>
+  <h3>Why the curve falls off a cliff</h3>
+  
+  <h4>Three readings, and the second is the one to take home</h4>
+  <p>Trimming improved a number. The zone ends at once. Below the cliff a sort order decides.</p>
+  <details>
+    <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
+    <div class="dbody">
+      <p><strong>"Shorter context is better, we have been overloading it."</strong> The 180 row invites it.</p>
+      <p><em>What is right.</em> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement rather than a measurement error.</p>
+      <p><em>What is wrong.</em> The improvement and the collapse have one cause, and the gap has no preferred direction. <strong>Ask for the next row.</strong> At 120 the adversarial case is at 55% and ₹22,87,600 has left the building.</p>
+      <p><strong>Extension question.</strong> What in your own system shares an eviction budget with the conversation history?</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
+    <div class="dbody">
+      <p>Two findings in the field notes support the shape, and both need their hedges if they are named at all. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation. Both are in week 1's reading for anyone who asks.</p>
+      <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-lab">
+  <span class="pairs">&#8596; 03:40 &#183; the lab, and the habit it replaces</span>
+  <h3>Lab: find your own cliff</h3>
+  
+  <h4>Starting state and how you check it</h4>
+  <h4 class="quiet" style="font-weight:700">Starting state: eight budgets. Check: make w3-trim</h4>
+  <details>
+    <summary><span class="chev">›</span> What they will get wrong</summary>
+    <div class="dbody">
+      <ul>
+        <li><strong>They trim and do not re-run.</strong> The habit the topic replaces. Ask what the adversarial row did.</li>
+        <li><strong>They report a percentage without the two adjacent budgets.</strong> The edge is between two rows, and one number does not locate it.</li>
+        <li><strong>They conclude a universal safe budget exists.</strong> It is this retriever on seven clauses. The shape transfers; the number does not.</li>
+      </ul>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="t5-r-atscale">
+  <span class="pairs">&#8596; 03:54 &#183; three or more named options a slot, no recommendation</span>
+  <h3>At enterprise scale: context budgets in production</h3>
+  <h4>At enterprise scale</h4>
+  <p class="lede">What do teams actually use to keep a context budget under control?</p>
+  <p>Five real answers, and none of the five tells you where your cliff is.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
+      <tbody>
+        <tr><td>Controls or observes the budget</td><td>Anthropic prompt caching</td><td>Cheaper reads on a repeated prefix, and a write premium on the first call. Saves money only if the prefix is genuinely stable</td></tr>
+        <tr><td></td><td>OpenAI prompt caching</td><td>Automatic on a matching prefix, no control over what is cached, and nothing to configure</td></tr>
+        <tr><td></td><td>Gemini context caching</td><td>Explicit and billed by the hour the cache is held. The most honest pricing of the three, and the one that makes you decide</td></tr>
+        <tr><td></td><td>Langfuse</td><td>Open source or hosted. Shows token counts per step, so a growing prefix is visible before it is expensive</td></tr>
+        <tr><td></td><td>OpenTelemetry GenAI conventions</td><td>Free, and a specification rather than a product, so somebody on your team implements it</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+
+<article class="card" id="t5-r-quiz">
+  <span class="pairs">&#8596; 03:57 &#183; three questions, one from earlier material</span>
+  <h3>Topic quiz: context engineering</h3>
+  <h4>Question 1 &#183; this topic</h4>
+  <p>Cutting the policy text from 217 characters to 180 moved the adversarial case from 75% to 100%. What does that tell you, and what does it not license?</p>
+  <p><strong>The answer.</strong> <p>The verdict turns on a scoring gap of one or two points, narrow enough that a change in either direction moves it. <strong>It does not license trimming</strong>, because the same mechanism takes the case to 0% at 100 characters.</p></p>
+  <p><strong>The likely wrong answer.</strong> "Shorter context is better, we have been overloading it."</p>
+  <p><strong>What is right about it.</strong> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.</p>
+  <h4>Question 2 &#183; this topic</h4>
+  <p>At 60 characters a clause almost every clause scores zero. What decides the answer then?</p>
+  <ul class="opt">
+    <li>A. The model’s judgement, with less to go on</li>
+    <li>B. Whichever clause id sorts first <span class="ok">&#8212; correct</span></li>
+    <li>C. The clause that was retrieved last time</li>
+    <li>D. The case’s expected clause</li>
+  </ul>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> Nothing about the model changed, and the scores are tied, so the tie-break decides. The tie-break is <span class="mono">sorted()</span>.</p></p>
+  <p><strong>The likely wrong answer.</strong> A, because with less context the model is guessing.</p>
+  <p><strong>What is right about it.</strong> It is the intuitive answer and it is half right: the system is guessing. It is not the model guessing. The choice was made before the model saw anything.</p>
+  <h4>Question 3 &#183; from earlier</h4>
+  <blockquote>Week 1’s reading carried this note against the compression-cliff finding: <em>"Trimming your tool and policy prompts is a runtime-reliability decision. There is a safe-looking zone, and it ends abruptly."</em></blockquote>
+  <p>Week 1 asserted that. What did you do today that week 1 could not?</p>
+  <p><strong>The answer.</strong> <p><strong>Measured where the zone ends</strong>, on this system, with a number beside it. Week 1 could not, because there was no evaluation harness. That ordering is why context engineering is this week’s topic and not week 1’s.</p></p>
+  <p><strong>The likely wrong answer.</strong> "We confirmed the paper."</p>
+  <p><strong>What is right about it.</strong> The shape did match, and noticing that is right. We measured one lexical retriever on seven clauses. Naming the difference between that and a confirmation is the answer.</p>
+</article>
+
+<article class="card" id="t5-r-line">
+  <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
+  <h3>The line this topic exists to land</h3>
+  <blockquote>You can only tune what you can measure, and the thing you most want to tune is what the model is shown.</blockquote>
+  <p>The ₹37,86,400 is what an untested guess costs. Not findable by reading the prompt; findable in ten minutes by running the cases.</p>
+</article>
+
+<article class="card" id="t5-r-checkpoint">
+  <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
+  <h3>✅ You can now</h3>
+  <p>Not rated. <strong>The last line is the one to read out</strong>, because the 180-character row is the thing a room takes away wrongly.</p>
+  <h4>Your takeaway</h4>
+  <p>Write one line: name the input in your own system that shares an eviction budget with the conversation history, and say what you will measure first.</p>
+  
+</article>
+</div>
+</div>
+<article class="card" id="t5-open">
+  <span class="pairs">&#8596; before you teach this at all</span>
+  <span class="tag warn">state &#183; checked 2026-09-30</span>
+  <h3>What is ready, and what is still open</h3>
+  
+  <ul>
+    <li><strong>The curve is not a straight line and that is the teaching, not a defect.</strong> Do not tidy the table. The 180 row and the 60 row are both real runs and both are instructive.</li>
+    <li><strong>The 03:54 table is first on the cut list.</strong> If the session is over, point at it on their page and go to the recall.</li>
+  </ul>
+</article>
+  </div>
+</details>
+
+<div class="head" id="closing">
+  <span class="k">the close &#183; 04:02 to 05:00</span>
+  <h2>How the session closes</h2>
+  
+  <p><strong>Nothing new after 04:00.</strong> The close is recall, the teardown, the quiz and the takeaway, in that order, and it is 58 minutes.</p>
+  <p><strong>Assign the five teardown questions by name before the day.</strong> An unassigned question to a room of eight produces silence.</p>
+</div>
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">the close &#183; 04:02 to 05:00</span>
+
+  <div class="beat" data-ref="close-r-recall"><span class="t">04:02</span><div class="b">
+    <h4>Recall: every control the agent gained today</h4>
+    <span class="pairs">Alone, in writing, notes closed · 10 min · then compare with your pair</span>
+    
+    <p><strong>Do not put the table on screen first.</strong> Six minutes alone, four in pairs, then reveal it.</p>
+    <p><strong>What most rooms miss is the per-class figure.</strong> They remember the case set and the rate and forget the thing that makes a missing class visible.</p>
+    <p class="quiet">This is retrieval practice rather than a summary. If the room is quiet at four minutes, that is the exercise working.</p>
+  </div></div>
+
+  <div class="beat" data-ref="close-r-teardown"><span class="t">04:12</span><div class="b">
+    <h4>Architectural teardown</h4>
+    <span class="pairs">Whole room · 28 min · five questions, one assigned to each of five people</span>
+    
+    <p>Architecture on screen and leave it there. Five minutes a question. <strong>Assign each to a named person before the day.</strong></p>
+    <p><strong>Question 4 is the one that reveals whether the week landed.</strong> A room that answers "we show the trace" has not taken the difference between what happened and why it was allowed to happen.</p>
+    <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="closing-a-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="close-r-recall">
+  <span class="pairs">&#8596; 04:02 &#183; retrieval practice, not a summary</span>
+  <h3>Recall: every control the agent gained today</h3>
+  
+  <p><strong>The six rows are the "What the agent can do now" table.</strong> Rooms reliably produce four of the six.</p>
+  <details>
+    <summary><span class="chev">›</span> What gets missed, in order of how often</summary>
+    <div class="dbody">
+      <ol>
+        <li><strong>The per-class figure.</strong> Almost always. It is the one that makes an absence visible.</li>
+        <li><strong>The retrieval grader.</strong> People remember building it and forget it is a control.</li>
+        <li><strong>The agreement rate.</strong> Remembered as a number rather than as a thing the agent now has.</li>
+      </ol>
+      <p>Reveal the table and let people see the gap. Do not narrate it.</p>
+    </div>
+  </details>
+</article>
+
+<article class="card" id="close-r-teardown">
+  <span class="pairs">&#8596; 04:12 &#183; five questions, and the full answer key</span>
+  <h3>Architectural teardown</h3>
+  
+  <h4>1 · The suite passes and the policy document changed. Who notices?</h4>
+  <p><em>A good answer</em> pins the document version into the case, so a clause edit fails the suite rather than passing it quietly. It names who owns the document, which is almost never the team that owns the agent.</p>
+  <p><em>The wrong answer worth taking seriously.</em> "The document is in git, so review catches it." Review catches a diff. It does not catch that GOOD-2.1 now scores below GOOD-2.2.</p>
+  <p><em>Push on this.</em> What is the smallest edit to that document that changes an answer and passes code review? A word.</p>
+  <hr class="hair">
+  <h4>2 · Forty thousand disputes a month. Which cases do you run, and how often?</h4>
+  <p><em>A good answer</em> stratifies, keeps every hand-written case, and runs the ones on narrow margins more often. It gives a figure for what one full pass costs.</p>
+  <p><em>The wrong answer.</em> "All of them, nightly." Ask what that costs at ₹912 a pass and what it buys over running the narrow ones twenty times.</p>
+  <p><em>Push on this.</em> Which case would you run on every commit? Most rooms name the adversarial one, and that is right.</p>
+  <hr class="hair">
+  <h4>3 · The grader agreed with you in September. It is March. What has moved?</h4>
+  <p><em>A good answer</em> names three things: the provider shipped an update, the policy changed, and the traffic changed. It says the agreement rate has to be re-measured on a schedule, and names one.</p>
+  <p><em>The wrong answer.</em> "We would notice." Nothing in the system reports grader drift, and every test still passes while it happens.</p>
+  <p><em>Push on this.</em> What would you have to store in September to be able to answer this in March? The labelled set, and the version of everything.</p>
+  <hr class="hair">
+  <h4>4 · A regulator asks why this customer was paid ₹2,000 and not ₹2,50,000</h4>
+  <p><em>A good answer</em> shows the clause id the retrieval step returned, the version of the document, the case that covers this shape, and the rate that case passes at. It does not show the model's sentence.</p>
+  <p><em>The wrong answer.</em> "We show the trace." A trace shows what happened. The question is why it was allowed to happen, which is the clause and the gate.</p>
+  <p><em>Push on this.</em> Week 1 asked what an audit trail has to contain beyond a stored prompt and completion. Today adds two things to that answer. Which two?</p>
+  <p class="quiet"><strong>This is the question that reveals whether the week landed.</strong></p>
+  <hr class="hair">
+  <h4>5 · The retrieval is 80% right. Where do you spend the next two weeks?</h4>
+  <p><em>A good answer</em> refuses the question until it knows which 20%. If the failures are one class, the fix is cases. If they are scattered, the fix is retrieval, and that is week 5.</p>
+  <p><em>The wrong answer worth taking seriously.</em> "Re-rank, it is the standard fix." It may well be. Ask how they would know the next morning whether it helped, and the answer is the evaluation harness they built this morning.</p>
+  <p><em>Push on this.</em> What would make you spend the two weeks on the case set instead?</p>
+</article>
+</div>
+</div>
+
+<div class="head" id="quiz">
+  <span class="k">04:40 &#183; eight asked, twenty-five in the bank</span>
+  <h2>Eight questions, ten minutes</h2>
+  
+  <p>The bank is <span class="mono">docs/teaching/quiz/week-3.md</span>: twenty-five items, eight asked here, and fifteen already asked inside the topics.</p>
+  <p><strong>Q3 is from week 2 and Q5 is from week 1.</strong> Read both quotes aloud. In a live room nobody goes and looks it up; they guess or sit quiet.</p>
+  <p><strong>Two need a read-out rather than a tally.</strong> Q4 splits most rooms between C and B, and the difference is one sentence about whether the rate had settled. Q8 splits between A and C, and C is a good engineering instinct used to avoid a decision.</p>
+</div>
+
+<article class="card">
+  <h4>Q1 · The four classes of case</h4>
+  <p class="qmeta">recall · this week</p>
+  <p>Name the four classes of case, and say which one your own suite has none of.</p>
+
+  <p class="qmeta"><strong>The wrong answer worth catching.</strong> "Happy path and error path." That is two classes doing the work of four, and it merges the two that matter. What is right about it: most teams genuinely do ship with those two.</p>
+</article>
+<article class="card">
+  <h4>Q2 · The case that was missing</h4>
+  <p class="qmeta">apply · this week · renders on the learner check</p>
+  <p>Last week’s fix made the same ticket pay once, and seven cases passed. Which one case would have failed?</p>
+  <ul class="opt">
+    <li>A. The same ticket delivered twice to one process</li>
+    <li>B. A ticket whose account does not exist</li>
+    <li>C. The same ticket delivered twice to two processes <span class="ok">&#8212; correct</span></li>
+    <li>D. Two different tickets on the same account, arriving at the same moment</li>
+  </ul>
+  <p class="qmeta">A is the case the suite already has. B is a different control. <strong>If somebody argues for D:</strong> ask what the fix was, then ask what a second process has that a second thread does not.</p>
+</article>
+<article class="card">
+  <h4>Q3 · Where the failure moved</h4>
+  <p class="qmeta">judge · from week 2</p>
+  <blockquote>Week 2’s opening: <em>"Five things go wrong before 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written."</em></blockquote>
+  <p>You added an evaluation harness today. What is this week’s version of your own rule working exactly as written and still being wrong?</p>
+
+  <p class="qmeta"><strong>What a strong answer adds.</strong> It names who can see it. Nobody, unless somebody reads which classes of case are present, which is why the per-class figure exists.</p>
+  <p class="qmeta"><strong>The wrong answer worth spending time on.</strong> "The grader is wrong." What is right: a grader can be wrong, and topic 3 measures exactly that. What is wrong: a wrong grader is a component failing, and a thin case set is the suite working.</p>
+</article>
+<article class="card">
+  <h4>Q4 · Ten out of ten</h4>
+  <p class="qmeta">apply · this week · renders on the learner check · C splits the room</p>
+  <p>One case passes 10 times out of 10. You run it twenty times and it passes 15. What do you report?</p>
+  <ul class="opt">
+    <li>A. 83%, the mean of the two results</li>
+    <li>B. 75%, and that the rate was still moving at twenty runs <span class="ok">&#8212; correct</span></li>
+    <li>C. 75%, because the larger sample is the better estimate</li>
+    <li>D. 100%, because the first ten runs were against the release build</li>
+  </ul>
+  <p class="qmeta"><strong>C splits the room and is the one to take up.</strong> It is correct about the estimate and drops the only thing anybody needed. A is arithmetic under time pressure: the second sample contains the first. D is a real practice, reported from the ten runs before the first failure.</p>
+  <p class="qmeta"><strong>Follow-up.</strong> How many runs would make you stop? There is no number.</p>
+</article>
+<article class="card">
+  <h4>Q5 · Which part of the harness</h4>
+  <p class="qmeta">apply · from week 1</p>
+  <blockquote>Week 1 named the four parts of the agent harness: <em>"the loop, the tool layer, the context built for each step, and the trace."</em></blockquote>
+  <p>search_policy arrived today. Which part is it, and which second part does its result reach?</p>
+
+  <p class="qmeta"><strong>The wrong answer worth catching.</strong> "It is retrieval, so it is its own part." Retrieval is not a fifth part of the harness, and naming it as one hides the thing that matters.</p>
+  <p class="qmeta"><strong>Follow-up.</strong> Which part did today's cliff belong to? The context built for each step.</p>
+</article>
+<article class="card">
+  <h4>Q6 · Two failures, two graders</h4>
+  <p class="qmeta">apply · this week · renders on the learner check</p>
+  <p>An agent retrieves the ceiling clause on a duplicate-charge case and credits one month of the plan, which is the right figure. Which grader catches it?</p>
+  <ul class="opt">
+    <li>A. An assertion over the ledger</li>
+    <li>B. A model grader asked whether the answer is reasonable</li>
+    <li>C. A person reviewing the wording sent to the customer</li>
+    <li>D. A grader that checks which clause the retrieval step returned <span class="ok">&#8212; correct</span></li>
+  </ul>
+  <p class="qmeta">A is what almost every suite has. C catches a badly worded refusal and nothing about which rule was applied. <strong>B is worth a minute:</strong> ask what it would have to be given before it could answer, and the answer is the case.</p>
+</article>
+<article class="card">
+  <h4>Q7 · Seven out of ten</h4>
+  <p class="qmeta">apply · this week · written answer</p>
+  <p>Your model grader agrees with your labels seven times in ten. Name the two directions it can disagree in, and say which of the two costs you more on a payment path.</p>
+
+  <p class="qmeta"><strong>The best answers refuse to stop there.</strong> A false alarm is cheap per event and expensive in aggregate, because a grader people stop trusting is a grader people switch off.</p>
+  <p class="qmeta"><strong>The wrong answer worth catching.</strong> "70% is not good enough, we need 95%." There is no threshold for a grader in the abstract.</p>
+</article>
+<article class="card">
+  <h4>Q8 · The release on Thursday</h4>
+  <p class="qmeta">apply · this week · renders on the learner check</p>
+  <p>A new model version scores 78% overall against your suite, up from 76%. On the adversarial cases it scores 65%, down from 75%. The release is on Thursday. What do you do?</p>
+  <ul class="opt">
+    <li>A. Hold it, and take the decision to the owner named on that gate-table row <span class="ok">&#8212; correct</span></li>
+    <li>B. Ship it, because the overall rate improved</li>
+    <li>C. Write more adversarial cases and re-run before deciding</li>
+    <li>D. Ship it behind a flag and watch production</li>
+  </ul>
+  <p class="qmeta">B is what the overall number invites. <strong>D is the real competitor to A</strong>, not a silly option: a flag moves the failure into production, where each occurrence pays ₹2,50,000.</p>
+  <p class="qmeta"><strong>Follow-up if the room splits between A and C.</strong> Who is allowed to say Thursday moves? If nobody in the room can, C is not an available answer.</p>
+</article>
+
+<div class="teach">
+<div class="pane pane-script">
+<div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
+<article class="card">
+  <span class="tag">the close &#183; 04:02 to 05:00</span>
+
+  <div class="beat" data-ref="close-r-takeaway"><span class="t">04:50</span><div class="b">
+    <h4>Takeaway, said out loud</h4>
+    <span class="pairs">Everybody · 5 min · one sentence each, written then spoken</span>
+    
+    <p>Everybody writes, then everybody says it. <strong>Do not read your own list out.</strong></p>
+    <p><strong>Listen for which topic nobody names.</strong> That is the one to open week 4 with, and it is the most useful five minutes of the day for you rather than for them.</p>
+    <p>Open the sealed prediction here and read three. Most wrote "the tests are shallow". The answer the day argued for is a question: how many times has any case in it ever failed?</p>
+  </div></div>
+</article>
+</div>
+<div class="pane pane-ref" id="closing-b-refpane" tabindex="-1">
+<div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
+
+<article class="card" id="close-r-takeaway">
+  <span class="pairs">&#8596; 04:50 &#183; the one sentence each topic was meant to land</span>
+  <h3>Takeaway, said out loud</h3>
+  
+  <p>Compare what is said with what was intended. <strong>One sentence a topic:</strong></p>
+  <ol>
+    <li>A pass is a claim about the cases you chose, not about your system.</li>
+    <li>A right answer under the wrong rule is a wrong answer that has not been paid for yet.</li>
+    <li>A grader is a component with a failure rate, so it needs a number and somebody's labels.</li>
+    <li>A threshold with no owner and no consequence is a number somebody typed.</li>
+    <li>You can only tune what you can measure.</li>
+  </ol>
+  <p><strong>The topic nobody names is the one to open week 4 with.</strong></p>
+</article>
+</div>
+</div>
+
+<div class="head" id="tools">
+  <span class="k">after today &#183; the resource shelf</span>
+  <h2>Tools for your own system</h2>
+  
+  <p>Six of ours, placed where this week’s question arises. <strong>Every one is Released</strong> in <span class="mono">src/data/resources.ts</span>, and the reader question and the action verb on the learner page are the registry’s own words rather than a paraphrase.</p>
+  <p><strong>The first one is the assignment.</strong> Name it at 02:56 while the gate table is on screen, not at the close. The worksheet is that table with twelve more rows of room.</p>
+  <p><strong>The Model Selection Tool is the last one and it carries what was cut.</strong> The old week pointed the evaluation harness at a second model version and watched two numbers. That is gone, because the room built nothing. The tool is where a learner answers the same question for their own system, from ten runs on four test cases.</p>
+  <p class="quiet">Do not add a seventh from memory. Read the registry, use its reader question and its verb, and link the tool’s own page rather than the directory.</p>
+</div>
+
+<article class="card">
+  <h4>The six, in the order they are placed</h4>
+  <div class="scroller"><table>
+    <thead><tr><th>The question it answers</th><th>What you do with it</th><th>Registry</th></tr></thead>
+    <tbody>
+      <tr><td>A release meeting is coming and somebody will ask whether the evaluation results mean the system is ready.</td><td><a href="/resources/evaluation-gates-worksheet">Connect one requirement to its evidence and a release decision with the Evaluation-gates worksheet</a></td><td class="mono">Released</td></tr>
+      <tr><td>One word, error, is covering three situations that need opposite responses.</td><td><a href="/resources/agent-failure-triage-kit">Separate absent evidence, an unreachable dependency and an uncertain action with the Agent Failure Triage Kit</a></td><td class="mono">Released</td></tr>
+      <tr><td>The agent has to decide and the evidence it needs is not available.</td><td><a href="/resources/guides/uncertain-evidence">Design the third outcome with What to do with uncertain evidence</a></td><td class="mono">Released</td></tr>
+      <tr><td>Somebody asks what the evaluation suite costs to run every month.</td><td><a href="/resources/run-cost-model">Price evaluation maintenance and re-qualification as operating lines with the Run-Cost Model Tool</a></td><td class="mono">Released</td></tr>
+      <tr><td>The release is going out and nobody can say who would notice if it silently stopped working.</td><td><a href="/resources/deployment-checklist">Name the action, owner, evidence and recovery path per area with the Deployment checklist</a></td><td class="mono">Released</td></tr>
+      <tr><td>A new model version is available and nobody can say whether moving to it is safe.</td><td><a href="/resources/model-selection-tool">Score twelve behaviours from ten runs on four test cases with the Model Selection Tool</a></td><td class="mono">Released</td></tr>
+    </tbody>
+  </table></div>
+</article>
+
+<div class="head" id="close">
+  <span class="k">the close &#183; 04:02 to 05:00</span>
+  <h2>How the day ends</h2>
+  
+  <p><strong>04:55, the same five statements</strong>, then one question out loud: who scored themselves lower than at 00:05? Say why that is the result you wanted. If you skip this, the second rating reads as a test rather than as a finding.</p>
+  <p><strong>This session should produce dropped scores on statements 1 and 2 in particular.</strong> If few hands go up, ask who was beaten in the teardown's first question.</p>
+  <h3>The assignment</h3>
+  <p>One row of the gate table, for the requirement in their own system that nothing currently tests.</p>
+  <h4>What a good answer looks like</h4>
+  <p><strong>A good answer has grader validation and decision owner filled from somebody's actual answer rather than from a guess.</strong> "Decision owner: I could not find out who owns this" is a pass, and it is the expected finding for about half the room. <strong>Say so in advance</strong>, because otherwise people invent a name.</p>
+  <h3>What week 3 owes the weeks after it</h3>
+  <ul>
+    <li><strong>Week 4 collects the adversarial cases.</strong> Every injection found next week becomes a case in the set built today, before that week ends.</li>
+    <li><strong>Week 4 owes the production-monitoring segment</strong>, ten minutes at its close.</li>
+    <li><strong>Week 5 owes retrieval quality and agent memory</strong>, and topic 2 hands it the unanswered half.</li>
+    <li><strong>Week 5 owes the cost of evidence at load</strong>, and 02:39 is the seed.</li>
+    <li><strong>Week 6 keeps evaluation strategy as a standing review heading</strong>, and the gate table from 02:56 is the artefact it reviews.</li>
+  </ul>
+</div>
+
+<footer>
+  The Living Craft &#183; week 3 &#183; all five topics &#183; instructor's copy, not for the room
+</footer>
+
+</div>
+<script>
+(function () {
+  var host = document.getElementById('sclock');
+  if (!host) return;
+  var elEl = host.querySelector('.el');
+  var nowEl = host.querySelector('.now');
+  var hintEl = host.querySelector('.hint');
+  var driftEl = host.querySelector('.drift');
+  var rows = [].slice.call(document.querySelectorAll('#clocktable tbody tr'));
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var qs = new URLSearchParams(location.search);
+  var startedAt = null;
+  var raw = qs.get('start');
+  if (raw) {
+    var t = Date.parse(raw);
+    if (!isNaN(t)) startedAt = t;
+  }
+
+  // Minutes of local offset, set by the instructor buttons. Not stored anywhere.
+  var offset = 0;
+  var paused = false;
+  var pausedAt = 0;
+
+  function mins(hhmm) {
+    var p = hhmm.split(':');
+    return Number(p[0]) * 60 + Number(p[1]);
+  }
+  function hhmm(m) {
+    var s = m < 0 ? '-' : '';
+    m = Math.abs(m);
+    return s + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+
+  var times = rows.map(function (r) {
+    return mins(r.querySelector('td').textContent.trim());
+  });
+  var LAST = 300;
+
+  function paint() {
+    if (startedAt === null) {
+      elEl.textContent = '--:--';
+      nowEl.textContent = 'Clock off';
+      hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';
+      return;
+    }
+    var elapsed = paused ? pausedAt : Math.floor((Date.now() - startedAt) / 60000);
+    elapsed += offset;
+    if (elapsed < 0) {
+      elEl.textContent = hhmm(0);
+      nowEl.textContent = 'Starts at ' + new Date(startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      hintEl.textContent = Math.abs(elapsed) + ' minutes to go.';
+      rows.forEach(function (r) { r.classList.remove('here'); });
+      return;
+    }
+    if (elapsed > LAST) {
+      elEl.textContent = hhmm(elapsed);
+      nowEl.textContent = 'Session ended';
+      hintEl.textContent = '';
+      rows.forEach(function (r) { r.classList.remove('here'); });
+      return;
+    }
+    var i = -1;
+    for (var k = 0; k < times.length; k++) if (times[k] <= elapsed) i = k;
+    elEl.textContent = hhmm(elapsed);
+    rows.forEach(function (r, n) { r.classList.toggle('here', n === i); });
+    if (i >= 0) {
+      var cells = rows[i].querySelectorAll('td');
+      nowEl.textContent = cells[1].textContent.trim();
+      var next = times[i + 1];
+      hintEl.textContent = next === undefined
+        ? 'last row'
+        : 'next at ' + hhmm(next) + ', in ' + (next - elapsed) + ' min';
+      if (driftEl) {
+        var d = elapsed - times[i];
+        var ran = next === undefined ? 0 : elapsed - next;
+        driftEl.textContent = ran > 0 ? 'running ' + ran + ' min over' : '';
+      }
+      if (!reduce && rows[i].scrollIntoViewIfNeeded) rows[i].scrollIntoViewIfNeeded();
+    }
+  }
+
+  var minus = host.querySelector('[data-off="-1"]');
+  var plus = host.querySelector('[data-off="1"]');
+  var pause = host.querySelector('[data-pause]');
+  if (minus) minus.addEventListener('click', function () { offset -= 1; paint(); });
+  if (plus) plus.addEventListener('click', function () { offset += 1; paint(); });
+  if (pause) pause.addEventListener('click', function () {
+    if (startedAt === null) return;
+    if (!paused) { pausedAt = Math.floor((Date.now() - startedAt) / 60000) + offset; offset = 0; }
+    paused = !paused;
+    pause.textContent = paused ? 'Resume' : 'Pause';
+    paint();
+  });
+
+  paint();
+  setInterval(paint, 10000);
+})();
+</script>
+<script>
+(function () {
+  var body = document.body;
+  var btn = document.getElementById('splitbtn');
+  var beats = [].slice.call(document.querySelectorAll('.beat[data-ref]'));
+  var wide = matchMedia('(min-width:1200px)');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function cardFor(beat) {
+    var ref = (beat.getAttribute('data-ref') || '').replace(/^#/, '');
+    return ref ? document.getElementById(ref) : null;
+  }
+  function paneFor(el) { return el ? el.closest('.pane-ref') : null; }
+
+  function lightUp(beat) {
+    var card = cardFor(beat);
+    if (!card) return;
+    var pane = paneFor(card);
+    var scope = pane || document;
+    var was = scope.querySelector('.card.lit');
+    if (was) was.classList.remove('lit');
+    card.classList.add('lit');
+    var here = document.querySelector('.beat.here');
+    if (here && here !== beat) here.classList.remove('here');
+    beat.classList.add('here');
+    var behaviour = reduce ? 'auto' : 'smooth';
+    if (pane && body.classList.contains('split') && wide.matches &&
+        pane.scrollHeight > pane.clientHeight) {
+      var top = card.getBoundingClientRect().top
+              - pane.getBoundingClientRect().top + pane.scrollTop;
+      pane.scrollTo({ top: Math.max(0, top - 8), behavior: behaviour });
+    } else {
+      card.scrollIntoView({ behavior: behaviour, block: 'start' });
+    }
+  }
+
+  beats.forEach(function (beat) {
+    beat.addEventListener('click', function (e) {
+      if (e.target.closest('a, summary, button, pre, code')) return;
+      lightUp(beat);
+    });
+  });
+
+  function setSplit(on) {
+    body.classList.toggle('split', on);
+    if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on) {
+      [].forEach.call(document.querySelectorAll('.card.lit'), function (c) {
+        c.classList.remove('lit');
+      });
+    }
+  }
+  if (btn) btn.addEventListener('click', function () {
+    setSplit(!body.classList.contains('split'));
+  });
+  setSplit(wide.matches);
+})();
+</script>
+</body>
+</html>

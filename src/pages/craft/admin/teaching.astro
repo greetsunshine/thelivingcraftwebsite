@@ -1,0 +1,455 @@
+---
+export const prerender = false;
+
+// /craft/admin/teaching — all of it, on one page, for the person teaching it.
+//
+// ---------------------------------------------------------------------------
+// WHY THIS IS NOT /craft/admin/sessions
+// ---------------------------------------------------------------------------
+// That page is the PLAN: outcomes, the run of show, checkpoints with the room's
+// counts against them, and what is not set yet. It is what you read while
+// deciding whether a week is ready.
+//
+// This is the MATERIAL: every week's prose in full, the answer key to every quiz
+// item, and the facilitation notes. It is what you read the night before, and
+// what you keep open in the room. Splitting them is the same argument as the
+// learner side, where /craft/material lists the weeks and /craft/week-N teaches
+// one: a page that both plans and teaches does neither well at 611 lines.
+//
+// ---------------------------------------------------------------------------
+// THE ANSWER KEY LIVES HERE AND NOWHERE A LEARNER CAN REACH
+// ---------------------------------------------------------------------------
+// `getQuizItems()` returns the bank WITH answers and teaching prose;
+// `getLearnerItems()` strips both. The learner surface calls the second. This
+// page calls the first, and it is under /craft/admin, which middleware.ts gates
+// on the console cookie before the learner gate ever sees the path. That
+// ordering is the load-bearing part — a seat code must not open this.
+//
+// ---------------------------------------------------------------------------
+// THE NOTES ARE READ FROM docs/teaching AT REQUEST TIME
+// ---------------------------------------------------------------------------
+// Same mechanism the quiz bank already uses: src/lib/craft/quiz.ts reads
+// docs/teaching/quiz/*.md with fs at request time rather than importing it. So
+// the notes stay reviewable as a diff, are never bundled into a learner page,
+// and this page can show them without a second copy existing anywhere.
+//
+// A missing notes file is normal, not an error. Only week 2's HITL topic has one
+// today, and a week with no note renders without one.
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import { getQuizItems } from '../../../lib/craft/quiz';
+import { dayPlan } from '../../../lib/craft/schedule';
+import { releases as sessionReleases } from '../../../lib/craft/release';
+import { renderMarkdown } from '../../../lib/craft/markdown';
+import { topics as topicPages } from '../../../lib/craft/teaching-pages';
+
+const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - b.data.week);
+// The instructor topic pages this week has stored, if any. Keyed by week so the
+// markup below can read them without a second await inside the map.
+const topicsByWeek = new Map(
+  await Promise.all(
+    sessions.map(async (w) => [w.data.week, await topicPages(w.data.week, 'instructor')] as const),
+  ),
+);
+const bank = await getQuizItems();
+const releaseRows = await sessionReleases();
+const releasedWeeks = new Set((releaseRows ?? []).map((r) => r.week));
+
+// The facilitation notes. One file per topic under docs/teaching/notes, plus the
+// two session-level files if they ever get written. Read once, matched to weeks
+// by the `week N` reference inside them rather than by filename, because the
+// filenames are topic names and always will be.
+const NOTES_DIR = path.join(process.cwd(), 'docs', 'teaching', 'notes');
+let noteFiles: Array<{ name: string; body: string }> = [];
+try {
+  const names = await fs.readdir(NOTES_DIR);
+  noteFiles = await Promise.all(
+    names
+      .filter((n) => n.endsWith('.md'))
+      .map(async (name) => ({
+        name,
+        body: await fs.readFile(path.join(NOTES_DIR, name), 'utf8'),
+      })),
+  );
+} catch {
+  noteFiles = [];
+}
+
+const notesForWeek = (week: number) =>
+  noteFiles
+    .filter((f) => new RegExp(`week\\s*${week}\\b`, 'i').test(f.body.slice(0, 900)))
+    .map((f) => ({
+      name: f.name,
+      // The first heading is the note's own title; everything after it is body.
+      title: (f.body.match(/^#\s+(.+)$/m)?.[1] ?? f.name).trim(),
+      html: renderMarkdown(f.body.replace(/^#\s+.+$/m, '').trim()),
+    }));
+
+const weeks = await Promise.all(
+  sessions.map(async (s) => {
+    const { Content } = await render(s);
+    const items = bank.filter((i) => i.week === s.data.week);
+    const asked = new Set(s.data.quiz);
+    return {
+      id: s.id,
+      data: s.data,
+      Content,
+      day: dayPlan(s.data),
+      notes: notesForWeek(s.data.week),
+      // The bank holds more than the room gets. Both are worth seeing, and which
+      // is which matters: an item in the bank and not in `quiz:` is a question
+      // for the room, not for the page with the Submit button.
+      asked: items.filter((i) => asked.has(i.id)),
+      held: items.filter((i) => !asked.has(i.id)),
+      released: releasedWeeks.has(s.data.week),
+    };
+  }),
+);
+
+const totalAsked = weeks.reduce((n, w) => n + w.asked.length, 0);
+const totalHeld = weeks.reduce((n, w) => n + w.held.length, 0);
+const notesCount = noteFiles.length;
+---
+
+<AdminLayout title="Teaching" active="teaching">
+  <div class="page-head">
+    <h1>Teaching material</h1>
+    <span class="label">every week in full, with the answer keys — instructor's copy</span>
+  </div>
+
+  <p class="intro">
+    All {weeks.length} weeks, each one's prose as the learner reads it, the full quiz bank with
+    every key and every distractor rationale, and the facilitation notes. {totalAsked} items are
+    asked on the learner's check and {totalHeld} are held back for the room. {notesCount}{' '}
+    {notesCount === 1 ? 'notes file' : 'notes files'} under <code>docs/teaching/notes</code>.
+  </p>
+
+  <div class="notice">
+    <h3>Not for a screen anybody else can see</h3>
+    <p>
+      This page carries the answer to every quiz item and the expected wrong answer to every
+      failure. It is gated on the console password, not on a seat code. The learner's copy of the
+      same bank is stripped of both by <code>toLearnerItem</code>.
+    </p>
+  </div>
+
+  <nav class="jump">
+    <span class="label">Jump to</span>
+    {weeks.map((w) => (
+      <a href={`#w${w.data.week}`}>{w.data.week === 0 ? 'Pre-work' : `Week ${w.data.week}`}</a>
+    ))}
+  </nav>
+
+  {weeks.map((w) => {
+    // Astro renders a component from a capitalised binding, so the entry's
+    // Content cannot be used as `w.Content` in the markup below.
+    const WeekBody = w.Content;
+    return (
+    <section class="tw card" id={`w${w.data.week}`}>
+      <header class="tw-head">
+        <span class="wk-n mono">{w.data.week === 0 ? 'Pre-work' : `Week ${w.data.week}`}</span>
+        <h2>{w.data.title}</h2>
+        <span class={`pill ${w.data.status === 'ready' ? 'ok' : 'draft'}`}>{w.data.status}</span>
+        <span class={`pill ${w.released ? 'ok' : ''}`}>
+          {w.data.week === 0 ? 'always open' : w.released ? 'released' : 'not released'}
+        </span>
+        {/* The live page 404s for an unreleased week, which is the gate working
+            and made this link dead for five weeks out of six. It points at the
+            admin preview instead, which always renders and says on the page
+            that it is a preview. The live URL is beside it, and is honest about
+            being reachable only once the week is open. */}
+        {(topicsByWeek.get(w.data.week) ?? []).length > 0 ? (
+          <a class="view mono" href={`/craft/admin/preview/${w.data.week}`} target="_blank" rel="noopener">
+            preview the learner's copy ↗
+          </a>
+        ) : (
+          <span class="view mono muted" title="Build the pair with scripts/build-teaching-pages.mjs and store it in docs/teaching/pages">
+            no stored pages
+          </span>
+        )}
+        {w.released && (
+          <a class="view mono" href={`/craft/${w.id}`} target="_blank" rel="noopener">
+            the live page ↗
+          </a>
+        )}
+      </header>
+      {(topicsByWeek.get(w.data.week) ?? []).length > 0 && (
+        <nav class="tp-nav">
+          <span class="tp-lab mono">Instructor topic pages</span>
+          {(topicsByWeek.get(w.data.week) ?? []).map((t) => (
+            <a
+              class="tp mono"
+              href={`/craft/admin/teaching/${w.data.week}/topic-${t.n}`}
+              target="_blank"
+              rel="noopener"
+              title={t.title}
+            >
+              {t.n} · {t.title.replace(/^.*?·\s*/, '')}
+            </a>
+          ))}
+        </nav>
+      )}
+      {(topicsByWeek.get(w.data.week) ?? []).length > 0 && (
+        <nav class="tp-nav">
+          <span class="tp-lab mono">Learner topic pages, as a preview</span>
+          {(topicsByWeek.get(w.data.week) ?? []).map((t) => (
+            <a
+              class="tp learner mono"
+              href={`/craft/admin/preview/${w.data.week}/topic-${t.n}`}
+              target="_blank"
+              rel="noopener"
+              title={t.title}
+            >
+              {t.n} · {t.title.replace(/^.*?·\s*/, '')}
+            </a>
+          ))}
+        </nav>
+      )}
+
+
+      <p class="muted summary">{w.data.summary}</p>
+
+      {w.data.outcomes.length > 0 && (
+        <div class="tw-block">
+          <span class="label">The five outcomes, rated twice</span>
+          <ol class="outcomes">
+            {w.data.outcomes.map((o) => (
+              <li>
+                {o.text}
+                {o.movesMost && <span class="moves mono">expect this one to move</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {w.day.length > 0 && (
+        <div class="tw-block">
+          <span class="label">The day</span>
+          <ul class="day">
+            {w.day.map((d) => (
+              <li>
+                <span class="mono at">{d.at}</span> {d.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {w.notes.length > 0 &&
+        w.notes.map((n) => (
+          <details class="tw-notes">
+            <summary>
+              Facilitation notes — {n.title} <code>{n.name}</code>
+            </summary>
+            <div class="prose" set:html={n.html} />
+          </details>
+        ))}
+
+      {w.asked.length > 0 && (
+        <details class="tw-bank">
+          <summary>The check the learner sits — {w.asked.length} items, with the keys</summary>
+          <ol class="bank">
+            {w.asked.map((i) => (
+              <li>
+                <p class="q-title">
+                  <span class="mono">{i.id}</span> · {i.title}
+                  <span class="pill">{i.difficulty}</span>
+                </p>
+                <div class="prose" set:html={renderMarkdown(i.body)} />
+                {i.options && i.options.length > 0 && (
+                  <ul class="opts">
+                    {i.options.map((o) => (
+                      <li class={o.key === i.answer ? 'is-key' : ''}>
+                        <b>{o.key}.</b> {o.text}
+                        {o.key === i.answer && <span class="mono key">the key</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {i.teaching && <div class="prose teaching" set:html={renderMarkdown(i.teaching)} />}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
+      {w.held.length > 0 && (
+        <details class="tw-bank">
+          <summary>Held back for the room — {w.held.length} more in the bank</summary>
+          <ol class="bank">
+            {w.held.map((i) => (
+              <li>
+                <p class="q-title">
+                  <span class="mono">{i.id}</span> · {i.title}
+                  <span class="pill">{i.difficulty}</span>
+                </p>
+                <div class="prose" set:html={renderMarkdown(i.body)} />
+                {i.teaching && <div class="prose teaching" set:html={renderMarkdown(i.teaching)} />}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
+      <details class="tw-body">
+        <summary>The week in full, as the learner reads it</summary>
+        <div class="prose">
+          <WeekBody />
+        </div>
+      </details>
+    </section>
+    );
+  })}
+</AdminLayout>
+
+<style>
+  .intro {
+    max-width: 68ch;
+    color: var(--ink-soft);
+  }
+  .jump {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 18px 0 22px;
+  }
+  .jump a {
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .jump a:hover {
+    background: var(--paper);
+  }
+
+  .tw {
+    margin-bottom: 22px;
+    scroll-margin-top: 16px;
+  }
+  .tw-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tw-head h2 {
+    margin: 0;
+    font-size: 19px;
+  }
+  .summary {
+    margin: 8px 0 14px;
+  }
+  .view {
+    margin-left: auto;
+    font-size: 12px;
+  }
+
+  .tw-block {
+    margin-bottom: 14px;
+  }
+  .outcomes,
+  .day,
+  .bank {
+    margin: 6px 0 0;
+    padding-left: 20px;
+    font-size: 13px;
+  }
+  .outcomes li,
+  .day li {
+    margin-bottom: 4px;
+  }
+  .day {
+    list-style: none;
+    padding-left: 0;
+  }
+  .at {
+    color: var(--ink-soft);
+    margin-right: 8px;
+  }
+  .moves {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  details {
+    margin: 10px 0 0;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  summary code {
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+
+  .bank > li {
+    margin-bottom: 18px;
+  }
+  .q-title {
+    margin: 0 0 6px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .q-title .pill {
+    margin-left: 8px;
+  }
+  .opts {
+    list-style: none;
+    margin: 8px 0;
+    padding: 0;
+    font-size: 13px;
+  }
+  .opts li {
+    padding: 3px 0;
+  }
+  .opts .is-key {
+    font-weight: 600;
+  }
+  .key {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .teaching {
+    border-left: 2px solid var(--line);
+    padding-left: 12px;
+    margin-top: 8px;
+  }
+
+  .prose {
+    font-size: 13px;
+    max-width: 78ch;
+  }
+  .prose :global(h2),
+  .prose :global(h3) {
+    font-size: 15px;
+    margin: 14px 0 6px;
+  }
+  .prose :global(table) {
+    font-size: 12px;
+  }
+
+  /* The instructor topic pages, one chip each, under the week's header. */
+  .tp-nav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 14px; }
+  .tp-lab { color: var(--ink-2); margin-right: 4px; }
+  .tp {
+    text-decoration: none; background: var(--paper-2); color: var(--ink-1);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; line-height: 1.3;
+  }
+  .tp:hover { background: var(--sun); color: #F5F0E6; }
+  .tp.learner { background: #F4E9CE; }
+  .tp.learner:hover { background: var(--sun); color: #F5F0E6; }
+</style>

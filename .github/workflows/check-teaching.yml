@@ -1,0 +1,52 @@
+# The teaching pages, checked on the way in.
+#
+# WHY THIS WORKFLOW EXISTS. docs/teaching/pages/week-N-*.html is served live by
+# /craft/week-N/topic-M and /craft/admin/preview/N. For a week with a content
+# module it is a build product that happens to be committed, so it goes stale the
+# first time somebody edits the module and forgets to rebuild and copy.
+#
+# Nothing about a stale page looks wrong. It renders, it is well formed, and it
+# serves last week's wording to eight people who paid. The only thing that
+# catches it is regenerating and comparing, which is what check:pages does — so
+# it has to run somewhere that is not a person's memory.
+#
+# Path-filtered, because it is the only thing this workflow can usefully say. A
+# change to the landing page cannot make a stored teaching page stale.
+
+name: teaching pages
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/teaching-content/**'
+      - 'scripts/build-teaching-pages.mjs'
+      - 'scripts/teaching-clock.mjs'
+      - 'scripts/check-stored-pages.mjs'
+      - 'scripts/check-teaching-pages.mjs'
+      - 'docs/teaching/pages/**'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/teaching-content/**'
+      - 'scripts/build-teaching-pages.mjs'
+      - 'scripts/teaching-clock.mjs'
+      - 'scripts/check-stored-pages.mjs'
+      - 'scripts/check-teaching-pages.mjs'
+      - 'docs/teaching/pages/**'
+
+jobs:
+  stored-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Astro needs >= 22.12 and this repo has been bitten by an older local
+          # default more than once. Pin it here so CI cannot drift from that.
+          node-version: '22.12'
+
+      # No install step. check:pages runs two plain node scripts over files in
+      # the repository and imports nothing from node_modules, so `npm ci` would
+      # be two minutes spent on nothing.
+      - name: Every stored page matches the module that builds it
+        run: node scripts/check-stored-pages.mjs

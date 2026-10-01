@@ -1,0 +1,153 @@
+---
+// /craft/material — every week's teaching material in one place, gated per week.
+//
+// WHY THIS IS NOT /craft/modules. That page answers "what is the shape of the
+// course": four modules, which weeks sit in each, what has been taught. This one
+// answers "what can I read right now, and what is in it" — one row per week,
+// open or shut, with the five outcomes, the drills and the assignment visible
+// before you click. A learner looking for the drill they half-finished should not
+// have to open four weeks to find it.
+//
+// THE GATE IS TWO CONDITIONS AND ONE OF THEM IS NOT IN THIS REPO. A week opens
+// when its material is written (`status: ready`, a commit) and when Sunil has
+// released it (a row in `session_releases`, a button in the console). The rule
+// itself lives in src/lib/craft/release.ts so this page, the week page and the
+// console cannot disagree about what is open.
+//
+// WHAT A SHUT WEEK SHOWS. Its title, its module, its one-line summary and why it
+// is shut. Never its outcomes, its drills or its body. The method is
+// prediction-before-reveal all the way down, and week 4's failure list read in
+// week 2 is four sessions of predictions spent in advance.
+import CraftLayout from '../../layouts/CraftLayout.astro';
+import { getCollection } from 'astro:content';
+import { learnerCohort as cohort } from '../../data/learner-cohort';
+import { sessionEnded } from '../../lib/craft/checks';
+import { releasedWeeks, isOpen, shutBecause } from '../../lib/craft/release';
+export const prerender = false;
+const learner = Astro.locals.learner!;
+
+const sessions = (await getCollection('sessions')).sort((a, b) => a.data.week - b.data.week);
+const released = await releasedWeeks();
+
+const weeks = sessions.map((s) => {
+  const d = s.data;
+  const open = isOpen(d.week, d.status, released);
+  return {
+    week: d.week,
+    slug: s.id,
+    title: d.title,
+    module: d.module,
+    summary: d.summary,
+    open,
+    shut: shutBecause(d.week, d.status, released),
+    taught: sessionEnded(d.endsAt),
+    outcomes: open ? d.outcomes : [],
+    drills: open ? d.runOfShow.filter((r) => r.kind === 'block').length : 0,
+    checkpoints: open ? d.checkpoints.length : 0,
+    quiz: open ? d.quiz.length : 0,
+    assignment: open && d.assignment && d.assignment !== 'TBD' ? d.assignment : null,
+    prework: open ? d.prework?.minutes ?? null : null,
+    after: open ? d.after?.hours ?? null : null,
+    reading: open ? d.reading.length : 0,
+  };
+});
+
+const openCount = weeks.filter((w) => w.open).length;
+---
+<CraftLayout title="Material" learner={learner}>
+  <div class="wrap mat">
+    <div class="page-head">
+      <h1>Teaching material</h1>
+      <p class="lede">
+        Every week of the programme. {openCount} of {weeks.length} {openCount === 1 ? 'is' : 'are'} open
+        to you now, and a week opens once it has been taught.
+      </p>
+    </div>
+
+    <ol class="mat-list" data-tour="material-list">
+      {weeks.map((w) => (
+        <li class={`panel mat-week ${w.open ? 'is-open' : 'is-shut'}`}>
+          <div class="mat-head">
+            <span class="klabel">{w.week === 0 ? 'Pre-work' : `Week ${w.week}`}{w.module ? ` · ${w.module}` : ''}</span>
+            {w.open ? (
+              <h2><a href={`/craft/${w.slug}`}>{w.title}</a></h2>
+            ) : (
+              <h2>{w.title}</h2>
+            )}
+            <p class="mat-summary">{w.summary}</p>
+          </div>
+
+          {w.open ? (
+            <div class="mat-body">
+              {w.outcomes.length > 0 && (
+                <div class="mat-outcomes">
+                  <p class="klabel">By the end of it you can</p>
+                  <ul class="tlist">
+                    {w.outcomes.map((o) => <li>{o.text}</li>)}
+                  </ul>
+                </div>
+              )}
+              <div class="mat-facts">
+                {w.prework !== null && <span class="pill">{w.prework} min pre-work</span>}
+                {w.drills > 0 && <span class="pill">{w.drills} blocks</span>}
+                {w.checkpoints > 0 && <span class="pill">{w.checkpoints} checkpoints</span>}
+                {w.quiz > 0 && <span class="pill">{w.quiz}-question check</span>}
+                {w.reading > 0 && <span class="pill">{w.reading} to read</span>}
+                {w.after !== null && <span class="pill">{w.after} h after</span>}
+              </div>
+              {w.assignment && (
+                <p class="mat-assignment"><span class="klabel">Assignment</span> {w.assignment}</p>
+              )}
+              <p class="mat-open">
+                <a class="btn btn-primary" href={`/craft/${w.slug}`}>Open {w.week === 0 ? 'the pre-work' : `week ${w.week}`}</a>
+                {w.quiz > 0 && <a class="mat-quiet" href="/craft/quiz">the knowledge check →</a>}
+              </p>
+            </div>
+          ) : (
+            <p class="mat-shut">
+              {w.shut === 'unwritten'
+                ? 'Still being written. It opens when it has been taught.'
+                : 'Not released yet. It opens on the evening this session is taught.'}
+            </p>
+          )}
+        </li>
+      ))}
+    </ol>
+
+    <p class="mat-note">
+      {cohort.weeks} weeks, and each one opens after it is taught. That is deliberate: every session
+      asks you to predict something before it shows you the answer, and reading week 4 during week 2
+      spends those predictions in advance.
+    </p>
+  </div>
+</CraftLayout>
+
+<style>
+  .mat { padding-bottom: var(--space-8, 72px); }
+  .lede { color: var(--muted); max-width: 62ch; }
+
+  .mat-list { list-style: none; margin: var(--space-6, 32px) 0 0; padding: 0; display: grid; gap: var(--space-4, 16px); }
+
+  .mat-week { display: grid; gap: var(--space-4, 16px); }
+  .mat-week.is-shut { opacity: 0.72; }
+
+  .mat-head h2 { margin: var(--space-1, 4px) 0 0; font-size: 20px; }
+  .mat-head h2 a { color: inherit; text-decoration: none; }
+  .mat-head h2 a:hover { text-decoration: underline; }
+  .mat-summary { margin: var(--space-2, 8px) 0 0; color: var(--muted); max-width: 66ch; }
+
+  .mat-body { display: grid; gap: var(--space-4, 16px); }
+  .mat-outcomes .tlist { margin-top: var(--space-2, 8px); }
+
+  .mat-facts { display: flex; flex-wrap: wrap; gap: var(--space-2, 8px); }
+
+  .mat-assignment { margin: 0; max-width: 66ch; }
+  .mat-assignment .klabel { display: block; margin-bottom: var(--space-1, 4px); }
+
+  .mat-open { display: flex; align-items: center; gap: var(--space-4, 16px); flex-wrap: wrap; margin: 0; }
+  .mat-quiet { font-size: 14px; color: var(--muted); }
+
+  .mat-shut { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .mat-note { margin-top: var(--space-6, 32px); color: var(--muted); max-width: 66ch; font-size: 15px; }
+</style>

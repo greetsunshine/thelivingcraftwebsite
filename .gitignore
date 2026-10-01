@@ -42,3 +42,6 @@ docs/**/*.zip
 
 # Python bytecode from the workbook builders (scripts/workbook_brand.py is imported)
 __pycache__/
+
+# teaching pages are built products; they ship as published Artifacts
+dist-teaching/

@@ -8,16 +8,33 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 29 September 2026
-**Branch:** `feat/plain-green-v5-pages-branded-pdfs`, off `origin/main`, one draft PR against
-`main` for the four tasks from Sunil's call of 25 September and a fifth from his call of
-28 September (below). The PR is ready for review, no longer a draft. PR #31
-(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`, below) are merged.
-The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
-`feat/learner-dashboard-poc` (PR #6).
+**Last updated:** 1 October 2026
+**Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
+merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
+the four tasks from Sunil's call of 25 September and the later ones below. PR #31
+(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are merged. The
+pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
+(PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
 ---
+
+## Before PR #37 reaches `main` — 1 October
+
+A push to `main` deploys production, so these happen in this order:
+
+1. **Run `supabase/schema.sql` on production, the whole file.** The 29 September run used
+   main's file, so this branch's additions are missing: `people.role_code`, three
+   attribution columns, `events_event_id_uidx`, the `p_role` and `p_role_code` arguments,
+   the `comms_sequences` columns, `comms_drip_sends`, three `comms_events` types and the
+   retry rule. Without them every gated download still returns its file, but no request
+   is saved.
+2. **Confirm the Vercel plan allows the ten-minute cron in `vercel.json`.** Hobby allows
+   daily jobs only. On Hobby, remove the `crons` entry and let
+   `.github/workflows/comms-worker.yml` keep the clock instead.
+3. Set `COMMS_WORKER_SECRET` in Vercel production. Without it the cron gets a 401 every ten
+   minutes, which is harmless. Nothing sends until `COMMS_DISPATCH=on`.
+4. A review approval on PR #37, then merge.
 
 ## Four tasks from Sunil's call, 25 September — `feat/plain-green-v5-pages-branded-pdfs`
 
@@ -486,6 +503,968 @@ One branch, one draft PR, at least one commit per task. The brief was meant to b
   the page no longer has one.
 
 ---
+
+## Week 2 rebuilt against the generation prompt — 30 September
+
+Sunil asked for week 2 to be revisited against
+[`docs/teaching/generation-prompt.md`](../teaching/generation-prompt.md). **Four topics now,
+in the prompt's six-part shape, and the prompt's fixed close.** This replaces the morning's
+eight-topic resequence. Week 2 has not been taught yet (no `startsAt`), so no stored rating
+or checkpoint answer is keyed to a moved offset.
+
+| Topic | Clock | Made from |
+|---|---|---|
+| 1 · Guardrails and policy enforcement | 00:15–01:39 | the old topics 0 and 1 |
+| 2 · Human-in-the-loop (HITL) approval | 01:44–02:34 | the old topic 2, plus the two-mistakes reading |
+| 3 · Idempotency | 02:34–03:13 | the old topic 3 |
+| 4 · Red-teaming | 03:18–04:05 | the judge, then the adversary round |
+| The close | 04:05–05:00 | recall, teardown, quiz, spoken takeaway, second rating |
+
+**What was cut from the room, and why:** governance as a topic (its five questions are now the
+teardown at 04:15, which builds one policy-table row on the board), "who is allowed to say
+what a system may do" (11 minutes, week 6 owns it), the in-room policy-table draft and its
+peer review (20 minutes, the table is the assignment), and "the two mistakes" as a segment
+(7 minutes, it is reading at 02:24). Each topic gained a four-minute quiz and a written
+takeaway. The full table is at the top of `notes/week-2-guardrails.md`.
+
+**Four things worth knowing.**
+
+- **Week 2 is generated now.** `scripts/teaching-content/week-2.mjs` is new, ported from the
+  stored pages. The HTML in `docs/teaching/pages/` is build output, and `check:pages` now
+  compares it for week 2 as well.
+- **The generator gained opt-in six-part slots**, agreed with the week 3 session so both weeks
+  fill the same fields. Weeks without `week.shape = 'six-part'` build byte-identical; week 1
+  was checked.
+- **`pair:` is gone from week 2's session file**, so `/craft/pair` opens nothing for week 2.
+  The session body shrank from about 1,000 lines to a short guide, because it was a second,
+  stale copy of the pages. The page still renders outcomes, pre-work, the day, after-work and
+  reading from the frontmatter.
+- **Topic URLs changed.** `/craft/week-2/topic-1` to `topic-4` exist. `topic-0` and `topic-5`
+  to `topic-7` now 404.
+
+**Verified.** Build passes the six-part checks. `check:teaching --by-topic --topics=4` passes
+9 of 9. `check:pages` passes for weeks 1 to 3. A one-off script comparing the clock, the
+session file, the notes headings, the quiz bank and the module found zero differences. The
+real quiz parser reads all 22 items, and the four on the check page are servable. `astro
+check` has 0 errors and `npm test` passes 85 of 85. Not checked: the pages behind the login on
+a dev server, because that needs a seat code or the console password.
+
+**Revised again the same afternoon against the topics learners expect from a guardrails
+class** (Sunil's list: three execution planes, in-band against out-of-band, a tiered gateway,
+latency budgets, false-positive tuning, audit logs without personal data, named tools). Net
+zero on the clock: the 01:09 read-out folded into the lab's check step, the lab gained a
+timer, 03:18 became "Layered defence: the tiered gateway, and its latency tax", and teardown
+question 4 became a latency budget. Prompt injection, PII leakage and groundedness are named
+in a threat table at 00:37 and point to weeks 3 and 4, which `threads.md` gives them.
+`threads.md` now records guardrail latency as week 2's. **Vendor latency figures are
+deliberately not printed as fact**; the pages give orders of magnitude and have each learner
+measure their own.
+
+**Remapped to the learners' guardrail list, same evening.** The pages now use its terms: input, output and operational/system guardrails with the checks it names; in-band (synchronous blocking) with its latency tax; out-of-band; the tiered gateway pattern; latency budgeting; false-positive rates and refusal fatigue; anonymised audit logging; and every tool it names, including TypeChat and Guardrails AI's RAIL spec. Its latency ranges are printed, labelled "ranges the field quotes", beside each learner's own measured number. No change to the clock's times.
+
+**Still open, and it blocks the day.** `make w2-paid-once` and the three queue fixtures do not
+exist in the reference agent (preparation items 1 and 2). That repo has uncommitted work from
+another session, so they were not added here. Pairs are named by number because the only seat
+list is the production learners table.
+
+## schema.sql was not idempotent, and the failure looked like nothing — 29 September
+
+Running the whole file in the SQL Editor failed on its last statement:
+
+    ERROR: 42725: function name "public.resource_request_submit" is not unique
+
+**Nothing applied.** A multi-statement script in the SQL Editor is one implicit
+transaction, so a failure at line 3,235 rolls back all 3,235 lines. That is the
+confusing part: the error names one function and the cost is the whole file.
+
+**The cause is `create or replace function` with a changed argument list.** It only
+replaces a function whose parameters match exactly. `p_kind` was added to
+`resource_request_submit` in `574df78`, the download gate, so the ten-parameter
+version was created *beside* the nine-parameter one already in production rather
+than replacing it. Two overloads then make the bare-name
+`revoke all on function public.resource_request_submit` ambiguous.
+
+**Fixed in the file rather than by a manual step.** Both writing functions now drop
+every overload of their own name immediately before the `create`, by
+`oid::regprocedure`, so any argument list is covered — including one written by a
+version of the file nobody has a copy of any more. Re-running is genuinely
+idempotent again.
+
+Two things worth carrying forward:
+
+- **A `create or replace function` whose signature has changed is a silent overload,
+  not a replacement.** Wherever this file grows a parameter, the guard has to grow
+  with it. `pipeline_submit` carries the same guard for that reason, even though its
+  signature has never changed.
+- **The nine-argument function existing at all proves production has run an earlier
+  version of this file.** The database is partly up to date, which matches the list
+  of pending tables in `CLAUDE.md` rather than contradicting it.
+
+---
+
+## Week 3 rebuilt against the generation prompt — 30 September
+
+`docs/teaching/generation-prompt.md` landed this morning and week 3 was rebuilt against it.
+**The week 3 section of [`docs/teaching/README.md`](../teaching/README.md) is the fuller
+record.** Week 2 was rebuilt in parallel by another session; we split the files and neither
+of us committed.
+
+**Five topics, not six.** §4 asks every topic for six parts, including a hands-on lab, an
+at-enterprise-scale table with three or more named products, and a three-question quiz with
+one question from an earlier week. That is 39 minutes a topic. §5's close takes 58 minutes,
+so only 202 remain. The old topics 1 and 2 merged into LLM evaluation, because a case set
+and a run count together are what an evaluation harness is.
+
+**Topic titles are industry terms now**, and every one carries a question in its subtitle.
+
+**What was cut:** the segment pointing the evaluation harness at a second model version. It
+was a demonstration rather than a capability. The Model Selection Tool carries the question
+instead.
+
+**Everything in §11 and §12 passes except one item.** `build-teaching-pages.mjs` 5 topics
+and 20 beats with every clock row claimed · `check:teaching --topics=5` all nine ·
+`check-stored-pages` week 3 both pages · `astro check` 0 errors · the §9 cross-file clock
+script **zero differences** across five sources · no banned word anywhere · no gold text ·
+no instructor material on the learner page · no horizontal overflow at 375px.
+
+**The one item not met: "Activities name real people."** §4 says to use real names from the
+seat list and never invented ones. There is no seat list in the repo, and the only source is
+the `learners` table in production. Weeks 1 and 2 already say "assigned by name" without
+naming anybody, so week 3 keeps that convention. **Both sessions report it the same way**
+rather than one of us pulling eight people's names into committed HTML.
+
+### Four cross-week quotes were wrong within the hour, and that is a standing risk
+
+Week 2 was rebuilt in parallel the same morning, and week 3 quotes week 1 and week 2 word
+for word because CLAUDE.md requires it: *"If it refers to an earlier week, quote that week
+verbatim, right above it."* When week 2 changed, four of week 3's seven quotes became false
+attributions, and nothing in the repo would have caught it.
+
+What broke, and it was found by checking rather than by noticing:
+
+- **"Every guardrail you add moves a failure. It does not delete one."** No longer appears
+  anywhere in week 2. The question that quoted it is rewritten against week 2's current
+  opening, and the new version is better: it asks what this week's equivalent of "your own
+  rule, working exactly as written" is, and the answer is a thin case set.
+- **Week 2's fifth outcome** gained "one row of" and lost "each row". Quote corrected.
+- **Week 1's four parts** are "the loop, the tool layer, **the context built for each
+  step**, and the trace". Week 3 had written "the per-turn context assembly", which is the
+  code's name for it and not the room's. Corrected in four files, including six places
+  where week 3 used the phrase in its own prose.
+
+Two quotes were already correct: week 2's pay-once outcome, and the fourth line of its rule
+for choosing a mechanism.
+
+**Six false quotes across the two weeks, in one morning.** Four in week 3 and two in week 2,
+found only because each session went looking after the other rebuilt. Week 2's were a
+reworded table cell and a paraphrase where a quote was required.
+
+**A naive grep gives a false all-clear, and that is the trap.** Two of week 3's stale quotes
+survived a first fix because the phrase was split across a wrapped line: `the per-turn` at
+the end of one line and `context assembly` at the start of the next, each prefixed with
+`> `. Grepping for the phrase returns zero and reads as clean. **Any checker for this has to
+flatten `\n>\s*` before matching**, or it will pass exactly the cases that are broken.
+
+**The standing risk.** Nothing checks that a verbatim quote of an earlier week still matches
+that week. `check:teaching` compares two pages with each other, and the §9 script compares
+one week's five files with its own clock. A quote is the one cross-week dependency the
+tooling cannot see, and every week from 4 onwards will have more of them.
+
+**A checker is about twenty lines and would have caught all six.** It extracts each quoted
+passage from the module and the bank, flattens the wrapping, and greps it against the named
+week's session file and stored pages. **Neither session added it, deliberately** — it is
+tooling nobody asked for, and it belongs to whoever owns `check-teaching-pages.mjs`. It is
+Sunil's call whether it lands before week 4.
+
+### Two things for Sunil
+
+- **Both pages are published**, on 30 September, and the links are in the README.
+  Learner `https://claude.ai/artifact/RXQs2UDaSP9sXfFHi7BAWi` ·
+  instructor `https://claude.ai/artifact/JN2LBiHmDc2sqgwNYocBLb`. Both are **private** until
+  shared from each page's Share menu. Republishing the same two files keeps the same URLs.
+  **Publishing is not releasing**: the week is still `status: draft` and no learner sees it
+  at `/craft/week-3` until Sunil writes a `session_releases` row from the console.
+- **The seat list.** If the labs and the teardown should name people, the names have to come
+  from somewhere a page may quote. Say where, and both weeks can use it.
+
+### Shared tooling, and who changed what
+
+The other session owns `build-teaching-pages.mjs` and `check-teaching-pages.mjs` and made
+every change to them; I own `ROWS_W3` and asked for four generator additions, all of which
+landed. Nothing in either script is week-3-specific: every new field is optional and week 1
+still builds byte-identical. **`check-stored-pages` currently reports week 2's two pages as
+out of date, and that is the other session's work in flight rather than a fault.**
+
+---
+
+## MCP has a home, and it is week 4 — 29 September
+
+Sunil asked where MCP should actually be covered. **Recorded as §7 of bridge 6 in
+[`docs/teaching/threads.md`](../teaching/threads.md)**, which is the master plan. The
+short version is below; read the bridge before writing week 4.
+
+**MCP had not landed anywhere because it is not one topic.** It has four faces:
+the protocol, tool boundary design, the boundary you did not write, and a server holding
+your credentials. The first turns over every few months and `threads.md` already excludes
+protocols from the seven threads. The other three do not turn over, and they are what this
+audience is asked about.
+
+**Week 4 gets a topic of about forty minutes, framed as "the boundary you did not
+write".** Not "MCP security" — a room that leaves believing MCP is dangerous has been sold
+a vendor deck in reverse. One beat inside it is about adoption rather than risk: when is
+inheriting somebody's tool surface the right call, and what do you need from them first.
+
+The deciding reason was load. Prompt injection is one coherent topic for five hours, so
+week 4 was the lightest of the three unwritten weeks. It now has two and is still lighter
+than week 5. **The cost is that injection gets roughly four blocks instead of five.**
+
+**Three things already existed and nothing pointed at them.**
+
+- **The Agent Failure Triage Quiz is now week 4's pre-work.** Released, twelve questions
+  on one incident, and it already teaches three of the topic's takeaways: MCP adds hops,
+  silence at the client says nothing about them, and `idempotentHint` declares rather than
+  enforces and defaults to false. A published resource doing part of a topic for free.
+- **Three of the eight field notes are MCP**, all from the 2026-07-28 spec. The one that
+  matters is a governance sentence rather than a protocol one: statelessness moves MCP
+  authorization to the application layer.
+- **Week 1 already links one of them** in its reading, framed as a tool interface changing
+  under you.
+
+**Bridge 6 §5 was rewritten rather than left to contradict §7.** It said MCP did not need
+a block, which was right about week 2 and wrong about the course. What stays in week 2 is
+one question against the nine control points — which of these do you own, and which does a
+vendor change under you — and it must not become about MCP. The named protocol is week 4's.
+
+Week 4 gains `◐` on boundaries in the matrix, which was blank.
+
+**Before week 4 is written, run `npm run gather` on the MCP topic.** Those notes date from
+the July spec and `latest.json` was last refreshed on 15 August 2026. A protocol that
+changed once in July can change again, and week 4 must not print a claim about a superseded
+spec.
+
+---
+
+## The six weeks read against the industry, and five things moved — 29 September
+
+Sunil asked for the arc to be compared with what technical architects and engineering
+leaders are expected to be sound on across the field, with the current plan deliberately
+set aside first. **The record of that is bridge 6 in
+[`docs/teaching/threads.md`](../teaching/threads.md)**, which is the master plan for
+content and topics. Read that, not this entry, before writing weeks 4 to 6.
+
+**Ten domains came out of the comparison**: system shape, tool and interface design,
+context, memory and state, retrieval, evaluation, security, cost and capacity, human
+control, and governance. The arc covers eight of them well. Two were absent and three were
+fragments.
+
+**Five changes, and the first two move material between weeks.**
+
+| Change | Where it landed |
+|---|---|
+| The business case moves out of week 5 | Week 6, about twenty minutes, inside the review |
+| Week 5 becomes multi-agent **and memory** | `week-5.md`. CAP and capacity compress to a beat each |
+| Retrieval quality gets a named home | Week 5, beside memory. It named no week before today |
+| Production monitoring gets one beat | Week 4, at the close, ten minutes |
+| The MCP question stays in week 2 | **Not made.** See below |
+
+**Agent memory was the real find.** Thread 5 has always said "memory outlives a process"
+and every week read that as idempotency. What a system remembers about a person between
+sessions, its scope, its expiry and who may correct it, was taught nowhere — while the
+practice publishes an Agent Memory Audit Kit that is twelve audit questions and seven
+runnable failure tests on exactly that. Same defect the 28 September review found for
+model selection. Thread 5's wording in `threads.md` changed so the next reader sees memory
+named rather than implied.
+
+**Two decisions recorded rather than changes made.**
+
+- **Regulatory depth stays out of the cohort.** DPDP, RBI, IRDAI, SEBI, NIST AI RMF,
+  ISO 42001 and the EU AI Act belong to `/caio` and `/assessment`. The cohort sells
+  engineering judgement and a compliance segment would dilute both. Week 6's governance
+  block stays at the level of who owns a decision.
+- **Latency and the user experience of a running loop are still absent, and that is not
+  decided.** Streaming, partial results, and what a person sees while a forty-second loop
+  runs are real architect questions with no home in the six weeks.
+
+### Two things that need Sunil
+
+- **The MCP question was not added to week 2.** The change is one extra question against
+  the nine control points already on screen in topic 1: *which of these do you own, and
+  which does a vendor change under you?* Week 2 was released to the room the same day and
+  its topic 1 pair is published, so editing the live session file would put the site and
+  the Artifacts out of step mid-cohort. It is recorded as an obligation in bridge 6 §5 and
+  is a two-line edit plus a rebuild of the topic 1 pair whenever he wants it.
+- **`cohort-copy.ts` was not touched, and that was checked rather than assumed.** M3 still
+  names multi-agent, CAP, capacity and the irreversible decisions, and all four survive as
+  blocks or beats. M4 still names design, failure modes, evaluation strategy and
+  governance. Memory and the business case are additive rather than a promise broken.
+  **Naming memory in M3 is worth considering**, because it is a selling point currently
+  given away for free.
+
+### One thing that happened to this session's work
+
+**The `--topics=N` flag added to `scripts/check-teaching-pages.mjs` today was swept into
+another session's commit and is now on `origin/main`** as part of PR #39. Nothing was lost
+and nothing broke. It is worth recording because it is the `git add -A` hazard CLAUDE.md
+warns about, arriving from the other direction: an uncommitted edit belonging to work in
+progress went out inside somebody else's commit message. Local `main` was fast-forwarded
+to `c655186` before any of today's later edits, and that commit touched none of the files
+this session holds.
+
+---
+
+## Week 3 is written, and the pages are generated rather than hand-built — 29 September
+
+**`src/content/sessions/week-3.md` was a page of `[PLACEHOLDER]` and is now complete**:
+five outcomes, four threads, ten-item quiz bank, eight blocks, four checkpoints, the pair
+offsets, pre-work, after-work and seven reading items. `status` stays `draft` until Sunil
+reads it. **Both pages are built and neither is published.**
+
+**The week is one argument, not four topics, and that was the risk.** `threads.md` bridge 5
+warned that week 3 carries four things — the false pass from week 2, evaluation, context
+engineering and retrieval — and said to cut retrieval rather than compress all four. They
+chain instead: retrieval makes the answer fuzzy, a fuzzy answer needs scoring, and scoring
+is what lets you change what the model is shown and know whether you made it worse.
+
+**The week's sentence:** a pass is a claim about the cases you chose, not a claim about
+your system. It lands five times, and once it costs ₹2,50,000.
+
+**All four obligations to week 3 are discharged.** Bridge 1 opens the session on last
+week's terminal by name. Bridge 3 gets a drill rather than a slide, at 04:22. Bridge 5's
+retrieval lands at 01:40. The 28 September resources note wanted re-qualifying against a
+new model version, and it is one beat at 04:40 that does not become a model-comparison
+segment.
+
+### The pages are generated now, and that is the process change
+
+One content module emits both pages, so the three views of a beat cannot disagree:
+
+    scripts/build-teaching-pages.mjs     npm run build:teaching 3
+    scripts/teaching-content/week-3.mjs  one entry per beat, three views each
+    docs/teaching/notes/week-3-evidence.md   the argument behind it
+
+**The build has a check `check:teaching` structurally cannot do.** It fails if a beat
+claims a time the clock does not hold, and if the clock holds a teaching row no beat
+covers. That is the "the clock listed nine of eleven blocks" defect, caught before a page
+exists. `check:teaching` still ran and still found seven real defects on the first build,
+all of them learner headings with no counterpart on the instructor page.
+
+**Two small changes to shared tooling, both additive and both defaulting to week 2's
+behaviour.** `teaching-clock.mjs` gained `ROWS_W3`, a `WEEKS` map and a `--week` flag that
+defaults to 2, and `ROWS` still exports week 2's rows. `check-teaching-pages.mjs` gained
+`--topics=N`, defaulting to 7. **The topic count was hard-wired to week 2's seven**, which
+would have failed a correct week 3 pair and then been "fixed" by editing the number,
+breaking week 2 the same day.
+
+### The reference agent gained eight targets and its own data, and weeks 1 and 2 are byte-identical
+
+`~/learningthelivingcraft/reference-agent`. New: `data/policy-docs.json` (seven clauses of
+policy prose), `data/w3-tickets.json`, `data/w3-accounts.json`, and `src/w3_*.py`. The
+Makefile rule held: a later week never changes an earlier week's target, and `make
+weird-mock`, `make retry`, `make w2-guarded` and `make w2-goodwill` all still print exactly
+what the published week 1 and week 2 pages show. **Nothing in that repo is committed** —
+the tree already carried another session's uncommitted week 1 and 2 refinements, which were
+left alone.
+
+**Every `w3-` target is deterministic and needs no key.** The run-to-run variation is a
+seeded stand-in for a model, and both pages say so in those words. It is not arbitrary
+noise: the agent picks between the top two retrieved clauses and takes the second more
+often the closer they scored, so the variance is interpretable and identical on eight
+screens. The one live model call anywhere in the session is `make chaos` from week 1, which
+the instructor page offers with its cost rather than scheduling.
+
+**Three numbers the session turns on, and all three are from real runs.** The adversarial
+case is 100% at ten runs and 75% at twenty, first failure on run eleven, ₹2,50,000 each
+time. Trimming the clause text to 100 characters takes that case to 0% and ₹37,86,400. A
+second profile scores 78% overall against 76% and 65% adversarial against 75%.
+
+### Open, and needing Sunil
+
+- **Publish both pages as Artifacts** and record the links in `docs/teaching/README.md`,
+  where two lines currently say "not published yet".
+- **`startsAt` is unset**, so the new live session clock on both pages is off and says so.
+  It switches on with `?start=2026-10-11T09:00+05:30` in the URL. Guessing a start time
+  would be inventing a fact, so nothing is defaulted.
+- **Two terminals at 00:40.** `w3-falsepass` models two processes inside one program, which
+  is honest and is not the same as two windows. Running it live is stronger and needs
+  arranging.
+- **The reference agent README lists week 1's targets only**, as it did after week 2. The
+  Makefile documents `w2-` and `w3-` instead. Worth a decision rather than drift.
+
+---
+
+## Week 1 has a generated learner and instructor pair — 29 September
+
+Week 1's two published pages were hand-built in August and the only thing done to them
+since was the palette swap. **They are generated now**, from a content module, the same way
+week 3 is.
+
+    learner    https://claude.ai/artifact/5jKNab8RVmu9mqJUM9K1yp
+    instructor https://claude.ai/artifact/1RHzfCGnNyD1oo8B8VKsiS
+
+**Seven topics, and five of them are a rated outcome.** Topic 1 is outcome 1, topic 3 is
+outcome 2, topic 2 is outcome 3, topic 4 is outcome 4, topic 5 is outcome 5. Topic 0 is the
+frame — the slot week 2 added on 29 September — and topic 6 is the horizon. 29 beats, all
+nine `check:teaching` rules passing.
+
+**The block names did not change**, and that was deliberate. The session file still reads
+"1 · The Concept", `threads.md` still refers to it that way, and renaming them is a content
+decision rather than a format one. A topic is how the page is organised; a block is what the
+day is called.
+
+**The four drawings were lost and are back.** The August learner page carried four SVGs — the
+ReAct loop, the whole system, the one-step interaction diagram, and what week 2 builds. The
+first generated pair had none, because the content module was written from the session file
+and a session file has never held an SVG. They are in
+`scripts/teaching-content/week-1-figures.mjs` now, original artwork unchanged, each a complete
+`<figure>` with its caption, and each rendered **twice** — learner page and reference card — so
+the instructor is looking at the same picture the room is. `_design.mjs` gained the figure
+rules; week 3 has no `<figure>`, so they are inert there.
+
+**If a week's page loses something, look for it on the hand-built predecessor first.** The
+generated pages are only as complete as the module, and the module is written from the session
+file, which holds prose and frontmatter and nothing else.
+
+### Three changes to shared machinery, and each one is proved safe
+
+- **`scripts/teaching-content/_design.mjs` is new.** The two stylesheets and two scripts were
+  literals inside `week-3.mjs`; week 1 needs the identical four. `week-3.mjs` re-exports from
+  it now. **Both week 3 pages build byte-identical to before the extraction**, which is the
+  regression test if anybody touches it.
+- **`build-teaching-pages.mjs` had week 3's wording in the template.** "Five hours, eight
+  blocks", a quiz at 04:10, "ten in the bank", "all six topics" — all wrong for week 1, which
+  has five blocks, a quiz at 04:20 and a bank of fifteen. They read off `week.wording` now,
+  and every default is the week 3 string, so week 3 is unchanged.
+- **`ROWS_W1` is in `scripts/teaching-clock.mjs`**, 40 rows. **Two times carry two rows each**:
+  01:10 is a checkpoint and a stand-up, 02:05 is a checkpoint and the break. `dayPlan()` sorts
+  the checkpoint first, and the generator's opening-row exclusion is configurable now because
+  week 1's opening is 00:00 and 00:08 rather than week 3's 00:00 and 00:10.
+
+### What is still true, and what is not
+
+**The old hand-built week 1 pair is superseded and recorded as such** in
+`docs/teaching/README.md`. Do not edit it. Its learner page's share is pinned to a
+pre-design-system version that only Sunil can move, so viewers were never seeing the
+28 September conversion anyway. The design review and the design spec are not superseded.
+
+**Week 2 still has no generated pair.** Its seven topic pairs and its collated pair are all
+hand-built, and its session file was restructured on 28 September into eight blocks and three
+cycles, so **all five of its published Artifacts are against the old clock.** A `week-2.mjs`
+would close that and is not done.
+
+**Nothing is committed.** The tree carries another session's week 3 work — `week-3.mjs`,
+`build-teaching-pages.mjs`, the quiz bank, the notes file, `package.json` and `.gitignore` —
+and week 1's changes are mixed in with it. Stage by path.
+
+## Week 1's session file is on week 2's format — 29 September
+
+`src/content/sessions/week-1.md` was written before week 2 existed and carried an older
+shape. It now follows the same contract week 2 follows. **Nothing about what week 1 teaches
+changed.** The clock, the four checkpoints, the five outcomes, the quiz ids and the four
+runs are all the ones that were there before.
+
+**Six format changes, and the first two are the ones that mattered.**
+
+- **Every beat now carries its own time, its participants and its duration** —
+  `*00:23 · Whole room, 8 minutes. Answer in chat first, 30 seconds.*`, 37 of them. Week 1
+  had nine such lines and all nine were block-level. The teaching standard asks an activity
+  to state its own duration and say who does it, and a room of eight given an unassigned
+  prompt goes quiet.
+- **The `## Opening` section did not exist.** `runOfShow` has declared an opening at 00:00
+  since the file was written and the page rendered nothing for it, so the first rating and
+  the four retrieval questions were on the instructor script only. Both are now on the
+  learner page.
+- **Four checkpoints now open with `**You can now…**`**, the week 2 wording, instead of four
+  different instruction sentences.
+- **Two sections were added above the outcomes**, matching week 2's *Why an agent needs
+  these* and *The six kinds*: **Why you draw the map before you fix anything** and **The
+  four parts**. The four-parts table maps part → what it holds → what goes wrong → which
+  week owns it. Week 2 states its concept at the top of the page and still builds the
+  taxonomy from the room at 00:37; week 1 now does the same, and block 1 still says "build
+  it from the room rather than reading it".
+- **The five outcomes carry their thread label**, as week 2's do. And prevention is now
+  named as deliberately absent, the way week 2 names evaluation as deliberately absent.
+- **The drills are `###` beats with the decide → build → review shape printed above them.**
+  That shape was in the instructor script at 02:20 and on no learner surface. Drill 4 is
+  marked *Homework, not run in the room* where it used to sit unmarked between drills 3 and
+  the bake-off.
+
+**Three real defects fell out of the pass, and all three are fixed.**
+
+- **`pair.reviewAt` was `04:05` and the arithmetic never supported it.** The draft opens at
+  03:50 and runs twelve minutes, so the swap is at 04:02, which is what
+  `week-1-script.md` has run all along. Three surfaces read that offset.
+- **The body's Reading list held four of the seven entries in the frontmatter.** The three
+  resources added on 28 September — the design guide, the Agent Authority Review, the tool
+  permissions guide — were in the frontmatter and invisible to anybody reading the page.
+- **Two beats were in the wrong order against the clock.** The `expected` grep ran at 02:02
+  in the script and sat inside *The pattern* at 01:44 on the page, and *the split* ran at
+  01:03 and sat inside *Inside one step* at 00:46. Both moved to their clock positions,
+  which is the rule the 28 September reordering established.
+
+**Two things I deliberately did not change, and both are judgement calls to overrule if you
+disagree:**
+
+- **The block names.** They are still The Concept, The Problem, The Drill, The Teardown, The
+  Horizon. Week 2's are descriptive — *Cycle A · The limit* — and these are not. But they
+  are the six-part shape from `CLAUDE.md`, they are in `threads.md` and in the four published
+  week 1 artifacts, and renaming them is a content decision rather than a format one. Each
+  block instead gained the framing paragraph week 2's blocks carry, which poses the questions
+  that block answers.
+- **The four checkpoint offsets.** `01:10 / 02:05 / 03:20 / 04:15` are unchanged. The
+  instructor script reads them at `01:05 / 02:05 / 03:15 / 04:15`, two to five minutes
+  earlier, which is week 2's convention. `CLAUDE.md` names 01:10 as the worked example of a
+  checkpoint sorting before a stand-up at the same offset, so moving them makes a documented
+  example wrong for two minutes of consistency.
+
+**The four published week 1 artifacts are now behind the session file** — the same situation
+week 2's five pages were in on 28 September. The learner page has no Opening section, no beat
+timings and four of seven reading entries, and the instructor page still has the swap at
+04:05. They were not rebuilt in this pass. `npm run check:teaching` cannot see any of it,
+because it compares a pair against each other and not against the session file.
+
+`npx astro check` is 0 errors and `npm run build` is clean.
+
+## Week 2 has a topic 0, and the preparation list is actionable — 29 September
+
+Sunil reviewed week 2 and raised two things. Both were real and both are fixed.
+
+**1 · "What to Prepare" was not understandable.** It is the `#prep` card on the collated
+instructor page. It held four noun phrases — "the `w2-` sqlite path", "three prepared queue
+states", "ticket #8812 does not exist", "a blank seven-column policy table". Those name gaps,
+not tasks. None said where the file goes, how big it is, how you know it is done, or what
+breaks without it.
+
+It is now **eleven items in four groups**: what blocks the session, what needs a decision
+either way, what is small and buys back minutes, and what you do in the hour before. Each
+carries the action, the file, the size, the done-test and the cost of skipping it. Three
+items are new and were on no list anywhere: **pick the two decision records for 00:15,
+assign the adversary pairs for 03:25 by name, and pick the 01:09 screen while circulating.**
+Those three have no file, so nothing was tracking them, and each one kills a beat outright.
+The source is `docs/teaching/notes/week-2-guardrails.md`, section *What to prepare, and by
+when*.
+
+**2 · The limit topic opened abruptly, and the cause was mechanical.** Block 1's three
+framing beats — 00:15 the policy-versus-wish exercise, 00:31 the three properties, 00:37 the
+six kinds — are labelled **"shared"** in `scripts/teaching-clock.mjs`. "Shared" means they
+belong to no topic, so when the six topic pages were built in September they landed on none
+of the six. **The six-kinds table and the three-properties rubric were on no published
+learner page at all.** Topic 1's page opened with "put a limit outside the function it
+constrains" and no definition of a guardrail above it.
+
+Fixed by adding **topic 0, the frame**, numbered 0 so no published link or `whose` label
+changes.
+
+    topic 0 · learner    https://claude.ai/artifact/EmG3hc16xvDeQEyEdoSxHh
+    topic 0 · instructor https://claude.ai/artifact/1v7vwMJxPL376pNBE1ev2Z
+
+Four things about it worth knowing before touching week 2 again:
+
+- **Nothing on the clock moved.** The same three beats run at the same three times, for the
+  same nineteen minutes. `ROWS` in `teaching-clock.mjs` is unchanged, so the other twelve
+  published pages did not drift. Topic 0's page marks its three rows with the standard
+  `mine` set. Relabelling them "topic 0" would cost a twelve-page regenerate for a word
+  nobody reads.
+- **Why an agent needs a guardrail was genuinely missing** from every week 2 surface. It is
+  now three rows — no call site, no path until it runs, no repeatability — and it is
+  **reading on the learner page plus one spoken sentence at 00:37**, not a new beat. Block 1
+  has no spare minutes and the house rule is cut rather than compress. If it should be live,
+  something has to come out.
+- **The order was not changed, on purpose.** Topic 1's working demo at 00:23 still sits
+  between beat one and beat two of topic 0. The room judges a refusal with no rubric, then
+  gets the rubric at 00:31. Putting the taxonomy first makes it a lecture and breaks
+  prediction-before-reveal.
+- **Week 2's first two diagrams and its only named-products card are on topic 0.** Six kinds
+  on one request path, and ordinary code beside an agent writing to the same ledger. The
+  enterprise card names four options per slot with costs and no recommendation: OPA, Verified
+  Permissions, LaunchDarkly, a JSON file; Temporal, Step Functions, the maker-checker screen
+  in Finacle or FLEXCUBE, a pending table; NeMo Guardrails, Guardrails AI, Bedrock Guardrails,
+  Azure AI Content Safety.
+
+**`check:teaching` changed in two places and both are load-bearing.** The by-topic check
+counts **seven** collapsible topics, not six. And `LOGISTICS_PATTERNS` gained three exact
+titles for topic 0's out-of-clock reading cards. Exact titles rather than a loose pattern, so
+a real beat that loses its clock row still fails.
+
+**Still open on week 2, and unchanged by this:** the `w2-` sqlite path for 02:55 blocks the
+day, and the three queue-state fixtures for 02:00 block the 02:20 debrief for anybody whose
+gate broke.
+
+---
+
+## Every published teaching page is on design system v1, and week 1 has its own title — 28 September
+
+Five Artifacts were still on the black, ember and sun palette after the two week 2 sheets
+were done. All five are converted now, so no learner-facing page is on the retired system.
+
+| Page | What changed |
+| --- | --- |
+| Week 2 topic 1, instructor | Tokens only |
+| Week 2 topic 1, learner | Tokens only |
+| Week 2 topic 2, learner | Tokens only |
+| Week 2 topic 2, instructor | Tokens only |
+| Week 1, learner | Tokens, plus the title |
+
+**The conversion is a script, not a hand edit** —
+`swap.py` in the session scratchpad holds the whole mapping and prints what it did not
+recognise. Three things it does that a find-and-replace would get wrong, and any future
+page needs the same three:
+
+- **`--ink-3` is the on-dark muted colour and some pages use it on paper.** Mapped to
+  `#C6D4C8`, it is about 1.4:1 on `--paper-1` and the hidden amount marker on every failure
+  card disappears. Those uses go to `#758279`, the control line.
+- **The heading rule split in two.** `h1, h2, h3, h4` at weight 800 became `h1, h2` in
+  Source Serif 4 at 400 plus `h3, h4` in Figtree at 700. Dropping h3 and h4 from the rule
+  without writing a second one also drops `margin: 0`, which returns the browser's default
+  margins and breaks every card.
+- **`--sun` is forest green now, so ink text on it is about 1.2:1.** Every `summary`, jump
+  link and pressed button on those pages carries `color: #F5F0E6` instead.
+
+**Week 1's learner page was titled "The money leaves anyway" and its session is titled
+"The harness".** It is now `Week 1 · The harness` in the tab and `The harness` as the h1;
+the old line's promise was already the first sentence of the sub-heading, so nothing was
+lost. Sunil asked for titles a learner can match to a week.
+
+**That page is shared as "anyone with the link" and the share is pinned to the old
+version.** Viewers keep seeing the pre-conversion page until the pin is moved from the
+page's Share menu. Nobody but Sunil can move it.
+
+**Weeks 1 and 2 are `status: ready`.** That is the written half of the release gate; neither
+is released, because `session_releases` does not exist in production yet.
+
+**`npm run check:teaching` is new** (`scripts/check-teaching-pages.mjs`). Eleven mechanical
+checks between a learner page and its instructor page: the two clock tables byte-identical,
+both pages in clock order, the run of show monotonic, every card and row present in the
+clock, both instructor columns agreeing heading for heading, every learner heading present
+on the instructor page, and both pages well-formed. It takes two saved HTML files. Building
+week 2's pair cost four rounds of one defect — an index going stale behind the content —
+and every one of those four was mechanical.
+
+### Two things are blocked, and both are Sunil's
+
+- **`supabase/schema.sql` has not been run and I cannot run it.** `.env.local` holds
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` and nothing else. The service-role key
+  reaches the REST API, which cannot execute DDL, and there is no Postgres connection
+  string anywhere in the repo or the environment; the Supabase CLI is installed and not
+  linked. Run the whole file, it is idempotent. Until then `/craft/material` shows every
+  week shut and the console shows the red table banner.
+- **The timetable cannot be set without real dates.** `learnerCohort.startsOn` is
+  `'October 2026'`, a month. `startsAt` and `endsAt` are unset on every session file, and
+  they must be full ISO 8601 with an offset because the cohort sits in three time zones.
+  Nothing derives from `taughtOn`. Until weeks 1 and 2 have a date, a time and an offset,
+  there is no before-pulse, no checkpoint window, no knowledge check and no ADR clock.
+  Inventing them is inventing a fact.
+
+**`src/content/sessions/week-2.md` is being rewritten in parallel and is uncommitted.** The
+day is now eight blocks and three cycles (A the limit, B maker-checker, C pay once) where it
+was five topics, and the clock moved: the four checkpoints are `00:46 / 02:02 / 03:18 /
+04:19`, not `01:02 / 01:59 / 03:20 / 04:15`. **The five published week 2 Artifacts are all
+built against the old clock and now disagree with the session file.** They were not touched
+beyond the palette, because the restructure is a content decision and not mine to finish.
+
+## Curriculum aligned to the resources, and week 2 wired up — 28 September
+
+Sunil asked for a review of the published curriculum against the topics on `/resources`,
+then for the changes. Ten tools in two series, three toolkit worksheets, four guides and
+four templates on one side; four modules and six weeks on the other. **No session
+referenced any of the 22 resources.** Week 2's reading list pointed at Open Policy Agent
+and the Google SRE book and not at the Rule Placement Audit, which is week 2 topic 1's
+exact subject.
+
+**What changed in the curriculum**
+
+- **Week 2's frontmatter was nearly empty and is now complete** — outcomes, threads, quiz,
+  runOfShow, checkpoints, pair, prework, assignment, after, reading. It was fully written in
+  prose and invisible to every instrument: no pulse, no checkpoints, no check, nothing in
+  session mode, and `assignment: "TBD"` meant no ADR unlocked. That was the single biggest
+  gap on the learner side and it is closed.
+- **`docs/teaching/quiz/week-2.md`** — eight items in the bank's authored format, three with
+  keyed options. All eight are asked, unlike week 1 where the bank holds fifteen and the
+  check asks four, because all eight of these stand on a page with a Submit button.
+- **M2's public copy said "multi-agent orchestration" for weeks 2–4** and the 8 September
+  decision had moved it to week 5, which is M3. Moved in `cohort-copy.ts`, so the page, the
+  JSON-LD Course node, `/api/facts` and `/llms.txt` all corrected at once.
+- **Week 0 gained the question the course never asked** — does this need an agent at all?
+  It is decision 1 of our own six-decisions guide and the course started at decision 2.
+  Pre-work, using the POC Selection Tool and the workflow-or-agent guide, so it costs no
+  live minutes.
+- **Week 1 drill 2 now maps its three tool grades onto the Agent Authority Review's four
+  undo-cost levels.** Two published surfaces were running two scales for one judgment.
+- **Weeks 3 and 5 carry a note each** for whoever writes them: week 3 owes re-qualifying
+  against a new model version, which is where the Model Selection Tool belongs without
+  breaking `threads.md`'s deliberate exclusion of model choice; week 5 owes the business
+  case, one beat, because M3 already owns cost under load.
+- Week 1 and week 2 reading lists now name six of our own resources.
+
+**Still not in the curriculum, and that is the recommendation:** rework cost and model
+selection stay tools only. Publishing a tool is not a promise to teach it, as long as no
+module copy implies otherwise.
+
+## Release a week to the room from the console — 28 September
+
+**`session_releases`, and it needs `supabase/schema.sql` run before the next deploy.**
+One row per released week, `week` as the primary key so releasing twice is a no-op.
+
+The gate is two conditions and only one of them is data: a week opens to a learner when it
+is **written** (`status: ready`, a commit) **and released** (a row, a button). Either alone
+is wrong — released but unwritten shows somebody who paid a page of `[PLACEHOLDER]`;
+written but unreleased hands week 4 to the room during week 2 and spends four sessions of
+prediction-before-reveal in advance. The rule is `src/lib/craft/release.ts` so the learner
+page, the week page and the console cannot disagree.
+
+**When the table is not answering the whole course reads as shut**, which is the opposite of
+every other query here and is deliberate: an unreachable table must not open material Sunil
+has not taught. It is in the health probe list, so the console shows the red banner.
+
+New surfaces:
+
+- **`/craft/material`** — the learner tab. Every week, open or shut, with the outcomes, the
+  block count, the checkpoints, the check and the assignment visible before you click. A
+  shut week shows its title and why it is shut, never its outcomes or its body. In the nav
+  rail as **Material**, and named in the tour spine.
+- **`/craft/admin/sessions`** grew a release control per week, and it refuses to enable for a
+  week that is not written.
+- **`/craft/admin/teaching`** — the instructor page. All seven weeks in full, the quiz bank
+  WITH every key and distractor rationale, and the facilitation notes read from
+  `docs/teaching/notes` at request time, the same mechanism the quiz bank already uses. It
+  is under `/craft/admin`, so the console cookie gates it and a seat code cannot open it.
+
+**And the two published week 2 Artifacts were rebuilt on design system v1.** They were still
+on the black, ember and sun palette: forest now, ivory ground, Source Serif 4 for h1 and h2,
+6px and 12px radii, a 1px line instead of a shadow. Every colour pair contrast-checked.
+
+## How a guardrail decides — a new topic note — 28 September
+
+**New: [`docs/teaching/notes/guardrail-patterns.md`](../teaching/notes/guardrail-patterns.md).**
+Week 2 builds four controls and every one is a predicate in code. That is the right
+default and the session never says so, because nothing contrasts with it. The note is the
+contrast: five pattern families, the nine control points, and a five-line rule for
+choosing between them. It answers the question the room asks at 02:40 while writing an
+`if` — why not just ask a model whether this credit looks reasonable?
+
+The real gap it closes is **model-based checkers**, which week 2 does not cover at all.
+LLM-as-judge, classifier guards, critic loops and the grounded verifier. Four points on
+judges: it is a detective control and may not authorise a payment; it is not independent
+of its input, so two models reading one hostile field are one control; an uncalibrated
+judge needs an agreement rate and nobody has one; and it drifts when the provider ships an
+update while every test still passes.
+
+It duplicates nothing. Maker-checker, the six pieces of a gate and the unique-constraint
+argument are already in `week-2-guardrails.md` and the note points at them. Checked
+mechanically, zero shared sentences. `/craft/admin/teaching` matches notes to weeks by a
+`week N` reference in the first 900 characters, so it attaches to week 2 and to no other.
+
+**The learner and instructor pages were updated to match, and the clock did not move.**
+The third of the "three things not to fix today" at 03:15 used to read *"a second agent to
+approve the first one. Week 5."* — six words and a week number for the thing this room is
+most likely to go and build between sessions. It now carries the judge argument in full on
+the learner page, with ticket #8812 asking ₹90,000 because its text claims finance
+pre-approved it. **The block stays at five minutes**, using component 5's device: one
+sentence out loud, then point at the page. The argument is reading, not a beat.
+
+The instructor card gained the sentence to say and one distinction the old line collapsed.
+A model judging one value against a rubric is a scorer, and whether a scorer is any good is
+a measurement, so that is week 3. A second agent with its own loop approving the first is
+orchestration, so that is week 5. The old bullet sent both to week 5.
+
+**The note maps onto the resource shelf, and closed one gap in week 2's reading.** Six of
+the thirteen resources and four guides are this material in public form, and the note says
+which family each serves. *Who may call the tool*
+([`src/content/guides/tool-permissions.md`](../../src/content/guides/tool-permissions.md))
+is drill 1 argued in prose and was not on week 2's reading list, so it is now, making seven
+items against a heading in the notes that still said four. *What to do with uncertain
+evidence* was already there and its note named only the 01:15 confidence card; the same
+guide answers the 03:15 judge bullet, so the note now names both. The evaluation-gates
+worksheet is judge calibration and stays with week 3. The Rework Cost Check, Model
+Selection Tool, Run-Cost Model, Cost-Ceiling Workbook and POC Selection Tool are named as
+deliberately not taught here, because publishing a tool is not a promise to teach it.
+
+**A correction worth recording, because it would cost the next session the same hour.** An
+earlier draft of the patterns note proposed a fifteen-minute beat at 03:05, traded against
+drill 5. That trade does not exist: drill 5 is after-work and frees no live minutes. The
+drill block from 02:20 to 03:20 is full, and anything added there comes out of drill 2,
+drill 3 or the checkpoint. The note now says so.
+
+## Week 2 rebuilt into build-break cycles — 28 September
+
+**The redesign the entry above said was not applied has now been applied.** Sunil asked
+for it after the collision list was put in front of him. The old five-block version is
+intact at `cb26654` if you want to compare, and `git show cb26654:src/content/sessions/week-2.md`
+is the fastest way to read it.
+
+**A note on where this landed.** It was started on a branch `teaching/week-2-redesign` off
+`cb26654`. While it was being written, the working tree was moved to
+`feat/curriculum-and-material-gate` from another session, which added the quiz bank, the
+teaching console and `check:teaching` on top of `cb26654`. This work depends on all three,
+so it was committed there rather than on the now-stale redesign branch. That branch can be
+deleted.
+
+**The shape.** Eight blocks and three build-break cycles instead of five blocks and one
+sixty-minute drill block. Keyboards are live at **00:57 instead of 02:20**. Each cycle
+builds a control and breaks it in the same hour, on the learner's own code.
+
+**The new material.** A sealed prediction at 00:10 opened at 03:52. A three-property
+rubric (locatable, readable, observable) that carries the whole day and forces a counter
+onto every build. Nine control points replacing a three-way show of hands. A 15-minute
+block on model-based checkers. And **the adversary round at 03:25**, where assigned pairs
+try to get ₹5,000 out of each other's guard, which is the only beat in six weeks where a
+participant's work is tested by a peer in real time.
+
+**What was cut, and it is stated in both files rather than left quiet.** The five teardown
+questions became columns three, six and seven of a seven-column policy table plus three
+lines of the 04:19 checkpoint; their answer keys are kept as reference cards because a
+senior room reaches them anyway. The ₹44,000 Friday night shrank from eight minutes to
+four and moved to 03:55, where it frames the teardown. "Nobody is there to approve" stopped
+being a discussion: the room sets an 18-minute approval timer at 02:00, goes to the break,
+and reads its own queue at 02:20. Three outcomes appear in every room and nobody chose a
+wrong one. Drill 5 is dropped, because homework was already over the five hours the public
+page promises.
+
+**Outcome 1 changed and its id changed with it**, `limit-as-data` to `limit-placement`.
+Writing the number in a file is the easy half. The half that costs money is which callers
+the control covers. Nothing had been rated against the old id, so this is a rename rather
+than a migration.
+
+### Two defects found while doing it, both pre-existing
+
+- **Week 2's learner check rendered ONE question under a heading promising eight.** Q4, Q6
+  and Q9 were tagged `judge` while each carried four options and a marked key; the tag was
+  being used to mean "hard". `isSelfServable` drops every `judge` item from `/craft/quiz`,
+  so seven of the eight ids in `quiz:` were dropped silently. The three are `apply` now,
+  `quiz:` lists the four that actually render, and the bank explains the split. **This was
+  not caused by the redesign** and would have reached the room.
+- **Cycle C had no buildable fix.** The learner page said "put a unique constraint in the
+  store" and this repository's ledger is a Python list, so there is no store. It is now a
+  sqlite file with the key as primary key and `INSERT OR IGNORE`, which is standard library
+  and about fifteen lines. **That is a staging dependency and it blocks running the
+  session**: the reference agent needs a `w2-` sqlite path, same rule as `w2-guarded` and
+  `w2-goodwill`.
+
+### Verified
+
+`astro build` completes, `astro check` is 0 errors against the baseline of 0, and 85 tests
+pass. The frontmatter parses, the run of show totals exactly 300 minutes, the before-pulse
+closes at the first block and the after-pulse opens at the close, and all four ids in
+`quiz:` render for a learner.
+
+### Still owed
+
+- **Topic 1's pair is rebuilt and republished, and it passes all eleven checks.** Learner
+  version 23, instructor version 29, same two URLs. Six topics now, not five: the choice of
+  mechanism earned one of its own. The unit stayed the topic rather than the block, because
+  after the rebuild four of the five old topics became single unbroken runs, so the two
+  nearly coincide and the topic is the unit of the argument. `docs/teaching/README.md` has
+  the list and the per-topic state.
+
+  The pages were built from one generated clock string dropped into both, which is the
+  cheapest way to keep "clocks are byte-identical" true. Topic 1 now covers 00:23, then
+  00:42 to 01:35 unbroken, then the adversary round at 03:25. It gained the nine control
+  points, the two counters, the move-toward-the-protected-thing rule and the six attack
+  routes; it lost the ₹44,000 Friday night to topic 5 and drill 5 entirely.
+
+- **Topic 2's pair is rebuilt and republished too, and also passes all eleven.** Learner
+  version 8, instructor version 7. It is cycle B: 01:40 to 02:05, and then it keeps going
+  through the break and lands at 02:20. **The break is bold on its clock on purpose**,
+  because for fifteen minutes it is the only part of the session still doing anything.
+
+  The big change is that the 2:14am question stopped being a discussion. The room sets a
+  real 18-minute timer at 02:00, leaves, and reads its own queue at 02:20. The old beat
+  carried a defect fixed on 11 September, where it asked about code the room had not
+  written yet; that cannot come back, because the code now exists forty minutes before the
+  question. The decision log moved from 00:52 to 01:47, where it is actually built, closing
+  a 115-minute gap between teaching it and building it.
+
+  **"Outline stage" in the README was wrong.** Both pages were complete, including a
+  hand-drawn SVG of the four exits from an ask, which is carried over unchanged. Only the
+  clock was stale.
+
+- **One new preparation item, and it is the only thing the rebuild added to the running
+  cost.** Three prepared queue states for 02:00, one per outcome, for anybody whose gate is
+  not working when the timer is set. Without them a broken build costs that person the
+  02:20 beat entirely, which is the best six minutes in the session.
+
+- **Topics 3 to 6 are written and published, so all six pairs now exist and all six pass
+  all eleven checks.** Eight new artifacts; the URLs are in `docs/teaching/README.md`.
+  - **Topic 3, reliability**, is cycle C. The whole topic turns on letting a green result
+    stand for four minutes before breaking it, and it now ends on a built fix rather than
+    handing one forward.
+  - **Topic 4, risk trade-offs, is a thread rather than a block, and it is the only one of
+    the six that is.** Seven minutes of its own. Planted at 00:54 as two counters, paid at
+    01:40 when Meera's refusal increments one and nothing else mentions her, argued at
+    04:32. Its instructor page carries one instruction in bold: do not teach it three
+    times. Explaining it at 00:54 buys agreement and spends the feeling.
+  - **Topic 5, governance**, is the policy table and the horizon. It records where each of
+    the five old teardown questions went.
+  - **Topic 6, choosing a mechanism**, is the 15-minute judge block.
+
+- **Week 2 now has a collated pair as well, the shape week 1 uses — 29 September.** All
+  six topics on one learner page and one instructor page, each topic in a collapsible.
+  Learner `Q1r2bp8wuXJtm8U6v31tLU`, instructor `UvW3uzMHXznXU95oWHkA98`. The six topic
+  pairs stay: they are what you open to teach one topic, and the collated pair is what you
+  open to see the week.
+
+  **The collated pages are generated from the six pairs**, so the pairs are the source and
+  the collated pair is the view. They are in topic order rather than clock order, because a
+  topic is an argument and an argument reads better in one piece; the clock at the top
+  gives the other reading.
+
+  `check:teaching` gained **`--by-topic`** for them. Six of the eleven checks describe a
+  page that claims to be a run of show, and a topic-ordered page does not, so they are
+  swapped for three that do apply: no duplicate ids on either page, six collapsible topics
+  present, and both pages carrying the same topics in the same order. Duplicate ids are the
+  real hazard, because six topic pages merged onto one is six chances for `id="r-scope"` to
+  collide.
+
+- **Two defects in the instructor pages, found by Sunil noticing the collated page had no
+  columns — 29 September.** Both are fixed and all seven instructor pages are republished.
+  - **The collated instructor page had lost the side-by-side layout.** The consolidator
+    stripped the `.pane` wrappers and stacked the script and reference columns. It now
+    emits one `.teach` grid per topic inside the collapsible, with the stock rule
+    `body.split .shell > :not(.teach)` undone for `details.topic`, because `.teach` sits
+    two levels down there rather than directly under `.shell`.
+  - **The worse one: clicking a beat did nothing, on all six topic pages.** The script
+    called `querySelector` on a bare id, which reads `r-payonce` as an element name,
+    matches nothing and returns null. It came from pairing topic 2's original script, which
+    used `data-ref="#b1"`, with rebuilt markup that uses `data-ref="r-payonce"`. **Nothing
+    in `check:teaching` can see this**, because a dead link and a working one are the same
+    HTML. The script is now [`scripts/teaching-pane.js`](../../scripts/teaching-pane.js),
+    it strips a leading `#`, and a rebuild is checked by confirming every `data-ref` has a
+    matching `id`. All 23 beat links resolve.
+
+- **The clock now lives in [`scripts/teaching-clock.mjs`](../../scripts/teaching-clock.mjs)
+  and nowhere else, and that is not a tidy-up.** Twelve published pages carry the same
+  table. Topics 1 and 2 were built before topics 3 to 6 existed, and by the time all six
+  were written **their clocks disagreed about who owned 02:05 and 03:01**. The checker
+  cannot see that, because it only compares the two pages of one pair. Both were
+  regenerated from the one table and republished. Generate a topic's block with
+  `node scripts/teaching-clock.mjs 01:40 01:47 …` rather than editing a page's table.
+
+- **`check-teaching-pages.mjs` never actually checked anything, and now it does.** This is
+  the one to read before rebuilding any page.
+
+  Run against the two published week 2 pages, unmodified, it reported 7 of 11 failing, and
+  **three of the four passes were vacuous**. Four causes, all of them the checker matching a
+  page shape that does not exist:
+  - `clockOf` searched for the literal "Five hours, five blocks". A topic page says *"Where
+    this topic sits"*, so it found no clock on either page, returned null for both, and
+    "clocks are byte-identical" then passed because `null === null`. With no clock, "every
+    learner card is in the clock" failed for every card.
+  - `runOfShow` expected `<div class="t">`. The pages use `<span class="t">`. Zero rows
+    found, so "run of show is monotonic" passed on an empty list.
+  - `beatRefs` expected `data-ref="#id"`. The pages write `data-ref="id"`. Zero refs, so
+    "run of show and notes column agree heading for heading" passed on an empty list.
+  - It also had no entry for a topic page's four framing cards, which sit outside the clock
+    by design.
+
+  **All four are fixed, and the gate now reports real drift.** Still 7 of 11, but they are
+  findings rather than artefacts: the two clock tables genuinely differ, the notes column is
+  out of clock order, ten run-of-show headings do not match the clock's wording for the same
+  beat, and **both published pages end with a duplicated `</body></html>`**. That is the
+  exact fault the checker's own header says it exists to catch, so it was right to build and
+  it had simply never run.
+- **The `w2-` sqlite target in the reference agent**, described above.
+- **`docs/teaching/notes/teardown-five-questions.md` needs nothing.** An earlier note here
+  said it was stale. That was wrong: it is **week 1's** teardown, for week 1 §4, and the
+  week 2 restructure does not touch it. Checked 28 September.
 
 ## Resource 07, the Agent Failure Triage Quiz — 26 September, on a branch
 

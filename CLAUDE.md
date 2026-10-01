@@ -158,6 +158,67 @@ quietly.
 - No placeholders, brackets, TODOs or leftover generation prompts anywhere,
   including image alt text.
 
+### The shape of a topic — Sunil, 11 September 2026
+Every teaching artifact follows these six parts, in this order. This replaces
+"whatever order the clock happens to put things in".
+
+    1  The narrative      open on a scene, not a definition. Something that
+                          happened, with a number in it
+    2  The concept        one sentence, then a diagram or a worked example.
+                          Never the definition alone
+    3  Components and     the parts, and what each design choice costs. Failures
+       design             belong here: each one is a choice that looked right
+                          until it ran
+    4  Drills             decide, then build, then check
+    5  At enterprise      what firms running this already use, **named**, with
+       scale              the cost of each option
+    6  Quiz               mixed across topics, never grouped
+
+**Sections run in clock order.** Parts 4 and 5 were the other way round until
+28 September, which made a learner reading along live jump from 01:49 to 03:25.
+A learner page follows these six parts and carries the clock as a table; an
+instructor page is the other way round, because the clock is what gets followed
+live.
+
+**Every part opens on a question** — what, why or how — and one a senior engineer
+cannot answer from the heading.
+
+**Name real technology in part 5.** Products, not categories: Temporal, OPA,
+LaunchDarkly, Step Functions, the maker-checker screen in Finacle or FLEXCUBE.
+The guard against a vendor deck is **three or more named options per slot, each
+with what it costs, and no recommendation.** One product named alone is the line
+not to cross.
+
+### Every question, checked before it ships
+Four tests, run as a pass over the finished artifact rather than while drafting.
+Sunil asked for this after two bad questions shipped in a row.
+
+1. **Would an instructor read it aloud without stumbling?** Under about fifteen
+   words, front-loaded, no clause stacked on a clause.
+2. **Can a learner answer it without first guessing what is being asked?** No
+   undefined reference ("your record", "the key"), and no category error — code
+   does not "check a sentence", it enforces a rule.
+3. **Is the context there, every single time?** Which document, which moment,
+   what they hand in, how long they have.
+4. **If it refers to an earlier week, quote that week verbatim, right above it.**
+   Never a bare "the record you wrote last week". In a live room nobody goes and
+   looks it up; they guess or sit quiet.
+
+**Where one question does two jobs, split it.** The second is usually where the
+learning is: *could another engineer build this?* is a yes or no, and *what would
+they have to ask you?* is the beat.
+
+**Print every question the instructor has to ask, on the instructor page**, and
+whatever the room is looking at when it is asked — the trace, the row on the
+board, the terminal output. An instructor holding two pages open loses the room
+while finding the second one. The no-duplication rule covers two notes carrying
+the same text, not the words somebody says out loud.
+
+**Check every printed artefact against what is actually running at that minute.**
+A trace is a claim about the system at a point in the day. Meera's refusal trace
+showed the rule and not the file, thirty minutes after the room was taught that a
+refusal must name both.
+
 ### Reference
 The per-session build contract is [docs/teaching/threads.md](docs/teaching/threads.md) — read the week's
 row before writing any block of that week. [docs/teaching/README.md](docs/teaching/README.md) says which
@@ -501,18 +562,32 @@ Two rules, and they are the reason the file is worth having:
   was written and wrong a week later is worse than none. Move the checkbox, adjust the
   counts in the summary table, and add a changelog row.
 
-**Schema is ahead of production right now.** Not yet applied: the `discussion_replies`
-table and five additive columns on `doubts` (`visibility`, `title`, `pinned`,
-`resolved_reply_id`, `endorsed_reply_id`); the `session_prompts` table, `outcome_ratings`,
-`checkpoint_ratings`, `pair_drafts` and `pair_reviews`; `feedback.changing` and `feedback.unsure`; the three walkthrough columns on `learners`
-(`tour_completed_at`, `tour_offers`, `tour_offered_at`); the `doubts.answer_source`
-and `submissions.status` columns, and the `feedback_responses` table; and (29 September)
-`first_landing_path`, `first_referrer_host` and `self_reported_detail` on `attributions`, the
-first two on `resource_requests`, and the unique `events_event_id_uidx`. **Run
-[supabase/schema.sql](supabase/schema.sql) before the next deploy** — the whole file, it is
-idempotent. Shipping code ahead of its schema shows up as the console's "table is not
-answering" banner rather than a crash, which is survivable and confusing. Clear this
-paragraph once it has been run.
+**The schema is applied. Production ran [supabase/schema.sql](supabase/schema.sql) in
+full on 29 September 2026**, and all nine tables the code was waiting on answer:
+`session_releases`, `discussion_replies`, `session_prompts`, `outcome_ratings`,
+`checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `feedback_responses` and
+`resource_requests`. The rule that put this paragraph here still stands: **run the whole
+file before any deploy that needs a new table**, because shipping code ahead of its schema
+shows up as the console's "table is not answering" banner rather than as a crash, which is
+survivable and confusing.
+
+**Re-running is only safe because of one guard, and it is easy to delete by accident.**
+`create or replace function` replaces a function whose argument list is IDENTICAL, and
+creates a second one beside it otherwise. Adding `p_kind` to `resource_request_submit` on
+19 September did exactly that, and the bare-name `revoke all on function` at the foot of
+the file then failed with *function name is not unique* — which, in the SQL Editor's single
+implicit transaction, rolled back all 3,235 lines and applied nothing. Both writing
+functions now drop every overload of their own name by `oid::regprocedure` immediately
+before the `create`. **If either function grows a parameter, keep the guard.**
+
+**This branch's schema is NOT applied yet** (`feat/plain-green-v5-pages-branded-pdfs`,
+PR #37). The 29 September run used main's file. Still to run: `people.role_code`;
+`first_landing_path`, `first_referrer_host` and `self_reported_detail` on
+`attributions`, the first two on `resource_requests`; the unique `events_event_id_uidx`; the
+`p_role` and `p_role_code` arguments on `resource_request_submit`; four columns on
+`comms_sequences`, the `comms_drip_sends` table, three `comms_events` types and the
+`sending → queued` retry rule. Run the whole file before this branch reaches `main`, then
+delete this paragraph.
 
   Every page under `/craft` goes through
   [src/layouts/CraftLayout.astro](src/layouts/CraftLayout.astro), **including sign-in and office hours**.

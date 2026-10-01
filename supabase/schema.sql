@@ -407,6 +407,32 @@ create unique index if not exists session_prompts_learner_week_phase
   on public.session_prompts (learner_id, week, phase);
 
 -- ---------------------------------------------------------------------------
+-- Session releases — which weeks the room may open, and when Sunil opened them
+-- ---------------------------------------------------------------------------
+-- One row per released week. No row means the week is shut.
+--
+-- WHY THIS IS NOT `status` IN THE SESSION FILE. `status: ready` answers "is the
+-- material written", which is an authoring fact and belongs beside the prose in
+-- git. Releasing a week is a different act: it happens on the evening a session
+-- ends, it is a judgement call, and asking for a commit and a deploy to let
+-- eight people read the page they just sat through is the wrong shape. So the
+-- gate is two conditions, checked in src/lib/craft/release.ts — written AND
+-- released — and only one of them is data.
+--
+-- `week` is the primary key, so releasing twice is a no-op rather than two rows
+-- with two timestamps and no way to say which was the release.
+--
+-- NOT keyed to a learner, on purpose. A week is open to the cohort or it is not.
+-- Per-learner release would mean eight different courses, and the first thing it
+-- would break is the discussion forum, where somebody answers a question about
+-- material the asker cannot see.
+create table if not exists public.session_releases (
+  week        int         primary key check (week between 1 and 6),
+  released_at timestamptz not null default now(),
+  note        text
+);
+
+-- ---------------------------------------------------------------------------
 -- Outcome ratings — the same five statements either side of one session
 -- ---------------------------------------------------------------------------
 -- Two ratings a session: one before the teaching starts, one near the end. Both
@@ -1635,6 +1661,41 @@ create trigger tasks_touch before update on public.tasks
 -- would be the two-owners-of-one-format mistake CLAUDE.md keeps a whole section
 -- about. On the (vanishingly rare) collision this raises pipeline_reference_taken
 -- before writing anything and the caller retries with a fresh candidate.
+
+-- DROP EVERY OVERLOAD FIRST, and this is load-bearing rather than tidiness.
+--
+-- `create or replace function` only replaces a function whose argument list is
+-- IDENTICAL. Add a parameter -- `p_kind` arrived with the download gate on
+-- 19 September -- and it creates a SECOND function of the same name beside the
+-- first instead of replacing it. Two overloads then make the bare-name
+-- `revoke all on function` below ambiguous, and re-running this file fails at
+-- the last statement with:
+--
+--   ERROR: function name "public.pipeline_submit" is not unique
+--
+-- In the SQL Editor a multi-statement script is one implicit transaction, so
+-- that failure rolls back the whole file and nothing applies. An idempotent
+-- schema that stops being idempotent the first time a signature changes is
+-- worse than one that never claimed to be.
+--
+-- Dropping by oid::regprocedure covers every overload whatever its arguments,
+-- including ones written by an older version of this file that nobody has a
+-- copy of any more. No cascade: these functions are called over RPC and nothing
+-- in the database depends on them, so a dependency here would be a surprise
+-- worth failing on. Both are recreated in the next statement, inside the same
+-- transaction, so there is no window where the API cannot call them.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = 'pipeline_submit'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
 
 create or replace function public.pipeline_submit(
   p_request_key            text,
@@ -3055,13 +3116,44 @@ create trigger resource_requests_touch before update on public.resource_requests
 -- implementation of that rule in SQL is how a+cohort@x.com becomes two people
 -- on one path and one person on another.
 
--- 29 September 2026: p_role was added. A new parameter is a new signature, and
--- CREATE OR REPLACE would leave the old ten-argument function beside it; a call
--- by name would then match both and fail as "not unique". Drop the old one.
--- 30 September 2026: p_role_code was added, so the eleven-argument one is
--- dropped too, for the same reason.
-drop function if exists public.resource_request_submit(text, text, text, text, text, text, jsonb, boolean, text, text);
-drop function if exists public.resource_request_submit(text, text, text, text, text, text, jsonb, boolean, text, text, text);
+-- Parameter history: p_kind (19 September), p_role (29 September) and
+-- p_role_code (30 September). Each one is a new signature, which is why
+-- the loop below drops every overload rather than a named one.
+--
+-- DROP EVERY OVERLOAD FIRST, and this is load-bearing rather than tidiness.
+--
+-- `create or replace function` only replaces a function whose argument list is
+-- IDENTICAL. Add a parameter -- `p_kind` arrived with the download gate on
+-- 19 September -- and it creates a SECOND function of the same name beside the
+-- first instead of replacing it. Two overloads then make the bare-name
+-- `revoke all on function` below ambiguous, and re-running this file fails at
+-- the last statement with:
+--
+--   ERROR: function name "public.resource_request_submit" is not unique
+--
+-- In the SQL Editor a multi-statement script is one implicit transaction, so
+-- that failure rolls back the whole file and nothing applies. An idempotent
+-- schema that stops being idempotent the first time a signature changes is
+-- worse than one that never claimed to be.
+--
+-- Dropping by oid::regprocedure covers every overload whatever its arguments,
+-- including ones written by an older version of this file that nobody has a
+-- copy of any more. No cascade: these functions are called over RPC and nothing
+-- in the database depends on them, so a dependency here would be a surprise
+-- worth failing on. Both are recreated in the next statement, inside the same
+-- transaction, so there is no window where the API cannot call them.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = 'resource_request_submit'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
 
 create or replace function public.resource_request_submit(
   p_request_key      text,
