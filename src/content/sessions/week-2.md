@@ -164,8 +164,21 @@ reading:
     note: "AWS Builders' Library. The 2am default argued properly. The fallback path never gets tested and always gets used at the worst moment."
 ---
 
-Last week you watched a tool pay out money with nothing in front of it. Today
-you put three things in front of it, and then you watch each one fail.
+**Today is about guardrails: understanding them, building them, and finding where
+each one breaks.** A guardrail is a check that stands between what an AI agent
+decides to do and what actually happens.
+
+You work on the **dispute agent**, the customer-support agent for billing
+disputes you cloned in week 1
+([github.com/greetsunshine/reference-agent](https://github.com/greetsunshine/reference-agent)).
+Last week you watched it pay ₹5,000 to an account that does not exist, ₹2,50,000
+because an account note told it to, and ₹3,600 on a ₹1,200 refund. Today you add
+three controls to it: a spending limit, a human approval step, and a rule that a
+payment happens only once. Then you watch each one fail.
+
+**Rate yourself in Session mode** (`/craft/live`) at 00:05 and again at 04:55.
+The five statements are the outcomes listed on this page. In order, they cover
+policy enforcement, human approval, idempotency, false positives and governance.
 
 **The topic pages above are your copy of the day.** There are four, in the
 order they are taught, and each one asks you to commit to an answer before it

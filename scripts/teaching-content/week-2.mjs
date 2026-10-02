@@ -38,20 +38,108 @@
 // Source Serif 4 for h1 and h2, Figtree for everything else, 6px and 12px radii,
 // a 1px ring instead of a shadow. Gold is never text.
 
-export { LEARNER_CSS, INSTRUCTOR_CSS, SESSION_CLOCK_JS, PANE_JS } from './_design.mjs';
+import { LEARNER_CSS as BASE_LEARNER_CSS, INSTRUCTOR_CSS as BASE_INSTRUCTOR_CSS, SESSION_CLOCK_JS as BASE_CLOCK_JS } from './_design.mjs';
+export { PANE_JS } from './_design.mjs';
+
+// Week 2 adds two things the shared design does not have yet: a start-time field
+// that turns every session time on the page into clock time, and a contents
+// card. They are added here, not in _design.mjs, so weeks 1 and 3 build
+// unchanged. Move them into _design.mjs when another week wants them.
+const EXTRA_CSS = `
+.sclock .startin{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-body);font-size:14px}
+.sclock .startin input{font:inherit;padding:4px 8px;border:1px solid #758279;border-radius:6px;background:#FBF8F2;color:#172E26}
+.sclock .startin button{font:inherit;padding:4px 10px;border:1px solid #758279;border-radius:6px;background:transparent;color:#172E26;cursor:pointer}
+.off{font-variant-numeric:tabular-nums}
+.off.wall{border-bottom:1px dotted #758279}
+ol.toc{margin:12px 0 0;padding-left:20px}
+ol.toc>li{margin:10px 0}
+ol.tocsegs{margin:6px 0 0;padding-left:18px;font-size:14px}
+ol.tocsegs li{margin:2px 0}
+ol.toc a{color:inherit}
+`;
+export const LEARNER_CSS = BASE_LEARNER_CSS + EXTRA_CSS;
+export const INSTRUCTOR_CSS = BASE_INSTRUCTOR_CSS + EXTRA_CSS;
+
+// The shared clock reads a start time from ?start= only. This adds a field to
+// enter it, keeps it in the URL (never in browser storage), and rewrites every
+// session time on the page to the time of day. The table's own minutes are read
+// from data-off, so the live highlight keeps working after the rewrite.
+const WALL_CLOCK_JS = `
+(function () {
+  var host = document.getElementById('sclock');
+  var spans = [].slice.call(document.querySelectorAll('.off[data-off]'));
+  function mins(t) { var p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  var qs = new URLSearchParams(location.search);
+  var raw = qs.get('start');
+  var start = raw ? new Date(raw) : null;
+  if (start && isNaN(start.getTime())) start = null;
+  if (host) {
+    var lab = document.createElement('label');
+    lab.className = 'startin';
+    lab.innerHTML = 'Session start <input type="time" aria-label="Session start time"> <button type="button">Clear</button>';
+    host.appendChild(lab);
+    var input = lab.querySelector('input');
+    var clear = lab.querySelector('button');
+    if (start) input.value = pad(start.getHours()) + ':' + pad(start.getMinutes());
+    input.addEventListener('change', function () {
+      if (!input.value) return;
+      var d = new Date();
+      var p = input.value.split(':');
+      d.setHours(Number(p[0]), Number(p[1]), 0, 0);
+      qs.set('start', d.toISOString());
+      location.search = qs.toString();
+    });
+    clear.addEventListener('click', function () { qs.delete('start'); location.search = qs.toString(); });
+  }
+  if (start) {
+    var base = start.getHours() * 60 + start.getMinutes();
+    spans.forEach(function (s) {
+      var off = s.getAttribute('data-off');
+      var m = (base + mins(off)) % 1440;
+      s.textContent = pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      s.title = off + ' into the session';
+      s.classList.add('wall');
+    });
+  }
+  if (start) {
+    [].forEach.call(document.querySelectorAll('summary .when'), function (w) {
+      w.textContent = w.textContent.replace(/\\b([0-4]\\d|05):([0-5]\\d)\\b/g, function (t) {
+        var m = (base + mins(t)) % 1440;
+        return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      });
+    });
+  }
+  function openTarget() {
+    var id = location.hash.slice(1);
+    var el = id && document.getElementById(id);
+    while (el) { if (el.tagName === 'DETAILS') el.open = true; el = el.parentElement; }
+  }
+  window.addEventListener('hashchange', openTarget);
+  openTarget();
+})();
+`;
+export const SESSION_CLOCK_JS = BASE_CLOCK_JS
+  .replace("hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';",
+           "hintEl.textContent = 'Enter the session start time to turn every time on this page into clock time.';")
+  .replace("return mins(r.querySelector('td').textContent.trim());",
+           "var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());")
+  + WALL_CLOCK_JS;
 
 export const week = {
   n: 2,
   title: 'Guardrails',
   module: 'M2',
   shape: 'six-part',
-  sub: 'Three controls go onto the dispute agent today, and each one breaks within the hour you build it. Then another pair tries to get ₹5,000 out of your version.',
-  lead: 'All four topics on one page, each one collapsible, in clock order. The argument lives in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>. Both pages are generated from <span class="mono">scripts/teaching-content/week-2.mjs</span>, and the clock comes from <span class="mono">scripts/teaching-clock.mjs</span>.',
+  toc: true,
+  wallClock: true,
+  sub: 'Guardrails are the checks that stand between what an AI agent decides to do and what actually happens. Today you add three of them to the dispute agent you built in week 1: a spending limit, a human approval step, and a rule that a payment happens only once. You break each one yourself, and then another pair tries to get ₹5,000 out of your version.',
+  lead: 'All four topics on one page, each one collapsible, in clock order. The argument lives in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>. Both pages are generated from <span class="mono">scripts/teaching-content/week-2.mjs</span>, and the clock comes from <span class="mono">scripts/teaching-clock.mjs</span>. Enter the session start time in the clock bar and every time on the page becomes clock time.',
   facts: [
-    { n: '4', l: 'topics, each with a hands-on lab' },
-    { n: '3', l: 'controls built onto the agent' },
-    { n: '6', l: 'routes past them, and another pair looks for them' },
-    { n: '5', l: 'statements you rate yourself on, twice' },
+    { n: '4', l: 'topics: policy enforcement, human approval, idempotency, red-teaming' },
+    { n: '3', l: 'controls added to the agent: a limit, an approval gate, pay once' },
+    { n: '6', l: 'ways past those controls, which another pair tries at 03:31' },
+    { n: '5', l: 'statements you rate yourself on, at the start and at the end' },
   ],
   status: [
     { k: 'Topics', v: '4' },
@@ -63,7 +151,7 @@ export const week = {
   ],
   wording: {
     blocksHeading: 'Five hours, six blocks',
-    topicsHeading: 'Four topics, in the order they are taught',
+    topicsHeading: 'What guardrails are, and the topics today covers',
     clockLabelAt: '00:00',
     quizAt: '04:40',
     quizHeading: 'Eight questions, ten minutes',
@@ -80,55 +168,63 @@ export const week = {
 
 export const opening = {
   learner: `
-  <p class="lede">Ticket #9999 arrives at 11:04 on a Tuesday night. The agent looks the account up first. The account does not exist, and the lookup says so in plain JSON. One step later the agent credits ₹5,000 to it anyway.</p>
-  <p>You watched that in week 1. You also watched a sentence in an account record send ₹2,50,000 out. So you add a check. <strong>Adding the check is the easy part, and it is not what today is about.</strong> Today is about where the check sits, who agreed to the number inside it, and what your system does at 2am when nobody is there.</p>
-  <p>Five things go wrong before 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written.</p>
-  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">You will rate yourself on these five, twice</h3>
-  <p>Once at 00:05, before anything is taught, and again at 04:55. Same words, scored 1 to 5. Nobody sees your first number but you.</p>
-  <div class="term"><span class="q">Right now, I could…</span>
-1  place a limit outside the function it constrains, at the
-   point that covers every caller, and name the callers it
-   still misses
-2  stop an action I cannot undo, and say what my code does
-   when nobody approves inside the time I set
-3  make the same request pay only once, and show that it still
-   holds from a second process
-4  name the honest customer my own check now refuses, and say
-   which of the two mistakes costs less
-5  write one row of a policy table someone else could build
-   from, marking it an invariant, a limit or a tuning number,
-   with an owner</div>
-  <p><strong>A score that drops at 04:55 is a good result.</strong> It means you found something in your own system that you did not know was there.</p>
-  <p><strong>Evaluation is not on this list, and that is on purpose.</strong> Week 3 has it. Defending against text an attacker wrote into a ticket is week 4. A second agent approving the first is week 5.</p>
+  <p class="lede"><strong>Today is about guardrails: understanding them, building them, and knowing where each one breaks.</strong> A guardrail is a check that stands between what an AI agent decides to do and what actually happens. By the end of the day you will have built three of them on a real agent and attacked someone else's.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">The agent you are working on</h3>
+  <p>All six weeks use one system: the <strong>dispute agent</strong>, a small customer-support agent for billing disputes. It reads a ticket, looks up the customer's account, and then either issues a credit, hands the ticket to a person, or closes it. Its code is the reference agent at <a href="https://github.com/greetsunshine/reference-agent">github.com/greetsunshine/reference-agent</a>. You cloned it in the week 1 pre-work.</p>
+  <p><strong>What week 1 showed.</strong> You built the agent's loop, its three tools and a trace that prints the cost of every step. Then you watched it lose money without the model ever making a mistake it knew about: ₹5,000 paid to an account that does not exist, ₹2,50,000 paid because an account note told it to, and ₹3,600 paid on a ₹1,200 refund because the same ticket arrived three times. Week 1 ended with one question: <em>where is the limit written down, and who agreed to it?</em> Today answers it.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">How today starts: ticket #9999</h3>
+  <p>Ticket #9999 arrives at 11:04 on a Tuesday night. The agent looks the account up first. The account does not exist, and the lookup says so in plain JSON. One step later the agent credits ₹5,000 to it anyway.</p>
+  <p>So you add a check. <strong>Adding the check is the easy part.</strong> Today is about where the check sits, who agreed to the number inside it, and what your system does if something goes wrong at 2am when nobody is awake to approve it.</p>
+  <p>Five things go wrong before the adversary round at 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">Rate yourself on five statements, twice</h3>
+  <p><strong>Where to rate.</strong> Open the course area on your laptop or phone and go to <strong>Session mode</strong> (<span class="mono">/craft/live</span>). The rating appears there at 00:05, before anything is taught, and again at 04:55. Score each statement from 1 (I could not do this) to 5 (I could do this tomorrow at work). Nobody sees your first score but you.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Guardrail topic</th><th>Right now, I could…</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · Policy enforcement</strong><br>the limit</td><td>place a limit outside the function it constrains, at the point that covers every caller, and name the callers it still misses</td></tr>
+        <tr><td><strong>2 · Human-in-the-loop approval</strong></td><td>stop an action I cannot undo, and say what my code does when nobody approves inside the time I set</td></tr>
+        <tr><td><strong>3 · Idempotency</strong><br>paying once</td><td>make the same request pay only once, and show that it still holds from a second process</td></tr>
+        <tr><td><strong>4 · False positives</strong><br>the cost of refusing</td><td>name the honest customer my own check now refuses, and say which of the two mistakes costs less</td></tr>
+        <tr><td><strong>5 · Governance</strong><br>who owns the rule</td><td>write one row of a policy table someone else could build from, marking it an invariant, a limit or a tuning number, with an owner</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>If your second score is lower than your first, that is useful, not a failure.</strong> It usually means today showed you a gap in your own system that you did not know about at 00:05. Most people rate statements 1 and 3 high at the start, because they believe their limits are already in a config file and their payments already happen once.</p>
+  <p><strong>Not on this list, on purpose.</strong> Measuring whether an answer is correct is week 3. Defending against text an attacker writes into a ticket is week 4. A second agent approving the first is week 5.</p>
   <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">One sealed prediction, at 00:10</h3>
-  <p>Answer this in chat, one line. Nobody reads the lines until 03:58.</p>
+  <p>Answer this in the session chat, in one line. Nobody reads the lines until 03:58.</p>
   <div class="term"><span class="q">By 04:00, will another pair get money out of the
 system you are about to build? Yes or no, and by which route.</span>
 
   ____________________________________________</div>`,
   script: `
-  <p><strong>Tell the opening as a scene, not as a summary.</strong> Ticket #9999, 11:04 on a Tuesday night, the account lookup says <span class="mono">found: False</span>, and one step later ₹5,000 leaves. Then the second one: a sentence in an account record, read as an instruction, ₹2,50,000 out.</p>
-  <p><strong>Then the turn: so you add a check, and that is the easy part.</strong> Say that anyone can add an <span class="mono">if</span> statement. Today is about where it sits, who agreed to the number inside it, and what the system does at 2am. Without that sentence the room decides this session is about validation, which it learned fifteen years ago, and you lose it by 00:35.</p>
+  <p><strong>Open on what today is for, then the ticket.</strong> One sentence first: today is about guardrails, understanding them, building three, and finding where each breaks. Then the scene: ticket #9999, 11:04 on a Tuesday night, the account lookup says <span class="mono">found: False</span>, and one step later ₹5,000 leaves.</p>
+  <h3>The agent you are working on</h3>
+  <p>The dispute agent, the reference agent at github.com/greetsunshine/reference-agent. The learner card names it and links it. Say it in one sentence: it reads a billing ticket, looks up the account, and issues a credit, hands over, or closes.</p>
+  <p><strong>Give the week 1 recap in three numbers, not a summary.</strong> ₹5,000 to an account that does not exist, ₹2,50,000 because an account note said so, ₹3,600 on a ₹1,200 refund. Then the question week 1 ended on: where is the limit written down, and who agreed to it?</p>
+  <h3>How today starts: ticket #9999</h3>
+  <p><strong>Then the turn: so you add a check, and that is the easy part.</strong> Today is about where it sits, who agreed to the number inside it, and what the system does if something goes wrong at 2am. Without that sentence the room decides this session is about validation, which it learned fifteen years ago, and you lose it by 00:35.</p>
   <p>Say that five things will go wrong before 03:31 and that not one of them is the model failing. <strong>Do not say which five.</strong></p>
-  <h3>You will rate yourself on these five, twice</h3>
-  <p>00:05 and 04:55, the same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do.</p>
-  <p><strong>Expect high scores on 1 and 3 at 00:05, and say nothing about it.</strong> Almost everyone believes their limits are already in config and their payments already run once. Both beliefs meet a keyboard today. A score that drops at 04:55 is the result you want, and announcing it in advance spends it.</p>
-  <p><strong>Say that evaluation is not among the five, and name week 3.</strong> A participant who cannot find a topic assumes it is missing from the course rather than scheduled.</p>
+  <h3>Rate yourself on five statements, twice</h3>
+  <p>00:05 and 04:55, in Session mode at <span class="mono">/craft/live</span>, the same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do. Each statement is labelled with its guardrail topic so the room can see what it is rating.</p>
+  <p><strong>Expect high scores on 1 and 3 at 00:05, and say nothing about it.</strong> A lower second score means somebody found a gap in their own system. Do not announce that in advance.</p>
   <h3>One sealed prediction, at 00:10</h3>
-  <p>Ask it in these words: <em>by 04:00, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em> One line each in chat. <strong>Say that nobody will see the lines until 03:58.</strong> A prediction somebody expects to be read aloud is a prediction written for the room. Copy the lines somewhere you can put them on screen at 03:58.</p>
+  <p>Ask it in these words: <em>by 04:00, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em> One line each in chat. <strong>Say that nobody will see the lines until 03:58.</strong> Copy the lines somewhere you can put them on screen at 03:58.</p>
   <p class="quiet">For anybody who finishes early, ask for a confidence as a percentage. It makes the confident-and-wrong group findable at 03:58 without naming anybody.</p>
-  <h3>Four topics, in the order they are taught</h3>
-  <p>Reading down either page follows the clock. Each topic has the six parts in the same order, and each ends on its own quiz and a written takeaway. The close from 04:05 is not a topic and sits after the four.</p>`,
+  <h3>What guardrails are, and the topics today covers</h3>
+  <p>The learner page opens the day with this card and the contents. Point at both in ten seconds. The definition is given up front because the room expects it; the 00:37 segment still asks them to sort the kinds before showing the map.</p>`,
 };
 
 export const clockNote = {
   lede: 'Six blocks: the opening, four topics and the close. One break of fifteen minutes and two short breaks of five, where you leave the screen.',
   learner: `
-  <p>The whole day is below, with the topic that owns each moment. <strong>Each topic ends on its own three-question quiz and one written line</strong>, so you leave every topic having written something down.</p>
-  <p><strong>Keyboards are live at 00:54.</strong> Four hands-on labs: the limit, the approval gate, paying once, and an attack on another pair's system. Each lab builds something and then breaks it in the same hour, on your own code.</p>
-  <p><strong>The last 55 minutes are the same every week.</strong> Recall with your notes closed, a teardown of the agent as it stands, a mixed quiz, and one sentence said out loud about what you will use at work.</p>`,
+  <p>The whole day is below, with the topic that owns each moment. <strong>Enter the session start time in the clock bar above</strong>, and every time on this page changes from "minutes into the session" to the time of day.</p>
+  <p><strong>Keyboards are live at 00:54.</strong> Four hands-on labs: the limit, the approval gate, paying once, and an attack on another pair's system. Each lab builds something on the dispute agent and then breaks it in the same hour.</p>
+  <p><strong>Each topic ends on its own three-question quiz and one written line. The last 55 minutes are the same every week:</strong> recall with your notes closed, a teardown of the agent as it stands, a mixed quiz, and one sentence said out loud about what you will use at work.</p>`,
   script: `
   <p><strong>Six blocks, four labs, and a fixed close.</strong> Keyboards are live at 00:54. The adversary round at 03:31 is what the earlier blocks are compressed to pay for. The close from 04:05 is the one generation-prompt.md §5 sets for every week.</p>
+  <p><strong>Enter the start time in the clock bar</strong> before the session and every offset on this page becomes clock time. It is kept in the page address, so a reload keeps it and nothing is stored in the browser.</p>
   <p><strong>The longest run without a break is 00:15 to 01:39, 84 minutes.</strong> It is deliberate: topic 1 has no seam that survives an interruption. Watch the room at about 01:15 and take two minutes if you need to.</p>`,
   cuts: `
   <p><strong>If you are running late, cut in this order.</strong></p>
@@ -149,9 +245,37 @@ export const clockNote = {
 
 export const howToRead = {
   learner: `
-  <p>Below are the four topics, each one collapsible, in the order they are taught. Reading down the page follows the day.</p>
-  <p><strong>Every topic has the same six parts.</strong> It opens on something that happened, with a number in it. Then the idea in one sentence, then the parts and what each choice costs. Then a hands-on lab: decide in writing, build, then check by running it. Then what firms that already run this use. Then a three-question quiz, and one line you write in your own words.</p>
-  <p>Every reveal on this page sits behind a <em>Show</em> button. Write your answer first. The button is the only thing that makes your answer a prediction.</p>`,
+  <p><strong>Guardrails are runtime checks placed around an AI model or agent</strong>, so the system stays secure, predictable, compliant and fast enough. "Runtime" means they run on every request, not once at design time. The field groups them by where they run:</p>
+  <ul>
+    <li><strong>Input guardrails</strong> run before the model is called. Example: mask a PAN number in the customer's message before the model sees it.</li>
+    <li><strong>Output guardrails</strong> run after the model answers, before a person reads it or a tool acts on it. Example: refuse a credit of ₹5,000 to an account that does not exist.</li>
+    <li><strong>Operational and system guardrails</strong> run around the whole system. Example: stop calling a payment service that has failed five times in a minute.</li>
+  </ul>
+  <p><strong>The topics a guardrails course is expected to cover, and where each one is today:</strong></p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Guardrail topic</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>What guardrails are, and the six kinds</td><td>Topic 1, 00:15 to 00:42</td></tr>
+        <tr><td>Input, output and system guardrails, with code</td><td>Topic 1, 00:37</td></tr>
+        <tr><td>Risk vectors: prompt injection, data leakage, hallucination, tool misuse</td><td>Topic 1, 00:37, and weeks 3 and 4</td></tr>
+        <tr><td>Policy enforcement: limits as data, where a check sits</td><td>Topic 1, 00:42 to 01:39</td></tr>
+        <tr><td>Human-in-the-loop approval</td><td>Topic 2, 01:44 to 02:34</td></tr>
+        <tr><td>False positives, shadow mode and audit logs</td><td>Topic 2, 01:51 and 02:24</td></tr>
+        <tr><td>Idempotency: paying once</td><td>Topic 3, 02:34 to 03:13</td></tr>
+        <tr><td>Layered defence: in-band, out-of-band, and the tiered gateway</td><td>Topic 4, 03:18</td></tr>
+        <tr><td>Engineering trade-offs: latency budgets and operations</td><td>Topic 4, 03:18</td></tr>
+        <tr><td>Red-teaming: attacking your own guardrails</td><td>Topic 4, 03:31</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Every topic has the same six parts: something that happened, the idea, the parts and what each costs, a hands-on lab, what firms that already run this use, and a short quiz. Every reveal sits behind a <em>Show</em> button. Write your answer first.</p>`,
+};
+
+export const toc = {
+  heading: 'Contents: six blocks, four topics',
+  lede: 'Click any line to jump to it. A topic opens when you jump into it.',
+  opening: '00:00 to 00:15 · ticket #9999, the five statements, one sealed prediction',
 };
 
 export const sessionClock = {
@@ -177,49 +301,54 @@ export const sessionClock = {
 // it. Two proofs depend on preparation items that do not exist yet in the
 // reference agent; the script column says which, and the notes file lists them.
 export const agentNow = {
-  lede: 'What the dispute agent can do at 00:00 today, and what it can do at the close. Every row is proved by running something.',
+  lede: 'What the dispute agent can do at the start of today, and what it can do at the close. Every row is proved by running something. "Check" here always means a policy check: a few lines of Python in the agent that run before a tool is called and can refuse the call.',
   rows: [
     {
-      gained: 'A limit outside the tool',
+      gained: 'A spending limit, kept in a file instead of in the code',
       atOpen: 'make weird-mock pays ₹5,000 to account 9999, which does not exist',
-      atClose: 'The same ticket is refused, and the refusal names the rule and data/policy.json',
+      atClose: 'The same ticket is refused, and the refusal says which rule refused it and which file the rule is in',
       file: 'data/policy.json, src/policy.py',
-      proof: 'make w2-guarded',
+      proof: 'Run make w2-guarded. The trace prints REFUSED, the rule, and data/policy.json',
     },
     {
-      gained: 'One check at the dispatch, with two counters',
-      atOpen: 'The check sits inside issue_credit. A second tool, apply_goodwill_credit, pays ₹5,000 past it',
-      atClose: 'Every tool call passes one check. A tool with no policy row is refused, and guard_refused counts it by tool and rule',
-      file: 'agent.py, before res = fn(**args)',
-      proof: 'make w2-goodwill shows the gap. Your own agent on the same ticket shows the refusal and the counter at 1',
+      gained: 'Every tool call checked against the policy file, with a count of what was allowed and refused',
+      atOpen: 'The check sits inside one tool, issue_credit. A second tool written later, apply_goodwill_credit, pays ₹5,000 without being checked',
+      atClose: 'The check runs once, before any tool is called, so a new tool is checked too. A tool with no row in the policy file is refused, and a counter records each refusal',
+      file: 'agent.py, just before the line res = fn(**args)',
+      proof: 'Run make w2-goodwill to see the gap. Then run your own agent on ticket 9999: the refusal prints, and the refused counter reads 1',
     },
     {
       gained: 'A measured cost for every check',
       atOpen: 'Nobody knows how long a check takes',
-      atClose: 'Each run prints the milliseconds its checks took, and 03:18 compares that with a model judge',
+      atClose: 'Each run prints how many milliseconds its checks took. At 03:18 you compare that with asking a model',
       file: 'agent.py, a timer around the check',
-      proof: 'Your agent on ticket 9999 prints the check time at the end of the run',
+      proof: 'Run your own agent on ticket 9999. The check time prints at the end of the run',
     },
     {
-      gained: 'A human approval gate, and a decision row',
-      atOpen: 'Over the ceiling means no. An honest ₹8,400 is refused and nobody is told',
-      atClose: 'Over the ceiling means ask. The row is written before the ask, and decided_by names a person or the timeout',
-      file: 'agent.py (the gate), your decision log',
-      proof: 'A ₹44,000 request with an 18-minute timeout, read back from your own queue at 02:24',
+      gained: 'A human approval step for large credits, with a record of each decision',
+      atOpen: 'Any credit above ₹1,200 is refused outright, even when the customer is owed it. Meera is owed ₹8,400 and gets nothing, and nobody is told',
+      atClose: 'Any credit above ₹1,200 is sent to a person to approve. The decision record is saved before the person is asked, so the request is not lost if the program stops while it waits. The record says whether the policy or a person decided',
+      file: 'src/agent.py (asks instead of refusing), src/approve.py, data/approvals.jsonl',
+      proof: 'Run ticket 7310: it waits for approval. Approve it with src/approve.py and it pays ₹8,400 once. Before the break you also leave one ₹44,000 request with an 18-minute timeout, and read what happened to it at 02:24',
     },
     {
-      gained: 'Pay once, from any number of processes',
-      atOpen: 'make retry pays ₹1,200 three times',
-      atClose: 'A second terminal on the same ticket is refused with "already paid"',
-      file: 'src/store.py, a paid table with the key as its primary key',
-      proof: 'make w2-paid-once, from two terminals at once',
+      gained: 'A payment that happens once, however many times the request arrives',
+      atOpen: 'make retry pays ₹1,200 three times for one refund',
+      atClose: 'Run the same ticket from a second terminal and it is refused with "already paid"',
+      file: 'src/agent.py, with a paid table in data/paid.db whose key is the dispute',
+      proof: 'Run python -m src.main --ticket 4471 --mock in two terminals. The second prints "already paid"',
     },
   ],
   learner: `
-  <p><strong>What the agent still cannot do at the close, on purpose.</strong> It cannot see a total: ₹1,200 four times passes every check you build today. It still reads ticket text as instructions, which is week 4. And the approval wait dies with the process, which is week 5.</p>`,
+  <p><strong>What the agent still cannot do at the close, on purpose:</strong></p>
+  <ul>
+    <li><strong>It cannot see a total.</strong> Four credits of ₹1,200 each pass every check you build today, because each one is under the limit.</li>
+    <li><strong>It still follows instructions hidden in a ticket or an account note.</strong> That is week 4.</li>
+    <li><strong>A request waiting for approval is lost if the program restarts.</strong> Making the wait survive a restart is week 5.</li>
+  </ul>`,
   script: `
-  <p><strong>Two proofs need work in the reference agent before the day.</strong> <span class="mono">make w2-paid-once</span> does not exist yet; it is preparation item 1 and it blocks 03:03. The 02:24 read-back needs the three prepared queue states for anybody whose gate did not run; that is preparation item 2. <span class="mono">make w2-guarded</span>, <span class="mono">make w2-goodwill</span> and <span class="mono">make retry</span> exist and print what the table says.</p>
-  <p class="quiet"><span class="mono">make w2-goodwill</span> runs a fixed demo, not the learner's own dispatch. So the second row's proof is in two halves: the demo shows the gap, and the learner's own agent shows the fix.</p>`,
+  <p><strong>Learners now build every proof themselves</strong>, from the code on the learner page. <span class="mono">make w2-paid-once</span> would be a convenience for your own demo at 03:03 and no longer blocks it (preparation item 1). The 02:24 read-back still needs a prepared queue file for anybody whose approval step did not run (preparation item 2). <span class="mono">make w2-guarded</span>, <span class="mono">make w2-goodwill</span> and <span class="mono">make retry</span> exist and print what the table says.</p>
+  <p class="quiet"><span class="mono">make w2-goodwill</span> runs a fixed demo, not the learner's own agent. So the second row's proof is in two halves: the demo shows the gap, and the learner's own agent shows the fix.</p>`,
 };
 
 export const topics = [
@@ -233,6 +362,9 @@ export const topics = [
       lede: "By the end of it you can tell a policy from a wish, place a limit at the point that covers every caller, and name the callers it still misses.",
       learner: `
   <p><strong>Two terms in the title.</strong> A <strong>guardrail</strong> is a control on what the agent is allowed to do, and at 00:37 you make that definition exact. <strong>Policy enforcement</strong> means checking a written rule at the moment an action is attempted.</p>
+  <h4>What a limit is, and why the agent needs one</h4>
+  <p><strong>A limit is a rule with a number in it</strong>: the most an action may do without anybody else agreeing. For the dispute agent the first limit is <em>no single credit above ₹1,200</em>, which is one month of the ₹1,200 Pro plan.</p>
+  <p>An agent needs limits more than ordinary software does, because <strong>the model chooses the arguments</strong>. In week 1 nobody typed "pay ₹5,000 to account 9999". The model picked those values while it ran. A limit is the part that still says no when the model picks badly.</p>
   <p>Week 1 ended with one question about your own system: <strong>where is the limit written down, and who agreed to it?</strong> Most people came back with an honest answer. The limit is a number inside a function, and nobody agreed to it. Somebody typed it during a sprint, and it has been policy ever since.</p>
   <p><strong>Writing the number in a file is the easy half</strong>, and most of this room already does it. The half that costs money is <em>which callers your control covers</em>. The ₹5,000 at 01:12 is what that half costs.</p>
   <p><strong>What this topic is not.</strong> It is not the gate that asks a person, which is topic 2. It is not a test that proves the limit works, which is week 3. It is not a defence against the poisoned ticket from week 1, which is week 4. And it is not a model deciding for you, which is topic 4 at 03:18.</p>`,
@@ -256,14 +388,16 @@ export const topics = [
         title: "Two decision records on screen",
         mode: "whole room, 8 minutes · first 60 seconds alone and silent",
         learner: `
-  <p class="lede">One of them contains a policy. One of them contains a wish. The difference is what the rest of the day is built on.</p>
-  <p>Two decision records go on screen. They are yours, written last week.</p>
-  <p>Before either one is read out, write one sentence, alone, in 60 seconds:</p>
+  <h4>Why a policy, before anything else</h4>
+  <p>A <strong>policy</strong> is a rule written down with a number in it and a named person who owns that number. Without one, the rule lives in somebody's head or inside a function nobody reads. Then a machine cannot enforce it, a colleague cannot check it, and nobody can change it safely.</p>
+  <h4>What is on the screen, and what you do</h4>
+  <p>In week 1 your assignment was a <strong>decision record</strong>: the boundary you drew for the agent, and the alternative you rejected. Two of those records, chosen before the session and agreed with their authors, now go on the shared screen. <strong>You do not need to prepare anything new.</strong> Have your own record open.</p>
+  <p><strong>Step 1, alone, 60 seconds, in writing.</strong> Answer this about your own record:</p>
   <div class="term"><span class="q">Which sentence in my own record could a machine
 enforce tonight, exactly as written?</span>
 
   ____________________________________________</div>
-  <p>Then the two records are read. In each one, find the sentence that is a policy and the sentence that is a wish.</p>
+  <p><strong>Step 2, the whole room.</strong> The two records are read. In each one, find one sentence that is a policy and one that is only a wish.</p>
   <details>
     <summary>Show the difference</summary>
     <div class="reveal">
@@ -286,9 +420,10 @@ enforce tonight, exactly as written?</span>
           </tbody>
         </table>
       </div>
-      <p><strong>Most records last week had four wishes and one policy.</strong> That ratio is the session in one line. Everything today is the work of turning one wish into one policy, and then finding out what the policy broke.</p>
+      <p><strong>Most records last week had four wishes and one policy.</strong> That is normal for a design document. Everything today is the work of turning one wish into one policy, and then finding out what the policy broke.</p>
     </div>
   </details>
+  <p><strong>Step 3, alone, in writing.</strong></p>
   <div class="writein">
     <span class="q">Rewrite one wish from your own record as a policy. It needs a number and an owner, and the owner is a role rather than a person.</span>
     <div class="rule"></div>
@@ -300,6 +435,12 @@ enforce tonight, exactly as written?</span>
     <p>Then read the two records. Ask the room to find, in each, the sentence that is a policy and the sentence that is a wish.</p>
     <p class="quiet">Do not give the definition first. The room produces the distinction from two real records in about three minutes, and produced is worth four times read.</p>`,
         ref: { id: 't1-r-records', pairs: "&#8596; 00:15 · two decision records, predicted before they are read", html: `
+  <h4>What a limit is, and why the agent needs one</h4>
+  <p>Learner reading on the topic 1 purpose card, before 00:15. One sentence if asked: a limit is a rule with a number, the most an action may do without anybody else agreeing, and an agent needs it because the model chooses the arguments.</p>
+  <h4>Why a policy, before anything else</h4>
+  <p>The learner card now opens with why a policy is needed. Say it in two sentences before the records go up: a rule that lives in somebody's head cannot be enforced or changed safely, and a rule written down with a number and an owner can.</p>
+  <h4>What is on the screen, and what you do</h4>
+  <p>Two decision records the room wrote as the week 1 assignment, chosen by you before the day and agreed with their authors (preparation item 8). Learners prepare nothing new. They bring their own record and test one sentence of it.</p>
   <h4 class="quiet" style="font-weight:700">Most records last week had four wishes and one policy</h4>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
@@ -332,8 +473,8 @@ enforce tonight, exactly as written?</span>
   <p><strong><span class="mono">make weird-mock</span> still pays it.</strong> That command does not change today and you need it unchanged, because the gap between it and what you are about to see is the build at 00:54, in topic 1.</p>
   <p>What is new is a second command, <span class="mono">make w2-guarded</span>. Same ticket, same deterministic brain, one thing added: a policy file. Before you see it run, write your answer to this:</p>
   <div class="term"><span class="q">The refusal line is about to print.
-What three facts does it have to contain to be
-useful to you at 2am?</span>
+What three facts must it contain, so that the engineer
+on call could act on it if this happened at 2am?</span>
 
 1  ______________________________________
 
@@ -355,7 +496,7 @@ useful to you at 2am?</span>
 <span class="q">tokens 660 (in 540 / out 120) · steps 8 · 0.0s · ~₹0.38
 paid out ₹0 · no credit issued</span></div>
       <p>Most people write "it should say refused". Fewer write "it should say which rule refused it". Almost nobody writes "it should say where that rule is written".</p>
-      <p>All three matter, and the third is the one people miss. It is the first of the three properties at 00:31: locatable. A refusal that names its rule tells you what happened. A refusal that names the <em>file</em> tells you where to go and change it, which is what somebody actually needs at 2am with a customer waiting.</p>
+      <p>All three matter, and the third is the one people miss. It is the first of the three properties at 00:31: locatable. A refusal that names its rule tells you what happened. A refusal that names the <em>file</em> tells you where to go and change it. That is what the engineer on call needs if a refusal like this wakes them at 2am with a customer waiting.</p>
       <p>The run also closes by claiming it issued a credit while the ledger says ₹0. Hold that. It is real, it is not today, and week 4 owns it.</p>
     </div>
   </details>`,
@@ -396,7 +537,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
         title: "Three properties, and your own control fails one",
         mode: "whole room, 6 minutes",
         learner: `
-  <p>You have just judged a refusal message against three questions and nobody gave you a rubric. Here is the rubric. It is the one instrument that carries the whole day.</p>
+  <p>You have just judged a refusal message without a rubric. Here is the rubric. <strong>Use it to assess any guardrail: a policy file, a check in code, or an approval step.</strong> It is the one instrument that carries the whole day.</p>
   <p><strong>A control is real when all three are true.</strong></p>
   <div class="tw">
     <table>
@@ -408,7 +549,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
       </tbody>
     </table>
   </div>
-  <p>Now look at the three answers you brought to the pre-work. You answered these questions about your own system before you had the words for them. One question out loud, and the room takes four answers:</p>
+  <p>Now look at your answer to <strong>pre-work item 6</strong>, which asked: <em>"Answer three questions about the smallest rule your own system enforces before it does something expensive. Which line enforces it. Could a colleague state it without reading code. How many times did it fire last week."</em> Those three questions are these three properties. You answered them before you had the words. One question out loud, and the room takes four answers:</p>
   <div class="term"><span class="q">Which of the three does your own control fail?</span>
 
   ____________________________________________</div>
@@ -455,14 +596,15 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <div class="dbody">
       <p><em>You have a count. Is it a rate?</em> A refusal count on its own cannot show a control going wrong, because a fall in refusals and a fall in traffic look the same. That is the argument for two counters at 00:54, arriving early and from a participant rather than from you.</p>
     </div>
-  </details>` },
+  </details>
+  <p class="quiet">The learner card now says the rubric applies to any guardrail, including a policy file, and quotes pre-work item 6 word for word above the question.</p>` },
       },
       {
         at: '00:37', part: 'concept',
         title: "The map, six kinds",
         mode: "whole room, 5 minutes · built on the board, not read off the page",
         learner: `
-  <p class="lede">Six, and you build three of them today. They are told apart by where each one stands, not by what it is called.</p>
+  <p class="lede">There are six kinds of guardrail, and you build three of them today. They are told apart by where each one stands in the request, not by what it is called.</p>
   <p>Predict first, in 60 seconds, alone:</p>
   <div class="term"><span class="q">How many distinct kinds of guardrail can you name?
 Write the number, then the names you have.</span>
@@ -544,7 +686,7 @@ Write the number, then the names you have.</span>
   </div>
   <p><strong>The reason this segment exists.</strong> A room that believes "guardrail" means one thing puts a person in front of everything. Six kinds is the whole correction, and the cost of getting it wrong is in topic 2: a human gate spends somebody's attention every single time it fires, and a limit costs nothing to use.</p>
   <p><strong>Two of the six share a column, and that is not an error.</strong> The limit and the human gate both stand between the decision and the action. They differ in what happens when the rule is met: one refuses and one asks. Topic 2 opens on ₹8,400 that a limit refused and a gate would have paid.</p>
-  <p>One sentence goes up before the table, and it is the answer to the question this room is already holding. <strong>An agent chooses its own arguments and its own next action, so the call site you would normally review does not exist.</strong> The long version is <em>Why an agent needs these</em> below. Read it tonight rather than now.</p>
+  <p>One sentence goes up before the table, and it is the answer to the question this room is already holding. <strong>An agent chooses its own arguments and its own next action, so the call site you would normally review does not exist.</strong> A <strong>call site</strong> is the line of code where a function is called with its arguments, such as <span class="mono">issue_credit("4471", 1200)</span>. In ordinary code a person writes that line, and you can open the file and review it. In an agent the model produces the call while it runs. The long version is <em>Why an agent needs these</em> below. Read it tonight rather than now.</p>
   <h4>Three execution planes, and where the six kinds sit</h4>
   <p>The field defines guardrails as <strong>runtime policy enforcement and validation placed around a model or an agent</strong>, so the system stays secure, predictable, compliant and fast enough. It groups them by <strong>execution plane</strong>: where in the request a check runs. Build the map first. Then read this.</p>
   <div class="tw">
@@ -557,7 +699,46 @@ Write the number, then the names you have.</span>
       </tbody>
     </table>
   </div>
-  <p><strong>An agent's tool call is output that acts.</strong> A wrong sentence can be corrected. A wrong ₹5,000 cannot. That is why today spends its time on the action checks inside the output plane, and why they need a person, a key and a place of their own.</p>
+  <p><strong>Why today spends most of its time on one part of the output plane.</strong> When the model's output is a sentence, a mistake can be corrected with a follow-up message. When the output is a tool call that pays ₹5,000, the money has gone and cannot be taken back. So the checks that run just before a tool acts need more than the others: a fixed place in the code that every call passes through (topic 1), a person who can approve the large ones (topic 2), and a key so the same payment happens only once (topic 3).</p>
+  <h4>One small example of each plane</h4>
+  <p>Short Python, so the idea is concrete. These are sketches, not production code.</p>
+  <pre># Input guardrail: mask a PAN before the model sees the message
+import re
+PAN = re.compile(r"\\b[A-Z]{5}[0-9]{4}[A-Z]\\b")
+def mask_input(text):
+    return PAN.sub("[PAN]", text)
+
+# Output guardrail: refuse a tool call whose arguments break the rules
+from pydantic import BaseModel, PositiveInt
+class Credit(BaseModel):
+    account_id: str
+    amount: PositiveInt            # a negative or text amount fails here
+def check_credit(args, accounts, ceiling=1200):
+    c = Credit(**args)             # raises on a malformed call
+    if c.account_id not in accounts:
+        return "refuse: account does not exist"
+    if c.amount &gt; ceiling:
+        return "refuse: over the ceiling"
+    return "allow"
+
+# Operational guardrail: stop calling a service that keeps failing
+FAILS, LIMIT = [], 5
+def call_payments(fn, *args):
+    if len(FAILS) &gt;= LIMIT:
+        raise RuntimeError("circuit open: payments failed 5 times, not calling")
+    try:
+        return fn(*args)
+    except Exception:
+        FAILS.append(1)
+        raise</pre>
+  <h4>When a check runs: synchronous, asynchronous, layered</h4>
+  <p>A check can run at three moments relative to the work. Topic 4 at 03:18 goes deeper, with timings.</p>
+  <ul>
+    <li><strong>Synchronous, also called in-band or blocking.</strong> The work waits until the check says yes. Example: the credit is not paid until the ceiling check passes. Nothing unchecked gets through, and every request waits a little longer.</li>
+    <li><strong>Asynchronous, also called out-of-band.</strong> The work goes ahead and the check runs beside it. Example: a chat reply streams to the customer while a slower check reads it, and the stream is cut if the check fails. Nobody waits, but you need a way to take the result back.</li>
+    <li><strong>Layered.</strong> Several checks in a row, cheapest first. Example: a fast rule catches most bad requests in well under a millisecond, and only the unclear ones go to a slower model. You get wide coverage without making every request slow.</li>
+  </ul>
+  <p><strong>The rule of thumb:</strong> if the action cannot be undone, like a payment, its checks must be synchronous.</p>
   <h4>The threats each plane meets</h4>
   <p>Reading, not a segment. Every row is a real failure, and every row says which week builds the control.</p>
   <div class="tw">
@@ -823,7 +1004,11 @@ software gives you for free.</span>
   <h4>Three execution planes, and where the six kinds sit</h4>
   <p><strong>Say the three planes only after the room has built the six kinds.</strong> Input, output, operational. The room has usually met this vocabulary in a vendor document, so name it, and map the six onto it in one minute. The point to land: a tool call is output that acts, which is why today lives inside the output plane.</p>
   <h4>The threats each plane meets</h4>
-  <p>Reading on the learner page. If somebody asks why injection is not today, the answer is the second row: today's ceiling caps what an injected instruction can cost, and week 4 is where the text itself is handled. <strong>Do not open the injection argument here.</strong></p>` },
+  <p>Reading on the learner page. If somebody asks why injection is not today, the answer is the second row: today's ceiling caps what an injected instruction can cost, and week 4 is where the text itself is handled. <strong>Do not open the injection argument here.</strong></p>
+  <h4>One small example of each plane</h4>
+  <p>Three sketches on the learner page: masking a PAN on input, a Pydantic check on a credit's arguments on output, and a circuit breaker as an operational guardrail. Point at them; do not walk them. They answer "what does this look like in code?" in under a minute of reading.</p>
+  <h4>When a check runs: synchronous, asynchronous, layered</h4>
+  <p>A plain introduction on the learner page, with one example each. <strong>Say only the rule of thumb here</strong>: anything that cannot be undone gets a synchronous check. 03:18 prices the three and adds the latency budget.</p>` },
       },
       {
         at: '00:42', part: 'design',
@@ -888,7 +1073,7 @@ control could run. Which one covers the most callers?</span>
         title: "What did the check have to know",
         mode: "whole room, 6 minutes",
         learner: `
-  <p>Four facts, and no more than four. Say them out loud before you read them.</p>
+  <p><strong>"The check" means the policy check you just watched refuse ticket #9999 at 00:23</strong>: a few lines of Python that run before a tool is called and decide allow or refuse. Before it can decide, it needs some facts. Four facts, and no more than four. Say them out loud before you read them.</p>
   <div class="tw">
     <table>
       <thead>
@@ -931,52 +1116,89 @@ control could run. Which one covers the most callers?</span>
     <li>It decides whether the check runs at all. A ceiling in front of <code>lookup_account</code> costs latency and protects nothing.</li>
     <li>It decides whether prevention is required or detection is enough. If an action can be undone there is an afterwards, and a dashboard with an alert is a legitimate answer. If it cannot, the only place a control can exist is before the call.</li>
     <li>It is what makes the rule writable. "Ask a human before an irreversible action" cannot be written until something in the code knows which actions are irreversible.</li>
-  </ul>` },
+  </ul>
+  <p class="quiet">The learner card now says what "the check" is in its first sentence: the policy check from 00:23, a few lines of Python that run before a tool is called.</p>` },
       },
       {
         at: '00:54', part: 'lab',
         title: "Hands-on lab: build the limit, and count what it does",
         mode: "decide 3 minutes in writing, then alone, 15 minutes, then one screen",
         learner: `
+  <h4>Starting state</h4>
+  <p>Work in your clone of the reference agent (<a href="https://github.com/greetsunshine/reference-agent">github.com/greetsunshine/reference-agent</a>). Run <span class="mono">git pull</span> first. Today <span class="mono">make weird-mock</span> still pays ₹5,000 to account 9999, and neither <span class="mono">src/tools.py</span> nor <span class="mono">src/agent.py</span> checks anything. The files you will touch are <span class="mono">data/my-policy.json</span> (new), <span class="mono">src/tools.py</span> and <span class="mono">src/main.py</span>.</p>
   <div class="builds">
     <div class="build">
       <h3>Decide first. Three minutes, in writing.</h3>
-      <p>Three questions, answered before you type anything. Your assistant will answer all three for you otherwise, and it will not mention that it did.</p>
+      <p>Answer these before you type anything. Your coding assistant will answer them for you otherwise, and it will not mention that it did.</p>
       <ul>
-        <li>Where does the file live, and what format is it?</li>
+        <li>Where does the policy file live, and what format is it?</li>
         <li>What does one row of it contain?</li>
         <li>What happens when a tool has no row?</li>
       </ul>
       <p class="check">The third one is the real exercise. Refuse, allow or crash: all three are a decision.</p>
     </div>
     <div class="build">
-      <h3>Build the rule as data.</h3>
-      <p>Do not uncomment the block in <span class="mono">tools.py</span>. You read it in the pre-work, so you know it does two jobs at once: it holds the rule and it holds the number, and it does both inside the function that moves the money.</p>
-      <p>Write the numbers as data. One row per tool. Six fields is enough: the tool, whether it can be undone, the ceiling, the currency, the owner, and a version.</p>
-      <p class="check">Three files change. That was true of week 1's first lab as well, and the repeat is on purpose.</p>
+      <h3>Build step 1: create the policy file. Five minutes.</h3>
+      <p>Create <span class="mono">data/my-policy.json</span> with one row per tool the agent can call:</p>
+      <pre>{
+  "on_missing_row": "refuse",
+  "tools": {
+    "lookup_account": { "reversible": true,  "ceiling": null, "owner": "support-eng" },
+    "escalate":       { "reversible": true,  "ceiling": null, "owner": "support-eng" },
+    "issue_credit":   { "reversible": false, "ceiling": 1200, "owner": "payments-lead" }
+  }
+}</pre>
+      <p><strong>The numbers.</strong> <span class="mono">1200</span> is the ceiling in rupees: one month of Ravi's ₹1,200 Pro plan, because a double charge is one month. <span class="mono">null</span> means the tool has no ceiling, because it does not move money. <span class="mono">"reversible": false</span> means the action cannot be undone. <span class="mono">owner</span> is the role that may change the number.</p>
+      <p class="check">The file is the policy. A person can now read the ceiling without opening any Python.</p>
     </div>
     <div class="build">
-      <h3>Build two counters. This part is new.</h3>
-      <p>One counter for allowed, one for refused, both tagged with the tool and the rule that fired.</p>
-      <p><strong>Two, not one.</strong> A refusal count on its own cannot produce a rate, and the rate is the only number that ever shows a control has gone wrong. Tag the refused counter with the rule as well as the tool, because "the ceiling fired" and "the missing-row rule fired" are different events and you will need to tell them apart in eighteen minutes.</p>
-      <p class="check">This is the third property from 00:31 arriving as code. A control nobody can count cannot be told apart from a broken one.</p>
+      <h3>Build step 2: check the ceiling inside issue_credit. Six minutes.</h3>
+      <p>In <span class="mono">src/tools.py</span>, load the file and refuse a credit above the ceiling. Put the check at the top of <span class="mono">issue_credit</span>. That is where most teams put a check first, and 01:12 shows what it costs.</p>
+      <pre>from collections import Counter
+ALLOWED, REFUSED = Counter(), Counter()
+POLICY = _load("my-policy.json")
+
+def issue_credit(account_id, amount):
+    ceiling = POLICY["tools"]["issue_credit"]["ceiling"]
+    if amount &gt; ceiling:
+        REFUSED[("issue_credit", "ceiling")] += 1
+        return {"credited": False, "refused": True,
+                "reason": f"{amount} is over the ceiling of {ceiling} "
+                          "[data/my-policy.json: tools.issue_credit]"}
+    ALLOWED["issue_credit"] += 1
+    LEDGER.append({"account_id": account_id, "amount": amount})
+    return {"credited": True, "account_id": account_id, "amount": amount}</pre>
+      <p class="check">Two counters, not one: allowed and refused. A refusal count alone cannot give you a rate, and the rate is what shows a check has gone wrong.</p>
     </div>
     <div class="build">
-      <h3>Build a timer around the check. Two minutes.</h3>
-      <p>Record how long the check takes on each call, next to the counters. Print it at the end of the run in milliseconds.</p>
-      <p class="check">At 03:18 you compare this number with a model doing the same job. Write it down.</p>
+      <h3>Build step 3: print the counters and time the check. Two minutes.</h3>
+      <p>In <span class="mono">src/main.py</span>, after <span class="mono">run(ticket, llm, trace)</span>, print the two counters. Wrap the ceiling check with <span class="mono">time.perf_counter()</span> and print how many milliseconds it took.</p>
+      <p class="check">Write the milliseconds down. At 03:18 you compare that number with asking a model.</p>
     </div>
     <div class="build">
-      <h3>Check yourself on three questions.</h3>
-      <p>You are done when you can answer all three without opening any Python file:</p>
+      <h3>Check it by running it. Two minutes.</h3>
       <ul>
-        <li><strong>Who owns this file?</strong> Name a role, not a person.</li>
-        <li><strong>What is the ceiling on <span class="mono">issue_credit</span>?</strong> Read it out from the file.</li>
-        <li><strong>Does your refusal message name the file?</strong> Run ticket 9999 and read the line. That closes the question from 00:23, against your own code.</li>
+        <li><span class="mono">python -m src.main --ticket 9999 --mock</span> should show <span class="mono">issue_credit</span> refused, with the reason naming <span class="mono">data/my-policy.json</span>, and the refused counter at 1.</li>
+        <li><span class="mono">python -m src.main --ticket 4471 --mock</span> should credit Ravi ₹1,200, and the allowed counter should be 1.</li>
+        <li>Without opening any Python file, answer: who owns the file, and what is the ceiling on <span class="mono">issue_credit</span>?</li>
       </ul>
-      <p class="check">If somebody who has never seen the repository can answer the second one, the limit is outside the function.</p>
+      <p class="check">At 01:10 one screen goes up and the room checks one thing: does the refusal name the file?</p>
     </div>
-  </div>`,
+  </div>
+  <details>
+    <summary>Show a working answer</summary>
+    <div class="reveal">
+      <p>The code above is a working answer for steps 1 and 2. For step 3, in <span class="mono">src/main.py</span>:</p>
+      <pre>import time
+from .tools import ALLOWED, REFUSED
+t0 = time.perf_counter()
+run(ticket, llm, trace)
+print("allowed:", dict(ALLOWED), "refused:", dict(REFUSED))
+print(f"run took {(time.perf_counter() - t0) * 1000:.1f} ms")</pre>
+      <p>To time the check alone rather than the whole run, put the two <span class="mono">perf_counter()</span> calls around the ceiling comparison inside <span class="mono">issue_credit</span>. Expect well under a millisecond.</p>
+      <p><strong>What a good answer has that a passing one does not:</strong> the refusal names the file and the row. Anybody who reads it at 2am knows where to go.</p>
+    </div>
+  </details>`,
         script: `
     <p>Decide, then build, then check. <strong>Enforce the three minutes of writing before anybody types.</strong> This is the build where an assistant produces a working answer to a question the person never asked.</p>
     <p><strong>The counters are new and they are not instrumentation.</strong> Two of them, allowed and refused, tagged with the tool and the rule. At 01:12 the goodwill tool pays ₹5,000 and their refused counter does not move, which teaches "the check was never called" far better than a trace does.</p>
@@ -985,26 +1207,15 @@ control could run. Which one covers the most callers?</span>
     <p><strong>The timer is two minutes and it matters at 03:18.</strong> Everybody needs their own number for what one check costs, because the tiered-checker segment compares it with a model.</p>
     <p><strong>At 01:10, one screen, one question.</strong> Share the screen you picked while circulating, one whose refusal names the file, and ask the room: does yours? That closes 00:23 against their own code. A public miss here costs you the rest of the topic.</p>`,
         ref: { id: 't1-r-build', pairs: "&#8596; 00:54 · the build, the two counters and the timer", html: `
+  <h4>Starting state</h4>
+  <p>Their clone, after <span class="mono">git pull</span>. They create <span class="mono">data/my-policy.json</span> rather than editing <span class="mono">data/policy.json</span>, which the 00:23 demo reads and must keep working. The check goes inside <span class="mono">issue_credit</span> first, on purpose: 01:12 shows what that costs, and 01:20 moves it. The full code is on the learner page and behind its "Show a working answer" button. That button is where the answers are published, and 01:10 and the topic quiz are where they are discussed.</p>
+
   <details>
     <summary><span class="chev">›</span> A working answer</summary>
     <div class="dbody">
-      <p>One shape, and not the only one. Anything that puts the numbers outside the tool and reads them at the dispatch is a pass.</p>
-      <pre>data/policy.json
-  "on_missing_row": "refuse"
-  "issue_credit": {
-    "reversible": false,
-    "ceiling": 1200,
-    "owner": "payments-lead"
-  }
-
-agent.py, before  res = fn(**args)
-  rule = POLICY.get(act)
-  if rule is None:
-      return refuse(f"{act} has no policy row")
-  if not rule.reversible and args.get("amount", 0) &gt; rule.ceiling:
-      return refuse(f"{args['amount']} over ceiling {rule.ceiling} "
-                    f"[data/policy.json:{act}]")</pre>
-      <p>The account-existence check is deliberately not a field. See <a href="#t1-r-row">two kinds of rule</a>. If a room puts it in the row, that is a good mistake and it is worth two minutes at 01:25.</p>
+      <p><strong>The full code is on the learner page</strong>, in the build steps and behind "Show a working answer". In short: <span class="mono">data/my-policy.json</span> holds three rows, the ceiling check sits at the top of <span class="mono">issue_credit</span> in <span class="mono">src/tools.py</span>, two counters count allowed and refused, and <span class="mono">src/main.py</span> prints them with the time the check took.</p>
+      <p><strong>The check starts inside the tool on purpose.</strong> 01:12 shows the goodwill tool walking past it, and 01:20 moves it to the dispatch in <span class="mono">src/agent.py</span>. If a learner puts it at the dispatch straight away, praise it and ask them to predict 01:12 from there.</p>
+      <p>The account-existence check is deliberately not a field in the row. If a room puts it there, that is a good mistake and it is worth two minutes at 01:25.</p>
       <p><strong>What a good answer has that a passing one does not:</strong> the refusal string names the file and the row. That is the third fact from 00:23, built rather than described.</p>
     </div>
   </details>
@@ -1052,6 +1263,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <p>Your limit is live and it works. Here is what happens next.</p>
   <p>Three weeks have passed. The agent now handles a second kind of ticket: customers who complain in public and are given a goodwill credit. A different team writes the tool for it, twenty lines, called <span class="mono">apply_goodwill_credit</span>. They add it to the agent's tool list, and it writes to the same ledger as <span class="mono">issue_credit</span>.</p>
   <p>Nobody on that team has read your check. Nobody told them it was there. Your ceiling is still live and still correct.</p>
+  <p><strong>To watch it, run <span class="mono">make w2-goodwill</span>.</strong> It is a fixed copy of the agent with that second tool registered, so everyone sees the same result.</p>
   <p>Two questions, and they are the same two questions all cohort:</p>
   <ul>
     <li><strong>What went wrong?</strong></li>
@@ -1110,12 +1322,28 @@ paid out ₹5,000 · 1 credit
         title: "Move it to the dispatch",
         mode: "alone, 5 minutes",
         learner: `
-  <p>Move the check to the line every tool call already passes through, which is <span class="mono">res = fn(**args)</span> in <span class="mono">agent.py</span>. One line, and every tool goes through it, including the ones nobody has written yet.</p>
-  <p><strong>Move the counters with it.</strong> About a third of the room leaves them behind in the tool, which gives you a guard at the dispatch and a count of a code path nothing calls any more. A control and its counter are one thing.</p>`,
+  <p>Move the check out of <span class="mono">issue_credit</span> and into <span class="mono">src/agent.py</span>, just before the line every tool call passes through: <span class="mono">res = fn(**args)</span>. Then every tool is checked, including tools nobody has written yet.</p>
+  <pre># src/agent.py
+from .tools import POLICY, ALLOWED, REFUSED
+
+# inside run(), replace   res = fn(**args)   with:
+row = POLICY["tools"].get(act)
+if row is None:
+    REFUSED[(act, "no-row")] += 1
+    res = {"refused": True, "reason": f"{act} has no policy row [data/my-policy.json]"}
+elif not row["reversible"] and row["ceiling"] is not None and args.get("amount", 0) &gt; row["ceiling"]:
+    REFUSED[(act, "ceiling")] += 1
+    res = {"refused": True, "reason": f"over the ceiling of {row['ceiling']} [data/my-policy.json: tools.{act}]"}
+else:
+    ALLOWED[act] += 1
+    res = fn(**args)</pre>
+  <p>Delete the old check from <span class="mono">issue_credit</span>. <strong>Move the counters with it.</strong> About a third of the room leaves them behind in the tool, which gives you a check at the dispatch and a count of a code path nothing calls any more.</p>
+  <p><strong>Check it.</strong> Ticket 9999 is still refused. Then rename the <span class="mono">issue_credit</span> row in your policy file to <span class="mono">issue_credit_x</span> and run ticket 4471: it should be refused with "has no policy row". Rename it back.</p>`,
         script: `
     <p>Circulate and look at one thing only: whether the counters came with the check. About a third of the room leaves them in the tool, which produces a guard at the dispatch and a count of a code path nothing calls any more.</p>`,
         ref: { id: 't1-r-move', pairs: "&#8596; 01:20 · move it to the dispatch", html: `
-  <p>Five minutes, and the only thing to watch is whether the counters moved with the check. A control and its counter are one thing. Leaving the counter behind gives a guard at the dispatch and a count of a dead path, which is a worse state than having no counter at all, because it reads as evidence.</p>` },
+  <p>Five minutes, and the only thing to watch is whether the counters moved with the check. A control and its counter are one thing. Leaving the counter behind gives a guard at the dispatch and a count of a dead path, which is a worse state than having no counter at all, because it reads as evidence.</p>
+  <p class="quiet">The learner card now carries the code for the move and a check: renaming the row proves a tool with no row is refused.</p>` },
       },
       {
         at: '01:25', part: 'lab',
@@ -1123,7 +1351,9 @@ paid out ₹5,000 · 1 credit
         mode: "whole room, 5 minutes",
         learner: `
   <p>The dispatch refused that new tool for having no policy row. It never looked at the account.</p>
-  <p>So somebody writes a row for it. Reversible false, a ceiling of ₹5,000, a named owner. It looks complete.</p>
+  <p>So somebody writes a row for it in <span class="mono">data/my-policy.json</span>. It looks complete:</p>
+  <pre>"apply_goodwill_credit": { "reversible": false, "ceiling": 5000, "owner": "growth-lead" }</pre>
+  <p>Now run the new tool through your dispatch check from 01:20 with <span class="mono">account_id="9999"</span> and <span class="mono">amount=5000</span>. The row exists, so the "no row" rule passes. ₹5,000 is not over the ₹5,000 ceiling, so the ceiling passes too.</p>
   <div class="term"><span class="q">What happens to account 9999?</span>
 
   ____________________________________________</div>
@@ -1148,6 +1378,16 @@ paid out ₹5,000 · 1 credit
     </table>
   </div>
   <p><strong>The test:</strong> could a reasonable person want this switched off for one tool? If yes, it is a limit and it belongs in the row. If no, it is an invariant, and putting it in the row is a bug you find later, with money.</p>
+  <h4>The fix, in code</h4>
+  <p>Put the invariants in the checker itself, so they apply to every action that cannot be undone, whatever its row says:</p>
+  <pre># src/agent.py, before the ceiling check
+from .tools import ACCOUNTS
+if row is not None and not row["reversible"]:
+    if str(args.get("account_id")) not in ACCOUNTS:
+        res = {"refused": True, "reason": "no credit to an account that does not exist"}
+    elif not isinstance(args.get("amount"), (int, float)) or args["amount"] &lt;= 0:
+        res = {"refused": True, "reason": "amount must be a positive number"}</pre>
+  <p>Nothing in the row can switch these off, and nobody has to remember to switch them on. <span class="mono">src/policy.py</span> in the reference agent is written the same way, with the reason in a comment.</p>
   <div class="writein"><span class="q">Name one rule in your own policy config that should never have been configurable.</span>
     <div class="rule"></div>
   </div>`,
@@ -1180,16 +1420,27 @@ paid out ₹5,000 · 1 credit
       <p>Ask who would set it to false, and why. Somebody always has a reason, and the reason is always a test environment.</p>
       <p class="quiet"><code>src/policy.py</code> is written this way, with the reason in a comment. It was not until 2026-09-08: it had the account check as a row field, which is exactly this bug, and it was found by somebody reading the material rather than by anybody running it.</p>
     </div>
-  </details>` },
+  </details>
+  <h4>The fix, in code</h4>
+  <p>On the learner page: the invariants live in the checker, before the ceiling, for every action that cannot be undone. Point at <span class="mono">src/policy.py</span> in the reference agent, which does exactly this.</p>` },
       },
       {
         at: '01:30', part: 'lab',
         title: "The rule this cycle exists to land",
         mode: "whole room, 5 minutes",
         learner: `
-  <p>Go back to the nine places from 00:42. You have moved one control twice, and each move changed which callers it covered.</p>
+  <p>Go back to the nine places from 00:42. You have moved one control twice, and each move changed which callers it covered:</p>
+  <ul>
+    <li><strong>Inside <span class="mono">issue_credit</span></strong>, it covered one tool. The goodwill tool walked past it.</li>
+    <li><strong>At the dispatch in <span class="mono">agent.py</span></strong>, it covers every tool the agent calls. It still cannot see a caller outside the agent, such as another team's nightly batch job that writes credits straight to the ledger.</li>
+    <li><strong>At the ledger itself</strong>, the place where the money is recorded, it would cover every caller there is.</li>
+  </ul>
   <p style="font-size:var(--size-4)"><strong>Move the control toward the thing being protected, not toward the thing being controlled.</strong></p>
-  <p>The resource of record is the last point that can still prevent, and the first point that covers a caller you have not written. A constraint in the ledger covers your agent, the goodwill tool, the batch job, and the service another team ships next quarter.</p>
+  <p>The <strong>resource of record</strong> is the system that holds the truth, here the ledger database. It is the last point that can still prevent a bad credit, and the first point that covers a caller you have not written. A constraint in the ledger covers your agent, the goodwill tool, the batch job, and the service another team ships next quarter. For example:</p>
+  <pre>-- in the ledger's own database: these hold for every caller, forever
+ALTER TABLE credits ADD CONSTRAINT credit_account_exists
+  FOREIGN KEY (account_id) REFERENCES accounts (account_id);
+ALTER TABLE credits ADD CONSTRAINT credit_positive CHECK (amount &gt; 0);</pre>
   <p><strong>Now the cost, because it is real.</strong> The ledger belongs to another team. The strongest placement available to you is the one you cannot ship on your own. That is a constraint on your week, not a reason to stop at the dispatch and call it finished.</p>
   <p>And keep both. Defence in depth is the same rule in two places, and it is correct. What it needs is one sentence saying which copy is authoritative, because two copies that drift are worse than one.</p>`,
         script: `
@@ -1391,14 +1642,14 @@ guard_refused_total{tool="issue_credit",rule="ceiling"} 1</span></div>
   <details>
     <summary>Show what happened</summary>
     <div class="reveal">
-      <p><strong>The ceiling was chosen by looking at what a normal case costs.</strong> One month, because a double charge is one month. Nobody asked what a <em>legitimate</em> case can cost at the top end. Seven months of a billing error is still one honest customer.</p>
+      <p><strong>The ceiling was chosen by looking at what a normal case costs.</strong> One month, because a double charge is one month. Nobody asked what a <em>legitimate</em> case can cost at the top end. Meera was charged wrongly for seven months, so she is owed seven times the ceiling. She is still one honest customer owed every rupee, and the rule cannot tell her apart from a fraudster.</p>
       <p>Over the limit has to mean <em>ask</em>, not <em>no</em>. <strong>A limit with only one outcome is a wall. A limit with two outcomes is a gate.</strong></p>
-      <p>You watched a ₹0 last week too. That one was the model failing on its own. This one is worse. <strong>This time you wrote the rule that did it.</strong></p>
+      <p>In week 1 you watched a run pay ₹0 to a customer who was owed money, because the model decided wrongly on its own. This time the model chose the right amount, and the rule you wrote at 00:54 stopped it. <strong>That is worse, because the mistake is now in your code.</strong> It repeats on every case like Meera's, and nothing reports it.</p>
       <p class="named">The name for this is older than any of it: maker-checker. The party that proposes cannot be the party that approves.</p>
     </div>
   </details>
   <h4>Three phrases, and which one this is</h4>
-  <p>The phrase for that gate is <strong>human in the loop</strong>, and it sits between two others.</p>
+  <p>The phrase for that gate is <strong>human in the loop</strong>. It sits between two other phrases you will meet in vendor documents and audits: <strong>human in command</strong>, where a person sets the rule in advance, and <strong>human on the loop</strong>, where a person watches and steps in afterwards.</p>
   <div class="tw">
     <table>
       <thead>
@@ -1467,34 +1718,102 @@ guard_refused_total{tool="issue_credit",rule="ceiling"} 1</span></div>
         title: "Hands-on lab: build the gate, and the record",
         mode: "alone, 13 minutes · three of them in writing before you type",
         learner: `
-  <p>Same order as every build. <strong>Decide, then build, then check.</strong> Write the decision down first, because your assistant will make it for you otherwise and it will not mention that it did.</p>
+  <h4>Starting state</h4>
+  <p>Your <span class="mono">src/agent.py</span> from topic 1, with the policy check at the dispatch. Add Meera to the agent's data so her ticket runs:</p>
+  <pre># data/accounts.json, add:
+{ "account_id": "7310", "name": "Meera Iyer", "plan": "Pro", "monthly_charge": 1200,
+  "past_due": 0, "status": "closed",
+  "note": "Plan closed in January. Seven charges after the closure date, 8,400 in total." }
+
+# data/tickets.json, add:
+{ "id": "7310", "account_id": "7310", "disputed_amount": 8400, "sentiment": "neutral",
+  "summary": "I cancelled in January and was charged for seven more months." }</pre>
+  <p>Run <span class="mono">python -m src.main --ticket 7310 --mock</span>. Today it is refused: over the ceiling of 1200.</p>
   <div class="builds">
     <div class="build">
       <h3>Decide. Three minutes, in writing.</h3>
-      <p>Over the limit means ask. So what does asking look like in a program with no user sitting in front of it?</p>
-      <div class="check">you are deciding a mechanism, not a wish</div>
+      <p>Over the limit should mean <em>ask a person</em>, not <em>no</em>. So what does asking look like in a program with no user sitting in front of it? And what does your code do when nobody answers?</p>
+      <div class="check">you are deciding a mechanism and a number, not a wish</div>
     </div>
     <div class="build">
-      <h3>Build the gate where the limit already is.</h3>
-      <p>Before the dispatch, at <span class="mono">res = fn(**args)</span>. If the tool cannot be undone, and the request is over its limit, do not call the function. Ask.</p>
-      <div class="check">same one line, and every tool goes through it</div>
-    </div>
-    <div class="build">
-      <h3>Build the record at the same time.</h3>
-      <p>Six fields, below. <strong>Write the row before you ask, not after the answer comes back.</strong> A row written only after approval loses the request entirely when the process dies while waiting.</p>
+      <h3>Build step 1: the agent asks instead of refusing. Four minutes.</h3>
+      <p>In the dispatch, when an action cannot be undone and is over the ceiling, do not call the tool and do not refuse. Write a pending request to a queue file and stop. <strong>Write the row before anybody is asked</strong>, so the request is not lost if the program stops while it waits.</p>
+      <pre># src/agent.py
+import json, time, uuid
+QUEUE = "data/approvals.jsonl"
+
+def ask_a_person(act, args, rule):
+    row = {"id": uuid.uuid4().hex[:8], "asked_at": time.time(),
+           "action": act, "args": args, "rule": rule,
+           "status": "pending", "decided_by": None}
+    with open(QUEUE, "a") as f:
+        f.write(json.dumps(row) + "\\n")
+    return {"status": "awaiting approval", "approval_id": row["id"]}
+
+# in the dispatch, replace the "over the ceiling" refusal with:
+#     res = ask_a_person(act, args, f"over the ceiling of {row['ceiling']}")</pre>
       <div class="check">write, then ask, then act on the answer</div>
     </div>
     <div class="build">
+      <h3>Build step 2: a person approves or refuses. Four minutes.</h3>
+      <p>Create <span class="mono">src/approve.py</span>. It reads the queue, and for one request either pays it once or refuses it, and records who decided.</p>
+      <pre># src/approve.py
+import json, sys, time
+from .tools import TOOLS
+QUEUE = "data/approvals.jsonl"
+TIMEOUT_S = 18 * 60          # today's experiment; your system picks its own number
+
+def decide(approval_id, by, approve):
+    rows = [json.loads(line) for line in open(QUEUE)]
+    row = next(r for r in rows if r["id"] == approval_id)
+    if row["status"] != "pending":
+        return f"already {row['status']}"            # one approval, one payment
+    if by == "agent":
+        return "refused: the requester cannot approve its own request"
+    if time.time() - row["asked_at"] &gt; TIMEOUT_S:
+        row.update(status="refused", decided_by="timeout")   # your default
+    elif approve:
+        TOOLS[row["action"]](**row["args"])
+        row.update(status="approved", decided_by=f"human:{by}")
+    else:
+        row.update(status="refused", decided_by=f"human:{by}")
+    with open(QUEUE, "w") as f:
+        f.writelines(json.dumps(r) + "\\n" for r in rows)
+    return row["status"]
+
+if __name__ == "__main__":
+    approval_id, by, answer = sys.argv[1], sys.argv[2], sys.argv[3]
+    print(decide(approval_id, by, answer == "yes"))</pre>
+      <div class="check">the timeout branch is your policy for "nobody answered"</div>
+    </div>
+    <div class="build">
       <h3>Then the part that is actually the lab.</h3>
-      <p>Decide what happens when nobody answers, and write it as a rule with a number in it. "Waits 30 seconds, then escalates to the on-call queue and refuses" is a rule. "Waits for approval" is a wish, and you now know the difference.</p>
+      <p>Decide what happens when nobody answers in time, and write it as a rule with a number in it. The code above refuses after 18 minutes. Waiting longer, refusing, or allowing are all possible. "Waits 30 seconds, then escalates to the on-call queue and refuses" is a rule. "Waits for approval" is a wish.</p>
       <div class="check">a number, a destination, and an outcome</div>
     </div>
     <div class="build">
-      <h3>Check against Meera.</h3>
-      <p>Run ticket #7310 again. She is owed ₹8,400 and the ceiling is ₹1,200. She should reach a person, not a refusal.</p>
-      <div class="check">python -m src.main --ticket 7310</div>
+      <h3>Check it against Meera.</h3>
+      <ul>
+        <li><span class="mono">python -m src.main --ticket 7310 --mock</span> now prints "awaiting approval" and an id. <span class="mono">data/approvals.jsonl</span> holds one pending row.</li>
+        <li><span class="mono">python -m src.approve &lt;id&gt; priya.n yes</span> pays ₹8,400 and records <span class="mono">decided_by: human:priya.n</span>.</li>
+        <li>Run the same command again. It must say "already approved" and pay nothing.</li>
+        <li><span class="mono">python -m src.approve &lt;id&gt; agent yes</span> on a new request must be refused.</li>
+      </ul>
+      <div class="check">she reaches a person, not a refusal, and is paid once</div>
     </div>
   </div>
+  <details>
+    <summary>Show a working answer</summary>
+    <div class="reveal">
+      <p>The two code blocks above are a working answer. Three things a good answer has that a passing one does not:</p>
+      <ul>
+        <li><strong>The row is written before the person is asked.</strong> If the program stops while waiting, the request is still in the queue.</li>
+        <li><strong>A second approval of the same request pays nothing.</strong> That is idempotency, and topic 3 makes it hold across processes.</li>
+        <li><strong>The approver's identity is checked in code</strong>, not in a sentence in the runbook.</li>
+      </ul>
+      <p>An <span class="mono">input()</span> call that blocks until somebody types "yes" also works for thirteen minutes. It holds the program open for hours and cannot survive a restart, which is why the queue file is the shape to learn.</p>
+    </div>
+  </details>
   <h4>The decision log, and the field that changes everything</h4>
   <p>Week 1 left a question open. A regulator asks why one specific account was credited. A stored prompt and completion is not enough, because the model's stated reasoning was never kept, and week 1 watched that reasoning claim a credit that never happened.</p>
   <p>So write the line you would want to find. Two minutes, before you look at ours.</p>
@@ -1613,6 +1932,9 @@ ______________________________________________</div>
     <p><strong>Add the approver check to individuals while circulating</strong>, not to the room. "Your gate asks. Who is allowed to answer, and where does your code check that?" Almost nobody has one, twenty minutes after agreeing that the proposer cannot be the approver.</p>
     <p class="qbadge">No model calls. This build costs nothing against their 20 a day.</p>`,
         ref: { id: 't2-r-gate', pairs: "&#8596; 01:51 · the gate, and the record, in one build", html: `
+  <h4>Starting state</h4>
+  <p>Their topic 1 agent. Meera's account and ticket are not in the published reference agent, so the learner page gives both as snippets to add to <span class="mono">data/accounts.json</span> and <span class="mono">data/tickets.json</span>. The mock brain looks the account up and then credits the ticket's disputed amount, so ticket 7310 asks for ₹8,400. The lab design is on the learner page: a pending queue file, <span class="mono">src/approve.py</span>, a timeout default, a requester check, and "already approved" on a second call. The full code sits behind "Show a working answer".</p>
+
   <h4>The decision log, and the field that changes everything</h4>
   <p>Do not give them the format. Ask for it: <em>nine months from now, somebody asks why account 4471 was credited ₹1,200 on 14 March. What one line do you want to find?</em> Two minutes, alone, nobody reads out until the six-field line is on screen.</p>
   <pre>decided_by=policy          a rule decided, no person involved
@@ -1709,7 +2031,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <p>All three are a policy. <strong>Nobody in this room chose a wrong answer.</strong> Every one of the three is somebody's production behaviour tonight. The difference between them is not correctness. It is whether the person who wrote the code ever asked the question.</p>
   <p>"It waits" is still not an answer on its own. <strong>Waiting with no upper bound is not a rule, it is the absence of one.</strong> Ask what yours does at hour six.</p>
   <h4>2:14am is one of six paths</h4>
-  <p>Yours is the only one you took live. The other five are here because a gate is only as good as its worst path. Bring a seventh if you have one.</p>
+  <p>An approval request can end in six ways. Your timer tested one of them during the break: nobody answers. The other five are listed so you can check your code handles each one, because an approval step is only as safe as its worst ending. If your own system has a seventh, write it down. One common seventh: the approver's account is removed while the request is waiting.</p>
   <div class="tw">
     <table>
       <thead>
@@ -1735,6 +2057,17 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <li><strong>Show enough to say no.</strong> "Approve ₹8,400 for account 7310?" is not a question anybody can answer. They need what was asked, what the agent found, which rule was crossed, and what happens either way.</li>
     <li><strong>Sample your own approvals.</strong> If nobody ever re-reads an approved item, you have no evidence the gate works at all.</li>
     <li><strong>Treat bulk approve as the end of the gate.</strong> A button that approves forty items at once is a gate you have already lost.</li>
+  </ul>
+  <h4>Best practices for human approval, from an architect's view</h4>
+  <ul>
+    <li><strong>Ask on the consequence, not the confidence.</strong> Send a request to a person because it cannot be undone and is over a limit, never because the model said it was unsure.</li>
+    <li><strong>Write the request down before asking.</strong> The pending record survives a crash; a question held in memory does not.</li>
+    <li><strong>One approval, one execution.</strong> Give each request an id and make a second approval of it do nothing.</li>
+    <li><strong>Check the approver in code.</strong> The person who asked cannot approve, and the approver's permission is recorded as it was at that moment.</li>
+    <li><strong>Choose the timeout and the default on purpose</strong>, with a number, and write them in the policy file next to the limit.</li>
+    <li><strong>Show enough to say no</strong>: what was asked, what the agent found, which rule was crossed, and what happens either way.</li>
+    <li><strong>Plan the queue's capacity</strong>, measure how long approvals take, and sample approved items to catch rubber-stamping.</li>
+    <li><strong>Use the approval workflow the business already runs</strong> where one exists, such as maker-checker in the core banking system.</li>
   </ul>
   <p>Two more that get forgotten. The decision log now holds personal data, including a named approver, so retention and erasure apply to it. And the calendar is a capacity input, because a queue sized for an ordinary Tuesday behaves differently across Diwali.</p>
   <p>One path belongs to where you work. A team in Bengaluru serving customers in the United States fills its queue at 2am IST, which is 4:30pm Eastern, the busiest hour of the customer's day. So "nobody is awake" and "the customer is waiting" are the same moment. <strong>A rota across time zones is an architecture decision, not an HR one</strong>, and you made it at 01:51 when you set the timeout.</p>
@@ -1822,7 +2155,9 @@ long it takes.</span></div>
   <p>Reading on the learner page. The one sentence to say: <strong>a new check runs in shadow mode on last week's traffic before it blocks anyone.</strong> It is the cheapest answer to the wrong refusal nobody sees, and topic 2's quiz asks it.</p>
   <h4>The sentence that travels upward</h4>
   <p>It is on the learner page, word for word. Read it rather than paraphrasing. <strong>Do not add a fourth idea.</strong> This is reading, not a segment: point at it in one sentence and move to the topic quiz.</p>
-  <blockquote>"We added validation" does not survive a board meeting. "Here is what being wrong costs us in each direction" does.</blockquote>` },
+  <blockquote>"We added validation" does not survive a board meeting. "Here is what being wrong costs us in each direction" does.</blockquote>
+  <h4>Best practices for human approval, from an architect's view</h4>
+  <p>Eight on the learner page. If time is short, say the first three: ask on consequence not confidence, write the request down before asking, one approval one execution.</p>` },
       },
     ],
     atScale: {
@@ -1953,8 +2288,15 @@ long it takes.</span></div>
       lede: "By the end of it you can make the same request pay only once, and show that it still holds from a second process.",
       learner: `
   
-  <p><strong>Idempotency</strong> means running a request twice does the same thing as running it once. It is the fourth of the four facts a check needs, from 00:48. The first three are written down somewhere and cost nothing to read. This one needs memory that outlives the program, and that is why it gets its own topic.</p>
-  <p><strong>It is also the one topic whose real lesson is not the fix.</strong> The fix is about fifteen lines. The lesson is the eight minutes between 02:55 and 03:03, when your test passes, your system is broken, and nothing anywhere tells you so.</p>
+  <p><strong>Idempotency</strong> means running a request twice does the same thing as running it once. Written as maths: f(f(x)) = f(x).</p>
+  <h4>Why idempotency belongs in a guardrails week</h4>
+  <ul>
+    <li><strong>It is one of the six kinds of guardrail.</strong> The "state" guardrail on the 00:37 map stands between an action and its record, and stops the same action happening twice.</li>
+    <li><strong>The approval step from topic 2 needs it.</strong> An approved payment that is resumed or retried is the most common way one approval turns into two payments.</li>
+    <li><strong>It is the expensive one of the four facts a check needs.</strong> At 00:48 the check needed: which action this is, whether it can be undone, what the limit is, and what has already happened. The first three are written down somewhere and cost nothing to read. The fourth, what has already happened, needs memory that outlives the program.</li>
+    <li><strong>Week 1 ended on it.</strong> <span class="mono">make retry</span> paid ₹3,600 on a ₹1,200 refund, and the agent was right every time.</li>
+  </ul>
+  <p><strong>The fix is short. The important part is what happens just before it.</strong> At 02:51 your fix passes its test. At 02:55 the same ticket, run from a second terminal, pays again. For eight minutes your test says "pass" while your system is broken, and nothing warns you. Learning to distrust a pass like that is the real lesson.</p>
   <p><strong>What this topic is not.</strong> It is not the limit, which was topic 1, and it is not the gate, which was topic 2. It is not evaluation. You will meet the need for evaluation here in the sharpest way this course offers, and week 3 is where it gets a method. We do not use the word on the day, and neither should you until week 3.</p>`,
       script: `
   <p>This is week 3 planted a week early, and <strong>it only works if you let the passing result stand for a moment.</strong> The room stops the double payment inside one running program, <span class="mono">make retry</span> shows one credit, and then the same ticket from a second terminal pays twice again. They watch a pass and a failure on the same ticket inside four minutes, a week before they have the words for it.</p>
@@ -1989,27 +2331,37 @@ and I know that because
 ______________________________________________</span></div>
   <div class="builds">
     <div class="build">
-      <h3>Build it.</h3>
-      <p>Give each credit a key derived from the ticket. Keep the keys you have already paid. Refuse a key you have seen before.</p>
-      <p class="check">fifteen minutes, alone, and the shape is yours</p>
+      <h3>Build it: remember what has been paid. Twelve minutes.</h3>
+      <p>In <span class="mono">src/agent.py</span>, give every action that cannot be undone a key made from the dispute, and refuse a key you have already paid. Start with the simplest store: a Python set.</p>
+      <pre># src/agent.py
+PAID = set()   # keys already paid, in memory
+
+# in the dispatch, for an action that cannot be undone, before  res = fn(**args):
+key = f"{act}:{state['ticket']['id']}"
+if key in PAID:
+    res = {"refused": True, "reason": f"already paid: {key}"}
+else:
+    PAID.add(key)
+    res = fn(**args)</pre>
+      <p class="check">the key is the dispute, chosen before the call, not a new id per run</p>
     </div>
     <div class="build">
       <h3>Check, part one. At 02:51.</h3>
-      <p>Run <span class="mono">make retry</span>. It delivers the same ticket three times. Last week it paid Ravi ₹3,600. Now it pays ₹1,200 once.</p>
+      <p>Run <span class="mono">make retry</span>. It delivers the same ticket three times inside one program. Last week it paid Ravi ₹3,600. Now it pays ₹1,200 once.</p>
       <p><strong>It works.</strong> Sit with that for a second, because it is about to matter.</p>
       <p class="check">make retry</p>
     </div>
     <div class="build">
       <h3>Check, part two. At 02:55.</h3>
       <p>Open a second terminal. Run the same ticket again.</p>
-      <p class="check">python -m src.main --ticket 4471</p>
+      <p class="check">python -m src.main --ticket 4471 --mock</p>
     </div>
   </div>
-  <div class="term">$ python -m src.main --ticket 4471
+  <div class="term">$ python -m src.main --ticket 4471 --mock
 <span class="x">paid out ₹1,200 · 1 credit</span>
 <span class="q">Ravi has now been paid ₹2,400.</span></div>
   <h4>The one case the test never covered</h4>
-  <p>The keys you remembered live in a Python list. The list dies with the process.</p>
+  <p>The keys you remembered live in a Python set. The set dies with the process, so the second terminal starts with it empty.</p>
   <p><strong><span class="mono">make retry</span> passed because all three deliveries ran inside one program</strong>, which is the one case that was never the problem. A redelivery after a crash, a second consumer, a restart, another pod: none of those share your process, and every one of them is what actually happens in production.</p>
   <p>Say the next sentence out loud, because it is the one this topic exists for.</p>
   <p style="font-size:var(--size-4)"><strong>Your test passed and proved nothing, and nothing in the room told you.</strong></p>
@@ -2020,6 +2372,10 @@ ______________________________________________</span></div>
     <p><strong>At 02:55, the second terminal.</strong> Have somebody share their screen rather than doing it yourself, so the room watches a peer's system pay twice rather than yours.</p>
     <p class="qbadge">No model calls. This lab costs nothing against their 20 a day.</p>`,
         ref: { id: 't3-r-payonce', pairs: "&#8596; 02:34 · the build, and the false pass", html: `
+  <h4>Why idempotency belongs in a guardrails week</h4>
+  <p>On the topic purpose card for learners: it is the "state" guardrail from the six kinds, the approval step needs it, it is the expensive fourth fact from 00:48, and week 1 ended on it. Say the second reason if asked: an approved payment that is retried is how one approval becomes two payments.</p>
+  <p class="quiet">The learner lab now carries the code: a set at 02:34, the same check passing <span class="mono">make retry</span> at 02:51, and the second terminal paying again at 02:55.</p>
+
   <h4>The narrative</h4>
   <p>Say it in two sentences, from the pre-work: week 1's <span class="mono">make retry</span> paid Ravi ₹3,600 on a ₹1,200 double charge, and the agent reasoned correctly all three times. Ask for the figure they wrote down.</p>
   <h4>The concept</h4>
@@ -2062,6 +2418,35 @@ ______________________________________________</span></div>
   <p>The fix is not a better data structure. It is a different place.</p>
   <p>The ledger here is a Python list, so there is no store to put a rule in. Make one. A sqlite file is in the standard library, it needs no service, and it survives the process that wrote it.</p>
   <p>Make the key the primary key of a table. Then <strong>do not ask whether the key is there.</strong> Insert it, and let the insert tell you whether you were first.</p>
+  <div class="builds">
+    <div class="build">
+      <h3>Build the fix that holds. Four minutes.</h3>
+      <p>In <span class="mono">src/agent.py</span>, replace the set with a table in a file.</p>
+      <pre>import sqlite3
+DB = sqlite3.connect("data/paid.db", isolation_level=None)
+DB.execute("CREATE TABLE IF NOT EXISTS paid (key TEXT PRIMARY KEY)")
+
+# in the dispatch, replacing the PAID set:
+key = f"{act}:{state['ticket']['id']}"
+cur = DB.execute("INSERT OR IGNORE INTO paid VALUES (?)", (key,))
+if cur.rowcount == 0:
+    res = {"refused": True, "reason": f"already paid: {key}"}
+else:
+    res = fn(**args)</pre>
+      <p class="check">the insert reports whether you were first; nothing reads first</p>
+    </div>
+    <div class="build">
+      <h3>Check it from two terminals. Two minutes.</h3>
+      <p>Delete <span class="mono">data/paid.db</span>, then run <span class="mono">python -m src.main --ticket 4471 --mock</span> in one terminal and the same command in a second. The second must print "already paid: issue_credit:4471".</p>
+      <p class="check">one credit, however many terminals</p>
+    </div>
+  </div>
+  <details>
+    <summary>Show a working answer</summary>
+    <div class="reveal">
+      <p>The code above is the answer. One thing it does not handle yet: the key is inserted <em>before</em> the payment. If the payment then fails, the key says "paid" when nothing was paid. The usual fix is a status column, written <span class="mono">pending</span> before the call and <span class="mono">done</span> after it. That is the two-phase pattern in the reading below.</p>
+    </div>
+  </details>
   <h4>Why a read then a write loses</h4>
   <p>That distinction is the whole segment, and it is worth being slow about.</p>
   <p>A read to check, followed by a write, has a window between the two. Two processes both read "not paid", both decide to pay, and both write. Nothing in your code is wrong when you read it line by line. The two lines are simply not one thing.</p>
@@ -2092,7 +2477,8 @@ if cur.rowcount == 0:
       <p><strong>Probe.</strong> "What releases your lock when the process is killed between the acquire and the write?" There is no comfortable answer, and that is the point.</p>
     </div>
   </details>
-  <blockquote>You did not write a better check. You moved the check to something that cannot be raced.</blockquote>` },
+  <blockquote>You did not write a better check. You moved the check to something that cannot be raced.</blockquote>
+  <p class="quiet">The learner card now has the sqlite code, a two-terminal check, and a working answer that names the gap: the key is written before the payment, so a failed payment leaves a key that says "paid". The two-phase pattern in the topic's reading is the answer.</p>` },
       },
     ],
     atScale: {
@@ -2110,9 +2496,54 @@ if cur.rowcount == 0:
         },
       ],
       learner: `
-  <p><strong>Two things none of them does for you.</strong> None chooses the key: a fresh key on every run removes the guarantee without touching the code that provides it. And none decides how long the key is kept. A dispute refunded twice, three months apart, needs a key that is the dispute and not the ticket.</p>`,
+  <p><strong>What these tools cannot decide for you.</strong> Every product above enforces a key you give it. Two decisions stay yours. First, <em>what the key is</em>: if your code makes a fresh key on every run, the provider sees two different requests and pays twice, and the tool cannot know. Second, <em>how long the key is remembered</em>: Stripe may forget a key after 24 hours, so a retry next week pays again. And if one dispute is legitimately refunded twice, three months apart, the key must name the dispute and the refund, not just the ticket.</p>
+  <h4>Code: the same idea in three products</h4>
+  <pre># Stripe: send your own key; a retry with the same key returns the first result
+stripe.Refund.create(charge=charge_id, amount=120000,
+                     idempotency_key=f"refund:{dispute_id}")
+
+-- PostgreSQL: the database refuses the second write
+INSERT INTO credits (dispute_id, account_id, amount)
+VALUES ($1, $2, $3)
+ON CONFLICT (dispute_id) DO NOTHING;
+
+# Powertools for AWS Lambda: a decorator keyed on part of the event
+from aws_lambda_powertools.utilities.idempotency import (
+    idempotent, DynamoDBPersistenceLayer, IdempotencyConfig)
+store = DynamoDBPersistenceLayer(table_name="IdempotencyTable")
+@idempotent(persistence_store=store,
+            config=IdempotencyConfig(event_key_jmespath="dispute_id"))
+def handler(event, context):
+    return issue_credit(event["account_id"], event["amount"])</pre>
+  <h4>Best practices firms follow</h4>
+  <ul>
+    <li><strong>The caller chooses the key</strong> from the business identity (the dispute), and sends it on every retry.</li>
+    <li><strong>The store that holds the money enforces it</strong> with a unique constraint, not a read followed by a write.</li>
+    <li><strong>Record pending and done separately</strong>, so a crash between the two is visible and can be finished or undone.</li>
+    <li><strong>Keep keys at least as long as a retry can arrive</strong>, including manual re-runs days later.</li>
+    <li><strong>Bound every retry</strong>: a fixed number of attempts with growing waits, then stop and alert.</li>
+    <li><strong>Test from two processes</strong>, not just by calling the function twice in one test.</li>
+  </ul>
+  <h4>Idempotency in guardrailed systems: the wider picture</h4>
+  <p>Reading, not a segment. The lab covers the first two ideas. The rest are where the same rule shows up elsewhere in an AI system.</p>
+  <ul>
+    <li><strong>Why retries are riskier around a model.</strong> A guardrail that rejects malformed output often asks the model again: the "repair loop". Each repair is a new model call that may produce a different tool call. If the first attempt already paid, the repair can pay again.</li>
+    <li><strong>Key injection.</strong> Create the key before the tool runs and pass it in. Some systems hash the session, the step number and the arguments together. That stops a retry inside one session from paying twice. It does not stop a redelivered ticket, which starts a new session, so for money the key should be the dispute itself.</li>
+    <li><strong>Two-phase actions: prepare, then commit.</strong> First check and record the intent as pending (prepare). Only then perform the effect and mark it done (commit). A crash between the two leaves a visible pending row rather than silence.</li>
+    <li><strong>One approval, one payment.</strong> The approval step from topic 2 must treat a second "yes" on the same request as a no-op.</li>
+    <li><strong>Masking personal data twice must not change it.</strong> If a masking step runs twice, <span class="mono">[PERSON_1]</span> must not become <span class="mono">[ENTITY_2]</span>. Keep a per-session table so the same name always maps to the same placeholder.</li>
+    <li><strong>Caching guardrail verdicts.</strong> Hashing the exact system prompt and user input (for example with SHA-256) lets you reuse a verdict and save time and money. A "similar enough" semantic cache is riskier: two requests that look alike can deserve different answers.</li>
+    <li><strong>Rebuilding context cleanly.</strong> When the agent corrects itself, replace the bad turn instead of stacking error messages in the history, so running the correction twice gives the same context.</li>
+    <li><strong>Circuit breakers on repair loops.</strong> Cap how many times a failed check may ask the model again, then stop and hand over to a person.</li>
+  </ul>`,
       script: `
-  <p><strong>Reading, not a segment.</strong> If somebody asks, the line to say is on the learner page: the provider enforces the key, the caller chooses it, and either half alone gives you nothing.</p>`,
+  <p><strong>Reading, not a segment.</strong> If somebody asks, the line to say is on the learner page: the provider enforces the key, the caller chooses it, and either half alone gives you nothing.</p>
+  <h4>Code: the same idea in three products</h4>
+  <p>Stripe's idempotency key, PostgreSQL's <span class="mono">ON CONFLICT DO NOTHING</span>, and the Powertools decorator, on the learner page. Point at them only if asked.</p>
+  <h4>Best practices firms follow</h4>
+  <p>Six on the learner page. The one to say: the caller chooses the key from the dispute, and the store that holds the money enforces it.</p>
+  <h4>Idempotency in guardrailed systems: the wider picture</h4>
+  <p>Reading for learners: repair loops, key injection, two-phase actions, approval de-duplication, stable masking, verdict caching, clean context and bounded repair loops. <strong>Name the tension if asked:</strong> a key hashed from the session, step and arguments stops retries inside one session and does not stop a redelivered ticket, so for money the key is the dispute.</p>`,
     },
     topicQuiz: {
       at: '03:09',
@@ -2160,7 +2591,8 @@ if cur.rowcount == 0:
       text: "Your test passed and proved nothing, and nothing in the room told you.",
       learner: `
   
-  <p>Everything else in this topic is that sentence with a mechanism attached. The Python list is why it passed. The second terminal is how you found out. The unique key is the fix, and week 3 is the method that would have found it without somebody standing over your shoulder.</p>`,
+  <p><strong>How this connects to the rest of today.</strong> Topic 1 decided <em>whether</em> an action may happen. Topic 2 decided <em>who</em> may approve it. This topic makes sure an allowed, approved action happens <em>only once</em>, however many times the request arrives. Without it, the other two guardrails can each work and still pay twice.</p>
+  <p>The Python set is why your test passed. The second terminal is how you found out. The unique key in a table is the fix, and week 3 is the method that would have found the gap without somebody standing over your shoulder.</p>`,
       script: `
   <blockquote>Your test passed and proved nothing, and nothing in the room told you.</blockquote>
   <p>Everything else is that sentence with a mechanism attached. The Python list is why it passed. The second terminal is how they found out. The unique key is the fix, and week 3 is the method that would have found it without somebody standing over their shoulder.</p>`,
@@ -2179,7 +2611,7 @@ if cur.rowcount == 0:
     state: `
   <h4 class="quiet">Still open, and the first one blocks the session</h4>
   <ul>
-    <li><strong><code>make w2-paid-once</code> does not exist.</strong> Until it does, 03:03 is a description rather than a build, and the topic ends on a problem with no demonstrated answer. It is preparation item 1.</li>
+    <li><strong><code>make w2-paid-once</code> does not exist, and no longer blocks 03:03.</strong> Learners build the paid table themselves from the code on their page. The target would only help your own demo. It is preparation item 1.</li>
     <li><strong><code>make retry</code> needs checking.</strong> Confirm it still delivers the same ticket three times and prints a total the room can read at a glance. It is preparation item 3.</li>
   </ul>`,
   },
@@ -2192,8 +2624,10 @@ if cur.rowcount == 0:
     purpose: {
       lede: "By the end of it you can place a check in the right tier and in-band or out-of-band, attack another pair's guard, and name the control point that would have stopped you.",
       learner: `
-  <p>Every control you built today decides the same way: code compares a value to a number. That is tier 1 of three. At 03:18 you meet tier 3, a second model that judges, and you watch it read the same attacker-written field the agent read. Then you price the tiers in milliseconds, and decide which checks may run in-band and which out-of-band.</p>
-  <p>Then the round. <strong>Red-teaming</strong> means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
+  <p><strong>Two parts.</strong> First, at 03:18, the different kinds of checker and what each costs. Then, at 03:31, an attack on the guardrails you built this morning.</p>
+  <p><strong>The kinds of checker, in three tiers.</strong> Every check you wrote today is plain code comparing a value with a number: in <span class="mono">src/agent.py</span>, <span class="mono">amount &gt; 1200</span>. That is <strong>tier 1, deterministic rules</strong>: fast and predictable. <strong>Tier 2</strong> is a small trained classifier, used for fuzzy questions such as "does this text look like an attack?". <strong>Tier 3</strong> is a model asked to judge, such as Llama Guard or a general model with a judging prompt. Each tier is slower and less predictable than the one before, and can handle harder questions.</p>
+  <p><strong>In-band or out-of-band.</strong> An in-band check runs before the action, and the action waits for it. An out-of-band check runs beside the action, and nobody waits, so you need a way to undo the action if the check fails. You will decide which of your checks can be which.</p>
+  <p><strong>Then the round.</strong> <strong>Red-teaming</strong> means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
   <p><strong>What this topic is not.</strong> It is not an argument that models are unreliable. It is not a defence against text an attacker writes into a ticket, which is week 4. And it is not a measurement of whether a model checker is any good, which is week 3.</p>`,
       script: `
   <p><strong>03:18 answers the question a room of eight always asks</strong>, usually while writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
@@ -2236,11 +2670,12 @@ The judge allows it.</span></div>
     <div class="reveal">
       <p><strong>The judge read the same field the agent read.</strong> It is not a second opinion. It is the same opinion with a different prompt.</p>
       <p style="font-size:var(--size-4)"><strong>Two models reading one attacker-written field are one control, not two.</strong></p>
-      <p>Now run ticket #8812 again. Same text, same judge. You may get a different verdict. <strong>A guard with a pass rate rather than a behaviour is a guard you cannot write a runbook for.</strong></p>
+      <p>Now run ticket #8812 again. Same text, same judge. You may get a different verdict. <strong>If the same ticket can get a different answer each time, you cannot say in advance what the check will do.</strong> A runbook, the written instructions for the engineer on call, needs a check that behaves the same way every time. A check that says yes on one run and no on the next is a probability, not a guardrail you can operate.</p>
       <p>The control is a deterministic ceiling underneath the judge. A model may widen what gets through a hard limit. It may never be the limit.</p>
     </div>
   </details>
   <h4>Layered defence: the tiered gateway pattern</h4>
+  <p><strong>The idea first.</strong> Put several checks in a row, from cheapest to most expensive, like security at an airport. A fast rule handles the clear cases, and most requests stop there. Only what the rule cannot decide goes on to a small classifier. Only what the classifier cannot decide goes on to a model that judges. You get wide coverage, and most requests pay only the cost of the cheapest check. The table below shows the three tiers.</p>
   <p>Predict first, alone, in writing. Your timer from 00:54 gave you a number for one check. <strong>How many times slower is a model asked the same question?</strong> Write a multiple, then read on.</p>
   <div class="tw">
     <table>
@@ -2254,12 +2689,41 @@ The judge allows it.</span></div>
   </div>
   <p>Those are ranges the field quotes, not a benchmark of your system. <strong>Your own timer is the number that counts.</strong> The answer most rooms reach: a model judge costs something like a thousand times your ceiling check, and it can still be argued with.</p>
   <p><strong>Run the tiers as a cascade.</strong> Tier 1 first, and most requests stop there. Tier 2 only for what tier 1 cannot state. Tier 3 only for what is left. That keeps the latency low and the coverage wide, and the cost of the day is set by how much traffic reaches tier 3.</p>
+  <h4>What tier 3 looks like in code</h4>
+  <p>A sketch of a specialised guardrail model, Llama Guard, used as a checker. It reads a conversation and answers "safe", or "unsafe" with a category code. It runs on a GPU you host.</p>
+  <pre>from transformers import AutoTokenizer, AutoModelForCausalLM
+name = "meta-llama/Llama-Guard-3-8B"
+tok = AutoTokenizer.from_pretrained(name)
+model = AutoModelForCausalLM.from_pretrained(name)
+
+def tier3(ticket_text):
+    chat = [{"role": "user", "content": ticket_text}]
+    ids = tok.apply_chat_template(chat, return_tensors="pt")
+    out = model.generate(ids, max_new_tokens=10)
+    verdict = tok.decode(out[0][ids.shape[-1]:], skip_special_tokens=True)
+    return verdict.strip()          # "safe", or "unsafe" and a code such as "S2"
+
+def check(credit, ticket_text):
+    if credit["amount"] &gt; 1200:    # tier 1: a rule, well under 1 ms
+        return "refuse"
+    if tier3(ticket_text) != "safe":  # tier 3: hundreds of ms
+        return "send to a person"
+    return "allow"</pre>
+  <p><strong>Notice the order.</strong> The ceiling runs first and cannot be argued with. The model only gets a say on what the rule already allowed, so it can make the guard stricter, never looser.</p>
   <h4>In-band or out-of-band: the latency tax</h4>
   <p><strong>In-band, or synchronous blocking:</strong> every request passes through the checks, often in a proxy or a sidecar, before anything happens. No unchecked output reaches a person or a tool. Every request pays a <strong>latency tax</strong>, commonly quoted as 50 to 300 ms depending on the checks.</p>
   <p><strong>Out-of-band, or asynchronous:</strong> the reply streams to the person while the checks run beside it. Nobody waits. When a check fails mid-stream, you need a fast way to take the reply back: close the stream, or run a compensating action that undoes what was done.</p>
   <p>So the choice follows the undo question from 00:48. <strong>A payment cannot be taken back, so its checks are in-band, whatever the tax.</strong> A chat reply can be stopped mid-stream, so a slow judge on it can run out-of-band.</p>
   <h4>Latency budgeting</h4>
   <p>Give each endpoint a written budget for guardrail time. For example: <em>no more than 150 ms of checks on an interactive reply</em>. A tier 3 judge alone does not fit inside that, so it goes out-of-band or onto a sample. The budget turns "is this check worth it?" into arithmetic somebody can review.</p>
+  <h4>Engineering trade-offs and operations</h4>
+  <p>Running guardrails in production is a set of trade-offs. Four of them, with where today covers each:</p>
+  <ul>
+    <li><strong>Latency budgeting.</strong> Every check adds time. Write a budget per endpoint, such as 150 ms of checks on a chat reply, and keep slow model judges out of the fast path. Covered above.</li>
+    <li><strong>False-positive rates.</strong> A check that refuses too much drives people around it. Track precision and recall on refusals, and run a changed check in shadow mode before it blocks anyone. Topic 2, 02:24.</li>
+    <li><strong>Observability and audit trails.</strong> Count every allow and refusal per rule, and record why each refusal happened and which rule fired, without copying personal data into the log. Topic 1's counters and topic 2's decision log, 01:51.</li>
+    <li><strong>Operating the rules.</strong> Version the policy file, give every number an owner, alert when a refusal rate changes sharply, and keep a runbook for the engineer on call. The teardown at 04:15 asks who owns each number.</li>
+  </ul>
   <h4>The order to choose in</h4>
   <p>Five lines, in order. Stop at the first one that applies.</p>
   <div class="tw">
@@ -2293,7 +2757,7 @@ The judge allows it.</span></div>
       </tbody>
     </table>
   </div>
-  <p><strong>The strongest member of the model family is the one nobody names.</strong> Do not ask a model whether an answer is reasonable. Ask whether it matches what the tool returned. The truth is then outside the model, and the check degrades to a comparison rather than an opinion. You have already seen the case for it: at 00:23 the agent closed a ticket claiming it issued a credit while the ledger said ₹0, and nothing noticed.</p>
+  <p><strong>Prefer a comparison to an opinion.</strong> Do not ask a model "is this answer reasonable?". Compare the claim with what the tool actually returned. <strong>Where both are structured values, that comparison is a plain rule, not a model:</strong> the agent's record says it credited ₹5,000, the ledger says ₹0, so refuse to close the ticket. You saw exactly that at 00:23, and one line of code catches it. A model is needed only when the claim is free text, such as the closing message "I have refunded your ₹5,000". Then a model pulls out the amount, and a rule still does the comparison.</p>
   <p>Whether a model's judgment is any good is a measurement rather than an opinion, and it needs a labelled set and an agreement rate. <strong>Week 3</strong> builds that. A second agent, with its own loop, approving the first is a different question again. <strong>Week 5.</strong></p>`,
         script: `
     <p>Put the case on screen and <strong>say nothing else</strong>. The standing two questions, in writing, before any discussion.</p>
@@ -2370,49 +2834,101 @@ The judge allows it.</span></div>
   <h4>Latency budgeting</h4>
   <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at 04:15 asks for one.</p>
   <h4>The order to choose in</h4>
-  <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>` },
+  <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>
+  <h4>What tier 3 looks like in code</h4>
+  <p>A Llama Guard sketch on the learner page, with a two-tier <span class="mono">check()</span> where the ceiling runs first. The point to land: the model can only tighten what the rule allowed.</p>
+  <h4>Engineering trade-offs and operations</h4>
+  <p>Reading on the learner page: latency budgeting, false-positive rates, observability and audit, operating the rules. Each one points at where today covers it. Do not teach it; point at it.</p>
+  <p class="quiet">The learner page now says plainly that comparing a claim with a tool result is a rule-based check when both are structured values. A model is needed only to pull a claim out of free text.</p>` },
       },
       {
         at: '03:31', part: 'lab',
         title: "Hands-on lab: the adversary round",
         mode: "pairs, assigned by name · 30 minutes",
         learner: `
-  <p>You have built three controls today and broken each one yourself. Now somebody who did not build them gets a turn. This is where your answer to 00:42 is actually tested.</p>
-  <p>Paste two things into chat: your policy file, and your patch to the dispatch. Your assigned pair does the same.</p>
-  <p><strong>Your target: get ₹5,000 out of the other pair's system.</strong> You may add a caller, add a tool, repeat a ticket, sit on a boundary value, or write anything you like into the ticket text. You may not edit their code.</p>
+  <p>You have built three controls today and broken each one yourself. Now somebody who did not build them gets a turn. This is where your answer to 00:42, where should a control stand, is actually tested.</p>
+  <h4>Today's three controls, and how each one broke</h4>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Control</th><th>What it does</th><th>How it broke today</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · The limit</strong>, topic 1</td><td>Refuses a credit above ₹1,200, read from <span class="mono">data/my-policy.json</span></td><td>A second tool skipped it at 01:12, and a "complete" policy row let ₹5,000 through at 01:25</td></tr>
+        <tr><td><strong>2 · The approval step</strong>, topic 2</td><td>Sends a credit above the limit to a person</td><td>During the break nobody answered, and your code did whatever it did by default</td></tr>
+        <tr><td><strong>3 · Pay once</strong>, topic 3</td><td>Refuses a credit for a dispute already paid</td><td>Held only in memory, it paid again from a second terminal at 02:55</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h4>The rules of the round</h4>
+  <ul>
+    <li><strong>Your target:</strong> get ₹5,000 out of the other pair's system.</li>
+    <li><strong>You may</strong> add a caller, add a tool, repeat a ticket, use a boundary value, or write anything into the ticket text.</li>
+    <li><strong>You may not</strong> edit their code. You run it, unchanged, on your machine.</li>
+  </ul>
   <div class="builds">
     <div class="build">
+      <h3>Before you start: run their code. Three minutes, with the rules.</h3>
+      <p>Each pair pastes two things into chat: their policy file and their changes to <span class="mono">src/agent.py</span> (<span class="mono">git diff &gt; ours.patch</span>). To attack them, keep your own work safe and load theirs:</p>
+      <pre>git stash                       # put your own changes aside
+git apply their.patch           # their agent.py changes
+cp their-policy.json data/my-policy.json
+rm -f data/paid.db              # start with an empty paid table</pre>
+      <p class="check">03:31 to 03:34. Run <span class="mono">git stash pop</span> afterwards to get your work back</p>
+    </div>
+    <div class="build">
       <h3>Decide first. One minute, in writing.</h3>
-      <p>Read the other pair's policy file and dispatch patch. Write down the one route you will try first, and why you expect it to work.</p>
-      <p class="check">03:31 to 03:34, with the rules</p>
+      <p>Read their policy file and their changes. Write down the one route you will try first, and why you expect it to work.</p>
     </div>
     <div class="build">
       <h3>Build the attack. Ten minutes.</h3>
-      <p>Add the caller, the tool, the repeated ticket or the boundary value. Run it against their system, not yours.</p>
+      <p>Save this as <span class="mono">attack.py</span> in the repository root. It replaces the model with a script that asks for exactly the tool calls you choose, so you test their checks rather than the model.</p>
+      <pre>from src.agent import run
+from src.trace import Trace
+from src import tools
+
+class Script:                       # a fake model: returns your steps in order
+    def __init__(self, steps): self.steps = list(steps)
+    def next_action(self, state):
+        return self.steps.pop(0) if self.steps else {"action": "resolve", "args": {}}
+
+def attack(steps, ticket_id="9999", account_id="9999"):
+    tools.LEDGER.clear()
+    run({"id": ticket_id, "account_id": account_id, "summary": "attack"},
+        Script(steps), Trace())
+    paid = sum(float(c["amount"]) for c in tools.LEDGER)
+    print(f"ticket {ticket_id}: paid out Rs {paid:,.0f}")
+    return paid
+
+credit = lambda acct, amt: {"action": "issue_credit",
+                            "args": {"account_id": acct, "amount": amt}}
+
+# Route 3: five credits under the ceiling, one per ticket, to a real account
+total = sum(attack([credit("4471", 1000)], ticket_id=f"t{n}", account_id="4471")
+            for n in range(5))
+print("route 3 total:", total)</pre>
+      <p>Then try the other routes the same way. For example, add a tool and a policy row for it, or call <span class="mono">tools.issue_credit("9999", 5000)</span> directly without going through the agent.</p>
       <p class="check">03:34 to 03:44</p>
     </div>
     <div class="build">
       <h3>Check: did money move? Four minutes.</h3>
-      <p>Read their ledger, not their trace. Then write the finding.</p>
+      <p>Read the ledger total the script prints, not the trace. Then write the finding in one line: <strong>which control you got past, and which of the nine control points from 00:42 would have stopped you.</strong> Name the control point, not the person.</p>
       <p class="check">03:44 to 03:48, then the report-out to 03:58</p>
     </div>
   </div>
-  <p>The finding is one line: <strong>which control you got past, and which of the nine control points from 00:42 would have stopped you.</strong> Name the control point, not the person.</p>
-  <p><strong>Most systems in this room will pay out, and that is the expected result.</strong> Eight people built the same three controls in the same ninety minutes from the same repository. That is what a guard looks like before anybody has attacked it.</p>
+  <p><strong>Most systems in this room will pay out, and that is the expected result.</strong> Everyone built the same three controls in the same ninety minutes from the same repository. That is what a guard looks like before anybody has attacked it.</p>
   <details>
-    <summary>Read this only after your ten minutes are up</summary>
+    <summary>Show the six known routes (open after your ten minutes of attacking)</summary>
     <div class="reveal">
-      <h4>The six routes</h4>
+      <p>These are the six ways past today's controls that rooms usually find. They are hidden until you have tried, because finding a route yourself is the point of the round. Each one says which control it gets past.</p>
       <ol>
-        <li><strong>A second caller.</strong> A new tool with no policy row is refused, so write one. The row does not say the account must exist. That is 01:25 used as a weapon.</li>
-        <li><strong>A caller outside the agent.</strong> Anything that writes to the ledger without going through the dispatch. That is 01:30, proved from the attacking side.</li>
-        <li><strong>Two credits under the ceiling.</strong> ₹1,200 four times is ₹4,800 and no single call is over the limit.</li>
-        <li><strong>The same ticket from a second process</strong>, against anybody who has not reached the fix at 03:03.</li>
-        <li><strong>The approval path.</strong> Submit, then approve it yourself.</li>
-        <li><strong>The ticket text.</strong> It works, and it is week 4.</li>
+        <li><strong>A second tool with a policy row.</strong> A tool with no row is refused, so write a row for it. If the row does not require the account to exist, ₹5,000 goes to account 9999. It gets past a limit that kept the account check in the row (01:25).</li>
+        <li><strong>A caller outside the agent.</strong> Call <span class="mono">tools.issue_credit("9999", 5000)</span> directly. A check at the dispatch never sees it. It gets past a control placed in the agent instead of at the ledger (01:30).</li>
+        <li><strong>Several credits under the ceiling.</strong> Five credits of ₹1,000, each on its own ticket. No single call is over ₹1,200, and each ticket has its own key. No control built today counts a total per account per day.</li>
+        <li><strong>The same ticket from a second process</strong>, against a pair whose paid list is still in memory (02:55).</li>
+        <li><strong>The approval path.</strong> Raise an approval request, then approve it as <span class="mono">agent</span>. It works against anyone who skipped the requester check at 01:51.</li>
+        <li><strong>Instructions in the ticket text.</strong> This needs a real model, and it works.</li>
       </ol>
-      <p>Route 3 is the one worth the most time. Nothing built today defends against it, and almost nobody expects that. A ceiling is per call. What you care about is per account, per day, and no control you wrote has that shape.</p>
-      <p><strong>If your attack was route 6, you have found week 1's injection two weeks early.</strong> Do not patch the prompt tonight. The answer you will reach for is a line in the system prompt telling the model to ignore instructions in ticket text. That is the wrong shape of answer, and week 4 will break it live. Bring what you found.</p>
+      <p><strong>Route 3 is the one worth the most time.</strong> A ceiling is per call. The risk is per account per day, and no control you wrote has that shape.</p>
+      <p><strong>About route 6.</strong> In week 1 you watched an account note make the agent pay ₹2,50,000. That is prompt injection: text the agent reads gets treated as an instruction. If your attack today worked by writing instructions into the ticket, you found the same weakness again. None of today's guardrails is designed to stop it; week 4 is. Do not try to fix it tonight by adding "ignore instructions in the ticket" to the prompt. That is the most common fix, and week 4 shows it failing. Bring what you found instead.</p>
     </div>
   </details>
   <h4>Open the predictions</h4>
@@ -2433,6 +2949,13 @@ system I am about to build? Yes or no, and by which route.</span></div>
     <p><strong>Say, before they start, that most systems in this room will pay out.</strong> This is the single most important decision in the segment. Without that sentence it reads as a test somebody fails in public. With it, it reads as what a guard looks like before anybody has attacked it.</p>
     <p>Circulate during the attack. You are looking for the stuck pair, not the winning one. A stuck pair has almost always gone for the ticket text, which is week 4 and will not be stopped by anything built today. Point them at boundary values and second callers.</p>`,
         ref: { id: 't4-r-adversary', pairs: "&#8596; 03:31 · the adversary round", html: `
+  <h4>Today's three controls, and how each one broke</h4>
+  <p>On the learner page as a table, so pairs know what they are attacking: the limit, the approval step, pay once, each with the failure the room already saw.</p>
+  <h4>Before you start: run their code. Three minutes, with the rules</h4>
+  <p>The setup step on the learner page: <span class="mono">git stash</span>, <span class="mono">git apply their.patch</span>, copy their policy file, clear <span class="mono">data/paid.db</span>.</p>
+  <h4>The rules of the round</h4>
+  <p>Target ₹5,000; add callers, tools, repeated tickets, boundary values or ticket text; never edit their code. Pairs swap a patch and a policy file and run them locally, and the learner page gives the exact git commands and an <span class="mono">attack.py</span> harness that replaces the model with a scripted list of tool calls. <strong>Remind them to run <span class="mono">git stash pop</span> afterwards.</strong></p>
+
   <h4 class="quiet" style="font-weight:700">Six routes exist. Expect four in a room of eight.</h4>
   <details>
     <summary><span class="chev">›</span> The six routes</summary>
@@ -2452,7 +2975,7 @@ system I am about to build? Yes or no, and by which route.</span></div>
     <summary><span class="chev">›</span> The wrong answer, and the injection sentence</summary>
     <div class="dbody">
       <p><strong>"We could not get in, so their guard is fine."</strong> What is right: they tried. What is wrong: ten minutes of two people is not evidence. Ask what they did not try, and the honest answer is usually routes 3 and 5.</p>
-      <p><strong>Then the sentence that must be said, and do not soften it.</strong> If your attack was a line in the ticket text, you have found week 1's injection two weeks early. Do not patch the prompt tonight. The answer you will reach for is a line in the system prompt telling the model to ignore instructions in ticket text. That is the wrong shape of answer, and week 4 will break it live.</p>
+      <p><strong>Then the sentence that must be said, and do not soften it.</strong> In week 1 an account note made the agent pay ₹2,50,000. If an attack today worked by writing instructions into the ticket text, it is the same weakness found again: prompt injection. None of today's guardrails is built to stop it, and week 4 is. Do not patch the prompt tonight. The fix most people reach for is a line telling the model to ignore instructions in ticket text, and week 4 shows it failing.</p>
       <p>Naming the date is what stops it festering. Week 4 opens by asking who tried anyway, so a room that tried is a better week 4.</p>
     </div>
   </details>
@@ -2516,9 +3039,25 @@ system I am about to build? Yes or no, and by which route.</span></div>
         },
       ],
       learner: `
-  <p><strong>Every finding needs a regression case.</strong> A bypass fixed with no test behind it survives exactly one deploy. That is why the after-work asks you to write one case per bypass, and why week 4 asks for them.</p>`,
+  <p><strong>Every finding needs a regression case.</strong> A bypass fixed with no test behind it survives exactly one deploy. That is why the after-work asks you to write one case per bypass, and why week 4 asks for them.</p>
+  <h4>A sample setup</h4>
+  <p>A sketch of a promptfoo red-team configuration for the dispute agent, assuming it is served over HTTP. Check the tool's current documentation before you run it, because plugin names change between versions.</p>
+  <pre># promptfooconfig.yaml
+targets:
+  - id: http
+    config:
+      url: http://localhost:8000/chat
+redteam:
+  purpose: "Billing dispute agent. It may issue credits of up to Rs 1,200 per dispute."
+  plugins: [excessive-agency, hijacking, pii]
+  strategies: [jailbreak, prompt-injection]
+
+# then:  npx promptfoo@latest redteam run</pre>
+  <p>A scanner like this generates attacks on the text. Your <span class="mono">attack.py</span> from 03:31 is the other half: it tests the business rules no scanner knows, such as five credits under the ceiling.</p>`,
       script: `
-  <p><strong>Reading, not a segment.</strong> The one sentence worth saying if asked: a scanner finds text that fools a model, and only somebody who knows the ceiling finds four credits under it.</p>`,
+  <p><strong>Reading, not a segment.</strong> The one sentence worth saying if asked: a scanner finds text that fools a model, and only somebody who knows the ceiling finds four credits under it.</p>
+  <h4>A sample setup</h4>
+  <p>A promptfoo configuration sketch on the learner page, labelled as needing a check against current documentation. Pair it with the 03:31 <span class="mono">attack.py</span>: the scanner tests text, the script tests business rules.</p>`,
     },
     topicQuiz: {
       at: '04:01',
@@ -3090,7 +3629,8 @@ export const close = {
 export const prep = `<p>Every item names the action, the file, the size, the test that says it is done, and what breaks in the room if it is not. Three groups, in the order to work through them. The same list is in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>, which is the source.</p>
 <article class="card" id="prep-blocking">
   <h3>Build these, or cut the segment and say so</h3>
-  <h4>1 · <code>make w2-paid-once</code>, for 03:03</h4>
+  <h4>1 · <code>make w2-paid-once</code>, for 03:03 · now optional</h4>
+  <p><strong>Learners build the paid table themselves at 03:03</strong>, from the code on their page. This target is only for your own demo if a learner's build fails.</p>
   <ul>
     <li><strong>Do this.</strong> Add a file-backed <code>paid</code> table to the reference agent. The idempotency key is the primary key. The write is <code>INSERT OR IGNORE</code>.</li>
     <li><strong>Where.</strong> A new <code>src/store.py</code>, called from <code>src/guarded.py</code>, with its own make target. It changes nothing an earlier week prints.</li>
@@ -3101,8 +3641,8 @@ export const prep = `<p>Every item names the action, the file, the size, the tes
   <hr class="hair">
   <h4>2 · Three prepared queue states, for 02:24</h4>
   <ul>
-    <li><strong>Do this.</strong> Write three small files, one per outcome the break produces: approved by somebody, timed out and took the default, still pending.</li>
-    <li><strong>Where.</strong> <code>fixtures/w2-queue/approved.json</code>, <code>timed-out.json</code> and <code>pending.json</code> in the reference agent.</li>
+    <li><strong>Do this.</strong> Write three small queue files in the format of the lab's <code>data/approvals.jsonl</code>, one per outcome the break produces: approved by somebody, timed out and took the default, still pending.</li>
+    <li><strong>Where.</strong> <code>fixtures/w2-queue/approved.jsonl</code>, <code>timed-out.jsonl</code> and <code>pending.jsonl</code> in the reference agent, or pasted into chat on the day.</li>
     <li><strong>Size.</strong> Three files, about ten lines each.</li>
     <li><strong>Done when.</strong> Somebody whose gate does not run can load one file and read their own 02:24 read-back off it.</li>
     <li><strong>If it is missing.</strong> Anybody whose build broke at 01:51 loses the 02:24 read-back. Six minutes, and the best six in the session.</li>

@@ -27,6 +27,14 @@ Nothing in this directory is imported, rendered, or deployed.
                        instructor page, on one clock. Paste it into a session
                        with the week number filled in. Change it when a rule it
                        quotes changes
+    cross-week-references.md
+                       every promise one week makes about another ("week 4
+                       owns this", a verbatim quote of week 1), and whether
+                       that week keeps it. Read the rows that point at a week
+                       before rewriting it
+    reviews/<week>-review-<date>.md
+                       the response to a review, comment by comment: what
+                       changed, where, or why not
 
 The files here are the source. The teaching surface built from them is a
 published Artifact, where each problem carries its solution behind a click, so a
