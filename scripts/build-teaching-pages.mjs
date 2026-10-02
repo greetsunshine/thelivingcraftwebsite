@@ -161,7 +161,7 @@ const learnerScale = (t) => (t.atScale ? `<section class="card">
   ${t.atScale.learner ?? ''}
 </section>` : '');
 
-const learnerQuiz = (t) => (t.topicQuiz ? `<section class="card">
+const learnerQuiz = (t) => (t.topicQuiz ? `<section class="card"${segId(t.topicQuiz.at)}>
   <span class="step-label">${claim(t.topicQuiz.at)} &#183; ${esc(t.topicQuiz.mode ?? 'alone, in writing')}</span>
   <h2>${esc(t.topicQuiz.title)}</h2>
   <p>${t.topicQuiz.lede ?? ''}</p>
@@ -180,11 +180,42 @@ const learnerTakeaway = (t) => (t.takeaway ? `<section class="card">
 </section>` : '');
 
 /** A beat as a learner card. Topics and the close both use it. */
-const learnerBeat = (b) => `<section class="card">
+const TOC = C.week.toc === true;
+const segId = (at) => (TOC && at ? ` id="s-${at.replace(':', '')}"` : '');
+
+const learnerBeat = (b) => `<section class="card"${segId(b.at)}>
   <span class="step-label">${partOf(b)}${claim(b.at) ? `${b.at} &#183; ` : ''}${esc(b.mode)}</span>
   <h2>${esc(b.title)}</h2>
   ${b.learner}
 </section>`;
+
+/**
+ * The contents card: the day's blocks, the topics inside them, and every
+ * segment with its time. Opt-in with `week.toc = true`. Each line links to the
+ * segment's id; the page script opens the collapsible that holds it.
+ */
+const tocHtml = () => {
+  if (!TOC) return '';
+  const seg = (at, title) => `<li><a href="#s-${at.replace(':', '')}"><span class="mono">${at}</span> ${esc(title)}</a></li>`;
+  const topicSegs = (t) => [
+    ...t.beats.map((b) => seg(b.at, b.title)),
+    ...(t.topicQuiz ? [seg(t.topicQuiz.at, t.topicQuiz.title)] : []),
+  ].join('\n        ');
+  const blocks = [
+    `    <li><strong>Opening</strong> &#183; ${esc(C.toc?.opening ?? '00:00 to 00:15')}</li>`,
+    ...C.topics.map((t) => `    <li><a href="#${t.id}"><strong>Topic ${t.n} &#183; ${esc(t.label)}</strong></a> &#183; ${esc(t.when)}
+      <ol class="tocsegs">
+        ${topicSegs(t)}
+      </ol></li>`),
+    ...(C.closing ? [`    <li><strong>${esc(C.closing.label)}</strong> &#183; ${esc(C.closing.when)}
+      <ol class="tocsegs">
+        ${C.closing.beats.map((b) => seg(b.at, b.title)).join('\n        ')}
+      </ol></li>`] : []),
+  ];
+  return `<ol class="toc">
+${blocks.join('\n')}
+  </ol>`;
+};
 
 // ── the learner page ───────────────────────────────────────────────────────
 
@@ -294,7 +325,14 @@ ${clockFor([])}
   ${C.howToRead.learner}
 </section>
 
-${C.topics.map(learnerTopic).join('\n\n')}
+${TOC ? `<section class="card" id="contents">
+  <span class="step-label">Contents</span>
+  <h2>${esc(C.toc?.heading ?? 'Contents')}</h2>
+  <p>${C.toc?.lede ?? ''}</p>
+  ${tocHtml()}
+</section>
+
+` : ''}${C.topics.map(learnerTopic).join('\n\n')}
 
 ${C.closing ? `${learnerClosingHead}${closingBefore.map(learnerBeat).join('\n')}\n\n` : ''}<section class="card">
   <span class="step-label">Quiz &#183; ${W.quizAt}</span>
@@ -353,7 +391,7 @@ ${C.tools.map((t) => `        <tr><td>${esc(t.q)}</td><td><a href="${t.url}">${e
 
 /** A beat as a run-of-show row on the instructor page. */
 const instructorRow = (b) => `
-  <div class="beat"${b.ref ? ` data-ref="${b.ref.id}"` : ''}><span class="t">${b.at}</span><div class="b">
+  <div class="beat"${segId(b.at)}${b.ref ? ` data-ref="${b.ref.id}"` : ''}><span class="t">${b.at}</span><div class="b">
     <h4>${esc(b.title)}</h4>
     <span class="pairs">${partOf(b)}${esc(b.mode)}</span>
     ${b.script}
@@ -567,7 +605,13 @@ ${clockFor([])}
   ${C.prep}
 </div>
 
-${C.topics.map(instructorTopic).join('\n\n')}
+${TOC ? `<div class="head" id="contents">
+  <span class="k">the whole day, block by block</span>
+  <h2>${esc(C.toc?.heading ?? 'Contents')}</h2>
+  ${tocHtml()}
+</div>
+
+` : ''}${C.topics.map(instructorTopic).join('\n\n')}
 
 ${C.closing ? `<div class="head" id="closing">
   <span class="k">the close &#183; ${esc(C.closing.when)}</span>
@@ -623,9 +667,36 @@ ${C.tools.map((t) => `      <tr><td>${esc(t.q)}</td><td><a href="${t.url}">${esc
 
 // ── write, then report what the content claimed about the clock ─────────────
 
+// ── session times as clock times, opt-in ──────────────────────────────────
+//
+// With `week.wallClock = true`, every session offset on the page (00:00 to
+// 05:00) is wrapped in <span class="off" data-off="HH:MM">. The page script
+// rewrites those spans to the time of day once somebody enters the session's
+// start time. Text inside <script>, <style>, <svg>, <summary> and <title> is
+// left alone: a summary carries the topic's own "when", which the site reads
+// back with a regular expression.
+const wrapOffsets = (html) => {
+  let skip = 0;
+  return html
+    .split(/(<[^>]+>)/)
+    .map((part) => {
+      if (part.startsWith('<')) {
+        const m = part.match(/^<(\/?)(script|style|svg|summary|title)\b/i);
+        if (m && !part.endsWith('/>')) skip += m[1] ? -1 : 1;
+        return part;
+      }
+      if (skip > 0) return part;
+      return part.replace(/\b([0-4]\d|05):([0-5]\d)\b/g, (t, h, mm) =>
+        Number(h) * 60 + Number(mm) > 300 ? t : `<span class="off" data-off="${t}">${t}</span>`,
+      );
+    })
+    .join('');
+};
+const finish = (html) => (C.week.wallClock === true ? wrapOffsets(html) : html);
+
 mkdirSync('dist-teaching', { recursive: true });
-writeFileSync(`dist-teaching/week-${week}-learner.html`, learner);
-writeFileSync(`dist-teaching/week-${week}-instructor.html`, instructor);
+writeFileSync(`dist-teaching/week-${week}-learner.html`, finish(learner));
+writeFileSync(`dist-teaching/week-${week}-instructor.html`, finish(instructor));
 
 // The quiz section and the close are real rows on the clock, not exceptions to
 // it, so they claim their own times. Only when the clock has them: a week whose

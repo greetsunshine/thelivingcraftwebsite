@@ -54,6 +54,31 @@ too long.
 
 ---
 
+## What changed on 1 October, from the review sheet
+
+Sunil reviewed week 2 in a sheet of about 80 comments across 10 content blocks. The full
+comment-by-comment response, with what changed and where, is
+[`../reviews/week-2-review-2026-10-01.md`](../reviews/week-2-review-2026-10-01.md). Every
+changed section below opens with a **Changed 1 October** note. In short:
+
+- **Clarity.** Unclear sentences rewritten, terms defined where first used ("the check",
+  "call site", "resource of record", the four facts), and context added for week 1 and the
+  dispute agent.
+- **New learner material.** What guardrails are and what a limit is; input, output and
+  system guardrails with code; synchronous, asynchronous and layered checks; HITL best
+  practices; the tiered gateway with a Llama Guard sketch; engineering trade-offs; a wider
+  reading on idempotency; code on the enterprise cards.
+- **Labs rebuilt** with real file names, numbers and code that run against the published
+  reference agent, and a worked answer behind a click on every lab.
+- **Two page features.** A session start-time field in the clock bar: enter it and every
+  time on the page becomes the time of day, kept in the page address. And a contents card
+  listing the six blocks, four topics and every segment.
+- **No clock times changed.**
+- **A new file**, [`cross-week-references.md`](../cross-week-references.md), lists every promise
+  week 2 makes about another week and whether that week keeps it.
+
+---
+
 ## What to prepare, and by when
 
 The same eleven items are on the instructor page's *What to prepare* card, built
@@ -62,7 +87,7 @@ through them.
 
 ### Blocks the session. Build these, or cut the segment and say so.
 
-**1 · `make w2-paid-once`, for 03:03.** Topic 3's fix.
+**1 · `make w2-paid-once`, for 03:03 · now optional.** Learners build the paid table themselves from the code on their page, so this target is only for your own demo if a learner's build fails.
 
 - *Do this.* Add a file-backed `paid` table to the reference agent. The key is
   the primary key. The write is `INSERT OR IGNORE`.
@@ -76,9 +101,10 @@ through them.
 
 **2 · Three prepared queue states, for 02:24.** Topic 2's read-back.
 
-- *Do this.* Three small files, one per outcome: approved, timed out and took the
-  default, still pending.
-- *Where.* `fixtures/w2-queue/approved.json`, `timed-out.json`, `pending.json`.
+- *Do this.* Three small queue files in the format of the lab's `data/approvals.jsonl`,
+  one per outcome: approved, timed out and took the default, still pending.
+- *Where.* `fixtures/w2-queue/approved.jsonl`, `timed-out.jsonl`, `pending.jsonl`, or
+  pasted into chat on the day.
 - *Done when.* Somebody whose gate does not run can read their own 02:24
   read-back off one file.
 - *If it is missing.* Anybody whose build broke at 01:51 loses the best six
@@ -145,6 +171,8 @@ the row that looks complete. 03:09's checkpoint and the injection sentence at ab
 ---
 
 ## 00:00 · The night the money left
+
+**Changed 1 October, from the review sheet.** The learner opening now starts with what today is for (understanding and building guardrails) before ticket #9999. It introduces the dispute agent with a link to the reference agent, and recaps week 1 in three numbers. The five rating statements are labelled with their guardrail topic, and the page says where to rate: Session mode at `/craft/live`. "A score that drops is a good result" is rephrased as "if your second score is lower, today showed you a gap you had not seen".
 
 Tell it as a scene, not as a summary. Ticket #9999 arrives at 11:04 on a Tuesday
 night. The agent does the sensible thing and looks the account up first. The
@@ -236,6 +264,8 @@ them findable at 03:58.
 
 ## 00:15 · Two decision records on screen
 
+**Changed 1 October.** The learner card now says why a policy is needed before anything else, what the two records on screen are (two week 1 assignments, chosen and agreed before the day, preparation item 8), and that learners prepare nothing new. It runs as three numbered steps.
+
 Trimmed from ten minutes to eight. The cut is the board-building of all seven
 checks; take four, not seven, and move on.
 
@@ -302,6 +332,8 @@ line.
 
 ## 00:23 · The check, working
 
+**Changed 1 October.** The prompt now reads "what three facts must it contain, so that the engineer on call could act on it if this happened at 2am?", rather than assuming 2am.
+
 **Set it up.** The run is about to print a refusal and they have not seen it yet.
 
 **Say this, in these words.**
@@ -357,6 +389,8 @@ says where to go.
 
 ## 00:31 · Three properties, and your own control fails one
 
+**Changed 1 October.** The learner card says the three properties are the rubric for assessing any guardrail, a policy file included, and quotes pre-work item 6 word for word above the question.
+
 **It is the one instrument that carries the whole day**, and it is
 placed here rather than at 00:15 for a specific reason: the room has just judged
 a refusal message against three criteria without being given any. This segment
@@ -398,6 +432,8 @@ Which of those two is the incident?"
 ---
 
 ## 00:37 · The map, six kinds
+
+**Changed 1 October.** The learner card names these as six kinds of guardrail, defines "call site", rewrites the sentence about a wrong ₹5,000, adds a short code example for each of input, output and operational guardrails, and introduces synchronous, asynchronous and layered checks in plain words. The threat table carries the five risk vectors with their controls.
 
 It reads better after they have seen one control working than before they have
 seen anything.
@@ -494,6 +530,8 @@ authentication. Both are real, and neither is about money.
 
 ## 00:48 · What did the check have to know
 
+**Changed 1 October.** The learner card opens by saying what "the check" is: the policy check from 00:23, a few lines of Python that run before a tool is called.
+
 It sits immediately before the build it describes.
 
 **Say this, in these words.**
@@ -576,6 +614,8 @@ rule, working exactly as written.
 ---
 
 ## 00:54 · Hands-on lab: build the limit, and count what it does
+
+**Changed 1 October.** The lab now names every file and number. Learners create `data/my-policy.json` (three rows, ceiling `1200` = one month of the ₹1,200 Pro plan), put the ceiling check at the top of `issue_credit` in `src/tools.py` first, add two counters and a timer, and check by running tickets 9999 and 4471. The 01:09 read-out is folded into the last check step, done at 01:10. A worked answer sits behind a click on the learner page; that is where answers are published, and 01:10 and the topic quiz are where they are discussed.
 
 **A timer joined the lab on 30 September.** Two minutes: time the check on each call and print the milliseconds at the end of the run. Every learner needs their own number, because 03:18 compares it with a model. Do not supply the number.
 
@@ -681,6 +721,8 @@ public miss here costs you the rest of the topic.
 
 ## 01:12 · A second team pays without asking
 
+**Changed 1 October.** The learner card tells them to run `make w2-goodwill` to watch it.
+
 It is the first failure, because topic 1 is about placement and this is the
 placement argument.
 
@@ -725,6 +767,8 @@ the same answer most rooms give.
 
 ## 01:20 · Move it to the dispatch
 
+**Changed 1 October.** The learner card carries the code for the move into `src/agent.py`, and a check: rename the row and watch "has no policy row".
+
 Move the check to the dispatch, and move the counters with it. Circulate and
 look at one thing only: whether the counters came too. About a third of the room
 leaves them behind in the tool, which produces a guard at the dispatch and a
@@ -735,6 +779,8 @@ count of a code path nothing calls any more.
 ---
 
 ## 01:25 · The row looks complete, and it is not
+
+**Changed 1 October.** The learner card shows the goodwill row in JSON, walks it through the dispatch check, and shows the invariant fix in code.
 
 **Protect this segment.** It is what topic 1 exists for, and it is the first
 thing that gets cut when a block runs long.
@@ -785,6 +831,8 @@ configurable."
 ---
 
 ## 01:30 · The rule this cycle exists to land
+
+**Changed 1 October.** The learner card spells out what each move covered (inside the tool, at the dispatch, at the ledger), defines "resource of record", and shows a ledger database constraint as the example.
 
 **Without this segment the room leaves topic 1 believing the dispatch is the
 answer.** An earlier version of this session taught exactly that, by accident.
@@ -875,6 +923,8 @@ comes 84 minutes in, the longest stretch of the day, on purpose.
 
 ## 01:44 · It refuses ₹8,400 that is genuinely owed
 
+**Changed 1 October.** Rephrased on the learner card: "seven months of a billing error is still one honest customer", the ₹0 in week 1 sentence (now with its context), and the two phrases either side of human in the loop are named: human in command and human on the loop.
+
 It opens topic 2, seven minutes before the build it motivates.
 
 **Say this, in these words.**
@@ -947,6 +997,8 @@ not run this one there.
 ---
 
 ## 01:51 · Hands-on lab: build the gate, and the record
+
+**Changed 1 October.** The lab is designed in code. Learners add Meera's account and ticket 7310 to the agent's data (the published reference agent does not have them), change the over-ceiling branch to write a pending row to `data/approvals.jsonl` before asking, and write `src/approve.py`, which approves or refuses by id, refuses the requester as approver, applies a timeout default, and pays once. A worked answer is behind a click. The decision log card adds "Anonymised audit logging: the reason, not the person".
 
 Merges the old 02:35 gate lab with the old 00:52 decision-log segment. They were
 115 minutes apart and they are one thing: **a gate that worked leaves one field
@@ -1113,6 +1165,8 @@ nobody watching the queue, including you.
 
 ## 02:24 · What the break did
 
+**Changed 1 October.** "2:14am is one of six paths" is rewritten: six ways an approval request can end, and a common seventh named. A new list, "Best practices for human approval, from an architect's view", eight items. The tuning reading is renamed "Tuning false-positive rates".
+
 **The single most memorable six minutes in the session**, and it costs no
 teaching time because the break did the work.
 
@@ -1232,6 +1286,8 @@ absent is your policy.
 
 ## 02:34 · Hands-on lab: pay once, then watch your fix fail
 
+**Changed 1 October.** The topic opens on why idempotency belongs in a guardrails week, names the four facts in place, and rewrites the "real lesson" line. The lab carries code: a key from the dispute and a Python set in `src/agent.py`. The enterprise card adds code for Stripe, PostgreSQL and Powertools, best practices, a clearer "what these tools cannot decide for you", and a reading section on idempotency across a guardrailed system (repair loops, key injection, two-phase actions, approval de-duplication, stable masking, verdict caching, clean context, bounded repair loops). **The one tension to know:** a key hashed from session, step and arguments stops retries inside a session and does not stop a redelivered ticket, so for money the key is the dispute.
+
 The decide step is the real content.
 
 **Say this, in these words.**
@@ -1286,6 +1342,8 @@ at 03:03.**
 ---
 
 ## 03:03 · The fix that holds
+
+**Changed 1 October.** Learners build the fix: a `paid` table in `data/paid.db` with `INSERT OR IGNORE`, and a two-terminal check. The worked answer names the gap (the key is written before the payment) and points at the two-phase pattern. `make w2-paid-once` is therefore optional for your own demo.
 
 **The fix is built, not described.** Stopping at the false pass leaves the room with a demonstrated problem and no
 demonstrated answer, which is a bad place to spend a week.
@@ -1385,6 +1443,8 @@ block in the day, and a room that skipped the break attacks worse.
 
 ## 03:18 · Layered defence: the tiered gateway, and its latency tax
 
+**Changed 1 October.** The learner purpose card explains the tiers and in-band against out-of-band in plain words, and says which code and which number (`amount > 1200` in `src/agent.py`). The "pass rate rather than a behaviour" line is rewritten around the runbook. The tiered gateway idea is explained before its table. A Llama Guard sketch and a two-tier check show tier 3 in code. The grounded-verifier paragraph is corrected: comparing a claim with a tool result is a rule when both are structured values, and a model is needed only to pull the claim out of free text. A new "Engineering trade-offs and operations" section.
+
 **It is the narrative that opens red-teaming**, and it is the thing this room is
 most likely to go and build between sessions.
 
@@ -1469,6 +1529,8 @@ instinct answered from two sides. Running both is the same twenty minutes twice.
 ---
 
 ## 03:31 · Hands-on lab: the adversary round
+
+**Changed 1 October.** The lab is restructured: a table of today's three controls and how each broke, the rules as a list, git commands to run the other pair's code, an `attack.py` harness that replaces the model with scripted tool calls, and a clearer reveal of the six known routes. Route 6 is reworded: it is week 1's prompt injection found again, and week 4 builds the defence. The enterprise card adds a promptfoo configuration sketch.
 
 **The reason the rest of the day is compressed.** Everything
 before it is a control the room was shown how to break. This is the first one
@@ -1570,7 +1632,7 @@ of those were wrong."
 
 **Say this, in these words, and do not soften it.**
 
-> If your attack was a line in the ticket text, you have found week 1's injection two weeks early. Do not patch the prompt tonight. The answer you will reach for is a line in the system prompt telling the model to ignore instructions in ticket text. That is the wrong shape of answer, and week 4 will break it live. Bring what you found.
+> In week 1 an account note made the agent pay ₹2,50,000. If an attack today worked by writing instructions into the ticket text, it is the same weakness found again: prompt injection. None of today's guardrails is built to stop it, and week 4 is. Do not patch the prompt tonight. The fix most people reach for is a line telling the model to ignore instructions in ticket text, and week 4 shows it failing.
 
 This is the bridge-2 obligation and naming the date is what stops it festering.
 Week 4 opens by asking who tried anyway, so a room that tried is a better week 4.

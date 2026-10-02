@@ -19,6 +19,20 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Week 2 revised from Sunil's review sheet — 1 October
+
+About 80 comments, all answered in `docs/teaching/reviews/week-2-review-2026-10-01.md`.
+Merged to `main` and deployed on 2 October, still unreleased to learners. Clearer wording
+throughout, new learner material (what guardrails are, planes with code, sync/async/layered,
+HITL best practices, tiered gateway with a Llama Guard sketch, trade-offs, the idempotency
+reading), every lab rebuilt with real files and code against the published reference agent,
+a session start-time field that turns every time on the page into clock time (week 2 only,
+opt-in in the generator; topic pages carry it via `teaching-pages.ts`), and a contents card.
+New `docs/teaching/cross-week-references.md`. No clock times changed; all checks pass; weeks 1
+and 3 build byte-identical. `make w2-paid-once` is now optional: learners build the paid table.
+
+---
+
 ## Before PR #37 reaches `main` — 1 October
 
 A push to `main` deploys production, so these happen in this order:

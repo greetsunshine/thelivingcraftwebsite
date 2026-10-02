@@ -198,6 +198,17 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   summary{display:none}
   details{background:#fff;padding:0}
   details.topic>.topicbody{display:flex !important}}
+
+.sclock .startin{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-body);font-size:14px}
+.sclock .startin input{font:inherit;padding:4px 8px;border:1px solid #758279;border-radius:6px;background:#FBF8F2;color:#172E26}
+.sclock .startin button{font:inherit;padding:4px 10px;border:1px solid #758279;border-radius:6px;background:transparent;color:#172E26;cursor:pointer}
+.off{font-variant-numeric:tabular-nums}
+.off.wall{border-bottom:1px dotted #758279}
+ol.toc{margin:12px 0 0;padding-left:20px}
+ol.toc>li{margin:10px 0}
+ol.tocsegs{margin:6px 0 0;padding-left:18px;font-size:14px}
+ol.tocsegs li{margin:2px 0}
+ol.toc a{color:inherit}
 </style>
 </head>
 <body>
@@ -207,52 +218,55 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
 <header class="hero">
   <div class="mono">The Living Craft &#183; week 2 &#183; M2 &#183; instructor's copy</div>
   <h1>Guardrails</h1>
-  <p class="lead">All four topics on one page, each one collapsible, in clock order. The argument lives in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>. Both pages are generated from <span class="mono">scripts/teaching-content/week-2.mjs</span>, and the clock comes from <span class="mono">scripts/teaching-clock.mjs</span>.</p>
+  <p class="lead">All four topics on one page, each one collapsible, in clock order. The argument lives in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>. Both pages are generated from <span class="mono">scripts/teaching-content/week-2.mjs</span>, and the clock comes from <span class="mono">scripts/teaching-clock.mjs</span>. Enter the session start time in the clock bar and every time on the page becomes clock time.</p>
   <div class="facts">
     <div><span class="mono">Topics</span><span class="v">4</span></div>
     <div><span class="mono">Blocks</span><span class="v">6, including the opening and the close</span></div>
-    <div><span class="mono">Hands-on labs</span><span class="v">4, keyboards first at 00:54</span></div>
-    <div><span class="mono">Question bank</span><span class="v">22 items, 8 asked at 04:40</span></div>
-    <div><span class="mono">Longest run without a break</span><span class="v">84 minutes, 00:15 to 01:39</span></div>
+    <div><span class="mono">Hands-on labs</span><span class="v">4, keyboards first at <span class="off" data-off="00:54">00:54</span></span></div>
+    <div><span class="mono">Question bank</span><span class="v">22 items, 8 asked at <span class="off" data-off="04:40">04:40</span></span></div>
+    <div><span class="mono">Longest run without a break</span><span class="v">84 minutes, <span class="off" data-off="00:15">00:15</span> to <span class="off" data-off="01:39">01:39</span></span></div>
     <div><span class="mono">Session status</span><span class="v">ready, not yet taught</span></div>
   </div>
 </header>
 
 <div class="head" id="today">
-  <span class="k">the opening &#183; 00:00 to 00:15</span>
+  <span class="k">the opening &#183; <span class="off" data-off="00:00">00:00</span> to <span class="off" data-off="00:15">00:15</span></span>
   <h2>What today is for</h2>
   
-  <p><strong>Tell the opening as a scene, not as a summary.</strong> Ticket #9999, 11:04 on a Tuesday night, the account lookup says <span class="mono">found: False</span>, and one step later ₹5,000 leaves. Then the second one: a sentence in an account record, read as an instruction, ₹2,50,000 out.</p>
-  <p><strong>Then the turn: so you add a check, and that is the easy part.</strong> Say that anyone can add an <span class="mono">if</span> statement. Today is about where it sits, who agreed to the number inside it, and what the system does at 2am. Without that sentence the room decides this session is about validation, which it learned fifteen years ago, and you lose it by 00:35.</p>
-  <p>Say that five things will go wrong before 03:31 and that not one of them is the model failing. <strong>Do not say which five.</strong></p>
-  <h3>You will rate yourself on these five, twice</h3>
-  <p>00:05 and 04:55, the same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do.</p>
-  <p><strong>Expect high scores on 1 and 3 at 00:05, and say nothing about it.</strong> Almost everyone believes their limits are already in config and their payments already run once. Both beliefs meet a keyboard today. A score that drops at 04:55 is the result you want, and announcing it in advance spends it.</p>
-  <p><strong>Say that evaluation is not among the five, and name week 3.</strong> A participant who cannot find a topic assumes it is missing from the course rather than scheduled.</p>
-  <h3>One sealed prediction, at 00:10</h3>
-  <p>Ask it in these words: <em>by 04:00, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em> One line each in chat. <strong>Say that nobody will see the lines until 03:58.</strong> A prediction somebody expects to be read aloud is a prediction written for the room. Copy the lines somewhere you can put them on screen at 03:58.</p>
-  <p class="quiet">For anybody who finishes early, ask for a confidence as a percentage. It makes the confident-and-wrong group findable at 03:58 without naming anybody.</p>
-  <h3>Four topics, in the order they are taught</h3>
-  <p>Reading down either page follows the clock. Each topic has the six parts in the same order, and each ends on its own quiz and a written takeaway. The close from 04:05 is not a topic and sits after the four.</p>
+  <p><strong>Open on what today is for, then the ticket.</strong> One sentence first: today is about guardrails, understanding them, building three, and finding where each breaks. Then the scene: ticket #9999, 11:04 on a Tuesday night, the account lookup says <span class="mono">found: False</span>, and one step later ₹5,000 leaves.</p>
+  <h3>The agent you are working on</h3>
+  <p>The dispute agent, the reference agent at github.com/greetsunshine/reference-agent. The learner card names it and links it. Say it in one sentence: it reads a billing ticket, looks up the account, and issues a credit, hands over, or closes.</p>
+  <p><strong>Give the week 1 recap in three numbers, not a summary.</strong> ₹5,000 to an account that does not exist, ₹2,50,000 because an account note said so, ₹3,600 on a ₹1,200 refund. Then the question week 1 ended on: where is the limit written down, and who agreed to it?</p>
+  <h3>How today starts: ticket #9999</h3>
+  <p><strong>Then the turn: so you add a check, and that is the easy part.</strong> Today is about where it sits, who agreed to the number inside it, and what the system does if something goes wrong at 2am. Without that sentence the room decides this session is about validation, which it learned fifteen years ago, and you lose it by <span class="off" data-off="00:35">00:35</span>.</p>
+  <p>Say that five things will go wrong before <span class="off" data-off="03:31">03:31</span> and that not one of them is the model failing. <strong>Do not say which five.</strong></p>
+  <h3>Rate yourself on five statements, twice</h3>
+  <p><span class="off" data-off="00:05">00:05</span> and <span class="off" data-off="04:55">04:55</span>, in Session mode at <span class="mono">/craft/live</span>, the same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do. Each statement is labelled with its guardrail topic so the room can see what it is rating.</p>
+  <p><strong>Expect high scores on 1 and 3 at <span class="off" data-off="00:05">00:05</span>, and say nothing about it.</strong> A lower second score means somebody found a gap in their own system. Do not announce that in advance.</p>
+  <h3>One sealed prediction, at <span class="off" data-off="00:10">00:10</span></h3>
+  <p>Ask it in these words: <em>by <span class="off" data-off="04:00">04:00</span>, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em> One line each in chat. <strong>Say that nobody will see the lines until <span class="off" data-off="03:58">03:58</span>.</strong> Copy the lines somewhere you can put them on screen at <span class="off" data-off="03:58">03:58</span>.</p>
+  <p class="quiet">For anybody who finishes early, ask for a confidence as a percentage. It makes the confident-and-wrong group findable at <span class="off" data-off="03:58">03:58</span> without naming anybody.</p>
+  <h3>What guardrails are, and the topics today covers</h3>
+  <p>The learner page opens the day with this card and the contents. Point at both in ten seconds. The definition is given up front because the room expects it; the <span class="off" data-off="00:37">00:37</span> segment still asks them to sort the kinds before showing the map.</p>
 </div>
 
 <div class="head" id="agentnow">
   <span class="k">what this week adds to the agent &#183; every row is proved by running something</span>
   <h2>What the agent can do now</h2>
-  <p>What the dispute agent can do at 00:00 today, and what it can do at the close. Every row is proved by running something.</p>
+  <p>What the dispute agent can do at the start of today, and what it can do at the close. Every row is proved by running something. "Check" here always means a policy check: a few lines of Python in the agent that run before a tool is called and can refuse the call.</p>
   <div class="scroller"><table>
-    <thead><tr><th>Capability</th><th>At 00:00 today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
+    <thead><tr><th>Capability</th><th>At <span class="off" data-off="00:00">00:00</span> today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
     <tbody>
-      <tr><td>A limit outside the tool</td><td>make weird-mock pays ₹5,000 to account 9999, which does not exist</td><td>The same ticket is refused, and the refusal names the rule and data/policy.json</td><td class="mono">data/policy.json, src/policy.py</td><td class="mono">make w2-guarded</td></tr>
-      <tr><td>One check at the dispatch, with two counters</td><td>The check sits inside issue_credit. A second tool, apply_goodwill_credit, pays ₹5,000 past it</td><td>Every tool call passes one check. A tool with no policy row is refused, and guard_refused counts it by tool and rule</td><td class="mono">agent.py, before res = fn(**args)</td><td class="mono">make w2-goodwill shows the gap. Your own agent on the same ticket shows the refusal and the counter at 1</td></tr>
-      <tr><td>A measured cost for every check</td><td>Nobody knows how long a check takes</td><td>Each run prints the milliseconds its checks took, and 03:18 compares that with a model judge</td><td class="mono">agent.py, a timer around the check</td><td class="mono">Your agent on ticket 9999 prints the check time at the end of the run</td></tr>
-      <tr><td>A human approval gate, and a decision row</td><td>Over the ceiling means no. An honest ₹8,400 is refused and nobody is told</td><td>Over the ceiling means ask. The row is written before the ask, and decided_by names a person or the timeout</td><td class="mono">agent.py (the gate), your decision log</td><td class="mono">A ₹44,000 request with an 18-minute timeout, read back from your own queue at 02:24</td></tr>
-      <tr><td>Pay once, from any number of processes</td><td>make retry pays ₹1,200 three times</td><td>A second terminal on the same ticket is refused with "already paid"</td><td class="mono">src/store.py, a paid table with the key as its primary key</td><td class="mono">make w2-paid-once, from two terminals at once</td></tr>
+      <tr><td>A spending limit, kept in a file instead of in the code</td><td>make weird-mock pays ₹5,000 to account 9999, which does not exist</td><td>The same ticket is refused, and the refusal says which rule refused it and which file the rule is in</td><td class="mono">data/policy.json, src/policy.py</td><td class="mono">Run make w2-guarded. The trace prints REFUSED, the rule, and data/policy.json</td></tr>
+      <tr><td>Every tool call checked against the policy file, with a count of what was allowed and refused</td><td>The check sits inside one tool, issue_credit. A second tool written later, apply_goodwill_credit, pays ₹5,000 without being checked</td><td>The check runs once, before any tool is called, so a new tool is checked too. A tool with no row in the policy file is refused, and a counter records each refusal</td><td class="mono">agent.py, just before the line res = fn(**args)</td><td class="mono">Run make w2-goodwill to see the gap. Then run your own agent on ticket 9999: the refusal prints, and the refused counter reads 1</td></tr>
+      <tr><td>A measured cost for every check</td><td>Nobody knows how long a check takes</td><td>Each run prints how many milliseconds its checks took. At <span class="off" data-off="03:18">03:18</span> you compare that with asking a model</td><td class="mono">agent.py, a timer around the check</td><td class="mono">Run your own agent on ticket 9999. The check time prints at the end of the run</td></tr>
+      <tr><td>A human approval step for large credits, with a record of each decision</td><td>Any credit above ₹1,200 is refused outright, even when the customer is owed it. Meera is owed ₹8,400 and gets nothing, and nobody is told</td><td>Any credit above ₹1,200 is sent to a person to approve. The decision record is saved before the person is asked, so the request is not lost if the program stops while it waits. The record says whether the policy or a person decided</td><td class="mono">src/agent.py (asks instead of refusing), src/approve.py, data/approvals.jsonl</td><td class="mono">Run ticket 7310: it waits for approval. Approve it with src/approve.py and it pays ₹8,400 once. Before the break you also leave one ₹44,000 request with an 18-minute timeout, and read what happened to it at <span class="off" data-off="02:24">02:24</span></td></tr>
+      <tr><td>A payment that happens once, however many times the request arrives</td><td>make retry pays ₹1,200 three times for one refund</td><td>Run the same ticket from a second terminal and it is refused with "already paid"</td><td class="mono">src/agent.py, with a paid table in data/paid.db whose key is the dispute</td><td class="mono">Run python -m src.main --ticket 4471 --mock in two terminals. The second prints "already paid"</td></tr>
     </tbody>
   </table></div>
   
-  <p><strong>Two proofs need work in the reference agent before the day.</strong> <span class="mono">make w2-paid-once</span> does not exist yet; it is preparation item 1 and it blocks 03:03. The 02:24 read-back needs the three prepared queue states for anybody whose gate did not run; that is preparation item 2. <span class="mono">make w2-guarded</span>, <span class="mono">make w2-goodwill</span> and <span class="mono">make retry</span> exist and print what the table says.</p>
-  <p class="quiet"><span class="mono">make w2-goodwill</span> runs a fixed demo, not the learner's own dispatch. So the second row's proof is in two halves: the demo shows the gap, and the learner's own agent shows the fix.</p>
+  <p><strong>Learners now build every proof themselves</strong>, from the code on the learner page. <span class="mono">make w2-paid-once</span> would be a convenience for your own demo at <span class="off" data-off="03:03">03:03</span> and no longer blocks it (preparation item 1). The <span class="off" data-off="02:24">02:24</span> read-back still needs a prepared queue file for anybody whose approval step did not run (preparation item 2). <span class="mono">make w2-guarded</span>, <span class="mono">make w2-goodwill</span> and <span class="mono">make retry</span> exist and print what the table says.</p>
+  <p class="quiet"><span class="mono">make w2-goodwill</span> runs a fixed demo, not the learner's own agent. So the second row's proof is in two halves: the demo shows the gap, and the learner's own agent shows the fix.</p>
 </div>
 
 <nav class="rail" aria-label="Jump to a topic">
@@ -283,66 +297,67 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
 <section class="beats" id="clock">
   <h2>Five hours, six blocks</h2>
   
-  <p><strong>Six blocks, four labs, and a fixed close.</strong> Keyboards are live at 00:54. The adversary round at 03:31 is what the earlier blocks are compressed to pay for. The close from 04:05 is the one generation-prompt.md §5 sets for every week.</p>
-  <p><strong>The longest run without a break is 00:15 to 01:39, 84 minutes.</strong> It is deliberate: topic 1 has no seam that survives an interruption. Watch the room at about 01:15 and take two minutes if you need to.</p>
+  <p><strong>Six blocks, four labs, and a fixed close.</strong> Keyboards are live at <span class="off" data-off="00:54">00:54</span>. The adversary round at <span class="off" data-off="03:31">03:31</span> is what the earlier blocks are compressed to pay for. The close from <span class="off" data-off="04:05">04:05</span> is the one generation-prompt.md §5 sets for every week.</p>
+  <p><strong>Enter the start time in the clock bar</strong> before the session and every offset on this page becomes clock time. It is kept in the page address, so a reload keeps it and nothing is stored in the browser.</p>
+  <p><strong>The longest run without a break is <span class="off" data-off="00:15">00:15</span> to <span class="off" data-off="01:39">01:39</span>, 84 minutes.</strong> It is deliberate: topic 1 has no seam that survives an interruption. Watch the room at about <span class="off" data-off="01:15">01:15</span> and take two minutes if you need to.</p>
   <div class="scroller"><table id="clocktable">
 <thead>
   <tr><th>time</th><th>what happens</th><th>whose</th></tr>
 </thead>
 <tbody>
-  <tr class="quiet" style="color:#526259"><td>00:00</td><td>The night the money left</td><td>opening, shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:10</td><td>One sealed prediction</td><td>opening, shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:15</td><td>Two decision records on screen</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:23</td><td>The check, working</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:31</td><td>Three properties, and your own control fails one</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:37</td><td>The map, six kinds</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:42</td><td>Where a control can stand</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:48</td><td>What did the check have to know</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>00:54</td><td>Hands-on lab: build the limit, and count what it does</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:12</td><td>A second team pays without asking</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:20</td><td>Move it to the dispatch</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:25</td><td>The row looks complete, and it is not</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:30</td><td>The rule this cycle exists to land</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:35</td><td>Checkpoint 1</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:35</td><td>Topic 1 quiz and takeaway</td><td>topic 1</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:39</td><td>Short break, five minutes</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:44</td><td>It refuses ₹8,400 that is genuinely owed</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>01:51</td><td>Hands-on lab: build the gate, and the record</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:04</td><td>Set the timer</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:06</td><td>Checkpoint 2</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:09</td><td>Break, fifteen minutes</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:24</td><td>What the break did</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:30</td><td>Topic 2 quiz and takeaway</td><td>topic 2</td></tr>
-  <tr class="quiet" style="color:#526259"><td>02:34</td><td>Hands-on lab: pay once, then watch your fix fail</td><td>topic 3</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:03</td><td>The fix that holds</td><td>topic 3</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:09</td><td>Checkpoint 3</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:09</td><td>Topic 3 quiz and takeaway</td><td>topic 3</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:13</td><td>Short break, five minutes</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:18</td><td>Layered defence: the tiered gateway, and its latency tax</td><td>topic 4</td></tr>
-  <tr class="quiet" style="color:#526259"><td>03:31</td><td>Hands-on lab: the adversary round</td><td>topic 4</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:01</td><td>Topic 4 quiz and takeaway</td><td>topic 4</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:05</td><td>Recall: every control, and where its failure moved</td><td>close, shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:15</td><td>Architectural teardown: the agent at forty thousand a month</td><td>close, shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:40</td><td>Checkpoint 4</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:40</td><td>The quiz</td><td>shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:50</td><td>Takeaway, said out loud</td><td>close, shared</td></tr>
-  <tr class="quiet" style="color:#526259"><td>04:55</td><td>Close</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:00">00:00</span></td><td>The night the money left</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:10">00:10</span></td><td>One sealed prediction</td><td>opening, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:15">00:15</span></td><td>Two decision records on screen</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:23">00:23</span></td><td>The check, working</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:31">00:31</span></td><td>Three properties, and your own control fails one</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:37">00:37</span></td><td>The map, six kinds</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:42">00:42</span></td><td>Where a control can stand</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:48">00:48</span></td><td>What did the check have to know</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="00:54">00:54</span></td><td>Hands-on lab: build the limit, and count what it does</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:12">01:12</span></td><td>A second team pays without asking</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:20">01:20</span></td><td>Move it to the dispatch</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:25">01:25</span></td><td>The row looks complete, and it is not</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:30">01:30</span></td><td>The rule this cycle exists to land</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:35">01:35</span></td><td>Checkpoint 1</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:35">01:35</span></td><td>Topic 1 quiz and takeaway</td><td>topic 1</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:39">01:39</span></td><td>Short break, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:44">01:44</span></td><td>It refuses ₹8,400 that is genuinely owed</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="01:51">01:51</span></td><td>Hands-on lab: build the gate, and the record</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:04">02:04</span></td><td>Set the timer</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:06">02:06</span></td><td>Checkpoint 2</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:09">02:09</span></td><td>Break, fifteen minutes</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:24">02:24</span></td><td>What the break did</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:30">02:30</span></td><td>Topic 2 quiz and takeaway</td><td>topic 2</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="02:34">02:34</span></td><td>Hands-on lab: pay once, then watch your fix fail</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:03">03:03</span></td><td>The fix that holds</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:09">03:09</span></td><td>Checkpoint 3</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:09">03:09</span></td><td>Topic 3 quiz and takeaway</td><td>topic 3</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:13">03:13</span></td><td>Short break, five minutes</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:18">03:18</span></td><td>Layered defence: the tiered gateway, and its latency tax</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="03:31">03:31</span></td><td>Hands-on lab: the adversary round</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:01">04:01</span></td><td>Topic 4 quiz and takeaway</td><td>topic 4</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:05">04:05</span></td><td>Recall: every control, and where its failure moved</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:15">04:15</span></td><td>Architectural teardown: the agent at forty thousand a month</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:40">04:40</span></td><td>Checkpoint 4</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:40">04:40</span></td><td>The quiz</td><td>shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:50">04:50</span></td><td>Takeaway, said out loud</td><td>close, shared</td></tr>
+  <tr class="quiet" style="color:#526259"><td><span class="off" data-off="04:55">04:55</span></td><td>Close</td><td>shared</td></tr>
 </tbody>
   </table></div>
   <p><strong>This table is generated.</strong> Both pages carry it, so it lives in <span class="mono">scripts/teaching-clock.mjs</span> and nowhere else. Change a time there, rebuild with <span class="mono">node scripts/build-teaching-pages.mjs 2</span>, and run <span class="mono">npm run check:teaching</span>.</p>
   
   <p><strong>If you are running late, cut in this order.</strong></p>
   <ol>
-    <li><strong>01:20, moving the check.</strong> Five minutes. Tell them where it goes and let them do it after the session. They lose the practice, not the idea.</li>
-    <li><strong>Two minutes off the adversary round's report-out at 03:48.</strong> Four pairs at ninety seconds rather than two minutes.</li>
+    <li><strong><span class="off" data-off="01:20">01:20</span>, moving the check.</strong> Five minutes. Tell them where it goes and let them do it after the session. They lose the practice, not the idea.</li>
+    <li><strong>Two minutes off the adversary round's report-out at <span class="off" data-off="03:48">03:48</span>.</strong> Four pairs at ninety seconds rather than two minutes.</li>
     <li><strong>The teardown's fourth and fifth questions.</strong> Take them in the room as a show of hands rather than as pair answers. The keys are on the teardown card.</li>
   </ol>
   <p><strong>Never cut these, in this order of protection.</strong></p>
   <ol>
-    <li><strong>02:55, the second terminal.</strong> It is the week 3 handover and there is no substitute for watching it.</li>
-    <li><strong>01:25, the row that looks complete.</strong> It is what topic 1 exists for.</li>
-    <li><strong>03:09's checkpoint and the injection sentence at 04:00.</strong> Both are obligations to other weeks.</li>
-    <li><strong>The four topic quizzes and the 04:55 rating.</strong> The quizzes are the only retrieval inside each topic, and without the second rating the first one was pointless.</li>
+    <li><strong><span class="off" data-off="02:55">02:55</span>, the second terminal.</strong> It is the week 3 handover and there is no substitute for watching it.</li>
+    <li><strong><span class="off" data-off="01:25">01:25</span>, the row that looks complete.</strong> It is what topic 1 exists for.</li>
+    <li><strong><span class="off" data-off="03:09">03:09</span>'s checkpoint and the injection sentence at <span class="off" data-off="04:00">04:00</span>.</strong> Both are obligations to other weeks.</li>
+    <li><strong>The four topic quizzes and the <span class="off" data-off="04:55">04:55</span> rating.</strong> The quizzes are the only retrieval inside each topic, and without the second rating the first one was pointless.</li>
   </ol>
   <p><strong>If the adversary round overruns</strong>, take the time from the teardown's opening scene rather than from the report-out. The scene is four minutes of prose the learner page carries in full.</p>
 </section>
@@ -353,22 +368,23 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   <p>Every item names the action, the file, the size, the test that says it is done, and what breaks in the room if it is not. Three groups, in the order to work through them. The same list is in <span class="mono">docs/teaching/notes/week-2-guardrails.md</span>, which is the source.</p>
 <article class="card" id="prep-blocking">
   <h3>Build these, or cut the segment and say so</h3>
-  <h4>1 · <code>make w2-paid-once</code>, for 03:03</h4>
+  <h4>1 · <code>make w2-paid-once</code>, for <span class="off" data-off="03:03">03:03</span> · now optional</h4>
+  <p><strong>Learners build the paid table themselves at <span class="off" data-off="03:03">03:03</span></strong>, from the code on their page. This target is only for your own demo if a learner's build fails.</p>
   <ul>
     <li><strong>Do this.</strong> Add a file-backed <code>paid</code> table to the reference agent. The idempotency key is the primary key. The write is <code>INSERT OR IGNORE</code>.</li>
     <li><strong>Where.</strong> A new <code>src/store.py</code>, called from <code>src/guarded.py</code>, with its own make target. It changes nothing an earlier week prints.</li>
     <li><strong>Size.</strong> Standard library, about fifteen lines.</li>
     <li><strong>Done when.</strong> The same ticket from two terminals at once leaves one credit in the ledger, and the second terminal prints the row it found.</li>
-    <li><strong>If it is missing.</strong> 03:03 becomes a description instead of a build. Topic 3 then ends on a problem with no demonstrated answer, and the room leaves believing it has no fix.</li>
+    <li><strong>If it is missing.</strong> <span class="off" data-off="03:03">03:03</span> becomes a description instead of a build. Topic 3 then ends on a problem with no demonstrated answer, and the room leaves believing it has no fix.</li>
   </ul>
   <hr class="hair">
-  <h4>2 · Three prepared queue states, for 02:24</h4>
+  <h4>2 · Three prepared queue states, for <span class="off" data-off="02:24">02:24</span></h4>
   <ul>
-    <li><strong>Do this.</strong> Write three small files, one per outcome the break produces: approved by somebody, timed out and took the default, still pending.</li>
-    <li><strong>Where.</strong> <code>fixtures/w2-queue/approved.json</code>, <code>timed-out.json</code> and <code>pending.json</code> in the reference agent.</li>
+    <li><strong>Do this.</strong> Write three small queue files in the format of the lab's <code>data/approvals.jsonl</code>, one per outcome the break produces: approved by somebody, timed out and took the default, still pending.</li>
+    <li><strong>Where.</strong> <code>fixtures/w2-queue/approved.jsonl</code>, <code>timed-out.jsonl</code> and <code>pending.jsonl</code> in the reference agent, or pasted into chat on the day.</li>
     <li><strong>Size.</strong> Three files, about ten lines each.</li>
-    <li><strong>Done when.</strong> Somebody whose gate does not run can load one file and read their own 02:24 read-back off it.</li>
-    <li><strong>If it is missing.</strong> Anybody whose build broke at 01:51 loses the 02:24 read-back. Six minutes, and the best six in the session.</li>
+    <li><strong>Done when.</strong> Somebody whose gate does not run can load one file and read their own <span class="off" data-off="02:24">02:24</span> read-back off it.</li>
+    <li><strong>If it is missing.</strong> Anybody whose build broke at <span class="off" data-off="01:51">01:51</span> loses the <span class="off" data-off="02:24">02:24</span> read-back. Six minutes, and the best six in the session.</li>
   </ul>
   <hr class="hair">
   <h4>3 · <code>make retry</code>, checked against the pre-work</h4>
@@ -380,7 +396,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
 </article>
 <article class="card" id="prep-decide">
   <h3>Either answer is fine. Not deciding is the failure.</h3>
-  <h4>4 · Ticket #8812 and a judge path, for 03:18</h4>
+  <h4>4 · Ticket #8812 and a judge path, for <span class="off" data-off="03:18">03:18</span></h4>
   <ul>
     <li><strong>The choice.</strong> Read the case off the page, or build a ticket with that text and a judge the dispatch can call.</li>
     <li><strong>What building it buys.</strong> You run it twice and the room watches the verdict change. That is much stronger than describing it.</li>
@@ -388,7 +404,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <li><strong>Recommendation.</strong> Read it off the page this cohort. Build it before the next one.</li>
   </ul>
   <hr class="hair">
-  <h4>5 · The refusal-sample sketch, for the reading at 02:24</h4>
+  <h4>5 · The refusal-sample sketch, for the reading at <span class="off" data-off="02:24">02:24</span></h4>
   <ul>
     <li><strong>The choice.</strong> Show a ten-line sketch of how you sample refusals and re-read them, or name it and show nothing.</li>
     <li><strong>Why it is open.</strong> Inventing a sketch implies a practice we have not run. Showing nothing names a thing to build with no shape.</li>
@@ -398,21 +414,70 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
 <article class="card" id="prep-small">
   <h3>Worth an hour between them</h3>
   <ul>
-    <li><strong>6 · A blank one-row policy table, for 04:18.</strong> Paste it into chat before the teardown pairs start, so nobody copies columns off the page.</li>
-    <li><strong>7 · A one-line counter summary at the end of a run.</strong> About three lines in the reference agent. It prints allowed and refused per tool, so the room reads one line at 01:12 and 01:44 rather than hunting a terminal.</li>
+    <li><strong>6 · A blank one-row policy table, for <span class="off" data-off="04:18">04:18</span>.</strong> Paste it into chat before the teardown pairs start, so nobody copies columns off the page.</li>
+    <li><strong>7 · A one-line counter summary at the end of a run.</strong> About three lines in the reference agent. It prints allowed and refused per tool, so the room reads one line at <span class="off" data-off="01:12">01:12</span> and <span class="off" data-off="01:44">01:44</span> rather than hunting a terminal.</li>
   </ul>
 </article>
 <article class="card" id="prep-hour">
   <h3>Four things that have no file and fail loudest</h3>
   <ul>
-    <li><strong>8 · Pick the two decision records for 00:15.</strong> Read last week's submissions and choose two: one with a real policy in it, one that is all wishes. Ask both people beforehand. Without this the first segment of the day has nothing on screen.</li>
-    <li><strong>9 · Write the four adversary pairs for 03:31, by name.</strong> Pairs that choose pick somebody whose approach they already understand, which is the one thing the round exists to prevent.</li>
-    <li><strong>10 · Write the four teardown pairs for 04:19, by name, and which two questions each takes.</strong> Use the table on the teardown card. Mix the pairs from 03:31, so nobody defends the design they just attacked.</li>
-    <li><strong>11 · Pick the 01:09 screen while you circulate.</strong> Choose one whose refusal message does name the file. A public miss there costs you the rest of topic 1.</li>
+    <li><strong>8 · Pick the two decision records for <span class="off" data-off="00:15">00:15</span>.</strong> Read last week's submissions and choose two: one with a real policy in it, one that is all wishes. Ask both people beforehand. Without this the first segment of the day has nothing on screen.</li>
+    <li><strong>9 · Write the four adversary pairs for <span class="off" data-off="03:31">03:31</span>, by name.</strong> Pairs that choose pick somebody whose approach they already understand, which is the one thing the round exists to prevent.</li>
+    <li><strong>10 · Write the four teardown pairs for <span class="off" data-off="04:19">04:19</span>, by name, and which two questions each takes.</strong> Use the table on the teardown card. Mix the pairs from <span class="off" data-off="03:31">03:31</span>, so nobody defends the design they just attacked.</li>
+    <li><strong>11 · Pick the <span class="off" data-off="01:09">01:09</span> screen while you circulate.</strong> Choose one whose refusal message does name the file. A public miss there costs you the rest of topic 1.</li>
   </ul>
   <p class="quiet">The pages name pairs by number, not by person. The seat list lives only in the production learners table, and names do not go into committed teaching pages. Items 9 and 10 are where the names are written, on the day.</p>
-  <p class="quiet">Check one dependency the night before: 00:31 works because pre-work item 6 asked the three property questions on paper. If the answers are one sentence each, that segment becomes a definition read off a slide.</p>
+  <p class="quiet">Check one dependency the night before: <span class="off" data-off="00:31">00:31</span> works because pre-work item 6 asked the three property questions on paper. If the answers are one sentence each, that segment becomes a definition read off a slide.</p>
 </article>
+</div>
+
+<div class="head" id="contents">
+  <span class="k">the whole day, block by block</span>
+  <h2>Contents: six blocks, four topics</h2>
+  <ol class="toc">
+    <li><strong>Opening</strong> &#183; <span class="off" data-off="00:00">00:00</span> to <span class="off" data-off="00:15">00:15</span> · ticket #9999, the five statements, one sealed prediction</li>
+    <li><a href="#t1"><strong>Topic 1 &#183; Guardrails and policy enforcement · Where the limit lives</strong></a> &#183; <span class="off" data-off="00:15">00:15</span> to <span class="off" data-off="01:39">01:39</span>
+      <ol class="tocsegs">
+        <li><a href="#s-0015"><span class="mono"><span class="off" data-off="00:15">00:15</span></span> Two decision records on screen</a></li>
+        <li><a href="#s-0023"><span class="mono"><span class="off" data-off="00:23">00:23</span></span> The check, working</a></li>
+        <li><a href="#s-0031"><span class="mono"><span class="off" data-off="00:31">00:31</span></span> Three properties, and your own control fails one</a></li>
+        <li><a href="#s-0037"><span class="mono"><span class="off" data-off="00:37">00:37</span></span> The map, six kinds</a></li>
+        <li><a href="#s-0042"><span class="mono"><span class="off" data-off="00:42">00:42</span></span> Where a control can stand</a></li>
+        <li><a href="#s-0048"><span class="mono"><span class="off" data-off="00:48">00:48</span></span> What did the check have to know</a></li>
+        <li><a href="#s-0054"><span class="mono"><span class="off" data-off="00:54">00:54</span></span> Hands-on lab: build the limit, and count what it does</a></li>
+        <li><a href="#s-0112"><span class="mono"><span class="off" data-off="01:12">01:12</span></span> A second team pays without asking</a></li>
+        <li><a href="#s-0120"><span class="mono"><span class="off" data-off="01:20">01:20</span></span> Move it to the dispatch</a></li>
+        <li><a href="#s-0125"><span class="mono"><span class="off" data-off="01:25">01:25</span></span> The row looks complete, and it is not</a></li>
+        <li><a href="#s-0130"><span class="mono"><span class="off" data-off="01:30">01:30</span></span> The rule this cycle exists to land</a></li>
+        <li><a href="#s-0135"><span class="mono"><span class="off" data-off="01:35">01:35</span></span> Topic 1 quiz and takeaway</a></li>
+      </ol></li>
+    <li><a href="#t2"><strong>Topic 2 &#183; Human-in-the-loop (HITL) approval · The guardrail that calls a person</strong></a> &#183; <span class="off" data-off="01:44">01:44</span> to <span class="off" data-off="02:34">02:34</span>, through the break
+      <ol class="tocsegs">
+        <li><a href="#s-0144"><span class="mono"><span class="off" data-off="01:44">01:44</span></span> It refuses ₹8,400 that is genuinely owed</a></li>
+        <li><a href="#s-0151"><span class="mono"><span class="off" data-off="01:51">01:51</span></span> Hands-on lab: build the gate, and the record</a></li>
+        <li><a href="#s-0204"><span class="mono"><span class="off" data-off="02:04">02:04</span></span> Set the timer</a></li>
+        <li><a href="#s-0224"><span class="mono"><span class="off" data-off="02:24">02:24</span></span> What the break did</a></li>
+        <li><a href="#s-0230"><span class="mono"><span class="off" data-off="02:30">02:30</span></span> Topic 2 quiz and takeaway</a></li>
+      </ol></li>
+    <li><a href="#t3"><strong>Topic 3 &#183; Idempotency · The fix that passes and is not a fix</strong></a> &#183; <span class="off" data-off="02:34">02:34</span> to <span class="off" data-off="03:13">03:13</span>
+      <ol class="tocsegs">
+        <li><a href="#s-0234"><span class="mono"><span class="off" data-off="02:34">02:34</span></span> Hands-on lab: pay once, then watch your fix fail</a></li>
+        <li><a href="#s-0303"><span class="mono"><span class="off" data-off="03:03">03:03</span></span> The fix that holds</a></li>
+        <li><a href="#s-0309"><span class="mono"><span class="off" data-off="03:09">03:09</span></span> Topic 3 quiz and takeaway</a></li>
+      </ol></li>
+    <li><a href="#t4"><strong>Topic 4 &#183; Red-teaming · Somebody else attacks your guard</strong></a> &#183; <span class="off" data-off="03:18">03:18</span> to <span class="off" data-off="04:05">04:05</span>
+      <ol class="tocsegs">
+        <li><a href="#s-0318"><span class="mono"><span class="off" data-off="03:18">03:18</span></span> Layered defence: the tiered gateway, and its latency tax</a></li>
+        <li><a href="#s-0331"><span class="mono"><span class="off" data-off="03:31">03:31</span></span> Hands-on lab: the adversary round</a></li>
+        <li><a href="#s-0401"><span class="mono"><span class="off" data-off="04:01">04:01</span></span> Topic 4 quiz and takeaway</a></li>
+      </ol></li>
+    <li><strong>How the session closes</strong> &#183; <span class="off" data-off="04:05">04:05</span> to <span class="off" data-off="05:00">05:00</span>
+      <ol class="tocsegs">
+        <li><a href="#s-0405"><span class="mono"><span class="off" data-off="04:05">04:05</span></span> Recall: every control, and where its failure moved</a></li>
+        <li><a href="#s-0415"><span class="mono"><span class="off" data-off="04:15">04:15</span></span> Architectural teardown: the agent at forty thousand a month</a></li>
+        <li><a href="#s-0450"><span class="mono"><span class="off" data-off="04:50">04:50</span></span> Takeaway, said out loud</a></li>
+      </ol></li>
+  </ol>
 </div>
 
 
@@ -424,18 +489,18 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   <h2>What this topic is for</h2>
   <p class="lede"><strong>Where does a limit have to sit to stop a caller nobody has written yet?</strong></p>
   
-  <p><strong>Two weak versions, and both lose this room.</strong> One is a taxonomy lecture on kinds of guardrail. The other is "do not hard-code magic numbers", which everybody here learned fifteen years ago. Teach either and you lose them by 00:35.</p>
-  <p><strong>The test is not "can I find the number".</strong> It is <strong>"which callers does my control stand in front of, and which does it miss"</strong>. That is why 00:42 offers nine places rather than three, and why the adversary round at 03:31 exists at all.</p>
-  <p><strong>The order of the first four segments is deliberate.</strong> The working check at 00:23 sits between the records and the rubric. The room judges a refusal message with no rubric, and the rubric arrives at 00:31. Reversing the two turns the sharpest segment of the first hour into a slide.</p>
-  <p><strong>This topic is 84 minutes with no break.</strong> It has no seam that survives an interruption. Watch the room at about 01:15 and take two minutes if you need to.</p>
+  <p><strong>Two weak versions, and both lose this room.</strong> One is a taxonomy lecture on kinds of guardrail. The other is "do not hard-code magic numbers", which everybody here learned fifteen years ago. Teach either and you lose them by <span class="off" data-off="00:35">00:35</span>.</p>
+  <p><strong>The test is not "can I find the number".</strong> It is <strong>"which callers does my control stand in front of, and which does it miss"</strong>. That is why <span class="off" data-off="00:42">00:42</span> offers nine places rather than three, and why the adversary round at <span class="off" data-off="03:31">03:31</span> exists at all.</p>
+  <p><strong>The order of the first four segments is deliberate.</strong> The working check at <span class="off" data-off="00:23">00:23</span> sits between the records and the rubric. The room judges a refusal message with no rubric, and the rubric arrives at <span class="off" data-off="00:31">00:31</span>. Reversing the two turns the sharpest segment of the first hour into a slide.</p>
+  <p><strong>This topic is 84 minutes with no break.</strong> It has no seam that survives an interruption. Watch the room at about <span class="off" data-off="01:15">01:15</span> and take two minutes if you need to.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">guardrails · the limit &#183; 00:15 to 01:39</span>
+  <span class="tag">guardrails · the limit &#183; <span class="off" data-off="00:15">00:15</span> to <span class="off" data-off="01:39">01:39</span></span>
 
-  <div class="beat" data-ref="t1-r-records"><span class="t">00:15</span><div class="b">
+  <div class="beat" id="s-0015" data-ref="t1-r-records"><span class="t"><span class="off" data-off="00:15">00:15</span></span><div class="b">
     <h4>Two decision records on screen</h4>
     <span class="pairs">The narrative &#183; whole room, 8 minutes · first 60 seconds alone and silent</span>
     
@@ -445,7 +510,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <p class="quiet">Do not give the definition first. The room produces the distinction from two real records in about three minutes, and produced is worth four times read.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-refusal"><span class="t">00:23</span><div class="b">
+  <div class="beat" id="s-0023" data-ref="t1-r-refusal"><span class="t"><span class="off" data-off="00:23">00:23</span></span><div class="b">
     <h4>The check, working</h4>
     <span class="pairs">The narrative &#183; whole room, 8 minutes · first 90 seconds alone and silent</span>
     
@@ -458,17 +523,17 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <p class="quiet">Success first. The room sees it working and names what it is looking at before anything breaks.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-props"><span class="t">00:31</span><div class="b">
+  <div class="beat" id="s-0031" data-ref="t1-r-props"><span class="t"><span class="off" data-off="00:31">00:31</span></span><div class="b">
     <h4>Three properties, and your own control fails one</h4>
     <span class="pairs">The concept &#183; whole room, 6 minutes</span>
     
-    <p>Open by naming what they just did. <strong>They judged a refusal message against three questions at 00:23 and nobody gave them a rubric.</strong> Now the rubric.</p>
+    <p>Open by naming what they just did. <strong>They judged a refusal message against three questions at <span class="off" data-off="00:23">00:23</span> and nobody gave them a rubric.</strong> Now the rubric.</p>
     <p><strong>Locatable · readable · observable.</strong> Put all three up at once, one line each, and do not expand on them.</p>
     <p>Then the question, which is the reason this segment exists: <em>which of the three does your own control fail?</em> Take four answers by name. Item 6 of the pre-work asked them exactly these three questions before they had the words, so the answers already exist on paper.</p>
     <p><strong>It is almost always the third, and say so only after the fourth answer.</strong> Saying it first turns four honest answers into agreement.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-map"><span class="t">00:37</span><div class="b">
+  <div class="beat" id="s-0037" data-ref="t1-r-map"><span class="t"><span class="off" data-off="00:37">00:37</span></span><div class="b">
     <h4>The map, six kinds</h4>
     <span class="pairs">The concept &#183; whole room, 5 minutes · built on the board, not read off the page</span>
     
@@ -478,37 +543,37 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <p class="quiet">Close by marking the three they build today and the three they do not, and name the week that owns each. A participant who cannot find a topic assumes it is missing from the course rather than scheduled.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-stand"><span class="t">00:42</span><div class="b">
+  <div class="beat" id="s-0042" data-ref="t1-r-stand"><span class="t"><span class="off" data-off="00:42">00:42</span></span><div class="b">
     <h4>Where a control can stand</h4>
     <span class="pairs">Components and design &#183; pairs, 4 minutes · predict before the list goes up</span>
     
     <p><strong>Nine places and a written prediction is a real commitment.</strong> A vote between three places lets a third of the room guess the answer.</p>
     <p>Ask it in these words: <em>there are nine places in the request path where a control could run. Which one covers the most callers?</em></p>
-    <p>Put the nine up, take the predictions, and <strong>leave them on the board until 01:12</strong>. Do not say which is right. 01:12 settles it with money and 01:30 states the rule.</p>
+    <p>Put the nine up, take the predictions, and <strong>leave them on the board until <span class="off" data-off="01:12">01:12</span></strong>. Do not say which is right. <span class="off" data-off="01:12">01:12</span> settles it with money and <span class="off" data-off="01:30">01:30</span> states the rule.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-four"><span class="t">00:48</span><div class="b">
+  <div class="beat" id="s-0048" data-ref="t1-r-four"><span class="t"><span class="off" data-off="00:48">00:48</span></span><div class="b">
     <h4>What did the check have to know</h4>
     <span class="pairs">Components and design &#183; whole room, 6 minutes</span>
     
     <p>Ask the room to list it before you show anything. Take four or five answers, write them on the board unedited, then map them onto the four.</p>
     <p><strong>Which action · can it be undone · what is the limit · what has already happened.</strong></p>
-    <p>Spend the time on the cost column. Three are free. The fourth needs a store that survives a restart, which is topic 3 at 02:34.</p>
+    <p>Spend the time on the cost column. Three are free. The fourth needs a store that survives a restart, which is topic 3 at <span class="off" data-off="02:34">02:34</span>.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-build"><span class="t">00:54</span><div class="b">
+  <div class="beat" id="s-0054" data-ref="t1-r-build"><span class="t"><span class="off" data-off="00:54">00:54</span></span><div class="b">
     <h4>Hands-on lab: build the limit, and count what it does</h4>
     <span class="pairs">Hands-on lab &#183; decide 3 minutes in writing, then alone, 15 minutes, then one screen</span>
     
     <p>Decide, then build, then check. <strong>Enforce the three minutes of writing before anybody types.</strong> This is the build where an assistant produces a working answer to a question the person never asked.</p>
-    <p><strong>The counters are new and they are not instrumentation.</strong> Two of them, allowed and refused, tagged with the tool and the rule. At 01:12 the goodwill tool pays ₹5,000 and their refused counter does not move, which teaches "the check was never called" far better than a trace does.</p>
+    <p><strong>The counters are new and they are not instrumentation.</strong> Two of them, allowed and refused, tagged with the tool and the rule. At <span class="off" data-off="01:12">01:12</span> the goodwill tool pays ₹5,000 and their refused counter does not move, which teaches "the check was never called" far better than a trace does.</p>
     <p class="qbadge">No model calls. This build costs nothing against their 20 a day.</p>
-    <p><strong>At 01:02, look at the room.</strong> If half are still deciding the file shape rather than writing the check, paste <code>data/policy.json</code> into chat and say you are handing it over. Not earlier, and not to individuals.</p>
-    <p><strong>The timer is two minutes and it matters at 03:18.</strong> Everybody needs their own number for what one check costs, because the tiered-checker segment compares it with a model.</p>
-    <p><strong>At 01:10, one screen, one question.</strong> Share the screen you picked while circulating, one whose refusal names the file, and ask the room: does yours? That closes 00:23 against their own code. A public miss here costs you the rest of the topic.</p>
+    <p><strong>At <span class="off" data-off="01:02">01:02</span>, look at the room.</strong> If half are still deciding the file shape rather than writing the check, paste <code>data/policy.json</code> into chat and say you are handing it over. Not earlier, and not to individuals.</p>
+    <p><strong>The timer is two minutes and it matters at <span class="off" data-off="03:18">03:18</span>.</strong> Everybody needs their own number for what one check costs, because the tiered-checker segment compares it with a model.</p>
+    <p><strong>At <span class="off" data-off="01:10">01:10</span>, one screen, one question.</strong> Share the screen you picked while circulating, one whose refusal names the file, and ask the room: does yours? That closes <span class="off" data-off="00:23">00:23</span> against their own code. A public miss here costs you the rest of the topic.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-goodwill"><span class="t">01:12</span><div class="b">
+  <div class="beat" id="s-0112" data-ref="t1-r-goodwill"><span class="t"><span class="off" data-off="01:12">01:12</span></span><div class="b">
     <h4>A second team pays without asking</h4>
     <span class="pairs">Hands-on lab &#183; pairs, 8 minutes · both answers in writing before you open the button</span>
     
@@ -518,14 +583,14 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <p><strong>Then point at their counters, and at the predictions still on the board.</strong> That is what the segment is for.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-move"><span class="t">01:20</span><div class="b">
+  <div class="beat" id="s-0120" data-ref="t1-r-move"><span class="t"><span class="off" data-off="01:20">01:20</span></span><div class="b">
     <h4>Move it to the dispatch</h4>
     <span class="pairs">Hands-on lab &#183; alone, 5 minutes</span>
     
     <p>Circulate and look at one thing only: whether the counters came with the check. About a third of the room leaves them in the tool, which produces a guard at the dispatch and a count of a code path nothing calls any more.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-row"><span class="t">01:25</span><div class="b">
+  <div class="beat" id="s-0125" data-ref="t1-r-row"><span class="t"><span class="off" data-off="01:25">01:25</span></span><div class="b">
     <h4>The row looks complete, and it is not</h4>
     <span class="pairs">Hands-on lab &#183; whole room, 5 minutes</span>
     
@@ -533,16 +598,16 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
     <p>Admit first that the dispatch refused the new tool for having no row, and never looked at the account. Then: <em>somebody writes a row for it. Reversible false, a ceiling of ₹5,000, a named owner. It looks complete. What happens to account 9999?</em></p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-rule"><span class="t">01:30</span><div class="b">
+  <div class="beat" id="s-0130" data-ref="t1-r-rule"><span class="t"><span class="off" data-off="01:30">01:30</span></span><div class="b">
     <h4>The rule this cycle exists to land</h4>
     <span class="pairs">Hands-on lab &#183; whole room, 5 minutes</span>
     
     <p><strong>Without this segment the room leaves believing the dispatch is the answer.</strong> That is what an earlier version of this session taught by accident.</p>
-    <p>Point at the nine places from 00:42 and at the two the control has now occupied. Then say it: <em>move the control toward the thing being protected, not toward the thing being controlled.</em></p>
+    <p>Point at the nine places from <span class="off" data-off="00:42">00:42</span> and at the two the control has now occupied. Then say it: <em>move the control toward the thing being protected, not toward the thing being controlled.</em></p>
     <p><strong>Say the cost out loud in the same breath.</strong> The ledger belongs to another team, so the strongest placement is the one they cannot ship alone. A senior room spots that in ten seconds and resents being sold past it.</p>
   </div></div>
 
-  <div class="beat" data-ref="t1-r-quiz"><span class="t">01:35</span><div class="b">
+  <div class="beat" id="s-0135" data-ref="t1-r-quiz"><span class="t"><span class="off" data-off="01:35">01:35</span></span><div class="b">
     <h4>Topic 1 quiz and takeaway</h4>
     <span class="pairs">alone, in writing, 3 minutes · then one line</span>
     
@@ -561,20 +626,26 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   <div class="scroller"><table>
     <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
     <tbody>
-      <tr><td>Over the limit still means "no", so an honest ₹8,400 is refused</td><td>Topic 2, at 01:44. That refusal is its opening</td></tr>
-      <tr><td>Nothing remembers what was already paid</td><td>Topic 3, at 02:34. Named here as the expensive fourth fact</td></tr>
-      <tr><td>A model could judge instead of a ceiling</td><td>Topic 4, at 03:18. It may widen a hard limit, and it may never replace one</td></tr>
-      <tr><td>Input and output are named and never taught</td><td>Week 4. Say the week out loud at 00:37</td></tr>
-      <tr><td>The owner column has no process behind it</td><td>The teardown at 04:15, question 2</td></tr>
-      <tr><td>A ceiling is per call, so four calls under it still drain an account</td><td><strong>Nowhere this week.</strong> Route 3 of the adversary round at 03:31. Say so if a pair finds it.</td></tr>
+      <tr><td>Over the limit still means "no", so an honest ₹8,400 is refused</td><td>Topic 2, at <span class="off" data-off="01:44">01:44</span>. That refusal is its opening</td></tr>
+      <tr><td>Nothing remembers what was already paid</td><td>Topic 3, at <span class="off" data-off="02:34">02:34</span>. Named here as the expensive fourth fact</td></tr>
+      <tr><td>A model could judge instead of a ceiling</td><td>Topic 4, at <span class="off" data-off="03:18">03:18</span>. It may widen a hard limit, and it may never replace one</td></tr>
+      <tr><td>Input and output are named and never taught</td><td>Week 4. Say the week out loud at <span class="off" data-off="00:37">00:37</span></td></tr>
+      <tr><td>The owner column has no process behind it</td><td>The teardown at <span class="off" data-off="04:15">04:15</span>, question 2</td></tr>
+      <tr><td>A ceiling is per call, so four calls under it still drain an account</td><td><strong>Nowhere this week.</strong> Route 3 of the adversary round at <span class="off" data-off="03:31">03:31</span>. Say so if a pair finds it.</td></tr>
     </tbody>
   </table></div>
 </article>
 
 <article class="card" id="t1-r-records">
-  <span class="pairs">&#8596; 00:15 &#183; &#8596; 00:15 · two decision records, predicted before they are read</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:15">00:15</span> &#183; &#8596; <span class="off" data-off="00:15">00:15</span> · two decision records, predicted before they are read</span>
   <h3>Two decision records on screen</h3>
   
+  <h4>What a limit is, and why the agent needs one</h4>
+  <p>Learner reading on the topic 1 purpose card, before <span class="off" data-off="00:15">00:15</span>. One sentence if asked: a limit is a rule with a number, the most an action may do without anybody else agreeing, and an agent needs it because the model chooses the arguments.</p>
+  <h4>Why a policy, before anything else</h4>
+  <p>The learner card now opens with why a policy is needed. Say it in two sentences before the records go up: a rule that lives in somebody's head cannot be enforced or changed safely, and a rule written down with a number and an owner can.</p>
+  <h4>What is on the screen, and what you do</h4>
+  <p>Two decision records the room wrote as the week 1 assignment, chosen by you before the day and agreed with their authors (preparation item 8). Learners prepare nothing new. They bring their own record and test one sentence of it.</p>
   <h4 class="quiet" style="font-weight:700">Most records last week had four wishes and one policy</h4>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
@@ -600,7 +671,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
 </article>
 
 <article class="card" id="t1-r-refusal">
-  <span class="pairs">&#8596; 00:23 &#183; &#8596; 00:23 · the refusal, predicted before it is shown</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:23">00:23</span> &#183; &#8596; <span class="off" data-off="00:23">00:23</span> · the refusal, predicted before it is shown</span>
   <h3>The check, working</h3>
   
   <details>
@@ -611,7 +682,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
         <li><strong>Why.</strong> The rule, in a sentence a person can read at 2am. About half the room.</li>
         <li><strong>Where the rule is written.</strong> The file, and the key inside it. Rare.</li>
       </ol>
-      <p><strong>Say out loud how few people wrote the third.</strong> That gap is the reason locatable is the first of the three properties at 00:31, and it is more convincing from their own paper than from you. The first two tell somebody what happened. Only the third tells them where to go, and going somewhere is the only thing that shortens the outage.</p>
+      <p><strong>Say out loud how few people wrote the third.</strong> That gap is the reason locatable is the first of the three properties at <span class="off" data-off="00:31">00:31</span>, and it is more convincing from their own paper than from you. The first two tell somebody what happened. Only the third tells them where to go, and going somewhere is the only thing that shortens the outage.</p>
     </div>
   </details>
   <details>
@@ -621,14 +692,14 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
       <pre>issue_credit(account_id='9999', amount=5000)  -&gt; no credit to an account that does not exist
 issue_credit(account_id='4471', amount=5000)  -&gt; 5000 is over the ceiling of 1200
 issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
-      <p><strong>The order is deliberate.</strong> On this data every ceiling refusal is the refusal of an honest customer, and that is 01:44's opening. Showing it here spends it. Confirm in one sentence and move on.</p>
+      <p><strong>The order is deliberate.</strong> On this data every ceiling refusal is the refusal of an honest customer, and that is <span class="off" data-off="01:44">01:44</span>'s opening. Showing it here spends it. Confirm in one sentence and move on.</p>
     </div>
   </details>
   <p class="quiet">The line about the model claiming a credit while the ledger says ₹0 is not this topic. Name it in ten seconds, say the customer has been told nothing, and say week 4 owns it.</p>
 </article>
 
 <article class="card" id="t1-r-props">
-  <span class="pairs">&#8596; 00:31 &#183; &#8596; 00:31 · three properties, and the one they fail</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:31">00:31</span> &#183; &#8596; <span class="off" data-off="00:31">00:31</span> · three properties, and the one they fail</span>
   <h3>Three properties, and your own control fails one</h3>
   
   <h4 class="quiet" style="font-weight:700">A control nobody counts cannot be told apart from a broken one</h4>
@@ -643,7 +714,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
           <tr><td>Observable</td><td>Say how many times it fired last week</td><td>A guess. A control that never fires and one that is switched off look identical</td></tr>
         </tbody>
       </table></div>
-      <p><strong>The third is the one to spend the time on.</strong> Both failure modes produce silence, and a dashboard cannot tell them apart. That sentence is what the two counters at 00:54 exist to answer, and 01:12 is where it costs ₹5,000.</p>
+      <p><strong>The third is the one to spend the time on.</strong> Both failure modes produce silence, and a dashboard cannot tell them apart. That sentence is what the two counters at <span class="off" data-off="00:54">00:54</span> exist to answer, and <span class="off" data-off="01:12">01:12</span> is where it costs ₹5,000.</p>
     </div>
   </details>
   <details>
@@ -658,13 +729,14 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
   <details>
     <summary><span class="chev">›</span> Extension probe, for the person who has all three</summary>
     <div class="dbody">
-      <p><em>You have a count. Is it a rate?</em> A refusal count on its own cannot show a control going wrong, because a fall in refusals and a fall in traffic look the same. That is the argument for two counters at 00:54, arriving early and from a participant rather than from you.</p>
+      <p><em>You have a count. Is it a rate?</em> A refusal count on its own cannot show a control going wrong, because a fall in refusals and a fall in traffic look the same. That is the argument for two counters at <span class="off" data-off="00:54">00:54</span>, arriving early and from a participant rather than from you.</p>
     </div>
   </details>
+  <p class="quiet">The learner card now says the rubric applies to any guardrail, including a policy file, and quotes pre-work item 6 word for word above the question.</p>
 </article>
 
 <article class="card" id="t1-r-map">
-  <span class="pairs">&#8596; 00:37 &#183; &#8596; 00:37 · six kinds, sorted by what they stand between</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:37">00:37</span> &#183; &#8596; <span class="off" data-off="00:37">00:37</span> · six kinds, sorted by what they stand between</span>
   <h3>The map, six kinds</h3>
   
   <h4 class="quiet" style="font-weight:700">A room that believes "guardrail" means one thing puts a person in front of everything</h4>
@@ -675,9 +747,9 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
         <thead><tr><th>Kind</th><th>Stands between</th><th>When</th></tr></thead>
         <tbody>
           <tr><td>Input</td><td>the world and the model</td><td>Week 4</td></tr>
-          <tr><td>The limit</td><td>the decision and the action</td><td>Topic 1, 00:48</td></tr>
-          <tr><td>The human gate</td><td>the decision and the action</td><td>Topic 2, 01:44</td></tr>
-          <tr><td>State</td><td>the action and the record</td><td>Topic 3, 02:34</td></tr>
+          <tr><td>The limit</td><td>the decision and the action</td><td>Topic 1, <span class="off" data-off="00:48">00:48</span></td></tr>
+          <tr><td>The human gate</td><td>the decision and the action</td><td>Topic 2, <span class="off" data-off="01:44">01:44</span></td></tr>
+          <tr><td>State</td><td>the action and the record</td><td>Topic 3, <span class="off" data-off="02:34">02:34</span></td></tr>
           <tr><td>Resource</td><td>the loop and your money</td><td>Lab 4, at home</td></tr>
           <tr><td>Output</td><td>the model and the customer</td><td>Week 4</td></tr>
         </tbody>
@@ -772,7 +844,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
 </figure></div>
   <p class="quiet">The filled bars are the three they build today. If you draw this on the board, draw the five boxes and the arrows first and let the room place the bars. It takes ninety seconds and it is better than the picture.</p>
   <h4>Why an agent needs these and a batch job does not</h4>
-  <p><strong>Reference, and deliberately not a segment.</strong> It is four minutes of argument and topic 1 does not have four minutes. The learner page carries it in full with a prediction in front of it, so it works as reading. Say the one sentence at 00:37 and point at the page.</p>
+  <p><strong>Reference, and deliberately not a segment.</strong> It is four minutes of argument and topic 1 does not have four minutes. The learner page carries it in full with a prediction in front of it, so it works as reading. Say the one sentence at <span class="off" data-off="00:37">00:37</span> and point at the page.</p>
   <p>If you are asked to run it live, the three rows are in the answer key on the map card above, and the figure the learner page uses is the second one — ordinary code beside an agent, the same ledger underneath both, and the middle row is the difference.</p>
 <div class="figwrap"><figure>
 <svg viewBox="0 0 980 320" role="img" aria-label="Two paths side by side. In ordinary code, your caller passes fixed arguments to issue_credit with account 4471 and amount 1200, then writes to the ledger, and the call site can be read. In an agent, ticket text written outside your company reaches the model, the model chooses issue_credit with account 9999 and amount 5000 while it runs, and that writes to the same ledger. There is no call site to read.">
@@ -826,10 +898,14 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
   <p><strong>Say the three planes only after the room has built the six kinds.</strong> Input, output, operational. The room has usually met this vocabulary in a vendor document, so name it, and map the six onto it in one minute. The point to land: a tool call is output that acts, which is why today lives inside the output plane.</p>
   <h4>The threats each plane meets</h4>
   <p>Reading on the learner page. If somebody asks why injection is not today, the answer is the second row: today's ceiling caps what an injected instruction can cost, and week 4 is where the text itself is handled. <strong>Do not open the injection argument here.</strong></p>
+  <h4>One small example of each plane</h4>
+  <p>Three sketches on the learner page: masking a PAN on input, a Pydantic check on a credit's arguments on output, and a circuit breaker as an operational guardrail. Point at them; do not walk them. They answer "what does this look like in code?" in under a minute of reading.</p>
+  <h4>When a check runs: synchronous, asynchronous, layered</h4>
+  <p>A plain introduction on the learner page, with one example each. <strong>Say only the rule of thumb here</strong>: anything that cannot be undone gets a synchronous check. <span class="off" data-off="03:18">03:18</span> prices the three and adds the latency budget.</p>
 </article>
 
 <article class="card" id="t1-r-stand">
-  <span class="pairs">&#8596; 00:42 &#183; &#8596; 00:42 · nine places, and a written prediction</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:42">00:42</span> &#183; &#8596; <span class="off" data-off="00:42">00:42</span> · nine places, and a written prediction</span>
   <h3>Where a control can stand</h3>
   
   <h4 class="quiet" style="font-weight:700">The later you place it, the more callers it covers and the less it knows</h4>
@@ -837,7 +913,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <summary><span class="chev">›</span> The answer, and when to give it</summary>
     <div class="dbody">
       <p>The resource of record. It is the last point that can still prevent and the first that covers a caller nobody has written yet.</p>
-      <p><strong>Do not say so at 00:42.</strong> Most rooms predict the dispatch, which is the best answer available to them and is not right. One or two predict the ledger. Name those people at 01:12, once the failure has made the argument.</p>
+      <p><strong>Do not say so at <span class="off" data-off="00:42">00:42</span>.</strong> Most rooms predict the dispatch, which is the best answer available to them and is not right. One or two predict the ledger. Name those people at <span class="off" data-off="01:12">01:12</span>, once the failure has made the argument.</p>
     </div>
   </details>
   <details>
@@ -851,13 +927,13 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <summary><span class="chev">›</span> Why the build targets the dispatch and not the ledger</summary>
     <div class="dbody">
       <p>Be straight about this, because a sharp room asks. <strong>The ledger in this repository is a Python list.</strong> There is no service and no boundary, so a ledger check would sit in the same file as the thing it guards, which is the in-tool check with a different name on it.</p>
-      <p>The build targets the dispatch, which is the strongest thing that is real in this codebase. The ledger version is column three of the policy table at 04:15, at forty processes, with a payments service that exists. <strong>Say the limitation out loud rather than letting them find it.</strong></p>
+      <p>The build targets the dispatch, which is the strongest thing that is real in this codebase. The ledger version is column three of the policy table at <span class="off" data-off="04:15">04:15</span>, at forty processes, with a payments service that exists. <strong>Say the limitation out loud rather than letting them find it.</strong></p>
     </div>
   </details>
 </article>
 
 <article class="card" id="t1-r-four">
-  <span class="pairs">&#8596; 00:48 &#183; &#8596; 00:48 · what did the check have to know</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:48">00:48</span> &#183; &#8596; <span class="off" data-off="00:48">00:48</span> · what did the check have to know</span>
   <h3>What did the check have to know</h3>
   
   <h4 class="quiet" style="font-weight:700">None of the four facts come from the model</h4>
@@ -866,7 +942,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <div class="dbody">
       <p>Rooms arrive expecting the check to consult a confidence score, and a check built on a confidence score is built on the one thing that moves every quarter.</p>
       <p>If somebody proposes it, take it seriously for 60 seconds and close it properly. A confidence number is not comparable across models, not comparable across two prompts on one model, and <strong>there is nobody you can name who owns it</strong>. That third reason is the argument.</p>
-      <p class="quiet">This is the same instinct 03:18 answers from the other side. Do not run the judge argument here, and do not run this one there.</p>
+      <p class="quiet">This is the same instinct <span class="off" data-off="03:18">03:18</span> answers from the other side. Do not run the judge argument here, and do not run this one there.</p>
     </div>
   </details>
   <h4>Why the second fact is there</h4>
@@ -876,33 +952,23 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <li>It decides whether prevention is required or detection is enough. If an action can be undone there is an afterwards, and a dashboard with an alert is a legitimate answer. If it cannot, the only place a control can exist is before the call.</li>
     <li>It is what makes the rule writable. "Ask a human before an irreversible action" cannot be written until something in the code knows which actions are irreversible.</li>
   </ul>
+  <p class="quiet">The learner card now says what "the check" is in its first sentence: the policy check from <span class="off" data-off="00:23">00:23</span>, a few lines of Python that run before a tool is called.</p>
 </article>
 
 <article class="card" id="t1-r-build">
-  <span class="pairs">&#8596; 00:54 &#183; &#8596; 00:54 · the build, the two counters and the timer</span>
+  <span class="pairs">&#8596; <span class="off" data-off="00:54">00:54</span> &#183; &#8596; <span class="off" data-off="00:54">00:54</span> · the build, the two counters and the timer</span>
   <h3>Hands-on lab: build the limit, and count what it does</h3>
   
+  <h4>Starting state</h4>
+  <p>Their clone, after <span class="mono">git pull</span>. They create <span class="mono">data/my-policy.json</span> rather than editing <span class="mono">data/policy.json</span>, which the <span class="off" data-off="00:23">00:23</span> demo reads and must keep working. The check goes inside <span class="mono">issue_credit</span> first, on purpose: <span class="off" data-off="01:12">01:12</span> shows what that costs, and <span class="off" data-off="01:20">01:20</span> moves it. The full code is on the learner page and behind its "Show a working answer" button. That button is where the answers are published, and <span class="off" data-off="01:10">01:10</span> and the topic quiz are where they are discussed.</p>
+
   <details>
     <summary><span class="chev">›</span> A working answer</summary>
     <div class="dbody">
-      <p>One shape, and not the only one. Anything that puts the numbers outside the tool and reads them at the dispatch is a pass.</p>
-      <pre>data/policy.json
-  "on_missing_row": "refuse"
-  "issue_credit": {
-    "reversible": false,
-    "ceiling": 1200,
-    "owner": "payments-lead"
-  }
-
-agent.py, before  res = fn(**args)
-  rule = POLICY.get(act)
-  if rule is None:
-      return refuse(f"{act} has no policy row")
-  if not rule.reversible and args.get("amount", 0) &gt; rule.ceiling:
-      return refuse(f"{args['amount']} over ceiling {rule.ceiling} "
-                    f"[data/policy.json:{act}]")</pre>
-      <p>The account-existence check is deliberately not a field. See <a href="#t1-r-row">two kinds of rule</a>. If a room puts it in the row, that is a good mistake and it is worth two minutes at 01:25.</p>
-      <p><strong>What a good answer has that a passing one does not:</strong> the refusal string names the file and the row. That is the third fact from 00:23, built rather than described.</p>
+      <p><strong>The full code is on the learner page</strong>, in the build steps and behind "Show a working answer". In short: <span class="mono">data/my-policy.json</span> holds three rows, the ceiling check sits at the top of <span class="mono">issue_credit</span> in <span class="mono">src/tools.py</span>, two counters count allowed and refused, and <span class="mono">src/main.py</span> prints them with the time the check took.</p>
+      <p><strong>The check starts inside the tool on purpose.</strong> <span class="off" data-off="01:12">01:12</span> shows the goodwill tool walking past it, and <span class="off" data-off="01:20">01:20</span> moves it to the dispatch in <span class="mono">src/agent.py</span>. If a learner puts it at the dispatch straight away, praise it and ask them to predict <span class="off" data-off="01:12">01:12</span> from there.</p>
+      <p>The account-existence check is deliberately not a field in the row. If a room puts it there, that is a good mistake and it is worth two minutes at <span class="off" data-off="01:25">01:25</span>.</p>
+      <p><strong>What a good answer has that a passing one does not:</strong> the refusal string names the file and the row. That is the third fact from <span class="off" data-off="00:23">00:23</span>, built rather than described.</p>
     </div>
   </details>
   <details>
@@ -911,7 +977,7 @@ agent.py, before  res = fn(**args)
       <pre>t0 = time.perf_counter()
 refusal = check(act, args)
 GUARD_MS[act].append((time.perf_counter() - t0) * 1000)</pre>
-      <p>A dictionary lookup and two comparisons in the same process. Expect well under a millisecond. <strong>Do not supply the number.</strong> Their own number is the point, and it is what 03:18 compares a model call against.</p>
+      <p>A dictionary lookup and two comparisons in the same process. Expect well under a millisecond. <strong>Do not supply the number.</strong> Their own number is the point, and it is what <span class="off" data-off="03:18">03:18</span> compares a model call against.</p>
     </div>
   </details>
   <details>
@@ -919,8 +985,8 @@ GUARD_MS[act].append((time.perf_counter() - t0) * 1000)</pre>
     <div class="dbody">
       <pre>GUARD_ALLOWED[act] += 1
 GUARD_REFUSED[(act, rule_name)] += 1</pre>
-      <p><strong>Two, not one.</strong> A refusal count on its own cannot produce a rate, and the rate is the only number that shows a control has gone wrong. Tag the refused counter with the rule as well as the tool, because "the ceiling fired" and "the missing-row rule fired" are different events and the room needs to tell them apart at 01:12.</p>
-      <p>Expect pushback that this is instrumentation rather than the lab. <strong>It is the lab.</strong> The counter that does not move at 01:12 is the sharpest thing in the topic.</p>
+      <p><strong>Two, not one.</strong> A refusal count on its own cannot produce a rate, and the rate is the only number that shows a control has gone wrong. Tag the refused counter with the rule as well as the tool, because "the ceiling fired" and "the missing-row rule fired" are different events and the room needs to tell them apart at <span class="off" data-off="01:12">01:12</span>.</p>
+      <p>Expect pushback that this is instrumentation rather than the lab. <strong>It is the lab.</strong> The counter that does not move at <span class="off" data-off="01:12">01:12</span> is the sharpest thing in the topic.</p>
     </div>
   </details>
   <details>
@@ -937,13 +1003,13 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <details>
     <summary><span class="chev">›</span> Extension probe, for anyone finished early</summary>
     <div class="dbody">
-      <p><em>Add a second business unit with its own ceiling, without copying the file.</em> They reach for inheritance, or a default with overrides. Either is fine. What matters is that they hit the question of who owns an override, which is column seven of the 04:15 table.</p>
+      <p><em>Add a second business unit with its own ceiling, without copying the file.</em> They reach for inheritance, or a default with overrides. Either is fine. What matters is that they hit the question of who owns an override, which is column seven of the <span class="off" data-off="04:15">04:15</span> table.</p>
     </div>
   </details>
 </article>
 
 <article class="card" id="t1-r-goodwill">
-  <span class="pairs">&#8596; 01:12 &#183; &#8596; 01:12 · another team adds one tool</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:12">01:12</span> &#183; &#8596; <span class="off" data-off="01:12">01:12</span> · another team adds one tool</span>
   <h3>A second team pays without asking</h3>
   
   <h4 class="quiet" style="font-weight:700">₹5,000, three weeks after they fixed it, and the counter never moved</h4>
@@ -952,8 +1018,8 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <div class="dbody">
       <p><strong>What went wrong.</strong> The check protects <code>issue_credit</code>. It does not protect the ledger, and the ledger holds the money. Every tool added later is a new chance to forget.</p>
       <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point.</p>
-      <p><strong>Then the counter.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from 00:31 paid off in their own code.</p>
-      <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and 01:30 is where it is said properly.</p>
+      <p><strong>Then the counter.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from <span class="off" data-off="00:31">00:31</span> paid off in their own code.</p>
+      <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and <span class="off" data-off="01:30">01:30</span> is where it is said properly.</p>
     </div>
   </details>
   <details>
@@ -968,14 +1034,15 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
 </article>
 
 <article class="card" id="t1-r-move">
-  <span class="pairs">&#8596; 01:20 &#183; &#8596; 01:20 · move it to the dispatch</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:20">01:20</span> &#183; &#8596; <span class="off" data-off="01:20">01:20</span> · move it to the dispatch</span>
   <h3>Move it to the dispatch</h3>
   
   <p>Five minutes, and the only thing to watch is whether the counters moved with the check. A control and its counter are one thing. Leaving the counter behind gives a guard at the dispatch and a count of a dead path, which is a worse state than having no counter at all, because it reads as evidence.</p>
+  <p class="quiet">The learner card now carries the code for the move and a check: renaming the row proves a tool with no row is refused.</p>
 </article>
 
 <article class="card" id="t1-r-row">
-  <span class="pairs">&#8596; 01:25 &#183; &#8596; 01:25 · the follow-up, and the sharpest segment in the topic</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:25">01:25</span> &#183; &#8596; <span class="off" data-off="01:25">01:25</span> · the follow-up, and the sharpest segment in the topic</span>
   <h3>The row looks complete, and it is not</h3>
   
   <h4 class="quiet" style="font-weight:700">Two kinds of rule, and only one belongs in the row</h4>
@@ -1004,10 +1071,12 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
       <p class="quiet"><code>src/policy.py</code> is written this way, with the reason in a comment. It was not until 2026-09-08: it had the account check as a row field, which is exactly this bug, and it was found by somebody reading the material rather than by anybody running it.</p>
     </div>
   </details>
+  <h4>The fix, in code</h4>
+  <p>On the learner page: the invariants live in the checker, before the ceiling, for every action that cannot be undone. Point at <span class="mono">src/policy.py</span> in the reference agent, which does exactly this.</p>
 </article>
 
 <article class="card" id="t1-r-rule">
-  <span class="pairs">&#8596; 01:30 &#183; &#8596; 01:30 · the rule this cycle exists to land</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:30">01:30</span> &#183; &#8596; <span class="off" data-off="01:30">01:30</span> · the rule this cycle exists to land</span>
   <h3>The rule this cycle exists to land</h3>
   
   <blockquote>Move the control toward the thing being protected, not toward the thing being controlled.</blockquote>
@@ -1022,7 +1091,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
 </article>
 
 <article class="card" id="t1-r-quiz">
-  <span class="pairs">&#8596; 01:35 &#183; three questions, one from earlier material</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:35">01:35</span> &#183; three questions, one from earlier material</span>
   <h3>Topic 1 quiz and takeaway</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>Another team runs a nightly batch job that writes credits straight to the ledger. Which control point still refuses its bad credit?</p>
@@ -1033,7 +1102,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <li>D. A check at ingress, when the ticket arrives</li>
   </ul>
   <p><strong>The answer.</strong> <p><strong>C.</strong> The batch job never goes through the agent, so the dispatch never sees it. Only a control at the thing being protected covers a caller you did not write.</p></p>
-  <p><strong>The likely wrong answer.</strong> A, the dispatch. It is what most of the room built at 01:20.</p>
+  <p><strong>The likely wrong answer.</strong> A, the dispatch. It is what most of the room built at <span class="off" data-off="01:20">01:20</span>.</p>
   <p><strong>What is right about it.</strong> The dispatch does cover every tool the agent calls, including tools nobody has written yet. It is the strongest placement available inside this repository. It stops at the agent’s edge.</p>
   <h4>Question 2 &#183; this topic</h4>
   <p>Which of these belongs as a field in the policy row, rather than inside the checker?</p>
@@ -1044,8 +1113,8 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <li>D. The target of a credit must be a real account</li>
   </ul>
   <p><strong>The answer.</strong> <p><strong>C.</strong> A reasonable person could want a different ceiling for a different tool, so it is a limit, and a limit lives in the row with an owner. A, B and D are invariants. Nobody should be able to switch them off for one tool.</p></p>
-  <p><strong>The likely wrong answer.</strong> A, because the row at 01:25 was missing exactly that rule.</p>
-  <p><strong>What is right about it.</strong> They have spotted the rule that let ₹5,000 through at 01:25. The fix is right and the place is wrong: a rule in a field is a rule somebody can set to false.</p>
+  <p><strong>The likely wrong answer.</strong> A, because the row at <span class="off" data-off="01:25">01:25</span> was missing exactly that rule.</p>
+  <p><strong>What is right about it.</strong> They have spotted the rule that let ₹5,000 through at <span class="off" data-off="01:25">01:25</span>. The fix is right and the place is wrong: a rule in a field is a rule somebody can set to false.</p>
   <h4>Question 3 &#183; from earlier</h4>
   <blockquote><strong>Week 1 · the decision record · section 4 of 7.</strong> “The design. The checks, in the order they run, and what each does when it fails: refuse, escalate, or ask a person. Say where the state lives.”</blockquote>
   <p>Pick one check from your own section 4. Is it a policy or a wish, and what one thing would make it a policy?</p>
@@ -1065,7 +1134,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
         <tr><td>The limit, as policy outside the code</td><td>Open Policy Agent, with policies in Rego</td><td>A new language for the team to learn and review. A sidecar or a library in every service. A bundle distribution path you build and monitor.</td></tr>
         <tr><td></td><td>Amazon Verified Permissions, with policies in Cedar</td><td>One cloud, and a charge per authorisation request on a path that already costs money. The policy store is not a file you can open offline.</td></tr>
         <tr><td></td><td>LaunchDarkly, holding the numbers as targeted values</td><td>A subscription, and a third party in the request path. It was built for feature flags, so the refusal reason and the audit line are still yours to write.</td></tr>
-        <tr><td></td><td>A JSON file in your own repository, which is the 00:54 lab</td><td>Changing a limit is a deploy, and there is no history beyond git. It is free and readable, and most teams start here.</td></tr>
+        <tr><td></td><td>A JSON file in your own repository, which is the <span class="off" data-off="00:54">00:54</span> lab</td><td>Changing a limit is a deploy, and there is no history beyond git. It is free and readable, and most teams start here.</td></tr>
         <tr><td>Making the model’s output match a schema, which is how a tool call gets checked arguments</td><td>Pydantic, validating arguments after the model answers</td><td>Free and familiar to most Python teams. It rejects a bad call after it is generated, so you pay for a retry.</td></tr>
         <tr><td></td><td>Instructor, retrying the model until the output validates</td><td>Open source, on top of Pydantic. Each failed validation is another model call, so a strict schema costs tokens and time.</td></tr>
         <tr><td></td><td>Outlines, constraining generation to the schema</td><td>Open source. It needs control of decoding, which most hosted APIs do not give you, so it suits models you run yourself.</td></tr>
@@ -1091,7 +1160,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <h3>The line this topic exists to land</h3>
   <blockquote>Move the control toward the thing being protected, not toward the thing being controlled.</blockquote>
   
-  <p>If a person leaves with one sentence from this topic, that is the one. ₹5,000 is what a check in the wrong place costs three weeks later. The adversary round at 03:31 is what it costs in ten minutes, with somebody watching.</p>
+  <p>If a person leaves with one sentence from this topic, that is the one. ₹5,000 is what a check in the wrong place costs three weeks later. The adversary round at <span class="off" data-off="03:31">03:31</span> is what it costs in ten minutes, with somebody watching.</p>
   <p class="quiet">It is on the learner page too, on the ember card. Do not paraphrase it on the day.</p>
 </article>
 
@@ -1099,7 +1168,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
   <h3>✅ You can now</h3>
   
-  <p><strong>Checkpoint 1, at 01:35, before the topic quiz.</strong> The same three lines as the learner page. One number from 1 to 5 in chat, on the last line only.</p>
+  <p><strong>Checkpoint 1, at <span class="off" data-off="01:35">01:35</span>, before the topic quiz.</strong> The same three lines as the learner page. One number from 1 to 5 in chat, on the last line only.</p>
   <p><strong>Read the counts, never a mean.</strong> A 2 means go slower, and two people at 2 disappear inside an average of 3.4. If two or more put a 2 or below, take one control somebody names from their own system and ask how they would notice it silently stopping. Ninety seconds of that is worth more than the break.</p>
   <p>A low number is the honest answer rather than a bad one. Say that before you ask, or you will get fours.</p>
   <h4>Your takeaway</h4>
@@ -1119,16 +1188,16 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <tbody>
       <tr><td>The limits, as data</td><td><code>data/policy.json</code></td><td>&#8212;</td></tr>
       <tr><td>The checker, with invariants split from limits</td><td><code>src/policy.py</code></td><td>&#8212;</td></tr>
-      <tr><td>The guarded run for 00:23</td><td><code>src/guarded.py</code></td><td><code>make w2-guarded</code></td></tr>
-      <tr><td>The second tool for 01:12</td><td><code>src/goodwill_demo.py</code></td><td><code>make w2-goodwill</code></td></tr>
+      <tr><td>The guarded run for <span class="off" data-off="00:23">00:23</span></td><td><code>src/guarded.py</code></td><td><code>make w2-guarded</code></td></tr>
+      <tr><td>The second tool for <span class="off" data-off="01:12">01:12</span></td><td><code>src/goodwill_demo.py</code></td><td><code>make w2-goodwill</code></td></tr>
     </tbody>
   </table></div>
-  <p><strong>The check lives in <code>src/guarded.py</code> and not in <code>agent.py</code>.</strong> <code>agent.py</code> is deliberately left exactly as week 1 ended, with no check at all, because putting the check into the dispatch <em>is</em> the build at 00:54. A demo that has already done it takes the build away.</p>
+  <p><strong>The check lives in <code>src/guarded.py</code> and not in <code>agent.py</code>.</strong> <code>agent.py</code> is deliberately left exactly as week 1 ended, with no check at all, because putting the check into the dispatch <em>is</em> the build at <span class="off" data-off="00:54">00:54</span>. A demo that has already done it takes the build away.</p>
   <h4 class="quiet">Still open, and the first one blocks the session</h4>
   <ul>
-    <li><strong>The two decision records for 00:15 are not chosen.</strong> Read last week's submissions, pick one with a real policy and one that is all wishes, and ask both people beforehand. It is preparation item 8.</li>
-    <li><strong>Pre-work item 6 has to have landed.</strong> 00:31 works because the room already answered the three property questions on paper. Check the submissions the night before.</li>
-    <li><strong>"Your own system" still has no stored answer.</strong> The phrase is defined in prose on the learner page and nowhere else, so nothing can quote a learner's own control back at them at 00:31.</li>
+    <li><strong>The two decision records for <span class="off" data-off="00:15">00:15</span> are not chosen.</strong> Read last week's submissions, pick one with a real policy and one that is all wishes, and ask both people beforehand. It is preparation item 8.</li>
+    <li><strong>Pre-work item 6 has to have landed.</strong> <span class="off" data-off="00:31">00:31</span> works because the room already answered the three property questions on paper. Check the submissions the night before.</li>
+    <li><strong>"Your own system" still has no stored answer.</strong> The phrase is defined in prose on the learner page and nowhere else, so nothing can quote a learner's own control back at them at <span class="off" data-off="00:31">00:31</span>.</li>
   </ul>
 </article>
   </div>
@@ -1144,24 +1213,24 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <p class="lede"><strong>What does your code do when nobody approves inside the time you set?</strong></p>
   
   <p>Change "no" to "ask". Then find out who answers. The second half is the part most teams skip, and it is where this topic spends its time.</p>
-  <p><strong>The 2:14am question is an experiment, not a discussion.</strong> The room sets a real 18-minute timer at 02:04, goes to the break, and reads its own queue at 02:24. Three outcomes appear in every room of eight, and none is a guess. It costs no teaching time, because the break does the work.</p>
+  <p><strong>The 2:14am question is an experiment, not a discussion.</strong> The room sets a real 18-minute timer at <span class="off" data-off="02:04">02:04</span>, goes to the break, and reads its own queue at <span class="off" data-off="02:24">02:24</span>. Three outcomes appear in every room of eight, and none is a guess. It costs no teaching time, because the break does the work.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">guardrails · the human gate &#183; 01:44 to 02:34, through the break</span>
+  <span class="tag">guardrails · the human gate &#183; <span class="off" data-off="01:44">01:44</span> to <span class="off" data-off="02:34">02:34</span>, through the break</span>
 
-  <div class="beat" data-ref="t2-r-refused"><span class="t">01:44</span><div class="b">
+  <div class="beat" id="s-0144" data-ref="t2-r-refused"><span class="t"><span class="off" data-off="01:44">01:44</span></span><div class="b">
     <h4>It refuses ₹8,400 that is genuinely owed</h4>
     <span class="pairs">The narrative &#183; in pairs · 7 minutes · both answers in writing before you open the button</span>
     
     <p>Setup and trace on screen. The standing two questions, in writing, before anything is read out.</p>
     <p><strong>Say maker-checker early and out loud.</strong> This is the highest-value move in the topic. For anyone who has shipped in a bank, an NBFC or a payments company it converts the whole thing from a new agent problem into something they already believe and have been audited on. Ask for a show of hands on who has built one. In this cohort it will not be a small number.</p>
-    <p><strong>Point at the counter.</strong> Meera's refusal incremented <code>guard_refused_total</code>, and that single number is the only trace of her anywhere. They built it at 00:54. It is the wrong-refusal cost, and the reading on the two mistakes at 02:24 comes back to it. It costs ten seconds to say.</p>
+    <p><strong>Point at the counter.</strong> Meera's refusal incremented <code>guard_refused_total</code>, and that single number is the only trace of her anywhere. They built it at <span class="off" data-off="00:54">00:54</span>. It is the wrong-refusal cost, and the reading on the two mistakes at <span class="off" data-off="02:24">02:24</span> comes back to it. It costs ten seconds to say.</p>
   </div></div>
 
-  <div class="beat" data-ref="t2-r-gate"><span class="t">01:51</span><div class="b">
+  <div class="beat" id="s-0151" data-ref="t2-r-gate"><span class="t"><span class="off" data-off="01:51">01:51</span></span><div class="b">
     <h4>Hands-on lab: build the gate, and the record</h4>
     <span class="pairs">Hands-on lab &#183; alone, 13 minutes · three of them in writing before you type</span>
     
@@ -1171,7 +1240,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <p class="qbadge">No model calls. This build costs nothing against their 20 a day.</p>
   </div></div>
 
-  <div class="beat" data-ref="t2-r-timer"><span class="t">02:04</span><div class="b">
+  <div class="beat" id="s-0204" data-ref="t2-r-timer"><span class="t"><span class="off" data-off="02:04">02:04</span></span><div class="b">
     <h4>Set the timer</h4>
     <span class="pairs">Hands-on lab &#183; whole room, 2 minutes · then leave</span>
     
@@ -1182,7 +1251,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <p><strong>Then leave the room for the break, and do not stay answering questions about the gate.</strong> The experiment needs nobody watching the queue, including you.</p>
   </div></div>
 
-  <div class="beat" data-ref="t2-r-break"><span class="t">02:24</span><div class="b">
+  <div class="beat" id="s-0224" data-ref="t2-r-break"><span class="t"><span class="off" data-off="02:24">02:24</span></span><div class="b">
     <h4>What the break did</h4>
     <span class="pairs">Hands-on lab &#183; whole room, 6 minutes · open your own queue</span>
     
@@ -1191,11 +1260,11 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <p><strong>Say plainly that nobody in the room chose a wrong answer.</strong> Every one of the three is somebody's production behaviour tonight. The difference is not correctness. It is whether the person who wrote the code ever asked the question.</p>
   </div></div>
 
-  <div class="beat" data-ref="t2-r-quiz"><span class="t">02:30</span><div class="b">
+  <div class="beat" id="s-0230" data-ref="t2-r-quiz"><span class="t"><span class="off" data-off="02:30">02:30</span></span><div class="b">
     <h4>Topic 2 quiz and takeaway</h4>
     <span class="pairs">alone, in writing, 3 minutes · then one line</span>
     
-  <p>Straight after the queue read-back, while the three outcomes are still on screen. Take up only the one that splits the room. <strong>Question 3 quotes 00:48 word for word.</strong> Read the quote out first.</p>
+  <p>Straight after the queue read-back, while the three outcomes are still on screen. Take up only the one that splits the room. <strong>Question 3 quotes <span class="off" data-off="00:48">00:48</span> word for word.</strong> Read the quote out first.</p>
   </div></div>
 </article>
 </div>
@@ -1209,17 +1278,17 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <div class="scroller"><table>
     <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
     <tbody>
-      <tr><td>The paused run lives in memory and dies with the process</td><td>Topic 3 at 02:34, and properly in week 5</td></tr>
-      <tr><td>Nothing stops the same approved request paying twice</td><td>Topic 3 at 03:03</td></tr>
-      <tr><td>The approval could be granted by a model instead of a person</td><td>Topic 4 at 03:18, and the answer is no</td></tr>
-      <tr><td>The threshold has no owner and no change path</td><td>The teardown at 04:15, question 2</td></tr>
-      <tr><td>A gate approved by somebody who stopped reading</td><td><strong>Nowhere.</strong> It is named at 02:24 and no control in this course detects it. Say so.</td></tr>
+      <tr><td>The paused run lives in memory and dies with the process</td><td>Topic 3 at <span class="off" data-off="02:34">02:34</span>, and properly in week 5</td></tr>
+      <tr><td>Nothing stops the same approved request paying twice</td><td>Topic 3 at <span class="off" data-off="03:03">03:03</span></td></tr>
+      <tr><td>The approval could be granted by a model instead of a person</td><td>Topic 4 at <span class="off" data-off="03:18">03:18</span>, and the answer is no</td></tr>
+      <tr><td>The threshold has no owner and no change path</td><td>The teardown at <span class="off" data-off="04:15">04:15</span>, question 2</td></tr>
+      <tr><td>A gate approved by somebody who stopped reading</td><td><strong>Nowhere.</strong> It is named at <span class="off" data-off="02:24">02:24</span> and no control in this course detects it. Say so.</td></tr>
     </tbody>
   </table></div>
 </article>
 
 <article class="card" id="t2-r-refused">
-  <span class="pairs">&#8596; 01:44 &#183; &#8596; 01:44 · the refusal that opens topic 2</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:44">01:44</span> &#183; &#8596; <span class="off" data-off="01:44">01:44</span> · the refusal that opens topic 2</span>
   <h3>It refuses ₹8,400 that is genuinely owed</h3>
   
   <details>
@@ -1233,7 +1302,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <summary><span class="chev">›</span> The wrong answer worth spending time on, and one probe</summary>
     <div class="dbody">
       <p><strong>"Raise the ceiling."</strong> What is right: the number genuinely is wrong. What is wrong: a higher wall is still a wall, and the next honest case sits just above the new number. Ask which number they would choose, then ask for the case that sits ₹1 over it. Do this once and the room stops proposing numbers.</p>
-      <p><strong>Probe.</strong> "Your ceiling is one month of the plan. Name the honest case that is twenty times the plan." Eleven months of a double charge on a ₹4,000 plan is ₹44,000, the teardown case at 04:15, so a pair that gets there has walked into the teardown on its own. Let them.</p>
+      <p><strong>Probe.</strong> "Your ceiling is one month of the plan. Name the honest case that is twenty times the plan." Eleven months of a double charge on a ₹4,000 plan is ₹44,000, the teardown case at <span class="off" data-off="04:15">04:15</span>, so a pair that gets there has walked into the teardown on its own. Let them.</p>
     </div>
   </details>
   <details>
@@ -1245,16 +1314,19 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
         <li><strong>What replaces it.</strong> The model expresses uncertainty by calling <code>escalate</code>. That call lands in the trace, is countable per week and per ticket type, and can be checked afterwards against whether a person agreed it needed looking at.</li>
         <li><strong>Where uncertainty does belong.</strong> In the record, and in week 3's harness as sampling variance measured by code. A test-time instrument, not a runtime gate.</li>
       </ul>
-      <p class="quiet"><strong>This card owns the confidence half. 03:18 owns the judge half.</strong> They are one instinct answered from two sides. Do not run 03:18's argument here, and do not run this one there.</p>
+      <p class="quiet"><strong>This card owns the confidence half. <span class="off" data-off="03:18">03:18</span> owns the judge half.</strong> They are one instinct answered from two sides. Do not run <span class="off" data-off="03:18">03:18</span>'s argument here, and do not run this one there.</p>
     </div>
   </details>
   <blockquote>A limit with one outcome is a wall. A limit with two outcomes is a gate.</blockquote>
 </article>
 
 <article class="card" id="t2-r-gate">
-  <span class="pairs">&#8596; 01:51 &#183; &#8596; 01:51 · the gate, and the record, in one build</span>
+  <span class="pairs">&#8596; <span class="off" data-off="01:51">01:51</span> &#183; &#8596; <span class="off" data-off="01:51">01:51</span> · the gate, and the record, in one build</span>
   <h3>Hands-on lab: build the gate, and the record</h3>
   
+  <h4>Starting state</h4>
+  <p>Their topic 1 agent. Meera's account and ticket are not in the published reference agent, so the learner page gives both as snippets to add to <span class="mono">data/accounts.json</span> and <span class="mono">data/tickets.json</span>. The mock brain looks the account up and then credits the ticket's disputed amount, so ticket 7310 asks for ₹8,400. The lab design is on the learner page: a pending queue file, <span class="mono">src/approve.py</span>, a timeout default, a requester check, and "already approved" on a second call. The full code sits behind "Show a working answer".</p>
+
   <h4>The decision log, and the field that changes everything</h4>
   <p>Do not give them the format. Ask for it: <em>nine months from now, somebody asks why account 4471 was credited ₹1,200 on 14 March. What one line do you want to find?</em> Two minutes, alone, nobody reads out until the six-field line is on screen.</p>
   <pre>decided_by=policy          a rule decided, no person involved
@@ -1310,7 +1382,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
 </article>
 
 <article class="card" id="t2-r-timer">
-  <span class="pairs">&#8596; 02:04 &#183; &#8596; 02:04 · the experiment that runs through the break</span>
+  <span class="pairs">&#8596; <span class="off" data-off="02:04">02:04</span> &#183; &#8596; <span class="off" data-off="02:04">02:04</span> · the experiment that runs through the break</span>
   <h3>Set the timer</h3>
   
   <p><strong>It is the best two minutes in the session, and it is easy to spoil.</strong></p>
@@ -1319,7 +1391,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <div class="dbody">
       <p>Eighteen minutes, not fifteen. You want it to fire while people are drifting back rather than while the room is empty.</p>
       <p><strong>Say nothing about what will happen.</strong> No "this will be interesting", no raised eyebrow. The value is entirely in them not having predicted it.</p>
-      <p><strong>If somebody's gate is not working by 02:04</strong>, give them a prepared queue state to open at 02:24 rather than letting them sit out the debrief. Have three files ready, one per outcome. This is the one place in the day where a broken build costs somebody the next segment entirely, so prepare the three files before the session rather than improvising.</p>
+      <p><strong>If somebody's gate is not working by <span class="off" data-off="02:04">02:04</span></strong>, give them a prepared queue state to open at <span class="off" data-off="02:24">02:24</span> rather than letting them sit out the debrief. Have three files ready, one per outcome. This is the one place in the day where a broken build costs somebody the next segment entirely, so prepare the three files before the session rather than improvising.</p>
       <p>There is nothing to reveal on this card. The reveal is their own queue, twenty minutes later.</p>
     </div>
   </details>
@@ -1327,7 +1399,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
 </article>
 
 <article class="card" id="t2-r-break">
-  <span class="pairs">&#8596; 02:24 &#183; &#8596; 02:24 · their own queue, read back</span>
+  <span class="pairs">&#8596; <span class="off" data-off="02:24">02:24</span> &#183; &#8596; <span class="off" data-off="02:24">02:24</span> · their own queue, read back</span>
   <h3>What the break did</h3>
   
   <h4>2:14am is one of six paths</h4>
@@ -1354,7 +1426,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <summary><span class="chev">›</span> The time-zone path, and why it is not a footnote</summary>
     <div class="dbody">
       <p>For a team in Bengaluru serving customers in the United States, the queue fills at 2am IST, which is 4:30pm Eastern, the customer's busiest hour. So "nobody is awake" and "the customer is waiting" are the same moment, and they pull in opposite directions.</p>
-      <p><strong>A rota across time zones is an architecture decision, not an HR one</strong>, and it gets made by whoever set the timeout at 01:51.</p>
+      <p><strong>A rota across time zones is an architecture decision, not an HR one</strong>, and it gets made by whoever set the timeout at <span class="off" data-off="01:51">01:51</span>.</p>
       <p>Ask how many in the room serve customers in a time zone that is not theirs. The hands make the argument better than the paragraph does.</p>
       <p class="quiet">Do not reach for an alert-fatigue statistic. Every source says a quarter to two-thirds of alerts go uninvestigated, and every source is a blog citing an unnamed survey. Use "hands up if you have ever muted an alert channel" instead.</p>
     </div>
@@ -1382,10 +1454,12 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <h4>The sentence that travels upward</h4>
   <p>It is on the learner page, word for word. Read it rather than paraphrasing. <strong>Do not add a fourth idea.</strong> This is reading, not a segment: point at it in one sentence and move to the topic quiz.</p>
   <blockquote>"We added validation" does not survive a board meeting. "Here is what being wrong costs us in each direction" does.</blockquote>
+  <h4>Best practices for human approval, from an architect's view</h4>
+  <p>Eight on the learner page. If time is short, say the first three: ask on consequence not confidence, write the request down before asking, one approval one execution.</p>
 </article>
 
 <article class="card" id="t2-r-quiz">
-  <span class="pairs">&#8596; 02:30 &#183; three questions, one from earlier material</span>
+  <span class="pairs">&#8596; <span class="off" data-off="02:30">02:30</span> &#183; three questions, one from earlier material</span>
   <h3>Topic 2 quiz and takeaway</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>It is 2:14am. Four approval requests are waiting and nobody is on the queue. Which answer is a policy?</p>
@@ -1396,7 +1470,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <li>D. It pays, because the customer is waiting</li>
   </ul>
   <p><strong>The answer.</strong> <p><strong>C.</strong> It is the only answer with a number and a recorded outcome. A, B and D are behaviours. Any of the three could be right, once somebody attaches a number and writes it down.</p></p>
-  <p><strong>The likely wrong answer.</strong> A, “it waits”. It is what most gates did at 02:24.</p>
+  <p><strong>The likely wrong answer.</strong> A, “it waits”. It is what most gates did at <span class="off" data-off="02:24">02:24</span>.</p>
   <p><strong>What is right about it.</strong> Waiting is often the correct behaviour. What is missing is the upper bound. Waiting with no limit is not a rule, it is the absence of one.</p>
   <h4>Question 2 &#183; this topic</h4>
   <p>You want to lower the ceiling from ₹1,200 to ₹800. What do you run before it blocks anybody?</p>
@@ -1410,8 +1484,8 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <p><strong>The likely wrong answer.</strong> D, because a lower ceiling is always safer.</p>
   <p><strong>What is right about it.</strong> It is safer in one direction: fewer wrong payments. Every signal you receive pushes that way. The wrong refusals it adds are the mistake your monitoring never shows you.</p>
   <h4>Question 3 &#183; from earlier</h4>
-  <blockquote><strong>Topic 1 · 00:48 · the second of the four facts.</strong> “Can it be undone · The grade you gave each tool in week 1” And below it: “If it cannot be undone there is no afterwards, and the only place a control can exist is before the call.”</blockquote>
-  <p>Using the four facts from 00:48, which one decides whether an action may need a person before it runs?</p>
+  <blockquote><strong>Topic 1 · <span class="off" data-off="00:48">00:48</span> · the second of the four facts.</strong> “Can it be undone · The grade you gave each tool in week 1” And below it: “If it cannot be undone there is no afterwards, and the only place a control can exist is before the call.”</blockquote>
+  <p>Using the four facts from <span class="off" data-off="00:48">00:48</span>, which one decides whether an action may need a person before it runs?</p>
   <ul class="opt">
     <li>A. Which action this is</li>
     <li>B. Whether it can be undone <span class="ok">&#8212; correct</span></li>
@@ -1426,7 +1500,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <span class="pairs">&#8596; reading, not a segment &#183; three or more named options a slot, no recommendation</span>
   <h3>At enterprise scale</h3>
   <p class="lede">Where do firms that already run this keep a request while it waits for a person?</p>
-  <p>The gate you build at 01:51 holds the wait in your own process. That is correct for one process, and it dies with the process. <strong>No recommendation is attached to any row.</strong></p>
+  <p>The gate you build at <span class="off" data-off="01:51">01:51</span> holds the wait in your own process. That is correct for one process, and it dies with the process. <strong>No recommendation is attached to any row.</strong></p>
   <div class="tw">
     <table>
       <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
@@ -1434,7 +1508,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
         <tr><td>The wait, once it outlives the process</td><td>Temporal, with a durable timer and a signal</td><td>A cluster to run, or Temporal Cloud and its bill. A new programming model: your team writes workflows rather than functions.</td></tr>
         <tr><td></td><td>AWS Step Functions, with a task token held across the wait</td><td>A state machine per flow, defined outside your codebase. The token has a maximum lifetime, so a longer wait needs its own answer.</td></tr>
         <tr><td></td><td>The maker-checker screen in Finacle or FLEXCUBE, where the bank already runs one</td><td>Nothing new to run. You inherit their queue, their roles, their latency and their release train.</td></tr>
-        <tr><td></td><td>A pending table and a scheduled job, which is the 01:51 lab</td><td>You own the timer, the retry, the escalation and the duplicate approval. Correct at one process, and week 5’s material at forty.</td></tr>
+        <tr><td></td><td>A pending table and a scheduled job, which is the <span class="off" data-off="01:51">01:51</span> lab</td><td>You own the timer, the retry, the escalation and the duplicate approval. Correct at one process, and week 5’s material at forty.</td></tr>
         <tr><td>The ask, inside tools the approver already uses</td><td>LangGraph, pausing the run with an interrupt</td><td>Open source. The paused run is saved by a checkpointer you run and back up, so the wait is now state you own.</td></tr>
         <tr><td></td><td>Camunda, with a user task in a BPMN process</td><td>A process engine to run or license, and a modelling language your team learns. The approval screen comes with it.</td></tr>
         <tr><td></td><td>ServiceNow, with an approval record</td><td>A per-user licence, and a second system of record for the decision. The approver works in a tool they already use.</td></tr>
@@ -1442,7 +1516,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     </table>
   </div>
   
-  <p><strong>Reading, not a segment.</strong> If somebody asks at 01:51, say the two-years question and point at the page. <strong>Name categories and products, never one alone.</strong> One product named alone turns a trade-off into a recommendation.</p>
+  <p><strong>Reading, not a segment.</strong> If somebody asks at <span class="off" data-off="01:51">01:51</span>, say the two-years question and point at the page. <strong>Name categories and products, never one alone.</strong> One product named alone turns a trade-off into a recommendation.</p>
   <p>For anybody who has shipped in a bank or an NBFC, the third row of the first slot is usually the right first question: does the core system already run maker-checker, and can the agent raise an item there rather than build a second approval inbox?</p>
 </article>
 
@@ -1452,14 +1526,14 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <blockquote>A limit costs nothing to use. A human gate spends somebody's attention every single time, and it stops being a guardrail the moment they stop reading.</blockquote>
   
   <blockquote>A limit costs nothing to use. A human gate spends somebody's attention every single time, and it stops being a guardrail the moment they stop reading.</blockquote>
-  <p>Everything else is that sentence with a price attached. The ₹8,400 is what a wall costs when a gate was needed. Their own timer at 02:24 is what happens when nobody chose the default. The 110 a day is the bill.</p>
+  <p>Everything else is that sentence with a price attached. The ₹8,400 is what a wall costs when a gate was needed. Their own timer at <span class="off" data-off="02:24">02:24</span> is what happens when nobody chose the default. The 110 a day is the bill.</p>
 </article>
 
 <article class="card" id="t2-r-checkpoint">
   <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
   <h3>✅ You can now</h3>
   
-  <p><strong>Checkpoint 2, at 02:06, before the timer has fired.</strong> The same three lines as the learner page. The number goes on the last line. That order is deliberate: they commit to an answer about their own code and find out twenty minutes later whether they were right.</p>
+  <p><strong>Checkpoint 2, at <span class="off" data-off="02:06">02:06</span>, before the timer has fired.</strong> The same three lines as the learner page. The number goes on the last line. That order is deliberate: they commit to an answer about their own code and find out twenty minutes later whether they were right.</p>
   <p>If the numbers are low, say so and tell them the next fifteen minutes will settle it. Do not extend the block.</p>
   <h4>Your takeaway</h4>
   <p>One line, in your own words: what a system you own does at 2am when the approver is asleep, and whether anybody chose it.</p>
@@ -1481,7 +1555,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   </ul>
   <h4 class="quiet">Still open</h4>
   <ul>
-    <li><strong>The three prepared queue states for 02:24 do not exist yet.</strong> One file per outcome, for anybody whose gate is not working when the timer is set. Without it a broken build costs somebody the 02:24 read-back entirely. It is preparation item 2.</li>
+    <li><strong>The three prepared queue states for <span class="off" data-off="02:24">02:24</span> do not exist yet.</strong> One file per outcome, for anybody whose gate is not working when the timer is set. Without it a broken build costs somebody the <span class="off" data-off="02:24">02:24</span> read-back entirely. It is preparation item 2.</li>
     <li><strong>"Your own system" still has no stored answer.</strong> Nothing can quote a learner's own system back at them.</li>
   </ul>
 </article>
@@ -1499,33 +1573,33 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   
   <p>This is week 3 planted a week early, and <strong>it only works if you let the passing result stand for a moment.</strong> The room stops the double payment inside one running program, <span class="mono">make retry</span> shows one credit, and then the same ticket from a second terminal pays twice again. They watch a pass and a failure on the same ticket inside four minutes, a week before they have the words for it.</p>
   <p><strong>Do not use the word "evaluation" on the day.</strong> Name the feeling and say week 3 is where it gets a method. Week 3 opens on this terminal rather than on a new example, so the handover is what the whole topic is for.</p>
-  <p><strong>The fix is built, not described.</strong> Ending on a problem with no demonstrated answer is a bad place to spend a week, so the constraint goes in at 03:03 and the room watches the second terminal refuse.</p>
+  <p><strong>The fix is built, not described.</strong> Ending on a problem with no demonstrated answer is a bad place to spend a week, so the constraint goes in at <span class="off" data-off="03:03">03:03</span> and the room watches the second terminal refuse.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">reliability and idempotency &#183; 02:34 to 03:13</span>
+  <span class="tag">reliability and idempotency &#183; <span class="off" data-off="02:34">02:34</span> to <span class="off" data-off="03:13">03:13</span></span>
 
-  <div class="beat" data-ref="t3-r-payonce"><span class="t">02:34</span><div class="b">
+  <div class="beat" id="s-0234" data-ref="t3-r-payonce"><span class="t"><span class="off" data-off="02:34">02:34</span></span><div class="b">
     <h4>Hands-on lab: pay once, then watch your fix fail</h4>
     <span class="pairs">Hands-on lab &#183; decide 2 minutes in writing, then alone 15, then two checks</span>
     
     <p><strong>The decide step is the real content.</strong> Ask it in these words: <em>what makes two payment requests the same? The ticket, the account, the amount, or all three?</em> Two minutes in writing. Their answer decides whether a customer with two genuine disputes is paid once or twice.</p>
-    <p><strong>At 02:51, let it work.</strong> Run <code>make retry</code>, see one credit, and say "it works" and mean it. Do not smile knowingly. The second terminal at 02:55 is worth nothing if the room suspects a trap four minutes earlier.</p>
-    <p><strong>At 02:55, the second terminal.</strong> Have somebody share their screen rather than doing it yourself, so the room watches a peer's system pay twice rather than yours.</p>
+    <p><strong>At <span class="off" data-off="02:51">02:51</span>, let it work.</strong> Run <code>make retry</code>, see one credit, and say "it works" and mean it. Do not smile knowingly. The second terminal at <span class="off" data-off="02:55">02:55</span> is worth nothing if the room suspects a trap four minutes earlier.</p>
+    <p><strong>At <span class="off" data-off="02:55">02:55</span>, the second terminal.</strong> Have somebody share their screen rather than doing it yourself, so the room watches a peer's system pay twice rather than yours.</p>
     <p class="qbadge">No model calls. This lab costs nothing against their 20 a day.</p>
   </div></div>
 
-  <div class="beat" data-ref="t3-r-fix"><span class="t">03:03</span><div class="b">
+  <div class="beat" id="s-0303" data-ref="t3-r-fix"><span class="t"><span class="off" data-off="03:03">03:03</span></span><div class="b">
     <h4>The fix that holds</h4>
     <span class="pairs">Hands-on lab &#183; alone, 6 minutes</span>
     
     <p>Six minutes, and the middle line is the entire lesson. They are not asking whether the key is there. They are inserting it and letting the insert report whether they were first.</p>
-    <p><strong>Then run the second terminal again and let them see it refuse.</strong> The false pass at 02:55 is much easier to sit with once the room has watched the real fix hold.</p>
+    <p><strong>Then run the second terminal again and let them see it refuse.</strong> The false pass at <span class="off" data-off="02:55">02:55</span> is much easier to sit with once the room has watched the real fix hold.</p>
   </div></div>
 
-  <div class="beat" data-ref="t3-r-quiz"><span class="t">03:09</span><div class="b">
+  <div class="beat" id="s-0309" data-ref="t3-r-quiz"><span class="t"><span class="off" data-off="03:09">03:09</span></span><div class="b">
     <h4>Topic 3 quiz and takeaway</h4>
     <span class="pairs">alone, in writing, 3 minutes · then one line</span>
     
@@ -1545,22 +1619,26 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <tbody>
       <tr><td>Nothing tells them the test was lying</td><td>Week 3. That is the whole handover.</td></tr>
       <tr><td>The key is per ticket, so one dispute refunded twice legitimately is refused</td><td>Named in the probe, not fixed. The key is the dispute, not the ticket.</td></tr>
-      <tr><td>Two writes to two different stores still cannot be made atomic</td><td>The teardown at 04:15, question 5</td></tr>
+      <tr><td>Two writes to two different stores still cannot be made atomic</td><td>The teardown at <span class="off" data-off="04:15">04:15</span>, question 5</td></tr>
       <tr><td>A ceiling is per call, so four calls under it still drain an account</td><td><strong>Nowhere.</strong> Route 3 of the adversary round.</td></tr>
     </tbody>
   </table></div>
 </article>
 
 <article class="card" id="t3-r-payonce">
-  <span class="pairs">&#8596; 02:34 &#183; &#8596; 02:34 · the build, and the false pass</span>
+  <span class="pairs">&#8596; <span class="off" data-off="02:34">02:34</span> &#183; &#8596; <span class="off" data-off="02:34">02:34</span> · the build, and the false pass</span>
   <h3>Hands-on lab: pay once, then watch your fix fail</h3>
   
+  <h4>Why idempotency belongs in a guardrails week</h4>
+  <p>On the topic purpose card for learners: it is the "state" guardrail from the six kinds, the approval step needs it, it is the expensive fourth fact from <span class="off" data-off="00:48">00:48</span>, and week 1 ended on it. Say the second reason if asked: an approved payment that is retried is how one approval becomes two payments.</p>
+  <p class="quiet">The learner lab now carries the code: a set at <span class="off" data-off="02:34">02:34</span>, the same check passing <span class="mono">make retry</span> at <span class="off" data-off="02:51">02:51</span>, and the second terminal paying again at <span class="off" data-off="02:55">02:55</span>.</p>
+
   <h4>The narrative</h4>
   <p>Say it in two sentences, from the pre-work: week 1's <span class="mono">make retry</span> paid Ravi ₹3,600 on a ₹1,200 double charge, and the agent reasoned correctly all three times. Ask for the figure they wrote down.</p>
   <h4>The concept</h4>
-  <p>One sentence and no more: running it twice does the same thing as running it once. Say that it is the fourth fact from 00:48, the expensive one.</p>
+  <p>One sentence and no more: running it twice does the same thing as running it once. Say that it is the fourth fact from <span class="off" data-off="00:48">00:48</span>, the expensive one.</p>
   <h4>Components and design</h4>
-  <p>A key and a store. Name both and answer neither. The decide step answers the key, and 03:03 answers the store.</p>
+  <p>A key and a store. Name both and answer neither. The decide step answers the key, and <span class="off" data-off="03:03">03:03</span> answers the store.</p>
   <h4>What makes two requests the same</h4>
   <p>The decide step carries more than the build does, so protect the two minutes.</p>
   <details>
@@ -1575,8 +1653,8 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <summary><span class="chev">›</span> How to run 02:51 and 02:55</summary>
     <div class="dbody">
       <p>The keys live in a Python list, the list dies with the process, and <code>make retry</code> passed because all three deliveries ran inside one program. That is the one case that was never the problem.</p>
-      <p><strong>Let the pass stand at 02:51.</strong> Say "it works" without irony. If the room suspects a trap, the reveal at 02:55 becomes a puzzle they were braced for rather than a result about their own judgment.</p>
-      <p><strong>Have somebody else share their screen at 02:55.</strong> A peer's system paying twice lands differently from yours doing it.</p>
+      <p><strong>Let the pass stand at <span class="off" data-off="02:51">02:51</span>.</strong> Say "it works" without irony. If the room suspects a trap, the reveal at <span class="off" data-off="02:55">02:55</span> becomes a puzzle they were braced for rather than a result about their own judgment.</p>
+      <p><strong>Have somebody else share their screen at <span class="off" data-off="02:55">02:55</span>.</strong> A peer's system paying twice lands differently from yours doing it.</p>
       <p>Then say the line and stop talking for a few seconds: <em>your test passed and proved nothing, and nothing in the room told you.</em></p>
     </div>
   </details>
@@ -1591,7 +1669,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
 </article>
 
 <article class="card" id="t3-r-fix">
-  <span class="pairs">&#8596; 03:03 &#183; &#8596; 03:03 · the constraint</span>
+  <span class="pairs">&#8596; <span class="off" data-off="03:03">03:03</span> &#183; &#8596; <span class="off" data-off="03:03">03:03</span> · the constraint</span>
   <h3>The fix that holds</h3>
   
   <h4>Why a read then a write loses</h4>
@@ -1615,10 +1693,11 @@ if cur.rowcount == 0:
     </div>
   </details>
   <blockquote>You did not write a better check. You moved the check to something that cannot be raced.</blockquote>
+  <p class="quiet">The learner card now has the sqlite code, a two-terminal check, and a working answer that names the gap: the key is written before the payment, so a failed payment leaves a key that says "paid". The two-phase pattern in the topic's reading is the answer.</p>
 </article>
 
 <article class="card" id="t3-r-quiz">
-  <span class="pairs">&#8596; 03:09 &#183; three questions, one from earlier material</span>
+  <span class="pairs">&#8596; <span class="off" data-off="03:09">03:09</span> &#183; three questions, one from earlier material</span>
   <h3>Topic 3 quiz and takeaway</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>What makes two payment requests the same request?</p>
@@ -1635,10 +1714,10 @@ if cur.rowcount == 0:
   <p>make retry passed with one credit, and a second terminal then paid again. In one sentence, what did make retry never test?</p>
   <p><strong>The answer.</strong> <p>A second process. All three deliveries ran inside one program, and the keys lived in a Python list that dies with that program. The one case the test covered was the one case that was never the problem.</p></p>
   <p><strong>The likely wrong answer.</strong> “Concurrency: two requests at exactly the same moment.”</p>
-  <p><strong>What is right about it.</strong> Two processes at the same instant is a real case, and the 03:03 constraint is what handles it. But the second terminal pays even when it runs a minute later, with no overlap at all. A second process is enough.</p>
+  <p><strong>What is right about it.</strong> Two processes at the same instant is a real case, and the <span class="off" data-off="03:03">03:03</span> constraint is what handles it. But the second terminal pays even when it runs a minute later, with no overlap at all. A second process is enough.</p>
   <h4>Question 3 &#183; from earlier</h4>
   <blockquote><strong>Week 1 · the teardown · question 1.</strong> “<span class="mono">issue_credit</span> times out mid-call. The agent does what every well-behaved distributed system does, and retries. Did the customer receive ₹1,200 or ₹2,400, and how would you know?”</blockquote>
-  <p>With the paid table from 03:03 in place, how would you know now?</p>
+  <p>With the paid table from <span class="off" data-off="03:03">03:03</span> in place, how would you know now?</p>
   <p><strong>The answer.</strong> <p>Look the dispute’s key up in the paid table. A row means the first attempt was recorded, and the retry is refused with “already paid”. The question becomes answerable because the key was chosen before the first call, not after it.</p></p>
   <p><strong>The likely wrong answer.</strong> “Check the ledger for two credits.”</p>
   <p><strong>What is right about it.</strong> The ledger is the system of record, so it is the right place to confirm the outcome. But it only tells you after the second payment has happened. The paid table stops the second payment from happening at all.</p>
@@ -1647,7 +1726,7 @@ if cur.rowcount == 0:
   <span class="pairs">&#8596; reading, not a segment &#183; three or more named options a slot, no recommendation</span>
   <h3>At enterprise scale</h3>
   <p class="lede">How do firms that already run this make a payment happen once?</p>
-  <p>Every option below is the same mechanism as the 03:03 lab: a key both sides agree on, and a store that refuses the second write. What changes is who runs the store and how long it remembers. <strong>No recommendation is attached to any row.</strong></p>
+  <p>Every option below is the same mechanism as the <span class="off" data-off="03:03">03:03</span> lab: a key both sides agree on, and a store that refuses the second write. What changes is who runs the store and how long it remembers. <strong>No recommendation is attached to any row.</strong></p>
   <div class="tw">
     <table>
       <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
@@ -1661,6 +1740,12 @@ if cur.rowcount == 0:
   </div>
   
   <p><strong>Reading, not a segment.</strong> If somebody asks, the line to say is on the learner page: the provider enforces the key, the caller chooses it, and either half alone gives you nothing.</p>
+  <h4>Code: the same idea in three products</h4>
+  <p>Stripe's idempotency key, PostgreSQL's <span class="mono">ON CONFLICT DO NOTHING</span>, and the Powertools decorator, on the learner page. Point at them only if asked.</p>
+  <h4>Best practices firms follow</h4>
+  <p>Six on the learner page. The one to say: the caller chooses the key from the dispute, and the store that holds the money enforces it.</p>
+  <h4>Idempotency in guardrailed systems: the wider picture</h4>
+  <p>Reading for learners: repair loops, key injection, two-phase actions, approval de-duplication, stable masking, verdict caching, clean context and bounded repair loops. <strong>Name the tension if asked:</strong> a key hashed from the session, step and arguments stops retries inside one session and does not stop a redelivered ticket, so for money the key is the dispute.</p>
 </article>
 
 <article class="card" id="t3-r-line">
@@ -1676,7 +1761,7 @@ if cur.rowcount == 0:
   <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
   <h3>✅ You can now</h3>
   
-  <p><strong>Checkpoint 3, at 03:09, before the topic quiz.</strong> The number goes on the last line. It is this week's step in the AI-written-code thread. <strong>Set it as a live instruction rather than a reflection:</strong> ask them to give this build to their assistant and watch where it puts the check. It is almost always inside the function.</p>
+  <p><strong>Checkpoint 3, at <span class="off" data-off="03:09">03:09</span>, before the topic quiz.</strong> The number goes on the last line. It is this week's step in the AI-written-code thread. <strong>Set it as a live instruction rather than a reflection:</strong> ask them to give this build to their assistant and watch where it puts the check. It is almost always inside the function.</p>
   <p>If the numbers are low, do not extend the session. Say it is the after-work to do first. The adversary round is about to test the same capability with somebody else's code, which is a better teacher than another three minutes here.</p>
   <h4>Your takeaway</h4>
   <p>One line, in your own words: one test in your own system that passes inside one process and has never been run from two.</p>
@@ -1691,7 +1776,7 @@ if cur.rowcount == 0:
   
   <h4 class="quiet">Still open, and the first one blocks the session</h4>
   <ul>
-    <li><strong><code>make w2-paid-once</code> does not exist.</strong> Until it does, 03:03 is a description rather than a build, and the topic ends on a problem with no demonstrated answer. It is preparation item 1.</li>
+    <li><strong><code>make w2-paid-once</code> does not exist, and no longer blocks <span class="off" data-off="03:03">03:03</span>.</strong> Learners build the paid table themselves from the code on their page. The target would only help your own demo. It is preparation item 1.</li>
     <li><strong><code>make retry</code> needs checking.</strong> Confirm it still delivers the same ticket three times and prints a total the room can read at a glance. It is preparation item 3.</li>
   </ul>
 </article>
@@ -1707,28 +1792,28 @@ if cur.rowcount == 0:
   <h2>What this topic is for</h2>
   <p class="lede"><strong>Can another pair get ₹5,000 out of the system you built this morning?</strong></p>
   
-  <p><strong>03:18 answers the question a room of eight always asks</strong>, usually while writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
-  <p><strong>The adversary round is the reason the rest of the day is compressed.</strong> It is the only segment in six weeks where a participant's work is tested by a peer in real time. It tests the 01:30 rule against an attacker, it produces the regression cases week 4 asks for, and it opens the prediction sealed at 00:10.</p>
+  <p><strong><span class="off" data-off="03:18">03:18</span> answers the question a room of eight always asks</strong>, usually while writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
+  <p><strong>The adversary round is the reason the rest of the day is compressed.</strong> It is the only segment in six weeks where a participant's work is tested by a peer in real time. It tests the <span class="off" data-off="01:30">01:30</span> rule against an attacker, it produces the regression cases week 4 asks for, and it opens the prediction sealed at <span class="off" data-off="00:10">00:10</span>.</p>
   <p><strong>The order is deliberate.</strong> The judge comes straight after topic 3, when the room has built three controls by hand and is most tempted to replace them with something cleverer. The round then attacks the three they kept.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">guardrails · adversarial testing &#183; 03:18 to 04:05</span>
+  <span class="tag">guardrails · adversarial testing &#183; <span class="off" data-off="03:18">03:18</span> to <span class="off" data-off="04:05">04:05</span></span>
 
-  <div class="beat" data-ref="t4-r-judge"><span class="t">03:18</span><div class="b">
+  <div class="beat" id="s-0318" data-ref="t4-r-judge"><span class="t"><span class="off" data-off="03:18">03:18</span></span><div class="b">
     <h4>Layered defence: the tiered gateway, and its latency tax</h4>
     <span class="pairs">The narrative &#183; pairs 5 minutes, then whole room 8</span>
     
     <p>Put the case on screen and <strong>say nothing else</strong>. The standing two questions, in writing, before any discussion.</p>
-    <p><strong>At 03:23, the reveal</strong>: the judge read the same field the agent read. Then rerun #8812 and get a different verdict, which is the second problem and the one nobody expects.</p>
-    <p><strong>At 03:26, the tiered gateway.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at 04:15 uses it.</p>
+    <p><strong>At <span class="off" data-off="03:23">03:23</span>, the reveal</strong>: the judge read the same field the agent read. Then rerun #8812 and get a different verdict, which is the second problem and the one nobody expects.</p>
+    <p><strong>At <span class="off" data-off="03:26">03:26</span>, the tiered gateway.</strong> Ask for the predicted multiple first, in writing: <em>your check took this many milliseconds; how many times slower is a model?</em> Take three numbers out loud. Then the tier table, the cascade, and in-band against out-of-band in one sentence each. <strong>Close on the latency budget</strong>, because the teardown's fourth question at <span class="off" data-off="04:15">04:15</span> uses it.</p>
     <p>Say where the two halves go: whether a judge is any good is a measurement, which is week 3; a second agent with its own loop is orchestration, which is week 5. The five-line order and the five families are reading on the learner page.</p>
     <p class="qbadge">No model calls unless you run #8812 live. If you do, that is two requests against the day's allowance and it is worth it for the different verdict.</p>
   </div></div>
 
-  <div class="beat" data-ref="t4-r-adversary"><span class="t">03:31</span><div class="b">
+  <div class="beat" id="s-0331" data-ref="t4-r-adversary"><span class="t"><span class="off" data-off="03:31">03:31</span></span><div class="b">
     <h4>Hands-on lab: the adversary round</h4>
     <span class="pairs">Hands-on lab &#183; pairs, assigned by name · 30 minutes</span>
     
@@ -1738,11 +1823,11 @@ if cur.rowcount == 0:
     <p>Circulate during the attack. You are looking for the stuck pair, not the winning one. A stuck pair has almost always gone for the ticket text, which is week 4 and will not be stopped by anything built today. Point them at boundary values and second callers.</p>
   </div></div>
 
-  <div class="beat" data-ref="t4-r-quiz"><span class="t">04:01</span><div class="b">
+  <div class="beat" id="s-0401" data-ref="t4-r-quiz"><span class="t"><span class="off" data-off="04:01">04:01</span></span><div class="b">
     <h4>Topic 4 quiz and takeaway</h4>
     <span class="pairs">alone, in writing, 3 minutes · then one line</span>
     
-  <p>Straight after the injection sentence. <strong>Question 3 quotes 01:30 word for word.</strong> Read the quote out first. It is the question that ties the round back to the rule, and it is the one worth the discussion.</p>
+  <p>Straight after the injection sentence. <strong>Question 3 quotes <span class="off" data-off="01:30">01:30</span> word for word.</strong> Read the quote out first. It is the question that ties the round back to the rule, and it is the one worth the discussion.</p>
   </div></div>
 </article>
 </div>
@@ -1757,7 +1842,7 @@ if cur.rowcount == 0:
     <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
     <tbody>
       <tr><td>Nobody can tell whether their judge is any good</td><td>Week 3. It needs a labelled set and an agreement rate.</td></tr>
-      <tr><td>The injected ticket text still works</td><td>Week 4. The adversary round hands it forward at 04:00</td></tr>
+      <tr><td>The injected ticket text still works</td><td>Week 4. The adversary round hands it forward at <span class="off" data-off="04:00">04:00</span></td></tr>
       <tr><td>A second agent approving the first</td><td>Week 5. Orchestration, not scoring.</td></tr>
       <tr><td>Classifier thresholds, and what a confusion matrix costs</td><td><strong>Nowhere in this course.</strong> Named in the families table and no further.</td></tr>
       <tr><td>A total per account per day</td><td><strong>Nowhere this week.</strong> Route 3 finds it, and the after-work turns it into a regression case.</td></tr>
@@ -1766,7 +1851,7 @@ if cur.rowcount == 0:
 </article>
 
 <article class="card" id="t4-r-judge">
-  <span class="pairs">&#8596; 03:18 &#183; &#8596; 03:18 · the case, and the rule</span>
+  <span class="pairs">&#8596; <span class="off" data-off="03:18">03:18</span> &#183; &#8596; <span class="off" data-off="03:18">03:18</span> · the case, and the rule</span>
   <h3>Layered defence: the tiered gateway, and its latency tax</h3>
   
   <h4>What went wrong</h4>
@@ -1807,7 +1892,7 @@ if cur.rowcount == 0:
     <summary><span class="chev">›</span> The strongest model-based pattern, and why it is not the judge</summary>
     <div class="dbody">
       <p><strong>The grounded verifier.</strong> Do not ask a model whether the answer is reasonable. Ask whether it matches what the tool returned. The truth is then external to the model and the check degrades to a comparison rather than an opinion.</p>
-      <p>The reference agent already carries the case for it and nobody has drawn attention to it: at 00:23 the model closed the ticket claiming a credit while the ledger said ₹0. That is one comparison between two values the system already holds, and nothing in the course builds it. Week 4 owns it.</p>
+      <p>The reference agent already carries the case for it and nobody has drawn attention to it: at <span class="off" data-off="00:23">00:23</span> the model closed the ticket claiming a credit while the ledger said ₹0. That is one comparison between two values the system already holds, and nothing in the course builds it. Week 4 owns it.</p>
       <p class="quiet">If a room has time and interest, this is the extension worth giving them. It is the one pattern in the family that is cheap, deterministic in its comparison, and unavailable to the attacker.</p>
     </div>
   </details>
@@ -1835,25 +1920,37 @@ if cur.rowcount == 0:
     </div>
   </details>
   <h4>Latency budgeting</h4>
-  <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at 04:15 asks for one.</p>
+  <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at <span class="off" data-off="04:15">04:15</span> asks for one.</p>
   <h4>The order to choose in</h4>
   <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>
+  <h4>What tier 3 looks like in code</h4>
+  <p>A Llama Guard sketch on the learner page, with a two-tier <span class="mono">check()</span> where the ceiling runs first. The point to land: the model can only tighten what the rule allowed.</p>
+  <h4>Engineering trade-offs and operations</h4>
+  <p>Reading on the learner page: latency budgeting, false-positive rates, observability and audit, operating the rules. Each one points at where today covers it. Do not teach it; point at it.</p>
+  <p class="quiet">The learner page now says plainly that comparing a claim with a tool result is a rule-based check when both are structured values. A model is needed only to pull a claim out of free text.</p>
 </article>
 
 <article class="card" id="t4-r-adversary">
-  <span class="pairs">&#8596; 03:31 &#183; &#8596; 03:31 · the adversary round</span>
+  <span class="pairs">&#8596; <span class="off" data-off="03:31">03:31</span> &#183; &#8596; <span class="off" data-off="03:31">03:31</span> · the adversary round</span>
   <h3>Hands-on lab: the adversary round</h3>
   
+  <h4>Today's three controls, and how each one broke</h4>
+  <p>On the learner page as a table, so pairs know what they are attacking: the limit, the approval step, pay once, each with the failure the room already saw.</p>
+  <h4>Before you start: run their code. Three minutes, with the rules</h4>
+  <p>The setup step on the learner page: <span class="mono">git stash</span>, <span class="mono">git apply their.patch</span>, copy their policy file, clear <span class="mono">data/paid.db</span>.</p>
+  <h4>The rules of the round</h4>
+  <p>Target ₹5,000; add callers, tools, repeated tickets, boundary values or ticket text; never edit their code. Pairs swap a patch and a policy file and run them locally, and the learner page gives the exact git commands and an <span class="mono">attack.py</span> harness that replaces the model with a scripted list of tool calls. <strong>Remind them to run <span class="mono">git stash pop</span> afterwards.</strong></p>
+
   <h4 class="quiet" style="font-weight:700">Six routes exist. Expect four in a room of eight.</h4>
   <details>
     <summary><span class="chev">›</span> The six routes</summary>
     <div class="dbody">
       <ol>
-        <li><strong>A second caller.</strong> A new tool with no row is refused, so write one. The row does not say the account must exist. 01:25 used as a weapon.</li>
-        <li><strong>A caller outside the agent.</strong> Anything that writes to the ledger without passing the dispatch. 01:30 from the attacking side.</li>
+        <li><strong>A second caller.</strong> A new tool with no row is refused, so write one. The row does not say the account must exist. <span class="off" data-off="01:25">01:25</span> used as a weapon.</li>
+        <li><strong>A caller outside the agent.</strong> Anything that writes to the ledger without passing the dispatch. <span class="off" data-off="01:30">01:30</span> from the attacking side.</li>
         <li><strong>Two credits under the ceiling.</strong> ₹1,200 four times is ₹4,800 and no single call is over the limit.</li>
-        <li><strong>The same ticket from a second process</strong>, against any pair who has not reached 03:03.</li>
-        <li><strong>The approval path.</strong> Submit, then approve it yourself. Whoever skipped the requester-and-approver check at 01:51 is open here.</li>
+        <li><strong>The same ticket from a second process</strong>, against any pair who has not reached <span class="off" data-off="03:03">03:03</span>.</li>
+        <li><strong>The approval path.</strong> Submit, then approve it yourself. Whoever skipped the requester-and-approver check at <span class="off" data-off="01:51">01:51</span> is open here.</li>
         <li><strong>The ticket text.</strong> It works, and it is week 4.</li>
       </ol>
       <p><strong>Route 3 is worth the most time in the report-out.</strong> Nothing in the session defends against it and nobody expects that. A ceiling is per call. The thing you care about is per account, per day, and no control built today has that shape.</p>
@@ -1863,7 +1960,7 @@ if cur.rowcount == 0:
     <summary><span class="chev">›</span> The wrong answer, and the injection sentence</summary>
     <div class="dbody">
       <p><strong>"We could not get in, so their guard is fine."</strong> What is right: they tried. What is wrong: ten minutes of two people is not evidence. Ask what they did not try, and the honest answer is usually routes 3 and 5.</p>
-      <p><strong>Then the sentence that must be said, and do not soften it.</strong> If your attack was a line in the ticket text, you have found week 1's injection two weeks early. Do not patch the prompt tonight. The answer you will reach for is a line in the system prompt telling the model to ignore instructions in ticket text. That is the wrong shape of answer, and week 4 will break it live.</p>
+      <p><strong>Then the sentence that must be said, and do not soften it.</strong> In week 1 an account note made the agent pay ₹2,50,000. If an attack today worked by writing instructions into the ticket text, it is the same weakness found again: prompt injection. None of today's guardrails is built to stop it, and week 4 is. Do not patch the prompt tonight. The fix most people reach for is a line telling the model to ignore instructions in ticket text, and week 4 shows it failing.</p>
       <p>Naming the date is what stops it festering. Week 4 opens by asking who tried anyway, so a room that tried is a better week 4.</p>
     </div>
   </details>
@@ -1871,32 +1968,32 @@ if cur.rowcount == 0:
     <summary><span class="chev">›</span> The finding, and the report-out</summary>
     <div class="dbody">
       <p><strong>Insist on the control point in the finding.</strong> "Their check was weak" teaches nobody. "A constraint at the ledger would have stopped this and a dispatch check could not" is the session's own vocabulary used without prompting. That is the capability you are actually assessing.</p>
-      <p>If a pair's system held, spend their two minutes on why. It is almost always route 2 being unavailable because they went further than the dispatch. That pair has reached 01:30's rule on their own.</p>
+      <p>If a pair's system held, spend their two minutes on why. It is almost always route 2 being unavailable because they went further than the dispatch. That pair has reached <span class="off" data-off="01:30">01:30</span>'s rule on their own.</p>
       <p><strong>Probe.</strong> "Which of the six routes works against your own system at work, right now?" Do not take an answer out loud. It is the after-work.</p>
     </div>
   </details>
   <p class="quiet">Findings only in the report-out. Never names, never a screen. The scoreboard is one number: how many systems paid out.</p>
   <h4>Open the predictions</h4>
-  <p>The question they answered at 00:10, word for word: <em>by 04:00, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em></p>
+  <p>The question they answered at <span class="off" data-off="00:10">00:10</span>, word for word: <em>by <span class="off" data-off="04:00">04:00</span>, will another pair get money out of the system you are about to build? Yes or no, and by which route.</em></p>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
-      <p>There was no correct answer at 00:10. What you collected was the distribution, before anybody had built anything. Put it beside what happened.</p>
-      <p>If you asked for a percentage at 00:10, you can name the confidently-wrong group without naming a person: "four people were at 80% or above and three of those were wrong."</p>
+      <p>There was no correct answer at <span class="off" data-off="00:10">00:10</span>. What you collected was the distribution, before anybody had built anything. Put it beside what happened.</p>
+      <p>If you asked for a percentage at <span class="off" data-off="00:10">00:10</span>, you can name the confidently-wrong group without naming a person: "four people were at 80% or above and three of those were wrong."</p>
     </div>
   </details>
   <details>
     <summary><span class="chev">›</span> The expected wrong answer, and what is right about it</summary>
     <div class="dbody">
       <p>Most of the room wrote "yes", because the framing of the question implies it. What is right: they read the session correctly. <strong>What matters is the second half, the route.</strong> Almost nobody names the route that was actually used against them, and that gap is the whole beat. The few who wrote "no" are the ones to watch.</p>
-      <p><strong>Probe.</strong> "Which route did you not predict, and why did it not occur to you at 00:10?"</p>
+      <p><strong>Probe.</strong> "Which route did you not predict, and why did it not occur to you at <span class="off" data-off="00:10">00:10</span>?"</p>
     </div>
   </details>
   <blockquote>You will be wrong about your own system in a way you can measure in four hours.</blockquote>
 </article>
 
 <article class="card" id="t4-r-quiz">
-  <span class="pairs">&#8596; 04:01 &#183; three questions, one from earlier material</span>
+  <span class="pairs">&#8596; <span class="off" data-off="04:01">04:01</span> &#183; three questions, one from earlier material</span>
   <h3>Topic 4 quiz and takeaway</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>In the adversary round, a pair sends ₹1,200 four times to one account. Which control you built today stops it?</p>
@@ -1921,7 +2018,7 @@ if cur.rowcount == 0:
   <p><strong>The likely wrong answer.</strong> B, out-of-band everywhere.</p>
   <p><strong>What is right about it.</strong> For text a person reads, it is often the right call: nobody waits and a stream can be cut. It fails exactly where the action has no afterwards.</p>
   <h4>Question 3 &#183; from earlier</h4>
-  <blockquote><strong>Topic 1 · 01:30 · the rule the first lab exists to land.</strong> “Move the control toward the thing being protected, not toward the thing being controlled.”</blockquote>
+  <blockquote><strong>Topic 1 · <span class="off" data-off="01:30">01:30</span> · the rule the first lab exists to land.</strong> “Move the control toward the thing being protected, not toward the thing being controlled.”</blockquote>
   <p>Which adversary route does this rule close, and which does it still leave open?</p>
   <p><strong>The answer.</strong> <p>It closes route 2, a caller outside the agent: a constraint at the ledger covers every caller, including ones you have not written. It leaves route 3 open unless the constraint counts a total per account per day. Route 6, the ticket text, is week 4.</p></p>
   <p><strong>The likely wrong answer.</strong> “It closes all six. Everything goes through the ledger.”</p>
@@ -1946,12 +2043,14 @@ if cur.rowcount == 0:
         <tr><td>Attacking your own system on purpose</td><td>Microsoft PyRIT</td><td>Open source. It is a framework you script, so every attack about your own business rules is one you write.</td></tr>
         <tr><td></td><td>NVIDIA garak</td><td>Open source. Its probes test the model’s text: injection, jailbreaks and leaks. It has no view of your ledger.</td></tr>
         <tr><td></td><td>Promptfoo, with its red-team plugins</td><td>An open-source core and a paid enterprise tier. It generates attacks from a description of your app. You still write the check that says money moved.</td></tr>
-        <tr><td></td><td>An AI red-teaming programme on HackerOne or Bugcrowd</td><td>Paid per programme and per finding. Outside people with no view of your code, which is the point of the 03:31 round, at a price.</td></tr>
+        <tr><td></td><td>An AI red-teaming programme on HackerOne or Bugcrowd</td><td>Paid per programme and per finding. Outside people with no view of your code, which is the point of the <span class="off" data-off="03:31">03:31</span> round, at a price.</td></tr>
       </tbody>
     </table>
   </div>
   
   <p><strong>Reading, not a segment.</strong> The one sentence worth saying if asked: a scanner finds text that fools a model, and only somebody who knows the ceiling finds four credits under it.</p>
+  <h4>A sample setup</h4>
+  <p>A promptfoo configuration sketch on the learner page, labelled as needing a check against current documentation. Pair it with the <span class="off" data-off="03:31">03:31</span> <span class="mono">attack.py</span>: the scanner tests text, the script tests business rules.</p>
 </article>
 
 <article class="card" id="t4-r-line">
@@ -1959,14 +2058,14 @@ if cur.rowcount == 0:
   <h3>The line this topic exists to land</h3>
   <blockquote>Your guard has not been tested until somebody who did not build it has tried to get past it.</blockquote>
   
-  <p>Two sentences carry this topic, and this one is on the ember card. The other, from 03:18, is on its reference card: a model may widen what gets through a hard limit, and it may never be the limit. Do not paraphrase either on the day.</p>
+  <p>Two sentences carry this topic, and this one is on the ember card. The other, from <span class="off" data-off="03:18">03:18</span>, is on its reference card: a model may widen what gets through a hard limit, and it may never be the limit. Do not paraphrase either on the day.</p>
 </article>
 
 <article class="card" id="t4-r-checkpoint">
   <span class="pairs">&#8596; the end of the topic &#183; the same lines as their page</span>
   <h3>✅ You can now</h3>
   
-  <p><strong>No number in chat here.</strong> The topic quiz at 04:01 does the checking. <strong>Watch for a room that gets the selection rule wrong in the quiz</strong>, because it means the five lines were heard as a list of kinds rather than as an order of preference.</p>
+  <p><strong>No number in chat here.</strong> The topic quiz at <span class="off" data-off="04:01">04:01</span> does the checking. <strong>Watch for a room that gets the selection rule wrong in the quiz</strong>, because it means the five lines were heard as a list of kinds rather than as an order of preference.</p>
   <h4>Your takeaway</h4>
   <p>One line, in your own words: which of the six routes would work against a system you own, right now.</p>
   
@@ -1989,33 +2088,33 @@ if cur.rowcount == 0:
 </details>
 
 <div class="head" id="closing">
-  <span class="k">the close &#183; 04:05 to 05:00</span>
+  <span class="k">the close &#183; <span class="off" data-off="04:05">04:05</span> to <span class="off" data-off="05:00">05:00</span></span>
   <h2>How the session closes</h2>
   
-  <p><strong>This close is fixed by generation-prompt.md §5, and it is the same every week.</strong> Recall at 04:05, the teardown at 04:15, checkpoint 4 and the quiz at 04:40, the spoken takeaway at 04:50, the rating at 04:55. Do not trade any of it for a longer adversary round.</p>
+  <p><strong>This close is fixed by generation-prompt.md §5, and it is the same every week.</strong> Recall at <span class="off" data-off="04:05">04:05</span>, the teardown at <span class="off" data-off="04:15">04:15</span>, checkpoint 4 and the quiz at <span class="off" data-off="04:40">04:40</span>, the spoken takeaway at <span class="off" data-off="04:50">04:50</span>, the rating at <span class="off" data-off="04:55">04:55</span>. Do not trade any of it for a longer adversary round.</p>
   <p><strong>The teardown is where governance is taught this week.</strong> The five questions used to be a topic of their own, and before that they were the policy table's columns. Today each answer fills one cell of the policy table row for <span class="mono">issue_credit</span>, on the board.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">the close &#183; 04:05 to 05:00</span>
+  <span class="tag">the close &#183; <span class="off" data-off="04:05">04:05</span> to <span class="off" data-off="05:00">05:00</span></span>
 
-  <div class="beat" data-ref="close-r-recall"><span class="t">04:05</span><div class="b">
+  <div class="beat" id="s-0405" data-ref="close-r-recall"><span class="t"><span class="off" data-off="04:05">04:05</span></span><div class="b">
     <h4>Recall: every control, and where its failure moved</h4>
     <span class="pairs">alone, notes closed, 6 minutes · then your pair, 4 minutes</span>
     
     <p><strong>Notes closed, and say it twice.</strong> Six minutes alone in writing, then four with their pair. Do not display the table.</p>
     <p>Then take the third column from the room, one row at a time: <em>take the control you added. Where did the failure move to?</em> Fill the first two columns fast and spend the time on the third.</p>
-    <p class="quiet">This replaced the 03:01 segment of the old clock. It is the same table, and it now arrives as retrieval rather than as a walk-through.</p>
+    <p class="quiet">This replaced the <span class="off" data-off="03:01">03:01</span> segment of the old clock. It is the same table, and it now arrives as retrieval rather than as a walk-through.</p>
   </div></div>
 
-  <div class="beat" data-ref="close-r-teardown"><span class="t">04:15</span><div class="b">
+  <div class="beat" id="s-0415" data-ref="close-r-teardown"><span class="t"><span class="off" data-off="04:15">04:15</span></span><div class="b">
     <h4>Architectural teardown: the agent at forty thousand a month</h4>
     <span class="pairs">whole room 4 minutes · pairs 10 · whole room 11</span>
     
-    <p><strong>04:15, four minutes, the scene.</strong> Say the words "this is a constructed teaching case" first. Sixty seconds alone in writing on <em>the refund has to go out tonight. Your check says no. What actually happens?</em> Then two answers out loud. Somebody always gets to "somebody pays it by hand".</p>
-    <p><strong>04:19, ten minutes, pairs.</strong> Put the drawing up and leave it up. Hand out the questions by name, as assigned before the day:</p>
+    <p><strong><span class="off" data-off="04:15">04:15</span>, four minutes, the scene.</strong> Say the words "this is a constructed teaching case" first. Sixty seconds alone in writing on <em>the refund has to go out tonight. Your check says no. What actually happens?</em> Then two answers out loud. Somebody always gets to "somebody pays it by hand".</p>
+    <p><strong><span class="off" data-off="04:19">04:19</span>, ten minutes, pairs.</strong> Put the drawing up and leave it up. Hand out the questions by name, as assigned before the day:</p>
     <div class="scroller"><table>
       <thead><tr><th>Pair</th><th>Questions</th></tr></thead>
       <tbody>
@@ -2025,8 +2124,8 @@ if cur.rowcount == 0:
         <tr><td>Pair 4</td><td>2 and 3</td></tr>
       </tbody>
     </table></div>
-    <p><strong>04:29, eleven minutes, the room.</strong> One question at a time, 90 seconds a pair. As each answer lands, write it into the <span class="mono">issue_credit</span> row on the board. Two pairs on the same question will disagree about at least one of them. That disagreement is the teardown working.</p>
-    <p class="quiet">Paste a blank one-row table into chat at 04:18, so nobody copies columns off the page.</p>
+    <p><strong><span class="off" data-off="04:29">04:29</span>, eleven minutes, the room.</strong> One question at a time, 90 seconds a pair. As each answer lands, write it into the <span class="mono">issue_credit</span> row on the board. Two pairs on the same question will disagree about at least one of them. That disagreement is the teardown working.</p>
+    <p class="quiet">Paste a blank one-row table into chat at <span class="off" data-off="04:18">04:18</span>, so nobody copies columns off the page.</p>
   </div></div>
 </article>
 </div>
@@ -2034,7 +2133,7 @@ if cur.rowcount == 0:
 <div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
 
 <article class="card" id="close-r-recall">
-  <span class="pairs">&#8596; 04:05 &#183; recall, then the failure-moved table</span>
+  <span class="pairs">&#8596; <span class="off" data-off="04:05">04:05</span> &#183; recall, then the failure-moved table</span>
   <h3>Recall: every control, and where its failure moved</h3>
   
   <details>
@@ -2056,7 +2155,7 @@ if cur.rowcount == 0:
 </article>
 
 <article class="card" id="close-r-teardown">
-  <span class="pairs">&#8596; 04:15 &#183; the scene, five questions, one row of the policy table</span>
+  <span class="pairs">&#8596; <span class="off" data-off="04:15">04:15</span> &#183; the scene, five questions, one row of the policy table</span>
   <h3>Architectural teardown: the agent at forty thousand a month</h3>
   
   <p><strong>The learner page carries two subheadings here</strong>, and they are the two halves of the pair work. The keys below follow the questions in order.</p>
@@ -2120,13 +2219,13 @@ if cur.rowcount == 0:
 </div>
 
 <div class="head" id="quiz">
-  <span class="k">04:40 &#183; eight asked, six from this week and two from week 1</span>
+  <span class="k"><span class="off" data-off="04:40">04:40</span> &#183; eight asked, six from this week and two from week 1</span>
   <h2>Eight questions, ten minutes</h2>
   
   <p><strong>Checkpoint 4 goes first, at the same minute.</strong> Four lines, no number in chat. Then the quiz.</p>
   <p>Say this, in these words: <em>eight questions, one at a time, about 40 seconds each. Nobody's score is shared.</em> Say the second sentence once and you get honest answers rather than careful ones.</p>
   <p>The bank is <span class="mono">docs/teaching/quiz/week-2.md</span>. <strong>Ask them in the order below.</strong> Questions 1 and 5 come from week 1's bank, <span class="mono">docs/teaching/quiz/week-1.md</span>, Q11 and Q13. Do not take up the ones everybody got right. Spend the minutes on the two or three that split the room. Week 2's Q4 and Q6 usually do.</p>
-  <p>Q1 and Q10 of this week's bank are held back: Q1 is asked out loud at 00:48, and Q10 is the teardown's fifth question. Q5 and Q8 moved to the topic 3 quiz and the teardown. The twelve topic-quiz items are Q11 to Q22.</p>
+  <p>Q1 and Q10 of this week's bank are held back: Q1 is asked out loud at <span class="off" data-off="00:48">00:48</span>, and Q10 is the teardown's fifth question. Q5 and Q8 moved to the topic 3 quiz and the teardown. The twelve topic-quiz items are Q11 to Q22.</p>
 </div>
 
 <article class="card">
@@ -2140,7 +2239,7 @@ if cur.rowcount == 0:
     <li>D. Defined behaviour when a step fails halfway</li>
   </ul>
   
-  <p class="qmeta"><strong>Why C is attractive.</strong> It really does reduce bad decisions, and the room watched it do so in week 1's comparison of two models. Tie it to 03:18 in one sentence and move on.</p>
+  <p class="qmeta"><strong>Why C is attractive.</strong> It really does reduce bad decisions, and the room watched it do so in week 1's comparison of two models. Tie it to <span class="off" data-off="03:18">03:18</span> in one sentence and move on.</p>
 </article>
 <article class="card">
   <h4>Q2 · When a limit is genuinely outside the function</h4>
@@ -2192,7 +2291,7 @@ if cur.rowcount == 0:
     <li>D. A hash of (account_id, amount)</li>
   </ul>
   
-  <p class="qmeta">After today's topic 3 this should be near unanimous. <strong>If it is not</strong>, the 02:34 decide step did not land, and that is worth two minutes now rather than a slide in week 3.</p>
+  <p class="qmeta">After today's topic 3 this should be near unanimous. <strong>If it is not</strong>, the <span class="off" data-off="02:34">02:34</span> decide step did not land, and that is worth two minutes now rather than a slide in week 3.</p>
 </article>
 <article class="card">
   <h4>Q6 · The judge that read the ticket</h4>
@@ -2228,9 +2327,9 @@ if cur.rowcount == 0:
 <div class="pane pane-script">
 <div class="head"><span class="k">the script &#183; what to do, in order</span><h3>Run of show</h3></div>
 <article class="card">
-  <span class="tag">the close &#183; 04:05 to 05:00</span>
+  <span class="tag">the close &#183; <span class="off" data-off="04:05">04:05</span> to <span class="off" data-off="05:00">05:00</span></span>
 
-  <div class="beat" data-ref="close-r-takeaway"><span class="t">04:50</span><div class="b">
+  <div class="beat" id="s-0450" data-ref="close-r-takeaway"><span class="t"><span class="off" data-off="04:50">04:50</span></span><div class="b">
     <h4>Takeaway, said out loud</h4>
     <span class="pairs">alone, 1 minute to write · then each person, 30 seconds</span>
     
@@ -2243,7 +2342,7 @@ if cur.rowcount == 0:
 <div class="head"><span class="k">the reference &#183; the argument, the keys</span><h3>The reasoning behind each segment</h3></div>
 
 <article class="card" id="close-r-takeaway">
-  <span class="pairs">&#8596; 04:50 &#183; what each topic was meant to teach</span>
+  <span class="pairs">&#8596; <span class="off" data-off="04:50">04:50</span> &#183; what each topic was meant to teach</span>
   <h3>Takeaway, said out loud</h3>
   
   <p>Compare what the room says with these four. They are the lines each topic exists to land, in the same words as the learner page.</p>
@@ -2267,7 +2366,7 @@ if cur.rowcount == 0:
   <span class="k">after today &#183; the resource shelf</span>
   <h2>Tools for your own system</h2>
   
-  <p><strong>Point at these at 04:57, in one sentence each.</strong> The Rule Placement Audit is topic 1 as a worksheet. The Authority Review's four-level undo scale is the finer version of week 1's three grades. The uncertain-evidence guide is the positive answer to both places today refuses to let a model decide.</p>
+  <p><strong>Point at these at <span class="off" data-off="04:57">04:57</span>, in one sentence each.</strong> The Rule Placement Audit is topic 1 as a worksheet. The Authority Review's four-level undo scale is the finer version of week 1's three grades. The uncertain-evidence guide is the positive answer to both places today refuses to let a model decide.</p>
 </div>
 
 <article class="card">
@@ -2284,12 +2383,12 @@ if cur.rowcount == 0:
 </article>
 
 <div class="head" id="close">
-  <span class="k">the close &#183; 04:55 to 05:00</span>
+  <span class="k">the close &#183; <span class="off" data-off="04:55">04:55</span> to <span class="off" data-off="05:00">05:00</span></span>
   <h2>How the day ends</h2>
   
-  <p><strong>04:55, the same five statements</strong>, then one question out loud: who scored themselves lower than at 00:05? Hands up. Say why that is the good result. If you skip this, the second rating reads as a test rather than as a finding.</p>
+  <p><strong><span class="off" data-off="04:55">04:55</span>, the same five statements</strong>, then one question out loud: who scored themselves lower than at <span class="off" data-off="00:05">00:05</span>? Hands up. Say why that is the good result. If you skip this, the second rating reads as a test rather than as a finding.</p>
   <p><strong>This session should produce more dropped scores than any other week.</strong> Statement 1 is about placement, and the adversary round exists to show them a caller they did not cover. If the hands are few, ask who got money out of somebody else's system, then ask whether their own would have held against the same route.</p>
-  <p><strong>04:57, two lines in chat</strong>, both answered by everybody. Keep the second one. It is what week 3 opens with, and it is the only place that input exists.</p>
+  <p><strong><span class="off" data-off="04:57">04:57</span>, two lines in chat</strong>, both answered by everybody. Keep the second one. It is what week 3 opens with, and it is the only place that input exists.</p>
 </div>
 
 <footer>
@@ -2332,7 +2431,7 @@ if cur.rowcount == 0:
   }
 
   var times = rows.map(function (r) {
-    return mins(r.querySelector('td').textContent.trim());
+    var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());
   });
   var LAST = 300;
 
@@ -2340,7 +2439,7 @@ if cur.rowcount == 0:
     if (startedAt === null) {
       elEl.textContent = '--:--';
       nowEl.textContent = 'Clock off';
-      hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';
+      hintEl.textContent = 'Enter the session start time to turn every time on this page into clock time.';
       return;
     }
     var elapsed = paused ? pausedAt : Math.floor((Date.now() - startedAt) / 60000);
@@ -2394,6 +2493,60 @@ if cur.rowcount == 0:
 
   paint();
   setInterval(paint, 10000);
+})();
+
+(function () {
+  var host = document.getElementById('sclock');
+  var spans = [].slice.call(document.querySelectorAll('.off[data-off]'));
+  function mins(t) { var p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  var qs = new URLSearchParams(location.search);
+  var raw = qs.get('start');
+  var start = raw ? new Date(raw) : null;
+  if (start && isNaN(start.getTime())) start = null;
+  if (host) {
+    var lab = document.createElement('label');
+    lab.className = 'startin';
+    lab.innerHTML = 'Session start <input type="time" aria-label="Session start time"> <button type="button">Clear</button>';
+    host.appendChild(lab);
+    var input = lab.querySelector('input');
+    var clear = lab.querySelector('button');
+    if (start) input.value = pad(start.getHours()) + ':' + pad(start.getMinutes());
+    input.addEventListener('change', function () {
+      if (!input.value) return;
+      var d = new Date();
+      var p = input.value.split(':');
+      d.setHours(Number(p[0]), Number(p[1]), 0, 0);
+      qs.set('start', d.toISOString());
+      location.search = qs.toString();
+    });
+    clear.addEventListener('click', function () { qs.delete('start'); location.search = qs.toString(); });
+  }
+  if (start) {
+    var base = start.getHours() * 60 + start.getMinutes();
+    spans.forEach(function (s) {
+      var off = s.getAttribute('data-off');
+      var m = (base + mins(off)) % 1440;
+      s.textContent = pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      s.title = off + ' into the session';
+      s.classList.add('wall');
+    });
+  }
+  if (start) {
+    [].forEach.call(document.querySelectorAll('summary .when'), function (w) {
+      w.textContent = w.textContent.replace(/\b([0-4]\d|05):([0-5]\d)\b/g, function (t) {
+        var m = (base + mins(t)) % 1440;
+        return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      });
+    });
+  }
+  function openTarget() {
+    var id = location.hash.slice(1);
+    var el = id && document.getElementById(id);
+    while (el) { if (el.tagName === 'DETAILS') el.open = true; el = el.parentElement; }
+  }
+  window.addEventListener('hashchange', openTarget);
+  openTarget();
 })();
 </script>
 <script>

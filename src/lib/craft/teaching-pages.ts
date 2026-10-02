@@ -181,6 +181,17 @@ export async function topicPage(
   const script =
     audience === 'instructor' ? (html.match(/<script>[\s\S]*?<\/script>/g)?.pop() ?? '') : '';
 
+  // CLOCK TIMES, FOR A WEEK THAT USES THEM. A page built with `wallClock` marks
+  // every session time as <span class="off" data-off="HH:MM">, and its own
+  // script turns those into the time of day once the session's start time is
+  // entered in the clock bar. The bar sits above the first topic, so a topic
+  // slice would lose it, and with it the only place to type the start time.
+  // For those pages only, carry the bar and every script; other weeks are
+  // served exactly as before.
+  const wall = html.includes('class="off" data-off=');
+  const sclock = wall ? (html.match(/<div class="sclock" id="sclock">[\s\S]*?<\/div>/)?.[0] ?? '') : '';
+  const scripts = wall ? (html.match(/<script>[\s\S]*?<\/script>/g) ?? []).join('\n') : script;
+
   const heading = `
 <header class="hero">
   <div class="${audience === 'learner' ? 'eyebrow' : 'mono'}">The Living Craft · week ${week} · topic ${n} · ${
@@ -245,9 +256,10 @@ export async function topicPage(
 ${preview ? previewBar(preview, '/craft/admin/teaching') : ''}
 ${heading}
 ${rail}
+${sclock}
 ${body}
 </div>
-${script}
+${scripts}
 </body></html>`;
 }
 
