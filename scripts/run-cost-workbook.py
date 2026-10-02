@@ -15,31 +15,33 @@ sheet says out loud: on the page a blank line is unknown and keeps the result
 off the screen; in Excel a blank cell is 0, so a half-filled sheet shows a
 number that is not a result.
 
-Branding follows .claude/skills/the-living-craft-design: one black band per
-sheet, sun for every cell you act on, mist for what is worked out, ember for
-the cohort panel with ink text on it, no borders where a fill will do.
+The look is the site's, from scripts/workbook_brand.py, the module the three
+other tool workbooks use: an ivory ground, the lockup and a Source Serif 4 title over
+a gold rule, sand for every cell you fill in, pale green for what is worked
+out, and a forest panel with ivory text for the cohort. Until 28 September
+2026 it carried the retired black, sun and ember brand.
 
     npm run workbook
 
-Needs openpyxl (pip install openpyxl).
+Needs openpyxl and Pillow (pip install openpyxl pillow), and the PNGs from
+`npm run build:pdf-assets`.
 """
 
 import json
 import sys
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.drawing.image import Image as XlImage
+from openpyxl.styles import Alignment, Border, Font
 from openpyxl.utils import get_column_letter
 
-NOIR = "000000"
-SUN = "FFC123"
-EMBER = "FD8549"
-MIST = "F1F3F5"
-INK = "16212E"
-QUIET = "5F6B78"
-WHITE = "FFFFFF"
+from workbook_brand import BODY, DISPLAY, FOREST, GOLD_RULE, HAIR, INK, INPUT, IVORY, MUTED, PAPER, SOFT, fill, lockup_png, print_setup
 
-BODY = "Helvetica Neue"
+# The names this file used under the old brand, pointed at the new tokens.
+SUN = INPUT     # a cell you fill in
+MIST = SOFT     # a line the sheet works out
+QUIET = MUTED   # notes
+BOXED = Border(top=HAIR, bottom=HAIR, left=HAIR, right=HAIR)
 
 # The formulas, one per worked-out line. `x` reads an option's cell in the
 # current column, `D` a shared cell in column D. Each is a function so a line
@@ -61,25 +63,38 @@ TOTAL_FORMULAS = {
     "perCase": lambda x, D: f"=IFERROR({x('total')}/{D('totalCases')},\"\")",
     "perOutcome": lambda x, D: f"=IFERROR({x('total')}/{x('outcomes')},\"n/a\")",
     "net": lambda x, D: f"={D('manualBaseline')}-{x('total')}",
-    "breakEven": lambda x, D: f"=IF(({D('manualBaseline')}/{D('months')}-{x('runPerMonth')})<=0,\"never\",{x('buildCost')}/({D('manualBaseline')}/{D('months')}-{x('runPerMonth')}))",
+    # IFERROR only for the blank sheet: with no period typed yet, the division
+    # by months is #DIV/0!, which reads as a broken sheet rather than an empty one.
+    "breakEven": lambda x, D: f"=IFERROR(IF(({D('manualBaseline')}/{D('months')}-{x('runPerMonth')})<=0,\"never\",{x('buildCost')}/({D('manualBaseline')}/{D('months')}-{x('runPerMonth')})),\"\")",
 }
 
-fill = lambda hex_: PatternFill("solid", start_color=hex_, end_color=hex_)
-font = lambda **kw: Font(name=BODY, color=kw.pop("color", INK), **kw)
+font = lambda **kw: Font(name=kw.pop("name", BODY), color=kw.pop("color", INK), **kw)
 
 
 def band(ws, row, title, subtitle, credit, cols=7):
-    """The one black area on a sheet: wordmark, title, credit."""
-    for r in (row, row + 1, row + 2):
-        for c in range(1, cols + 1):
-            ws.cell(r, c).fill = fill(NOIR)
-    ws.cell(row, 1, "● The Living Craft").font = font(bold=True, size=11, color=SUN)
-    ws.cell(row + 1, 1, title).font = font(bold=True, size=18, color=WHITE)
-    ws.cell(row + 2, 1, f"{subtitle}  ·  {credit}").font = font(size=9, color="A3ACB8")
-    ws.row_dimensions[row].height = 20
-    ws.row_dimensions[row + 1].height = 28
+    """The masthead: the lockup, the title over a gold rule, the credit line."""
+    img = XlImage(lockup_png())
+    img.anchor = f"A{row}"
+    ws.add_image(img)
+    ws.row_dimensions[row].height = 34
+    ws.cell(row + 1, 1, title).font = font(size=22, color=FOREST, name=DISPLAY)
+    ws.cell(row + 1, 1).alignment = Alignment(vertical="bottom")
+    ws.row_dimensions[row + 1].height = 34
+    for c in range(1, cols + 1):
+        ws.cell(row + 1, c).border = GOLD_RULE
+    ws.cell(row + 2, 1, f"{subtitle}  ·  {credit}").font = font(size=9, color=MUTED)
     ws.row_dimensions[row + 2].height = 18
     return row + 4
+
+
+def ivory_ground(ws, cols):
+    """The site's ivory under every cell that has no fill of its own."""
+    ws.sheet_view.showGridLines = False
+    ws.sheet_properties.tabColor = FOREST
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row + 2, max_col=cols):
+        for c in row:
+            if c.fill is None or c.fill.fill_type is None:
+                c.fill = fill(IVORY)
 
 
 def wrapped(cell, **kw):
@@ -108,7 +123,7 @@ def build_model_sheet(wb, data, title, values, story=None):
         r += 1
 
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
-    wrapped(ws.cell(r, 1, "Fill the yellow cells. Column C says what to type and where the number comes from. Grey rows are worked out for you; do not type into them. Percent lines take a percentage: 12 means 12%.")).font = font(size=10)
+    wrapped(ws.cell(r, 1, "Fill the sand-coloured cells. Column C says what to type and where the number comes from. Pale green rows are worked out for you; do not type into them. Percent lines take a percentage: 12 means 12%.")).font = font(size=10)
     ws.row_dimensions[r].height = 30
     r += 2
 
@@ -131,8 +146,8 @@ def build_model_sheet(wb, data, title, values, story=None):
     def section_head(sec):
         nonlocal r
         for c in range(1, 8):
-            ws.cell(r, c).fill = fill(MIST)
-        ws.cell(r, 1, f"{sec['num']}  {sec['name']}").font = font(bold=True, size=11)
+            ws.cell(r, c).fill = fill(PAPER)
+        ws.cell(r, 1, f"{sec['num']}  {sec['name']}").font = font(bold=True, size=11, color=FOREST)
         ws.cell(r, 3, sec["question"]).font = font(size=10, color=QUIET)
         ws.row_dimensions[r].height = 20
         r += 1
@@ -147,6 +162,7 @@ def build_model_sheet(wb, data, title, values, story=None):
         if sec["scope"] == "shared":
             cell = ws.cell(r, 4)
             cell.fill = fill(SUN)
+            cell.border = BOXED
             cell.font = font(size=10, bold=True)
             cell.alignment = Alignment(horizontal="right")
             if values:
@@ -155,6 +171,7 @@ def build_model_sheet(wb, data, title, values, story=None):
             for a in arms:
                 cell = ws.cell(r, 4 + arms.index(a))
                 cell.fill = fill(SUN)
+                cell.border = BOXED
                 cell.font = font(size=10, bold=True)
                 cell.alignment = Alignment(horizontal="right")
                 if values:
@@ -192,6 +209,7 @@ def build_model_sheet(wb, data, title, values, story=None):
             wrapped(ws.cell(r, 3, "Such as INR or USD. A label only; the formulas do not read it.")).font = font(size=9, color=QUIET)
             cell = ws.cell(r, 4, values["currency"] if values else None)
             cell.fill = fill(SUN)
+            cell.border = BOXED
             cell.font = font(size=10, bold=True)
             ws.row_dimensions[r].height = 30
             r += 1
@@ -216,8 +234,8 @@ def build_model_sheet(wb, data, title, values, story=None):
 
     # Totals.
     for c in range(1, 8):
-        ws.cell(r, c).fill = fill(MIST)
-    ws.cell(r, 1, "Totals").font = font(bold=True, size=11)
+        ws.cell(r, c).fill = fill(PAPER)
+    ws.cell(r, 1, "Totals").font = font(bold=True, size=11, color=FOREST)
     ws.cell(r, 3, "Every option on the same cases. The number to argue about is cost per acceptable outcome.").font = font(size=10, color=QUIET)
     r += 1
     for t in data["totals"]:
@@ -242,6 +260,9 @@ def build_model_sheet(wb, data, title, values, story=None):
     ws.cell(rows["leader"], 4).alignment = Alignment(horizontal="left")
 
     ws.freeze_panes = ws.cell(header_row + 2, 4)
+    ivory_ground(ws, 7)
+    print_setup(ws)
+    ws.print_title_rows = f"{header_row}:{header_row + 1}"
     return ws
 
 
@@ -253,7 +274,7 @@ def build_readme(wb, data):
 
     def h(text):
         nonlocal r
-        ws.cell(r, 1, text).font = font(bold=True, size=12)
+        ws.cell(r, 1, text).font = font(bold=True, size=12, color=FOREST)
         r += 1
 
     def p(text, color=INK, size=10):
@@ -269,11 +290,11 @@ def build_readme(wb, data):
 
     h("How to fill it in")
     for line in [
-        "1. Open the sheet called Your model. Fill the yellow cells. Column C says what to type and where the number comes from.",
+        "1. Open the sheet called Your model. Fill the sand-coloured cells. Column C says what to type and where the number comes from.",
         "2. Sections 1 and 2 take one value each. Sections 3 to 7 take one value per option: Rules, Rules v2, Assisted, Agent.",
         "3. Percent lines take a percentage. Type 12 for 12%, not 0.12.",
-        "4. Grey rows are worked out for you. Do not type into them.",
-        "5. Excel treats a blank cell as 0, so a half-filled sheet shows a number that is not a result. The page at the link below keeps the result off the screen until every line is set; here, fill every yellow cell before you read the totals.",
+        "4. Pale green rows are worked out for you. Do not type into them.",
+        "5. Excel treats a blank cell as 0, so a half-filled sheet shows a number that is not a result. The page at the link below keeps the result off the screen until every line is set; here, fill every sand-coloured cell before you read the totals.",
         "6. The Reference example sheet is the same model with every cell filled: an ordering agent across 40 sites in India, in rupees at Indian rates. Copy it, or use it to see what a finished model looks like.",
         f"7. The same model runs in the browser, with the result read against the rubric and a PDF you can build: {data['pageUrl']}",
     ]:
@@ -281,9 +302,9 @@ def build_readme(wb, data):
     r += 1
 
     h("Colour key")
-    c = ws.cell(r, 1, "Yellow: a cell you fill in.")
-    c.fill = fill(SUN); c.font = font(size=10, bold=True); r += 1
-    c = ws.cell(r, 1, "Grey: a line the sheet works out. Do not type into it.")
+    c = ws.cell(r, 1, "Sand: a cell you fill in.")
+    c.fill = fill(SUN); c.font = font(size=10, bold=True); c.border = BOXED; r += 1
+    c = ws.cell(r, 1, "Pale green: a line the sheet works out. Do not type into it.")
     c.fill = fill(MIST); c.font = font(size=10, bold=True, color=QUIET); r += 1
     p("• before a line: one of the nine lines most business cases leave out. Fill these from a trial log, not from a guess.")
     r += 1
@@ -314,23 +335,29 @@ def build_readme(wb, data):
         p(l)
     r += 1
 
-    # The cohort panel: ember with ink text, the one promotional surface.
+    # The cohort panel: forest with ivory text, as in the PDFs, and the one
+    # promotional surface. It holds the apply link, so it is something to press.
     top = r
-    ws.cell(r, 1, data["cta"]["heading"]).font = font(bold=True, size=12); r += 1
+    ws.cell(r, 1, data["cta"]["heading"]).font = font(bold=True, size=12, color=IVORY, name=DISPLAY); r += 1
     for line in data["cta"]["lines"]:
-        p(line)
+        p(line, IVORY)
     c = ws.cell(r, 1, f"Apply at {data['applyUrl']}")
     c.hyperlink = data["applyUrl"]
-    c.font = font(bold=True, size=10, underline="single"); r += 1
+    c.font = font(bold=True, size=10, underline="single", color=IVORY); r += 1
     for rr in range(top, r):
-        ws.cell(rr, 1).fill = fill(EMBER)
+        ws.cell(rr, 1).fill = fill(FOREST)
     r += 1
     p(f"{data['toolName']} · The Living Craft · {data['credit']} · free to use and to pass on", QUIET, 9)
+    ivory_ground(ws, 1)
+    print_setup(ws)
+    ws.page_setup.orientation = "portrait"
     return ws
 
 
 def main():
-    data = json.load(sys.stdin)
+    # UTF-8, whatever the console says: on Windows sys.stdin is cp1252, and
+    # ₹, → and every curly quote from the data modules came out as mojibake.
+    data = json.loads(sys.stdin.buffer.read().decode("utf-8"))
     out = sys.argv[1]
     wb = Workbook()
     build_readme(wb, data)

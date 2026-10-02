@@ -1,0 +1,142 @@
+---
+/**
+ * The closing call to action at the foot of every tool and resource page.
+ *
+ * WHY IT EXISTS. Sunil, 28 September 2026: "At the bottom of each of the tools
+ * or any of the resources that we give, there should be a CTA that takes them
+ * to, you know, join or explore." The purpose is conversion. Before this, the
+ * row was written out by hand on each page, and the wording had already drifted
+ * three ways ("See the cohort", "Apply to the cohort", "Apply for a seat").
+ * This component is the only place the row is written.
+ *
+ * WHAT IT DRAWS, in this order:
+ *   1. At most one short line about the cohort (`note`). By default it is the
+ *      page's own line from the outreach readiness handoff (28 September 2026),
+ *      then one sentence whose date, hours and name come from facts.ts, both
+ *      from src/data/resource-cohort-copy.ts. Never type an offer fact here,
+ *      and no scarcity: no seats left, no countdown.
+ *   2. "Explore the cohort" to `/`, the primary button.
+ *   3. "Apply" to `/#apply`. The cohort CTA is always Apply. Never "Buy now",
+ *      "Join now" or "Enrol".
+ *   4. The page's own download, passed in the `download` slot. The button
+ *      keeps its `data-gate` attribute, so the download gate opens exactly as
+ *      it does anywhere else on the page. Never a plain file link.
+ *   5. Quiet links: anything in the `links` slot, then "All resources".
+ *
+ * MEASURED. Both cohort links carry `data-cta` and `data-cta-placement`, and
+ * Track.astro sends a `cta_click` for any element with `data-cta`. Before
+ * this, a link to `/` was not counted at all. The Apply link also keeps
+ * `data-apply`, which two pages (the memory kit and the cost-ceiling workbook)
+ * already listen for to send `cohort_apply_click`.
+ *
+ * PRINTED AS ONE LINE. A button row on paper is noise, so the row is hidden in
+ * print, as the tool pages already hide `.hero-cta`. In its place a print-only
+ * line carries the same invitation and the full application address, because
+ * a printed page cannot follow a link (handoff: "include print footer").
+ */
+import { APPLY_URL, closingResultNoteFor, cohortInvitationFor } from '../../data/resource-cohort-copy';
+
+export interface Props {
+  /** The one line about the cohort. `false` when the page's own prose already says it. */
+  note?: string | false;
+  /** Where this row sits, recorded with the click. */
+  placement?: string;
+  /**
+   * The page's content is itself the useful result (a kit, a guide, a
+   * template, a worksheet). The line is then the revised handoff's "after the
+   * useful result" sentence, with the cohort's facts, from
+   * `closingResultNoteFor()`. A tool leaves this off: its useful-result line
+   * sits under the result (ResultCohortNote.astro), and this row keeps the
+   * page's own line from the 28 September audit.
+   */
+  result?: boolean;
+}
+
+const invitation = cohortInvitationFor(Astro.url.pathname);
+const { result = false } = Astro.props;
+const { note = result ? closingResultNoteFor(Astro.url.pathname) : invitation, placement = 'resource-close' } = Astro.props;
+const hasDownload = Astro.slots.has('download');
+const hasLinks = Astro.slots.has('links');
+---
+
+<div class="lc-closing-cta">
+  {note && <p class="lc-closing-cta-note">{note}</p>}
+  <div class="lc-closing-cta-row">
+    <a class="btn btn-primary" href="/" data-cta="cohort" data-cta-placement={placement}>
+      Explore the cohort&nbsp;<span class="arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="btn btn-ghost" href="/#apply" data-cta="form" data-cta-placement={placement} data-apply>
+      Apply&nbsp;<span class="arrow" aria-hidden="true">→</span>
+    </a>
+    {hasDownload && <slot name="download" />}
+  </div>
+  <p class="lc-closing-cta-links">
+    {hasLinks && <slot name="links" />}
+    <a href="/resources">All resources</a>
+  </p>
+</div>
+<p class="lc-closing-print">{invitation} Apply at {APPLY_URL}</p>
+
+<style>
+  /* Left-aligned, like the closing sections since 19 September. global.css
+     still centres .final, and a centred note above a left-aligned row of
+     buttons read as a mistake. */
+  .lc-closing-cta {
+    margin-top: var(--space-6);
+    text-align: left;
+  }
+  .lc-closing-cta-note {
+    max-width: var(--measure-prose, 62ch);
+    color: var(--text-body);
+    margin-bottom: var(--space-4);
+  }
+  .lc-closing-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  /* A slotted note, such as the cost-ceiling workbook's "not produced yet". */
+  .lc-closing-cta-row :global(.hero-note) {
+    margin: 0;
+  }
+  .lc-closing-cta-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-4);
+    font-size: var(--size-2, 0.875rem);
+  }
+  .lc-closing-cta-links :global(a) {
+    color: var(--text-quiet);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .lc-closing-cta-links :global(a:hover) {
+    color: var(--text-body);
+  }
+  /* Full-width buttons on a phone, so no label wraps inside a button. */
+  @media (max-width: 480px) {
+    .lc-closing-cta-row > :global(.btn) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  .lc-closing-print {
+    display: none;
+  }
+  @media print {
+    .lc-closing-cta {
+      display: none !important;
+    }
+    .lc-closing-print {
+      display: block !important;
+      margin-top: 12pt;
+      padding-top: 6pt;
+      border-top: 0.5pt solid var(--line, #cbd1c8);
+      font-size: 9pt;
+      text-align: left;
+      color: #172e26;
+    }
+  }
+</style>

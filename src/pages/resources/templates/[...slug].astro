@@ -55,6 +55,8 @@
 //    files contain no raw HTML, so nothing is lost by the dropped html token.
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import PracticeLayout from '../../../layouts/PracticeLayout.astro';
+import ClosingCta from '../../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../../data/facts';
 import { blankTemplateText, resolveTokens as resolve, templateFilenames, workedTemplateText } from '../../../lib/resources/template-text';
@@ -225,10 +227,13 @@ const schema: unknown[] = [
           <dt>Written by</dt>
           <dd>{d.author}</dd>
         </div>
-        <div>
-          <dt>Reviewed by</dt>
-          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
-        </div>
+        {/* The reviewer is shown once there is one; an empty review is not announced (29 September 2026). */}
+        {d.reviewedBy && (
+          <div>
+            <dt>Reviewed by</dt>
+            <dd>{d.reviewedBy}</dd>
+          </div>
+        )}
         <div>
           <dt>Last revised</dt>
           <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
@@ -250,6 +255,7 @@ const schema: unknown[] = [
         <span class="sep" aria-hidden="true">·</span>
         <a href="#using">How to use it</a>
       </p>
+      <CohortIntroLink />
     </header>
 
     {/* The live region every copy button announces into. */}
@@ -420,7 +426,11 @@ const schema: unknown[] = [
     }
 
     {/* The roadmap's onward step for this row: "browser checker or programme".
-        Two links, no pitch — this visitor arrived for an artefact and has one. */}
+        Until 28 September 2026 this said "two links, no pitch": the visitor
+        arrived for an artefact and has one. Sunil reversed that on 28 September:
+        every tool and resource page ends in a cohort call to action
+        (ClosingCta). The two links stay as calm text; the component carries the
+        buttons, with the blank template's download beside them. */}
     <aside class="after onward" aria-labelledby="onward-h">
       <h2 id="onward-h">If you would rather be asked the questions</h2>
       <p>
@@ -432,6 +442,9 @@ const schema: unknown[] = [
         The <a class="textlink" href="/programmes/">open cohort</a> is where this is practised on
         a system you build, with the reviews run in the room.
       </p>
+      <ClosingCta result>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="md" data-variant="blank">Download {blankFile}&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
     </aside>
   </article>
   <ResourceGate resource={`template-${entry.id}`} lead="The Markdown file is the template as it reads on this page: the blank with every prompt as a quoted block you delete as you answer it, or the worked example with its illustrative label." />
@@ -528,6 +541,14 @@ const schema: unknown[] = [
   }
   .jump .sep {
     color: var(--text-quiet);
+  }
+  /* On a phone the list wraps, and a separator dot started the next line
+     ("· Test the boundary"). Below 720px the dots go and the gap does their
+     job (UI/UX audit, 29 September 2026). */
+  @media (max-width: 720px) {
+    .jump { column-gap: var(--space-5); row-gap: var(--space-2); }
+    .jump .sep { display: none; }
+    .jump a { padding-block: 4px; }
   }
 
   /* ── the two sheets ─────────────────────────────────────────────────────── */
@@ -822,6 +843,7 @@ const schema: unknown[] = [
     font-size: var(--size-3);
     line-height: var(--lh-normal);
     color: var(--text-quiet);
+    max-width: 64ch; /* ran to 100 characters a line on a laptop */
   }
 
   .tpl .using .prose h2 {

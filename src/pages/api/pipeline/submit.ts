@@ -34,7 +34,7 @@
 // write their own version of what they agreed to into our evidence.
 
 import type { APIRoute } from 'astro';
-import { buildAttribution, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, serialiseFirstTouch } from '../../../lib/pipeline/attribution';
+import { buildAttribution, FIRST_TOUCH_COOKIE, SESSION_TOUCH_COOKIE } from '../../../lib/pipeline/attribution';
 import { resolveCohort, routeIsOpen } from '../../../lib/pipeline/cohorts';
 import { isRoute, validate } from '../../../lib/pipeline/forms';
 import { confirmationFor, saveSubmission } from '../../../lib/pipeline/submit';
@@ -42,6 +42,7 @@ import { checkRate } from '../../../lib/agent/ratelimit';
 import { record } from '../../../lib/admin/supabase';
 import { deviceOf } from '../../../lib/admin/visitor';
 import { queueForSubmission } from '../../../lib/comms/outbox';
+import { analyticsAllowed, consentFromHeader, eventContext } from '../../../lib/analytics/context';
 
 export const prerender = false;
 
@@ -123,21 +124,24 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies, url }) =
 
   // ---- 4. attribution -----------------------------------------------------
 
-  // There is no consent mechanism on this site yet, so this is false at every
-  // request and first-touch stays unknown. That is the correct behaviour and
-  // acceptance case E07 depends on it, not a placeholder to be flipped for
-  // convenience — flipping it needs a consent control in front of a visitor
-  // first. See the note at the head of attribution.ts.
-  const trackingPermitted = false;
+  // The visitor's analytics answer on the cookie banner, from the cookie this
+  // request carried (29 September 2026). Only a yes lets the two stored
+  // arrivals be read; see the head of attribution.ts. No answer is a no, which
+  // keeps acceptance case E07 true: nothing stored, nothing joined.
+  const trackingPermitted = analyticsAllowed(consentFromHeader(request.headers.get('cookie')));
 
-  const { row: attribution, writeFirstTouch } = buildAttribution({
+  // The self-reported answer is the handoff's "How did you first hear about The
+  // Living Craft?": a code and an optional line, kept apart from the tags.
+  const { row: attribution } = buildAttribution({
     search: typeof body.search === 'string' ? body.search : '',
     referrer: typeof body.referrer === 'string' ? body.referrer : '',
     path: typeof body.entryPath === 'string' ? body.entryPath : '/',
     selfHost: url.hostname,
     selfReported: values.discovery ?? null,
+    selfReportedDetail: values.discovery_detail ?? null,
     permitted: trackingPermitted,
     storedFirstTouch: cookies.get(FIRST_TOUCH_COOKIE)?.value,
+    storedSessionTouch: cookies.get(SESSION_TOUCH_COOKIE)?.value,
   });
 
   // ---- 5. the save --------------------------------------------------------
@@ -160,16 +164,6 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies, url }) =
   }
 
   // ---- 6. after the commit ------------------------------------------------
-
-  if (writeFirstTouch) {
-    cookies.set(FIRST_TOUCH_COOKIE, serialiseFirstTouch(writeFirstTouch, new Date().toISOString()), {
-      path: '/',
-      maxAge: FIRST_TOUCH_MAX_AGE,
-      sameSite: 'lax',
-      httpOnly: true,
-      secure: url.protocol === 'https:',
-    });
-  }
 
   // Queue the acknowledgement only after the application transaction commits.
   // Message keys are derived from the submission id, so sending the same
@@ -210,7 +204,15 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies, url }) =
       type: route === 'application' ? 'application_saved' : 'enquiry_saved',
       path: attribution.entry_path ?? '/',
       referrer_host: attribution.referrer_host,
-      meta: { submission_id: result.submissionId, route },
+      // `event_id` is the handoff's deduplication key (29 September 2026). It
+      // is built from the submission id, so the same save can never be two
+      // events. `env` and `consent` come from eventContext().
+      meta: {
+        submission_id: result.submissionId,
+        route,
+        event_id: `saved:${result.submissionId}`,
+        ...eventContext(request),
+      },
     });
   }
 

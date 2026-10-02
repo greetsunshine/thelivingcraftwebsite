@@ -17,7 +17,7 @@ from pathlib import Path
 import fitz  # pymupdf
 
 HERE = Path(__file__).resolve().parent
-XLSX = HERE.parents[1] / "public" / "downloads" / "rework-cost-check.xlsx"
+XLSX = HERE.parents[1] / "downloads" / "rework-cost-check.xlsx"
 SOFFICE = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
 
 

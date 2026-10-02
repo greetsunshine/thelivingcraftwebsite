@@ -22,6 +22,8 @@
 //     record with its own wording and version (consent.ts), and folding it in
 //     here would let a copy edit silently change what someone agreed to.
 
+import { ROLE_MAX, ROLE_OPTIONS } from '../../data/audience-roles';
+
 /** A route is what somebody wants, not which form they filled in. */
 export type Route = 'application' | 'enquiry' | 'enterprise';
 
@@ -38,6 +40,13 @@ export interface Field {
   hint?: string;
   /** For kind: 'choice'. The stored value is the `value`, never the label. */
   options?: { value: string; label: string }[];
+  /**
+   * For kind: 'choice'. A typed value is accepted as well as a listed one.
+   * The role field: its select carries an "Other" option that reveals a text
+   * box, and the typed words are posted as the value (RoleField.astro). The
+   * server then checks length only, because there is no list to check against.
+   */
+  freeText?: boolean;
   /** Rows for a textarea. Affects nothing but the shape of the box. */
   rows?: number;
   /** HTML autocomplete token, so a browser can fill it. */
@@ -54,11 +63,19 @@ export interface FormDefinition {
   action: string;
   fields: Field[];
   /**
-   * Shown on success. Exact wording from the brief — these three sentences
-   * were approved and the third one is load-bearing: "An application is not a
-   * confirmed place." Do not reword without an approval round.
+   * Shown on success, only after the server has committed the row. Exact
+   * wording from the brief. The application's sentences were replaced on 29
+   * September 2026 by the revised outreach readiness handoff's own
+   * confirmation; the promise that matters survived the change: applying is
+   * not an offer, a payment or a place. Do not reword without an approval round.
    */
   confirmation: string;
+  /**
+   * The saved panel's small label and heading, and a link under it. Optional:
+   * a route without them shows "Received" and no link, as all three did until
+   * 29 September 2026.
+   */
+  saved?: { kicker: string; heading: string; link?: { label: string; href: string } };
   /**
    * Optional progressive-disclosure grouping, read by RouteForm.astro.
    *
@@ -115,31 +132,69 @@ const organisation = (required: boolean): Field => ({
   autocomplete: 'organization',
 });
 
+// A choice since 29 September 2026 (Sunil: "ask for role there also", with
+// the ten options in audience-roles.ts and a way to type one). It was a text
+// box. The stored value is the label, or the typed words after "Other".
 const role = (required: boolean): Field => ({
   name: 'role',
   label: 'Your role',
-  kind: 'text',
+  kind: 'choice',
   required,
-  max: 200,
+  max: ROLE_MAX,
   hint: required ? undefined : 'Optional.',
+  options: ROLE_OPTIONS.map((o) => ({ value: o, label: o })),
+  freeText: true,
   autocomplete: 'organization-title',
 });
 
 /**
- * "How did you hear about us" — evidence, never an override.
+ * "How did you first hear about The Living Craft?" — evidence, never an override.
  *
  * The operating guide is firm about this: a self-reported source sits BESIDE
  * the captured attribution and does not replace it. Someone can meet Sunil on
  * LinkedIn in March and type the URL directly in September; both facts are
  * true and neither is the other's correction.
+ *
+ * A choice since 29 September 2026 (the revised outreach readiness handoff),
+ * with the handoff's seven options and an optional line under it. It was a
+ * free-text box, and free text cannot be counted: "LinkedIn", "linkedin post"
+ * and "Sunil's post" were three answers to one question. The stored value is
+ * the code; `DISCOVERY_OPTIONS` turns it back into words for the console. The
+ * answer is stored in `attributions.self_reported` (the code) and
+ * `self_reported_detail` (the line), apart from the tags and never sent to
+ * analytics.
  */
+export const DISCOVERY_OPTIONS = [
+  { value: 'sunil-linkedin', label: 'Sunil’s LinkedIn' },
+  { value: 'lc-social', label: 'The Living Craft’s social channels' },
+  { value: 'colleague', label: 'A colleague or employer' },
+  { value: 'resource', label: 'A resource or guide' },
+  { value: 'live-session', label: 'A live session' },
+  { value: 'search', label: 'Search' },
+  { value: 'other', label: 'Other' },
+];
+
+/** The words for a stored answer. An answer from before the choice existed is shown as typed. */
+export const discoveryLabel = (value: string | null | undefined): string | null =>
+  value ? (DISCOVERY_OPTIONS.find((o) => o.value === value)?.label ?? value) : null;
+
 const discovery = (): Field => ({
   name: 'discovery',
-  label: 'How did you come across the programme?',
+  label: 'How did you first hear about The Living Craft?',
+  kind: 'choice',
+  required: false,
+  max: 20,
+  hint: 'Optional.',
+  options: DISCOVERY_OPTIONS,
+});
+
+const discoveryDetail = (): Field => ({
+  name: 'discovery_detail',
+  label: 'Anything to add about how you heard',
   kind: 'text',
   required: false,
-  max: 300,
-  hint: 'Optional.',
+  max: 200,
+  hint: 'Optional. For example, which post, guide or session.',
 });
 
 // ---------------------------------------------------------------------------
@@ -199,15 +254,28 @@ export const FORMS: Record<Route, FormDefinition> = {
       organisation(false),
       phone(),
       discovery(),
+      discoveryDetail(),
     ],
+    // The revised outreach readiness handoff's confirmation (29 September
+    // 2026), which replaced the 10 September sentences. Its last sentence
+    // carries the same promise the old one did ("An application is not a
+    // confirmed place"): applying is not an offer, a payment or a seat.
     confirmation:
-      "Your application has been received. We'll review your experience and learning goal and contact you about the next step. An application is not a confirmed place.",
-    // Three short screens instead of one long one — the same seven fields,
-    // grouped so nobody meets all of them at once on a phone.
+      'The team will review your details and contact you about the next step. Applying is separate from an offer, payment and confirmation of attendance.',
+    saved: {
+      kicker: 'Application received',
+      heading: 'Thank you for applying.',
+      link: { label: 'Return to the programme', href: '/' },
+    },
+    // Three short screens instead of one long one — the same fields, grouped
+    // so nobody meets all of them at once on a phone.
     steps: [
       { label: 'About you', fields: ['name', 'email', 'role'] },
       { label: 'Your experience', fields: ['experience', 'goal'] },
-      { label: 'A few more details', fields: ['funding', 'organisation', 'phone', 'discovery'] },
+      {
+        label: 'A few more details',
+        fields: ['funding', 'organisation', 'phone', 'discovery', 'discovery_detail'],
+      },
     ],
   },
 
@@ -230,7 +298,9 @@ export const FORMS: Record<Route, FormDefinition> = {
    */
   enquiry: {
     route: 'enquiry',
-    title: 'Ask about the cohort',
+    // The page's label since 29 September 2026: the automated chat is "Ask about
+    // the cohort", and two controls with one name would be a trap.
+    title: 'Write to Sunil about the cohort',
     intro:
       'Ask anything about fit, the commitment, the schedule or employer funding. This is not an application.',
     action: 'Send your question',
@@ -250,6 +320,7 @@ export const FORMS: Record<Route, FormDefinition> = {
       organisation(false),
       phone(),
       discovery(),
+      discoveryDetail(),
     ],
     confirmation:
       "Your enquiry has been received. We'll contact you about your question.",
@@ -303,13 +374,17 @@ export const FORMS: Record<Route, FormDefinition> = {
       },
       phone(),
       discovery(),
+      discoveryDetail(),
     ],
     confirmation:
       "Your enquiry has been received. We'll contact you about your question.",
     steps: [
       { label: 'About you', fields: ['name', 'email', 'organisation', 'role'] },
       { label: 'What the team needs', fields: ['goal'] },
-      { label: 'A few more details', fields: ['group_size', 'industry', 'phone', 'discovery'] },
+      {
+        label: 'A few more details',
+        fields: ['group_size', 'industry', 'phone', 'discovery', 'discovery_detail'],
+      },
     ],
   },
 };
@@ -411,7 +486,7 @@ export function validate(
       continue;
     }
 
-    if (field.kind === 'choice' && !field.options?.some((o) => o.value === cleaned)) {
+    if (field.kind === 'choice' && !field.freeText && !field.options?.some((o) => o.value === cleaned)) {
       errors.push({ field: field.name, code: 'not_an_option', message: messageFor(field, 'not_an_option') });
       continue;
     }

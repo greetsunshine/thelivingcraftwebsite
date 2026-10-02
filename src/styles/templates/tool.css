@@ -10,25 +10,28 @@
    - Primary and secondary buttons in the heading go back to their ordinary
      colours, because they no longer sit on forest.
 
-   Applied by `body.tool-page`: ResourcesLayout sets it on all eight tools it
+   Applied by `body.tool-page`: ResourcesLayout sets it on all nine tools it
    serves, and /tools/agent-design-check passes `bodyClass="tool-page"` to
    PracticeLayout. Each tool keeps its own workspace, scoring and PDF logic;
    only the shell and shared parts are restyled here.
+
+   SINCE 25 SEPTEMBER (V5 on the inner pages). A tool page also carries
+   `lc-v5`, so its header, footer, content width and the ivory weave behind
+   this heading come from ds/site-v5.css, as on `/`. What stays here is the
+   working heading itself: the Figtree h1, the muted lead and the tool's own
+   spacing. The heading-on-ivory colours (eyebrow, notes, focus ring, the two
+   button styles) moved to ds/site-v5.css unchanged, because every inner
+   hero is on ivory now, not only a tool's.
    ───────────────────────────────────────────────────────────────────────────── */
 
 .tool-page .hero { padding: var(--space-8) 0 var(--space-6); background: transparent; }
+/* The width and side gutters are the V5 container's (ds/site-v5.css). */
 .tool-page .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: 0 var(--space-5);
+  padding-block: 0;
   background: none;
   border-radius: 0;
   color: var(--text-body);
 }
-.tool-page .hero .eyebrow { color: var(--accent-ink); }
-.tool-page .hero .eyebrow .num { color: var(--text-quiet); }
-.tool-page .hero .eyebrow a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 0.2em; }
 .tool-page .hero h1 {
   max-width: 24ch;
   margin: var(--space-4) 0 var(--space-5);
@@ -44,19 +47,6 @@
 .tool-page .hero .credential { max-width: 47rem; color: var(--text-quiet); }
 .tool-page .hero .credential strong,
 .tool-page .hero .lead strong { color: var(--text-body); }
-.tool-page .hero .muted,
-.tool-page .hero .faint,
-.tool-page .hero > .wrap .hero-note { color: var(--text-quiet); }
-.tool-page .hero > .wrap :focus-visible { outline-color: var(--focus-ring); }
-.tool-page .hero > .wrap .btn-primary {
-  background: var(--control-primary-bg);
-  border-color: transparent;
-  color: var(--text-on-accent);
-}
-.tool-page .hero > .wrap .btn-primary:hover { background: var(--control-primary-bg-hover); color: var(--text-on-accent); }
-.tool-page .hero > .wrap .btn-ghost { color: var(--text-body); border-color: var(--border-field); }
-.tool-page .hero > .wrap .btn-ghost:hover,
-.tool-page .hero > .wrap a.btn-ghost:hover { background: var(--surface-hover); color: var(--text-body); border-color: var(--border-field); }
 
 /* Section headings inside a tool: one colour. The gold emphasised word is a
    brand flourish the working area does not need; the <em> stays. */
@@ -65,9 +55,58 @@
 
 @media (max-width: 900px) {
   .tool-page .hero { padding: var(--space-7) 0 var(--space-5); }
-  .tool-page .hero > .wrap { padding: 0 var(--space-4); border-radius: 0; }
 }
 @media (max-width: 560px) {
   .tool-page .hero { padding: var(--space-6) 0 var(--space-4); }
   .tool-page .hero h1 { font-size: 2.2rem; }
+}
+
+/* The closing section reads left, like every closing section on the site since
+   19 September. global.css still centres `.final` for /caio, /assessment and
+   /latest; on a tool page that centred the heading and the prose above a
+   left-aligned button row (ClosingCta), which read as a mistake. The quiz and
+   the memory kit had already overridden it page by page; this is the rule. */
+.final { text-align: left; }
+.final .prose { max-width: var(--measure-prose); }
+
+/* ── touch screens: controls a finger can hit ──────────────────────────────
+   UI/UX audit, 29 September 2026. On a phone the tools' small controls
+   measured 26 to 35px: the step pips (28 × 26), the answer pills on the
+   authority review and the rule audit (28px tall), the move and remove
+   buttons (32px), the copy buttons, the sound toggle, the workbook tabs and
+   the design check's "clear" buttons. They pass WCAG's 24px minimum; they
+   are still easy to miss with a thumb, and a missed answer pill silently
+   leaves a row undecided.
+
+   `pointer: coarse` only, so a laptop keeps the compact working density the
+   tools were designed at. `body.tool-page` outranks each page's scoped rule
+   (one class plus Astro's attribute), whatever order the sheets load in.
+   The pips grow their hit area with an invisible layer rather than their
+   size, so the step row keeps its shape. */
+@media (pointer: coarse) {
+  body.tool-page .p-step { position: relative; }
+  body.tool-page .p-step::after {
+    content: '';
+    position: absolute;
+    inset: -9px -2px;
+  }
+  body.tool-page .choice,
+  body.tool-page .toggle,
+  body.tool-page .copy,
+  body.tool-page .clear-one,
+  body.tool-page [role='tab'] {
+    min-height: 44px;
+  }
+  body.tool-page .choice { padding-inline: 14px; }
+  body.tool-page .rm,
+  body.tool-page .mv {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  body.tool-page input[type='text'],
+  body.tool-page input[type='number'],
+  body.tool-page input[type='email'],
+  body.tool-page select {
+    min-height: 44px;
+  }
 }

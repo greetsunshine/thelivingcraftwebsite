@@ -86,7 +86,11 @@ import {
   LEAVE_WITH,
   LIVE_EXPERIENCE,
   HEADLINE,
+  HERO_KICKER,
+  HERO_INTRO,
+  HERO_DESCRIPTION,
 } from '../../data/cohort-copy';
+import { cohortCtaLabel } from '../../data/resource-cohort-copy';
 
 /**
  * D1 was answered on 14 September 2026: the figures are published. A region is
@@ -118,21 +122,24 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     "Talk with Sunil" is no longer beside Apply here. The package gives the
     second button to the team route, and the conversation stays reachable
     from the menu, the footer and #book. The employer names and the 26 years
-    appear once, in the intro strip under the brain. */}
+    appear once, in the intro strip under the brain.
+
+    29 September 2026, the revised outreach readiness package: the h1 is its
+    positioning line, the V5 headline moved up to the eyebrow, the two
+    paragraphs are its lead, and the buttons are its labels. "Explore the
+    October cohort" names the month from facts.ts and drops it once
+    applications close (cohortCtaLabel). The team button keeps #team, because
+    the team form is on this page. */}
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <p class="eyebrow">The Living Craft · Agentic &amp; systems architecture</p>
-      <h1>{HEADLINE.split(/(?<=\.)\s+/).map((line, i) => (i === 0 ? line : <Fragment><br />{line}</Fragment>))}</h1>
-      <p class="hero-intro">Live learning for experienced engineers and engineering teams.</p>
-      <p class="hero-description">
-        The Living Craft is a live programme with Sunil Mathew for engineers responsible for how AI
-        systems are designed and run. Build a working agentic system, examine its behaviour and
-        practise the decisions your team will depend on.
-      </p>
+      <p class="eyebrow">{HERO_KICKER}</p>
+      <h1>{HEADLINE}</h1>
+      <p class="hero-intro">{HERO_INTRO}</p>
+      <p class="hero-description">{HERO_DESCRIPTION}</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#apply">Apply for the cohort<span class="arrow" aria-hidden="true">→</span></a>
-        <a class="btn btn-primary" href="#team">Start the team conversation<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="#apply" data-cta="form" data-cta-placement="home-hero">{cohortCtaLabel()}<span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="#team">Discuss your team’s need<span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
 
@@ -166,7 +173,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     <p class="route-kicker">Open cohort</p>
     <h2>Join the open cohort</h2>
     <p>{FORMS.application.intro}</p>
-    <p class="route-fact">30 live hours with Sunil, plus independent work.</p>
+    <p class="route-fact">{cohort.liveHours} live hours with Sunil, plus independent work.</p>
     <p>Joining as an individual — self-funded or exploring employer support.</p>
     <p class="route-small">An application-only program in agentic &amp; systems architecture{region ? ` · ${region.label}` : ''}</p>
     <p class="route-small">
@@ -557,7 +564,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
       <div class="signature quote-attrib">— Sunil Mathew</div>
       <p class="scope-label">Open cohort</p>
       <p class="after-quote">
-        That is what the 30 live hours are for. You bring a design decision from your own
+        That is what the {cohort.liveHours} live hours are for. You bring a design decision from your own
         work. He shows you how he would examine it, and what evidence would settle it.
       </p>
     </div>
@@ -606,7 +613,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
   <div class="commit">
     <div class="commit-copy">
       <p class="body-copy">
-        The programme includes 30 live hours with Sunil, plus independent work.
+        The programme includes {cohort.liveHours} live hours with Sunil, plus independent work.
         Confirm the session schedule, independent-work commitment, attendance support
         and access arrangements before joining.
       </p>
@@ -618,7 +625,7 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     </div>
 
     <div class="commit-facts">
-      <div class="detail-row"><span class="dk">Live hours</span><span class="dv">30, with Sunil</span></div>
+      <div class="detail-row"><span class="dk">Live hours</span><span class="dv">{cohort.liveHours}, with Sunil</span></div>
       <div class="detail-row"><span class="dk">Independent work</span><span class="dv">Additional; confirmed before joining</span></div>
       <div class="detail-row"><span class="dk">Cohort size</span><span class="dv">{cohort.seats} seats, capped</span></div>
       <div class="detail-row"><span class="dk">Length</span><span class="dv">{cohort.weeks} weeks, live</span></div>
@@ -772,13 +779,20 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     needs. Each form itself is now progressive (see RouteForm.astro's
     `steps`), so nobody meets all seven-plus fields on one screen either. */}
 <section class="wrap band forms" id="apply">
+  {/* The heading and lead are the revised outreach readiness package's
+      application page (29 September 2026). Its "Individual cohort
+      application" label is not used as the eyebrow: this section also holds
+      the team route, and a label naming only one of the two would be wrong
+      for the other. */}
   <div class="sec-head" id="enquire">
     <p class="eyebrow">Apply</p>
-    <h2>Start <em>here</em></h2>
+    <h2>Bring the production decision you want to <em>handle better</em></h2>
     <p class="lead">
-      One flow, however you are arriving at it. Pick the one that matches you, then answer a
-      few questions at a time.
+      Tell us about your engineering experience, the decisions you own and what you want to
+      become better at doing. You can apply individually or discuss employer support. Keep
+      confidential company material out of the form.
     </p>
+    <p class="lead">Pick the route that matches you, then answer a few questions at a time.</p>
   </div>
 
   <div class="route-choice" role="group" aria-label="What brings you here?">
@@ -824,7 +838,10 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
     `cohort-call` meeting type in meetings.ts.
 
     V4/V5 moved it BELOW the application and put the short written enquiry
-    back under it, folded, as "Ask about the cohort". The widget's empty and
+    back under it, folded. It was headed "Ask about the cohort" until 29
+    September 2026, when the chat launcher took that label (outreach readiness
+    handoff, item 1); two controls with one name and two different results is
+    a trap, so the human route now says who reads it. The widget's empty and
     failure copy therefore points UP, not down (`formAt="above"`, Sunil,
     20 September): the application is the form a reader sees first here. The
     folded enquiry stays as the shorter way to ask a question.
@@ -840,8 +857,8 @@ const TAKEAWAY_ART = ['blueprint', 'toolkit', 'peers'] as const;
   <BookingWidget type="cohort-call" heading="Book a call about the cohort" formAt="above" />
 
   <details class="cohort-question" id="cohort-question">
-    <summary>Ask about the cohort<span class="plus" aria-hidden="true">+</span></summary>
-    <RouteForm route="enquiry" id="enquiry-form" heading="Ask about the cohort" />
+    <summary>Write to Sunil about the cohort<span class="plus" aria-hidden="true">+</span></summary>
+    <RouteForm route="enquiry" id="enquiry-form" heading="Write to Sunil about the cohort" />
   </details>
 </section>
 

@@ -84,6 +84,7 @@ const TABLES = [
   // missing on its own (a schema run that stopped early), and the requests
   // page and the export both read it.
   'resource_requests_marketing',
+  'comms_drip_sends',
   'booking_rules',
   'booking_blocks',
   'bookings',

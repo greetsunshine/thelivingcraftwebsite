@@ -27,6 +27,9 @@
 // script imports that module too (Vite bundles it), so the live score bar, the
 // result summary and the PDF all read one rubric: `readAssessment()`.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -40,6 +43,8 @@ import {
   STEP_QUESTION,
   STEP_WHY,
   GATES,
+  GATE_ANSWERS,
+  DQ_ANSWERS,
   GATES_CLOSER,
   CRITERIA,
   WEIGHTS_NOTE,
@@ -112,7 +117,7 @@ const STEP_COUNT = steps.length;
 
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/model-selection-tool" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/model-selection-tool" schema={schema} howTo="how" tool="model-selection-tool">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -130,7 +135,11 @@ const STEP_COUNT = steps.length;
       <p class="hero-note mono">
         {ANSWER_COUNT} answers · {sections.length} sections · two hard gates · one afternoon
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -196,7 +205,7 @@ const STEP_COUNT = steps.length;
               {PURPOSE.map((p) => <li>{p}</li>)}
             </ul>
           </div>
-          <div class="about-col">
+          <div class="about-col" id="how">
             <span class="eyebrow"><span class="num">02</span> How to use it</span>
             <ol class="steps">
               {HOW_TO_USE.map((p) => <li>{p}</li>)}
@@ -300,11 +309,11 @@ const STEP_COUNT = steps.length;
               <p class="why">{g.cost}</p>
               <div class="anchors two" role="group" aria-label={`Gate ${i + 1}: ${g.short}`}>
                 <button type="button" class="anchor" id={`gate${i}v1`} data-k="gate" data-i={i} data-v="1" aria-pressed="false">
-                  <span class="av mono">Passes</span>
+                  <span class="av mono">{GATE_ANSWERS.pass}</span>
                   <span class="at">{g.passes}</span>
                 </button>
                 <button type="button" class="anchor fail" id={`gate${i}v0`} data-k="gate" data-i={i} data-v="0" aria-pressed="false">
-                  <span class="av mono">Fails</span>
+                  <span class="av mono">{GATE_ANSWERS.fail}</span>
                   <span class="at">Not confirmed, or confirmed and it does not meet the line above.</span>
                 </button>
               </div>
@@ -415,11 +424,11 @@ const STEP_COUNT = steps.length;
               <p class="why">{d.why}</p>
               <div class="anchors two" role="group" aria-label={`Disqualifier ${i + 1}: ${d.short}`}>
                 <button type="button" class="anchor" id={`dq${i}v0`} data-k="dq" data-i={i} data-v="0" aria-pressed="false">
-                  <span class="av mono">Did not happen</span>
+                  <span class="av mono">{DQ_ANSWERS.no}</span>
                   <span class="at">Not on any of the ten runs, on any of the four cases.</span>
                 </button>
                 <button type="button" class="anchor fail" id={`dq${i}v1`} data-k="dq" data-i={i} data-v="1" aria-pressed="false">
-                  <span class="av mono">Happened</span>
+                  <span class="av mono">{DQ_ANSWERS.yes}</span>
                   <span class="at">At least once. Write down which run and keep the output as evidence.</span>
                 </button>
               </div>
@@ -465,10 +474,12 @@ const STEP_COUNT = steps.length;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions" role="group" aria-label="Assessment controls">
-            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf" data-own>Download your scored copy (PDF)</button>
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -641,15 +652,14 @@ const STEP_COUNT = steps.length;
           never mentions. That part takes a room.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
 
-  <ResourceGate resource="model-selection-tool" lead="The PDF carries your twenty-seven answers, the weighted score, the outcome and the rows to fix first, and is checked before it is handed over." manual />
+  <ResourceGate resource="model-selection-tool" lead="The Excel workbook is the tool itself, blank: the gates, the twelve behaviours with their weights, the disqualifiers and the rubric, scored the same way as this page. The PDF carries your twenty-seven answers, the weighted score, the outcome and the rows to fix first, and is checked before it is handed over." manual />
 </ResourcesLayout>
 
 <style>
@@ -1371,6 +1381,17 @@ const STEP_COUNT = steps.length;
   }
 
   /* ── print: every step, in order, as a scorecard ──────────────────────── */
+  /* A phone: the question card sits inside the tool's shell, and the answer
+     cards inside the question card. At 390px that nesting left each answer
+     about 250px of text width. The shell's inner gutter and the card padding
+     both step down, so an answer keeps close to 300px (UI/UX audit, 29
+     September 2026). */
+  @media (max-width: 560px) {
+    .inner { padding: 0 var(--space-3); }
+    .item { padding: var(--space-4); }
+    .anchor { padding: var(--space-3) var(--space-4); }
+  }
+
   @media print {
     .tool.js .step { display: block; }
     .scorebar-wrap { position: static; }
@@ -1414,11 +1435,14 @@ const STEP_COUNT = steps.length;
     type Assessment,
   } from '../../data/model-selection-tool';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
 
   let state: Assessment = blankAssessment();
+  /** True while the answers on screen are a loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   // ---- the steps ----------------------------------------------------------
 
@@ -1454,6 +1478,14 @@ const STEP_COUNT = steps.length;
     const name = stepEls[i].querySelector('.sname')?.textContent ?? '';
     return `${LETTERS[i - 1]} ${name}`;
   }
+
+  // The footer's "How to use this" points at #how, which sits in the Start
+  // step. From any other step that section is hidden, so show the Start step
+  // first; the browser then follows the link as usual.
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest?.('a[href="#how"]');
+    if (a && step !== 0) goTo(0, false);
+  });
 
   function goTo(i: number, move = true) {
     step = Math.max(0, Math.min(LAST, i));
@@ -1653,6 +1685,12 @@ const STEP_COUNT = steps.length;
     renderResult(r, line);
     updateProgress();
 
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every row has an answer. A loaded example shows the line and records
+    // nothing: the reader did not reach that result.
+    if (r.complete) markUsefulResult('model-selection-tool', { example: fromExample });
+    else clearUsefulResult();
+
     for (const key of ['gate', 'dq', 'fit', 'cover', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
     }
@@ -1699,6 +1737,7 @@ const STEP_COUNT = steps.length;
       const i = Number(b.dataset.i);
       const v = Number(b.dataset.v);
       const wasBlank = valueOf({ k, i }) === null;
+      fromExample = false;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       if (k === 'profile') state.profile = state.profile === v ? null : v;
       else if (k === 'gate') state.gates[i] = state.gates[i] === v ? null : v;
@@ -1713,6 +1752,7 @@ const STEP_COUNT = steps.length;
     const sel = document.getElementById(`own${k}`) as HTMLSelectElement | null;
     sel?.addEventListener('change', () => {
       state.own[k] = Number(sel.value);
+      fromExample = false;
       update();
     });
   });
@@ -1729,6 +1769,7 @@ const STEP_COUNT = steps.length;
   }
 
   $('blank').addEventListener('click', () => {
+    fromExample = false;
     load(blankAssessment());
     goTo(1);
   });
@@ -1737,6 +1778,7 @@ const STEP_COUNT = steps.length;
     b.addEventListener('click', () => {
       const ex = EXAMPLES.find((e) => e.id === b.dataset.example);
       if (!ex) return;
+      fromExample = true;
       load(ex.assessment);
       goTo(LAST);
     });
@@ -1752,7 +1794,7 @@ const STEP_COUNT = steps.length;
 
   // ---- the download gate ---------------------------------------------
   // One component, one client, one route: see src/components/ResourceGate.astro.
-  mountGate({ payload: () => state });
+  mountGate({ payload: (kind) => (kind === 'pdf' ? state : undefined) });
 
   update();
   goTo(0, false);

@@ -204,9 +204,16 @@ const schema = [
 </NotesLayout>
 
 <style>
-  .notes-hero {
-    padding: 76px 0 64px;
+  /* The closing section is centred (global.css .final), but the V5 reading
+     type gives an h2 a max-width and no side margins, so the heading sat at
+     the left above a centred paragraph. Centre its box too. */
+  .final h2 {
+    margin-left: auto;
+    margin-right: auto;
   }
+
+  /* The hero's spacing is V5's (ds/site-v5.css) since 25 September; the
+     76px/64px padding here was for the old forest shell and doubled it. */
   .notes-hero h1 {
     max-width: 20ch;
   }
@@ -241,7 +248,9 @@ const schema = [
   .note > p {
     font-size: 16px;
     color: var(--ink-soft);
-    max-width: 74ch;
+    /* 64ch, about 80 characters a line. At 74ch these ran 94 to 99, too long
+       to track back to the start of the next line (UI/UX audit, 29 Sep 2026). */
+    max-width: 64ch;
   }
 
   .note-meta {

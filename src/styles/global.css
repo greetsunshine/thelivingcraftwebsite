@@ -273,7 +273,7 @@ header.nav {
    both together double-inset it (48px a side) and misalign it with body text. */
 .hero { background: transparent; padding: var(--space-2) 0 var(--space-8); }
 .hero > .wrap {
-  /* Dark green linen with a forest overlay; flat forest if the image fails.
+  /* Flat forest since 25 September; the linen is drawn on `/` only.
      See --texture-forest in ds/theme.css for the contrast it guarantees. */
   background: var(--texture-forest);
   color: var(--text-on-invert);

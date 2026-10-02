@@ -49,6 +49,15 @@ create index if not exists events_created_idx on public.events (created_at desc)
 create index if not exists events_type_created_idx on public.events (type, created_at desc);
 create index if not exists events_path_idx on public.events (path);
 
+-- One row per event id (outreach readiness handoff, 29 September 2026:
+-- "Deduplicate by event/request ID"). The browser gives every beacon an id and
+-- the server gives its two saved events one built from the record's own id, so
+-- a beacon sent twice, or a save reported twice, is stored once. Rows from
+-- before 29 September carry no id and are outside the index.
+create unique index if not exists events_event_id_uidx
+  on public.events ((meta ->> 'event_id'))
+  where meta ? 'event_id';
+
 -- ---------------------------------------------------------------------------
 -- Leads — what people entered, from either path
 -- ---------------------------------------------------------------------------
@@ -1438,6 +1447,17 @@ create table if not exists public.attributions (
   created_at          timestamptz not null default now()
 );
 
+-- Added 29 September 2026 (the revised outreach readiness handoff). Additive.
+--   first_landing_path, first_referrer_host: the page and the host of the FIRST
+--     arrival, beside its five tags. Until now only the submitting visit had a
+--     page and a host, so "where did they first land" could not be answered.
+--   self_reported_detail: the optional line under "How did you first hear about
+--     The Living Craft?". `self_reported` holds the chosen option's code; the
+--     detail is kept apart from it so a count by option stays a clean count.
+alter table public.attributions add column if not exists first_landing_path   text;
+alter table public.attributions add column if not exists first_referrer_host  text;
+alter table public.attributions add column if not exists self_reported_detail text;
+
 create index if not exists attributions_session_source_idx on public.attributions (session_source, session_captured_at desc);
 create index if not exists attributions_first_source_idx on public.attributions (first_source);
 
@@ -1956,8 +1976,9 @@ begin
   insert into public.attributions (
     submission_id,
     first_source, first_medium, first_campaign, first_content, first_term,
+    first_landing_path, first_referrer_host,
     session_source, session_medium, session_campaign, session_content, session_term,
-    entry_path, referrer_host, self_reported, tracking_permission,
+    entry_path, referrer_host, self_reported, self_reported_detail, tracking_permission,
     first_captured_at, session_captured_at
   ) values (
     v_submission_id,
@@ -1966,6 +1987,8 @@ begin
     nullif(p_attribution ->> 'first_campaign', ''),
     nullif(p_attribution ->> 'first_content', ''),
     nullif(p_attribution ->> 'first_term', ''),
+    nullif(p_attribution ->> 'first_landing_path', ''),
+    nullif(p_attribution ->> 'first_referrer_host', ''),
     nullif(p_attribution ->> 'session_source', ''),
     nullif(p_attribution ->> 'session_medium', ''),
     nullif(p_attribution ->> 'session_campaign', ''),
@@ -1974,6 +1997,7 @@ begin
     nullif(p_attribution ->> 'entry_path', ''),
     nullif(p_attribution ->> 'referrer_host', ''),
     nullif(p_attribution ->> 'self_reported', ''),
+    nullif(p_attribution ->> 'self_reported_detail', ''),
     coalesce((p_attribution ->> 'tracking_permission')::boolean, false),
     nullif(p_attribution ->> 'first_captured_at', '')::timestamptz,
     coalesce(nullif(p_attribution ->> 'session_captured_at', '')::timestamptz, now())
@@ -2666,6 +2690,21 @@ begin
     return new;
   end if;
 
+  -- 30 September 2026: THE RETRY DOOR. A provider refusal that is worth another
+  -- attempt (a 5xx, a rate limit) returns the message to the queue with a
+  -- back-off time and the reason. It is the only other descent, and it needs
+  -- both fields: a bare state change to 'queued' is still refused. A message
+  -- that may have landed (a provider reference) never comes back this way.
+  if old.state = 'sending' and new.state = 'queued' then
+    if new.next_attempt_at is null or new.last_error is null then
+      raise exception 'a message returns to the queue after a transient failure only with next_attempt_at and last_error set';
+    end if;
+    if new.provider_message_id is not null then
+      raise exception 'this message has a provider reference, so it may have landed: reconcile it rather than retrying';
+    end if;
+    return new;
+  end if;
+
   if public.comms_state_rank(new.state) < public.comms_state_rank(old.state) then
     raise exception 'message state is one-way: % cannot become % (a stale callback must never lift a later bounce, complaint or unsubscribe)', old.state, new.state;
   end if;
@@ -2985,6 +3024,11 @@ create table if not exists public.resource_requests (
 alter table public.resource_requests
   add column if not exists kind text not null default 'email';
 
+-- The first arrival's page and host, beside its tags. Same columns and reason
+-- as on public.attributions (29 September 2026).
+alter table public.resource_requests add column if not exists first_landing_path  text;
+alter table public.resource_requests add column if not exists first_referrer_host text;
+
 create index if not exists resource_requests_person_idx
   on public.resource_requests (person_id, requested_at desc);
 
@@ -3036,7 +3080,9 @@ select
        and c.purpose = 'marketing'
      order by c.obtained_at desc
      limit 1
-  ), false)                                          as consented
+  ), false)                                          as consented,
+  -- Last, because CREATE OR REPLACE VIEW only accepts a new column at the end.
+  p.role
 from public.resource_requests r
 join public.people p on p.person_id = r.person_id
 where r.is_test = false;
@@ -3070,6 +3116,10 @@ create trigger resource_requests_touch before update on public.resource_requests
 -- implementation of that rule in SQL is how a+cohort@x.com becomes two people
 -- on one path and one person on another.
 
+-- Parameter history: p_kind (19 September), p_role (29 September) and
+-- p_role_code (30 September). Each one is a new signature, which is why
+-- the loop below drops every overload rather than a named one.
+--
 -- DROP EVERY OVERLOAD FIRST, and this is load-bearing rather than tidiness.
 --
 -- `create or replace function` only replaces a function whose argument list is
@@ -3115,7 +3165,10 @@ create or replace function public.resource_request_submit(
   p_attribution      jsonb       default '{}'::jsonb,
   p_is_test          boolean     default false,
   p_actor            text        default 'public_form',
-  p_kind             text        default 'email'
+  p_kind             text        default 'email',
+  p_role             text        default null,
+  -- The stable role code (audience-roles.ts), beside the readable label.
+  p_role_code        text        default null
 )
 returns table (
   request_id      uuid,
@@ -3148,8 +3201,10 @@ begin
   end if;
 
   -- 2 -- Person, by normalised email and nothing else.
-  insert into public.people (name, normalised_email, original_email)
-  values (p_name, p_normalised_email, p_original_email)
+  insert into public.people (name, normalised_email, original_email, role, role_code)
+  values (p_name, p_normalised_email, p_original_email,
+          nullif(btrim(coalesce(p_role, '')), ''),
+          nullif(btrim(coalesce(p_role_code, '')), ''))
   on conflict (normalised_email) do nothing
   returning people.person_id into v_person_id;
 
@@ -3171,6 +3226,7 @@ begin
       request_key, person_id, resource_id, resource_version, is_test, kind,
       resource_id_dimension,
       first_source, first_medium, first_campaign, first_content, first_term,
+      first_landing_path, first_referrer_host,
       session_source, session_medium, session_campaign, session_content, session_term,
       entry_path, referrer_host, self_reported, tracking_permission,
       first_captured_at, session_captured_at
@@ -3187,6 +3243,8 @@ begin
       nullif(p_attribution ->> 'first_campaign', ''),
       nullif(p_attribution ->> 'first_content', ''),
       nullif(p_attribution ->> 'first_term', ''),
+      nullif(p_attribution ->> 'first_landing_path', ''),
+      nullif(p_attribution ->> 'first_referrer_host', ''),
       nullif(p_attribution ->> 'session_source', ''),
       nullif(p_attribution ->> 'session_medium', ''),
       nullif(p_attribution ->> 'session_campaign', ''),
@@ -3234,3 +3292,75 @@ $fn$;
 -- Writes, so no public execute grant -- same rule as pipeline_submit().
 revoke all on function public.resource_request_submit from public;
 grant execute on function public.resource_request_submit to service_role;
+
+-- ===========================================================================
+-- ===========================================================================
+-- RESOURCE FOLLOW-UPS -- the drip (30 September 2026)
+-- ===========================================================================
+-- ===========================================================================
+--
+-- APPENDED SECTION, idempotent like everything above it. What it adds:
+--
+--   * people.role_code -- the stable role code beside the readable label.
+--   * comms_sequences gains the 'resource' route and four columns that only a
+--     resource sequence uses: the resource that opened it, the request row,
+--     the next send time and a step count.
+--   * comms_drip_sends -- one row per resource sent per sequence. This is the
+--     "already sent" record the selection excludes against, and it is unique
+--     on (sequence, resource) and on (sequence, step), so a planner that runs
+--     twice cannot send the same resource twice or fill the same step twice.
+--   * comms_events.type admits sent, opened and clicked.
+--
+-- WHAT IT DOES NOT ADD. No new state on comms_sequences: the brief's
+-- 'unsubscribed', 'suppressed' and 'failed' are 'stopped' with a
+-- stopped_reason, because the stop rules, the unsubscribe path and the console
+-- all already act on 'stopped', and a second vocabulary for the same fact is
+-- how one screen disagrees with another. 'completed' is exhausted content.
+-- 'pending_confirmation' is not used: consent here is a ticked box, not a
+-- confirmed email, and double opt-in is a decision for the owner.
+--
+-- THE CLAIM. A planner claims a due sequence by moving next_send_at forward a
+-- few minutes in one conditional UPDATE (a lease). Two planners racing for the
+-- same row: one UPDATE matches, the other matches nothing and moves on. The
+-- message it then queues is keyed 'drip:<sequence>:<step>', so even a planner
+-- that lost the lease and carried on could not write a second row.
+
+alter table public.people add column if not exists role_code text;
+create index if not exists people_role_code_idx on public.people (role_code);
+
+alter table public.comms_sequences drop constraint if exists comms_sequences_route_check;
+alter table public.comms_sequences
+  add constraint comms_sequences_route_check
+  check (route in ('application', 'enquiry', 'enterprise', 'resource'));
+
+alter table public.comms_sequences add column if not exists resource_id  text;
+alter table public.comms_sequences add column if not exists request_id   uuid references public.resource_requests(request_id) on delete set null;
+alter table public.comms_sequences add column if not exists next_send_at timestamptz;
+alter table public.comms_sequences add column if not exists steps_sent   int not null default 0;
+
+create index if not exists comms_sequences_due_idx
+  on public.comms_sequences (next_send_at)
+  where state = 'active' and route = 'resource';
+
+create table if not exists public.comms_drip_sends (
+  send_id     uuid        primary key default gen_random_uuid(),
+  sequence_id uuid        not null references public.comms_sequences(sequence_id) on delete cascade,
+  -- The catalogue id (resource-routing.ts), e.g. 'LC-T02'.
+  resource_id text        not null,
+  step        int         not null check (step >= 1),
+  message_id  uuid        references public.comms_messages(message_id) on delete set null,
+  planned_at  timestamptz not null default now()
+);
+
+create unique index if not exists comms_drip_sends_resource
+  on public.comms_drip_sends (sequence_id, resource_id);
+create unique index if not exists comms_drip_sends_step
+  on public.comms_drip_sends (sequence_id, step);
+
+alter table public.comms_drip_sends enable row level security;
+
+alter table public.comms_events drop constraint if exists comms_events_type_check;
+alter table public.comms_events
+  add constraint comms_events_type_check
+  check (type in ('sent', 'delivered', 'bounce_hard', 'bounce_soft', 'complaint', 'reply',
+                  'unsubscribe', 'deferred', 'opened', 'clicked'));

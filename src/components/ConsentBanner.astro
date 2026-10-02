@@ -1,0 +1,131 @@
+---
+// The cookie consent banner, and the only loader of Google Tag Manager.
+//
+// Rendered by GoogleTagManager.astro (with `gtm`) on every page that used to
+// load the container, and by /privacy (without `gtm`) so a visitor can change
+// the choice there. Anything with `data-consent-open` reopens it.
+//
+// `ask` (29 September 2026) is for the pages that never load the container:
+// the tools on ResourcesLayout and the agent design check. The banner asks
+// there as it does everywhere else, and a yes still loads nothing on that
+// page. It exists because outreach links land on those tools, and the site's
+// own attribution cookies (src/lib/pipeline/touch-client.ts) can only record
+// an arrival on the page where it happened, and only after a yes.
+//
+// The rules are in src/lib/consent/consent.ts. The short form: nothing loads
+// until the visitor says yes to analytics, and saying no is one click, the
+// same size as saying yes.
+export interface Props {
+  /** The container id. Absent on a page that only lets you change the choice. */
+  gtm?: string;
+  /** Ask on a first visit even though this page loads no tags. */
+  ask?: boolean;
+}
+const { gtm, ask = false } = Astro.props;
+---
+
+{gtm && <meta name="lc-tags" content={gtm} />}
+{ask && !gtm && <meta name="lc-consent-ask" content="1" />}
+
+<script>
+  import { mountConsent } from '../lib/consent/client';
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountConsent);
+  else mountConsent();
+</script>
+
+<style is:global>
+  /* Global because the banner is built in script (see client.ts). Every rule
+     sits under .lc-consent so nothing here reaches the page. Tokens come from
+     ds/theme.css; the fallbacks keep it readable on a layout without them. */
+  .lc-consent {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+  }
+  .lc-consent[hidden] { display: none; }
+  .lc-consent-inner {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 440px;
+    background: var(--surface-panel, #fbf8f2);
+    color: var(--text-body, #172e26);
+    border-radius: var(--radius-card, 12px);
+    box-shadow: 0 0 0 1px var(--lc-line, #cbd1c8), var(--shadow-overlay, 0 8px 24px rgba(23, 46, 38, 0.2));
+    padding: 20px 24px;
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: left;
+  }
+  .lc-consent-title {
+    margin: 0 0 6px;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-loud, #172e26);
+  }
+  .lc-consent-title:focus { outline: none; }
+  .lc-consent-body { margin: 0 0 14px; }
+  .lc-consent-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+  .lc-consent-choices { display: grid; gap: 10px; margin: 0 0 14px; }
+  .lc-consent-choices[hidden] { display: none; }
+  .lc-consent-choice { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .lc-consent-choice input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--lc-forest, #183d32); }
+  .lc-consent-choice strong { display: block; }
+  .lc-consent-detail { display: block; color: var(--text-quiet, #526259); font-size: 14px; }
+  .lc-consent-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lc-consent-actions .lc-consent-btn { flex: 1 1 0; }
+  /* Accept and Reject are the same size and the same colour on purpose:
+     saying no must be as easy as saying yes. */
+  .lc-consent-btn {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--radius-control, 6px);
+    border: 1px solid var(--lc-forest, #183d32);
+    background: var(--lc-forest, #183d32);
+    color: var(--text-on-accent, #f5f0e6);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .lc-consent-btn-quiet {
+    background: transparent;
+    color: var(--text-body, #172e26);
+    border-color: var(--border-field, #758279);
+  }
+  .lc-consent-btn:focus-visible,
+  .lc-consent-choice input:focus-visible,
+  .lc-consent-link:focus-visible,
+  .lc-consent-footer:focus-visible {
+    outline: 2px solid var(--lc-forest, #183d32);
+    outline-offset: 3px;
+  }
+  /* The "Cookie choices" control added beside the footer's Privacy link. It
+     sits on the dark footer, so it inherits the footer's colour and size. */
+  .lc-consent-footer {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  footer .lc-consent-footer:focus-visible { outline-color: currentColor; }
+  /* A card in the bottom-right corner, not a bar across the page: the cohort
+     page's Apply buttons sit on the left of the hero, and the handoff of 28
+     September says no popup may cover an application button. */
+  @media (max-width: 560px) {
+    .lc-consent { left: 8px; right: 8px; bottom: 8px; }
+    .lc-consent-inner { max-width: none; padding: 14px 16px; font-size: 14px; max-height: 80vh; overflow-y: auto; }
+    .lc-consent-btn { padding: 0 10px; }
+  }
+  @media print {
+    .lc-consent { display: none !important; }
+  }
+</style>

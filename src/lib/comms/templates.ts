@@ -76,6 +76,9 @@
  * that sentence forbids, and it would also put a resource delivery inside
  * `nurtureFor('enquiry')`'s reach the first time somebody changed a filter.
  */
+// With the extension, so `node --test` can load this module directly.
+import { dripTemplateFor } from './drip-templates.ts';
+
 export type TemplateRoute = 'application' | 'enquiry' | 'enterprise' | 'resource';
 export type TemplatePurpose = 'transactional' | 'marketing';
 
@@ -270,7 +273,7 @@ export const NURTURE_OFFSETS = [2, 5, 9] as const;
  * `resource-`), so there is nothing to disambiguate.
  */
 export const templateFor = (key: string): PackageTemplate | undefined =>
-  TEMPLATES.find((t) => t.key === key) ?? RESOURCE_TEMPLATES.find((t) => t.key === key);
+  TEMPLATES.find((t) => t.key === key) ?? RESOURCE_TEMPLATES.find((t) => t.key === key) ?? dripTemplateFor(key);
 
 /** The templates for one route, receipt first, then the nurture steps in order. */
 export const templatesForRoute = (route: TemplateRoute): PackageTemplate[] =>
@@ -336,6 +339,20 @@ export const nurtureFor = (route: TemplateRoute): PackageTemplate[] =>
 export const RESOURCE_PACKAGE_VERSION = 'LC-STRATEGY-V4.0.0';
 
 /**
+ * The version of a wording that changed after the addendum, for one reason:
+ * the tool downloads (28 September 2026).
+ *
+ * Sunil asked on 25 September that each tool's main download be the tool
+ * itself, blank and reusable, not the reader's filled-in report. Five bodies
+ * described the old download, so five bodies changed, and a new form of words
+ * is a new version. It is NOT 'V4.0.1': that would claim the addendum was
+ * revised, and it was not. It is the addendum's marker plus the date this
+ * site changed the words. None of these rows had been stored or approved, so
+ * nothing already approved is invalidated.
+ */
+export const RESOURCE_TOOLS_REVISION = `${RESOURCE_PACKAGE_VERSION}+tools-2026-09-28`;
+
+/**
  * The template key for a resource, derived from the register's identifier.
  *
  * ONE OWNER FOR THIS JOIN. `src/lib/pipeline/resources.ts` canonicalises a
@@ -380,11 +397,10 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_PACKAGE_VERSION,
   },
   // The POC Selection Tool is a published tool, not a V4 worksheet, and it is
-  // keyed by its page slug because it has no register code. It is the one
-  // resource with a PDF: /api/pipeline/resource-pdf builds the scored copy on
-  // request and hands it straight back to the browser, so this email does not
-  // carry an attachment. The outbox sends text and the page rebuilds the PDF
-  // from a fresh score, which is the better copy anyway.
+  // keyed by its page slug because it has no register code. Its main download
+  // is the blank workbook; the scored PDF is the second option. Both come
+  // straight back to the browser from /api/pipeline/download, so this email
+  // carries no attachment and points at the page.
   {
     key: 'resource-poc-screen',
     route: 'resource',
@@ -392,9 +408,9 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The POC Selection Tool',
     body:
-      'Here is the POC Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/poc-screen\n\nIt scores an agent proof of concept before anyone builds it. Twelve questions in four sections, each answered 0, 1 or 2, and one hard gate on whether you can survive the agent being wrong. The page shows the score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the POC Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/poc-screen\n\nIt scores an agent proof of concept before anyone builds it. Twelve questions in four sections, each answered 0, 1 or 2, and one hard gate on whether you can survive the agent being wrong. The page shows the score as you go and reads it against the rubric. The Excel workbook is the same tool, blank, with the same questions and the same rubric, so you can score the next proof of concept offline. The page can also build a PDF of your scored copy.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
-    version: RESOURCE_PACKAGE_VERSION,
+    version: RESOURCE_TOOLS_REVISION,
   },
   // The Agent Authority Review: the second tool with a PDF, keyed by its page
   // slug for the same reason. The PDF carries the person's own workflow steps,
@@ -406,9 +422,9 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Agent Authority Review',
     body:
-      'Here is the Agent Authority Review you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/agent-authority-review\n\nIt decides which steps of a workflow an AI agent may own, which it may only suggest on, and which stay as plain code. You type the steps, answer three questions for each one, and the rubric names the owner beside every step as you go. Three worked examples are on the page, and it can build a PDF of your assessment whenever you want one.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Agent Authority Review you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/agent-authority-review\n\nIt decides which steps of a workflow an AI agent may own, which it may only suggest on, and which stay as plain code. You type the steps, answer three questions for each one, and the rubric names the owner beside every step as you go. Three worked examples are on the page. The Excel workbook is the same review, blank, with room for twelve steps and a worked example on its own sheet. The page can also build a PDF of your assessment.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
-    version: RESOURCE_PACKAGE_VERSION,
+    version: RESOURCE_TOOLS_REVISION,
   },
 
   // The Run-Cost Model Tool: the third tool with a PDF. The PDF carries the
@@ -436,9 +452,25 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Model Selection Tool',
     body:
-      'Here is the Model Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/model-selection-tool\n\nIt scores one candidate model for one step of your system. You choose the job the model is being staffed on, answer ten deployment gates from the model card, score twelve behaviours from ten runs on four test cases you build yourself, and check four disqualifiers. The page shows the weighted score as you go, reads it against the rubric, and can build a PDF of your scored copy whenever you want one. Two reference candidates can be loaded from the first step.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Model Selection Tool you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/model-selection-tool\n\nIt scores one candidate model for one step of your system. You choose the job the model is being staffed on, answer ten deployment gates from the model card, score twelve behaviours from ten runs on four test cases you build yourself, and check four disqualifiers. The page shows the weighted score as you go and reads it against the rubric. The Excel workbook is the same tool, blank, so you can score the next candidate offline; the two reference candidates are on their own sheets. The page can also build a PDF of your scored copy. Two reference candidates can be loaded from the first step.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
-    version: RESOURCE_PACKAGE_VERSION,
+    version: RESOURCE_TOOLS_REVISION,
+  },
+
+  // The Rework Cost Check. Its workbook was a plain file under public/ until
+  // 28 September 2026, which put it outside the download gate. It moved to
+  // downloads/ and asks for a name and an address like every other file, so
+  // it needs its own held wording.
+  {
+    key: 'resource-rework-cost-check',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Rework Cost Check',
+    body:
+      'Here is the Rework Cost Check you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/rework-cost-check\n\nIt costs one task the way it actually runs: the clean path, plus every round a rate limit, a judge, a validator, a tool error or a reviewer sends back. It returns two numbers, typical cost per task and worst case at peak, and five checks with the next fix to make. The page works it out as you type and stores nothing. The Excel workbook is the same check, with the worked example on its own sheet.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_TOOLS_REVISION,
   },
 
   // The download gate (19 September 2026) put every file on every resource
@@ -475,9 +507,9 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Rule Placement Audit',
     body:
-      'Here is the Rule Placement Audit you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/rule-placement-audit\n\nIt lists the rules your agent must never break and finds where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere. Your rows stay in your browser and are never sent. The CSV and the print copy are made in your browser after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Rule Placement Audit you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/rule-placement-audit\n\nIt lists the rules your agent must never break and finds where each one is actually enforced: in code, in a prompt, by a critic model, or nowhere. The blank worksheet downloads from the page after your name and email address, for a team that would rather fill it in on paper or in its own document. Your rows stay in your browser and are never sent. The CSV of your rows and the print copy are made in your browser, after the same two fields.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
-    version: RESOURCE_PACKAGE_VERSION,
+    version: RESOURCE_TOOLS_REVISION,
   },
   {
     key: 'resource-agent-failure-triage-kit',
@@ -497,9 +529,9 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     purpose: 'transactional',
     subject: 'The Agent Design Check',
     body:
-      'Here is the Agent Design Check you asked for.\n\nhttps://learning.thelivingcraft.ai/tools/agent-design-check\n\nIt is nineteen questions about a design you already have, scored against rules you can read in full, with the next step for each one. Your answers never leave your browser. The text summary and the print copy are made in your browser after your name and email address.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+      'Here is the Agent Design Check you asked for.\n\nhttps://learning.thelivingcraft.ai/tools/agent-design-check\n\nIt is nineteen questions about a design you already have, checked against rules you can read in full, with the next step for each one. It gives no score. The question list downloads from the page after your name and email address, so a team can work through the check in a design review. Your answers never leave your browser. The text summary of your answers and the print copy are made in your browser, after the same two fields.\n\nYou asked for this resource and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
     actions: [],
-    version: RESOURCE_PACKAGE_VERSION,
+    version: RESOURCE_TOOLS_REVISION,
   },
   {
     key: 'resource-template-agent-design-canvas',

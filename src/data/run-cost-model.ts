@@ -934,7 +934,11 @@ export function fmtMoney(v: Cell, currency: string, each = false): string {
   const digits = each && Math.abs(v) < 1000 ? 2 : 0;
   const num = v.toLocaleString(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const c = currency.trim();
-  return c ? `${c} ${num}` : num;
+  if (!c) return num;
+  // A symbol sits against the number, as it is written: "₹52.78", "$40".
+  // A code or a word keeps its space: "INR 52.78". Until 29 September 2026
+  // every label took a space, which printed "₹ 52.78".
+  return /^\p{Sc}+$/u.test(c) ? `${c}${num}` : `${c} ${num}`;
 }
 
 export function fmtCount(v: Cell): string {
@@ -972,7 +976,7 @@ export function fmtInput(v: Cell): string {
 // the retry multiplier, times the cost per call"). Words alone made a reader
 // go back three screens and add six numbers in their head to see where the
 // run cost came from. This prints the same formula with the numbers in:
-// "2,000 × 6 × 1.35 × ₹ 2.50 = ₹ 40,500". The page shows it under the row
+// "2,000 × 6 × 1.35 × ₹2.50 = ₹40,500". The page shows it under the row
 // and updates it as they type; the PDF prints it under the same row. One
 // function so the two cannot say different things.
 

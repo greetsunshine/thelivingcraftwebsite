@@ -49,7 +49,7 @@ export const HOW_TO_USE = [
   'Answer B from the model card and the contract, before you run anything. Score C and D from ten runs on the four test cases described under the tool.',
   'For each row, choose the answer the runs showed, not the one the model card promises. The page moves to the next row for you.',
   'Watch the score bar and the progress bar. Both stay at the top and update as you answer.',
-  'Read the result at the end. It gives the outcome and the rows to fix first. Get the PDF of your scored copy there.',
+  'Read the result at the end. It gives the outcome and the rows to fix first. Download the tool as an Excel workbook to score the next candidate offline. The PDF of your scored copy is there too.',
 ];
 
 /** The rules for scoring. Each one is a rule, then the reason. */
@@ -183,6 +183,10 @@ export const GATES: Gate[] = [
     cost: 'Most work arrives in waves. Capacity that fits the mean fails the wave.',
   },
 ];
+
+/** The two answers to a gate and to a disqualifier, as the page's buttons and the workbook's lists print them. */
+export const GATE_ANSWERS = { pass: 'Passes', fail: 'Fails' } as const;
+export const DQ_ANSWERS = { no: 'Did not happen', yes: 'Happened' } as const;
 
 export const GATES_CLOSER =
   'A model card gets a candidate into the room. It never wins the job. A published benchmark has never told anyone whether a model can do their specific work.';

@@ -1,8 +1,8 @@
 // The PDF of a scored POC Selection Tool.
 //
-// Built on the server with pdf-lib, which is pure JavaScript: no headless
-// browser, no font files on disk, no native module, so it runs unchanged
-// inside a Vercel function. The text comes from `src/data/poc-screen.ts`, the
+// Built on the server with pdf-lib through the shared engine in pdf-writer.ts,
+// which carries the brand, the fonts and the layout; it runs unchanged inside a
+// Vercel function. The text comes from `src/data/poc-screen.ts`, the
 // same module the page renders from, and the band comes from `readScores()`,
 // the same function the page's script uses. The PDF cannot say something the
 // page does not.
@@ -28,25 +28,23 @@
 // THE BRAND, ON PAPER
 // ───────────────────────────────────────────────────────────────────────────
 //
-// The design system of record is .claude/skills/the-living-craft-design. Its
-// print rule is that soft elevation does not print, so every panel here is a
-// flat fill with a small radius and no shadow. The four brand values each keep
-// their one job: noir is the cover band and nothing else, sun marks the chosen
-// answer, ember carries the promotional panel with ink text on it, berry is the
-// hard-gate mark. The wordmark is the words "The Living Craft" in the display
-// weight beside a sun dot, because no logo has been drawn.
+// The brand lives in pdf-writer.ts and nowhere else: the ivory weave cover,
+// the paper inner pages with a weave band, the lockup (the LC mark and the
+// lettering, as BrandLockup.astro draws them), Source Serif 4 for the title
+// and Figtree for everything else, and the colours of design system v1. Read
+// its head before changing how a page looks. What this file decides is which
+// colour marks what:
 //
-// The display face is Figtree, standing in for Sofia Pro, and neither ships as
-// a file in this repo. The token stack names "Helvetica Neue" as its fallback,
-// so Helvetica is what this file uses: a stand-in for a stand-in, and the one
-// thing about the branding here that is not what the screen shows.
+//   * forest marks the chosen answer, and fills the cohort panel at the end,
+//     with ivory text on it;
+//   * the result sits on a soft green panel (--lc-soft), as the enterprise
+//     facts do on `/`;
+//   * the error red (--lc-error) marks a hard gate and anything that stops.
 //
-// Standard fonts encode WinAnsi only. Curly quotes, en and em dashes, the
-// multiplication sign and the ellipsis are fine; an arrow, a rupee sign or an
-// emoji is not, and pdf-lib throws on one. `clean()` maps the few we use and
-// drops the rest. Our own copy must lose nothing to that; a typed name may.
+// A character the embedded fonts cannot draw is dropped by `clean()`. Our own
+// copy must lose nothing to that, and a check says so; a typed name may.
 
-import { PDFDocument, PDFName, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import {
   CUT_LINES,
   FLAT,
@@ -64,36 +62,22 @@ import { TOOL_CREDIT, publishedResources } from '../../data/resources';
 import { SITE_ORIGIN, cohort } from '../../data/facts';
 import { COHORT_SIZE, COMMITMENT } from '../../data/offer-display';
 
-// ---------------------------------------------------------------------------
-// Geometry and colour
-// ---------------------------------------------------------------------------
-
-const PAGE = { w: 595.28, h: 841.89 }; // A4, points
-const MARGIN = { top: 64, right: 52, bottom: 60, left: 52 };
-const MEASURE = PAGE.w - MARGIN.left - MARGIN.right;
-const BAND_H = 128; // the cover band on page 1
-
-// Brand values, from tokens/theme.css. Each has one job; see the note above.
-const NOIR = rgb(0, 0, 0);
-const SUN = rgb(1, 0.757, 0.137); // #ffc123
-const EMBER = rgb(0.992, 0.522, 0.286); // #fd8549
-const MIST = rgb(0.945, 0.953, 0.961); // #f1f3f5
-const BERRY = rgb(0.922, 0.078, 0.314); // #eb1450, the mark bar
-const INK = rgb(0.086, 0.129, 0.18); // #16212e
-const QUIET = rgb(0.38, 0.42, 0.47);
-const ON_NOIR_QUIET = rgb(0.64, 0.675, 0.72); // faint text on the black band
-const RULE = rgb(0.86, 0.88, 0.9);
-const DANGER = rgb(0.81, 0.06, 0.27); // #cf0f45, the text bar
-const WHITE = rgb(1, 1, 1);
-
-const clean = (s: string): string =>
-  s
-    .replace(/→/g, '->')
-    .replace(/₹/g, 'INR ')
-    .replace(/[^\x20-\x7e\xa0-\xff–—‘’“”…•]/g, '');
-
-/** True when `clean()` would change nothing. Our own copy must satisfy this. */
-const drawsWhole = (s: string): boolean => clean(s) === s;
+import {
+  byLine,
+  ERROR,
+  FOREST,
+  INK,
+  IVORY,
+  MARGIN,
+  MEASURE,
+  MUTED,
+  SOFT,
+  Writer,
+  brandedPages,
+  clean,
+  drawsWhole,
+  openBrandedDoc,
+} from './pdf-writer';
 
 export interface PocPdfInput {
   /** Twelve entries, each 0, 1, 2 or null for unanswered. */
@@ -168,7 +152,7 @@ export function buildModel(input: PocPdfInput): PocPdfModel {
     subtitle: 'Can this agent proof of concept reach production? Twelve questions, scored before you build.',
     series: meta ? `${meta.series} · ${meta.number}` : 'Resources',
     coverLine: [
-      input.name ? `Scored by ${clean(input.name)}` : null,
+      byLine('Scored by', input.name),
       dateLine || null,
       'learning.thelivingcraft.ai/resources/poc-screen',
     ]
@@ -369,173 +353,6 @@ export function checkModel(model: PocPdfModel, input: PocPdfInput): PdfCheck[] {
 // Stage 3: drawing
 // ---------------------------------------------------------------------------
 
-type Colour = ReturnType<typeof rgb>;
-
-class Writer {
-  private doc: PDFDocument;
-  private page!: PDFPage;
-  private y = 0;
-  private pageNo = 0;
-  readonly body: PDFFont;
-  readonly bold: PDFFont;
-  private decorate: (page: PDFPage, pageNo: number) => number;
-
-  constructor(doc: PDFDocument, body: PDFFont, bold: PDFFont, decorate: (page: PDFPage, pageNo: number) => number) {
-    this.doc = doc;
-    this.body = body;
-    this.bold = bold;
-    this.decorate = decorate;
-    this.newPage();
-  }
-
-  private newPage() {
-    this.page = this.doc.addPage([PAGE.w, PAGE.h]);
-    this.pageNo += 1;
-    // The decorator draws the band or the slim header and says where text starts.
-    this.y = this.decorate(this.page, this.pageNo);
-  }
-
-  /** Start a new page unless `height` points still fit on this one. */
-  ensure(height: number) {
-    if (this.y - height < MARGIN.bottom) this.newPage();
-  }
-
-  gap(points: number) {
-    this.y -= points;
-  }
-
-  rule() {
-    this.ensure(8);
-    this.page.drawLine({
-      start: { x: MARGIN.left, y: this.y },
-      end: { x: PAGE.w - MARGIN.right, y: this.y },
-      thickness: 0.6,
-      color: RULE,
-    });
-    this.y -= 10;
-  }
-
-  wrap(text: string, font: PDFFont, size: number, width: number): string[] {
-    const words = clean(text).split(/\s+/).filter(Boolean);
-    const lines: string[] = [];
-    let line = '';
-    for (const w of words) {
-      const probe = line ? `${line} ${w}` : w;
-      if (font.widthOfTextAtSize(probe, size) <= width) line = probe;
-      else {
-        if (line) lines.push(line);
-        line = w;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  heightOf(text: string, font: PDFFont, size: number, width = MEASURE, lh = 1.4): number {
-    return this.wrap(text, font, size, width).length * size * lh;
-  }
-
-  text(
-    text: string,
-    opts: { font?: PDFFont; size?: number; color?: Colour; indent?: number; width?: number; lh?: number } = {},
-  ) {
-    const font = opts.font ?? this.body;
-    const size = opts.size ?? 10;
-    const lh = opts.lh ?? 1.4;
-    const indent = opts.indent ?? 0;
-    const width = opts.width ?? MEASURE - indent;
-    for (const line of this.wrap(text, font, size, width)) {
-      this.ensure(size * lh);
-      this.page.drawText(line, { x: MARGIN.left + indent, y: this.y - size, size, font, color: opts.color ?? INK });
-      this.y -= size * lh;
-    }
-  }
-
-  /** A label in the left gutter and a paragraph beside it, on one baseline. */
-  labelled(
-    label: string,
-    text: string,
-    opts: { size?: number; labelColor?: Colour; gutter?: number; font?: PDFFont; indent?: number; color?: Colour } = {},
-  ) {
-    const size = opts.size ?? 10;
-    const gutter = opts.gutter ?? 30;
-    const indent = opts.indent ?? 0;
-    this.ensure(size * 1.4);
-    this.page.drawText(clean(label), {
-      x: MARGIN.left + indent,
-      y: this.y - size,
-      size,
-      font: this.bold,
-      color: opts.labelColor ?? QUIET,
-    });
-    this.text(text, { size, indent: indent + gutter, font: opts.font, color: opts.color });
-  }
-
-  /** A filled square, used for the chosen anchor. */
-  marker(x: number, yTop: number, size: number, color: Colour) {
-    this.page.drawRectangle({ x, y: yTop - size, width: size, height: size, color });
-  }
-
-  /** A flat panel with a small radius. Print rule: a fill, never a shadow. */
-  panel(height: number, color: Colour, radius = 8) {
-    this.ensure(height);
-    roundedRect(this.page, MARGIN.left, this.y - height, MEASURE, height, radius, color);
-  }
-
-  /** A clickable area over the rectangle, opening `url`. */
-  link(x: number, yTop: number, width: number, height: number, url: string) {
-    const annot = this.doc.context.obj({
-      Type: 'Annot',
-      Subtype: 'Link',
-      Rect: [x, yTop - height, x + width, yTop],
-      Border: [0, 0, 0],
-      A: { Type: 'Action', S: 'URI', URI: PDFString.of(url) },
-    });
-    const ref = this.doc.context.register(annot);
-    const existing = this.page.node.lookup(PDFName.of('Annots'));
-    if (existing && 'push' in existing && typeof (existing as { push: unknown }).push === 'function') {
-      (existing as { push: (r: unknown) => void }).push(ref);
-    } else {
-      this.page.node.set(PDFName.of('Annots'), this.doc.context.obj([ref]));
-    }
-  }
-
-  get cursor() {
-    return this.y;
-  }
-
-  get current() {
-    return this.page;
-  }
-
-  /** Page numbers, drawn last so the total is known. */
-  finish(footer: string) {
-    const pages = this.doc.getPages();
-    pages.forEach((p, i) => {
-      p.drawText(clean(`${footer} · page ${i + 1} of ${pages.length}`), {
-        x: MARGIN.left,
-        y: MARGIN.bottom - 24,
-        size: 7.5,
-        font: this.body,
-        color: QUIET,
-      });
-    });
-  }
-}
-
-function roundedRect(page: PDFPage, x: number, y: number, w: number, h: number, r: number, color: Colour) {
-  const d = `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r} V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
-  // drawSvgPath draws downward from (x, y); hand it the top-left corner.
-  page.drawSvgPath(d, { x, y: y + h, color, borderWidth: 0 });
-}
-
-/** The wordmark: a sun dot and "The Living Craft" in the display weight. */
-function wordmark(page: PDFPage, font: PDFFont, x: number, baseline: number, size: number, color: Colour) {
-  const dot = size * 0.42;
-  page.drawCircle({ x: x + dot / 2, y: baseline + size * 0.3, size: dot / 2, color: SUN });
-  page.drawText('The Living Craft', { x: x + dot + size * 0.45, y: baseline, size, font, color });
-}
-
 /**
  * The checks alone, for the route to run BEFORE the request is saved. A file
  * that would fail a check must not leave a person, a request row and a queued
@@ -555,51 +372,18 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
     throw new Error(`PDF check failed: ${failed.map((c) => c.name).join('; ')}`);
   }
 
-  const doc = await PDFDocument.create();
-  doc.setTitle(`${TOOL_NAME} — scored copy`);
-  doc.setAuthor('The Living Craft');
-  doc.setSubject(model.subtitle);
-  doc.setProducer('learning.thelivingcraft.ai');
-  const body = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-
-  // The page decorator. Page 1 carries the black cover band, the one black
-  // area in the document; every later page a slim header with the wordmark.
-  const decorate = (page: PDFPage, pageNo: number): number => {
-    if (pageNo === 1) {
-      page.drawRectangle({ x: 0, y: PAGE.h - BAND_H, width: PAGE.w, height: BAND_H, color: NOIR });
-      wordmark(page, bold, MARGIN.left, PAGE.h - 34, 12, WHITE);
-      const seriesText = clean(model.series);
-      page.drawText(seriesText, {
-        x: PAGE.w - MARGIN.right - body.widthOfTextAtSize(seriesText, 8),
-        y: PAGE.h - 33,
-        size: 8,
-        font: body,
-        color: ON_NOIR_QUIET,
-      });
-      page.drawText(clean(model.title), { x: MARGIN.left, y: PAGE.h - 74, size: 24, font: bold, color: WHITE });
-      page.drawText(clean(model.subtitle), { x: MARGIN.left, y: PAGE.h - 94, size: 9.5, font: body, color: ON_NOIR_QUIET });
-      page.drawText(clean(model.credit), { x: MARGIN.left, y: PAGE.h - 112, size: 8, font: body, color: ON_NOIR_QUIET });
-      return PAGE.h - BAND_H - 28;
-    }
-    wordmark(page, bold, MARGIN.left, PAGE.h - 34, 9, INK);
-    page.drawLine({
-      start: { x: MARGIN.left, y: PAGE.h - 46 },
-      end: { x: PAGE.w - MARGIN.right, y: PAGE.h - 46 },
-      thickness: 0.6,
-      color: RULE,
-    });
-    return PAGE.h - MARGIN.top;
-  };
-
-  const w = new Writer(doc, body, bold, decorate);
+  const { doc, brand } = await openBrandedDoc({ title: `${TOOL_NAME} — scored copy`, subject: model.subtitle });
+  const { body, bold } = brand;
+  // Page 1 is the ivory cover; every later page is paper with a weave band.
+  const decorate = brandedPages(brand, { series: model.series, title: model.title, subtitle: model.subtitle, credit: model.credit });
+  const w = new Writer(doc, brand, decorate);
   const danger = model.result.bandKey === 'gate' || model.result.bandKey === 'stop';
 
   // ---- cover line ---------------------------------------------------------
-  w.text(model.coverLine, { size: 8.5, color: QUIET });
+  w.text(model.coverLine, { size: 8.5, color: MUTED });
   w.gap(14);
 
-  // ---- the result, on a mist panel ----------------------------------------
+  // ---- the result, on a soft green panel (--lc-soft) -----------------------
   const pad = 16;
   const inner = MEASURE - pad * 2;
   const resultLines = [
@@ -613,15 +397,15 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
     model.result.gateNames.length ? 6 + w.heightOf(`Hard gate: section B has a 0 on ${model.result.gateNames.join(', ')}. This stops the proof of concept whatever the total.`, bold, 10, inner) : 0,
   ];
   const resultH = resultLines.reduce((a, b) => a + b, 0) + pad * 2 + 10;
-  w.panel(resultH, MIST);
+  w.panel(resultH, SOFT);
   w.gap(pad);
-  w.text('Result', { font: bold, size: 9, color: QUIET, indent: pad });
+  w.text('Result', { font: bold, size: 9, color: MUTED, indent: pad });
   w.gap(6);
   w.text(`${model.result.total} / ${model.result.max}  —  ${model.result.bandName}`, {
     font: bold,
     size: 16,
     indent: pad,
-    color: danger ? DANGER : INK,
+    color: danger ? ERROR : INK,
   });
   w.gap(4);
   w.text(model.result.what, { size: 10, indent: pad });
@@ -633,7 +417,7 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
     w.gap(6);
     w.text(`Hard gate: section B has a 0 on ${model.result.gateNames.join(', ')}. This stops the proof of concept whatever the total.`, {
       size: 10,
-      color: DANGER,
+      color: ERROR,
       font: bold,
       indent: pad,
     });
@@ -645,11 +429,11 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
     w.ensure(60);
     w.text('Fix first', { font: bold, size: 13 });
     w.gap(4);
-    w.text('Lowest scores first, with the move that answers each one before the agent exists.', { size: 9.5, color: QUIET });
+    w.text('Lowest scores first, with the move that answers each one before the agent exists.', { size: 9.5, color: MUTED });
     w.gap(6);
     for (const f of model.fixFirst) {
       const line = `${f.short}, scored ${f.score}${f.gate ? ' (hard gate)' : ''}. ${f.anchor}${f.move ? ` ${f.move}` : ''}`;
-      w.labelled(f.num, line, { size: 9.5, gutter: 24, labelColor: f.score === 0 && f.gate ? DANGER : QUIET });
+      w.labelled(f.num, line, { size: 9.5, gutter: 24, labelColor: f.score === 0 && f.gate ? ERROR : MUTED });
       w.gap(3);
     }
     w.gap(8);
@@ -666,14 +450,14 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
   w.ensure(70 + 44 + questionHeight(model.answers[0].items[0]));
   w.text('Your answers', { font: bold, size: 13 });
   w.gap(2);
-  w.text('Each question, the answer you chose, and what the other two anchors would have needed.', { size: 9.5, color: QUIET });
+  w.text('Each question, the answer you chose, and what the other two anchors would have needed.', { size: 9.5, color: MUTED });
   w.gap(10);
 
   for (const s of model.answers) {
     // A section header never sits alone at the foot of a page.
     w.ensure(44 + questionHeight(s.items[0]));
     w.text(`${s.letter}  ${s.name}${s.gate ? '  (hard gate)' : ''}`, { font: bold, size: 12 });
-    w.text(s.question, { size: 10, color: QUIET });
+    w.text(s.question, { size: 10, color: MUTED });
     w.gap(8);
 
     for (const it of s.items) {
@@ -682,11 +466,11 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
       w.gap(3);
       it.anchors.forEach((a, k) => {
         const chosen = it.chosen === k;
-        if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, s.gate && k === 0 ? BERRY : SUN);
-        w.text(`${k}  ${a}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : QUIET });
+        if (chosen) w.marker(MARGIN.left + 24, w.cursor - 1, 8, s.gate && k === 0 ? ERROR : FOREST);
+        w.text(`${k}  ${a}`, { size: 9.5, indent: 38, font: chosen ? bold : body, color: chosen ? INK : MUTED });
         w.gap(3);
       });
-      if (it.chosen === null) w.text('Unanswered. Counts as 0.', { size: 9, indent: 38, color: DANGER });
+      if (it.chosen === null) w.text('Unanswered. Counts as 0.', { size: 9, indent: 38, color: ERROR });
       w.gap(8);
     }
     w.gap(4);
@@ -698,11 +482,11 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
   w.ensure(60 + model.rubric.slice(0, 2).reduce((h, c) => h + w.heightOf(`${c.name}. ${c.what}`, body, 9.5, MEASURE - 70) + 5, 0));
   w.text('The rubric', { font: bold, size: 13 });
   w.gap(2);
-  w.text('Agree these before you score, not after. A total one point above a line is a narrow, not a yes.', { size: 9.5, color: QUIET });
+  w.text('Agree these before you score, not after. A total one point above a line is a narrow, not a yes.', { size: 9.5, color: MUTED });
   w.gap(8);
   for (const c of model.rubric) {
     w.ensure(40);
-    w.labelled(c.score, `${c.name}. ${c.what}`, { size: 9.5, gutter: 70, labelColor: c.key === 'gate' ? DANGER : QUIET });
+    w.labelled(c.score, `${c.name}. ${c.what}`, { size: 9.5, gutter: 70, labelColor: c.key === 'gate' ? ERROR : MUTED });
     w.gap(5);
   }
   w.gap(8);
@@ -712,19 +496,19 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
   w.ensure(60 + w.heightOf(model.moves[0].body, body, 9.5, MEASURE - 30) + 40);
   w.text('Four ways to answer most questions before you build the agent', { font: bold, size: 13 });
   w.gap(2);
-  w.text('Listed from cheapest to most expensive. Each one costs less than a pilot that fails in front of a customer.', { size: 9.5, color: QUIET });
+  w.text('Listed from cheapest to most expensive. Each one costs less than a pilot that fails in front of a customer.', { size: 9.5, color: MUTED });
   w.gap(8);
   for (const m of model.moves) {
     w.ensure(w.heightOf(m.body, body, 9.5, MEASURE - 30) + 40);
-    w.labelled(m.num, m.name, { size: 11, gutter: 30, font: bold, labelColor: QUIET });
+    w.labelled(m.num, m.name, { size: 11, gutter: 30, font: bold, labelColor: MUTED });
     w.text(m.body, { size: 9.5, indent: 30 });
     w.gap(2);
-    w.text(`Cost: ${m.cost}  ·  Answers ${m.answers}`, { size: 8.5, indent: 30, color: QUIET });
+    w.text(`Cost: ${m.cost}  ·  Answers ${m.answers}`, { size: 8.5, indent: 30, color: MUTED });
     w.gap(8);
   }
   w.gap(6);
 
-  // ---- join the cohort, on an ember panel with ink text ---------------------
+  // ---- join the cohort, on a forest panel with ivory text -----------------
   const ctaH =
     pad * 2 +
     w.heightOf(model.cta.heading, bold, 15, inner) +
@@ -732,17 +516,17 @@ export async function renderPocScreenPdf(input: PocPdfInput): Promise<{ bytes: U
     model.cta.lines.reduce((h, l) => h + w.heightOf(l, body, 10, inner) + 4, 0) +
     6 +
     w.heightOf(`${model.cta.action} ${model.cta.url}`, bold, 10, inner);
-  w.panel(ctaH, EMBER, 10);
+  w.panel(ctaH, FOREST, 10);
   const panelTop = w.cursor;
   w.gap(pad);
-  w.text(model.cta.heading, { font: bold, size: 15, indent: pad });
+  w.text(model.cta.heading, { font: bold, size: 15, indent: pad, width: inner, color: IVORY });
   w.gap(6);
   for (const l of model.cta.lines) {
-    w.text(l, { size: 10, indent: pad });
+    w.text(l, { size: 10, indent: pad, width: inner, color: IVORY });
     w.gap(4);
   }
   w.gap(6);
-  w.text(`${model.cta.action} ${model.cta.url}`, { font: bold, size: 10, indent: pad });
+  w.text(`${model.cta.action} ${model.cta.url}`, { font: bold, size: 10, indent: pad, width: inner, color: IVORY });
   // The whole panel is the link, so a reader does not have to hit one line.
   w.link(MARGIN.left, panelTop, MEASURE, ctaH, model.cta.url);
   w.gap(pad + 6);

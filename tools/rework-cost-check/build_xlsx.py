@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build public/downloads/rework-cost-check.xlsx.
+"""Build downloads/rework-cost-check.xlsx (behind the download gate; see CLAUDE.md).
 
 Four tabs: Start here, Check, How to find these numbers, Example.
 
@@ -22,6 +22,7 @@ Run:  python3 tools/rework-cost-check/build_xlsx.py
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -38,7 +39,7 @@ REPO = HERE.parents[1]
 BRAND = json.loads((HERE / "brand.json").read_text(encoding="utf-8"))
 BRAND_DIR = REPO / "public" / "brand"
 BUILD = HERE / ".build"
-OUT = REPO / "public" / "downloads" / "rework-cost-check.xlsx"
+OUT = REPO / "downloads" / "rework-cost-check.xlsx"
 
 TITLE = "Rework Cost Check"
 TAGLINE = "What does one task really cost once limits, judges, validators and reviewers send work back?"
@@ -52,9 +53,14 @@ BODY = BRAND["fonts"]["body"]["family"]
 
 def content() -> dict:
     """The words and the worked example, from the TypeScript that owns them."""
+    # tsx, not `node --experimental-strip-types`, since 29 September 2026: the
+    # dump now reads the cohort invitation, whose module imports facts.ts
+    # without a file extension, which plain Node refuses. UTF-8 is explicit
+    # because Windows would otherwise decode the output as cp1252.
+    npx = shutil.which("npx") or "npx"
     out = subprocess.run(
-        ["node", "--experimental-strip-types", str(HERE / "dump_content.ts")],
-        capture_output=True, text=True, cwd=REPO, check=False,
+        [npx, "-y", "tsx", str(HERE / "dump_content.ts")],
+        capture_output=True, text=True, encoding="utf-8", cwd=REPO, check=False,
     )
     if out.returncode != 0:
         raise SystemExit(f"dump_content.ts failed:\n{out.stderr[-2000:]}")
@@ -723,6 +729,18 @@ def cover(ws: Worksheet, data: dict):
     r += 2
     ws.merge_cells(f"B{r}:D{r}")
     put(ws, f"B{r}", FOOTER, font=F_NOTE)
+    r += 2
+    # The cohort invitation and a working application address, which the
+    # outreach readiness handoff (28 September 2026) asks every file a reader
+    # keeps to carry. The words come from src/data/resource-cohort-copy.ts.
+    put(ws, f"B{r}", "THE LIVING CRAFT COHORT", font=F_LABEL, align=Alignment(horizontal="left", vertical="top"))
+    ws.merge_cells(f"C{r}:D{r}")
+    put(ws, f"C{r}", data["cohort"], font=F_BODY, align=WRAP)
+    ws.row_dimensions[r].height = 46
+    r += 1
+    ws.merge_cells(f"C{r}:D{r}")
+    link = put(ws, f"C{r}", f"Apply at {data['applyUrl']}", font=F_BODY_B)
+    link.hyperlink = data["applyUrl"]
     return {"checkTitlesFirst": cover_first}
 
 

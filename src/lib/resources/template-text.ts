@@ -15,6 +15,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { SITE_ORIGIN } from '../../data/facts';
 import { COMMITMENT, FEES_NOTE } from '../../data/offer-display';
+import { APPLY_URL, cohortInvitationFor } from '../../data/resource-cohort-copy';
 
 export type TemplateEntry = CollectionEntry<'templates'>;
 
@@ -29,6 +30,18 @@ const quote = (lines: string[]): string[] =>
   lines.flatMap((line, i) => (i === 0 ? [`> ${line}`] : ['>', `> ${line}`]));
 
 export const templateUrl = (entry: TemplateEntry): string => `${SITE_ORIGIN}/resources/templates/${entry.id}`;
+
+/**
+ * The last lines of both files: the page's cohort invitation and the full
+ * application address. The outreach readiness handoff (28 September 2026) asks
+ * for "contextual cohort copy plus a working application URL" in every file a
+ * reader takes away. Plain text, so it survives a paste into a document.
+ */
+const cohortFooter = (entry: TemplateEntry): string[] => [
+  '---',
+  '',
+  `${cohortInvitationFor(`/resources/templates/${entry.id}`)} Apply at ${APPLY_URL}`,
+];
 
 /** `<fileBase>.md` and `<fileBase>-example.md`. */
 export const templateFilenames = (entry: TemplateEntry) => ({
@@ -63,6 +76,7 @@ export function blankTemplateText(entry: TemplateEntry): string {
     // Room to write, and a blank line either side of it.
     lines.push('', '', '');
   }
+  lines.push(...cohortFooter(entry));
   return `${lines.join('\n').trimEnd()}\n`;
 }
 
@@ -91,6 +105,6 @@ export function workedTemplateText(entry: TemplateEntry): string {
   for (const s of d.sections) {
     lines.push(`## ${s.heading}`, '', resolveTokens(s.example).trimEnd(), '');
   }
-  lines.push('---', '', `Blank version of this template · ${url}`);
+  lines.push('---', '', `Blank version of this template · ${url}`, '', ...cohortFooter(entry));
   return `${lines.join('\n').trimEnd()}\n`;
 }

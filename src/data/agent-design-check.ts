@@ -735,6 +735,13 @@ export interface SummaryContext {
   /** e.g. `location.origin`, so guide links in a saved file still resolve. */
   origin: string;
   now: Date;
+  /**
+   * The cohort invitation and the application address, closing the file. The
+   * page passes them in from resource-cohort-copy.ts rather than this module
+   * importing it, because this module ships to the browser and that one pulls
+   * in facts.ts. Outreach readiness handoff, 28 September 2026.
+   */
+  cohort?: { invitation: string; applyUrl: string };
 }
 
 /**
@@ -856,6 +863,11 @@ export function summaryText(answers: Answers, ctx: SummaryContext): string {
 
   out.push(thin);
   out.push(wrap('The Living Craft — ' + ctx.origin + '/tools/agent-design-check/', W, ''));
+  if (ctx.cohort) {
+    out.push('');
+    out.push(wrap(ctx.cohort.invitation, W, ''));
+    out.push('Apply at ' + ctx.cohort.applyUrl);
+  }
 
   return out.join('\n') + '\n';
 }

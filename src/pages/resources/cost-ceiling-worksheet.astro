@@ -34,16 +34,18 @@
 //    counts one, or turns a set of answers into a number. See NO_SCORE and
 //    rule 1 in src/data/resources.ts.
 //
-// 3. NO OFFER FACTS. The V4 public policy publishes no fee, date or week count
-//    on this route. The onward
-//    links below name the cohort and the contact page and say nothing about
-//    either one's terms.
+// 3. OFFER FACTS ONLY THROUGH facts.ts. The V4 policy of publishing no fee,
+//    date or week count was reversed on 14 September 2026 (D1). The one figure
+//    on this page, the week count in the closing row, comes from facts.ts
+//    through ClosingCta.astro. Nothing here types an offer fact.
 //
 // 4. THE DOWNLOAD IS THE GATE'S. The CSV is built on the server by
 //    /api/pipeline/download from the same `csvFor()` the page's table comes
 //    from, so the file and the table cannot disagree. The page is complete
 //    without the script: a reader can print from their own browser menu.
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN, practitioner } from '../../data/facts';
 import {
@@ -144,10 +146,13 @@ const schema: unknown[] = [
           <dt>Written by</dt>
           <dd>{d.author}</dd>
         </div>
-        <div>
-          <dt>Reviewed by</dt>
-          <dd>{d.reviewedBy ?? <span class="unset">Not yet reviewed</span>}</dd>
-        </div>
+        {/* The reviewer is shown once there is one; an empty review is not announced (29 September 2026). */}
+        {d.reviewedBy && (
+          <div>
+            <dt>Reviewed by</dt>
+            <dd>{d.reviewedBy}</dd>
+          </div>
+        )}
         <div>
           <dt>Last revised</dt>
           <dd><time datetime={d.revisedOn}>{readableDate(d.revisedOn)}</time></dd>
@@ -164,6 +169,7 @@ const schema: unknown[] = [
           ))
         }
       </nav>
+      <CohortIntroLink />
     </header>
 
     {/* The live region the print button announces into. */}
@@ -318,8 +324,11 @@ const schema: unknown[] = [
       )
     }
 
-    {/* Two links onward, no pitch. This reader arrived for a worksheet and has
-        one; neither link asks for anything. */}
+    {/* Two links onward, then the shared closing row. Until 28 September 2026
+        this said "no pitch": the reader arrived for a worksheet and has one.
+        Sunil reversed that on 28 September: every tool and resource page ends
+        in a cohort call to action (ClosingCta). The onward text stays calm; the
+        component carries the buttons, and the CSV download sits beside them. */}
     <aside class="after onward" aria-labelledby="onward-h">
       <h2 id="onward-h">If you would rather work through it with someone</h2>
       <p>
@@ -331,6 +340,9 @@ const schema: unknown[] = [
         <a class="textlink" href="/contact/"> say so</a> — an awkward case is the most useful
         thing anybody sends.
       </p>
+      <ClosingCta result>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="csv">Download {file}&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
     </aside>
   </article>
   <ResourceGate resource="cost-ceiling-worksheet" lead="The CSV is the table above, with the same column names, for a spreadsheet." />
@@ -435,6 +447,14 @@ const schema: unknown[] = [
   }
   .jump .sep {
     color: var(--text-quiet);
+  }
+  /* On a phone the list wraps, and a separator dot started the next line
+     ("· Test the boundary"). Below 720px the dots go and the gap does their
+     job (UI/UX audit, 29 September 2026). */
+  @media (max-width: 720px) {
+    .jump { column-gap: var(--space-5); row-gap: var(--space-2); }
+    .jump .sep { display: none; }
+    .jump a { padding-block: 4px; }
   }
 
   /* ── a section ──────────────────────────────────────────────────────────── */

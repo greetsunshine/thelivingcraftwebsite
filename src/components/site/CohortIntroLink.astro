@@ -1,0 +1,45 @@
+---
+/**
+ * One short line under a tool or resource page's introduction, pointing at the
+ * cohort. Outreach readiness handoff, 28 September 2026, item 2: "Add a short
+ * contextual cohort link below each tool introduction and a fuller invitation
+ * after the useful result or worksheet. Keep tool completion primary."
+ *
+ * So this is a text link, not a button: the page's own first action stays the
+ * loudest thing in the introduction. The fuller invitation is ClosingCta.astro
+ * at the foot of the page. The link carries `data-cta`, so Track.astro counts
+ * it separately from the closing row (`resource-intro` against `resource-close`).
+ * Hidden in print; the closing row's print line carries the address instead.
+ */
+import { INTRO_LINE } from '../../data/resource-cohort-copy';
+---
+
+<p class="lc-intro-cohort">
+  {INTRO_LINE}
+  <a href="/" data-cta="cohort" data-cta-placement="resource-intro">Explore the cohort<span aria-hidden="true">&nbsp;→</span></a>
+</p>
+
+<style>
+  .lc-intro-cohort {
+    margin-top: var(--space-3);
+    font-size: var(--size-2, 0.875rem);
+    line-height: 1.5;
+    color: var(--text-body);
+    text-align: left;
+  }
+  .lc-intro-cohort a {
+    color: var(--text-body);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+  .lc-intro-cohort a:hover {
+    color: var(--text-loud);
+  }
+  @media print {
+    .lc-intro-cohort {
+      display: none !important;
+    }
+  }
+</style>

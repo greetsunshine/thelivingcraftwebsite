@@ -54,6 +54,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { env } from '../admin/env';
 import { verifyStored, type StoredTemplate, type TemplatePurpose, type TemplateRoute } from './templates';
 import { available as unsubscribeAvailable } from './unsubscribe';
+import { senderFromEnv } from './sender';
 
 // ---------------------------------------------------------------------------
 // The send switch, and what must be true before it moves
@@ -66,6 +67,23 @@ import { available as unsubscribeAvailable } from './unsubscribe';
 
 /** Reply detection: a monitored mailbox whose replies link into lead history. */
 export const replyDetectionAvailable = (): boolean => Boolean(env('COMMS_REPLY_MAILBOX'));
+
+/**
+ * The recipient allow-list, for a deployment that must never mail a real
+ * person (staging). COMMS_RECIPIENT_ALLOWLIST is a comma-separated list of
+ * addresses and `@domain` entries. Unset means no list: every recipient may be
+ * mailed. Set, anybody not on it is HELD, never sent and never failed.
+ *
+ * Returns null when there is no list, so a caller can tell "no list" from
+ * "not on it".
+ */
+export function recipientAllowed(recipient: string, list = env('COMMS_RECIPIENT_ALLOWLIST')): boolean | null {
+  const entries = list.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  if (!entries.length) return null;
+  const addr = recipient.trim().toLowerCase();
+  const domain = addr.slice(addr.indexOf('@'));
+  return entries.some((e) => (e.startsWith('@') ? e === domain : e === addr));
+}
 
 export interface Precondition {
   id: string;
@@ -133,6 +151,14 @@ export function preconditions(): Precondition[] {
       detail: unsubscribeAvailable()
         ? 'Configured. Links can be signed and verified.'
         : 'Not set. Nurture is disabled while this is absent.',
+    },
+    {
+      id: 'sender',
+      what: 'The sender is configured: COMMS_FROM_ADDRESS and COMMS_SENDER_POSTAL_ADDRESS (the footer every message carries).',
+      why: 'A message from nobody, or one whose footer cannot say who sent it and from where, is the kind that gets reported as spam. Both are owner facts that this build cannot invent.',
+      checked: 'machine',
+      ready: senderFromEnv().missing.length === 0,
+      detail: senderFromEnv().missing.length ? senderFromEnv().missing.join(' ') : 'Configured.',
     },
     {
       id: 'templates',
@@ -452,6 +478,23 @@ export async function checkEligibility(
             'hold',
           )
         : pass('service', 'Nurture in service', 'Reply detection and unsubscribe processing are both available.'),
+    );
+  }
+
+  // ── 1b. The recipient allow-list ───────────────────────────────────────
+  // A staging safety. With a list set, a real person's address is held here
+  // and the console shows why; without one this gate does not appear.
+  const allowed = recipientAllowed(subject.recipient);
+  if (allowed !== null) {
+    gates.push(
+      allowed
+        ? pass('allowlist', 'Recipient allow-list', 'On the allow-list for this deployment.')
+        : block(
+            'allowlist',
+            'Recipient allow-list',
+            'COMMS_RECIPIENT_ALLOWLIST is set for this deployment and this address is not on it. Held, never sent, until the list changes.',
+            'hold',
+          ),
     );
   }
 

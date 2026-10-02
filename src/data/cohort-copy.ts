@@ -8,6 +8,8 @@
 // and an ESM cycle here fails at module-evaluation time with "cannot access
 // before initialization" rather than at type-check time.
 
+import { LIVE_HOURS } from './cohort-hours';
+
 export interface Explores {
   title: string;
   body: string;
@@ -295,7 +297,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     q: 'How much independent work is involved?',
-    a: 'Independent work is additional to the 30 live hours. Its amount and interval will be confirmed before joining.',
+    a: `Independent work is additional to the ${LIVE_HOURS} live hours. Its amount and interval will be confirmed before joining.`,
   },
   {
     q: 'What are the dates and fees?',
@@ -324,8 +326,21 @@ export const QUESTIONS: Question[] = [
  * meta title. STANDFIRST is the meta description and the Course node's
  * description in the JSON-LD: the V4/V5 package's wording, adopted on
  * Sunil's instruction of 19 September.
+ *
+ * Since 29 September 2026 the h1 is the revised outreach readiness package's
+ * positioning line, and the V5 headline it replaced sits above it as the
+ * eyebrow (HERO_KICKER), as the package's home page preview draws it. The
+ * lead is the package's, split across the V5 hero's two paragraphs.
  */
-export const HEADLINE = 'Design agentic systems. Guide your team.';
+export const HEADLINE = 'Build agentic systems that hold up in production.';
+
+export const HERO_KICKER = 'Design agentic systems. Guide your team.';
+
+export const HERO_INTRO =
+  'Practical building and review for experienced engineers, architects and engineering leaders.';
+
+export const HERO_DESCRIPTION =
+  'Learn to explain the decisions behind a working system—and what happens when its assumptions fail.';
 
 export const STANDFIRST =
   'Live learning with Sunil Mathew for experienced engineers and engineering teams. Explore the open cohort or start a team-learning conversation.';

@@ -4,7 +4,8 @@
 
    The page's own content stays; this changes its composition to the one the
    package uses for a reflective, story-led page:
-   - a full-width linen hero, not a rounded box, with room around the words;
+   - a full-width hero, not a rounded box, with room around the words. Since
+     25 September it is V5's ivory hero with the weave, from ds/site-v5.css;
    - "split" sections: the heading in a left column, the reading on the right,
      each section set off by a hairline and generous space;
    - numbered steps as open columns under a rule, not a boxed list;
@@ -17,19 +18,8 @@
    Applied by `body.brand-page`, which /about passes to PracticeLayout.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── hero: full width on the linen ──────────────────────────────────────── */
-.brand-page .hero { padding: 0; }
-.brand-page .hero > .wrap {
-  width: auto;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding: var(--space-9) var(--space-5) var(--space-8);
-  border-radius: 0;
-  background: none;
-}
-.brand-page .hero { background: var(--texture-forest); }
-.brand-page .hero h1 { max-width: 14ch; margin: var(--space-4) 0 var(--space-5); }
-.brand-page .hero h1 em { font-style: normal; color: inherit; }
+/* ── hero: ground, width, spacing and type are ds/site-v5.css's ──────────── */
+.brand-page .hero h1 { max-width: 14ch; }
 .brand-page .hero .credential { max-width: 52ch; }
 
 /* ── split sections ─────────────────────────────────────────────────────── */
@@ -96,13 +86,11 @@
   .brand-page .tlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 800px) {
-  .brand-page .hero > .wrap { padding: var(--space-8) var(--space-4) var(--space-7); }
   .brand-page main > section.wrap { display: block; padding-block: var(--space-7); }
   .brand-page main > section.wrap > .sec-head { margin-bottom: var(--space-5); }
   .brand-page .sec-head h2 { max-width: none; }
 }
 @media (max-width: 560px) {
-  .brand-page .hero > .wrap { padding: var(--space-7) var(--space-4) var(--space-6); }
   .brand-page main > section.wrap { padding-block: var(--space-6); }
   .brand-page .tlist { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
   .brand-page .facts .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }

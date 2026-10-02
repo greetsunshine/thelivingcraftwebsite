@@ -109,7 +109,7 @@ import {
   type Blocker,
   type Route,
 } from '../../../../lib/pipeline/stages';
-import { FORMS, isRoute } from '../../../../lib/pipeline/forms';
+import { discoveryLabel, FORMS, isRoute } from '../../../../lib/pipeline/forms';
 
 const admin = Astro.locals.admin;
 const roles = admin?.roles ?? [];
@@ -889,12 +889,19 @@ const RECORD_ACTIONS: { cap: Capability; what: string; note: string; built: bool
                   <dd>{detail.attribution.first_medium ?? <span class="none">Not recorded</span>}</dd>
                   <dt>Campaign</dt>
                   <dd>{detail.attribution.first_campaign ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Landing page</dt>
+                  <dd class="mono">{detail.attribution.first_landing_path ?? <span class="none">Not recorded</span>}</dd>
+                  <dt>Referrer host</dt>
+                  <dd class="mono">{detail.attribution.first_referrer_host ?? <span class="none">Not recorded</span>}</dd>
                 </dl>
               </div>
 
               <div class="card">
                 <h3>This submission</h3>
-                <p class="sub muted">The visit the form was actually sent from.</p>
+                <p class="sub muted">
+                  How the visit that sent the form began. With an analytics yes on the cookie
+                  banner that is the page the visitor arrived on; without it, the form's own page.
+                </p>
                 <dl class="facts">
                   <dt>Source</dt>
                   <dd>{detail.attribution.session_source ?? <span class="none">Not recorded</span>}</dd>
@@ -919,7 +926,8 @@ const RECORD_ACTIONS: { cap: Capability; what: string; note: string; built: bool
                   search that day.
                 </p>
                 <p class="self-reported">
-                  {detail.attribution.self_reported ?? <span class="none">Not answered</span>}
+                  {discoveryLabel(detail.attribution.self_reported) ?? <span class="none">Not answered</span>}
+                  {detail.attribution.self_reported_detail && <Fragment> · {detail.attribution.self_reported_detail}</Fragment>}
                 </p>
                 <p class="src mono">
                   tracking permission:{' '}

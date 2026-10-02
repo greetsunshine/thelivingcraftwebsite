@@ -24,6 +24,9 @@
 // imports that module too (Vite bundles it), so the live score bar, the result
 // summary, the copied scorecard and the PDF all read one rubric.
 import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResultCohortNote from '../../components/site/ResultCohortNote.astro';
 import ResourceCredit from '../../components/ResourceCredit.astro';
 import ResourceGate from '../../components/ResourceGate.astro';
 import { SITE_ORIGIN } from '../../data/facts';
@@ -90,7 +93,7 @@ const STEP_COUNT = steps.length;
 
 ---
 
-<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema}>
+<ResourcesLayout title={title} description={description} canonical="/resources/poc-screen" schema={schema} howTo="how" tool="poc-screen">
   <!-- Hero -->
   <section class="hero" id="top" style="border-top:0">
     <div class="wrap">
@@ -107,7 +110,11 @@ const STEP_COUNT = steps.length;
       <p class="hero-note mono">
         {QUESTION_COUNT} questions · {SECTIONS.length} sections · maximum {MAX_SCORE} · one hard gate
       </p>
+      <p class="hero-cta">
+        <button class="btn btn-ghost" id="xlsx-hero" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </p>
       <ResourceCredit />
+      <CohortIntroLink />
     </div>
   </section>
 
@@ -174,7 +181,7 @@ const STEP_COUNT = steps.length;
               {PURPOSE.map((p) => <li>{p}</li>)}
             </ul>
           </div>
-          <div class="about-col">
+          <div class="about-col" id="how">
             <span class="eyebrow"><span class="num">02</span> How to use it</span>
             <ol class="steps">
               {HOW_TO_USE.map((p) => <li>{p}</li>)}
@@ -291,10 +298,12 @@ const STEP_COUNT = steps.length;
             <ol id="r-fixlist"></ol>
           </div>
           <div class="r-actions" role="group" aria-label="Assessment controls">
-            <button class="btn btn-primary" id="pdf" type="button" data-gate="pdf">Get the PDF</button>
+            <button class="btn btn-primary" id="xlsx" type="button" data-gate="xlsx">Download the tool (Excel)</button>
+            <button class="btn btn-ghost" id="pdf" type="button" data-gate="pdf" data-own>Download your scored copy (PDF)</button>
             <button class="btn btn-ghost" id="blank" type="button">New assessment</button>
           </div>
         </div>
+        <ResultCohortNote />
 
         <div class="rubric">
           <div class="sec-head">
@@ -364,15 +373,14 @@ const STEP_COUNT = steps.length;
           disagreement about the system lives, and that part takes a room.
         </p>
       </div>
-      <p class="hero-cta">
-        <a class="btn btn-primary" href="/">See the cohort&nbsp;<span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="/resources">All resources&nbsp;<span class="arrow">→</span></a>
-      </p>
+      <ClosingCta>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate="xlsx">Download the tool (Excel)&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
       <p class="mono faint pubdate">Published {longDate(meta.publishedAt)} · free to use and to pass on</p>
     </div>
   </section>
 
-  <ResourceGate resource="poc-screen" lead="The PDF carries your twelve answers, the score, the outcome and what to fix first, and is checked before it is handed over." manual />
+  <ResourceGate resource="poc-screen" lead="The Excel workbook is the tool itself, blank: the twelve questions, their anchors and the rubric, scored the same way as this page. The PDF carries your twelve answers, the score, the outcome and what to fix first, and is checked before it is handed over." manual />
 </ResourcesLayout>
 
 <style>
@@ -943,6 +951,17 @@ const STEP_COUNT = steps.length;
   }
 
   /* ── print: every step, in order, as a scorecard ──────────────────────── */
+  /* A phone: the question card sits inside the tool's shell, and the answer
+     cards inside the question card. At 390px that nesting left each answer
+     about 250px of text width. The shell's inner gutter and the card padding
+     both step down, so an answer keeps close to 300px (UI/UX audit, 29
+     September 2026). */
+  @media (max-width: 560px) {
+    .inner { padding: 0 var(--space-3); }
+    .item { padding: var(--space-4); }
+    .anchor { padding: var(--space-3) var(--space-4); }
+  }
+
   @media print {
     .tool.js .step { display: block; }
     .scorebar-wrap { position: static; }
@@ -975,11 +994,14 @@ const STEP_COUNT = steps.length;
     readScores,
   } from '../../data/poc-screen';
   import { mountGate } from '../../lib/resources/gate-client';
+  import { clearUsefulResult, markUsefulResult } from '../../lib/analytics/events';
 
   const $ = (id: string) => document.getElementById(id)!;
   const pad = (n: number) => String(n).padStart(2, '0');
 
   let state: (number | null)[] = new Array(QUESTION_COUNT).fill(null);
+  /** True while the answers on screen are the loaded worked example, not the reader's own. */
+  let fromExample = false;
 
   // ---- the steps ----------------------------------------------------------
 
@@ -1000,6 +1022,14 @@ const STEP_COUNT = steps.length;
     if (i === LAST) return 'Result';
     return `${SECTIONS[i - 1].letter} ${SECTIONS[i - 1].name}`;
   }
+
+  // The footer's "How to use this" points at #how, which sits in the Start
+  // step. From any other step that section is hidden, so show the Start step
+  // first; the browser then follows the link as usual.
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest?.('a[href="#how"]');
+    if (a && step !== 0) goTo(0, false);
+  });
 
   function goTo(i: number, move = true) {
     step = Math.max(0, Math.min(LAST, i));
@@ -1149,6 +1179,12 @@ const STEP_COUNT = steps.length;
     renderResult(r, line);
     updateProgress();
 
+    // The cohort line under the result, and `useful_result_completed`, once
+    // every question has an answer. The loaded example shows the line and
+    // records nothing: the reader did not reach that result.
+    if (r.complete) markUsefulResult('poc-screen', { example: fromExample });
+    else clearUsefulResult();
+
     for (const key of ['gate', 'go', 'narrow', 'stop']) {
       document.getElementById(`cut-${key}`)?.classList.toggle('active', r.band?.key === key);
     }
@@ -1189,6 +1225,7 @@ const STEP_COUNT = steps.length;
       const q = Number(b.dataset.q);
       const v = Number(b.dataset.v);
       const wasBlank = state[q] === null;
+      fromExample = false;
       // Clicking the selected anchor again clears it, so a mis-click is undoable.
       state[q] = state[q] === v ? null : v;
       update();
@@ -1198,12 +1235,14 @@ const STEP_COUNT = steps.length;
 
   $('blank').addEventListener('click', () => {
     state = new Array(QUESTION_COUNT).fill(null);
+    fromExample = false;
     update();
     goTo(1);
   });
 
   $('example').addEventListener('click', () => {
     state = EXAMPLE.slice();
+    fromExample = true;
     update();
     goTo(LAST);
   });
@@ -1218,7 +1257,7 @@ const STEP_COUNT = steps.length;
 
   // ---- the download gate ---------------------------------------------
   // One component, one client, one route: see src/components/ResourceGate.astro.
-  mountGate({ payload: () => state });
+  mountGate({ payload: (kind) => (kind === 'pdf' ? state : undefined) });
 
   update();
   goTo(0, false);

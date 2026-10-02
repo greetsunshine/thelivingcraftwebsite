@@ -30,7 +30,7 @@ import openpyxl
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-XLSX = REPO / "public" / "downloads" / "rework-cost-check.xlsx"
+XLSX = REPO / "downloads" / "rework-cost-check.xlsx"
 REFS = json.loads((HERE / "refs.json").read_text(encoding="utf-8"))
 
 SOFFICE_CANDIDATES = [
