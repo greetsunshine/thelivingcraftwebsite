@@ -17,8 +17,15 @@ Status: **kept** means the other week has it today. **Owed** means the other
 week is still a draft and must cover it. **Quote** means a verbatim quote, which
 must still match its source word for word.
 
-Checked on 1 October 2026, against weeks 1 to 6 as they stand on
-`content/week-2-review-sheet`.
+Checked on 1 October 2026 for week 2, and on 3 October 2026 for week 3, against weeks 1
+to 6 as they stand on `content/week-2-review-sheet`.
+
+**Week 3's rows found three stale quotes**, all broken by week 2's rebuild on 1 October
+and all fixed the same day. That is what this file is for, and it is worth saying plainly:
+a stale verbatim quote fails silently. The page renders, every automated check passes, and
+an instructor reads a sentence to the room that the earlier week does not contain. A plain
+grep is not enough to catch it either, because a quote wrapped across two `> ` lines
+returns no matches and no matches reads as clean.
 
 ## Week 2 → week 1
 
@@ -75,3 +82,57 @@ Week 5 is a draft. Every row here is owed.
 |---|---|---|
 | The policy table rows from the assignment are the input to the week 6 review | Teardown at 04:15; assignment | Owed. Week 6 is a draft |
 | Who decides what a system may do | Cut from week 2's room; reference card in the notes | Owed |
+
+## Week 3 → week 1
+
+Added 3 October 2026, with the week 3 review.
+
+| What week 3 says | Where in week 3 | Status |
+|---|---|---|
+| Week 1 claims the bare word *harness* for the agent harness, so week 3 always writes **evaluation harness** in full | Opening; the notes header | Kept: week 1 uses the bare word, and the terminology sentence is said at 00:02 |
+| "the loop, the tool layer, the context built for each step, and the trace." | Topic 3 quiz; end-of-week quiz Q5 | Quote: verbatim in week 1. Checked 3 October |
+| "Trimming your tool and policy prompts is a runtime-reliability decision. There is a safe-looking zone, and it ends abruptly." | Topic 5 quiz | Quote: verbatim in week 1's reading note. Checked 3 October |
+| Week 1's reading carries the compression-cliff finding, for anyone who asks | 03:33; 03:54 | Kept |
+
+## Week 3 → week 2
+
+| What week 3 says | Where in week 3 | Status |
+|---|---|---|
+| At 02:55 last week the room made the same ticket pay once, then a second terminal paid Ravi again | Opening; 00:15 | Kept: week 2's topic 3, and `make w3-falsepass` reproduces it |
+| Week 2 added three controls: a limit, a human approval gate above the ceiling, and a pay-once check | 00:36 lab, "What the agent does today" | Kept: week 2's three controls, named in its own description |
+| "make the same request pay only once, and show that it still holds from a second process" | Topic 1 quiz | Quote: verbatim, week 2's third outcome. Checked 3 October |
+| "write one row of a policy table someone else could build from, marking it an invariant, a limit or a tuning number, with an owner" | Topic 5 quiz | Quote: verbatim, week 2's fifth outcome. Checked 3 October, after a trailing full stop was removed |
+| "Five things go wrong before the adversary round at 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written." | End-of-week quiz Q3 | Quote: verbatim. **Was stale** — week 2's 1 October rebuild inserted "the adversary round at". Fixed 3 October |
+| Week 2's mechanism table, row four, asked "Is the action irreversible?" and answered "A model may never be the only control." | Topic 4 quiz | Quote: both halves verbatim. **Was stale as a single sentence** — it is two cells of one table row, and is now credited as such. Fixed 3 October |
+| Week 2's ceiling is what the gate table's threshold column inherits | 02:49 | Kept |
+| The adversarial cases written in week 2's attack round are the pre-work for week 3's adversarial class | 00:15 broken list; 00:36 lab | Kept, with a stated fallback: the repository's own C7 if somebody did not bring theirs |
+
+## Week 3 → week 4
+
+Week 4 is a draft. Every row here is owed.
+
+| What week 3 says | Where in week 3 | Status |
+|---|---|---|
+| The adversarial cases written today are what week 4 comes to collect | Opening; 00:15 | Owed |
+| Defending against the poisoned account note is week 4's | Opening; topic 1 purpose | Owed |
+| Week 4 owns step 1 of retrieval, where the query carries text somebody else wrote | 01:11 | Owed |
+| Prompt injection, data exfiltration and jailbreak cases are named as a source of evaluation cases, and week 4 collects them | 02:44, "Where the cases come from" | Owed. Added 3 October with the syllabus |
+| MCP, framed as "the boundary you did not write", is a 40-minute week 4 topic | `threads.md` bridge 6, §7 | Owed |
+
+## Week 3 → week 5
+
+Week 5 is a draft. Every row here is owed.
+
+| What week 3 says | Where in week 3 | Status |
+|---|---|---|
+| Making retrieval itself better is week 5 | Opening; 01:11 instructor note | Owed |
+| Week 5 owns retrieval quality: embeddings, recall@k and re-ranking | 01:11 instructor note | Owed. Added 3 October, as the boundary for the RAG triad |
+| A second agent reviewing the first is week 5 | Opening | Owed. Week 5's outline names orchestration |
+| Week 5 covers memory between sessions | 02:49; `threads.md` thread 5 | Owed |
+
+## Week 3 → week 6
+
+| What week 3 says | Where in week 3 | Status |
+|---|---|---|
+| The gate-table row written at 02:56 is an input to the week 6 review | 02:56; teardown | Owed. Week 6 is a draft |
+| Trace-and-bill lands fully in week 6 | `threads.md` bridge 6 matrix | Owed |

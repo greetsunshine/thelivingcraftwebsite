@@ -1,8 +1,8 @@
 ---
 week: 3
-title: "Evidence"
+title: "LLM Evaluation"
 module: M2
-summary: "Your fix passed and proved nothing. How to test a system that answers differently every time."
+summary: "How you find out whether an agent works when it answers differently each run. Evals, retrieval-augmented generation, model-based grading, release gates and context engineering."
 status: draft
 
 # THE FIVE OUTCOMES. Rated at 00:05 and again at 04:55, same words both times.

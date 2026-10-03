@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 1 October 2026
+**Last updated:** 3 October 2026
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -16,6 +16,66 @@ the four tasks from Sunil's call of 25 September and the later ones below. PR #3
 pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
 (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Week 3 revised from Sunil's review sheet — 3 October
+
+Ten Week3 rows in the same "Notes Review" sheet, all answered in
+[`docs/teaching/reviews/week-3-review-2026-10-03.md`](../teaching/reviews/week-3-review-2026-10-03.md).
+Not yet committed when this line was written. **Still `status: draft`, unreleased.**
+
+**The week is called LLM Evaluation, not Evidence.** Session file, both pages, the notes
+file. The notes file keeps its `week-3-evidence.md` filename on purpose — renaming it
+breaks every link in for no reader's benefit.
+
+**Week 2's start-time field and contents-card styles moved into `_design.mjs`.** Week 2
+built them locally on 1 October with a comment saying to move them when a second week
+wanted them, and week 3 wanted them. Both weeks now read one copy, `week.wallClock` and
+`week.toc` are the opt-ins, and **week 2's pages are behaviour-identical across the move.**
+Week 1 gains ten inert CSS rules and a script that no-ops without wrapped offsets; its
+off-state clock hint is now chosen by whether the page actually has the field, so week 1
+does not advertise a control it lacks. **All six stored pages were rebuilt and re-stored**,
+so `check:pages` compares clean.
+
+**The attached LLM-evals syllabus is covered, spread across the five topics rather than
+added as a sixth.** About forty concepts, and the day is already exactly 05:00. The review
+doc has the table of where each one went. Two landed on something the day already does: the
+02:02 lab's 7-of-10 agreement now sits visibly under the industry's 80% target, and
+self-enhancement bias has a consequence inside the session because 04:40 is a model swap.
+Retrieval quality stays week 5's and injection evaluation stays week 2's and week 4's, and
+both boundaries are stated on the instructor page.
+
+**Nothing moved on the clock.** All 46 `ROWS_W3` rows unchanged, no beat added or renamed.
+That was a constraint: a new beat means a new clock row, which the quiz bank, the notes file
+and the session file all have to agree with.
+
+### Three cross-week quotes were stale again, and this is the second time
+
+Week 2's 1 October rebuild broke three sentences week 3 quotes as week 2's own words. All
+three are fixed, and `docs/teaching/cross-week-references.md` now carries week 3's five
+sections.
+
+**This failure is silent and it will happen again.** The page renders, every automated check
+passes, and an instructor reads a sentence to the room that the earlier week does not
+contain. **A plain grep gives a false all-clear**, because a quote wrapped across two `> `
+lines returns zero matches and zero reads as clean — that is how the September pass missed
+two of them.
+
+A working checker exists at `check-cross-week-quotes.mjs` in the 3 October session
+scratchpad. It flattens whitespace and blockquote markers, strips tags and normalises curly
+quotes, and all eight of week 3's quoted fragments pass it. **It is deliberately not in the
+repository**, because adding it as a repo script is still recorded below as Sunil's call. If
+that call goes yes, it is a copy-paste plus a line in `package.json`. Note that it finds no
+quoted fragments in week 2, which uses a different markup for its quotes, so it would need
+one more pattern to cover that week.
+
+### Still true, and still the thing that breaks the day
+
+**The labs do not run for a learner.** The eight `w3-` make targets and their data are
+uncommitted in `~/learningthelivingcraft/reference-agent`, so every command these pages name
+fails for all eight participants. Fifteen paths, one commit, one push — the exact command is
+below under the reference agent. Nothing in the 3 October content change affects this.
 
 ---
 
@@ -869,11 +929,40 @@ breaking week 2 the same day.
 
 `~/learningthelivingcraft/reference-agent`. New: `data/policy-docs.json` (seven clauses of
 policy prose), `data/w3-tickets.json`, `data/w3-accounts.json`, and `src/w3_*.py`. The
-Makefile rule held: a later week never changes an earlier week's target, and `make
-weird-mock`, `make retry`, `make w2-guarded` and `make w2-goodwill` all still print exactly
-what the published week 1 and week 2 pages show. **Nothing in that repo is committed** —
-the tree already carried another session's uncommitted week 1 and 2 refinements, which were
-left alone.
+Makefile rule held: a later week never changes an earlier week's target, and in the working
+tree `make weird-mock`, `make retry`, `make w2-guarded` and `make w2-goodwill` all print
+exactly what the published week 1 and week 2 pages show. **Nothing in that repo is
+committed** — the tree already carried another session's uncommitted week 1 and 2
+refinements, which were left alone.
+
+**Corrected 3 October, and the correction matters.** The sentence above is true of the
+working tree on this machine and false of the repository. Checked against a clean copy of
+`origin/main` (`e1c9ebf`) with none of the new files present:
+
+- **`make w3-falsepass` and the other seven `w3-` targets do not exist at all.** `origin/main`
+  has zero `w3-` targets and zero `src/w3_*.py`, so a fresh clone answers
+  `make: *** No rule to make target 'w3-falsepass'.` That is what a learner sees.
+- **`make w2-guarded` is already broken at `origin/main`**, with
+  `TypeError: LLM.__init__() got an unexpected keyword argument 'trace'`. It needs the
+  uncommitted `src/llm.py`. Week 3's commit neither causes nor fixes this; whoever wrote
+  week 2's refinements still has eight modified files to land.
+
+**The week 3 commit is fifteen paths, not thirteen.** Verified by materialising `origin/main`
+into a temp directory, copying in only the new files, and running all eight targets. With
+the thirteen untracked files plus `Makefile`, five of eight targets fail with *ticket 5820 is
+in neither ticket file*. **`data/tickets.json` is the fifteenth path** — its whole diff is one
+appended ticket, 5820, the ₹4,000 cancellation claim week 3's adversarial case needs. With it,
+all eight run.
+
+```
+cd ~/learningthelivingcraft/reference-agent
+git add data/policy-docs.json data/w3-accounts.json data/w3-tickets.json \
+        data/tickets.json Makefile src/w3_*.py
+git commit -m "Add week 3's retrieval and evaluation labs" && git push
+```
+
+Leave the other eight modified files alone. Staging was blocked in the 30 September and
+3 October sessions by the sandbox, so this is Sunil's to run.
 
 **Every `w3-` target is deterministic and needs no key.** The run-to-run variation is a
 seeded stand-in for a model, and both pages say so in those words. It is not arbitrary

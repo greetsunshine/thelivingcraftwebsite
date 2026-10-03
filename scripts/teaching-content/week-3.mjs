@@ -46,10 +46,12 @@ export { LEARNER_CSS, INSTRUCTOR_CSS, SESSION_CLOCK_JS, PANE_JS } from './_desig
 
 export const week = {
   n: 3,
-  title: 'Evidence',
+  title: 'LLM Evaluation',
   module: 'M2',
   shape: 'six-part',
-  sub: 'Last week your fix passed. Today you find out why the pass meant nothing, and what a test has to do instead. By the end you will have watched a suite of seven cases pass while the bug was still live, and watched one case pay ₹2,50,000 on the eleventh run of twenty.',
+  toc: true,
+  wallClock: true,
+  sub: 'Today is about LLM evaluation, usually shortened to evals: how you find out whether an agent works when it can answer differently on two runs of the same case. It starts with last week’s fix. The fix passed a suite of seven cases while the bug it was written to fix was still live, because every case in that suite ran one process and the bug needs two. Five topics follow: evals, retrieval-augmented generation, model-based grading, release gates and context engineering.',
   lead: "All five topics on one page, each one collapsible so you can work through them one at a time. The argument behind every segment is in <span class=\"mono\">docs/teaching/notes/week-3-evidence.md</span>, whose sections run in clock order. Both pages are generated from <span class=\"mono\">scripts/teaching-content/week-3.mjs</span> and the clock from <span class=\"mono\">scripts/teaching-clock.mjs</span>.",
   facts: [
     { n: '5', l: 'topics, each with a hands-on lab' },
@@ -84,9 +86,28 @@ export const week = {
 
 export const opening = {
   learner: `
-  <p class="lede">At 02:55 last week you made the same ticket pay once. Then somebody ran it from a second terminal and Ravi was paid twice again. Today that moment becomes a test suite, and the suite passes.</p>
+  <p class="lede">Today is about <strong>LLM evaluation</strong>, usually shortened to <strong>evals</strong>. An eval is a fixed set of cases you run against the agent, scored by something other than your own reading of the output. It is the same idea as a test suite, with one difference that changes everything: the agent can answer differently on two runs of the same case.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">How today starts: the suite that passed over a live bug</h3>
+  <p>At 02:55 last week you made the same ticket pay once. Then somebody ran that ticket from a second terminal, and Ravi was paid twice again.</p>
+  <p>Today that moment becomes a suite of seven cases. <strong>The suite passes. All seven, 100%.</strong> The bug is still live while it passes.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">What went wrong</h3>
+  <p>Nothing went wrong inside the suite. Every case in it runs the agent as one process. The bug only appears when the same ticket reaches two processes. So no case in that suite could ever have seen it.</p>
+  <p>The suite did not lie to anybody. It answered the question it was asked, and the question it was asked had one process in it.</p>
   <p style="font-size:var(--size-4)"><strong>A pass is a claim about the cases you chose. It is not a claim about your system.</strong> That sentence is the week, and by 04:00 you will have watched it happen five times.</p>
-  <p><strong>One word to be careful with today.</strong> Week 1 used <em>harness</em> for the agent: the loop, the tools, the context assembly and the trace. Today's thing is the <strong>evaluation harness</strong>, and this page always writes it in full. Two different harnesses one week apart with the same name is a confusion nobody recovers from in the middle of a session.</p>
+  <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">The five topics, and the question each one answers</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Topic</th><th>The industry name for it</th><th>The question it answers</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1</strong></td><td>LLM evaluation (evals)</td><td>Your tests pass. The agent answers differently each run. What have the tests proved?</td></tr>
+        <tr><td><strong>2</strong></td><td>Retrieval-augmented generation (RAG)</td><td>The rule now comes out of a document. What does a wrong answer mean now?</td></tr>
+        <tr><td><strong>3</strong></td><td>Model-based grading (LLM-as-a-judge)</td><td>Your grader is a component. What is its own failure rate?</td></tr>
+        <tr><td><strong>4</strong></td><td>Release gates and AI governance</td><td>A rate of 85%. Who decides whether that ships?</td></tr>
+        <tr><td><strong>5</strong></td><td>Context engineering</td><td>You cut the context to save money. Where does the decision break?</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>One word to be careful with today.</strong> Week 1 used <em>harness</em> for the agent: the loop, the tools, the context built for each step, and the trace. Today's thing is the <strong>evaluation harness</strong>, and this page always writes it in full. Two different harnesses one week apart with the same name is a confusion nobody recovers from in the middle of a session.</p>
   <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">You will rate yourself on these five, twice</h3>
   <p>Once at 00:05 before anything has been taught, and again at 04:55. Same words, scored 1 to 5. Nobody sees your first number but you. Both sets go on screen together at the end.</p>
   <div class="term"><span class="q">Right now, I could…</span>
@@ -104,7 +125,14 @@ export const opening = {
   <p><strong>Statements 1 and 2 both belong to topic 1.</strong> A case set and a run count are not two ideas. Together they are what an evaluation harness is.</p>
   <p>Making retrieval itself better is week 5. Defending against the poisoned account note is week 4, and the adversarial cases you write today are what week 4 comes to collect. A second agent reviewing the first is week 5.</p>`,
   script: `
-  <p>At 02:55 last week they made the same ticket pay once. Then a second terminal paid Ravi again and there were no words for it yet. Today that moment is a test suite, and the suite passes. <strong>A pass is a claim about the cases you chose. It is not a claim about your system.</strong></p>
+  <p><strong>Open on the word, not on the story.</strong> Today is LLM evaluation, shortened to evals: a fixed set of cases, run against the agent, scored by something other than somebody reading the output. The room needs the word before it needs the anecdote, because the anecdote is an instance of it.</p>
+  <h3>How today starts: the suite that passed over a live bug</h3>
+  <p>At 02:55 last week they made the same ticket pay once. Then a second terminal paid Ravi again and there were no words for it yet. Today that moment is a suite of seven cases, and the suite passes at 100% with the bug still live.</p>
+  <h3>What went wrong</h3>
+  <p>Say this slowly, because it is the whole week. <strong>Nothing went wrong inside the suite.</strong> Every case runs one process, the bug needs two, so no case could have seen it. The suite answered the question it was asked.</p>
+  <p><strong>A pass is a claim about the cases you chose. It is not a claim about your system.</strong></p>
+  <h3>The five topics, and the question each one answers</h3>
+  <p>The learner page carries this as a table, with the industry name beside each one. <strong>Read the five questions out and stop.</strong> Do not answer any of them here; each is the opening question of its own topic.</p>
   <h3>Say the terminology sentence in the first two minutes</h3>
   <p>Week 1 claims the bare word <em>harness</em> for the agent harness. Today's thing is the <strong>evaluation harness</strong>, always in full, on both pages and out loud. If you shorten it once at 00:36 the room spends the next hour unsure which one you mean.</p>
   <h3>You will rate yourself on these five, twice</h3>
@@ -137,6 +165,12 @@ export const howToRead = {
   <p>Every reveal on this page sits behind a <em>Show</em> button. Write your answer first. The button is not a formality, it is the only thing making the prediction real.</p>`,
 };
 
+export const toc = {
+  heading: 'Contents: five blocks, five topics',
+  lede: 'Click any line to jump to it. A topic opens when you jump into it. Every time below is an offset from the start of the session, and the Session start field turns them into clock times.',
+  opening: '00:00 to 00:15 · the suite that passed over a live bug, the five statements, one sealed prediction',
+};
+
 export const sessionClock = {
   learner: `
 <div class="sclock" id="sclock">
@@ -157,16 +191,34 @@ export const sessionClock = {
 };
 
 export const agentNow = {
-  lede: 'Six things the agent gains today, and the command that proves each one. If a row cannot be proven by running something, it does not belong in this table.',
+  lede: 'Six things the agent gains today, and the command that proves each one. If a row cannot be proven by running something, it does not belong in this table. The industry name for each capability is in brackets, so you can look the idea up after the session.',
   rows: [
-    { gained: 'A case set in four classes', atOpen: 'seven cases, one class', atClose: 'eight cases, four classes', file: 'src/w3_cases.py', proof: 'make w3-eval' },
-    { gained: 'A result that is a rate', atOpen: 'one run, pass or fail', atClose: 'twenty runs, a rate per case and per class', file: 'src/w3_harness.py', proof: 'make w3-wobble' },
-    { gained: 'A rule read from a document', atOpen: 'a number in policy.json', atClose: 'seven clauses, retrieved and scored', file: 'src/w3_docs.py', proof: 'make w3-search' },
-    { gained: 'A grader on the retrieval', atOpen: 'nothing reads the clause', atClose: 'the clause is graded against the case', file: 'src/w3_cases.py', proof: 'make w3-grade' },
-    { gained: 'A grader with a number on it', atOpen: 'no grader', atClose: '7 of 10 against labels a person wrote', file: 'src/w3_agree.py', proof: 'make w3-agree' },
-    { gained: 'A measured context budget', atOpen: 'untested', atClose: 'the cliff located at 100 characters', file: 'src/w3_trim.py', proof: 'make w3-trim' },
+    { gained: 'An evaluation set covering four classes of case <span class="quiet">(test-case taxonomy)</span>', atOpen: 'seven cases, all of them ordinary or difficult', atClose: 'eight cases across all four classes', file: 'src/w3_cases.py', proof: 'make w3-eval' },
+    { gained: 'A pass rate over repeated runs, instead of one verdict <span class="quiet">(stochastic evaluation)</span>', atOpen: 'one run per case, pass or fail', atClose: 'twenty runs per case, a rate per case and per class', file: 'src/w3_harness.py', proof: 'make w3-wobble' },
+    { gained: 'A rule retrieved from a document rather than read from a field <span class="quiet">(retrieval-augmented generation)</span>', atOpen: 'one number in policy.json', atClose: 'seven clauses of prose, retrieved and scored', file: 'src/w3_docs.py', proof: 'make w3-search' },
+    { gained: 'A grader on the retrieval, not just the answer <span class="quiet">(faithfulness, or groundedness)</span>', atOpen: 'nothing checks which clause was used', atClose: 'the clause the answer used is graded against the case', file: 'src/w3_cases.py', proof: 'make w3-grade' },
+    { gained: 'A grader measured against a person <span class="quiet">(human&#8211;model agreement)</span>', atOpen: 'no grader, and no way to tell if one is any good', atClose: '7 of 10 against ten labels a person wrote', file: 'src/w3_agree.py', proof: 'make w3-agree' },
+    { gained: 'A measured context budget <span class="quiet">(context engineering)</span>', atOpen: 'the budget is untested and nobody knows the limit', atClose: 'the cliff located at 100 characters a clause', file: 'src/w3_trim.py', proof: 'make w3-trim' },
   ],
-  learner: `<p><strong>You rebuild this table from memory at 04:02</strong>, alone and with your notes closed. That is the point of it. Reading a summary is not the same as producing one.</p>`,
+  learner: `
+  <h4>The four classes of case</h4>
+  <p>The first row names them, so here they are. They are the four kinds of situation a suite can contain, and almost every suite in this room holds only the first two.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Class</th><th>In one line</th><th>An example from this agent</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ordinary</strong></td><td>The case the feature was built for</td><td>One duplicate charge, credited in full</td></tr>
+        <tr><td><strong>Difficult</strong></td><td>A real case at an edge the feature still has to handle</td><td>&#8377;8,400 genuinely owed, seven times the ceiling</td></tr>
+        <tr><td><strong>Incomplete</strong></td><td>The evidence needed to decide is not available</td><td>A cancellation is claimed and no record can confirm it</td></tr>
+        <tr><td><strong>Adversarial</strong></td><td>Somebody wrote the input on purpose to get a payout</td><td>An account note asking for &#8377;2,50,000 under a goodwill programme</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>You rebuild this table from memory at 04:02</strong>, alone and with your notes closed. That is the point of it. Reading a summary is not the same as producing one.</p>`,
+  script: `
+  <h4>The four classes of case</h4>
+  <p>The learner page carries the four classes as a table under this one, with an example from this agent beside each. <strong>Do not teach them here.</strong> They are the 00:27 reveal, and the room writes its own kinds down first.</p>
+  <p>If somebody asks at 00:03 what the classes are, say they are coming at 00:27 and move on. Answering now costs the only prediction that part has.</p>`,
 };
 
 export const topics = [
@@ -178,21 +230,36 @@ export const topics = [
     when: '00:15 to 01:00',
     scopeDate: '2026-09-30',
     stateDate: '2026-09-30',
-    question: 'What does a passing test prove about a system that answers differently every time?',
+    question: 'Your tests pass. The agent answers differently each run. What have the tests proved?',
     purpose: {
       lede: 'By the end of it you can write the case your current tests cannot fail, name which of the four classes your suite has none of, and report a result as a rate rather than a verdict.',
       learner: `
-  <p><strong>LLM evaluation, usually shortened to evals, means running a fixed set of cases against the system and scoring what comes back.</strong> It is the same idea as a test suite, with one difference that changes everything: the system can answer differently on two runs of the same case.</p>
-  <p><strong>What this topic is not.</strong> It is not grading a retrieved answer, which is topic 2. It is not whether your grader is any good, which is topic 3. It is not the threshold the result is compared against, which is topic 4.</p>
-  <p><strong>Left unfixed on purpose.</strong> Nothing here grades <em>why</em> an answer was right, which topic 2 fixes at 01:23. No threshold exists anywhere, which topic 4 fixes at 02:56.</p>`,
+  <p><strong>LLM evaluation, usually shortened to evals, means running a fixed set of cases against the agent and scoring what comes back.</strong> The fixed set of cases is called an <strong>evaluation set</strong>. The thing that does the scoring is called a <strong>grader</strong>. Both words are used all day.</p>
+  <h4>Why the ordinary idea of a test breaks here</h4>
+  <p>A unit test assumes one thing: the same input gives the same output. Run it twice and you get the same answer twice. So one run is enough, and pass or fail is a complete result.</p>
+  <p>An agent removes that assumption. The model samples its next word, so the same ticket can produce a credit on one run and a refusal on the next. Nothing is broken when that happens. It is how the model works.</p>
+  <p><strong>Two things follow, and together they are this topic.</strong></p>
+  <ul>
+    <li><strong>One run proves nothing.</strong> You run the same case many times, and the result is a rate rather than a verdict.</li>
+    <li><strong>The cases you chose are the whole result.</strong> A suite is a list of situations somebody thought of. So the only interesting question about any suite is which kind of situation is missing from it.</li>
+  </ul>
+  <h4>What this topic is not</h4>
+  <p>It is not grading a retrieved answer, which is topic 2. It is not whether your grader is any good, which is topic 3. It is not the pass bar the result is compared against, which is topic 4.</p>
+  <h4>Left unfixed on purpose</h4>
+  <p>Nothing here grades <em>why</em> an answer was right, which topic 2 fixes at 01:23. No pass bar exists anywhere, which topic 4 fixes at 02:56.</p>`,
       script: `
   <p>The weak version is "write more tests", which everybody in this room learned fifteen years ago. Teach it that way and you lose them by 00:30.</p>
+  <h4>Why the ordinary idea of a test breaks here</h4>
+  <p><strong>Spend the minute on the assumption, not on the conclusion.</strong> A unit test assumes same input, same output. An agent removes that assumption, and every consequence today follows from removing it. A room given the consequences without the assumption argues about the consequences.</p>
   <p>The stronger claim is that <strong>a suite is a list of situations somebody thought of</strong>, so the only interesting question about any suite is which class of situation is missing. The percentage is not the artefact. The list is.</p>
+  <h4>What this topic is not</h4>
+  <p>Three sentences, then move on. The boundary matters because topics 2 and 3 both look like this one from the outside.</p>
+  <h4>Left unfixed on purpose</h4>
   <p><strong>This topic carries outcomes 1 and 2</strong>, because the old week taught them apart and that was an accident of how it grew. A case set and a run count together are what an evaluation harness is.</p>`,
     },
     broken: [
       ['Nothing grades why an answer was right', 'Topic 2, at 01:23 — the retrieval grader'],
-      ['No threshold exists, so a rate means nothing yet', 'Topic 4, at 02:56 — it becomes two columns of the gate table'],
+      ['No pass bar exists, so a rate means nothing yet', 'Topic 4, at 02:56 — it becomes two columns of the gate table'],
       ['The adversarial class depends on last week’s bypasses, which some people will not have brought', '<strong>Nowhere.</strong> The fallback is the repository’s own C7. Say so rather than letting the column sit empty'],
       ['The run count that settles one case does not settle another', '<strong>Nowhere.</strong> There is no number. You watch the rate, and on the adversarial case it is still moving at fifty'],
     ],
@@ -201,7 +268,10 @@ export const topics = [
         at: '00:15', part: 'narrative', title: 'Last week the fix passed and proved nothing',
         mode: 'Whole room · 6 min · both answers in writing before the reveal',
         learner: `
-  <p><span class="mono">make w3-falsepass</span> runs seven cases against the agent as last week left it.</p>
+  <h4>What this part is about</h4>
+  <p>You are about to watch a test suite pass while the bug it was written to catch is still live. The point is not that somebody wrote a bad test. The point is that a passing suite and a working system are two different claims, and this is the clearest case of that difference you will see today.</p>
+  <h4>What you are looking at</h4>
+  <p><span class="mono">make w3-falsepass</span> runs seven cases against the agent exactly as last week left it. Each line is one case: its class, what it tests, how many runs passed, and the rate.</p>
   <div class="term">  C1  ordinary     One duplicate charge, credited in full                 1/1  100%
   C2  ordinary     The same ticket twice, one process — pays once         1/1  100%
   C3  incomplete   Cancellation claimed, record shows it active           1/1  100%
@@ -226,9 +296,15 @@ What does he get paid?</span>
 ▸ tool  delivery 2 · process A · ledger: 1 credit, ₹1,200   <span class="q">&lt;- the paid set remembers</span>
 <span class="x">▸ warn  delivery 2 · process B · ledger: 2 credits, ₹2,400   &lt;- a set that has never heard of this ticket</span></div>
       <p><strong>₹2,400 for one ₹1,200 double charge, and every case above passes.</strong></p>
-      <p><strong>What went wrong: nothing, inside the suite.</strong> Every case runs one process, so no case can see a fix that only holds inside one process. The paid set is held in memory, and a second process has its own copy.</p>
-      <p><strong>The control is one case, one field longer than the one beside it.</strong> C8 differs from C2 by <span class="mono">processes: 2</span>.</p>
-      <p>The suite did not lie to anybody. It answered the question it was asked, and the question it was asked had one process in it.</p>
+      <h4>What went wrong</h4>
+      <p>Ravi was paid twice for one double charge. Last week's fix keeps a set of ticket ids that have already been paid, and checks that set before paying. That check works.</p>
+      <p>The set is held in memory, inside one running process. A second process starts with its own empty set. It has never heard of this ticket, so it pays again.</p>
+      <h4>Why no case in the suite could have caught it</h4>
+      <p>Every one of the seven cases runs the agent as a single process. The failure needs two. A case that cannot create the condition cannot detect it, however many times you run it.</p>
+      <p><strong>So nothing went wrong inside the suite.</strong> The suite did not lie to anybody. It answered the question it was asked, and the question it was asked had one process in it.</p>
+      <h4>The one control that would have prevented it</h4>
+      <p>One more case, one field longer than the case beside it. C8 differs from C2 by <span class="mono">processes: 2</span>. That is the whole control.</p>
+      <p>Note what the control is <em>not</em>. It is not a better fix, a code review, or a stricter type. The fix was correct for the condition it was given. The missing thing was a case that produced a different condition.</p>
     </div>
   </details>
   <div class="writein"><span class="q">How many of your own cases were written the same day as the code they test? Write the number. "Most of them" is the honest answer and it is the finding.</span>
@@ -242,14 +318,22 @@ What does he get paid?</span>
           id: 't1-r-false', pairs: 'a suite that passes over a live bug',
           html: `
   <h4 class="quiet" style="font-weight:700">Nobody was careless, and that is the point</h4>
+  <h4>What this part is about</h4>
+  <p>A passing suite and a working system are two different claims. Say that before the table goes up, and do not explain it; the table explains it.</p>
+  <h4>What you are looking at</h4>
+  <p>Seven cases, the agent as last week left it, one run each. Each line is a case: class, what it tests, runs passed, rate.</p>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
       <pre>delivery 1 · process A · ledger: 1 credit, ₹1,200
 delivery 2 · process A · ledger: 1 credit, ₹1,200   &lt;- the paid set remembers
 delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never heard of it</pre>
-      <p><strong>What went wrong.</strong> Nothing inside the suite. The paid set is in memory and a second process has its own.</p>
-      <p><strong>The control.</strong> One case, one field. C8 differs from C2 by <code>processes: 2</code>.</p>
+      <h4>What went wrong</h4>
+      <p>The paid-ticket set is in memory inside one process. A second process starts empty, has never heard of the ticket, and pays again. ₹2,400 for one ₹1,200 double charge.</p>
+      <h4>Why no case in the suite could have caught it</h4>
+      <p>All seven cases run one process. The failure needs two. A case that cannot create the condition cannot detect it, at any number of runs.</p>
+      <h4>The one control that would have prevented it</h4>
+      <p>One case, one field. C8 differs from C2 by <code>processes: 2</code>. Not a better fix, not a review, not a stricter type.</p>
     </div>
   </details>
   <details>
@@ -279,7 +363,30 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
       </tbody>
     </table>
   </div>
-  <p><strong>Nothing here adds up to a score out of ten.</strong> An average hides the case that matters, and today the case that matters is the adversarial one.</p>`,
+  <h4>Why there is no single score</h4>
+  <p>It is tempting to average those three numbers into one figure and track that figure. Do not.</p>
+  <p>Here is what averaging costs you. Say seven cases pass on all twenty runs, and one case passes on ten of twenty. The overall figure is 150 passes out of 160, which is 94%. That reads like a healthy system.</p>
+  <p>The case failing half the time is the adversarial one. When it fails, it pays ₹2,50,000. <strong>The 94% is arithmetically correct and operationally useless</strong>, because nothing in it tells you to go and look at that one case.</p>
+  <p><strong>So the per-case number is the one you act on.</strong> The overall figure is good for one thing only: watching a trend across releases.</p>
+  <h4>How a case gets scored: the four kinds of grader</h4>
+  <p>Something has to decide whether a run passed. There are four ways to do it, and the industry uses all four for different jobs.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Kind of grader</th><th>How it decides</th><th>What it costs</th><th>Used today?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rule-based</strong><br><span class="quiet">deterministic</span></td><td>Exact match, a number comparison, a regular expression, or a schema check</td><td>Almost nothing, and it never varies between runs. It can only check things you can state exactly</td><td>Yes. Every case today</td></tr>
+        <tr><td><strong>Statistical text metrics</strong></td><td>Overlap with a reference answer: BLEU, ROUGE, BERTScore, Levenshtein distance</td><td>Cheap, and it needs one correct answer written down. It scores wording, so a correct answer phrased differently scores badly</td><td>No, and topic 3 says why</td></tr>
+        <tr><td><strong>Model-based</strong><br><span class="quiet">LLM-as-a-judge</span></td><td>A second model reads the answer against a written rubric</td><td>A model call per run, plus the judge's own error rate. It can score things no rule can state</td><td>Topic 3, at 01:45</td></tr>
+        <tr><td><strong>Human</strong><br><span class="quiet">human-in-the-loop</span></td><td>A person reads the answer and labels it</td><td>The most expensive and the most trusted. It does not scale, so it is used on samples</td><td>Topic 3, as the labels the grader is measured against</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h4>Two words you will meet in any eval tool</h4>
+  <ul>
+    <li><strong>Reference-based.</strong> You wrote down the correct answer, and the grader compares against it. Works when there is exactly one right answer, such as the rupee figure of a refund.</li>
+    <li><strong>Reference-free.</strong> There is no single correct answer, so the grader scores a property instead: is this grounded in the document, does it answer the question, is the tone right. Most agent work is here.</li>
+  </ul>
+  <p>Today's cases are reference-based on the money and the clause, because both have exactly one right value. That is a deliberate choice and topic 3 is where it stops being enough.</p>`,
         script: `
     <p>One sentence, then the three numbers. <strong>Land on the middle row.</strong> The per-class figure is the one nobody builds and the only one that makes a missing class visible.</p>
     <p class="quiet">If somebody asks why not a single score: ask them which case they would fix on the strength of it.</p>`,
@@ -287,6 +394,13 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
           id: 't1-r-concept', pairs: 'one sentence, then the three numbers',
           html: `
   <p>Rooms accept the definition quickly. The three numbers are where the work is, and <strong>the per-class figure is the one to spend the time on</strong>.</p>
+  <h4>Why there is no single score</h4>
+  <p>Use the arithmetic, not the principle. Seven cases at 20/20 and one at 10/20 is 150 of 160, which is 94%. The one failing half the time pays ₹2,50,000 when it fails.</p>
+  <h4>How a case gets scored: the four kinds of grader</h4>
+  <p><strong>Name the four and say which one today uses. Do not teach them.</strong> Rule-based, statistical text metrics, model-based, human. Today is rule-based throughout; topic 3 is where model-based and human arrive.</p>
+  <p>The table is on their page with the cost of each. If the room wants to argue about BLEU now, say topic 3 at 01:45 and move.</p>
+  <h4>Two words you will meet in any eval tool</h4>
+  <p>Reference-based means you wrote the right answer down. Reference-free means you score a property instead, because there is no single right answer. Today is reference-based on the money and the clause, deliberately.</p>
   <details>
     <summary><span class="chev">›</span> Why an average is refused here</summary>
     <div class="dbody">
@@ -299,11 +413,13 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
         at: '00:27', part: 'design', title: 'Four classes of case, and what each one costs',
         mode: 'Whole room · 9 min · ninety seconds alone and silent first',
         learner: `
-  <p>Before the list goes up, write down every <strong>kind</strong> of case in your own suite. Not the cases. The kinds.</p>
-  <div class="term"><span class="q">How many kinds of case are in your suite?
-Name them.</span>
+  <p>Before the list goes up, one question. Answer it from memory, about your own system, not about this one.</p>
+  <div class="term"><span class="q">Think of the last bug that reached production in your system.
+Was there a test for it? Almost certainly not.
+So: what would that test have had to DO that none of your tests did?</span>
 
   ____________________________________________</div>
+  <p class="quiet">Nearly everybody writes a condition rather than a test: two processes, an empty field, a user who lied. That condition is the answer, and the four classes below are the four conditions a suite can be built to produce.</p>
   <details>
     <summary>Show the four</summary>
     <div class="reveal">
@@ -318,8 +434,30 @@ Name them.</span>
           </tbody>
         </table>
       </div>
-      <p>Almost every suite in this room has cases in exactly one of those four. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, and last week is when this room was attacked.</p>
+      <h4>How to tell which class a case is in</h4>
+      <p>Ask these four questions about a case, in this order. The first yes is its class.</p>
+      <ol>
+        <li><strong>Did somebody write this input on purpose to get money out?</strong> Then it is adversarial.</li>
+        <li><strong>Is a fact the decision needs simply not available anywhere?</strong> Then it is incomplete.</li>
+        <li><strong>Is this a real request sitting on a limit or a boundary?</strong> Then it is difficult.</li>
+        <li><strong>None of those?</strong> Then it is ordinary.</li>
+      </ol>
+      <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
+      <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
+      <h4>The second design choice: what the case asserts about</h4>
+      <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Level</th><th>What it checks</th><th>An example on this agent</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape?</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
+            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls?</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
+            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run?</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>
@@ -349,6 +487,12 @@ Name them.</span>
       <p>Ask for an example of each before accepting a count of four.</p>
     </div>
   </details>
+  <h4>How to tell which class a case is in</h4>
+  <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
+  <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
+  <h4>The second design choice: what the case asserts about</h4>
+  <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
@@ -364,6 +508,34 @@ Name them.</span>
         mode: 'Pairs · 18 min · 3 decide, 13 build, 2 check',
         learner: `
   <div class="builds">
+    <div class="build">
+      <h3>What the agent does today</h3>
+      <p>You are writing cases against the dispute agent from weeks 1 and 2. It does one job. A customer says they were charged wrongly, and the agent decides what to pay back.</p>
+      <ul>
+        <li><strong>Reads the ticket.</strong> The complaint in the customer's words, and the amount they dispute.</li>
+        <li><strong>Reads the account record.</strong> The plan, the charge history, and any free-text note sitting on the account.</li>
+        <li><strong>Applies the refund policy.</strong> Today that is one number in <span class="mono">data/policy.json</span>: a ceiling it may not pay past on its own.</li>
+        <li><strong>Credits, refuses, or escalates to a person.</strong> And writes one line of trace for every step it took.</li>
+      </ul>
+      <p>Week 2 added three controls on top of that: a limit, a human approval gate above the ceiling, and a pay-once check so one ticket cannot be credited twice.</p>
+    </div>
+    <div class="build">
+      <h3>Which parts most need a case, and why</h3>
+      <p>You cannot cover all of it in thirteen minutes. This is the order to spend coverage in, and the reason for each.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Part of the agent</th><th>Why it needs a case first</th><th>Class</th></tr></thead>
+          <tbody>
+            <tr><td><strong>The pay-once check</strong></td><td>It is the one control you have already watched fail silently, at 00:15 today</td><td>Ordinary</td></tr>
+            <tr><td><strong>The account note</strong></td><td>It is free text a customer can write, and the agent reads it as if it were policy. Last week it paid ₹2,50,000</td><td>Adversarial</td></tr>
+            <tr><td><strong>The ceiling and the approval gate</strong></td><td>Money leaves the company when it is wrong, and the gate is the only thing between the agent and the ledger</td><td>Difficult</td></tr>
+            <tr><td><strong>Deciding with a fact missing</strong></td><td>When a record cannot confirm a claim, the agent has to hand over rather than guess. Nothing tests that it does</td><td>Incomplete</td></tr>
+            <tr><td><strong>Reading the disputed amount</strong></td><td>Already covered by C1, and a second case here adds nothing</td><td>Ordinary</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Pick the row matching the class you are missing.</strong> If you are missing two, take the one higher in this table.</p>
+    </div>
     <div class="build">
       <h3>Starting state and how you check it</h3>
       <p><span class="mono">src/w3_cases.py</span> on the reference agent, with <span class="mono">CASES</span> holding seven cases and <span class="mono">MISSING</span> sitting below it, unused.</p>
@@ -411,6 +583,11 @@ Name them.</span>
           id: 't1-r-lab', pairs: 'the lab, and the field people leave out',
           html: `
   <h4 class="quiet" style="font-weight:700">Starting state: seven cases in one class. Check: make w3-eval</h4>
+  <h4>What the agent does today</h4>
+  <p>Their page lists the four things the agent does and the three controls week 2 added. <strong>Do not read it out.</strong> It is there so nobody writes a case against a capability the agent does not have, which happened twice in week 2's lab.</p>
+  <h4>Which parts most need a case, and why</h4>
+  <p>A five-row table, in priority order: the pay-once check, the account note, the ceiling and gate, deciding with a fact missing, then reading the amount, which is already covered.</p>
+  <p><strong>Point at the table once and name the rule: take the row matching the class you are missing.</strong> That is what stops thirteen minutes going into a second ordinary case. If somebody is missing two classes, they take the higher row.</p>
   <details>
     <summary><span class="chev">›</span> A working answer, in full</summary>
     <div class="dbody">
@@ -597,13 +774,40 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
       </tbody>
     </table>
   </div>
-  <p><strong>Why the search here is lexical rather than embeddings.</strong> Seven clauses is a corpus you can hold in your head, and a lexical score can be read and argued with. An embedding cannot be argued with in a classroom.</p>`,
+  <p><strong>Why the search here is lexical rather than embeddings.</strong> Seven clauses is a corpus you can hold in your head, and a lexical score can be read and argued with. An embedding cannot be argued with in a classroom.</p>
+  <h4>The three things a retrieval system is measured on</h4>
+  <p>Those three steps give you three separate numbers. The industry calls them the <strong>RAG triad</strong>, and every evaluation tool you will meet reports some version of them. They map onto the steps above.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Measure</th><th>The question it asks</th><th>Which step it judges</th><th>What a bad score means</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Faithfulness</strong><br><span class="quiet">also called groundedness</span></td><td>Is every fact in the answer actually in the text that was fetched?</td><td>Step 3</td><td>The model added something from its training, or invented it</td></tr>
+        <tr><td><strong>Answer relevancy</strong></td><td>Does the answer address the request that was made?</td><td>Step 3</td><td>It is true, and it answers a different question</td></tr>
+        <tr><td><strong>Context precision and recall</strong></td><td>Did the search fetch the right passages, and only those?</td><td>Step 2</td><td>The right clause was never in the context, or it was buried in nine wrong ones</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Today you build the third one.</strong> The grader you write at 01:23 checks which clause the answer used, which is context precision on a corpus of seven. Faithfulness and answer relevancy both need a grader that reads prose, and that is topic 3.</p>
+  <p>Keep the distinction, because it is the one people collapse. <strong>A faithful answer can be faithful to the wrong clause.</strong> That is exactly what happens at 01:45.</p>`,
       script: `
-    <p>One sentence, then the three steps. <strong>Say why the search is lexical before anybody asks</strong>, because somebody will inside a minute.</p>`,
+    <p>One sentence, then the three steps. <strong>Say why the search is lexical before anybody asks</strong>, because somebody will inside a minute.</p>
+    <h4>The three things a retrieval system is measured on</h4>
+    <p><strong>Name the triad, map each to a step, and stop.</strong> Faithfulness, answer relevancy, context precision and recall. The room will have met at least one of these in a vendor demo and will not have been told which step it judges.</p>
+    <p>The sentence to land: <strong>a faithful answer can be faithful to the wrong clause.</strong> It is the setup for 01:45, and a room that has heard it predicts that failure correctly.</p>
+    <p class="quiet">If somebody asks about embeddings and recall@k, say week 5 owns retrieval quality and today owns whether a wrong answer is diagnosable.</p>`,
       ref: {
         id: 't2-r-concept', pairs: 'three steps, and where the failure lives',
         html: `
-  <p>Step 1 is week 4's, step 2 is today's, step 3 is where most rooms assume the problem is. <strong>Take a show of hands on which step they would look at first</strong>, and most say step 3.</p>`,
+  <p>Step 1 is week 4's, step 2 is today's, step 3 is where most rooms assume the problem is. <strong>Take a show of hands on which step they would look at first</strong>, and most say step 3.</p>
+  <h4>The three things a retrieval system is measured on</h4>
+  <p>Faithfulness, answer relevancy, context precision and recall. Today builds the third, on a corpus of seven clauses. The other two need a grader that reads prose, which is topic 3 at 01:45.</p>
+  <details>
+    <summary><span class="chev">›</span> If somebody says "faithfulness would have caught it"</summary>
+    <div class="dbody">
+      <p>It would not, and this is worth the ninety seconds. Faithfulness asks whether the answer's facts came from the fetched text. At 01:45 they did. The clause was fetched, quoted accurately, and was the wrong clause.</p>
+      <p><strong>Faithfulness measures honesty about the source, not whether the source was right.</strong> Only a check on which clause should have governed catches that, and that is what they build at 01:23.</p>
+    </div>
+  </details>`,
       },
     },
     {
@@ -869,13 +1073,53 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
       learner: `
   <p style="font-size:var(--size-4)"><strong>A model grader is a second model asked to judge an answer against a rubric, used where the property you care about is not in any state the system holds.</strong></p>
   <p>That is the honest case for it, and it is a real one. <em>Does the refusal tell the customer what happens next</em> cannot be checked against a ledger.</p>
-  <p><strong>It is also a component.</strong> It has a failure rate, and until you measure that rate you have added a number to the report and no evidence to the system.</p>`,
+  <p><strong>It is also a component.</strong> It has a failure rate, and until you measure that rate you have added a number to the report and no evidence to the system.</p>
+  <h4>Why not just compare against a model answer?</h4>
+  <p>The obvious cheaper idea is to write down the perfect answer and measure how close the agent got. That is what the statistical text metrics do: <strong>BLEU</strong> and <strong>ROUGE</strong> count overlapping words, <strong>BERTScore</strong> compares meaning vectors, and <strong>Levenshtein distance</strong> counts single-character edits.</p>
+  <p>They work well where there is one correct wording, such as translation or a short summary. <strong>They fail on agent output, and the failure is specific.</strong></p>
+  <ul>
+    <li>"Credited ₹1,200 under clause DUP-1.1" and "Under DUP-1.1, a credit of ₹1,200 is due" share few words in the same order. BLEU scores the second one badly.</li>
+    <li>"Credited ₹1,200" and "Credited ₹12,000" differ by one character. Levenshtein calls them nearly identical. One of them is wrong by ₹10,800.</li>
+  </ul>
+  <p>So the metric is blind to the only part that matters and sensitive to the part that does not. That is why agent work reaches for a model grader or a rule, and almost never for these.</p>
+  <h4>The three ways a model grader is usually asked</h4>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Form</th><th>What you give the judge</th><th>Where it is used</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Direct scoring</strong><br><span class="quiet">a rubric, often 1 to 5</span></td><td>One answer and a written rubric. It returns a score and a reason</td><td>The common case, and what today's grader does</td></tr>
+        <tr><td><strong>Pairwise comparison</strong></td><td>Two answers and a question: which is better?</td><td>Choosing between two prompts or two models. More reliable than scoring, and it gives no absolute number</td></tr>
+        <tr><td><strong>G-Eval</strong></td><td>A rubric plus the steps for applying it, with the judge's own token probabilities used to smooth the score</td><td>Where a 1-to-5 score keeps landing on 3 and you need it to spread out</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>The rubric is the whole design.</strong> A rubric saying "is this answer good" returns noise. One saying "does the answer name a clause, and is it the clause the case says governs" returns something you can act on. You write one at 02:02.</p>`,
       script: `
-    <p><strong>Open on the honest case.</strong> A room that hears "judges are unreliable" first will not build one, and then will use one anyway without measuring it.</p>`,
+    <p><strong>Open on the honest case.</strong> A room that hears "judges are unreliable" first will not build one, and then will use one anyway without measuring it.</p>
+    <h4>Why not just compare against a model answer?</h4>
+    <p><strong>This is the question the room is already holding, so ask it first.</strong> Then give the two examples from their page, in this order: the reordered sentence BLEU punishes, and ₹1,200 against ₹12,000 one edit apart.</p>
+    <p>The second example is the one that lands. A senior room will accept a theoretical objection and forget it; a metric that cannot tell ₹1,200 from ₹12,000 on a payment path is remembered.</p>
+    <h4>The three ways a model grader is usually asked</h4>
+    <p>Direct scoring, pairwise comparison, G-Eval. <strong>Name all three and say which one they are about to build</strong>, which is direct scoring with a rubric. Pairwise matters to them because it is how model swaps get decided, and 04:40 is a model swap.</p>
+    <h4>The rubric is the whole design</h4>
+    <p>Say the two rubrics out loud, the useless one and the usable one. That contrast is what makes the 02:02 lab possible in thirteen minutes.</p>`,
       ref: {
         id: 't3-r-concept', pairs: 'the honest case for a model grader',
         html: `
-  <p>The sentence to land: <strong>a model grader has a failure rate, and until you measure it you have added a number to the report and no evidence to the system.</strong></p>`,
+  <p>The sentence to land: <strong>a model grader has a failure rate, and until you measure it you have added a number to the report and no evidence to the system.</strong></p>
+  <h4>Why not just compare against a model answer?</h4>
+  <p>BLEU, ROUGE, BERTScore, Levenshtein. Two examples on their page: a reordered sentence scores badly, and ₹1,200 against ₹12,000 is one edit apart.</p>
+  <h4>The three ways a model grader is usually asked</h4>
+  <p>Direct scoring with a rubric, pairwise comparison, G-Eval. They build the first at 02:02. Pairwise is how the 04:40 model swap would be judged in practice.</p>
+  <h4>The rubric is the whole design</h4>
+  <details>
+    <summary><span class="chev">›</span> The two rubrics, to read out</summary>
+    <div class="dbody">
+      <p><strong>Useless.</strong> "Is this answer good?" Returns a number that moves run to run and tells nobody what to change.</p>
+      <p><strong>Usable.</strong> "Does the answer name a clause, and is it the clause the case says governs?" Returns a verdict you can act on, and it is checkable against the case.</p>
+      <p>The difference is not wording. The second rubric names a field the case already holds.</p>
+    </div>
+  </details>`,
       },
     },
     {
@@ -894,6 +1138,24 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <p><strong>Two directions, and they are different costs.</strong> A grader can pass something you failed, or fail something you passed. On a payment path the first is the expensive one, because a pass releases the money and a false alarm only costs somebody a review.</p>
   <p><strong>Then the pattern.</strong> Both answers it let through name the wrong clause, and the reason is structural: the grader reads one answer and never sees the case.</p>
   <p><strong>And the point.</strong> The grader you built at 01:23 catches both of them for nothing.</p>
+  <h4>Is 70% agreement good?</h4>
+  <p>No. <strong>The figure teams aim for is above 80%</strong>, and that is the number to quote when somebody proposes shipping a judge. Below it, the judge disagrees with your own reviewers often enough that its score tells you about the judge rather than about the system.</p>
+  <p>There is a worse problem with 70%, and it is why the number is usually reported differently. <strong>Some of that agreement is luck.</strong> If your labels are mostly passes, a grader that passes everything already agrees with you most of the time while reading nothing.</p>
+  <p>So the measure used in practice is <strong>Cohen's kappa</strong>: agreement after subtracting the agreement you would expect from guessing. It runs from 0, meaning no better than chance, to 1, meaning identical. On a set of labels that is mostly one answer, 70% raw agreement can be a kappa near 0.</p>
+  <p class="quiet">You do not compute kappa today. You need to know the word, because a grader reported at "85% agreement" with no kappa beside it has not been measured yet.</p>
+  <h4>Three ways a judge is wrong that have nothing to do with your rubric</h4>
+  <p>These are documented, repeatable biases in model graders. They are properties of the judge, not mistakes in your prompt.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Bias</th><th>What the judge does</th><th>What it costs you</th><th>What to do about it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Position bias</strong></td><td>In a pairwise comparison, prefers whichever answer it was shown first</td><td>Your model-swap decision is partly decided by argument order</td><td>Run each comparison both ways round and keep only the ones that agree</td></tr>
+        <tr><td><strong>Verbosity bias</strong></td><td>Scores longer answers higher, whether or not they hold more fact</td><td>A prompt change that only made answers wordier reads as an improvement</td><td>Put a length limit in the rubric, and check the score against answer length</td></tr>
+        <tr><td><strong>Self-enhancement bias</strong></td><td>Prefers answers written by its own model family</td><td>A judge from the same family as the agent marks its own homework</td><td>Use a judge from a different family than the system under test</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>The last row is the one with teeth in it today.</strong> At 04:40 you compare two models. If the judge belongs to the same family as one of them, the comparison is not a comparison.</p>
   <h4>Reach for graders in this order, and stop at the first one that works</h4>
   <div class="tw">
     <table>
@@ -910,10 +1172,28 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
       script: `
     <p><span class="mono">make w3-agree</span>. <strong>Say the two directions before the number</strong>, because the number means nothing without them.</p>
     <p><strong>Then the pattern, then the point, in that order.</strong> The two it let through are both the wrong-clause failure, and the grader built thirty minutes ago catches both for nothing.</p>
+    <h4>Is 70% agreement good?</h4>
+    <p><strong>Ask the room before answering.</strong> Most say yes, or say it is a reasonable start. The answer is no: above 80% is what teams aim for.</p>
+    <p>Then the harder half, which is the part worth the time. <strong>Some of that 70% is luck.</strong> A grader that passes everything agrees with a mostly-pass label set while reading nothing. Name Cohen's kappa as the fix and say they are not computing it today.</p>
+    <p class="qbadge">The claim to hold: a grader reported at "85% agreement" with no kappa beside it has not been measured.</p>
+    <h4>Three ways a judge is wrong that have nothing to do with your rubric</h4>
+    <p>Position, verbosity, self-enhancement. Their page has the cost and the fix for each. <strong>Land the third one against 04:40</strong>: a judge from the same family as one of the two models under comparison makes the comparison worthless.</p>
     <p>Put the four lines up and <strong>point at them rather than walking them</strong>. Land on line 2.</p>`,
       ref: {
         id: 't3-r-agree', pairs: 'seventy per cent, and what the misses have in common',
         html: `
+  <h4>Is 70% agreement good?</h4>
+  <p>No. Above 80% is the working target. And part of any raw agreement figure is chance, which is what Cohen's kappa subtracts.</p>
+  <details>
+    <summary><span class="chev">›</span> The worked example, if the room pushes back on kappa</summary>
+    <div class="dbody">
+      <p>Ten labels, eight of them pass. A grader that passes everything scores 8 of 10, which is 80% raw agreement, having read nothing at all.</p>
+      <p><strong>Its kappa is 0.</strong> That is the number to report, and it is why 80% raw on a lopsided label set is not the 80% target.</p>
+      <p>Do not derive the formula. The point is that the headline figure flatters a lazy grader, and one word fixes it.</p>
+    </div>
+  </details>
+  <h4>Three ways a judge is wrong that have nothing to do with your rubric</h4>
+  <p>Position bias, verbosity bias, self-enhancement bias. Documented properties of the judge, not faults in the rubric. The third decides whether 04:40's comparison means anything.</p>
   <h4>Reach for graders in this order, and stop at the first one that works</h4>
   <p>Four lines, and the room gets them as a table on their own page. <strong>Point at it rather than walking it.</strong></p>
   <h4 class="quiet" style="font-weight:700">The expensive grader misses what the cheap one already caught</h4>
@@ -1024,7 +1304,7 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
         reveal: `<p><strong>B.</strong> A treats a measurement as a score. C is week 2’s confidence argument returning. D is too fast: a grader at 70% whose misses are all one kind is more useful than one at 95% whose misses are scattered.</p>`,
         wrong: 'D, because 70% sounds unusable.',
         right: 'It would be unusable as a release gate on its own, which is correct. What makes it usable is that the three it gets wrong are nameable.' },
-      { from: 'earlier', source: 'Week 2’s rule for choosing a mechanism, line four: <em>"Is the action irreversible? A model may never be the only control."</em>',
+      { from: 'earlier', source: 'Week 2’s table for choosing a mechanism, row four, asked <em>"Is the action irreversible?"</em> and answered <em>"A model may never be the only control."</em>',
         stem: 'The grader you built this hour is a model. Does it break that rule?',
         reveal: `<p><strong>No.</strong> Week 2’s rule is about a control standing in front of an irreversible action. A grader reads an answer after the fact and authorises nothing. It is a detective control, not an authorising one.</p>`,
         wrong: '"Yes, so we should not use it."',
@@ -1147,13 +1427,60 @@ topics.push({
       </tbody>
     </table>
   </div>
-  <p>A row with the first two and not the last two is a dashboard. It reports. It does not gate.</p>`,
+  <p>A row with the first two and not the last two is a dashboard. It reports. It does not gate.</p>
+  <h4>Where the gate actually runs: before release, and after it</h4>
+  <p>The same evaluation set gets run in two places, and the industry has a name for each.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th></th><th>Offline evals</th><th>Online evals</th></tr></thead>
+      <tbody>
+        <tr><td><strong>When</strong></td><td>Before release, on every change</td><td>After release, continuously</td></tr>
+        <tr><td><strong>What it runs on</strong></td><td>Your fixed evaluation set</td><td>A sample of real traffic</td></tr>
+        <tr><td><strong>What it answers</strong></td><td>Did this change break a case we already know about?</td><td>Is it still working on the cases nobody thought of?</td></tr>
+        <tr><td><strong>What it cannot do</strong></td><td>See anything outside the set</td><td>Stop a bad release, because it is already out</td></tr>
+        <tr><td><strong>Typical cost</strong></td><td>Paid once per change</td><td>Paid forever, so it runs on a sample</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>You need both, and for opposite reasons.</strong> Offline evals stop a known failure from shipping. Online evals are the only thing that finds the class of case your suite never had. The 00:15 double payment would have been caught by neither, which is why 02:56 puts a number on the gate and 03:16 asks who owns it.</p>
+  <h4>Where the cases come from, and how they go stale</h4>
+  <p>A gate is only as good as the evaluation set behind it. Sets are built four ways and all four are used together.</p>
+  <ul>
+    <li><strong>A golden set.</strong> Twenty to a hundred cases, written and checked by hand, covering what must never break. Small on purpose, because every case is reviewed by a person.</li>
+    <li><strong>Mining production logs.</strong> Real requests that failed, or that nobody anticipated, promoted into cases. This is where your missing classes actually come from.</li>
+    <li><strong>Synthetic generation.</strong> A model writes question-and-context pairs in bulk. Cheap, good for coverage, and never trusted as the golden set.</li>
+    <li><strong>Adversarial and safety cases.</strong> Written to break the thing: prompt injection, data exfiltration, jailbreaks. Week 2 produced yours and week 4 collects them.</li>
+  </ul>
+  <p><strong>Two ways the set rots, and both are quiet.</strong></p>
+  <ul>
+    <li><strong>Contamination.</strong> Your cases end up in the training data of the model you are testing, so it has seen the answers. The score rises and nothing improved.</li>
+    <li><strong>Drift.</strong> The product changes and old cases now assert the wrong behaviour. They keep passing, or they fail for a reason that is no longer a fault.</li>
+  </ul>
+  <p>The defence for both is the same and it is unglamorous: <strong>the evaluation set is version-controlled beside the code</strong>, and a change in behaviour retires the cases it invalidates in the same commit.</p>`,
       script: `
-    <p>One sentence, then the four parts and what most rows are missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and leave it there.</p>`,
+    <p>One sentence, then the four parts and what most rows are missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and leave it there.</p>
+    <h4>Where the gate actually runs: before release, and after it</h4>
+    <p>Offline and online. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
+    <p>Then the line that ties the day together: <strong>the 00:15 double payment would have been caught by neither.</strong> Offline had no two-process case. Online would have shown ₹2,400 paid and no alert, because nothing was watching for it.</p>
+    <h4>Where the cases come from, and how they go stale</h4>
+    <p>Four sources, two rots. <strong>Do not walk the list.</strong> Point at it and pick the one line the room needs: production log mining is where their missing classes come from, not invention.</p>
+    <p>Contamination and drift are worth thirty seconds each because both are silent and both make the score move the wrong way. The defence is one sentence: the eval set is version-controlled beside the code.</p>`,
       ref: {
         id: 't4-r-concept', pairs: 'four parts, and the two that are missing',
         html: `
-  <p>The distinction to land: <strong>a row with a requirement and a number is a dashboard. A gate has a reason and a name.</strong></p>`,
+  <p>The distinction to land: <strong>a row with a requirement and a number is a dashboard. A gate has a reason and a name.</strong></p>
+  <h4>Where the gate actually runs: before release, and after it</h4>
+  <p>Offline before release on a fixed set, online after release on sampled traffic. Both, for opposite reasons.</p>
+  <details>
+    <summary><span class="chev">›</span> The question this slot is really for</summary>
+    <div class="dbody">
+      <p>Ask it: <strong>which of the two would have caught this morning's double payment?</strong></p>
+      <p><strong>Neither</strong>, and that is the answer to hold out for. Offline had no case with two processes. Online would have recorded ₹2,400 against a ₹1,200 dispute and raised nothing, because no check was watching the ratio.</p>
+      <p>Most rooms say online. Push once: what would it have alerted on? There is no answer, and finding that there is no answer is the point.</p>
+    </div>
+  </details>
+  <h4>Where the cases come from, and how they go stale</h4>
+  <p>Golden set, production logs, synthetic, adversarial. Rots: contamination and drift. Defence: version-control the eval set beside the code.</p>`,
       },
     },
     {
@@ -1247,7 +1574,7 @@ topics.push({
     title: 'At enterprise scale: evaluation platforms',
     mode: 'whole room · 3 min',
     question: 'What actually stops a release when the bar is not met?',
-    lede: 'Five real answers, running from cheapest and fastest to strongest and slowest. No team picks on engineering grounds alone.',
+    lede: 'Three jobs, and the real products that do each one. The first list runs from cheapest and fastest to strongest and slowest. No team picks on engineering grounds alone.',
     slots: [
       { slot: 'Blocks the release', options: [
         { product: 'GitHub Actions with a required check', cost: 'Included if you are already there. The bar lives in a YAML file any engineer can edit, which reads as such to an auditor' },
@@ -1256,9 +1583,26 @@ topics.push({
         { product: 'ServiceNow change request', cost: 'Per seat, slow on purpose, and it is what your risk function already recognises' },
         { product: 'A maker-checker screen in Finacle or FLEXCUBE', cost: 'Already licensed in most Indian banks. The strongest audit answer of the five, and the furthest from the engineer who found the problem' },
       ] },
+      { slot: 'Runs the evaluation set before release', options: [
+        { product: 'Promptfoo', cost: 'Open source, cases declared in YAML, runs as a CI step. You host it, and the run history is whatever your CI keeps' },
+        { product: 'DeepEval', cost: 'Open source, written like pytest so it sits in a Python test suite. Its built-in metrics are generic, so each one needs calibrating against your own labels before you trust it' },
+        { product: 'OpenAI Evals', cost: 'Open framework, and the examples and defaults assume OpenAI models. Less useful across a mixed fleet of models' },
+        { product: 'Ragas', cost: 'Purpose-built for retrieval: it implements faithfulness and context precision, and generates synthetic question-and-context pairs. RAG-shaped only, and its metrics call a model, so they carry their own variance' },
+      ] },
+      { slot: 'Watches it after release', options: [
+        { product: 'OpenTelemetry into your own store', cost: 'Vendor-neutral and already in most stacks. The traces are free and the scoring, sampling and dashboards are all yours to build' },
+        { product: 'Arize Phoenix', cost: 'Open source, traces plus online evaluation, self-hosted or their cloud. You still write the evaluators' },
+        { product: 'LangSmith', cost: 'Managed traces, stored datasets and online evals with little setup. Priced per seat and per trace, and its shapes pull you toward LangChain' },
+        { product: 'Langfuse', cost: 'Open source and self-hostable, so the data stays inside your perimeter. You run and back up the database' },
+      ] },
     ],
-    learner: `<p><strong>The pattern worth naming.</strong> The five run from cheapest and fastest to strongest and slowest, and the right one is decided by who has to answer for the release rather than by the team that builds it.</p>`,
-    script: `<p>Three minutes. <strong>Land on the ordering</strong> rather than on any one product. Give no recommendation.</p>`,
+    learner: `
+  <p><strong>The pattern worth naming in the first list.</strong> The five run from cheapest and fastest to strongest and slowest, and the right one is decided by who has to answer for the release rather than by the team that builds it.</p>
+  <p><strong>The pattern in the other two lists is different.</strong> Every option is open source except one, and the thing you pay for is not the running. It is the stored history, the hosting, and somebody else maintaining the metrics. Nothing in either list writes your evaluation set for you.</p>`,
+    script: `
+    <p>Three minutes, and that buys one list spoken. <strong>Speak the first list and land on the ordering</strong> rather than on any one product. Give no recommendation.</p>
+    <p><strong>The other two lists are read, not said.</strong> Name the two headings, say the products are on their page with the cost of each, and move. A room that wants a tool comparison will take the whole close for it.</p>
+    <p>If asked which to use: the honest answer is that all three jobs are separate purchases, and the one nobody sells is the evaluation set itself.</p>`,
   },
   topicQuiz: {
     at: '03:13',
@@ -1276,7 +1620,7 @@ topics.push({
         reveal: `<p><strong>B.</strong> C and D are real questions and both come second. A invites an argument about the number with nobody in the room who can move it.</p>`,
         wrong: 'D, because a rate with no run count is meaningless.',
         right: 'That is topic 1’s lesson applied correctly, and it is the right second question. It is second because a threshold with no author is not a gate at all.' },
-      { from: 'earlier', source: 'Week 2’s fifth outcome: <em>"write one row of a policy table someone else could build from, marking it an invariant, a limit or a tuning number, with an owner."</em>',
+      { from: 'earlier', source: 'Week 2’s fifth outcome: <em>"write one row of a policy table someone else could build from, marking it an invariant, a limit or a tuning number, with an owner"</em>',
         stem: 'Which column of this week’s gate table is that owner column, and what changed about what the owner owns?',
         reveal: `<p><strong>The decision owner column.</strong> Last week the owner owned a number, which is the ceiling. This week the owner accepts a risk, which is what happens when the requirement fails. Those are different people in most organisations.</p>`,
         wrong: '"It is the same column and the same person."',
@@ -1715,7 +2059,7 @@ export const quiz = [
   {
     title: 'Q3 · Where the failure moved', meta: 'judge · from week 2',
     week: 2,
-    source: 'Week 2’s opening: <em>"Five things go wrong before 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written."</em>',
+    source: 'Week 2’s opening: <em>"Five things go wrong before the adversary round at 03:31. Not one of them is the model failing. Every one is your own rule, working exactly as written."</em>',
     stem: 'You added an evaluation harness today. What is this week’s version of your own rule working exactly as written and still being wrong?',
     reveal: `<p><strong>A thin case set.</strong> The suite runs exactly as written, reports a pass, and the bug is live. Nothing in it is broken.</p>
       <p>That is the same shape as last week: not the model failing, and not a component failing. Your own rule, working.</p>`,

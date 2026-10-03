@@ -12,6 +12,23 @@
 // Source Serif 4 for h1 and h2, Figtree for everything else, 6px and 12px radii,
 // a 1px ring instead of a shadow. Gold is never text.
 
+// The session start-time field and the contents card. Both were written inside
+// week-2.mjs on 1 October, with a note to move them here when a second week
+// wanted them. Week 3 wants them, so this is that move: one copy, and both
+// weeks read it. Nothing here is week-specific.
+const WALL_CSS = `
+.sclock .startin{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-body);font-size:14px}
+.sclock .startin input{font:inherit;padding:4px 8px;border:1px solid #758279;border-radius:6px;background:#FBF8F2;color:#172E26}
+.sclock .startin button{font:inherit;padding:4px 10px;border:1px solid #758279;border-radius:6px;background:transparent;color:#172E26;cursor:pointer}
+.off{font-variant-numeric:tabular-nums}
+.off.wall{border-bottom:1px dotted #758279}
+ol.toc{margin:12px 0 0;padding-left:20px}
+ol.toc>li{margin:10px 0}
+ol.tocsegs{margin:6px 0 0;padding-left:18px;font-size:14px}
+ol.tocsegs li{margin:2px 0}
+ol.toc a{color:inherit}
+`;
+
 export const LEARNER_CSS = `
 :root{
   --noir:#183D32;--ember:#B58A46;--sun:#183D32;--mist:#F5F0E6;--berry:#963D34;
@@ -179,7 +196,7 @@ tr.here td{background:var(--accent-quiet)}
   details.topic>.topicbody{display:flex !important}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
-`;
+${WALL_CSS}`;
 
 export const INSTRUCTOR_CSS = `
 :root{
@@ -372,7 +389,7 @@ details.topic[open]>summary .caret{transform:rotate(90deg)}
   summary{display:none}
   details{background:#fff;padding:0}
   details.topic>.topicbody{display:flex !important}}
-`;
+${WALL_CSS}`;
 
 // ── the live "now" marker, on both pages ───────────────────────────────────
 // Both devices read their own wall clock against ONE declared start time, so they
@@ -395,6 +412,12 @@ export const SESSION_CLOCK_JS = `
   var elEl = host.querySelector('.el');
   var nowEl = host.querySelector('.now');
   var hintEl = host.querySelector('.hint');
+  // A week that wraps its offsets (week.wallClock) gets a Session start field
+  // below, so the off-state hint names the field. Every other week keeps the
+  // query-string hint, because on those pages there is no field to point at.
+  var OFFHINT = document.querySelector('.off[data-off]')
+    ? 'Enter the session start time to turn every time on this page into clock time.'
+    : 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';
   var driftEl = host.querySelector('.drift');
   var rows = [].slice.call(document.querySelectorAll('#clocktable tbody tr'));
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -423,7 +446,7 @@ export const SESSION_CLOCK_JS = `
   }
 
   var times = rows.map(function (r) {
-    return mins(r.querySelector('td').textContent.trim());
+    var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());
   });
   var LAST = 300;
 
@@ -431,7 +454,7 @@ export const SESSION_CLOCK_JS = `
     if (startedAt === null) {
       elEl.textContent = '--:--';
       nowEl.textContent = 'Clock off';
-      hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';
+      hintEl.textContent = OFFHINT;
       return;
     }
     var elapsed = paused ? pausedAt : Math.floor((Date.now() - startedAt) / 60000);
@@ -485,6 +508,64 @@ export const SESSION_CLOCK_JS = `
 
   paint();
   setInterval(paint, 10000);
+})();
+
+// The clock above reads a start time from ?start= only. This adds a field to
+// enter it, keeps it in the URL and never in browser storage, and rewrites every
+// session offset on the page to the time of day. The table's own minutes are read
+// from data-off, so the live highlight keeps working after the rewrite. Offsets
+// are wrapped only when the week sets wallClock, so a week without it is
+// unchanged by this block.
+(function () {
+  var host = document.getElementById('sclock');
+  var spans = [].slice.call(document.querySelectorAll('.off[data-off]'));
+  function mins(t) { var p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  var qs = new URLSearchParams(location.search);
+  var raw = qs.get('start');
+  var start = raw ? new Date(raw) : null;
+  if (start && isNaN(start.getTime())) start = null;
+  if (host && spans.length) {
+    var lab = document.createElement('label');
+    lab.className = 'startin';
+    lab.innerHTML = 'Session start <input type="time" aria-label="Session start time"> <button type="button">Clear</button>';
+    host.appendChild(lab);
+    var input = lab.querySelector('input');
+    var clear = lab.querySelector('button');
+    if (start) input.value = pad(start.getHours()) + ':' + pad(start.getMinutes());
+    input.addEventListener('change', function () {
+      if (!input.value) return;
+      var d = new Date();
+      var p = input.value.split(':');
+      d.setHours(Number(p[0]), Number(p[1]), 0, 0);
+      qs.set('start', d.toISOString());
+      location.search = qs.toString();
+    });
+    clear.addEventListener('click', function () { qs.delete('start'); location.search = qs.toString(); });
+  }
+  if (start) {
+    var base = start.getHours() * 60 + start.getMinutes();
+    spans.forEach(function (s) {
+      var off = s.getAttribute('data-off');
+      var m = (base + mins(off)) % 1440;
+      s.textContent = pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      s.title = off + ' into the session';
+      s.classList.add('wall');
+    });
+    [].forEach.call(document.querySelectorAll('summary .when'), function (w) {
+      w.textContent = w.textContent.replace(/\\b([0-4]\\d|05):([0-5]\\d)\\b/g, function (t) {
+        var m = (base + mins(t)) % 1440;
+        return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+      });
+    });
+  }
+  function openTarget() {
+    var id = location.hash.slice(1);
+    var el = id && document.getElementById(id);
+    while (el) { if (el.tagName === 'DETAILS') el.open = true; el = el.parentElement; }
+  }
+  window.addEventListener('hashchange', openTarget);
+  openTarget();
 })();
 `;
 

@@ -38,93 +38,11 @@
 // Source Serif 4 for h1 and h2, Figtree for everything else, 6px and 12px radii,
 // a 1px ring instead of a shadow. Gold is never text.
 
-import { LEARNER_CSS as BASE_LEARNER_CSS, INSTRUCTOR_CSS as BASE_INSTRUCTOR_CSS, SESSION_CLOCK_JS as BASE_CLOCK_JS } from './_design.mjs';
-export { PANE_JS } from './_design.mjs';
-
-// Week 2 adds two things the shared design does not have yet: a start-time field
-// that turns every session time on the page into clock time, and a contents
-// card. They are added here, not in _design.mjs, so weeks 1 and 3 build
-// unchanged. Move them into _design.mjs when another week wants them.
-const EXTRA_CSS = `
-.sclock .startin{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-body);font-size:14px}
-.sclock .startin input{font:inherit;padding:4px 8px;border:1px solid #758279;border-radius:6px;background:#FBF8F2;color:#172E26}
-.sclock .startin button{font:inherit;padding:4px 10px;border:1px solid #758279;border-radius:6px;background:transparent;color:#172E26;cursor:pointer}
-.off{font-variant-numeric:tabular-nums}
-.off.wall{border-bottom:1px dotted #758279}
-ol.toc{margin:12px 0 0;padding-left:20px}
-ol.toc>li{margin:10px 0}
-ol.tocsegs{margin:6px 0 0;padding-left:18px;font-size:14px}
-ol.tocsegs li{margin:2px 0}
-ol.toc a{color:inherit}
-`;
-export const LEARNER_CSS = BASE_LEARNER_CSS + EXTRA_CSS;
-export const INSTRUCTOR_CSS = BASE_INSTRUCTOR_CSS + EXTRA_CSS;
-
-// The shared clock reads a start time from ?start= only. This adds a field to
-// enter it, keeps it in the URL (never in browser storage), and rewrites every
-// session time on the page to the time of day. The table's own minutes are read
-// from data-off, so the live highlight keeps working after the rewrite.
-const WALL_CLOCK_JS = `
-(function () {
-  var host = document.getElementById('sclock');
-  var spans = [].slice.call(document.querySelectorAll('.off[data-off]'));
-  function mins(t) { var p = t.split(':'); return Number(p[0]) * 60 + Number(p[1]); }
-  function pad(n) { return String(n).padStart(2, '0'); }
-  var qs = new URLSearchParams(location.search);
-  var raw = qs.get('start');
-  var start = raw ? new Date(raw) : null;
-  if (start && isNaN(start.getTime())) start = null;
-  if (host) {
-    var lab = document.createElement('label');
-    lab.className = 'startin';
-    lab.innerHTML = 'Session start <input type="time" aria-label="Session start time"> <button type="button">Clear</button>';
-    host.appendChild(lab);
-    var input = lab.querySelector('input');
-    var clear = lab.querySelector('button');
-    if (start) input.value = pad(start.getHours()) + ':' + pad(start.getMinutes());
-    input.addEventListener('change', function () {
-      if (!input.value) return;
-      var d = new Date();
-      var p = input.value.split(':');
-      d.setHours(Number(p[0]), Number(p[1]), 0, 0);
-      qs.set('start', d.toISOString());
-      location.search = qs.toString();
-    });
-    clear.addEventListener('click', function () { qs.delete('start'); location.search = qs.toString(); });
-  }
-  if (start) {
-    var base = start.getHours() * 60 + start.getMinutes();
-    spans.forEach(function (s) {
-      var off = s.getAttribute('data-off');
-      var m = (base + mins(off)) % 1440;
-      s.textContent = pad(Math.floor(m / 60)) + ':' + pad(m % 60);
-      s.title = off + ' into the session';
-      s.classList.add('wall');
-    });
-  }
-  if (start) {
-    [].forEach.call(document.querySelectorAll('summary .when'), function (w) {
-      w.textContent = w.textContent.replace(/\\b([0-4]\\d|05):([0-5]\\d)\\b/g, function (t) {
-        var m = (base + mins(t)) % 1440;
-        return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
-      });
-    });
-  }
-  function openTarget() {
-    var id = location.hash.slice(1);
-    var el = id && document.getElementById(id);
-    while (el) { if (el.tagName === 'DETAILS') el.open = true; el = el.parentElement; }
-  }
-  window.addEventListener('hashchange', openTarget);
-  openTarget();
-})();
-`;
-export const SESSION_CLOCK_JS = BASE_CLOCK_JS
-  .replace("hintEl.textContent = 'Add ?start=2026-10-11T09:00+05:30 to this URL and the clock follows the room.';",
-           "hintEl.textContent = 'Enter the session start time to turn every time on this page into clock time.';")
-  .replace("return mins(r.querySelector('td').textContent.trim());",
-           "var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());")
-  + WALL_CLOCK_JS;
+// The session start-time field and the contents card were written here on
+// 1 October, with a note to move them into _design.mjs when a second week wanted
+// them. Week 3 wanted them on 3 October, so they live there now and this file
+// reads the one copy. Week 2's two pages are unchanged by that move.
+export { LEARNER_CSS, INSTRUCTOR_CSS, SESSION_CLOCK_JS, PANE_JS } from './_design.mjs';
 
 export const week = {
   n: 2,
