@@ -23,7 +23,20 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 Ten Week3 rows in the same "Notes Review" sheet, all answered in
 [`docs/teaching/reviews/week-3-review-2026-10-03.md`](../teaching/reviews/week-3-review-2026-10-03.md).
-Not yet committed when this line was written. **Still `status: draft`, unreleased.**
+**Merged to `main` and deployed to production on 4 October** as `cef1cf5`, together with
+week 2's review. GitHub records that commit as the Production deployment, the Vercel status
+is success, and the `teaching pages` workflow passed on the push. The `eval-agent` workflow
+correctly did not run: it is path-filtered to `facts.ts`, `latest.json`, `regions.ts` and
+`lib/agent/**`, none of which this change touches.
+
+**Still `status: draft`, so still unreleased to learners.** A week opens only when it is
+`ready` *and* has a row in `session_releases`, which is Sunil's action in the console.
+Deploying the material does not release it.
+
+**The push bypassed a branch-protection rule.** The remote reported *"Changes must be made
+through a pull request"* and allowed the push anyway, on Sunil's instruction to merge and
+promote directly. Every other week on this repo went through a PR, so treat the direct push
+as the exception it was rather than the new habit.
 
 **The week is called LLM Evaluation, not Evidence.** Session file, both pages, the notes
 file. The notes file keeps its `week-3-evidence.md` filename on purpose — renaming it
