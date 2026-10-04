@@ -82,7 +82,10 @@ below under the reference agent. Nothing in the 3 October content change affects
 ## Week 2 revised from Sunil's review sheet — 1 October
 
 About 80 comments, all answered in `docs/teaching/reviews/week-2-review-2026-10-01.md`.
-Merged to `main` and deployed on 2 October, still unreleased to learners. Clearer wording
+**Corrected 4 October: this had NOT been merged.** The line here said "merged to `main` and
+deployed on 2 October", and it was wrong — commit `36aaa18` sat on
+`content/week-2-review-sheet` and its review doc did not exist on `main` at all. It merged
+with week 3 on 4 October. Still unreleased to learners either way. Clearer wording
 throughout, new learner material (what guardrails are, planes with code, sync/async/layered,
 HITL best practices, tiered gateway with a Llama Guard sketch, trade-offs, the idempotency
 reading), every lab rebuilt with real files and code against the published reference agent,
