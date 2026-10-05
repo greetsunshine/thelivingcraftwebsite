@@ -135,9 +135,10 @@ after:
   items:
     - "Write the missing case. Take the class your suite has none of and add one case in it. Run it. If it passes the first time, the case is too easy."
     - "Run one case twenty times and write the rate. Then say at which run number the rate stopped moving, and whether it ever did."
+    - "Finish the retrieval margin guard if the 01:23 lab ran out of clock. Return the gap as a number from _pick, thread it through _record, then escalate instead of paying when it is under two. Run make w3-wobble and count how many honest customers you just sent to a human."
     - "One row of the gate table for your own system. All thirteen columns, and the decision owner column is to go and ask rather than assume."
     - "Answer one question in writing: what does your agent get shown each turn that nobody chose? Week 5 opens near it."
-  note: "Two hours, and the first item is the one that matters. The other three are readable in the gaps."
+  note: "Two hours, and the first item is the one that matters. The margin guard is only here for people whose lab ran out of time at 01:37; skip it if yours is already running. The rest are readable in the gaps."
 
 reading:
   - title: Evaluation-gates worksheet

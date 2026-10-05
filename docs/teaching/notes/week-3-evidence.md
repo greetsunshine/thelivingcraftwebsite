@@ -106,6 +106,75 @@ renamed, and every addition sits inside a beat that already existed. That was a
 constraint rather than a happy accident: a new beat means a new clock row, and the clock
 is shared with the quiz bank, this file and the session file.
 
+## What changed on 5 October, and why
+
+A second review pass. The sheet gained a **Topic** column and seventeen new Week 3 rows:
+eight on RAG, eight on model-based grading, one on release gates.
+[`docs/teaching/reviews/week-3-review-2026-10-05.md`](../reviews/week-3-review-2026-10-05.md)
+answers each one. **The clock did not move again** — 46 rows, no beat added or renamed.
+
+**Three rows asked for a judgement rather than a change.** The RAG metrics list, the
+LLM-as-a-judge list and the release-gate list all say *evaluate whether this needs adding* or
+*check which ones need to be included*. Together they name well over a hundred concepts. Each
+one was placed where it changes a decision the room makes, named once as reference where a
+learner can look it up, or left to the week that owns it. The review doc records every call.
+
+**Topic 2 now says why a RAG topic is in an evaluation day.** It was the biggest gap: the
+topic taught retrieval evaluation without ever saying that retrieval is what gives you the
+second thing to measure. The purpose card now opens on that, with ticket 8002 as the example —
+₹2,000 paid and right, a second clause one point behind that would have paid ₹2,50,000.
+**Stop at the near miss when teaching it.** The right-money-wrong-clause case is 01:45's
+reveal and naming it at 01:06 spends that prediction.
+
+**Two diagrams were added, both as monospace boxes rather than images.** One at 01:11 showing
+the three retrieval steps with the measurement points attached, one at 01:50 showing how
+model-based grading works with the validation loop as a dotted path. They are in the page's
+existing terminal-block style, so they need no new assets and they print.
+
+**Cohen's kappa is now taught properly and implemented in the code.** The 3 October pass named
+it. Sunil asked for it explained, and for the lab to compute it. So:
+
+- 01:55 does the arithmetic on the board: p_o = 0.70, p_e = 0.54, **kappa = 0.35** against a
+  production bar of 0.60. The two-by-two table behind the 70% is printed.
+- `cohens_kappa()` is now in `src/w3_agree.py` and `make w3-agree` prints the figure with the
+  chance-agreement line above it. **Verified against the real label set**: raw 70%, kappa 0.35.
+- The lab's new experiment is the one that lands it. Replace the grader with one that passes
+  everything: **raw 60%, kappa 0.00.** Ten points of raw rate against the whole of kappa.
+
+**The 01:23 lab now builds something deployable.** Sunil's instruction was that the build
+should add to the agent's core functionality rather than produce a throwaway. The grader needs
+the right answer, so it cannot run in production. **The retrieval margin can.** The lab now
+also returns the gap as a number from `_pick`, threads it through `_record`, and escalates
+instead of paying when the margin is under two. That is week 2's approval gate on a new
+signal, and it is the piece that survives the session. It is also in the week's after-work,
+because nine minutes covers the grader comfortably and the guard only just.
+
+**Week 3's content additions, by comment group.**
+
+| Where | What arrived |
+|---|---|
+| Topic 2 purpose | Why RAG is in an evaluation day, with the 8002 near-miss |
+| 01:06 | What the part is about, and the trace annotated line by line |
+| 01:11 | The measurement-point diagram. Why lexical and not embeddings, in three reasons. Whether step 1 is ever evaluated, which it is, as query rewriting |
+| 01:16 | Framed as diagnosis. Both failures shown as traces with the owner of each fix named, and ₹2,50,000 paid in both |
+| 01:23 | The three data shapes. Context precision as the metric. The deployable margin guard |
+| 01:37 | Five IR metrics with typical targets, three referenceless metrics, and the diagnostic table |
+| Topic 3 purpose | What "not in a state" means, worked on the refusal. A judge against a reviewing agent, as five rows |
+| 01:45 | Both clause texts, how BILL-3.2 reached ₹1,200, and where the coincidence breaks |
+| 01:50 | The grading diagram. Direct scoring, pairwise, G-Eval |
+| 01:55 | The two-by-two behind 70%. Kappa, derived. Granularity drift as a fourth bias. Five ways to bound a grader, of which only the first is evidence |
+| 02:02 | Setup and run instructions. A five-row table for when not to use a model. The kappa build and the lazy-grader contrast |
+| 02:16 | The two-tier judge topology, and in-line against async |
+| 02:44 | The three-tier gate cascade with budgets. Mirror, slice, auto-reverse, harvest |
+| 02:49 | Absolute floors against relative deltas, and why it fixes the 92% problem |
+| 03:10 | NIST AI RMF, ISO/IEC 42001, the EU AI Act. The bill of materials, run lineage, token budgets, the amber zone |
+
+**Two quiz items changed.** Topic 2's three were evaluated and kept — each tests a distinct
+judgement — with one sentence added to the first naming context precision. Topic 3's second
+item was replaced: it asked what 70% *is*, and now asks what 70% and 0.35 say together, with
+the "0.35 means wrong 65% of the time" misreading as the distractor to spend time on. The
+bank records the replacement and why.
+
 ## What the agent can do now
 
 The table the close produces, and the reason the recall segment at 04:02 exists. Every
@@ -602,6 +671,35 @@ Only a check on which clause *should* have governed catches that.
 **If somebody asks about embeddings, recall@k or re-ranking**, say week 5 owns retrieval
 quality and today owns whether a wrong answer is diagnosable.
 
+### The measurement-point diagram, added 5 October
+
+Their page carries the three steps a second time, as boxes, with what can be measured beside
+each one. **Walk the right-hand column only** — the boxes are the same three steps just named.
+
+The line it exists for: **every arrow out of the diagram is a number somebody can report, and
+today you add exactly one of them.**
+
+### Is step 1 ever evaluated?
+
+Yes, and somebody who has built RAG will ask. It is **query rewriting**, or decontextualization
+when the request refers to an earlier turn, and it is measured by whether the rewritten query
+retrieves the right passage.
+
+**Say why today skips it without pretending it does not exist.** This agent's query is the
+ticket plus the account note glued together, and nobody chose that, so there is no design to
+measure. Topic 5 at 03:23 makes the gluing a decision. Week 4 owns the half a customer wrote.
+
+### Why lexical and not embeddings, in three reasons
+
+Define both words first: lexical scores shared words, embeddings score meaning as distance.
+Then the three reasons, in order, because only the third is about teaching.
+
+1. Seven clauses is not a retrieval problem. Embeddings earn their cost at thousands.
+2. The score has to be arguable. An embedding gives 0.83 against 0.81 and no account of itself.
+3. **Eight laptops have to agree.** Same lexical query, same scores, no model call, no key.
+
+Week 5 owns the swap, on a corpus where it matters.
+
 ## 01:16 · Two failures, and one word for both
 
 Seven minutes, pairs, written first. Ask for every distinct reason an answer could now be
@@ -672,6 +770,35 @@ rupees.
   case-that-cannot-fail defect one level up.
 - **The case stores the clause and the harness never passes it through.** Their rate does
   not move and they conclude the grader passed. Ask for one deliberate failure.
+
+### The three shapes, printed on their page
+
+Added 5 October, because Sunil asked for the details needed to build the thing. A case with its
+`expect` block, a clause record with its `clause` id, and a result from `_record`. **Point at the
+last line of that card**: the margin is inside the `why` string and not a field, which is what
+the second build step fixes.
+
+### The metric, and its name
+
+Two graders means two rates. `outcome 20/20` and `retrieval 19/20`. **Say the name once: that
+second rate is context precision**, the same metric as 01:37 computed on a set of seven. Rooms
+do not make that connection on their own.
+
+### The deployable half, and when to drop it
+
+**This is the half to protect and the half to drop if the clock goes.** Nine minutes covers the
+grader comfortably and the margin guard only just. Decide at 01:30.
+
+The argument, in one sentence either way: **the grader needs the right answer so it cannot run
+in production, and the margin does not, so the margin is the part that ships.**
+
+If you are running late, say out loud that the guard moves to after-work and that the session
+file carries it. **Do not let people half-build it** — a half-wired guard makes `make w3-wobble`
+print numbers nobody can interpret.
+
+The third check question is the one to take up in the room: **how many honest customers did the
+guard just escalate?** `MIN_MARGIN = 2` catches the ₹2,50,000 case and also escalates a correct
+₹1,200 credit. There is no threshold that does neither, and that is the sentence for 03:16.
 
 ## 01:37 · At enterprise scale: retrieval in regulated work
 
@@ -880,6 +1007,56 @@ worse than one at 70% whose misses you can name.
 **Extension question.** Who wrote the labels? If the answer is "the model wrote them",
 there is no agreement rate. There is a model agreeing with itself.
 
+### What 70% means, and then what it does not: kappa
+
+Rewritten 5 October. Sunil asked for 70% explained, for kappa explained, and for kappa in the
+code. All three are done and the code prints it.
+
+**First the literal reading.** On 7 of 10 answers the grader said what you said. Not a mark for
+the grader, not accuracy, because nobody established that you were right either.
+
+**Then the two-by-two**, which the rate hides. 5 both-pass, 2 both-fail, 1 you-pass-it-fails,
+2 you-fail-it-passes. The two off-diagonal cells are different costs: one review, against two
+releases of money.
+
+**Then do the arithmetic on the board.** Three steps, and it is worth the three minutes:
+
+    p_o = 7/10                            = 0.70
+    you passed 6/10, grader passed 7/10
+    p_e = (0.6 x 0.7) + (0.4 x 0.3)       = 0.54
+    kappa = (0.70 - 0.54) / (1 - 0.54)
+          = 0.16 / 0.46                   = 0.35
+
+**0.35 against a production bar of 0.60.** Read kappa as: of the agreement still available above
+chance, how much did the grader get? It got 35% of it.
+
+The sentence it exists for: **the headline moves from "70%, not bad" to "0.35, nowhere near",
+and the only thing that changed is subtracting the luck.**
+
+`make w3-agree` now prints all of this. Verified: raw 70%, chance 54%, kappa 0.35.
+
+### Why the grader cannot see the failure, precisely
+
+This is the beat's real content and the thing Sunil asked to have explained. **It is information,
+not wording.** The grader is handed the answer and the rubric. The governing clause is a fact
+about the *case*, and the case was never passed in.
+
+So **no rubric fixes it.** If somebody proposes a better prompt, accept it seriously, then ask:
+*where in your prompt is the clause that governs this case?* There is no answer, and finding
+that there is none is the point.
+
+Then the payoff: **the expensive grader missed what the cheap one already caught**, with no
+model call.
+
+### How you know the grader itself is not wrong
+
+Five ways on their page, in priority order: measure against people, anchor the rubric, make it
+reason before it scores, use a different model family with position swapping, re-measure on a
+schedule. **Only the first is evidence. The rest are precautions.**
+
+The closing sentence: a judge with every precaution and no agreement figure is a well-dressed
+opinion. And nothing in this course does the fifth, which 02:22 says out loud.
+
 ## 02:02 · Lab: measure how far your grader agrees with you
 
 Fourteen minutes. Pairs. Two decide, ten build, two check.
@@ -931,6 +1108,35 @@ Three minutes.
 **The Indian context worth naming.** For a GCC the in-house queue is often genuinely the
 cheapest of the five, because the people who know the policy are on the same floor. That is
 a real advantage and most teams do not count it.
+
+### The judge at volume: two tiers, added 5 October
+
+You ran one grader over ten answers. At volume nobody runs one, because **the model good enough
+to trust is too expensive to run on everything.** So the judge splits:
+
+- **The calibration judge** runs on the hand-labelled gold set, hundreds of traces, with the
+  strongest model you can justify. It produces the agreement figure. Few calls, expensive each,
+  a cost you can forecast.
+- **The production judge** runs on sampled live traffic, typically 5% to 20%, with a small,
+  fine-tuned or distilled model. Llama Guard and similar purpose-built judges live here. Many
+  calls, cheap each, and **the sampling rate is the cost dial.**
+
+**The relationship is the point:** the production judge is only worth reading because the
+calibration judge gave it a number. Run the cheap one alone and you have an opinion at scale
+with a dashboard.
+
+### In the request, or beside it
+
+Async is the default. **Read only the bottom row of that table out loud:** the moment the judge
+can stop an answer it is a control rather than an evaluator, and everything week 2 demanded
+applies — an owner, a timeout, and a documented behaviour when it is unavailable.
+
+That turns the judge-against-reviewing-agent question from 01:45 into an operations decision,
+which is the shape this room thinks in.
+
+Two further practices are one line each on their page and should not be taught: make the judge
+return structured output so the score is extracted rather than parsed, and check reasoning
+alignment rather than the label alone.
 
 ## 02:19 · Topic quiz: model-based grading
 
@@ -1063,6 +1269,29 @@ The defence for both is one unglamorous sentence: **the evaluation set is versio
 beside the code**, and a behaviour change retires the cases it invalidates in the same
 commit.
 
+### The three-tier cascade, added 5 October
+
+Running the whole suite on every commit is how evaluation gets switched off. So the gate is a
+cascade: under a minute on each push, three to five minutes before merge, fifteen to thirty
+nightly.
+
+**Point at the budget column and nothing else.** The tiers are defined by what an engineer will
+wait for, and the checks were fitted to the time afterwards. That is the right way round, and it
+is why **tier 1 holds no model calls at all.**
+
+Then place the room's own work: the eight cases from 00:36 are a tier 2 set, and twenty runs each
+from 00:55 is tier 3.
+
+### And the gate does not stop at merge
+
+Four steps: mirror the traffic, release to a slice, tie the score to an automatic reversal, then
+harvest what went wrong back into the golden set.
+
+**Spend the time on the last one.** Everything before it protects this release. The harvest is the
+only mechanism in the whole day that improves the next suite without somebody sitting down to
+invent cases — and it ties back to 00:27, because nobody invents an adversarial class. They get
+attacked and then write it down.
+
 ## 02:49 · Who owns the pass bar
 
 Seven minutes. Three things to watch for, and the first is nearly universal.
@@ -1073,6 +1302,29 @@ Seven minutes. Three things to watch for, and the first is nearly universal.
   then ask whether that person knows.
 - **Grader validation blank, or filled with the grader's own output.** "94% accurate"
   against whose labels? This is the column that separates a gate from a dashboard.
+
+### Two kinds of threshold, added 5 October
+
+**This is the part to protect in this beat, and it may be the best thing in the topic.** The 95%
+is one number doing two incompatible jobs, which is why nobody can defend it.
+
+- An **absolute floor** says this may never happen: personal data leaked 0%, injection succeeding
+  0%, schema compliance 100%. The number comes from outside — a regulation, a contract, a board
+  position. When it fails the build stops and there is no conversation.
+- A **relative delta** says this may not get worse: faithfulness no more than a point below
+  today, 95th-percentile latency no more than 10% worse, cost no more than 15% higher. The number
+  comes from last week's measurement of the same thing. When it fails, somebody decides.
+
+The sentence that does the work: **"95% faithfulness" is unarguable in the wrong way, and "no
+worse than last release" is arguable in the right way.**
+
+**Then close the loop on the 92%.** As a relative gate it is a one-point regression a named person
+signs in a minute. As an absolute floor it asks somebody to override a rule nobody can source,
+which is exactly how it ends up overridden on a call.
+
+Say the asymmetry last, because somebody will find it: ten releases each one point worse is ten
+points worse and every one passed. **A relative gate needs an absolute floor underneath it**, far
+enough down that it is never the live constraint.
 
 ## 02:56 · Lab: write one row of the gate table
 
@@ -1146,6 +1398,36 @@ and somebody else maintaining the metrics.
 **the one nobody sells is the evaluation set itself.** Give no recommendation on any of the
 three lists; the teaching standard requires three or more named options with their costs
 and no lean.
+
+### What an auditor asks for, added 5 October
+
+Three frameworks get named, and all three want the same thing underneath: **evidence that the
+evaluation happened, for the exact thing that shipped.**
+
+- **NIST AI RMF** — voluntary, US, and the common vocabulary. Asks for measurement and
+  management, not a particular score.
+- **ISO/IEC 42001** — a certifiable management-system standard. An auditor visits and asks for
+  records, so this is the one that turns practice into paperwork you must already have.
+- **The EU AI Act** — law, phasing in, with obligations by risk class. A dispute agent paying
+  refunds is not the top class, and the record-keeping expectations still reach it.
+
+Two practices do most of the work underneath all three.
+
+- **A bill of materials per release.** Prompt version, model id and version, temperature, the
+  retriever's commit, and a checksum of the evaluation set. **The model version is the one that
+  moves without you**, which makes last month's result a statement about a system that no longer
+  exists.
+- **Keep every evaluation run**, with the judge's reasons and the prompt diff, not only the
+  scores. **Nobody keeps the reasons, and the reasons are what answers "why did it pass in
+  March".**
+
+**Finish on the operational rule, because governance is defeated by cost rather than by
+argument.** Put a token budget on each build and cache results for prompts that did not change.
+Unbounded evaluation exhausts the quota, somebody switches the gate off, and it was theatre from
+that moment.
+
+The amber zone is worth one sentence: a regression that neither stops the build nor passes
+quietly, requiring a named signature. It is 02:49's decision owner with a trigger attached.
 
 ## 03:13 · Topic quiz: release gates
 
