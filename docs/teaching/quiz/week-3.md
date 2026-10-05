@@ -340,20 +340,32 @@ labels, you have no grader, you have an opinion with a number on it.
 
 ---
 
-### Q32 · What 70% is
+### Q32 · What 70% and 0.35 both say
 `apply` · 02:19
 
-> Your model grader agrees with your labels 7 times in 10. What is that number?
+> Your grader agrees with your labels 7 times in 10, and its Cohen's kappa is 0.35. Which is
+> the honest summary?
 
-- **A.** A mark for the grader, and it needs to be higher
-- **B.** The sentence "three answers in ten, this verdict is wrong, and here is which three" ✅
-- **C.** A confidence threshold to route on
-- **D.** Evidence the grader is unusable
+- **A.** 70% is the headline and 0.35 is a statistical adjustment to it
+- **B.** It agrees often, and most of the agreement is what chance would have given you anyway ✅
+- **C.** 0.35 means the grader's verdict is wrong 65% of the time
+- **D.** The two numbers contradict each other, so one is computed wrongly
 
-**Why the others are attractive and wrong.** **A** treats a measurement as a score. **C** is
-week 2's confidence argument returning: a grader's own number is not comparable across models
-or across two prompts, and nobody owns it. **D** is too fast. A grader at 70% whose misses are
-all one kind is more useful than one at 95% whose misses are scattered.
+**The working, if the room wants it.** You passed 6 of 10 and the grader passed 7 of 10, so
+chance alone agrees 54% of the time. Kappa asks how much of the remaining room the grader
+covered: (0.70 − 0.54) / (1 − 0.54) = 0.35.
+
+**Why the others are attractive and wrong.** **C is the one to spend time on**, and it is the
+common misreading: 0.35 reads like "35% correct" and kappa is not an error rate at all. The
+error rate is three verdicts in ten. Ask which three answers 0.35 says are wrong — it does not
+say, and that is the difference. **A** is what teams actually do, which is why it is here: it
+keeps the flattering number as the headline. **D** assumes two measures of the same data must
+agree, and the whole point is that they measure different things.
+
+**Replaced on 5 October.** The earlier version asked what 70% *is* and keyed to "the sentence
+naming which three are wrong". That answer is still true and is now the reveal of this one.
+The question moved because 01:55 teaches kappa properly, and a quiz that only asks about the
+raw rate tests the half of the segment that was already easy.
 
 ---
 

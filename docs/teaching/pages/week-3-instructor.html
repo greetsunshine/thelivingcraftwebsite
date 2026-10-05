@@ -749,7 +749,13 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
   <p class="lede"><strong>When the rule comes out of a document, what does a wrong answer actually mean?</strong></p>
   
   <p>The weak version is "RAG can retrieve the wrong thing", which the room knows.</p>
+  <h4>Why this topic sits inside a day about evaluation</h4>
+  <p><strong>Say this before anything else, because the room will otherwise wonder why a search topic is in an evaluation day.</strong> Retrieval gives you a second thing to check, and it is sharper than the amount.</p>
+  <p>Read the ticket 8002 block off their page verbatim: ₹2,000 paid and right, acted on GOOD-2.1, a second clause one point behind that would have paid ₹2,50,000. <strong>That block is the topic.</strong> Do not explain it afterwards; it explains itself and the explaining dilutes it.</p>
+  <p class="qbadge">Stop at the near miss. The case where the money is right and the clause is wrong is the <span class="off" data-off="01:45">01:45</span> reveal, and naming it here spends that prediction.</p>
   <p>The stronger claim is that <strong>once the rule arrives by retrieval, one wrong answer holds two failures with different fixes</strong>, and the grader every suite already has cannot see either of them.</p>
+  <h4>What changes in the agent today</h4>
+  <p>One sentence: the rule leaves <span class="mono">data/policy.json</span> and becomes seven clauses of prose in <span class="mono">data/policy-docs.json</span>. Name both files, because the lab edits against them.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
@@ -769,7 +775,17 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
     <h4>What retrieval-augmented generation is</h4>
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
-    <p>One sentence, then the three steps. <strong>Say why the search is lexical before anybody asks</strong>, because somebody will inside a minute.</p>
+    <p>One sentence, then the three steps.</p>
+    <h4>The same three steps, with the measurement points marked</h4>
+    <p><strong>This is the five minutes' centre.</strong> Their page has the diagram: three boxes down the left, and on the right what can be measured at each. Walk down the right-hand column only — the boxes are the same three steps you just named.</p>
+    <p>The line to land: <strong>every arrow out of the diagram is a number somebody can report, and today you add exactly one of them.</strong></p>
+    <h4>Is step 1 never evaluated?</h4>
+    <p>Somebody asks this, usually the person who has built RAG before. It is a good question and the answer is yes: query rewriting, or decontextualization across turns.</p>
+    <p><strong>Say why today skips it without pretending it does not exist.</strong> This agent's query is the ticket plus the account note glued together and nobody chose that, so there is no design to measure. Topic 5 at <span class="off" data-off="03:23">03:23</span> makes the gluing a decision; week 4 owns the half a customer wrote.</p>
+    <h4>Why the search here is lexical rather than embeddings</h4>
+    <p><strong>Say this before anybody asks</strong>, because somebody will inside a minute. Define both words, then give the three reasons from their page in order.</p>
+    <p>Reasons one and two are engineering: seven clauses is not a retrieval problem, and an embedding gives you 0.83 against 0.81 with no account of itself. <strong>Reason three is the one to say out loud:</strong> the same lexical query scores identically on eight laptops, with no model call and no key.</p>
+    <p class="quiet">If somebody wants the embedding version, that is week 5 on a corpus where it matters.</p>
     <h4>The three things a retrieval system is measured on</h4>
     <p><strong>Name the triad, map each to a step, and stop.</strong> Faithfulness, answer relevancy, context precision and recall. The room will have met at least one of these in a vendor demo and will not have been told which step it judges.</p>
     <p>The sentence to land: <strong>a faithful answer can be faithful to the wrong clause.</strong> It is the setup for <span class="off" data-off="01:45">01:45</span>, and a room that has heard it predicts that failure correctly.</p>
@@ -780,7 +796,15 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
     <h4>Two failures, and one word for both</h4>
     <span class="pairs">Components and design &#183; Pairs · 7 min · written first</span>
     
+    <h4>What this part is about</h4>
+    <p><strong>Frame it as diagnosis before you ask the question.</strong> Their page uses an on-call page: the alert says the agent paid the wrong amount, and today that has two answers living in two parts of the system with two different owners.</p>
+    <p>Without that frame the question reads as a quiz about RAG and the room lists failure modes. With it, the room is deciding what a case has to record.</p>
+    <h4>Name the reasons before you see them</h4>
     <p>Ask for every distinct reason an answer could now be wrong. <strong>Take answers before putting the two up</strong>, because rooms reliably produce three or four items that collapse into those two.</p>
+    <h4>The same two, on the run you watched at <span class="off" data-off="01:06">01:06</span></h4>
+    <p>Their page shows both failures as traces against ticket 8002, with the owner of each fix named. <strong>Land the one fact that makes the argument: ₹2,50,000 is paid in both, from two different faults.</strong> The amount cannot distinguish them. The clause can.</p>
+    <h4>What this means for the case you write</h4>
+    <p>One sentence, and it sets up the lab: recording the clause is the difference between an alert and a diagnosis, and it costs one extra field.</p>
     <p><strong>Stop properly on "the model hallucinated" when it comes up</strong>, and it will. The card beside this segment has the full argument.</p>
   </div></div>
 
@@ -790,12 +814,32 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
     
     <p><strong>The second decide question is the whole lab</strong>, so say it in those words: a clause id from the model's prose is a claim, from the retrieval step it is a fact.</p>
     <p><strong>Circulate for the grader that cannot fail.</strong> About one person in eight asserts the top-scoring clause rather than the governing clause, which makes the grader agree with the retrieval by construction. Name it as the case-that-cannot-fail defect one level up.</p>
+    <h4>What you have to work with</h4>
+    <p>Their page prints all three shapes: a case, a clause record, and a result. <strong>Point at the last line of that card.</strong> The margin is in the <span class="mono">why</span> string and not a field, which is what the second build step fixes.</p>
+    <h4>The metric this produces, and what to call it</h4>
+    <p>Two graders, two rates. <strong>Say the name once: that second rate is context precision</strong>, the same metric as <span class="off" data-off="01:37">01:37</span> computed on a set of seven. Rooms do not connect those two on their own.</p>
+    <h4>Build the part you could actually deploy</h4>
+    <p><strong>This is the half to protect, and the half to drop if the clock goes.</strong> Nine minutes covers the grader comfortably and the guard only just. Decide at <span class="off" data-off="01:30">01:30</span> which you are doing.</p>
+    <p>If you are running late: <strong>say out loud that the guard moves to after-work</strong> and that the session file carries it. Do not let people half-build it, because a half-wired guard makes <span class="mono">make w3-wobble</span> report numbers nobody can interpret.</p>
+    <p>The argument to make either way, in one sentence: <strong>the grader needs the right answer so it cannot run in production, and the margin does not, so the margin is the part that ships.</strong></p>
+    <h4>Check yourself on three questions.</h4>
+    <p>The third is the one to take up in the room: <strong>how many honest customers did the guard just escalate?</strong> It is week 2's cost-of-refusing argument on a new control, and it is the setup for <span class="off" data-off="03:16">03:16</span>.</p>
+    <p class="qbadge">There is no threshold that neither misses the catch nor escalates somebody honest. If a learner proposes one, ask for the number and then ask what it does to the ₹1,200 case.</p>
   </div></div>
 
   <div class="beat" id="s-0137" data-ref="t2-r-atscale"><span class="t"><span class="off" data-off="01:37">01:37</span></span><div class="b">
     <h4>At enterprise scale: retrieval in regulated work</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p>Three minutes, point at it. <strong>The line to land is the order of the questions</strong>: where may it sit, then how fast is it, and not the other way round.</p>
+    
+  <p>Three minutes, point at it. <strong>The line to land is the order of the questions</strong>: where may it sit, then how fast is it, and not the other way round.</p>
+  <h4>How retrieval is actually graded at enterprise scale</h4>
+  <p><strong>Three minutes does not buy five metrics taught.</strong> Name the five, say the one sentence that makes them one family — every one is computed against a labelled set of queries — and point at the typical column.</p>
+  <p>If you say one thing about the numbers, say this: <strong>treat them as the shape of the number, not as your number.</strong> A senior room will otherwise take 0.90 recall home as a target it has not earned.</p>
+  <h4>When there is no labelled set: the referenceless metrics</h4>
+  <p>Context relevancy, synthetic context recall, chunk utilisation. Named, with Ragas, DeepEval and Arize Phoenix as the tools that implement them. <strong>The sentence that ties it to the next topic: these carry the judge's own error rate.</strong></p>
+  <h4>The diagnostic table worth keeping</h4>
+  <p>Four rows, cause and lever. <strong>Say "this is the part to photograph" and move on.</strong> It is reference material and it reads better later than it presents now.</p>
+  <p>Then the boundary, because it protects week 5: the right-hand column is week 5's subject. Today's job was to make the measurement exist.</p>
   </div></div>
 
   <div class="beat" id="s-0140" data-ref="t2-r-quiz"><span class="t"><span class="off" data-off="01:40">01:40</span></span><div class="b">
@@ -828,6 +872,11 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
   <h3>The rule is in a document now</h3>
   
   <h4 class="quiet" style="font-weight:700">GOOD-2.1 carries the cap. GOOD-2.2 does not. One point apart.</h4>
+  <h4>What this part is about</h4>
+  <p>Say the setup in two sentences before the trace goes up. The rule used to be a number in a field, so finding it could not go wrong. It is now seven clauses of prose, so <strong>searching for the right one is a new step that nothing is watching.</strong></p>
+  <p>Then: the agent gets the money right here. The instruction to the room is <em>watch how close it came to not.</em></p>
+  <h4>What you are looking at</h4>
+  <p>Their page annotates the three new trace lines: <span class="mono">search_policy</span> with its scores, <span class="mono">ctx</span> with the clause acted on, and the summary. <strong>Point at the scores, not at the words.</strong> The gap is the content.</p>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
@@ -917,7 +966,8 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
   <h3>Topic quiz: retrieval</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>search_policy returns GOOD-2.1 at score 6 and GOOD-2.2 at score 5. GOOD-2.1 caps a goodwill credit at ₹2,000 and GOOD-2.2 names no figure. What does the one-point gap decide?</p>
-  <p><strong>The answer.</strong> <p><strong>Whether the customer is paid ₹2,000 or ₹2,50,000.</strong> And the gap is one point because somebody wrote the account note to make it one point.</p></p>
+  <p><strong>The answer.</strong> <p><strong>Whether the customer is paid ₹2,000 or ₹2,50,000.</strong> And the gap is one point because somebody wrote the account note to make it one point.</p>
+          <p><strong>The gap is also the only part of this you can use in production.</strong> Your grader needs the governing clause, which nothing knows at request time. The gap needs nothing, which is why it became the guard you built at <span class="off" data-off="01:23">01:23</span>, and why the rate it moves is called context precision.</p></p>
   <p><strong>The likely wrong answer.</strong> "Nothing, because the agent still has the ceiling."</p>
   <p><strong>What is right about it.</strong> It is the right instinct from last week, and here there is no ceiling in the path. The cap lives in the clause, so losing the clause loses the cap.</p>
   <h4>Question 2 &#183; this topic</h4>
@@ -980,6 +1030,14 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
   <p>The weak version is "LLM-as-judge is unreliable", which the room has read.</p>
   <p>The stronger claim is that <strong>a grader is a component with a failure rate</strong>, the rate is measurable against labels a person wrote, and the measurement usually shows the expensive grader missing something a cheap one already caught.</p>
   <p><strong>Open on the honest case for a model grader, not on its faults</strong>, or the room hears a warning instead of a method.</p>
+  <h4>"Not in a state" — what that phrase means</h4>
+  <p><strong>Do not define "state" abstractly.</strong> Their page walks the refusal example: the ledger has no row, the clause id is true and useless, and the only place the property lives is the sentence. Read those three lines and stop.</p>
+  <p>Then the three options, in this order: a keyword rule, a person, or a model against a rubric. <strong>Say that the keyword rule is the one most rooms have already built and already distrust.</strong></p>
+  <h4>A judge is not a second agent reviewing the first</h4>
+  <p>This is the confusion worth five minutes of the topic's thirty-seven, because half the room has read about multi-agent review and will map this onto it.</p>
+  <p>The distinction is on their page as a five-row table. <strong>If you say one row, say the last but one: if a judge is wrong your number is wrong, and if a reviewing agent is wrong the customer is affected.</strong></p>
+  <p>Then the line: <strong>a judge measures, a reviewing agent decides.</strong> And the consequence, which is week 2 arriving again: the moment a judge can change what the customer gets, it is a control and needs everything a control needs.</p>
+  <p class="quiet">Somebody will ask which is better. Neither. They answer different questions, and week 5 owns the second one.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
@@ -992,7 +1050,13 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     <span class="pairs">The narrative &#183; Whole room · 5 min · written answer before the reveal</span>
     
     <p><span class="mono">make w3-grade</span>. Take the written answer before revealing why the second run is a problem.</p>
-    <p><strong>Give the concrete case or it sounds like pedantry.</strong> A Pro-to-Team upgrade mid-month, billed twice for the Pro charge: the duplicate is ₹1,200 and the ceiling is ₹4,000.</p>
+    <h4>What each clause actually says</h4>
+    <p><strong>Put both clause texts on screen and read them.</strong> Their page has them side by side. Rooms accept "wrong clause" as a label and do not feel it until they see that BILL-3.1 says <em>no ceiling applies to a duplicate</em> and BILL-3.2 is nothing but a ceiling.</p>
+    <h4>How the run on BILL-3.2 reached ₹1,200</h4>
+    <p>Two sentences, and the word to stress is <strong>coincidence</strong>. Under BILL-3.1, ₹1,200 because that is what was double-billed. Under BILL-3.2, ₹1,200 because one month of Pro is ₹1,200. The plan price and the duplicated charge happen to be the same number on this account.</p>
+    <h4>Where the coincidence breaks</h4>
+    <p><strong>Give the concrete case or it sounds like pedantry.</strong> A Pro-to-Team upgrade mid-month, billed twice for the Pro charge: the duplicate is ₹1,200 and the ceiling is now ₹4,000.</p>
+    <p>The sentence that lands it: <strong>the wrong rule is wrong on every account, and the ledger only notices on some of them.</strong></p>
     <p><strong>Then the harder sentence.</strong> Every passing run of that case up to today carries no information about the clause. Saying that in a release meeting is harder than adding the grader.</p>
   </div></div>
 
@@ -1001,6 +1065,10 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
     <p><strong>Open on the honest case.</strong> A room that hears "judges are unreliable" first will not build one, and then will use one anyway without measuring it.</p>
+    <h4>How model-based grading actually works</h4>
+    <p><strong>Their page has the diagram and it is the five minutes' centre.</strong> Four inputs, two outputs, and a dotted path at the bottom. Walk the solid part in thirty seconds; it is what everyone has built.</p>
+    <p>Then stop on the dotted path and say it plainly: <strong>everything above the dots is what every team builds, and the dots are what make the score mean anything.</strong> That sentence is why <span class="off" data-off="02:02">02:02</span> exists.</p>
+    <p class="quiet">Point at what the judge is never handed: the ledger, the tools, the power to change the answer. It closes the judge-versus-reviewing-agent question before it reopens.</p>
     <h4>Why not just compare against a model answer?</h4>
     <p><strong>This is the question the room is already holding, so ask it first.</strong> Then give the two examples from their page, in this order: the reordered sentence BLEU punishes, and ₹1,200 against ₹12,000 one edit apart.</p>
     <p>The second example is the one that lands. A senior room will accept a theoretical objection and forget it; a metric that cannot tell ₹1,200 from ₹12,000 on a payment path is remembered.</p>
@@ -1015,13 +1083,24 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     <span class="pairs">Components and design &#183; Whole room · 7 min</span>
     
     <p><span class="mono">make w3-agree</span>. <strong>Say the two directions before the number</strong>, because the number means nothing without them.</p>
-    <p><strong>Then the pattern, then the point, in that order.</strong> The two it let through are both the wrong-clause failure, and the grader built thirty minutes ago catches both for nothing.</p>
-    <h4>Is 70% agreement good?</h4>
-    <p><strong>Ask the room before answering.</strong> Most say yes, or say it is a reasonable start. The answer is no: above 80% is what teams aim for.</p>
-    <p>Then the harder half, which is the part worth the time. <strong>Some of that 70% is luck.</strong> A grader that passes everything agrees with a mostly-pass label set while reading nothing. Name Cohen's kappa as the fix and say they are not computing it today.</p>
-    <p class="qbadge">The claim to hold: a grader reported at "85% agreement" with no kappa beside it has not been measured.</p>
+    <h4>What does 70% agreement actually mean?</h4>
+    <p><strong>Ask the room before answering, and expect "not bad".</strong> Then give the literal reading: on 7 of 10 answers the grader said what you said. It is not a mark for the grader and it is not accuracy, because nobody has established that you were right either.</p>
+    <p>Put the two-by-two table up. <strong>The two off-diagonal cells are different costs</strong>: one review, against two releases of money.</p>
+    <h4>Why 70% is not as good as it sounds: Cohen's kappa</h4>
+    <p><strong>Do the three steps on the board.</strong> They asked for kappa explained, so explain it rather than naming it. You passed 6 of 10, the grader passed 7 of 10, so chance alone gives 54% agreement. Kappa is 0.16 over 0.46, which is <strong>0.35</strong>.</p>
+    <p>The sentence it exists for: <strong>the headline moves from "70%, not bad" to "0.35, nowhere near", and the only thing that changed is subtracting the luck.</strong></p>
+    <p class="qbadge">0.60 is the figure usually required before a judge runs in production. This grader is at 0.35, so the room's own number fails the bar it is about to be told about.</p>
+    <h4>The pattern in the misses, and why it is not a coincidence</h4>
+    <p>A3 and A4 are one mistake twice, not two mistakes. Say it that way round.</p>
+    <h4>Why the grader cannot see that failure</h4>
+    <p><strong>This is the beat's real content and it is worth three minutes.</strong> The grader is handed the answer and not the case. The governing clause is a fact about the case. So no rubric fixes it, however good.</p>
+    <p>If somebody proposes a better prompt, accept it seriously and then ask: <em>where in your prompt is the clause that governs this case?</em> There is no answer, and finding that there is none is the point.</p>
+    <p>Then the payoff: <strong>the expensive grader missed what the cheap one already caught</strong>, with no model call.</p>
     <h4>Three ways a judge is wrong that have nothing to do with your rubric</h4>
-    <p>Position, verbosity, self-enhancement. Their page has the cost and the fix for each. <strong>Land the third one against <span class="off" data-off="04:40">04:40</span></strong>: a judge from the same family as one of the two models under comparison makes the comparison worthless.</p>
+    <p>Position, verbosity, self-enhancement, plus granularity drift as a fourth. Their page has the cost and the fix for each. <strong>Land self-enhancement against <span class="off" data-off="04:40">04:40</span></strong>: a judge from the same family as one of the two models under comparison makes the comparison worthless.</p>
+    <p>Granularity drift is the one this room needs: a 1-to-10 scale invites invented distinctions. <strong>Use pass or fail, or three points at most.</strong></p>
+    <h4>So how do you know the grader itself is not making mistakes?</h4>
+    <p>Five lines on their page, in priority order. <strong>Say only that line 1 is evidence and lines 2 to 5 are precautions</strong>, then read the closing sentence: a judge with every precaution and no agreement figure is a well-dressed opinion.</p>
     <p>Put the four lines up and <strong>point at them rather than walking them</strong>. Land on line 2.</p>
   </div></div>
 
@@ -1031,18 +1110,39 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     
     <p><strong>Watch for one thing: whether they labelled before they graded.</strong> It is the single most important thing in the block. Ask to see the labels written down before the grader ran.</p>
     <p><strong>Ask where the five answers came from.</strong> A set built to be instructive tells you nothing about production.</p>
+    <h4>Set the grader up, and run it once before you change anything</h4>
+    <p><strong>Have the room run <span class="mono">make w3-agree</span> before touching anything</strong>, so everybody has seen a working output. No key, no model call; the grader is a deterministic stand-in.</p>
+    <p>Their page prints the four summary lines they should see, kappa included. <strong>If somebody's output has no kappa line they are on an older checkout</strong> — that line is new. Tell them to pull.</p>
+    <h4>Decide first. One question, two minutes.</h4>
+    <p>Their page has a five-row table for sorting a check to the cheapest thing that settles it. <strong>Point at the bottom row and say it out loud</strong>: whether the answer was <em>allowed</em> is never a model alone, which is week 2's rule arriving again.</p>
+    <h4>Build the kappa, and read it against the raw rate</h4>
+    <p>This is the new half of the lab and it is where the ten minutes should go. Five lines of code, then the one experiment that matters: <strong>replace the grader with one that passes everything and run both numbers again.</strong></p>
+    <p>raw 60%, kappa 0.00. Against the real grader's raw 70%, kappa 0.35. <strong>Ten points of raw rate against the whole of kappa.</strong></p>
+    <p class="qbadge">The question to ask whoever finishes first: why do 60% and 0.00 describe the same grader? If they can answer it, they have the topic.</p>
+    <h4>Check yourself on three questions.</h4>
+    <p><strong>Say the sample-size caveat rather than hiding it.</strong> A kappa on five labels is barely meaningful. Five is what fits in ten minutes, production practice is 200 to 500 hand-labelled traces, and the method is identical at both sizes.</p>
   </div></div>
 
   <div class="beat" id="s-0216" data-ref="t3-r-atscale"><span class="t"><span class="off" data-off="02:16">02:16</span></span><div class="b">
     <h4>At enterprise scale: who grades at volume</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p>Three minutes. <strong>Land on the in-house row</strong>, because it is the one teams dismiss and the one that is usually right here.</p>
+    
+  <p>Three minutes. <strong>Land on the in-house row</strong>, because it is the one teams dismiss and the one that is usually right here.</p>
+  <h4>How the judge itself is run at volume: two tiers, not one</h4>
+  <p><strong>Name the split and the reason for it in one sentence</strong>: the model good enough to trust is too expensive to run on everything, so the judge becomes two judges. Calibration on the gold set, production on 5% to 20% of traffic.</p>
+  <p>The sentence that matters: <strong>the cheap judge is only worth reading because the expensive one gave it a number.</strong> Without that, it is an opinion at scale with a dashboard.</p>
+  <h4>Where the judge sits: in the request, or beside it</h4>
+  <p>Async is the default. <strong>Read only the bottom row of that table out loud:</strong> the moment the judge can stop an answer it is a control, not an evaluator, and week 2's requirements all apply.</p>
+  <p>That closes the question from <span class="off" data-off="01:45">01:45</span> by turning it into an operations decision, which is the shape this room thinks in.</p>
+  <p class="quiet">Structured output and reasoning alignment are one line each on their page. Do not teach them; they are there so nobody has to rediscover them.</p>
   </div></div>
 
   <div class="beat" id="s-0219" data-ref="t3-r-quiz"><span class="t"><span class="off" data-off="02:19">02:19</span></span><div class="b">
     <h4>Topic quiz: model-based grading</h4>
     <span class="pairs">alone, in writing · 3 min</span>
-    <p><strong>Question three is the sharpest in the week.</strong> Read the week 2 quote aloud first, then let somebody argue for yes before giving the distinction.</p>
+    
+  <p><strong>Question two changed with the kappa material.</strong> C is the distractor to spend time on: 0.35 reads like "35% correct" and it is not an error rate at all. Ask which three answers 0.35 says are wrong — it does not say, and the error rate does.</p>
+  <p><strong>Question three is the sharpest in the week.</strong> Read the week 2 quote aloud first, then let somebody argue for yes before giving the distinction.</p>
   </div></div>
 </article>
 </div>
@@ -1113,16 +1213,33 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <span class="pairs">&#8596; <span class="off" data-off="01:55">01:55</span> &#183; seventy per cent, and what the misses have in common</span>
   <h3>The failure a grader cannot see</h3>
   
-  <h4>Is 70% agreement good?</h4>
-  <p>No. Above 80% is the working target. And part of any raw agreement figure is chance, which is what Cohen's kappa subtracts.</p>
+  <h4>What does 70% agreement actually mean?</h4>
+  <p>On 7 of 10 answers the grader agreed with the label. Not a mark, not accuracy. The two-by-two is 5 both-pass, 2 both-fail, 1 you-pass-it-fails, 2 you-fail-it-passes.</p>
+  <h4>Why 70% is not as good as it sounds: Cohen's kappa</h4>
   <details>
-    <summary><span class="chev">›</span> The worked example, if the room pushes back on kappa</summary>
+    <summary><span class="chev">›</span> The full working, to put on the board</summary>
     <div class="dbody">
-      <p>Ten labels, eight of them pass. A grader that passes everything scores 8 of 10, which is 80% raw agreement, having read nothing at all.</p>
-      <p><strong>Its kappa is 0.</strong> That is the number to report, and it is why 80% raw on a lopsided label set is not the 80% target.</p>
-      <p>Do not derive the formula. The point is that the headline figure flatters a lazy grader, and one word fixes it.</p>
+      <pre>p_o = 7/10                      = 0.70
+you passed 6/10, grader passed 7/10
+p_e = (0.6 x 0.7) + (0.4 x 0.3) = 0.54
+kappa = (0.70 - 0.54)/(1 - 0.54)
+      = 0.16 / 0.46             = 0.35</pre>
+      <p><strong>0.35 against a production bar of 0.60.</strong> Read kappa as: of the agreement still available above chance, the grader got 35% of it.</p>
+      <p>If somebody asks about Krippendorff's alpha: same job, copes with more than two labels and more than two reviewers. Kappa first.</p>
     </div>
   </details>
+  <h4>The pattern in the misses, and why it is not a coincidence</h4>
+  <p>A3 and A4 are the same failure twice: the wrong clause, stated well.</p>
+  <h4>Why the grader cannot see that failure</h4>
+  <details>
+    <summary><span class="chev">›</span> The answer to "could a better prompt fix it?"</summary>
+    <div class="dbody">
+      <p><strong>No, and the reason is information rather than wording.</strong> The grader is handed the answer and the rubric. The governing clause is a fact about the <em>case</em>, which was never passed in.</p>
+      <p>Ask the proposer: where in your prompt is the clause that governs this case? There is no answer. A grader cannot check what it was not given.</p>
+    </div>
+  </details>
+  <h4>So how do you know the grader itself is not making mistakes?</h4>
+  <p>Measure against people, anchor the rubric, reason before scoring, cross-family judge with position swapping, re-measure on a schedule. <strong>Only the first is evidence.</strong></p>
   <h4>Three ways a judge is wrong that have nothing to do with your rubric</h4>
   <p>Position bias, verbosity bias, self-enhancement bias. Documented properties of the judge, not faults in the rubric. The third decides whether <span class="off" data-off="04:40">04:40</span>'s comparison means anything.</p>
   <h4>Reach for graders in this order, and stop at the first one that works</h4>
@@ -1198,16 +1315,17 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <p><strong>The likely wrong answer.</strong> "Whichever is quickest to write."</p>
   <p><strong>What is right about it.</strong> Speed is a real constraint and the model grader often is quickest to write. It is the slowest to trust, because it is the only one of the three that needs a labelled set before it means anything.</p>
   <h4>Question 2 &#183; this topic</h4>
-  <p>Your model grader agrees with your labels 7 times in 10. What is that number?</p>
+  <p>Your grader agrees with your labels 7 times in 10, and its Cohen’s kappa is 0.35. Which is the honest summary?</p>
   <ul class="opt">
-    <li>A. A mark for the grader, and it needs to be higher</li>
-    <li>B. The sentence "three answers in ten, this verdict is wrong, and here is which three" <span class="ok">&#8212; correct</span></li>
-    <li>C. A confidence threshold to route on</li>
-    <li>D. Evidence the grader is unusable</li>
+    <li>A. 70% is the headline and 0.35 is a statistical adjustment to it</li>
+    <li>B. It agrees often, and most of the agreement is what chance would have given you anyway <span class="ok">&#8212; correct</span></li>
+    <li>C. 0.35 means the grader’s verdict is wrong 65% of the time</li>
+    <li>D. The two numbers contradict each other, so one is computed wrongly</li>
   </ul>
-  <p><strong>The answer.</strong> <p><strong>B.</strong> A treats a measurement as a score. C is week 2’s confidence argument returning. D is too fast: a grader at 70% whose misses are all one kind is more useful than one at 95% whose misses are scattered.</p></p>
-  <p><strong>The likely wrong answer.</strong> D, because 70% sounds unusable.</p>
-  <p><strong>What is right about it.</strong> It would be unusable as a release gate on its own, which is correct. What makes it usable is that the three it gets wrong are nameable.</p>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> You passed 6 of 10 and the grader passed 7 of 10, so chance alone agrees 54% of the time. Kappa asks how much of the remaining room the grader covered, and the answer is 35% of it.</p>
+          <p><strong>C is the misreading to catch</strong>, and it is the common one. Kappa is not an error rate. The error rate is three verdicts in ten. 0.35 is a statement about how much of the agreement was earned.</p></p>
+  <p><strong>The likely wrong answer.</strong> C, because 0.35 reads like 35% correct.</p>
+  <p><strong>What is right about it.</strong> The instinct is right that 0.35 is bad news, and it is. What is wrong is the arithmetic: kappa has no direct reading as a percentage of answers. Ask which three answers the 0.35 says are wrong. It does not say.</p>
   <h4>Question 3 &#183; from earlier</h4>
   <blockquote>Week 2’s table for choosing a mechanism, row four, asked <em>"Is the action irreversible?"</em> and answered <em>"A model may never be the only control."</em></blockquote>
   <p>The grader you built this hour is a model. Does it break that rule?</p>
@@ -1220,7 +1338,10 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <span class="pairs">&#8596; the close of the topic &#183; same words as the learner page</span>
   <h3>The line this topic exists to land</h3>
   <blockquote>A grader is a component with a failure rate, so it needs a number and the number needs somebody’s labels.</blockquote>
-  <p>The 70% is not a mark. It is a sentence naming which three are wrong.</p>
+  
+  <p><strong>Say which number, because they asked.</strong> Two numbers, both from <span class="mono">make w3-agree</span> over ten hand-labelled answers: raw 70% and kappa 0.35, against a production bar of 0.60.</p>
+  <p>Neither is a mark. 70% names which three verdicts are wrong. 0.35 says most of the agreement was luck.</p>
+  <p>Then the line itself: <strong>a grader with no labels has no number, and a grader with no number is an opinion that returns a verdict.</strong></p>
 </article>
 
 <article class="card" id="t3-r-checkpoint">
@@ -1281,6 +1402,13 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
     <h4>Where the gate actually runs: before release, and after it</h4>
     <p>Offline and online. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
     <p>Then the line that ties the day together: <strong>the <span class="off" data-off="00:15">00:15</span> double payment would have been caught by neither.</strong> Offline had no two-process case. Online would have shown ₹2,400 paid and no alert, because nothing was watching for it.</p>
+    <h4>Offline is not one gate. It is three, and they run at different speeds</h4>
+    <p><strong>Point at the budget column and nothing else.</strong> Under a minute, three to five minutes, fifteen to thirty. The tiers are defined by what an engineer will wait for, and the checks were fitted to the time afterwards.</p>
+    <p>The line that makes it land for this room: <strong>tier 1 holds no model calls at all</strong>, because anything that costs money per run cannot sit on every push.</p>
+    <p>Then place their own work: the eight cases from <span class="off" data-off="00:36">00:36</span> are a tier 2 set, and twenty runs each from <span class="off" data-off="00:55">00:55</span> is tier 3.</p>
+    <h4>And the gate does not stop at merge</h4>
+    <p>Four steps: mirror, slice, automatic reversal, harvest. <strong>Spend the time on the last one.</strong> Everything before it protects this release; the harvest is the only mechanism all day that improves the next suite without somebody inventing cases.</p>
+    <p class="qbadge">Tie it back to <span class="off" data-off="00:27">00:27</span>: the harvest is where a class of case you never thought of actually comes from. Nobody invents an adversarial class. They get attacked and then write it down.</p>
     <h4>Where the cases come from, and how they go stale</h4>
     <p>Four sources, two rots. <strong>Do not walk the list.</strong> Point at it and pick the one line the room needs: production log mining is where their missing classes come from, not invention.</p>
     <p>Contamination and drift are worth thirty seconds each because both are silent and both make the score move the wrong way. The defence is one sentence: the eval set is version-controlled beside the code.</p>
@@ -1291,6 +1419,11 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
     <span class="pairs">Components and design &#183; Whole room · 7 min</span>
     
     <p>Three things to check, and the first is nearly universal. <strong>Take the written answer on the 92% question</strong> before revealing it, because the room will name a senior person and the answer is the junior one.</p>
+    <h4>Two kinds of threshold, and only one of them can be argued with</h4>
+    <p><strong>This is the part to protect in this beat.</strong> Absolute floor against relative delta. Give one example of each and then the sentence that does the work: "95% faithfulness" is unarguable in the wrong way, "no worse than last release" is arguable in the right way.</p>
+    <p>Then close the loop on the 92%: as a relative gate it is a one-point regression somebody signs in a minute; as an absolute floor it asks for an override of a rule nobody can source, which is how it gets overridden on a call.</p>
+    <p class="qbadge">If one person takes one thing from this topic, this is the better candidate than the thirteen columns. A room that splits its gate rows into floors and deltas has changed how it writes them.</p>
+    <p>Say the asymmetry last, because somebody will find it otherwise: ten releases each one point worse is ten points worse and every one passed. A relative gate needs an absolute floor underneath it.</p>
   </div></div>
 
   <div class="beat" id="s-0256" data-ref="t4-r-lab"><span class="t"><span class="off" data-off="02:56">02:56</span></span><div class="b">
@@ -1309,6 +1442,11 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
     <p>Three minutes, and that buys one list spoken. <strong>Speak the first list and land on the ordering</strong> rather than on any one product. Give no recommendation.</p>
     <p><strong>The other two lists are read, not said.</strong> Name the two headings, say the products are on their page with the cost of each, and move. A room that wants a tool comparison will take the whole close for it.</p>
     <p>If asked which to use: the honest answer is that all three jobs are separate purchases, and the one nobody sells is the evaluation set itself.</p>
+  <h4>What an auditor asks for, and what it costs to be able to answer</h4>
+  <p><strong>Name the three frameworks and the one thing all of them want.</strong> NIST AI RMF as the vocabulary, ISO/IEC 42001 as the one with an auditor at the door, the EU AI Act as the one that is law. Underneath: evidence that the evaluation happened, for the exact thing that shipped.</p>
+  <p>Then the two practices. The bill of materials, and keeping the runs. <strong>The sentence for this room: nobody keeps the judge's reasons, only the scores — and the reasons are what answers "why did it pass in March".</strong></p>
+  <p>Finish on the operational rule, because it is the one that decides whether any of it survives: <strong>put a token budget on each build.</strong> Unbounded evaluation exhausts the quota, somebody switches the gate off, and the governance was theatre from that moment.</p>
+  <p class="quiet">The amber zone is worth one sentence: a regression that neither stops the build nor passes quietly, and requires a named signature. It is <span class="off" data-off="02:49">02:49</span>'s decision owner with a trigger.</p>
   </div></div>
 
   <div class="beat" id="s-0313" data-ref="t4-r-quiz"><span class="t"><span class="off" data-off="03:13">03:13</span></span><div class="b">

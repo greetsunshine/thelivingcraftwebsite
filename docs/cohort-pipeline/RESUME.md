@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 3 October 2026
+**Last updated:** 5 October 2026
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -19,7 +19,52 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
-## Week 3 revised from Sunil's review sheet — 3 October
+## Week 3, review round 2 — 5 October
+
+The sheet gained a **Topic** column and **seventeen new Week 3 rows**: eight on RAG, eight on
+model-based grading, one on release gates. All answered in
+[`docs/teaching/reviews/week-3-review-2026-10-05.md`](../teaching/reviews/week-3-review-2026-10-05.md).
+**Still `status: draft`, so still unreleased.** The clock did not move again: 46 rows, no beat
+added or renamed.
+
+**Three rows asked for judgement, not a change.** The RAG metrics list, the LLM-as-a-judge list
+and the release-gate list all say *evaluate whether this needs adding*. Together they name well
+over a hundred concepts against a day already at exactly 05:00. Each went where it changes a
+decision, or became reference material in an enterprise-scale slot, or was left to the week that
+owns it. Every call is recorded with its reason.
+
+**Cohen's kappa is now taught and implemented.** 01:55 derives it on the board from the real
+label set: p_o 0.70, chance 0.54, **kappa 0.35 against a production bar of 0.60**. And
+`cohens_kappa()` is now in `src/w3_agree.py`, so `make w3-agree` prints it. The lab's new
+experiment is the one that lands it: a grader that passes everything scores **raw 60%, kappa
+0.00**. Both figures were run and read back, not asserted.
+
+**The 01:23 lab now builds something deployable**, which was Sunil's instruction rather than a
+wording fix. The grader needs the governing clause so it cannot run in production; **the
+retrieval margin can**, so the lab returns the gap as a number and escalates instead of paying
+when it is under two. That is week 2's approval gate on a new signal. It is also item 3 of the
+week's after-work, because nine minutes covers the grader comfortably and the guard only just.
+
+**Two diagrams were added as monospace boxes, not images** — the retrieval steps with their
+measurement points at 01:11, and how model-based grading works at 01:50 with the validation loop
+as a dotted path. They use the page's existing terminal-block style, so no new assets and they
+print.
+
+### A contradiction I introduced and caught before it shipped
+
+The first draft of the RAG opener said the agent paid ₹2,000 "by citing the goodwill clause,
+which does not govern this case". **That is false** — GOOD-2.1 *is* the governing clause and it
+is what caps the credit at ₹2,000. It also would have spent 01:45's reveal, which is the real
+right-money-wrong-clause case. Fixed to the near miss the 01:06 trace actually shows, and the
+instructor page now says to stop there and why.
+
+Worth keeping as a habit: **the cross-week quote checker catches stale quotes, and nothing
+catches a newly invented claim that contradicts the trace two beats later.** Reading the beat you
+are referring to is still the only guard.
+
+---
+
+## Week 3 revised from Sunil’s review sheet — 3 October
 
 Ten Week3 rows in the same "Notes Review" sheet, all answered in
 [`docs/teaching/reviews/week-3-review-2026-10-03.md`](../teaching/reviews/week-3-review-2026-10-03.md).
