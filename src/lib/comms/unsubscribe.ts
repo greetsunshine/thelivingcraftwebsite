@@ -296,7 +296,7 @@ export async function applyUnsubscribe(
       stopped_reason: 'unsubscribe',
     })
     .eq('person_id', personId)
-    .in('state', ['active', 'paused']);
+    .in('state', ['awaiting_confirmation', 'active', 'paused']);
   if (seqErr) failed('sequence stop', seqErr);
 
   // 4. Cancel what is already queued. Without this, the unsubscribe is honoured

@@ -3316,8 +3316,8 @@ grant execute on function public.resource_request_submit to service_role;
 -- stopped_reason, because the stop rules, the unsubscribe path and the console
 -- all already act on 'stopped', and a second vocabulary for the same fact is
 -- how one screen disagrees with another. 'completed' is exhausted content.
--- 'pending_confirmation' is not used: consent here is a ticked box, not a
--- confirmed email, and double opt-in is a decision for the owner.
+-- (6 October 2026: double opt-in was added after all, as the state
+-- 'awaiting_confirmation'. See the section at the foot of this file.)
 --
 -- THE CLAIM. A planner claims a due sequence by moving next_send_at forward a
 -- few minutes in one conditional UPDATE (a lease). Two planners racing for the
@@ -3364,3 +3364,47 @@ alter table public.comms_events
   add constraint comms_events_type_check
   check (type in ('sent', 'delivered', 'bounce_hard', 'bounce_soft', 'complaint', 'reply',
                   'unsubscribe', 'deferred', 'opened', 'clicked'));
+
+-- ===========================================================================
+-- ===========================================================================
+-- RESOURCE FOLLOW-UPS, ALIGNED TO THE RESOURCE BRIEF (6 October 2026)
+-- ===========================================================================
+-- ===========================================================================
+--
+-- APPENDED SECTION, idempotent like everything above it. The source is the
+-- outreach package's 05-email-and-resource-routing (revised 29 September).
+-- What it adds:
+--
+--   * comms_sequences.state admits 'awaiting_confirmation'. A tick on the
+--     download gate opens the sequence in this state, and one email asks the
+--     person to confirm. Nothing else is sent until they do (double opt-in).
+--   * comms_sequences.confirmed_at: when they clicked. Days 2, 5, 9 and 14
+--     count from here.
+--   * The one-live-sequence index counts 'awaiting_confirmation' as live, so a
+--     second tick cannot open a second sequence while the first waits.
+--   * consents.confirmed_at: the confirming row carries it. consents stays
+--     append-only; confirming is a new row, never an edit of the tick.
+--
+-- AND ONE DATA CHANGE, also idempotent. A resource sequence opened before
+-- 6 October went straight to 'active' with no confirmation. Those people
+-- ticked a box and were never asked to confirm, so they are moved back to
+-- 'awaiting_confirmation' and the planner sends each of them the request
+-- once. Nothing had been sent to any of them: dispatch has never been on.
+
+alter table public.comms_sequences drop constraint if exists comms_sequences_state_check;
+alter table public.comms_sequences
+  add constraint comms_sequences_state_check
+  check (state in ('awaiting_confirmation', 'active', 'paused', 'stopped', 'completed'));
+
+alter table public.comms_sequences add column if not exists confirmed_at timestamptz;
+
+drop index if exists public.comms_sequences_one_live;
+create unique index if not exists comms_sequences_one_live
+  on public.comms_sequences (person_id)
+  where state in ('awaiting_confirmation', 'active', 'paused');
+
+alter table public.consents add column if not exists confirmed_at timestamptz;
+
+update public.comms_sequences
+   set state = 'awaiting_confirmation', next_send_at = null
+ where route = 'resource' and state = 'active' and confirmed_at is null;

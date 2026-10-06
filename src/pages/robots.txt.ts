@@ -61,6 +61,9 @@ const DISALLOW = [
   // a prefetcher or a link-scanner follows on somebody's behalf, and the action
   // is not one we want taken by a machine that has not read it.
   '/api/unsubscribe',
+  // The double opt-in page. It only means something with a token from an
+  // email, and its GET changes nothing, but it has no business in an index.
+  '/confirm-resource-emails',
 ];
 
 export const GET: APIRoute = () => {

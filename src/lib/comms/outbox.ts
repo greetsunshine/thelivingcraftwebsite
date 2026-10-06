@@ -66,10 +66,13 @@ import { providerFor, type DeliveryOutcome } from './providers/index';
 import { retryPlan, MAX_ATTEMPTS as RETRY_MAX } from './retry';
 import { senderFromEnv } from './sender';
 import { signToken, unsubscribeUrl } from './unsubscribe';
+import { confirmUrl, signConfirmToken } from './confirm';
+import { CONFIRM_ACTION } from './drip-templates';
 import {
   checkEligibility,
   dispatchSwitch,
   replyDetectionAvailable,
+  suppressionFor,
   type Effect,
   type Eligibility,
   type Subject,
@@ -234,9 +237,22 @@ async function deliver(message: OutboxRow): Promise<DeliveryOutcome> {
   const token = message.person_id ? await signToken(message.person_id) : null;
   const links = { unsubscribe: token ? unsubscribeUrl(sender.origin, token) : null };
 
+  // 1b. The confirmation link, for the one message that carries it (the
+  //     double opt-in request, drip.ts). Minted here for the same reason as
+  //     the unsubscribe link: no working link ever sits in the outbox.
+  let body = message.body;
+  if (body.includes(CONFIRM_ACTION)) {
+    const confirmToken =
+      message.sequence_id && message.person_id ? await signConfirmToken(message.sequence_id, message.person_id) : null;
+    if (!confirmToken) {
+      return { kind: 'failed', permanent: false, reason: 'No confirmation link could be signed, so the confirmation request was not sent.' };
+    }
+    body = body.replace(CONFIRM_ACTION, confirmUrl(sender.origin, confirmToken));
+  }
+
   // 2. The text with the footer, and the HTML rendering of the same words.
   //    Null means a marketing body with no unsubscribe link: never sent.
-  const built = materialise({ subject: message.subject, body: message.body, purpose: message.purpose }, links, sender.footer);
+  const built = materialise({ subject: message.subject, body, purpose: message.purpose }, links, sender.footer);
   if (!built) {
     return { kind: 'failed', permanent: false, reason: 'No unsubscribe link could be signed for a marketing message, so it was not sent.' };
   }
@@ -311,7 +327,7 @@ export interface SequenceRow {
   submission_id: string | null;
   route: TemplateRoute;
   cohort_id: string | null;
-  state: 'active' | 'paused' | 'stopped' | 'completed';
+  state: 'awaiting_confirmation' | 'active' | 'paused' | 'stopped' | 'completed';
   anchor_at: string;
   started_at: string;
   paused_at: string | null;
@@ -477,7 +493,7 @@ export async function queueForSubmission(req: QueueRequest): Promise<QueueOutcom
     .from('comms_sequences')
     .select('sequence_id, route, state')
     .eq('person_id', req.personId)
-    .in('state', ['active', 'paused'])
+    .in('state', ['awaiting_confirmation', 'active', 'paused'])
     .maybeSingle();
 
   if (liveErr) {
@@ -1061,9 +1077,9 @@ export async function stopSequence(
 
   const { error } = await client
     .from('comms_sequences')
-    .update({ state: 'stopped', stopped_at: new Date().toISOString(), stopped_reason: reason.slice(0, 500) })
+    .update({ state: 'stopped', stopped_at: new Date().toISOString(), stopped_reason: reason.slice(0, 500), next_send_at: null })
     .eq('sequence_id', sequenceId)
-    .in('state', ['active', 'paused']);
+    .in('state', ['awaiting_confirmation', 'active', 'paused']);
 
   if (error) return { ok: false, detail: failed('sequence record', error) };
 
@@ -1140,6 +1156,7 @@ export async function resumeSequence(
   if (!data) return { ok: false, detail: 'No such sequence.' };
 
   const seq = data as SequenceRow;
+  if (seq.state === 'paused' && seq.route === 'resource') return resumeResourceSequence(client, seq, actor);
   if (seq.state !== 'paused') {
     return {
       ok: false,
@@ -1245,6 +1262,91 @@ export async function cancelMessage(messageId: string, reason: string): Promise<
         detail:
           'Only a queued message can be cancelled. Anything further on has either been handed to a provider or already has an outcome, and cancelling is not how either is undone.',
       };
+}
+
+
+/**
+ * Resume a paused RESOURCE follow-up after review.
+ *
+ * Different from the cohort resume above because the follow-ups are planned
+ * one step at a time (drip.ts): there is no row of missed messages to cancel,
+ * because a pause already cancelled whatever was queued. What the resume does:
+ *
+ *   * refuses unless the person's permission is still there and they are not
+ *     suppressed, checked now rather than assumed from the pause reason;
+ *   * moves the sequence to active and sets next_send_at to now. The planner
+ *     then computes the real slot itself, with the 48-hour rule, so a resume
+ *     never sends anything early and never sends a backlog;
+ *   * records resumed_at, so the pause signals that were reviewed are not
+ *     read again. A NEW reply after the resume pauses it again.
+ */
+async function resumeResourceSequence(
+  client: SupabaseClient,
+  seq: SequenceRow,
+  actor: string,
+): Promise<{ ok: boolean; detail: string; cancelled?: number }> {
+  const { data: person } = await client
+    .from('people')
+    .select('normalised_email')
+    .eq('person_id', seq.person_id)
+    .maybeSingle();
+  const recipient = String(person?.normalised_email ?? '');
+
+  const suppression = await suppressionFor(client, recipient);
+  if (suppression.state !== 'none') {
+    return {
+      ok: false,
+      detail:
+        suppression.state === 'unknown'
+          ? 'Not resumed: the suppression list did not answer.'
+          : `Not resumed: this address is suppressed (${suppression.reason}).`,
+    };
+  }
+
+  const { data: consents, error: consentErr } = await client
+    .from('consents')
+    .select('state, confirmed_at')
+    .eq('person_id', seq.person_id)
+    .eq('purpose', 'marketing')
+    .order('obtained_at', { ascending: false })
+    .limit(50);
+  if (consentErr) return { ok: false, detail: failed('consent record', consentErr) };
+  const rows = consents ?? [];
+  let confirmed = false;
+  for (const r of rows) {
+    if (r.state !== 'granted') break;
+    if (r.confirmed_at) {
+      confirmed = true;
+      break;
+    }
+  }
+  if (!confirmed) {
+    return { ok: false, detail: 'Not resumed: there is no confirmed permission for this person after their last withdrawal.' };
+  }
+
+  const now = new Date().toISOString();
+  const { data: moved, error } = await client
+    .from('comms_sequences')
+    .update({
+      state: 'active',
+      paused_at: null,
+      paused_reason: null,
+      resumed_at: now,
+      resumed_by: actor.slice(0, 120),
+      next_send_at: now,
+    })
+    .eq('sequence_id', seq.sequence_id)
+    .eq('state', 'paused')
+    .select('sequence_id');
+  if (error) return { ok: false, detail: failed('sequence record', error) };
+  if (!moved?.length) return { ok: false, detail: 'Not resumed: the sequence was no longer paused.' };
+
+  return {
+    ok: true,
+    cancelled: 0,
+    detail:
+      'Resumed. The next follow-up goes at the next allowed slot: never sooner than 48 hours after the last one that was sent, and never on a weekend.',
+  };
 }
 
 /**

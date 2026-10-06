@@ -60,13 +60,37 @@ export const MARKETING_CONSENT = {
 } as const satisfies ConsentDefinition;
 
 /**
+ * The wording beside the box on a resource download (ResourceGate.astro).
+ *
+ * Verbatim from the outreach package's resource brief (05-email-and-resource-
+ * routing, revised 29 September 2026, § Consent copy). That document carries
+ * two slightly different sentences for the same box; this is the one under
+ * its own "Consent copy" heading, which is the later and more specific one.
+ *
+ * It is a separate definition rather than a new version of MARKETING_CONSENT
+ * because the two boxes promise different things: the application form's box
+ * is about the programme, this one is about other resources. A record written
+ * from either one must still say which box was ticked.
+ *
+ * A tick here is not yet permission to send. The person must also click the
+ * confirmation email (double opt-in, drip.ts). The confirming row repeats this
+ * wording and version and carries `confirmed_at`.
+ */
+export const RESOURCE_MARKETING_CONSENT = {
+  purpose: 'marketing',
+  version: 'mkt-resource-2026-09-29',
+  wording:
+    'Yes, send me practical resources and occasional updates about The Living Craft cohort. I can unsubscribe at any time.',
+} as const satisfies ConsentDefinition;
+
+/**
  * Every wording that has ever been in use, newest first.
  *
  * Keep retired versions here forever. The console renders a consent record by
  * looking its version up in this list; a version it cannot find is a record it
  * cannot explain, which is worse than a slightly longer file.
  */
-export const CONSENT_HISTORY: ConsentDefinition[] = [MARKETING_CONSENT];
+export const CONSENT_HISTORY: ConsentDefinition[] = [RESOURCE_MARKETING_CONSENT, MARKETING_CONSENT];
 
 export const consentVersion = (version: string): ConsentDefinition | undefined =>
   CONSENT_HISTORY.find((c) => c.version === version);

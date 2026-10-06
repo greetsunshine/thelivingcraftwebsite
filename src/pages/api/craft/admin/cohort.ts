@@ -86,7 +86,7 @@ async function stopCohortSequences(
     .from('comms_sequences')
     .select('sequence_id')
     .eq('cohort_id', cohortId)
-    .in('state', ['active', 'paused']);
+    .in('state', ['awaiting_confirmation', 'active', 'paused']);
 
   if (error) {
     console.error('cohort sequence lookup failed:', error.code ?? 'unknown');

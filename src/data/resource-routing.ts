@@ -16,7 +16,7 @@
 //
 // HOW SELECTION READS THIS (src/lib/comms/drip.ts, `recommend()`):
 //   1. drop every module the person requested, and every module already sent;
-//   2. drop inactive modules;
+//   2. drop inactive modules, and modules not yet released (RELEASES);
 //   3. take the initial resource's `preferredFollowUps`, in order;
 //   4. then the rest whose `roles` include the person's role, in catalogue order;
 //   5. then the rest, in catalogue order.
@@ -48,6 +48,11 @@ export interface DripModule {
   priority: number;
   /** False keeps a module out of every selection. LC-T10 and LC-T11 today. */
   active: boolean;
+  /**
+   * True only once Sunil has confirmed the released version (RELEASES below).
+   * A module that is active but not released is never selected.
+   */
+  released: boolean;
   /** The marketing wording, in drip-templates.ts. */
   templateKey: string;
   /** The button label in the email. From the placement matrix. */
@@ -66,7 +71,7 @@ const m = (
   roles: RoleCode[],
   cta: string,
   active = true,
-): Omit<DripModule, 'priority' | 'templateKey'> => ({
+): Omit<DripModule, 'priority' | 'templateKey' | 'released'> => ({
   id,
   requestIds,
   title,
@@ -78,7 +83,7 @@ const m = (
   cta,
 });
 
-const CATALOGUE: Omit<DripModule, 'priority' | 'templateKey'>[] = [
+const CATALOGUE: Omit<DripModule, 'priority' | 'templateKey' | 'released'>[] = [
   m('LC-T01', ['poc-screen'], 'The POC Selection Tool', '/resources/poc-screen', 'readiness',
     ['LC-G01', 'LC-TPL01', 'LC-T02', 'LC-R02', 'LC-T09'],
     ['founder', 'executive', 'product', 'operations', 'consultant'], 'Use the POC Selection Tool'),
@@ -150,11 +155,32 @@ const CATALOGUE: Omit<DripModule, 'priority' | 'templateKey'>[] = [
     ['product', 'engineering_leader', 'founder', 'operations'], 'Run the check', false),
 ];
 
-/** The catalogue in catalogue order, with the priority and the template key filled in. */
+/**
+ * Which modules Sunil has confirmed for sending, and at which version.
+ *
+ * The resource brief (05-email-and-resource-routing, § Current catalogue and
+ * release guard): "All begin disabled pending technical review and relevant
+ * delivery tests." and "A URL returning 200 does not set released=true. Ein
+ * must map these handoff IDs to the actual backend registry and Sunil must
+ * confirm the released version before a module can be selected."
+ *
+ * So this starts EMPTY, and nothing is selected until it is not. To release a
+ * module, add a line here in a reviewed pull request:
+ *
+ *   'LC-T02': { version: '<the version Sunil confirmed>', confirmedBy: 'Sunil Mathew', on: '2026-10-07' },
+ *
+ * While this is empty the planner HOLDS every due sequence rather than ending
+ * it: "nothing is released yet" is a state of the catalogue, not a sign that
+ * this person has seen everything. See runDripPlanner() in drip.ts.
+ */
+export const RELEASES: Readonly<Record<string, { version: string; confirmedBy: string; on: string }>> = {};
+
+/** The catalogue in catalogue order, with the priority, the template key and the release filled in. */
 export const DRIP_MODULES: readonly DripModule[] = CATALOGUE.map((x, i) => ({
   ...x,
   priority: i + 1,
   templateKey: `recommend-${x.id.toLowerCase()}`,
+  released: Object.prototype.hasOwnProperty.call(RELEASES, x.id),
 }));
 
 export const moduleById = (id: string): DripModule | undefined =>

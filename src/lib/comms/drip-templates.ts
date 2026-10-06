@@ -32,11 +32,16 @@
 // approved text is the text WITH the placeholders in it:
 //
 //   {{first_name}}          the person's first name, or nothing
-//   {{requested_title}}     the title of the resource that opened the sequence
+//   {{relevance}}           at most one relevance sentence (relevanceSentence()
+//                           below), or the paragraph is removed
 //   {{cohort_invitation}}   the date-aware cohort block (resource-cohort-copy.ts):
 //                           the October invitation while applications are open,
 //                           the evergreen sentence after they close
 //   {{action:unsubscribe}}  the signed one-click link, minted at dispatch
+//
+// The resource brief (05-email-and-resource-routing): "The complete email
+// modules work with 'Hi,' and no extra relevance sentence." So every body
+// below reads correctly with the {{relevance}} paragraph removed.
 //
 // The substitution happens at queue time in drip.ts, from data this codebase
 // owns (the person row, the catalogue, facts.ts). Nothing typed by anybody
@@ -53,8 +58,15 @@ import type { PackageTemplate } from './templates';
 // With the extension, so `node --test` can load this module directly.
 import { DRIP_MODULES } from '../../data/resource-routing.ts';
 
-/** The package these words answer to. A new form of words is a new version. */
-export const DRIP_PACKAGE_VERSION = 'LC-OUTREACH-2026-09-29';
+/**
+ * The package these words answer to. A new form of words is a new version.
+ *
+ * '.2' since 6 October 2026: the acknowledgement line became the brief's
+ * relevance sentence, and the confirmation request was added. The first
+ * version's rows stay in the store under 'LC-OUTREACH-2026-09-29' and are
+ * never selected again.
+ */
+export const DRIP_PACKAGE_VERSION = 'LC-OUTREACH-2026-09-29.2';
 
 export const SIGN_OFF = 'Sunil Mathew · The Living Craft';
 
@@ -211,7 +223,7 @@ const W: Record<string, Wording> = {
     cohortLine: 'Work through those decisions on a system you build and review.',
   },
   // LC-T10 and LC-T11: the package's own bodies (additional-resource-emails),
-  // with the acknowledgement line the brief asks for added in front.
+  // with the relevance paragraph in front, like every other module.
   'LC-T10': {
     subject: 'Can your agent tell silence from failure?',
     bridge: 'A tool call times out. That means the answer did not arrive; it does not establish whether the action happened.',
@@ -231,7 +243,7 @@ const W: Record<string, Wording> = {
 /**
  * The body, in the placeholder form that is stored and approved.
  *
- * Paragraphs, in the package's order: greeting, the acknowledgement and the
+ * Paragraphs, in the package's order: greeting, the relevance sentence, the
  * bridge, what the resource is, the call to action with its URL, the cohort
  * block, the sign-off. The unsubscribe action is appended by `renderMessage()`
  * as the last line, the same as for the twelve.
@@ -240,7 +252,8 @@ const bodyFor = (id: string, url: string, cta: string): string => {
   const w = W[id];
   return [
     'Hi {{first_name}},',
-    `You asked for {{requested_title}}. ${w.bridge}`,
+    '{{relevance}}',
+    w.bridge,
     w.about,
     `${cta}: ${url}`,
     `${w.cohortLine} {{cohort_invitation}}`,
@@ -281,22 +294,104 @@ export const UNSUBSCRIBE_CONFIRMATION_TEMPLATE: PackageTemplate = {
   version: DRIP_PACKAGE_VERSION,
 };
 
+/** Where the signed confirmation link goes in the body. Minted at dispatch, like the unsubscribe link. */
+export const CONFIRM_ACTION = '{{action:confirm}}';
+
+/**
+ * The confirmation request: the one email a person gets after ticking the box
+ * on a download, before anything else.
+ *
+ * Verbatim from the resource brief (05-email-and-resource-routing,
+ * § Subscription confirmation email), with the link placeholder where the
+ * brief has {{PLACEHOLDER:personal_confirmation_url}}. Transactional: it
+ * answers what the person just asked for, carries no cohort promotion, and is
+ * not itself marketing. The footer (identity, preferences link) is appended at
+ * dispatch like every other message.
+ */
+export const CONFIRMATION_TEMPLATE: PackageTemplate = {
+  key: 'confirm-resource-emails',
+  route: 'resource',
+  dayOffset: 0,
+  purpose: 'transactional',
+  subject: 'Confirm your Living Craft resource emails',
+  body: [
+    'Hi,',
+    'Please confirm that you want practical resources and occasional cohort updates from The Living Craft.',
+    `Confirm my subscription: ${CONFIRM_ACTION}`,
+    "If you didn't ask for these updates, ignore this email. You won't be added to the sequence.",
+    'The Living Craft',
+  ].join('\n\n'),
+  actions: [],
+  version: DRIP_PACKAGE_VERSION,
+};
+
+/** The preview line the brief gives for the confirmation request. */
+export const CONFIRMATION_PREVIEW = 'One step to confirm the resource updates you requested.';
+
 export const dripTemplateFor = (key: string): PackageTemplate | undefined =>
   key === UNSUBSCRIBE_CONFIRMATION_TEMPLATE.key
     ? UNSUBSCRIBE_CONFIRMATION_TEMPLATE
-    : DRIP_TEMPLATES.find((t) => t.key === key);
+    : key === CONFIRMATION_TEMPLATE.key
+      ? CONFIRMATION_TEMPLATE
+      : DRIP_TEMPLATES.find((t) => t.key === key);
 
 /** The placeholders a follow-up body may carry. Anything else is left as typed. */
-export const DRIP_PLACEHOLDERS = ['first_name', 'requested_title', 'cohort_invitation'] as const;
+export const DRIP_PLACEHOLDERS = ['first_name', 'relevance', 'cohort_invitation'] as const;
+
+/**
+ * The brief's role sentences, keyed by our role codes.
+ *
+ * The brief has four: engineering manager, architect, engineer, and an
+ * employer-funding goal. Our role list (audience-roles.ts) has
+ * 'engineering_leader' and 'engineer', so those two are used. It has no
+ * architect option, and no form asks about employer funding, so those two
+ * sentences cannot be chosen from anything a person told us. They are kept
+ * here, unused, so the day a form asks, the words are already the approved
+ * ones. "Never invent a name" applies to roles too: no sentence is chosen
+ * from a guess.
+ */
+export const ROLE_SENTENCES: Readonly<Record<string, string>> = {
+  engineering_leader:
+    'You mentioned leading an engineering team, so this may be useful in a design discussion with the people responsible for the workflow.',
+  engineer: 'You mentioned hands-on engineering work, so you can try this with one small, non-sensitive workflow.',
+};
+
+/** Kept for when a form asks. Not reachable from any role code today. */
+export const UNUSED_ROLE_SENTENCES = {
+  architect: 'You mentioned architecture work, so this resource focuses on a boundary you can make explicit in the design.',
+  employerFunding: 'You mentioned employer support, so this may help you connect your learning goal to a team conversation.',
+} as const;
+
+/**
+ * At most one relevance sentence, or null for none.
+ *
+ * The brief: "Use at most one relevance sentence; default to the known
+ * request, then a voluntary goal/role, then neutral copy." And the request
+ * sentence's exact form: "You requested the POC Selection Tool. This resource
+ * looks at another decision around the same kind of workflow."
+ */
+export function relevanceSentence(args: { requestedTitle: string | null; roleCode: string | null }): string | null {
+  if (args.requestedTitle) {
+    const t = args.requestedTitle.trim();
+    const named = /^the\s/i.test(t) ? `the ${t.slice(4)}` : t;
+    return `You requested ${named}. This resource looks at another decision around the same kind of workflow.`;
+  }
+  if (args.roleCode && ROLE_SENTENCES[args.roleCode]) return ROLE_SENTENCES[args.roleCode];
+  return null;
+}
 
 /** Fill the placeholders. Pure; the caller supplies every value. */
 export function fillDripBody(
   body: string,
-  values: { firstName: string | null; requestedTitle: string; cohortInvitation: string },
+  values: { firstName: string | null; relevance: string | null; cohortInvitation: string },
 ): string {
   const greeting = values.firstName ? `Hi ${values.firstName},` : 'Hi,';
-  return body
+  const filled = body
     .replace('Hi {{first_name}},', greeting)
-    .replaceAll('{{requested_title}}', values.requestedTitle)
     .replaceAll('{{cohort_invitation}}', values.cohortInvitation);
+  // No sentence: the paragraph goes, with its blank line, so the module reads
+  // as the brief says it must: complete with "Hi," and nothing extra.
+  return values.relevance
+    ? filled.replace('{{relevance}}', values.relevance)
+    : filled.replace(/\n\n\{\{relevance\}\}(?=\n\n)/, '').replace('{{relevance}}', '');
 }

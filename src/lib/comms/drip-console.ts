@@ -11,7 +11,7 @@ import { db } from '../admin/supabase';
 import type { Answer } from '../admin/pipeline-queries';
 import type { Identity } from '../admin/staff';
 import { can, refusal, type Capability } from '../pipeline/roles';
-import { DRIP_PACKAGE_VERSION, DRIP_TEMPLATES, UNSUBSCRIBE_CONFIRMATION_TEMPLATE } from './drip-templates';
+import { CONFIRMATION_TEMPLATE, DRIP_PACKAGE_VERSION, DRIP_TEMPLATES, UNSUBSCRIBE_CONFIRMATION_TEMPLATE } from './drip-templates';
 import { dripView, type DripView } from './drip';
 import { renderMessage, templateRow, verifyStored, type PackageTemplate, type StoredTemplate } from './templates';
 import { moduleById } from '../../data/resource-routing';
@@ -29,8 +29,8 @@ const failed = (what: string, error: unknown): string => {
   return `${what} did not answer.`;
 };
 
-/** Every follow-up wording this build knows: the modules plus the unsubscribe confirmation. */
-export const ALL_DRIP_TEMPLATES: readonly PackageTemplate[] = [...DRIP_TEMPLATES, UNSUBSCRIBE_CONFIRMATION_TEMPLATE];
+/** Every follow-up wording this build knows: the confirmation request, the modules and the unsubscribe confirmation. */
+export const ALL_DRIP_TEMPLATES: readonly PackageTemplate[] = [CONFIRMATION_TEMPLATE, ...DRIP_TEMPLATES, UNSUBSCRIBE_CONFIRMATION_TEMPLATE];
 
 export async function loadDripTemplates(): Promise<{ ok: boolean; inserted: number; detail: string }> {
   const client = db();
@@ -58,6 +58,8 @@ export interface DripTemplateStatus {
   moduleId: string | null;
   title: string;
   active: boolean;
+  /** Sunil has confirmed the released version (RELEASES in resource-routing.ts). Always true for a non-module wording. */
+  released: boolean;
   subject: string;
   body: string;
   version: string;
@@ -84,8 +86,15 @@ export async function dripTemplateStatuses(who: Identity | undefined): Promise<A
     out.push({
       key: t.key,
       moduleId: mod?.id ?? null,
-      title: mod?.title ?? (t.key === UNSUBSCRIBE_CONFIRMATION_TEMPLATE.key ? 'Unsubscribe confirmation' : t.key),
+      title:
+        mod?.title ??
+        (t.key === UNSUBSCRIBE_CONFIRMATION_TEMPLATE.key
+          ? 'Unsubscribe confirmation'
+          : t.key === CONFIRMATION_TEMPLATE.key
+            ? 'Confirmation request (double opt-in)'
+            : t.key),
       active: mod ? mod.active : true,
+      released: mod ? mod.released : true,
       subject: t.subject,
       body: renderMessage(t).body,
       version: t.version,
@@ -115,6 +124,7 @@ export interface DripSequenceView {
   resourceTitle: string;
   stepsSent: number;
   nextSendAt: string | null;
+  confirmedAt: string | null;
   sent: { step: number; moduleId: string; title: string }[];
   failures: { messageId: string; state: string; error: string | null; at: string }[];
 }
@@ -129,6 +139,7 @@ interface SeqRow {
   resource_id: string | null;
   steps_sent: number | null;
   next_send_at: string | null;
+  confirmed_at: string | null;
   people: { name: string | null; normalised_email: string | null; role: string | null; role_code: string | null } | null;
 }
 
@@ -140,7 +151,7 @@ export async function dripSequenceRows(who: Identity | undefined, limit = 200): 
 
   const { data, error } = await client
     .from('comms_sequences')
-    .select('sequence_id, person_id, started_at, state, stopped_reason, paused_reason, resource_id, steps_sent, next_send_at, people(name, normalised_email, role, role_code)')
+    .select('sequence_id, person_id, started_at, state, stopped_reason, paused_reason, resource_id, steps_sent, next_send_at, confirmed_at, people(name, normalised_email, role, role_code)')
     .eq('route', 'resource')
     .order('started_at', { ascending: false })
     .limit(Math.min(limit, 500));
@@ -193,6 +204,7 @@ export async function dripSequenceRows(who: Identity | undefined, limit = 200): 
         resourceTitle: mod?.title ?? (r.resource_id ?? 'unknown'),
         stepsSent: Number(r.steps_sent ?? 0),
         nextSendAt: r.next_send_at,
+        confirmedAt: r.confirmed_at,
         sent: (sentBy.get(r.sequence_id) ?? []).sort((a, b) => a.step - b.step),
         failures: failBy.get(r.sequence_id) ?? [],
       };

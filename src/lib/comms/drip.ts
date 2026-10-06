@@ -10,10 +10,47 @@
 // ───────────────────────────────────────────────────────────────────────────
 //
 // Somebody asks for a resource and ticks the marketing box. The resource goes
-// at once (the transactional delivery, resources.ts). From calendar day 2 a
-// sequence recommends one other resource per step, chosen at the moment of
-// sending from the routing catalogue, never the one they asked for and never
-// one already sent, until the catalogue is used up or the person stops it.
+// at once (the transactional delivery, resources.ts). The sequence opens
+// AWAITING CONFIRMATION and one email asks the person to confirm. Once they
+// click it, a step falls due on calendar days 2, 5, 9 and 14 after the click,
+// then seven days after each actual send. Each step recommends one other
+// resource, chosen at the moment of sending from the routing catalogue, never
+// the one they asked for and never one already sent, until the catalogue is
+// used up or the person stops it.
+//
+// THE SOURCE is the outreach package's resource brief,
+// 05-email-and-resource-routing (revised 29 September 2026). This file was
+// brought in line with it on 6 October 2026: the confirmation step, the
+// schedule, the pause rules, the release guard and the relevance sentences
+// all come from that document.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// THE SCHEDULE, AND THE THREE RULES THAT BOUND IT
+// ───────────────────────────────────────────────────────────────────────────
+//
+//   * Days 2, 5, 9 and 14 count from the CONFIRMATION, in calendar days in
+//     Asia/Kolkata, at 10:00. After step 4, seven days after the last ACTUAL
+//     send. A weekend slot moves to Monday 10:00.
+//   * At least 48 hours between actual sends, which also means at most one a
+//     day. A slot that would break that moves to the first weekday 10:00
+//     after the 48 hours.
+//   * NO CATCH-UP BURST. The next step is not planned while the last one is
+//     still in the outbox, and its time is computed from when the last one
+//     really went. A week of dispatch being off leaves one queued message,
+//     not seven.
+//
+// ───────────────────────────────────────────────────────────────────────────
+// WHAT PAUSES IT, AND WHAT STOPS IT
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Pause (a person reviews it, nothing resumes on its own): a reply, a booked
+// call, an open application or enquiry, a payment, or an operator pausing it
+// by hand ("manual owner"). Stop (for good): an unsubscribe, a hard bounce, a
+// complaint, withdrawn consent. Exhausted: nothing eligible is left.
+//
+// The planner reads the pause signals just before it queues each step. The
+// dispatch sweep then re-checks suppression, consent, replies and the
+// sequence state again just before sending (eligibility.ts).
 //
 // It is a `comms_sequences` row with route 'resource', and its messages are
 // `comms_messages` rows like every other, so the second eligibility check, the
@@ -52,7 +89,7 @@
 
 import { DRIP_MODULES, moduleForRequestId, type DripModule } from '../../data/resource-routing.ts';
 import { roleCodeFor, type RoleCode } from '../../data/audience-roles.ts';
-import { dripTemplateFor, fillDripBody } from './drip-templates.ts';
+import { CONFIRMATION_TEMPLATE, dripTemplateFor, fillDripBody, relevanceSentence } from './drip-templates.ts';
 import { renderMessage } from './templates.ts';
 
 // ---------------------------------------------------------------------------
@@ -60,27 +97,33 @@ import { renderMessage } from './templates.ts';
 // ---------------------------------------------------------------------------
 
 export interface DripConfig {
-  /** Calendar days after the request for the first follow-up. The brief: 2. */
-  firstOffsetDays: number;
   /**
-   * Calendar days between follow-ups. NOT IN ANY BRIEF OR PACKAGE. The default
-   * is a placeholder until the owner sets COMMS_DRIP_INTERVAL_DAYS.
+   * Calendar days after the confirmation for steps 1 to 4. The brief: "Days
+   * 2, 5, 9 and 14 from the first qualifying opt-in, then weekly".
    */
-  intervalDays: number;
-  /** Local hour of the send, 0-23. The outbox's convention is 10:00. */
+  offsets: readonly number[];
+  /** Calendar days after the last actual send, from step 5 on. The brief: 7. */
+  weeklyDays: number;
+  /** The least time between two actual sends. The brief: 48 hours. */
+  minGapHours: number;
+  /** Local hour of the send, 0-23. The brief: 10:00. */
   hour: number;
-  /** IANA zone the hour is read in. */
+  /** IANA zone the hour and the weekday are read in. The brief: Asia/Kolkata. */
   zone: string;
   /** How long a planner's claim lasts before another may take the row. */
   leaseMinutes: number;
+  /** How soon to look again at a sequence whose last step has not gone yet. */
+  recheckMinutes: number;
 }
 
 export const DEFAULT_DRIP_CONFIG: Readonly<DripConfig> = {
-  firstOffsetDays: 2,
-  intervalDays: 3,
+  offsets: [2, 5, 9, 14],
+  weeklyDays: 7,
+  minGapHours: 48,
   hour: 10,
   zone: 'Asia/Kolkata',
   leaseMinutes: 10,
+  recheckMinutes: 60,
 };
 
 export const isValidZone = (zone: string): boolean => {
@@ -97,15 +140,18 @@ const int = (v: string, fallback: number, min: number, max: number): number => {
   return Number.isFinite(n) && n >= min && n <= max ? n : fallback;
 };
 
-/** The config from an environment reader. Out-of-range values fall back, never throw. */
+/**
+ * The config from an environment reader. Out-of-range values fall back, never
+ * throw. Only the hour and the zone can be changed: the offsets, the weekly
+ * gap and the 48 hours are the brief's, and a setting that quietly overrode
+ * them would be a second source for a decided fact.
+ */
 export function dripConfig(read: (key: string) => string): DripConfig {
   const zone = read('COMMS_DRIP_TIMEZONE').trim();
   return {
-    firstOffsetDays: int(read('COMMS_DRIP_FIRST_OFFSET_DAYS'), DEFAULT_DRIP_CONFIG.firstOffsetDays, 1, 30),
-    intervalDays: int(read('COMMS_DRIP_INTERVAL_DAYS'), DEFAULT_DRIP_CONFIG.intervalDays, 1, 60),
+    ...DEFAULT_DRIP_CONFIG,
     hour: int(read('COMMS_DRIP_SEND_HOUR'), DEFAULT_DRIP_CONFIG.hour, 0, 23),
     zone: zone && isValidZone(zone) ? zone : DEFAULT_DRIP_CONFIG.zone,
-    leaseMinutes: DEFAULT_DRIP_CONFIG.leaseMinutes,
   };
 }
 
@@ -175,6 +221,58 @@ export function sendSlot(anchorISO: string, dayOffset: number, zone: string, hou
   return new Date(t).toISOString();
 }
 
+/** Day of the week in `zone` at instant `t`, 0 = Sunday. */
+const weekdayAt = (t: number, zone: string): number => {
+  const p = wallParts(t, zone);
+  return new Date(Date.UTC(p.y, p.m - 1, p.d)).getUTCDay();
+};
+
+/** A slot on a Saturday or Sunday moves to Monday at the same hour. */
+export function rollToWeekday(slotISO: string, zone: string, hour: number): string {
+  const day = weekdayAt(Date.parse(slotISO), zone);
+  if (day === 6) return sendSlot(slotISO, 2, zone, hour);
+  if (day === 0) return sendSlot(slotISO, 1, zone, hour);
+  return slotISO;
+}
+
+/** The first weekday `hour`:00 at or after the instant `atISO`. */
+export function firstSlotAtOrAfter(atISO: string, zone: string, hour: number): string {
+  const at = Date.parse(atISO);
+  let slot = sendSlot(atISO, 0, zone, hour);
+  if (Date.parse(slot) < at) slot = sendSlot(atISO, 1, zone, hour);
+  return rollToWeekday(slot, zone, hour);
+}
+
+/**
+ * When step `step` (1-based) is due.
+ *
+ *   1. Steps 1 to 4: the offset day after the confirmation. Later steps: seven
+ *      days after the last actual send.
+ *   2. A weekend slot moves to Monday.
+ *   3. If that is under 48 hours after the last actual send, the first
+ *      weekday slot after the 48 hours instead.
+ *
+ * Pure. The planner calls it at the moment a step falls due, with the real
+ * time of the last send, so a late send moves everything after it.
+ */
+export function slotForStep(args: { step: number; enrolledAt: string; lastSentAt: string | null; config?: DripConfig }): string {
+  const cfg = args.config ?? DEFAULT_DRIP_CONFIG;
+  const { zone, hour } = cfg;
+  if (!Number.isInteger(args.step) || args.step < 1) throw new RangeError('slotForStep: step starts at 1');
+
+  let slot =
+    args.step <= cfg.offsets.length
+      ? sendSlot(args.enrolledAt, cfg.offsets[args.step - 1], zone, hour)
+      : sendSlot(args.lastSentAt ?? args.enrolledAt, cfg.weeklyDays, zone, hour);
+  slot = rollToWeekday(slot, zone, hour);
+
+  if (args.lastSentAt) {
+    const floor = Date.parse(args.lastSentAt) + cfg.minGapHours * 3_600_000;
+    if (Date.parse(slot) < floor) slot = firstSlotAtOrAfter(new Date(floor).toISOString(), zone, hour);
+  }
+  return slot;
+}
+
 // ---------------------------------------------------------------------------
 // Selection
 // ---------------------------------------------------------------------------
@@ -192,7 +290,8 @@ export interface RecommendArgs {
 /**
  * The next resource, or null when nothing eligible is left.
  *
- *   1. never the initial resource, never one in `excluded`, never inactive;
+ *   1. never the initial resource, never one in `excluded`, never inactive,
+ *      never one Sunil has not released;
  *   2. the initial resource's preferred follow-ups, in the matrix's order;
  *   3. then modules whose proposed roles include the person's, in catalogue order;
  *   4. then the rest, in catalogue order.
@@ -204,7 +303,8 @@ export function recommend(args: RecommendArgs): DripModule | null {
   if (args.initial) out.add(args.initial.toLowerCase());
 
   const byId = new Map(catalogue.map((m) => [m.id.toLowerCase(), m]));
-  const eligible = (m: DripModule | undefined): m is DripModule => Boolean(m && m.active && !out.has(m.id.toLowerCase()));
+  const eligible = (m: DripModule | undefined): m is DripModule =>
+    Boolean(m && m.active && m.released && !out.has(m.id.toLowerCase()));
 
   const initial = args.initial ? byId.get(args.initial.toLowerCase()) : undefined;
   for (const id of initial?.preferredFollowUps ?? []) {
@@ -225,16 +325,24 @@ export function recommend(args: RecommendArgs): DripModule | null {
 // The store, as this file sees it
 // ---------------------------------------------------------------------------
 
+export type DripState = 'awaiting_confirmation' | 'active' | 'paused' | 'stopped' | 'completed';
+
 export interface DripSequence {
   sequenceId: string;
   personId: string;
   /** The catalogue id, or the raw request id when no module claims it. */
   resourceId: string;
   requestId: string | null;
-  state: 'active' | 'paused' | 'stopped' | 'completed';
+  state: DripState;
   nextSendAt: string | null;
+  /** Steps planned so far. A step is planned once and never again. */
   stepsSent: number;
+  /** When the request that opened it was saved. */
   anchorAt: string;
+  /** When the person clicked the confirmation link. Day 2, 5, 9 and 14 count from here. */
+  confirmedAt: string | null;
+  /** The last reviewed resume, if any. Pause signals older than this were already reviewed. */
+  resumedAt: string | null;
 }
 
 export interface DripPerson {
@@ -250,7 +358,9 @@ export interface DripMessage {
   personId: string;
   templateKey: string;
   templateVersion: string;
-  purpose: 'marketing';
+  /** 'transactional' for the confirmation request only. */
+  purpose: 'marketing' | 'transactional';
+  /** 0 for the confirmation request, 1 upwards for a follow-up. */
   step: number;
   recipient: string;
   subject: string;
@@ -263,7 +373,24 @@ export interface OpenRow {
   requestId: string | null;
   resourceId: string;
   anchorAt: string;
-  nextSendAt: string;
+}
+
+/**
+ * What a person's latest marketing permission is.
+ *
+ *   'confirmed'  granted, and the confirmation link was clicked
+ *   'granted'    a box was ticked, and nobody has clicked the link yet
+ *   'withdrawn'  the most recent record is a withdrawal
+ *   'none'       no record at all
+ *   'unknown'    the read failed; nothing is decided on it
+ */
+export type ConsentRead = 'confirmed' | 'granted' | 'withdrawn' | 'none' | 'unknown';
+
+export interface StepStatus {
+  /** A follow-up for this sequence is still queued, sending or unreconciled. */
+  pending: boolean;
+  /** When the last follow-up actually went, if one did. The 48-hour rule counts from here. */
+  lastSentAt: string | null;
 }
 
 export interface DripStore {
@@ -274,23 +401,76 @@ export interface DripStore {
   person(personId: string): Promise<DripPerson | null>;
   /** The request ids (resource_requests.resource_id) this person has ever asked for. */
   requestedIds(personId: string): Promise<string[]>;
-  /** Catalogue ids already sent in this sequence. */
+  /** Catalogue ids already planned in this sequence. */
   sentIds(sequenceId: string): Promise<string[]>;
+  /** Whether the last follow-up has gone yet, and when the last one went. Null when unknown. */
+  stepStatus(sequenceId: string): Promise<StepStatus | null>;
+  /**
+   * The reasons this person should not be sent marketing right now: a reply, a
+   * booked call, an application, a payment. Empty when there are none; null
+   * when the read failed.
+   */
+  pauseSignals(args: { personId: string; recipient: string; sinceISO: string; everResumed: boolean }): Promise<string[] | null>;
   /** Insert on the outbox. `duplicate` when the idempotency key already exists. */
   queueMessage(m: DripMessage): Promise<{ messageId: string | null; duplicate: boolean }>;
   recordSend(sequenceId: string, moduleId: string, step: number, messageId: string | null): Promise<void>;
   schedule(sequenceId: string, nextSendAtISO: string, stepsSent: number): Promise<void>;
   complete(sequenceId: string, atISO: string): Promise<void>;
   stop(sequenceId: string, reason: string, atISO: string): Promise<void>;
-  /** The one live sequence for a person, whatever its route. */
+  /** Pause, and cancel anything queued for it. Only a person resumes it. */
+  pause(sequenceId: string, reason: string, atISO: string): Promise<void>;
+  /** The one live sequence for a person (awaiting confirmation, active or paused), whatever its route. */
   liveSequenceFor(personId: string): Promise<{ sequenceId: string; route: string; state: string } | null>;
-  /** The most recent marketing consent record for a person. */
-  consentState(personId: string): Promise<'granted' | 'withdrawn' | 'none' | 'unknown'>;
-  /** Append a granted marketing consent row. False when it could not be written. */
+  /** Whether this person has EVER had a resource sequence, in any state. Null when unknown. */
+  hadResourceSequence(personId: string): Promise<boolean | null>;
+  /** One sequence by id, for the confirmation link. */
+  sequence(sequenceId: string): Promise<DripSequence | null>;
+  consentState(personId: string): Promise<ConsentRead>;
+  /** Append a granted, unconfirmed marketing consent row. False when it could not be written. */
   grantConsent(personId: string, source: string, atISO: string): Promise<boolean>;
-  /** Open a resource sequence. `duplicate` when the one-live-sequence index refused. */
+  /** Append the confirming row: granted, with confirmed_at. False when it could not be written. */
+  confirmConsent(personId: string, atISO: string): Promise<boolean>;
+  /** Open a resource sequence awaiting confirmation. `duplicate` when the one-live-sequence index refused. */
   open(row: OpenRow): Promise<{ sequenceId: string | null; duplicate: boolean }>;
+  /** Move awaiting_confirmation to active. False when it was not awaiting (already confirmed, stopped). */
+  activate(sequenceId: string, confirmedAtISO: string, nextSendAtISO: string): Promise<boolean>;
+  /** Sequences awaiting confirmation that have never had a confirmation request queued. */
+  awaitingWithoutRequest(limit: number): Promise<{ sequenceId: string; personId: string }[]>;
 }
+
+// ---------------------------------------------------------------------------
+// The confirmation request
+// ---------------------------------------------------------------------------
+
+/**
+ * The confirmation email for one sequence, ready for the outbox.
+ *
+ * `key` makes it idempotent: 'confirm:<sequence>:1' for the first request,
+ * 'confirm:<sequence>:<date>' for a later one, so a person who ticks the box
+ * three times in an afternoon is sent one confirmation request that day.
+ */
+const confirmationMessage = (seq: { sequenceId: string; personId: string }, person: DripPerson, key: string, atISO: string): DripMessage => {
+  const rendered = renderMessage(CONFIRMATION_TEMPLATE);
+  return {
+    idempotencyKey: key,
+    sequenceId: seq.sequenceId,
+    personId: seq.personId,
+    templateKey: CONFIRMATION_TEMPLATE.key,
+    templateVersion: CONFIRMATION_TEMPLATE.version,
+    purpose: 'transactional',
+    step: 0,
+    recipient: person.recipient,
+    subject: rendered.subject,
+    body: rendered.body,
+    scheduledFor: atISO,
+  };
+};
+
+/** The calendar date in the sending zone, for a once-a-day key. */
+const localDate = (atISO: string, zone: string): string => {
+  const p = wallParts(Date.parse(atISO), zone);
+  return `${p.y}-${String(p.m).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+};
 
 // ---------------------------------------------------------------------------
 // Opening
@@ -308,16 +488,27 @@ export interface OpenRequest {
 }
 
 export type OpenOutcome =
-  | { opened: true; sequenceId: string; resourceId: string; nextSendAt: string }
+  | { opened: true; sequenceId: string; resourceId: string; confirmationQueued: boolean }
   | { opened: false; why: string };
 
 /**
- * Open a follow-up sequence for a saved request, if the person allowed it and
- * has no live sequence already.
+ * Open a follow-up sequence for a saved request, if the person allowed it.
+ *
+ * The sequence opens AWAITING CONFIRMATION and one email goes out asking the
+ * person to confirm. Nothing else is sent until they click it (confirmDrip
+ * below). The brief: "If the person opts in, verify the address through the
+ * selected provider's confirmation flow before marketing starts."
  *
  * THE CONSENT IS RECORDED BEFORE THE LIVE-SEQUENCE CHECK. A person already in
  * the application sequence who ticks the box has still given permission, and
  * that row is evidence worth keeping even though no second sequence opens.
+ *
+ * NO RE-ENROLMENT. A person who has had a resource sequence before, in any
+ * state, does not get a new one from another tick. The brief: "A duplicate
+ * form submission does not create another active sequence, reset the
+ * cadence, clear suppression or re-enrol a stopped contact." Re-enrolment is
+ * a reviewed decision somebody makes in the console, not a side effect of a
+ * download.
  */
 export async function openResourceDrip(store: DripStore, req: OpenRequest): Promise<OpenOutcome> {
   if (!req.consented) {
@@ -333,31 +524,106 @@ export async function openResourceDrip(store: DripStore, req: OpenRequest): Prom
 
   const live = await store.liveSequenceFor(req.personId);
   if (live) {
+    // Still waiting for the click: send the request again, at most once a day.
+    if (live.route === 'resource' && live.state === 'awaiting_confirmation' && live.sequenceId) {
+      const person = await store.person(req.personId);
+      if (person) {
+        const q = await store.queueMessage(
+          confirmationMessage({ sequenceId: live.sequenceId, personId: req.personId }, person, `confirm:${live.sequenceId}:${localDate(at, cfg.zone)}`, at),
+        );
+        return {
+          opened: false,
+          why: q.duplicate
+            ? 'This person is already waiting to confirm, and a confirmation request went today. Nothing more was queued.'
+            : 'This person is already waiting to confirm. The confirmation request was queued again.',
+        };
+      }
+    }
     return {
       opened: false,
       why: `This person already has a ${live.state} ${live.route} sequence. One live sequence per person; the permission was recorded and no second sequence was opened.`,
     };
   }
 
+  const before = await store.hadResourceSequence(req.personId);
+  if (before !== false) {
+    return {
+      opened: false,
+      why:
+        before === null
+          ? 'Whether this person had a follow-up sequence before could not be checked, so none was opened. The permission was recorded.'
+          : 'This person has had a follow-up sequence before. A new tick does not re-enrol them; that is a reviewed decision. The permission was recorded.',
+    };
+  }
+
+  const person = await store.person(req.personId);
+  if (!person) return { opened: false, why: 'The person record could not be read, so no sequence was opened.' };
+
   const module = moduleForRequestId(req.requestResourceId);
   const resourceId = module?.id ?? req.requestResourceId;
-  const nextSendAt = sendSlot(at, cfg.firstOffsetDays, cfg.zone, cfg.hour);
 
-  const opened = await store.open({ personId: req.personId, requestId: req.requestId, resourceId, anchorAt: at, nextSendAt });
+  const opened = await store.open({ personId: req.personId, requestId: req.requestId, resourceId, anchorAt: at });
   if (opened.duplicate) {
     return { opened: false, why: 'Another sequence for this person was opened at the same moment. One live sequence per person; this one was not created.' };
   }
   if (!opened.sequenceId) {
-    return { opened: false, why: 'The sequence record could not be written. The request and the permission are saved; open it from the console.' };
+    return { opened: false, why: 'The sequence record could not be written. The request and the permission are saved.' };
   }
-  return { opened: true, sequenceId: opened.sequenceId, resourceId, nextSendAt };
+
+  const q = await store.queueMessage(
+    confirmationMessage({ sequenceId: opened.sequenceId, personId: req.personId }, person, `confirm:${opened.sequenceId}:1`, at),
+  );
+  return { opened: true, sequenceId: opened.sequenceId, resourceId, confirmationQueued: Boolean(q.messageId) };
+}
+
+// ---------------------------------------------------------------------------
+// Confirming
+// ---------------------------------------------------------------------------
+
+export type ConfirmOutcome = 'confirmed' | 'already' | 'gone';
+
+/**
+ * The person clicked the confirmation link and pressed the button.
+ *
+ *   'confirmed'  the sequence was waiting and is now active; day 2 counts from now
+ *   'already'    it was confirmed before; nothing changed
+ *   'gone'       no such sequence, not this person's, or stopped (an
+ *                unsubscribe, a bounce). Never re-opened from a link.
+ *
+ * A GET never reaches this. The page asks for a button press, because mail
+ * scanners follow every link in a message and a scanner is not a person
+ * saying yes. The brief: "no consent activation on a scanner GET alone".
+ */
+export async function confirmDrip(
+  store: DripStore,
+  args: { sequenceId: string; personId: string; now: Date; config?: DripConfig },
+): Promise<ConfirmOutcome> {
+  const cfg = args.config ?? DEFAULT_DRIP_CONFIG;
+  const seq = await store.sequence(args.sequenceId);
+  if (!seq || seq.personId !== args.personId) return 'gone';
+  if (seq.state !== 'awaiting_confirmation') {
+    return seq.confirmedAt && seq.state !== 'stopped' ? 'already' : 'gone';
+  }
+
+  const consent = await store.consentState(args.personId);
+  if (consent === 'withdrawn' || consent === 'none' || consent === 'unknown') return 'gone';
+
+  const at = args.now.toISOString();
+  if (!(await store.confirmConsent(args.personId, at))) return 'gone';
+
+  const first = slotForStep({ step: 1, enrolledAt: at, lastSentAt: null, config: cfg });
+  const moved = await store.activate(args.sequenceId, at, first);
+  if (moved) return 'confirmed';
+  // Lost a race with a second click, or an unsubscribe landed in between.
+  const again = await store.sequence(args.sequenceId);
+  return again?.confirmedAt && again.state !== 'stopped' ? 'already' : 'gone';
 }
 
 // ---------------------------------------------------------------------------
 // The planner
 // ---------------------------------------------------------------------------
 
-export type PlannerOutcome = 'planned' | 'completed' | 'already-queued' | 'lost-lease' | 'stopped' | 'held';
+export type PlannerOutcome = 'planned' | 'completed' | 'already-queued' | 'lost-lease' | 'stopped' | 'paused' | 'held' | 'waiting';
 
 export interface PlannerLine {
   sequenceId: string;
@@ -373,12 +639,15 @@ export interface PlannerResult {
   considered: number;
   planned: number;
   completed: number;
+  paused: number;
   skipped: number;
+  /** Confirmation requests queued for sequences that never had one (opened before 6 October). */
+  confirmationsQueued: number;
   lines: PlannerLine[];
 }
 
 export interface PlannerEvent {
-  type: 'planned' | 'completed' | 'stopped';
+  type: 'planned' | 'completed' | 'stopped' | 'paused';
   sequenceId: string;
   moduleId: string | null;
   step: number | null;
@@ -397,10 +666,7 @@ export interface PlannerOptions {
 
 export const PLANNER_LIMIT = 50;
 
-const firstNameOf = (name: string | null): string | null => {
-  const t = (name ?? '').trim().split(/\s+/)[0] ?? '';
-  return t ? t : null;
-};
+const later = (now: Date, minutes: number): string => new Date(now.getTime() + minutes * 60_000).toISOString();
 
 export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Promise<PlannerResult> {
   const now = opts.now ?? new Date();
@@ -414,12 +680,31 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
       /* reporting must never stop the work */
     }
   };
+  const limit = Math.min(opts.limit ?? PLANNER_LIMIT, PLANNER_LIMIT);
 
-  const due = await store.due(nowISO, Math.min(opts.limit ?? PLANNER_LIMIT, PLANNER_LIMIT));
+  // ── 0. Sequences that never had a confirmation request ─────────────────
+  // Those opened before 6 October were opened straight into 'active'; the
+  // schema moved them back to 'awaiting_confirmation'. They are owed the one
+  // email that asks. The key makes this run-twice safe.
+  let confirmationsQueued = 0;
+  for (const w of await store.awaitingWithoutRequest(limit)) {
+    const person = await store.person(w.personId);
+    if (!person) continue;
+    const q = await store.queueMessage(confirmationMessage(w, person, `confirm:${w.sequenceId}:1`, nowISO));
+    if (q.messageId && !q.duplicate) confirmationsQueued += 1;
+  }
+
+  const due = await store.due(nowISO, limit);
   const lines: PlannerLine[] = [];
   let planned = 0;
   let completed = 0;
+  let paused = 0;
   let skipped = 0;
+
+  // Nothing released means nothing can be chosen for anybody. That is a fact
+  // about the catalogue, so it holds every sequence rather than ending each
+  // one as if the person had seen everything.
+  const anyReleased = catalogue.some((m) => m.active && m.released);
 
   for (const seq of due) {
     const line = (outcome: PlannerOutcome, detail: string, extra: Partial<PlannerLine> = {}) =>
@@ -432,15 +717,15 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
     }
 
     // ── 1. The lease ───────────────────────────────────────────────────────
-    const until = new Date(now.getTime() + cfg.leaseMinutes * 60_000).toISOString();
-    const won = await store.lease(seq.sequenceId, seq.nextSendAt, until);
+    const won = await store.lease(seq.sequenceId, seq.nextSendAt, later(now, cfg.leaseMinutes));
     if (!won) {
       skipped += 1;
       line('lost-lease', 'Claimed by another planner. One sequence, one claim.');
       continue;
     }
+    const giveBack = (at: string = seq.nextSendAt!) => store.schedule(seq.sequenceId, at, seq.stepsSent);
 
-    // ── 2. Who, and what they have already ─────────────────────────────────
+    // ── 2. Who ─────────────────────────────────────────────────────────────
     const person = await store.person(seq.personId);
     if (!person) {
       await store.stop(seq.sequenceId, 'person record missing', nowISO);
@@ -450,10 +735,7 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
       continue;
     }
 
-    // ── 2b. Permission, re-read every step ────────────────────────────────
-    // The sweep re-checks it too, immediately before dispatch; this check is
-    // earlier and cheaper, and it stops the sequence rather than cancelling
-    // one message at a time.
+    // ── 3. Permission, re-read every step ──────────────────────────────────
     const consent = await store.consentState(seq.personId);
     if (consent === 'withdrawn' || consent === 'none') {
       const reason = consent === 'withdrawn' ? 'consent withdrawn' : 'no marketing consent on record';
@@ -463,10 +745,77 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
       line('stopped', `${reason[0].toUpperCase()}${reason.slice(1)}. Stopped; nothing is sent without a recorded permission.`);
       continue;
     }
-    if (consent === 'unknown') {
-      await store.schedule(seq.sequenceId, seq.nextSendAt, seq.stepsSent);
+    if (consent === 'unknown' || consent === 'granted' || !seq.confirmedAt) {
+      await giveBack();
       skipped += 1;
-      line('held', 'The consent record did not answer. Nothing is sent on an unestablished check; the step is still due.');
+      line(
+        'held',
+        consent === 'unknown'
+          ? 'The consent record did not answer. Nothing is sent on an unestablished check; the step is still due.'
+          : 'Active, but no confirmed permission is on record. Nothing is sent until the confirmation link is clicked.',
+      );
+      continue;
+    }
+
+    // ── 4. Pause signals: a reply, a call, an application, a payment ──────
+    // The brief: these "pause the sequence and cancel pending nurture ... no
+    // automatic resume". Only events since the last reviewed resume count, so
+    // a person somebody has already looked at is not paused again for the
+    // same reply.
+    const signals = await store.pauseSignals({
+      personId: seq.personId,
+      recipient: person.recipient,
+      sinceISO: seq.resumedAt ?? seq.anchorAt,
+      everResumed: Boolean(seq.resumedAt),
+    });
+    if (signals === null) {
+      await giveBack(later(now, cfg.recheckMinutes));
+      skipped += 1;
+      line('held', 'Whether this person replied, booked, applied or paid could not be checked. Held, and checked again shortly.');
+      continue;
+    }
+    if (signals.length) {
+      const reason = signals.join('; ');
+      await store.pause(seq.sequenceId, reason, nowISO);
+      await emit({ type: 'paused', sequenceId: seq.sequenceId, moduleId: null, step: null });
+      paused += 1;
+      line('paused', `Paused: ${reason}. A person reviews it; nothing resumes on its own.`);
+      continue;
+    }
+
+    // ── 5. The previous step has to have gone ──────────────────────────────
+    // "Seven days after each actual send" and "at least 48 hours between
+    // actual sends": both count from a real send, so a step that is still in
+    // the outbox (dispatch off, a hold, an unknown outcome) blocks the next
+    // one. This is what stops a backlog from leaving as a burst.
+    const status = await store.stepStatus(seq.sequenceId);
+    if (!status) {
+      await giveBack(later(now, cfg.recheckMinutes));
+      skipped += 1;
+      line('held', 'The outbox did not answer, so whether the last follow-up went is unknown. Held.');
+      continue;
+    }
+    if (status.pending) {
+      await giveBack(later(now, cfg.recheckMinutes));
+      skipped += 1;
+      line('waiting', `Step ${seq.stepsSent} has not been sent yet. The next one waits for it.`);
+      continue;
+    }
+
+    const step = seq.stepsSent + 1;
+    const slot = slotForStep({ step, enrolledAt: seq.confirmedAt, lastSentAt: status.lastSentAt, config: cfg });
+    if (Date.parse(slot) > now.getTime()) {
+      await giveBack(slot);
+      skipped += 1;
+      line('waiting', `Step ${step} is not due until ${slot}.`);
+      continue;
+    }
+
+    // ── 6. Choose ──────────────────────────────────────────────────────────
+    if (!anyReleased) {
+      await giveBack(later(now, 24 * 60));
+      skipped += 1;
+      line('held', 'No resource in the catalogue is released yet (RELEASES in resource-routing.ts). Held, not ended.');
       continue;
     }
 
@@ -477,25 +826,21 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
       excluded.add(m ? m.id : id);
     }
 
-    const step = seq.stepsSent + 1;
     const roleCode = (person.roleCode as RoleCode | null) ?? roleCodeFor(person.role);
     const pick = recommend({ initial: seq.resourceId, excluded, roleCode, catalogue });
 
-    // ── 3. Nothing left: done ──────────────────────────────────────────────
     if (!pick) {
       await store.complete(seq.sequenceId, nowISO);
       await emit({ type: 'completed', sequenceId: seq.sequenceId, moduleId: null, step: null });
       completed += 1;
-      line('completed', `Content exhausted after ${seq.stepsSent} step${seq.stepsSent === 1 ? '' : 's'}. Completed.`);
+      line('completed', `Content exhausted after ${seq.stepsSent} step${seq.stepsSent === 1 ? '' : 's'}. Completed; a new tick does not restart it.`);
       continue;
     }
 
-    // ── 4. The wording ─────────────────────────────────────────────────────
+    // ── 7. The wording ─────────────────────────────────────────────────────
     const template = dripTemplateFor(pick.templateKey);
     if (!template) {
-      // A catalogue entry with no wording is a configuration fault, not a
-      // reason to skip the person. Give the lease back and say so.
-      await store.schedule(seq.sequenceId, seq.nextSendAt, seq.stepsSent);
+      await giveBack();
       skipped += 1;
       line('held', `No wording exists for ${pick.id} (${pick.templateKey}). Add it to drip-templates.ts. The step is still due.`, { moduleId: pick.id, step });
       continue;
@@ -505,11 +850,11 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
     const rendered = renderMessage(template);
     const body = fillDripBody(rendered.body, {
       firstName: person.firstName,
-      requestedTitle: initialModule?.title ?? 'a Living Craft resource',
+      relevance: relevanceSentence({ requestedTitle: initialModule?.title ?? null, roleCode }),
       cohortInvitation: opts.cohortInvitation,
     });
 
-    // ── 5. One message, one key ────────────────────────────────────────────
+    // ── 8. One message, one key ────────────────────────────────────────────
     const queued = await store.queueMessage({
       idempotencyKey: `drip:${seq.sequenceId}:${step}`,
       sequenceId: seq.sequenceId,
@@ -525,36 +870,50 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
     });
 
     if (queued.duplicate) {
-      // The key did its job: another planner wrote this step. It also owns
-      // the scheduling; leave the row as it is.
       skipped += 1;
       line('already-queued', 'Already queued under the same idempotency key. One row, not two.', { moduleId: pick.id, step });
       continue;
     }
 
     await store.recordSend(seq.sequenceId, pick.id, step, queued.messageId);
-    const next = sendSlot(nowISO, cfg.intervalDays, cfg.zone, cfg.hour);
-    await store.schedule(seq.sequenceId, next, step);
+    // Look again within the hour, not at the next slot. While this step sits
+    // in the outbox, each look re-reads the pause signals, so a reply or a
+    // booked call cancels it before it goes. Once it has gone, the look finds
+    // nothing pending and sets next_send_at to the real next slot, computed
+    // from the real send time.
+    const next = slotForStep({ step: step + 1, enrolledAt: seq.confirmedAt, lastSentAt: nowISO, config: cfg });
+    await store.schedule(seq.sequenceId, later(now, cfg.recheckMinutes), step);
     await emit({ type: 'planned', sequenceId: seq.sequenceId, moduleId: pick.id, step });
     planned += 1;
-    line('planned', `Step ${step}: ${pick.id} (${pick.title}). Queued for the sweep; next step ${next}.`, {
+    line('planned', `Step ${step}: ${pick.id} (${pick.title}). Queued for the sweep; the next step is no earlier than ${next}.`, {
       moduleId: pick.id,
       step,
       messageId: queued.messageId,
     });
   }
 
-  return { ranAt: nowISO, considered: due.length, planned, completed, skipped, lines };
+  return { ranAt: nowISO, considered: due.length, planned, completed, paused, skipped, confirmationsQueued, lines };
 }
 
 /**
  * The brief's vocabulary for a sequence, derived from the stored state and
- * the stop reason. The store keeps four states; screens may show seven.
+ * the stop reason. The brief's states: not subscribed, awaiting confirmation,
+ * active, paused for human handling, stopped, exhausted.
  */
-export type DripView = 'active' | 'paused' | 'completed' | 'unsubscribed' | 'suppressed' | 'failed' | 'stopped';
+export type DripView =
+  | 'awaiting confirmation'
+  | 'active'
+  | 'paused'
+  | 'exhausted'
+  | 'unsubscribed'
+  | 'suppressed'
+  | 'failed'
+  | 'stopped';
 
 export function dripView(state: string, stoppedReason: string | null | undefined): DripView {
-  if (state === 'active' || state === 'paused' || state === 'completed') return state;
+  if (state === 'awaiting_confirmation') return 'awaiting confirmation';
+  if (state === 'active' || state === 'paused') return state;
+  if (state === 'completed') return 'exhausted';
   const r = (stoppedReason ?? '').toLowerCase();
   if (r.includes('unsubscribe') || r.includes('withdrawn') || r.includes('consent')) return 'unsubscribed';
   if (r.includes('bounce') || r.includes('complain') || r.includes('suppress')) return 'suppressed';

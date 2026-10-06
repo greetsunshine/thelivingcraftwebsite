@@ -44,7 +44,7 @@ import PolicyLayout from '../layouts/PolicyLayout.astro';
 import { CONTACT_EMAIL } from '../data/site';
 import { canonical } from '../data/facts';
 import { FORMS } from '../lib/pipeline/forms';
-import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+import { MARKETING_CONSENT, RESOURCE_MARKETING_CONSENT } from '../lib/pipeline/consent';
 import { CONSENT_COOKIE, CONSENT_DAYS } from '../lib/consent/consent';
 import { FIRST_TOUCH_COOKIE, SESSION_TOUCH_COOKIE } from '../lib/pipeline/attribution';
 import ConsentBanner from '../components/ConsentBanner.astro';
@@ -372,11 +372,19 @@ const TAG_FREE_TOOLS = [
       </p>
 
       <h3>When you tick the marketing box</h3>
-      <p>The forms carry one optional tick box, in these words:</p>
+      <p>The application and enquiry forms carry one optional tick box, in these words:</p>
       <blockquote><p>{MARKETING_CONSENT.wording}</p></blockquote>
+      <p>The download forms carry a different optional tick box, in these words:</p>
+      <blockquote><p>{RESOURCE_MARKETING_CONSENT.wording}</p></blockquote>
       <p>
-        It starts unticked and nothing depends on it. Your application is treated the same either
-        way. A receipt confirming that your request was saved is not marketing.
+        Both start unticked and nothing depends on them. Your application or your download is
+        treated the same either way. A receipt confirming that your request was saved is not
+        marketing.
+      </p>
+      <p>
+        If you tick the box on a download form, we first send one email asking you to confirm.
+        Nothing else is sent until you click the link in it. If you do not click it, you receive
+        nothing more.
       </p>
       <p>
         What you agreed to is stored with the words you were shown, under a version label. If that

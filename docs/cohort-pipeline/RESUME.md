@@ -9,15 +9,56 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 6 October 2026
-**Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
-merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
-the four tasks from Sunil's call of 25 September and the later ones below. PR #31
-(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are merged. The
-pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
-(PR #6).
+**Branch:** `feat/resource-followups-spec`, off `origin/main`, in worktree `D:\lc-followups`.
+It brings the resource follow-ups in line with the resource brief (below). PR #37
+(`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
+1 October. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
+`feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
 ---
+
+## Resource follow-ups, aligned to the resource brief — 6 October
+
+**The brief is `review/05-email-and-resource-routing.md`** in the outreach package
+(`docs/2026-09-28_Outreach_Readiness-…/`, revised 29 September). The drip shipped in PR #37
+was built from a pasted brief and the package's routing table only. This document already
+decided several things recorded then as "not decided": the timing, the consent wording and
+double opt-in. Read it before changing anything in `src/lib/comms/drip*.ts`.
+
+What changed:
+- **Double opt-in.** A tick opens the sequence `awaiting_confirmation` and queues one
+  transactional email, `confirm-resource-emails`, with a signed seven-day link
+  (`src/lib/comms/confirm.ts`). `/confirm-resource-emails` shows a button on GET and confirms
+  only on POST, because mail scanners open links. A second tick while waiting re-sends the
+  request at most once a day.
+- **Schedule.** Days 2, 5, 9 and 14 after the click, then seven days after each actual send.
+  Weekends roll to Monday 10:00 IST. At least 48 hours apart. The next step is not planned
+  while the last one is still in the outbox, so a week of dispatch being off leaves one queued
+  message, not seven. `COMMS_DRIP_INTERVAL_DAYS` and `COMMS_DRIP_FIRST_OFFSET_DAYS` are gone.
+- **Pause.** A reply, a booked call (`bookings`), an open application or enquiry, or a payment
+  pauses the sequence and cancels what is queued. Only a person resumes it from the console.
+  After a resume, only signals newer than the resume count.
+- **No re-enrolment.** A person who has had a resource sequence before is not given another by
+  a new tick.
+- **Release guard.** `RELEASES` in `src/data/resource-routing.ts` is empty, so no module is
+  selected. With none released, a confirmed sequence waits; it does not end as exhausted.
+- **Wording.** The box reads the brief's sentence (`RESOURCE_MARKETING_CONSENT`,
+  `mkt-resource-2026-09-29`). Each follow-up opens with the brief's "You requested the …"
+  sentence, or a role sentence when the request is unknown, or nothing. The wordings are now
+  version `LC-OUTREACH-2026-09-29.2`; load and approve them again in the console.
+- **Schema** (run the whole file before deploying): the `awaiting_confirmation` state,
+  `comms_sequences.confirmed_at`, `consents.confirmed_at`, the one-live index widened, and
+  every resource sequence opened before today moved back to awaiting. The planner sends each
+  of those people the confirmation request once.
+
+Still not built, and why:
+- **Reading replies.** Nothing reads the reply mailbox; that needs the provider (D2). Dispatch
+  already refuses to switch on without `COMMS_REPLY_MAILBOX`. Until then an operator pauses by
+  hand when a reply arrives.
+- **Two of the four role sentences** (architect, employer funding). No form option reaches
+  them. The words are kept, unused, in `drip-templates.ts`.
+- **The 16 acceptance tests on a real database and provider.** They need the provider.
 
 ## Week 3, review round 4 — 6 October
 

@@ -736,6 +736,14 @@ export async function checkEligibility(
       gates.push(block('sequence', 'Sequence state', 'No sequence record.', 'cancel'));
     } else if (data.state === 'active') {
       gates.push(pass('sequence', 'Sequence state', 'Active.'));
+    } else if (data.state === 'awaiting_confirmation') {
+      // The one message a sequence in this state may send is the request to
+      // confirm, which is transactional. Marketing waits for the click.
+      gates.push(
+        marketing
+          ? block('sequence', 'Sequence state', 'Awaiting confirmation. Nothing but the confirmation request goes until the person clicks it.', 'hold')
+          : pass('sequence', 'Sequence state', 'Awaiting confirmation; this is the confirmation request.'),
+      );
     } else if (data.state === 'paused') {
       gates.push(
         block('sequence', 'Sequence state', `Paused${data.paused_reason ? `: ${data.paused_reason}` : '.'} A paused sequence is resumed by hand after review, never by a sweep.`, 'hold'),
