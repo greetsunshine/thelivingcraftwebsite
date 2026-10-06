@@ -125,7 +125,7 @@ figcaption{font-size:var(--size-2);color:var(--text-quiet);margin-top:var(--spac
 table{border-collapse:collapse;width:100%;min-width:560px;font-size:var(--size-2)}
 th,td{text-align:left;padding:var(--space-3) var(--space-4) var(--space-3) 0;
   border-bottom:1px solid var(--line-hair);vertical-align:top}
-th{color:var(--text-quiet);font-weight:500}
+th{color:var(--ink-2);font-weight:700}
 td.mono,th.mono{font-family:var(--font-mono);font-feature-settings:var(--font-features)}
 tr:last-child td{border-bottom:none}
 .ok{color:var(--ink-1)}
@@ -315,7 +315,7 @@ figcaption{font-size:12px;color:var(--ink-2);margin-top:8px}
 
 table{border-collapse:collapse;width:100%;min-width:460px}
 th,td{text-align:left;padding:var(--sp3) var(--sp4);vertical-align:top;font-size:var(--s2)}
-th{font-family:var(--font-mono);font-size:var(--s1);font-weight:500;color:var(--ink-2);
+th{font-family:var(--font-mono);font-size:var(--s1);font-weight:700;color:var(--ink-2);
   border-bottom:1px solid var(--line-hair)}
 td{border-bottom:1px solid var(--line-hair)}
 tr:last-child td{border-bottom:0}

@@ -267,6 +267,107 @@ Topic 5's three were evaluated and kept: each tests the cliff, which is what the
 **Positional sensitivity was deliberately not made a quiz item**, because the lab does not
 demonstrate it, and testing it would test reading rather than doing.
 
+## What changed on 6 October (round four), and why
+
+The sheet gained a **Re-review** column. This pass worked the re-review rows: three on the
+opening, and **twenty-three on context engineering**, which had the least attention of the five
+topics. Answered in
+[`docs/teaching/reviews/week-3-review-2026-10-06-round4.md`](../reviews/week-3-review-2026-10-06-round4.md).
+**The clock did not move:** 46 rows, fourth round running.
+
+### I had a wrong explanation on the page, and the data caught it
+
+**This is the most important entry in this file.** Round three added a mechanism for the
+context cliff. Writing the expanded version, I built a score progression to explain it — scores
+converging, two clauses tying at 100 characters, a coin flip. It was plausible, it was
+internally consistent, and **it was wrong.**
+
+`make w3-trim` prints a **gap column** I had not read. The real data:
+
+    kept   overall  adversarial   gap on the adversarial case
+     all     76%        75%       gap 1 · GOOD-2.1 over GOOD-2.2
+     180     82%       100%       gap 3 · GOOD-2.1 over GOOD-2.2
+     150     74%        75%       gap 1 · GOOD-2.1 over GOOD-2.2
+     120     74%        55%       gap 0 · GOOD-2.1 over GOOD-2.2
+     100     62%         0%       gap 1 · GOOD-2.2 over BILL-3.1
+      80     62%         0%       gap 1 · GOOD-2.2 over ESC-1.1
+      60     69%        55%       gap 0 · GOOD-2.1 over GOOD-2.2
+      40     68%        55%       gap 0 · GOOD-2.1 over GOOD-2.2
+
+At 100 characters the gap is **1**, not 0 — and the rate is **0%**, not 50%. A tie cannot produce
+0%. What actually happens is better than my invented version: **GOOD-2.1 has dropped out of the
+front of the list entirely**, and the two clauses in front are both wrong.
+
+**So "gap 1" appears at 217 characters with a 75% rate and at 100 characters with a 0% rate.**
+Same gap, opposite outcome, because at 217 the gap is between right and wrong and at 100 it is
+between wrong and wrong. That is now the centre of the beat, and it is real.
+
+**Two process notes.** The page table was also missing the 40-character row and the gap column
+itself, so it showed seven rows while the text said eight budgets. Every figure on the page has
+now been diffed against a live `make w3-trim` and all eight rows match. **Run the target before
+explaining its output** — reconstructing a mechanism from the rates alone is how this happened.
+
+### The opening, three items
+
+**"Two runs" was ambiguous.** It now says what varies and what does not: not two users, not two
+machines, not two versions — the same case, same agent, same input, run twice on one laptop, and
+the model samples its next word.
+
+**The week's sentence was rephrased.** It now leads with the plain version — *a green suite tells
+you the situations you thought of are handled, and nothing about the ones you did not* — and then
+gives the compressed form.
+
+**Outcome 1 named "the four classes" before anybody had met them**, in the self-rating at 00:05.
+It now reads *write a test case my current suite would pass today but should fail, and say what
+kind of situation my suite has no cases for.* Changed in **both** places, word for word, because
+the 00:05 and 04:55 ratings only compare if the wording is identical. The id `case-classes` is
+unchanged, so stored ratings are unaffected.
+
+### Context engineering, twenty-three items
+
+**It now says what it is and why it is here.** Three reasons, and the third is the one that
+places it: **a starved context produces no error — it produces a confident, well-written, wrong
+answer**, which is the failure the whole day exists to catch.
+
+**Drift was resolved rather than left hanging.** The old line "this topic has no outcome of its
+own and the opening said so" read as an apology for the topic existing. It is replaced by a
+straight answer: drift is a change nobody makes, discovered late or never, and the only defence
+is re-measuring on a schedule. **A lab takes thirteen minutes and drift takes three months**, so
+it is named at the three moments it would bite and taught nowhere. The course says so at 02:22.
+
+**Memory is now in the context table**, because the comment asked the right question. Memory is
+context — it reaches the model as tokens like everything else. Two kinds: within the run
+(present, it is the history) and between runs (absent). **The absence is why today's cliff is as
+clean as it is.**
+
+**Figure 4 was added**, showing how the five pieces assemble into a window, with the five levers
+marked down the right-hand side. Honest line attached: **five levers, and today you measure only
+the third.**
+
+**The three payload measures are now computed rather than named**, on ticket 8002 at k=3:
+precision@3 = 1/3, recall@3 = 1/1. Then the part that earns the section: **trim the clauses, run
+it again, both numbers are unchanged and the answer is wrong.** Precision and recall measure
+whether the right material was *fetched*, not whether it was *used* — which is exactly the gap
+the 01:23 grader covers.
+
+**The eviction budget is defined**, because it was the load-bearing phrase and had never been
+explained. With the one-budget-versus-two diagram, walked to turn 10 where the oldest thing
+dropped is the system prompt.
+
+**The needle-in-a-haystack grid is published.** Round three said "read the grid, not the average"
+and never showed a grid. There is now an illustrative one, **labelled as illustrative**, with a
+92% average beside a 22% worst cell, five steps for running one, and the practical defence that
+costs nothing.
+
+**The four failure modes gained detection, control and a clash section.** Each is shown as a
+thing that happens to ticket 8002. The pattern to name: **three of the four are fixed by
+structure and none by a better prompt — context failures are an assembly problem, not a wording
+problem.** Clash gets five practices, and the taxonomy link is a good one: contradiction cases
+are *incomplete*-class cases from 00:27, so the right behaviour is to escalate rather than choose.
+
+**Table headers are bold page-wide**, both stylesheets. They were weight 500, which is why
+nothing read as a header. 178 header cells on the learner page.
+
 ## What the agent can do now
 
 The table the close produces, and the reason the recall segment at 04:02 exists. Every
