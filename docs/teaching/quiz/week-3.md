@@ -390,14 +390,31 @@ to happen. Nothing. Then ask what the ceiling can stop. A payment.
 
 ## Topic 4 · Release gates and AI governance · asked at 03:13
 
-### Q41 · The column that is nearly always blank
-`recall` · 03:13
+### Q41 · The same number, two gates
+`apply` · 03:13
 
-> Of the thirteen columns in the gate table, which two carry the weight, and which is nearly
-> always empty when a row arrives?
+> Faithfulness measures 92%. The absolute gate is "at least 95%". The relative gate is "no
+> more than 1 point below the last release", and the last release measured 93%. What happens?
 
-**Answer.** Grader validation and decision owner carry the weight. Grader validation is the
-one that is nearly always empty, or filled with the grader's own output.
+- **A.** Both gates fail, because 92% is below both bars
+- **B.** The absolute gate fails and the relative gate passes ✅
+- **C.** The relative gate fails and the absolute gate passes
+- **D.** The gates contradict each other, so one of them is configured wrongly
+
+**Answer.** 92 is below 95, so the absolute gate fails. 93 to 92 is a one-point drop, which is
+inside the relative gate, so it passes. **Neither gate is broken.** Absolute asks "is this good
+enough"; relative asks "did we make it worse". A system can be not-good-enough and also
+not-worse, and that is exactly where this release sits.
+
+**The wrong answer worth spending time on.** **D**, because two gates on the same number ought
+to agree. That is a good engineering instinct and it is wrong here. Ask what each gate compares
+against: one a fixed line, the other last week. Different comparisons, different answers, both
+correct.
+
+**Replaced on 6 October.** The earlier version asked which two of the thirteen columns carry
+the weight, keyed to grader validation and decision owner. That was recall of a list the lab
+already walks, and the absolute-against-relative distinction added on 6 October was untested.
+The old answer is still taught at 02:49 and is still checked by the 02:56 lab's 0/1/2 review.
 
 ---
 

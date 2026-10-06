@@ -2435,6 +2435,14 @@ if cur.rowcount == 0:
     m = Math.abs(m);
     return s + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   }
+  // A session offset as a time of day, once a start time is known. The rest of the
+  // page is rewritten to clock time by the block below, and the widget's own "next
+  // at" line was the one place still printing a bare offset beside it.
+  function wall(m) {
+    if (startedAt === null) return null;
+    var d = new Date(startedAt + m * 60000);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
 
   var times = rows.map(function (r) {
     var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());
@@ -2467,6 +2475,7 @@ if cur.rowcount == 0:
     var i = -1;
     for (var k = 0; k < times.length; k++) if (times[k] <= elapsed) i = k;
     elEl.textContent = hhmm(elapsed);
+    elEl.title = 'elapsed since the session started, not a time of day';
     rows.forEach(function (r, n) { r.classList.toggle('here', n === i); });
     if (i >= 0) {
       var cells = rows[i].querySelectorAll('td');
@@ -2474,7 +2483,7 @@ if cur.rowcount == 0:
       var next = times[i + 1];
       hintEl.textContent = next === undefined
         ? 'last row'
-        : 'next at ' + hhmm(next) + ', in ' + (next - elapsed) + ' min';
+        : 'next at ' + (wall(next) || hhmm(next)) + ', in ' + (next - elapsed) + ' min';
       if (driftEl) {
         var d = elapsed - times[i];
         var ran = next === undefined ? 0 : elapsed - next;

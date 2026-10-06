@@ -175,6 +175,98 @@ item was replaced: it asked what 70% *is*, and now asks what 70% and 0.35 say to
 the "0.35 means wrong 65% of the time" misreading as the distractor to spend time on. The
 bank records the replacement and why.
 
+## What changed on 6 October, and why
+
+Round three. The sheet gained a **Status** column, so this pass worked only the rows marked
+**Open** — eleven of them, answered in
+[`docs/teaching/reviews/week-3-review-2026-10-06.md`](../reviews/week-3-review-2026-10-06.md).
+Everything marked Fixed was left alone. **The clock did not move again**: 46 rows, no beat
+added or renamed.
+
+Nine of the eleven were the same complaint in different places: **topic 4 and the 02:56 lab
+were not explained well enough to act on.** One was a real bug. One was the context-engineering
+syllabus.
+
+**The bug: the live clock widget printed a bare offset.** Sunil asked that every time block
+follow the start time. Every time on the page already did — but the clock widget's own hint read
+"next at 02:16" while the table beside it read 11:16. Fixed in `_design.mjs`, which means it is
+fixed for weeks 1 and 2 as well. The elapsed counter still shows an offset, which is correct
+because it is a duration, and it now carries a title saying so.
+
+**"You have a rate" now says which rate.** Topic 4's purpose card opens on the three the room
+actually holds by 02:39: 75% on the adversarial case from 00:55, 95% context precision from
+01:23, and 70% raw with kappa 0.35 from 02:02. Then the question that cannot be answered:
+**the adversarial case passes 15 times in 20 — is 75% good enough to ship?** The instructor
+page says to let the silence sit, because the gap is organisational rather than technical.
+
+**The gate definition was rebuilt around one worked row.** The old 02:44 table did two jobs at
+once — it listed the four parts and scored how often organisations have each — which is why it
+did not read as an explanation. It is now three things in order: the plainest sentence (a
+release gate is a written rule that can stop a release), the four parts **filled in against the
+adversarial case**, and then separately which two are usually missing.
+
+**Absolute against relative gates is now shown rather than described.** The round-two table
+listed properties. It now carries three releases of the same requirement gated both ways, and
+the row that teaches is release 3: **92% fails the absolute gate and passes the relative one.**
+Neither gate is broken. The sentence to keep is *a system can be not-good-enough and also
+not-worse.*
+
+**"Ask where 95 came from" now says what it means.** It was a bare instruction about a number
+that had never been introduced. There is now a gate row on the page with `threshold 95%` and
+`owner (blank)`, the question to ask about it, and four answers you might get — two that mean
+nobody chose it and two that are real reasons. The two real ones are the two kinds of
+threshold, which sets up the next part.
+
+**The 02:56 lab had three "not clear" comments and they were all the same gap.** The learner
+had thirteen column names and no model. It now has:
+
+- a card saying what is being produced in one sentence — **thirteen cells of text, no code** —
+  and that **the real output is the cells you cannot fill**;
+- three tests for choosing a requirement, the middle one being *if it broke, money or trust
+  would leave the company*;
+- **a completely filled row** against this agent, all thirteen cells, as a model;
+- a triage instruction that makes ten minutes enough: **if you only have time for four cells,
+  do 1, 7, 11 and 12**;
+- **a definition of the 0/1/2 scale**, which it never had: 0 is empty or a placeholder, 1 is
+  filled but not actionable by an outsider, 2 is actionable without asking the author anything.
+
+**Context engineering absorbed the syllabus, selectively.** Five sections naming about forty
+concepts, against a 37-minute topic with five beats. What went in:
+
+| Where | What arrived |
+|---|---|
+| 03:28 | **Minimum viable context** as the name for what the lab finds. Context relevancy and recall connected back to 01:37. And *the judge has a context window too*, which closes topic 3's loop |
+| 03:33 | **Positional sensitivity**: lost in the middle, and needle-in-a-haystack as the test, varying depth and placement. Plus the **four failure modes** — starvation, clash, distraction, poisoning — with who owns each |
+| 03:54 | Compression, history pruning and agent handoff, each with the measurement it needs, all named as week 5's. And a five-row card summarising the whole of context evaluation |
+
+**One thing to be careful about when teaching 03:33.** Today's cliff and the positional effect
+are **different mechanisms**, and the page says so twice. The cliff is a retrieval artefact:
+cutting clause text pulls lexical scores together until two clauses are indistinguishable. The
+positional effect belongs to the model and **this lab does not demonstrate it.** Say both
+sentences or the room leaves with one misconception in place of two facts.
+
+**The teardown now has a named artifact, because it referred to one that did not exist.** The
+page said "the whole architecture goes on screen" and no such figure existed anywhere. There
+are now three named figures in the week, and the teardown uses the third:
+
+- **Figure 1**, at 01:11 — how retrieval is measured.
+- **Figure 2**, at 01:50 — how model-based grading works.
+- **Figure 3**, at 04:12 — the dispute agent at the close of week 3.
+
+Figure 3 shows what each of the three weeks added, with a double line across it: above it is
+the thing that serves customers, below it is the thing that tells you whether it works.
+**THE GATE box says "not built"**, which is honest and is the thing to point at before question
+4. Each of the five teardown questions also now carries a "what it is about" column naming the
+box in Figure 3 to look at, and those descriptions contain no answers. The full answer key for
+all five was already on the instructor page and is unchanged.
+
+**One quiz item changed.** Topic 4's first item asked which two of thirteen columns carry the
+weight, which is recall of a list the lab already walks. It now asks the release-3 question, and
+the distractor to spend time on is *the gates contradict each other, so one is misconfigured*.
+Topic 5's three were evaluated and kept: each tests the cliff, which is what the lab produces.
+**Positional sensitivity was deliberately not made a quiz item**, because the lab does not
+demonstrate it, and testing it would test reading rather than doing.
+
 ## What the agent can do now
 
 The table the close produces, and the reason the recall segment at 04:02 exists. Every
@@ -1292,6 +1384,27 @@ only mechanism in the whole day that improves the next suite without somebody si
 invent cases — and it ties back to 00:27, because nobody invents an adversarial class. They get
 attacked and then write it down.
 
+### Rebuilt 6 October, because the table was doing two jobs
+
+The old version listed the four parts and scored how often organisations have each, in one
+table. That is why it did not read as an explanation.
+
+**Three things in order now.** The plainest sentence first: *a release gate is a written rule
+that can stop a release.* Then the word that does the work — a gate is open or shut, so a number
+that cannot shut it is a report whatever the dashboard calls it.
+
+**Then the four parts, filled in against the adversarial case from 00:55 at 15 of 20.** Read
+only the right-hand column; the middle one is a definition and the right-hand one is a decision.
+
+The cell that teaches is the threshold's reason: **20 of 20, because one escape pays
+₹2,50,000 and there is no partial credit on a payment.** That is what "a threshold with a
+reason" means, and it is why the reason is not optional.
+
+**Then, separately, why most rows are not gates.** Two of four nearly always present, two nearly
+always missing. Close on the state this describes: a team with good numbers, no bar, and a
+release process where the numbers are looked at and the release happens anyway. **Ask whether
+that describes them and do not push for answers out loud.** The recognition is the point.
+
 ## 02:49 · Who owns the pass bar
 
 Seven minutes. Three things to watch for, and the first is nearly universal.
@@ -1326,6 +1439,38 @@ Say the asymmetry last, because somebody will find it: ten releases each one poi
 points worse and every one passed. **A relative gate needs an absolute floor underneath it**, far
 enough down that it is never the live constraint.
 
+### "Ask where 95 came from" — rewritten 6 October
+
+It was a bare instruction about a number nobody had introduced. Their page now shows the row it
+refers to — `threshold 95%`, `owner (blank)` — then the question, then four answers you might
+get. Two mean nobody chose it. **Two are real reasons, and they are the two kinds of threshold**,
+which is the setup for the next part, so do not resolve them here.
+
+Say why the question is asked: a threshold with a reason can be argued with and adjusted. One
+without a reason gets overridden the first time it is inconvenient, because there is nothing
+there to override.
+
+### Absolute against relative — shown, not described, from 6 October
+
+Round two listed properties in a table and it did not land. There is now a three-release
+worked example of **the same requirement gated both ways.**
+
+    release   measured   absolute (>= 95%)   relative (>= last - 1)
+    v1          96%      passes              nothing to compare to
+    v2          93%      FAILS               FAILS  (96 -> 93, 3 points)
+    v3          92%      FAILS               passes (93 -> 92, 1 point)
+
+**Walk to release 3 and stop there.** Same measurement, 92%, fails one gate and passes the
+other. Neither is broken; they asked different questions and both answers are right.
+
+The sentence that makes it stick: **a system can be not-good-enough and also not-worse.** That
+is release 3, and it is where most real arguments about a threshold actually live.
+
+**Then the cost of each, and only the last row needs saying out loud.** An absolute gate alone
+gets argued away because nobody can source the number. A relative gate alone lets you decay one
+point a release with a green build every week. So the answer is both: a relative gate for the
+weekly decision, an absolute floor underneath as a backstop rather than a target.
+
 ## 02:56 · Lab: write one row of the gate table
 
 Fourteen minutes. Pairs, then swap. Ten to write, four to review.
@@ -1350,6 +1495,42 @@ is the cut feature returning under a new name.
 
 Tell the reviewing pair to spend their four minutes on grader validation and decision owner
 and to skip the rest if they run out of time. Those two are where every weak row is weak.
+
+### Rebuilt 6 October: three "not clear" comments, one gap
+
+All three cards drew the same complaint, and the cause was the same: **the learner had thirteen
+column names and no model.**
+
+**Say this before anything else.** One row, thirteen cells of text, no code. Then the reframe
+that changes the block: **the real output is the cells they cannot fill.** A row with four
+honest blanks teaches more than thirteen confident guesses.
+
+**Choosing the requirement.** Three tests on their page, and hold them to the middle one: *if it
+broke, money or trust would leave the company.* Rooms otherwise pick a style preference and the
+row teaches nothing. The fallback for anybody stuck is the account-note requirement from 02:44.
+
+**There is now a completely filled row on their page**, all thirteen cells, against this agent.
+Point at it once and say "this is the shape, yours is about your own system". **Do not read it
+out** — it is thirteen lines and reading it costs three of the ten minutes.
+
+**The triage instruction is what makes ten minutes enough:** if you only have time for four
+cells, do 1, 7, 11 and 12 — the requirement, the threshold with its reason, the owner, and what
+failing stops. Those four are a gate. The other nine are the evidence behind it.
+
+**The 0/1/2 scale now has a definition**, which it did not before:
+
+| Score | Means |
+|---|---|
+| 0 | Empty, or a placeholder |
+| 1 | Filled in, but somebody outside the pair could not act on it |
+| 2 | Filled in, and another engineer could act on it without asking a question |
+
+Give them the shape of the sentence to say back, because four unstructured minutes produce
+politeness: *"Column 11 is a 1 — it says the platform team, and a team cannot be called at 2am."*
+
+**Say in advance that "I could not find out who owns this" scores a 2, not a 0.** It is accurate
+and actionable. Otherwise people invent a name to avoid a zero, and **an invented name is the
+worst outcome this lab can produce.**
 
 ## 03:10 · At enterprise scale: evaluation platforms
 
@@ -1488,6 +1669,26 @@ Then `make w3-trim`. Same eight cases, same graders, same brain. Only the clause
 Five minutes. **Context engineering is deciding what the model is shown each turn, and on
 whose authority each piece got there.**
 
+### Minimum viable context, added 6 October
+
+**Give the term, because it is what the 03:40 lab finds and the lab had no name for it.** The
+minimum viable context is the smallest payload that still completes the task, and finding it is
+a measurement rather than a judgement.
+
+Then connect it backwards in one sentence each. **Context relevancy**, the signal-to-noise
+ratio, is the same idea from the cost end. **Context recall** is what trimming destroys. So
+trimming is not one decision with one number: **it is a trade between cost and recall**, and the
+cliff at 03:33 is what winning the cost side too hard looks like.
+
+### The judge has a context window too
+
+Thirty seconds, and it closes topic 3's loop. Three items on their page: strip bias-inducing
+metadata from the judge's window, place the anchor examples deliberately, force a fixed output
+structure.
+
+All three were given as instructions at 01:55 and 02:16. **This is the topic that explains why
+they work.** Do not teach them again — what is new is the reason, not the practice.
+
 ## 03:33 · Why the curve falls off a cliff
 
 Seven minutes. Three readings, and the second is the one that goes home.
@@ -1515,6 +1716,36 @@ Two findings in the field notes support the shape and both need their hedges if 
 named at all. **The safest handling is not to name either from the front of the room.** The
 table is a run the room can reproduce, which is stronger than a citation. Both papers are in
 week 1's reading for anyone who asks.
+
+### Positional sensitivity, added 6 October — and a warning
+
+**Flag the change of mechanism explicitly or you will create a misconception.** Today's cliff is
+a retrieval artefact: lexical scores converge until two clauses are indistinguishable. The
+positional effect belongs to the model, and **this lab does not demonstrate it.** Say both
+sentences.
+
+Then the effect: attention is strongest at the beginning and end of a long context and weakest
+in the middle, so the same fact at the same token count can be used or ignored depending on
+where it sits. The name is **lost in the middle**.
+
+Then the test, which is the actionable part: **needle in a haystack**, varying depth and
+placement independently, and **reading the grid rather than the average.** A model at 95%
+overall can be at 40% for a needle two-thirds down a 64k context.
+
+The line for this room: **"our model handles 128k" is a capacity claim, not a performance one.**
+The defensible number is the depth and position at which your own task still works.
+
+### Four ways a context window goes wrong
+
+Starvation, clash, distraction, poisoning. Point at the table and say which one they just
+watched, which is **starvation**.
+
+**Spend the minute on clash, because it is the one nobody tests.** This agent can be handed a
+retrieved clause that contradicts its own system prompt and has no rule for which wins. It will
+pick one, and **the trace will not record that it was a choice.**
+
+Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn
+run, and every later answer in a multi-turn agent.
 
 ## 03:40 · Lab: find your own cliff
 
@@ -1553,6 +1784,32 @@ Three minutes.
 
 **The one that matters for this week.** None of the five tells you where your cliff is. They
 tell you what the context costs, not what cutting it does to the answers.
+
+### Compression, pruning and handoff, added 6 October
+
+Trimming by character count is the crudest option. Three better ones exist and **each needs its
+own measurement, because each loses something different.**
+
+- **Compression** replaces a passage with a model-written summary. Measure the accuracy drop
+  against the uncompressed payload. A summary that reads well can still have dropped the one
+  clause that governs.
+- **Pruning the history** drops old turns. Measure task retention against token saving as a
+  pair. **A sliding window is cheapest to build and is the one that drops the decision made four
+  turns ago.**
+- **Handing off between agents** passes condensed state instead of the whole history. Measure
+  whether the variables that mattered survived.
+
+**All three are week 5's**, beside what the system remembers between sessions. They are on the
+page so that "just summarise the history" meets the question "measured against what".
+
+### The five-row card
+
+The whole of context evaluation on one card, and the week has now touched every row. **Say "keep
+this one" and point at the last row**: four of the five are about the agent's window and the
+fifth is about the grader's, measured with the number produced at 02:02.
+
+If the clock has gone, **cut the three techniques and keep the card.** The card is the summary;
+the techniques are reference.
 
 ## 03:57 · Topic quiz: context engineering
 
@@ -1648,6 +1905,30 @@ Ask how they would know the next morning whether it helped, and the answer is th
 harness they built this morning.
 
 *Push on this.* What would make you spend the two weeks on the case set instead?
+
+### Figure 3, added 6 October, because the artifact did not exist
+
+The page said "the whole architecture goes on screen" and no such figure existed anywhere in
+the week. **There are now three named figures**, so an instructor can call for one by name:
+
+- **Figure 1**, 01:11 — how retrieval is measured.
+- **Figure 2**, 01:50 — how model-based grading works.
+- **Figure 3**, 04:12 — the dispute agent at the close of week 3.
+
+**Put Figure 3 up and leave it there for the full twenty-eight minutes.** It shows what each of
+the three weeks added, boxed, with a double line across it.
+
+**Read the double line out loud before the first question.** Above it is the thing that serves
+customers. Below it is the thing that tells you whether it works. Today built everything below
+the line and two boxes above it.
+
+**Point at the empty box before question 4.** THE GATE says *not built*, which is honest: the
+room wrote one row at 02:56 and nothing enforces it.
+
+Each of the five questions now carries a "what it is about" column on the learner page, naming
+the box in Figure 3 to look at. **Those descriptions contain no answers.** The full answer key
+for all five — a good answer, the wrong answer worth taking seriously, and one push — is below
+and is unchanged. Read the key for your five before the session, not during it.
 
 ## 04:40 · End-of-week quiz
 
