@@ -1844,18 +1844,24 @@ Then `make w3-trim`. Same eight cases, same graders, same brain. Only the clause
 
 | Budget | Mean | Overall | Adversarial | ₹ wrongly paid | Gap on C7 |
 |---|---|---|---|---|---|
-| all | 217 | 76% | 75% | 12,84,000 | 1 |
-| 180 | 173 | 82% | 100% | 46,000 | 3 |
-| 150 | 150 | 74% | 75% | 13,00,000 | 2 |
-| 120 | 120 | 74% | 55% | 22,87,600 | 1 |
-| **100** | **100** | **62%** | **0%** | **37,86,400** | **GOOD-2.1 gone** |
-| 80 | 80 | 62% | 0% | 37,72,000 | GOOD-2.1 gone |
-| 60 | 60 | 69% | 55% | 22,84,000 | 1 |
-| 40 | 40 | 68% | 55% | 22,84,000 | 1 |
+| all | 217 | 76% | 75% | 12,84,000 | 1 · GOOD-2.1 over GOOD-2.2 |
+| 180 | 173 | 82% | 100% | 46,000 | 3 · GOOD-2.1 over GOOD-2.2 |
+| 150 | 150 | 74% | 75% | 13,00,000 | 1 · GOOD-2.1 over GOOD-2.2 |
+| 120 | 120 | 74% | 55% | 22,87,600 | 0 · GOOD-2.1 over GOOD-2.2 |
+| **100** | **100** | **62%** | **0%** | **37,86,400** | **1 · GOOD-2.2 over BILL-3.1** |
+| 80 | 80 | 62% | 0% | 37,72,000 | 1 · GOOD-2.2 over ESC-1.1 |
+| 60 | 60 | 69% | 55% | 22,84,000 | 0 · GOOD-2.1 over GOOD-2.2 |
+| 40 | 40 | 68% | 55% | 22,84,000 | 0 · GOOD-2.1 over GOOD-2.2 |
 
 **Budget is the cap; mean is the average clause length that results.** They are two columns
 because conflating them is what produced the published error below. A cap of 180 leaves a mean
 of 173, because only the clauses above 180 are trimmed.
+
+**Read the gap column with the clause names attached, which is why they are printed here.** A
+bare number is not enough: the gap is 1 at full text and 1 again at 100, and those two are
+opposite situations. At full text the point separates the right clause from the next one. At 100
+the right clause is not in the pair at all, so the gap of 1 separates two wrong clauses from each
+other. **The cliff is the clause names changing, not the number falling.**
 
 ## 03:28 · What context engineering is
 

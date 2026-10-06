@@ -68,6 +68,33 @@ rates and amounts are unchanged — verified by diffing the run output field by 
 and its column headers are content.** No check in this repo could have caught the original error,
 because the page was faithfully reporting what the tool said.
 
+### The review of PR #51 found four more, and one was in that same commit
+
+Reviewed adversarially rather than read over. **Four defects, all the same failure mode**, which is
+now at ten instances across rounds four and five.
+
+| Where | What was wrong | Real value |
+|---|---|---|
+| The notes' 03:23 table | **Six of eight gap cells invented**, in the commit that fixed the column names | 150 is gap 1, 120 is gap 0, 60 and 40 are gap 0, 100 and 80 are gap 1 naming two wrong clauses |
+| The 03:40 starvation case, 3 places | "Passes at full context", including an instruction telling the instructor to call a correct case broken | **15 of 20 at full context, 0 of 20 below the cliff.** It is the adversarial ticket, so it carries that case's 75% |
+| The instructor note at 03:33 | "217 chars is gap 1" — the original error surviving as a row label | The row is the uncapped text. 217 is its mean |
+| The needle grid's prose | Said "a model at 95% overall" above a grid whose average is 92% | 92% average, 40% in the middle cell at 64k |
+
+**The second one is the one that mattered.** The page told a learner their case should pass at full
+context, and told the instructor that a case failing there is broken. A correct case fails five runs
+in twenty, because the gap is 1 and a one-point gap is a coin flip. An instructor following the note
+would have told somebody with a working case to fix it.
+
+**What the review verified rather than assumed**, by running the tools: the 03:40 answer key (nine
+rows, exact), the 03:23 table (48 cells, exact), kappa 0.35 against 70% and chance 54%, and that the
+margin case's `result["gap"]` is a field the 01:23 lab really does instruct the learner to add. Also
+clean: eight cross-week quotes verbatim, the clock identical across four files, three enterprise
+slots with three to five named products and a cost on each and no recommendation, and the needle
+grid labelled illustrative on both pages.
+
+**The answer key also printed a `125` row the build step never produces.** Replaced with the `150`
+row the learner will actually have.
+
 That makes **six stale-figure defects found across rounds four and five**, all of the same kind. The
 failure mode and what catches it are recorded under round four above, and they have not changed.
 
