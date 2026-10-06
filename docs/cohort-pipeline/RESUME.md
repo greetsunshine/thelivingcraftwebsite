@@ -19,6 +19,75 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Week 3, review round 4 — 6 October
+
+The sheet gained a **Re-review** column. This pass worked those rows: three on the opening and
+**twenty-three on context engineering**, which had the least attention in round three. Answered
+in
+[`docs/teaching/reviews/week-3-review-2026-10-06-round4.md`](../teaching/reviews/week-3-review-2026-10-06-round4.md).
+Clock unmoved: 46 rows, fourth round.
+
+### I had a wrong explanation on the page, and this is how it happened
+
+**Read this before touching topic 5.** Round three gave the context cliff a mechanism. Expanding
+it, I constructed a score progression — scores converging, a tie at 100 characters, a coin flip.
+Plausible, consistent, **and wrong.**
+
+`make w3-trim` prints a **gap column** I had not read. At 100 characters the gap is **1**, not 0,
+and the rate is **0%**, not 50%. A tie cannot produce 0%. What actually happens: **the governing
+clause has dropped out of the front of the list entirely**, so both clauses in front are wrong.
+
+That is better material than my version, and it is real: **"gap 1" appears at 217 characters
+with a 75% rate and at 100 characters with a 0% rate** — same gap, opposite outcome, because the
+gap is between right-and-wrong in one and wrong-and-wrong in the other.
+
+The table was also missing the 40-character row and the gap column, so it showed seven rows
+while the text said eight budgets. **Every figure is now diffed against a live run and all eight
+rows match.**
+
+**The process rule, and it is now the fourth round in a row:** run the target before explaining
+its output. A self-review of PR #50 then found **six more of the same defect**, five from this
+round: the worked example asserted `k = 3` when `search_policy` defaults to `k = 2`; "the full
+text is 217 characters" was the *mean* clause length, not any clause; the page said 217 in one
+place and 223 in another for the same clause; "almost nothing matches" where the real scores were
+2 and 2; a quiz item keyed to a wrong mechanism; and "three tools" where week 3 has four. All six
+are fixed and recorded in the review doc.
+
+**Name the failure mode precisely, because it keeps recurring.** I reason a mechanism forward
+from a result and then write it down as if I had observed it. The reasoning is usually sound and
+the conclusion often close, which is what makes it dangerous — it reads as verified.
+
+**What catches it:** running the target and diffing its output field by field against the page.
+**What does not:** `check:teaching`, `check:pages`, `astro check` and the build all passed on
+every wrong version. There is no automated guard for this class of error, and a cross-check
+script comparing page figures to live target output is the obvious candidate if it recurs again.
+
+### The rest, briefly
+
+**Table headers are bold page-wide**, both stylesheets. They were weight 500, which is why
+nothing read as a header.
+
+**Outcome 1 no longer names "the four classes"** before the room has met them. Changed in the
+session file *and* the opening block, then diffed to confirm they match word for word — the
+00:05 and 04:55 ratings only compare if the wording is identical. The id `case-classes` is
+unchanged, so stored ratings are unaffected.
+
+**Context engineering now says what it is and why it is in an evaluation day.** The line that
+places it: a starved context produces no error, it produces a confident well-written wrong
+answer. **Drift was answered rather than left hanging** — it is a change nobody makes, so a
+thirteen-minute lab cannot cover it; it is named at the three moments it bites and taught
+nowhere, and the course says so.
+
+**Memory is in the context table now**, split into within-run (present) and between-runs
+(absent), with the note that the absence is why today's cliff is so clean.
+
+**Figure 4 added** — how the five pieces assemble a window, with five levers marked and the
+honest line that today measures only the third. **The needle-in-a-haystack grid is published**,
+labelled illustrative. **The eviction budget is defined.** The four failure modes gained
+detection, control and five clash practices.
+
+---
+
 ## Week 3, review round 3 — 6 October
 
 The sheet gained a **Status** column. This pass worked **only the `Open` rows** — eleven with a

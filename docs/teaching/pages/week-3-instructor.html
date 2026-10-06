@@ -124,7 +124,7 @@ figcaption{font-size:12px;color:var(--ink-2);margin-top:8px}
 
 table{border-collapse:collapse;width:100%;min-width:460px}
 th,td{text-align:left;padding:var(--sp3) var(--sp4);vertical-align:top;font-size:var(--s2)}
-th{font-family:var(--font-mono);font-size:var(--s1);font-weight:500;color:var(--ink-2);
+th{font-family:var(--font-mono);font-size:var(--s1);font-weight:700;color:var(--ink-2);
   border-bottom:1px solid var(--line-hair)}
 td{border-bottom:1px solid var(--line-hair)}
 tr:last-child td{border-bottom:0}
@@ -1692,6 +1692,17 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   
   <p>The weak version is "context windows are limited, so prune", which every engineer here has done.</p>
   <p>The stronger claim is that <strong>pruning has a zone where it looks free, the zone ends at once rather than sloping, and you cannot find the edge by reading the prompt</strong>. You find it by running the cases.</p>
+  <h4>What this topic is about, in one line</h4>
+  <p><strong>Say the turn-around explicitly.</strong> Everything measured today has been the agent's output. This topic measures the input. Not "was the answer right" but "was the material it was built from right, and how would you know".</p>
+  <h4>Why context engineering belongs in a day about evaluation</h4>
+  <p>Somebody will wonder, because this is usually taught as a cost or performance subject. <strong>Three reasons on their page, and the third is the one to say out loud:</strong> a starved context produces no error. It produces a confident, well-written, wrong answer, which is the failure the whole day exists to catch.</p>
+  <p>The sentence that places the topic: <strong>context is the input most likely to change without anybody evaluating the change</strong>, and the three hours before this built the only tool that can tell you what the change did.</p>
+  <h4>What this topic is not</h4>
+  <p>Not compaction across a run, which is week 5. Not the four buckets from week 1. <strong>And not how to make the context better</strong> — those levers are week 5's. Today measures it.</p>
+  <h4>Does drift belong here? No, and it is worth saying why</h4>
+  <p><strong>This replaces the old "this topic has no outcome of its own" line</strong>, which read as an apology for the topic existing.</p>
+  <p>If drift comes up, and it does: it is a change nobody makes, discovered late or never, and the only defence is re-measuring on a schedule. <strong>A lab takes thirteen minutes and drift takes three months</strong>, so it is named at the three moments it would bite — the grader at <span class="off" data-off="01:55">01:55</span>, the eval set at <span class="off" data-off="02:44">02:44</span>, the model version at <span class="off" data-off="03:10">03:10</span> — and taught nowhere.</p>
+  <p class="qbadge">Be straight about it: nothing in this course detects drift, and <span class="off" data-off="02:22">02:22</span> says so. Rooms respect that more than a hand-wave.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
@@ -1704,14 +1715,35 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">The narrative &#183; Whole room · 5 min · predict in one written line first</span>
     
     <p><strong>Take the written prediction first.</strong> One line, what shape is the curve. Then <span class="mono">make w3-trim</span>.</p>
-    <p>Show the table and hold the explanation for <span class="off" data-off="03:33">03:33</span>. The room should sit with the 180 row for a moment.</p>
+    <h4>What this part is about</h4>
+    <p><strong>Say what is changing and what is not, in one sentence each.</strong> Changing: how much of each clause reaches the model. Not changing: the cases, the agent, the policy text on disk.</p>
+    <p>Then why it is worth five minutes: <strong>trimming is the cheapest and commonest optimisation in production, and almost nobody measures what it costs.</strong></p>
+    <h4>What you are looking at</h4>
+    <p>Annotate the four columns before the table goes up, because a room reading an unlabelled grid reads the first column and stops. <strong>Tell them the adversarial column is the one to read</strong>, and that the rupee column is the same information in the unit a release meeting argues in.</p>
+    <p class="qbadge">Say the sourcing caveat now rather than when challenged: these figures are this retriever's. The shape transfers; the thresholds do not. Their own numbers come from <span class="off" data-off="03:40">03:40</span>.</p>
+    <p><strong>Show the table and hold the explanation for <span class="off" data-off="03:33">03:33</span>.</strong> The room should sit with the 180 row for a moment. Do not answer "why did it go up" here — that is the next beat's whole job.</p>
   </div></div>
 
   <div class="beat" id="s-0328" data-ref="t5-r-concept"><span class="t"><span class="off" data-off="03:28">03:28</span></span><div class="b">
     <h4>What context engineering is</h4>
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
-    <p>One sentence, then the four rows. <strong>Land on the third row.</strong> The account note is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>
+    <p>One sentence, then the rows. <strong>Land on the account-note row.</strong> It is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>
+    <h4>What is in the window, on one real request</h4>
+    <p><strong>The table is ticket 8002 against account 6100</strong>, the request they ran at <span class="off" data-off="01:06">01:06</span>. Say which request it is, because an abstract list of five context sources teaches nothing and the same list against a real ticket teaches the authority point immediately.</p>
+    <h4>Is memory part of the context? Yes, and this agent has only half of it</h4>
+    <p>Memory is context — it reaches the model as tokens like everything else, so every measure here applies to it. Two kinds: <strong>within the run (present, it is the history) and between runs (absent, each ticket starts from nothing).</strong></p>
+    <p>The line that matters: <strong>the absence is why today's cliff is as clean as it is.</strong> Add memory between runs and the budget they measure at <span class="off" data-off="03:40">03:40</span> becomes a budget that moves. Week 5's, beside retrieval quality, and the reason those two sit together is that what you retrieve and what you remember compete for the same room.</p>
+    <h4>Figure 4 · how the pieces assemble a window, and where you can intervene</h4>
+    <p><strong>Figure 4 is on their page.</strong> Do not walk the boxes — walk the five labelled levers down the right-hand side, one phrase each.</p>
+    <p>Then the honest sentence: <strong>five levers, and today you measure only the third.</strong> That is not a gap; the third is the one this agent exposes.</p>
+    <h4>The five levers, and how you would optimise each</h4>
+    <p>A table, pointed at rather than walked. <strong>Spend what time you have on lever 5</strong>: give policy and tool definitions their own budget so they can never be evicted for history. It has the sharpest cost and nothing measures it, which makes it the design rule to take home.</p>
+    <h4>The three payload measures, and how each one is actually computed</h4>
+    <p><strong>This is the five minutes' centre and it was added because the metric names alone taught nothing.</strong> Precision@3 is 1/3 on ticket 8002. Recall@3 is 1/1. Both are arithmetic over a list a person labelled once — no model, no judgement at run time.</p>
+    <p>Then the part worth the time: <strong>trim the clauses and run it again. Both numbers are unchanged and the answer is now wrong.</strong></p>
+    <p class="qbadge">That is the sentence to land: precision and recall measure whether the right material was <em>fetched</em>, not whether it was <em>used</em>. The gap is exactly what the <span class="off" data-off="01:23">01:23</span> grader covers, so the two are not alternatives.</p>
+    <p>Context relevancy is the third, it is the only one needing a model, and it therefore carries the <span class="off" data-off="01:55">01:55</span> error rate. It is for live traffic where nothing is labelled.</p>
     <h4>What the lab is actually looking for: the minimum viable context</h4>
     <p><strong>Give the term, because it is what the lab is finding and the lab did not have a name for it.</strong> The minimum viable context is the smallest payload that still completes the task, and it is a measurement rather than a judgement.</p>
     <p>Then connect it backwards in one sentence each: context relevancy is the same idea from the cost end, context recall is what trimming destroys. <strong>Trimming is a trade between cost and recall</strong>, and the cliff is what winning the cost side too hard looks like.</p>
@@ -1725,16 +1757,54 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <h4>Why the curve falls off a cliff</h4>
     <span class="pairs">Components and design &#183; Whole room · 7 min</span>
     
-    <p><strong>Give the three readings in order.</strong> Trimming improved a number. The zone ends at once. Below the cliff a sort order decides. The third is the coldest sentence in the session and it is worth saying slowly.</p>
-    <p><strong>Close on the durable rule</strong>, because it is the part that does not depend on any of these numbers.</p>
+    <h4>How this part runs: the result, then the mechanism, then the rule</h4>
+    <p><strong>Say the order before you start</strong>, because this beat was restructured on 6 October for exactly this reason: read what happened, explain why, then name the rule that survives whatever their own numbers are.</p>
+    <h4>First, the mechanism. One rule explains every row</h4>
+    <p>Give the scoring rule before any reading: <strong>a clause scores one point per distinct query word it contains, ties break on the clause id, the agent acts on the leader.</strong> Then the gap-to-reliability table from <span class="off" data-off="00:55">00:55</span>: gap 3 settled, gap 1 takes second one run in four, gap 0 a coin flip.</p>
+    <p class="qbadge">The framing that makes the whole beat work: <strong>the gap column is the cause, the rate column is the symptom.</strong> The run's own closing line says to read the gap. It is right.</p>
+    <h4>Reading one · at 180 characters the number went UP, because the gap got WIDER</h4>
+    <p>Gap 1 to gap 3, same two clauses. <strong>Trimming took more matching words off the wrong clause than off the right one</strong>, because GOOD-2.2's enrolment wording sits in the part that got cut.</p>
+    <h4>Could you use reading one in production? Almost certainly not</h4>
+    <p>Three reasons on their page. <strong>Land the third</strong>: 180 is thirty characters from a cliff, so shipping it means sitting on a narrow ledge with nothing watching whether the ledge moved.</p>
+    <p>Then the transferable instruction: <strong>pick a budget with margin above your cliff, not the budget that scored best.</strong> The best-scoring budget is usually the most fragile.</p>
+    <h4>Reading two · the cliff, and the most important row in the table</h4>
+    <p><strong>This is the beat's centre and it was wrong until 6 October.</strong> Put the three gap-1 rows up together: 217 chars is gap 1 at 75%, 100 chars is gap 1 at 0%, 80 chars is gap 1 at 0%.</p>
+    <p>Ask what changed. <strong>The answer is not the gap — it is which clauses the gap is between.</strong> At 100 characters GOOD-2.1 has dropped out of the front entirely, and the two clauses in front are both wrong.</p>
+    <p class="qbadge">So the rate is zero rather than fifty: the coin is still flipping and both faces are wrong. <strong>A tie is a coin flip; the governing clause falling out of contention is a guaranteed wrong answer reporting a healthy-looking gap.</strong></p>
+    <p>Close it on <span class="off" data-off="00:21">00:21</span> one last time: that case went to zero and the overall figure fell twelve points.</p>
+    <h4>Reading three · at 60 and 40 the rate goes back up, and that is worse</h4>
+    <p>Cutting further brings GOOD-2.1 back in front, tied, so the tie-break decides the order — <strong>and the tie-break is the clause id.</strong></p>
+    <p>The coldest sentence in the session, and it is worth saying slowly: <strong>at 60 characters the refund decision on a ₹2,50,000 dispute is settled by alphabetical order and a coin.</strong></p>
+    <p>Then why it matters more than a fall: <strong>a number that improves for a reason you cannot name ends an investigation.</strong></p>
+    <h4>The rule that survives, and what an eviction budget is</h4>
+    <p><strong>Close on the durable rule</strong>, because it is the part that does not depend on any of these numbers. Then define the phrase, because it is load-bearing and was never defined: a context window is finite, something has to decide what is left out when the payload will not fit, and that rule plus the space it manages is the eviction budget.</p>
+    <p>Their page has the one-budget-versus-two diagram. <strong>Walk the one-budget case to turn 10</strong>, where the oldest thing dropped is the system prompt and the agent is answering a billing dispute with no refund policy in the window, and nothing errored.</p>
+    <h4>What happens when memory starts growing the window</h4>
+    <p>Three consequences, and <strong>the third is the one to say out loud</strong>: the window overflows soonest for the customer with the most history, so <strong>the failure is correlated with account value.</strong> That is the opposite of how anybody would choose to degrade.</p>
+    <p>The design answer is the same rule applied earlier: memory gets its own budget and a rule for what it keeps. Measuring those choices is week 5's, and <span class="off" data-off="03:54">03:54</span> has the techniques.</p>
     <h4>How much is not the only question. Where also matters.</h4>
     <p><strong>Flag the change of mechanism explicitly or you will create a misconception.</strong> Today's cliff is a retrieval artefact — lexical scores converging. The positional effect belongs to the model, and <strong>this lab does not demonstrate it.</strong> Say both sentences.</p>
     <p>Then the effect: attention is strongest at the beginning and end of a long context and weakest in the middle, so the same fact at the same token count can be used or ignored depending on where it sits. The name is <strong>lost in the middle</strong>.</p>
-    <p>Then the test, which is the actionable part: <strong>needle in a haystack</strong>, varying depth and position independently, and <strong>reading the grid rather than the average.</strong> A model at 95% overall can be at 40% for a needle two-thirds down a 64k context.</p>
+    <p>Then the test, which is the actionable part: <strong>needle in a haystack</strong>, varying depth and position independently, and <strong>reading the grid rather than the average.</strong></p>
+    <h4>What the grid looks like, and how to read it</h4>
+    <p><strong>The grid is now published on their page</strong>, which it was not before 6 October — this beat referred to "the grid" and never showed one. <strong>Say that the figures are illustrative of the shape and are not measurements</strong>, because this agent's context is far too short to need the test.</p>
+    <p>Point at two things only: <strong>the 92% average beside the 22% worst cell</strong>, and the middle column falling away while both edges hold.</p>
+    <h4>How to run one, in five steps</h4>
+    <p>Five steps on their page. <strong>If you say one, say step three</strong>: use filler from your own domain, because unrelated filler is easier to ignore and makes you look better than you are.</p>
+    <h4>And the practical defence, which costs nothing</h4>
+    <p>They do not have to beat the effect, they can avoid it. <strong>Never bury a limit in the middle</strong>, restate the critical instruction at the end, and — the strongest one — <strong>extract a fact into a field rather than trusting the model to find it in a paragraph.</strong></p>
     <p class="qbadge">The line for this room: "our model handles 128k" is a capacity claim, not a performance one. The defensible number is the depth and position at which your own task still works.</p>
     <h4>Four ways a context window goes wrong, and who owns each</h4>
     <p>Starvation, clash, distraction, poisoning. <strong>Point at the table and say which one they just watched</strong>, which is starvation.</p>
-    <p><strong>Spend the minute on clash</strong>, because it is the one nobody tests. This agent can be handed a retrieved clause that contradicts its own system prompt and has no rule for which wins. It will pick one, and the trace will not record that it was a choice.</p>
+    <h4>Telling the four apart, on this agent</h4>
+    <p><strong>The names are not the useful part.</strong> Their page shows each of the four as a thing that happens to ticket 8002, so the room can look at one wrong answer and say which of the four produced it. That is the skill; the taxonomy is the scaffolding.</p>
+    <h4>How to control each one</h4>
+    <p>Detection and control for each, and <strong>the pattern across the right-hand column is the thing to name</strong>: three of the four are fixed by structure — budgets, limits, ordering, marking — and none is fixed by a better prompt. <strong>Context failures are an assembly problem, not a wording problem.</strong></p>
+    <h4>Clash in detail, because it is the one nobody tests</h4>
+    <p><strong>Spend the minute here.</strong> This agent can be handed a retrieved clause that contradicts its own system prompt and has no rule for which wins. It will pick one, and the trace will not record that it was a choice.</p>
+    <p>What makes clash worse than the other three: <strong>every input was valid.</strong> Nothing trimmed, nothing injected, nothing missing. Two correct pieces of text disagreed and the system could not say so.</p>
+    <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
+    <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from <span class="off" data-off="00:27">00:27</span>. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
     <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
   </div></div>
@@ -1873,14 +1943,15 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <p><strong>The likely wrong answer.</strong> "Shorter context is better, we have been overloading it."</p>
   <p><strong>What is right about it.</strong> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.</p>
   <h4>Question 2 &#183; this topic</h4>
-  <p>At 60 characters a clause almost every clause scores zero. What decides the answer then?</p>
+  <p>At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts on?</p>
   <ul class="opt">
-    <li>A. The model’s judgement, with less to go on</li>
-    <li>B. Whichever clause id sorts first <span class="ok">&#8212; correct</span></li>
+    <li>A. The model’s judgement, with less text to go on</li>
+    <li>B. The clause id breaks the tie, and then a gap of zero makes it a coin flip <span class="ok">&#8212; correct</span></li>
     <li>C. The clause that was retrieved last time</li>
     <li>D. The case’s expected clause</li>
   </ul>
-  <p><strong>The answer.</strong> <p><strong>B.</strong> Nothing about the model changed, and the scores are tied, so the tie-break decides. The tie-break is <span class="mono">sorted()</span>.</p></p>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> Nothing about the model changed. The two scores are level, so the tie-break puts GOOD-2.1 first because its id sorts before GOOD-2.2 — and then, because the gap is zero, the agent takes second place half the time anyway.</p>
+          <p><strong>Both halves matter.</strong> The id decides the ordering; the zero gap decides that the ordering barely holds. The refund is settled by <span class="mono">sorted()</span> and a coin, and neither of those is policy.</p></p>
   <p><strong>The likely wrong answer.</strong> A, because with less context the model is guessing.</p>
   <p><strong>What is right about it.</strong> It is the intuitive answer and it is half right: the system is guessing. It is not the model guessing. The choice was made before the model saw anything.</p>
   <h4>Question 3 &#183; from earlier</h4>

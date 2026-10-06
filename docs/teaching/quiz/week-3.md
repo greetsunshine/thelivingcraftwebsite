@@ -474,19 +474,29 @@ Ask for the next row of the table. At 120 characters the adversarial case is at 
 ### Q52 · Below the cliff
 `apply` · 03:57
 
-> At 60 characters a clause almost every clause scores zero. What decides the answer then?
+> At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts
+> on?
 
-- **A.** The model's judgement, with less to go on
-- **B.** Whichever clause id sorts first ✅
+- **A.** The model's judgement, with less text to go on
+- **B.** The clause id breaks the tie, and then a gap of zero makes it a coin flip ✅
 - **C.** The clause that was retrieved last time
 - **D.** The case's expected clause
 
-**Why the others are attractive and wrong.** **A** is the intuitive answer and it is the one
-to take apart: nothing about the model changed, and the scores are tied, so the tie-break
-decides. The tie-break is `sorted()`. **C** and **D** describe systems that do not exist here.
+**Answer.** Both halves matter. The scores are level, so the tie-break puts GOOD-2.1 first
+because its id sorts before GOOD-2.2 — and then, because the gap is zero, the agent takes second
+place half the time anyway. The id decides the ordering; the zero gap decides that the ordering
+barely holds.
 
-**Why it is worth asking.** It is the coldest sentence in the session. Below the cliff, policy
-is not deciding anything.
+**Why the others are attractive and wrong.** **A** is the intuitive answer and it is the one to
+take apart: nothing about the model changed. The choice was made before the model saw anything.
+**C** and **D** describe systems that do not exist here.
+
+**Why it is worth asking.** It is the coldest sentence in the session. The refund is settled by
+`sorted()` and a coin, and neither of those is policy.
+
+**Corrected on 6 October.** The stem previously read "almost every clause scores zero", which is
+wrong — the real scores at that budget are 2 and 2 — and the keyed answer named only the
+tie-break, which is half the mechanism. Verified against `search_policy` at all eight budgets.
 
 ---
 

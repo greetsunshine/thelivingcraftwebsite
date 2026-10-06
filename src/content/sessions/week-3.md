@@ -22,7 +22,7 @@ status: draft
 # run count are not two ideas; together they are what an evaluation harness is.
 outcomes:
   - id: case-classes
-    text: write the case my current tests cannot fail, and name which of the four classes of case my suite has none of
+    text: write a test case my current suite would pass today but should fail, and say what kind of situation my suite has no cases for
     movesMost: true
   - id: rate-not-verdict
     text: report a result as a rate over repeated runs, and say how many runs I needed before the rate stopped moving
