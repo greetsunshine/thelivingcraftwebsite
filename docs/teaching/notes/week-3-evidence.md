@@ -368,6 +368,85 @@ are *incomplete*-class cases from 00:27, so the right behaviour is to escalate r
 **Table headers are bold page-wide**, both stylesheets. They were weight 500, which is why
 nothing read as a header. 178 header cells on the learner page.
 
+## What changed on 6 October (round five), and why
+
+The last five rows of the sheet, all on context engineering and the close. Answered in
+[`docs/teaching/reviews/week-3-review-2026-10-06-round5.md`](../reviews/week-3-review-2026-10-06-round5.md).
+**The clock did not move:** 46 rows, fifth round.
+
+### The 03:40 lab now has an answer key, and it was run to get it
+
+The lab asked learners to "narrow where the edge sits" and gave them no way to know whether they
+had found it. **It now has two edges with definite answers, and both came from running the
+experiment rather than reasoning about it:**
+
+| | between | what changes across it |
+|---|---|---|
+| The first edge | **165 and 160** | the gap narrows from 3 to 2; the rate slips 100% to 95%. Gradual |
+| The cliff | **115 and 110** | the gap column stops naming GOOD-2.1 at all. 55% to 0%, nothing between |
+
+**So "is the fall gradual or sudden?" has the answer "both"**, and that is now the question to ask
+whoever finishes first.
+
+The lab also gained a second half: **write two cases that fail on context alone.** A starvation
+case that asserts the governing clause below the cliff, and a margin case that asserts the gap
+rather than the answer — which fails *before* the money is wrong. The second needs the `gap` field
+from the 01:23 lab, which is the second reason to have added it.
+
+### 03:54 gained three slots and two sections
+
+The slot list was one job with five products. It is now three jobs: **makes a stable prefix
+cheaper**, **watches the context growing**, **shrinks the context**. The third names LLMLingua,
+LangChain's `trim_messages` with LangGraph checkpointers, LlamaIndex summarising buffers, Zep and
+Mem0, and LangGraph, the OpenAI Agents SDK, CrewAI and AutoGen for handoff — each with what it
+costs.
+
+**When prompt caching is worth using** is now explicit: the front of the payload byte-identical,
+the stable part large, the prefix read many times inside the cache's lifetime. And the design
+consequence, which is the eviction rule again: **caching rewards stable-at-the-front, which is
+also where attention is strongest for rules that must be obeyed.** For once the cost and
+correctness optimisations agree.
+
+**Four patterns for tracking context growth**, with the line that matters: only the fourth is
+evaluation. A token budget per request type, alerting on prefix growth rather than total cost,
+token attribution per step — all three tell you the context changed. **A context budget written as
+a gate row** tells you whether the change was safe, and it is the only one that can stop a release.
+
+**The summary card went from five rows to seven.** Added: the margin, and whether shrinking lost
+anything. The split worth leaving the room with: **rows 1, 2, 4 and 5 have tools; rows 3, 6 and 7
+are cases you write.**
+
+### The week's assignment is now the decision record
+
+**This is the change with the widest reach, so it is worth stating plainly.** The assignment was
+"one row of the gate table". It is now **an architecture decision record for one evaluation
+decision, with the gate-table row as its design section.**
+
+The reason: Sunil asked for an ADR recording the session's key takeaways, which learners fill in.
+The seven sections already exist and are fixed; what varies is the brief. So the brief now names
+the ADR, and the teardown carries a section-by-section guide mapping each of the seven onto today.
+
+**The gate row is still what they build in the room.** It became a section of a larger artefact
+rather than the whole of it. The after-work's standalone gate-row item was removed, because it had
+become a duplicate.
+
+**Five takeaways are printed at the close**, each tagged with the minute it came from — a pass is a
+claim about the cases you chose (00:15), one run is not a result (00:55), a right answer can be
+reached by the wrong rule (01:45), a grader has its own failure rate (02:02), a threshold with no
+owner is not a gate (02:49). **Read them out as the last thing before the quiz**, because it is the
+only moment in the day when all five sit together.
+
+### Two more stale figures found and fixed
+
+**Topic 5's first quiz item still said "cutting the policy text from 217 characters to 180"**, and
+its answer said the gap was "one or two points". Both wrong: 217 is the mean clause length, and the
+gap at 180 is 3. The stem now asks one thing — *why did capping at 180 improve it?* — and the second
+half is a spoken follow-up. The same item appears twice in the bank, as Q9 and Q51; both corrected.
+
+**The 217 label on the 03:23 table is now explained rather than removed**, because it is genuinely
+what `make w3-trim` prints. The row reads `all (mean 217)` and the annotation says it is the mean
+clause length and not the length of any one clause.
+
 ## What the agent can do now
 
 The table the close produces, and the reason the recall segment at 04:02 exists. Every

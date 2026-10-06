@@ -19,6 +19,59 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Week 3, review round 5 — 6 October
+
+The last five rows of the sheet, eleven items, all on context engineering and the close. Answered
+in
+[`docs/teaching/reviews/week-3-review-2026-10-06-round5.md`](../teaching/reviews/week-3-review-2026-10-06-round5.md).
+Clock unmoved: 46 rows, fifth round.
+
+### The assignment changed, and this one reaches beyond the pages
+
+**Week 3's assignment was "one row of the gate table". It is now "an architecture decision record
+for one evaluation decision in your own system, with the gate-table row as its design section."**
+
+Sunil asked for an ADR recording the session's takeaways. The seven ADR sections are fixed and must
+not vary by week, so what changed is the brief — and the teardown now carries a section-by-section
+guide mapping the seven onto today. **The gate row is still what they build in the room**; it became
+a section of a larger artefact. The after-work's standalone gate-row item was removed as a
+duplicate.
+
+**Check this against `/craft/adr` and `/craft/admin/work` before release.** Those surfaces read
+`assignment` from the session file, and the text they now show is longer than before.
+
+### The 03:40 lab has an answer key, produced by running it
+
+It previously asked learners to narrow the edge and gave them no way to know if they had. Now two
+edges, both from running the harness at fourteen budgets: **the first edge is between 165 and 160**
+(gap 3 to 2, 100% to 95%, gradual) and **the cliff is between 115 and 110** (the gap column stops
+naming GOOD-2.1; 55% to 0% with nothing between). So *"is the fall gradual or sudden?"* answers
+**both**.
+
+The lab also gained a second half: two cases that fail on context alone, the better of which
+**asserts the gap rather than the answer**, so it fails before the money is wrong.
+
+### Two more stale figures found
+
+**Topic 5's first quiz item still said "cutting the policy text from 217 characters to 180"** and
+its answer said the gap was "one or two points". 217 is the mean clause length; the gap at 180 is 3.
+Corrected in the module and both bank copies. **The 217 on the 03:23 table is now labelled
+`all (mean 217)` and explained**, because it is genuinely what the target prints.
+
+That makes **six stale-figure defects found across rounds four and five**, all of the same kind. The
+failure mode and what catches it are recorded under round four above, and they have not changed.
+
+### The rest
+
+03:54 went from one slot to three — caching, watching, shrinking — with named tools and costs for
+each, when caching is worth using, four patterns for tracking context growth (only the fourth is
+evaluation), and the summary card expanded from five rows to seven.
+
+The end-of-week quiz was reviewed: six items needed nothing, and two were strengthened rather than
+replaced — Q8 now names the absolute-against-relative reading, and Q7 gained the kappa follow-up.
+
+---
+
 ## Week 3, review round 4 — 6 October
 
 The sheet gained a **Re-review** column. This pass worked those rows: three on the opening and

@@ -179,6 +179,12 @@ today it does.
 
 ---
 
+**Added 6 October — the better half of this question.** What is the kappa? Seven in ten is 70%,
+and on this label set the kappa is 0.35 against a production bar of 0.60. **A room that gives the
+rate without the kappa has answered half of it.**
+
+---
+
 ### Q8 · The release on Thursday
 `apply` · 04:40 · renders on the learner check
 
@@ -200,17 +206,27 @@ case pays ₹2,50,000 to somebody who asked for it in a ticket.
 **Follow-up if the room splits between A and C.** Who is allowed to say Thursday moves? If
 nobody in the room can, C is not an available answer.
 
+**Added 6 October — the sentence that ties the day together.** Look at what the two numbers are.
+Overall up from 76% to 78% is a *relative* reading: not worse than last time, so a regression gate
+passes it. The adversarial case down from 75% to 65% is the one that should have been an
+*absolute* floor, because one escape pays ₹2,50,000 and there is no partial credit on a payment.
+**This release passes one kind of gate and fails the other**, which is 02:49 arriving on a
+Thursday.
+
 ---
 
 ### Q9 · Trimming made it better
 `apply` · held back from the end-of-week quiz, because it is asked at 03:57 as Q51
 
-> Cutting the policy text from 217 characters to 180 moved the adversarial case from 75% to
-> 100%. What does that tell you, and what does it not license?
+> Capping each clause at 180 characters took the adversarial case from 75% to 100%. Why?
 
-**Answer.** The case's verdict turns on a scoring gap of one or two points, which is narrow
-enough that a change in either direction moves it. It does not license trimming, because
-the same mechanism takes the case to 0% at 100 characters.
+**Answer.** The gap widened, from 1 point to 3. Trimming removed more of the query's words from
+GOOD-2.2, the clause that does not govern, than from GOOD-2.1, the clause that does — because
+GOOD-2.2's enrolment wording sits in the part that got cut. A gap of 3 is settled, so the agent
+stops taking second place at all.
+
+**Ask the second half out loud:** *and what does that license?* Nothing. The same mechanism takes
+the case to 0% at 110 characters.
 
 ---
 
@@ -458,12 +474,20 @@ gate table is the first artefact that makes that visible.
 ### Q51 · Trimming made it better
 `apply` · 03:57
 
-> Cutting the policy text from 217 characters to 180 moved the adversarial case from 75% to
-> 100%. What does that tell you, and what does it not license?
+> Capping each clause at 180 characters took the adversarial case from 75% to 100%. Why?
 
-**Answer.** The verdict turns on a scoring gap of one or two points, narrow enough that a
-change in either direction moves it. It does not license trimming, because the same mechanism
-takes the case to 0% at 100 characters.
+**Answer.** The gap widened, from 1 point to 3. Trimming removed more of the query's words from
+GOOD-2.2, the clause that does not govern, than from GOOD-2.1, the clause that does. A gap of 3 is
+settled, so the agent stops taking second place at all and the case passes every run.
+
+**Ask the second half out loud:** *and what does that license?* Nothing. The same mechanism takes
+the case to 0% at 110 characters.
+
+**Corrected on 6 October.** The stem described 217 characters as "the policy text". 217 is the
+*mean* clause length printed by `make w3-trim`; GOOD-2.1 is 223 characters and GOOD-2.2 is 235.
+The old answer also said the gap was "one or two points", where the real gap at 180 is 3. Both
+verified against `search_policy` at every budget. The stem now asks one thing, and the second half
+is a spoken follow-up.
 
 **The wrong answer worth catching.** "Shorter context is better, we have been overloading it."
 Ask for the next row of the table. At 120 characters the adversarial case is at 55% and

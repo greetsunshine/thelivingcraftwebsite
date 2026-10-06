@@ -128,17 +128,17 @@ prework:
     - "Read one clause of `data/policy-docs.json`, GOOD-2.1, and one account note, account 6100 in `data/accounts.json`. Bring a written answer: which of the two would you rather your agent obeyed, and what in the code decides?"
     - "Check your daily quota. Nothing today needs a model call, and every `w3-` target is deterministic, so the whole session runs on zero requests."
 
-assignment: "One row of the gate table for the requirement in your own system that nothing currently tests"
+assignment: "An architecture decision record for one evaluation decision in your own system. The gate-table row you wrote at 02:56 is its design section."
 
 after:
   hours: 2
   items:
+    - "Write the week's decision record at /craft/adr. Seven sections, and the gate-table row from 02:56 is the design section. One line each is enough; the five takeaways on the close page are the prompts. The design section is all thirteen columns, and the decision owner column is to go and ask rather than assume."
     - "Write the missing case. Take the class your suite has none of and add one case in it. Run it. If it passes the first time, the case is too easy."
     - "Run one case twenty times and write the rate. Then say at which run number the rate stopped moving, and whether it ever did."
     - "Finish the retrieval margin guard if the 01:23 lab ran out of clock. Return the gap as a number from _pick, thread it through _record, then escalate instead of paying when it is under two. Run make w3-wobble and count how many honest customers you just sent to a human."
-    - "One row of the gate table for your own system. All thirteen columns, and the decision owner column is to go and ask rather than assume."
     - "Answer one question in writing: what does your agent get shown each turn that nobody chose? Week 5 opens near it."
-  note: "Two hours, and the first item is the one that matters. The margin guard is only here for people whose lab ran out of time at 01:37; skip it if yours is already running. The rest are readable in the gaps."
+  note: "Two hours, and the decision record is the one that matters — it is the assignment, and it is the artefact a year from now. The margin guard is only here for people whose lab ran out of time at 01:37; skip it if yours is already running. The rest are readable in the gaps."
 
 reading:
   - title: Evaluation-gates worksheet
