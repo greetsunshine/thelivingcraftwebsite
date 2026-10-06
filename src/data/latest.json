@@ -1,5 +1,5 @@
 {
-  "refreshedAt": "2026-08-15T03:58:01.240Z",
+  "refreshedAt": "2026-09-28T13:19:35.976Z",
   "items": [
     {
       "id": "seed-assessment-founding",
@@ -16,100 +16,183 @@
       ]
     },
     {
-      "id": "context-compaction-reliability-failure",
-      "title": "Context compaction shows up as a reliability failure, not just a cost lever",
-      "body": "A preliminary empirical study (Min et al., arXiv 2608.06503, 6 Aug 2026) looks at agents that repeatedly compress their own context. It finds that this compression weakens the influence of recent interactions. The agent then blocks more actions, explores the same ground again, and behaves differently from run to run. Token-count metrics never show any of this. The authors propose TRACE. It evaluates each individual compaction event by running paired closed-loop continuations from the same environment state, then optimises the compression prompt while leaving all models frozen. If your agent compacts, treat each compaction boundary as a discrete event and test it by what the agent then does, rather than by reading the summary and judging it by eye.",
-      "reviewNote": "Primary source (arXiv preprint), but the authors label it explicitly preliminary; results are on AppWorld only, single team (UVA + Nokia), no independent replication. Do not present TRACE as an established technique — the durable point is the failure-mode observation, not the proposed fix.",
-      "source": "https://arxiv.org/abs/2608.06503",
+      "id": "compaction-cliff-safety-rules",
+      "title": "Compaction quietly deletes safety rules, and the loss compounds each round",
+      "body": "A University of Passau paper measures what happens to hard constraints when an agent compacts its context, meaning it summarises the running log to fit the token budget. Across 20 production agent configurations, Claude Code's /compact prompt on Sonnet 4.6 kept 53% of safety rules after one compaction round and 10% after five; the authors call this the Compaction Cliff. The cause is structural: an episodic log and a rule like \"patient is allergic to penicillin\" compete for the same tokens and get summarised at the same rate, but only the rule needs exact wording to stay enforceable. If you run long sessions, treat compaction as a lossy operation on your constraints, not only on your history — pin invariants outside the compactable window and check that every constraint still appears after each compaction round.",
+      "reviewNote": "Single unreplicated academic result. I read the paper directly (PDF, arXiv 2608.22752v1, dated 24 Aug 2026), not a summary. Authors release AgentArtifactCorpus, the classifier, and a reference implementation, and downstream tests report paired significance results. The 53%/10% figure is measured on one vendor's compaction prompt at one model version — quote it as a demonstration that compaction is lossy, not as a universal decay rate. Related recent work (CliffCompaction, Memory Control Signals, CompactionRL) went unopened due to fetch limits; tool design was not reached at all.",
+      "source": "https://arxiv.org/abs/2608.22752",
       "tags": [
         "agentic-ai",
         "context-management",
-        "reliability",
-        "evaluation"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "control-context-compression-cliff",
-      "title": "Compressing system-side control context has a sharp, non-linear reliability cliff",
-      "body": "\"Control Under Compression\" (arXiv 2608.01056, 2 Aug 2026) looks at agent control contexts rather than conversation history. A control context is the persistent system-side instruction set. It specifies tools, arguments, policies, execution protocols and recovery. The benchmark ran 15,525 environment-verified runs. Retaining 75% of the context held success near the full-context baseline, at 92.7% and 92.4% against 93.8%. Between 50% and 35% the methods diverged sharply. At 35% they scored 47.0%, 39.0% and 19.9%, depending on the compression method. Failures appeared mainly as tool-execution and action-parsing errors. Reliability varied enough between control contexts that the authors argue no compressor ranking holds universally, and that each context needs its own qualification. So trimming tool and policy prompts is a runtime-reliability decision, and it needs executable testing per context. The safe-looking zone ends abruptly.",
-      "reviewNote": "Primary source, methodologically the stronger of the two (large run count, environment-verified). Still a single unreplicated preprint; all results are on three fixed Qwen model identifiers, so the specific cliff thresholds may not transfer to other model families. Cite the shape of the finding, not the exact percentages, when talking to clients.",
-      "source": "https://arxiv.org/abs/2608.01056",
-      "tags": [
-        "agentic-ai",
-        "tool-design",
-        "context-management",
-        "reliability"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "mcp-2026-07-28-stateless-spec",
-      "title": "MCP went stateless: the 2026-07-28 spec is a breaking change for remote MCP server deployment",
-      "body": "The 2026-07-28 Model Context Protocol specification shipped with a stateless protocol core. It also brought Multi Round-Trip Requests, header-based routing, cacheable list results, authorization hardening, a formal extensions framework, and updated Tier 1 SDKs. This is the largest revision of the protocol since launch. The initialize/initialized handshake (SEP-2575) and the Mcp-Session-Id header (SEP-2567) are removed entirely. Every request is now self-describing. The protocol version, client info and capabilities travel in a _meta field inline on every request. A remote MCP server used to need sticky sessions, a shared session store, and deep packet inspection at the gateway. It can now run behind a plain round-robin load balancer, route traffic on an Mcp-Method header, and let clients cache tools/list responses for as long as the server's ttlMs permits. If you have an MCP server in production behind a Redis session store, that architecture is now legacy. Plan the migration rather than inheriting it.",
-      "reviewNote": "Primary source is the MCP maintainers' own blog, the right artefact for a spec release. The announcement includes promotional quotes from Microsoft and Netlify, and Google published its own framing of work it led (Google states it led the decoupling effort and co-founded the MCP Transports Working Group with Hugging Face) — treat \"widely adopted already\" and download-volume claims as vendor-sourced. The substance of the protocol change is verifiable from the spec itself.",
-      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
-      "tags": [
-        "mcp",
-        "tooling-release",
+        "safety",
         "architecture"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-28"
     },
     {
-      "id": "mcp-sdk-migration-edges",
-      "title": "MCP migration has sharp edges: a silent version downgrade and three deprecated capabilities",
-      "body": "Beta releases of the Python, TypeScript, Go and C# SDKs are available with support for the 2026-07-28 spec. Here is the trap. The streamable HTTP transport accepts 2026-07-28 only when you set StreamableHTTPOptions.Stateless = true. Leave it unset and clients negotiate down to 2025-11-25. That is a silent change in behaviour rather than an error. So add an explicit assertion on the negotiated protocol version to your integration tests. The other breaking changes are confined to the capabilities the specification deprecates: roots, sampling and logging. If your agent design depends on server-initiated sampling, that is now on a deprecation path. Note also that server/discover is optional for clients to call, but mandatory for every 2026-07-28 server to implement.",
-      "reviewNote": "Primary source, maintainer-authored. The SDKs were in beta at time of writing (three weeks ago) — worth re-checking whether Tier 1 SDKs have since gone stable before recommending anyone migrate production code.",
-      "source": "https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/",
-      "tags": [
-        "mcp",
-        "tooling-release",
-        "migration"
-      ],
-      "gatheredAt": "2026-08-15"
-    },
-    {
-      "id": "stateless-mcp-authorization-shift",
-      "title": "Statelessness moves MCP authorization to the application layer, and most MCP risk was never in the transport",
-      "body": "Removing the session also removes the per-session authorization context. As Google's write-up puts it, \"As the responsibility of managing state shifts from the transport layer to the application layer, security becomes paramount.\" An independent security review of the release is blunter. Statelessness changes where authorization happens and how you deploy the server. But the vulnerabilities found in MCP servers sit in the functionality those servers expose, and the specification does not touch that. The spec upgrade buys scale and cheaper operations, not safety. Every request must now carry and re-verify its own authorization, and tool-level authorization design remains entirely your problem.",
-      "reviewNote": "Equixly is a security vendor writing about a protocol it does not own, which makes the critical framing more credible than a first-party post — but they sell MCP security testing, so the \"vulnerabilities are in your functionality\" conclusion is commercially convenient for them. The underlying claim (spec doesn't govern tool implementation) is structurally obvious and low-risk to repeat.",
-      "source": "https://equixly.com/blog/2026/08/05/stateless-mcp/",
+      "id": "mcp-stateless-breaks-gateway-session-controls",
+      "title": "MCP spec 2026-07-28 removes protocol sessions, which breaks session-based gateway controls",
+      "body": "The Model Context Protocol release candidate makes the protocol stateless. The initialize/initialized handshake is removed, protocol version and client capabilities now travel in _meta on every request, and the Mcp-Session-Id header and its protocol-level session are also removed. The maintainers state the practical effect directly: a remote MCP server that previously needed sticky sessions, a shared session store, and deep packet inspection at the gateway can now run behind a plain round-robin load balancer and route traffic on an Mcp-Method header. If your containment design inspects or rate-limits an agent per session at the gateway, that anchor is gone, and authorization must be carried per request instead.",
+      "reviewNote": "Primary source, opened and read. Date caution: page metadata carries published_time 2026-05-21 with modified_time 2026-07-24, while the post is titled for the 2026-07-28 release and says the final spec ships July 28, 2026. The release is inside the 90-day window but the announcement text may date from May — confirm against the spec changelog before teaching it as \"this quarter\". I did not open the individual SEP pull requests.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
       "tags": [
         "mcp",
         "security",
-        "authorization",
-        "architecture"
+        "containment",
+        "protocol"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-28"
     },
     {
-      "id": "indirect-prompt-injection-live-campaigns",
-      "title": "Indirect prompt injection against web-browsing agents documented in live campaigns",
-      "body": "Zscaler ThreatLabz documented real-world campaigns that embed instructions in web content aimed at AI agents. They describe indirect prompt injection as an attack that hides malicious instructions inside content an AI agent retrieves, such as websites, documents or email, in order to influence the agent's reasoning while it works. Their test setup matters. They built an autonomous agent with web browsing and payment-execution tools. They ran it fully sandboxed, with no real funds. They deliberately configured it with no spending limits, in order to measure the largest possible exploitation surface. The engineering takeaway is that spend caps, tool-scope limits, and human confirmation on actions you cannot undo are the controls doing the actual work. Model-level instruction hardening is not.",
-      "reviewNote": "Vendor security research with a Zscaler product-coverage section at the end — campaign attribution and severity framing are their own and unreplicated. The \"no spending limits\" configuration is an adversarial worst case by design, so demonstrated impact should not be read as typical. The general point that prompt injection remains unsolved is separately supported by an OWASP researcher at Infosec Europe (https://www.infosecurity-magazine.com/news/infosec-europe-prompt-injection/), though that is a secondhand press report of a talk.",
-      "source": "https://www.zscaler.com/blogs/security-research/indirect-prompt-injection-web-content-targets-ai-agents",
+      "id": "mcp-authorization-mixup-hardening",
+      "title": "Authorization hardening in the same MCP spec targets a mix-up attack specific to MCP's shape",
+      "body": "Six proposals tighten the authorization spec toward normal OAuth and OpenID Connect practice. Clients must now validate the iss parameter on authorization responses per RFC 9207, described as a low-cost mitigation for a class of mix-up attack that is more prevalent in MCP's single-client, many-server deployment pattern. In a future version, clients will be expected to reject responses that omit iss, so authorization servers should begin supplying it now. Also plan migrations: Roots, Sampling, and Logging are deprecated under a new feature lifecycle policy, and Sampling removal changes who calls the model.",
+      "reviewNote": "Primary source, opened and read. Same date caveat as the related MCP finding: metadata suggests the announcement text may predate the 28 July release. I did not open the individual SEP pull requests.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/",
+      "tags": [
+        "mcp",
+        "authorization",
+        "oauth",
+        "security"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "agent-memory-files-injection-vector",
+      "title": "Agent memory files are a durable injection vector, and model strength does not predict safety",
+      "body": "A University of Washington paper tests injections planted in persistent agent state, such as CLAUDE.md, AGENTS.md, and preference files. The authors find that although it is hard to make an agent overwrite its own memory files using untrusted external content, payloads already planted in those files can attack current and future sessions, with success varying by system, model, and multi-session sequence. Single-probe attack success rates ranged widely across models and goals, for example 80% credential exfiltration on one model and 0% on two others, and 100% brand targeting on one Codex model. The practical lesson is to treat memory and instruction files as a write-controlled trust boundary, with review on updates, not as ordinary config.",
+      "reviewNote": "Primary preprint, opened and read including results tables. Unfinished ACM template (placeholder conference metadata), n=10 trials per cell, one synthetic sandboxed workspace, two agent products, four models. Attack success rates at that sample size are directional, not precise. No independent replication — do not quote specific percentages as stable facts.",
+      "source": "https://arxiv.org/pdf/2607.14611",
+      "tags": [
+        "agentic-ai",
+        "prompt-injection",
+        "agent-memory",
+        "security"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "salesbleed-zero-click-exfiltration",
+      "title": "SalesBleed shows a zero-click exfiltration chain through a public web form",
+      "body": "Zenity Labs disclosed weaknesses in Salesforce Agentforce. Researchers report zero-click vulnerabilities that let attackers silently exfiltrate CRM data with no victim interaction and without the attacker authenticating into the target environment. The chain, dubbed SalesBleed and published on September 24, plants hidden prompt injection payloads in public-facing Web-to-Lead forms, and the instructions hijack the agent when it later processes that record. The payload then queried and exfiltrated account data including company names and deal sizes, using DNS-based exfiltration that evaded Salesforce's Trusted URLs redaction controls.",
+      "reviewNote": "Secondhand. I opened the Infosecurity Magazine report, not Zenity Labs' original write-up at labs.zenity.io, and had no fetch budget left for the primary. Zenity is a vendor in the agent-security market, so the framing is interested even though the vulnerability class is credible. Salesforce's own response is not verified here.",
+      "source": "https://www.infosecurity-magazine.com/news/vulnerabilities-salesforce-ai/",
       "tags": [
         "security",
         "prompt-injection",
-        "agentic-ai",
-        "containment"
+        "data-exfiltration",
+        "salesforce"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-28"
     },
     {
-      "id": "data-injection-broader-threat-model",
-      "title": "Early academic work argues the agent threat model is broader than instruction injection",
-      "body": "A preprint led by Seoul National University argues that agent security research has been too narrow. Prior work has focused mainly on indirect prompt injection. The most-studied category within that is instruction injection, where attacker-controlled untrusted data is read as an instruction. The paper argues that data injection is a realistic threat class in its own right. Data injection means poisoning what the agent believes to be true, rather than what it is told to do. If your agent threat model is built only around \"untrusted text might contain commands\", this is a reason to widen it.",
-      "reviewNote": "arXiv preprint, July 2026, not peer-reviewed and no independent replication. Only the abstract and reference sections were read in the search result, so the claim is deliberately kept narrow — do not let the Q&A agent describe specific attack results or success rates from this paper. Worth a full read before it goes anywhere near teaching material.",
-      "source": "https://arxiv.org/html/2607.05120v1",
+      "id": "crowdstrike-injection-taxonomy",
+      "title": "A published injection taxonomy gives concrete red-team cases beyond \"ignore previous instructions\"",
+      "body": "CrowdStrike's AI security research team published additions to its prompt injection taxonomy. The post announces 18 new additions, expanding coverage to over 200 distinct techniques. Several named classes are worth adding to your own test suite. They include trigger-activated rule addition, where a rule does nothing at first then activates on a trigger phrase or condition, so it looks harmless during review, and special token injection, which mimics the role identifiers and hidden delimiters models use to separate system commands, user input, and tool output, aiming to cause boundary confusion.",
+      "reviewNote": "A vendor writing about its own research asset, and the post is adjacent to a product launch. The \"200+\" count is self-reported and self-defined, with no external standard for what counts as a distinct technique. The value is the technique descriptions as test cases, not the number — treat the count as marketing.",
+      "source": "https://www.crowdstrike.com/en-us/blog/crowdstrike-uncovers-new-prompt-injection-techniques/",
       "tags": [
         "security",
-        "threat-modelling",
-        "agentic-ai",
-        "research"
+        "red-teaming",
+        "prompt-injection"
       ],
-      "gatheredAt": "2026-08-15"
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "enterprise-agent-governance-gap",
+      "title": "Enterprise survey says agents are in production but ownership and logging are not",
+      "body": "A survey of 362 US IT decision-makers reports that almost all enterprises now run AI agents in production, while fewer than half log what those agents do. No single function owns the majority of the agent fleet, and engineering or IT claims only the largest minority share. The survey also reports that most leaders believe staff deploy agents without approval, yet only about a third require agents to be registered before deployment. For a senior engineer, the competency this points at is operational, not model-related: agent inventory, an owner per agent, action-level audit logs, and a registration gate before anything reaches production.",
+      "reviewNote": "Vendor research. Guild sells agent governance tooling and the report describes exactly the gap its product fills. Fieldwork attributed to Morning Consult (credible polling firm), but the full report is behind a download form and I only read the public landing page — several headline numbers rendered as \"0.0%\" in my fetch, so I reported only figures appearing in prose. Single unreplicated survey of self-reported perceptions, not measured system data. Treat as a conversation prompt, not evidence.",
+      "source": "https://www.guild.ai/ai-agent-management-gap-report",
+      "tags": [
+        "skills",
+        "governance",
+        "enterprise",
+        "operations"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "mcp-stateless-core",
+      "title": "MCP drops sessions: the protocol core is now stateless",
+      "body": "The 2026-07-28 Model Context Protocol specification removes the initialize/initialized handshake and the Mcp-Session-Id header. Each request now carries its own protocol version, client identity and client capabilities in _meta, and an optional server/discover call lets a client learn capabilities up front. Any request can land on any server instance behind a plain round-robin load balancer, with no shared storage. If your server still needs state across calls, the maintainers advise a different pattern: mint an explicit handle from a tool and have the model pass it back as an argument, so the model can see the handle and thread it between tools. Treat sticky routing and Redis session stores in your MCP deployments as legacy design, and plan a migration.",
+      "reviewNote": "Primary source. Technical claims are backed by linked SEP numbers, which I did not open individually. Partner quotes and download figures in the announcement were excluded. Three findings share this URL, deliberately.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+      "tags": [
+        "mcp",
+        "protocol",
+        "infrastructure",
+        "architecture"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "mcp-mrtr-retry-pattern",
+      "title": "Server-initiated calls are replaced by a retry pattern (MRTR)",
+      "body": "Mid-call prompts to a user no longer need a held-open stream. Multi Round-Trip Requests replace the server-initiated elicitation/create, sampling/createMessage and roots/list requests: the server returns resultType \"input_required\" with what it needs, and the client retries the original call with answers in inputResponses. Roots, Sampling and Logging are deprecated; they keep working for at least twelve months, but new implementations should not adopt them. If your agent design assumes the server can call back into the client, redesign that flow now.",
+      "reviewNote": "Primary source. Backed by linked SEP numbers I did not open individually.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+      "tags": [
+        "mcp",
+        "protocol",
+        "tool-design"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "mcp-authorization-registration-breaks",
+      "title": "MCP authorization changes break some existing client registrations",
+      "body": "This revision hardens the parts of MCP where teams lose the most integration time. Authorization servers should return the iss parameter per RFC 9207 and clients must validate it before redeeming a code, which closes an authorization-server mix-up hole. Client credentials are now bound to the issuer that minted them, and Dynamic Client Registration is formally deprecated in favour of Client ID Metadata Documents, with DCR still working for backward compatibility until a future removal. Audit your agent's OAuth path against these three items before the offramp closes.",
+      "reviewNote": "Primary source. Backed by linked SEP numbers I did not open individually.",
+      "source": "https://blog.modelcontextprotocol.io/posts/2026-07-28/",
+      "tags": [
+        "mcp",
+        "authorization",
+        "oauth",
+        "migration"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "google-mcp-stateless-failure-modes",
+      "title": "Google publishes the production failure modes that forced the MCP change",
+      "body": "This write-up is useful because it names the exact operational problems, not just the new syntax. Google describes three pods behind a round-robin balancer returning 400 Session Not Found, sticky affinity rules that block even traffic distribution and efficient autoscaling, and lost in-memory state on pod restart. It also notes that remote MCP servers previously needed shared Redis session stores or gateway-level packet inspection. Use this as a checklist against your own MCP infrastructure, since these are the symptoms that mean you are still running the old model.",
+      "reviewNote": "Vendor writing about its own contribution — it states Google led the pull request to decouple the protocol from stateful transport constraints. Failure modes are plausible and match the spec text, but the framing is self-interested. It also calls 2026-07-28 a \"release candidate\" while the MCP blog announces it as released, so the two pages disagree on status; the Google post is dated 5 August, after the 28 July release.",
+      "source": "https://developers.googleblog.com/scaling-ai-agent-infrastructure-with-the-mcp-stateless-updates/",
+      "tags": [
+        "mcp",
+        "infrastructure",
+        "operations"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "mcp-roadmap-agent-identity",
+      "title": "The MCP roadmap names agent identity as the next hard problem",
+      "body": "The maintainers published an updated roadmap on 22 August. It sets five priority areas: agentic messaging primitives, HTTP-native transport unification and hardening, agent identity and enterprise-ready security, improved primitives, and improved SDK developer experience. Governance also matured: the specification now has a formal feature lifecycle and deprecation policy, which the 2026-07-28 deprecations were the first to follow. Enterprise-Managed Authorization is now available as a stable extension. A published deprecation policy means you can now plan upgrade windows instead of reacting to each release.",
+      "reviewNote": "Primary source from the MCP maintainers.",
+      "source": "https://blog.modelcontextprotocol.io/posts/mcp-roadmap/",
+      "tags": [
+        "mcp",
+        "roadmap",
+        "agent-identity",
+        "governance"
+      ],
+      "gatheredAt": "2026-09-28"
+    },
+    {
+      "id": "mcp-header-routing-gateways",
+      "title": "Gateways and tooling can now route on headers, not JSON bodies",
+      "body": "The spec change moves work out of your application and into the infrastructure layer. Streamable HTTP requests must now include Mcp-Method and Mcp-Name, so a gateway, rate limiter or web application firewall can route and meter on headers instead of parsing JSON bodies. Agentgateway shipped version 1.4 with support for the revision, and notes that \"dual era\" servers handle both legacy and new-era clients. Version 2 of the MCP Inspector is also out, supporting multiple servers configured through a --catalog flag. Policy, quota and audit for tool calls can now live in the gateway.",
+      "reviewNote": "Vendor blog about its own product, and its description of the spec is secondhand. I used it only for the version 1.4 support claim and the Inspector detail, both of which are the vendor's own. I did not independently verify Inspector v2 features.",
+      "source": "https://agentgateway.dev/blog/2026-08-03-new-mcp-spec-revision/",
+      "tags": [
+        "mcp",
+        "gateway",
+        "tooling",
+        "infrastructure"
+      ],
+      "gatheredAt": "2026-09-28"
     }
   ]
 }
