@@ -152,6 +152,56 @@ Listed again with no new comment. Answered in round three: Figure 3 exists, each
 "what it is about" column naming the box to look at, and the full answer key for all five is on
 the instructor page.
 
+## Self-review of this PR, and what it found
+
+**Six defects, five of them mine from this round.** They are recorded rather than quietly fixed,
+because the pattern they form is the useful part.
+
+| # | Defect | Severity |
+|---|---|---|
+| 1 | The precision/recall worked example asserted **k = 3** and three returned clauses. `search_policy(query, k=2)` — the agent retrieves **two**. The third clause named, ESC-1.1, is not even second at full length; BILL-3.1 is | **Wrong on screen** |
+| 2 | "The full text is 217 characters." **217 is the mean clause length** (floor of 1523/7). GOOD-2.1 is 223 | **Wrong on screen** |
+| 3 | The same page said 217 in one place and 223 in another for the same clause | Internally inconsistent |
+| 4 | "At 60 characters almost nothing matches anything, so the scores collapse towards zero." The real scores are **2 and 2** | Overclaim |
+| 5 | Topic 5 quiz item 2 keyed to "whichever clause id sorts first" on a stem claiming scores are zero. Both halves wrong: scores are 2, and the id only orders the pair — the zero gap then makes it a coin flip | **Wrong answer key**, pre-existing and exposed by this round's correction |
+| 6 | "the schemas for the three tools". At week 3 the agent calls **four** — the three in `TOOLS` plus `search_policy` | Wrong on screen |
+
+### What was done about each
+
+**1** → rewritten as precision@2 = 1/2 = 0.50, with BILL-3.1 named as the clause that scores 3 and
+does not make the cut. The trim-and-re-run half now uses the 120-character budget, where both
+clauses score 3, because that is where the metrics genuinely stay flat while the answer goes wrong.
+
+**2 and 3** → the column is described as the budget rather than the text length, and the page now
+gives the real range: the seven clauses run from 151 to 286 characters, GOOD-2.1 is 223 and
+GOOD-2.2 is 235, so a 180-character cap takes 43 off one and 55 off the other.
+
+**4** → "both score 2 — the scores have compressed until the two are level again".
+
+**5** → stem and key rewritten in the module and the bank, with a note in the bank recording the
+correction. Both halves of the mechanism are now in the keyed answer.
+
+**6** → "its four tools — the three from week 1, and `search_policy` added today".
+
+### The pattern, which matters more than the six
+
+**Every one of these is the same mistake: asserting an output I had not run.** It is now the
+fourth round in which that has happened — the missing Figure 3, the unpublished grid, the invented
+score progression, and now these.
+
+The specific failure mode is worth naming precisely. **I reason a mechanism forward from a result
+and then write the mechanism down as if I had observed it.** The reasoning is usually sound and
+the conclusion is often close, which is exactly what makes it dangerous: it reads as verified.
+
+**What catches it:** running the target and diffing the output, field by field, against what the
+page claims. That found all six in about fifteen minutes. **What does not catch it:**
+`check:teaching`, `check:pages`, `astro check` or the build, all of which passed on every wrong
+version.
+
+Every numeric and identifier claim in topic 5 has now been checked against `make w3-search`,
+`make w3-trim`, `search_policy` at all eight budgets, `P_SECOND` in `w3_brain.py`, the clause
+lengths in `policy-docs.json`, and the `TOOLS` registry.
+
 ## Reported against the teaching standard
 
 - **Outcomes verb-led and observable.** Held, and outcome 1 is now ratable at 00:05 without

@@ -1943,14 +1943,15 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <p><strong>The likely wrong answer.</strong> "Shorter context is better, we have been overloading it."</p>
   <p><strong>What is right about it.</strong> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.</p>
   <h4>Question 2 &#183; this topic</h4>
-  <p>At 60 characters a clause almost every clause scores zero. What decides the answer then?</p>
+  <p>At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts on?</p>
   <ul class="opt">
-    <li>A. The model’s judgement, with less to go on</li>
-    <li>B. Whichever clause id sorts first <span class="ok">&#8212; correct</span></li>
+    <li>A. The model’s judgement, with less text to go on</li>
+    <li>B. The clause id breaks the tie, and then a gap of zero makes it a coin flip <span class="ok">&#8212; correct</span></li>
     <li>C. The clause that was retrieved last time</li>
     <li>D. The case’s expected clause</li>
   </ul>
-  <p><strong>The answer.</strong> <p><strong>B.</strong> Nothing about the model changed, and the scores are tied, so the tie-break decides. The tie-break is <span class="mono">sorted()</span>.</p></p>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> Nothing about the model changed. The two scores are level, so the tie-break puts GOOD-2.1 first because its id sorts before GOOD-2.2 — and then, because the gap is zero, the agent takes second place half the time anyway.</p>
+          <p><strong>Both halves matter.</strong> The id decides the ordering; the zero gap decides that the ordering barely holds. The refund is settled by <span class="mono">sorted()</span> and a coin, and neither of those is policy.</p></p>
   <p><strong>The likely wrong answer.</strong> A, because with less context the model is guessing.</p>
   <p><strong>What is right about it.</strong> It is the intuitive answer and it is half right: the system is guessing. It is not the model guessing. The choice was made before the model saw anything.</p>
   <h4>Question 3 &#183; from earlier</h4>

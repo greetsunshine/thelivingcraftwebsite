@@ -45,9 +45,22 @@ The table was also missing the 40-character row and the gap column, so it showed
 while the text said eight budgets. **Every figure is now diffed against a live run and all eight
 rows match.**
 
-**The process rule, and it is the third time in four rounds:** run the target before explaining
-its output. After the missing Figure 3 and the unpublished grid, this is a pattern — I reference
-artefacts and outputs I have not verified. **Verify first, then write.**
+**The process rule, and it is now the fourth round in a row:** run the target before explaining
+its output. A self-review of PR #50 then found **six more of the same defect**, five from this
+round: the worked example asserted `k = 3` when `search_policy` defaults to `k = 2`; "the full
+text is 217 characters" was the *mean* clause length, not any clause; the page said 217 in one
+place and 223 in another for the same clause; "almost nothing matches" where the real scores were
+2 and 2; a quiz item keyed to a wrong mechanism; and "three tools" where week 3 has four. All six
+are fixed and recorded in the review doc.
+
+**Name the failure mode precisely, because it keeps recurring.** I reason a mechanism forward
+from a result and then write it down as if I had observed it. The reasoning is usually sound and
+the conclusion often close, which is what makes it dangerous — it reads as verified.
+
+**What catches it:** running the target and diffing its output field by field against the page.
+**What does not:** `check:teaching`, `check:pages`, `astro check` and the build all passed on
+every wrong version. There is no automated guard for this class of error, and a cross-check
+script comparing page figures to live target output is the obvious candidate if it recurs again.
 
 ### The rest, briefly
 

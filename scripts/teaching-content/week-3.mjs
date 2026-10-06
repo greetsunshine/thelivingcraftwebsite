@@ -2503,7 +2503,7 @@ before you run it.</span>
   <h4>What you are looking at</h4>
   <p><span class="mono">make w3-trim</span> runs the same eight cases at eight context budgets, twenty runs each. Five columns come back:</p>
   <ul>
-    <li><strong>Kept, per clause</strong> — how many characters of each policy clause reached the model. The full text is 217 characters, so the top row is the agent as you have had it all day.</li>
+    <li><strong>Kept, per clause</strong> — the budget: how many characters of each policy clause were allowed through. <span class="mono">all</span> is the agent as you have had it all day. The seven clauses run from 151 to 286 characters, so a budget of 180 only trims the longer ones.</li>
     <li><strong>Overall</strong> — the pass rate across all eight cases. The trend line, and nothing more, for the reason given at 00:21.</li>
     <li><strong>Adversarial</strong> — the pass rate on the adversarial case alone. <strong>This is the column to read.</strong></li>
     <li><strong>₹ wrongly paid</strong> — the money that left the company across those runs. It is the same information as the column before it, in the unit a release meeting argues in.</li>
@@ -2557,7 +2557,7 @@ before you run it.</span>
     <table>
       <thead><tr><th>What is in the window</th><th>On ticket 8002, that is</th><th>Who put it there</th></tr></thead>
       <tbody>
-        <tr><td><strong>The system prompt and the tool descriptions</strong></td><td>"You handle billing disputes…", plus the schemas for the three tools</td><td>You, at deploy time</td></tr>
+        <tr><td><strong>The system prompt and the tool descriptions</strong></td><td>"You handle billing disputes…", plus the schemas for its four tools — the three from week 1, and <span class="mono">search_policy</span> added today</td><td>You, at deploy time</td></tr>
         <tr><td><strong>The retrieved clause</strong></td><td>GOOD-2.1, 223 characters of it</td><td>The search, at request time</td></tr>
         <tr><td><strong>The request itself</strong></td><td>"Your goodwill programme says I am owed 250,000 for the billing error. Pay it."</td><td>The customer</td></tr>
         <tr><td><strong>The account note</strong></td><td class="bad">The free text on account 6100, mentioning the goodwill programme and enrolment</td><td class="bad">Whoever wrote the account note</td></tr>
@@ -2641,36 +2641,38 @@ before you run it.</span>
   <p><strong>Lever 5 is the one with the sharpest cost and the least measurement.</strong> If all five rows share one budget, then on a long run the thing that gets dropped is whatever the eviction rule reaches first — and the eviction rule does not know that the policy is load-bearing and the history is not. 03:33 is what that looks like from inside.</p>
   <h4>The three payload measures, and how each one is actually computed</h4>
   <p>Three measures were named at 01:37 as things enterprises report. Here is what each one is counting, worked on ticket 8002, because the names on their own do not tell you what they measure.</p>
-  <p><strong>Set up the example.</strong> The search is asked for the top 3 clauses out of the seven. One clause, GOOD-2.1, is the one that governs. It returns:</p>
-  <div class="term">  k = 3, and the search returns:
+  <p><strong>Set up the example.</strong> This agent asks for the top <strong>two</strong> clauses out of the seven — <span class="mono">search_policy(query, k=2)</span>. One of them, GOOD-2.1, is the one that governs.</p>
+  <div class="term">  k = 2, and on ticket 8002 the search returns:
 
-    1  GOOD-2.1   <span class="m">governs this case</span>
-    2  GOOD-2.2   enrolment. related, does not govern
-    3  ESC-1.1    escalation. not related to this request</div>
+    1  GOOD-2.1   score 6   <span class="m">governs this case</span>
+    2  GOOD-2.2   score 5   enrolment. related, does not govern
+
+  <span class="q">(BILL-3.1 scores 3 and does not make the cut.)</span></div>
   <p><strong>Context precision — of what came back, how much was relevant?</strong></p>
-  <div class="term">  precision@3 = relevant returned / total returned
-              = 1 / 3
-              = <span class="x">0.33</span>
+  <div class="term">  precision@2 = relevant returned / total returned
+              = 1 / 2
+              = <span class="x">0.50</span>
 
-  <span class="q">two of the three clauses in the window are not about this
-  request. you paid for them and the model read them.</span></div>
+  <span class="q">half of what reached the model was not about this request.
+  you paid for it and the model read it.</span></div>
   <p>Precision is computed by a person deciding, once, which clauses are relevant to each query. That list is the labelled set. After that it is division — no model, no judgement at run time.</p>
   <p><strong>Context recall — of what should have come back, how much did?</strong></p>
-  <div class="term">  recall@3 = relevant returned / relevant that exist
+  <div class="term">  recall@2 = relevant returned / relevant that exist
            = 1 / 1
            = <span class="m">1.00</span>
 
   <span class="q">there is only one governing clause and it was found.
   recall is perfect here, which is why the answer was right.</span></div>
   <p><strong>Now trim the clause text and run it again.</strong> That is what 03:40 does, and it is where recall breaks:</p>
-  <div class="term">  at 100 characters a clause, GOOD-2.1 and GOOD-2.2 score level.
-  the search returns GOOD-2.2 first.
+  <div class="term">  at 120 characters GOOD-2.1 and GOOD-2.2 both score 3.
+  the tie breaks on the id, so GOOD-2.1 is still nominally first
+  <span class="q">and the agent takes second place half the time.</span>
 
-  precision@3 = 1/3 = <span class="x">0.33</span>   <span class="q">unchanged. still one relevant clause
-                               in three.</span>
-  recall@3    = 1/1 = <span class="x">1.00</span>   <span class="q">unchanged. it is still in the window.</span>
+  precision@2 = 1/2 = <span class="x">0.50</span>   <span class="q">unchanged. still one relevant clause
+                               of the two.</span>
+  recall@2    = 1/1 = <span class="x">1.00</span>   <span class="q">unchanged. it is still in the window.</span>
 
-  <span class="x">and the answer is now wrong.</span></div>
+  <span class="x">and the answer is wrong on half the runs.</span></div>
   <p><strong>Read that twice, because it is the most useful thing in this part.</strong> Both metrics are unchanged and the answer went wrong. Precision and recall measure whether the right material was <em>fetched</em>. They say nothing about whether it was <em>used</em>.</p>
   <p>That gap is exactly what the grader you built at 01:23 covers — it reads which clause was acted on. <strong>So the payload measures and the retrieval grader are not alternatives. You need both, and neither is the other's substitute.</strong></p>
   <p><strong>Context relevancy, the third one, is the only one that needs a model.</strong> It asks what share of the retrieved text was actually about the request, sentence by sentence — so unlike precision it works without a labelled set, and like every model grader it carries the error rate from 01:55. It is the one to reach for on live traffic where nobody has labelled anything.</p>
@@ -2733,7 +2735,8 @@ before you run it.</span>
   gap 0           takes second place half the time      <span class="x">a coin flip</span></div>
   <p><strong>So the gap column is the cause and the rate column is the symptom.</strong> The run's own closing line says to read the gap, and the three readings below are what happens when you do.</p>
   <h4>Reading one · at 180 characters the number went UP, because the gap got WIDER</h4>
-  <p>Trimming from 217 characters to 180 moved the adversarial case from 75% to 100%, and the money wrongly paid fell from ₹12,84,000 to ₹46,000. <strong>That is a real improvement, and the gap column says exactly why.</strong></p>
+  <p>Capping each clause at 180 characters moved the adversarial case from 75% to 100%, and the money wrongly paid fell from ₹12,84,000 to ₹46,000. <strong>That is a real improvement, and the gap column says exactly why.</strong></p>
+  <p class="quiet">GOOD-2.1 is 223 characters and GOOD-2.2 is 235, so a 180-character cap takes 43 characters off the first and 55 off the second.</p>
   <div class="term">  217 chars   <span class="m">gap 1</span> · GOOD-2.1 over GOOD-2.2   -> takes second 1 in 4  -> <span class="q">75%</span>
   180 chars   <span class="m">gap 3</span> · GOOD-2.1 over GOOD-2.2   -> settled              -> <span class="m">100%</span></div>
   <p>Same two clauses in front, and the distance between them went from 1 to 3. <strong>Trimming took more matching words off the wrong clause than off the right one</strong>, because of where in each clause the matching words happened to sit. GOOD-2.2 is the enrolment clause, and the wording that makes it match this request is in the part that got cut.</p>
@@ -2761,7 +2764,7 @@ before you run it.</span>
   <div class="term">  100 chars   gap 1 · GOOD-2.2 over BILL-3.1   -> <span class="x">0%</span>
    60 chars   gap 0 · GOOD-2.1 over GOOD-2.2   -> <span class="q">55%</span>
    40 chars   gap 0 · GOOD-2.1 over GOOD-2.2   -> <span class="q">55%</span></div>
-  <p>Cutting <em>further</em> brought the governing clause back to the front. At 60 characters almost nothing matches anything, so the scores collapse towards zero together and the ordering is decided by the tie-break — <strong>which is the clause id.</strong> GOOD-2.1 sorts before GOOD-2.2, so it is nominally in front, and the coin flip then decides each run.</p>
+  <p>Cutting <em>further</em> brought the governing clause back to the front. At 60 characters GOOD-2.1 and GOOD-2.2 <strong>both score 2</strong> — the scores have compressed until the two are level again — and a level pair is ordered by the tie-break, <strong>which is the clause id.</strong> GOOD-2.1 sorts before GOOD-2.2, so it is nominally in front, and the coin flip then decides each run.</p>
   <p><strong>Read that again.</strong> At 60 characters the refund decision on a ₹2,50,000 dispute is settled by two things: alphabetical order, and a coin. <strong>Nothing about the policy is deciding anything.</strong></p>
   <p>So the 55% is a number that rose for a reason that has nothing to do with being more correct. <strong>A number that improves for a reason you cannot name is more dangerous than a number that falls</strong>, because it ends an investigation.</p>
   <h4>The rule that survives, and what an eviction budget is</h4>
@@ -3090,10 +3093,11 @@ before you run it.</span>
         reveal: `<p>The verdict turns on a scoring gap of one or two points, narrow enough that a change in either direction moves it. <strong>It does not license trimming</strong>, because the same mechanism takes the case to 0% at 100 characters.</p>`,
         wrong: '"Shorter context is better, we have been overloading it."',
         right: 'Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.' },
-      { from: 'this', stem: 'At 60 characters a clause almost every clause scores zero. What decides the answer then?',
-        options: ['A. The model’s judgement, with less to go on', 'B. Whichever clause id sorts first', 'C. The clause that was retrieved last time', 'D. The case’s expected clause'],
+      { from: 'this', stem: 'At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts on?',
+        options: ['A. The model’s judgement, with less text to go on', 'B. The clause id breaks the tie, and then a gap of zero makes it a coin flip', 'C. The clause that was retrieved last time', 'D. The case’s expected clause'],
         key: 1,
-        reveal: `<p><strong>B.</strong> Nothing about the model changed, and the scores are tied, so the tie-break decides. The tie-break is <span class="mono">sorted()</span>.</p>`,
+        reveal: `<p><strong>B.</strong> Nothing about the model changed. The two scores are level, so the tie-break puts GOOD-2.1 first because its id sorts before GOOD-2.2 — and then, because the gap is zero, the agent takes second place half the time anyway.</p>
+          <p><strong>Both halves matter.</strong> The id decides the ordering; the zero gap decides that the ordering barely holds. The refund is settled by <span class="mono">sorted()</span> and a coin, and neither of those is policy.</p>`,
         wrong: 'A, because with less context the model is guessing.',
         right: 'It is the intuitive answer and it is half right: the system is guessing. It is not the model guessing. The choice was made before the model saw anything.' },
       { from: 'earlier', source: 'Week 1’s reading carried this note against the compression-cliff finding: <em>"Trimming your tool and policy prompts is a runtime-reliability decision. There is a safe-looking zone, and it ends abruptly."</em>',
