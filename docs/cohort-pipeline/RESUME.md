@@ -55,8 +55,18 @@ The lab also gained a second half: two cases that fail on context alone, the bet
 
 **Topic 5's first quiz item still said "cutting the policy text from 217 characters to 180"** and
 its answer said the gap was "one or two points". 217 is the mean clause length; the gap at 180 is 3.
-Corrected in the module and both bank copies. **The 217 on the 03:23 table is now labelled
-`all (mean 217)` and explained**, because it is genuinely what the target prints.
+Corrected in the module and both bank copies.
+
+**And then the cause was fixed rather than worked around.** The 217 came from a column in
+`src/w3_trim.py` headed `chars` whose code computed a mean. The page had been patched to explain
+that; the tool now prints **`budget` and `mean` as two columns**, with a line underneath naming the
+real clause range of 151 to 286 characters. The page names both columns directly, the 03:23 table
+gained the mean column, and the notes table gained the missing 40 row and the gap column. All eight
+rates and amounts are unchanged — verified by diffing the run output field by field.
+
+**Worth carrying forward: a tool that prints numbers for the room to read is a teaching artefact,
+and its column headers are content.** No check in this repo could have caught the original error,
+because the page was faithfully reporting what the tool said.
 
 That makes **six stale-figure defects found across rounds four and five**, all of the same kind. The
 failure mode and what catches it are recorded under round four above, and they have not changed.

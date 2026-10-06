@@ -443,9 +443,17 @@ its answer said the gap was "one or two points". Both wrong: 217 is the mean cla
 gap at 180 is 3. The stem now asks one thing — *why did capping at 180 improve it?* — and the second
 half is a spoken follow-up. The same item appears twice in the bank, as Q9 and Q51; both corrected.
 
-**The 217 label on the 03:23 table is now explained rather than removed**, because it is genuinely
-what `make w3-trim` prints. The row reads `all (mean 217)` and the annotation says it is the mean
-clause length and not the length of any one clause.
+**The 217 label on the 03:23 table was first explained rather than removed**, because it is
+genuinely what `make w3-trim` prints. That was a workaround for a mislabelled column, and the tool
+has since been fixed instead: it now prints `budget` and `mean` as separate columns, with a line
+underneath saying which is which and giving the real clause range of 151 to 286 characters. The
+page names those two columns directly and no longer explains around one of them.
+
+**The lesson worth keeping.** The published error — "the full text is 217 characters" — was
+downstream of a column header in a tool I wrote. The header said `chars`; the code computed a
+mean. Nothing in the teaching repo could have caught that, because the page was faithfully
+reporting what the tool said. **A tool that prints a number for the room to read is a teaching
+artefact, and its column names are part of the content.**
 
 ## What the agent can do now
 
@@ -1834,15 +1842,20 @@ Five minutes. **Take the written prediction first.** One line: what shape is the
 
 Then `make w3-trim`. Same eight cases, same graders, same brain. Only the clause text changes.
 
-| Kept, per clause | Overall | Adversarial | ₹ wrongly paid |
-|---|---|---|---|
-| all, 217 chars | 76% | 75% | 12,84,000 |
-| 180 | 82% | 100% | 46,000 |
-| 150 | 74% | 75% | 13,00,000 |
-| 120 | 74% | 55% | 22,87,600 |
-| **100** | **62%** | **0%** | **37,86,400** |
-| 80 | 62% | 0% | 37,72,000 |
-| 60 | 69% | 55% | 22,84,000 |
+| Budget | Mean | Overall | Adversarial | ₹ wrongly paid | Gap on C7 |
+|---|---|---|---|---|---|
+| all | 217 | 76% | 75% | 12,84,000 | 1 |
+| 180 | 173 | 82% | 100% | 46,000 | 3 |
+| 150 | 150 | 74% | 75% | 13,00,000 | 2 |
+| 120 | 120 | 74% | 55% | 22,87,600 | 1 |
+| **100** | **100** | **62%** | **0%** | **37,86,400** | **GOOD-2.1 gone** |
+| 80 | 80 | 62% | 0% | 37,72,000 | GOOD-2.1 gone |
+| 60 | 60 | 69% | 55% | 22,84,000 | 1 |
+| 40 | 40 | 68% | 55% | 22,84,000 | 1 |
+
+**Budget is the cap; mean is the average clause length that results.** They are two columns
+because conflating them is what produced the published error below. A cap of 180 leaves a mean
+of 173, because only the clauses above 180 are trimmed.
 
 ## 03:28 · What context engineering is
 

@@ -175,7 +175,10 @@ produced by running something:
 - **The gap transitions across those edges** (3 to 2, and GOOD-2.1 leaving the list) came from
   `search_policy` at each budget.
 - **The clause lengths** (223 and 235, range 151 to 286) and **the mean of 217** came from
-  `policy-docs.json` and `w3_trim.py`'s own `avg` line.
+  `policy-docs.json` and `w3_trim.py`'s own mean line — at the time called `avg` and printed
+  under a column header reading `chars`, **which is the source of the error this round
+  corrected.** The tool has since been fixed: the identifier is `mean_len` and the column is
+  `mean`.
 - **Every tool named** in the three slots was checked to be a real product doing the thing claimed.
 
 ## Reported against the teaching standard

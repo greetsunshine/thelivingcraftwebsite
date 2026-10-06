@@ -2104,9 +2104,10 @@ before you run it.</span>
   <p>You are about to change one thing about the agent — <strong>how much of each policy clause is allowed into the context</strong> — and watch what it does to the answers. Nothing else changes. Same cases, same agent, same policy text on disk; only the slice of each clause that reaches the model gets shorter.</p>
   <p>This is the cheapest and most common optimisation in production. It saves tokens, it saves latency, and <strong>almost nobody measures what it costs.</strong> Today you measure it.</p>
   <h4>What you are looking at</h4>
-  <p><span class="mono">make w3-trim</span> runs the same eight cases at eight context budgets, twenty runs each. Five columns come back:</p>
+  <p><span class="mono">make w3-trim</span> runs the same eight cases at eight context budgets, twenty runs each. Six columns come back:</p>
   <ul>
-    <li><strong>Kept, per clause</strong> — the budget: how many characters of each policy clause were allowed through. <span class="mono">all</span> is the agent as you have had it all day. The seven clauses run from 151 to 286 characters, so a budget of 180 only trims the longer ones. <strong>The 217 beside <span class="mono">all</span> is the mean clause length</strong>, which is what the run prints — it is not the length of any one clause.</li>
+    <li><strong>Budget</strong> — the cap applied to every clause: the most characters any one of them may contribute. <span class="mono">all</span> means no cap, which is the agent as you have had it all day.</li>
+    <li><strong>Mean</strong> — the average clause length that results. <strong>It is not the length of any one clause.</strong> The seven run from 151 to 286 characters, so a cap of 180 only trims the ones above it, and the mean lands at 173. The run prints both columns and says which is which.</li>
     <li><strong>Overall</strong> — the pass rate across all eight cases. The trend line, and nothing more, for the reason given at <span class="off" data-off="00:21">00:21</span>.</li>
     <li><strong>Adversarial</strong> — the pass rate on the adversarial case alone. <strong>This is the column to read.</strong></li>
     <li><strong>₹ wrongly paid</strong> — the money that left the company across those runs. It is the same information as the column before it, in the unit a release meeting argues in.</li>
@@ -2118,16 +2119,16 @@ before you run it.</span>
     <div class="reveal">
       <div class="tw">
         <table>
-          <thead><tr><th class="mono">Kept, per clause</th><th>Overall</th><th>Adversarial</th><th>₹ wrongly paid</th><th>The gap on the adversarial case</th></tr></thead>
+          <thead><tr><th class="mono">Budget</th><th class="mono">Mean</th><th>Overall</th><th>Adversarial</th><th>₹ wrongly paid</th><th>The gap on the adversarial case</th></tr></thead>
           <tbody>
-            <tr><td class="mono">all <span class="quiet">(mean 217)</span></td><td>76%</td><td>75%</td><td>12,84,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">180</td><td class="ok">82%</td><td class="ok">100%</td><td>46,000</td><td class="mono">gap 3 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">150</td><td>74%</td><td>75%</td><td>13,00,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">120</td><td>74%</td><td>55%</td><td>22,87,600</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono"><strong>100</strong></td><td><strong>62%</strong></td><td class="bad"><strong>0%</strong></td><td class="bad"><strong>37,86,400</strong></td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over BILL-3.1</strong></td></tr>
-            <tr><td class="mono">80</td><td>62%</td><td class="bad">0%</td><td class="bad">37,72,000</td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over ESC-1.1</strong></td></tr>
-            <tr><td class="mono">60</td><td>69%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">40</td><td>68%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">all</td><td class="mono">217</td><td>76%</td><td>75%</td><td>12,84,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">180</td><td class="mono">173</td><td class="ok">82%</td><td class="ok">100%</td><td>46,000</td><td class="mono">gap 3 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">150</td><td class="mono">150</td><td>74%</td><td>75%</td><td>13,00,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">120</td><td class="mono">120</td><td>74%</td><td>55%</td><td>22,87,600</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono"><strong>100</strong></td><td class="mono">100</td><td><strong>62%</strong></td><td class="bad"><strong>0%</strong></td><td class="bad"><strong>37,86,400</strong></td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over BILL-3.1</strong></td></tr>
+            <tr><td class="mono">80</td><td class="mono">80</td><td>62%</td><td class="bad">0%</td><td class="bad">37,72,000</td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over ESC-1.1</strong></td></tr>
+            <tr><td class="mono">60</td><td class="mono">60</td><td>69%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">40</td><td class="mono">40</td><td>68%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
           </tbody>
         </table>
       </div>
