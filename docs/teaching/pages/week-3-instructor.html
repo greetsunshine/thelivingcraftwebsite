@@ -1379,6 +1379,10 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <p>The weak version is "you need a quality bar", which nobody disputes.</p>
   <p>The stronger claim is that <strong>a threshold with no owner and no stated consequence is not a gate, it is a number somebody typed</strong>, and it behaves exactly as week 2's ceiling did.</p>
   <p>Draw that parallel out loud. The room spent last week discovering that a ceiling nobody agreed to is a policy nobody agreed to. This is the same defect in the evidence layer.</p>
+  <h4>Which rate? The ones you have been producing all morning</h4>
+  <p><strong>Name the three on their page</strong>, because "you have a rate" is abstract and the room has three concrete ones: 75% on the adversarial case at <span class="off" data-off="00:55">00:55</span>, 95% context precision at <span class="off" data-off="01:23">01:23</span>, and 70% raw with kappa 0.35 at <span class="off" data-off="02:02">02:02</span>.</p>
+  <p>Then take the first and ask it as a real question: <strong>the adversarial case passes 15 times in 20. Is 75% good enough to ship?</strong> Let the silence sit.</p>
+  <p class="qbadge">The point of the silence is that nobody can answer, and the reason is not missing information about the agent. It is that no bar exists and no name is against one. <strong>That gap is organisational, not technical</strong>, which is why this is the topic engineers find hardest to act on.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
@@ -1398,7 +1402,14 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <h4>What a release gate is</h4>
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
-    <p>One sentence, then the four parts and what most rows are missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and leave it there.</p>
+    <h4>Start with the plain version</h4>
+    <p><strong>Lead with the plainest sentence and let it sit: a release gate is a written rule that can stop a release.</strong> Then the word that does the work — a gate is either open or shut, so a number that cannot shut it is a report, whatever the dashboard calls it.</p>
+    <h4>The four parts, on one real row</h4>
+    <p>Their page fills the four parts in against <strong>the adversarial case from <span class="off" data-off="00:55">00:55</span>, at 15 of 20</strong>. <strong>Read only the right-hand column.</strong> The middle column is a definition; the right-hand column is a decision.</p>
+    <p>Land the threshold's reason, because it is the one that teaches: 20 of 20, because one escape pays ₹2,50,000 and <strong>there is no partial credit on a payment.</strong> That is what "a threshold with a reason" means, and it is why the reason is not optional.</p>
+    <h4>Why most rows are not gates</h4>
+    <p>Two of four are nearly always present, two nearly always missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and then the sentence that lands it: a team with good numbers, no bar, and a release process where the numbers are looked at and the release happens anyway.</p>
+    <p class="qbadge">Ask the room whether that describes them. Most of it will. Do not push for answers out loud; the recognition is the point.</p>
     <h4>Where the gate actually runs: before release, and after it</h4>
     <p>Offline and online. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
     <p>Then the line that ties the day together: <strong>the <span class="off" data-off="00:15">00:15</span> double payment would have been caught by neither.</strong> Offline had no two-process case. Online would have shown ₹2,400 paid and no alert, because nothing was watching for it.</p>
@@ -1419,11 +1430,27 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">Components and design &#183; Whole room · 7 min</span>
     
     <p>Three things to check, and the first is nearly universal. <strong>Take the written answer on the 92% question</strong> before revealing it, because the room will name a senior person and the answer is the junior one.</p>
+    <h4>One · a threshold with no reason beside it</h4>
+    <p>Their page shows a gate row with <strong>threshold 95%, owner blank</strong>, then the question to ask about it: <em>where did the 95 come from?</em> Not "is it right" — where did it come from.</p>
+    <p>Four answers are tabulated, two bad and two good. <strong>The two good ones are the two kinds of threshold</strong>, which is the setup for the next part, so do not resolve them here.</p>
+    <p class="qbadge">Say why the question is asked: a threshold with a reason can be argued with and adjusted. One without a reason gets overridden the first time it is inconvenient, because there is nothing there to override.</p>
+    <h4>Two · a team name in the decision owner column</h4>
+    <p>A team cannot accept a risk and cannot be called at 2am. Ask for a role held by one person, then the harder question: <strong>does that person know their name is on it?</strong></p>
+    <h4>Three · grader validation filled with the grader's own output</h4>
+    <p>"Model grader, 94% accurate" is the grader quoting itself. <strong>Against whose labels?</strong> If none, it is <span class="off" data-off="02:02">02:02</span>'s number with no kappa beside it.</p>
+    <h4>The difference in one sentence each</h4>
+    <p>Absolute asks whether the value is acceptable, against a fixed line. Relative asks whether it is worse than last time, against your own previous measurement. <strong>Give these two and stop</strong>; the table does the rest.</p>
     <h4>Two kinds of threshold, and only one of them can be argued with</h4>
-    <p><strong>This is the part to protect in this beat.</strong> Absolute floor against relative delta. Give one example of each and then the sentence that does the work: "95% faithfulness" is unarguable in the wrong way, "no worse than last release" is arguable in the right way.</p>
-    <p>Then close the loop on the 92%: as a relative gate it is a one-point regression somebody signs in a minute; as an absolute floor it asks for an override of a rule nobody can source, which is how it gets overridden on a call.</p>
+    <p><strong>This is the part to protect in this beat, and it was rewritten because the distinction was not landing.</strong> Give the one-sentence version of each first and nothing else:</p>
+    <p>An absolute gate asks <em>is this value acceptable</em>, against a fixed line. A relative gate asks <em>is this worse than last time</em>, against your own previous measurement.</p>
+    <h4>The same requirement, gated both ways</h4>
+    <p><strong>Put the three-release table up and walk to release 3.</strong> Same measurement, 92%, fails the absolute gate and passes the relative one. Neither gate is broken; they asked different questions and both answers are right.</p>
+    <p class="qbadge">The sentence that makes it stick: a system can be not-good-enough and also not-worse. That is release 3, and it is where most real arguments about a threshold actually live.</p>
+    <h4>Which to use, and what each one costs</h4>
+    <p>Five rows, and <strong>only the last one needs saying out loud</strong>: an absolute gate alone gets argued away because nobody can source the number, and a relative gate alone lets you decay one point a release with a green build every week.</p>
+    <p>So the answer is both. A relative gate for the weekly decision, an absolute floor underneath as a backstop rather than a target. <strong>Release 3 is exactly what the pair is for.</strong></p>
+    <p>Then close the loop on the 92% from earlier in this beat: as a relative gate it is a one-point regression somebody signs in a minute; as an absolute floor it asks for an override of a rule nobody can source.</p>
     <p class="qbadge">If one person takes one thing from this topic, this is the better candidate than the thirteen columns. A room that splits its gate rows into floors and deltas has changed how it writes them.</p>
-    <p>Say the asymmetry last, because somebody will find it otherwise: ten releases each one point worse is ten points worse and every one passed. A relative gate needs an absolute floor underneath it.</p>
   </div></div>
 
   <div class="beat" id="s-0256" data-ref="t4-r-lab"><span class="t"><span class="off" data-off="02:56">02:56</span></span><div class="b">
@@ -1431,7 +1458,19 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">Hands-on lab &#183; Pairs, then swap · 14 min · 10 write, 4 review</span>
     
     <p>Paste the blank thirteen-column table into chat rather than having pairs copy the column names off the page. Ten minutes is tight and copying costs four of them.</p>
+    <h4>What you are producing, in one sentence</h4>
+    <p><strong>Say this before anything else, because all three cards were unclear until 6 October.</strong> One row, thirteen cells of text, no code. Then the sentence that reframes the whole block: <strong>the real output is the cells they cannot fill.</strong> A row with four honest blanks teaches more than thirteen confident guesses.</p>
+    <h4>Starting state and how you check it</h4>
+    <p>Give the three tests for choosing a requirement and hold them to the second one: <strong>if it broke, money or trust would leave the company.</strong> Rooms otherwise pick a style preference and the row teaches nothing.</p>
+    <p>Offer the fallback out loud for anybody stuck: the account-note requirement from <span class="off" data-off="02:44">02:44</span>.</p>
+    <h4>Build the row. Ten minutes.</h4>
+    <p><strong>Their page now carries a completely filled row against this agent.</strong> Point at it once and say "this is the shape, yours is about your own system". Do not read it out; it is thirteen lines and reading it costs three minutes.</p>
+    <p>Then the triage instruction, which is what makes ten minutes enough: <strong>if you only have time for four cells, do 1, 7, 11 and 12.</strong> Those four are a gate; the other nine are the evidence behind it.</p>
     <p><strong>Nothing sums.</strong> If anybody produces a total out of 26, that is the cut feature returning under a new name.</p>
+    <h4>Check: review another pair's row. Four minutes.</h4>
+    <p><strong>The 0/1/2 scale now has a definition on their page</strong>, which it did not before: 0 is empty or a placeholder, 1 is filled but not actionable by an outsider, 2 is actionable without asking the author a question.</p>
+    <p>Give them the shape of the sentence to say back, because four minutes of unstructured feedback produces politeness: <em>"Column 11 is a 1 — it says the platform team, and a team cannot be called at 2am."</em></p>
+    <p class="qbadge">Say in advance that "I could not find out who owns this" scores a <strong>2</strong>, not a 0. It is accurate and actionable. Otherwise people invent a name to avoid a zero, and the invented name is the worst outcome of this lab.</p>
     <p class="quiet">Somebody will ask whether a platform does this. The <span class="off" data-off="03:10">03:10</span> table answers it. Give no recommendation.</p>
   </div></div>
 
@@ -1583,10 +1622,17 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <span class="pairs">&#8596; <span class="off" data-off="03:13">03:13</span> &#183; three questions, one from earlier material</span>
   <h3>Topic quiz: release gates</h3>
   <h4>Question 1 &#183; this topic</h4>
-  <p>Of the thirteen columns in the gate table, which two carry the weight, and which is nearly always empty when a row arrives?</p>
-  <p><strong>The answer.</strong> <p><strong>Grader validation and decision owner carry the weight.</strong> Grader validation is the one nearly always empty, or filled with the grader’s own output.</p></p>
-  <p><strong>The likely wrong answer.</strong> "Result and threshold."</p>
-  <p><strong>What is right about it.</strong> They are the two people look at, which is exactly why they are not the two that carry the weight. A result with no validated grader behind it is a number about nothing.</p>
+  <p>Faithfulness measures 92%. The absolute gate is "at least 95%". The relative gate is "no more than 1 point below the last release", and the last release measured 93%. What happens?</p>
+  <ul class="opt">
+    <li>A. Both gates fail, because 92% is below both bars</li>
+    <li>B. The absolute gate fails and the relative gate passes <span class="ok">&#8212; correct</span></li>
+    <li>C. The relative gate fails and the absolute gate passes</li>
+    <li>D. The gates contradict each other, so one of them is configured wrongly</li>
+  </ul>
+  <p><strong>The answer.</strong> <p><strong>B.</strong> 92 is below 95, so the absolute gate fails. 93 to 92 is a one-point drop, which is inside the relative gate, so it passes.</p>
+          <p><strong>Neither gate is broken.</strong> They ask different questions: absolute asks "is this good enough", relative asks "did we make it worse". <strong>A system can be not-good-enough and also not-worse</strong>, and that is exactly where this release sits.</p></p>
+  <p><strong>The likely wrong answer.</strong> D, because two gates on the same number ought to agree.</p>
+  <p><strong>What is right about it.</strong> The instinct that a contradiction means a misconfiguration is a good engineering instinct and it is wrong here. Ask what each gate is comparing against: one compares to a fixed line, the other to last week. Different comparisons, different answers, both correct.</p>
   <h4>Question 2 &#183; this topic</h4>
   <p>A gate-table row says the threshold is 95%. What is the next question?</p>
   <ul class="opt">
@@ -1666,6 +1712,13 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
     <p>One sentence, then the four rows. <strong>Land on the third row.</strong> The account note is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>
+    <h4>What the lab is actually looking for: the minimum viable context</h4>
+    <p><strong>Give the term, because it is what the lab is finding and the lab did not have a name for it.</strong> The minimum viable context is the smallest payload that still completes the task, and it is a measurement rather than a judgement.</p>
+    <p>Then connect it backwards in one sentence each: context relevancy is the same idea from the cost end, context recall is what trimming destroys. <strong>Trimming is a trade between cost and recall</strong>, and the cliff is what winning the cost side too hard looks like.</p>
+    <h4>The judge has a context window too</h4>
+    <p>Thirty seconds, and it closes topic 3's loop. <strong>Everything here applies to the grader.</strong> Three items on their page: strip bias-inducing metadata from the judge's window, place the anchor examples deliberately, force a fixed output structure.</p>
+    <p>The line: all three were given as instructions at <span class="off" data-off="01:55">01:55</span> and <span class="off" data-off="02:16">02:16</span>, and <strong>this is the topic that explains why they work.</strong></p>
+    <p class="quiet">Do not teach them again. The room has already done them; what is new is the reason.</p>
   </div></div>
 
   <div class="beat" id="s-0333" data-ref="t5-r-cliff"><span class="t"><span class="off" data-off="03:33">03:33</span></span><div class="b">
@@ -1674,7 +1727,16 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     
     <p><strong>Give the three readings in order.</strong> Trimming improved a number. The zone ends at once. Below the cliff a sort order decides. The third is the coldest sentence in the session and it is worth saying slowly.</p>
     <p><strong>Close on the durable rule</strong>, because it is the part that does not depend on any of these numbers.</p>
-    <p class="quiet">Two papers support the shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
+    <h4>How much is not the only question. Where also matters.</h4>
+    <p><strong>Flag the change of mechanism explicitly or you will create a misconception.</strong> Today's cliff is a retrieval artefact — lexical scores converging. The positional effect belongs to the model, and <strong>this lab does not demonstrate it.</strong> Say both sentences.</p>
+    <p>Then the effect: attention is strongest at the beginning and end of a long context and weakest in the middle, so the same fact at the same token count can be used or ignored depending on where it sits. The name is <strong>lost in the middle</strong>.</p>
+    <p>Then the test, which is the actionable part: <strong>needle in a haystack</strong>, varying depth and position independently, and <strong>reading the grid rather than the average.</strong> A model at 95% overall can be at 40% for a needle two-thirds down a 64k context.</p>
+    <p class="qbadge">The line for this room: "our model handles 128k" is a capacity claim, not a performance one. The defensible number is the depth and position at which your own task still works.</p>
+    <h4>Four ways a context window goes wrong, and who owns each</h4>
+    <p>Starvation, clash, distraction, poisoning. <strong>Point at the table and say which one they just watched</strong>, which is starvation.</p>
+    <p><strong>Spend the minute on clash</strong>, because it is the one nobody tests. This agent can be handed a retrieved clause that contradicts its own system prompt and has no rule for which wins. It will pick one, and the trace will not record that it was a choice.</p>
+    <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
+    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
   </div></div>
 
   <div class="beat" id="s-0340" data-ref="t5-r-lab"><span class="t"><span class="off" data-off="03:40">03:40</span></span><div class="b">
@@ -1687,7 +1749,14 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <div class="beat" id="s-0354" data-ref="t5-r-atscale"><span class="t"><span class="off" data-off="03:54">03:54</span></span><div class="b">
     <h4>At enterprise scale: context budgets in production</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+    
+  <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+  <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
+  <p>Compression, pruning the history, handing off between agents. <strong>Name them, give the measurement each needs, and say all three are week 5's.</strong> They are on the page so that "just summarise the history" meets the question "measured against what".</p>
+  <p>If you say one thing: <strong>a sliding window is the cheapest to build and the one that drops the decision made four turns ago.</strong></p>
+  <h4>The whole of context evaluation on one card</h4>
+  <p>Five rows, and the week has touched each. <strong>Say "keep this one" and point at the last row</strong>: four are about the agent's window and the fifth is about the grader's, measured with the number they produced at <span class="off" data-off="02:02">02:02</span>.</p>
+  <p class="quiet">If the clock has gone, cut the three techniques and keep the five-row card. The card is the summary; the techniques are reference.</p>
   </div></div>
 
   <div class="beat" id="s-0357" data-ref="t5-r-quiz"><span class="t"><span class="off" data-off="03:57">03:57</span></span><div class="b">
@@ -1727,6 +1796,10 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <h3>What context engineering is</h3>
   
   <p>The sentence to land: <strong>only one of the four rows is chosen by you at the moment it matters.</strong></p>
+  <h4>What the lab is actually looking for: the minimum viable context</h4>
+  <p>The smallest payload that still completes the task. A measurement, not a judgement, and it is what <span class="off" data-off="03:40">03:40</span> produces. Connect it to context relevancy and context recall from <span class="off" data-off="01:37">01:37</span>.</p>
+  <h4>The judge has a context window too</h4>
+  <p>Strip metadata, place the anchors, force the structure. All three were instructions at <span class="off" data-off="01:55">01:55</span> and <span class="off" data-off="02:16">02:16</span>; this topic is the reason they work.</p>
 </article>
 
 <article class="card" id="t5-r-cliff">
@@ -1874,7 +1947,13 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <h4>Architectural teardown</h4>
     <span class="pairs">Whole room · 28 min · five questions, one assigned to each of five people</span>
     
-    <p>Architecture on screen and leave it there. Five minutes a question. <strong>Assign each to a named person before the day.</strong></p>
+    <h4>What is on screen: Figure 3</h4>
+    <p><strong>Put Figure 3 on screen and leave it there for the full twenty-eight minutes.</strong> It is on the learner page, headed "Figure 3 · the dispute agent at the close of week 3". There are three named figures in the week: Figure 1 at <span class="off" data-off="01:11">01:11</span> is how retrieval is measured, Figure 2 at <span class="off" data-off="01:50">01:50</span> is how model-based grading works, Figure 3 is this one.</p>
+    <p>Before the first question, <strong>read the double line out loud.</strong> Above it is the thing that serves customers; below it is the thing that tells you whether it works. Today built everything below the line and two boxes above it.</p>
+    <p class="qbadge">The empty box matters. <strong>THE GATE says "not built"</strong>, and that is honest: the room wrote one row at <span class="off" data-off="02:56">02:56</span> and nothing enforces it. Point at it before question 4.</p>
+    <h4>Five questions, each assigned to a person by name</h4>
+    <p>Five minutes a question. <strong>Assign each to a named person before the day.</strong> Their page gives each question a "what it is about" column naming the box in Figure 3 to look at, and those descriptions contain no answers.</p>
+    <p><strong>The full answer key for all five is below</strong>, each with a good answer, the wrong answer worth taking seriously, and one push. Read the key for your five before the session, not during it.</p>
     <p><strong>Question 4 is the one that reveals whether the week landed.</strong> A room that answers "we show the trace" has not taken the difference between what happened and why it was allowed to happen.</p>
     <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>
   </div></div>
@@ -2152,6 +2231,14 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     m = Math.abs(m);
     return s + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   }
+  // A session offset as a time of day, once a start time is known. The rest of the
+  // page is rewritten to clock time by the block below, and the widget's own "next
+  // at" line was the one place still printing a bare offset beside it.
+  function wall(m) {
+    if (startedAt === null) return null;
+    var d = new Date(startedAt + m * 60000);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
 
   var times = rows.map(function (r) {
     var c = r.querySelector('td'); var o = c.querySelector('[data-off]'); return mins(o ? o.getAttribute('data-off') : c.textContent.trim());
@@ -2184,6 +2271,7 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     var i = -1;
     for (var k = 0; k < times.length; k++) if (times[k] <= elapsed) i = k;
     elEl.textContent = hhmm(elapsed);
+    elEl.title = 'elapsed since the session started, not a time of day';
     rows.forEach(function (r, n) { r.classList.toggle('here', n === i); });
     if (i >= 0) {
       var cells = rows[i].querySelectorAll('td');
@@ -2191,7 +2279,7 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
       var next = times[i + 1];
       hintEl.textContent = next === undefined
         ? 'last row'
-        : 'next at ' + hhmm(next) + ', in ' + (next - elapsed) + ' min';
+        : 'next at ' + (wall(next) || hhmm(next)) + ', in ' + (next - elapsed) + ' min';
       if (driftEl) {
         var d = elapsed - times[i];
         var ran = next === undefined ? 0 : elapsed - next;

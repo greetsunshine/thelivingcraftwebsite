@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 5 October 2026
+**Last updated:** 6 October 2026
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -16,6 +16,53 @@ the four tasks from Sunil's call of 25 September and the later ones below. PR #3
 pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
 (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Week 3, review round 3 — 6 October
+
+The sheet gained a **Status** column. This pass worked **only the `Open` rows** — eleven with a
+comment — and left everything marked `Fixed` alone. All answered in
+[`docs/teaching/reviews/week-3-review-2026-10-06.md`](../teaching/reviews/week-3-review-2026-10-06.md).
+**Still `status: draft`, still unreleased.** Clock unmoved for a third round: 46 rows.
+
+**Read the Status column from now on.** The sheet is no longer a flat list of comments; it
+tracks which are done. Working a Fixed row again is wasted effort and risks undoing a decision.
+
+**One of the eleven was a real bug.** Every time *on the page* already followed the start time,
+but **the clock widget's own hint printed a bare offset** — "next at 02:16" beside a table
+reading 11:16. Fixed in `_design.mjs`, so weeks 1 and 2 got it too. The elapsed counter still
+shows an offset, correctly, and now says so in a title.
+
+**How to re-check that.** Render the page headless with `?start=`, then list every remaining
+`0X:XX` in the visible text. Two came back before the fix; one does after, and it is the elapsed
+counter. Repeat this whenever the clock code changes.
+
+**Nine of the eleven were one complaint in different places:** topic 4 and the 02:56 lab were not
+explained well enough to act on. The pattern worth remembering is what fixed them — **in every
+case it was a worked example rather than a better description.**
+
+- "You have a rate" became the three rates the room actually holds, then the question that
+  cannot be answered: the adversarial case passes 15 of 20, is 75% good enough to ship?
+- The gate definition became the four parts **filled in against a real requirement**.
+- Absolute against relative became **the same requirement gated both ways across three
+  releases**, where 92% fails one and passes the other.
+- "Ask where 95 came from" became a gate row with `threshold 95%`, `owner (blank)` and the four
+  answers you might get.
+- The lab got **a completely filled thirteen-cell row**, a triage order, and a definition of the
+  0/1/2 scale it never had.
+
+**The teardown referred to an artifact that did not exist.** "The whole architecture goes on
+screen" — there was no such figure anywhere. The week now has three named figures: **Figure 1**
+(01:11, how retrieval is measured), **Figure 2** (01:50, how model-based grading works) and
+**Figure 3** (04:12, the dispute agent at the close of week 3). Figure 3 has a double line
+across it, and a THE GATE box marked *not built*, which is honest.
+
+**Context engineering absorbed its syllabus selectively**: minimum viable context at 03:28, the
+positional work and four failure modes at 03:33, compression and pruning and handoff at 03:54 as
+week 5's. **One care point when teaching 03:33** — today's cliff is a retrieval artefact and the
+positional effect belongs to the model, and the lab does not demonstrate the second. The page
+says both sentences on purpose.
 
 ---
 

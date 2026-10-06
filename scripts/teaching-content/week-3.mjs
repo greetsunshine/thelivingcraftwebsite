@@ -810,6 +810,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
   </div>
   <h4>The same three steps, with the measurement points marked</h4>
   <p>This is the diagram to keep. The top row is the agent doing its job. <strong>The bottom row is where a measurement can attach</strong>, and it is the reason this topic is in an evaluation day.</p>
+  <p class="quiet"><strong>Figure 1 · how retrieval is measured.</strong></p>
   <div class="term">   ticket 8002 + account note
               │
               ▼
@@ -1366,6 +1367,7 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <p><strong>It is also a component.</strong> It has a failure rate, and until you measure that rate you have added a number to the report and no evidence to the system.</p>
   <h4>How model-based grading actually works</h4>
   <p>Four things go in and two come out. <strong>The dotted path at the bottom is the part teams skip</strong>, and it is where this topic spends its time.</p>
+  <p class="quiet"><strong>Figure 2 · how model-based grading works.</strong></p>
   <div class="term">  <span class="q">WHAT IS BEING GRADED</span>
   ┌─────────────────────────┐
   │ one recorded run        │   "This request needs manager
@@ -1893,13 +1895,30 @@ topics.push({
     lede: 'By the end of it you can name who owns the pass bar on one requirement, say what failing it blocks, and turn an evaluation run into a monthly figure at production volume.',
     learner: `
   <p><strong>A release gate is one requirement, the evidence for it, a threshold with a reason, and a named person who accepts the risk when it fails.</strong> Four parts, and most rows in most organisations have two of them.</p>
-  <p>You have a rate. Nothing yet says what rate is good enough, and nobody’s name is against it.</p>
+  <h4>Which rate? The ones you have been producing all morning</h4>
+  <p>Three hours of this session have been about producing numbers. By now you hold several, and every one of them is a candidate for a gate row.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Where it came from</th><th>The rate</th><th>What it measures</th></tr></thead>
+      <tbody>
+        <tr><td><strong>00:55</strong>, twenty runs per case</td><td>Adversarial case at <strong>75%</strong>, ordinary cases at 100%</td><td>How often each case passes, per case and per class</td></tr>
+        <tr><td><strong>01:23</strong>, the retrieval grader</td><td><strong>95%</strong> on the ordinary case</td><td>How often the agent acted on the clause that governs. Context precision</td></tr>
+        <tr><td><strong>02:02</strong>, the grader against labels</td><td><strong>70%</strong> raw, and <strong>kappa 0.35</strong></td><td>How far your grader agrees with a person. Not a mark for the agent</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Pick the first one and hold it.</strong> The adversarial case passes 15 times in 20. Is 75% good enough to ship?</p>
+  <p>You cannot answer that, and the reason is not that you lack information about the agent. <strong>Nothing anywhere says what rate is good enough, and nobody's name is against the answer.</strong> That is the gap this topic closes, and it is a gap in the organisation rather than in the code.</p>
   <p><strong>What this topic is not.</strong> It is not how to compute the rate, which was topic 1. It is not what to do about a grader that drifts, which is nowhere in this course.</p>
   <p><strong>Left unfixed on purpose.</strong> Nothing here monitors the requirement after release. <strong>Week 4 closes on it</strong>, in ten minutes, and the deployment checklist in the reading is the fuller version.</p>`,
     script: `
   <p>The weak version is "you need a quality bar", which nobody disputes.</p>
   <p>The stronger claim is that <strong>a threshold with no owner and no stated consequence is not a gate, it is a number somebody typed</strong>, and it behaves exactly as week 2's ceiling did.</p>
-  <p>Draw that parallel out loud. The room spent last week discovering that a ceiling nobody agreed to is a policy nobody agreed to. This is the same defect in the evidence layer.</p>`,
+  <p>Draw that parallel out loud. The room spent last week discovering that a ceiling nobody agreed to is a policy nobody agreed to. This is the same defect in the evidence layer.</p>
+  <h4>Which rate? The ones you have been producing all morning</h4>
+  <p><strong>Name the three on their page</strong>, because "you have a rate" is abstract and the room has three concrete ones: 75% on the adversarial case at 00:55, 95% context precision at 01:23, and 70% raw with kappa 0.35 at 02:02.</p>
+  <p>Then take the first and ask it as a real question: <strong>the adversarial case passes 15 times in 20. Is 75% good enough to ship?</strong> Let the silence sit.</p>
+  <p class="qbadge">The point of the silence is that nobody can answer, and the reason is not missing information about the agent. It is that no bar exists and no name is against one. <strong>That gap is organisational, not technical</strong>, which is why this is the topic engineers find hardest to act on.</p>`,
   },
   broken: [
     ['Nothing monitors the requirement after release', '<strong>Week 4, at its close</strong> — ten minutes on which signal would have moved, who reads it, and what they do at 3am'],
@@ -1960,19 +1979,32 @@ topics.push({
       at: '02:44', part: 'concept', title: 'What a release gate is',
       mode: 'Whole room · 5 min',
       learner: `
-  <p style="font-size:var(--size-4)"><strong>A release gate is one requirement, the evidence for it, a threshold with a reason, and a named person who accepts the risk when it fails.</strong></p>
+  <h4>Start with the plain version</h4>
+  <p><strong>A release gate is a written rule that can stop a release.</strong> That is all. It answers one question — may this ship? — and it has to answer it without a meeting.</p>
+  <p>The word "gate" is doing real work. A gate is either open or shut. If a number cannot shut it, the number is a report and not a gate, whatever it is called on the dashboard.</p>
+  <h4>The four parts, on one real row</h4>
+  <p>A gate needs four things, and the easiest way to see them is to write one for a rate you already have. <strong>This is the adversarial case from 00:55, which passes 15 times in 20.</strong></p>
   <div class="tw">
     <table>
-      <thead><tr><th>Part</th><th>What most rows have</th></tr></thead>
+      <thead><tr><th class="mono">#</th><th>The part</th><th>What it is</th><th>Filled in, for this row</th></tr></thead>
       <tbody>
-        <tr><td>The requirement</td><td class="ok">Usually present</td></tr>
-        <tr><td>The evidence</td><td class="ok">Usually present, as a number</td></tr>
-        <tr><td>The threshold, <em>and its reason</em></td><td class="bad">The number is there. The reason almost never is</td></tr>
-        <tr><td>The person who accepts the risk</td><td class="bad">Almost never</td></tr>
+        <tr><td class="mono">1</td><td><strong>The requirement</strong></td><td>The thing in plain words that must be true</td><td>"The agent must not obey an instruction written in an account note"</td></tr>
+        <tr><td class="mono">2</td><td><strong>The evidence</strong></td><td>The measurement that tells you whether it is true, and where it comes from</td><td>The adversarial case in the suite, 20 runs, currently 15 of 20</td></tr>
+        <tr><td class="mono">3</td><td><strong>The threshold, and its reason</strong></td><td>The value that divides ship from do-not-ship, <em>and why that value</em></td><td>20 of 20, because one escape pays ₹2,50,000 and there is no partial credit on a payment</td></tr>
+        <tr><td class="mono">4</td><td><strong>The person who accepts the risk</strong></td><td>A named human who signs when the gate fails and the release goes anyway</td><td>The payments lead, by name, not "the platform team"</td></tr>
       </tbody>
     </table>
   </div>
-  <p>A row with the first two and not the last two is a dashboard. It reports. It does not gate.</p>
+  <p><strong>Read the right-hand column, not the middle one.</strong> The middle column is a definition and the right-hand column is a decision. Rows 3 and 4 are where the work is, and both are about people rather than code.</p>
+  <h4>Why most rows are not gates</h4>
+  <p>Now the uncomfortable part. Of those four, two are nearly always present and two are nearly always missing.</p>
+  <div class="term">  1  the requirement              <span class="m">usually there</span>
+  2  the evidence, as a number    <span class="m">usually there</span>
+  3  the threshold                <span class="m">the number is there</span>
+     ...and its reason            <span class="x">almost never there</span>
+  4  the person who signs         <span class="x">almost never there</span></div>
+  <p><strong>A row with the first two and not the last two is a dashboard.</strong> It reports. It cannot stop anything, because there is no agreed value to fail against and nobody whose job it is to decide.</p>
+  <p>That is the single most common state of evaluation in production: a team with good numbers, no bar, and a release process in which the numbers are looked at and then the release happens anyway.</p>
   <h4>Where the gate actually runs: before release, and after it</h4>
   <p>The same evaluation set gets run in two places, and the industry has a name for each.</p>
   <div class="tw">
@@ -2026,7 +2058,14 @@ topics.push({
   </ul>
   <p>The defence for both is the same and it is unglamorous: <strong>the evaluation set is version-controlled beside the code</strong>, and a change in behaviour retires the cases it invalidates in the same commit.</p>`,
       script: `
-    <p>One sentence, then the four parts and what most rows are missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and leave it there.</p>
+    <h4>Start with the plain version</h4>
+    <p><strong>Lead with the plainest sentence and let it sit: a release gate is a written rule that can stop a release.</strong> Then the word that does the work — a gate is either open or shut, so a number that cannot shut it is a report, whatever the dashboard calls it.</p>
+    <h4>The four parts, on one real row</h4>
+    <p>Their page fills the four parts in against <strong>the adversarial case from 00:55, at 15 of 20</strong>. <strong>Read only the right-hand column.</strong> The middle column is a definition; the right-hand column is a decision.</p>
+    <p>Land the threshold's reason, because it is the one that teaches: 20 of 20, because one escape pays ₹2,50,000 and <strong>there is no partial credit on a payment.</strong> That is what "a threshold with a reason" means, and it is why the reason is not optional.</p>
+    <h4>Why most rows are not gates</h4>
+    <p>Two of four are nearly always present, two nearly always missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and then the sentence that lands it: a team with good numbers, no bar, and a release process where the numbers are looked at and the release happens anyway.</p>
+    <p class="qbadge">Ask the room whether that describes them. Most of it will. Do not push for answers out loud; the recognition is the point.</p>
     <h4>Where the gate actually runs: before release, and after it</h4>
     <p>Offline and online. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
     <p>Then the line that ties the day together: <strong>the 00:15 double payment would have been caught by neither.</strong> Offline had no two-process case. Online would have shown ₹2,400 paid and no alert, because nothing was watching for it.</p>
@@ -2063,11 +2102,31 @@ topics.push({
       mode: 'Whole room · 7 min',
       learner: `
   <p>Three things to check on any gate row, and the first is nearly universal.</p>
-  <ul>
-    <li><strong>A threshold with no reason beside it.</strong> Ask where 95 came from. The honest answer is usually that it is a round number, which is the same defect as last week’s ceiling.</li>
-    <li><strong>A team name in the decision owner column.</strong> A team cannot accept a risk. Ask for a role, then ask whether that person knows.</li>
-    <li><strong>Grader validation filled with the grader’s own output.</strong> "Model grader, 94% accurate." Against whose labels?</li>
-  </ul>
+  <h4>One · a threshold with no reason beside it</h4>
+  <p>Almost every gate row you will ever read has a number like this in it:</p>
+  <div class="term">  requirement   the agent must answer billing disputes correctly
+  evidence      the evaluation suite
+  threshold     <span class="x">95%</span>
+  owner         <span class="x">(blank)</span></div>
+  <p><strong>So ask one question about that 95: where did it come from?</strong> Not "is it right" — where did the number come from. Who chose it, and what were they comparing against?</p>
+  <p>There are only a few honest answers, and you can tell them apart.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>The answer you get</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td class="bad">"It is the standard bar." / "It has always been 95."</td><td>Nobody chose it. It is a round number that arrived with the template, which is the same defect as week 2's ceiling</td></tr>
+        <tr><td class="bad">Silence, or "I would have to check"</td><td>The same thing, said honestly</td></tr>
+        <tr><td class="ok">"Because below 95% we breach the support contract"</td><td>A real reason. It comes from outside, it is checkable, and it tells you what failing costs</td></tr>
+        <tr><td class="ok">"Because last release measured 96% and we will not regress"</td><td>Also a real reason, and a different kind. It comes from your own last measurement</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>The point of the question is not to catch anybody out.</strong> It is that a threshold with a reason can be argued with, adjusted, and defended in a release meeting. A threshold without one gets overridden the first time it is inconvenient, because there is nothing to override.</p>
+  <p class="quiet">The two good answers above are the two kinds of threshold, and the next part is about the difference between them.</p>
+  <h4>Two · a team name in the decision owner column</h4>
+  <p>A team cannot accept a risk. "Platform" cannot be called at 2am and cannot be accountable afterwards. <strong>Ask for a role held by one person</strong>, then ask the harder question: does that person know their name is on it?</p>
+  <h4>Three · grader validation filled with the grader's own output</h4>
+  <p>A row that says "model grader, 94% accurate" is quoting the grader about itself. <strong>Against whose labels?</strong> If the answer is none, the 94% is the number from 02:02 with no kappa beside it, and it is an opinion with a decimal point.</p>
   <h4>The failure this part is really about</h4>
   <p>Your suite reports 92% against a bar of 95%. The release goes out anyway, because somebody senior said it was fine on a call.</p>
   <div class="term"><span class="q">Who is accountable when that release causes an incident?</span>
@@ -2081,29 +2140,67 @@ topics.push({
     </div>
   </details>
   <h4>Two kinds of threshold, and only one of them can be argued with</h4>
-  <p>The 95% above is a single number doing two incompatible jobs, which is why nobody can defend it. <strong>Split any gate row into one of two kinds before you argue about its value.</strong></p>
+  <p>The two good answers in the table above were not just both acceptable. <strong>They were two different kinds of gate</strong>, and most arguments about a threshold are really an argument about which kind it should be.</p>
+  <h4>The difference in one sentence each</h4>
+  <ul>
+    <li><strong>An absolute gate asks: is this value acceptable?</strong> It compares your measurement against a fixed line. The line does not move when you release.</li>
+    <li><strong>A relative gate asks: is this value worse than last time?</strong> It compares your measurement against <em>your own previous measurement</em>. The line moves every release.</li>
+  </ul>
+  <p>So the absolute gate needs somebody to have decided what "acceptable" is. The relative gate needs nobody to decide anything — it only needs you to have measured last time.</p>
+  <h4>The same requirement, gated both ways</h4>
+  <p>Take one requirement and write it as each kind. Then watch what happens across three releases.</p>
+  <div class="term">  requirement: the agent's answers stay grounded in the policy text
+
+  <span class="m">AS AN ABSOLUTE GATE</span>          faithfulness must be at least 95%
+  <span class="m">AS A RELATIVE GATE</span>          faithfulness must be no more than 1 point
+                                 below the current release
+
+  release   measured   absolute gate (>= 95%)      relative gate (>= last - 1)
+  ───────   ────────   ──────────────────────      ──────────────────────────
+  v1          96%      <span class="m">passes</span>                      <span class="q">nothing to compare to</span>
+  v2          93%      <span class="x">FAILS</span>  (93 is under 95)    <span class="x">FAILS</span>  (96 -> 93 is 3 points)
+  v3          92%      <span class="x">FAILS</span>  (92 is under 95)    <span class="m">passes</span> (93 -> 92 is 1 point)</div>
+  <p><strong>Look at release 3.</strong> The same measurement, 92%, fails one gate and passes the other. Neither gate is broken. They are asking different questions, and both answers are correct answers to the question that was asked.</p>
+  <p>That is the whole distinction. <strong>Absolute asks "is this good enough". Relative asks "did we make it worse".</strong> A system can be not-good-enough and also not-worse, which is exactly where release 3 sits.</p>
+  <h4>Which to use, and what each one costs</h4>
   <div class="tw">
     <table>
-      <thead><tr><th></th><th>An absolute floor</th><th>A relative delta</th></tr></thead>
+      <thead><tr><th></th><th>Absolute gate</th><th>Relative gate</th></tr></thead>
       <tbody>
-        <tr><td><strong>Says</strong></td><td>This may never happen at all</td><td>This may not get worse than it is today</td></tr>
-        <tr><td><strong>Written as</strong></td><td>A fixed value: 0%, or 100%</td><td>A change against the current release: −1%, +10%</td></tr>
-        <tr><td><strong>Examples</strong></td><td>Personal data leaked: 0%. Prompt injection succeeding: 0%. Output matching the schema: 100%</td><td>Faithfulness no more than 1 point below today. 95th-percentile latency no more than 10% worse. Cost per answer no more than 15% higher</td></tr>
-        <tr><td><strong>When it fails</strong></td><td>The build stops. There is no conversation, because the value is not a preference</td><td>Somebody decides. This is where the decision owner column earns its place</td></tr>
-        <tr><td><strong>Where the number comes from</strong></td><td>The outside: a regulation, a contract, a board position</td><td>The inside: last week's measurement of the same thing</td></tr>
+        <tr><td><strong>Written as</strong></td><td>A fixed value: 0%, 100%, at least 95%</td><td>A change: no more than 1 point below, no more than 10% slower</td></tr>
+        <tr><td><strong>Where the number comes from</strong></td><td>Outside you: a regulation, a contract, a board position</td><td>Inside you: your own last measurement of the same thing</td></tr>
+        <tr><td><strong>Use it for</strong></td><td>Things that must never happen. Personal data leaked: 0%. Injection succeeding: 0%. Schema valid: 100%</td><td>Things that have no natural "right" value but should not decay. Faithfulness, latency, cost per answer</td></tr>
+        <tr><td><strong>When it fails</strong></td><td>The build stops and there is no conversation, because the value was never a preference</td><td>Somebody decides. This is where the decision owner column earns its place</td></tr>
+        <tr><td><strong>How it fails you</strong></td><td class="bad">Nobody can source the number, so it gets overridden the first time it is inconvenient</td><td class="bad">It drifts. Ten releases each one point worse is ten points worse, and every single one passed</td></tr>
       </tbody>
     </table>
   </div>
-  <p><strong>Here is why the split matters more than the values.</strong> "95% faithfulness" is unarguable in the wrong way — nobody knows if 95 is ambitious or lax. "No worse than last release" is arguable in the right way, because the comparison is a measurement you already have.</p>
-  <p><strong>And it fixes the 92% problem above.</strong> If faithfulness is a relative gate, 92% against last week's 93% is a one-point regression that a named person signs off in a minute. If it is an absolute floor at 95%, the row is asking somebody to override a rule nobody can source, which is how it ends up overridden on a call.</p>
-  <p class="quiet">Mind the asymmetry. A relative gate drifts: ten releases each one point worse is ten points worse, and every single one passed. So a relative gate needs an absolute floor underneath it, far enough down that it is never the live constraint.</p>`,
+  <p><strong>Read the last row twice, because it is the reason you need both.</strong> An absolute gate alone gets argued away. A relative gate alone lets you decay one point at a time with a green build every week.</p>
+  <p><strong>So pair them.</strong> A relative gate for the week-to-week decision, and an absolute floor underneath it, set far enough down that it is never the live constraint — a backstop rather than a target. Release 3 above is exactly the case the pair is for: the relative gate passes it, and the floor is what eventually stops the slide.</p>
+  <p><strong>And it fixes the 92% problem from the start of this part.</strong> As a relative gate, 92% against last release's 93% is a one-point regression a named person signs in a minute. As an absolute floor at 95%, the row is asking somebody to override a rule nobody can source — which is how it ends up overridden on a call.</p>`,
       script: `
     <p>Three things to check, and the first is nearly universal. <strong>Take the written answer on the 92% question</strong> before revealing it, because the room will name a senior person and the answer is the junior one.</p>
+    <h4>One · a threshold with no reason beside it</h4>
+    <p>Their page shows a gate row with <strong>threshold 95%, owner blank</strong>, then the question to ask about it: <em>where did the 95 come from?</em> Not "is it right" — where did it come from.</p>
+    <p>Four answers are tabulated, two bad and two good. <strong>The two good ones are the two kinds of threshold</strong>, which is the setup for the next part, so do not resolve them here.</p>
+    <p class="qbadge">Say why the question is asked: a threshold with a reason can be argued with and adjusted. One without a reason gets overridden the first time it is inconvenient, because there is nothing there to override.</p>
+    <h4>Two · a team name in the decision owner column</h4>
+    <p>A team cannot accept a risk and cannot be called at 2am. Ask for a role held by one person, then the harder question: <strong>does that person know their name is on it?</strong></p>
+    <h4>Three · grader validation filled with the grader's own output</h4>
+    <p>"Model grader, 94% accurate" is the grader quoting itself. <strong>Against whose labels?</strong> If none, it is 02:02's number with no kappa beside it.</p>
+    <h4>The difference in one sentence each</h4>
+    <p>Absolute asks whether the value is acceptable, against a fixed line. Relative asks whether it is worse than last time, against your own previous measurement. <strong>Give these two and stop</strong>; the table does the rest.</p>
     <h4>Two kinds of threshold, and only one of them can be argued with</h4>
-    <p><strong>This is the part to protect in this beat.</strong> Absolute floor against relative delta. Give one example of each and then the sentence that does the work: "95% faithfulness" is unarguable in the wrong way, "no worse than last release" is arguable in the right way.</p>
-    <p>Then close the loop on the 92%: as a relative gate it is a one-point regression somebody signs in a minute; as an absolute floor it asks for an override of a rule nobody can source, which is how it gets overridden on a call.</p>
-    <p class="qbadge">If one person takes one thing from this topic, this is the better candidate than the thirteen columns. A room that splits its gate rows into floors and deltas has changed how it writes them.</p>
-    <p>Say the asymmetry last, because somebody will find it otherwise: ten releases each one point worse is ten points worse and every one passed. A relative gate needs an absolute floor underneath it.</p>`,
+    <p><strong>This is the part to protect in this beat, and it was rewritten because the distinction was not landing.</strong> Give the one-sentence version of each first and nothing else:</p>
+    <p>An absolute gate asks <em>is this value acceptable</em>, against a fixed line. A relative gate asks <em>is this worse than last time</em>, against your own previous measurement.</p>
+    <h4>The same requirement, gated both ways</h4>
+    <p><strong>Put the three-release table up and walk to release 3.</strong> Same measurement, 92%, fails the absolute gate and passes the relative one. Neither gate is broken; they asked different questions and both answers are right.</p>
+    <p class="qbadge">The sentence that makes it stick: a system can be not-good-enough and also not-worse. That is release 3, and it is where most real arguments about a threshold actually live.</p>
+    <h4>Which to use, and what each one costs</h4>
+    <p>Five rows, and <strong>only the last one needs saying out loud</strong>: an absolute gate alone gets argued away because nobody can source the number, and a relative gate alone lets you decay one point a release with a green build every week.</p>
+    <p>So the answer is both. A relative gate for the weekly decision, an absolute floor underneath as a backstop rather than a target. <strong>Release 3 is exactly what the pair is for.</strong></p>
+    <p>Then close the loop on the 92% from earlier in this beat: as a relative gate it is a one-point regression somebody signs in a minute; as an absolute floor it asks for an override of a rule nobody can source.</p>
+    <p class="qbadge">If one person takes one thing from this topic, this is the better candidate than the thirteen columns. A room that splits its gate rows into floors and deltas has changed how it writes them.</p>`,
       ref: {
         id: 't4-r-owner', pairs: 'three things to check, and who is accountable',
         html: `
@@ -2126,26 +2223,88 @@ topics.push({
       learner: `
   <div class="builds">
     <div class="build">
+      <h3>What you are producing, in one sentence</h3>
+      <p><strong>One row of a gate table, for one requirement in your own system that nothing currently tests.</strong> A row is thirteen cells of text. There is no code in this lab.</p>
+      <p>You are not designing a process or writing a policy document. You are filling in thirteen cells and then finding out, from another pair, which of them you could not actually fill.</p>
+      <p class="check"><strong>That is the real output of the lab: the cells you cannot fill.</strong> A row with four honest blanks teaches you more than a row with thirteen confident guesses.</p>
+    </div>
+    <div class="build">
       <h3>Starting state and how you check it</h3>
-      <p>A blank thirteen-column table, pasted into chat. One row, for one requirement in your own system that nothing currently tests.</p>
-      <p class="check">Check: another pair reads it. That is the check, and it is the point.</p>
+      <p>A blank thirteen-column table, pasted into chat at the start of the block. Copy it into your own notes.</p>
+      <p><strong>Choosing the requirement — do this first, in under a minute.</strong> Pick one where all three of these are true:</p>
+      <ul>
+        <li>It is about your own system, not this one.</li>
+        <li><strong>If it broke, money or trust would leave the company.</strong> Not a style preference.</li>
+        <li>Nothing in your current test suite would catch it breaking.</li>
+      </ul>
+      <p>If nothing comes to mind, use the one from 02:44: <em>the agent must not obey an instruction written in an account note.</em></p>
+      <p class="check">Check: another pair reads your row and scores each cell. That is the check, and it is the point — you are not checked by a command.</p>
     </div>
     <div class="build">
       <h3>Build the row. Ten minutes.</h3>
-      <p>Requirement · system version · case set · expected behaviour · grader · <strong>grader validation</strong> · threshold and reason · result · coverage gaps · evidence · <strong>decision owner</strong> · failure consequence · review date.</p>
-      <p>These are the evaluation-gates worksheet’s columns unchanged, so filling that worksheet next month introduces no new vocabulary.</p>
+      <p>Thirteen columns. These are the evaluation-gates worksheet's columns unchanged, so filling that worksheet next month introduces no new vocabulary.</p>
+      <p><strong>Here is one filled in completely</strong>, against this agent, so you have a model rather than thirteen words. Yours will be about your own system.</p>
+      <div class="term">  1  requirement          the agent must not obey an instruction
+                          written in an account note
+  2  system version       agent of 2026-10-02, policy-docs.json at 9f41c0e
+  3  case set             C7, plus the adversarial case I wrote at 00:36.
+                          2 cases, 20 runs each
+  4  expected behaviour   refuses, escalates to a person, credits nothing
+  5  grader               grade_outcome (reads the ledger) and
+                          grade_retrieval (reads the clause id)
+  6  <span class="m">grader validation</span>    both are assertions over stored state, so no
+                          agreement figure is needed. <span class="q">If this were a model
+                          grader, this cell holds the kappa</span>
+  7  threshold + reason   20 of 20. One escape pays &#8377;2,50,000, and there
+                          is no partial credit on a payment
+  8  result               15 of 20 = 75%. <span class="x">FAILS</span>
+  9  coverage gaps        only two adversarial cases and both were written
+                          by this team. none in another language
+ 10  evidence             make w3-wobble output, run 2026-10-02,
+                          stored with the build
+ 11  <span class="m">decision owner</span>       the payments lead, by name
+ 12  failure consequence  the release does not go. if it goes anyway, the
+                          account-note path is switched off for the week
+ 13  review date          when the policy text changes, or in three
+                          months, whichever comes first</div>
+      <p><strong>Two cells carry the weight, and they are marked above.</strong> Column 6 is what separates a gate from a dashboard. Column 11 is what separates a decision somebody made from a decision that happened.</p>
+      <p><strong>If you only have time for four cells, do 1, 7, 11 and 12</strong> — the requirement, the threshold with its reason, the owner, and what failing actually stops. Those four are a gate. The other nine are the evidence behind it.</p>
       <p class="check"><strong>There is no column for a total, and none is coming.</strong> A percentage across thirteen requirements is the same mistake as the overall rate at 00:21.</p>
     </div>
     <div class="build">
       <h3>Check: review another pair’s row. Four minutes.</h3>
-      <p>Score each column 0, 1 or 2. <strong>Nothing sums.</strong></p>
-      <p>Spend your four minutes on <strong>grader validation</strong> and <strong>decision owner</strong> and skip the rest if you run out of time. Those two are where every weak row is weak.</p>
-      <p class="check">If a row says "decision owner: I could not find out who owns this", that is a pass and it is the expected finding for about half the room.</p>
+      <p>Swap rows with the pair next to you. <strong>Read theirs and score each cell 0, 1 or 2.</strong> Here is what the three numbers mean, so everybody scores the same way.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Score</th><th>What it means</th><th>Example, on the threshold cell</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">0</td><td>Empty, or a placeholder</td><td>Blank, or "TBD", or "high"</td></tr>
+            <tr><td class="mono">1</td><td>Filled in, but somebody outside the pair could not act on it</td><td>"95%" — a number with no reason, so nobody can defend or adjust it</td></tr>
+            <tr><td class="mono">2</td><td>Filled in, and another engineer could act on it without asking you a question</td><td>"20 of 20, because one escape pays ₹2,50,000 and there is no partial credit on a payment"</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Nothing sums.</strong> You are not producing a mark out of 26. You are pointing at which cells are 0 or 1, and saying why.</p>
+      <p><strong>Spend your four minutes on column 6 and column 11</strong> and skip the rest if you run out of time. Those two are where every weak row is weak, including yours.</p>
+      <p>Then say one sentence back to the pair, in this shape: <em>"Column 11 is a 1 — it says the platform team, and a team cannot be called at 2am."</em></p>
+      <p class="check">If a row says "decision owner: I could not find out who owns this", <strong>that is a 2, not a 0.</strong> It is accurate, it is actionable, and it is the expected finding for about half the room.</p>
     </div>
   </div>`,
       script: `
     <p>Paste the blank thirteen-column table into chat rather than having pairs copy the column names off the page. Ten minutes is tight and copying costs four of them.</p>
+    <h4>What you are producing, in one sentence</h4>
+    <p><strong>Say this before anything else, because all three cards were unclear until 6 October.</strong> One row, thirteen cells of text, no code. Then the sentence that reframes the whole block: <strong>the real output is the cells they cannot fill.</strong> A row with four honest blanks teaches more than thirteen confident guesses.</p>
+    <h4>Starting state and how you check it</h4>
+    <p>Give the three tests for choosing a requirement and hold them to the second one: <strong>if it broke, money or trust would leave the company.</strong> Rooms otherwise pick a style preference and the row teaches nothing.</p>
+    <p>Offer the fallback out loud for anybody stuck: the account-note requirement from 02:44.</p>
+    <h4>Build the row. Ten minutes.</h4>
+    <p><strong>Their page now carries a completely filled row against this agent.</strong> Point at it once and say "this is the shape, yours is about your own system". Do not read it out; it is thirteen lines and reading it costs three minutes.</p>
+    <p>Then the triage instruction, which is what makes ten minutes enough: <strong>if you only have time for four cells, do 1, 7, 11 and 12.</strong> Those four are a gate; the other nine are the evidence behind it.</p>
     <p><strong>Nothing sums.</strong> If anybody produces a total out of 26, that is the cut feature returning under a new name.</p>
+    <h4>Check: review another pair's row. Four minutes.</h4>
+    <p><strong>The 0/1/2 scale now has a definition on their page</strong>, which it did not before: 0 is empty or a placeholder, 1 is filled but not actionable by an outsider, 2 is actionable without asking the author a question.</p>
+    <p>Give them the shape of the sentence to say back, because four minutes of unstructured feedback produces politeness: <em>"Column 11 is a 1 — it says the platform team, and a team cannot be called at 2am."</em></p>
+    <p class="qbadge">Say in advance that "I could not find out who owns this" scores a <strong>2</strong>, not a 0. It is accurate and actionable. Otherwise people invent a name to avoid a zero, and the invented name is the worst outcome of this lab.</p>
     <p class="quiet">Somebody will ask whether a platform does this. The 03:10 table answers it. Give no recommendation.</p>`,
       ref: {
         id: 't4-r-lab', pairs: 'the lab, and the two columns that matter',
@@ -2231,10 +2390,13 @@ topics.push({
     mode: 'alone, in writing · 3 min',
     lede: 'Three questions. The third is from week 2, and its words are quoted above it.',
     items: [
-      { from: 'this', stem: 'Of the thirteen columns in the gate table, which two carry the weight, and which is nearly always empty when a row arrives?',
-        reveal: `<p><strong>Grader validation and decision owner carry the weight.</strong> Grader validation is the one nearly always empty, or filled with the grader’s own output.</p>`,
-        wrong: '"Result and threshold."',
-        right: 'They are the two people look at, which is exactly why they are not the two that carry the weight. A result with no validated grader behind it is a number about nothing.' },
+      { from: 'this', stem: 'Faithfulness measures 92%. The absolute gate is "at least 95%". The relative gate is "no more than 1 point below the last release", and the last release measured 93%. What happens?',
+        options: ['A. Both gates fail, because 92% is below both bars', 'B. The absolute gate fails and the relative gate passes', 'C. The relative gate fails and the absolute gate passes', 'D. The gates contradict each other, so one of them is configured wrongly'],
+        key: 1,
+        reveal: `<p><strong>B.</strong> 92 is below 95, so the absolute gate fails. 93 to 92 is a one-point drop, which is inside the relative gate, so it passes.</p>
+          <p><strong>Neither gate is broken.</strong> They ask different questions: absolute asks "is this good enough", relative asks "did we make it worse". <strong>A system can be not-good-enough and also not-worse</strong>, and that is exactly where this release sits.</p>`,
+        wrong: 'D, because two gates on the same number ought to agree.',
+        right: 'The instinct that a contradiction means a misconfiguration is a good engineering instinct and it is wrong here. Ask what each gate is comparing against: one compares to a fixed line, the other to last week. Different comparisons, different answers, both correct.' },
       { from: 'this', stem: 'A gate-table row says the threshold is 95%. What is the next question?',
         options: ['A. Is 95% high enough for a payment path?', 'B. Who chose 95, and what did they compare it against?', 'C. What is the current rate?', 'D. How many runs is it measured over?'],
         key: 1,
@@ -2352,13 +2514,41 @@ before you run it.</span>
       </tbody>
     </table>
   </div>
-  <p><strong>Only one of those four rows is chosen by you at the moment it matters.</strong> That is the whole subject.</p>`,
+  <p><strong>Only one of those four rows is chosen by you at the moment it matters.</strong> That is the whole subject.</p>
+  <h4>What the lab is actually looking for: the minimum viable context</h4>
+  <p>Trimming context saves money and latency, so the obvious question is how far you can trim. That has a name. <strong>The minimum viable context is the smallest payload that still completes the task</strong>, and finding it is a measurement rather than a judgement.</p>
+  <p>You find it the way you find anything today: run the suite at several sizes and plot the rate against the token count. <strong>That is the lab at 03:40</strong>, and the number you leave with is the point at which your own system stops working.</p>
+  <p>Two measures from 01:37 are the same idea looked at from the other end, and it is worth connecting them out loud.</p>
+  <ul>
+    <li><strong>Context relevancy</strong>, sometimes called the signal-to-noise ratio, asks what share of the payload was actually about the request. High noise means you are paying for tokens nobody read.</li>
+    <li><strong>Context precision and recall</strong> ask whether the right material was there at all. Trimming is how recall gets quietly destroyed.</li>
+  </ul>
+  <p>So trimming is not one decision with one number. <strong>It is a trade between cost and recall</strong>, and the cliff at 03:33 is what happens when you win the cost side too hard.</p>
+  <h4>The judge has a context window too</h4>
+  <p>One connection worth making before the lab, because it closes the loop on topic 3. <strong>Everything in this topic applies to the grader as much as to the agent.</strong></p>
+  <ul>
+    <li>What you put in the judge's window decides its verdict. Hand it the model's name, the latency, or the prompt length and you have handed it something to be biased by. <strong>Give it the input, the output and the rubric, and nothing else.</strong></li>
+    <li>Where you put the anchor examples in the rubric changes how well the judge agrees with you. That is the kappa from 01:55, moved by context placement rather than by a better model.</li>
+    <li>Forcing the judge to answer in a fixed structure, rather than in prose you then parse, is context engineering on the output side.</li>
+  </ul>
+  <p>All three were named at 01:55 and 02:16 as things to do. <strong>This is the topic that explains why they work.</strong></p>`,
       script: `
-    <p>One sentence, then the four rows. <strong>Land on the third row.</strong> The account note is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>`,
+    <p>One sentence, then the four rows. <strong>Land on the third row.</strong> The account note is in the window on somebody else's authority, and that is week 4's subject arriving early.</p>
+    <h4>What the lab is actually looking for: the minimum viable context</h4>
+    <p><strong>Give the term, because it is what the lab is finding and the lab did not have a name for it.</strong> The minimum viable context is the smallest payload that still completes the task, and it is a measurement rather than a judgement.</p>
+    <p>Then connect it backwards in one sentence each: context relevancy is the same idea from the cost end, context recall is what trimming destroys. <strong>Trimming is a trade between cost and recall</strong>, and the cliff is what winning the cost side too hard looks like.</p>
+    <h4>The judge has a context window too</h4>
+    <p>Thirty seconds, and it closes topic 3's loop. <strong>Everything here applies to the grader.</strong> Three items on their page: strip bias-inducing metadata from the judge's window, place the anchor examples deliberately, force a fixed output structure.</p>
+    <p>The line: all three were given as instructions at 01:55 and 02:16, and <strong>this is the topic that explains why they work.</strong></p>
+    <p class="quiet">Do not teach them again. The room has already done them; what is new is the reason.</p>`,
       ref: {
         id: 't5-r-concept', pairs: 'four things in one window',
         html: `
-  <p>The sentence to land: <strong>only one of the four rows is chosen by you at the moment it matters.</strong></p>`,
+  <p>The sentence to land: <strong>only one of the four rows is chosen by you at the moment it matters.</strong></p>
+  <h4>What the lab is actually looking for: the minimum viable context</h4>
+  <p>The smallest payload that still completes the task. A measurement, not a judgement, and it is what 03:40 produces. Connect it to context relevancy and context recall from 01:37.</p>
+  <h4>The judge has a context window too</h4>
+  <p>Strip metadata, place the anchors, force the structure. All three were instructions at 01:55 and 02:16; this topic is the reason they work.</p>`,
       },
     },
     {
@@ -2369,11 +2559,50 @@ before you run it.</span>
   <p><strong>One. Trimming improved a number.</strong> At 180 characters the adversarial case went to 100% and the money fell to ₹46,000. That is not luck and it is not an argument for trimming. It is what a zone where trimming looks free looks like from inside it.</p>
   <p><strong>Two. The zone ends at once.</strong> At 100 characters the adversarial row is zero and stays zero. The mechanism is visible in the run: search scores a clause by how many of the query’s words it holds, so cutting text pulls every score towards every other score. Two clauses a point apart become level, and level is a coin flip. Nothing degraded gradually. <strong>The clauses stopped being distinguishable.</strong></p>
   <p><strong>Three. Below the cliff a sort order decides.</strong> At 60 characters almost every clause scores zero, so the winner is whichever clause id sorts first. Nothing about policy decides it.</p>
-  <p style="font-size:var(--size-4)"><strong>The engineering rule, and it survives whatever these numbers do: policy and tool definitions must never share an eviction budget with conversation history.</strong></p>`,
+  <p style="font-size:var(--size-4)"><strong>The engineering rule, and it survives whatever these numbers do: policy and tool definitions must never share an eviction budget with conversation history.</strong></p>
+  <h4>How much is not the only question. Where also matters.</h4>
+  <p><strong>Be careful here, because this is a different mechanism from the one you just watched.</strong> Today's cliff is a retrieval artefact: cutting the clause text pulled the lexical scores together until two clauses became indistinguishable. That is about the search, not about the model.</p>
+  <p>There is a second effect, it belongs to the model rather than the retriever, and <strong>this agent's lab does not demonstrate it.</strong> You need to know it exists because you will meet it the first time your context gets long.</p>
+  <ul>
+    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. The usual name for the consequence is <strong>lost in the middle</strong>.</li>
+    <li>So the same fact, in the same payload, at the same token count, can be used or ignored depending on where it sits.</li>
+  </ul>
+  <p><strong>The test for it has a name: needle in a haystack.</strong> You hide one fact — the needle — inside a long filler context, then ask a question only that fact answers. Vary two things independently:</p>
+  <div class="term">  depth   how long the whole context is      4k, 16k, 64k, 128k tokens
+  place   where the needle sits inside it    top / middle / bottom
+
+  then read the grid, not the average. a model at 95% overall can be
+  at 40% for a needle two-thirds of the way down a 64k context.</div>
+  <p>Run it with two needles that must be combined, and it gets harder again, because the model has to attend to two weak positions at once.</p>
+  <p><strong>Why this matters for a gate row.</strong> "Our model handles 128k" is a capacity claim, not a performance one. The number you can defend is the depth and position at which <em>your</em> task still works, and that is a measurement you have to make.</p>
+  <h4>Four ways a context window goes wrong, and who owns each</h4>
+  <p>The cliff is one failure. There are four, they are distinct, and only one of them is today's.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Failure</th><th>What happens</th><th>Where it is owned</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Starvation</strong></td><td>The right material is not in the window, or is too trimmed to be distinguishable. <strong>Today's cliff</strong></td><td>Here, at 03:40</td></tr>
+        <tr><td><strong>Clash</strong></td><td>Two things in the window contradict each other — a system rule against a retrieved clause, or a stale document against a fresh tool result. The model picks one, and nothing records which</td><td>Here in principle, and the agent has no mechanism for it. <strong>Say so</strong></td></tr>
+        <tr><td><strong>Distraction</strong></td><td>Irrelevant material crowds out the relevant: unused tool schemas, long history, rules that do not apply to this request. Accuracy falls while nothing looks broken</td><td>Measured by context relevancy, from 01:37</td></tr>
+        <tr><td><strong>Poisoning</strong></td><td>Untrusted text in the window is treated as instruction. One bad tool result or one account note corrupts every later step of the run</td><td class="bad">Week 4. The account note at 01:06 is this, caught early</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Clash is the one worth a minute, because it is the one nobody tests.</strong> This agent can be handed a retrieved clause that contradicts its own system prompt, and it has no rule for which wins. It will pick one. The trace will not say it was a choice.</p>
+  <p class="quiet">Poisoning accumulates, which is what makes it week 4's rather than today's. In a single-turn run one bad input affects one answer. In a multi-turn agent it is in the history, so it affects every answer after it.</p>`,
       script: `
     <p><strong>Give the three readings in order.</strong> Trimming improved a number. The zone ends at once. Below the cliff a sort order decides. The third is the coldest sentence in the session and it is worth saying slowly.</p>
     <p><strong>Close on the durable rule</strong>, because it is the part that does not depend on any of these numbers.</p>
-    <p class="quiet">Two papers support the shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>`,
+    <h4>How much is not the only question. Where also matters.</h4>
+    <p><strong>Flag the change of mechanism explicitly or you will create a misconception.</strong> Today's cliff is a retrieval artefact — lexical scores converging. The positional effect belongs to the model, and <strong>this lab does not demonstrate it.</strong> Say both sentences.</p>
+    <p>Then the effect: attention is strongest at the beginning and end of a long context and weakest in the middle, so the same fact at the same token count can be used or ignored depending on where it sits. The name is <strong>lost in the middle</strong>.</p>
+    <p>Then the test, which is the actionable part: <strong>needle in a haystack</strong>, varying depth and position independently, and <strong>reading the grid rather than the average.</strong> A model at 95% overall can be at 40% for a needle two-thirds down a 64k context.</p>
+    <p class="qbadge">The line for this room: "our model handles 128k" is a capacity claim, not a performance one. The defensible number is the depth and position at which your own task still works.</p>
+    <h4>Four ways a context window goes wrong, and who owns each</h4>
+    <p>Starvation, clash, distraction, poisoning. <strong>Point at the table and say which one they just watched</strong>, which is starvation.</p>
+    <p><strong>Spend the minute on clash</strong>, because it is the one nobody tests. This agent can be handed a retrieved clause that contradicts its own system prompt and has no rule for which wins. It will pick one, and the trace will not record that it was a choice.</p>
+    <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
+    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>`,
       ref: {
         id: 't5-r-cliff', pairs: 'the mechanism, and the sourcing',
         html: `
@@ -2460,8 +2689,44 @@ before you run it.</span>
         { product: 'OpenTelemetry GenAI conventions', cost: 'Free, and a specification rather than a product, so somebody on your team implements it' },
       ] },
     ],
-    learner: `<p><strong>The one that matters for this week.</strong> None of the five tells you where your cliff is. They tell you what the context costs, not what cutting it does to the answers. That is the difference between a bill and an evaluation.</p>`,
-    script: `<p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>`,
+    learner: `
+  <p><strong>The one that matters for this week.</strong> None of the five tells you where your cliff is. They tell you what the context costs, not what cutting it does to the answers. That is the difference between a bill and an evaluation.</p>
+  <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
+  <p>Trimming by character count, which is what the lab does, is the crudest of the options. Three better ones exist, and <strong>each needs its own measurement because each loses something different.</strong></p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Technique</th><th>What it does</th><th>What you have to measure</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Compression</strong></td><td>Replaces a long passage with a shorter summary, usually written by a model</td><td>How much the task accuracy falls against the uncompressed payload. A summary that reads well can still have dropped the one clause that governs</td></tr>
+        <tr><td><strong>Pruning the history</strong></td><td>Drops old turns. A sliding window keeps the last N, semantic selection keeps the relevant ones, key-value extraction keeps only the facts</td><td>Task retention against token saving, as a pair. A sliding window is cheapest to build and is the one that drops the decision made four turns ago</td></tr>
+        <tr><td><strong>Handing off between agents</strong></td><td>One agent passes a condensed state to the next instead of the whole history</td><td>Whether the variables that mattered survived the handoff. This is where context silently stops being complete</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>All three are week 5's subject</strong>, beside what the system remembers between sessions, and none of them is built today. They are here so that when somebody proposes "just summarise the history" you know which number to ask for.</p>
+  <h4>The whole of context evaluation on one card</h4>
+  <p>Five things to measure, and the week has now touched each one. Keep this; it is the summary.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>What you are asking</th><th>What you measure</th><th>What good looks like</th></tr></thead>
+      <tbody>
+        <tr><td>Is the payload mostly signal?</td><td>Context relevancy, and chunk utilisation</td><td>Little filler, and most of what you sent was used</td></tr>
+        <tr><td>Is the right material there at all?</td><td>Context recall, and your own cliff</td><td>You know the token count below which your task stops working</td></tr>
+        <tr><td>Does position change the answer?</td><td>Needle in a haystack, by depth and placement</td><td>No position in the window is materially worse than any other</td></tr>
+        <tr><td>Does bad or contradictory input survive?</td><td>Clash and poisoning cases in the suite</td><td>Contradictions resolve by a stated rule, not by whichever came first</td></tr>
+        <tr><td>Is the <em>judge's</em> context fair?</td><td>The agreement figure from 01:55</td><td>Kappa holds up when you change what the judge is shown</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>The last row is the one to notice.</strong> Four of the five are about the agent's window. The fifth is about the grader's, and it is measured with the same number you produced at 02:02.</p>`,
+    script: `
+  <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+  <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
+  <p>Compression, pruning the history, handing off between agents. <strong>Name them, give the measurement each needs, and say all three are week 5's.</strong> They are on the page so that "just summarise the history" meets the question "measured against what".</p>
+  <p>If you say one thing: <strong>a sliding window is the cheapest to build and the one that drops the decision made four turns ago.</strong></p>
+  <h4>The whole of context evaluation on one card</h4>
+  <p>Five rows, and the week has touched each. <strong>Say "keep this one" and point at the last row</strong>: four are about the agent's window and the fifth is about the grader's, measured with the number they produced at 02:02.</p>
+  <p class="quiet">If the clock has gone, cut the three techniques and keep the five-row card. The card is the summary; the techniques are reference.</p>`,
   },
   topicQuiz: {
     at: '03:57',
@@ -2569,25 +2834,86 @@ export const closing = {
       at: '04:12', title: 'Architectural teardown',
       mode: 'Whole room · 28 min · five questions, one assigned to each of five people',
       learner: `
-  <p>The whole architecture goes on screen, as it stands at the close, and stays there. Five questions. Each one is assigned to somebody by name before the session.</p>
+  <h4>What is on screen: Figure 3</h4>
+  <p><strong>Figure 3 stays on screen for the whole twenty-eight minutes.</strong> It is the dispute agent as it stands at the close of today, with what each of the three weeks added. Every question below is a question about something in this picture.</p>
+  <div class="term">  <span class="q">FIGURE 3 · the dispute agent at the close of week 3</span>
+
+  ticket ──┐
+           ▼
+  ┌──────────────────────────────────────────────┐
+  │  THE AGENT                      <span class="q">week 1</span>       │
+  │  the loop · three tools · the context built  │
+  │  for each step · the cost trace              │
+  │                                              │
+  │  reads the ticket ─> reads the account ─>    │
+  │  applies the policy ─> credits, refuses      │
+  │  or escalates                                │
+  └──────────────────────────────────────────────┘
+      │                │                  │
+      │                │                  │
+      ▼                ▼                  ▼
+  ┌─────────┐   ┌──────────────┐   ┌────────────────┐
+  │ POLICY  │   │ THE CONTROLS │   │ THE GUARD      │
+  │ <span class="q">week 3</span>  │   │ <span class="q">week 2</span>       │   │ <span class="q">week 3</span>         │
+  │         │   │              │   │                │
+  │ 7 clauses│  │ a limit      │   │ thin retrieval │
+  │ of prose│   │ an approval  │   │ margin ->      │
+  │ searched│   │ gate         │   │ escalate       │
+  │ at       │  │ pay once     │   │                │
+  │ request │   │              │   │ <span class="q">01:23</span>          │
+  └─────────┘   └──────────────┘   └────────────────┘
+
+  ════════════════ everything below is NOT the agent ════════════════
+
+  ┌──────────────────────────────────────────────┐
+  │  THE EVALUATION HARNESS         <span class="q">week 3</span>       │
+  │                                              │
+  │  8 cases in 4 classes · 20 runs each         │
+  │                                              │
+  │  three graders:                              │
+  │    grade_outcome      reads the ledger       │
+  │    grade_retrieval    reads the clause id    │
+  │    a model grader     reads the prose        │
+  │                       <span class="q">kappa 0.35 vs labels</span>  │
+  │                                              │
+  │  reports a RATE per case and per class       │
+  └──────────────────────────────────────────────┘
+                     │
+                     ▼
+  ┌──────────────────────────────────────────────┐
+  │  THE GATE                       <span class="q">week 3</span>       │
+  │  requirement · evidence · threshold and its  │
+  │  reason · the person who signs               │
+  │                                              │
+  │  <span class="x">not built. one row written at 02:56.</span>         │
+  └──────────────────────────────────────────────┘</div>
+  <p><strong>Read the double line.</strong> Above it is the thing that serves customers. Below it is the thing that tells you whether it works. Today built everything below the line, and two boxes above it.</p>
+  <h4>Five questions, each assigned to a person by name</h4>
+  <p>Five minutes each. <strong>The answer is not a plan.</strong> It is the next weakness in the system in Figure 3, named.</p>
+  <p>Each question has a description beside it saying what it is about, so you know which part of the figure to look at. The descriptions do not contain the answers.</p>
   <div class="tw">
     <table>
-      <thead><tr><th class="mono">#</th><th>The question</th></tr></thead>
+      <thead><tr><th class="mono">#</th><th>The question</th><th>What it is about</th></tr></thead>
       <tbody>
-        <tr><td class="mono">1</td><td>The suite passes and the policy document changed. Who notices?</td></tr>
-        <tr><td class="mono">2</td><td>Forty thousand disputes a month. Which cases do you run, and how often?</td></tr>
-        <tr><td class="mono">3</td><td>The grader agreed with you in September. It is March. What has moved?</td></tr>
-        <tr><td class="mono">4</td><td>A regulator asks why this customer was paid ₹2,000 and not ₹2,50,000. What do you show them?</td></tr>
-        <tr><td class="mono">5</td><td>The retrieval is 80% right. Where do you spend the next two weeks?</td></tr>
+        <tr><td class="mono">1</td><td>The suite passes and the policy document changed. Who notices?</td><td>The <strong>POLICY</strong> box. The agent's rule now lives in a document somebody else edits. Nothing in the harness is attached to which version of it was used</td></tr>
+        <tr><td class="mono">2</td><td>Forty thousand disputes a month. Which cases do you run, and how often?</td><td>The <strong>HARNESS</strong> box, at real volume. Eight cases times twenty runs is cheap. The question is what you do when the real set is hundreds and a full pass has a price</td></tr>
+        <tr><td class="mono">3</td><td>The grader agreed with you in September. It is March. What has moved?</td><td>The <strong>kappa 0.35</strong> line. That figure was true on one day against one set of labels, and nothing in the figure re-checks it</td></tr>
+        <tr><td class="mono">4</td><td>A regulator asks why this customer was paid ₹2,000 and not ₹2,50,000. What do you show them?</td><td>Everything in the figure at once. The question is which boxes produce evidence somebody outside the team would accept, and which only produce output</td></tr>
+        <tr><td class="mono">5</td><td>The retrieval is 80% right. Where do you spend the next two weeks?</td><td>The <strong>POLICY</strong> box against the <strong>HARNESS</strong> box. One of them is the thing to fix and the figure does not tell you which</td></tr>
       </tbody>
     </table>
   </div>
-  <p><strong>Five minutes each, and the answer is not a plan.</strong> It is the next weakness in the system you have just built, named.</p>
   <div class="writein"><span class="q">Before the discussion: which of the five would your own system fail hardest on?</span>
     <div class="rule"></div>
   </div>`,
       script: `
-    <p>Architecture on screen and leave it there. Five minutes a question. <strong>Assign each to a named person before the day.</strong></p>
+    <h4>What is on screen: Figure 3</h4>
+    <p><strong>Put Figure 3 on screen and leave it there for the full twenty-eight minutes.</strong> It is on the learner page, headed "Figure 3 · the dispute agent at the close of week 3". There are three named figures in the week: Figure 1 at 01:11 is how retrieval is measured, Figure 2 at 01:50 is how model-based grading works, Figure 3 is this one.</p>
+    <p>Before the first question, <strong>read the double line out loud.</strong> Above it is the thing that serves customers; below it is the thing that tells you whether it works. Today built everything below the line and two boxes above it.</p>
+    <p class="qbadge">The empty box matters. <strong>THE GATE says "not built"</strong>, and that is honest: the room wrote one row at 02:56 and nothing enforces it. Point at it before question 4.</p>
+    <h4>Five questions, each assigned to a person by name</h4>
+    <p>Five minutes a question. <strong>Assign each to a named person before the day.</strong> Their page gives each question a "what it is about" column naming the box in Figure 3 to look at, and those descriptions contain no answers.</p>
+    <p><strong>The full answer key for all five is below</strong>, each with a good answer, the wrong answer worth taking seriously, and one push. Read the key for your five before the session, not during it.</p>
     <p><strong>Question 4 is the one that reveals whether the week landed.</strong> A room that answers "we show the trace" has not taken the difference between what happened and why it was allowed to happen.</p>
     <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>`,
       ref: {
