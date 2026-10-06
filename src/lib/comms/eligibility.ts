@@ -55,6 +55,7 @@ import { env } from '../admin/env';
 import { verifyStored, type StoredTemplate, type TemplatePurpose, type TemplateRoute } from './templates';
 import { available as unsubscribeAvailable } from './unsubscribe';
 import { senderFromEnv } from './sender';
+import { inboundSecret, staleAfterMinutes } from './inbound';
 
 // ---------------------------------------------------------------------------
 // The send switch, and what must be true before it moves
@@ -65,8 +66,13 @@ import { senderFromEnv } from './sender';
 // eligibility question and because putting it here is what keeps outbox.ts and
 // eligibility.ts from importing each other.
 
-/** Reply detection: a monitored mailbox whose replies link into lead history. */
-export const replyDetectionAvailable = (): boolean => Boolean(env('COMMS_REPLY_MAILBOX'));
+/**
+ * Reply detection: a monitored mailbox, AND a way for its replies to reach
+ * this system (the signed inbound feed, inbound.ts). A mailbox nobody reads
+ * into the database is not detection. Whether the feed is actually running is
+ * a separate, per-message check (gate 8b), because it needs the database.
+ */
+export const replyDetectionAvailable = (): boolean => Boolean(env('COMMS_REPLY_MAILBOX')) && Boolean(inboundSecret());
 
 /**
  * The recipient allow-list, for a deployment that must never mail a real
@@ -136,11 +142,15 @@ export function preconditions(): Precondition[] {
     },
     {
       id: 'reply-mailbox',
-      what: 'A monitored reply mailbox whose replies are linked into lead history (COMMS_REPLY_MAILBOX).',
+      what: 'A monitored reply mailbox whose replies are linked into lead history (COMMS_REPLY_MAILBOX), and the signed feed that carries them here (COMMS_INBOUND_SECRET, scripts/inbound/gmail-replies.gs).',
       why: 'Eight of the twelve messages ask the reader to reply. Reply is also the first item on the stop list, so without detection a person who answers keeps receiving the sequence they answered.',
       checked: 'machine',
-      ready: Boolean(mailbox),
-      detail: mailbox ? `Set to ${mailbox}.` : 'Not set. Nurture is disabled while this is absent.',
+      ready: replyDetectionAvailable(),
+      detail: !mailbox
+        ? 'COMMS_REPLY_MAILBOX is not set. Nurture is disabled while this is absent.'
+        : !inboundSecret()
+          ? `Mailbox ${mailbox}, but COMMS_INBOUND_SECRET is not set (16 characters or more), so replies cannot reach this system.`
+          : `Mailbox ${mailbox}, with the inbound feed configured. Each marketing message also checks that the feed has posted in the last ${staleAfterMinutes()} minutes.`,
     },
     {
       id: 'unsubscribe',
@@ -704,20 +714,58 @@ export async function checkEligibility(
   // already blocked, and asking a table that cannot know the answer would
   // produce a confident 'pass' on the most important stop signal there is.
   if (marketing && replyDetectionAvailable() && subject.personId) {
-    const { data, error } = await client
+    // A reply a person already reviewed (a resumed sequence) does not count
+    // again; anything newer than the resume does.
+    let since: string | null = null;
+    if (subject.sequenceId) {
+      const { data: seqRow } = await client.from('comms_sequences').select('resumed_at').eq('sequence_id', subject.sequenceId).maybeSingle();
+      since = seqRow?.resumed_at ? String(seqRow.resumed_at) : null;
+    }
+    // Two shapes of reply: one a provider linked to a message we sent, and one
+    // from the reply mailbox feed, linked to the person directly.
+    let viaMessage = client
       .from('comms_events')
       .select('event_id, comms_messages!inner(person_id)')
       .eq('type', 'reply')
-      .eq('comms_messages.person_id', subject.personId)
-      .limit(1);
+      .eq('comms_messages.person_id', subject.personId);
+    let viaPerson = client.from('comms_events').select('event_id').eq('type', 'reply').eq('person_id', subject.personId);
+    if (since) {
+      viaMessage = viaMessage.gt('received_at', since);
+      viaPerson = viaPerson.gt('received_at', since);
+    }
+    const [a, b] = await Promise.all([viaMessage.limit(1), viaPerson.limit(1)]);
+    const error = a.error ?? b.error;
 
     if (error) {
-      gates.push(unknown('reply', 'Reply', 'The provider event log', error));
+      gates.push(unknown('reply', 'Reply', 'The reply record', error));
     } else {
       gates.push(
-        data?.length
+        a.data?.length || b.data?.length
           ? block('reply', 'Reply', 'This person has replied. A reply is the first item on the stop list.', 'stop')
-          : pass('reply', 'Reply', 'No reply recorded.'),
+          : pass('reply', 'Reply', since ? 'No reply since the last reviewed resume.' : 'No reply recorded.'),
+      );
+    }
+
+    // 8b. The feed is running. "Reply detection unavailable or stale: fail
+    // closed." A forwarder that stopped is a hold on every marketing message,
+    // not a silence that reads as "nobody replied".
+    const { data: hb, error: hbErr } = await client
+      .from('comms_inbound_status')
+      .select('last_seen_at')
+      .order('last_seen_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const limitMin = staleAfterMinutes();
+    if (hbErr) {
+      gates.push(unknown('reply-feed', 'Reply feed', 'The reply feed status', hbErr));
+    } else if (!hb?.last_seen_at) {
+      gates.push(block('reply-feed', 'Reply feed', 'The reply mailbox feed has never posted. Replies cannot be seen, so marketing is held.', 'hold'));
+    } else {
+      const ageMin = (now.getTime() - Date.parse(String(hb.last_seen_at))) / 60_000;
+      gates.push(
+        ageMin > limitMin
+          ? block('reply-feed', 'Reply feed', `The reply mailbox feed last posted ${Math.round(ageMin)} minutes ago (limit ${limitMin}). Held until it is running again.`, 'hold')
+          : pass('reply-feed', 'Reply feed', `The reply mailbox feed posted ${Math.max(0, Math.round(ageMin))} minutes ago.`),
       );
     }
   }

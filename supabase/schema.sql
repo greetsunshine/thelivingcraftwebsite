@@ -3408,3 +3408,25 @@ alter table public.consents add column if not exists confirmed_at timestamptz;
 update public.comms_sequences
    set state = 'awaiting_confirmation', next_send_at = null
  where route = 'resource' and state = 'active' and confirmed_at is null;
+
+-- ---------------------------------------------------------------------------
+-- Replies from the reply mailbox (6 October 2026)
+-- ---------------------------------------------------------------------------
+-- The reply feed (src/lib/comms/inbound.ts, POST /api/comms/inbound) records
+-- a reply against the PERSON, because a reply to the mailbox is not always a
+-- reply to a message we can identify. comms_events gains person_id for that.
+-- comms_inbound_status holds when each forwarder last posted; the dispatch
+-- check holds marketing while the newest post is stale.
+
+alter table public.comms_events add column if not exists person_id uuid references public.people(person_id) on delete cascade;
+create index if not exists comms_events_person_reply_idx
+  on public.comms_events (person_id, received_at desc) where type = 'reply';
+
+create table if not exists public.comms_inbound_status (
+  -- The forwarder's name, e.g. 'gmail'. One row per forwarder.
+  source        text        primary key,
+  last_seen_at  timestamptz not null,
+  last_reply_at timestamptz
+);
+
+alter table public.comms_inbound_status enable row level security;

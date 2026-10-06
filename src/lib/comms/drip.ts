@@ -87,7 +87,7 @@
 // Both are in the database, not in this file. This file just reads the
 // answers and reports them.
 
-import { DRIP_MODULES, moduleForRequestId, type DripModule } from '../../data/resource-routing.ts';
+import { DRIP_MODULES, ROLE_PRIORITY, moduleForRequestId, type DripModule } from '../../data/resource-routing.ts';
 import { roleCodeFor, type RoleCode } from '../../data/audience-roles.ts';
 import { CONFIRMATION_TEMPLATE, dripTemplateFor, fillDripBody, relevanceSentence } from './drip-templates.ts';
 import { renderMessage } from './templates.ts';
@@ -292,7 +292,9 @@ export interface RecommendArgs {
  *
  *   1. never the initial resource, never one in `excluded`, never inactive,
  *      never one Sunil has not released;
- *   2. the initial resource's preferred follow-ups, in the matrix's order;
+ *   2. the role's priorities (ROLE_PRIORITY), when the person chose a role
+ *      the brief names;
+ *   2b. the initial resource's preferred follow-ups, in the matrix's order;
  *   3. then modules whose proposed roles include the person's, in catalogue order;
  *   4. then the rest, in catalogue order.
  */
@@ -305,6 +307,11 @@ export function recommend(args: RecommendArgs): DripModule | null {
   const byId = new Map(catalogue.map((m) => [m.id.toLowerCase(), m]));
   const eligible = (m: DripModule | undefined): m is DripModule =>
     Boolean(m && m.active && m.released && !out.has(m.id.toLowerCase()));
+
+  for (const id of (args.roleCode && ROLE_PRIORITY[args.roleCode]) || []) {
+    const m = byId.get(id.toLowerCase());
+    if (eligible(m)) return m;
+  }
 
   const initial = args.initial ? byId.get(args.initial.toLowerCase()) : undefined;
   for (const id of initial?.preferredFollowUps ?? []) {

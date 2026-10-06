@@ -342,23 +342,22 @@ export const DRIP_PLACEHOLDERS = ['first_name', 'relevance', 'cohort_invitation'
  * The brief's role sentences, keyed by our role codes.
  *
  * The brief has four: engineering manager, architect, engineer, and an
- * employer-funding goal. Our role list (audience-roles.ts) has
- * 'engineering_leader' and 'engineer', so those two are used. It has no
- * architect option, and no form asks about employer funding, so those two
- * sentences cannot be chosen from anything a person told us. They are kept
- * here, unused, so the day a form asks, the words are already the approved
- * ones. "Never invent a name" applies to roles too: no sentence is chosen
+ * employer-funding goal. The role list (audience-roles.ts) has
+ * 'engineering_leader', 'engineer' and, since 6 October, 'architect', so
+ * those three are used. No form asks about employer funding, so that
+ * sentence cannot be chosen from anything a person told us; it is kept below,
+ * unused. "Never invent a name" applies to roles too: no sentence is chosen
  * from a guess.
  */
 export const ROLE_SENTENCES: Readonly<Record<string, string>> = {
   engineering_leader:
     'You mentioned leading an engineering team, so this may be useful in a design discussion with the people responsible for the workflow.',
   engineer: 'You mentioned hands-on engineering work, so you can try this with one small, non-sensitive workflow.',
+  architect: 'You mentioned architecture work, so this resource focuses on a boundary you can make explicit in the design.',
 };
 
-/** Kept for when a form asks. Not reachable from any role code today. */
+/** Kept for when a form asks about employer funding. Not reachable today. */
 export const UNUSED_ROLE_SENTENCES = {
-  architect: 'You mentioned architecture work, so this resource focuses on a boundary you can make explicit in the design.',
   employerFunding: 'You mentioned employer support, so this may help you connect your learning goal to a team conversation.',
 } as const;
 

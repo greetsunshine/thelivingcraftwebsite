@@ -913,7 +913,13 @@ already sent, until the catalogue is used up or the person stops it. A reply, a 
 an open application or a payment pauses it, and only a person resumes it. **No module is
 selected until Sunil releases it** (`RELEASES` in `resource-routing.ts`, empty today). The
 rules come from the outreach package's
-`review/05-email-and-resource-routing.md`, which is the brief for this feature. The design is in the header of
+`review/05-email-and-resource-routing.md`, which is the brief for this feature.
+**Replies reach the site through a signed feed** (`POST /api/comms/inbound`, a Gmail Apps
+Script in `scripts/inbound/`), and marketing is held whenever that feed has not posted for
+30 minutes. **Astro's cross-site form check is off in `astro.config.mjs` and runs in
+`src/lib/http/origin.ts` instead**, because Astro's refused every RFC 8058 one-click
+unsubscribe; `/api/unsubscribe` is its only exemption, and nothing else may join it without
+the same argument. The design is in the header of
 [src/lib/comms/drip.ts](src/lib/comms/drip.ts); the operator's note is
 [src/lib/comms/README.md](src/lib/comms/README.md); the catalogue is data in
 [src/data/resource-routing.ts](src/data/resource-routing.ts). Two things to hold: **the

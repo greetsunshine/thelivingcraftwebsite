@@ -31,6 +31,8 @@ import { capabilities } from './lib/admin/env';
 import { COOKIE_NAME as CRAFT_COOKIE, readSession } from './lib/craft/auth';
 import { activeLearner } from './lib/craft/learners';
 import { isProduction } from './lib/env';
+// The cross-site form check, moved here from Astro's own (astro.config.mjs).
+import { crossSiteFormRefusal } from './lib/http/origin';
 
 /** Reachable without a session, because they are how you get one. */
 const OPEN = new Set(['/craft/admin/login', '/api/craft/admin/login', '/api/craft/admin/logout']);
@@ -42,6 +44,11 @@ const isCraftPath = (p: string) => p === '/craft' || p.startsWith('/craft/') || 
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const path = context.url.pathname.replace(/\/+$/, '') || '/';
+
+  if (!context.isPrerendered) {
+    const refused = crossSiteFormRefusal(context.request, context.url, path);
+    if (refused) return refused;
+  }
 
   // Console first — see the note at the top of this file. Both predicates match
   // /craft/admin/*; only the admin one may answer for it.

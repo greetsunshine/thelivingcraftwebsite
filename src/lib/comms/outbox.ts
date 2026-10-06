@@ -1835,7 +1835,7 @@ export async function inboxState(who: Identity | undefined): Promise<Answer<Inbo
     return ok({
       detection: false,
       replies: null,
-      note: 'No monitored reply mailbox is configured, so replies are not detected and not linked into lead history. The number of replies is unknown, not zero.',
+      note: 'Reply detection is not configured (COMMS_REPLY_MAILBOX and COMMS_INBOUND_SECRET), so replies are not detected and not linked into lead history. The number of replies is unknown, not zero.',
     });
   }
 
@@ -1848,7 +1848,7 @@ export async function inboxState(who: Identity | undefined): Promise<Answer<Inbo
   return ok({
     detection: true,
     replies: data?.length ?? 0,
-    note: 'Replies recorded by the provider callback and linked to a message.',
+    note: 'Replies recorded from the reply mailbox feed or a provider callback.',
   });
 }
 

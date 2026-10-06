@@ -61,6 +61,8 @@ every message has an idempotency key; the database refuses the second copy.
 | `COMMS_REPLY_MAILBOX` | The monitored reply address | Nurture disabled |
 | `COMMS_SENDING_DOMAIN` | The verified domain | Dispatch off |
 | `COMMS_LINK_SECRET` | Signs unsubscribe and confirmation links | Nurture disabled; no confirmation request can be sent |
+| `COMMS_INBOUND_SECRET` | Signs the reply mailbox feed | Reply detection off; nurture disabled |
+| `COMMS_INBOUND_STALE_MINUTES` | How old the feed's last post may be | 30 |
 | `COMMS_LINK_ORIGIN` | Where links point | Production origin |
 | `COMMS_RECIPIENT_ALLOWLIST` | Staging: who may be mailed | Everybody may |
 | `COMMS_WORKER_SECRET` / `CRON_SECRET` | The worker's bearer | Worker closed |
@@ -147,14 +149,63 @@ consent, two planners at once); confirmation and unsubscribe tokens; retry
 planning; the provider's outcome mapping; webhook signatures; and the rendered
 email.
 
-## What is still not built
+## Replies: the reply mailbox feed
 
-- **Reading replies.** Nothing reads the reply mailbox yet. Dispatch refuses to
-  switch on without `COMMS_REPLY_MAILBOX`, and a reply recorded as a
-  `comms_events` row of type `reply` pauses the sequence. Until a provider's
-  inbound feed writes those rows, an operator pauses by hand.
-- **The two role sentences the forms cannot reach.** The brief has four. Our
-  role list has no architect, and no form asks about employer funding. The
-  words are kept in `drip-templates.ts`, unused.
-- **Pause on a meeting recorded in the pipeline** is covered through the open
-  opportunity it belongs to, not read from `meetings` directly.
+A reply goes to the reply mailbox, not to this site. A small script carries it
+here:
+
+```
+the reply mailbox ──(scripts/inbound/gmail-replies.gs)──▶ POST /api/comms/inbound
+```
+
+- The script runs every five minutes inside the mailbox's own Google account.
+  It posts each new message's sender and Message-ID, never the subject or the
+  body, and a heartbeat on every run. Its header has the five setup steps.
+- A reply from a known person is recorded once (`comms_events`, type `reply`,
+  `person_id`). It **pauses** a resource follow-up and **stops** a cohort
+  sequence with a review task.
+- **Fail closed.** Every marketing message is held while the newest heartbeat
+  is older than 30 minutes (`comms_inbound_status`). If the script stops,
+  sending stops.
+- Auto-replies count as replies. A pause a person reviews costs nothing.
+- A mailbox that is not Gmail needs a different forwarder. Anything that can
+  sign a JSON body works; the format is in `src/lib/comms/inbound.ts`.
+
+## Unsubscribe: a GET asks, a POST acts
+
+Since 6 October the footer link opens a page with one button, because mail
+scanners open links (the brief: "GET scanner does not unsubscribe"). A mail
+client's own unsubscribe control (RFC 8058) posts directly and needs no page.
+Those posts carry no `Origin` header, which Astro's built-in cross-site check
+refused with a 403. That check now runs in `src/middleware.ts`
+(`src/lib/http/origin.ts`) with `/api/unsubscribe` as its only exemption.
+
+## The brief's 16 acceptance cases
+
+The brief: "Record test contact, timestamp, environment, device,
+request/message ID, expected result and actual evidence before enabling
+sends." The automated column runs in `npm test`. The live column needs the
+provider, a sending domain and an allow-listed address, and is run on staging
+before `COMMS_DISPATCH=on`.
+
+| # | Case | Automated (`npm test`) | Live, on staging |
+|---|---|---|---|
+| 1 | No consent | "without the box ticked …" | Download, box unticked: request row, file delivered, no sequence |
+| 2 | Unconfirmed address | "a tick opens the sequence awaiting confirmation …", "nothing marketing is ever planned …" | Tick, do not click: one confirmation email, nothing else for 3 days |
+| 3 | Duplicate submission | "a second tick while waiting …", "not re-enrolled …" | Submit the same download twice: one person, one sequence |
+| 4 | Several downloads | the exhaustion test; "a request id maps to its module" | Download two resources: neither is ever recommended |
+| 5 | Download after scheduling | the exhaustion test (a request added after step 1) | Confirm, then download the resource step 1 would pick: it is skipped |
+| 6 | Missing personalisation | "with no relevance sentence …"; "a person with no name …" | Gate with a one-word name: "Hi," and no blank line |
+| 7 | Unsubscribe before dispatch | "an unsubscribe cancels what is queued …"; `unsubscribe.test.ts` | Unsubscribe while a step is queued: the outbox row is cancelled |
+| 8 | One-click unsubscribe | `origin.test.ts`; the GET-asks change | Gmail's own Unsubscribe control; open the footer link and see the button |
+| 9 | Reply / booking / application / payment | the pause tests; `inbound.test.ts` | Reply from the test address: paused within 5 minutes |
+| 10 | Reply detection failure | (needs a database: gate 8b in `eligibility.ts`) | Disable the script's trigger for 35 minutes: marketing held, "Reply feed" gate |
+| 11 | Hard bounce / complaint | `resend.test.ts` (signature, parsing) | The provider's bounce and complaint test addresses: suppressed, sequence stopped |
+| 12 | Provider timeout / duplicate callback | `resend.test.ts` (timeout is "unknown") | Replay one webhook: one event row |
+| 13 | Enrolment closure | (reads `facts.ts`; `resource-cohort-copy.ts`) | Set the close date in the past on staging: the evergreen line appears |
+| 14 | Weekend and delayed job | the calendar tests; "no catch-up burst …" | Confirm on a Thursday: step 1 arrives Monday 10:00 IST |
+| 15 | Exhaustion and catalogue change | the exhaustion test; "not re-enrolled …" | Release two modules only: two sends, then exhausted |
+| 16 | Mobile and desktop | (none) | The gate, the confirmation page and one email, on a phone and a desktop |
+
+Two cases have no automated test, and say so: 10 needs a database, and 16 is
+visual.

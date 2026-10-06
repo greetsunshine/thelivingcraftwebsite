@@ -119,6 +119,7 @@ test('at most one relevance sentence: the request first, then a stated role, the
   );
   assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'engineering_leader' })!, /^You mentioned leading an engineering team/);
   assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'engineer' })!, /^You mentioned hands-on engineering work/);
+  assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'architect' })!, /^You mentioned architecture work/);
   assert.equal(relevanceSentence({ requestedTitle: null, roleCode: 'founder' }), null, 'no sentence is invented for a role the brief does not cover');
   assert.equal(relevanceSentence({ requestedTitle: null, roleCode: null }), null);
 });
@@ -153,6 +154,18 @@ test('once the preferred list is used up, the role decides, then catalogue order
   assert.equal(r('engineer'), 'LC-T02');
   assert.equal(r(null), 'LC-T01', 'no role: catalogue order');
   assert.equal(r('student'), 'LC-TPL04', 'a student: the one module that names students');
+});
+
+test('a role the brief names goes first: an engineering leader gets the review agenda, an architect the authority review', () => {
+  // LC-R01's own list would start with LC-T07.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: null, catalogue: RELEASED })?.id, 'LC-T07');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'engineering_leader', catalogue: RELEASED })?.id, 'LC-TPL02');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: ['LC-TPL02'], roleCode: 'engineering_leader', catalogue: RELEASED })?.id, 'LC-TPL03');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'architect', catalogue: RELEASED })?.id, 'LC-T02');
+  // Once both are used, the topic order takes over.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: ['LC-T02', 'LC-TPL01'], roleCode: 'architect', catalogue: RELEASED })?.id, 'LC-T07');
+  // An engineer has no priority in the brief.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'engineer', catalogue: RELEASED })?.id, 'LC-T07');
 });
 
 test('an inactive or unreleased module is skipped even when the matrix prefers it', () => {

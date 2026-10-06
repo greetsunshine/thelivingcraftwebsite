@@ -52,13 +52,24 @@ What changed:
   every resource sequence opened before today moved back to awaiting. The planner sends each
   of those people the confirmation request once.
 
-Still not built, and why:
-- **Reading replies.** Nothing reads the reply mailbox; that needs the provider (D2). Dispatch
-  already refuses to switch on without `COMMS_REPLY_MAILBOX`. Until then an operator pauses by
-  hand when a reply arrives.
-- **Two of the four role sentences** (architect, employer funding). No form option reaches
-  them. The words are kept, unused, in `drip-templates.ts`.
-- **The 16 acceptance tests on a real database and provider.** They need the provider.
+Then, the same day, the rest of the brief:
+- **Replies.** `POST /api/comms/inbound` takes a signed post from a forwarder in the reply
+  mailbox (`scripts/inbound/gmail-replies.gs`, a Google Apps Script). A reply pauses a
+  follow-up, or stops a cohort sequence and raises a task. Every marketing message is held
+  while the feed has not posted for 30 minutes. Needs `COMMS_INBOUND_SECRET`.
+- **A defect found on the way:** Astro's own cross-site check refused every one-click
+  unsubscribe from a mail client (a form POST with no Origin) with a 403. The check now runs
+  in `src/lib/http/origin.ts` with `/api/unsubscribe` exempt. The footer link's GET now asks
+  with a button before acting.
+- **Architect** is an eleventh role, with the brief's role-first ranking.
+- **The 16 acceptance cases** are mapped to tests and to live staging steps in
+  `src/lib/comms/README.md`. Fourteen have automated cover; all sixteen still need the live run.
+
+Not built, on purpose:
+- **An employer-funding question on the download gate.** It would be the only way to reach the
+  brief's fourth role sentence and its LC-TPL04 priority. Recording it means a download writes
+  to the person record, which `resource_request_submit()` refuses by design, and it adds a
+  question to every download form. The sentence is kept, unused, in `drip-templates.ts`.
 
 ## Week 3, review round 4 — 6 October
 

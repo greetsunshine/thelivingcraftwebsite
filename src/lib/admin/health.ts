@@ -85,6 +85,8 @@ const TABLES = [
   // page and the export both read it.
   'resource_requests_marketing',
   'comms_drip_sends',
+  // When the reply mailbox feed last posted. Missing means replies are unseen.
+  'comms_inbound_status',
   'booking_rules',
   'booking_blocks',
   'bookings',

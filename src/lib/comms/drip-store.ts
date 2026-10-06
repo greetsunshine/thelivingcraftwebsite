@@ -146,12 +146,20 @@ class SupabaseDripStore implements DripStore {
 
   async pauseSignals(args: { personId: string; recipient: string; sinceISO: string; everResumed: boolean }): Promise<string[] | null> {
     const since = args.sinceISO;
-    const [replies, repliedMessages, bookings, opportunities, payments] = await Promise.all([
+    const [replies, mailboxReplies, repliedMessages, bookings, opportunities, payments] = await Promise.all([
       this.client
         .from('comms_events')
         .select('event_id, comms_messages!inner(person_id)')
         .eq('type', 'reply')
         .eq('comms_messages.person_id', args.personId)
+        .gte('received_at', since)
+        .limit(1),
+      // A reply from the reply mailbox feed (inbound.ts), linked to the person.
+      this.client
+        .from('comms_events')
+        .select('event_id')
+        .eq('type', 'reply')
+        .eq('person_id', args.personId)
         .gte('received_at', since)
         .limit(1),
       this.client
@@ -192,6 +200,7 @@ class SupabaseDripStore implements DripStore {
 
     for (const [what, r] of [
       ['reply events', replies],
+      ['mailbox replies', mailboxReplies],
       ['replied messages', repliedMessages],
       ['bookings', bookings],
       ['opportunities', opportunities],
@@ -204,7 +213,7 @@ class SupabaseDripStore implements DripStore {
     }
 
     const out: string[] = [];
-    if (replies.data?.length || repliedMessages.data?.length) out.push('the person replied');
+    if (replies.data?.length || mailboxReplies.data?.length || repliedMessages.data?.length) out.push('the person replied');
     if (bookings.data?.length) out.push('the person booked a call');
     if (opportunities.data?.length) out.push('the person has an open application or enquiry');
     if (payments.data?.length) out.push('a payment was recorded');
