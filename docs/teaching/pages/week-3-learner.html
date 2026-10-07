@@ -573,13 +573,14 @@ So: what would that test have had to DO that none of your tests did?</span>
         <table>
           <thead><tr><th>Level</th><th>What it checks</th><th>An example on this agent</th></tr></thead>
           <tbody>
-            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape?</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
-            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls?</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
-            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run?</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
+            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape? The two measures have names: <strong>tool-selection accuracy</strong> for the first, <strong>schema validation</strong> for the second.</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
+            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls? Measured as <strong>plan efficiency</strong> and <strong>loop detection</strong>.</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
+            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run? Measured as <strong>task completion rate</strong>, and <strong>goal success</strong> where the goal is more than one step.</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
           </tbody>
         </table>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
+      <p><strong>Where each one is cheap, and what it misses.</strong> A step check is a schema assertion, so it runs in milliseconds and costs nothing — and a correctly shaped call to the correct tool still pays the wrong customer. A trajectory check needs the whole trace, which you already keep from week 1. An end-state check needs the world, which means a test ledger you can read after the run. <strong>Cheapest first is the right order to add them, and the wrong order to trust them.</strong></p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>
@@ -2371,6 +2372,7 @@ before you run it.</span>
   averaging 92% is at 40% in the middle of a 64k context.</div>
   <h4>What the grid looks like, and how to read it</h4>
   <p><strong>This is the artefact the test produces.</strong> It is not published anywhere today — this agent's context is far too short to need it — so the figures below are illustrative of the shape, not measurements of anything. <strong>Your own grid comes from running it on your own system.</strong></p>
+  <p><strong>Where the shape comes from, so you can read the originals rather than this summary.</strong> The effect was measured by Nelson F. Liu and colleagues in <em>Lost in the Middle: How Language Models Use Long Contexts</em> (Transactions of the Association for Computational Linguistics, volume 12, 2024, pages 157–173; arXiv:2307.03172). They found accuracy highest when the needed fact sits at the beginning or the end of the context and lowest when it sits in the middle, <strong>and the effect held for models sold as long-context ones.</strong> The test itself is Greg Kamradt's <em>Needle In A Haystack</em> (2023, <span class="mono">github.com/gkamradt/LLMTest_NeedleInAHaystack</span>), which sweeps context length against needle depth — the same two axes as the grid above. <strong>The first is a peer-reviewed paper; the second is a benchmark you can run.</strong></p>
   <div class="term">  <span class="q">an illustrative needle-in-a-haystack grid · % of runs that found the needle</span>
 
                   <span class="q">where the needle sits in the context</span>

@@ -620,6 +620,7 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p><strong>Their table now carries the measure names for each level</strong>, so somebody will ask. Step is tool-selection accuracy and schema validation; trajectory is plan efficiency and loop detection; end state is task completion rate and goal success. <strong>Do not read the six out.</strong> They are there so a learner can search for them next month. The answer to "which do we add first?" is on their page: cheapest first is the right order to add them and the wrong order to trust them.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
@@ -1806,7 +1807,8 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from <span class="off" data-off="00:27">00:27</span>. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
+    <p class="quiet"><strong>The sources, if the room asks where the shape comes from.</strong> The effect is Liu et al., <em>Lost in the Middle: How Language Models Use Long Contexts</em>, TACL volume 12, 2024, pages 157–173 (arXiv:2307.03172) — accuracy highest when the fact sits at the beginning or the end, and lowest in the middle, holding even for models sold as long-context. The test is Greg Kamradt's <em>Needle In A Haystack</em>, 2023, which sweeps context length against needle depth. <strong>One is a peer-reviewed paper and one is a benchmark repository, so do not call them two papers.</strong> Both are printed on the learner page.</p>
+    <p class="quiet">Clash and poisoning are the two to handle carefully. <strong>The safest handling is not to name a vendor or a model from the front of the room</strong>, because the shape is general and the specific numbers age in months.</p>
   </div></div>
 
   <div class="beat" id="s-0340" data-ref="t5-r-lab"><span class="t"><span class="off" data-off="03:40">03:40</span></span><div class="b">
