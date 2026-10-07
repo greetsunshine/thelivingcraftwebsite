@@ -44,7 +44,7 @@ export const week = {
   lead: "All five topics on one page, each one collapsible. The argument behind every segment is in <span class=\"mono\">docs/teaching/notes/week-4-untrusted-input.md</span>, whose sections run in clock order. Both pages are generated from <span class=\"mono\">scripts/teaching-content/week-4.mjs</span> and the clock from <span class=\"mono\">scripts/teaching-clock.mjs</span>.",
   facts: [
     { n: '5', l: 'topics, each with a hands-on lab' },
-    { n: '20', l: 'attacks and planted clauses in the regression set by the close' },
+    { n: '18', l: 'attacks and planted clauses in the regression set by the close' },
     { n: '₹0', l: 'moved by a note the agent still obeys 19 times in 20' },
     { n: '0', l: 'model calls all session' },
   ],
@@ -175,7 +175,7 @@ export const sessionClock = {
 export const agentNow = {
   lede: 'Five things the agent gains today, and the command that proves each one. If a row cannot be proven by running something, it does not belong in this table. The industry name for each is in brackets.',
   rows: [
-    { gained: 'A regression set of attacks <span class="quiet">(adversarial test cases)</span>', atOpen: 'three attacks, one from each earlier week', atClose: 'ten attacks, ten planted clauses and two honest cases, twenty runs each', file: 'data/w4-attacks.json', proof: 'make w4-eval' },
+    { gained: 'A regression set of attacks <span class="quiet">(adversarial test cases)</span>', atOpen: 'three attacks, one from each earlier week', atClose: 'eight attacks, ten planted clauses and two honest cases, twenty runs each', file: 'data/w4-attacks.json', proof: 'make w4-eval' },
     { gained: 'A check between retrieval and action <span class="quiet">(retrieval-time content scanning)</span>', atOpen: 'every retrieved clause is obeyed', atClose: '9 of 10 planted clauses stopped, and the miss rate printed', file: 'src/w4_defences.py', proof: 'make w4-poison' },
     { gained: 'An MCP server whose hints are true <span class="quiet">(MCP tool annotations)</span>', atOpen: 'idempotentHint: true, and nothing enforcing it', atClose: 'a dispute id the server stores, and a scope checked on every request', file: 'src/w4_mcp_server.py', proof: 'make w4-mcp-serve' },
     { gained: 'A proxy at the tool boundary <span class="quiet">(least privilege, MCP gateway)</span>', atOpen: 'every tool, one broad token, the whole result', atClose: 'two rows; the ₹2,50,000 note is obeyed and moves ₹0', file: 'src/w4_defences.py', proof: 'make w4-proxy' },

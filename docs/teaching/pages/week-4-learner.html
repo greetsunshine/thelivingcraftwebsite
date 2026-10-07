@@ -196,7 +196,7 @@ ol.toc a{color:inherit}
   <p class="sub">Today is about untrusted input: text your agent reads that somebody outside your team can write. Five topics. An attacker types into the ticket. Somebody plants a clause in the policy store. You build an MCP server and keep the promises its annotations make. You adopt a server you did not write and contain it. And a loop that raises no error runs sixty times. The defence is to limit what that text can make the agent do. A better filter is not the defence.</p>
   <div class="facts">
     <div class="fact"><span class="n">5</span><span class="l">topics, each with a hands-on lab</span></div>
-    <div class="fact"><span class="n">20</span><span class="l">attacks and planted clauses in the regression set by the close</span></div>
+    <div class="fact"><span class="n">18</span><span class="l">attacks and planted clauses in the regression set by the close</span></div>
     <div class="fact"><span class="n">₹0</span><span class="l">moved by a note the agent still obeys 19 times in 20</span></div>
     <div class="fact"><span class="n">0</span><span class="l">model calls all session</span></div>
   </div>
@@ -251,7 +251,7 @@ ol.toc a{color:inherit}
     <table>
       <thead><tr><th>Capability</th><th>At <span class="off" data-off="00:00">00:00</span> today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
       <tbody>
-        <tr><td>A regression set of attacks <span class="quiet">(adversarial test cases)</span></td><td>three attacks, one from each earlier week</td><td>ten attacks, ten planted clauses and two honest cases, twenty runs each</td><td class="named">data/w4-attacks.json</td><td><code>make w4-eval</code></td></tr>
+        <tr><td>A regression set of attacks <span class="quiet">(adversarial test cases)</span></td><td>three attacks, one from each earlier week</td><td>eight attacks, ten planted clauses and two honest cases, twenty runs each</td><td class="named">data/w4-attacks.json</td><td><code>make w4-eval</code></td></tr>
         <tr><td>A check between retrieval and action <span class="quiet">(retrieval-time content scanning)</span></td><td>every retrieved clause is obeyed</td><td>9 of 10 planted clauses stopped, and the miss rate printed</td><td class="named">src/w4_defences.py</td><td><code>make w4-poison</code></td></tr>
         <tr><td>An MCP server whose hints are true <span class="quiet">(MCP tool annotations)</span></td><td>idempotentHint: true, and nothing enforcing it</td><td>a dispute id the server stores, and a scope checked on every request</td><td class="named">src/w4_mcp_server.py</td><td><code>make w4-mcp-serve</code></td></tr>
         <tr><td>A proxy at the tool boundary <span class="quiet">(least privilege, MCP gateway)</span></td><td>every tool, one broad token, the whole result</td><td>two rows; the ₹2,50,000 note is obeyed and moves ₹0</td><td class="named">src/w4_defences.py</td><td><code>make w4-proxy</code></td></tr>

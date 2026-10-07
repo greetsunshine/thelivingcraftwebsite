@@ -66,7 +66,7 @@ be proven by running something, it does not belong in this table.
 
 | What the agent gains | At 00:00 | At the close | File | Proof |
 |---|---|---|---|---|
-| A regression set of attacks *(adversarial test cases)* | three attacks, one from each earlier week | ten attacks, ten planted clauses and two honest cases, run twenty times each | `data/w4-attacks.json` | `make w4-eval` prints one row per attack |
+| A regression set of attacks *(adversarial test cases)* | three attacks, one from each earlier week | eight attacks, ten planted clauses and two honest cases, run twenty times each | `data/w4-attacks.json` | `make w4-eval` prints one row per attack |
 | A check between retrieval and action *(retrieval-time content scanning)* | every retrieved clause is obeyed | 9 of 10 planted clauses stopped, and the miss rate printed | `src/w4_defences.py` | `make w4-poison` prints `miss rate 10%` |
 | An MCP server whose hints are true *(MCP tool annotations)* | `idempotentHint: true` and nothing enforcing it | a dispute id the server stores, and a scope checked on every request | `src/w4_mcp_server.py` | `make w4-mcp-serve` prints ₹1,200 three times where it printed ₹2,400 |
 | A proxy at the tool boundary *(least privilege, MCP gateway)* | every tool, one broad token, the whole result | two rows; the ₹2,50,000 note is obeyed and moves ₹0 | `src/w4_defences.py` | `make w4-proxy` prints `paid wrongly ₹0` beside `obeyed 19/20` |

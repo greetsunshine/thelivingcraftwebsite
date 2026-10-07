@@ -159,7 +159,7 @@ Things that must survive the writing:
 - Topic 5 is the production-monitoring beat from bridge 6 §4.
 - Bridge 4 checkpoint bullet: the assistant will defend against the attack you
   named, and only that one. Review the attacks it did not think of.
-- Teaching figures here (₹50,000 clause, 60 calls, 180,000 tokens) are invented
+- Teaching figures here (₹50,000 clause, 60 calls, 180,450 tokens) are invented
   for the case and may change. Product prices are unchecked.
 -->
 
@@ -171,9 +171,12 @@ better filter is not the defence.
 
 - Take the Agent Failure Triage Quiz at `/resources/agent-failure-triage-quiz`.
   Twelve questions on one incident.
-- Read one page on how MCP works: tools, resources, prompts and transports. It
-  is reading only, and none of it is taught live.
-- Bring the regression cases from your week 3 suite.
+- Read the Overview and the Architecture pages of the MCP specification dated
+  2026-07-28. It is reading only, and none of it is taught live.
+- Bring one adversarial case from your week 3 suite, or your bypass from week 2's
+  adversary round, written down and quoted exactly.
+- Pull the reference agent and run `make w4-eval` once.
+- If you added a line to your prompt after week 1, bring it.
 
 ## The five topics
 
@@ -218,7 +221,7 @@ worked. What is the most it could do?
 
 **5 · The runaway loop, and who would notice.** Which signal would have moved,
 and who reads it?
-- One run calls `get_account` 60 times and burns 180,000 tokens.
+- One run calls `get_account` 60 times and burns 180,450 tokens.
 - The resource guardrail: the sixth kind on week 2's map, and the one week 2 did
   not build.
 - Lab, `make w4-breaker`: stop a run on token burn and on a repeated tool call.

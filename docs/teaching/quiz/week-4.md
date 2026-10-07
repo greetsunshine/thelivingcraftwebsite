@@ -109,7 +109,7 @@ pre-work quiz exists to remove. **D** is the most common answer in the lab. It p
 >
 > Your regression set passes 346 of 360 adversarial runs. What is that a claim about?
 
-**Answer.** The attacks somebody wrote. Ten attacks and ten planted clauses, chosen by this room
+**Answer.** The attacks somebody wrote. Eight attacks and ten planted clauses, chosen by this room
 today. It says nothing about the eleventh wording, and 01:16 showed that writing one takes a
 minute.
 
