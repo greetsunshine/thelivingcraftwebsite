@@ -216,9 +216,9 @@ and write one row of the gate table with an owner.
 
 **5 · Context engineering.** *03:23 to 04:00.* What happens to the answers
 when you cut what the model is shown? **Context engineering** is deciding what
-the model sees on each turn. You trim the policy text step by step. The
-score holds, then drops sharply at 100 characters a clause instead of declining
-slowly.
+the model sees on each turn. You trim the policy text step by step. Trimming
+first improves the score. Then it falls away fast, and at 100 characters a
+clause it is zero.
 
 Each topic ends the same way: three quiz questions, one of them from an earlier
 week, and one line you write in your own words.

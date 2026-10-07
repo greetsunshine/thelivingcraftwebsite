@@ -8,7 +8,10 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 6 October 2026
+**Last updated:** 7 October 2026
+**Teaching work now:** the six-week plan is PR #54 (`content/six-week-plan`), and week 4's
+build is on `content/week-4-draft` (local, waiting for #54). The Branch line below describes
+the earlier site work and has not been current since October began.
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -75,8 +78,8 @@ to 6 plans that were not on main. #54 was then merged with main, which by then h
 **Delete the writer's note at the top of weeks 4 to 6 before any of them becomes `ready`.**
 It is an HTML comment, so it ships in the page source.
 
-- **Do not adopt the specification's Redis idempotency layer.** It is the split week 2's
-  03:03 lab teaches against.
+**Do not adopt the outside specification's Redis idempotency layer.** It is the split that
+week 2's 03:03 lab teaches against.
 
 ---
 
