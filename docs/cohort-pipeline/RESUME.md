@@ -60,7 +60,10 @@ still `"TBD"`.
   the stated cost of the proxy's record check.
 - **Not done:** no real names on activities (no seat list outside production), not rendered
   on the dev server (it writes to production; the pages were sliced with
-  `teaching-pages.ts` instead), not published as Artifacts.
+  `teaching-pages.ts` instead).
+- **Preview links**, private Artifacts like week 3's: learner
+  https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu, instructor
+  https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA.
 
 ---
 
