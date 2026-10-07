@@ -22,6 +22,23 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Citation Fit Check — 7 October (`add-citation-fit-check`)
+
+A new tool, built from Sunil's brief: an Excel checklist for RAG assistants and its page at
+`/resources/citation-fit-check`. **Released 7 October, not featured**: a row in
+`resources.ts` (Agentic system design 09), none in `resource-choices.ts`, whose top three
+are unchanged. `tools/citation-fit-check/README.md` has the rebuild steps and decisions.
+
+- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 46 of 46, every acceptance
+  figure in the brief plus the two edited variants (16 Fix first; 24 Ready). `npm test`
+  157 of 157. `astro check` 0 errors. No horizontal scroll at 375px.
+- **Download gate kept**, confirmed by Sunil, although the brief said "no email gate". The
+  real dialog handed over the file byte for byte in a local test.
+- **Still open:** the held delivery email `resource-citation-fit-check` is unapproved, and the
+  tool is not in the resource follow-up catalogue.
+
+---
+
 ## Public module copy names the bridge 7 topics — 7 October (PR #55)
 
 `MODULES` in `src/data/cohort-copy.ts` now names MCP servers (M2), A2A, agent memory,

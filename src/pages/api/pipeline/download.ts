@@ -217,6 +217,7 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
   // Published 28 September with a plain link under public/; behind the gate
   // since, like every other file (CLAUDE.md, "The download gate").
   'rework-cost-check': { xlsx: staticFile('rework-cost-check.xlsx', XLSX) },
+  'citation-fit-check': { xlsx: staticFile('citation-fit-check.xlsx', XLSX) },
   'lc-r01': { csv: worksheetCsv('lc-r01') },
   'lc-r02': { csv: worksheetCsv('lc-r02') },
   'lc-r03': { csv: worksheetCsv('lc-r03') },
