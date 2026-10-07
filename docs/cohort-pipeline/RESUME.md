@@ -200,7 +200,10 @@ What changed:
   `mkt-resource-2026-09-29`). Each follow-up opens with the brief's "You requested the …"
   sentence, or a role sentence when the request is unknown, or nothing. The wordings are now
   version `LC-OUTREACH-2026-09-29.2`; load and approve them again in the console.
-- **Schema** (run the whole file before deploying): the `awaiting_confirmation` state,
+- **Schema: applied to production on 7 October**, before this branch merged. All six checks
+  returned 1 (`comms_sequences.confirmed_at`, `consents.confirmed_at`,
+  `comms_events.person_id`, the `comms_inbound_status` table, the `awaiting_confirmation`
+  state, the widened one-live index). What it holds: the `awaiting_confirmation` state,
   `comms_sequences.confirmed_at`, `consents.confirmed_at`, the one-live index widened, and
   every resource sequence opened before today moved back to awaiting. The planner sends each
   of those people the confirmation request once.
