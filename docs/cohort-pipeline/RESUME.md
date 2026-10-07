@@ -19,6 +19,17 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Public module copy names the bridge 7 topics — 7 October (PR #55)
+
+`MODULES` in `src/data/cohort-copy.ts` now names MCP servers (M2), A2A, agent memory,
+compaction and retrieval quality (M3), and pricing the system (M4). Capacity moved from M3
+to M4 with the week. Titles are unchanged, so nothing a crawler or the Ask agent reads
+changed. **Merge PR #54 first**: bridge 7 and the week 4 to 6 plans this copy describes are
+on that branch, not on main. **One gap, older than this PR:** the Ask agent cannot see module
+bodies, so asked "do you teach MCP?" it says it does not know while the page says yes.
+
+---
+
 ## Week 3, review round 5 — 6 October
 
 The last five rows of the sheet, eleven items, all on context engineering and the close. Answered

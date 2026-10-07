@@ -154,7 +154,10 @@ export interface ModuleDetail {
  * docs/teaching/threads.md gave each a topic: MCP servers in week 4 (M2), A2A,
  * agent memory and retrieval quality in week 5 (M3), tokenomics in week 6 (M4).
  * Capacity under load moved from week 5 to week 6 the same day, so it moved from
- * M3's copy to M4's. Titles are unchanged, so facts.ts, the JSON-LD Course node,
+ * M3's copy to M4's, as the rate limit and peak load. MCP sits in M2 as something
+ * you build and decide whether to adopt, not as a security topic (bridge 7 §2).
+ * MERGE content/six-week-plan (PR #54) FIRST: it holds bridge 7 and the week 4-6
+ * plans this copy describes. Titles are unchanged, so facts.ts, the JSON-LD Course node,
  * /api/facts and /llms.txt are unchanged too.
  *
  * The prose lives here and not in facts.ts on purpose. facts.ts is the
@@ -173,19 +176,19 @@ export const MODULES: ModuleDetail[] = [
     id: 'M2',
     weeks: 'Weeks 2–4',
     title: "Agentic systems you'd put your name on",
-    body: 'Tool boundaries, guardrails and retrieval. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft, including through the MCP servers you build and the ones you adopt. Demos are easy. Systems you would run in production are not.',
+    body: 'Tool boundaries, guardrails and retrieval. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft. You build an MCP server (the Model Context Protocol, a standard way to give an agent tools), and decide when to adopt one somebody else wrote. Demos are easy. Systems you would run in production are not.',
   },
   {
     id: 'M3',
     weeks: 'Week 5',
     title: 'Scale, consistency & the irreversible trade-offs',
-    body: 'Multi-agent orchestration, and what happens to a harness when one loop is no longer enough. How agents hand work to each other, including the A2A protocol. What an agent remembers between sessions, and how to keep that memory small. Retrieval that finds the right text. Reading the CAP trade-off in real systems. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
+    body: 'Multi-agent orchestration, and what happens to a harness when one loop is no longer enough. How agents hand work to each other, including the A2A (agent-to-agent) protocol. What an agent remembers between sessions, how long it keeps it, and who may correct it. How to shrink a long history to a token budget without losing a safety rule. How to improve retrieval, and what each change costs per query. Reading the CAP trade-off in real systems. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
   },
   {
     id: 'M4',
     weeks: 'Week 6',
     title: 'Your system, reviewed in the room',
-    body: 'You bring a real architecture. We price it first: what one run costs in tokens, what it costs under load, and the cost per outcome you would accept. Then we pressure-test it together as a cohort. We cover the design, the failure modes, the evaluation strategy, and the governance around it. That governance means review depth matched to risk, and accountability for the code the AI wrote. This is a senior review the way it should feel.',
+    body: 'You bring a real architecture. We price it first: what one run costs in tokens, what happens at the rate limit your provider sets and under peak load, and the true cost of each outcome that meets your pass bar, including the wrong answers that got through. Then we pressure-test it together as a cohort. We cover the design, the failure modes, the evaluation strategy, and the governance around it. That governance means review depth matched to risk, and accountability for the code the AI wrote. This is a senior review the way it should feel.',
   },
 ];
 
