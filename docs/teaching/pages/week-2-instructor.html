@@ -545,11 +545,12 @@ ol.toc a{color:inherit}
 
   <div class="beat" id="s-0042" data-ref="t1-r-stand"><span class="t"><span class="off" data-off="00:42">00:42</span></span><div class="b">
     <h4>Where a control can stand</h4>
-    <span class="pairs">Components and design &#183; pairs, 4 minutes · predict before the list goes up</span>
+    <span class="pairs">Components and design &#183; pairs, 5 minutes · predict before the list goes up, then one minute on ownership</span>
     
     <p><strong>Nine places and a written prediction is a real commitment.</strong> A vote between three places lets a third of the room guess the answer.</p>
     <p>Ask it in these words: <em>there are nine places in the request path where a control could run. Which one covers the most callers?</em></p>
     <p>Put the nine up, take the predictions, and <strong>leave them on the board until <span class="off" data-off="01:12">01:12</span></strong>. Do not say which is right. <span class="off" data-off="01:12">01:12</span> settles it with money and <span class="off" data-off="01:30">01:30</span> states the rule.</p>
+    <p>Then one minute on ownership. Ask it in these words: <em>which of these nine places do you own? Which can a vendor change without a deploy from your team?</em> Take two answers. <strong>Do not let it become about a named protocol.</strong> That is week 4's.</p>
   </div></div>
 
   <div class="beat" id="s-0048" data-ref="t1-r-four"><span class="t"><span class="off" data-off="00:48">00:48</span></span><div class="b">
@@ -921,6 +922,16 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <div class="dbody">
       <p><strong>"Ingress, because it stops the whole run."</strong> What is right: it does, and it is the cheapest place to refuse. What is wrong is that at ingress you know almost nothing. You have a ticket, not an amount, not a tool and not an account.</p>
       <p>That trade, between how much you can prevent and how much you know, is the shape of the whole table. <strong>Probe:</strong> name a control that can only live at ingress. Rate limiting and authentication. Both real, neither about money.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Ownership: which of the nine you own · 1 minute</summary>
+    <div class="dbody">
+      <p><strong>Sequence.</strong> After the predictions are on the board, read the question aloud. Pairs mark each row "ours" or "can move under us". Take two answers.</p>
+      <p><strong>Answer key.</strong> Ingress, the dispatch and the resource of record are usually yours. Context assembly, tool selection and argument construction move when the model or the framework changes, because the model decides which tool to call and with what values. Inside the tool and egress move when the tool belongs to a vendor, such as a hosted tool server or a payment SDK.</p>
+      <p><strong>The expected wrong answer.</strong> "We own all nine, it is our code." What is right: the code that calls each place is yours. What is wrong: a model upgrade changes tool selection and arguments with no commit from your team.</p>
+      <p><strong>Extension question.</strong> Which of the nine changed in your own system last quarter without a commit from your team?</p>
+      <p class="qbadge">The line: the control that covers the most callers has to sit in a place you own.</p>
     </div>
   </details>
   <details>

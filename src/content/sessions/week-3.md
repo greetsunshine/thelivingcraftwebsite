@@ -164,573 +164,79 @@ reading:
     note: "Anthropic. Code-based, model-based and human graders as three complementary things rather than three options. Read it for the ordering argument, which is the one the 01:55 segment makes with money."
 ---
 
-At 02:55 last week you made the same ticket pay once. `make retry` agreed with
-you: one credit, ₹1,200. Then somebody ran the same ticket from a second
-terminal and Ravi was paid twice again.
-
-Today that moment becomes a test suite, and the suite is green.
-
-**A pass is a claim about the cases you chose. It is not a claim about your
-system.** That sentence is the week. By 04:40 you will have watched it happen
-five times, and one of those times it costs ₹2,50,000.
-
-## What this week builds
-
-Four things, and they are one argument rather than four topics.
-
-| What arrives | Why the next one becomes necessary |
-|---|---|
-| **A case set** | Seven cases pass while a live bug sits behind them, because no case has two processes |
-| **A rate, not a verdict** | The agent answers differently on the same input, so one run is an anecdote |
-| **A rule inside a document** | The answer now comes from a retrieved clause, so "right" splits into two questions |
-| **A grader with a number on it** | The grader is a component, so it has a failure rate, so it needs measuring too |
-
-Retrieval makes the answer fuzzy. A fuzzy answer needs scoring. Scoring is what
-lets you change what the model is shown and know whether you made it worse.
-
-**By the end of this session you will be able to:**
-
-1. *Evaluation framework.* **Write the case your tests cannot fail.** There are
-   four classes of case and almost every suite in this room has one of them.
-   Name the three you are missing, then write one case in the class that is
-   missing. If it passes first time, it was too easy.
-2. *Evaluation framework.* **Report a rate rather than a pass.** Run one case
-   many times and count. Then say at which run number the rate stopped moving.
-   One case today looks perfect at ten runs and is wrong three times in twenty.
-3. *Retrieval.* **Tell two failures apart inside one wrong answer.** When the
-   rule comes out of a document, an answer can be wrong because the wrong clause
-   was found, or wrong because the right clause was ignored. Different fixes.
-   One grader sees neither.
-4. *Evaluation framework.* **Put a number on your grader.** A model grader is a
-   component with a failure rate. Measure it against answers you labelled
-   yourself, state the agreement rate, and name the failure it cannot see.
-5. *Governance.* **Name who owns the pass bar.** A threshold is a decision with
-   an owner, not a number. Say what failing it blocks, and what running the
-   evaluation harness costs at forty thousand cases a month.
-
-**Context engineering is the sixth thing today and it has no outcome of its
-own.** It is planted in the first hour, it costs somebody ₹37,86,400 at 04:22,
-and it is argued at the end. The reason it belongs in this week and not in week 1
-is exact: what the model is shown each turn is an input you control, and you can
-only tune an input once you can measure the effect of changing it. Before 00:40
-today, trimming a prompt was taste.
-
-**What is deliberately not here.** Defending against the poisoned account note is
-week 4, and the adversarial cases you write today are what week 4 collects. A
-second agent with its own loop, reviewing the first, is week 5. Compaction across
-a run that will not fit is week 5 as well.
-
-## Before the session
-
-Forty-five minutes, and the first item is the one that matters.
-
-Bring the regression cases you wrote after last week's adversary round. One per
-bypass. Those become the adversarial class of your case set at 00:23, and they
-are the only cases in the room that nobody else can guess.
-
-Run `make retry` once more and write down the figure. Then run it again from a
-second terminal and write that figure down too. The gap between those two
-numbers is what the first hour is about.
-
-Pull the reference agent before the day. Week 3 adds seven clauses of policy
-prose in `data/policy-docs.json`, three new tickets and accounts, and eight
-`w3-` targets. **Every one of them is deterministic and none of them calls a
-model**, so the whole session costs nothing against your twenty requests a day.
-Run `make w3-falsepass` once, so that the first beat of the session is not also
-your first install.
-
-## The day, and where the stops are
-
-Eight blocks, one break of fifteen minutes, and two stand-ups where you leave
-the screen. Nothing runs for more than 42 minutes without a stop.
-
-**Keyboards are live at 00:23**, which is the earliest of the six weeks. Three
-build-break cycles: the case set, the two graders, the agreement rate. Each one
-builds something and then breaks it in the same hour, on your own code.
-
-The review round at 03:17 is what the earlier blocks are compressed to pay for.
-Another pair gets ten minutes and one job: make your suite pass on a system you
-would not ship.
-
-## Opening
-
-**00:00. Last week's fix, still passing.** One command, and the room reads one
-trace. No prediction yet.
-
-**00:05. The five statements above, scored 1 to 5.** Nobody sees your number but
-you. You will score the same five again at 04:52 and both sets go on screen
-together. Expect a high score on 1 and 2 today, and expect it to fall.
-
-**00:10. One sealed prediction.** Written, folded, opened at 04:46.
-
-> Your team's evaluation suite goes green on every run for three weeks. Write
-> down the most likely reason, in one line.
-
-## 1 · Cycle A · The case set
-
-*00:15 to 00:55. Keyboards live at 00:23.*
-
-### Four kinds of case, and your suite has one
-
-*00:15. Whole room, 8 minutes. Ninety seconds alone and silent first.*
-
-Before the list goes up, write down every kind of case in your own suite. Not the
-cases. The kinds.
-
-There are four, and the names are the ones the evaluation-gates worksheet
-already uses.
-
-| Class | What it is | The failure it catches |
-|---|---|---|
-| **Ordinary** | The case the feature was built for | It never worked |
-| **Difficult** | A real case at an edge the feature still has to hold | It works until the input is large, small, or at a boundary |
-| **Incomplete** | The evidence needed to decide is not available | It invents a decision rather than handing over |
-| **Adversarial** | Somebody wrote the input on purpose | It obeys the attacker |
-
-Almost every suite in this room has cases in exactly one of those four. That is
-not carelessness. Ordinary cases are the ones you can write from the
-specification, and the other three need you to have been hurt already.
-
-### Write the case that already fails
-
-*00:23. Decide 3 minutes in writing, then alone, 14 minutes.*
-
-**Decide first.** Three questions, answered on paper before you type. Your
-assistant will answer all three for you otherwise, and it will not mention that
-it did.
-
-- What does one case contain? Name the fields.
-- What does a case assert about? The prose the agent wrote, or something the
-  system already holds?
-- What makes two cases different cases rather than one case run twice?
-
-**Then build.** Take the class your suite has none of and write one case in it.
-Use the regression cases from last week for the adversarial class. Run it.
-
-**If it passes first time, the case is too easy.** Write a harder one.
-
-Two self-checks, and you are done when you can answer both without opening a
-test file:
-
-- Which class is each of your cases in? Count them.
-- Which of your existing cases has never once failed? A case that cannot fail is
-  not evidence about anything.
-
-### Seven cases pass and the bug is still live
-
-*00:40. Whole room, 8 minutes. Both answers in writing before the reveal.*
-
-`make w3-falsepass` runs seven cases against the agent as last week left it. All
-seven pass. Then the same ticket is delivered twice, to two processes.
-
-Two questions, and they are the same two questions all cohort:
-
-- **What went wrong?**
-- **Which single control would have prevented it?**
-
-The suite did not lie to anybody. It answered the question it was asked. The
-question it was asked had one process in it.
-
-### Checkpoint · 00:48
-
-One number in chat, on the last line only.
-
-### The rule this cycle exists to land
-
-*00:50. Whole room, 5 minutes.*
+**Today is about evidence: how you find out whether an agent works when it
+answers differently each run.** At 02:55 last week you made the same ticket pay
+once. Then somebody ran it from a second terminal, and Ravi was paid twice again.
+Today that moment becomes a test suite, and the suite passes with the bug still
+live.
 
 **A pass is a claim about the cases you chose. It is not a claim about your
-system.**
-
-There is no test that says "this works". There is only a list of situations
-somebody thought of. The list is the artefact, the code that runs it is
-plumbing, and the interesting question about any suite is never the percentage.
-It is which class of case is missing.
-
-## 2 · Cycle B · One run is not a result
-
-*00:55 to 01:35.*
-
-### Run the same case five times
-
-*00:55. Whole room, 10 minutes. Predict before the numbers go up.*
-
-Same case, same input, five runs. Write down what you expect to see.
-
-`make w3-wobble` runs every case twenty times instead of once. The agent now has
-run-to-run variation, because the rule it obeys comes out of a retrieved clause
-and two clauses can score within a point of each other.
-
-**Nothing here calls a model.** The variation is seeded and reproducible, and
-every screen in the room shows the same numbers. That is deliberate: a room
-comparing eight different traces learns nothing about a rate.
-
-### Build the repeat, and report a rate
-
-*01:05. Decide 3 minutes, then alone, 15 minutes.*
-
-**Decide first.** Two questions in writing.
-
-- Which number do you report: per case, or overall?
-- What do you do with a case that passes 19 times out of 20?
-
-**Then build.** Make your own suite run each case N times and report a rate per
-case. Then add a second figure: the rate per class of case.
-
-The per-class figure is the one to build even though it looks like a nicety.
-**A suite with no adversarial cases shows a blank in that column, not a low
-number, and blank is the failure nobody reads.**
-
-Two self-checks:
-
-- What is your slowest case's rate over 20 runs?
-- How much did one full run of your suite cost? Count the model calls.
-
-### The case that looks perfect at ten runs
-
-*01:23. Whole room, 12 minutes.*
-
-One case is the adversarial one. It asks for ₹2,50,000 under a goodwill policy
-capped at ₹2,000.
-
-| Runs | That case | Overall |
-|---|---|---|
-| 5 | 5/5, 100% | 82% |
-| 10 | 10/10, 100% | 80% |
-| 20 | 15/20, 75% | 76% |
-| 50 | 35/50, 70% | 76% |
-
-**It is perfect at ten runs.** The first failure arrives on run eleven, and it
-pays ₹2,50,000.
-
-The overall figure barely moves across the whole table. That is the trap: the
-number that looks stable is the one that hides the case, and the case that
-matters is the one with money behind it.
-
-**How many runs is enough?** Enough that the rate stops moving, and you only
-know that by watching it. The rate on that case is still moving at fifty.
-
-## 3 · The rule is in a document
-
-*01:40 to 02:15, then 02:30 to 02:40 after the break.*
-
-### The rule is in a document now
-
-*01:40. Whole room, 8 minutes.*
-
-Everything the agent obeyed up to the end of last week was a number in
-`data/policy.json`. A number is obeyed or it is not.
-
-`make w3-search` runs one ticket with the rule in prose. Seven clauses in
-`data/policy-docs.json`, and the trace prints two lines you have not had to read
-before: the candidates with their scores, and which one was acted on.
-
-Look at the gap. One point.
-
-### Two failures, and one word for both
-
-*01:48. Pairs, 7 minutes. Written first.*
-
-An answer arrives and it is wrong. Name every distinct reason it could be wrong,
-now that the rule comes from a document.
-
-There are two and they need different fixes.
-
-| The failure | What it looks like | What fixes it |
-|---|---|---|
-| **It found the wrong clause** | A confident answer under a rule that does not govern this case | The search, the clause text, or what goes into the query |
-| **It ignored the clause it found** | The right rule retrieved and not applied | The prompt, the loop, or a check after the model |
-
-One word covers both, which is why one grader sees neither. "Wrong answer" is
-not a diagnosis.
-
-### Build the second grader
-
-*01:55. Decide 3 minutes, then alone, 15 minutes.*
-
-**Decide first.** Two questions.
-
-- What does your case have to record so that a grader can check retrieval at
-  all?
-- Where does the clause id come from? The model's sentence, or the tool call?
-
-The second one is the whole question. If the clause id comes out of the model's
-prose, your grader is reading a claim. If it comes out of the retrieval step,
-your grader is reading a fact.
-
-**Then build.** Add a second grader that checks which clause was acted on
-against the clause the case says governs it. Keep the first grader. Report both.
-
-Two self-checks:
-
-- Which of your cases now fails that passed ten minutes ago?
-- Can a case pass one grader and fail the other? Show one.
-
-### Checkpoint · 02:13
-
-One number in chat, on the last line only.
-
-### Break
-
-*02:15. Fifteen minutes.*
-
-### It cites the wrong clause and scores full marks
-
-*02:30. Whole room, 10 minutes.*
-
-`make w3-grade` takes one ordinary case and runs it twice.
-
-Both runs credit ₹1,200. Both runs are correct to the rupee. One acted on
-BILL-3.1, the duplicate-charge clause. The other acted on BILL-3.2, the ceiling
-clause, which happens to allow ₹1,200 because one month of a Pro plan is ₹1,200.
-
-The ledger cannot tell them apart. The outcome grader passes both.
-
-**The second one will pay the wrong figure the first time a duplicated charge is
-not equal to one month.** A Team plan billed twice mid-upgrade, and the two
-numbers stop agreeing.
-
-## 4 · Cycle C · The grader is a component
-
-*02:40 to 03:12.*
-
-### Your grader agrees with you seven times out of ten
-
-*02:40. Whole room, 8 minutes.*
-
-Some things a case cares about are not in the state. "Does the refusal tell the
-customer what happens next" is one, and no assertion over a ledger will ever see
-it. That is the honest case for a model grader, and it is the last one to reach
-for rather than the first.
-
-`make w3-agree` reads ten answers against ten labels a person wrote first.
-
-Agreement is 7 out of 10. Two of the three disagreements are answers the grader
-let through, and both are the same failure.
-
-### Build the agreement rate
-
-*02:48. Decide 2 minutes, then pairs, 15 minutes.*
-
-**Decide first.** One question, in writing: which of your cases genuinely needs a
-model grader, and which are you reaching for one out of habit?
-
-**Then build.** Take five answers from your own system. Label each one yourself,
-pass or fail, before you run any grader. Then run your grader and count the
-agreement.
-
-Two self-checks:
-
-- What is your agreement rate, and against how many labels?
-- Of the answers your grader let through, are they all the same kind? Name the
-  kind.
-
-### The failure your grader cannot see
-
-*03:05. Whole room, 5 minutes.*
-
-The two answers the grader let through both name the wrong clause. It cannot see
-that, because it reads one answer and never sees the case.
-
-The cheaper grader you built at 01:55 catches both, for nothing.
-
-**Reach for graders in this order, and stop at the first one that works.**
-
-| # | Ask | Then use |
-|---|---|---|
-| 1 | Is the property in state the system already holds? | An assertion. Stop here. |
-| 2 | Is it a comparison between two things you hold? | Compare them. The truth stays outside the model. |
-| 3 | Is it a judgment about prose, with nothing to compare? | A model grader, with an agreement rate beside it. |
-| 4 | Do you have labels a person wrote? | If not, you have no grader yet. You have an opinion with a number on it. |
-
-### Checkpoint · 03:10
-
-One number in chat, on the last line only.
-
-## 5 · The review round
-
-*03:17 to 03:46. Pairs, assigned by name.*
-
-You have built a case set, two graders and an agreement rate. Now somebody who
-did not build them gets a turn.
-
-Paste your case set into chat: the cases, their classes, and what each one
-asserts. Your assigned pair does the same.
-
-**Your target: name a change to the other pair's system that keeps their suite
-green and that you would refuse to ship.** You may not edit their cases.
-
-Ten minutes to find one. Four to write the finding, which is one line: **which
-class of case is missing, and the one case that would have caught you.**
-
-**Most suites in this room will be beaten, and that is the expected result.**
-Eight people built a case set in the same ninety minutes from the same
-repository. That is what a suite looks like before anybody has attacked it.
-
-Ten minutes to report out, two minutes a pair.
-
-## 6 · Who set the pass bar
-
-*03:46 to 04:10.*
-
-### Forty thousand disputes, and what you sample
-
-*03:46. Whole room, 5 minutes. Sixty seconds alone first.*
-
-Your suite has 40 cases and you run each one 20 times. That is 800 runs. At
-three model calls a run and ₹0.38 a call, one full pass costs about ₹912.
-
-Now the constraint. Production handles 40,000 disputes a month. Somebody asks
-you to evaluate against real traffic rather than 40 hand-written cases.
-
-*Illustrative figures, and the arithmetic is on the page so you can check it.*
-
-Two questions in writing before anything is said out loud:
-
-- What do you sample, and on what basis?
-- What does your sample hide?
-
-A sample chosen at random tells you about the ordinary cases, because the
-ordinary cases are most of the traffic. The adversarial ones are rare by
-definition, which is exactly why they have to be written by hand rather than
-sampled.
-
-### The gate table
-
-*03:51. Pairs, 10 minutes to write, then swap for 7 to review.*
-
-One row, thirteen columns, for one requirement in your own system.
-
-| Column | The question it answers |
-|---|---|
-| Requirement | What observable behaviour is being examined? |
-| System version | Which build produced this result? |
-| Case set | Which ordinary, difficult, incomplete and adversarial cases are in it? |
-| Expected behaviour | What counts as correct, in one sentence? |
-| Grader | An assertion, a comparison, a model, or a person? |
-| Grader validation | How do you know the grader detects the failure that matters? |
-| Threshold and reason | What is the bar, and why that number? |
-| Result | The rate, and over how many runs. |
-| Coverage gaps | What has not been tested? |
-| Evidence | Can another reviewer reproduce this? |
-| Decision owner | Who accepts the risk on this row? |
-| Failure consequence | Does failing block the release, or need a named decision? |
-| Review date | When was this last true? |
-
-**There is no column for a total, and none is coming.** A percentage across
-thirteen requirements is the same mistake as the overall rate at 01:23.
-
-Review another pair's row and score each column 0, 1 or 2. Nothing is summed.
-
-The two columns that carry the weight are **grader validation** and **decision
-owner**. Most rows arrive with a threshold, a result, and nobody's name.
-
-### Checkpoint · 04:08
-
-No number in chat on this one. It is a list to read.
-
-## The quiz
-
-*04:10. Eight questions, 12 minutes.*
-
-Answer with a letter and a confidence. Confident and wrong is the only dangerous
-state, and it is the state this room is most likely to be in about its own tests.
-
-## 7 · The context cliff
-
-*04:22 to 04:40.*
-
-### Cut the context, and watch the cliff
-
-*04:22. Whole room 5 minutes, then alone 13.*
-
-What the model is shown each turn is an input you control. You can now measure
-the effect of changing it, which you could not do at 09:00 this morning.
-
-`make w3-trim` runs the same eight cases at eight context budgets. Nothing
-changes except how much of each clause is in the context.
-
-Predict the shape of the curve before you run it. One line, written.
-
-| Kept, per clause | Overall | Adversarial | ₹ wrongly paid |
-|---|---|---|---|
-| all, 217 chars | 76% | 75% | 12,84,000 |
-| 180 | 82% | 100% | 46,000 |
-| 150 | 74% | 75% | 13,00,000 |
-| 120 | 74% | 55% | 22,87,600 |
-| **100** | **62%** | **0%** | **37,86,400** |
-| 80 | 62% | 0% | 37,72,000 |
-| 60 | 69% | 55% | 22,84,000 |
-
-Three readings, and the second is the one to take home.
-
-**Trimming improved one number.** At 180 characters the adversarial case went to
-100%. That is not luck and it is not an argument for trimming. It is what a zone
-where trimming looks free actually looks like from inside.
-
-**The zone ends at once rather than sloping.** At 100 characters the adversarial
-row is zero and stays zero. The reason is visible: search scores a clause by how
-many of the query's words it holds, so cutting text pulls the scores towards
-each other. Two clauses that were a point apart become level, and level is a
-coin flip.
-
-**Below the cliff the decision is made by a sort order.** At 60 characters
-almost every clause scores zero, so the winner is whichever clause id sorts
-first. Nothing about policy decides it.
-
-**The engineering rule, and it survives whatever the numbers do:** policy and
-tool definitions must never share an eviction budget with conversation history.
-
-## 8 · The Horizon
-
-*04:40 to 04:50.*
-
-### The same cases, a second version
-
-*04:40. Whole room, 10 minutes.*
-
-"Is the new model version safe to move to" is a question this course otherwise
-refuses, because model choice turns over every few months and nothing durable
-can be taught about it.
-
-What is durable is that the question is answerable at all, and only by the thing
-you built this morning.
-
-`make w3-model` runs the same eight cases against two profiles.
-
-| | Overall | Adversarial | ₹ wrongly paid |
-|---|---|---|---|
-| v1 | 76% | 75% | 12,84,000 |
-| v2 | **78%** | **65%** | **17,60,000** |
-
-**v2 is better on the overall number and ₹4,76,000 worse on the case that
-matters.** There is no threshold that decides this for you. The overall rate says
-ship it and the adversarial row says do not, and which one wins is a decision
-with an owner.
-
-That owner is a row in the gate table you wrote at 03:51.
-
-*v1 and v2 are two settings of the same deterministic stand-in, not two real
-models. What is real is the shape of the result. For a real model on your own
-system, the Model Selection Tool is in the reading.*
-
-## Close
-
-**04:46. Open the sealed prediction.** Read three out loud. The answer most
-rooms write is "the tests are shallow". The sharper answer, and the one today
-argues for, is that the suite has never been run twice.
-
-**04:52. The same five statements.** Same words, same order, 1 to 5. Both sets go
-on screen together.
-
-Then one question out loud: **who scored themselves lower than at 00:05?** A
-score that dropped means you found something in your own suite today.
-
-**04:56. Two lines in chat.** Everybody answers both.
-
-> The case I am adding to my own suite this week is ______
->
-> The thing I am still fuzzy on is ______
-
-The second line sets what week 4 opens with, and it is the only place that input
-exists.
+system.** That sentence is the week.
+
+You work on the same **dispute agent** as weeks 1 and 2. Week 3 adds seven
+clauses of policy text, three new tickets and the `w3-` targets. None of the
+targets calls a model, so the day costs nothing against your daily requests.
+
+**Rate yourself in Session mode** (`/craft/live`) at 00:05 and again at 04:55.
+The five statements are the outcomes listed on this page.
+
+**The topic pages above are your copy of the day.** There are five, in the
+order they are taught, and each one asks you to commit to an answer before it
+shows you one. This page is the short version: what each topic asks, and what
+you leave with.
+
+## The five topics
+
+**1 · LLM evaluation (evals).** *00:15 to 01:00, then a pair discussion.* What
+does a passing test prove about a system that answers differently every time?
+An **evaluation harness** runs a fixed set of cases against the agent and
+scores each one. You sort cases into four classes (ordinary, difficult,
+incomplete, adversarial), find the class your own suite has none of, and write
+the case your tests cannot fail.
+
+**2 · Retrieval-augmented generation (RAG).** *01:06 to 01:43.* When the rule
+comes out of a document, what does a wrong answer actually mean? **RAG** means
+the agent looks up text and answers from it. A wrong answer is now one of two
+failures: the wrong clause was found, or the right clause was ignored. You build
+a second grader that sees the first kind, and run each case twenty times so the
+result is a rate rather than a verdict.
+
+**3 · Model-based grading (LLM-as-judge).** *01:45 to 02:22.* A grader is a
+component, so what is its failure rate? A **model-based grader** is a model
+asked to score another model's answer. You measure how often it agrees with
+answers you labelled yourself, first as a raw rate and then as Cohen's kappa
+(agreement after removing the agreement chance alone would give).
+
+**4 · Release gates and AI governance.** *02:39 to 03:16, then a pair
+discussion.* Who decided the pass bar, and what does failing it stop? A
+**release gate** is a rule that blocks a release when a score falls below a
+bar. You price the harness at 40,000 disputes a month, decide what to sample,
+and write one row of the gate table with an owner.
+
+**5 · Context engineering.** *03:23 to 04:00.* What happens to the answers
+when you cut what the model is shown? **Context engineering** is deciding what
+the model sees on each turn. You trim the policy text step by step and watch
+the score hold, then fall off a cliff rather than decline smoothly.
+
+Each topic ends the same way: three quiz questions, one of them from an earlier
+week, and one line you write in your own words.
+
+## How the day closes
+
+- **04:02 · Recall, notes closed.** List every control the agent gained today,
+  and the failure each one prevents.
+- **04:12 · Architectural teardown.** The agent as it stands at the close. Five
+  questions, each assigned to one person.
+- **04:40 · The quiz.** Eight questions, mixed across today and two earlier
+  weeks.
+- **04:50 · Your takeaway, said out loud.** "I can now ___, and I will use it
+  on ___ at work."
+- **04:55 · The same five statements**, rated again.
+
+**A score that drops at 04:55 is a good result.** It means you found something
+in your own suite that you did not know was there.
+
+**What is deliberately not here.** Defending against text an attacker writes
+into a ticket or a document is week 4. The adversarial cases you write today
+are what week 4 collects. A second agent, step-level checks on each handoff,
+better retrieval and compaction of a long run are all week 5.

@@ -931,7 +931,7 @@ software gives you for free.</span>
       {
         at: '00:42', part: 'design',
         title: "Where a control can stand",
-        mode: "pairs, 4 minutes · predict before the list goes up",
+        mode: "pairs, 5 minutes · predict before the list goes up, then one minute on ownership",
         learner: `
   <p>You have just watched a limit work. Nothing in that trace tells you where it ran, and that is the question this whole topic turns on.</p>
   <p>Write down, in pairs, in 90 seconds, before you read the table:</p>
@@ -957,11 +957,16 @@ control could run. Which one covers the most callers?</span>
       </tbody>
     </table>
   </div>
-  <p>Most rooms say the dispatch. It is the best answer available to you today and it is not the right one. Nobody says which is right yet. The failure at 01:12 settles part of it with money, and 01:30 states the rule.</p>`,
+  <p>Most rooms say the dispatch. It is the best answer available to you today and it is not the right one. Nobody says which is right yet. The failure at 01:12 settles part of it with money, and 01:30 states the rule.</p>
+  <p><strong>One more question about the same nine places. One minute, in pairs.</strong></p>
+  <div class="writein"><span class="q">Which of these nine places do you own? Which can a vendor change without a deploy from your team?</span>
+    <div class="rule"></div>
+  </div>`,
         script: `
     <p><strong>Nine places and a written prediction is a real commitment.</strong> A vote between three places lets a third of the room guess the answer.</p>
     <p>Ask it in these words: <em>there are nine places in the request path where a control could run. Which one covers the most callers?</em></p>
-    <p>Put the nine up, take the predictions, and <strong>leave them on the board until 01:12</strong>. Do not say which is right. 01:12 settles it with money and 01:30 states the rule.</p>`,
+    <p>Put the nine up, take the predictions, and <strong>leave them on the board until 01:12</strong>. Do not say which is right. 01:12 settles it with money and 01:30 states the rule.</p>
+    <p>Then one minute on ownership. Ask it in these words: <em>which of these nine places do you own? Which can a vendor change without a deploy from your team?</em> Take two answers. <strong>Do not let it become about a named protocol.</strong> That is week 4's.</p>`,
         ref: { id: 't1-r-stand', pairs: "&#8596; 00:42 · nine places, and a written prediction", html: `
   <h4 class="quiet" style="font-weight:700">The later you place it, the more callers it covers and the less it knows</h4>
   <details>
@@ -976,6 +981,16 @@ control could run. Which one covers the most callers?</span>
     <div class="dbody">
       <p><strong>"Ingress, because it stops the whole run."</strong> What is right: it does, and it is the cheapest place to refuse. What is wrong is that at ingress you know almost nothing. You have a ticket, not an amount, not a tool and not an account.</p>
       <p>That trade, between how much you can prevent and how much you know, is the shape of the whole table. <strong>Probe:</strong> name a control that can only live at ingress. Rate limiting and authentication. Both real, neither about money.</p>
+    </div>
+  </details>
+  <details>
+    <summary><span class="chev">›</span> Ownership: which of the nine you own · 1 minute</summary>
+    <div class="dbody">
+      <p><strong>Sequence.</strong> After the predictions are on the board, read the question aloud. Pairs mark each row "ours" or "can move under us". Take two answers.</p>
+      <p><strong>Answer key.</strong> Ingress, the dispatch and the resource of record are usually yours. Context assembly, tool selection and argument construction move when the model or the framework changes, because the model decides which tool to call and with what values. Inside the tool and egress move when the tool belongs to a vendor, such as a hosted tool server or a payment SDK.</p>
+      <p><strong>The expected wrong answer.</strong> "We own all nine, it is our code." What is right: the code that calls each place is yours. What is wrong: a model upgrade changes tool selection and arguments with no commit from your team.</p>
+      <p><strong>Extension question.</strong> Which of the nine changed in your own system last quarter without a commit from your team?</p>
+      <p class="qbadge">The line: the control that covers the most callers has to sit in a place you own.</p>
     </div>
   </details>
   <details>

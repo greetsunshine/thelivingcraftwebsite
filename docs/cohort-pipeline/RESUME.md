@@ -26,9 +26,38 @@ meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 
 [`docs/teaching/reviews/course-review-2026-10-07.md`](../teaching/reviews/course-review-2026-10-07.md).
 **Sunil approved the revised plan the same day**, with security as week 6's question 5,
 step-level evaluation built in week 5, and the public M3 copy to be updated. The decisions
-table is at the foot of the review file. **Next: PR A** (bridge 7 in `threads.md`, weeks 4
-to 6 session files, week 3 fixes, the owed week 2 question) on this branch, then **PR B**
-(public M3 copy) on its own branch.
+table is at the foot of the review file.
+
+**PR A, on this branch, carries the teaching half:**
+
+- **Bridge 7 in `threads.md`.** Where the five topics land, the reversal of bridge 6 §7 and
+  its guard, the homework rule, the five fixed week 6 questions. Retrieval is `●` in week 5
+  and `○` in week 4. A new topic label, "Tool and agent protocols".
+- **Weeks 4 to 6 session files** carry five outcomes, the thread weights and the approved
+  topics, still `status: draft`. The bracketed placeholders are gone; the decisions they held
+  are in a writer's note at the top of each body. **Assignments stay `"TBD"` on purpose**:
+  `/craft/adr` lists upcoming assignment titles and the discussion lookup quotes them, so a
+  real string would publish a draft week's assignment. Set it when the week becomes ready.
+  **The summaries are learner-visible now**, on the dashboard and the session page, because a
+  draft shows its summary.
+- **Week 3's session body** is now a short guide in week 2's shape, with the clock from its
+  own frontmatter.
+- **Week 3 pages:** a sentence saying step-level checks are built in week 5, a sentence
+  separating where a case comes from (synthetic, production sample, regression case) from
+  its class, and the 03:33 sourcing corrected. Only one of the "two papers" was a field note,
+  and it was about compression, not position. The positional source is Liu et al., "Lost in
+  the Middle" (2023).
+- **Week 2 pages:** the ownership question owed by bridge 6 §5, at 00:42, with its answer key.
+
+**After PR A merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
+the same URLs (`docs/teaching/README.md` lists them). The stored pages changed and the
+published ones have not.
+
+**A parallel session opened `content/week-4-draft` in the main checkout on 7 October** while
+this work was uncommitted there. The work was moved into a worktree. Check that branch before
+writing week 4, so week 4 is not drafted in two places.
+
+**PR B** (public M3 copy) is on its own branch, because merging it deploys public text.
 
 - **Before week 3 is set to `ready`, shrink its session body.** It is a stale copy of an
   older day: Cycle A/B/C, checkpoints at 00:48, 02:13, 03:10 and 04:08, and a cut segment.

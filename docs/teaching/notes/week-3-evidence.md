@@ -2211,7 +2211,14 @@ compressed to a line each at 02:16 on purpose.
 evaluation — tool-selection accuracy and schema parameter validation from row 7's list — is not on
 either page. Trajectory-level and end-state evaluation are. Adding it is a new segment in a topic
 that already runs 45 minutes, so it is Sunil's call, not a quiet insertion.
+**Resolved 7 October:** Sunil placed it in week 5, where each handoff between two loops is
+graded on its own. Week 3's three-levels table already names the step level; both pages now
+add one sentence saying week 5 builds it. No segment was added and the clock did not move.
 
 **Also flagged:** the instructor note at 03:33 says *"Two papers support the positional shape"* and
 names neither. Either name them or drop the claim.
+**Resolved 7 October:** the claim was also wrong. Only one of the two sources is a field
+note: the compression cliff (arXiv 2608.01056), which is about trimming context and not
+about position. The positional shape is Liu et al., "Lost in the Middle" (2023). The 03:33
+note and its sourcing card now name both and say which one is in the field notes.
 

@@ -448,6 +448,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
       <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
+      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident so that it cannot happen twice (a regression case). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression case for every attack the room finds.</p>
       <h4>The second design choice: what the case asserts about</h4>
       <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
       <div class="tw">
@@ -461,6 +462,7 @@ So: what would that test have had to DO that none of your tests did?</span>
         </table>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
+      <p><strong>Step-level checks are built in week 5.</strong> There the agent splits in two, and each handoff between the two halves has to be graded on its own: the right tool, with valid arguments.</p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>
@@ -492,9 +494,11 @@ So: what would that test have had to DO that none of your tests did?</span>
   </details>
   <h4>How to tell which class a case is in</h4>
   <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
+  <p>Their page also separates the class from the source: synthetic, production sample, or regression case. One sentence is enough. It gives week 4 a name for the cases it collects.</p>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p>If anyone asks where step-level checks are taught, the answer is week 5: the agent splits in two, and each handoff is graded on its own.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
@@ -2958,7 +2962,7 @@ before you run it.</span>
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from 00:27. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>`,
+    <p class="quiet">The positional shape comes from Liu et al., "Lost in the Middle" (2023). The cliff shape comes from the one field note in week 1's reading. The card beside this segment says how to handle both. The safest handling is not to name either from the front of the room.</p>`,
       ref: {
         id: 't5-r-cliff', pairs: 'the mechanism, and the sourcing',
         html: `
@@ -2976,7 +2980,7 @@ before you run it.</span>
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Two findings in the field notes support the shape, and both need their hedges if they are named at all. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation. Both are in week 1's reading for anyone who asks.</p>
+      <p>Two sources support what the room sees, and both need their hedges if they are named at all. <strong>The positional shape</strong> is Liu et al., "Lost in the Middle" (2023), measured on question answering over long documents, not on an agent. <strong>The cliff shape</strong> is the field note on compressing control context (arXiv 2608.01056), which is in week 1's reading. Only that second one is in the field notes. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>`,

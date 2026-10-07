@@ -38,14 +38,15 @@ systems problems that agents made urgent for a wider group of people.
 | 3 Trace and bill | ● | ◐ | ◐ | ◐ | ◐ | ● |
 | 4 Untrusted input | ○ | | ◐ | ● | | ◐ |
 | 5 State | ○ | ● | | | ● | ◐ |
-| 6 Retrieval | | | ● | | ◐ | ◐ |
+| 6 Retrieval | | | ● | ○ | ● | ◐ |
 | 7 Multi-agent | ○ | | | | ● | ◐ |
 
 Every `◐` and `○` in that table is an obligation on a week that has not been
-written yet. The six bridges below are what each week owes to close a gap. The
+written yet. The seven bridges below are what each week owes to close a gap. The
 first five were found by reading this file against itself. Bridge 6 was found by
-reading the six weeks against the field and ignoring the plan, which is the only
-one of the six that moved material between weeks.
+reading the six weeks against the field and ignoring the plan. Bridge 7 is Sunil's
+decision of 7 October 2026 to give five subjects a topic each, and it is the one
+that set the topics for weeks 4 to 6.
 
 Row order here is the order the matrix prints on screen, which is
 `THREADS` in [src/lib/craft/threads.ts](../../src/lib/craft/threads.ts). The two
@@ -283,6 +284,10 @@ Week 2 is written, taught and published, so this is an obligation on its next
 revision rather than a change made today. The topic 1 pair has to be rebuilt when
 it lands.
 
+**Landed 7 October 2026.** The question is at 00:42 in `week-2.mjs`, with its answer
+key on the instructor card, and the topic 1 pair is rebuilt. The beat runs five
+minutes instead of four, inside the six the clock already gave it.
+
 ### 6 · Regulatory depth stays out of the cohort — a decision, not an omission
 
 CLAUDE.md treats regulated-industry depth as a core differentiator, and it names
@@ -389,6 +394,111 @@ Week 4 gains `◐` on boundaries in the matrix, which was blank.
   is still absent and not decided: streaming, partial results, and what a person
   sees while a forty-second loop runs.
 
+---
+
+## Bridge 7 · Five subjects get a topic each — decided 2026-10-07
+
+Sunil reviewed an outside specification for the whole course and then asked for
+**A2A, MCP servers, RAG, memory optimisation and tokenomics** to be separate
+topics. The review, the plan and his five decisions are in
+[`reviews/course-review-2026-10-07.md`](reviews/course-review-2026-10-07.md).
+This bridge is the part the weeks are written against.
+
+### 1 · Where each one lands
+
+| Subject | Week | Slot |
+|---|---|---|
+| RAG, part 1: retrieval as the reason evaluation is needed | 3 | Topic 2, already taught as written |
+| MCP server: build one | 4 | Topic 3 |
+| MCP server: use one you did not write, and contain it | 4 | Topic 4 |
+| A2A: the handoff contract | 5 | Topic 2 |
+| RAG, part 2: retrieval quality | 5 | Topic 3 |
+| Memory optimisation | 5 | Topic 5 |
+| Tokenomics | 6 | Topic 1 |
+
+**What moved to make room.** Containment folds into week 4 topic 4, because the
+proxy is where least privilege is enforced. The CAP trade-off folds into A2A,
+because two agents reading one ledger at different moments is where it shows up.
+Capacity under load moves into week 6's tokenomics topic. The week 6 review loses
+about forty minutes and keeps four slots.
+
+**Retrieval is now `●` in week 5**, which makes week 5 the only week that builds
+three threads. That is the cost of the five topics, and it is why two of its builds
+are homework (§3).
+
+### 2 · This reverses part of bridge 6 §7
+
+§7 said protocol mechanics get no live minutes, because they turn over every few
+months. **MCP and A2A now have live topics.** The turnover risk has not gone away,
+so the guard is in how they are taught, not whether:
+
+- Teach the design choices live: tool size, schemas, annotations, where
+  authorisation lives, what a handoff must carry. Those do not turn over.
+- Put the mechanics in the pre-reading: transports, message shapes, the spec's
+  structure.
+- **Print the specification's version date on every page that names a protocol.**
+- Run `npm run gather` on MCP and A2A in the week before each one is taught.
+
+The framing rule from §7 still holds. Week 4's MCP topics are not "MCP security".
+Topic 3 builds a server and topic 4 adopts one, and the adoption beat (when is
+inheriting somebody's tools the right call) stays.
+
+### 3 · Homework replaces live minutes, it never adds to them
+
+The published commitment is about five hours a week, and the live session alone
+is five hours. Each week already sets about two hours of after-work. **So a build
+can move out of the room only if the after-work stays at two hours, ADR
+included.**
+
+A build may move home when nothing later in the session depends on it, it is one
+person measuring and repeating, and it does not need the room's prediction and
+reveal. Week 5 applies this:
+
+| Build | Where |
+|---|---|
+| A2A handoff | Room, in pairs |
+| RAG part 2, retrieval levers | Home, 50 minutes |
+| Memory tests | Rules decided in the room; three tests at home, 30 minutes |
+| Compaction | Room |
+
+The week 5 ADR is one memory decision, 40 minutes. **Nothing in the room may
+depend on homework being done**, and every homework build has a `-check` target
+that prints pass or fail.
+
+### 4 · Week 6 asks five fixed questions
+
+Week 6's summary promised "the same five questions all cohort", and weeks 1 to 3
+each asked a different five. The five are now fixed, and week 6 traces each to the
+week that built its evidence:
+
+1. Where is state kept between tool calls, and who can change it? *(W2, W5)*
+2. What is the most one bad input can cost, in money and in time? *(W1, W4, W5)*
+3. Which tool call can destroy value, and what stands before it? *(W1, W2)*
+4. How would you know a model upgrade broke tool accuracy? *(W3, W5)*
+5. Which text can an outsider write, and what can it make the agent do? *(W4)*
+
+Question 5 is security rather than the outside specification's latency question,
+because security is one of the course's two named outcomes. Latency lives in
+question 2.
+
+### 5 · Two smaller decisions
+
+- **Step-level evaluation is built in week 5**, inside A2A: grading a handoff is
+  grading one step. Week 3 names the level and points there.
+- **Cost per acceptable outcome carries a loss term.** Spend alone counts a
+  ₹2,50,000 credit to an attacker as a completed task. Week 6 uses the Run-Cost
+  Model and adds the expected loss from wrong answers that passed, which week 3's
+  agreement rate lets the room estimate. The denominator is outcomes that met the
+  pass bar.
+
+### What this bridge did not change
+
+- Weeks 0, 1 and 2 keep their topics. Week 3 keeps its five.
+- Regulatory depth stays out (bridge 6 §6).
+- The outside specification's separate repository, Redis idempotency layer,
+  five-run evaluation and case taxonomy were rejected. The reasons are in the
+  review file.
+
 ## Topic labels
 
 Every outcome in every week carries a topic label, so a participant can see which
@@ -414,6 +524,8 @@ covers something none of these names cover, and add it here at the same time.
     The business case             cost per acceptable outcome, the break-even
                                   month, and when the answer is never
     Multi-agent orchestration     more than one loop, and who is in charge
+    Tool and agent protocols      MCP and A2A: what a protocol fixes, and what it
+                                  leaves to the people on either side of it
     Risk trade-offs               the cost of being wrong in each direction
 
 Which week uses which is set by the coverage table above. Two rules:
