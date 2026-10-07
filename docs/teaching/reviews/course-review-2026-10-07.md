@@ -387,7 +387,7 @@ names neither.** Flagged in the same audit. Name them, or cut the sentence.
 **5 · Week 2: the ownership question owed by bridge 6 §5.** One question against the nine
 control points: *which of these do you own, and which does a vendor change under you?* It
 is a two-line edit and a rebuild of the topic 1 pair. It has been owed since 29 September.
-Week 4 topic 3 opens on it, so it should land before week 4 is written.
+Week 4 quotes it in topic 4, where adopting somebody else's tool server is taught (placement corrected after the revised plan split MCP into two topics).
 
 ### Leave alone, deliberately
 
