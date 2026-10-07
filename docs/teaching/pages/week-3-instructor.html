@@ -617,9 +617,12 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
   </details>
   <h4>How to tell which class a case is in</h4>
   <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
+  <p>Their page also separates the class from the source: synthetic, production sample, or regression case. One sentence is enough. It gives week 4 a name for the cases it collects.</p>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p><strong>Their table now carries the measure names for each level</strong>, so somebody will ask. Step is tool-selection accuracy and schema validation; trajectory is plan efficiency and loop detection; end state is task completion rate and goal success. <strong>Do not read the six out.</strong> They are there so a learner can search for them next month. The answer to "which do we add first?" is on their page: cheapest first is the right order to add them and the wrong order to trust them.</p>
+  <p>If anyone asks where step-level checks are taught, the answer is week 5: the agent splits in two, and each handoff is graded on its own.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
@@ -1768,7 +1771,7 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <p>Three reasons on their page. <strong>Land the third</strong>: 180 is thirty characters from a cliff, so shipping it means sitting on a narrow ledge with nothing watching whether the ledge moved.</p>
     <p>Then the transferable instruction: <strong>pick a budget with margin above your cliff, not the budget that scored best.</strong> The best-scoring budget is usually the most fragile.</p>
     <h4>Reading two · the cliff, and the most important row in the table</h4>
-    <p><strong>This is the beat's centre and it was wrong until 6 October.</strong> Put the three gap-1 rows up together: 217 chars is gap 1 at 75%, 100 chars is gap 1 at 0%, 80 chars is gap 1 at 0%.</p>
+    <p><strong>This is the beat's centre and it was wrong until 6 October.</strong> Put the three gap-1 rows up together: the full text is gap 1 at 75%, 100 chars is gap 1 at 0%, 80 chars is gap 1 at 0%. <strong>Do not call the top row “217 chars”</strong> — 217 is the mean, the row is the uncapped text, and that slip is what put a wrong figure in the quiz.</p>
     <p>Ask what changed. <strong>The answer is not the gap — it is which clauses the gap is between.</strong> At 100 characters GOOD-2.1 has dropped out of the front entirely, and the two clauses in front are both wrong.</p>
     <p class="qbadge">So the rate is zero rather than fifty: the coin is still flipping and both faces are wrong. <strong>A tie is a coin flip; the governing clause falling out of contention is a guaranteed wrong answer reporting a healthy-looking gap.</strong></p>
     <p>Close it on <span class="off" data-off="00:21">00:21</span> one last time: that case went to zero and the overall figure fell twelve points.</p>
@@ -1806,7 +1809,8 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from <span class="off" data-off="00:27">00:27</span>. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>
+    <p class="quiet"><strong>The sources, if the room asks where the shape comes from.</strong> The effect is Liu et al., <em>Lost in the Middle: How Language Models Use Long Contexts</em>, TACL volume 12, 2024, pages 157–173 (arXiv:2307.03172) — accuracy highest when the fact sits at the beginning or the end, and lowest in the middle, holding even for models sold as long-context. The test is Greg Kamradt's <em>Needle In A Haystack</em>, 2023, which sweeps context length against needle depth. <strong>One is a peer-reviewed paper and one is a benchmark repository, so do not call them two papers.</strong> Both are printed on the learner page.</p>
+    <p class="quiet">Clash and poisoning are the two to handle carefully. <strong>The safest handling is not to name a vendor or a model from the front of the room</strong>, because the shape is general and the specific numbers age in months.</p>
   </div></div>
 
   <div class="beat" id="s-0340" data-ref="t5-r-lab"><span class="t"><span class="off" data-off="03:40">03:40</span></span><div class="b">
@@ -1814,6 +1818,24 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">Hands-on lab &#183; Alone · 14 min · 2 decide, 10 build, 2 check</span>
     
     <p><strong>Circulate for the person who trims their own prompt without running anything.</strong> That is the habit this whole topic exists to replace.</p>
+    <h4>What you are producing, in one sentence</h4>
+    <p><strong>Say it before they start:</strong> two pairs of adjacent numbers. Where the adversarial case stops being perfect, and where it falls to zero, each pinned between two budgets they have actually run.</p>
+    <p>The eight budgets from <span class="off" data-off="03:23">03:23</span> are deliberately too coarse to locate either edge. <strong>Narrowing them is the lab.</strong></p>
+    <h4>Starting state and how you check it</h4>
+    <p>Name the file and the line: <span class="mono">src/w3_trim.py</span>, line 33, the <span class="mono">BUDGETS</span> list. <strong>One full run is about forty seconds</strong> — eight budgets by eight cases by twenty runs — so tell them to expect the wait rather than thinking it has hung.</p>
+    <p class="qbadge">If the room is slow, point at <span class="mono">--runs 10</span> for the narrowing passes and 20 to confirm. Their page has the command.</p>
+    <h4>Build, second half. Write two cases that fail on context alone.</h4>
+    <p><strong>This half is new and it is the part that transfers.</strong> Everything in their suite so far tests at full context; a case that only fails when the context is trimmed is a kind nobody writes.</p>
+    <p>Case one asserts the governing clause and runs below the cliff. Case two is the interesting one: <strong>it asserts the gap rather than the answer</strong>, so it fails before the money is wrong. It needs the <span class="mono">gap</span> field from the <span class="off" data-off="01:23">01:23</span> lab, which is the second reason to have added it.</p>
+    <h4>Check yourself. Here is how to tell whether you got it right.</h4>
+    <p><strong>Two of the four checks have definite answers</strong>, which is new — this lab previously had no way for a learner to know if they were right. The answer key is behind a <em>Show</em> on their page and they are told not to open it before running.</p>
+    <p>The answers, for your own reference while circulating:</p>
+    <ul>
+      <li><strong>First edge: between 165 and 160</strong>, where the gap narrows from 3 to 2 and the rate slips 100% to 95%. Gradual.</li>
+      <li><strong>The cliff: between 115 and 110</strong>, where the gap column stops naming GOOD-2.1 at all. 55% to 0% with nothing between.</li>
+    </ul>
+    <p class="qbadge">The best question to ask whoever finishes first: <em>is the fall gradual or sudden?</em> The correct answer is <strong>both</strong>, and that is the whole shape of the curve in one word.</p>
+    <p><strong>Watch for the broken starvation case, and know what broken means here.</strong> It is <strong>0 of 20 at full context</strong> that is broken, not the five failing runs out of twenty. The case asserts the adversarial ticket, so about 15 of 20 at the top is the right answer and matches the 75% the room read at <span class="off" data-off="03:23"><span class="off" data-off="03:23">03:23</span></span>. <strong>Somebody will report 15 of 20 as a failure.</strong> Tell them to compare it against 0 of 20 below the cliff, which is the measurement.</p>
   </div></div>
 
   <div class="beat" id="s-0354" data-ref="t5-r-atscale"><span class="t"><span class="off" data-off="03:54">03:54</span></span><div class="b">
@@ -1821,18 +1843,31 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <span class="pairs">whole room · 3 min</span>
     
   <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+  <h4>When prompt caching is worth using, and when it is not</h4>
+  <p>Three conditions on their page, each with its opposite. <strong>If you say one, say the first:</strong> the front of the payload has to be byte-identical, and one changed character before the cache marker means nothing matches.</p>
+  <p>Then the design consequence, which is the part that transfers: <strong>caching rewards stable-at-the-front, variable-at-the-back — which is also where attention is strongest for rules that must be obeyed.</strong> For once the cost optimisation and the correctness optimisation agree.</p>
+  <p class="quiet">There is a worked example on their page from this site's own visitor agent: twelve cached prefix variants, each paying the write premium to be read about once. Use it only if somebody asks for a real instance.</p>
+  <h4>How enterprises actually track context growth</h4>
+  <p>Four patterns, and <strong>the only line that must be said is the last one</strong>: only the fourth is evaluation. The first three tell you the context changed; the fourth tells you whether the change was safe, and it is the only one that can stop a release.</p>
+  <p>The fourth pattern is <strong>a context budget written as a gate row</strong> — the <span class="off" data-off="02:56">02:56</span> table, with their own cliff as the threshold. That is the sentence that joins this topic to the rest of the day, so do not skip it even when cutting.</p>
   <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
   <p>Compression, pruning the history, handing off between agents. <strong>Name them, give the measurement each needs, and say all three are week 5's.</strong> They are on the page so that "just summarise the history" meets the question "measured against what".</p>
   <p>If you say one thing: <strong>a sliding window is the cheapest to build and the one that drops the decision made four turns ago.</strong></p>
   <h4>The whole of context evaluation on one card</h4>
-  <p>Five rows, and the week has touched each. <strong>Say "keep this one" and point at the last row</strong>: four are about the agent's window and the fifth is about the grader's, measured with the number they produced at <span class="off" data-off="02:02">02:02</span>.</p>
-  <p class="quiet">If the clock has gone, cut the three techniques and keep the five-row card. The card is the summary; the techniques are reference.</p>
+  <p><strong>Seven rows now, up from five.</strong> Two were added on 6 October: the margin, and whether shrinking lost anything. Point at two of the seven rather than reading the card.</p>
+  <p><strong>Row 3, the margin.</strong> The row most teams do not have, because no tool sells it — and it is the thing that actually moved on the <span class="off" data-off="03:23">03:23</span> curve.</p>
+  <p><strong>Row 7, the judge's context.</strong> Six of seven are about the agent's window; the last is about the grader's, measured with the number they produced at <span class="off" data-off="02:02">02:02</span>.</p>
+  <p class="qbadge">The split worth leaving them with: rows 1, 2, 4 and 5 have tools. Rows 3, 6 and 7 are cases you write. That is the useful answer when somebody proposes buying a context-evaluation platform.</p>
+  <p class="quiet">If the clock has gone, cut the three techniques and keep the card. The card is the summary; the techniques are reference.</p>
   </div></div>
 
   <div class="beat" id="s-0357" data-ref="t5-r-quiz"><span class="t"><span class="off" data-off="03:57">03:57</span></span><div class="b">
     <h4>Topic quiz: context engineering</h4>
     <span class="pairs">alone, in writing · 3 min</span>
-    <p><strong>Read the week 1 quote aloud before question three.</strong> Watch for "we confirmed the paper" and take it apart.</p>
+    
+  <p><strong>Question one changed on 6 October.</strong> It used to ask two things at once and described 217 characters as the policy text, which is wrong — 217 is the mean clause length. It now asks one thing: why did capping at 180 improve it? The answer is in the gap column, 1 to 3.</p>
+  <p><strong>Then ask the second half out loud rather than in writing:</strong> <em>and what does that license?</em> Nothing. The same mechanism takes the case to 0% at 110. If anybody answers "so trim", point at the row below.</p>
+  <p><strong>Read the week 1 quote aloud before question three.</strong> Watch for "we confirmed the paper" and take it apart.</p>
   </div></div>
 </article>
 </div>
@@ -1890,7 +1925,9 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Two findings in the field notes support the shape, and both need their hedges if they are named at all. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation. Both are in week 1's reading for anyone who asks.</p>
+      <p><strong>The positional sources are in the note beside this segment, and on their page.</strong> Name them if asked. This card adds what the note does not cover.</p>
+      <p>Two field notes describe a different shape, a cliff when context is compressed: <strong>arXiv 2608.01056</strong> (control context, in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). <strong>Both are single preprints.</strong> 2608.01056 is unreplicated and ran on three models. 2608.06503 is labelled preliminary by its authors and ran on AppWorld only. Cite the shape, never the thresholds.</p>
+      <p><strong>None of these is what today's lab measures.</strong> The room's cliff is a retrieval artefact, as their page says. The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>
@@ -1919,16 +1956,23 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <h3>At enterprise scale: context budgets in production</h3>
   <h4>At enterprise scale</h4>
   <p class="lede">What do teams actually use to keep a context budget under control?</p>
-  <p>Five real answers, and none of the five tells you where your cliff is.</p>
+  <p>Three jobs, and the real products that do each. None of them tells you where your cliff is.</p>
   <div class="tw">
     <table>
       <thead><tr><th>The job</th><th>What firms use</th><th>What it costs</th></tr></thead>
       <tbody>
-        <tr><td>Controls or observes the budget</td><td>Anthropic prompt caching</td><td>Cheaper reads on a repeated prefix, and a write premium on the first call. Saves money only if the prefix is genuinely stable</td></tr>
+        <tr><td>Makes a stable prefix cheaper</td><td>Anthropic prompt caching</td><td>Cheaper reads on a repeated prefix, and a write premium on the first call. Saves money only if the prefix is genuinely stable</td></tr>
         <tr><td></td><td>OpenAI prompt caching</td><td>Automatic on a matching prefix, no control over what is cached, and nothing to configure</td></tr>
         <tr><td></td><td>Gemini context caching</td><td>Explicit and billed by the hour the cache is held. The most honest pricing of the three, and the one that makes you decide</td></tr>
-        <tr><td></td><td>Langfuse</td><td>Open source or hosted. Shows token counts per step, so a growing prefix is visible before it is expensive</td></tr>
-        <tr><td></td><td>OpenTelemetry GenAI conventions</td><td>Free, and a specification rather than a product, so somebody on your team implements it</td></tr>
+        <tr><td>Watches the context growing</td><td>Langfuse</td><td>Open source or hosted. Token counts per step, so a growing prefix is visible before it is expensive. You host it, or pay per trace</td></tr>
+        <tr><td></td><td>Arize Phoenix</td><td>Open source, and the same traces it uses for online evals carry the token counts. One system for both, and you still write the evaluators</td></tr>
+        <tr><td></td><td>LangSmith</td><td>Managed, least setup, token and cost attribution per step out of the box. Per seat and per trace, and it pulls you toward LangChain</td></tr>
+        <tr><td></td><td>OpenTelemetry GenAI conventions</td><td>Free, vendor-neutral, and a specification rather than a product — somebody on your team implements it, and then any backend above can read it</td></tr>
+        <tr><td>Shrinks the context: compression, pruning, handoff</td><td>LLMLingua</td><td>Microsoft Research, open source. Compresses a prompt by dropping low-information tokens. Aggressive, measurable, and it needs its own evaluation because what it drops is not always what you would drop</td></tr>
+        <tr><td></td><td>LangChain trim_messages, with LangGraph checkpointers</td><td>Open source. Prunes history by token count or message count and persists what is left. Trivial to adopt, and a token-count rule is exactly the rule that drops the decision made four turns ago</td></tr>
+        <tr><td></td><td>LlamaIndex memory buffers</td><td>Open source, with a summarising buffer that condenses old turns rather than dropping them. You then own the question of what the summary lost</td></tr>
+        <tr><td></td><td>Zep or Mem0</td><td>Managed long-term memory as a service: it decides what is worth keeping between sessions. Priced per user or per message, and it puts a vendor between your agent and its own history</td></tr>
+        <tr><td></td><td>LangGraph, the OpenAI Agents SDK, CrewAI or AutoGen</td><td>Open source frameworks with explicit handoff between agents. Each gives you a place to put condensed state, and none measures whether the state survived the handoff</td></tr>
       </tbody>
     </table>
   </div>
@@ -1938,10 +1982,11 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   <span class="pairs">&#8596; <span class="off" data-off="03:57">03:57</span> &#183; three questions, one from earlier material</span>
   <h3>Topic quiz: context engineering</h3>
   <h4>Question 1 &#183; this topic</h4>
-  <p>Cutting the policy text from 217 characters to 180 moved the adversarial case from 75% to 100%. What does that tell you, and what does it not license?</p>
-  <p><strong>The answer.</strong> <p>The verdict turns on a scoring gap of one or two points, narrow enough that a change in either direction moves it. <strong>It does not license trimming</strong>, because the same mechanism takes the case to 0% at 100 characters.</p></p>
+  <p>Capping each clause at 180 characters took the adversarial case from 75% to 100%. Why?</p>
+  <p><strong>The answer.</strong> <p><strong>The gap widened, from 1 point to 3.</strong> Trimming removed more of the query's words from GOOD-2.2, the clause that does not govern, than from GOOD-2.1, the clause that does — because GOOD-2.2's enrolment wording sits in the part that got cut.</p>
+          <p>And a gap of 3 is settled: the agent stops taking second place at all, so the case passes every run.</p></p>
   <p><strong>The likely wrong answer.</strong> "Shorter context is better, we have been overloading it."</p>
-  <p><strong>What is right about it.</strong> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.</p>
+  <p><strong>What is right about it.</strong> Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement rather than a measurement error. Ask for the next row down: at 150 the gap is back to 1 and the case is back to 75%.</p>
   <h4>Question 2 &#183; this topic</h4>
   <p>At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts on?</p>
   <ul class="opt">
@@ -2027,6 +2072,17 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
     <p><strong>The full answer key for all five is below</strong>, each with a good answer, the wrong answer worth taking seriously, and one push. Read the key for your five before the session, not during it.</p>
     <p><strong>Question 4 is the one that reveals whether the week landed.</strong> A room that answers "we show the trace" has not taken the difference between what happened and why it was allowed to happen.</p>
     <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>
+    <h4>What you write afterwards: the week's decision record</h4>
+    <p><strong>Close the teardown by naming what it was for.</strong> The five questions produce a list of weaknesses; the decision record is where somebody commits to one of them. It is this week's assignment, written at <span class="mono">/craft/adr</span>, and the notes they just took are notes towards it.</p>
+    <p>Their page maps all seven sections onto today. <strong>Do not walk the table</strong> — point at two rows:</p>
+    <ul>
+      <li><strong>Section 4, the design.</strong> Their gate-table row from <span class="off" data-off="02:56">02:56</span> goes straight in. That is the lab paying off, and saying so is what makes the lab feel like work rather than an exercise.</li>
+      <li><strong>Section 7, open questions.</strong> Say out loud that <em>"I could not find out who owns the pass bar"</em> is a complete and valuable answer. Otherwise people invent an owner, which is the same failure as inventing a name at <span class="off" data-off="02:56">02:56</span>.</li>
+    </ul>
+    <p class="qbadge">The assignment changed on 6 October. It used to be the gate-table row alone; it is now the decision record, with the row as its design section. The row is still the thing they build in the room.</p>
+    <h4>The five takeaways the record should carry</h4>
+    <p>Five lines on their page, each tagged with the minute it came from. <strong>Read them out as the last thing before the quiz</strong>, because it is the only moment in the day when all five sit together.</p>
+    <p>The framing that makes them write it: <strong>a record that answers those five questions about their own system is worth more than a long one that answers them about this one.</strong></p>
   </div></div>
 </article>
 </div>
@@ -2162,6 +2218,7 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
 
   <p class="qmeta"><strong>The best answers refuse to stop there.</strong> A false alarm is cheap per event and expensive in aggregate, because a grader people stop trusting is a grader people switch off.</p>
   <p class="qmeta"><strong>The wrong answer worth catching.</strong> "70% is not good enough, we need 95%." There is no threshold for a grader in the abstract.</p>
+  <p class="qmeta"><strong>Follow-up, and it is the better half of this question:</strong> what is the kappa? Seven in ten is 70%, and on this label set the kappa is 0.35 against a production bar of 0.60. <strong>A room that gives the rate without the kappa has answered half of it.</strong></p>
 </article>
 <article class="card">
   <h4>Q8 · The release on Thursday</h4>
@@ -2175,6 +2232,7 @@ kappa = (0.70 - 0.54)/(1 - 0.54)
   </ul>
   <p class="qmeta">B is what the overall number invites. <strong>D is the real competitor to A</strong>, not a silly option: a flag moves the failure into production, where each occurrence pays ₹2,50,000.</p>
   <p class="qmeta"><strong>Follow-up if the room splits between A and C.</strong> Who is allowed to say Thursday moves? If nobody in the room can, C is not an available answer.</p>
+  <p class="qmeta"><strong>The sentence to land after the reveal</strong>, because it ties the day together: the overall figure is a relative reading and the adversarial case should have been an absolute floor. <strong>This release passes one kind of gate and fails the other.</strong></p>
 </article>
 
 <div class="teach">

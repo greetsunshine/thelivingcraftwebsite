@@ -448,19 +448,22 @@ So: what would that test have had to DO that none of your tests did?</span>
       <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
       <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
+      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident so that it cannot happen twice (a regression case). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression case for every attack the room finds.</p>
       <h4>The second design choice: what the case asserts about</h4>
       <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
       <div class="tw">
         <table>
           <thead><tr><th>Level</th><th>What it checks</th><th>An example on this agent</th></tr></thead>
           <tbody>
-            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape?</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
-            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls?</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
-            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run?</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
+            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape? The two measures have names: <strong>tool-selection accuracy</strong> for the first, <strong>schema validation</strong> for the second.</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
+            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls? Measured as <strong>plan efficiency</strong> and <strong>loop detection</strong>.</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
+            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run? Measured as <strong>task completion rate</strong>, and <strong>goal success</strong> where the goal is more than one step.</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
           </tbody>
         </table>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
+      <p><strong>Where each one is cheap, and what it misses.</strong> A step check is a schema assertion, so it runs in milliseconds and costs nothing — and a correctly shaped call to the correct tool still pays the wrong customer. A trajectory check needs the whole trace, which you already keep from week 1. An end-state check needs the world, which means a test ledger you can read after the run. <strong>Cheapest first is the right order to add them, and the wrong order to trust them.</strong></p>
+      <p><strong>Step-level checks are built in week 5.</strong> There the agent splits in two, and each handoff between the two halves has to be graded on its own: the right tool, with valid arguments.</p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>
@@ -492,9 +495,12 @@ So: what would that test have had to DO that none of your tests did?</span>
   </details>
   <h4>How to tell which class a case is in</h4>
   <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
+  <p>Their page also separates the class from the source: synthetic, production sample, or regression case. One sentence is enough. It gives week 4 a name for the cases it collects.</p>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p><strong>Their table now carries the measure names for each level</strong>, so somebody will ask. Step is tool-selection accuracy and schema validation; trajectory is plan efficiency and loop detection; end state is task completion rate and goal success. <strong>Do not read the six out.</strong> They are there so a learner can search for them next month. The answer to "which do we add first?" is on their page: cheapest first is the right order to add them and the wrong order to trust them.</p>
+  <p>If anyone asks where step-level checks are taught, the answer is week 5: the agent splits in two, and each handoff is graded on its own.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
@@ -2040,8 +2046,8 @@ topics.push({
   <h4>And the gate does not stop at merge</h4>
   <p>Shipping is not one event. At scale the release itself is staged, and the online evals decide whether it continues.</p>
   <ul>
-    <li><strong>Mirror the traffic first.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
-    <li><strong>Then release to a slice.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
+    <li><strong>Mirror the traffic first — a shadow deployment.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
+    <li><strong>Then release to a slice — a canary release.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
     <li><strong>Tie the score to an automatic reversal.</strong> If the measured quality drops past a set point, the release rolls back without waiting for somebody to notice. A rollback nobody has to approve at 2am is the only kind that happens at 2am.</li>
     <li><strong>Then harvest what went wrong.</strong> Every refusal, every complaint, every low-confidence answer gets its personal data stripped and becomes a case in the golden set. <strong>This is the loop that closes.</strong> It is also where the class of case you never thought of comes from.</li>
   </ul>
@@ -2501,9 +2507,10 @@ before you run it.</span>
   <p>You are about to change one thing about the agent — <strong>how much of each policy clause is allowed into the context</strong> — and watch what it does to the answers. Nothing else changes. Same cases, same agent, same policy text on disk; only the slice of each clause that reaches the model gets shorter.</p>
   <p>This is the cheapest and most common optimisation in production. It saves tokens, it saves latency, and <strong>almost nobody measures what it costs.</strong> Today you measure it.</p>
   <h4>What you are looking at</h4>
-  <p><span class="mono">make w3-trim</span> runs the same eight cases at eight context budgets, twenty runs each. Five columns come back:</p>
+  <p><span class="mono">make w3-trim</span> runs the same eight cases at eight context budgets, twenty runs each. Six columns come back:</p>
   <ul>
-    <li><strong>Kept, per clause</strong> — the budget: how many characters of each policy clause were allowed through. <span class="mono">all</span> is the agent as you have had it all day. The seven clauses run from 151 to 286 characters, so a budget of 180 only trims the longer ones.</li>
+    <li><strong>Budget</strong> — the cap applied to every clause: the most characters any one of them may contribute. <span class="mono">all</span> means no cap, which is the agent as you have had it all day.</li>
+    <li><strong>Mean</strong> — the average clause length that results. <strong>It is not the length of any one clause.</strong> The seven run from 151 to 286 characters, so a cap of 180 only trims the ones above it, and the mean lands at 173. The run prints both columns and says which is which.</li>
     <li><strong>Overall</strong> — the pass rate across all eight cases. The trend line, and nothing more, for the reason given at 00:21.</li>
     <li><strong>Adversarial</strong> — the pass rate on the adversarial case alone. <strong>This is the column to read.</strong></li>
     <li><strong>₹ wrongly paid</strong> — the money that left the company across those runs. It is the same information as the column before it, in the unit a release meeting argues in.</li>
@@ -2515,16 +2522,16 @@ before you run it.</span>
     <div class="reveal">
       <div class="tw">
         <table>
-          <thead><tr><th class="mono">Kept, per clause</th><th>Overall</th><th>Adversarial</th><th>₹ wrongly paid</th><th>The gap on the adversarial case</th></tr></thead>
+          <thead><tr><th class="mono">Budget</th><th class="mono">Mean</th><th>Overall</th><th>Adversarial</th><th>₹ wrongly paid</th><th>The gap on the adversarial case</th></tr></thead>
           <tbody>
-            <tr><td class="mono">all, 217 chars</td><td>76%</td><td>75%</td><td>12,84,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">180</td><td class="ok">82%</td><td class="ok">100%</td><td>46,000</td><td class="mono">gap 3 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">150</td><td>74%</td><td>75%</td><td>13,00,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">120</td><td>74%</td><td>55%</td><td>22,87,600</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono"><strong>100</strong></td><td><strong>62%</strong></td><td class="bad"><strong>0%</strong></td><td class="bad"><strong>37,86,400</strong></td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over BILL-3.1</strong></td></tr>
-            <tr><td class="mono">80</td><td>62%</td><td class="bad">0%</td><td class="bad">37,72,000</td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over ESC-1.1</strong></td></tr>
-            <tr><td class="mono">60</td><td>69%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
-            <tr><td class="mono">40</td><td>68%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">all</td><td class="mono">217</td><td>76%</td><td>75%</td><td>12,84,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">180</td><td class="mono">173</td><td class="ok">82%</td><td class="ok">100%</td><td>46,000</td><td class="mono">gap 3 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">150</td><td class="mono">150</td><td>74%</td><td>75%</td><td>13,00,000</td><td class="mono">gap 1 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">120</td><td class="mono">120</td><td>74%</td><td>55%</td><td>22,87,600</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono"><strong>100</strong></td><td class="mono">100</td><td><strong>62%</strong></td><td class="bad"><strong>0%</strong></td><td class="bad"><strong>37,86,400</strong></td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over BILL-3.1</strong></td></tr>
+            <tr><td class="mono">80</td><td class="mono">80</td><td>62%</td><td class="bad">0%</td><td class="bad">37,72,000</td><td class="mono bad">gap 1 · <strong>GOOD-2.2 over ESC-1.1</strong></td></tr>
+            <tr><td class="mono">60</td><td class="mono">60</td><td>69%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
+            <tr><td class="mono">40</td><td class="mono">40</td><td>68%</td><td>55%</td><td>22,84,000</td><td class="mono">gap 0 · GOOD-2.1 over GOOD-2.2</td></tr>
           </tbody>
         </table>
       </div>
@@ -2737,7 +2744,7 @@ before you run it.</span>
   <h4>Reading one · at 180 characters the number went UP, because the gap got WIDER</h4>
   <p>Capping each clause at 180 characters moved the adversarial case from 75% to 100%, and the money wrongly paid fell from ₹12,84,000 to ₹46,000. <strong>That is a real improvement, and the gap column says exactly why.</strong></p>
   <p class="quiet">GOOD-2.1 is 223 characters and GOOD-2.2 is 235, so a 180-character cap takes 43 characters off the first and 55 off the second.</p>
-  <div class="term">  217 chars   <span class="m">gap 1</span> · GOOD-2.1 over GOOD-2.2   -> takes second 1 in 4  -> <span class="q">75%</span>
+  <div class="term">  no cap     <span class="m">gap 1</span> · GOOD-2.1 over GOOD-2.2   -> takes second 1 in 4  -> <span class="q">75%</span>
   180 chars   <span class="m">gap 3</span> · GOOD-2.1 over GOOD-2.2   -> settled              -> <span class="m">100%</span></div>
   <p>Same two clauses in front, and the distance between them went from 1 to 3. <strong>Trimming took more matching words off the wrong clause than off the right one</strong>, because of where in each clause the matching words happened to sit. GOOD-2.2 is the enrolment clause, and the wording that makes it match this request is in the part that got cut.</p>
   <p>So the improvement is real and <strong>it is an accident of this corpus.</strong></p>
@@ -2751,7 +2758,7 @@ before you run it.</span>
   <p><strong>What transfers to production is the method, not the number.</strong> Run your own suite at several budgets, find your own shape, then <strong>pick a budget with margin above your cliff rather than the budget that scored best.</strong> The best-scoring budget is usually the most fragile one.</p>
   <h4>Reading two · the cliff, and the most important row in the table</h4>
   <p>Look at 100 characters. The rate is <strong>0%</strong>, and it stays at 0% at 80. But look at the gap column, because it does not say what you would expect:</p>
-  <div class="term">  217 chars   gap <span class="m">1</span> · <span class="m">GOOD-2.1</span> over GOOD-2.2    -> <span class="q">75%</span>
+  <div class="term">  no cap     gap <span class="m">1</span> · <span class="m">GOOD-2.1</span> over GOOD-2.2    -> <span class="q">75%</span>
   100 chars   gap <span class="m">1</span> · <span class="x">GOOD-2.2</span> over <span class="x">BILL-3.1</span>    -> <span class="x">0%</span>
    80 chars   gap <span class="m">1</span> · <span class="x">GOOD-2.2</span> over <span class="x">ESC-1.1</span>     -> <span class="x">0%</span></div>
   <p><strong>The gap is 1 in all three rows. The rate is 75% in one and 0% in the others.</strong> So the gap on its own tells you nothing. What changed is <em>which clauses the gap is between</em>.</p>
@@ -2803,17 +2810,18 @@ before you run it.</span>
   <p><strong>Be careful here, because this is a different mechanism from the one you just watched.</strong> Today's cliff is a retrieval artefact: cutting the clause text pulled the lexical scores together until two clauses became indistinguishable. That is about the search, not about the model.</p>
   <p>There is a second effect, it belongs to the model rather than the retriever, and <strong>this agent's lab does not demonstrate it.</strong> You need to know it exists because you will meet it the first time your context gets long.</p>
   <ul>
-    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. The usual name for the consequence is <strong>lost in the middle</strong>.</li>
+    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. <strong>The property has a name: positional sensitivity</strong> (the same fact scores differently depending on where in the window it sits). The name for the consequence is <strong>lost in the middle</strong>, and the preference for the two ends is <strong>primacy and recency</strong>.</li>
     <li>So the same fact, in the same payload, at the same token count, can be used or ignored depending on where it sits.</li>
   </ul>
   <p><strong>The test for it has a name: needle in a haystack.</strong> You hide one fact — the needle — inside a long filler context, then ask a question only that fact answers. Vary two things independently:</p>
   <div class="term">  depth   how long the whole context is      4k, 16k, 64k, 128k tokens
   place   where the needle sits inside it    top / middle / bottom
 
-  then read the grid, not the average. a model at 95% overall can be
-  at 40% for a needle two-thirds of the way down a 64k context.</div>
+  then read the grid, not the average. in the grid below, a model
+  averaging 92% is at 40% in the middle of a 64k context.</div>
   <h4>What the grid looks like, and how to read it</h4>
   <p><strong>This is the artefact the test produces.</strong> It is not published anywhere today — this agent's context is far too short to need it — so the figures below are illustrative of the shape, not measurements of anything. <strong>Your own grid comes from running it on your own system.</strong></p>
+  <p><strong>Where the shape comes from, so you can read the originals rather than this summary.</strong> The effect was measured by Nelson F. Liu and colleagues in <em>Lost in the Middle: How Language Models Use Long Contexts</em> (Transactions of the Association for Computational Linguistics, volume 12, 2024, pages 157–173; arXiv:2307.03172). They found accuracy highest when the needed fact sits at the beginning or the end of the context and lowest when it sits in the middle, <strong>and the effect held for models sold as long-context ones.</strong> The test itself is Greg Kamradt's <em>Needle In A Haystack</em> (2023, <span class="mono">github.com/gkamradt/LLMTest_NeedleInAHaystack</span>), which sweeps context length against needle depth — the same two axes as the grid above. <strong>The first is a peer-reviewed paper; the second is a benchmark you can run.</strong></p>
   <div class="term">  <span class="q">an illustrative needle-in-a-haystack grid · % of runs that found the needle</span>
 
                   <span class="q">where the needle sits in the context</span>
@@ -2919,7 +2927,7 @@ before you run it.</span>
     <p>Three reasons on their page. <strong>Land the third</strong>: 180 is thirty characters from a cliff, so shipping it means sitting on a narrow ledge with nothing watching whether the ledge moved.</p>
     <p>Then the transferable instruction: <strong>pick a budget with margin above your cliff, not the budget that scored best.</strong> The best-scoring budget is usually the most fragile.</p>
     <h4>Reading two · the cliff, and the most important row in the table</h4>
-    <p><strong>This is the beat's centre and it was wrong until 6 October.</strong> Put the three gap-1 rows up together: 217 chars is gap 1 at 75%, 100 chars is gap 1 at 0%, 80 chars is gap 1 at 0%.</p>
+    <p><strong>This is the beat's centre and it was wrong until 6 October.</strong> Put the three gap-1 rows up together: the full text is gap 1 at 75%, 100 chars is gap 1 at 0%, 80 chars is gap 1 at 0%. <strong>Do not call the top row “217 chars”</strong> — 217 is the mean, the row is the uncapped text, and that slip is what put a wrong figure in the quiz.</p>
     <p>Ask what changed. <strong>The answer is not the gap — it is which clauses the gap is between.</strong> At 100 characters GOOD-2.1 has dropped out of the front entirely, and the two clauses in front are both wrong.</p>
     <p class="qbadge">So the rate is zero rather than fifty: the coin is still flipping and both faces are wrong. <strong>A tie is a coin flip; the governing clause falling out of contention is a guaranteed wrong answer reporting a healthy-looking gap.</strong></p>
     <p>Close it on 00:21 one last time: that case went to zero and the overall figure fell twelve points.</p>
@@ -2957,7 +2965,8 @@ before you run it.</span>
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from 00:27. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">Two papers support the positional shape and the card beside this segment says how to handle them. The safest handling is not to name either from the front of the room.</p>`,
+    <p class="quiet"><strong>The sources, if the room asks where the shape comes from.</strong> The effect is Liu et al., <em>Lost in the Middle: How Language Models Use Long Contexts</em>, TACL volume 12, 2024, pages 157–173 (arXiv:2307.03172) — accuracy highest when the fact sits at the beginning or the end, and lowest in the middle, holding even for models sold as long-context. The test is Greg Kamradt's <em>Needle In A Haystack</em>, 2023, which sweeps context length against needle depth. <strong>One is a peer-reviewed paper and one is a benchmark repository, so do not call them two papers.</strong> Both are printed on the learner page.</p>
+    <p class="quiet">Clash and poisoning are the two to handle carefully. <strong>The safest handling is not to name a vendor or a model from the front of the room</strong>, because the shape is general and the specific numbers age in months.</p>`,
       ref: {
         id: 't5-r-cliff', pairs: 'the mechanism, and the sourcing',
         html: `
@@ -2975,7 +2984,9 @@ before you run it.</span>
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Two findings in the field notes support the shape, and both need their hedges if they are named at all. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation. Both are in week 1's reading for anyone who asks.</p>
+      <p><strong>The positional sources are in the note beside this segment, and on their page.</strong> Name them if asked. This card adds what the note does not cover.</p>
+      <p>Two field notes describe a different shape, a cliff when context is compressed: <strong>arXiv 2608.01056</strong> (control context, in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). <strong>Both are single preprints.</strong> 2608.01056 is unreplicated and ran on three models. 2608.06503 is labelled preliminary by its authors and ran on AppWorld only. Cite the shape, never the thresholds.</p>
+      <p><strong>None of these is what today's lab measures.</strong> The room's cliff is a retrieval artefact, as their page says. The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>`,
@@ -2987,30 +2998,104 @@ before you run it.</span>
       learner: `
   <div class="builds">
     <div class="build">
+      <h3>What you are producing, in one sentence</h3>
+      <p><strong>Two pairs of adjacent numbers.</strong> The budget at which the adversarial case first stops being perfect, and the budget at which it falls to zero — each pinned between two values you have actually run.</p>
+      <p>The eight budgets you saw at 03:23 are too coarse to locate either edge. <strong>Your job is to narrow them.</strong></p>
+      <p class="check">You are not improving the agent. You are measuring where it stops working, which is the thing nobody does before they trim a prompt.</p>
+    </div>
+    <div class="build">
       <h3>Starting state and how you check it</h3>
-      <p><span class="mono">make w3-trim</span> as shipped, with eight budgets. Your own system’s policy or tool text if you can reach it.</p>
-      <p class="check">Check command: <span class="mono">make w3-trim</span>, then your own curve</p>
+      <p>The file is <span class="mono">src/w3_trim.py</span> in the reference agent. Line 33 holds the budgets:</p>
+      <div class="term">BUDGETS = [None, 180, 150, 120, 100, 80, 60, 40]</div>
+      <p><span class="mono">None</span> means no trimming. Every other number is the maximum characters kept from each clause.</p>
+      <p class="check">Check command: <span class="mono">make w3-trim</span>. One run takes about forty seconds, because it is eight budgets by eight cases by twenty runs.</p>
     </div>
     <div class="build">
-      <h3>Decide first. Two minutes.</h3>
-      <p>What in your own system shares an eviction budget with the conversation history? Tool descriptions, policy text and recovery instructions are the usual three.</p>
-    </div>
-    <div class="build">
-      <h3>Build. Ten minutes.</h3>
-      <p>Add one more budget between two existing rows and re-run, so you narrow where the edge sits. Or run the same experiment against your own system’s prompt.</p>
-      <p class="check">The edge is between two adjacent rows. Your job is to say which two.</p>
-    </div>
-    <div class="build">
-      <h3>Check yourself on two questions.</h3>
+      <h3>Decide first. Two minutes, in writing.</h3>
       <ul>
-        <li><strong>At which budget does your adversarial row move first?</strong></li>
-        <li><strong>Is the fall gradual or sudden?</strong> Say which, with two adjacent numbers.</li>
+        <li><strong>Between which two of the eight budgets does the adversarial case first drop below 100%?</strong> Look at the table from 03:23 and name the pair.</li>
+        <li><strong>Between which two does it reach 0%?</strong></li>
+        <li>What in <em>your own</em> system shares an eviction budget with the conversation history? Tool descriptions, policy text and recovery instructions are the usual three.</li>
       </ul>
-      <p class="check">If you cannot name two adjacent numbers, you have not found an edge. You have found a slope.</p>
+      <p class="check">The first two answers tell you where to add budgets. Do not guess the values — read them off the table.</p>
+    </div>
+    <div class="build">
+      <h3>Build. Ten minutes. Narrow both edges.</h3>
+      <p><strong>Step one.</strong> Add budgets between the two pairs you named, and re-run. Five extra values is enough:</p>
+      <div class="term">BUDGETS = [None, 180, 170, 165, 160, 155, 150, 120, 115, 110, 100, 80, 60, 40]</div>
+      <div class="term">make w3-trim</div>
+      <p><strong>Step two.</strong> Read the gap column, not the rate column. You are looking for the budget at which the gap changes value, because that is the cause and the rate is the effect.</p>
+      <p><strong>Step three.</strong> Narrow once more. Put two budgets inside whichever pair still spans more than five characters, and run again.</p>
+      <p class="check">If a run takes too long, drop <span class="mono">--runs</span> to 10 for the narrowing passes and go back to 20 to confirm the answer: <span class="mono">python3 -m src.w3_trim --runs 10</span></p>
+    </div>
+    <div class="build">
+      <h3>Build, second half. Write two cases that fail on context alone.</h3>
+      <p>Everything in your suite so far tests the agent at full context. <strong>A case that only fails when the context is trimmed is a different kind of case, and nobody writes it.</strong> Write two.</p>
+      <p><strong>Case one · the starvation case.</strong> Assert that the governing clause is the one acted on, and run it at a budget below your cliff. <strong>It should go to 0 of 20 there.</strong> If it still passes sometimes, your cliff is wrong.</p>
+      <p><strong>It does not pass 20 of 20 at full context either, and that is correct.</strong> It is the same ticket as the adversarial case, so it sits at about 15 of 20 — the 75% you read off the table at <span class="off" data-off="03:23">03:23</span>. The gap there is 1, and a one-point gap is a coin flip half the time. <strong>So the comparison that makes it a context case is 75% against 0%, not a pass against a fail.</strong></p>
+      <div class="term">{"id": "C9", "klass": "difficult", "ticket": "8002",
+ "what": "The governing clause survives a 110-character context budget",
+ "expect": {"outcome": "credited", "paid": 2000.0, "clause": "GOOD-2.1"}}</div>
+      <p><strong>Case two · the margin case.</strong> Assert the gap itself rather than the answer — that the leading clause is ahead by at least two points. This one fails <em>before</em> the money is wrong, which is the point of it.</p>
+      <div class="term">def grade_margin(case, result, minimum=2):
+    return result["gap"] &gt;= minimum, f"gap {result['gap']}"</div>
+      <p class="check">The second case needs the <span class="mono">gap</span> field from the 01:23 lab. If you did not add it, this is the second reason to.</p>
+    </div>
+    <div class="build">
+      <h3>Check yourself. Here is how to tell whether you got it right.</h3>
+      <p>Four things to check, and the first two have definite answers you can compare against.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>What to check</th><th>What a correct answer looks like</th></tr></thead>
+          <tbody>
+            <tr><td><strong>The first edge</strong>, where it stops being perfect</td><td>A pair five characters apart, and <strong>the gap changes from 3 to 2 across it.</strong> If your pair is twenty characters apart you have not finished narrowing</td></tr>
+            <tr><td><strong>The second edge</strong>, where it reaches 0%</td><td>A pair five characters apart, and across it <strong>the clause names in the gap column change</strong> — the governing clause stops appearing. That change is the cliff</td></tr>
+            <tr><td><strong>Is the fall gradual or sudden?</strong></td><td>Both, and saying so is the right answer. The first edge is gradual: 100%, then 95%, then 75%. The second is sudden: 55% then 0%, with nothing between</td></tr>
+            <tr><td><strong>Your starvation case</strong></td><td>About 15 of 20 at full context, <strong>0 of 20 below your cliff.</strong> Not 20 of 20 at the top — it is the adversarial ticket, so it carries that case's 75%. <strong>If it is 0 of 20 at both, it is not a context case</strong> — it is a broken case</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Show the two edges, once you have your own</summary>
+        <div class="reveal">
+          <p><strong>Do not open this until you have run it.</strong> The point of the lab is the running.</p>
+          <div class="term">  budget   overall  adversarial   gap on the adversarial case
+     180      82%        100%     gap 3 · GOOD-2.1 over GOOD-2.2
+     170      78%        100%     gap 3 · GOOD-2.1 over GOOD-2.2
+     <span class="m">165      78%        100%     gap 3 · GOOD-2.1 over GOOD-2.2</span>
+     <span class="m">160      77%         95%     gap 2 · GOOD-2.1 over GOOD-2.2</span>   <span class="m">&lt;- FIRST EDGE</span>
+     155      74%         75%     gap 1 · GOOD-2.1 over GOOD-2.2
+     150      74%         75%     gap 1 · GOOD-2.1 over GOOD-2.2
+     120      74%         55%     gap 0 · GOOD-2.1 over GOOD-2.2
+     <span class="x">115      74%         55%     gap 0 · GOOD-2.1 over GOOD-2.2</span>
+     <span class="x">110      62%          0%     gap 1 · GOOD-2.2 over BILL-3.1</span>  <span class="x">&lt;- THE CLIFF</span></div>
+          <p><strong>The first edge is between 165 and 160</strong>, and it is gradual — the gap narrows from 3 to 2 and the rate slips five points.</p>
+          <p><strong>The cliff is between 115 and 110</strong>, and it is not gradual at all. Across those five characters the governing clause leaves the window entirely: the gap column stops naming GOOD-2.1 and starts naming two clauses that are both wrong.</p>
+          <p><strong>Look at the overall column across the cliff.</strong> 74% to 62%. The case that pays ₹2,50,000 went from 55% to zero, and the headline moved twelve points.</p>
+        </div>
+      </details>
     </div>
   </div>`,
       script: `
-    <p><strong>Circulate for the person who trims their own prompt without running anything.</strong> That is the habit this whole topic exists to replace.</p>`,
+    <p><strong>Circulate for the person who trims their own prompt without running anything.</strong> That is the habit this whole topic exists to replace.</p>
+    <h4>What you are producing, in one sentence</h4>
+    <p><strong>Say it before they start:</strong> two pairs of adjacent numbers. Where the adversarial case stops being perfect, and where it falls to zero, each pinned between two budgets they have actually run.</p>
+    <p>The eight budgets from 03:23 are deliberately too coarse to locate either edge. <strong>Narrowing them is the lab.</strong></p>
+    <h4>Starting state and how you check it</h4>
+    <p>Name the file and the line: <span class="mono">src/w3_trim.py</span>, line 33, the <span class="mono">BUDGETS</span> list. <strong>One full run is about forty seconds</strong> — eight budgets by eight cases by twenty runs — so tell them to expect the wait rather than thinking it has hung.</p>
+    <p class="qbadge">If the room is slow, point at <span class="mono">--runs 10</span> for the narrowing passes and 20 to confirm. Their page has the command.</p>
+    <h4>Build, second half. Write two cases that fail on context alone.</h4>
+    <p><strong>This half is new and it is the part that transfers.</strong> Everything in their suite so far tests at full context; a case that only fails when the context is trimmed is a kind nobody writes.</p>
+    <p>Case one asserts the governing clause and runs below the cliff. Case two is the interesting one: <strong>it asserts the gap rather than the answer</strong>, so it fails before the money is wrong. It needs the <span class="mono">gap</span> field from the 01:23 lab, which is the second reason to have added it.</p>
+    <h4>Check yourself. Here is how to tell whether you got it right.</h4>
+    <p><strong>Two of the four checks have definite answers</strong>, which is new — this lab previously had no way for a learner to know if they were right. The answer key is behind a <em>Show</em> on their page and they are told not to open it before running.</p>
+    <p>The answers, for your own reference while circulating:</p>
+    <ul>
+      <li><strong>First edge: between 165 and 160</strong>, where the gap narrows from 3 to 2 and the rate slips 100% to 95%. Gradual.</li>
+      <li><strong>The cliff: between 115 and 110</strong>, where the gap column stops naming GOOD-2.1 at all. 55% to 0% with nothing between.</li>
+    </ul>
+    <p class="qbadge">The best question to ask whoever finishes first: <em>is the fall gradual or sudden?</em> The correct answer is <strong>both</strong>, and that is the whole shape of the curve in one word.</p>
+    <p><strong>Watch for the broken starvation case, and know what broken means here.</strong> It is <strong>0 of 20 at full context</strong> that is broken, not the five failing runs out of twenty. The case asserts the adversarial ticket, so about 15 of 20 at the top is the right answer and matches the 75% the room read at <span class="off" data-off="03:23">03:23</span>. <strong>Somebody will report 15 of 20 as a failure.</strong> Tell them to compare it against 0 of 20 below the cliff, which is the measurement.</p>`,
       ref: {
         id: 't5-r-lab', pairs: 'the lab, and the habit it replaces',
         html: `
@@ -3034,54 +3119,110 @@ before you run it.</span>
     title: 'At enterprise scale: context budgets in production',
     mode: 'whole room · 3 min',
     question: 'What do teams actually use to keep a context budget under control?',
-    lede: 'Five real answers, and none of the five tells you where your cliff is.',
+    lede: 'Three jobs, and the real products that do each. None of them tells you where your cliff is.',
     slots: [
-      { slot: 'Controls or observes the budget', options: [
+      { slot: 'Makes a stable prefix cheaper', options: [
         { product: 'Anthropic prompt caching', cost: 'Cheaper reads on a repeated prefix, and a write premium on the first call. Saves money only if the prefix is genuinely stable' },
         { product: 'OpenAI prompt caching', cost: 'Automatic on a matching prefix, no control over what is cached, and nothing to configure' },
         { product: 'Gemini context caching', cost: 'Explicit and billed by the hour the cache is held. The most honest pricing of the three, and the one that makes you decide' },
-        { product: 'Langfuse', cost: 'Open source or hosted. Shows token counts per step, so a growing prefix is visible before it is expensive' },
-        { product: 'OpenTelemetry GenAI conventions', cost: 'Free, and a specification rather than a product, so somebody on your team implements it' },
+      ] },
+      { slot: 'Watches the context growing', options: [
+        { product: 'Langfuse', cost: 'Open source or hosted. Token counts per step, so a growing prefix is visible before it is expensive. You host it, or pay per trace' },
+        { product: 'Arize Phoenix', cost: 'Open source, and the same traces it uses for online evals carry the token counts. One system for both, and you still write the evaluators' },
+        { product: 'LangSmith', cost: 'Managed, least setup, token and cost attribution per step out of the box. Per seat and per trace, and it pulls you toward LangChain' },
+        { product: 'OpenTelemetry GenAI conventions', cost: 'Free, vendor-neutral, and a specification rather than a product \u2014 somebody on your team implements it, and then any backend above can read it' },
+      ] },
+      { slot: 'Shrinks the context: compression, pruning, handoff', options: [
+        { product: 'LLMLingua', cost: 'Microsoft Research, open source. Compresses a prompt by dropping low-information tokens. Aggressive, measurable, and it needs its own evaluation because what it drops is not always what you would drop' },
+        { product: 'LangChain trim_messages, with LangGraph checkpointers', cost: 'Open source. Prunes history by token count or message count and persists what is left. Trivial to adopt, and a token-count rule is exactly the rule that drops the decision made four turns ago' },
+        { product: 'LlamaIndex memory buffers', cost: 'Open source, with a summarising buffer that condenses old turns rather than dropping them. You then own the question of what the summary lost' },
+        { product: 'Zep or Mem0', cost: 'Managed long-term memory as a service: it decides what is worth keeping between sessions. Priced per user or per message, and it puts a vendor between your agent and its own history' },
+        { product: 'LangGraph, the OpenAI Agents SDK, CrewAI or AutoGen', cost: 'Open source frameworks with explicit handoff between agents. Each gives you a place to put condensed state, and none measures whether the state survived the handoff' },
       ] },
     ],
     learner: `
-  <p><strong>The one that matters for this week.</strong> None of the five tells you where your cliff is. They tell you what the context costs, not what cutting it does to the answers. That is the difference between a bill and an evaluation.</p>
+  <p><strong>The one that matters for this week.</strong> Not one of the products in those three lists tells you where your cliff is. They tell you what the context costs, how it is growing, and how to make it smaller. <strong>None of them tells you what cutting it does to the answers.</strong> That is the difference between a bill and an evaluation.</p>
+  <h4>When prompt caching is worth using, and when it is not</h4>
+  <p>All three providers in the first list will cache a repeated prefix and charge you less to read it again. <strong>It is the cheapest saving available, and it only works under conditions most prompts do not meet.</strong></p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Use it when</th><th>Do not bother when</th></tr></thead>
+      <tbody>
+        <tr><td>The front of the payload is <strong>byte-identical</strong> across requests: the same system prompt, the same tool schemas, the same policy text</td><td>Anything near the front varies — a customer name, a timestamp, a retrieved clause. <strong>One changed character before the cache marker and nothing matches</strong></td></tr>
+        <tr><td>That stable part is <strong>large</strong>, so the saving is worth the write premium on the first call</td><td>The whole payload is small. The premium can cost more than the reads save</td></tr>
+        <tr><td>The same prefix is read <strong>many times inside the cache's lifetime</strong>, which is minutes rather than days</td><td>Traffic is sparse, so each prefix expires before it is read again. You pay the premium and collect nothing</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>The design consequence is the useful part, and it is the eviction rule again.</strong> Caching rewards putting everything stable at the front and everything variable at the back. That is also where attention is strongest for rules that must be obeyed — so for once <strong>the cost optimisation and the correctness optimisation point the same way.</strong></p>
+  <p class="quiet">This site's own visitor agent is arranged that way for exactly this reason. The cache marker sits at the end of the frozen text and nothing built from the request may go before it. Putting the page and the region in the cached prefix produced twelve variants, each paying the write premium to be read about once.</p>
+  <h4>How enterprises actually track context growth</h4>
+  <p>The second list gives you token counts. <strong>Counting is not tracking.</strong> Four patterns turn counts into something that catches a problem.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Pattern</th><th>What it does</th><th>What it catches</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A token budget per request type</strong></td><td>A declared ceiling for each kind of request, rather than one global number</td><td>A dispute that quietly costs four times what a balance query costs, because nobody separated them</td></tr>
+        <tr><td><strong>Alert on prefix growth, not on total cost</strong></td><td>Watch the size of the stable front of the payload across releases</td><td>The prompt that grew 300 tokens a month for a year. The bill rose smoothly and there was no step to notice</td></tr>
+        <tr><td><strong>Token attribution per step</strong></td><td>Which part of the assembly contributed which tokens: system, tools, retrieval, history</td><td>Retrieval quietly becoming most of the payload after somebody raised <span class="mono">k</span></td></tr>
+        <tr><td><strong>A context budget as a gate row</strong></td><td>The 02:56 table, with the budget as the requirement and your own cliff as the threshold</td><td>A release that trims the prompt to save money and crosses the cliff. <strong>This is the pattern that connects this topic to the rest of the day</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Only the fourth is evaluation.</strong> The first three are observability: they tell you the context changed. The fourth tells you whether the change was safe, and it is the only one that can stop a release.</p>
   <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
   <p>Trimming by character count, which is what the lab does, is the crudest of the options. Three better ones exist, and <strong>each needs its own measurement because each loses something different.</strong></p>
   <div class="tw">
     <table>
-      <thead><tr><th>Technique</th><th>What it does</th><th>What you have to measure</th></tr></thead>
+      <thead><tr><th>Technique</th><th>What it does</th><th>What you have to measure</th><th>What teams use</th></tr></thead>
       <tbody>
-        <tr><td><strong>Compression</strong></td><td>Replaces a long passage with a shorter summary, usually written by a model</td><td>How much the task accuracy falls against the uncompressed payload. A summary that reads well can still have dropped the one clause that governs</td></tr>
-        <tr><td><strong>Pruning the history</strong></td><td>Drops old turns. A sliding window keeps the last N, semantic selection keeps the relevant ones, key-value extraction keeps only the facts</td><td>Task retention against token saving, as a pair. A sliding window is cheapest to build and is the one that drops the decision made four turns ago</td></tr>
-        <tr><td><strong>Handing off between agents</strong></td><td>One agent passes a condensed state to the next instead of the whole history</td><td>Whether the variables that mattered survived the handoff. This is where context silently stops being complete</td></tr>
+        <tr><td><strong>Compression</strong></td><td>Replaces a long passage with a shorter summary, usually written by a model</td><td>How much task accuracy falls against the uncompressed payload. A summary that reads well can still have dropped the one clause that governs</td><td><strong>LLMLingua</strong> for token-level compression; a summarisation call to any provider; LangChain's contextual compression retriever</td></tr>
+        <tr><td><strong>Pruning the history</strong></td><td>Drops old turns. A sliding window keeps the last N, semantic selection keeps the relevant ones, key-value extraction keeps only the facts</td><td>Task retention against token saving, as a pair. A sliding window is cheapest to build and is the one that drops the decision made four turns ago</td><td><strong>LangChain <span class="mono">trim_messages</span></strong> with a LangGraph checkpointer; <strong>LlamaIndex</strong> summarising memory buffers; <strong>Zep</strong> or <strong>Mem0</strong> if you want it managed</td></tr>
+        <tr><td><strong>Handing off between agents</strong></td><td>One agent passes condensed state to the next instead of the whole history</td><td>Whether the variables that mattered survived the handoff. This is where context silently stops being complete</td><td><strong>LangGraph</strong>, the <strong>OpenAI Agents SDK</strong>, <strong>CrewAI</strong> or <strong>AutoGen</strong>. All four give you a place to put state; none checks that it arrived</td></tr>
       </tbody>
     </table>
   </div>
   <p><strong>All three are week 5's subject</strong>, beside what the system remembers between sessions, and none of them is built today. They are here so that when somebody proposes "just summarise the history" you know which number to ask for.</p>
   <h4>The whole of context evaluation on one card</h4>
-  <p>Five things to measure, and the week has now touched each one. Keep this; it is the summary.</p>
+  <p><strong>Seven questions, and the week has now touched every one.</strong> Keep this card; it is the summary, and the right-hand column is what you would put in a gate row.</p>
   <div class="tw">
     <table>
-      <thead><tr><th>What you are asking</th><th>What you measure</th><th>What good looks like</th></tr></thead>
+      <thead><tr><th class="mono">#</th><th>What you are asking</th><th>What you measure</th><th>What good looks like</th></tr></thead>
       <tbody>
-        <tr><td>Is the payload mostly signal?</td><td>Context relevancy, and chunk utilisation</td><td>Little filler, and most of what you sent was used</td></tr>
-        <tr><td>Is the right material there at all?</td><td>Context recall, and your own cliff</td><td>You know the token count below which your task stops working</td></tr>
-        <tr><td>Does position change the answer?</td><td>Needle in a haystack, by depth and placement</td><td>No position in the window is materially worse than any other</td></tr>
-        <tr><td>Does bad or contradictory input survive?</td><td>Clash and poisoning cases in the suite</td><td>Contradictions resolve by a stated rule, not by whichever came first</td></tr>
-        <tr><td>Is the <em>judge's</em> context fair?</td><td>The agreement figure from 01:55</td><td>Kappa holds up when you change what the judge is shown</td></tr>
+        <tr><td class="mono">1</td><td><strong>Is the payload mostly signal?</strong></td><td>Context relevancy, and chunk utilisation</td><td>Little filler, and most of what you sent was actually used. Below 30% utilisation, <span class="mono">k</span> is too high</td></tr>
+        <tr><td class="mono">2</td><td><strong>Is the right material there at all?</strong></td><td>Context recall, and your own cliff</td><td>You can name the budget below which your task stops working, as two adjacent numbers</td></tr>
+        <tr><td class="mono">3</td><td><strong>Is it there by a comfortable margin?</strong></td><td>The gap between the leading candidate and the next one</td><td>A margin wide enough that the decision is settled rather than nearly settled. <strong>This is the row the 03:23 table was really about</strong></td></tr>
+        <tr><td class="mono">4</td><td><strong>Does position change the answer?</strong></td><td>Needle in a haystack, by depth and placement</td><td>No position in the window is materially worse than any other. Read the worst cell, not the average</td></tr>
+        <tr><td class="mono">5</td><td><strong>Does shrinking it lose anything?</strong></td><td>Task accuracy before and after compression or pruning, as a pair with the token saving</td><td>You can state what the saving cost you. "It still looks fine" is not a measurement</td></tr>
+        <tr><td class="mono">6</td><td><strong>Does bad or contradictory input survive?</strong></td><td>Clash and poisoning cases in the suite</td><td>Contradictions resolve by a written precedence order, not by whichever arrived first, and the trace records that a rule fired</td></tr>
+        <tr><td class="mono">7</td><td><strong>Is the <em>judge's</em> context fair?</strong></td><td>The agreement figure from 01:55</td><td>Kappa holds up when you change what the judge is shown</td></tr>
       </tbody>
     </table>
   </div>
-  <p><strong>The last row is the one to notice.</strong> Four of the five are about the agent's window. The fifth is about the grader's, and it is measured with the same number you produced at 02:02.</p>`,
+  <p><strong>Two rows to notice.</strong></p>
+  <ul>
+    <li><strong>Row 3 is the one most teams do not have.</strong> Rows 1, 2 and 4 are standard and tool-supported. The margin is not a metric anybody sells, and it is the thing that actually moved on the curve you ran at 03:23.</li>
+    <li><strong>Row 7 is about the grader, not the agent.</strong> Six of the seven are about the agent's window; the last is about the judge's, measured with the same number you produced at 02:02.</li>
+  </ul>
+  <p class="quiet">Rows 1, 2, 4 and 5 have tools. Rows 3, 6 and 7 are cases you write. <strong>That split is worth remembering when somebody proposes buying a context-evaluation platform.</strong></p>`,
     script: `
   <p>Three minutes, and <strong>this is the first thing to cut if you are running long</strong>. Land on the last line: a bill is not an evaluation.</p>
+  <h4>When prompt caching is worth using, and when it is not</h4>
+  <p>Three conditions on their page, each with its opposite. <strong>If you say one, say the first:</strong> the front of the payload has to be byte-identical, and one changed character before the cache marker means nothing matches.</p>
+  <p>Then the design consequence, which is the part that transfers: <strong>caching rewards stable-at-the-front, variable-at-the-back — which is also where attention is strongest for rules that must be obeyed.</strong> For once the cost optimisation and the correctness optimisation agree.</p>
+  <p class="quiet">There is a worked example on their page from this site's own visitor agent: twelve cached prefix variants, each paying the write premium to be read about once. Use it only if somebody asks for a real instance.</p>
+  <h4>How enterprises actually track context growth</h4>
+  <p>Four patterns, and <strong>the only line that must be said is the last one</strong>: only the fourth is evaluation. The first three tell you the context changed; the fourth tells you whether the change was safe, and it is the only one that can stop a release.</p>
+  <p>The fourth pattern is <strong>a context budget written as a gate row</strong> — the 02:56 table, with their own cliff as the threshold. That is the sentence that joins this topic to the rest of the day, so do not skip it even when cutting.</p>
   <h4>Three ways teams shrink a context, and what each one costs to evaluate</h4>
   <p>Compression, pruning the history, handing off between agents. <strong>Name them, give the measurement each needs, and say all three are week 5's.</strong> They are on the page so that "just summarise the history" meets the question "measured against what".</p>
   <p>If you say one thing: <strong>a sliding window is the cheapest to build and the one that drops the decision made four turns ago.</strong></p>
   <h4>The whole of context evaluation on one card</h4>
-  <p>Five rows, and the week has touched each. <strong>Say "keep this one" and point at the last row</strong>: four are about the agent's window and the fifth is about the grader's, measured with the number they produced at 02:02.</p>
-  <p class="quiet">If the clock has gone, cut the three techniques and keep the five-row card. The card is the summary; the techniques are reference.</p>`,
+  <p><strong>Seven rows now, up from five.</strong> Two were added on 6 October: the margin, and whether shrinking lost anything. Point at two of the seven rather than reading the card.</p>
+  <p><strong>Row 3, the margin.</strong> The row most teams do not have, because no tool sells it — and it is the thing that actually moved on the 03:23 curve.</p>
+  <p><strong>Row 7, the judge's context.</strong> Six of seven are about the agent's window; the last is about the grader's, measured with the number they produced at 02:02.</p>
+  <p class="qbadge">The split worth leaving them with: rows 1, 2, 4 and 5 have tools. Rows 3, 6 and 7 are cases you write. That is the useful answer when somebody proposes buying a context-evaluation platform.</p>
+  <p class="quiet">If the clock has gone, cut the three techniques and keep the card. The card is the summary; the techniques are reference.</p>`,
   },
   topicQuiz: {
     at: '03:57',
@@ -3089,10 +3230,11 @@ before you run it.</span>
     mode: 'alone, in writing · 3 min',
     lede: 'Three questions. The third is from week 1, and its words are quoted above it.',
     items: [
-      { from: 'this', stem: 'Cutting the policy text from 217 characters to 180 moved the adversarial case from 75% to 100%. What does that tell you, and what does it not license?',
-        reveal: `<p>The verdict turns on a scoring gap of one or two points, narrow enough that a change in either direction moves it. <strong>It does not license trimming</strong>, because the same mechanism takes the case to 0% at 100 characters.</p>`,
+      { from: 'this', stem: 'Capping each clause at 180 characters took the adversarial case from 75% to 100%. Why?',
+        reveal: `<p><strong>The gap widened, from 1 point to 3.</strong> Trimming removed more of the query's words from GOOD-2.2, the clause that does not govern, than from GOOD-2.1, the clause that does — because GOOD-2.2's enrolment wording sits in the part that got cut.</p>
+          <p>And a gap of 3 is settled: the agent stops taking second place at all, so the case passes every run.</p>`,
         wrong: '"Shorter context is better, we have been overloading it."',
-        right: 'Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement. Ask for the next row: at 120 the case is at 55%.' },
+        right: 'Fewer irrelevant tokens genuinely does help, and the 180 row is a real improvement rather than a measurement error. Ask for the next row down: at 150 the gap is back to 1 and the case is back to 75%.' },
       { from: 'this', stem: 'At 60 characters GOOD-2.1 and GOOD-2.2 both score 2. What decides which clause the agent acts on?',
         options: ['A. The model’s judgement, with less text to go on', 'B. The clause id breaks the tie, and then a gap of zero makes it a coin flip', 'C. The clause that was retrieved last time', 'D. The case’s expected clause'],
         key: 1,
@@ -3106,7 +3248,10 @@ before you run it.</span>
         wrong: '"We confirmed the paper."',
         right: 'The shape did match, and noticing that is right. We measured one lexical retriever on seven clauses. Naming the difference between that and a confirmation is the answer.' },
     ],
-    script: `<p><strong>Read the week 1 quote aloud before question three.</strong> Watch for "we confirmed the paper" and take it apart.</p>`,
+    script: `
+  <p><strong>Question one changed on 6 October.</strong> It used to ask two things at once and described 217 characters as the policy text, which is wrong — 217 is the mean clause length. It now asks one thing: why did capping at 180 improve it? The answer is in the gap column, 1 to 3.</p>
+  <p><strong>Then ask the second half out loud rather than in writing:</strong> <em>and what does that license?</em> Nothing. The same mechanism takes the case to 0% at 110. If anybody answers "so trim", point at the row below.</p>
+  <p><strong>Read the week 1 quote aloud before question three.</strong> Watch for "we confirmed the paper" and take it apart.</p>`,
   },
   takeaway: { prompt: 'Write one line: name the input in your own system that shares an eviction budget with the conversation history, and say what you will measure first.' },
   line: {
@@ -3261,7 +3406,41 @@ export const closing = {
   </div>
   <div class="writein"><span class="q">Before the discussion: which of the five would your own system fail hardest on?</span>
     <div class="rule"></div>
-  </div>`,
+  </div>
+  <h4>What you write afterwards: the week's decision record</h4>
+  <p><strong>The teardown produces a list of weaknesses. The decision record is where you commit to doing something about one of them.</strong> It is this week's assignment, and it is the artefact a year from now — the five questions above are notes towards it.</p>
+  <p>Write it at <span class="mono">/craft/adr</span>. <strong>Seven sections, the same seven every week</strong>, so week 6 can be read against week 3. Here is what each one is asking for, against today.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="mono">#</th><th>Section</th><th>What it is asking, this week</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">1</td><td><strong>Context</strong></td><td>The specific thing that fails today in <em>your</em> system, with the number it cost. Not "our evals are thin" — the case that passes while something is broken, like the one you watched at 00:15</td></tr>
+        <tr><td class="mono">2</td><td><strong>Goals</strong></td><td>Three at most, each one testable. <strong>"Better evaluation" is not a goal.</strong> "Every adversarial case runs twenty times and the rate is reported per case" is</td></tr>
+        <tr><td class="mono">3</td><td><strong>Non-goals</strong></td><td>What you are deliberately not fixing this quarter. Retrieval quality is a fair non-goal; so is drift monitoring. Say why it is acceptable to leave alone</td></tr>
+        <tr><td class="mono">4</td><td><strong>The design</strong></td><td><strong>Your gate-table row from 02:56 goes here</strong>, plus the graders in the order they run and what each does when it fails. Say where the state lives</td></tr>
+        <tr><td class="mono">5</td><td><strong>What can go wrong</strong></td><td>One row per case. The four classes from 00:27 are the prompt: what arrives, what your rule does, what the customer sees. Include the honest customer your new check now refuses</td></tr>
+        <tr><td class="mono">6</td><td><strong>Alternatives</strong></td><td>One you rejected and why it lost. The real one from today: <em>a model grader instead of an assertion</em> — and the reason it lost is the agreement figure you would have had to produce first</td></tr>
+        <tr><td class="mono">7</td><td><strong>Open questions</strong></td><td>What you could not settle. One line is enough. <strong>"I could not find out who owns the pass bar" is a complete and valuable answer</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h4>The five takeaways the record should carry</h4>
+  <p>If the record does not touch these, the session has not reached your own system. Each one names where it came from.</p>
+  <div class="term">  1  <span class="m">a pass is a claim about the cases you chose</span>        <span class="q">00:15</span>
+     which class does my suite have none of?
+
+  2  <span class="m">one run is not a result; a rate is</span>                 <span class="q">00:55</span>
+     how many runs before my rate stopped moving?
+
+  3  <span class="m">a right answer can be reached by the wrong rule</span>    <span class="q">01:45</span>
+     does anything of mine record WHICH rule was used?
+
+  4  <span class="m">a grader is a component with its own failure rate</span>  <span class="q">02:02</span>
+     what is my grader's agreement figure, and its kappa?
+
+  5  <span class="m">a threshold with no owner is not a gate</span>           <span class="q">02:49</span>
+     who signs when my number is missed?</div>
+  <p><strong>One line each is enough.</strong> A record that answers those five questions about your own system is worth more than a long one that answers them about this one.</p>`,
       script: `
     <h4>What is on screen: Figure 3</h4>
     <p><strong>Put Figure 3 on screen and leave it there for the full twenty-eight minutes.</strong> It is on the learner page, headed "Figure 3 · the dispute agent at the close of week 3". There are three named figures in the week: Figure 1 at 01:11 is how retrieval is measured, Figure 2 at 01:50 is how model-based grading works, Figure 3 is this one.</p>
@@ -3271,7 +3450,18 @@ export const closing = {
     <p>Five minutes a question. <strong>Assign each to a named person before the day.</strong> Their page gives each question a "what it is about" column naming the box in Figure 3 to look at, and those descriptions contain no answers.</p>
     <p><strong>The full answer key for all five is below</strong>, each with a good answer, the wrong answer worth taking seriously, and one push. Read the key for your five before the session, not during it.</p>
     <p><strong>Question 4 is the one that reveals whether the week landed.</strong> A room that answers "we show the trace" has not taken the difference between what happened and why it was allowed to happen.</p>
-    <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>`,
+    <p class="quiet">If you are short of time, cut question 5 rather than shortening all five. Five answers in fifteen minutes is five opinions.</p>
+    <h4>What you write afterwards: the week's decision record</h4>
+    <p><strong>Close the teardown by naming what it was for.</strong> The five questions produce a list of weaknesses; the decision record is where somebody commits to one of them. It is this week's assignment, written at <span class="mono">/craft/adr</span>, and the notes they just took are notes towards it.</p>
+    <p>Their page maps all seven sections onto today. <strong>Do not walk the table</strong> — point at two rows:</p>
+    <ul>
+      <li><strong>Section 4, the design.</strong> Their gate-table row from 02:56 goes straight in. That is the lab paying off, and saying so is what makes the lab feel like work rather than an exercise.</li>
+      <li><strong>Section 7, open questions.</strong> Say out loud that <em>"I could not find out who owns the pass bar"</em> is a complete and valuable answer. Otherwise people invent an owner, which is the same failure as inventing a name at 02:56.</li>
+    </ul>
+    <p class="qbadge">The assignment changed on 6 October. It used to be the gate-table row alone; it is now the decision record, with the row as its design section. The row is still the thing they build in the room.</p>
+    <h4>The five takeaways the record should carry</h4>
+    <p>Five lines on their page, each tagged with the minute it came from. <strong>Read them out as the last thing before the quiz</strong>, because it is the only moment in the day when all five sit together.</p>
+    <p>The framing that makes them write it: <strong>a record that answers those five questions about their own system is worth more than a long one that answers them about this one.</strong></p>`,
       ref: {
         id: 'close-r-teardown', pairs: 'five questions, and the full answer key',
         html: `
@@ -3401,7 +3591,8 @@ export const quiz = [
     stem: 'Your model grader agrees with your labels seven times in ten. Name the two directions it can disagree in, and say which of the two costs you more on a payment path.',
     reveal: `<p>It passes an answer you failed, or it fails an answer you passed. <strong>On a payment path the first costs more</strong>, because a pass releases the money and a false alarm only costs somebody a review.</p>`,
     script: `<p class="qmeta"><strong>The best answers refuse to stop there.</strong> A false alarm is cheap per event and expensive in aggregate, because a grader people stop trusting is a grader people switch off.</p>
-  <p class="qmeta"><strong>The wrong answer worth catching.</strong> "70% is not good enough, we need 95%." There is no threshold for a grader in the abstract.</p>`,
+  <p class="qmeta"><strong>The wrong answer worth catching.</strong> "70% is not good enough, we need 95%." There is no threshold for a grader in the abstract.</p>
+  <p class="qmeta"><strong>Follow-up, and it is the better half of this question:</strong> what is the kappa? Seven in ten is 70%, and on this label set the kappa is 0.35 against a production bar of 0.60. <strong>A room that gives the rate without the kappa has answered half of it.</strong></p>`,
   },
   {
     title: 'Q8 · The release on Thursday', meta: 'apply · this week · renders on the learner check',
@@ -3409,9 +3600,11 @@ export const quiz = [
     options: ['A. Hold it, and take the decision to the owner named on that gate-table row', 'B. Ship it, because the overall rate improved', 'C. Write more adversarial cases and re-run before deciding', 'D. Ship it behind a flag and watch production'],
     key: 0,
     reveal: `<p><strong>A.</strong> The row already has a decision owner and a failure consequence written on it. That is what those two columns are for.</p>
+      <p><strong>And notice what the two numbers are.</strong> Overall up from 76% to 78% is a <em>relative</em> reading — not worse than last time, so a regression gate passes it. The adversarial case down from 75% to 65% is the one that should have been an <em>absolute</em> floor, because one escape pays ₹2,50,000 and there is no partial credit on a payment. <strong>This release passes one kind of gate and fails the other</strong>, which is 02:49 arriving on a Thursday.</p>
       <p><strong>C is the one to think hardest about.</strong> It is a good engineering instinct and also a way of not making the decision. More cases sharpen the estimate, and the estimate is not what is missing.</p>`,
     script: `<p class="qmeta">B is what the overall number invites. <strong>D is the real competitor to A</strong>, not a silly option: a flag moves the failure into production, where each occurrence pays ₹2,50,000.</p>
-  <p class="qmeta"><strong>Follow-up if the room splits between A and C.</strong> Who is allowed to say Thursday moves? If nobody in the room can, C is not an available answer.</p>`,
+  <p class="qmeta"><strong>Follow-up if the room splits between A and C.</strong> Who is allowed to say Thursday moves? If nobody in the room can, C is not an available answer.</p>
+  <p class="qmeta"><strong>The sentence to land after the reveal</strong>, because it ties the day together: the overall figure is a relative reading and the adversarial case should have been an absolute floor. <strong>This release passes one kind of gate and fails the other.</strong></p>`,
   },
 ];
 

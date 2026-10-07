@@ -8,13 +8,166 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 6 October 2026
-**Branch:** `feat/resource-followups-spec`, off `origin/main`, in worktree `D:\lc-followups`.
-It brings the resource follow-ups in line with the resource brief (below). PR #37
-(`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
+**Last updated:** 7 October 2026
+**Teaching work now:** the six-week plan is PR #54 (`content/six-week-plan`), and week 4's
+build is on `content/week-4-draft` (local, waiting for #54).
+**Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
+`D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
+PR #37 (`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
 1 October. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Public module copy names the bridge 7 topics — 7 October (PR #55)
+
+`MODULES` in `src/data/cohort-copy.ts` now names MCP servers (M2), A2A, agent memory,
+compaction and retrieval quality (M3), and pricing the system (M4). Capacity moved from M3
+to M4 with the week. Titles are unchanged, so nothing a crawler or the Ask agent reads
+changed. It merged before PR #54, which holds bridge 7 and the week 4 to 6 plans this copy
+describes; see the next entry. **One gap, older than this PR:** the Ask agent cannot see module
+bodies, so asked "do you teach MCP?" it says it does not know while the page says yes.
+
+---
+
+## Whole-course review against an outside specification — 7 October
+
+Sunil supplied a "Master Execution Specification" for all seven weeks and asked whether it
+meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 are in
+[`docs/teaching/reviews/course-review-2026-10-07.md`](../teaching/reviews/course-review-2026-10-07.md).
+**Sunil approved the revised plan the same day**, with security as week 6's question 5,
+step-level evaluation built in week 5, and the public M3 copy to be updated. The decisions
+table is at the foot of the review file.
+
+**PR #54 carries the teaching half:**
+
+- **Bridge 7 in `threads.md`.** Where the five topics land, the reversal of bridge 6 §7 and
+  its guard, the homework rule, the five fixed week 6 questions. Retrieval is `●` in week 5
+  and `○` in week 4. A new topic label, "Tool and agent protocols".
+- **Weeks 4 to 6 session files** carry five outcomes, the thread weights and the approved
+  topics, still `status: draft`. The bracketed placeholders are gone; the decisions they held
+  are in a writer's note at the top of each body. **Assignments stay `"TBD"` on purpose**:
+  `/craft/adr` lists upcoming assignment titles and the discussion lookup quotes them, so a
+  real string would publish a draft week's assignment. Set it when the week becomes ready.
+  **The summaries are learner-visible now**, on the dashboard and the session page, because a
+  draft shows its summary.
+- **Week 3's session body** is now a short guide in week 2's shape, with the clock from its
+  own frontmatter.
+- **Week 3 pages:** a sentence saying step-level checks are built in week 5, a sentence
+  separating where a case comes from (synthetic, production sample, regression case) from
+  its class, and the 03:33 sourcing card aligned with #56. #56 named the positional sources (Liu
+  et al., TACL 2024, and the needle test). The card adds that the two compression field notes
+  are a different shape, and that the room's cliff is a retrieval artefact confirming none of
+  them.
+- **Week 2 pages:** the ownership question owed by bridge 6 §5, at 00:42, with its answer key.
+
+**After PR #54 merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
+the same URLs (`docs/teaching/README.md` lists them). The stored pages changed and the
+published ones have not.
+
+**A parallel session opened `content/week-4-draft` in the main checkout on 7 October** while
+this work was uncommitted there. The work was moved into a worktree. Check that branch before
+writing week 4, so week 4 is not drafted in two places.
+
+**PR #55 (public module copy) merged before #54**, so for a time production described week 4
+to 6 plans that were not on main. #54 was then merged with main, which by then held #56.
+
+**Delete the writer's note at the top of weeks 4 to 6 before any of them becomes `ready`.**
+It is an HTML comment, so it ships in the page source.
+
+**Do not adopt the outside specification's Redis idempotency layer.** It is the split that
+week 2's 03:03 lab teaches against.
+
+---
+
+## Week 3, review round 5 — 6 October
+
+The last five rows of the sheet, eleven items, all on context engineering and the close. Answered
+in
+[`docs/teaching/reviews/week-3-review-2026-10-06-round5.md`](../teaching/reviews/week-3-review-2026-10-06-round5.md).
+Clock unmoved: 46 rows, fifth round.
+
+### The assignment changed, and this one reaches beyond the pages
+
+**Week 3's assignment was "one row of the gate table". It is now "an architecture decision record
+for one evaluation decision in your own system, with the gate-table row as its design section."**
+
+Sunil asked for an ADR recording the session's takeaways. The seven ADR sections are fixed and must
+not vary by week, so what changed is the brief — and the teardown now carries a section-by-section
+guide mapping the seven onto today. **The gate row is still what they build in the room**; it became
+a section of a larger artefact. The after-work's standalone gate-row item was removed as a
+duplicate.
+
+**Check this against `/craft/adr` and `/craft/admin/work` before release.** Those surfaces read
+`assignment` from the session file, and the text they now show is longer than before.
+
+### The 03:40 lab has an answer key, produced by running it
+
+It previously asked learners to narrow the edge and gave them no way to know if they had. Now two
+edges, both from running the harness at fourteen budgets: **the first edge is between 165 and 160**
+(gap 3 to 2, 100% to 95%, gradual) and **the cliff is between 115 and 110** (the gap column stops
+naming GOOD-2.1; 55% to 0% with nothing between). So *"is the fall gradual or sudden?"* answers
+**both**.
+
+The lab also gained a second half: two cases that fail on context alone, the better of which
+**asserts the gap rather than the answer**, so it fails before the money is wrong.
+
+### Two more stale figures found
+
+**Topic 5's first quiz item still said "cutting the policy text from 217 characters to 180"** and
+its answer said the gap was "one or two points". 217 is the mean clause length; the gap at 180 is 3.
+Corrected in the module and both bank copies.
+
+**And then the cause was fixed rather than worked around.** The 217 came from a column in
+`src/w3_trim.py` headed `chars` whose code computed a mean. The page had been patched to explain
+that; the tool now prints **`budget` and `mean` as two columns**, with a line underneath naming the
+real clause range of 151 to 286 characters. The page names both columns directly, the 03:23 table
+gained the mean column, and the notes table gained the missing 40 row and the gap column. All eight
+rates and amounts are unchanged — verified by diffing the run output field by field.
+
+**Worth carrying forward: a tool that prints numbers for the room to read is a teaching artefact,
+and its column headers are content.** No check in this repo could have caught the original error,
+because the page was faithfully reporting what the tool said.
+
+### The review of PR #51 found four more, and one was in that same commit
+
+Reviewed adversarially rather than read over. **Four defects, all the same failure mode**, which is
+now at ten instances across rounds four and five.
+
+| Where | What was wrong | Real value |
+|---|---|---|
+| The notes' 03:23 table | **Six of eight gap cells invented**, in the commit that fixed the column names | 150 is gap 1, 120 is gap 0, 60 and 40 are gap 0, 100 and 80 are gap 1 naming two wrong clauses |
+| The 03:40 starvation case, 3 places | "Passes at full context", including an instruction telling the instructor to call a correct case broken | **15 of 20 at full context, 0 of 20 below the cliff.** It is the adversarial ticket, so it carries that case's 75% |
+| The instructor note at 03:33 | "217 chars is gap 1" — the original error surviving as a row label | The row is the uncapped text. 217 is its mean |
+| The needle grid's prose | Said "a model at 95% overall" above a grid whose average is 92% | 92% average, 40% in the middle cell at 64k |
+
+**The second one is the one that mattered.** The page told a learner their case should pass at full
+context, and told the instructor that a case failing there is broken. A correct case fails five runs
+in twenty, because the gap is 1 and a one-point gap is a coin flip. An instructor following the note
+would have told somebody with a working case to fix it.
+
+**What the review verified rather than assumed**, by running the tools: the 03:40 answer key (nine
+rows, exact), the 03:23 table (48 cells, exact), kappa 0.35 against 70% and chance 54%, and that the
+margin case's `result["gap"]` is a field the 01:23 lab really does instruct the learner to add. Also
+clean: eight cross-week quotes verbatim, the clock identical across four files, three enterprise
+slots with three to five named products and a cost on each and no recommendation, and the needle
+grid labelled illustrative on both pages.
+
+**The answer key also printed a `125` row the build step never produces.** Replaced with the `150`
+row the learner will actually have.
+
+That makes **six stale-figure defects found across rounds four and five**, all of the same kind. The
+failure mode and what catches it are recorded under round four above, and they have not changed.
+
+### The rest
+
+03:54 went from one slot to three — caching, watching, shrinking — with named tools and costs for
+each, when caching is worth using, four patterns for tracking context growth (only the fourth is
+evaluation), and the summary card expanded from five rows to seven.
+
+The end-of-week quiz was reviewed: six items needed nothing, and two were strengthened rather than
+replaced — Q8 now names the absolute-against-relative reading, and Q7 gained the kappa follow-up.
 
 ---
 
@@ -3107,3 +3260,31 @@ and every reader who checked it was misled.
    each and compare what the pipeline screens return.
 
 Stage 4 stays shut until D2 is answered.
+
+## The sheet audited against the content, 7 October 2026
+
+**The "Notes Review" sheet's Status column is stale and should not be read as a to-do list.** It
+was last edited 6 October at 10:19 UTC, before rounds 4 and 5 merged. Six Week-3 rows still say
+`Open` and all six are done. Check the content, not the column.
+
+**All forty-six Week-3 rows have been worked.** The audit found two gaps, both terminology the
+sheet asks for repeatedly ("use the terminology used industry wide"): `positional sensitivity` was
+on the instructor page and not the learner page, and 02:44 taught shadow and canary deployment
+without naming either. Both fixed.
+
+**Three apparent gaps were false.** PII leakage, HITL sign-off and self-preference bias are all on
+the page in plain English or under the other standard name. A grep for the acronym is the wrong
+test, and it produced three false positives before the plain-English check corrected them.
+
+**What I called a real omission was a fourth false positive.** Step-level agent evaluation was in
+the 00:27 table the whole time, as *"was the right tool called, with arguments of the right shape?"*.
+Same mistake as the other three: I grepped the industry phrasing against a table written in plain
+English. **Four false positives from one bad method in a single audit** — if a term is missing,
+check for the plain-English sentence before reporting it.
+
+**Done on 7 October instead:** all three levels carry their measure names (tool-selection accuracy,
+schema validation, plan efficiency, loop detection, task completion rate, goal success), with what
+each level costs and misses. And the positional effect is sourced — Liu et al., *Lost in the
+Middle*, TACL 12 (2024) 157–173, arXiv:2307.03172, plus Kamradt's *Needle In A Haystack* benchmark.
+**It was one paper and one benchmark, never "two papers".**
+
