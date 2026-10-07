@@ -448,6 +448,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
       <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
+      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident so that it cannot happen twice (a regression case). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression case for every attack the room finds.</p>
       <h4>The second design choice: what the case asserts about</h4>
       <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
       <div class="tw">
@@ -462,6 +463,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
       <p><strong>Where each one is cheap, and what it misses.</strong> A step check is a schema assertion, so it runs in milliseconds and costs nothing — and a correctly shaped call to the correct tool still pays the wrong customer. A trajectory check needs the whole trace, which you already keep from week 1. An end-state check needs the world, which means a test ledger you can read after the run. <strong>Cheapest first is the right order to add them, and the wrong order to trust them.</strong></p>
+      <p><strong>Step-level checks are built in week 5.</strong> There the agent splits in two, and each handoff between the two halves has to be graded on its own: the right tool, with valid arguments.</p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>
@@ -493,10 +495,12 @@ So: what would that test have had to DO that none of your tests did?</span>
   </details>
   <h4>How to tell which class a case is in</h4>
   <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
+  <p>Their page also separates the class from the source: synthetic, production sample, or regression case. One sentence is enough. It gives week 4 a name for the cases it collects.</p>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
   <p><strong>Their table now carries the measure names for each level</strong>, so somebody will ask. Step is tool-selection accuracy and schema validation; trajectory is plan efficiency and loop detection; end state is task completion rate and goal success. <strong>Do not read the six out.</strong> They are there so a learner can search for them next month. The answer to "which do we add first?" is on their page: cheapest first is the right order to add them and the wrong order to trust them.</p>
+  <p>If anyone asks where step-level checks are taught, the answer is week 5: the agent splits in two, and each handoff is graded on its own.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
@@ -2980,7 +2984,9 @@ before you run it.</span>
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Two findings in the field notes support the shape, and both need their hedges if they are named at all. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation. Both are in week 1's reading for anyone who asks.</p>
+      <p><strong>The positional sources are in the note beside this segment, and on their page.</strong> Name them if asked. This card adds what the note does not cover.</p>
+      <p>Two field notes describe a different shape, a cliff when context is compressed: <strong>arXiv 2608.01056</strong> (control context, in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). <strong>Both are single preprints.</strong> 2608.01056 is unreplicated and ran on three models. 2608.06503 is labelled preliminary by its authors and ran on AppWorld only. Cite the shape, never the thresholds.</p>
+      <p><strong>None of these is what today's lab measures.</strong> The room's cliff is a retrieval artefact, as their page says. The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>`,

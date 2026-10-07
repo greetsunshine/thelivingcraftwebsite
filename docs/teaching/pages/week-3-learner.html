@@ -567,6 +567,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
       <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
+      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident so that it cannot happen twice (a regression case). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression case for every attack the room finds.</p>
       <h4>The second design choice: what the case asserts about</h4>
       <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
       <div class="tw">
@@ -581,6 +582,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
       <p><strong>Where each one is cheap, and what it misses.</strong> A step check is a schema assertion, so it runs in milliseconds and costs nothing — and a correctly shaped call to the correct tool still pays the wrong customer. A trajectory check needs the whole trace, which you already keep from week 1. An end-state check needs the world, which means a test ledger you can read after the run. <strong>Cheapest first is the right order to add them, and the wrong order to trust them.</strong></p>
+      <p><strong>Step-level checks are built in week 5.</strong> There the agent splits in two, and each handoff between the two halves has to be graded on its own: the right tool, with valid arguments.</p>
     </div>
   </details>
   <h4>The failure this part is really about</h4>

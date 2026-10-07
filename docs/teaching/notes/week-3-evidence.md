@@ -2230,3 +2230,10 @@ to call them two papers.
 **Fixed on 7 October:** the instructor note at 03:33 said *"Two papers support the positional
 shape"* and named neither. Both are named now, and the count was wrong as well as the sourcing.
 
+**Two more lines, from PR #54 the same day.** Sunil placed the *building* of step-level checks in
+week 5, where each handoff between two loops is graded on its own; both pages say so in one
+sentence beside the table. And the sourcing card separates three things the room could confuse:
+the positional effect (Liu et al., measured by the needle test), the two compression field notes
+(arXiv 2608.01056 and 2608.06503, a different shape), and today's cliff, which is a retrieval
+artefact and confirms none of them.
+

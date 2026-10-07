@@ -2,143 +2,162 @@
 week: 5
 title: "The second loop"
 module: M3
-summary: "One loop is no longer enough, and what the system remembers between sessions."
+summary: "One loop is no longer enough: how two agents hand work over, what each one remembers, and how to keep that memory small."
 status: draft
 topics: []
+# THE FIVE OUTCOMES, one per topic, from bridge 7 of docs/teaching/threads.md
+# (decided 7 October 2026). No `movesMost` yet: that flag is Sunil's
+# before-the-fact prediction, and nobody has made one for this week.
+outcomes:
+  - id: split
+    text: decide whether a task needs a second agent, and state what the second loop costs before it saves anything
+  - id: handoff
+    text: build a schema-checked handoff between two agents, and grade each step of it on its own
+  - id: retrieval
+    text: name the retrieval change that moves my score most, and what it costs per 1,000 queries
+  - id: memory
+    text: set the scope, the expiry and the correction rule for one thing my agent remembers
+  - id: compact
+    text: shrink a 50-turn history to a token budget, and show which safety rule survived and which did not
+# Week 5's row of the matrix in docs/teaching/threads.md. The only week that
+# builds three threads, which is why two of its builds are homework (bridge 7 §3).
+threads:
+  - { id: multi-agent, weight: builds }
+  - { id: state, weight: builds }
+  - { id: retrieval, weight: builds }
+  - { id: boundaries, weight: second }
+  - { id: evidence, weight: second }
+  - { id: trace-and-bill, weight: second }
+# The assignment is decided (see "After" below) and held back on purpose. A real
+# string here is shown to learners on /craft/adr and by the discussion lookup
+# while the week is still a draft. Set it when status becomes ready.
 assignment: "TBD"
 ---
 
-[PLACEHOLDER: session outline for Sunil to write. Everything below is
-scaffolding, so that the page renders and the shape is agreed. None of it is
-teaching material yet. While `status: draft`, learners see a short "still being
-written" note instead of this body, so drafting in the open is safe.]
+<!--
+WRITER'S NOTE. The topics below were approved by Sunil on 7 October 2026
+(docs/teaching/reviews/course-review-2026-10-07.md, and bridge 7 of
+docs/teaching/threads.md). Build the pages against generation-prompt.md as weeks
+2 and 3 were, then shrink this body to the short guide week 3 now has.
+DELETE THIS NOTE BEFORE status BECOMES ready. An HTML comment is not shown
+on the page, but it ships in the page source.
 
-[THE BUSINESS CASE HAS MOVED TO WEEK 6 — 29 September 2026. It was assigned here
-on 28 September, on the argument that M3 already owns cost under load. That was
-right about the subject and wrong about the room's attention. This week was
-already carrying multi-agent orchestration, the CAP trade-off, capacity under load
-and the irreversible decisions, and the business case was the fifth thing in five
-hours.
+Things that must survive the writing:
+- One argument, not five topics: what each loop knows, and where that knowledge
+  comes from (another agent, a document, or its own memory).
+- Homework replaces live minutes (bridge 7 §3). Nothing in the room may depend on
+  the homework being done. Every homework build gets a -check target.
+- Topic 2 builds step-level evaluation. Week 6's question 4 depends on it.
+- CAP is inside topic 2. Capacity under load is week 6's, inside tokenomics.
+- The Agent Memory Audit Kit opens on an expense agent. Move its case onto the
+  dispute agent: one anchor system.
+- Name A2A's spec version date on every page that names it. Run
+  `npm run gather` on A2A the week before.
+- If the dry run runs long, cut the A2A build first and keep the contract on
+  paper.
+- Bridge 4 checkpoint bullet: name the decision you would not delegate, and say
+  why that one.
+- Teaching figures here (four agents, 30% escalation, the ₹10,000 rule, 80%)
+  are invented for the case and may change. Product prices are unchecked.
+-->
 
-Week 6 is a review with no new material of its own, and "would you fund this"
-is the right frame for reviewing somebody's architecture. See bridge 6 in
-docs/teaching/threads.md. Do not bring it back here without moving something out.]
-
-[THIS WEEK IS MULTI-AGENT AND MEMORY — decided 29 September 2026, bridge 6.
-
-**Agent memory had no owner anywhere in the six weeks.** Thread 5 has always said
-"memory outlives a process" and every week read that as idempotency. What the
-system remembers about a person between sessions, how that memory is scoped, when
-it expires, and what happens when somebody corrects it, was taught nowhere. The
-practice publishes an Agent Memory Audit Kit at /resources/agent-memory-audit-kit:
-a record schema, twelve audit questions, seven runnable failure tests with a naive
-store that fails all seven, and a four-outcome decision table. It is this material
-already written down, and no session referenced it.
-
-**The two halves are one argument, not two topics.** Decomposition and memory are
-the same question asked twice: the moment there are two loops, what each one knows
-about the other stops being rhetorical. Write it that way or week 5 repeats week
-3's four-things problem with less room.
-
-The kit's own opening case is the one to use: an expense agent remembers a project
-code somebody typed once, for one trip, and reuses it on the next trip. The team
-ships "learn from user corrections", and three weeks later the agent puts her own
-team's dinner on a client's bill, because a correction is a memory too.
-
-**What this costs, and say it out loud rather than hiding it.** CAP and capacity
-under load compress to a beat each. M3's public copy names both, so neither may be
-dropped, and neither is a block any more.]
-
-[RETRIEVAL QUALITY LANDS HERE AS A BEAT — 29 September 2026, bridge 6. Week 3 uses
-retrieval as the device that makes evaluation necessary and then leaves chunking,
-re-ranking, hybrid search and freshness explicitly unfixed. Until today it named
-no week, which is the exact thing the teaching standard says makes a participant
-assume a topic is missing rather than scheduled.
-
-It sits beside memory because the join is real: what gets retrieved and what gets
-remembered are both answers to "what is the system shown, and on whose say-so".
-
-**A beat, not a block.** This week cannot teach retrieval properly either. Name
-the three levers, say which one to reach for first, and point at the resource. An
-honest handoff beats a silent deferral.]
-
-[THREAD. This is where the harness lands. Week 1 introduces it as four files:
-the loop, the tool layer, the per-turn context assembly, and the trace. Drill 1
-there ends with an explicit promise. It says week 5 asks what happens to the
-harness when one loop is no longer enough. That promise is now made in a file
-learners read, so this week has to keep it.
-
-Here is the argument for placing it this week rather than another. Harness shape
-is the least reversible decision in the course. A cache, a model or a retry
-policy takes an afternoon to change. A decomposition your team has built on for
-six months does not. Caching, routing and idempotency then read as consequences
-of the shape you chose, rather than as a list of five scale topics.
-
-One of the two open questions is answered. **What leaves this week to make room**
-is the business case, which went to week 6 on 29 September, and CAP and capacity,
-which are beats rather than blocks now. What is still open is whether the
-reference agent has a shape that can be split up by then. It will not, unless the
-week 4 roadmap heads that way on purpose, and week 3 did not move it that way:
-`src/w3_brain.py` is still one loop.]
+**Today is about the second loop: when one agent is no longer enough, and what
+each agent knows.** Splitting the work and remembering things are one question
+asked twice. Once there are two loops, what each one knows about the other is no
+longer a theory question.
 
 ## Before the session
 
-[PLACEHOLDER: pre-work. What to read, what to bring, what to have running. Keep
-it to something a working engineer can do in under an hour. The commitment is
-~5 hrs/week including the live session.]
+- Answer one question in writing, from week 3's homework: what does your agent
+  get shown each turn that nobody chose?
+- Pull the reference agent, and run `make w5-a2a` once so that the first lab is
+  not also your first install.
 
-## 1 · The Concept
+## The five topics
 
-*~15 minutes.*
+**1 · Multi-agent orchestration: when to split.** What does a second loop cost
+before it saves anything?
+- The dispute agent split into four agents, and the cost per dispute tripled.
+- Three shapes: a supervisor that routes work, a chain of handoffs, and agents
+  that run in parallel whose results are combined.
+- Decide, no build: which shape for the dispute agent, or none.
+- At enterprise scale: LangGraph, Temporal, AWS Step Functions, OpenAI Agents
+  SDK, each with what it costs.
 
-[PLACEHOLDER: the idea of the week, shown working on the smallest example that
-is still real. Success comes first. The room sees it behave, and names what it is
-looking at, before anything breaks.]
+**2 · A2A: the handoff contract.** The approver received valid JSON with the
+wrong account. Which check should have caught it?
+- An agent card says what an agent can do. A task carries the work. A typed
+  handoff carries the state.
+- Grade each step on its own: the right tool, and valid arguments. This is
+  step-level evaluation.
+- Two agents read the ledger at different moments. Which one is right? This is
+  where the CAP trade-off shows up.
+- Lab in pairs, `make w5-a2a`: an investigator and an approver, with a
+  schema-checked handoff between them.
+- At enterprise scale: A2A, MCP used between agents, and plain HTTP with JSON
+  Schema, with costs.
 
-## 2 · The Problem
+**3 · RAG part 2: retrieval quality.** Which change moves your retrieval score
+most, and what does it cost per 1,000 queries?
+- Week 3's guard escalates 30% of disputes, because retrieval is thin.
+- Four levers: how documents are split into chunks, keyword search combined with
+  vector search (hybrid search), re-ranking with a second model, and keeping
+  the store up to date.
+- Predict which lever helps most, then see the results table.
+- Retrieval alone gives the same result every run, so it needs no repeat runs.
+- At enterprise scale: OpenSearch hybrid search, pgvector, Pinecone, Cohere
+  Rerank, with costs.
+- The build is homework.
 
-*~30 minutes.*
+**4 · Agent memory: scope, expiry, correction.** What did the agent learn from
+the last refund?
+- The agent remembers a goodwill credit given once, and applies it to the next
+  dispute.
+- Working memory, episodic memory (past events) and semantic memory (lasting
+  facts).
+- A correction is a memory too.
+- Decide the rules for the dispute agent: what it keeps, for how long, and who
+  may correct it.
+- At enterprise scale: Mem0, Zep, Letta, with costs.
+- The tests are homework.
 
-[PLACEHOLDER: the same system, broken. Work the room for fixes, and take the
-answers in the order rooms actually give them. That way the real constraint is
-worked out rather than lectured. The positioning spine is "AI builds, the human
-judges and directs", and this is where the judgment gets practised.]
+**5 · Memory optimisation.** Compaction saved 80% of the tokens. Which safety
+rule did it drop?
+- A 50-turn conversation, and the ₹10,000 approval rule it loses.
+- What stays in full, what becomes a summary, and what is looked up only when it
+  is needed.
+- Prompt caching for the part that never changes: the provider reuses a repeated
+  opening at a lower price.
+- Lab, `make w5-compact`: shrink 50 turns to under 1,000 tokens, scored by week
+  3's harness.
+- At enterprise scale: provider prompt caching, framework checkpointers,
+  summarisation services.
 
-## 3 · The Drill
+Each topic ends the same way: three quiz questions, one of them from an earlier
+week, and one line you write in your own words.
 
-*~45 minutes, hands-on.*
+## How the day closes
 
-[PLACEHOLDER: two or three exercises against the reference agent. Each should be
-a real defect, not a synthetic task. Say explicitly what NOT to fix, so the next
-week keeps its opening.]
-
-## 4 · The Teardown
-
-*~35 minutes. In pairs, then the room.*
-
-[PLACEHOLDER: the same problem at enterprise scale, where block 3's fix is no
-longer enough. Constructed teaching case, labelled as constructed. No real
-client, product, or metric. Four or five questions, taken in pairs. Closes on the
-leader's framing: the week's trade-off, stated the way it survives a board
-meeting.]
-
-## 5 · The Horizon
-
-*~10 minutes.*
-
-[PLACEHOLDER: the closing beat, present in every session. Write the durable
-framing here, which is the career and skills question this week's material
-raises. Do NOT write the specifics here. Those are pulled from
-`/craft/admin/radar` (Trends · Hiring — India · Durable skills) in the week you
-teach it, so nothing dated is committed to this file. See week 1 for the
-pattern.]
+- **Recall, notes closed.** Every control the agent gained today, and what each
+  one prevents.
+- **Architectural teardown.** The agent as two loops, at the close.
+- **The quiz.** Eight questions, mixed across today and earlier weeks.
+- **Your takeaway, said out loud,** then the same five statements rated again.
 
 ## After
 
-[PLACEHOLDER: what to apply to your own system before next week, and what you
-will be asked to show.]
+Two hours, in three parts.
 
-## Reading
+- **50 minutes · Retrieval levers,** `make w5-rag`. The starter code wires
+  hybrid search and re-ranking. Turn on one lever at a time, and record the
+  retrieval score and the cost per 1,000 queries. `make w5-rag-check` says
+  whether your table is complete. Week 6 uses these numbers.
+- **30 minutes · Memory tests,** `make w5-memory`. Make three of the seven tests
+  pass: the three that match the rules you set in the room.
+  `make w5-memory-check` says pass or fail.
+- **40 minutes · The decision record.** One memory decision in your own system:
+  what it keeps, for how long, and who may correct it. The tests are its
+  evidence.
 
-[PLACEHOLDER: sources. Field Notes at /latest already tracks what is changing in
-the field. Link the relevant findings here rather than restating them.]
+**What is deliberately not here.** What the whole system costs, and what happens
+when latency doubles at peak, are week 6.

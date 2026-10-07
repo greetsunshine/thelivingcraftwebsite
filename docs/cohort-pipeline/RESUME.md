@@ -8,7 +8,10 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 6 October 2026
+**Last updated:** 7 October 2026
+**Teaching work now:** the six-week plan is PR #54 (`content/six-week-plan`), and week 4's
+build is on `content/week-4-draft` (local, waiting for #54). The Branch line below describes
+the earlier site work and has not been current since October began.
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -24,9 +27,59 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 `MODULES` in `src/data/cohort-copy.ts` now names MCP servers (M2), A2A, agent memory,
 compaction and retrieval quality (M3), and pricing the system (M4). Capacity moved from M3
 to M4 with the week. Titles are unchanged, so nothing a crawler or the Ask agent reads
-changed. **Merge PR #54 first**: bridge 7 and the week 4 to 6 plans this copy describes are
-on that branch, not on main. **One gap, older than this PR:** the Ask agent cannot see module
+changed. It merged before PR #54, which holds bridge 7 and the week 4 to 6 plans this copy
+describes; see the next entry. **One gap, older than this PR:** the Ask agent cannot see module
 bodies, so asked "do you teach MCP?" it says it does not know while the page says yes.
+
+---
+
+## Whole-course review against an outside specification — 7 October
+
+Sunil supplied a "Master Execution Specification" for all seven weeks and asked whether it
+meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 are in
+[`docs/teaching/reviews/course-review-2026-10-07.md`](../teaching/reviews/course-review-2026-10-07.md).
+**Sunil approved the revised plan the same day**, with security as week 6's question 5,
+step-level evaluation built in week 5, and the public M3 copy to be updated. The decisions
+table is at the foot of the review file.
+
+**PR #54 carries the teaching half:**
+
+- **Bridge 7 in `threads.md`.** Where the five topics land, the reversal of bridge 6 §7 and
+  its guard, the homework rule, the five fixed week 6 questions. Retrieval is `●` in week 5
+  and `○` in week 4. A new topic label, "Tool and agent protocols".
+- **Weeks 4 to 6 session files** carry five outcomes, the thread weights and the approved
+  topics, still `status: draft`. The bracketed placeholders are gone; the decisions they held
+  are in a writer's note at the top of each body. **Assignments stay `"TBD"` on purpose**:
+  `/craft/adr` lists upcoming assignment titles and the discussion lookup quotes them, so a
+  real string would publish a draft week's assignment. Set it when the week becomes ready.
+  **The summaries are learner-visible now**, on the dashboard and the session page, because a
+  draft shows its summary.
+- **Week 3's session body** is now a short guide in week 2's shape, with the clock from its
+  own frontmatter.
+- **Week 3 pages:** a sentence saying step-level checks are built in week 5, a sentence
+  separating where a case comes from (synthetic, production sample, regression case) from
+  its class, and the 03:33 sourcing card aligned with #56. #56 named the positional sources (Liu
+  et al., TACL 2024, and the needle test). The card adds that the two compression field notes
+  are a different shape, and that the room's cliff is a retrieval artefact confirming none of
+  them.
+- **Week 2 pages:** the ownership question owed by bridge 6 §5, at 00:42, with its answer key.
+
+**After PR #54 merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
+the same URLs (`docs/teaching/README.md` lists them). The stored pages changed and the
+published ones have not.
+
+**A parallel session opened `content/week-4-draft` in the main checkout on 7 October** while
+this work was uncommitted there. The work was moved into a worktree. Check that branch before
+writing week 4, so week 4 is not drafted in two places.
+
+**PR #55 (public module copy) merged before #54**, so for a time production described week 4
+to 6 plans that were not on main. #54 was then merged with main, which by then held #56.
+
+**Delete the writer's note at the top of weeks 4 to 6 before any of them becomes `ready`.**
+It is an HTML comment, so it ships in the page source.
+
+**Do not adopt the outside specification's Redis idempotency layer.** It is the split that
+week 2's 03:03 lab teaches against.
 
 ---
 

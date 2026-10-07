@@ -2,108 +2,104 @@
 week: 6
 title: "The review"
 module: M4
-summary: "Your own system, read by the room against the same five questions all cohort."
+summary: "Your own system, priced, and read by the room against five questions the course has been building evidence for since week 1."
 status: draft
 topics: []
+# THE FIVE OUTCOMES, from bridge 7 of docs/teaching/threads.md (decided 7
+# October 2026). No `movesMost` yet: that flag is Sunil's before-the-fact
+# prediction, and nobody has made one for this week. Week 6 has no after-pulse;
+# the thirteen-capability re-ask covers it that day.
+outcomes:
+  - id: tokens
+    text: price one run of my agent end to end, and state its cost per acceptable outcome including the loss from wrong answers
+  - id: levers
+    text: choose between caching, routing, batching and a cost ceiling for my own system, and defend the choice with a number
+  - id: tiers
+    text: place each action my agent takes in a risk tier, and set how closely the code behind it is reviewed
+  - id: review
+    text: answer the five review questions about my own system in front of the room
+  - id: verdict
+    text: give another learner's system a fund, fund-with-one-change or do-not-fund verdict, with the number behind it
+# Week 6's row of the matrix in docs/teaching/threads.md.
+threads:
+  - { id: trace-and-bill, weight: builds }
+  - { id: boundaries, weight: second }
+  - { id: evidence, weight: second }
+  - { id: untrusted-input, weight: second }
+  - { id: state, weight: second }
+  - { id: retrieval, weight: second }
+  - { id: multi-agent, weight: second }
 assignment: "TBD"
 ---
 
-[PLACEHOLDER: session outline for Sunil to write. Everything below is
-scaffolding, so that the page renders and the shape is agreed. None of it is
-teaching material yet. While `status: draft`, learners see a short "still being
-written" note instead of this body, so drafting in the open is safe.]
+<!--
+WRITER'S NOTE. The topics below were approved by Sunil on 7 October 2026
+(docs/teaching/reviews/course-review-2026-10-07.md, and bridge 7 of
+docs/teaching/threads.md). Build the pages against generation-prompt.md as weeks
+2 and 3 were, then shrink this body to the short guide week 3 now has.
+DELETE THIS NOTE BEFORE status BECOMES ready. An HTML comment is not shown
+on the page, but it ships in the page source.
 
-[THE BUSINESS CASE LANDS HERE — moved from week 5 on 29 September 2026, bridge 6
-in docs/teaching/threads.md.
+Things that must survive the writing:
+- The five questions are fixed (bridge 7 §4). Do not reword them per learner.
+- Cost per acceptable outcome carries the loss term (bridge 7 §5). The
+  denominator is outcomes that met the pass bar.
+- Include a case where the answer is "never build it". The Run-Cost Model's own
+  reference example is one.
+- Do not write a new cost calculator. The Run-Cost Model is the tool.
+- Governance stays at who owns each decision (bridge 6 §6). No regulatory
+  framework tour.
+- The assignment is still "TBD". Nobody has decided what week 6 hands in.
+- Teaching figures are invented for the case. Product prices are unchecked.
+-->
 
-**Why here.** This week is a review with no new material of its own, and the
-question "would you fund this" is the right frame for reviewing somebody's
-architecture. It also gives the review a number to argue about rather than only a
-design to admire. Week 5 was carrying it as a fifth topic in five hours.
-
-**About twenty minutes, inside the review rather than beside it.** It is a heading
-the room applies to each architecture on screen, not a segment delivered at them.
-
-The line to land is the Run-Cost Model's own: **cost per case is the wrong number
-to argue about, and cost per acceptable outcome is the right one.**
-
-Three tools already carry this and none is taught elsewhere: the Run-Cost Model at
-/resources/run-cost-model, the Rework Cost Check, and the Cost-Ceiling Workbook.
-The Run-Cost Model is the one to put in the reading, because it prices the lines
-business cases leave out — retries and failed tool calls, review minutes per
-reviewed case, evaluation maintenance, and re-qualifying against a new model
-version, which week 3 taught them to measure.
-
-**Include the case where the answer is never.** The Run-Cost Model's own reference
-example is deliberately one where the full agent does not pay back inside the
-period, and where building it was still worth doing because it produced the
-written specification that made the cheap option good. A review that cannot reach
-that conclusion is not a review.]
-
-[GOVERNANCE STAYS AT THE LEVEL OF WHO OWNS A DECISION — 29 September 2026, bridge
-6. Regulatory depth is the consulting surfaces' subject and not the cohort's.
-DPDP, RBI, IRDAI, SEBI, NIST AI RMF, ISO 42001 and the EU AI Act belong on /caio
-and /assessment. If the room asks, say that plainly and point at the assessment.
-Do not improvise a framework tour.]
+**Today is the review: read your own system against five fixed questions, and
+decide whether you would fund it.** Nothing new is built after the first hour.
 
 ## Before the session
 
-[PLACEHOLDER: pre-work. What to read, what to bring, what to have running. Keep
-it to something a working engineer can do in under an hour. The commitment is
-~5 hrs/week including the live session.]
+- Bring your own system: one diagram, and your decision records from weeks 1
+  to 5.
+- Bring your retrieval numbers from week 5's homework, if you have them.
 
-## 1 · The Concept
+## The topics
 
-*~15 minutes.*
+**1 · Tokenomics.** Where did the money go in the October bill?
+- The bill for 40,000 disputes, and the line nobody expected.
+- Cost per token, then per step, then per run, then per acceptable outcome. The
+  last one includes the loss from wrong answers that passed, which week 3's
+  agreement rate lets you estimate.
+- Four levers: caching, sending easy steps to a smaller model, batch pricing for
+  work that can wait, and a cost ceiling on each run.
+- Capacity: provider rate limits, and what the loop does when latency doubles at
+  peak.
+- Lab, `make w6-tokens`: price one dispute from start to finish, with your
+  retrieval numbers from week 5 or the reference ones.
+- A case where the honest answer is "never build it".
+- At enterprise scale: the Run-Cost Model, LiteLLM, Portkey, Helicone, and
+  provider batch pricing, with costs.
 
-[PLACEHOLDER: the idea of the week, shown working on the smallest example that
-is still real. Success comes first. The room sees it behave, and names what it is
-looking at, before anything breaks.]
+**2 · Governance.** Who owns each decision, and how closely is the code behind
+it reviewed?
+- Three risk tiers: read-only and internal, an outside action that moves no
+  money, and an action that moves money or changes state.
+- The tier of an action sets the depth of review for the AI-written code that
+  performs it.
 
-## 2 · The Problem
+**3 to 6 · The review.** Four slots, two of you in each.
+- Six minutes to show your system.
+- The room asks the same five questions of every system:
+  1. Where is state kept between tool calls, and who can change it?
+  2. What is the most one bad input can cost, in money and in time?
+  3. Which tool call can destroy value, and what stands before it?
+  4. How would you know a model upgrade broke tool accuracy?
+  5. Which text can an outsider write, and what can it make the agent do?
+- A verdict: fund it, fund it with one change, or do not fund it. Each verdict
+  carries a cost per acceptable outcome.
 
-*~30 minutes.*
+## How the course closes
 
-[PLACEHOLDER: the same system, broken. Work the room for fixes, and take the
-answers in the order rooms actually give them. That way the real constraint is
-worked out rather than lectured. The positioning spine is "AI builds, the human
-judges and directs", and this is where the judgment gets practised.]
-
-## 3 · The Drill
-
-*~45 minutes, hands-on.*
-
-[PLACEHOLDER: two or three exercises against the reference agent. Each should be
-a real defect, not a synthetic task. Say explicitly what NOT to fix, so the next
-week keeps its opening.]
-
-## 4 · The Teardown
-
-*~35 minutes. In pairs, then the room.*
-
-[PLACEHOLDER: the same problem at enterprise scale, where block 3's fix is no
-longer enough. Constructed teaching case, labelled as constructed. No real
-client, product, or metric. Four or five questions, taken in pairs. Closes on the
-leader's framing: the week's trade-off, stated the way it survives a board
-meeting.]
-
-## 5 · The Horizon
-
-*~10 minutes.*
-
-[PLACEHOLDER: the closing beat, present in every session. Write the durable
-framing here, which is the career and skills question this week's material
-raises. Do NOT write the specifics here. Those are pulled from
-`/craft/admin/radar` (Trends · Hiring — India · Durable skills) in the week you
-teach it, so nothing dated is committed to this file. See week 1 for the
-pattern.]
-
-## After
-
-[PLACEHOLDER: what to apply to your own system before next week, and what you
-will be asked to show.]
-
-## Reading
-
-[PLACEHOLDER: sources. Field Notes at /latest already tracks what is changing in
-the field. Link the relevant findings here rather than restating them.]
+- **Recall across all six weeks,** mixed, notes closed.
+- **The final quiz.**
+- **The thirteen capabilities from week 0,** asked again in the same words.
+- **One takeaway each,** said out loud.
