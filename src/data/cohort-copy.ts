@@ -150,6 +150,13 @@ export interface ModuleDetail {
  * the only definition of the modules, so the fix reaches the page, the JSON-LD
  * Course node, /api/facts and /llms.txt at once.
  *
+ * MCP, A2A, MEMORY AND TOKENOMICS NAMED ON 7 OCTOBER 2026. Bridge 7 of
+ * docs/teaching/threads.md gave each a topic: MCP servers in week 4 (M2), A2A,
+ * agent memory and retrieval quality in week 5 (M3), tokenomics in week 6 (M4).
+ * Capacity under load moved from week 5 to week 6 the same day, so it moved from
+ * M3's copy to M4's. Titles are unchanged, so facts.ts, the JSON-LD Course node,
+ * /api/facts and /llms.txt are unchanged too.
+ *
  * The prose lives here and not in facts.ts on purpose. facts.ts is the
  * structured offer — the fields a crawler and the assistant read. A paragraph
  * of page copy is not one of those, which is why `cohortModules()` below hands
@@ -166,19 +173,19 @@ export const MODULES: ModuleDetail[] = [
     id: 'M2',
     weeks: 'Weeks 2–4',
     title: "Agentic systems you'd put your name on",
-    body: 'Tool boundaries, guardrails and retrieval. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft. Demos are easy. Systems you would run in production are not.',
+    body: 'Tool boundaries, guardrails and retrieval. Then the part most courses skip. Evaluation harnesses that prove it works. Reliability engineering for systems that do not behave the same way twice. And attacking your own system, to test it for prompt injection and data theft, including through the MCP servers you build and the ones you adopt. Demos are easy. Systems you would run in production are not.',
   },
   {
     id: 'M3',
     weeks: 'Week 5',
     title: 'Scale, consistency & the irreversible trade-offs',
-    body: 'Multi-agent orchestration, and what happens to a harness when one loop is no longer enough. Reading the CAP trade-off in real systems. Capacity and cost under load. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
+    body: 'Multi-agent orchestration, and what happens to a harness when one loop is no longer enough. How agents hand work to each other, including the A2A protocol. What an agent remembers between sessions, and how to keep that memory small. Retrieval that finds the right text. Reading the CAP trade-off in real systems. And the architectural decisions you cannot take back, made with the judgment to know which way they will break.',
   },
   {
     id: 'M4',
     weeks: 'Week 6',
     title: 'Your system, reviewed in the room',
-    body: 'You bring a real architecture. We pressure-test it together as a cohort. We cover the design, the failure modes, the evaluation strategy, and the governance around it. That governance means review depth matched to risk, and accountability for the code the AI wrote. This is a senior review the way it should feel.',
+    body: 'You bring a real architecture. We price it first: what one run costs in tokens, what it costs under load, and the cost per outcome you would accept. Then we pressure-test it together as a cohort. We cover the design, the failure modes, the evaluation strategy, and the governance around it. That governance means review depth matched to risk, and accountability for the code the AI wrote. This is a senior review the way it should feel.',
   },
 ];
 
