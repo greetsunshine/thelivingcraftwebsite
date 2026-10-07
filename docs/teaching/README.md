@@ -271,6 +271,52 @@ table in production. Weeks 1 and 2 both say "assigned by name" without naming an
 week 3 keeps that convention. Pulling eight people's names out of production into committed
 HTML is not a decision to make on the way past. **Both weeks report this the same way.**
 
+## Week 4 · Attack your own system — built 7 October
+
+**Built against bridge 7 of [`threads.md`](threads.md)**, the plan Sunil approved on
+7 October, and against [`generation-prompt.md`](generation-prompt.md). Not published as
+Artifacts yet. `status: draft`.
+
+    scripts/teaching-clock.mjs                 ROWS_W4, 47 rows, ends at exactly 05:00
+    scripts/teaching-content/week-4.mjs        the pages: five topics, six parts each
+    docs/teaching/notes/week-4-untrusted-input.md
+                                               the argument, in clock order, 47 offset headings
+    docs/teaching/quiz/week-4.md               25 items, every one tagged with its offset
+    docs/teaching/pages/week-4-*.html          the stored pages
+    src/content/sessions/week-4.md             owned by PR #54 until it merges; frontmatter
+                                               to be filled to match the clock after that
+
+    node scripts/build-teaching-pages.mjs 4
+    npm run check:teaching -- --by-topic --topics=5 \
+      dist-teaching/week-4-learner.html dist-teaching/week-4-instructor.html   # 9 of 9 pass
+
+**The five topics:** direct prompt injection (00:15) · indirect injection through
+retrieval (00:59) · building an MCP server (01:37) · least privilege for an MCP server
+you did not write (02:31) · circuit breakers and production monitoring (03:16). Topic 4
+runs 40 minutes for the adoption questions, and topic 5 runs 46 for the monitoring
+segment bridge 6 §4 owes.
+
+**The labs are real code**, in the reference agent at
+`~/learningthelivingcraft/reference-agent`, branch `week-4-draft`, commit `cfff515`, not
+pushed. Ten `w4-` targets, all deterministic, no key. Learners edit
+`src/w4_defences.py` and `src/w4_mcp_server.py`; `SOLUTION=1` runs the worked answers in
+`src/w4_solution.py`, which is what both pages print. **That branch depends on week 3's
+reference-agent code, which on 7 October was not committed at all.** Commit week 3 first.
+
+**Every figure on both pages was matched against saved output of the targets** before the
+pages were stored: every fraction exactly, every ₹ figure either exactly or as a vendor
+price converted at ₹84 to the dollar. The script that did it was a one-off in the
+scratchpad; the method is to run every target in both modes, save the output, and diff
+the pages' figures against it.
+
+**Product prices were checked on 7 October 2026** from vendor pages and pricing APIs.
+Prices only a third-party site quoted are left out and marked "not published".
+
+**Two §12 items are not met, the same as weeks 1 to 3.** Activities say "assigned by name"
+without naming anybody, because the seat list is only in production. And the pages were
+checked by slicing them with `src/lib/craft/teaching-pages.ts` rather than on the dev
+server, because a dev server here writes to production.
+
 ## The quiz decision, reversed
 
 This file used to say the quiz banks were teaching material only, and that there

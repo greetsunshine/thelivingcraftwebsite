@@ -278,8 +278,8 @@ model guess. They do not change the fact that it is guessing.
 **"Mark the untrusted parts with tags, and tell the model to ignore instructions inside
 the tags."** A good engineer's answer, and the field calls it spotlighting.
 
-*What is right.* It does lower the rate. Microsoft's 2024 paper that named the technique
-reports large drops in attack success on its own test set.
+*What is right.* It does lower the rate. The 2024 paper that named the technique reports
+attack success falling from above 50% to below 2% on its own tests.
 
 *What is wrong.* It is still a sentence in the same channel. It is a better version of the
 line from 00:15, with the same property: a rate, not a rule.
