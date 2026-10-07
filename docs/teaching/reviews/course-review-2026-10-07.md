@@ -522,3 +522,15 @@ takeaway each.
 
 **Every number in weeks 4 to 6 is an invented teaching figure, and every named product is a
 candidate whose price has not been checked.**
+
+---
+
+## Sunil's decisions — 7 October
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | The revised six-week plan | **Approved as written.** It goes into `threads.md` as bridge 7, and replaces the placeholders in `week-4.md`, `week-5.md` and `week-6.md` |
+| 2 | Week 6 question 5 | **Security.** Q5 is "Which text can an outsider write, and what can it make the agent do?" Latency joins Q2: "in money and in time" |
+| 3 | Step-level evaluation | **Built in week 5**, in the A2A topic. Week 3 names it in one sentence and points to week 5 |
+| 4 | Public M3 copy | **Update it** to name agent memory, A2A, MCP and tokenomics, through `cohort-copy.ts` |
+| 5 | Shipping | **Two PRs.** PR A on `content/week-3-review-fixes`: bridge 7, weeks 4 to 6 session files, the week 3 fixes and the owed week 2 question. PR B on its own branch: the public M3 copy, because merging it deploys public text |

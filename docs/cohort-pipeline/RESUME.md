@@ -24,8 +24,11 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 Sunil supplied a "Master Execution Specification" for all seven weeks and asked whether it
 meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 are in
 [`docs/teaching/reviews/course-review-2026-10-07.md`](../teaching/reviews/course-review-2026-10-07.md).
-**Nothing in the sessions, pages or `threads.md` was changed. It waits on five decisions
-listed at the foot of that file.**
+**Sunil approved the revised plan the same day**, with security as week 6's question 5,
+step-level evaluation built in week 5, and the public M3 copy to be updated. The decisions
+table is at the foot of the review file. **Next: PR A** (bridge 7 in `threads.md`, weeks 4
+to 6 session files, week 3 fixes, the owed week 2 question) on this branch, then **PR B**
+(public M3 copy) on its own branch.
 
 - **Before week 3 is set to `ready`, shrink its session body.** It is a stale copy of an
   older day: Cycle A/B/C, checkpoints at 00:48, 02:13, 03:10 and 04:08, and a cut segment.
