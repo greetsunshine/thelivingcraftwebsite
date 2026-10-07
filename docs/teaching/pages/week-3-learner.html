@@ -1761,8 +1761,8 @@ print(f"raw {raw:.0%}   kappa {kappa:.2f}")</div>
   <h4>And the gate does not stop at merge</h4>
   <p>Shipping is not one event. At scale the release itself is staged, and the online evals decide whether it continues.</p>
   <ul>
-    <li><strong>Mirror the traffic first.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
-    <li><strong>Then release to a slice.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
+    <li><strong>Mirror the traffic first — a shadow deployment.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
+    <li><strong>Then release to a slice — a canary release.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
     <li><strong>Tie the score to an automatic reversal.</strong> If the measured quality drops past a set point, the release rolls back without waiting for somebody to notice. A rollback nobody has to approve at 2am is the only kind that happens at 2am.</li>
     <li><strong>Then harvest what went wrong.</strong> Every refusal, every complaint, every low-confidence answer gets its personal data stripped and becomes a case in the golden set. <strong>This is the loop that closes.</strong> It is also where the class of case you never thought of comes from.</li>
   </ul>
@@ -2360,15 +2360,15 @@ before you run it.</span>
   <p><strong>Be careful here, because this is a different mechanism from the one you just watched.</strong> Today's cliff is a retrieval artefact: cutting the clause text pulled the lexical scores together until two clauses became indistinguishable. That is about the search, not about the model.</p>
   <p>There is a second effect, it belongs to the model rather than the retriever, and <strong>this agent's lab does not demonstrate it.</strong> You need to know it exists because you will meet it the first time your context gets long.</p>
   <ul>
-    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. The usual name for the consequence is <strong>lost in the middle</strong>.</li>
+    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. <strong>The property has a name: positional sensitivity</strong> (the same fact scores differently depending on where in the window it sits). The name for the consequence is <strong>lost in the middle</strong>, and the preference for the two ends is <strong>primacy and recency</strong>.</li>
     <li>So the same fact, in the same payload, at the same token count, can be used or ignored depending on where it sits.</li>
   </ul>
   <p><strong>The test for it has a name: needle in a haystack.</strong> You hide one fact — the needle — inside a long filler context, then ask a question only that fact answers. Vary two things independently:</p>
   <div class="term">  depth   how long the whole context is      4k, 16k, 64k, 128k tokens
   place   where the needle sits inside it    top / middle / bottom
 
-  then read the grid, not the average. a model at 95% overall can be
-  at 40% for a needle two-thirds of the way down a 64k context.</div>
+  then read the grid, not the average. in the grid below, a model
+  averaging 92% is at 40% in the middle of a 64k context.</div>
   <h4>What the grid looks like, and how to read it</h4>
   <p><strong>This is the artefact the test produces.</strong> It is not published anywhere today — this agent's context is far too short to need it — so the figures below are illustrative of the shape, not measurements of anything. <strong>Your own grid comes from running it on your own system.</strong></p>
   <div class="term">  <span class="q">an illustrative needle-in-a-haystack grid · % of runs that found the needle</span>
@@ -2504,7 +2504,8 @@ before you run it.</span>
     <div class="build">
       <h3>Build, second half. Write two cases that fail on context alone.</h3>
       <p>Everything in your suite so far tests the agent at full context. <strong>A case that only fails when the context is trimmed is a different kind of case, and nobody writes it.</strong> Write two.</p>
-      <p><strong>Case one · the starvation case.</strong> Assert that the governing clause is the one acted on, and run it at a budget below your cliff. It should fail. If it passes, your cliff is wrong.</p>
+      <p><strong>Case one · the starvation case.</strong> Assert that the governing clause is the one acted on, and run it at a budget below your cliff. <strong>It should go to 0 of 20 there.</strong> If it still passes sometimes, your cliff is wrong.</p>
+      <p><strong>It does not pass 20 of 20 at full context either, and that is correct.</strong> It is the same ticket as the adversarial case, so it sits at about 15 of 20 — the 75% you read off the table at <span class="off" data-off="03:23"><span class="off" data-off="03:23">03:23</span></span>. The gap there is 1, and a one-point gap is a coin flip half the time. <strong>So the comparison that makes it a context case is 75% against 0%, not a pass against a fail.</strong></p>
       <div class="term">{"id": "C9", "klass": "difficult", "ticket": "8002",
  "what": "The governing clause survives a 110-character context budget",
  "expect": {"outcome": "credited", "paid": 2000.0, "clause": "GOOD-2.1"}}</div>
@@ -2523,7 +2524,7 @@ before you run it.</span>
             <tr><td><strong>The first edge</strong>, where it stops being perfect</td><td>A pair five characters apart, and <strong>the gap changes from 3 to 2 across it.</strong> If your pair is twenty characters apart you have not finished narrowing</td></tr>
             <tr><td><strong>The second edge</strong>, where it reaches 0%</td><td>A pair five characters apart, and across it <strong>the clause names in the gap column change</strong> — the governing clause stops appearing. That change is the cliff</td></tr>
             <tr><td><strong>Is the fall gradual or sudden?</strong></td><td>Both, and saying so is the right answer. The first edge is gradual: 100%, then 95%, then 75%. The second is sudden: 55% then 0%, with nothing between</td></tr>
-            <tr><td><strong>Your starvation case</strong></td><td>Passes at full context and fails below your cliff. <strong>If it fails at both, it is not a context case</strong> — it is a broken case</td></tr>
+            <tr><td><strong>Your starvation case</strong></td><td>About 15 of 20 at full context, <strong>0 of 20 below your cliff.</strong> Not 20 of 20 at the top — it is the adversarial ticket, so it carries that case's 75%. <strong>If it is 0 of 20 at both, it is not a context case</strong> — it is a broken case</td></tr>
           </tbody>
         </table>
       </div>
@@ -2537,7 +2538,7 @@ before you run it.</span>
      <span class="m">165      78%        100%     gap 3 · GOOD-2.1 over GOOD-2.2</span>
      <span class="m">160      77%         95%     gap 2 · GOOD-2.1 over GOOD-2.2</span>   <span class="m">&lt;- FIRST EDGE</span>
      155      74%         75%     gap 1 · GOOD-2.1 over GOOD-2.2
-     125      73%         75%     gap 1 · GOOD-2.1 over GOOD-2.2
+     150      74%         75%     gap 1 · GOOD-2.1 over GOOD-2.2
      120      74%         55%     gap 0 · GOOD-2.1 over GOOD-2.2
      <span class="x">115      74%         55%     gap 0 · GOOD-2.1 over GOOD-2.2</span>
      <span class="x">110      62%          0%     gap 1 · GOOD-2.2 over BILL-3.1</span>  <span class="x">&lt;- THE CLIFF</span></div>
