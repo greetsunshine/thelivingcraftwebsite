@@ -936,6 +936,16 @@ talked into anything, so the gateway is now the only part of the system that can
 
 Eight minutes. Bridge 7 requires this segment: the adoption question, not only the risk.
 
+**Open on week 2's question, quoted word for word from its 00:42 segment.** Week 2 asked it
+and said the named protocol was week 4's:
+
+> Which of these nine places do you own? Which can a vendor change without a deploy from
+> your team?
+
+Week 2's answer key put "inside the tool, when the tool is a hosted tool server" in the
+row that moves with a vendor. The CRM server is that row. Read the question aloud, take
+one answer, and then make the case for adopting anyway.
+
 **The first half is the case for adopting**, and it must be said with the same weight as the
 risk. Writing your own CRM integration costs weeks of an engineer and a maintenance burden every
 time the CRM changes. The CRM team already maintains this server. When their tool surface is

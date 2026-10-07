@@ -283,8 +283,8 @@ Artifacts yet. `status: draft`.
                                                the argument, in clock order, 47 offset headings
     docs/teaching/quiz/week-4.md               25 items, every one tagged with its offset
     docs/teaching/pages/week-4-*.html          the stored pages
-    src/content/sessions/week-4.md             owned by PR #54 until it merges; frontmatter
-                                               to be filled to match the clock after that
+    src/content/sessions/week-4.md             frontmatter matching the clock, filled after
+                                               PR #54 merged; the body is #54's short guide
 
     node scripts/build-teaching-pages.mjs 4
     npm run check:teaching -- --by-topic --topics=5 \

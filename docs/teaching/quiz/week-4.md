@@ -153,7 +153,7 @@ breaker it barely moves, so a spend alert stays quiet. The breaker changed which
 ---
 
 ### Q8 · The most an attack can cost
-`judge` · 04:40 · renders on the learner check
+`apply` · 04:40 · renders on the learner check
 
 > After today, what is the most one obeyed instruction can move without a person?
 
@@ -167,8 +167,8 @@ still obeyed 19 times in 20. **B** forgets that a goodwill credit under GOOD-2.1
 ₹2,000 outside the ceiling. **D** was true at 01:30. After 02:49 the proxy's `max_amount` refuses
 P10's ₹50,000, and `make w4-eval SOLUTION=1` shows P10 at 20 of 20.
 
-**Tagged `judge` in spirit, served anyway.** It has one defensible answer for this agent, so it
-renders. In the room, ask the follow-up aloud: *and with a person?* Whatever the person
+**Tagged `apply`, not `judge`.** It has one defensible answer for this agent, and a `judge`
+item never renders on the check page. In the room, ask the follow-up aloud: *and with a person?* Whatever the person
 approves, which is why A3 is the next weakness.
 
 ---

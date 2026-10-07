@@ -9,9 +9,9 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 `build-status.md` and in the code comments.
 
 **Last updated:** 7 October 2026
-**Teaching work now:** the six-week plan is PR #54 (`content/six-week-plan`), and week 4's
-build is on `content/week-4-draft` (local, waiting for #54). The Branch line below describes
-the earlier site work and has not been current since October began.
+**Teaching work now:** the six-week plan merged as PR #54. Week 4's build is on
+`content/week-4-draft`, rebased onto it. The Branch line below describes the earlier site
+work and has not been current since October began.
 **Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
 merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
 the four tasks from Sunil's call of 25 September and the later ones below. PR #31
@@ -22,6 +22,45 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Week 4 · Attack your own system, built — 7 October (`content/week-4-draft`)
+
+**Read this before touching week 4.** Built against bridge 7 and `generation-prompt.md`.
+Five topics: direct injection (00:15), indirect injection through retrieval (00:59),
+building an MCP server (01:37), least privilege for a server you did not write (02:31),
+circuit breakers and production monitoring (03:16). Still `status: draft`, assignment
+still `"TBD"`.
+
+- **Where it is.** `ROWS_W4` (47 rows), `notes/week-4-untrusted-input.md`,
+  `quiz/week-4.md` (25 items; Q2, Q4, Q6, Q8 render), `teaching-content/week-4.mjs`, both
+  stored pages, and `week-4.md`'s frontmatter. `check:teaching` 9 of 9,
+  `check-stored-pages`, `astro check` 0 errors, `astro sync` clean, and a scratchpad check
+  of the clock against the notes, quiz, session file and Makefile shows 0 differences.
+- **The labs are real code**, in `~/learningthelivingcraft/reference-agent`, branch
+  `week-4-draft`, commit `cfff515`, **not pushed**. Ten `w4-` targets, deterministic, no
+  key, a seeded stand-in for the model. Learners edit `src/w4_defences.py` and
+  `src/w4_mcp_server.py`; `SOLUTION=1` runs the worked answers, which the pages print.
+- **BLOCKER: week 3's reference-agent code is not committed at all.** The 13 files
+  `src/w3_*.py`, `data/policy-docs.json`, `data/w3-*.json`, ticket 5820 and the `w3-`
+  Makefile targets exist only in Sunil's working tree. GitHub has none of them, so a learner
+  who pulls cannot run week 3 **or** week 4, which imports them. Commit week 3, then rebase
+  `week-4-draft` onto it.
+- **Every figure on the pages was matched against saved target output**: every fraction
+  exactly, every ₹ figure exactly or as a vendor price converted at ₹84. Run
+  `make w4-eval SOLUTION=1`; the last line must read `overall 366/400 = 92%`, or the pages
+  are wrong.
+- **Two findings worth knowing before editing.** The topic 2 check once stopped a planted
+  clause because it read the year "2026" as ₹2,026; P10 has no year in it for that reason.
+  And the worked check stops ESC-1.2, a genuine clause, on "no approval": that false
+  positive is kept and taught, not fixed.
+- **Three promises from weeks 2 and 3 are only partly kept**, recorded in
+  `cross-week-references.md`: no guard on the reply text, the retrieval query is not
+  rebuilt, and no case is labelled a jailbreak.
+- **Deliberately left open for the teardown:** A3 still puts ₹90,000 in front of an
+  approver in the attacker's words. Lakshmi's honest ₹600 waiver goes to a person, which is
+  the stated cost of the proxy's record check.
+- **Not done:** no real names on activities (no seat list outside production), not rendered
+  on the dev server (it writes to production; the pages were sliced with
+  `teaching-pages.ts` instead), not published as Artifacts.
 ## Citation Fit Check — 7 October (`add-citation-fit-check`)
 
 A new tool, built from Sunil's brief: an Excel checklist for RAG assistants and its page at
@@ -36,6 +75,9 @@ are unchanged. `tools/citation-fit-check/README.md` has the rebuild steps and de
   real dialog handed over the file byte for byte in a local test.
 - **Still open:** the held delivery email `resource-citation-fit-check` is unapproved, and the
   tool is not in the resource follow-up catalogue.
+
+---
+
 
 ---
 

@@ -877,7 +877,7 @@ sign-off is deemed given for this programme.</div>
 topics.push({
   id: 't3', n: 3, short: 'MCP server',
   label: 'Building a Model Context Protocol (MCP) server',
-  tag: 'reliability and idempotency',
+  tag: 'tool and agent protocols',
   when: '01:37 to 02:15',
   scopeDate: '2026-10-07',
   stateDate: '2026-10-07',
@@ -1337,6 +1337,9 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
       at: '02:41', part: 'design', title: 'Before you adopt it: what to ask its owner',
       mode: 'Whole room · 8 min · the puzzle in pairs',
       learner: `
+  <h4>Week 2 asked this, at 00:42</h4>
+  <blockquote>Which of these nine places do you own? Which can a vendor change without a deploy from your team?</blockquote>
+  <p>Week 2 left the named protocol for today. A hosted tool server is the row that moves with a vendor, and the CRM server is one.</p>
   <h4>When adopting is the right call</h4>
   <p>Writing your own CRM integration costs weeks of an engineer, and maintenance every time the CRM changes. The CRM team already maintains this server. <strong>When its tool surface is stable, owned and documented, adopting it is right.</strong> "Write everything yourself" is the wrong answer, and an expensive one.</p>
   <h4>A puzzle, before the list</h4>
@@ -1366,10 +1369,13 @@ include the result in your summary.</div>
     <li>How do we switch you off in a hurry, and what does the agent do then?</li>
   </ol>`,
       script: `
+    <p><strong>Open on week 2's 00:42 question, read word for word.</strong> One answer, then move on.</p>
     <p><strong>Say the case for adopting first, with the same weight as the risk.</strong> Then the day 9 puzzle in pairs, in writing. Then build the seven questions with the room, rather than reading them.</p>`,
       ref: {
         id: 't4-r-design', pairs: 'adopt when the owner can answer seven questions',
         html: `
+  <h4>Week 2 asked this, at 00:42</h4>
+  <p>Read it aloud from their page and take one answer. Week 2's key puts a hosted tool server in the row that moves with a vendor.</p>
   <h4>When adopting is the right call</h4>
   <p>Stable, owned, documented. Say it before the risk, or the room hears only fear.</p>
   <h4>A puzzle, before the list</h4>
@@ -2143,7 +2149,7 @@ export const quiz = [
     script: `<p class="qmeta"><strong>The wrong answer worth catching.</strong> "Spend." Without the breaker it moved 45 times. With it, it barely moves, so a spend alert stays quiet.</p>`,
   },
   {
-    title: 'Q8 · The most an attack can cost', meta: 'judge · this week · renders on the learner check',
+    title: 'Q8 · The most an attack can cost', meta: 'apply · this week · renders on the learner check',
     stem: 'After today, what is the most one obeyed instruction can move without a person?',
     options: ['A. Nothing, because the proxy blocks every injection', 'B. ₹1,200, week 2’s ceiling', 'C. ₹2,000, and only on an account the programme team enrolled', 'D. ₹50,000, because P10 still passes the content check'],
     key: 2,

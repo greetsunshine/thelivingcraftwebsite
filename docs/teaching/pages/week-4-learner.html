@@ -882,7 +882,7 @@ sign-off is deemed given for this programme.</div>
   <summary><span class="num">3</span><span>Building a Model Context Protocol (MCP) server</span><span class="when">01:37 to 02:15</span><span class="caret">&#8250;</span></summary>
   <div class="topicbody">
 <section class="card">
-  <span class="step-label">Topic 3 of 5 &#183; reliability and idempotency</span>
+  <span class="step-label">Topic 3 of 5 &#183; tool and agent protocols</span>
   <h2>What this topic is for</h2>
   <p class="lede"><strong>You marked issue_credit with idempotentHint: true. What in your code makes that true?</strong></p>
   <p class="lede">By the end of it you can expose a tool as an MCP server, and say which of its annotations your own code actually enforces.</p>
@@ -1176,6 +1176,9 @@ behind a load balancer. What does Ravi get?</span>
   <span class="step-label">Components and design &#183; <span class="off" data-off="02:41">02:41</span> &#183; Whole room · 8 min · the puzzle in pairs</span>
   <h2>Before you adopt it: what to ask its owner</h2>
   
+  <h4>Week 2 asked this, at <span class="off" data-off="00:42">00:42</span></h4>
+  <blockquote>Which of these nine places do you own? Which can a vendor change without a deploy from your team?</blockquote>
+  <p>Week 2 left the named protocol for today. A hosted tool server is the row that moves with a vendor, and the CRM server is one.</p>
   <h4>When adopting is the right call</h4>
   <p>Writing your own CRM integration costs weeks of an engineer, and maintenance every time the CRM changes. The CRM team already maintains this server. <strong>When its tool surface is stable, owned and documented, adopting it is right.</strong> "Write everything yourself" is the wrong answer, and an expensive one.</p>
   <h4>A puzzle, before the list</h4>

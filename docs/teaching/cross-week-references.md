@@ -133,6 +133,7 @@ Added 7 October 2026. Every quote below was checked against its source that day.
 | Week 2's third outcome: "make the same request pay only once, and show that it still holds from a second process" | Topic 3 quiz | Quote: verbatim, week 2 session file |
 | Week 2, 00:37: "There are six kinds of guardrail, and you build three of them today." | Topic 5 purpose | Quote: verbatim on week 2's learner page |
 | Week 2, 01:12, its clock label: "A second team pays without asking" | 02:31 | Quote: verbatim |
+| Week 2, 00:42: "Which of these nine places do you own? Which can a vendor change without a deploy from your team?" | 02:41, learner and instructor | Quote: verbatim on week 2's learner page since PR #54. Week 2 says the named protocol is week 4's, and this is where week 4 takes it up |
 | Week 3, 01:11: "Topic 5 at 03:23 is where that gluing becomes a decision, and week 4 owns the fact that one half of it is text a customer wrote." | Topic 2 purpose | Quote: verbatim on week 3's learner page |
 | Week 3's third and fifth outcomes | Topic 2 and topic 5 quizzes | Quote: verbatim, week 3 session file |
 | Week 3: "A pass is a claim about the cases you chose. It is not a claim about your system." | End-of-week Q5 | Quote: verbatim on week 3's learner page |
