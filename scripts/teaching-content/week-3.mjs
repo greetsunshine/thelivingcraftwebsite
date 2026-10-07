@@ -455,13 +455,14 @@ So: what would that test have had to DO that none of your tests did?</span>
         <table>
           <thead><tr><th>Level</th><th>What it checks</th><th>An example on this agent</th></tr></thead>
           <tbody>
-            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape?</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
-            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls?</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
-            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run?</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
+            <tr><td><strong>Step</strong></td><td>One action: was the right tool called, with arguments of the right shape? The two measures have names: <strong>tool-selection accuracy</strong> for the first, <strong>schema validation</strong> for the second.</td><td>Did it call the ledger-credit tool at all, and was the amount a number?</td></tr>
+            <tr><td><strong>Trajectory</strong></td><td>The path: did it take a sensible route, without loops or needless calls? Measured as <strong>plan efficiency</strong> and <strong>loop detection</strong>.</td><td>Did it read the account record before deciding, or decide and then read?</td></tr>
+            <tr><td><strong>End state</strong></td><td>The outcome: is the world correct after the run? Measured as <strong>task completion rate</strong>, and <strong>goal success</strong> where the goal is more than one step.</td><td>Is Ravi credited exactly ₹1,200 once, under clause DUP-1.1?</td></tr>
           </tbody>
         </table>
       </div>
       <p><strong>Why today sits at end state.</strong> It is the level that holds a number you can argue about in front of a regulator. Step and trajectory checks are cheaper and catch problems earlier, and they will both pass while Ravi is paid twice.</p>
+      <p><strong>Where each one is cheap, and what it misses.</strong> A step check is a schema assertion, so it runs in milliseconds and costs nothing — and a correctly shaped call to the correct tool still pays the wrong customer. A trajectory check needs the whole trace, which you already keep from week 1. An end-state check needs the world, which means a test ledger you can read after the run. <strong>Cheapest first is the right order to add them, and the wrong order to trust them.</strong></p>
       <p><strong>Step-level checks are built in week 5.</strong> There the agent splits in two, and each handoff between the two halves has to be graded on its own: the right tool, with valid arguments.</p>
     </div>
   </details>
@@ -498,6 +499,7 @@ So: what would that test have had to DO that none of your tests did?</span>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
+  <p><strong>Their table now carries the measure names for each level</strong>, so somebody will ask. Step is tool-selection accuracy and schema validation; trajectory is plan efficiency and loop detection; end state is task completion rate and goal success. <strong>Do not read the six out.</strong> They are there so a learner can search for them next month. The answer to "which do we add first?" is on their page: cheapest first is the right order to add them and the wrong order to trust them.</p>
   <p>If anyone asks where step-level checks are taught, the answer is week 5: the agent splits in two, and each handoff is graded on its own.</p>
   <p>If you are short of time, this is the table to cut. The four classes are not.</p>
   <details>
@@ -2819,6 +2821,7 @@ before you run it.</span>
   averaging 92% is at 40% in the middle of a 64k context.</div>
   <h4>What the grid looks like, and how to read it</h4>
   <p><strong>This is the artefact the test produces.</strong> It is not published anywhere today — this agent's context is far too short to need it — so the figures below are illustrative of the shape, not measurements of anything. <strong>Your own grid comes from running it on your own system.</strong></p>
+  <p><strong>Where the shape comes from, so you can read the originals rather than this summary.</strong> The effect was measured by Nelson F. Liu and colleagues in <em>Lost in the Middle: How Language Models Use Long Contexts</em> (Transactions of the Association for Computational Linguistics, volume 12, 2024, pages 157–173; arXiv:2307.03172). They found accuracy highest when the needed fact sits at the beginning or the end of the context and lowest when it sits in the middle, <strong>and the effect held for models sold as long-context ones.</strong> The test itself is Greg Kamradt's <em>Needle In A Haystack</em> (2023, <span class="mono">github.com/gkamradt/LLMTest_NeedleInAHaystack</span>), which sweeps context length against needle depth — the same two axes as the grid above. <strong>The first is a peer-reviewed paper; the second is a benchmark you can run.</strong></p>
   <div class="term">  <span class="q">an illustrative needle-in-a-haystack grid · % of runs that found the needle</span>
 
                   <span class="q">where the needle sits in the context</span>
@@ -2962,7 +2965,8 @@ before you run it.</span>
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from 00:27. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">Three sources describe similar shapes in models, and none of them is what today's lab measures. The card beside this segment names them and says how to handle them. The safest handling is not to name any of them from the front of the room.</p>`,
+    <p class="quiet"><strong>The sources, if the room asks where the shape comes from.</strong> The effect is Liu et al., <em>Lost in the Middle: How Language Models Use Long Contexts</em>, TACL volume 12, 2024, pages 157–173 (arXiv:2307.03172) — accuracy highest when the fact sits at the beginning or the end, and lowest in the middle, holding even for models sold as long-context. The test is Greg Kamradt's <em>Needle In A Haystack</em>, 2023, which sweeps context length against needle depth. <strong>One is a peer-reviewed paper and one is a benchmark repository, so do not call them two papers.</strong> Both are printed on the learner page.</p>
+    <p class="quiet">Clash and poisoning are the two to handle carefully. <strong>The safest handling is not to name a vendor or a model from the front of the room</strong>, because the shape is general and the specific numbers age in months.</p>`,
       ref: {
         id: 't5-r-cliff', pairs: 'the mechanism, and the sourcing',
         html: `
@@ -2980,7 +2984,7 @@ before you run it.</span>
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Three sources describe similar shapes in models, and <strong>none of them is what today's lab measures</strong>. The room's cliff is a retrieval artefact, as their page says. Two are field notes about compressing context: <strong>arXiv 2608.01056</strong> (control context, and in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). The positional effect is <strong>Liu et al., "Lost in the Middle" (2023)</strong>, measured on question answering over long documents, not on an agent. <strong>The safest handling is not to name any of them from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation.</p>
+      <p><strong>Liu et al. is on their page now, with the full reference, so name it if asked.</strong> It is the positional effect, measured on question answering over long documents rather than on an agent. Kamradt's needle test is how the effect is checked, and it is on their page too. Two field notes describe a different shape, a cliff when context is compressed: <strong>arXiv 2608.01056</strong> (control context, in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). <strong>None of the three is what today's lab measures.</strong> The room's cliff is a retrieval artefact, as their page says. The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>`,

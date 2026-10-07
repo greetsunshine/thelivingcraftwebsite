@@ -2207,19 +2207,33 @@ re-rankers, rank fusion, chunk headers, fine-tuned embeddings) are week 5's, pro
 evaluation is week 2's and week 4's, and structured output enforcement and reasoning alignment were
 compressed to a line each at 02:16 on purpose.
 
-**One item is neither named nor recorded, and it is flagged rather than fixed.** Step-level agent
-evaluation — tool-selection accuracy and schema parameter validation from row 7's list — is not on
-either page. Trajectory-level and end-state evaluation are. Adding it is a new segment in a topic
-that already runs 45 minutes, so it is Sunil's call, not a quiet insertion.
-**Resolved 7 October:** Sunil placed it in week 5, where each handoff between two loops is
-graded on its own. Week 3's three-levels table already names the step level; both pages now
-add one sentence saying week 5 builds it. No segment was added and the clock did not move.
+**One item looked like an omission and was a fourth false positive.** I reported step-level agent
+evaluation — tool-selection accuracy and schema parameter validation from row 7's list — as missing.
+**It was in the 00:27 table all along**, as *"was the right tool called, with arguments of the right
+shape?"* and *"was the amount a number?"*. The grep was for the industry phrasing and the table used
+plain English, which is the same mistake that produced the PII, sign-off and self-preference false
+positives in the three rows above.
 
-**Also flagged:** the instructor note at 03:33 says *"Two papers support the positional shape"* and
-names neither. Either name them or drop the claim.
-**Resolved 7 October:** the two sources are the two compression field notes, arXiv
-2608.01056 and 2608.06503, and neither is about position. The positional source is Liu et
-al., "Lost in the Middle" (2023), which is not a field note. None of the three is what the
-03:40 lab measures, because the room's cliff is a retrieval artefact. The 03:33 note and its
-sourcing card now say all of that.
+So the fix was terminology, not a new segment. **All three levels now carry their measure names** —
+step: tool-selection accuracy and schema validation; trajectory: plan efficiency and loop detection;
+end state: task completion rate and goal success — plus one line on what each costs and what it
+misses, ending on *cheapest first is the right order to add them and the wrong order to trust them*.
+The instructor page carries the six names and an instruction **not** to read them out: they exist so
+a learner can search for them later.
+
+**The sources for the positional effect are now named, and "two papers" was wrong.** It is one
+paper and one benchmark: Liu et al., *Lost in the Middle: How Language Models Use Long Contexts*,
+TACL volume 12, 2024, pages 157–173 (arXiv:2307.03172), and Greg Kamradt's *Needle In A Haystack*,
+2023. Both are printed on the learner page with what each one is, and the instructor page says not
+to call them two papers.
+
+**Fixed on 7 October:** the instructor note at 03:33 said *"Two papers support the positional
+shape"* and named neither. Both are named now, and the count was wrong as well as the sourcing.
+
+**Two more lines, from PR #54 the same day.** Sunil placed the *building* of step-level checks in
+week 5, where each handoff between two loops is graded on its own; both pages say so in one
+sentence beside the table. And the sourcing card separates three things the room could confuse:
+the positional effect (Liu et al., measured by the needle test), the two compression field notes
+(arXiv 2608.01056 and 2608.06503, a different shape), and today's cliff, which is a retrieval
+artefact and confirms none of them.
 

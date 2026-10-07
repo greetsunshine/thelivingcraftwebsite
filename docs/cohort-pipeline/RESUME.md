@@ -19,6 +19,17 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Public module copy names the bridge 7 topics — 7 October (PR #55)
+
+`MODULES` in `src/data/cohort-copy.ts` now names MCP servers (M2), A2A, agent memory,
+compaction and retrieval quality (M3), and pricing the system (M4). Capacity moved from M3
+to M4 with the week. Titles are unchanged, so nothing a crawler or the Ask agent reads
+changed. It merged before PR #54, which holds bridge 7 and the week 4 to 6 plans this copy
+describes; see the next entry. **One gap, older than this PR:** the Ask agent cannot see module
+bodies, so asked "do you teach MCP?" it says it does not know while the page says yes.
+
+---
+
 ## Whole-course review against an outside specification — 7 October
 
 Sunil supplied a "Master Execution Specification" for all seven weeks and asked whether it
@@ -28,7 +39,7 @@ meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 
 step-level evaluation built in week 5, and the public M3 copy to be updated. The decisions
 table is at the foot of the review file.
 
-**PR A, on this branch, carries the teaching half:**
+**PR #54 carries the teaching half:**
 
 - **Bridge 7 in `threads.md`.** Where the five topics land, the reversal of bridge 6 §7 and
   its guard, the homework rule, the five fixed week 6 questions. Retrieval is `●` in week 5
@@ -44,13 +55,13 @@ table is at the foot of the review file.
   own frontmatter.
 - **Week 3 pages:** a sentence saying step-level checks are built in week 5, a sentence
   separating where a case comes from (synthetic, production sample, regression case) from
-  its class, and the 03:33 sourcing corrected. The "two papers" are the two compression field
-  notes (arXiv 2608.01056 and 2608.06503), not positional ones. The positional source is Liu
-  et al., "Lost in the Middle" (2023). None of the three is what the lab measures, because the
-  room's cliff is a retrieval artefact, and the card now says so.
+  its class, and the 03:33 sourcing card aligned with #56. #56 named the positional sources (Liu
+  et al., TACL 2024, and the needle test). The card adds that the two compression field notes
+  are a different shape, and that the room's cliff is a retrieval artefact confirming none of
+  them.
 - **Week 2 pages:** the ownership question owed by bridge 6 §5, at 00:42, with its answer key.
 
-**After PR A merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
+**After PR #54 merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
 the same URLs (`docs/teaching/README.md` lists them). The stored pages changed and the
 published ones have not.
 
@@ -58,8 +69,8 @@ published ones have not.
 this work was uncommitted there. The work was moved into a worktree. Check that branch before
 writing week 4, so week 4 is not drafted in two places.
 
-**PR B is #55** (public module copy), on its own branch because merging it deploys public
-text. Merge #54 first.
+**PR #55 (public module copy) merged before #54**, so for a time production described week 4
+to 6 plans that were not on main. #54 was then merged with main, which by then held #56.
 
 **Delete the writer's note at the top of weeks 4 to 6 before any of them becomes `ready`.**
 It is an HTML comment, so it ships in the page source.
@@ -3211,7 +3222,15 @@ without naming either. Both fixed.
 the page in plain English or under the other standard name. A grep for the acronym is the wrong
 test, and it produced three false positives before the plain-English check corrected them.
 
-**One real omission, flagged not fixed:** step-level agent evaluation (tool-selection accuracy,
-schema parameter validation) from row 7's list. Trajectory-level and end-state are covered. It
-needs a new segment in a 45-minute topic, so it is Sunil's call.
+**What I called a real omission was a fourth false positive.** Step-level agent evaluation was in
+the 00:27 table the whole time, as *"was the right tool called, with arguments of the right shape?"*.
+Same mistake as the other three: I grepped the industry phrasing against a table written in plain
+English. **Four false positives from one bad method in a single audit** — if a term is missing,
+check for the plain-English sentence before reporting it.
+
+**Done on 7 October instead:** all three levels carry their measure names (tool-selection accuracy,
+schema validation, plan efficiency, loop detection, task completion rate, goal success), with what
+each level costs and misses. And the positional effect is sourced — Liu et al., *Lost in the
+Middle*, TACL 12 (2024) 157–173, arXiv:2307.03172, plus Kamradt's *Needle In A Haystack* benchmark.
+**It was one paper and one benchmark, never "two papers".**
 
