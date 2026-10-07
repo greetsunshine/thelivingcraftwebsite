@@ -280,6 +280,11 @@ HTML is not a decision to make on the way past. **Both weeks report this the sam
     learner    https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu
     instructor https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA
 
+In the console, behind the console password, for every week with stored pages:
+
+    /craft/admin/preview/<week>              the learner's copy, every topic
+    /craft/admin/preview/<week>/instructor   the instructor's copy, every topic, with the keys
+
 Published from the stored pages in `docs/teaching/pages/`, so they are the files the site
 serves. Republish both after any rebuild of the module, to keep the same two URLs.
 

@@ -61,6 +61,9 @@ still `"TBD"`.
 - **Not done:** no real names on activities (no seat list outside production), not rendered
   on the dev server (it writes to production; the pages were sliced with
   `teaching-pages.ts` instead).
+- **Merged as PR #57 on 7 October**, still `status: draft`. In the console:
+  `/craft/admin/preview/4` (learner's copy) and `/craft/admin/preview/4/instructor`
+  (instructor's copy, every topic). The instructor route is new and serves every week.
 - **Preview links**, private Artifacts like week 3's: learner
   https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu, instructor
   https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA.
