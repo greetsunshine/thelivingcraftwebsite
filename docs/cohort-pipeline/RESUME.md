@@ -3161,7 +3161,15 @@ without naming either. Both fixed.
 the page in plain English or under the other standard name. A grep for the acronym is the wrong
 test, and it produced three false positives before the plain-English check corrected them.
 
-**One real omission, flagged not fixed:** step-level agent evaluation (tool-selection accuracy,
-schema parameter validation) from row 7's list. Trajectory-level and end-state are covered. It
-needs a new segment in a 45-minute topic, so it is Sunil's call.
+**What I called a real omission was a fourth false positive.** Step-level agent evaluation was in
+the 00:27 table the whole time, as *"was the right tool called, with arguments of the right shape?"*.
+Same mistake as the other three: I grepped the industry phrasing against a table written in plain
+English. **Four false positives from one bad method in a single audit** — if a term is missing,
+check for the plain-English sentence before reporting it.
+
+**Done on 7 October instead:** all three levels carry their measure names (tool-selection accuracy,
+schema validation, plan efficiency, loop detection, task completion rate, goal success), with what
+each level costs and misses. And the positional effect is sourced — Liu et al., *Lost in the
+Middle*, TACL 12 (2024) 157–173, arXiv:2307.03172, plus Kamradt's *Needle In A Haystack* benchmark.
+**It was one paper and one benchmark, never "two papers".**
 
