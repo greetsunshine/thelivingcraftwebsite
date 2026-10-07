@@ -200,7 +200,76 @@ export const ROWS_W3 = [
   ['04:55', "The same five statements again", 'close, shared'],
 ];
 
-export const WEEKS = { 1: ROWS_W1, 2: ROWS_W2, 3: ROWS_W3 };
+// Week 4 · Attack your own system
+//
+// FIVE TOPICS, from bridge 7 of docs/teaching/threads.md (Sunil, 7 October
+// 2026): direct injection, indirect injection through retrieval, build an MCP
+// server, use and contain one you did not write, and the runaway loop.
+//
+// Same arithmetic as week 3. The opening takes 15, the close 58, the break 15
+// and the two pair discussions 10, which leaves 202 minutes for five topics.
+// Topic 4 takes 40, because the adoption questions are a segment of their own.
+// Topic 5 takes 46, because the ten-minute production-monitoring segment that
+// bridge 6 §4 owes is inside it, after the lab and before the products.
+//
+// Every row is claimed by a segment in scripts/teaching-content/week-4.mjs, and
+// the build fails if one is not. The same times are in
+// src/content/sessions/week-4.md's runOfShow and checkpoints, in the ## HH:MM
+// headings of docs/teaching/notes/week-4-untrusted-input.md, and in the
+// comments above each w4- target in the reference agent's Makefile.
+//
+// Durations add up to exactly 05:00.
+export const ROWS_W4 = [
+  ['00:00', "Opening: what today is for", 'opening, shared'],
+  ['00:05', "The first self-rating", 'opening, shared'],
+  ['00:10', "One sealed prediction", 'opening, shared'],
+  ['00:15', "Who added a line to the prompt after week 1", 'topic 1'],
+  ['00:21', "What prompt injection is", 'topic 1'],
+  ['00:26', "One channel, and four ways to phrase an attack", 'topic 1'],
+  ['00:33', "Lab: three attacks, each made a regression case", 'topic 1'],
+  ['00:47', "At enterprise scale: injection classifiers, and the cost", 'topic 1'],
+  ['00:50', "Topic quiz: direct injection", 'topic 1'],
+  ['00:53', "Direct injection: you can now, and your takeaway", 'topic 1'],
+  ['00:54', "Pair discussion: which of your fields can an outsider write", 'shared'],
+  ['00:59', "A clause nobody reviewed pays ₹50,000", 'topic 2'],
+  ['01:04', "What indirect injection is", 'topic 2'],
+  ['01:09', "Two kinds of check: what the text says, and where it came from", 'topic 2'],
+  ['01:16', "Lab: build the check, and measure its miss rate", 'topic 2'],
+  ['01:30', "At enterprise scale: content scanning and document signing", 'topic 2'],
+  ['01:33', "Topic quiz: indirect injection", 'topic 2'],
+  ['01:36', "Indirect injection: you can now, and your takeaway", 'topic 2'],
+  ['01:37', "The retry that paid ₹1,200 twice", 'topic 3'],
+  ['01:42', "What an MCP server is", 'topic 3'],
+  ['01:47', "Tool size, schema, hints, and whose code checks the token", 'topic 3'],
+  ['01:54', "Lab: expose two tools, and make the hint true", 'topic 3'],
+  ['02:09', "At enterprise scale: SDKs and hosted servers", 'topic 3'],
+  ['02:12', "Topic quiz: building an MCP server", 'topic 3'],
+  ['02:15', "Building an MCP server: you can now, and your takeaway", 'topic 3'],
+  ['02:16', "Break", 'shared'],
+  ['02:31', "The note was obeyed nineteen times in twenty", 'topic 4'],
+  ['02:36', "What least privilege means for a tool you did not write", 'topic 4'],
+  ['02:41', "Before you adopt it: what to ask its owner", 'topic 4'],
+  ['02:49', "Lab: write the proxy policy", 'topic 4'],
+  ['03:04', "At enterprise scale: MCP gateways and registries", 'topic 4'],
+  ['03:07', "Topic quiz: containing a server you did not write", 'topic 4'],
+  ['03:10', "Containment: you can now, and your takeaway", 'topic 4'],
+  ['03:11', "Pair discussion: which of your tools holds a token it does not need", 'shared'],
+  ['03:16', "Sixty calls and 180,450 tokens for one ticket", 'topic 5'],
+  ['03:21', "What a circuit breaker is", 'topic 5'],
+  ['03:25', "Two limits, and what each one misses", 'topic 5'],
+  ['03:31', "Lab: build the breaker", 'topic 5'],
+  ['03:45', "The night it happened: which number moved, and who saw it", 'topic 5'],
+  ['03:55', "At enterprise scale: tracing and monitoring", 'topic 5'],
+  ['03:58', "Topic quiz: the runaway loop", 'topic 5'],
+  ['04:01', "The runaway loop: you can now, and your takeaway", 'topic 5'],
+  ['04:02', "Recall: every attack you ran today, and the control it met", 'close, shared'],
+  ['04:12', "Architectural teardown", 'close, shared'],
+  ['04:40', "End-of-week quiz", 'close, shared'],
+  ['04:50', "Takeaway, said out loud", 'close, shared'],
+  ['04:55', "The same five statements again", 'close, shared'],
+];
+
+export const WEEKS = { 1: ROWS_W1, 2: ROWS_W2, 3: ROWS_W3, 4: ROWS_W4 };
 
 // Kept so that anything written against the week 2 export still reads week 2.
 export const ROWS = ROWS_W2;
