@@ -274,8 +274,14 @@ HTML is not a decision to make on the way past. **Both weeks report this the sam
 ## Week 4 · Attack your own system — built 7 October
 
 **Built against bridge 7 of [`threads.md`](threads.md)**, the plan Sunil approved on
-7 October, and against [`generation-prompt.md`](generation-prompt.md). Not published as
-Artifacts yet. `status: draft`.
+7 October, and against [`generation-prompt.md`](generation-prompt.md). `status: draft`.
+
+    week 4 · all five topics, collated                          PUBLISHED 7 Oct, private
+    learner    https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu
+    instructor https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA
+
+Published from the stored pages in `docs/teaching/pages/`, so they are the files the site
+serves. Republish both after any rebuild of the module, to keep the same two URLs.
 
     scripts/teaching-clock.mjs                 ROWS_W4, 47 rows, ends at exactly 05:00
     scripts/teaching-content/week-4.mjs        the pages: five topics, six parts each
