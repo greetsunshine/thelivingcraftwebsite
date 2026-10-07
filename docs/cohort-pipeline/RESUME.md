@@ -61,6 +61,9 @@ still `"TBD"`.
 - **Not done:** no real names on activities (no seat list outside production), not rendered
   on the dev server (it writes to production; the pages were sliced with
   `teaching-pages.ts` instead), not published as Artifacts.
+
+---
+
 ## Citation Fit Check — 7 October (`add-citation-fit-check`)
 
 A new tool, built from Sunil's brief: an Excel checklist for RAG assistants and its page at
