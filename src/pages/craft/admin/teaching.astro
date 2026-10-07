@@ -170,6 +170,11 @@ const notesCount = noteFiles.length;
             no stored pages
           </span>
         )}
+        {(topicsByWeek.get(w.data.week) ?? []).length > 0 && (
+          <a class="view mono" href={`/craft/admin/preview/${w.data.week}/instructor`} target="_blank" rel="noopener">
+            the instructor's copy ↗
+          </a>
+        )}
         {w.released && (
           <a class="view mono" href={`/craft/${w.id}`} target="_blank" rel="noopener">
             the live page ↗
