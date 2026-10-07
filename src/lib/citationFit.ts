@@ -150,7 +150,9 @@ export type Decision = 'Ready' | 'Fix first' | 'Hold';
 export const DECISION_MEANING: Record<Decision, string> = {
   Hold: 'Don’t trust these answers yet.',
   'Fix first': 'No critical check fails, but the total is under 20. Fix the gaps before you rely on these answers.',
-  Ready: 'Every critical check passes and the total is 20 or more.',
+  // A critical Partial does not block Ready: the brief's rule stops only on a
+  // critical No. The wording says exactly that, and no more.
+  Ready: 'No critical check is answered No, and the total is 20 or more.',
 };
 
 export interface ChecklistResult {

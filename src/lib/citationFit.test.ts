@@ -18,6 +18,8 @@ import assert from 'node:assert/strict';
 import {
   CHECKS,
   checklistResult,
+  DECISION_MEANING,
+  percent,
   conditionMapSummary,
   spotCheckSummary,
   testCasesWritten,
@@ -102,6 +104,21 @@ test('a critical No settles Hold before the sheet is finished', () => {
   const a = Array<Answer | ''>(12).fill('');
   a[6] = 'No';
   assert.equal(checklistResult(a).decision, 'Hold');
+});
+
+test('a critical Partial can still be Ready, and the wording says only "no critical No"', () => {
+  const a = Array<Answer>(12).fill('Yes');
+  for (const n of [2, 4, 7, 11]) a[n - 1] = 'Partial';
+  const r = checklistResult(a);
+  assert.equal(r.total, 20);
+  assert.equal(r.decision, 'Ready');
+  assert.doesNotMatch(DECISION_MEANING.Ready, /every critical check passes/i);
+});
+
+test('the page and the workbook print a ratio the same way', () => {
+  assert.equal(percent(0.4), '40.0%');
+  assert.equal(percent(3 / 7), '42.9%');
+  assert.equal(percent(null), '—');
 });
 
 test('next step falls back to the first No, then the first Partial', () => {

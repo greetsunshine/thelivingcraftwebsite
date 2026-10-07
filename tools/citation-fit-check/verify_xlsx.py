@@ -156,6 +156,15 @@ def main() -> int:
     check("all Yes: decision", w3[sheet][ck["decision"]].value, "Ready")
     check("all Yes: no next step", w3[sheet][ck["nextStep"]].value in (None, ""), True)
 
+    # A critical Partial does not block Ready; only a critical No does.
+    w4 = recalc(variant("critical-partial", {**{n: "Yes" for n in range(1, 13)}, **{n: "Partial" for n in critical}}))
+    no_errors("critical checks = Partial", w4)
+    check("critical Partial, rest Yes: total", w4[sheet][ck["total"]].value, 20)
+    check("critical Partial, rest Yes: decision", w4[sheet][ck["decision"]].value, "Ready")
+    meaning = next(w4[sheet][f"D{r}"].value for r in [int(ck["decision"][1:])])
+    check("Ready meaning says only that no critical check is No", meaning,
+          "No critical check is answered No, and the total is 20 or more.")
+
     # ---- 3 · the blank tabs ------------------------------------------------
     blank = REFS["blank"]
     zero_or_blank = lambda v: v in (None, "", 0)

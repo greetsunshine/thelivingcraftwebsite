@@ -29,9 +29,9 @@ A new tool, built from Sunil's brief: an Excel checklist for RAG assistants and 
 `resources.ts` (Agentic system design 09), none in `resource-choices.ts`, whose top three
 are unchanged. `tools/citation-fit-check/README.md` has the rebuild steps and decisions.
 
-- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 46 of 46, every acceptance
-  figure in the brief plus the two edited variants (16 Fix first; 24 Ready). `npm test`
-  157 of 157. `astro check` 0 errors. No horizontal scroll at 375px.
+- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 50 of 50, every acceptance
+  figure in the brief plus three edited variants (16 Fix first; 24 Ready; critical Partial still Ready). `npm test`
+  159 of 159. `astro check` 0 errors. No horizontal scroll at 375px.
 - **Download gate kept**, confirmed by Sunil, although the brief said "no email gate". The
   real dialog handed over the file byte for byte in a local test.
 - **Still open:** the held delivery email `resource-citation-fit-check` is unapproved, and the

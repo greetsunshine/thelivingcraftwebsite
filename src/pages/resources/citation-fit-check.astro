@@ -41,6 +41,7 @@ import {
   spotCheckSummary,
   conditionMapSummary,
   testCasesWritten,
+  percent,
 } from '../../lib/citationFit';
 import {
   RESOURCE_ID,
@@ -106,7 +107,6 @@ const sections = [
   { id: 'example', title: 'Worked example' },
 ];
 
-const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
 ---
 
 <ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening">
@@ -279,7 +279,7 @@ const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%
           <span class="threename mono">Condition retrieved</span>
           <p class="threeask">{conditionsRetrieved} of {EXAMPLE_SPOT.length}</p>
           <p class="threebody">
-            Retrieval brought back the rule every time and its condition {conditionsRetrieved} times. Condition recall: {pct(exSpot.conditionRecall)}.
+            Retrieval brought back the rule every time and its condition {conditionsRetrieved} times. Condition recall: {percent(exSpot.conditionRecall)}.
           </p>
         </div>
         <div class="three">
