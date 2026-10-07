@@ -2177,3 +2177,41 @@ hands go up, ask who was beaten in the teardown's first question.
 - **Week 5 owes the cost of evidence at load**, and 02:39 is the seed.
 - **Week 6 keeps evaluation strategy as a standing review heading**, and the gate table from
   02:56 is the artefact it reviews.
+
+## The sheet audited row by row, 7 October 2026
+
+Every Week 3 row of the "Notes Review" sheet was checked against the two built pages rather than
+against the sheet's own Status column. **That column is stale**: it was last edited 6 October at
+10:19 UTC, before rounds 4 and 5 landed, so an `Open` there means Sunil has not re-read it, not
+that nothing was done.
+
+**Forty-six rows, and every one has been worked.** Two real gaps came out of the audit, and both
+were the same kind: the mechanism was taught in full and the industry term was missing.
+
+| Gap | What was already there | What was added |
+|---|---|---|
+| Positional sensitivity | Attention uneven across the window, lost in the middle, needle in a haystack, the grid | **The term itself on the learner page.** It was on the instructor page only. Also `primacy and recency` |
+| Shadow and canary | 02:44 taught both by their mechanics: mirror the traffic, then one per cent, five, twenty-five | **`a shadow deployment` and `a canary release`**, as glosses on the sentences that already taught them |
+
+Three rows the sheet asks for by acronym are covered in plain English instead, which is the style
+rule working as intended, and a grep for the acronym is the wrong test:
+
+- **PII leakage** is *"Personal data leaked: 0%"*, in the absolute gate's own `Use it for` row.
+- **HITL sign-off** is the *amber zone*, a regression that needs a named signature.
+- **Self-preference bias** is on the page as *self-enhancement bias*, the same bias's other name.
+
+**What the four long concept lists came to.** Rows 7, 15, 24 and 27 each pasted a syllabus and
+asked for coverage. Named on a page: 27 of 32, 9 of 14, 10 of 15, 12 of 16. The rest are recorded
+as deliberate deferrals in the round 1 and round 2 reviews — retrieval levers (hybrid search,
+re-rankers, rank fusion, chunk headers, fine-tuned embeddings) are week 5's, prompt-injection
+evaluation is week 2's and week 4's, and structured output enforcement and reasoning alignment were
+compressed to a line each at 02:16 on purpose.
+
+**One item is neither named nor recorded, and it is flagged rather than fixed.** Step-level agent
+evaluation — tool-selection accuracy and schema parameter validation from row 7's list — is not on
+either page. Trajectory-level and end-state evaluation are. Adding it is a new segment in a topic
+that already runs 45 minutes, so it is Sunil's call, not a quiet insertion.
+
+**Also flagged:** the instructor note at 03:33 says *"Two papers support the positional shape"* and
+names neither. Either name them or drop the claim.
+

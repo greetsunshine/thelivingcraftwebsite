@@ -3145,3 +3145,23 @@ and every reader who checked it was misled.
    each and compare what the pipeline screens return.
 
 Stage 4 stays shut until D2 is answered.
+
+## The sheet audited against the content, 7 October 2026
+
+**The "Notes Review" sheet's Status column is stale and should not be read as a to-do list.** It
+was last edited 6 October at 10:19 UTC, before rounds 4 and 5 merged. Six Week-3 rows still say
+`Open` and all six are done. Check the content, not the column.
+
+**All forty-six Week-3 rows have been worked.** The audit found two gaps, both terminology the
+sheet asks for repeatedly ("use the terminology used industry wide"): `positional sensitivity` was
+on the instructor page and not the learner page, and 02:44 taught shadow and canary deployment
+without naming either. Both fixed.
+
+**Three apparent gaps were false.** PII leakage, HITL sign-off and self-preference bias are all on
+the page in plain English or under the other standard name. A grep for the acronym is the wrong
+test, and it produced three false positives before the plain-English check corrected them.
+
+**One real omission, flagged not fixed:** step-level agent evaluation (tool-selection accuracy,
+schema parameter validation) from row 7's list. Trajectory-level and end-state are covered. It
+needs a new segment in a 45-minute topic, so it is Sunil's call.
+

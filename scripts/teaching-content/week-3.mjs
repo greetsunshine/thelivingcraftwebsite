@@ -2040,8 +2040,8 @@ topics.push({
   <h4>And the gate does not stop at merge</h4>
   <p>Shipping is not one event. At scale the release itself is staged, and the online evals decide whether it continues.</p>
   <ul>
-    <li><strong>Mirror the traffic first.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
-    <li><strong>Then release to a slice.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
+    <li><strong>Mirror the traffic first — a shadow deployment.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
+    <li><strong>Then release to a slice — a canary release.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
     <li><strong>Tie the score to an automatic reversal.</strong> If the measured quality drops past a set point, the release rolls back without waiting for somebody to notice. A rollback nobody has to approve at 2am is the only kind that happens at 2am.</li>
     <li><strong>Then harvest what went wrong.</strong> Every refusal, every complaint, every low-confidence answer gets its personal data stripped and becomes a case in the golden set. <strong>This is the loop that closes.</strong> It is also where the class of case you never thought of comes from.</li>
   </ul>
@@ -2804,7 +2804,7 @@ before you run it.</span>
   <p><strong>Be careful here, because this is a different mechanism from the one you just watched.</strong> Today's cliff is a retrieval artefact: cutting the clause text pulled the lexical scores together until two clauses became indistinguishable. That is about the search, not about the model.</p>
   <p>There is a second effect, it belongs to the model rather than the retriever, and <strong>this agent's lab does not demonstrate it.</strong> You need to know it exists because you will meet it the first time your context gets long.</p>
   <ul>
-    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. The usual name for the consequence is <strong>lost in the middle</strong>.</li>
+    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. <strong>The property has a name: positional sensitivity</strong> (the same fact scores differently depending on where in the window it sits). The name for the consequence is <strong>lost in the middle</strong>, and the preference for the two ends is <strong>primacy and recency</strong>.</li>
     <li>So the same fact, in the same payload, at the same token count, can be used or ignored depending on where it sits.</li>
   </ul>
   <p><strong>The test for it has a name: needle in a haystack.</strong> You hide one fact — the needle — inside a long filler context, then ask a question only that fact answers. Vary two things independently:</p>
