@@ -37,6 +37,8 @@ WRITER'S NOTE. The topics below were approved by Sunil on 7 October 2026
 (docs/teaching/reviews/course-review-2026-10-07.md, and bridge 7 of
 docs/teaching/threads.md). Build the pages against generation-prompt.md as weeks
 2 and 3 were, then shrink this body to the short guide week 3 now has.
+DELETE THIS NOTE BEFORE status BECOMES ready. An HTML comment is not shown
+on the page, but it ships in the page source.
 
 Things that must survive the writing:
 - The five questions are fixed (bridge 7 §4). Do not reword them per learner.

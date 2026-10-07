@@ -2962,7 +2962,7 @@ before you run it.</span>
     <p>Five practices on their page. <strong>Land the first two</strong>: write the precedence order down, and enforce it where the context is assembled rather than in the prompt — because a prompt saying "the system prompt wins" is itself just more text competing for attention.</p>
     <p class="qbadge">Note the taxonomy link, because it is a good one: contradiction cases are <em>incomplete</em>-class cases from 00:27. The evidence is genuinely ambiguous, so the right behaviour is to escalate rather than to choose.</p>
     <p>Poisoning is week 4's because it accumulates: one bad input affects one answer in a single-turn run, and every later answer in a multi-turn agent.</p>
-    <p class="quiet">The positional shape comes from Liu et al., "Lost in the Middle" (2023). The cliff shape comes from the one field note in week 1's reading. The card beside this segment says how to handle both. The safest handling is not to name either from the front of the room.</p>`,
+    <p class="quiet">Three sources describe similar shapes in models, and none of them is what today's lab measures. The card beside this segment names them and says how to handle them. The safest handling is not to name any of them from the front of the room.</p>`,
       ref: {
         id: 't5-r-cliff', pairs: 'the mechanism, and the sourcing',
         html: `
@@ -2980,7 +2980,7 @@ before you run it.</span>
   <details>
     <summary><span class="chev">›</span> Sourcing discipline, and what not to claim</summary>
     <div class="dbody">
-      <p>Two sources support what the room sees, and both need their hedges if they are named at all. <strong>The positional shape</strong> is Liu et al., "Lost in the Middle" (2023), measured on question answering over long documents, not on an agent. <strong>The cliff shape</strong> is the field note on compressing control context (arXiv 2608.01056), which is in week 1's reading. Only that second one is in the field notes. <strong>The safest handling is not to name either from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation.</p>
+      <p>Three sources describe similar shapes in models, and <strong>none of them is what today's lab measures</strong>. The room's cliff is a retrieval artefact, as their page says. Two are field notes about compressing context: <strong>arXiv 2608.01056</strong> (control context, and in week 1's reading) and <strong>arXiv 2608.06503</strong> (compaction). The positional effect is <strong>Liu et al., "Lost in the Middle" (2023)</strong>, measured on question answering over long documents, not on an agent. <strong>The safest handling is not to name any of them from the front of the room.</strong> The table is a run the room can reproduce, which is stronger than a citation.</p>
       <p>Do not let "we confirmed the paper" stand. We measured one lexical retriever on seven clauses and the shape matched.</p>
     </div>
   </details>`,

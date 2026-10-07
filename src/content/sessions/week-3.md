@@ -190,22 +190,23 @@ you leave with.
 **1 · LLM evaluation (evals).** *00:15 to 01:00, then a pair discussion.* What
 does a passing test prove about a system that answers differently every time?
 An **evaluation harness** runs a fixed set of cases against the agent and
-scores each one. You sort cases into four classes (ordinary, difficult,
-incomplete, adversarial), find the class your own suite has none of, and write
-the case your tests cannot fail.
+scores each one. You sort cases into four classes: ordinary, difficult,
+incomplete and adversarial. You find the class your own suite has none of, and
+write the case your tests cannot fail. Then each case runs twenty times, so the
+result is a rate rather than a verdict.
 
 **2 · Retrieval-augmented generation (RAG).** *01:06 to 01:43.* When the rule
 comes out of a document, what does a wrong answer actually mean? **RAG** means
 the agent looks up text and answers from it. A wrong answer is now one of two
 failures: the wrong clause was found, or the right clause was ignored. You build
-a second grader that sees the first kind, and run each case twenty times so the
-result is a rate rather than a verdict.
+a second grader that checks which clause the answer used. Then you add a guard
+that sends a dispute to a person when retrieval cannot tell two clauses apart.
 
 **3 · Model-based grading (LLM-as-judge).** *01:45 to 02:22.* A grader is a
 component, so what is its failure rate? A **model-based grader** is a model
 asked to score another model's answer. You measure how often it agrees with
-answers you labelled yourself, first as a raw rate and then as Cohen's kappa
-(agreement after removing the agreement chance alone would give).
+answers you labelled yourself. First as a raw rate, then as Cohen's kappa:
+agreement after removing what chance alone would give.
 
 **4 · Release gates and AI governance.** *02:39 to 03:16, then a pair
 discussion.* Who decided the pass bar, and what does failing it stop? A
@@ -215,8 +216,9 @@ and write one row of the gate table with an owner.
 
 **5 · Context engineering.** *03:23 to 04:00.* What happens to the answers
 when you cut what the model is shown? **Context engineering** is deciding what
-the model sees on each turn. You trim the policy text step by step and watch
-the score hold, then fall off a cliff rather than decline smoothly.
+the model sees on each turn. You trim the policy text step by step. The
+score holds, then drops sharply at 100 characters a clause instead of declining
+slowly.
 
 Each topic ends the same way: three quiz questions, one of them from an earlier
 week, and one line you write in your own words.

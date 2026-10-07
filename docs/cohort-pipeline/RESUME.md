@@ -44,9 +44,10 @@ table is at the foot of the review file.
   own frontmatter.
 - **Week 3 pages:** a sentence saying step-level checks are built in week 5, a sentence
   separating where a case comes from (synthetic, production sample, regression case) from
-  its class, and the 03:33 sourcing corrected. Only one of the "two papers" was a field note,
-  and it was about compression, not position. The positional source is Liu et al., "Lost in
-  the Middle" (2023).
+  its class, and the 03:33 sourcing corrected. The "two papers" are the two compression field
+  notes (arXiv 2608.01056 and 2608.06503), not positional ones. The positional source is Liu
+  et al., "Lost in the Middle" (2023). None of the three is what the lab measures, because the
+  room's cliff is a retrieval artefact, and the card now says so.
 - **Week 2 pages:** the ownership question owed by bridge 6 §5, at 00:42, with its answer key.
 
 **After PR A merges, republish the week 2 and week 3 Artifacts** from the stored pages, to
@@ -57,12 +58,12 @@ published ones have not.
 this work was uncommitted there. The work was moved into a worktree. Check that branch before
 writing week 4, so week 4 is not drafted in two places.
 
-**PR B** (public M3 copy) is on its own branch, because merging it deploys public text.
+**PR B is #55** (public module copy), on its own branch because merging it deploys public
+text. Merge #54 first.
 
-- **Before week 3 is set to `ready`, shrink its session body.** It is a stale copy of an
-  older day: Cycle A/B/C, checkpoints at 00:48, 02:13, 03:10 and 04:08, and a cut segment.
-  The frontmatter and the pages say five topics and 01:00, 01:43, 02:22, 03:16, 04:00.
-  Week 2 had the same fix on 30 September.
+**Delete the writer's note at the top of weeks 4 to 6 before any of them becomes `ready`.**
+It is an HTML comment, so it ships in the page source.
+
 - **Do not adopt the specification's Redis idempotency layer.** It is the split week 2's
   03:03 lab teaches against.
 

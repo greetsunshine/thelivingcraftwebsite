@@ -2217,8 +2217,9 @@ add one sentence saying week 5 builds it. No segment was added and the clock did
 
 **Also flagged:** the instructor note at 03:33 says *"Two papers support the positional shape"* and
 names neither. Either name them or drop the claim.
-**Resolved 7 October:** the claim was also wrong. Only one of the two sources is a field
-note: the compression cliff (arXiv 2608.01056), which is about trimming context and not
-about position. The positional shape is Liu et al., "Lost in the Middle" (2023). The 03:33
-note and its sourcing card now name both and say which one is in the field notes.
+**Resolved 7 October:** the two sources are the two compression field notes, arXiv
+2608.01056 and 2608.06503, and neither is about position. The positional source is Liu et
+al., "Lost in the Middle" (2023), which is not a field note. None of the three is what the
+03:40 lab measures, because the room's cliff is a retrieval artefact. The 03:33 note and its
+sourcing card now say all of that.
 

@@ -928,10 +928,16 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
     <summary><span class="chev">›</span> Ownership: which of the nine you own · 1 minute</summary>
     <div class="dbody">
       <p><strong>Sequence.</strong> After the predictions are on the board, read the question aloud. Pairs mark each row "ours" or "can move under us". Take two answers.</p>
-      <p><strong>Answer key.</strong> Ingress, the dispatch and the resource of record are usually yours. Context assembly, tool selection and argument construction move when the model or the framework changes, because the model decides which tool to call and with what values. Inside the tool and egress move when the tool belongs to a vendor, such as a hosted tool server or a payment SDK.</p>
+      <p><strong>Answer key, all nine rows.</strong></p>
+      <ul>
+        <li><strong>Usually yours:</strong> ingress, the dispatch, after the effect (your reconciliation and refunds), and egress (your response layer).</li>
+        <li><strong>Move with the model or the framework:</strong> context assembly, tool selection and argument construction. Your code builds them, but the model decides which tool to call and with what values, so a model upgrade changes them with no commit from your team.</li>
+        <li><strong>Move with a vendor:</strong> inside the tool, when the tool is a hosted tool server or a payment SDK.</li>
+        <li><strong>Depends on who holds the ledger:</strong> the resource of record. If the ledger is a payment provider's, it is theirs, and the strongest control point on the table is one you do not own.</li>
+      </ul>
       <p><strong>The expected wrong answer.</strong> "We own all nine, it is our code." What is right: the code that calls each place is yours. What is wrong: a model upgrade changes tool selection and arguments with no commit from your team.</p>
       <p><strong>Extension question.</strong> Which of the nine changed in your own system last quarter without a commit from your team?</p>
-      <p class="qbadge">The line: the control that covers the most callers has to sit in a place you own.</p>
+      <p class="qbadge">The line: the control that covers the most callers has to sit in a place you own. If you do not own the ledger, find that out before you design anything else.</p>
     </div>
   </details>
   <details>

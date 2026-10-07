@@ -436,7 +436,9 @@ so the guard is in how they are taught, not whether:
   authorisation lives, what a handoff must carry. Those do not turn over.
 - Put the mechanics in the pre-reading: transports, message shapes, the spec's
   structure.
-- **Print the specification's version date on every page that names a protocol.**
+- **Print the specification's version date on every teaching page that names a
+  protocol.** The public module copy names MCP and A2A as subjects, not as a
+  specification, and carries no date.
 - Run `npm run gather` on MCP and A2A in the week before each one is taught.
 
 The framing rule from §7 still holds. Week 4's MCP topics are not "MCP security".
@@ -472,7 +474,7 @@ each asked a different five. The five are now fixed, and week 6 traces each to t
 week that built its evidence:
 
 1. Where is state kept between tool calls, and who can change it? *(W2, W5)*
-2. What is the most one bad input can cost, in money and in time? *(W1, W4, W5)*
+2. What is the most one bad input can cost, in money and in time? *(W1, W4, W6)*
 3. Which tool call can destroy value, and what stands before it? *(W1, W2)*
 4. How would you know a model upgrade broke tool accuracy? *(W3, W5)*
 5. Which text can an outsider write, and what can it make the agent do? *(W4)*
