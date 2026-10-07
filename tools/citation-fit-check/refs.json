@@ -1,0 +1,196 @@
+{
+  "blank": {
+    "1 · Condition Map": {
+      "hdr": 9,
+      "end": 24,
+      "rulesMapped": "C5",
+      "storedAway": "C6",
+      "cannotCheck": "C7"
+    },
+    "2 · Spot Check": {
+      "hdr": 9,
+      "end": 19,
+      "conditionRecall": "C5",
+      "citedButWrong": "C6",
+      "accuracy": "C7"
+    },
+    "3 · Checklist": {
+      "hdr": 10,
+      "end": 26,
+      "decision": "C5",
+      "total": "C6",
+      "answered": "C7",
+      "nextStep": "C8",
+      "answers": {
+        "1": "E12",
+        "2": "E13",
+        "3": "E14",
+        "4": "E16",
+        "5": "E17",
+        "6": "E18",
+        "7": "E20",
+        "8": "E21",
+        "9": "E22",
+        "10": "E23",
+        "11": "E25",
+        "12": "E26"
+      },
+      "status": {
+        "1": "G12",
+        "2": "G13",
+        "3": "G14",
+        "4": "G16",
+        "5": "G17",
+        "6": "G18",
+        "7": "G20",
+        "8": "G21",
+        "9": "G22",
+        "10": "G23",
+        "11": "G25",
+        "12": "G26"
+      }
+    },
+    "4 · Test Cases": {
+      "hdr": 12,
+      "end": 27,
+      "testCasesWritten": "C5"
+    }
+  },
+  "example": {
+    "sheet": "Worked Example",
+    "conditionMap": {
+      "hdr": 11,
+      "end": 26,
+      "rulesMapped": "C7",
+      "storedAway": "C8",
+      "cannotCheck": "C9"
+    },
+    "spotCheck": {
+      "hdr": 37,
+      "end": 47,
+      "conditionRecall": "C33",
+      "citedButWrong": "C34",
+      "accuracy": "C35"
+    },
+    "checklist": {
+      "hdr": 59,
+      "end": 75,
+      "decision": "C54",
+      "total": "C55",
+      "answered": "C56",
+      "nextStep": "C57",
+      "answers": {
+        "1": "E61",
+        "2": "E62",
+        "3": "E63",
+        "4": "E65",
+        "5": "E66",
+        "6": "E67",
+        "7": "E69",
+        "8": "E70",
+        "9": "E71",
+        "10": "E72",
+        "11": "E74",
+        "12": "E75"
+      },
+      "status": {
+        "1": "G61",
+        "2": "G62",
+        "3": "G63",
+        "4": "G65",
+        "5": "G66",
+        "6": "G67",
+        "7": "G69",
+        "8": "G70",
+        "9": "G71",
+        "10": "G72",
+        "11": "G74",
+        "12": "G75"
+      }
+    },
+    "testCases": {
+      "hdr": 86,
+      "end": 101,
+      "testCasesWritten": "C84"
+    }
+  },
+  "expected": {
+    "rulesMapped": 3,
+    "storedAway": 2,
+    "cannotCheck": 1,
+    "conditionRecall": 0.4,
+    "citedButWrong": 3,
+    "accuracy": 0.7,
+    "total": 10,
+    "criticalNo": [
+      4,
+      7,
+      11
+    ],
+    "decision": "Hold",
+    "nextStep": "Retrieval returns the condition along with the rule (Tab 2 condition recall).",
+    "testCasesWritten": 1
+  },
+  "checks": [
+    {
+      "n": 1,
+      "text": "The source documents are the current versions, and the assistant knows each one’s effective date.",
+      "critical": false
+    },
+    {
+      "n": 2,
+      "text": "Every rule this answer type relies on has its gating conditions identified (Tab 1).",
+      "critical": true
+    },
+    {
+      "n": 3,
+      "text": "Each condition is stored with its rule or linked to it, for example in passage metadata or by retrieving the parent section.",
+      "critical": false
+    },
+    {
+      "n": 4,
+      "text": "Retrieval returns the condition along with the rule (Tab 2 condition recall).",
+      "critical": true
+    },
+    {
+      "n": 5,
+      "text": "Superseded or conflicting versions of a rule are excluded or flagged.",
+      "critical": false
+    },
+    {
+      "n": 6,
+      "text": "Exceptions and overrides to a rule are retrieved with it.",
+      "critical": false
+    },
+    {
+      "n": 7,
+      "text": "The assistant has, or asks for, every asker fact the conditions depend on.",
+      "critical": true
+    },
+    {
+      "n": 8,
+      "text": "The answer states the conditions it relied on, not just the rule.",
+      "critical": false
+    },
+    {
+      "n": 9,
+      "text": "When an asker fact is missing, the answer is conditional (“it depends on your length of service”) or the assistant asks; it doesn’t default to yes.",
+      "critical": false
+    },
+    {
+      "n": 10,
+      "text": "Answers that affect health, money or employment point to a named human contact or the official source for confirmation.",
+      "critical": false
+    },
+    {
+      "n": 11,
+      "text": "The eval set includes cases where the cited text is true but doesn’t apply, scored separately from groundedness (Tab 4).",
+      "critical": true
+    },
+    {
+      "n": 12,
+      "text": "A named owner re-runs this check when a source policy changes.",
+      "critical": false
+    }
+  ]
+}

@@ -462,6 +462,17 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
   // downloads/ and asks for a name and an address like every other file, so
   // it needs its own held wording.
   {
+    key: 'resource-citation-fit-check',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Citation Fit Check',
+    body:
+      'Here is the Citation Fit Check you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/citation-fit-check\n\nIt checks whether a cited answer from a RAG assistant applies to the person asking. Four tabs map the conditions on each rule, spot-check whether retrieval returns them, score twelve checks to a decision of Ready, Fix first or Hold, and collect test cases where the cited text is true but does not apply. The worked example is on its own tab.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_TOOLS_REVISION,
+  },
+  {
     key: 'resource-rework-cost-check',
     route: 'resource',
     dayOffset: 0,
