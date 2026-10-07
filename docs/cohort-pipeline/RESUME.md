@@ -19,6 +19,23 @@ pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashbo
 
 ---
 
+## Whole-course review against an outside specification — 7 October
+
+Sunil supplied a "Master Execution Specification" for all seven weeks and asked whether it
+meets the course's goals. The answer and a proposed final plan for weeks 4 to 6 are in
+[`docs/teaching/reviews/course-review-2026-10-07.md`](../teaching/reviews/course-review-2026-10-07.md).
+**Nothing in the sessions, pages or `threads.md` was changed. It waits on five decisions
+listed at the foot of that file.**
+
+- **Before week 3 is set to `ready`, shrink its session body.** It is a stale copy of an
+  older day: Cycle A/B/C, checkpoints at 00:48, 02:13, 03:10 and 04:08, and a cut segment.
+  The frontmatter and the pages say five topics and 01:00, 01:43, 02:22, 03:16, 04:00.
+  Week 2 had the same fix on 30 September.
+- **Do not adopt the specification's Redis idempotency layer.** It is the split week 2's
+  03:03 lab teaches against.
+
+---
+
 ## Week 3, review round 5 — 6 October
 
 The last five rows of the sheet, eleven items, all on context engineering and the close. Answered
