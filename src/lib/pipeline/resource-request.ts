@@ -248,7 +248,9 @@ export async function handleResourceRequest(
     // The follow-ups (30 September 2026). Only with the marketing box ticked
     // on THIS request; the words the box carried are in consent.ts and the
     // record is written before anything else. Never for a repeat under the
-    // same key, which this branch already excludes.
+    // same key, which this branch already excludes. Since 6 October the
+    // sequence opens awaiting confirmation, and the only email it queues is
+    // the one asking the person to confirm.
     const followUp = await startDripFromRequest({
       personId: saved.personId,
       requestId: saved.requestId,
@@ -260,7 +262,7 @@ export async function handleResourceRequest(
         resource_follow_up: {
           request_id: saved.requestId,
           opened: followUp.opened,
-          detail: followUp.opened ? followUp.nextSendAt : followUp.why,
+          detail: followUp.opened ? (followUp.confirmationQueued ? 'awaiting confirmation; request queued' : 'awaiting confirmation; request NOT queued') : followUp.why,
         },
       }),
     );

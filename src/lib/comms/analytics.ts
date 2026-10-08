@@ -16,7 +16,9 @@ import { environment } from '../analytics/context';
 export type CommsEventType =
   | 'resource_delivery_sent'
   | 'drip_opened'
+  | 'drip_confirmed'
   | 'drip_planned'
+  | 'drip_paused'
   | 'drip_sent'
   | 'drip_delivered'
   | 'drip_email_opened'

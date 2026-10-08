@@ -34,7 +34,7 @@
 // blank tools that became the main download on 28 September.
 import { RESOURCE_FIELDS } from '../lib/pipeline/resources';
 import RoleField from './RoleField.astro';
-import { MARKETING_CONSENT } from '../lib/pipeline/consent';
+import { RESOURCE_MARKETING_CONSENT } from '../lib/pipeline/consent';
 
 interface Props {
   /** The resource id the request is recorded against. */
@@ -74,7 +74,7 @@ const emailField = RESOURCE_FIELDS.find((f) => f.name === 'email')!;
         wording on this surface awaits Sunil's confirmation. */}
     <label class="gate-tick" for="gate-consent">
       <input type="checkbox" id="gate-consent" name="marketing_consent" value="yes" />
-      <span>{MARKETING_CONSENT.wording}</span>
+      <span>{RESOURCE_MARKETING_CONSENT.wording}</span>
     </label>
     <input class="hp" type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <p class="gate-note">

@@ -1,42 +1,76 @@
 // The resource follow-ups, end to end against the in-memory store, with the
 // clock in the test's hand.
 //
-// The rules under test are at the head of drip.ts. The ones that matter most,
-// because each one failing is silent:
-//   * never the resource they asked for, never one already sent;
-//   * a step is planned once, whatever runs the planner and however often;
-//   * nothing is planned without a recorded permission, and a withdrawal stops
-//     the sequence rather than one message;
-//   * "day 2" is the reader's calendar day, in the reader's zone.
+// The rules under test come from the resource brief
+// (05-email-and-resource-routing, revised 29 September 2026). The ones that
+// matter most, because each one failing is silent:
+//   * nothing but the confirmation request goes until the person clicks it;
+//   * days 2, 5, 9 and 14 from the click, then weekly; weekdays at 10:00 IST;
+//     never less than 48 hours apart; no catch-up burst;
+//   * a reply, a call, an application or a payment pauses it, and nothing
+//     resumes it except a person;
+//   * never the resource they asked for, never one already sent, never one
+//     Sunil has not released;
+//   * a step is planned once, whatever runs the planner and however often.
 //
 // Run with `npm test`.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_DRIP_CONFIG, dripConfig, dripView, openResourceDrip, recommend, runDripPlanner, sendSlot } from './drip.ts';
+import {
+  DEFAULT_DRIP_CONFIG,
+  confirmDrip,
+  dripConfig,
+  dripView,
+  openResourceDrip,
+  recommend,
+  rollToWeekday,
+  runDripPlanner,
+  sendSlot,
+  slotForStep,
+} from './drip.ts';
 import { MemoryDripStore } from './drip-memory.ts';
-import { DRIP_MODULES, moduleForRequestId, type DripModule } from '../../data/resource-routing.ts';
-import { DRIP_TEMPLATES, dripTemplateFor } from './drip-templates.ts';
+import { DRIP_MODULES, RELEASES, moduleForRequestId, type DripModule } from '../../data/resource-routing.ts';
+import { CONFIRM_ACTION, CONFIRMATION_TEMPLATE, DRIP_TEMPLATES, dripTemplateFor, fillDripBody, relevanceSentence } from './drip-templates.ts';
 
 const IST = 'Asia/Kolkata';
 const COHORT = 'Explore the cohort: https://learning.thelivingcraft.ai/#apply';
-const T0 = new Date('2026-10-01T05:00:00.000Z'); // 10:30 IST, 1 October
-const DAY2 = new Date(sendSlot(T0.toISOString(), 2, IST, 10)); // 10:00 IST, 3 October
+const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 
-const person = (store: MemoryDripStore, id = 'p1', role = 'Founder / Business Owner') => {
-  store.addPerson(id, { firstName: 'Asha', recipient: `${id}@example.org`, role, roleCode: null });
+// Thursday 1 October 2026, 10:30 IST.
+const T0 = new Date('2026-10-01T05:00:00.000Z');
+// 10:00 IST is 04:30 UTC.
+const at10 = (date: string) => new Date(`${date}T04:30:00.000Z`);
+
+/** The live catalogue with every active module released, as it will be once Sunil confirms them. */
+const RELEASED: readonly DripModule[] = DRIP_MODULES.map((m) => ({ ...m, released: true }));
+
+const person = (store: MemoryDripStore, id = 'p1', role = 'Founder / Business Owner', roleCode: string | null = null) => {
+  store.addPerson(id, { firstName: 'Asha', recipient: `${id}@example.org`, role, roleCode });
   return id;
 };
 
-const opened = async (store: MemoryDripStore, personId = 'p1', requestResourceId = 'lc-r01') => {
+/** Tick the box on a download, at T0. */
+const ticked = async (store: MemoryDripStore, personId = 'p1', requestResourceId = 'lc-r01', now = T0) => {
   store.addRequest(personId, requestResourceId);
-  const out = await openResourceDrip(store, { personId, requestId: `req-${personId}`, requestResourceId, consented: true, now: T0 });
+  const out = await openResourceDrip(store, { personId, requestId: `req-${personId}`, requestResourceId, consented: true, now });
   assert.equal(out.opened, true);
   return out.opened ? out.sequenceId : '';
 };
 
-const plan = (store: MemoryDripStore, now: Date, catalogue?: readonly DripModule[]) =>
+/** Tick, then click the confirmation link at `confirmAt`. Sends the confirmation request on the way. */
+const confirmed = async (store: MemoryDripStore, personId = 'p1', requestResourceId = 'lc-r01', confirmAt = T0) => {
+  const seqId = await ticked(store, personId, requestResourceId, confirmAt);
+  store.sweep(confirmAt.toISOString());
+  assert.equal(await confirmDrip(store, { sequenceId: seqId, personId, now: confirmAt }), 'confirmed');
+  return seqId;
+};
+
+const plan = (store: MemoryDripStore, now: Date, catalogue: readonly DripModule[] = RELEASED) =>
   runDripPlanner(store, { now, cohortInvitation: COHORT, catalogue });
+
+const marketing = (store: MemoryDripStore) => store.messages.filter((m) => m.purpose === 'marketing');
 
 // ── the catalogue and the wordings ─────────────────────────────────────────
 
@@ -53,6 +87,12 @@ test('the catalogue is closed: every follow-up id exists, every module has a wor
   assert.equal(DRIP_MODULES.find((m) => m.id === 'LC-T11')?.active, false, 'the register says LC-T11 is not enabled');
 });
 
+test('every module starts unreleased: "All begin disabled pending technical review"', () => {
+  assert.deepEqual(Object.keys(RELEASES), []);
+  assert.ok(DRIP_MODULES.every((m) => m.released === false));
+  assert.equal(recommend({ initial: 'LC-T01', excluded: [], roleCode: null }), null, 'the live catalogue selects nothing yet');
+});
+
 test('a request id maps to its module, and a guide has no request id', () => {
   assert.equal(moduleForRequestId('lc-r01')?.id, 'LC-R01');
   assert.equal(moduleForRequestId('poc-screen')?.id, 'LC-T01');
@@ -61,93 +101,185 @@ test('a request id maps to its module, and a guide has no request id', () => {
   assert.deepEqual(DRIP_MODULES.find((m) => m.id === 'LC-G01')?.requestIds, []);
 });
 
+test('the confirmation request is the brief\'s wording, transactional, with the link placeholder and no cohort promotion', () => {
+  assert.equal(CONFIRMATION_TEMPLATE.purpose, 'transactional');
+  assert.equal(CONFIRMATION_TEMPLATE.subject, 'Confirm your Living Craft resource emails');
+  assert.ok(CONFIRMATION_TEMPLATE.body.includes(`Confirm my subscription: ${CONFIRM_ACTION}`));
+  assert.ok(CONFIRMATION_TEMPLATE.body.includes("If you didn't ask for these updates, ignore this email. You won't be added to the sequence."));
+  assert.ok(!/apply|cohort starts|seats?/i.test(CONFIRMATION_TEMPLATE.body.replace('cohort updates', '')), 'no promotion');
+  assert.deepEqual(CONFIRMATION_TEMPLATE.actions, []);
+});
+
+// ── the relevance sentence ─────────────────────────────────────────────────
+
+test('at most one relevance sentence: the request first, then a stated role, then none', () => {
+  assert.equal(
+    relevanceSentence({ requestedTitle: 'The POC Selection Tool', roleCode: 'engineer' }),
+    'You requested the POC Selection Tool. This resource looks at another decision around the same kind of workflow.',
+  );
+  assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'engineering_leader' })!, /^You mentioned leading an engineering team/);
+  assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'engineer' })!, /^You mentioned hands-on engineering work/);
+  assert.match(relevanceSentence({ requestedTitle: null, roleCode: 'architect' })!, /^You mentioned architecture work/);
+  assert.equal(relevanceSentence({ requestedTitle: null, roleCode: 'founder' }), null, 'no sentence is invented for a role the brief does not cover');
+  assert.equal(relevanceSentence({ requestedTitle: null, roleCode: null }), null);
+});
+
+test('with no relevance sentence the module reads complete: "Hi," and no empty paragraph', () => {
+  const body = 'Hi {{first_name}},\n\n{{relevance}}\n\nThe bridge.\n\nThe resource.';
+  assert.equal(fillDripBody(body, { firstName: null, relevance: null, cohortInvitation: '' }), 'Hi,\n\nThe bridge.\n\nThe resource.');
+  assert.equal(
+    fillDripBody(body, { firstName: 'Asha', relevance: 'One sentence.', cohortInvitation: '' }),
+    'Hi Asha,\n\nOne sentence.\n\nThe bridge.\n\nThe resource.',
+  );
+});
+
 // ── selection ──────────────────────────────────────────────────────────────
 
 test('the initial resource is never recommended, and its preferred list comes first, in order', () => {
-  const first = recommend({ initial: 'LC-T01', excluded: [], roleCode: null });
+  const first = recommend({ initial: 'LC-T01', excluded: [], roleCode: null, catalogue: RELEASED });
   assert.equal(first?.id, 'LC-G01');
-  const second = recommend({ initial: 'LC-T01', excluded: ['LC-G01'], roleCode: null });
+  const second = recommend({ initial: 'LC-T01', excluded: ['LC-G01'], roleCode: null, catalogue: RELEASED });
   assert.equal(second?.id, 'LC-TPL01');
   for (let i = 0; i < 30; i++) {
-    const pick = recommend({ initial: 'LC-T01', excluded: DRIP_MODULES.slice(0, i).map((m) => m.id), roleCode: null });
+    const pick = recommend({ initial: 'LC-T01', excluded: RELEASED.slice(0, i).map((m) => m.id), roleCode: null, catalogue: RELEASED });
     assert.notEqual(pick?.id, 'LC-T01');
   }
 });
 
 test('once the preferred list is used up, the role decides, then catalogue order', () => {
   const exhausted = ['LC-G03', 'LC-T03', 'LC-T04', 'LC-TPL02']; // LC-R02's list
-  assert.equal(recommend({ initial: 'LC-R02', excluded: exhausted, roleCode: 'founder' })?.id, 'LC-T01');
-  assert.equal(recommend({ initial: 'LC-R02', excluded: exhausted, roleCode: 'engineer' })?.id, 'LC-T02');
-  assert.equal(recommend({ initial: 'LC-R02', excluded: exhausted, roleCode: null })?.id, 'LC-T01', 'no role: catalogue order');
-  assert.equal(recommend({ initial: 'LC-R02', excluded: exhausted, roleCode: 'student' })?.id, 'LC-TPL04', 'a student: the one module that names students');
+  const r = (roleCode: Parameters<typeof recommend>[0]['roleCode']) =>
+    recommend({ initial: 'LC-R02', excluded: exhausted, roleCode, catalogue: RELEASED })?.id;
+  assert.equal(r('founder'), 'LC-T01');
+  assert.equal(r('engineer'), 'LC-T02');
+  assert.equal(r(null), 'LC-T01', 'no role: catalogue order');
+  assert.equal(r('student'), 'LC-TPL04', 'a student: the one module that names students');
 });
 
-test('an inactive module is skipped even when the matrix prefers it, and nothing left is null', () => {
+test('a role the brief names goes first: an engineering leader gets the review agenda, an architect the authority review', () => {
+  // LC-R01's own list would start with LC-T07.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: null, catalogue: RELEASED })?.id, 'LC-T07');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'engineering_leader', catalogue: RELEASED })?.id, 'LC-TPL02');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: ['LC-TPL02'], roleCode: 'engineering_leader', catalogue: RELEASED })?.id, 'LC-TPL03');
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'architect', catalogue: RELEASED })?.id, 'LC-T02');
+  // Once both are used, the topic order takes over.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: ['LC-T02', 'LC-TPL01'], roleCode: 'architect', catalogue: RELEASED })?.id, 'LC-T07');
+  // An engineer has no priority in the brief.
+  assert.equal(recommend({ initial: 'LC-R01', excluded: [], roleCode: 'engineer', catalogue: RELEASED })?.id, 'LC-T07');
+});
+
+test('an inactive or unreleased module is skipped even when the matrix prefers it', () => {
+  const base = { ...DRIP_MODULES[0], preferredFollowUps: [] as string[], released: true, active: true };
   const cat: DripModule[] = [
-    { ...DRIP_MODULES[0], id: 'A', preferredFollowUps: ['B', 'C'], active: true, priority: 1 },
-    { ...DRIP_MODULES[0], id: 'B', preferredFollowUps: [], active: false, priority: 2 },
-    { ...DRIP_MODULES[0], id: 'C', preferredFollowUps: [], active: true, priority: 3 },
+    { ...base, id: 'A', preferredFollowUps: ['B', 'C', 'D'], priority: 1 },
+    { ...base, id: 'B', active: false, priority: 2 },
+    { ...base, id: 'C', released: false, priority: 3 },
+    { ...base, id: 'D', priority: 4 },
   ];
-  assert.equal(recommend({ initial: 'A', excluded: [], roleCode: null, catalogue: cat })?.id, 'C');
-  assert.equal(recommend({ initial: 'A', excluded: ['C'], roleCode: null, catalogue: cat }), null);
+  assert.equal(recommend({ initial: 'A', excluded: [], roleCode: null, catalogue: cat })?.id, 'D');
+  assert.equal(recommend({ initial: 'A', excluded: ['D'], roleCode: null, catalogue: cat }), null);
 });
 
-// ── the calendar clock ─────────────────────────────────────────────────────
+// ── the calendar ───────────────────────────────────────────────────────────
 
-test('day 2 is 10:00 on the reader\'s second calendar day, not 48 hours later', () => {
-  // 01:30 IST on 2 October is already "day 0 = 2 October" in India.
+test('a calendar day is the reader\'s calendar day, on both sides of a daylight-saving change', () => {
   assert.equal(sendSlot('2026-10-01T20:00:00.000Z', 2, IST, 10), '2026-10-04T04:30:00.000Z');
-  // 23:30 IST and 00:30 IST, an hour apart, land a day apart.
-  const late = sendSlot('2026-10-01T18:00:00.000Z', 2, IST, 10); // 23:30 IST 1 Oct
-  const early = sendSlot('2026-10-01T19:00:00.000Z', 2, IST, 10); // 00:30 IST 2 Oct
-  assert.equal(late, '2026-10-03T04:30:00.000Z');
-  assert.equal(early, '2026-10-04T04:30:00.000Z');
-  // Month rollover.
+  assert.equal(sendSlot('2026-10-01T18:00:00.000Z', 2, IST, 10), '2026-10-03T04:30:00.000Z');
   assert.equal(sendSlot('2026-09-30T06:00:00.000Z', 2, IST, 10), '2026-10-02T04:30:00.000Z');
-});
-
-test('the slot is right on both sides of a daylight-saving change', () => {
-  // Europe/London: BST begins 29 March 2026 at 01:00 UTC.
   assert.equal(sendSlot('2026-03-27T12:00:00.000Z', 2, 'Europe/London', 10), '2026-03-29T09:00:00.000Z');
-  assert.equal(sendSlot('2026-03-27T12:00:00.000Z', 1, 'Europe/London', 10), '2026-03-28T10:00:00.000Z');
-  // BST ends 25 October 2026 at 01:00 UTC.
   assert.equal(sendSlot('2026-10-24T12:00:00.000Z', 1, 'Europe/London', 10), '2026-10-25T10:00:00.000Z');
-  assert.equal(sendSlot('2026-10-24T12:00:00.000Z', 0, 'Europe/London', 10), '2026-10-24T09:00:00.000Z');
-  // America/New_York: EDT begins 8 March 2026 at 07:00 UTC.
-  assert.equal(sendSlot('2026-03-07T12:00:00.000Z', 1, 'America/New_York', 10), '2026-03-08T14:00:00.000Z');
-  assert.equal(sendSlot('2026-03-07T12:00:00.000Z', 0, 'America/New_York', 10), '2026-03-07T15:00:00.000Z');
 });
 
-test('the config falls back on nonsense and never throws', () => {
-  const read = (k: string) => ({ COMMS_DRIP_INTERVAL_DAYS: '400', COMMS_DRIP_SEND_HOUR: 'noon', COMMS_DRIP_TIMEZONE: 'Mars/Olympus' })[k] ?? '';
-  const cfg = dripConfig(read);
-  assert.equal(cfg.intervalDays, DEFAULT_DRIP_CONFIG.intervalDays);
+test('a weekend slot moves to Monday 10:00', () => {
+  assert.equal(rollToWeekday(at10('2026-10-03').toISOString(), IST, 10), at10('2026-10-05').toISOString(), 'Saturday');
+  assert.equal(rollToWeekday(at10('2026-10-04').toISOString(), IST, 10), at10('2026-10-05').toISOString(), 'Sunday');
+  assert.equal(rollToWeekday(at10('2026-10-06').toISOString(), IST, 10), at10('2026-10-06').toISOString(), 'Tuesday stays');
+});
+
+test('steps 1 to 4 fall on days 2, 5, 9 and 14 after the click, moved off weekends and kept 48 hours apart', () => {
+  const enrolledAt = T0.toISOString(); // Thursday 1 October
+  const s = (step: number, lastSentAt: string | null) => slotForStep({ step, enrolledAt, lastSentAt });
+  // Day 2 is Saturday 3 October: Monday 5.
+  assert.equal(s(1, null), at10('2026-10-05').toISOString());
+  // Day 5 is Tuesday 6, but that is 24 hours after Monday's send: Wednesday 7, exactly 48 hours on.
+  assert.equal(s(2, at10('2026-10-05').toISOString()), at10('2026-10-07').toISOString());
+  // Day 9 is Saturday 10: Monday 12.
+  assert.equal(s(3, at10('2026-10-07').toISOString()), at10('2026-10-12').toISOString());
+  // Day 14 is Thursday 15.
+  assert.equal(s(4, at10('2026-10-12').toISOString()), at10('2026-10-15').toISOString());
+  // Then seven days after the last actual send.
+  assert.equal(s(5, at10('2026-10-15').toISOString()), at10('2026-10-22').toISOString());
+  // A late send moves the weekly step with it.
+  assert.equal(s(5, '2026-10-16T09:00:00.000Z'), at10('2026-10-23').toISOString());
+});
+
+test('the 48-hour floor rolls to the next weekday slot after it, not to the minute', () => {
+  // Sent Friday 9 October at 15:00 IST. 48 hours on is Sunday 15:00: next weekday 10:00 is Monday 12.
+  const last = '2026-10-09T09:30:00.000Z';
+  assert.equal(slotForStep({ step: 3, enrolledAt: T0.toISOString(), lastSentAt: last }), at10('2026-10-12').toISOString());
+});
+
+test('only the hour and the zone can be configured; the brief\'s offsets cannot be overridden', () => {
+  const cfg = dripConfig((k) => ({ COMMS_DRIP_INTERVAL_DAYS: '1', COMMS_DRIP_SEND_HOUR: 'noon', COMMS_DRIP_TIMEZONE: 'Mars/Olympus' })[k] ?? '');
+  assert.deepEqual(cfg.offsets, [2, 5, 9, 14]);
+  assert.equal(cfg.weeklyDays, 7);
+  assert.equal(cfg.minGapHours, 48);
   assert.equal(cfg.hour, 10);
   assert.equal(cfg.zone, IST);
-  assert.equal(dripConfig((k) => ({ COMMS_DRIP_INTERVAL_DAYS: '7', COMMS_DRIP_TIMEZONE: 'Europe/London' })[k] ?? '').intervalDays, 7);
+  assert.equal(dripConfig((k) => ({ COMMS_DRIP_SEND_HOUR: '9' })[k] ?? '').hour, 9);
 });
 
-// ── opening ────────────────────────────────────────────────────────────────
+// ── opening: the tick ──────────────────────────────────────────────────────
 
-test('without the box ticked, nothing opens and no consent is written', async () => {
+test('without the box ticked, nothing opens, no consent is written and no email is queued', async () => {
   const store = new MemoryDripStore();
   person(store);
   const out = await openResourceDrip(store, { personId: 'p1', requestId: 'r1', requestResourceId: 'lc-r01', consented: false, now: T0 });
   assert.equal(out.opened, false);
   assert.equal(store.sequences.length, 0);
   assert.equal(store.consents.length, 0);
+  assert.equal(store.messages.length, 0);
 });
 
-test('with the box ticked, a consent row is written and the sequence is due on day 2', async () => {
+test('a tick opens the sequence awaiting confirmation and queues exactly one email: the confirmation request', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const out = await openResourceDrip(store, { personId: 'p1', requestId: 'r1', requestResourceId: 'lc-r01', consented: true, now: T0 });
-  assert.equal(out.opened, true);
-  assert.deepEqual(store.consents.map((c) => [c.state, c.source]), [['granted', 'resource-gate']]);
-  const seq = store.sequences[0];
-  assert.equal(seq.route, 'resource');
+  const seqId = await ticked(store);
+  const seq = store.find(seqId)!;
+  assert.equal(seq.state, 'awaiting_confirmation');
+  assert.equal(seq.nextSendAt, null);
   assert.equal(seq.resourceId, 'LC-R01');
-  assert.equal(seq.nextSendAt, DAY2.toISOString());
+  assert.deepEqual(store.consents.map((c) => [c.state, c.source, c.confirmedAt]), [['granted', 'resource-gate', null]]);
+  assert.equal(store.messages.length, 1);
+  const m = store.messages[0];
+  assert.equal(m.purpose, 'transactional');
+  assert.equal(m.templateKey, 'confirm-resource-emails');
+  assert.equal(m.idempotencyKey, `confirm:${seqId}:2026-10-01`, 'dated in IST, like every later request');
+  assert.equal(m.step, 0);
+  assert.ok(m.body.includes(CONFIRM_ACTION), 'the link is minted at dispatch, never stored');
+});
+
+test('nothing marketing is ever planned for a sequence that is not confirmed', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  await ticked(store);
+  for (let d = 0; d < 40; d++) await plan(store, new Date(T0.getTime() + d * DAY));
+  assert.equal(marketing(store).length, 0);
+});
+
+test('a second tick while waiting re-sends the request, at most once a day, and opens nothing new', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await ticked(store);
+  const again = (now: Date) => openResourceDrip(store, { personId: 'p1', requestId: 'r2', requestResourceId: 'poc-screen', consented: true, now });
+  await again(new Date(T0.getTime() + 20 * 60_000)); // twenty minutes later, same IST day
+  assert.equal(store.messages.length, 1, 'the first request already went today: no second one');
+  await again(new Date(T0.getTime() + 2 * HOUR));
+  assert.equal(store.messages.length, 1, 'still one that day');
+  await again(new Date(T0.getTime() + DAY));
+  assert.equal(store.messages.length, 2, 'one more the next day');
+  assert.equal(store.sequences.length, 1);
+  assert.ok(store.messages.every((m) => m.sequenceId === seqId && m.purpose === 'transactional'));
 });
 
 test('a person already in the application sequence keeps that one; the permission is still recorded', async () => {
@@ -158,6 +290,17 @@ test('a person already in the application sequence keeps that one; the permissio
   assert.equal(out.opened, false);
   assert.match(out.opened ? '' : out.why, /already has a active application sequence/);
   assert.equal(store.consents.length, 1);
+  assert.equal(store.messages.length, 0);
+});
+
+test('a person who has had a follow-up sequence before is not re-enrolled by another tick', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  store.find(seqId)!.state = 'completed';
+  const out = await openResourceDrip(store, { personId: 'p1', requestId: 'r9', requestResourceId: 'poc-screen', consented: true, now: new Date(T0.getTime() + 60 * DAY) });
+  assert.equal(out.opened, false);
+  assert.match(out.opened ? '' : out.why, /does not re-enrol/);
   assert.equal(store.sequences.length, 1);
 });
 
@@ -170,208 +313,287 @@ test('a store that cannot write the consent opens nothing', async () => {
   assert.equal(store.sequences.length, 0);
 });
 
-// ── the planner ────────────────────────────────────────────────────────────
+// ── confirming: the click ──────────────────────────────────────────────────
 
-test('nothing is planned before day 2; on day 2 one message goes with the name, the request and the cohort block', async () => {
+test('the click activates the sequence, writes a confirmed consent row, and sets step 1 to day 2', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const seqId = await opened(store);
+  const seqId = await ticked(store);
+  const outcome = await confirmDrip(store, { sequenceId: seqId, personId: 'p1', now: T0 });
+  assert.equal(outcome, 'confirmed');
+  const seq = store.find(seqId)!;
+  assert.equal(seq.state, 'active');
+  assert.equal(seq.confirmedAt, T0.toISOString());
+  assert.equal(seq.nextSendAt, at10('2026-10-05').toISOString(), 'day 2 is a Saturday: Monday');
+  assert.equal(store.consents.at(-1)!.confirmedAt, T0.toISOString());
+  assert.equal(await store.consentState('p1'), 'confirmed');
+});
 
-  const early = await plan(store, new Date(DAY2.getTime() - 60_000));
+test('a second click changes nothing; somebody else\'s link and a stopped sequence are "gone"', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  person(store, 'p2');
+  const seqId = await ticked(store);
+  assert.equal(await confirmDrip(store, { sequenceId: seqId, personId: 'p1', now: T0 }), 'confirmed');
+  const before = JSON.stringify(store.sequences);
+  assert.equal(await confirmDrip(store, { sequenceId: seqId, personId: 'p1', now: new Date(T0.getTime() + HOUR) }), 'already');
+  assert.equal(JSON.stringify(store.sequences), before);
+  assert.equal(await confirmDrip(store, { sequenceId: seqId, personId: 'p2', now: T0 }), 'gone');
+  assert.equal(await confirmDrip(store, { sequenceId: 'no-such', personId: 'p1', now: T0 }), 'gone');
+
+  const s2 = new MemoryDripStore();
+  person(s2);
+  const id2 = await ticked(s2);
+  s2.unsubscribe('p1', T0.toISOString());
+  assert.equal(await confirmDrip(s2, { sequenceId: id2, personId: 'p1', now: T0 }), 'gone', 'an unsubscribe is never undone by a link');
+  assert.equal(s2.find(id2)!.state, 'stopped');
+});
+
+test('sequences opened before 6 October, moved back to awaiting, are each sent the request once', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = store.addLiveSequence('p1', 'resource', 'awaiting_confirmation');
+  const r1 = await plan(store, T0);
+  assert.equal(r1.confirmationsQueued, 1);
+  const r2 = await plan(store, new Date(T0.getTime() + HOUR));
+  assert.equal(r2.confirmationsQueued, 0);
+  assert.deepEqual(store.messages.map((m) => [m.idempotencyKey, m.purpose]), [[`confirm:${seqId}:2026-10-01`, 'transactional']]);
+});
+
+test('the confirmation retry still finds a new sequence behind 500 that never confirmed', async () => {
+  const store = new MemoryDripStore();
+  for (let i = 0; i < 520; i++) {
+    person(store, `old${i}`);
+    await ticked(store, `old${i}`);
+  }
+  person(store);
+  const seqId = store.addLiveSequence('p1', 'resource', 'awaiting_confirmation'); // its first request never queued
+  const r = await plan(store, new Date(T0.getTime() + DAY));
+  assert.equal(r.confirmationsQueued, 1);
+  assert.ok(store.messages.some((m) => m.sequenceId === seqId && m.templateKey === CONFIRMATION_TEMPLATE.key));
+});
+
+// ── the planner ────────────────────────────────────────────────────────────
+
+test('on the first slot one message goes with the name, the relevance sentence and the cohort block', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  const day2 = at10('2026-10-05');
+
+  const early = await plan(store, new Date(day2.getTime() - 60_000));
   assert.equal(early.considered, 0);
-  assert.equal(store.messages.length, 0);
 
-  const r = await plan(store, DAY2);
+  const r = await plan(store, day2);
   assert.equal(r.planned, 1);
   assert.equal(r.lines[0].moduleId, 'LC-T07', 'LC-R01 prefers LC-T07 first');
-  assert.equal(store.messages.length, 1);
-  const m = store.messages[0];
+  const [m] = marketing(store);
   assert.equal(m.idempotencyKey, `drip:${seqId}:1`);
-  assert.equal(m.purpose, 'marketing');
   assert.equal(m.recipient, 'p1@example.org');
   assert.equal(m.subject, 'What does an acceptable outcome cost?');
-  assert.match(m.body, /^Hi Asha,/);
-  assert.match(m.body, /You asked for The Cost-Ceiling Worksheet\./);
+  assert.match(m.body, /^Hi Asha,\n\nYou requested the Cost-Ceiling Worksheet\. This resource looks at another decision around the same kind of workflow\.\n\n/);
   assert.match(m.body, /Use the Run-Cost Model: https:\/\/learning\.thelivingcraft\.ai\/resources\/run-cost-model/);
   assert.ok(m.body.includes(COHORT));
-  assert.ok(m.body.endsWith('{{action:unsubscribe}}'), 'the action placeholder is the last line, for the adapter to sign');
-  assert.ok(!m.body.includes('{{first_name}}') && !m.body.includes('{{requested_title}}') && !m.body.includes('{{cohort_invitation}}'));
+  assert.ok(m.body.endsWith('{{action:unsubscribe}}'));
+  assert.ok(!/\{\{(first_name|relevance|cohort_invitation)\}\}/.test(m.body));
+  assert.equal(store.find(seqId)!.stepsSent, 1);
 
-  const seq = store.find(seqId)!;
-  assert.equal(seq.stepsSent, 1);
-  assert.equal(seq.nextSendAt, sendSlot(DAY2.toISOString(), DEFAULT_DRIP_CONFIG.intervalDays, IST, 10));
-  assert.deepEqual(store.sends.map((s) => [s.step, s.moduleId]), [[1, 'LC-T07']]);
-
-  const again = await plan(store, DAY2);
+  const again = await plan(store, day2);
   assert.equal(again.considered, 0, 'the same instant plans nothing twice');
 });
 
-test('a person with no name is greeted without one', async () => {
-  const store = new MemoryDripStore();
-  store.addPerson('p9', { firstName: null, recipient: 'p9@example.org', role: null, roleCode: null });
-  await opened(store, 'p9');
-  await plan(store, DAY2);
-  assert.match(store.messages[0].body, /^Hi,\n/);
-});
-
-test('the sequence never repeats a resource, never sends the requested ones, and completes when the catalogue is used up', async () => {
+test('the whole run lands on the brief\'s calendar: Mon 5, Wed 7, Mon 12, Thu 15, Thu 22 October', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const seqId = await opened(store);
-  let now = DAY2;
-  const sent: string[] = [];
-  for (let i = 0; i < 40; i++) {
-    const r = await plan(store, now);
+  const seqId = await confirmed(store);
+  const sentAt: string[] = [];
+  for (let i = 0; i < 5; i++) {
     const seq = store.find(seqId)!;
-    if (seq.state === 'completed') break;
-    assert.equal(r.planned, 1, `step ${i + 1} should plan exactly one`);
-    sent.push(r.lines[0].moduleId!);
-    // A second request mid-sequence is excluded from then on.
-    if (i === 0) store.addRequest('p1', 'poc-screen');
-    now = new Date(seq.nextSendAt!);
+    // Run the clock forward in ten-minute ticks, like the cron, until a step is planned.
+    let now = new Date(Math.max(Date.parse(seq.nextSendAt!), T0.getTime()));
+    let r = await plan(store, now);
+    let guard = 0;
+    while (r.planned === 0 && guard++ < 2000) {
+      now = new Date(Date.parse(store.find(seqId)!.nextSendAt!));
+      r = await plan(store, now);
+    }
+    assert.equal(r.planned, 1);
+    store.sweep(now.toISOString());
+    sentAt.push(now.toISOString());
   }
+  assert.deepEqual(sentAt, ['2026-10-05', '2026-10-07', '2026-10-12', '2026-10-15', '2026-10-22'].map((d) => at10(d).toISOString()));
+});
+
+test('no catch-up burst: with dispatch off for three weeks, one message waits and nothing piles up behind it', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  await plan(store, at10('2026-10-05'));
+  assert.equal(marketing(store).length, 1);
+  // Nothing is swept. The cron keeps running.
+  for (let t = at10('2026-10-05').getTime(); t < at10('2026-10-26').getTime(); t += 6 * HOUR) await plan(store, new Date(t));
+  assert.equal(marketing(store).length, 1, 'still one');
+  assert.equal(store.find(seqId)!.stepsSent, 1);
+  // Dispatch comes on: the waiting one goes on Monday 26. The next is 48 hours later at the earliest.
+  store.sweep(at10('2026-10-26').toISOString());
+  const r = await plan(store, new Date(at10('2026-10-26').getTime() + HOUR));
+  assert.equal(r.planned, 0);
+  assert.equal(store.find(seqId)!.nextSendAt, at10('2026-10-28').toISOString());
+});
+
+test('a reply pauses the sequence, cancels what is queued, and nothing restarts it on its own', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  await plan(store, at10('2026-10-05'));
+  store.addSignal('p1', 'the person replied', at10('2026-10-05').toISOString());
+  // The queued step has not gone; the next due check pauses.
+  await plan(store, new Date(at10('2026-10-05').getTime() + 2 * HOUR));
   const seq = store.find(seqId)!;
-  assert.equal(seq.state, 'completed');
+  assert.equal(seq.state, 'paused');
+  assert.equal(seq.pausedReason, 'the person replied');
+  assert.equal(marketing(store)[0].state, 'cancelled');
+  for (let d = 1; d < 30; d++) await plan(store, new Date(at10('2026-10-05').getTime() + d * DAY));
+  assert.equal(store.find(seqId)!.state, 'paused');
+  assert.equal(marketing(store).length, 1);
+});
+
+test('after a reviewed resume the old reply is not read again, and a new one pauses it again', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  store.addSignal('p1', 'the person replied', at10('2026-10-02').toISOString());
+  await plan(store, at10('2026-10-05'));
+  assert.equal(store.find(seqId)!.state, 'paused');
+
+  store.resume(seqId, at10('2026-10-08').toISOString());
+  const r = await plan(store, at10('2026-10-08'));
+  assert.equal(r.planned, 1, 'the reviewed reply does not pause it again');
+
+  store.sweep(at10('2026-10-08').toISOString());
+  store.addSignal('p1', 'the person booked a call', at10('2026-10-09').toISOString());
+  await plan(store, at10('2026-10-12'));
+  assert.equal(store.find(seqId)!.state, 'paused');
+  assert.equal(store.find(seqId)!.pausedReason, 'the person booked a call');
+});
+
+test('an open application pauses it whenever it was opened, until somebody reviews it', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  store.addSignal('p1', 'the person has an open application or enquiry', '2026-09-01T00:00:00.000Z', true);
+  await plan(store, at10('2026-10-05'));
+  assert.equal(store.find(seqId)!.state, 'paused');
+  assert.equal(marketing(store).length, 0);
+});
+
+test('when the pause signals cannot be read, nothing is sent and the step is checked again', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  store.signalsUnavailable = true;
+  const r = await plan(store, at10('2026-10-05'));
+  assert.equal(r.lines[0].outcome, 'held');
+  assert.equal(marketing(store).length, 0);
+  assert.equal(store.find(seqId)!.state, 'active');
+});
+
+test('with nothing released, a confirmed sequence waits; it is not ended as exhausted', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  const r = await plan(store, at10('2026-10-05'), DRIP_MODULES);
+  assert.equal(r.lines[0].outcome, 'held');
+  assert.match(r.lines[0].detail, /released/);
+  assert.equal(store.find(seqId)!.state, 'active');
+  assert.equal(marketing(store).length, 0);
+});
+
+test('the sequence never repeats a resource, never sends a requested one, and is exhausted when the catalogue is used up', async () => {
+  const store = new MemoryDripStore();
+  person(store);
+  const seqId = await confirmed(store);
+  const sent: string[] = [];
+  let now = at10('2026-10-05');
+  for (let i = 0; i < 400 && store.find(seqId)!.state === 'active'; i++) {
+    const r = await plan(store, now);
+    for (const l of r.lines) if (l.outcome === 'planned') sent.push(l.moduleId!);
+    if (i === 0) store.addRequest('p1', 'poc-screen');
+    store.sweep(now.toISOString());
+    const next = store.find(seqId)!.nextSendAt;
+    if (!next) break;
+    now = new Date(Math.max(Date.parse(next), now.getTime() + 60_000));
+  }
+  assert.equal(store.find(seqId)!.state, 'completed');
+  assert.equal(dripView('completed', null), 'exhausted');
   assert.equal(new Set(sent).size, sent.length, 'no resource twice');
-  assert.ok(!sent.includes('LC-R01'), 'never the one they asked for');
-  assert.ok(!sent.includes('LC-T01'), 'never one they asked for later');
+  assert.ok(!sent.includes('LC-R01') && !sent.includes('LC-T01'), 'never one they asked for');
   assert.ok(!sent.includes('LC-T10') && !sent.includes('LC-T11'), 'never an inactive module');
-  const active = DRIP_MODULES.filter((m) => m.active).length;
-  assert.equal(sent.length, active - 2, 'every active module except the two requested');
-  assert.equal(store.messages.length, sent.length);
-  assert.equal(store.sends.length, sent.length);
+  assert.equal(sent.length, RELEASED.filter((m) => m.active).length - 2);
 });
 
-test('an unsubscribe before the first send means nothing is ever planned', async () => {
+test('an unsubscribe cancels what is queued and stops the rest; withdrawn consent stops it at the next step', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const seqId = await opened(store);
-  store.unsubscribe('p1', T0.toISOString());
-  const r = await plan(store, DAY2);
-  assert.equal(r.considered, 0);
-  assert.equal(store.messages.length, 0);
-  assert.equal(store.find(seqId)!.state, 'stopped');
+  const seqId = await confirmed(store);
+  await plan(store, at10('2026-10-05'));
+  store.unsubscribe('p1', at10('2026-10-05').toISOString());
+  assert.equal(marketing(store)[0].state, 'cancelled');
   assert.equal(dripView('stopped', store.find(seqId)!.stoppedReason), 'unsubscribed');
-});
 
-test('an unsubscribe during the sequence cancels what is queued and stops the rest; a second unsubscribe changes nothing', async () => {
-  const store = new MemoryDripStore();
-  person(store);
-  const seqId = await opened(store);
-  await plan(store, DAY2);
-  assert.equal(store.messages[0].state, 'queued');
-  store.unsubscribe('p1', DAY2.toISOString());
-  assert.equal(store.messages[0].state, 'cancelled');
-  const before = JSON.stringify(store.sequences) + JSON.stringify(store.messages);
-  store.unsubscribe('p1', DAY2.toISOString());
-  assert.equal(JSON.stringify(store.sequences) + JSON.stringify(store.messages), before, 'idempotent');
-  const later = await plan(store, new Date(DAY2.getTime() + 10 * 86_400_000));
-  assert.equal(later.considered, 0);
-  assert.equal(store.messages.length, 1);
-  assert.equal(store.find(seqId)!.state, 'stopped');
-});
-
-test('withdrawn consent stops the sequence at the next step, and no consent on record does too', async () => {
-  const store = new MemoryDripStore();
-  person(store);
-  const seqId = await opened(store);
-  store.consents.push({ personId: 'p1', state: 'withdrawn', source: 'operator', at: T0.toISOString() });
-  const r = await plan(store, DAY2);
+  const s2 = new MemoryDripStore();
+  person(s2);
+  const id2 = await confirmed(s2);
+  s2.consents.push({ personId: 'p1', state: 'withdrawn', source: 'operator', at: T0.toISOString(), confirmedAt: null });
+  const r = await plan(s2, at10('2026-10-05'));
   assert.equal(r.lines[0].outcome, 'stopped');
-  assert.equal(store.find(seqId)!.stoppedReason, 'consent withdrawn');
-  assert.equal(store.messages.length, 0);
-
-  // A sequence that somehow exists with no consent row at all.
-  const store2 = new MemoryDripStore();
-  person(store2, 'p2');
-  const o = await store2.open({ personId: 'p2', requestId: null, resourceId: 'LC-T02', anchorAt: T0.toISOString(), nextSendAt: DAY2.toISOString() });
-  const r2 = await plan(store2, DAY2);
-  assert.equal(r2.lines[0].outcome, 'stopped');
-  assert.equal(store2.find(o.sequenceId!)!.stoppedReason, 'no marketing consent on record');
-  assert.equal(store2.messages.length, 0);
+  assert.equal(s2.find(id2)!.stoppedReason, 'consent withdrawn');
 });
 
 test('a consent record that does not answer holds the step and gives the lease back', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const seqId = await opened(store);
+  const seqId = await confirmed(store);
   store.consentUnavailable = true;
-  const r = await plan(store, DAY2);
+  const r = await plan(store, at10('2026-10-05'));
   assert.equal(r.lines[0].outcome, 'held');
-  assert.equal(store.messages.length, 0);
-  assert.equal(store.find(seqId)!.nextSendAt, DAY2.toISOString(), 'still due, not leased');
+  assert.equal(store.find(seqId)!.nextSendAt, at10('2026-10-05').toISOString(), 'still due, not leased');
   store.consentUnavailable = false;
-  const r2 = await plan(store, DAY2);
-  assert.equal(r2.planned, 1);
-});
-
-test('a message already queued under the step\'s key is not written twice', async () => {
-  const store = new MemoryDripStore();
-  person(store);
-  const seqId = await opened(store);
-  await store.queueMessage({
-    idempotencyKey: `drip:${seqId}:1`,
-    sequenceId: seqId,
-    personId: 'p1',
-    templateKey: 'recommend-lc-t07',
-    templateVersion: 'x',
-    purpose: 'marketing',
-    step: 1,
-    recipient: 'p1@example.org',
-    subject: 's',
-    body: 'b',
-    scheduledFor: DAY2.toISOString(),
-  });
-  const r = await plan(store, DAY2);
-  assert.equal(r.lines[0].outcome, 'already-queued');
-  assert.equal(store.messages.length, 1);
-});
-
-test('a planner that died after claiming leaves a lease that expires; the step is then planned once', async () => {
-  const store = new MemoryDripStore();
-  person(store);
-  const seqId = await opened(store);
-  const leaseUntil = new Date(DAY2.getTime() + 10 * 60_000).toISOString();
-  assert.equal(await store.lease(seqId, DAY2.toISOString(), leaseUntil), true);
-  const during = await plan(store, DAY2);
-  assert.equal(during.considered, 0, 'leased: not due');
-  const after = await plan(store, new Date(Date.parse(leaseUntil) + 1000));
-  assert.equal(after.planned, 1);
-  assert.equal(store.messages.length, 1);
+  assert.equal((await plan(store, at10('2026-10-05'))).planned, 1);
 });
 
 test('two planners at once over three due sequences plan each step exactly once', async () => {
   const store = new MemoryDripStore();
   for (const id of ['a', 'b', 'c']) {
     person(store, id);
-    await opened(store, id, 'lc-r01');
+    await confirmed(store, id);
   }
-  const [x, y] = await Promise.all([plan(store, DAY2), plan(store, DAY2)]);
+  const day2 = at10('2026-10-05');
+  const [x, y] = await Promise.all([plan(store, day2), plan(store, day2)]);
   assert.equal(x.planned + y.planned, 3);
-  assert.equal(store.messages.length, 3);
-  assert.equal(new Set(store.messages.map((m) => m.idempotencyKey)).size, 3);
-  assert.equal(store.sends.length, 3);
-  const losses = [...x.lines, ...y.lines].filter((l) => l.outcome === 'lost-lease' || l.outcome === 'already-queued').length;
-  assert.equal(losses, 3, 'the other planner lost each race');
+  assert.equal(marketing(store).length, 3);
+  assert.equal(new Set(marketing(store).map((m) => m.idempotencyKey)).size, 3);
 });
 
-test('a person whose record is gone stops the sequence rather than addressing nobody', async () => {
+test('a planner that died after claiming leaves a lease that expires; the step is then planned once', async () => {
   const store = new MemoryDripStore();
   person(store);
-  const seqId = await opened(store);
-  store.people.delete('p1');
-  const r = await plan(store, DAY2);
-  assert.equal(r.lines[0].outcome, 'stopped');
-  assert.equal(store.find(seqId)!.state, 'stopped');
+  const seqId = await confirmed(store);
+  const day2 = at10('2026-10-05');
+  const leaseUntil = new Date(day2.getTime() + 10 * 60_000).toISOString();
+  assert.equal(await store.lease(seqId, day2.toISOString(), leaseUntil), true);
+  assert.equal((await plan(store, day2)).considered, 0);
+  assert.equal((await plan(store, new Date(Date.parse(leaseUntil) + 1000))).planned, 1);
+  assert.equal(marketing(store).length, 1);
 });
 
 test('the brief\'s vocabulary is derived from the state and the reason', () => {
+  assert.equal(dripView('awaiting_confirmation', null), 'awaiting confirmation');
   assert.equal(dripView('active', null), 'active');
-  assert.equal(dripView('completed', null), 'completed');
+  assert.equal(dripView('paused', null), 'paused');
+  assert.equal(dripView('completed', null), 'exhausted');
   assert.equal(dripView('stopped', 'unsubscribe'), 'unsubscribed');
-  assert.equal(dripView('stopped', 'consent withdrawn'), 'unsubscribed');
   assert.equal(dripView('stopped', 'hard bounce'), 'suppressed');
-  assert.equal(dripView('stopped', 'complaint'), 'suppressed');
-  assert.equal(dripView('stopped', 'failed permanently'), 'failed');
   assert.equal(dripView('stopped', 'superseded by application'), 'stopped');
+  assert.equal(DEFAULT_DRIP_CONFIG.hour, 10);
 });

@@ -904,17 +904,30 @@ same invitation and the full application address.
 
 **The gate also carries an unticked marketing box (30 September 2026), and that box is
 what starts the resource follow-ups.** Ticked, the request writes a `consents` row and opens
-a `comms_sequences` row with route `resource`; from calendar day 2 a planner recommends one
-other resource per step, never the one asked for and never one already sent, until the
-catalogue is used up or the person stops it. The design is in the header of
+a `comms_sequences` row with route `resource` in state `awaiting_confirmation`. **Since
+6 October that is double opt-in:** one email asks the person to confirm, and nothing else is
+sent until they press the button on `/confirm-resource-emails`. Then a planner recommends one
+other resource per step on days 2, 5, 9 and 14 after the click and weekly after that,
+weekdays at 10:00 India time, at least 48 hours apart, never the one asked for and never one
+already sent, until the catalogue is used up or the person stops it. A reply, a booked call,
+an open application or a payment pauses it, and only a person resumes it. **No module is
+selected until Sunil releases it** (`RELEASES` in `resource-routing.ts`, empty today). The
+rules come from the outreach package's
+`review/05-email-and-resource-routing.md`, which is the brief for this feature.
+**Replies reach the site through a signed feed** (`POST /api/comms/inbound`, a Gmail Apps
+Script in `scripts/inbound/`), and marketing is held whenever that feed has not posted for
+30 minutes. **Astro's cross-site form check is off in `astro.config.mjs` and runs in
+`src/lib/http/origin.ts` instead**, because Astro's refused every RFC 8058 one-click
+unsubscribe; `/api/unsubscribe` is its only exemption, and nothing else may join it without
+the same argument. The design is in the header of
 [src/lib/comms/drip.ts](src/lib/comms/drip.ts); the operator's note is
 [src/lib/comms/README.md](src/lib/comms/README.md); the catalogue is data in
 [src/data/resource-routing.ts](src/data/resource-routing.ts). Two things to hold: **the
 planner queues one message per due step and no more**, so a resource added tomorrow can be
 recommended without touching a row; and **nothing sends without a ticked box, an approved
 wording, a signed unsubscribe link and `COMMS_DISPATCH=on`**, the same gates as everything
-else in stage 4. The wording on the box is the application form's `mkt-2026-09-10`; its use
-on a download surface awaits Sunil's confirmation.
+else in stage 4, plus a confirmed permission. The box's wording is its own,
+`RESOURCE_MARKETING_CONSENT` (`mkt-resource-2026-09-29`), verbatim from that brief.
 
 **Each gated resource needs its own held delivery wording** in
 [src/lib/comms/templates.ts](src/lib/comms/templates.ts) (`resource-<id>`), a literal body,

@@ -1,0 +1,122 @@
+---
+/**
+ * /confirm-resource-emails — the second half of double opt-in.
+ *
+ * A person ticks the marketing box on a download. One email asks them to
+ * confirm, and its link lands here. The resource brief
+ * (05-email-and-resource-routing): "If the person opts in, verify the address
+ * through the selected provider's confirmation flow before marketing starts",
+ * and the confirmation route must allow "no consent activation on a scanner
+ * GET alone".
+ *
+ * So a GET only shows a button, and nothing changes until it is pressed.
+ * Corporate mail scanners open every link in a message before the person
+ * does; if opening the link confirmed, every address behind such a scanner
+ * would be confirmed by a machine.
+ *
+ * The POST verifies the signed token (confirm.ts) and confirms the one
+ * sequence it names (confirmDrip in drip.ts). Three outcomes, two sentences:
+ * confirmed and already-confirmed read the same, because to the person they
+ * are the same. Anything else (a forged, expired or used-up link, or a
+ * sequence an unsubscribe already stopped) gets one neutral sentence and a
+ * contact route.
+ *
+ * noindex, and disallowed in robots.txt: the page only means something with a
+ * token from an email.
+ */
+import PracticeLayout from '../layouts/PracticeLayout.astro';
+import { confirmFromToken } from '../lib/comms/drip-runtime';
+
+const title = 'Confirm your resource emails — The Living Craft';
+const description = 'Confirm that you want practical resources and occasional cohort updates from The Living Craft.';
+
+let token: string | null = Astro.url.searchParams.get('c');
+let outcome: 'ask' | 'done' | 'gone' = token ? 'ask' : 'gone';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const form = await Astro.request.formData();
+    token = String(form.get('c') ?? '') || null;
+  } catch {
+    token = null;
+  }
+  const result = await confirmFromToken(token);
+  outcome = result === 'gone' ? 'gone' : 'done';
+}
+---
+
+{/* tagManager={false}: the URL carries ?c=, a working confirmation token for
+    seven days. Google Tag Manager loads Google Analytics 4 and Microsoft Clarity,
+    which record the full URL, so with it on the token went to both for anyone
+    who had said yes to analytics. The first-party beacon stays: it sends
+    location.pathname, never the query. */}
+<PracticeLayout title={title} description={description} canonical="/confirm-resource-emails" noindex tagManager={false}>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Email preferences</p>
+      {
+        outcome === 'ask' && (
+          <>
+            <h1>
+              Confirm your <em>resource emails</em>
+            </h1>
+            <p class="credential">
+              Press the button to confirm that you want practical resources and occasional cohort
+              updates from The Living Craft. You can unsubscribe at any time, from a link in every
+              email.
+            </p>
+            <form method="post" class="hero-cta">
+              <input type="hidden" name="c" value={token ?? ''} />
+              <button class="btn btn-primary" type="submit">
+                Confirm my subscription&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </button>
+            </form>
+            <p class="hero-note">
+              If you did not ask for these emails, close this page. Nothing is sent unless you
+              press the button.
+            </p>
+          </>
+        )
+      }
+      {
+        outcome === 'done' && (
+          <>
+            <h1>
+              You are <em>confirmed</em>
+            </h1>
+            <p class="credential">
+              Thank you. You will receive practical resources and occasional cohort updates from The
+              Living Craft. Every email has a link to unsubscribe.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="/tools">
+                Browse the tools&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </a>
+              <a class="btn btn-ghost" href="/communication-preferences">Email preferences</a>
+            </div>
+          </>
+        )
+      }
+      {
+        outcome === 'gone' && (
+          <>
+            <h1>
+              This link can <em>no longer be used</em>
+            </h1>
+            <p class="credential">
+              Confirmation links work for seven days. If you still want these emails, tick the box
+              the next time you request a resource, and we will send a new link. If you have a
+              question, write one line to <strong>apply@thelivingcraft.ai</strong>.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="/tools">
+                Browse the tools&nbsp;<span class="arrow" aria-hidden="true">→</span>
+              </a>
+              <a class="btn btn-ghost" href="/privacy">How your details are handled</a>
+            </div>
+          </>
+        )
+      }
+    </div>
+  </section>
+</PracticeLayout>

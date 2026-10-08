@@ -8,16 +8,15 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 7 October 2026
-**Teaching work now:** the six-week plan merged as PR #54. Week 4's build is on
-`content/week-4-draft`, rebased onto it. The Branch line below describes the earlier site
-work and has not been current since October began.
-**Branch:** `feat/plain-green-v5-pages-branded-pdfs` (PR #37), off `origin/main`, with main
-merged in on 1 October (the week 2 and week 3 teaching rebuild, PRs #39 to #45). It carries
-the four tasks from Sunil's call of 25 September and the later ones below. PR #31
-(`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are merged. The
-pipeline work is `feat/cohort-pipeline` (PR #7), stacked on `feat/learner-dashboard-poc`
-(PR #6).
+**Last updated:** 8 October 2026
+**Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
+**Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
+`D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
+Its schema ran on production on 7 October, but the 8 October review fixes added one read-only function, `comms_awaiting_without_request`: **run `supabase/schema.sql` again before merging.** Without it the confirmation retry logs an error and finds nobody. The reply script also changed; whoever runs the Gmail mailbox must paste the new copy in. PR #37
+(`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
+1 October. PR #31 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are
+merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
+`feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
 ---
@@ -234,6 +233,72 @@ The end-of-week quiz was reviewed: six items needed nothing, and two were streng
 replaced — Q8 now names the absolute-against-relative reading, and Q7 gained the kappa follow-up.
 
 ---
+
+## Resource follow-ups, aligned to the resource brief — 6 October
+
+**The brief is `review/05-email-and-resource-routing.md`** in the outreach package
+(`docs/2026-09-28_Outreach_Readiness-…/`, revised 29 September). The drip shipped in PR #37
+was built from a pasted brief and the package's routing table only. This document already
+decided several things recorded then as "not decided": the timing, the consent wording and
+double opt-in. Read it before changing anything in `src/lib/comms/drip*.ts`.
+
+What changed:
+- **Double opt-in.** A tick opens the sequence `awaiting_confirmation` and queues one
+  transactional email, `confirm-resource-emails`, with a signed seven-day link
+  (`src/lib/comms/confirm.ts`). `/confirm-resource-emails` shows a button on GET and confirms
+  only on POST, because mail scanners open links. A second tick while waiting re-sends the
+  request at most once a day.
+- **Schedule.** Days 2, 5, 9 and 14 after the click, then seven days after each actual send.
+  Weekends roll to Monday 10:00 IST. At least 48 hours apart. The next step is not planned
+  while the last one is still in the outbox, so a week of dispatch being off leaves one queued
+  message, not seven. `COMMS_DRIP_INTERVAL_DAYS` and `COMMS_DRIP_FIRST_OFFSET_DAYS` are gone.
+- **Pause.** A reply, a booked call (`bookings`), an open application or enquiry, or a payment
+  pauses the sequence and cancels what is queued. Only a person resumes it from the console.
+  After a resume, only signals newer than the resume count.
+- **No re-enrolment.** A person who has had a resource sequence before is not given another by
+  a new tick.
+- **Release guard.** `RELEASES` in `src/data/resource-routing.ts` is empty, so no module is
+  selected. With none released, a confirmed sequence waits; it does not end as exhausted.
+- **Wording.** The box reads the brief's sentence (`RESOURCE_MARKETING_CONSENT`,
+  `mkt-resource-2026-09-29`). Each follow-up opens with the brief's "You requested the …"
+  sentence, or a role sentence when the request is unknown, or nothing. The wordings are now
+  version `LC-OUTREACH-2026-09-29.2`; load and approve them again in the console.
+- **Schema: applied to production on 7 October**, before this branch merged. All six checks
+  returned 1 (`comms_sequences.confirmed_at`, `consents.confirmed_at`,
+  `comms_events.person_id`, the `comms_inbound_status` table, the `awaiting_confirmation`
+  state, the widened one-live index). What it holds: the `awaiting_confirmation` state,
+  `comms_sequences.confirmed_at`, `consents.confirmed_at`, the one-live index widened, and
+  every resource sequence opened before today moved back to awaiting. The planner sends each
+  of those people the confirmation request once.
+
+Then, the same day, the rest of the brief:
+- **Replies.** `POST /api/comms/inbound` takes a signed post from a forwarder in the reply
+  mailbox (`scripts/inbound/gmail-replies.gs`, a Google Apps Script). A reply pauses a
+  follow-up, or stops a cohort sequence and raises a task. Every marketing message is held
+  while the feed has not posted for 30 minutes. Needs `COMMS_INBOUND_SECRET`.
+- **Mailbox decided 8 October:** `newsletter@thelivingcraft.ai`, on Gmail, is both the
+  reply mailbox and the from-address. Set `COMMS_REPLY_MAILBOX` and `COMMS_FROM_ADDRESS` to it,
+  and `LC_MAILBOX` in the reply script. Somebody has to read that inbox: the brief asks for a
+  monitored mailbox, and a reply that pauses a sequence is a person waiting for an answer.
+- **A defect found on the way:** Astro's own cross-site check refused every one-click
+  unsubscribe from a mail client (a form POST with no Origin) with a 403. The check now runs
+  in `src/lib/http/origin.ts` with `/api/unsubscribe` exempt. The footer link's GET now asks
+  with a button before acting.
+- **Review fixes, 8 October.** Five defects from the PR #52 review. The reply script used a
+  thread label, so a second reply in a thread was never seen; it now keeps a time cursor.
+  `/confirm-resource-emails` loaded Tag Manager while its URL held a live token; it no longer
+  does. The send-time reply check counted replies from before the sequence opened. A first
+  confirmation request and a same-day repeat had different keys and both sent. The
+  confirmation retry read the 500 oldest unconfirmed sequences and stopped finding new ones.
+- **Architect** is an eleventh role, with the brief's role-first ranking.
+- **The 16 acceptance cases** are mapped to tests and to live staging steps in
+  `src/lib/comms/README.md`. Fourteen have automated cover; all sixteen still need the live run.
+
+Not built, on purpose:
+- **An employer-funding question on the download gate.** It would be the only way to reach the
+  brief's fourth role sentence and its LC-TPL04 priority. Recording it means a download writes
+  to the person record, which `resource_request_submit()` refuses by design, and it adds a
+  question to every download form. The sentence is kept, unused, in `drip-templates.ts`.
 
 ## Week 3, review round 4 — 6 October
 

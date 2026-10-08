@@ -29,6 +29,13 @@ const pdfAssets = readdirSync('pdf-assets', { recursive: true, withFileTypes: tr
 // it points at the piece that replaced it rather than returning a 404.
 export default defineConfig({
   output: 'server',
+  // Astro's own cross-site form check is OFF here and the same check runs in
+  // src/middleware.ts instead, with one exception: /api/unsubscribe. A mail
+  // client's one-click unsubscribe (RFC 8058) is a form POST with no Origin
+  // header, and Astro's check refuses every one of those with a 403. That
+  // endpoint acts only on a signed token, so a cross-site post can do nothing
+  // without one. Found 6 October 2026. See `crossSiteFormRefusal()`.
+  security: { checkOrigin: false },
   // The private downloads folder rides inside the server function, so the
   // download gate can read a file that no URL can reach. See downloads/README.md.
   adapter: vercel({ includeFiles: [...privateDownloads, ...pdfAssets] }),

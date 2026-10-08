@@ -567,10 +567,11 @@ const STATE_NOTE: Record<string, string> = {
       <div>
         <h2 id="commsDripsHead">Resource follow-ups</h2>
         <p>
-          One sequence per person who ticked the marketing box on a download. From calendar day 2 the
-          planner picks one resource per step from the routing catalogue, never the one they asked for
-          and never one already sent, and the sweep sends it. The state column uses the brief's words;
-          the store keeps four states and a reason.
+          One sequence per person who ticked the marketing box on a download. It waits until they click
+          the confirmation email. Then a follow-up falls due on days 2, 5, 9 and 14 after the click and
+          weekly after that, on weekdays at 10:00 India time, never less than 48 hours apart. Each one
+          recommends a resource they have not asked for and have not been sent. A reply, a booked call,
+          an open application or a payment pauses it until somebody here resumes it.
         </p>
       </div>
       {
@@ -627,6 +628,7 @@ const STATE_NOTE: Record<string, string> = {
                   </td>
                   <td>
                     <span class={`pill ${d.view === 'active' ? '' : 'warn'}`}>{d.view}</span>
+                    {d.confirmedAt && <div class="faint small mono">confirmed {when(d.confirmedAt)}</div>}
                     {d.reason && <div class="quiet small">{d.reason}</div>}
                   </td>
                   <td>
@@ -651,6 +653,9 @@ const STATE_NOTE: Record<string, string> = {
                         <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={d.sequenceId}>Stop</button>
                       </>
                     )}
+                    {mayManage && d.state === 'awaiting_confirmation' && (
+                      <button class="btn small danger" type="button" data-comms="sequence.stop" data-id={d.sequenceId}>Stop</button>
+                    )}
                     {mayManage && d.state === 'paused' && (
                       <>
                         <button class="btn small" type="button" data-comms="sequence.resume" data-id={d.sequenceId}>Resume</button>
@@ -668,10 +673,11 @@ const STATE_NOTE: Record<string, string> = {
 
     <h3 style="margin-top: var(--space-6)">The follow-up wordings</h3>
     <p class="muted small">
-      One per catalogue module, plus the unsubscribe confirmation. Assembled from the resource register
-      and the outreach package's subject and CTA lines; none is approved until somebody approves it
-      here, and nothing is sent from an unapproved wording. LC-T10 and LC-T11 are inactive in the
-      catalogue and cannot be selected whatever their approval.
+      The confirmation request, one wording per catalogue module, and the unsubscribe confirmation.
+      None is approved until somebody approves it here, and nothing is sent from an unapproved wording.
+      A module is chosen only when it is active, approved here, and released: Sunil confirms the
+      released version in RELEASES in <code>src/data/resource-routing.ts</code>. Until at least one
+      module is released, confirmed sequences wait rather than end.
     </p>
     {
       mayApprove && (
@@ -708,6 +714,7 @@ const STATE_NOTE: Record<string, string> = {
                     <div class="faint mono" style="font-size:12px">
                       {t.key}
                       {!t.active && ' · inactive'}
+                      {t.active && !t.released && ' · not released'}
                     </div>
                   </td>
                   <td>

@@ -85,6 +85,8 @@ const TABLES = [
   // page and the export both read it.
   'resource_requests_marketing',
   'comms_drip_sends',
+  // When the reply mailbox feed last posted. Missing means replies are unseen.
+  'comms_inbound_status',
   'booking_rules',
   'booking_blocks',
   'bookings',
@@ -231,6 +233,20 @@ export async function dbHealth(force = false): Promise<Health> {
         const { error } = await client.rpc(name, {
           p_opportunity_id: '00000000-0000-0000-0000-000000000000',
         });
+        return error
+          ? { name, kind: 'function', ok: false, error: error.message.slice(0, 300) }
+          : { name, kind: 'function', ok: true };
+      } catch (err) {
+        return { name, kind: 'function', ok: false, error: err instanceof Error ? err.message.slice(0, 300) : 'threw' };
+      }
+    })(),
+
+    // The planner's confirmation retry (drip-store.ts). Read-only; a limit of
+    // one keeps the probe to a single row at most.
+    (async (): Promise<Probe> => {
+      const name = 'comms_awaiting_without_request';
+      try {
+        const { error } = await client.rpc(name, { p_limit: 1 });
         return error
           ? { name, kind: 'function', ok: false, error: error.message.slice(0, 300) }
           : { name, kind: 'function', ok: true };

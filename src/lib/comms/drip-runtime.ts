@@ -8,7 +8,8 @@ import { env } from '../admin/env';
 import { SITE_ORIGIN } from '../../data/facts';
 import { APPLY_URL, applicationsOpen, COHORT_SENTENCE, EVERGREEN_SENTENCE } from '../../data/resource-cohort-copy';
 import { commsEvent } from './analytics';
-import { dripConfig, openResourceDrip, runDripPlanner, type DripConfig, type OpenOutcome, type PlannerResult } from './drip';
+import { verifyConfirmToken } from './confirm';
+import { confirmDrip, dripConfig, openResourceDrip, runDripPlanner, type ConfirmOutcome, type DripConfig, type OpenOutcome, type PlannerResult } from './drip';
 import { supabaseDripStore } from './drip-store';
 import { runDispatchSweep, type SweepResult } from './outbox';
 
@@ -60,6 +61,24 @@ export async function startDripFromRequest(args: {
   return outcome;
 }
 
+/**
+ * The confirmation page's POST. Verifies the signed link, then confirms.
+ *
+ * 'gone' covers a bad token, an expired one, somebody else's, and a stopped
+ * sequence alike. The page shows one sentence for all of them.
+ */
+export async function confirmFromToken(token: string | null, now: Date = new Date()): Promise<ConfirmOutcome> {
+  const claim = await verifyConfirmToken(token, now.getTime());
+  if (!claim) return 'gone';
+  const store = supabaseDripStore();
+  if (!store) return 'gone';
+  const outcome = await confirmDrip(store, { ...claim, now, config: dripConfigFromEnv() });
+  if (outcome === 'confirmed') {
+    await commsEvent('drip_confirmed', `drip-confirmed:${claim.sequenceId}`, { sequence_id: claim.sequenceId });
+  }
+  return outcome;
+}
+
 export interface WorkerResult {
   ranAt: string;
   planner: PlannerResult | null;
@@ -88,6 +107,8 @@ export async function runCommsWorker(now: Date = new Date()): Promise<WorkerResu
           });
         } else if (e.type === 'completed') {
           await commsEvent('drip_completed', `drip-completed:${e.sequenceId}`, { sequence_id: e.sequenceId });
+        } else if (e.type === 'paused') {
+          await commsEvent('drip_paused', `drip-paused:${e.sequenceId}:${now.toISOString()}`, { sequence_id: e.sequenceId });
         } else {
           await commsEvent('drip_stopped', `drip-stopped:${e.sequenceId}:${now.toISOString()}`, { sequence_id: e.sequenceId });
         }
@@ -102,7 +123,14 @@ export async function runCommsWorker(now: Date = new Date()): Promise<WorkerResu
       at: now.toISOString(),
       comms_worker: {
         planner: planner
-          ? { considered: planner.considered, planned: planner.planned, completed: planner.completed, skipped: planner.skipped }
+          ? {
+              considered: planner.considered,
+              planned: planner.planned,
+              completed: planner.completed,
+              paused: planner.paused,
+              skipped: planner.skipped,
+              confirmations: planner.confirmationsQueued,
+            }
           : 'no store',
         sweep: {
           due: sweep.dueConsidered,

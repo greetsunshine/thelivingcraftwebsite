@@ -1,8 +1,9 @@
 // The role list every public form asks with a name and an email address.
 //
 // Sunil, 29 September 2026: "Wherever currently name and email are being asked
-// for, ask for role there also", with these ten options and a way to type a
-// role that is not on the list. One list, read by the application and enquiry
+// for, ask for role there also", with ten options and a way to type a role
+// that is not on the list. An eleventh, Architect, was added on 6 October 2026
+// for the resource brief's architect sentence and ranking rule. One list, read by the application and enquiry
 // forms (forms.ts), the download gate (resources.ts), the consulting enquiry
 // forms and the booking widget, so the same person is described in the same
 // words on every path into the practice.
@@ -35,6 +36,9 @@ export const ROLES = [
   { code: 'product', label: 'Product Manager / Product Leader' },
   { code: 'engineering_leader', label: 'Engineering / Technology Leader' },
   { code: 'engineer', label: 'Software Engineer / Developer' },
+  // Added 6 October 2026. The resource brief has a sentence and a ranking
+  // rule for architects, and without this option nobody could be one.
+  { code: 'architect', label: 'Architect / Solution Architect' },
   { code: 'data_ai', label: 'Data / AI / ML Professional' },
   { code: 'operations', label: 'Operations / Transformation' },
   { code: 'consultant', label: 'Consultant / Agency' },

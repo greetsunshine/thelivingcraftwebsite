@@ -23,19 +23,22 @@
 //     nothing at all.
 //
 // ───────────────────────────────────────────────────────────────────────────
-// WHY BOTH GET AND POST, AND WHY A GET MAY CHANGE STATE HERE
+// A GET ASKS. A POST ACTS. (Changed 6 October 2026.)
 // ───────────────────────────────────────────────────────────────────────────
 //
-// A GET that changes state is normally a mistake, because link prefetchers and
-// mail-security scanners follow links without a person deciding to. Here the
-// direction of that error is the safe one: a scanner that follows this link
-// causes us to send LESS mail to somebody who was going to receive marketing.
-// The alternative — a confirmation page with a button — makes the person who
-// genuinely wants out do a second thing, and the brief asks for "one action".
+// Until 6 October a GET unsubscribed, on the argument that a scanner following
+// the link only ever sends LESS mail. The resource brief
+// (05-email-and-resource-routing) decided the other way, in its acceptance
+// list: "Authenticated POST works without login; GET scanner does not
+// unsubscribe." A scanner that unsubscribes somebody who wanted the emails
+// is a person silently cut off, and every address behind a corporate scanner
+// would be. So a GET now shows one button, and the button posts.
 //
-// POST is here for RFC 8058 one-click unsubscribe, which is what a mail client
-// uses when it renders its own "unsubscribe" affordance. Same code path, same
-// response.
+// POST is also RFC 8058 one-click unsubscribe: the control a mail client draws
+// itself, which posts `List-Unsubscribe=One-Click` with the token in the URL
+// and no Origin header. src/middleware.ts exempts this path from the
+// cross-site form check for exactly that reason. One click in the mail client
+// is still one action; the link in the footer is two.
 //
 // ───────────────────────────────────────────────────────────────────────────
 // NOTE ON Referrer-Policy
@@ -58,15 +61,16 @@ export const prerender = false;
  * on an unsubscribe link may be doing it from a mail client's embedded browser
  * with everything blocked, and the one thing this page has to do is render.
  */
+const lines = (): string => CONFIRMATION.lines.map((l) => `      <p>${l}</p>`).join('\n');
+
 const PAGE = ((): string => {
-  const lines = CONFIRMATION.lines.map((l) => `      <p>${l}</p>`).join('\n');
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>${CONFIRMATION.title} · The Living Craft</title>
+<title>__TITLE__ · The Living Craft</title>
 <style>
   /* Inline, and the values are literals rather than var() references, because
      this page is a Response built by hand — there is no layout, no global.css
@@ -97,12 +101,16 @@ const PAGE = ((): string => {
   a:focus-visible { outline: 2px solid #eb1450; outline-offset: 2px; }
   .foot { margin-top: 28px; padding-top: 20px; border-top: 1px solid #e7eaef; font-size: 0.9rem; }
   .foot a { margin-right: 16px; }
+  button {
+    font: inherit; font-weight: 600; color: #F5F0E6; background: #183D32;
+    border: 0; border-radius: 6px; padding: 12px 20px; min-height: 44px; cursor: pointer;
+  }
+  button:focus-visible { outline: 2px solid #765523; outline-offset: 2px; }
 </style>
 </head>
 <body>
   <main>
-    <h1>${CONFIRMATION.title}</h1>
-${lines}
+__MAIN__
     <div class="foot">
       <a href="/communication-preferences">Changing what you receive</a>
       <a href="/privacy">How your details are handled</a>
@@ -114,8 +122,22 @@ ${lines}
 `;
 })();
 
-const page = (): Response =>
-  new Response(PAGE, {
+const DONE = PAGE.replace('__TITLE__', CONFIRMATION.title).replace('__MAIN__', `    <h1>${CONFIRMATION.title}</h1>\n${lines()}`);
+
+/**
+ * The question, for a GET. It does not read the token, so it is the same page
+ * for a valid link, a forged one and an expired one. The form posts back to
+ * the same URL, token included.
+ */
+const ASK = PAGE.replace('__TITLE__', 'Unsubscribe').replace(
+  '__MAIN__',
+  `    <h1>Unsubscribe from The Living Craft emails?</h1>
+      <p>Press the button to stop practical resources and cohort updates from The Living Craft. A reply to something you asked us still reaches you.</p>
+      <form method="post"><button type="submit">Unsubscribe</button></form>`,
+);
+
+const page = (html: string = DONE): Response =>
+  new Response(html, {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
@@ -155,7 +177,8 @@ async function handle(token: string | undefined): Promise<Response> {
   return page();
 }
 
-export const GET: APIRoute = async ({ url }) => handle(url.searchParams.get('u') ?? undefined);
+// A GET never acts. See the header.
+export const GET: APIRoute = async () => page(ASK);
 
 export const POST: APIRoute = async ({ url, request }) => {
   // RFC 8058 puts the token in the URL and posts an empty body; some clients
