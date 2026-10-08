@@ -306,6 +306,28 @@ export const resources: Resource[] = [
     url: '/resources/rework-cost-check',
     publishedAt: '2026-09-28',
   },
+  {
+    id: 'citation-fit-check',
+    topic: 'Citation Fit',
+    number: '09',
+    series: 'Agentic system design',
+    title: 'The Citation Fit Check',
+    kind: 'Excel checklist \u00b7 4 working tabs \u00b7 12 checks \u00b7 1 worked example',
+    summary:
+      'Does this cited answer apply to the person asking? A checklist for RAG assistants that quote the right rule to the wrong person.',
+    description:
+      'A citation shows the text exists. It does not show the text applies. A benefits answer can quote the right clause and still be wrong for someone who does not meet a condition stated elsewhere in the policy, such as a minimum length of service. Groundedness evals pass these answers, because they measure whether the answer is supported by its source, not whether the source applies to the user. The checklist works through four questions, one per tab. Which conditions gate each rule, and where do they live? Does retrieval bring back the conditions with the rule? Does the system check the asker\u2019s facts before answering? Would your evals catch a true citation that does not apply? Twelve checks, four of them critical, end in one decision: Ready, Fix first or Hold, with the first thing to fix named. The worked example is an illustrative HR benefits assistant: retrieval brought back the condition on 4 of 10 questions, 3 cited answers were wrong for the person asking, and the decision was Hold.',
+    useFor: [
+      'Map every rule an answer type relies on to the condition that narrows it, and where that condition is stored',
+      'Measure whether retrieval returns the condition along with the rule, not just the rule',
+      'Find the facts about the asker that your assistant cannot check',
+      'Write eval cases where the cited text is true but does not apply, scored apart from groundedness',
+    ],
+    format:
+      'Excel workbook, which also opens in Google Sheets and LibreOffice. It asks for a name, a role and an email address before it downloads.',
+    url: '/resources/citation-fit-check',
+    publishedAt: '2026-10-07',
+  },
 ];
 
 /**

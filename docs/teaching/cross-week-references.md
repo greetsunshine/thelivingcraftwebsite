@@ -54,16 +54,18 @@ returns no matches and no matches reads as clean.
 
 ## Week 2 → week 4
 
-Week 4 is a draft. Every row here is owed.
+Checked 7 October 2026 against week 4's draft on `content/week-4-draft`: the notes, the
+question bank and the content module. Week 4's session file body is held until PR #54
+lands, so these rows are checked against the pages, not the session file.
 
 | What week 2 says | Where in week 2 | Status |
 |---|---|---|
-| Week 4 defends against text an attacker writes into a ticket (prompt injection), direct and indirect | Opening; 00:37 threat table; 03:31 route 6 | Owed. Week 4's outline names injection |
-| Week 4 shows "ignore instructions in the ticket" failing as a fix | 03:18; 03:31 | Owed |
-| Week 4 builds input and output guards, including masking personal data | 00:37 planes table and threat table | Owed |
-| Week 4 builds the check that compares the agent's claim with the ledger | 00:23; 00:37 threat table | Owed |
-| Week 4 asks for one regression case per bypass found at 03:31 | After-work; topic 4 | Owed. Week 4's outline names a regression case |
-| Week 4 opens by asking who tried the ticket-text attack anyway | 03:31 instructor card | Owed |
+| Week 4 defends against text an attacker writes into a ticket (prompt injection), direct and indirect | Opening; 00:37 threat table; 03:31 route 6 | Kept: week 4 topic 1 is direct injection and topic 2 indirect |
+| Week 4 shows "ignore instructions in the ticket" failing as a fix | 03:18; 03:31 | Kept: week 4 at 00:15, the line held on A2 and failed on A3, A6 and A7 |
+| Week 4 builds input and output guards, including masking personal data | 00:37 planes table and threat table | **Partly kept.** Input: topic 2 builds a check on retrieved text, and topic 1 names the classifiers. Personal data: the proxy's `fields` column keeps PAN and mobile out of the model's context (A5, 02:49). **No guard on the reply text itself is built.** A reply that quoted a PAN from somewhere else would go out |
+| Week 4 builds the check that compares the agent's claim with the ledger | 00:23; 00:37 threat table | Kept: the proxy's money row at 02:49 lets a credit through only for a reason a record proves (`backed_by_record` in `src/w4_proxy.py`) |
+| Week 4 asks for one regression case per bypass found at 03:31 | After-work; topic 4 | Kept: the 00:33 lab, and `make w4-eval` at 04:12 |
+| Week 4 opens by asking who tried the ticket-text attack anyway | 03:31 instructor card | Kept: week 4 at 00:15 |
 
 ## Week 2 → week 5
 
@@ -109,15 +111,33 @@ Added 3 October 2026, with the week 3 review.
 
 ## Week 3 → week 4
 
-Week 4 is a draft. Every row here is owed.
+Checked 7 October 2026, as above.
 
 | What week 3 says | Where in week 3 | Status |
 |---|---|---|
-| The adversarial cases written today are what week 4 comes to collect | Opening; 00:15 | Owed |
-| Defending against the poisoned account note is week 4's | Opening; topic 1 purpose | Owed |
-| Week 4 owns step 1 of retrieval, where the query carries text somebody else wrote | 01:11 | Owed |
-| Prompt injection, data exfiltration and jailbreak cases are named as a source of evaluation cases, and week 4 collects them | 02:44, "Where the cases come from" | Owed. Added 3 October with the syllabus |
-| MCP, framed as "the boundary you did not write", is a 40-minute week 4 topic | `threads.md` bridge 6, §7 | Owed |
+| The adversarial cases written today are what week 4 comes to collect | Opening; 00:15 | Kept: the 00:33 lab asks for one from each learner's week 3 suite, and C7 is in the regression set as A4 |
+| Defending against the poisoned account note is week 4's | Opening; topic 1 purpose | Kept: A1 at 02:31 and 02:49, obeyed 19 in 20 and contained to ₹0 |
+| Week 4 owns step 1 of retrieval, where the query carries text somebody else wrote | 01:11 | **Partly kept.** Week 4 topic 2 quotes the sentence and contains A4, whose note is in the query. The query itself is not rebuilt: it is still the ticket plus the note. Week 5's retrieval topic is the natural owner of rebuilding it |
+| Prompt injection, data exfiltration and jailbreak cases are named as a source of evaluation cases, and week 4 collects them | 02:44, "Where the cases come from" | **Partly kept.** Injection and exfiltration (A5) are collected. No case is labelled a jailbreak |
+| MCP, framed as "the boundary you did not write", is a 40-minute week 4 topic | `threads.md` bridge 6, §7 | Kept and widened: bridge 7 (7 October) made it two topics, 3 and 4. Topic 4 carries the adoption questions |
+
+## Week 4 → earlier weeks
+
+Added 7 October 2026. Every quote below was checked against its source that day.
+
+| What week 4 quotes | Where in week 4 | Status |
+|---|---|---|
+| Week 2, 03:31: "In week 1 an account note made the agent pay ₹2,50,000. … The fix most people reach for is a line telling the model to ignore instructions in ticket text, and week 4 shows it failing." | 00:15, learner and instructor | Quote: verbatim from week 2's instructor card, which is said aloud at 03:31. **It is not on week 2's learner page**, so week 4 presents it as "week 2 said this", not "week 2's page says" |
+| Week 2: "Two models reading one attacker-written field are one control, not two." | 01:09; topic 1 quiz | Quote: verbatim on week 2's learner page |
+| Week 2's first outcome: "place a limit outside the function it constrains, at the point that covers every caller, and name the callers it still misses" | Topic 4 quiz; end-of-week Q3 | Quote: verbatim, week 2 session file |
+| Week 2's third outcome: "make the same request pay only once, and show that it still holds from a second process" | Topic 3 quiz | Quote: verbatim, week 2 session file |
+| Week 2, 00:37: "There are six kinds of guardrail, and you build three of them today." | Topic 5 purpose | Quote: verbatim on week 2's learner page |
+| Week 2, 01:12, its clock label: "A second team pays without asking" | 02:31 | Quote: verbatim |
+| Week 2, 00:42: "Which of these nine places do you own? Which can a vendor change without a deploy from your team?" | 02:41, learner and instructor | Quote: verbatim on week 2's learner page since PR #54. Week 2 says the named protocol is week 4's, and this is where week 4 takes it up |
+| Week 3, 01:11: "Topic 5 at 03:23 is where that gluing becomes a decision, and week 4 owns the fact that one half of it is text a customer wrote." | Topic 2 purpose | Quote: verbatim on week 3's learner page |
+| Week 3's third and fifth outcomes | Topic 2 and topic 5 quizzes | Quote: verbatim, week 3 session file |
+| Week 3: "A pass is a claim about the cases you chose. It is not a claim about your system." | End-of-week Q5 | Quote: verbatim on week 3's learner page |
+| The Agent Failure Triage Quiz: "idempotentHint declares; it does not enforce." | 01:37 | Quote: verbatim, `src/data/agent-failure-triage-quiz.ts` |
 
 ## Week 3 → week 5
 

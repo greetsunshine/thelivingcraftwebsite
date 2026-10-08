@@ -1,0 +1,453 @@
+---
+/**
+ * /resources/citation-fit-check — the Citation Fit Check.
+ *
+ * A checklist for engineers who run retrieval-augmented (RAG) assistants. It
+ * answers one question: does this cited answer apply to the person asking?
+ * A citation shows the text exists. It does not show the text applies, and a
+ * groundedness eval passes the answer either way.
+ *
+ * The tool is the Excel workbook. This page describes it and hands it over.
+ * Every word the page and the workbook share comes from
+ * src/data/citation-fit-check.ts; every figure in the worked example is
+ * computed by src/lib/citationFit.ts, so the page cannot print a number the
+ * workbook would not produce (tools/citation-fit-check/verify_xlsx.py).
+ *
+ * THE DOWNLOAD IS GATED, although the brief said "no email gate". CLAUDE.md,
+ * "The download gate" (decided 19 September 2026), puts every file a resource
+ * page hands out behind ResourceGate, and the file lives in downloads/, which
+ * is not a public URL. The Rework Cost Check met the same conflict and
+ * resolved it the same way. Flagged to Sunil in the Phase 1 report.
+ *
+ * Released 7 October 2026. The row in src/data/resources.ts is what lists it
+ * on /resources, the sitemap and /llms.txt, and what lets the gate hand the
+ * file over: resolveResource() only knows tools that have a row there. Not
+ * featured, so there is no row in resource-choices.ts.
+ */
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { longDate } from '../../data/resources';
+import {
+  CHECKS,
+  CHECK_GROUPS,
+  DECISION_MEANING,
+  READY_AT,
+  MAX_TOTAL,
+  checklistResult,
+  spotCheckSummary,
+  conditionMapSummary,
+  testCasesWritten,
+  percent,
+} from '../../lib/citationFit';
+import {
+  RESOURCE_ID,
+  TITLE,
+  TAGLINE,
+  BRING,
+  DO,
+  LEAVE,
+  WHY,
+  FAILURES,
+  TABS,
+  EXAMPLE_LABEL,
+  EXAMPLE_CONDITIONS,
+  EXAMPLE_SPOT,
+  EXAMPLE_ANSWERS,
+  EXAMPLE_TESTS,
+  CLOSING,
+  LICENCE_LINE,
+  PUBLISHED_AT,
+  DOWNLOAD_KIND,
+} from '../../data/citation-fit-check';
+
+const canonical = `/resources/${RESOURCE_ID}`;
+const url = `${SITE_ORIGIN}${canonical}`;
+
+// The promises the page makes in words. A wrong count fails the first render.
+const critical = CHECKS.filter((c) => c.critical);
+if (CHECKS.length !== 12) throw new Error(`citation fit check: ${CHECKS.length} checks, promised 12`);
+if (critical.length !== 4) throw new Error(`citation fit check: ${critical.length} critical checks, promised 4`);
+if (TABS.length !== 4) throw new Error(`citation fit check: ${TABS.length} tabs, promised 4`);
+
+// The worked example, read through the same module the tests and the workbook verifier use.
+const exMap = conditionMapSummary(EXAMPLE_CONDITIONS);
+const exSpot = spotCheckSummary(EXAMPLE_SPOT);
+const exResult = checklistResult(EXAMPLE_ANSWERS);
+const conditionsRetrieved = EXAMPLE_SPOT.filter((r) => r.conditionRetrieved === 'Yes').length;
+const exTests = testCasesWritten(EXAMPLE_TESTS);
+
+const title = `${TITLE} — does this cited answer apply to the person asking? · The Living Craft`;
+// Under 155 characters.
+const description =
+  'A checklist for RAG assistants: map the conditions on each rule, check retrieval returns them, and test answers that cite true text that does not apply.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: TITLE,
+    description,
+    url,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    ...(PUBLISHED_AT ? { datePublished: PUBLISHED_AT } : {}),
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    step: TABS.map((t, i) => ({ '@type': 'HowToStep', position: i + 1, name: t.name, text: t.ask })),
+  },
+];
+
+const sections = [
+  { id: 'why', title: 'Why' },
+  { id: 'tabs', title: 'The four tabs' },
+  { id: 'checks', title: '12 checks' },
+  { id: 'example', title: 'Worked example' },
+];
+
+---
+
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening">
+  <!-- Hero: title, tagline, author, then what to bring, do and leave with, then the action. -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design</span>
+      </div>
+      <h1>{TITLE}</h1>
+      <p class="lead">{TAGLINE}</p>
+      <ResourceCredit />
+
+      <dl class="opening" id="opening">
+        <div class="open-row">
+          <dt class="mono">What to bring</dt>
+          <dd>{BRING}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What to do</dt>
+          <dd>{DO}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What you leave with</dt>
+          <dd>{LEAVE}</dd>
+        </div>
+      </dl>
+
+      <p class="hero-cta controls">
+        <button class="btn btn-primary" type="button" data-gate={DOWNLOAD_KIND} data-download={DOWNLOAD_KIND}>
+          Download the Citation Fit Check&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </button>
+      </p>
+      <p class="hero-note mono">Excel workbook · also opens in Google Sheets and LibreOffice · free</p>
+      <CohortIntroLink />
+    </div>
+  </section>
+
+  <!-- Why this exists -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why this exists</span>
+        <h2>The citation checks out. <em>The answer is still wrong.</em></h2>
+      </div>
+      <div class="prose">
+        <p>{WHY}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The two failures, then the four questions -->
+  <section id="failures">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Two ways a RAG answer fails</span>
+        <h2>Only one of them <em>shows up in a groundedness eval</em>.</h2>
+      </div>
+      <div class="scroll" tabindex="0" role="region" aria-label="The two failures">
+        <table class="grid failures">
+          <thead>
+            <tr>
+              <th>Failure</th>
+              <th>What it looks like</th>
+              <th>Caught by groundedness evals?</th>
+            </tr>
+          </thead>
+          <tbody>
+            {FAILURES.map((f) => (
+              <tr>
+                <td class="cname">{f.failure}</td>
+                <td>{f.looks}</td>
+                <td class={f.caught === 'No' ? 'caught no' : 'caught'}>{f.caught}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-note">The checklist targets the second failure. It asks four questions, one per working tab.</p>
+
+      <h3 class="sub">The four questions</h3>
+      <div class="scroll" tabindex="0" role="region" aria-label="The four questions, one per tab">
+        <table class="grid questions">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Question</th>
+              <th>Tab</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TABS.map((t, i) => (
+              <tr>
+                <td class="tn mono">{i + 1}</td>
+                <td class="cname">{t.ask}</td>
+                <td class="mono tabname">{t.sheet}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 to 04, one per tab: what it asks, and the one mistake it catches -->
+  <section id="tabs">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The four tabs</span>
+        <h2>One question each, <em>and the mistake it catches</em>.</h2>
+      </div>
+      <div class="threegrid tabgrid">
+        {TABS.map((t) => (
+          <div class="three" id={`tab-${t.n}`}>
+            <span class="threename mono">{t.n} · {t.name}</span>
+            <p class="threeask">{t.ask}</p>
+            <p class="qflag"><span class="flaglbl mono">The mistake it catches</span> {t.catches}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- The twelve checks -->
+  <section id="checks">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The {CHECKS.length} checks</span>
+        <h2>Four are critical. <em>One No on any of them is a Hold.</em></h2>
+      </div>
+      <p class="prose-lead">
+        Each check is answered Yes, Partial or No, and scores 2, 1 or 0. A No on any check marked critical
+        means Hold. Otherwise {READY_AT} or more out of {MAX_TOTAL} is Ready, and anything less is Fix first.
+      </p>
+      {CHECK_GROUPS.map((g) => {
+        const group = CHECKS.filter((c) => c.group === g);
+        return (
+          <div class="qgroup">
+            <h3 class="qgroupname">{g}</h3>
+            <ol class="qs" start={group[0].n}>
+              {group.map((c) => (
+                <li>
+                  <span class="qn mono">{String(c.n).padStart(2, '0')}</span>
+                  <div>
+                    <p class="qask">
+                      {c.critical && <span class="tag">Critical</span>}
+                      {c.text}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- The worked example -->
+  <section id="example">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Worked example · Illustrative</span>
+        <h2>An HR benefits assistant, <em>held</em>.</h2>
+      </div>
+      <p class="prose-lead">{EXAMPLE_LABEL} It is filled in on the workbook’s last tab.</p>
+      <div class="threegrid">
+        <div class="three">
+          <span class="threename mono">Condition retrieved</span>
+          <p class="threeask">{conditionsRetrieved} of {EXAMPLE_SPOT.length}</p>
+          <p class="threebody">
+            Retrieval brought back the rule every time and its condition {conditionsRetrieved} times. Condition recall: {percent(exSpot.conditionRecall)}.
+          </p>
+        </div>
+        <div class="three">
+          <span class="threename mono">Cited but wrong</span>
+          <p class="threeask">{exSpot.citedButWrong}</p>
+          <p class="threebody">
+            Answers with a real citation that were wrong for the person asking. A reader would trust them and act on them.
+          </p>
+        </div>
+        <div class="three">
+          <span class="threename mono">Decision</span>
+          <p class="threeask">{exResult.decision}</p>
+          <p class="threebody">
+            {DECISION_MEANING[exResult.decision ?? 'Hold']} Critical checks {exResult.criticalNo.join(', ').replace(/, (\d+)$/, ' and $1')} were answered No. Total {exResult.total} of {MAX_TOTAL}.
+          </p>
+        </div>
+      </div>
+      <p class="prose-note">
+        The condition map found {exMap.rulesMapped} rules. {exMap.storedAway} of their conditions live away from the rule, and the assistant has no way to check {exMap.cannotCheck}: an employee’s start date.
+        The first thing to fix is check {exResult.nextStep?.n}. {exTests === 1 ? 'One test case' : `${exTests} test cases`} is written: someone who joined eight months ago, asking about a pre-existing condition.
+      </p>
+    </div>
+  </section>
+
+  <!-- Closing -->
+  <section class="final" id="close">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Closing</span>
+        <h2>{CLOSING}</h2>
+      </div>
+      <ClosingCta result>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate={DOWNLOAD_KIND} data-download={DOWNLOAD_KIND}>Download the Citation Fit Check&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
+      <p class="mono faint pubdate">
+        Published {PUBLISHED_AT ? longDate(PUBLISHED_AT) : '[PLACEHOLDER: publish date, Sunil to confirm]'} · {LICENCE_LINE} · © The Living Craft
+      </p>
+    </div>
+  </section>
+  <ResourceGate
+    resource={RESOURCE_ID}
+    lead="The workbook holds the four working tabs, blank, and a worked example of an HR benefits assistant on its own tab."
+  />
+</ResourcesLayout>
+
+<style>
+  /* The same rules the Agent Memory Audit Kit and the Rework Cost Check pages
+     carry under the same names. Nothing here is a new style. */
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .hero .controls { margin-top: var(--space-6); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  /* ── the opening (rework-cost-check.astro) ────────────────────────────── */
+  .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); margin-top: var(--space-6); }
+  .open-row { display: grid; gap: var(--space-1); }
+  @media (min-width: 720px) {
+    .opening { max-width: none; }
+    .open-row { grid-template-columns: 180px 1fr; gap: var(--space-5); align-items: start; }
+  }
+  .open-row dt { font-size: var(--size-1); color: var(--accent-ink); font-weight: var(--weight-strong); padding-top: 3px; }
+  .open-row dd { color: var(--text-body); max-width: var(--measure-prose); }
+
+  /* ── cards (agent-memory-audit-kit.astro, "the three questions") ──────── */
+  .threegrid { display: grid; gap: var(--space-4); }
+  @media (min-width: 860px) { .threegrid { grid-template-columns: repeat(3, 1fr); } }
+  .three {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .threename { font-size: var(--size-1); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
+  .threeask { font-family: var(--font-heading); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .threebody { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+
+  /* ── tables (agent-memory-audit-kit.astro) ────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  .scroll:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .grid thead th {
+    background: var(--texture-forest);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
+  .tn { color: var(--text-quiet); }
+  .tabname { white-space: nowrap; }
+  /* The answer to "caught?" carries a word, not only a colour. */
+  .grid tbody td.caught { color: var(--text-body); font-weight: var(--weight-medium); }
+  .grid tbody td.caught.no { color: var(--danger); }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-ink-strong);
+    background: var(--accent-quiet);
+    border-radius: var(--radius-pill);
+    padding: 1px var(--space-2);
+    margin-right: var(--space-2);
+    vertical-align: 1px;
+  }
+
+  /* ── the checks (agent-memory-audit-kit.astro, "the twelve questions") ── */
+  .qgroup + .qgroup { margin-top: var(--space-6); }
+  .qgroupname { font-family: var(--font-mono); font-size: var(--size-2); color: var(--accent-ink-strong); font-weight: var(--weight-medium); margin-bottom: var(--space-3); }
+  ol.qs { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.qs li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .qn { color: var(--text-quiet); font-size: var(--size-1); padding-top: 3px; }
+  .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .qflag { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+  .flaglbl { color: var(--danger); font-size: 12px; margin-right: var(--space-2); }
+  /* Four cards, two by two: the memory kit's three-card row, one column wider. */
+  @media (min-width: 860px) { .tabgrid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<script>
+  // The beacon only, the same as the memory kit. A download is counted when
+  // the gate hands the file over, not when its button is clicked: the click
+  // only opens the dialog. If the beacon is absent nothing happens.
+  const RESOURCE = 'citation-fit-check';
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (!target?.closest || typeof fn !== 'function') return;
+    if (target.closest('[data-apply]')) fn('cohort_apply_click', { resource: RESOURCE });
+  });
+
+  document.addEventListener('lc:download', (e) => {
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn !== 'function') return;
+    const d = (e as CustomEvent<{ kind: string }>).detail;
+    fn('resource_download', { resource: RESOURCE, file: d.kind });
+  });
+</script>
