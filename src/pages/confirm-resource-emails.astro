@@ -45,7 +45,12 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<PracticeLayout title={title} description={description} canonical="/confirm-resource-emails" noindex>
+{/* tagManager={false}: the URL carries ?c=, a working confirmation token for
+    seven days. Google Tag Manager loads Google Analytics 4 and Microsoft Clarity,
+    which record the full URL, so with it on the token went to both for anyone
+    who had said yes to analytics. The first-party beacon stays: it sends
+    location.pathname, never the query. */}
+<PracticeLayout title={title} description={description} canonical="/confirm-resource-emails" noindex tagManager={false}>
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow">Email preferences</p>

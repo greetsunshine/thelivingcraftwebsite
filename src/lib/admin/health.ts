@@ -241,6 +241,20 @@ export async function dbHealth(force = false): Promise<Health> {
       }
     })(),
 
+    // The planner's confirmation retry (drip-store.ts). Read-only; a limit of
+    // one keeps the probe to a single row at most.
+    (async (): Promise<Probe> => {
+      const name = 'comms_awaiting_without_request';
+      try {
+        const { error } = await client.rpc(name, { p_limit: 1 });
+        return error
+          ? { name, kind: 'function', ok: false, error: error.message.slice(0, 300) }
+          : { name, kind: 'function', ok: true };
+      } catch (err) {
+        return { name, kind: 'function', ok: false, error: err instanceof Error ? err.message.slice(0, 300) : 'threw' };
+      }
+    })(),
+
     // Two arguments rather than one, so it needs its own probe.
     (async (): Promise<Probe> => {
       const name = 'admin_traffic_breakdown';

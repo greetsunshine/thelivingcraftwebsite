@@ -12,7 +12,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { db } from '../admin/supabase';
 import { RESOURCE_MARKETING_CONSENT } from '../pipeline/consent';
-import { CONFIRMATION_TEMPLATE } from './drip-templates';
 import type { ConsentRead, DripMessage, DripPerson, DripSequence, DripStore, OpenRow, StepStatus } from './drip';
 
 const code = (error: unknown): string => (error as { code?: string })?.code ?? 'unknown';
@@ -456,36 +455,17 @@ class SupabaseDripStore implements DripStore {
   }
 
   async awaitingWithoutRequest(limit: number): Promise<{ sequenceId: string; personId: string }[]> {
-    const { data, error } = await this.client
-      .from('comms_sequences')
-      .select('sequence_id, person_id')
-      .eq('route', 'resource')
-      .eq('state', 'awaiting_confirmation')
-      .order('started_at', { ascending: true })
-      .limit(500);
+    // One query in the database (supabase/schema.sql). Reading the 500 oldest
+    // and filtering here stopped finding anyone once 500 people had not clicked.
+    const { data, error } = await this.client.rpc('comms_awaiting_without_request', { p_limit: limit });
     if (error) {
       log('awaiting read', error);
       return [];
     }
-    const rows = data ?? [];
-    if (!rows.length) return [];
-    const { data: asked, error: askedErr } = await this.client
-      .from('comms_messages')
-      .select('sequence_id')
-      .eq('template_key', CONFIRMATION_TEMPLATE.key)
-      .in(
-        'sequence_id',
-        rows.map((r) => String(r.sequence_id)),
-      );
-    if (askedErr) {
-      log('confirmation read', askedErr);
-      return [];
-    }
-    const done = new Set((asked ?? []).map((r) => String(r.sequence_id)));
-    return rows
-      .filter((r) => !done.has(String(r.sequence_id)))
-      .slice(0, limit)
-      .map((r) => ({ sequenceId: String(r.sequence_id), personId: String(r.person_id) }));
+    return ((data ?? []) as { sequence_id: string; person_id: string }[]).map((r) => ({
+      sequenceId: String(r.sequence_id),
+      personId: String(r.person_id),
+    }));
   }
 }
 

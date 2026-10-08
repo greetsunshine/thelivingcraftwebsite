@@ -12,7 +12,7 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
-Its schema is already on production (7 October). PR #37
+Its schema ran on production on 7 October, but the 8 October review fixes added one read-only function, `comms_awaiting_without_request`: **run `supabase/schema.sql` again before merging.** Without it the confirmation retry logs an error and finds nobody. The reply script also changed; whoever runs the Gmail mailbox must paste the new copy in. PR #37
 (`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
 1 October. PR #31 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are
 merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
@@ -284,6 +284,12 @@ Then, the same day, the rest of the brief:
   unsubscribe from a mail client (a form POST with no Origin) with a 403. The check now runs
   in `src/lib/http/origin.ts` with `/api/unsubscribe` exempt. The footer link's GET now asks
   with a button before acting.
+- **Review fixes, 8 October.** Five defects from the PR #52 review. The reply script used a
+  thread label, so a second reply in a thread was never seen; it now keeps a time cursor.
+  `/confirm-resource-emails` loaded Tag Manager while its URL held a live token; it no longer
+  does. The send-time reply check counted replies from before the sequence opened. A first
+  confirmation request and a same-day repeat had different keys and both sent. The
+  confirmation retry read the 500 oldest unconfirmed sequences and stopped finding new ones.
 - **Architect** is an eleventh role, with the brief's role-first ranking.
 - **The 16 acceptance cases** are mapped to tests and to live staging steps in
   `src/lib/comms/README.md`. Fourteen have automated cover; all sixteen still need the live run.

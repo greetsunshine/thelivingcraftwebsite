@@ -714,12 +714,16 @@ export async function checkEligibility(
   // already blocked, and asking a table that cannot know the answer would
   // produce a confident 'pass' on the most important stop signal there is.
   if (marketing && replyDetectionAvailable() && subject.personId) {
-    // A reply a person already reviewed (a resumed sequence) does not count
-    // again; anything newer than the resume does.
+    // Only replies inside this sequence count: since the last reviewed resume,
+    // else since the sequence opened. That is the planner's window too
+    // (pauseSignals, `resumedAt ?? anchorAt`). Counting every reply ever meant
+    // a September email stopped, for good, a sequence somebody confirmed in
+    // October, after the planner had already queued its first step.
     let since: string | null = null;
     if (subject.sequenceId) {
-      const { data: seqRow } = await client.from('comms_sequences').select('resumed_at').eq('sequence_id', subject.sequenceId).maybeSingle();
-      since = seqRow?.resumed_at ? String(seqRow.resumed_at) : null;
+      const { data: seqRow } = await client.from('comms_sequences').select('resumed_at, anchor_at').eq('sequence_id', subject.sequenceId).maybeSingle();
+      const from = seqRow?.resumed_at ?? seqRow?.anchor_at;
+      since = from ? String(from) : null;
     }
     // Two shapes of reply: one a provider linked to a message we sent, and one
     // from the reply mailbox feed, linked to the person directly.
@@ -742,7 +746,7 @@ export async function checkEligibility(
       gates.push(
         a.data?.length || b.data?.length
           ? block('reply', 'Reply', 'This person has replied. A reply is the first item on the stop list.', 'stop')
-          : pass('reply', 'Reply', since ? 'No reply since the last reviewed resume.' : 'No reply recorded.'),
+          : pass('reply', 'Reply', since ? 'No reply since this sequence opened or was last resumed.' : 'No reply recorded.'),
       );
     }
 

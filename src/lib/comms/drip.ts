@@ -452,9 +452,11 @@ export interface DripStore {
 /**
  * The confirmation email for one sequence, ready for the outbox.
  *
- * `key` makes it idempotent: 'confirm:<sequence>:1' for the first request,
- * 'confirm:<sequence>:<date>' for a later one, so a person who ticks the box
- * three times in an afternoon is sent one confirmation request that day.
+ * `key` makes it idempotent. Every request, the first one included, uses
+ * 'confirm:<sequence>:<date>' (confirmationKey below), so a person who ticks
+ * the box three times in an afternoon is sent one confirmation request that
+ * day. The first request used to be 'confirm:<sequence>:1', which never
+ * collided with a same-day repeat, and that sent two.
  */
 const confirmationMessage = (seq: { sequenceId: string; personId: string }, person: DripPerson, key: string, atISO: string): DripMessage => {
   const rendered = renderMessage(CONFIRMATION_TEMPLATE);
@@ -478,6 +480,9 @@ const localDate = (atISO: string, zone: string): string => {
   const p = wallParts(Date.parse(atISO), zone);
   return `${p.y}-${String(p.m).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
 };
+
+/** The once-a-day idempotency key for a sequence's confirmation request. */
+export const confirmationKey = (sequenceId: string, atISO: string, zone: string): string => `confirm:${sequenceId}:${localDate(atISO, zone)}`;
 
 // ---------------------------------------------------------------------------
 // Opening
@@ -536,7 +541,7 @@ export async function openResourceDrip(store: DripStore, req: OpenRequest): Prom
       const person = await store.person(req.personId);
       if (person) {
         const q = await store.queueMessage(
-          confirmationMessage({ sequenceId: live.sequenceId, personId: req.personId }, person, `confirm:${live.sequenceId}:${localDate(at, cfg.zone)}`, at),
+          confirmationMessage({ sequenceId: live.sequenceId, personId: req.personId }, person, confirmationKey(live.sequenceId, at, cfg.zone), at),
         );
         return {
           opened: false,
@@ -578,7 +583,7 @@ export async function openResourceDrip(store: DripStore, req: OpenRequest): Prom
   }
 
   const q = await store.queueMessage(
-    confirmationMessage({ sequenceId: opened.sequenceId, personId: req.personId }, person, `confirm:${opened.sequenceId}:1`, at),
+    confirmationMessage({ sequenceId: opened.sequenceId, personId: req.personId }, person, confirmationKey(opened.sequenceId, at, cfg.zone), at),
   );
   return { opened: true, sequenceId: opened.sequenceId, resourceId, confirmationQueued: Boolean(q.messageId) };
 }
@@ -697,7 +702,7 @@ export async function runDripPlanner(store: DripStore, opts: PlannerOptions): Pr
   for (const w of await store.awaitingWithoutRequest(limit)) {
     const person = await store.person(w.personId);
     if (!person) continue;
-    const q = await store.queueMessage(confirmationMessage(w, person, `confirm:${w.sequenceId}:1`, nowISO));
+    const q = await store.queueMessage(confirmationMessage(w, person, confirmationKey(w.sequenceId, nowISO, cfg.zone), nowISO));
     if (q.messageId && !q.duplicate) confirmationsQueued += 1;
   }
 

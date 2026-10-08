@@ -254,7 +254,7 @@ test('a tick opens the sequence awaiting confirmation and queues exactly one ema
   const m = store.messages[0];
   assert.equal(m.purpose, 'transactional');
   assert.equal(m.templateKey, 'confirm-resource-emails');
-  assert.equal(m.idempotencyKey, `confirm:${seqId}:1`);
+  assert.equal(m.idempotencyKey, `confirm:${seqId}:2026-10-01`, 'dated in IST, like every later request');
   assert.equal(m.step, 0);
   assert.ok(m.body.includes(CONFIRM_ACTION), 'the link is minted at dispatch, never stored');
 });
@@ -272,12 +272,12 @@ test('a second tick while waiting re-sends the request, at most once a day, and 
   person(store);
   const seqId = await ticked(store);
   const again = (now: Date) => openResourceDrip(store, { personId: 'p1', requestId: 'r2', requestResourceId: 'poc-screen', consented: true, now });
-  await again(new Date(T0.getTime() + HOUR)); // same IST day
-  assert.equal(store.messages.length, 2, 'the first re-send that day');
+  await again(new Date(T0.getTime() + 20 * 60_000)); // twenty minutes later, same IST day
+  assert.equal(store.messages.length, 1, 'the first request already went today: no second one');
   await again(new Date(T0.getTime() + 2 * HOUR));
-  assert.equal(store.messages.length, 2, 'not a third the same day');
+  assert.equal(store.messages.length, 1, 'still one that day');
   await again(new Date(T0.getTime() + DAY));
-  assert.equal(store.messages.length, 3, 'one more the next day');
+  assert.equal(store.messages.length, 2, 'one more the next day');
   assert.equal(store.sequences.length, 1);
   assert.ok(store.messages.every((m) => m.sequenceId === seqId && m.purpose === 'transactional'));
 });
@@ -357,7 +357,20 @@ test('sequences opened before 6 October, moved back to awaiting, are each sent t
   assert.equal(r1.confirmationsQueued, 1);
   const r2 = await plan(store, new Date(T0.getTime() + HOUR));
   assert.equal(r2.confirmationsQueued, 0);
-  assert.deepEqual(store.messages.map((m) => [m.idempotencyKey, m.purpose]), [[`confirm:${seqId}:1`, 'transactional']]);
+  assert.deepEqual(store.messages.map((m) => [m.idempotencyKey, m.purpose]), [[`confirm:${seqId}:2026-10-01`, 'transactional']]);
+});
+
+test('the confirmation retry still finds a new sequence behind 500 that never confirmed', async () => {
+  const store = new MemoryDripStore();
+  for (let i = 0; i < 520; i++) {
+    person(store, `old${i}`);
+    await ticked(store, `old${i}`);
+  }
+  person(store);
+  const seqId = store.addLiveSequence('p1', 'resource', 'awaiting_confirmation'); // its first request never queued
+  const r = await plan(store, new Date(T0.getTime() + DAY));
+  assert.equal(r.confirmationsQueued, 1);
+  assert.ok(store.messages.some((m) => m.sequenceId === seqId && m.templateKey === CONFIRMATION_TEMPLATE.key));
 });
 
 // ── the planner ────────────────────────────────────────────────────────────

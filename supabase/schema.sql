@@ -3430,3 +3430,48 @@ create table if not exists public.comms_inbound_status (
 );
 
 alter table public.comms_inbound_status enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- Sequences still owed their first confirmation request (8 October 2026)
+-- ---------------------------------------------------------------------------
+-- The planner retries the confirmation email for any resource sequence that
+-- is awaiting confirmation and has never had one queued. It used to read the
+-- 500 oldest awaiting sequences and filter them in TypeScript. A sequence
+-- nobody confirms stays awaiting forever, so once 500 people had not clicked,
+-- every run read only those 500, and a newer sequence whose first request
+-- failed was never retried. The filter also sent 500 ids in one query string.
+-- NOT EXISTS in the database has neither problem.
+--
+-- Read-only. Same overload guard as resource_request_submit above, for the
+-- same reason: a new parameter must replace this function, not sit beside it.
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.proname = 'comms_awaiting_without_request'
+  loop
+    execute format('drop function %s', r.sig);
+  end loop;
+end $$;
+
+create or replace function public.comms_awaiting_without_request(p_limit int default 50)
+returns table (sequence_id uuid, person_id uuid)
+language sql stable as $fn$
+  select s.sequence_id, s.person_id
+    from public.comms_sequences s
+   where s.route = 'resource'
+     and s.state = 'awaiting_confirmation'
+     and not exists (
+       select 1 from public.comms_messages m
+        where m.sequence_id = s.sequence_id
+          and m.template_key = 'confirm-resource-emails'
+     )
+   order by s.started_at asc
+   limit greatest(1, least(coalesce(p_limit, 50), 500));
+$fn$;
+
+revoke all on function public.comms_awaiting_without_request from public;
+grant execute on function public.comms_awaiting_without_request to service_role;

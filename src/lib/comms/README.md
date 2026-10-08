@@ -161,6 +161,12 @@ the reply mailbox ──(scripts/inbound/gmail-replies.gs)──▶ POST /api/co
 - The script runs every five minutes inside the mailbox's own Google account.
   It posts each new message's sender and Message-ID, never the subject or the
   body, and a heartbeat on every run. Its header has the five setup steps.
+- It finds new mail by time, not by label. Gmail labels a whole thread, so a
+  label-based search skipped the second reply in a thread. The script keeps
+  `LC_CURSOR` in Script properties and reads 15 minutes back from it on each
+  run; the site ignores a Message-ID it already has. A failed post holds the
+  cursor at that message. The old `lc-reply-posted` label is unused and can be
+  deleted from the mailbox.
 - A reply from a known person is recorded once (`comms_events`, type `reply`,
   `person_id`). It **pauses** a resource follow-up and **stops** a cohort
   sequence with a review task.
