@@ -562,11 +562,11 @@ Two rules, and they are the reason the file is worth having:
   was written and wrong a week later is worse than none. Move the checkbox, adjust the
   counts in the summary table, and add a changelog row.
 
-**⚠ Production's database is behind (found 8 October 2026).** The runs below were recorded
-as production but went to the preview Supabase project; see the warning at the top of
-`docs/cohort-pipeline/RESUME.md`. The owner of the production project must run the whole
-[supabase/schema.sql](supabase/schema.sql) there. **Before recording a schema run, confirm
-which project it was**: production's `events` table has rows from the last few minutes.
+**Production's database was behind, and was fixed on 8 October 2026.** The runs below were
+recorded as production but went to the preview Supabase project; see the note at the top of
+`docs/cohort-pipeline/RESUME.md`. The whole [supabase/schema.sql](supabase/schema.sql) then ran
+on the real production project (`inmtodaosxmtrwtdwwnu`). **Before recording a schema run,
+confirm which project it was**: production's `events` table has rows from the last few minutes.
 
 **What was recorded: [supabase/schema.sql](supabase/schema.sql) ran in full on 29 September
 2026** (on the preview project, as it turned out), and all nine tables the code was waiting on answer:

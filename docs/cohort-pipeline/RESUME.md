@@ -19,16 +19,18 @@ merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
 
-> ### ⚠ Production's database is behind the code (found 8 October)
+> ### Production's database was behind the code (found 8 October, fixed the same day)
 > The schema runs recorded below as "production" on 29 September, 1 October and 7 October
 > went to the **preview** Supabase project, the only one Ein's account can open. Evidence:
 > that project's newest `events` row was 1 October (124 rows in all), and production's
 > `/api/comms/worker` logs `drip store due read failed: 42703` (column does not exist) on
 > every run, while the same columns exist in the preview project.
-> **Fix:** whoever owns the production Supabase project (the one in Vercel's Production
-> `SUPABASE_URL`, added 16 August) runs the whole `supabase/schema.sql` from `main` there.
-> Until then, assume production has none of the schema added since August, and check a
-> project's identity before trusting any "schema applied" line in this file.
+> **Fixed 8 October:** the production project is `inmtodaosxmtrwtdwwnu` (found through Vercel's
+> Observability → External APIs, because `SUPABASE_URL` is a secret). Ein was added to it as a
+> Developer and ran the whole `supabase/schema.sql` there. The check returned 6, 4 and 1
+> (`comms_sequences` columns, comms tables, `comms_awaiting_without_request`). The preview
+> project is `itxythjynnfcqvrfltrq`. Check a project's identity (`events` has rows from the last
+> few minutes) before recording any future schema run as production.
 
 ---
 
