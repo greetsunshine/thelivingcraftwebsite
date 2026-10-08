@@ -12,12 +12,25 @@ cost the next session an hour to rediscover. It is short on purpose — the deta
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
-Its schema ran on production on 7 October, but the 8 October review fixes added one read-only function, `comms_awaiting_without_request`: **run `supabase/schema.sql` again before merging.** Without it the confirmation retry logs an error and finds nobody. The reply script also changed; whoever runs the Gmail mailbox must paste the new copy in. PR #37
-(`feat/plain-green-v5-pages-branded-pdfs`) is merged, and production ran its schema on
-1 October. PR #31 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are
+Its schema ran on the PREVIEW database on 7 October, not production (see the warning below), and the 8 October review fixes added one read-only function, `comms_awaiting_without_request`: **run `supabase/schema.sql` again before merging.** Without it the confirmation retry logs an error and finds nobody. The reply script also changed; whoever runs the Gmail mailbox must paste the new copy in. PR #37
+(`feat/plain-green-v5-pages-branded-pdfs`) is merged; its 1 October schema run also went to
+the preview database. PR #31 (`feat/landing-refinement`) and PR #36 (`resource/failure-triage-quiz`) are
 merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+> ### Production's database was behind the code (found 8 October, fixed the same day)
+> The schema runs recorded below as "production" on 29 September, 1 October and 7 October
+> went to the **preview** Supabase project, the only one Ein's account can open. Evidence:
+> that project's newest `events` row was 1 October (124 rows in all), and production's
+> `/api/comms/worker` logs `drip store due read failed: 42703` (column does not exist) on
+> every run, while the same columns exist in the preview project.
+> **Fixed 8 October:** the production project is `inmtodaosxmtrwtdwwnu` (found through Vercel's
+> Observability → External APIs, because `SUPABASE_URL` is a secret). Ein was added to it as a
+> Developer and ran the whole `supabase/schema.sql` there. The check returned 6, 4 and 1
+> (`comms_sequences` columns, comms tables, `comms_awaiting_without_request`). The preview
+> project is `itxythjynnfcqvrfltrq`. Check a project's identity (`events` has rows from the last
+> few minutes) before recording any future schema run as production.
 
 ---
 
@@ -263,7 +276,8 @@ What changed:
   `mkt-resource-2026-09-29`). Each follow-up opens with the brief's "You requested the …"
   sentence, or a role sentence when the request is unknown, or nothing. The wordings are now
   version `LC-OUTREACH-2026-09-29.2`; load and approve them again in the console.
-- **Schema: applied to production on 7 October**, before this branch merged. All six checks
+- **Schema: applied to the PREVIEW database on 7 October, not production** (found 8 October;
+  see the warning at the top). Production still needs it. All six checks
   returned 1 (`comms_sequences.confirmed_at`, `consents.confirmed_at`,
   `comms_events.person_id`, the `comms_inbound_status` table, the `awaiting_confirmation`
   state, the widened one-live index). What it holds: the `awaiting_confirmation` state,
@@ -555,7 +569,8 @@ and 3 build byte-identical. `make w2-paid-once` is now optional: learners build 
 
 A push to `main` deploys production, so these happen in this order:
 
-1. [x] **Done 1 October.** Production ran `supabase/schema.sql` in full from this branch.
+1. [ ] **Ran 1 October, but on the preview database, not production** (found 8 October).
+   The whole file still has to run on production.
    A check query confirmed `people.role_code`, `attributions.first_landing_path`,
    `comms_drip_sends`, `events_event_id_uidx` and the `p_role_code` argument all exist.
 2. [x] **Done 1 October.** The Vercel team is on Pro, which allows the ten-minute cron in

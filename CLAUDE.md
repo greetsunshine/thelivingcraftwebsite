@@ -562,8 +562,14 @@ Two rules, and they are the reason the file is worth having:
   was written and wrong a week later is worse than none. Move the checkbox, adjust the
   counts in the summary table, and add a changelog row.
 
-**The schema is applied. Production ran [supabase/schema.sql](supabase/schema.sql) in
-full on 29 September 2026**, and all nine tables the code was waiting on answer:
+**Production's database was behind, and was fixed on 8 October 2026.** The runs below were
+recorded as production but went to the preview Supabase project; see the note at the top of
+`docs/cohort-pipeline/RESUME.md`. The whole [supabase/schema.sql](supabase/schema.sql) then ran
+on the real production project (`inmtodaosxmtrwtdwwnu`). **Before recording a schema run,
+confirm which project it was**: production's `events` table has rows from the last few minutes.
+
+**What was recorded: [supabase/schema.sql](supabase/schema.sql) ran in full on 29 September
+2026** (on the preview project, as it turned out), and all nine tables the code was waiting on answer:
 `session_releases`, `discussion_replies`, `session_prompts`, `outcome_ratings`,
 `checkpoint_ratings`, `pair_drafts`, `pair_reviews`, `feedback_responses` and
 `resource_requests`. The rule that put this paragraph here still stands: **run the whole
@@ -580,8 +586,7 @@ implicit transaction, rolled back all 3,235 lines and applied nothing. Both writ
 functions now drop every overload of their own name by `oid::regprocedure` immediately
 before the `create`. **If either function grows a parameter, keep the guard.**
 
-**This branch's schema is applied too.** Production ran the whole file again on 1 October
-2026, from PR #37's copy: `people.role_code`, the attribution columns,
+**PR #37's schema ran too, on 1 October 2026, also on the preview project:** `people.role_code`, the attribution columns,
 `events_event_id_uidx`, the `p_role_code` argument, `comms_drip_sends` and the comms
 changes all answer.
 
