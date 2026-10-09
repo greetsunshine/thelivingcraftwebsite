@@ -21,6 +21,29 @@ merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 
 ---
 
+## Week 4 review, round 1 — 9 October (`content/week-4-review-round1`)
+
+Rows 58 to 69 of the "Notes Review" sheet, answered in
+[`docs/teaching/reviews/week-4-review-2026-10-09.md`](../teaching/reviews/week-4-review-2026-10-09.md).
+**The week is now "Securing AI Agents".**
+
+- **Topic 1 runs on a real model now: DeepSeek, deepseek-flash, temperature 0.** 600 calls
+  measured ten attack vectors at four defence levels. The model refused every attack shaped
+  as an order and believed nearly every attack shaped as evidence; the prompt line changed one
+  vector and made another worse; only the check in code stopped all 200 rounds. Reprint with
+  `make w4-levels-recorded`. **Rerun `make w4-levels-vectors RUNS=20` the week you teach.**
+- **The lab is Gandalf-shaped and live**: `make w4-levels`, four levels, and every win saved
+  as a regression case; `make w4-regress` replays them. Reference agent commit `95701b6`,
+  local only, on top of uncommitted week 3 code.
+- **The start-time field was broken inside Artifacts** (it reloaded the page, which a
+  sandboxed frame loses). Fixed in the shared script; weeks 1 to 3 rebuilt, content unchanged.
+- **Two references were wrong in the sheet's suggestions**: "LLM-Goat" is not an OWASP
+  project (OWASP PromptMe is used instead), and Gandalf now redirects to Agent Breaker.
+- **Topics 3 to 5 still use the simulation.** Topic 4's opening now says so and prints
+  DeepSeek's 0/20 beside the simulation's 19/20.
+
+---
+
 ## Week 4 · Attack your own system, built — 7 October (`content/week-4-draft`)
 
 **Read this before touching week 4.** Built against bridge 7 and `generation-prompt.md`.

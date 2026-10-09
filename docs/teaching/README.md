@@ -271,7 +271,13 @@ table in production. Weeks 1 and 2 both say "assigned by name" without naming an
 week 3 keeps that convention. Pulling eight people's names out of production into committed
 HTML is not a decision to make on the way past. **Both weeks report this the same way.**
 
-## Week 4 · Attack your own system — built 7 October
+## Week 4 · Securing AI Agents — built 7 October, review round 1 on 9 October
+
+**Renamed from "Attack your own system" on 9 October.** Topic 1 now runs on DeepSeek; see
+[`reviews/week-4-review-2026-10-09.md`](reviews/week-4-review-2026-10-09.md). The review
+added `make w4-levels`, `make w4-regress` and `make w4-levels-recorded` to the reference agent.
+
+### The original build, 7 October
 
 **Built against bridge 7 of [`threads.md`](threads.md)**, the plan Sunil approved on
 7 October, and against [`generation-prompt.md`](generation-prompt.md). Not published as

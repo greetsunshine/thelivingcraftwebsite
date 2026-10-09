@@ -1613,6 +1613,16 @@ python -m src.main --ticket 9999 --model &lt;a second model&gt;</div>
     paint();
   });
 
+  // The start-time field below announces a new start without reloading the page,
+  // because a reload is blocked or lost inside a sandboxed frame such as a
+  // claude.ai Artifact, which is where the field silently did nothing.
+  document.addEventListener('lc:start', function (e) {
+    startedAt = e.detail === null ? null : e.detail;
+    offset = 0; paused = false;
+    if (pause) pause.textContent = 'Pause';
+    paint();
+  });
+
   paint();
   setInterval(paint, 10000);
 })();
@@ -1646,26 +1656,44 @@ python -m src.main --ticket 9999 --model &lt;a second model&gt;</div>
       var p = input.value.split(':');
       d.setHours(Number(p[0]), Number(p[1]), 0, 0);
       qs.set('start', d.toISOString());
-      location.search = qs.toString();
+      keepInUrl();
+      apply(d);
     });
-    clear.addEventListener('click', function () { qs.delete('start'); location.search = qs.toString(); });
+    clear.addEventListener('click', function () {
+      qs.delete('start');
+      input.value = '';
+      keepInUrl();
+      apply(null);
+    });
   }
-  if (start) {
-    var base = start.getHours() * 60 + start.getMinutes();
+  // The start time lives in the URL so a shared link carries it, and never in
+  // browser storage. replaceState changes the URL without a reload; inside a
+  // sandboxed frame it may be refused, and the page still updates below.
+  function keepInUrl() {
+    try { history.replaceState(null, '', '?' + qs.toString() + location.hash); } catch (e) {}
+  }
+  var whens = [].slice.call(document.querySelectorAll('summary .when'));
+  whens.forEach(function (w) { w.setAttribute('data-orig', w.textContent); });
+  function apply(when) {
+    var base = when ? when.getHours() * 60 + when.getMinutes() : null;
     spans.forEach(function (s) {
       var off = s.getAttribute('data-off');
+      if (base === null) { s.textContent = off; s.removeAttribute('title'); s.classList.remove('wall'); return; }
       var m = (base + mins(off)) % 1440;
       s.textContent = pad(Math.floor(m / 60)) + ':' + pad(m % 60);
       s.title = off + ' into the session';
       s.classList.add('wall');
     });
-    [].forEach.call(document.querySelectorAll('summary .when'), function (w) {
-      w.textContent = w.textContent.replace(/\b([0-4]\d|05):([0-5]\d)\b/g, function (t) {
+    whens.forEach(function (w) {
+      var orig = w.getAttribute('data-orig');
+      w.textContent = base === null ? orig : orig.replace(/\b([0-4]\d|05):([0-5]\d)\b/g, function (t) {
         var m = (base + mins(t)) % 1440;
         return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
       });
     });
+    document.dispatchEvent(new CustomEvent('lc:start', { detail: when ? when.getTime() : null }));
   }
+  if (start) apply(start);
   function openTarget() {
     var id = location.hash.slice(1);
     var el = id && document.getElementById(id);

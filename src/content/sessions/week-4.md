@@ -1,8 +1,8 @@
 ---
 week: 4
-title: "Attack your own system"
+title: "Securing AI Agents"
 module: M2
-summary: "Before somebody else does. Text an attacker writes into what your agent reads, an MCP server you build and one you did not, and a loop that will not stop."
+summary: "Prompt injection, direct and through retrieval, measured on a real model. An MCP server you build and one you did not write, contained. And a loop that will not stop."
 status: draft
 topics: []
 # THE FIVE OUTCOMES, one per topic, from bridge 7 of docs/teaching/threads.md
@@ -68,10 +68,10 @@ runOfShow:
 checkpoints:
   - at: "00:53"
     items:
-      - Show a line in the prompt holding against one attack, and failing against a rewording of it
-      - Name the four phrasings, and say which one honest customers use most
-      - Turn three attacks into regression cases, each with what the agent should do instead
-      - Review attacks an assistant wrote for the phrasings it did not think of
+      - Show a prompt line that appears to work, and prove whether it did anything
+      - Name the two shapes of attack, and say which one a real model believed
+      - Turn every attack that beat a level into a regression case, and replay them all
+      - Review attacks an assistant wrote for the shapes it did not think of
   - at: "01:36"
     items:
       - Plant a clause in the store that wins the retrieval for an honest ticket
@@ -98,12 +98,13 @@ checkpoints:
       - Name the number in your own system that falls to zero when the job silently stops, and who it pages
 
 prework:
-  minutes: 45
+  minutes: 50
   items:
     - "Take the Agent Failure Triage Quiz at /resources/agent-failure-triage-quiz. Twelve questions on one incident, about 20 minutes. Three of its takeaways are topic 3's starting point, and nobody re-teaches them."
     - "Read one page on how MCP works: the Overview and the Architecture page of the specification dated 2026-07-28, at modelcontextprotocol.io. About 10 minutes. None of it is taught live."
     - "Bring one adversarial case from your week 3 suite, or your bypass from week 2's adversary round. Written down, quoted exactly. It becomes your third attack in the 00:33 lab."
-    - "Pull the reference agent and run make w4-eval once, about two seconds, so the first lab is not also your first install. Every w4- target is deterministic and none calls a model."
+    - "Pull the reference agent, run make setup, and run make w4-eval once, about two seconds, so the first lab is not also your first install."
+    - "Get a model key for topic 1's live lab, about 5 minutes. A DeepSeek key is the default (platform.deepseek.com/api_keys, a small top-up; the whole lab is about 30 calls, roughly ₹1 at deepseek-flash's peak price on 7 October 2026), saved as DEEPSEEK_API_KEY in the reference agent's .env. Your Gemini key from week 0 also works: set W4_PROVIDER=gemini, but the lab may use most of the free tier's 20 requests that day."
     - "If you added a line to your prompt after week 1, bring it. We start with it at 00:15."
 
 after:
