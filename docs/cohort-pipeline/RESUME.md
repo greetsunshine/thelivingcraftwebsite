@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 8 October 2026
+**Last updated:** 9 October 2026
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
@@ -18,6 +18,39 @@ Its schema ran on production on 7 October, but the 8 October review fixes added 
 merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Week 4 review, round 1 — 9 October (`content/week-4-review-round1`)
+
+Rows 58 to 69 of the "Notes Review" sheet, answered in
+[`docs/teaching/reviews/week-4-review-2026-10-09.md`](../teaching/reviews/week-4-review-2026-10-09.md).
+**The week is now "Securing AI Agents".**
+
+- **Topic 1 runs on a real model now: DeepSeek, deepseek-flash, temperature 0.** 600 calls
+  measured ten attack vectors at four defence levels. The model refused every attack shaped
+  as an order and believed nearly every attack shaped as evidence; the prompt line changed one
+  vector and made another worse; only the check in code stopped all 200 rounds. Reprint with
+  `make w4-levels-recorded`. **Rerun `make w4-levels-vectors RUNS=20` the week you teach.**
+- **The lab is Gandalf-shaped and live**: `make w4-levels`, four levels, and every win saved
+  as a regression case; `make w4-regress` replays them.
+- **The start-time field was broken inside Artifacts** (it reloaded the page, which a
+  sandboxed frame loses). Fixed in the shared script; weeks 1 to 3 rebuilt, content unchanged.
+- **Two references were wrong in the sheet's suggestions**: "LLM-Goat" is not an OWASP
+  project (OWASP PromptMe is used instead), and Gandalf now redirects to Agent Breaker.
+- **Topics 3 to 5 run on DeepSeek too** (Sunil's decision). Topic 3: the hint decides the
+  retry, 10/10 against 0/10. Topic 4 needed a new attack, A9, an approved-record note that moved
+  ₹10,00,000 over 20 runs with no policy and ₹0 with it. **Topic 5 was rebuilt**: DeepSeek did
+  not loop the simulated way; the loop it does is an endless cursor, 13 to 25 calls, and only a
+  per-tool limit stops all five recorded runs. `make w4-eval` is the one target still simulated
+  (now 21 cases, `386/420`).
+- **Every DeepSeek table was recorded twice on 9 October and the pages pool both** (40 runs a
+  cell). The second recording disagreed with the first in places, so the prompt line's apparent
+  effects are now taught as run-to-run noise. **Rerun before teaching** and add a third
+  recording rather than replacing the two: every report sums the whole log.
+- **Reference agent is pushed.** `main` (week 1–3 code, `3393e07`) went out on 9 October, so
+  learners who pull have week 3. `week-4-draft` is on GitHub at `742c6eb`, with `make w4-hint`
+  added for topic 3.
 
 ---
 

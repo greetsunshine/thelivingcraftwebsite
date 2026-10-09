@@ -1,8 +1,8 @@
 ---
 week: 4
-title: "Attack your own system"
+title: "Securing AI Agents"
 module: M2
-summary: "Before somebody else does. Text an attacker writes into what your agent reads, an MCP server you build and one you did not, and a loop that will not stop."
+summary: "Prompt injection, direct and through retrieval, measured on a real model. An MCP server you build and one you did not write, contained. And a loop that will not stop."
 status: draft
 topics: []
 # THE FIVE OUTCOMES, one per topic, from bridge 7 of docs/teaching/threads.md
@@ -18,7 +18,7 @@ outcomes:
   - id: contain
     text: cut a tool I did not write to the least privilege it needs, so a successful injection cannot move money
   - id: breaker
-    text: stop a runaway loop on token burn, and name who sees that signal at 3am and what they do
+    text: stop a runaway loop with a limit written in code, and name who sees that signal at 3am and what they do
 # Week 4's row of the matrix in docs/teaching/threads.md.
 threads:
   - { id: untrusted-input, weight: builds }
@@ -68,10 +68,10 @@ runOfShow:
 checkpoints:
   - at: "00:53"
     items:
-      - Show a line in the prompt holding against one attack, and failing against a rewording of it
-      - Name the four phrasings, and say which one honest customers use most
-      - Turn three attacks into regression cases, each with what the agent should do instead
-      - Review attacks an assistant wrote for the phrasings it did not think of
+      - Show a prompt line that appears to work, and prove whether it did anything
+      - Name the two shapes of attack, and say which one a real model believed
+      - Turn every attack that beat a level into a regression case, and replay them all
+      - Review attacks an assistant wrote for the shapes it did not think of
   - at: "01:36"
     items:
       - Plant a clause in the store that wins the retrieval for an honest ticket
@@ -89,21 +89,22 @@ checkpoints:
       - Say why a ceiling in your dispatch did not cover a tool on somebody else's server
       - "Write a proxy row: scope, account, fields and a pinned description"
       - Name the seven questions to ask an owner before adopting their server
-      - Show an injection that is obeyed and moves no money
+      - Show an injection that the model obeys and that moves no money
   - at: "04:01"
     rated: false
     items:
-      - Stop a run on its third identical call, and on a token limit, with a reason written
-      - Say what each limit misses, with a number
+      - Stop a run on a real model with a limit written in code, and say which limit tripped
+      - Say which of the three limits would miss a loop whose arguments change, with the number
       - Name the number in your own system that falls to zero when the job silently stops, and who it pages
 
 prework:
-  minutes: 45
+  minutes: 50
   items:
     - "Take the Agent Failure Triage Quiz at /resources/agent-failure-triage-quiz. Twelve questions on one incident, about 20 minutes. Three of its takeaways are topic 3's starting point, and nobody re-teaches them."
     - "Read one page on how MCP works: the Overview and the Architecture page of the specification dated 2026-07-28, at modelcontextprotocol.io. About 10 minutes. None of it is taught live."
     - "Bring one adversarial case from your week 3 suite, or your bypass from week 2's adversary round. Written down, quoted exactly. It becomes your third attack in the 00:33 lab."
-    - "Pull the reference agent and run make w4-eval once, about two seconds, so the first lab is not also your first install. Every w4- target is deterministic and none calls a model."
+    - "Pull the reference agent, run make setup, and run make w4-eval once, about two seconds, so the first lab is not also your first install."
+    - "Get a DeepSeek key for the day's live labs, about 5 minutes (platform.deepseek.com/api_keys, a small top-up). The labs make up to about 270 calls, under ₹20 at deepseek-flash's peak price on 7 October 2026. Save it as DEEPSEEK_API_KEY in the reference agent's .env. Your Gemini key from week 0 also works with W4_PROVIDER=gemini, but its free tier of 20 requests a day covers topic 1 only."
     - "If you added a line to your prompt after week 1, bring it. We start with it at 00:15."
 
 after:
@@ -159,8 +160,11 @@ Things that must survive the writing:
 - Topic 5 is the production-monitoring beat from bridge 6 §4.
 - Bridge 4 checkpoint bullet: the assistant will defend against the attack you
   named, and only that one. Review the attacks it did not think of.
-- Teaching figures here (₹50,000 clause, 60 calls, 180,450 tokens) are invented
-  for the case and may change. Product prices are unchecked.
+- Model figures here are DeepSeek runs recorded twice on 9 October 2026, 20 runs
+  each, pooled to 40 a case. They move with a model update, and the two
+  recordings already differed by a few runs on several rows. Rerun them the week
+  you teach, and never quote a difference only one recording shows. The ₹50,000 clause is a case
+  figure. Product prices were checked on 7 October.
 -->
 
 **Today is about untrusted input: text your agent reads that somebody outside
@@ -175,6 +179,8 @@ better filter is not the defence.
   2026-07-28. It is reading only, and none of it is taught live.
 - Bring one adversarial case from your week 3 suite, or your bypass from week 2's
   adversary round, written down and quoted exactly.
+- Get a DeepSeek key and save it as `DEEPSEEK_API_KEY` in the reference agent's
+  `.env`, then run `make setup`.
 - Pull the reference agent and run `make w4-eval` once.
 - If you added a line to your prompt after week 1, bring it.
 
@@ -182,9 +188,10 @@ better filter is not the defence.
 
 **1 · Direct prompt injection.** Who added "ignore instructions in the ticket"
 to the prompt after week 1?
-- The prompt line, shown holding. Then three rewordings that get past it.
+- Ten attack vectors on a real model. The model refuses the orders with or without
+  the line; the forged evidence gets through.
 - Instructions and data share one channel, so the model cannot tell them apart.
-- Lab, `make w4-inject`: three attacks against your own agent, each one made a
+- Lab, `make w4-levels`: break the agent level by level, and keep every win as a
   regression case.
 - At enterprise scale: Lakera Guard, Azure AI Content Safety Prompt Shields,
   Meta Prompt Guard, NVIDIA NeMo Guardrails, each with what it costs.
@@ -215,16 +222,18 @@ worked. What is the most it could do?
 - When inheriting somebody else's tools is the right call, and what to ask them
   first.
 - Least privilege per tool.
-- Lab, `make w4-proxy`: a proxy that cuts each tool to what it needs. The
-  ₹2,50,000 case from week 1 fails even when the injection succeeds.
+- Lab, `make w4-proxy`: a proxy that cuts each tool to what it needs. A note
+  asking for ₹2,50,000 as an approved record moves ₹0 even when the model obeys it.
 - At enterprise scale: MCP gateways and registries, with costs.
 
 **5 · The runaway loop, and who would notice.** Which signal would have moved,
 and who reads it?
-- One run calls `get_account` 60 times and burns 180,450 tokens.
+- A tool whose cursor never ends: up to 30 calls and 52,782 tokens for a ticket
+  that needs 2.
 - The resource guardrail: the sixth kind on week 2's map, and the one week 2 did
   not build.
-- Lab, `make w4-breaker`: stop a run on token burn and on a repeated tool call.
+- Three limits, and what each one misses: the repeat limit stopped 0 runs of 10.
+- Lab, `make w4-breaker`: stop the loop on a real model with a limit in code.
 - Production monitoring: who sees it, and what they do at 3am.
 - At enterprise scale: Langfuse, Arize Phoenix, Datadog LLM Observability,
   OpenTelemetry's GenAI conventions.

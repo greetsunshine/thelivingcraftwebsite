@@ -62,6 +62,12 @@ const W = {
   // does not opt in builds exactly as before.
   refHeading: 'The reasoning behind each beat',
   canNowHeading: 'After this topic, you can now',
+  // The capability table's heading and column labels. Week 4's review asked
+  // whether "What the agent can do now" meant now or by the end of the day, so a
+  // week can name both ends. Defaults are the old strings.
+  agentNowHeading: 'What the agent can do now',
+  agentNowFrom: 'At 00:00 today',
+  agentNowTo: 'At the close',
   ...(C.week.wording ?? {}),
 };
 
@@ -254,11 +260,11 @@ const closingAfter = (C.closing?.beats ?? []).filter((b) => b.at >= W.quizAt);
 const learnerAgentNow = C.agentNow ? `
 <section class="card">
   <span class="step-label">Opening &#183; what this week adds to the agent</span>
-  <h2>What the agent can do now</h2>
+  <h2>${W.agentNowHeading}</h2>
   <p class="lede">${esc(C.agentNow.lede)}</p>
   <div class="tw">
     <table>
-      <thead><tr><th>Capability</th><th>At 00:00 today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
+      <thead><tr><th>Capability</th><th>${W.agentNowFrom}</th><th>${W.agentNowTo}</th><th>File</th><th>How you prove it</th></tr></thead>
       <tbody>
 ${C.agentNow.rows.map((r) => `        <tr><td>${esc(r.gained)}</td><td>${esc(r.atOpen)}</td><td>${esc(r.atClose)}</td><td class="named">${esc(r.file)}</td><td><code>${esc(r.proof)}</code></td></tr>`).join('\n')}
       </tbody>
@@ -535,10 +541,10 @@ ${beats.filter((b) => b.ref).map(instructorRef).join('\n')}
 const instructorAgentNow = C.agentNow ? `
 <div class="head" id="agentnow">
   <span class="k">what this week adds to the agent &#183; every row is proved by running something</span>
-  <h2>What the agent can do now</h2>
+  <h2>${W.agentNowHeading}</h2>
   <p>${esc(C.agentNow.lede)}</p>
   <div class="scroller"><table>
-    <thead><tr><th>Capability</th><th>At 00:00 today</th><th>At the close</th><th>File</th><th>How you prove it</th></tr></thead>
+    <thead><tr><th>Capability</th><th>${W.agentNowFrom}</th><th>${W.agentNowTo}</th><th>File</th><th>How you prove it</th></tr></thead>
     <tbody>
 ${C.agentNow.rows.map((r) => `      <tr><td>${esc(r.gained)}</td><td>${esc(r.atOpen)}</td><td>${esc(r.atClose)}</td><td class="mono">${esc(r.file)}</td><td class="mono">${esc(r.proof)}</td></tr>`).join('\n')}
     </tbody>
