@@ -284,8 +284,19 @@ way the simulation did.
 ### The original build, 7 October
 
 **Built against bridge 7 of [`threads.md`](threads.md)**, the plan Sunil approved on
-7 October, and against [`generation-prompt.md`](generation-prompt.md). Not published as
-Artifacts yet. `status: draft`.
+7 October, and against [`generation-prompt.md`](generation-prompt.md). `status: draft`.
+
+    week 4 · all five topics, collated                          PUBLISHED 7 Oct, private
+    learner    https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu
+    instructor https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA
+
+In the console, behind the console password, for every week with stored pages:
+
+    /craft/admin/preview/<week>              the learner's copy, every topic
+    /craft/admin/preview/<week>/instructor   the instructor's copy, every topic, with the keys
+
+Published from the stored pages in `docs/teaching/pages/`, so they are the files the site
+serves. Republish both after any rebuild of the module, to keep the same two URLs.
 
     scripts/teaching-clock.mjs                 ROWS_W4, 47 rows, ends at exactly 05:00
     scripts/teaching-content/week-4.mjs        the pages: five topics, six parts each
