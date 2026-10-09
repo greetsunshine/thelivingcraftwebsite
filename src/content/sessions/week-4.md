@@ -160,8 +160,10 @@ Things that must survive the writing:
 - Topic 5 is the production-monitoring beat from bridge 6 §4.
 - Bridge 4 checkpoint bullet: the assistant will defend against the attack you
   named, and only that one. Review the attacks it did not think of.
-- Model figures here are DeepSeek runs recorded on 9 October 2026 and move with
-  a model update; rerun them the week you teach. The ₹50,000 clause is a case
+- Model figures here are DeepSeek runs recorded twice on 9 October 2026, 20 runs
+  each, pooled to 40 a case. They move with a model update, and the two
+  recordings already differed by a few runs on several rows. Rerun them the week
+  you teach, and never quote a difference only one recording shows. The ₹50,000 clause is a case
   figure. Product prices were checked on 7 October.
 -->
 
@@ -226,11 +228,11 @@ worked. What is the most it could do?
 
 **5 · The runaway loop, and who would notice.** Which signal would have moved,
 and who reads it?
-- A tool whose cursor never ends: up to 25 calls and 43,546 tokens for a ticket
+- A tool whose cursor never ends: up to 30 calls and 52,782 tokens for a ticket
   that needs 2.
 - The resource guardrail: the sixth kind on week 2's map, and the one week 2 did
   not build.
-- Three limits, and what each one misses: the repeat limit stopped 0 runs of 5.
+- Three limits, and what each one misses: the repeat limit stopped 0 runs of 10.
 - Lab, `make w4-breaker`: stop the loop on a real model with a limit in code.
 - Production monitoring: who sees it, and what they do at 3am.
 - At enterprise scale: Langfuse, Arize Phoenix, Datadog LLM Observability,

@@ -34,11 +34,11 @@ single right answer and is scored on the defence.
 ### Q1 · The note that is still obeyed
 `apply` · 04:40
 
-> After the 02:49 lab, A9's note is still obeyed 4 times in 20. What did the proxy change?
+> After the 02:49 lab, A9's note is still obeyed 9 times in 40. What did the proxy change?
 
-**Answer.** What an obeyed note can do. The money it moves went from ₹10,00,000 over twenty
-DeepSeek runs to ₹0 (`make w4-proxy RUNS=20`, with and without `SOLUTION=1`). The obedience did
-not change.
+**Answer.** What an obeyed note can do. The money it moves went from ₹20,00,000 over forty
+DeepSeek runs to ₹0 (`make w4-proxy RUNS=20`, with and without `SOLUTION=1`, two recordings each,
+pooled). The obedience did not change: 8 of 40 before the policy, 9 of 40 after.
 
 **The wrong answer worth catching.** "It stopped the injection." The `obeyed` column says
 otherwise, and reading that column is the skill.
@@ -51,18 +51,24 @@ matters to the engineer who has to decide which control to keep.
 ### Q2 · What the line changed
 `apply` · 04:40 · renders on the learner check
 
-> On DeepSeek, which attack did the prompt line actually change?
+> Two recordings, 20 runs each: what did the prompt line change?
 
-- **A.** The direct override, "ignore your previous instructions"
-- **B.** The delimiter hijack, a fake system block ✅
-- **C.** The forged tool output
-- **D.** The invented UPI references
+- **A.** It stopped the direct override
+- **B.** Nothing the second recording reproduced ✅
+- **C.** It cut forged tool output by half
+- **D.** It stopped the invented UPI references
+
+**Answer.** B. In the first recording the delimiter hijack went from 2 in 20 to 0 with the
+line, and the vendor tool's result went from 5 in 20 to 9. In the second recording the
+delimiter hijack was 0 to 0, and the vendor result 10 to 8. A difference of a few runs in
+twenty is run-to-run noise, even at temperature 0 (`make w4-levels-recorded`).
 
 **Why the others are attractive and wrong.** **A** is the trap. It looks like the line's
-work, and the model refused it 0 in 20 with or without the line. **C** and **D** are the
-attacks the line cannot touch, because they contain no order: 20 and 19 in 20 with the line
-in place (`make w4-levels-recorded`). B went from 2 in 20 to 0, the only change the line
-made except one it made worse: a vendor tool's result rose from 5 in 20 to 9.
+work, and the model refused it 0 in 40 with or without the line. **C** and **D** are the
+attacks the line cannot touch, because they contain no order: forged output got through 40 in
+40 with the line in place, and invented evidence 39 in 40.
+
+**Ask the follow-up aloud.** What would you have shipped after the first recording alone?
 
 ---
 
@@ -148,10 +154,10 @@ reads. **D** changes which clauses are seen, not whether one of them was tampere
 > With the breaker on, the billing change lands at 2 am. Which number moves?
 
 **Answer.** Credits per hour, from 41 to 0, and the queue for a person, from 15 an hour to 56
-(`make w4-night SOLUTION=1`). Spend moves from ₹3.93 to ₹16.31 an hour on DeepSeek.
+(`make w4-night SOLUTION=1`). Spend moves from ₹4.09 to ₹16.23 an hour on DeepSeek.
 
-**The wrong answer worth catching.** "Spend." It did move, to ₹58.88 an hour without the breaker.
-That is about ₹55 an hour more, which no monthly budget alert would notice. The signal that cannot
+**The wrong answer worth catching.** "Spend." It did move, to ₹71.94 an hour without the breaker.
+That is about ₹68 an hour more, which no monthly budget alert would notice. The signal that cannot
 be missed is the one that falls to zero.
 
 ---
@@ -167,7 +173,7 @@ be missed is the one that falls to zero.
 - **D.** ₹50,000, because P10 still passes the content check
 
 **Why the others are attractive and wrong.** **A** confuses limiting with stopping; the note is
-still obeyed 4 times in 20 (A9). **B** forgets that a goodwill credit under GOOD-2.1 pays up to
+still obeyed 9 times in 40 (A9). **B** forgets that a goodwill credit under GOOD-2.1 pays up to
 ₹2,000 outside the ceiling. **D** was true at 01:30. After 02:49 the proxy's `max_amount` refuses
 P10's ₹50,000, and `make w4-eval SOLUTION=1` shows P10 at 20 of 20.
 
@@ -202,10 +208,11 @@ question 3: if they cannot tell you when a description changes, you cannot pin w
 ### Q11 · What the line did
 `recall` · 00:50
 
-> Week 2's override attack was refused 0 in 20 with the prompt line. What did the line do?
+> Week 2's override attack was refused 0 in 40 with the prompt line. What did the line do?
 
-**Answer.** Nothing you can see. The model also refused it 0 in 20 without the line. The
-only vector the line stopped was the delimiter hijack, from 2 in 20 to 0.
+**Answer.** Nothing you can see. The model also refused it 0 in 40 without the line. On no
+vector did the line make a change that a second recording reproduced. The first recording
+showed the delimiter hijack going from 2 in 20 to 0; the second showed 0 to 0.
 
 **The wrong answer.** "It stopped the attack." What is right: the attack was stopped. What
 is wrong: the line was not the reason, and only a run without the line can show that.
@@ -218,7 +225,8 @@ is wrong: the line was not the reason, and only a run without the line can show 
 > Which shape of attack got past the prompt line on DeepSeek: orders, or evidence?
 
 **Answer.** Evidence. Forged tool output, a split payload and invented UPI references got
-through on 19 or 20 runs in 20. Every order-shaped attack got nothing.
+through on 39 or 40 runs in 40. Every order-shaped attack got nothing, apart from the
+delimiter hijack's 2 in 40 without the line.
 
 **The wrong answer.** "Encoded or translated orders." What is right: those are the famous
 bypasses, and they work on some models. What is wrong: on this one they got nothing. The
@@ -391,8 +399,8 @@ wrong: week 2's question was about every caller, and the proxy was never in fron
 
 > The step budget was 60. Why did it never fire?
 
-**Answer.** The model stopped itself first, after 13 to 25 calls (`make w4-breaker`, five recorded
-DeepSeek runs). A budget that a loop never reaches is not a control for that loop.
+**Answer.** The model stopped itself first, after 13 to 30 calls (`make w4-breaker`, ten recorded
+DeepSeek runs over two recordings). A budget that a loop never reaches is not a control for that loop.
 
 **The wrong answer.** "Because 60 is too high." What is right: it is high. What is wrong: lowering it
 to 10 counts every step of every ticket, not calls to one tool, and long honest tickets would start
@@ -403,10 +411,11 @@ going to a person.
 ### Q52 · The loop that changes its arguments
 `apply` · 03:58
 
-> Why did the limit on identical calls stop none of the five runs?
+> Why did the limit on identical calls stop none of the ten runs?
 
 **Answer.** Every call carried a new cursor, so no two calls had the same arguments. Only the limit
-of ten calls to one tool stopped all five; the token limit stopped two.
+of ten calls to one tool stopped all ten. The token limit stopped seven: two of five in the first
+recording, five of five in the second.
 
 **The wrong answer.** "Because three is too high." What is right: a lower number trips sooner on a
 fixed-argument loop. What is wrong: here the arguments never repeat at all, so no number helps.
