@@ -44,9 +44,13 @@ Rows 58 to 69 of the "Notes Review" sheet, answered in
   not loop the simulated way; the loop it does is an endless cursor, 13 to 25 calls, and only a
   per-tool limit stops all five recorded runs. `make w4-eval` is the one target still simulated
   (now 21 cases, `386/420`).
-- **Reference agent, all local, none pushed.** `main` has the week 1–3 code the published weeks
-  depend on (`6a20c0d`, `3393e07`). `week-4-draft` sits on top, head `9b38996`. **Pushing `main`
-  publishes week 3 to learners**; that is Sunil's call.
+- **Every DeepSeek table was recorded twice on 9 October and the pages pool both** (40 runs a
+  cell). The second recording disagreed with the first in places, so the prompt line's apparent
+  effects are now taught as run-to-run noise. **Rerun before teaching** and add a third
+  recording rather than replacing the two: every report sums the whole log.
+- **Reference agent is pushed.** `main` (week 1–3 code, `3393e07`) went out on 9 October, so
+  learners who pull have week 3. `week-4-draft` is on GitHub at `742c6eb`, with `make w4-hint`
+  added for topic 3.
 
 ---
 
