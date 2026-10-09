@@ -34,10 +34,11 @@ single right answer and is scored on the defence.
 ### Q1 · The note that is still obeyed
 `apply` · 04:40
 
-> After the 02:49 lab, the goodwill note is obeyed 19 times in 20. What did the proxy change?
+> After the 02:49 lab, A9's note is still obeyed 4 times in 20. What did the proxy change?
 
-**Answer.** What an obeyed note can do. The money it moves went from ₹47,50,000 over twenty
-runs to ₹0 (`make w4-proxy`, with and without `SOLUTION=1`). The obedience did not change.
+**Answer.** What an obeyed note can do. The money it moves went from ₹10,00,000 over twenty
+DeepSeek runs to ₹0 (`make w4-proxy RUNS=20`, with and without `SOLUTION=1`). The obedience did
+not change.
 
 **The wrong answer worth catching.** "It stopped the injection." The `obeyed` column says
 otherwise, and reading that column is the skill.
@@ -147,10 +148,11 @@ reads. **D** changes which clauses are seen, not whether one of them was tampere
 > With the breaker on, the billing change lands at 2 am. Which number moves?
 
 **Answer.** Credits per hour, from 41 to 0, and the queue for a person, from 15 an hour to 56
-(`make w4-night SOLUTION=1`). Spend moves only from ₹96 to ₹126 an hour.
+(`make w4-night SOLUTION=1`). Spend moves from ₹3.93 to ₹16.31 an hour on DeepSeek.
 
-**The wrong answer worth catching.** "Spend." It moved 45 times without the breaker. With the
-breaker it barely moves, so a spend alert stays quiet. The breaker changed which signal is loud.
+**The wrong answer worth catching.** "Spend." It did move, to ₹58.88 an hour without the breaker.
+That is about ₹55 an hour more, which no monthly budget alert would notice. The signal that cannot
+be missed is the one that falls to zero.
 
 ---
 
@@ -165,7 +167,7 @@ breaker it barely moves, so a spend alert stays quiet. The breaker changed which
 - **D.** ₹50,000, because P10 still passes the content check
 
 **Why the others are attractive and wrong.** **A** confuses limiting with stopping; the note is
-still obeyed 19 times in 20. **B** forgets that a goodwill credit under GOOD-2.1 pays up to
+still obeyed 4 times in 20 (A9). **B** forgets that a goodwill credit under GOOD-2.1 pays up to
 ₹2,000 outside the ceiling. **D** was true at 01:30. After 02:49 the proxy's `max_amount` refuses
 P10's ₹50,000, and `make w4-eval SOLUTION=1` shows P10 at 20 of 20.
 
@@ -387,26 +389,27 @@ wrong: week 2's question was about every caller, and the proxy was never in fron
 ### Q51 · Why the step budget did not save it
 `recall` · 03:58
 
-> The step budget of 60 fired. Why is that not a control here?
+> The step budget was 60. Why did it never fire?
 
-**Answer.** It fired after 180,450 tokens and about ₹77. A limit that fires after the money is spent
-is a record, not a control.
+**Answer.** The model stopped itself first, after 13 to 25 calls (`make w4-breaker`, five recorded
+DeepSeek runs). A budget that a loop never reaches is not a control for that loop.
 
-**The wrong answer.** "It is a control, it stopped the run." What is right: it did stop it. What is
-wrong: at about 46 times a healthy run's tokens, the stop came too late to matter.
+**The wrong answer.** "Because 60 is too high." What is right: it is high. What is wrong: lowering it
+to 10 counts every step of every ticket, not calls to one tool, and long honest tickets would start
+going to a person.
 
 ---
 
 ### Q52 · The loop that changes its arguments
 `apply` · 03:58
 
-> The agent alternates `get_account('4471')` and `get_account('04471')`. Which limit stops it?
+> Why did the limit on identical calls stop none of the five runs?
 
-**Answer.** Only the token limit, at about 11 calls. The repeat limit counts identical calls, and no
-two consecutive calls are identical.
+**Answer.** Every call carried a new cursor, so no two calls had the same arguments. Only the limit
+of ten calls to one tool stopped all five; the token limit stopped two.
 
-**The wrong answer.** "The repeat limit, because it is the same account." Ask what the code compares:
-the arguments as written, not the account they mean.
+**The wrong answer.** "Because three is too high." What is right: a lower number trips sooner on a
+fixed-argument loop. What is wrong: here the arguments never repeat at all, so no number helps.
 
 ---
 
@@ -416,7 +419,7 @@ the arguments as written, not the account they mean.
 > Week 3's fifth outcome: *"name who owns the pass bar on one requirement, what failing it blocks,
 > and what the evaluation harness costs to run at production volume"*
 >
-> Who owns the breaker's 20,000-token limit, and what does tripping it block?
+> Who owns the breaker's limit of ten calls to one tool, and what does tripping it block?
 
 **Answer.** Whoever owns the cost of a run, usually the product owner for the agent, not the engineer
 who typed the number. Tripping it blocks one ticket and sends it to a person. So the owner is trading

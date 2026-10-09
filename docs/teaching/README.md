@@ -273,9 +273,13 @@ HTML is not a decision to make on the way past. **Both weeks report this the sam
 
 ## Week 4 · Securing AI Agents — built 7 October, review round 1 on 9 October
 
-**Renamed from "Attack your own system" on 9 October.** Topic 1 now runs on DeepSeek; see
+**Renamed from "Attack your own system" on 9 October.** Every topic now runs on DeepSeek; see
 [`reviews/week-4-review-2026-10-09.md`](reviews/week-4-review-2026-10-09.md). The review
-added `make w4-levels`, `make w4-regress` and `make w4-levels-recorded` to the reference agent.
+added `make w4-levels`, `make w4-regress`, `make w4-levels-recorded` and `make
+w4-breaker-healthy` to the reference agent, and made `w4-mcp-serve`, `w4-proxy` and
+`w4-breaker` call the model (`--stand-in` keeps the simulation). **`make w4-eval` is still the
+simulation.** Topic 5 was rebuilt around an endless cursor, because DeepSeek does not loop the
+way the simulation did.
 
 ### The original build, 7 October
 
