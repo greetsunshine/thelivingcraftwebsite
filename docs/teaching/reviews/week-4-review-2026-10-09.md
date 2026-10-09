@@ -182,9 +182,8 @@ checks the claim against your records before any money moves."*
 
 ## What changed outside the rows, and why
 
-- **Topic 4's opening now says its 19-in-20 is the simulation**, and prints DeepSeek's 0 in
-  20 for the same note beside it. Topic 1 now shows a real model refusing that kind of note,
-  and the two would have contradicted each other.
+- **Topic 4 moved onto DeepSeek after your decision**, so its old simulated 19-in-20 is gone.
+  The section *Topics 3 to 5 on DeepSeek* below has the new table.
 - **The close**: the recall answer key, the teardown's question 2, the end-of-week quiz Q2 and
   the bank's Q11 and Q12 now use the DeepSeek figures.
 - **Pre-work** gains a model key, 5 minutes, and is now 50 minutes. The lab needs about 30
@@ -256,7 +255,8 @@ error, a "pending" status. The loop that does happen is a paginated tool whose c
 
 - **Rerun every recorded table the week you teach.** A model update can move every number here.
   The commands are in the notes beside each table.
-- **The three topic 5 dead ends came from one-off probes** that are not kept in the reference
-  agent. The notes say so and treat them as observations.
+- **Two measurements have no kept log.** The three topic 5 dead ends, and topic 3's 10/10
+  against 0/10, came from one-off probe scripts that were deleted before the commit. The pages
+  say so. Topic 4's two 20-run tables are kept as text in `runs/w4-proxy-2026-10-09.txt`.
 - **Week 1's stored pages fail three of `check:teaching`'s eleven checks**, on `main` as well as
   here. That predates this round and is not touched by it.

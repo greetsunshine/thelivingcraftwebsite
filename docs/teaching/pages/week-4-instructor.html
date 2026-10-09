@@ -480,15 +480,15 @@ ol.toc a{color:inherit}
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
     <p>One sentence, then the diagram. <strong>Ask the room to mark the one arrow your team wrote.</strong> Only the system prompt gets a mark.</p>
-    <p>Then the four layers, quickly, and land on the last line: layer 3 is the only one that does not depend on the model noticing anything.</p>
+    <p>Then the four layers, quickly, and end on the last line: layer 3 is the only one that does not depend on the model noticing anything.</p>
   </div></div>
 
   <div class="beat" id="s-0026" data-ref="t1-r-design"><span class="t"><span class="off" data-off="00:26">00:26</span></span><div class="b">
     <h4>Ten attack vectors, measured on a real model</h4>
     <span class="pairs">Components and design &#183; Whole room · 7 min · pairs for the last three</span>
     
-    <p><strong>Prediction first, in writing:</strong> which two vectors get through with the line in place? Then open the table.</p>
-    <p>Most rooms predict encoding and another language, because those are the famous ones. <strong>Both got nothing.</strong> The three that got through contain no instruction at all. Let that land before the four bullets.</p>
+    <p><strong>Prediction first, in writing:</strong> which vectors get through with the line in place? Then open the table.</p>
+    <p>Most rooms predict encoding and another language, because those are the famous ones. <strong>Both got nothing.</strong> The four that got through contain no instruction at all. Pause on that before the bullets.</p>
   </div></div>
 
   <div class="beat" id="s-0033" data-ref="t1-r-lab"><span class="t"><span class="off" data-off="00:33">00:33</span></span><div class="b">
@@ -502,7 +502,7 @@ ol.toc a{color:inherit}
   <div class="beat" id="s-0047" data-ref="t1-r-atscale"><span class="t"><span class="off" data-off="00:47">00:47</span></span><div class="b">
     <h4>At enterprise scale: classifiers and red-team suites, and the cost</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p><strong>Point at the table, do not walk it.</strong> Land on two lines: every classifier has a miss rate, and every red-team suite costs model calls on every run.</p>
+    <p><strong>Point at the table, do not walk it.</strong> End on two lines: every classifier has a miss rate, and every red-team suite costs model calls on every run.</p>
   </div></div>
 
   <div class="beat" id="s-0050" data-ref="t1-r-quiz"><span class="t"><span class="off" data-off="00:50">00:50</span></span><div class="b">
@@ -626,7 +626,7 @@ ol.toc a{color:inherit}
       <ul>
         <li><strong>Every attack is an order.</strong> They lose at level 1 and conclude the model is safe. Point at the evidence rows.</li>
         <li><strong>They stop at the first win.</strong> The lab is the regression run, not the win. Insist on <span class="mono">make w4-regress</span>.</li>
-        <li><strong>"Level 4 is cheating, it ignores the model."</strong> Yes. That is the point of layer 3.</li>
+        <li><strong>"Level 4 is cheating, it ignores the model."</strong> Yes. Layer 3 is meant to ignore the model.</li>
         <li><strong>An assistant wrote the attacks.</strong> It wrote the shapes it was asked for. Ask which shape it did not think of. That is bridge 4's checkpoint line this week.</li>
       </ul>
     </div>
@@ -661,7 +661,7 @@ ol.toc a{color:inherit}
   <h3>Topic quiz: direct injection</h3>
   <h4>Question 1 &#183; this topic</h4>
   <p>Week 2’s override attack was refused 0 in 20 with the prompt line. What did the line do?</p>
-  <p><strong>The answer.</strong> <p><strong>Nothing you can see.</strong> The model also refused it 0 in 20 without the line. The only vector the line changed was the delimiter hijack, from 2 in 20 to 0.</p></p>
+  <p><strong>The answer.</strong> <p><strong>Nothing you can see.</strong> The model also refused it 0 in 20 without the line. The only vector the line stopped was the delimiter hijack, from 2 in 20 to 0.</p></p>
   <p><strong>The likely wrong answer.</strong> "It stopped the attack."</p>
   <p><strong>What is right about it.</strong> The attack was stopped. The line was not the reason. Only a run without the line can tell you that.</p>
   <h4>Question 2 &#183; this topic</h4>
@@ -767,7 +767,7 @@ ol.toc a{color:inherit}
   <div class="beat" id="s-0130" data-ref="t2-r-atscale"><span class="t"><span class="off" data-off="01:30">01:30</span></span><div class="b">
     <h4>At enterprise scale: content scanning and document signing</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p><strong>Point at the table.</strong> Land on the last line: scanners sell a rate, signing sells a rule.</p>
+    <p><strong>Point at the table.</strong> End on the last line: scanners sell a rate, signing sells a rule.</p>
   </div></div>
 
   <div class="beat" id="s-0133" data-ref="t2-r-quiz"><span class="t"><span class="off" data-off="01:33">01:33</span></span><div class="b">
@@ -1026,7 +1026,7 @@ ol.toc a{color:inherit}
   <div class="beat" id="s-0209" data-ref="t3-r-atscale"><span class="t"><span class="off" data-off="02:09">02:09</span></span><div class="b">
     <h4>At enterprise scale: SDKs and hosted servers</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p><strong>Point at the table.</strong> Land on the last line.</p>
+    <p><strong>Point at the table.</strong> End on the last line.</p>
   </div></div>
 
   <div class="beat" id="s-0212" data-ref="t3-r-quiz"><span class="t"><span class="off" data-off="02:12">02:12</span></span><div class="b">
@@ -1246,7 +1246,7 @@ ol.toc a{color:inherit}
     <h4>Four notes in twenty moved ₹2,50,000 each</h4>
     <span class="pairs">The narrative &#183; Whole room · 5 min · both answers in writing before the reveal</span>
     
-    <p>The agent stands with no policy at <span class="off" data-off="02:31">02:31</span>. <strong>Show the table from the learner page</strong>; it is the recorded DeepSeek run of 9 October. A live rerun of 120 cases takes several minutes. <strong>Both questions in writing.</strong></p>
+    <p>The agent stands with no policy at <span class="off" data-off="02:31">02:31</span>. <strong>Show the table from the learner page</strong>; it is a DeepSeek run of 9 October, 20 runs a case, kept as text in the reference agent's <span class="mono">runs/w4-proxy-2026-10-09.txt</span>. A live rerun of 120 cases takes several minutes. <strong>Both questions in writing.</strong></p>
     <p>Point at A1 and A9 side by side: the same ₹2,50,000, refused as an order and paid as a record.</p>
     <p>Name week 2's <span class="off" data-off="01:12">01:12</span> by its title in the reveal.</p>
   </div></div>
@@ -1278,7 +1278,7 @@ ol.toc a{color:inherit}
   <div class="beat" id="s-0304" data-ref="t4-r-atscale"><span class="t"><span class="off" data-off="03:04">03:04</span></span><div class="b">
     <h4>At enterprise scale: MCP gateways and registries</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p><strong>Point at the table.</strong> Land on the last line.</p>
+    <p><strong>Point at the table.</strong> End on the last line.</p>
   </div></div>
 
   <div class="beat" id="s-0307" data-ref="t4-r-quiz"><span class="t"><span class="off" data-off="03:07">03:07</span></span><div class="b">
@@ -1498,7 +1498,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
   <h4>Week 2 drew the map</h4>
   <p>Quoted on their page from week 2's <span class="off" data-off="00:37">00:37</span>. Resource is the sixth kind.</p>
   <h4>What a real model does</h4>
-  <p><strong>Say this early</strong>: DeepSeek gave up on three dead ends within one to three calls. The loop that happens is the endless cursor. That honesty is the point: you test for the loop your model actually gets into.</p>
+  <p><strong>Say this early</strong>: DeepSeek gave up on three dead ends within one to three calls. The loop that happens is the endless cursor. Test for the loop your own model gets into, not the one a simulation predicted. You test for the loop your model actually gets into.</p>
   <h4>Who would notice</h4>
   <p><strong>The <span class="off" data-off="03:45">03:45</span> segment is bridge 6 §4's obligation.</strong> Ten minutes, and do not cut it.</p>
 </div>
@@ -1549,7 +1549,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
   <div class="beat" id="s-0355" data-ref="t5-r-atscale"><span class="t"><span class="off" data-off="03:55">03:55</span></span><div class="b">
     <h4>At enterprise scale: tracing and monitoring</h4>
     <span class="pairs">whole room · 3 min</span>
-    <p><strong>Point at the table.</strong> Land on the last line.</p>
+    <p><strong>Point at the table.</strong> End on the last line.</p>
   </div></div>
 
   <div class="beat" id="s-0358" data-ref="t5-r-quiz"><span class="t"><span class="off" data-off="03:58">03:58</span></span><div class="b">
@@ -1672,7 +1672,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
   <h4>The spend moved, and it was small</h4>
   <p>₹3.93 to ₹58.88 an hour without the breaker; ₹16.31 with it.</p>
   <h4>The number that moved both times</h4>
-  <p>Credits per hour, 41 to 0. 224 tickets waiting at 9 am.</p>
+  <p>Credits per hour, 41 to 0. 224 tickets waiting at 6 am.</p>
   <h4>Who reads it, and what they do</h4>
   <p>Page on completed outcomes. First runbook line: what changed in a tool server?</p>
   <details>
@@ -2191,7 +2191,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
   // browser storage. replaceState changes the URL without a reload; inside a
   // sandboxed frame it may be refused, and the page still updates below.
   function keepInUrl() {
-    try { history.replaceState(null, '', '?' + qs.toString() + location.hash); } catch (e) {}
+    try { var q = qs.toString(); history.replaceState(null, '', (q ? '?' + q : location.pathname) + location.hash); } catch (e) {}
   }
   var whens = [].slice.call(document.querySelectorAll('summary .when'));
   whens.forEach(function (w) { w.setAttribute('data-orig', w.textContent); });

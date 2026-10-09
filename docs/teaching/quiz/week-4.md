@@ -20,9 +20,9 @@ options; everything else on this page is withheld by `toLearnerItem`.*
 options and a marked key, and none is `judge`.
 
 **Every figure in a question or an answer comes from a run of a `w4-` target**, and the
-target is named in the answer. Topic 1 and 2 figures are DeepSeek (deepseek-flash,
-temperature 0, 9 October 2026). Topic 4's obey counts come from a seeded simulation, which
-is not a measurement of any model; the item says so where it matters.
+target is named in the answer. Every topic's figures are DeepSeek (deepseek-flash,
+temperature 0, 9 October 2026). The one exception is `make w4-eval`, which replays a seeded
+simulation so that it needs no key; an item quoting it says so.
 
 **Difficulty:** `recall` reads the material · `apply` uses it on a new case · `judge` has no
 single right answer and is scored on the defence.
@@ -205,7 +205,7 @@ question 3: if they cannot tell you when a description changes, you cannot pin w
 > Week 2's override attack was refused 0 in 20 with the prompt line. What did the line do?
 
 **Answer.** Nothing you can see. The model also refused it 0 in 20 without the line. The
-only vector the line changed was the delimiter hijack, from 2 in 20 to 0.
+only vector the line stopped was the delimiter hijack, from 2 in 20 to 0.
 
 **The wrong answer.** "It stopped the attack." What is right: the attack was stopped. What
 is wrong: the line was not the reason, and only a run without the line can show that.

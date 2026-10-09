@@ -572,7 +572,7 @@ export const SESSION_CLOCK_JS = `
   // browser storage. replaceState changes the URL without a reload; inside a
   // sandboxed frame it may be refused, and the page still updates below.
   function keepInUrl() {
-    try { history.replaceState(null, '', '?' + qs.toString() + location.hash); } catch (e) {}
+    try { var q = qs.toString(); history.replaceState(null, '', (q ? '?' + q : location.pathname) + location.hash); } catch (e) {}
   }
   var whens = [].slice.call(document.querySelectorAll('summary .when'));
   whens.forEach(function (w) { w.setAttribute('data-orig', w.textContent); });
