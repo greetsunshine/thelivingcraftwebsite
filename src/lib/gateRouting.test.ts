@@ -185,3 +185,20 @@ test('the four critical checks are 1, 3, 5 and 8', () => {
     [1, 3, 5, 8],
   );
 });
+
+test('the /resources listing states the same worked-example figures the page computes', async () => {
+  // resources.ts types these into its description; /resources, /llms.txt and
+  // the sitemap read it. This test is what stops that text going stale.
+  // Read as text: resources.ts uses extensionless imports that node's test
+  // runner cannot resolve.
+  const { readFile } = await import('node:fs/promises');
+  const src = await readFile(new URL('../data/resources.ts', import.meta.url), 'utf8');
+  const block = src.slice(src.indexOf("id: 'gate-routing-map'"));
+  const row = { description: block.slice(0, block.indexOf('useFor:')) };
+  assert.ok(row.description.length > 0, 'gate-routing-map has a row in resources.ts');
+  const inv = inventorySummary(EXAMPLE_CASES);
+  const req = requirementsSummary(EXAMPLE_CASES, EXAMPLE_REQUIREMENTS, EXAMPLE_MIN_TRIALS);
+  const r = checklistResult(EXAMPLE_ANSWERS);
+  assert.match(row.description, new RegExp(`${inv.listed} gate cases, ${req.notReady} routes not ready`));
+  assert.match(row.description, new RegExp(`the decision was ${r.decision}`));
+});

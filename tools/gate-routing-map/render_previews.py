@@ -16,16 +16,18 @@ from pathlib import Path
 
 import fitz  # pymupdf
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from verify_xlsx import soffice  # noqa: E402  one copy of the LibreOffice lookup
+
 HERE = Path(__file__).resolve().parent
 XLSX = HERE.parents[1] / "downloads" / "gate-routing-map.xlsx"
-SOFFICE = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
 
 
 def main() -> int:
     out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(tempfile.mkdtemp(prefix="grm-png-"))
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="grm-pdf-"))
-    subprocess.run([SOFFICE, "--headless", "--norestore", "--convert-to", "pdf",
+    subprocess.run([soffice(), "--headless", "--norestore", "--convert-to", "pdf",
                     "--outdir", str(work), str(XLSX)], check=True, capture_output=True, timeout=300)
     pdf = work / (XLSX.stem + ".pdf")
     doc = fitz.open(pdf)

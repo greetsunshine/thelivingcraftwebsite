@@ -111,8 +111,8 @@ case one of four routes (Block, Human decides, Check downstream, Track), and its
 which overrode the brief's "do not publish". `tools/gate-routing-map/README.md` has the
 rebuild steps and decisions.
 
-- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 85 of 85, every acceptance
-  figure in the brief, the four variants and the three edge cases. `npm test` 205 of 205.
+- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 87 of 87, every acceptance
+  figure in the brief, the four variants and the three edge cases. `npm test` 206 of 206.
   `astro check` 0 errors. No horizontal page scroll at 375px. The real gate dialog handed
   over the file byte for byte in a local test.
 - **Download gate kept**, as for the two tools before it, although the brief said "no email gate".

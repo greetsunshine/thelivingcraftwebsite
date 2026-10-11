@@ -203,6 +203,12 @@ def main() -> int:
     check("all Yes: decision", w4[ck["decision"]].value, "Ready")
     check("all Yes: next step", w4[ck["nextStep"]].value, REFS["noOpenItems"])
 
+    # A cleared minimum (Delete skips validation) reads as the default, 3.
+    w5b = recalc(variant("min-cleared", set_example({req["minTrials"]: None})))
+    no_errors("minimum trials cleared", w5b)
+    w5 = w5b[sheet]
+    check("minimum cleared: rows read as with 3", [w5[c].value for c in req["readyCells"][:8]], BRIEF["readyRows"])
+
     # ---- 3 · the edge cases, on the blank tabs ----------------------------
     b = REFS["blank"]
     s1, s2, s3 = b["sheets"]["inventory"], b["sheets"]["requirements"], b["sheets"]["checklist"]

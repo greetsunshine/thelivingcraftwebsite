@@ -42,6 +42,7 @@ import {
   inventorySummary,
   requirementsSummary,
   routeReadiness,
+  WHY as NOT_READY,
 } from '../../lib/gateRouting';
 import {
   RESOURCE_ID,
@@ -83,7 +84,7 @@ const exRows = EXAMPLE_CASES.map((c, i) => ({
   route: finalRoute(c),
   ...routeReadiness(finalRoute(c), c.deterministic, EXAMPLE_REQUIREMENTS[i], EXAMPLE_MIN_TRIALS),
 }));
-const unverified = exRows.find((r) => r.route === 'Check downstream' && r.ready === false);
+const unverified = exRows.find((r) => r.route === 'Check downstream' && r.why === NOT_READY.notVerified);
 const notReadyRows = exRows.filter((r) => r.ready === false);
 const listJoin = (xs: (string | number)[]) =>
   xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
@@ -101,7 +102,7 @@ const schema = [
     description,
     url,
     author: { '@id': `${SITE_ORIGIN}/#person` },
-    ...(PUBLISHED_AT ? { datePublished: PUBLISHED_AT } : {}),
+    datePublished: PUBLISHED_AT,
     isAccessibleForFree: true,
     license: 'https://creativecommons.org/licenses/by/4.0/',
     step: TABS.map((t, i) => ({ '@type': 'HowToStep', position: i + 1, name: t.name, text: t.ask })),
@@ -303,13 +304,18 @@ const routeClass = (r: string) => `route route-${r.toLowerCase().replace(/\s+/g,
           <span class="threename mono">Decision</span>
           <p class="threeask">{exResult.decision}</p>
           <p class="threebody">
-            {DECISION_MEANING[exResult.decision ?? 'Hold']} Critical checks {listJoin(exResult.criticalNo)} were answered No. Total {exResult.total} of {MAX_TOTAL}.
+            {exResult.decision && DECISION_MEANING[exResult.decision]}
+            {exResult.criticalNo.length === 1 && ` Critical check ${exResult.criticalNo[0]} was answered No.`}
+            {exResult.criticalNo.length > 1 && ` Critical checks ${listJoin(exResult.criticalNo)} were answered No.`}
+            {` Total ${exResult.total} of ${MAX_TOTAL}.`}
           </p>
         </div>
       </div>
-      <p class="prose-note">
-        The first thing to fix is check {exResult.nextCheck?.n}. {exResult.nextStep}
-      </p>
+      {exResult.nextCheck && (
+        <p class="prose-note">
+          The first thing to fix is check {exResult.nextCheck.n}. {exResult.nextStep}
+        </p>
+      )}
     </div>
   </section>
 
@@ -324,7 +330,7 @@ const routeClass = (r: string) => `route route-${r.toLowerCase().replace(/\s+/g,
         <button slot="download" class="btn btn-ghost" type="button" data-gate={DOWNLOAD_KIND} data-download={DOWNLOAD_KIND}>Download the Gate Routing Map&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
       </ClosingCta>
       <p class="mono faint pubdate">
-        Published {PUBLISHED_AT ? longDate(PUBLISHED_AT) : '[PLACEHOLDER: publish date, Sunil to confirm]'} · {LICENCE_LINE} · © The Living Craft
+        Published {longDate(PUBLISHED_AT)} · {LICENCE_LINE} · © The Living Craft
       </p>
     </div>
   </section>

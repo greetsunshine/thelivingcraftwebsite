@@ -22,7 +22,7 @@ export const TAGLINE = 'A gate that only says pass or fail is hiding a decision.
 export const QUESTION = 'Which of my agent’s gate results should block, go to a human, or wait on a downstream system?';
 
 /** Released on 11 October 2026. The resources.ts row carries the same date. */
-export const PUBLISHED_AT: string | null = '2026-10-11';
+export const PUBLISHED_AT = '2026-10-11';
 
 /** The download gate hands the workbook out as this kind (src/pages/api/pipeline/download.ts). */
 export const DOWNLOAD_KIND = 'xlsx';

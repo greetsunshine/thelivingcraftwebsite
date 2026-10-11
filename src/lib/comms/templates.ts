@@ -457,10 +457,7 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_TOOLS_REVISION,
   },
 
-  // The Rework Cost Check. Its workbook was a plain file under public/ until
-  // 28 September 2026, which put it outside the download gate. It moved to
-  // downloads/ and asks for a name and an address like every other file, so
-  // it needs its own held wording.
+  // The Citation Fit Check and the Gate Routing Map: held wordings, unapproved.
   {
     key: 'resource-gate-routing-map',
     route: 'resource',
@@ -483,6 +480,10 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     actions: [],
     version: RESOURCE_TOOLS_REVISION,
   },
+  // The Rework Cost Check. Its workbook was a plain file under public/ until
+  // 28 September 2026, which put it outside the download gate. It moved to
+  // downloads/ and asks for a name and an address like every other file, so
+  // it needs its own held wording.
   {
     key: 'resource-rework-cost-check',
     route: 'resource',

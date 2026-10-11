@@ -39,9 +39,9 @@ spreadsheet's own results against the brief and against `gateRouting.ts`.
 ```bash
 python3 -m venv .venv && ./.venv/bin/pip install openpyxl pymupdf pillow
 
-npm test                                                      # includes 14 tests for this tool
+npm test                                                      # includes 15 tests for this tool
 ./.venv/bin/python tools/gate-routing-map/build_xlsx.py       # -> downloads/gate-routing-map.xlsx and refs.json
-./.venv/bin/python tools/gate-routing-map/verify_xlsx.py      # recalculate in LibreOffice and assert (85 checks)
+./.venv/bin/python tools/gate-routing-map/verify_xlsx.py      # recalculate in LibreOffice and assert (87 checks)
 ./.venv/bin/python tools/gate-routing-map/render_previews.py  # a PNG per printed page, into a temp folder
 ```
 
@@ -84,6 +84,12 @@ from `src/data/resource-cohort-copy.ts`, which names the October 2026 cohort.
   stray value elsewhere changes nothing.
 - **`Route ready?` is "Ready" exactly when `Why not ready` is blank.** One
   formula decides both, so they cannot disagree.
+- **A cleared minimum-trials cell reads as 3.** Delete clears a cell without
+  passing its validation, and a blank compared with a number would fail every
+  non-deterministic Block row.
+- **A cell holding only a space counts as filled**, in the workbook and in
+  `gateRouting.ts` alike. The workbook tests `=""`, and the module matches it
+  rather than trimming.
 - **Determinism left blank counts as No.** A Block case nobody has shown to be
   deterministic needs the minimum trials.
 - **A critical Partial blocks Ready**, as the brief says. Ready needs 16 or more

@@ -65,7 +65,7 @@ export interface GateCase {
  * a check could decide it.
  */
 export function suggestedRoute(c: GateCase): Route | '' {
-  if (c.name.trim() === '' || c.purpose === '' || c.severity === '' || c.actor === '' || c.checkDecides === '') return '';
+  if (c.name === '' || c.purpose === '' || c.severity === '' || c.actor === '' || c.checkDecides === '') return '';
   if (c.purpose === 'Capability') return 'Track';
   if (c.actor === 'Another system with its own pipeline') return 'Check downstream';
   if (c.severity === 'Low') return 'Track';
@@ -79,7 +79,8 @@ export const finalRoute = (c: GateCase): Route | '' => (c.chosen !== '' ? c.chos
 /** Column L: an override that differs from the suggestion, including one on a row with no suggestion. */
 export const differs = (c: GateCase): boolean => c.chosen !== '' && c.chosen !== suggestedRoute(c);
 
-const named = (c: GateCase) => c.name.trim() !== '';
+// No trim: the workbook tests a cell with ="", and a cell holding a space is not "".
+const named = (c: GateCase) => c.name !== '';
 
 export interface InventorySummary {
   listed: number;
@@ -100,7 +101,7 @@ export function inventorySummary(rows: GateCase[]): InventorySummary {
     suggested: count(suggestedRoute),
     unrouted: rows.filter((c) => named(c) && finalRoute(c) === '').length,
     overrides: rows.filter(differs).length,
-    overridesNoReason: rows.filter((c) => differs(c) && c.reason.trim() === '').length,
+    overridesNoReason: rows.filter((c) => differs(c) && c.reason === '').length,
   };
 }
 
@@ -176,7 +177,7 @@ export interface Readiness {
   why: string;
 }
 
-const filled = (s: string) => s.trim() !== '';
+const filled = (s: string) => s !== '';
 
 /** Columns Q and R of Tab 2. */
 export function routeReadiness(

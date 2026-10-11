@@ -382,7 +382,9 @@ def requirements(ws, top: int, d: dict, lists: Lists, rows: list[dict] | None, l
     mt.add(f"C{r_min}")
     merged(ws, f"D{r_min}", f"I{r_min}", d["minTrialsNote"], font=F_NOTE, align=WRAP_MID)
     ws.row_dimensions[r_min].height = 34
-    MIN = f"$C${r_min}"
+    # Delete clears a cell without passing its validation. A blank minimum
+    # then reads as the default, not as "" (which every number is less than).
+    MIN = f'IF($C${r_min}="",{d["defaultMinTrials"]},$C${r_min})'
 
     grp = top + 6
     hdr = grp + 1
