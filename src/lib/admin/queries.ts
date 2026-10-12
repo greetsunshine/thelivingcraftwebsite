@@ -32,11 +32,17 @@ export async function trafficDaily(days: number): Promise<DailyPoint[]> {
     return [];
   }
 
-  const rows = (data ?? []) as DailyPoint[];
+  return fillDays((data ?? []) as DailyPoint[], days);
+}
 
-  // Fill the gaps. A day with no traffic returns no row, and a line chart drawn
-  // from sparse rows silently compresses quiet periods — it looks like steady
-  // traffic when it was three visits a fortnight apart.
+/**
+ * One point per UTC day in the range, zero where there was no row.
+ *
+ * A day with no traffic returns no row, and a line chart drawn from sparse rows
+ * silently compresses quiet periods — it looks like steady traffic when it was
+ * three visits a fortnight apart. Used by every daily chart in the console.
+ */
+export function fillDays(rows: DailyPoint[], days: number): DailyPoint[] {
   const byDay = new Map(rows.map((r) => [r.day, r]));
   const out: DailyPoint[] = [];
   const today = new Date();
@@ -56,6 +62,9 @@ export interface PathRow {
   views: number;
   visitors: number;
 }
+
+/** The row cap in admin_traffic_paths(). The Pages panel says so when it is reached. */
+export const PATHS_CAP = 200;
 
 export async function trafficPaths(days: number): Promise<PathRow[]> {
   const client = db();

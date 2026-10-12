@@ -4,7 +4,8 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import LineChart from '../../../components/admin/LineChart.astro';
 import Bars from '../../../components/admin/Bars.astro';
-import { funnel, trafficBreakdown, trafficDaily, trafficPaths } from '../../../lib/admin/queries';
+import { PATHS_CAP, funnel, trafficBreakdown, trafficDaily, trafficPaths } from '../../../lib/admin/queries';
+import { labelFor } from '../../../lib/admin/event-labels';
 
 // Range is a link, not a control — the page is server-rendered, so a plain
 // query parameter needs no script and survives a bookmark.
@@ -35,28 +36,31 @@ const countOf = (type: string) => Number(steps.find((s) => s.type === type)?.eve
 // `cta_click` is not added in: it still counts links to /caio, /assessment and
 // the booking widget, and adding it would count those as cohort links.
 //
-// Form starts come back from `admin_funnel()` split by form
-// (`form_started:application`, `:enquiry`, `:enterprise`), because the three
-// routes share one event and only the first is an application (12 October
-// 2026). Two kinds of row cannot be split and get a row of their own rather
-// than being guessed into one: `apply_start`, the name before 29 September,
-// which recorded no form; and a bare `form_started`, which is what the rollup
-// returns until supabase/schema.sql is run again.
-const unsplitStarts = stepOf('apply_start') + stepOf('form_started');
+// Every row reads ONE key from admin_event_key() in supabase/schema.sql, and no
+// two rows are added together. Each row is a count of distinct visitors, and
+// summing two of them counts somebody who did both twice. Form starts are split
+// by form there; the two that carry no usable form name (`unrecorded`, and
+// `other` for a form nobody has listed yet) appear only when they have rows.
+// Labels come from src/lib/admin/event-labels.ts, shared with the page detail.
+const step = (key: string) => ({ label: labelFor(key), value: stepOf(key) });
+const ifAny = (key: string) => (stepOf(key) > 0 ? [step(key)] : []);
 const FUNNEL = [
-  { label: 'Landed on a page', value: stepOf('pageview') },
-  { label: 'Started a tool', value: stepOf('tool_started') },
-  { label: 'Reached a tool’s result', value: stepOf('useful_result_completed') },
-  { label: 'Requested a resource (saved, server)', value: countOf('resource_requested') },
-  { label: 'Received the requested file', value: stepOf('requested_delivery_confirmed') },
-  { label: 'Followed a cohort link', value: stepOf('cohort_cta_clicked') },
-  { label: 'Started an application', value: stepOf('form_started:application') },
-  { label: 'Application saved (server)', value: countOf('application_saved') },
-  { label: 'Started a cohort or team enquiry', value: stepOf('form_started:enquiry') + stepOf('form_started:enterprise') },
-  ...(unsplitStarts > 0 ? [{ label: 'Started a form, which one not recorded', value: unsplitStarts }] : []),
-  { label: 'Followed a link to the consulting pages or a booking', value: stepOf('cta_click') },
-  { label: 'Opened the assistant', value: stepOf('ask_open') },
-  { label: 'Asked it something', value: stepOf('ask_question') },
+  step('pageview'),
+  step('tool_started'),
+  step('useful_result_completed'),
+  { label: labelFor('resource_requested'), value: countOf('resource_requested') },
+  step('requested_delivery_confirmed'),
+  step('cohort_cta_clicked'),
+  step('form_started:application'),
+  { label: labelFor('application_saved'), value: countOf('application_saved') },
+  step('form_started:enquiry'),
+  step('form_started:enterprise'),
+  step('cta_click'),
+  step('form_started:consulting'),
+  ...ifAny('form_started:other'),
+  ...ifAny('form_started:unrecorded'),
+  step('ask_open'),
+  step('ask_question'),
 ];
 
 // A country code alone is a lookup task for the reader. Only the three that
@@ -128,6 +132,13 @@ const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia',
             limit={paths.length}
             empty="No page views recorded yet."
           />
+          {
+            paths.length >= PATHS_CAP && (
+              <p class="faint" style="font-size:12.5px;margin-top:12px">
+                Showing the {PATHS_CAP} most-viewed pages. Others in this range are not listed.
+              </p>
+            )
+          }
         </div>
       </div>
       <div>
