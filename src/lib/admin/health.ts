@@ -98,6 +98,7 @@ const FUNCTIONS = [
   'admin_traffic_paths',
   'admin_funnel',
   'admin_page_detail',
+  'admin_step_detail',
 ] as const;
 
 /**

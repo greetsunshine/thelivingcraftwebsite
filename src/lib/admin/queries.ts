@@ -96,6 +96,29 @@ export async function pageDetail(days: number, path: string): Promise<PageDetail
   return ((data ?? []) as PageDetailRow[]).map((r) => ({ ...r, views: Number(r.views), visitors: Number(r.visitors) }));
 }
 
+export interface StepDetailRow {
+  section: 'total' | 'day' | 'page' | 'source' | 'country' | 'device' | 'hour' | 'detail';
+  label: string;
+  events: number;
+  visitors: number;
+}
+
+/**
+ * One funnel step in detail. The key is an admin_event_key() value; see
+ * admin_step_detail(). Returns null when the rollup did not answer, so the page
+ * can say so instead of showing a missing function as a true zero.
+ */
+export async function stepDetail(days: number, key: string): Promise<StepDetailRow[] | null> {
+  const client = db();
+  if (!client) return null;
+  const { data, error } = await client.rpc('admin_step_detail', { days, p_key: key });
+  if (error) {
+    fail('stepDetail', error);
+    return null;
+  }
+  return ((data ?? []) as StepDetailRow[]).map((r) => ({ ...r, events: Number(r.events), visitors: Number(r.visitors) }));
+}
+
 export interface LabelRow {
   label: string;
   views: number;

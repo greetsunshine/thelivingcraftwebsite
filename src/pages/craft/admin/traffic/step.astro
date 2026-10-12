@@ -1,0 +1,205 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import LineChart from '../../../../components/admin/LineChart.astro';
+import Bars from '../../../../components/admin/Bars.astro';
+import { fillDays, stepDetail, type StepDetailRow } from '../../../../lib/admin/queries';
+import { EVENT_LABELS, SERVER_EVENTS, labelFor } from '../../../../lib/admin/event-labels';
+import { countryName, sourceLabel } from '../../../../lib/admin/traffic-labels';
+
+// One row of the funnel on /craft/admin/traffic, in detail: where the step
+// happened, where those visitors came from, and the event's own fields (which
+// tool, which link, which form). Read from existing events through
+// admin_step_detail() in supabase/schema.sql; nothing new is collected.
+
+const RANGES = [7, 30, 90];
+const requested = Number(Astro.url.searchParams.get('days'));
+const days = RANGES.includes(requested) ? requested : 30;
+
+// Only a key the console knows is accepted: the keys admin_event_key() returns,
+// which are exactly the ones event-labels.ts names. A made-up key would
+// otherwise render as a step nobody reached, which reads as a true zero.
+const rawKey = Astro.url.searchParams.get('key') ?? '';
+const key = Object.hasOwn(EVENT_LABELS, rawKey) ? rawKey : '';
+
+// null means the rollup did not answer, which is not the same as nobody.
+const rows = key ? await stepDetail(days, key) : [];
+const failed = rows === null;
+const all = rows ?? [];
+
+// The three events the server writes carry no visitor hash, so they are
+// counted as events, the same way the funnel counts them.
+const server = SERVER_EVENTS.has(key);
+const value = (r: StepDetailRow) => (server ? r.events : r.visitors);
+
+// Sorted by the number each bar shows, so the order matches what is on screen.
+const of = (section: StepDetailRow['section']) =>
+  all.filter((r) => r.section === section).sort((a, b) => value(b) - value(a) || b.events - a.events);
+
+// The tiles read the range total, not a sum of days: a visitor who returns on
+// three days is one visitor here, as in the funnel row that opened this page.
+const total = all.find((r) => r.section === 'total');
+const events = total?.events ?? 0;
+const visitors = total?.visitors ?? 0;
+
+const daily = fillDays(
+  of('day').map((r) => ({ day: r.label, views: r.events, visitors: r.visitors })),
+  days,
+);
+const pages = of('page');
+const details = of('detail');
+const sources = of('source');
+const countries = of('country');
+const devices = of('device');
+const hours = of('hour').sort((a, b) => a.label.localeCompare(b.label));
+
+const asBars = (list: StepDetailRow[], label: (s: string) => string = (s) => s, link?: (s: string) => string) =>
+  list.map((r) => ({
+    label: label(r.label),
+    value: value(r),
+    note: server ? undefined : `${r.events} events`,
+    href: link?.(r.label),
+  }));
+
+// A page in this list opens that page's own detail view.
+const pageLink = (path: string) => `/craft/admin/traffic/page?days=${days}&path=${encodeURIComponent(path)}`;
+const backTo = `/craft/admin/traffic?days=${days}`;
+---
+
+<AdminLayout title={key ? `Traffic · ${labelFor(key)}` : 'Traffic · funnel step'} active="traffic">
+  <div class="page-head">
+    <div>
+      <span class="label">Funnel step · last {days} days · <a href={backTo}>Back to traffic</a></span>
+      <h1>{key ? labelFor(key) : 'No step chosen'}</h1>
+      <p>
+        Where this step happened, where those visitors came from, and the event's own details.
+        {server && ' The server records this step after a save, so it is counted in events, not visitors.'}
+      </p>
+    </div>
+    {
+      key && (
+        <div class="cat-nav" style="margin:0">
+          {RANGES.map((r) => (
+            <a class={r === days ? 'on' : ''} href={`/craft/admin/traffic/step?days=${r}&key=${encodeURIComponent(key)}`}>
+              {r} days
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  {
+    !key ? (
+      <p class="faint">
+        {rawKey ? 'That is not a funnel step the console knows. ' : ''}Open a step from the Funnel panel on{' '}
+        <a href={backTo}>Traffic</a>.
+      </p>
+    ) : failed ? (
+      <p class="faint">
+        The step detail is not answering, so nothing can be shown. Run <code>supabase/schema.sql</code> on
+        production: this page needs <code>admin_step_detail()</code>.
+      </p>
+    ) : events === 0 ? (
+      <p class="faint">Nobody reached this step in the last {days} days.</p>
+    ) : (
+      <>
+        <div class="tiles">
+          <div class="tile">
+            <div class="n">{server ? events : visitors}</div>
+            <div class="k label">{server ? 'Events' : 'Visitors'}</div>
+            <div class="note">{server ? 'Saved by the server' : `${events} events in the range`}</div>
+          </div>
+          <div class="tile">
+            <div class="n">{pages.length}</div>
+            <div class="k label">{pages.length === 1 ? 'Page' : 'Pages'}</div>
+            <div class="note">{pages[0] ? `Most on ${pages[0].label}` : '—'}</div>
+          </div>
+        </div>
+
+        <section class="panel">
+          <h2>Daily</h2>
+          <p class="sub">Events and {server ? 'events' : 'visitors'} per UTC day for this step.</p>
+          <div class="card">
+            <LineChart points={daily} height={200} />
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="grid-2">
+            <div>
+              <h2>Where it happened</h2>
+              <p class="sub">
+                {server
+                  ? 'The page the visit began on. The server stores this step under the entry page, not the page with the form.'
+                  : 'The page this step was recorded on. Open one for that page’s detail.'}
+              </p>
+              <div class="card">
+                <Bars rows={asBars(pages, (s) => s, pageLink)} limit={pages.length} empty="No pages recorded." />
+              </div>
+            </div>
+            <div>
+              <h2>Details</h2>
+              <p class="sub">The event's own fields: which tool, which link and where it sat, which form or file.</p>
+              <div class="card">
+                <Bars rows={asBars(details)} limit={details.length} empty="This event carries no details." />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="grid-2">
+            <div>
+              <h2>Came from</h2>
+              <p class="sub">
+                {server
+                  ? 'The website the visit came from, recorded with the save. Direct means the visit began on this site or had no referrer.'
+                  : 'The referring website of the page where the step happened, host only.'}
+              </p>
+              <div class="card">
+                <Bars rows={asBars(sources, sourceLabel)} limit={sources.length} empty="No referrer recorded." />
+              </div>
+            </div>
+            {
+              server ? (
+                <div>
+                  <h2>Country and device</h2>
+                  <p class="sub">
+                    Not recorded for this step. The server writes it after the save and keeps no location or
+                    device with it. The browser steps before it carry both.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h2>Country</h2>
+                  <p class="sub">From the edge network's location header.</p>
+                  <div class="card">
+                    <Bars rows={asBars(countries, countryName)} limit={countries.length} empty="No country recorded." />
+                  </div>
+                  <h2 style="margin-top:var(--space-5)">Device</h2>
+                  <div class="card">
+                    <Bars rows={asBars(devices)} limit={devices.length} empty="No device recorded." />
+                  </div>
+                </div>
+              )
+            }
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Time of day, India time</h2>
+          <p class="sub">Hours with none are left out.</p>
+          <div class="card">
+            <Bars
+              rows={hours.map((r) => ({ label: `${r.label}:00`, value: value(r), note: server ? undefined : `${r.events} events` }))}
+              limit={24}
+              empty="No times recorded."
+            />
+          </div>
+        </section>
+      </>
+    )
+  }
+</AdminLayout>
