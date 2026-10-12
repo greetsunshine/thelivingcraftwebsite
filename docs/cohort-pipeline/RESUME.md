@@ -23,6 +23,20 @@ merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 
 ---
 
+## Week 4 review, round 2 — 12 October (`content/week-4-review-round2`)
+
+Rows 70 to 75 of the "Notes Review" sheet, all topic 2 (indirect injection), answered in
+[`docs/teaching/reviews/week-4-review-2026-10-12.md`](../teaching/reviews/week-4-review-2026-10-12.md).
+
+- **Topic 2's lab now asks DeepSeek.** Until 12 October `make w4-poison` never called a model.
+  Pooled, 40 runs a case: no defence paid 405 of 440 planted runs, fenced 47, the worked check
+  40 (all P10, 40 of 40). New case Z1 hides its phrases with zero-width spaces. Reference agent
+  `week-4-draft` commit `c750304`.
+- **The worked check counted "Programme 2026" as a figure**, the bug the lab warns about. Fixed:
+  it ignores years and strips invisible characters first.
+- **The lab card gives a skeleton, not the answer**: `CAP = 0`, `SKIP = ()`, no year line.
+- **1,333 a day is week 1's 40,000 a month divided by 30**, and the page now says so.
+
 ## Week 4 review, round 1 — 9 October (`content/week-4-review-round1`)
 
 Rows 58 to 69 of the "Notes Review" sheet, answered in

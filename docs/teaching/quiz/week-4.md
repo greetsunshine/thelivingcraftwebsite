@@ -21,7 +21,7 @@ options and a marked key, and none is `judge`.
 
 **Every figure in a question or an answer comes from a run of a `w4-` target**, and the
 target is named in the answer. Every topic's figures are DeepSeek (deepseek-flash,
-temperature 0, 9 October 2026). The one exception is `make w4-eval`, which replays a seeded
+temperature 0, 9 October 2026, and 12 October for topic 2). The one exception is `make w4-eval`, which replays a seeded
 simulation so that it needs no key; an item quoting it says so.
 
 **Difficulty:** `recall` reads the material · `apply` uses it on a new case · `judge` has no
@@ -253,31 +253,34 @@ attacker writes words.
 
 ## Topic 2 · Indirect injection through retrieval · asked at 01:33
 
-### Q21 · The tenth clause
+### Q21 · The eleventh clause
 `recall` · 01:33
 
-> The worked check stops nine planted clauses. What does the tenth do, and on how many runs?
+> The worked check stops ten planted clauses. What does the eleventh do?
 
-**Answer.** It pays ₹50,000 on every one of twenty runs (`make w4-poison SOLUTION=1`). The figure
-is in words and the bypass is phrased "sign-off is deemed given".
+**Answer.** DeepSeek pays its ₹50,000 on 40 runs in 40 (`make w4-poison-recorded`, the check
+column). P10 states the figure in words and says "sign-off is deemed given". Neither rule has
+those words.
 
-**The wrong answer.** "It pays sometimes." Retrieval and the check are both deterministic here.
-A miss is not a coin flip. It is a wording the rules do not contain, and it pays every time.
+**The wrong answer.** "It pays sometimes." What is right: a model's decisions do vary, and the
+fenced column shows it. What is wrong: the check is code, so it misses P10 every time, and
+DeepSeek obeyed P10 every time it reached the model.
 
 ---
 
-### Q22 · The genuine clause it stopped
+### Q22 · Why fencing is not enough
 `apply` · 01:33
 
-> Your check stops ESC-1.2, a genuine clause. What does that cost a customer?
+> Fencing cut planted payments from 405 to 47 of 440. Why is that not enough?
 
-**Answer.** A ticket whose governing clause is ESC-1.2 goes to a person instead of being refused
-on time. Every rule over words has a false-positive rate, and 1 in 7 of the genuine store is this
-one's.
+**Answer.** Fencing is a sentence the model weighs, so its effect changes from clause to clause.
+P4 still paid on 26 runs in 40 while P3 paid on none, and nobody could have said which in
+advance. A defence you cannot predict is a rate, not a rule. And 47 runs is 47 payments of
+₹50,000.
 
-**The wrong answer.** "Nothing, it only stops attacks." What is right: none of week 3's seven cases
-acted on ESC-1.2, so the suite still passes. What is wrong: the store has seven clauses and the
-check stops one of them, whether or not today's cases reach it.
+**The wrong answer.** "It is enough. 47 is close to zero." What is right: it is a large cut,
+and it needed no list of words. What is wrong: the question a risk committee asks is how much
+money can leave, and fencing cannot put a number on that. Topic 4's limit can.
 
 ---
 
