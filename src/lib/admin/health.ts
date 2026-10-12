@@ -97,6 +97,7 @@ const FUNCTIONS = [
   'admin_traffic_daily',
   'admin_traffic_paths',
   'admin_funnel',
+  'admin_page_detail',
 ] as const;
 
 /**

@@ -1007,16 +1007,87 @@ language sql stable as $$
 $$;
 
 -- The funnel this practice cares about: land -> engage -> hand over contact.
+-- `form_started` is split by the form it came from (`form_started:application`,
+-- `:enquiry`, `:enterprise`), because the three routes share one event and only
+-- the first is an application. Same signature, so `create or replace` is enough.
 create or replace function public.admin_funnel(days int default 30)
 returns table (type text, events bigint, visitors bigint)
 language sql stable as $$
-  select e.type,
+  select case when e.type = 'form_started'
+              then 'form_started:' || coalesce(e.meta->>'form', 'unknown')
+              else e.type
+         end as type,
          count(*)                  as events,
          count(distinct e.visitor) as visitors
   from public.events e
   where e.created_at >= now() - make_interval(days => days)
   group by 1
   order by 2 desc;
+$$;
+
+-- One page, in detail (12 October 2026): /craft/admin/traffic/page?path=...
+-- Every row is (section, label, views, visitors), so one call answers all of it:
+--
+--   day       views and visitors per UTC day, for the line chart
+--   source    the referring host, or 'direct / unknown'. Our own host means
+--             they came from another page on this site
+--   previous  the page this visitor viewed just before, on the same day
+--   next      the page they viewed just after, on the same day
+--   country   from the edge network's header
+--   region    the pricing region the page was showing (only `/` sends one)
+--   device    mobile, tablet or desktop
+--   hour      the hour of day in India time, '00' to '23'
+--   action    every other event on this page, with form starts split by form
+--
+-- WHY "SAME DAY". `visitor` is a hash that changes at midnight UTC, so the
+-- same person is two visitors either side of it. Previous and next are read
+-- inside one (visitor, UTC day), which is the longest sequence the data can
+-- honestly show. A null previous is labelled as the first page of the visit.
+--
+-- lag() and lead() run over EVERY pageview in the range before this page is
+-- picked out, so "previous" can be any page, not only this one.
+create or replace function public.admin_page_detail(days int default 30, p_path text default '/')
+returns table (section text, label text, views bigint, visitors bigint)
+language sql stable as $$
+  with pv as (
+    select e.path, e.created_at, e.referrer_host, e.country, e.region, e.device, e.visitor,
+           lag(e.path)  over w as prev_path,
+           lead(e.path) over w as next_path
+      from public.events e
+     where e.type = 'pageview'
+       and e.created_at >= now() - make_interval(days => days)
+    window w as (partition by e.visitor, (e.created_at at time zone 'UTC')::date
+                 order by e.created_at, e.id)
+  ),
+  here as (select * from pv where pv.path = p_path)
+  select 'day', ((h.created_at at time zone 'UTC')::date)::text, count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'source', coalesce(h.referrer_host, 'direct / unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'previous', coalesce(h.prev_path, '(first page of the visit)'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'next', coalesce(h.next_path, '(no further page)'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'country', coalesce(h.country, 'unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'region', coalesce(h.region, 'none sent'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'device', coalesce(h.device, 'unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'hour', lpad(extract(hour from h.created_at at time zone 'Asia/Kolkata')::int::text, 2, '0'),
+         count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'action',
+         case when e.type = 'form_started'
+              then 'form_started:' || coalesce(e.meta->>'form', 'unknown')
+              else e.type
+         end,
+         count(*), count(distinct e.visitor)
+    from public.events e
+   where e.path = p_path
+     and e.type <> 'pageview'
+     and e.created_at >= now() - make_interval(days => days)
+   group by 2;
 $$;
 
 -- ---------------------------------------------------------------------------

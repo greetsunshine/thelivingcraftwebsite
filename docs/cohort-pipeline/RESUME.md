@@ -8,7 +8,8 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 9 October 2026
+**Last updated:** 12 October 2026
+**Console funnel, 12 October:** application starts now have their own row on `/craft/admin/traffic`. `admin_funnel()` changed and a per-page view (`/craft/admin/traffic/page`) with its rollup `admin_page_detail()` was added. **The schema ran on production on 12 October**; the code is not merged yet.
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).

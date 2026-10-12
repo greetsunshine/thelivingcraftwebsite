@@ -68,6 +68,25 @@ export async function trafficPaths(days: number): Promise<PathRow[]> {
   return (data ?? []) as PathRow[];
 }
 
+export interface PageDetailRow {
+  section: 'day' | 'source' | 'previous' | 'next' | 'country' | 'region' | 'device' | 'hour' | 'action';
+  label: string;
+  views: number;
+  visitors: number;
+}
+
+/** One page in detail. Every section in one call; see admin_page_detail() in schema.sql. */
+export async function pageDetail(days: number, path: string): Promise<PageDetailRow[]> {
+  const client = db();
+  if (!client) return [];
+  const { data, error } = await client.rpc('admin_page_detail', { days, p_path: path });
+  if (error) {
+    fail('pageDetail', error);
+    return [];
+  }
+  return ((data ?? []) as PageDetailRow[]).map((r) => ({ ...r, views: Number(r.views), visitors: Number(r.visitors) }));
+}
+
 export interface LabelRow {
   label: string;
   views: number;

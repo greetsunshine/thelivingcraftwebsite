@@ -31,13 +31,18 @@ const countOf = (type: string) => Number(steps.find((s) => s.type === type)?.eve
 
 // The seven events of the revised outreach readiness handoff (29 September
 // 2026), in the order a visitor meets them, with the older steps between.
-// Two were renamed that day: `apply_start` is now `form_started`, and a cohort
-// link is `cohort_cta_clicked` rather than `cta_click`. The old form name is
-// added in, so a range that crosses the rename keeps its first half.
-// `cta_click` is not: it still counts links to /caio, /assessment and the
-// booking widget, and adding it would count those as cohort links.
-// "Submitted it" read `apply_submit`, which the cohort form has never sent;
-// the step is now the server's `application_saved`, which is a stored row.
+// A cohort link is `cohort_cta_clicked` since that day, not `cta_click`.
+// `cta_click` is not added in: it still counts links to /caio, /assessment and
+// the booking widget, and adding it would count those as cohort links.
+//
+// Form starts come back from `admin_funnel()` split by form
+// (`form_started:application`, `:enquiry`, `:enterprise`), because the three
+// routes share one event and only the first is an application (12 October
+// 2026). Two kinds of row cannot be split and get a row of their own rather
+// than being guessed into one: `apply_start`, the name before 29 September,
+// which recorded no form; and a bare `form_started`, which is what the rollup
+// returns until supabase/schema.sql is run again.
+const unsplitStarts = stepOf('apply_start') + stepOf('form_started');
 const FUNNEL = [
   { label: 'Landed on a page', value: stepOf('pageview') },
   { label: 'Started a tool', value: stepOf('tool_started') },
@@ -45,11 +50,13 @@ const FUNNEL = [
   { label: 'Requested a resource (saved, server)', value: countOf('resource_requested') },
   { label: 'Received the requested file', value: stepOf('requested_delivery_confirmed') },
   { label: 'Followed a cohort link', value: stepOf('cohort_cta_clicked') },
+  { label: 'Started an application', value: stepOf('form_started:application') },
+  { label: 'Application saved (server)', value: countOf('application_saved') },
+  { label: 'Started a cohort or team enquiry', value: stepOf('form_started:enquiry') + stepOf('form_started:enterprise') },
+  ...(unsplitStarts > 0 ? [{ label: 'Started a form, which one not recorded', value: unsplitStarts }] : []),
   { label: 'Followed a link to the consulting pages or a booking', value: stepOf('cta_click') },
   { label: 'Opened the assistant', value: stepOf('ask_open') },
   { label: 'Asked it something', value: stepOf('ask_question') },
-  { label: 'Started an application form', value: stepOf('form_started') + stepOf('apply_start') },
-  { label: 'Application saved (server)', value: countOf('application_saved') },
 ];
 
 // A country code alone is a lookup task for the reader. Only the three that
@@ -109,10 +116,16 @@ const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia',
     <div class="grid-2">
       <div>
         <h2>Pages</h2>
-        <p class="sub">Which surface is doing the work.</p>
+        <p class="sub">Which surface is doing the work. Open a page to see where its visitors came from and went next.</p>
         <div class="card">
           <Bars
-            rows={paths.map((p) => ({ label: p.path, value: Number(p.views), note: `${p.visitors} uniq` }))}
+            rows={paths.map((p) => ({
+              label: p.path,
+              value: Number(p.views),
+              note: `${p.visitors} uniq`,
+              href: `/craft/admin/traffic/page?days=${days}&path=${encodeURIComponent(p.path)}`,
+            }))}
+            limit={paths.length}
             empty="No page views recorded yet."
           />
         </div>
@@ -123,7 +136,7 @@ const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia',
           Distinct visitors at each step of the assessment → CAIO → cohort spine.
         </p>
         <div class="card">
-          <Bars rows={FUNNEL} limit={6} empty="No events recorded yet." />
+          <Bars rows={FUNNEL} limit={FUNNEL.length} empty="No events recorded yet." />
         </div>
       </div>
     </div>
