@@ -32,11 +32,17 @@ export async function trafficDaily(days: number): Promise<DailyPoint[]> {
     return [];
   }
 
-  const rows = (data ?? []) as DailyPoint[];
+  return fillDays((data ?? []) as DailyPoint[], days);
+}
 
-  // Fill the gaps. A day with no traffic returns no row, and a line chart drawn
-  // from sparse rows silently compresses quiet periods — it looks like steady
-  // traffic when it was three visits a fortnight apart.
+/**
+ * One point per UTC day in the range, zero where there was no row.
+ *
+ * A day with no traffic returns no row, and a line chart drawn from sparse rows
+ * silently compresses quiet periods — it looks like steady traffic when it was
+ * three visits a fortnight apart. Used by every daily chart in the console.
+ */
+export function fillDays(rows: DailyPoint[], days: number): DailyPoint[] {
   const byDay = new Map(rows.map((r) => [r.day, r]));
   const out: DailyPoint[] = [];
   const today = new Date();
@@ -57,6 +63,9 @@ export interface PathRow {
   visitors: number;
 }
 
+/** The row cap in admin_traffic_paths(). The Pages panel says so when it is reached. */
+export const PATHS_CAP = 200;
+
 export async function trafficPaths(days: number): Promise<PathRow[]> {
   const client = db();
   if (!client) return [];
@@ -66,6 +75,25 @@ export async function trafficPaths(days: number): Promise<PathRow[]> {
     return [];
   }
   return (data ?? []) as PathRow[];
+}
+
+export interface PageDetailRow {
+  section: 'day' | 'source' | 'previous' | 'next' | 'country' | 'region' | 'device' | 'hour' | 'action';
+  label: string;
+  views: number;
+  visitors: number;
+}
+
+/** One page in detail. Every section in one call; see admin_page_detail() in schema.sql. */
+export async function pageDetail(days: number, path: string): Promise<PageDetailRow[]> {
+  const client = db();
+  if (!client) return [];
+  const { data, error } = await client.rpc('admin_page_detail', { days, p_path: path });
+  if (error) {
+    fail('pageDetail', error);
+    return [];
+  }
+  return ((data ?? []) as PageDetailRow[]).map((r) => ({ ...r, views: Number(r.views), visitors: Number(r.visitors) }));
 }
 
 export interface LabelRow {

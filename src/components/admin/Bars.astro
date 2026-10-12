@@ -11,7 +11,8 @@
 // wraps, scales and stays selectable in a way a fixed viewBox does not.
 
 export interface Props {
-  rows: { label: string; value: number; note?: string }[];
+  /** `href` makes the label a link, for a row that has a detail page. */
+  rows: { label: string; value: number; note?: string; href?: string }[];
   /** Shown when there is nothing yet. */
   empty?: string;
   /** Cap the list; the caller says what was dropped. */
@@ -37,7 +38,7 @@ const peak = Math.max(1, ...shown.map((r) => Number(r.value)));
       {shown.map((r) => (
         <div class="bar-row">
           <span class="bl" title={r.label}>
-            {r.label}
+            {r.href ? <a href={r.href}>{r.label}</a> : r.label}
           </span>
           <span class="bv">
             {r.value}

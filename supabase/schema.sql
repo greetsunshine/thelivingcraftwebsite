@@ -983,7 +983,9 @@ language sql stable as $$
     and e.created_at >= now() - make_interval(days => days)
   group by 1
   order by 2 desc
-  limit 50;
+  -- 200, not 50 (12 October 2026): the console lists every page so each one
+  -- can be opened, and it says so when this cap is reached.
+  limit 200;
 $$;
 
 create or replace function public.admin_traffic_breakdown(days int default 30, dim text default 'referrer_host')
@@ -1006,17 +1008,138 @@ language sql stable as $$
   limit 25;
 $$;
 
+-- The name an event is counted under, shared by both rollups below
+-- (12 October 2026). Every event keeps its own type except a form start, which
+-- is split by the form it came from, because one event serves five forms and
+-- only one of them is an application:
+--
+--   form_started:application   the application on /
+--   form_started:enquiry       the cohort enquiry on /
+--   form_started:enterprise    the team enquiry on /
+--   form_started:consulting    the contact form on /caio and /assessment
+--                              (Track.astro keys it by its id, `contactForm`)
+--   form_started:other         any other form, so a new one is never dropped
+--   form_started:unrecorded    a start with no form named: every `apply_start`
+--                              (the name until 29 September 2026) and any
+--                              `form_started` without meta.form
+--
+-- One key per event is what lets a funnel row count DISTINCT visitors. Adding
+-- two rows' visitor counts together counts somebody who did both twice.
+-- The console's labels for these keys are in src/lib/admin/event-labels.ts.
+create or replace function public.admin_event_key(p_type text, p_meta jsonb)
+returns text
+language sql immutable as $$
+  select case
+    when p_type = 'apply_start' then 'form_started:unrecorded'
+    when p_type = 'form_started' then
+      case coalesce(p_meta ->> 'form', '')
+        when 'application' then 'form_started:application'
+        when 'enquiry'     then 'form_started:enquiry'
+        when 'enterprise'  then 'form_started:enterprise'
+        when 'contactForm' then 'form_started:consulting'
+        when ''            then 'form_started:unrecorded'
+        else 'form_started:other'
+      end
+    else p_type
+  end;
+$$;
+
 -- The funnel this practice cares about: land -> engage -> hand over contact.
+-- Grouped by admin_event_key() above, so each row is one key.
 create or replace function public.admin_funnel(days int default 30)
 returns table (type text, events bigint, visitors bigint)
 language sql stable as $$
-  select e.type,
+  select public.admin_event_key(e.type, e.meta) as type,
          count(*)                  as events,
          count(distinct e.visitor) as visitors
   from public.events e
   where e.created_at >= now() - make_interval(days => days)
   group by 1
   order by 2 desc;
+$$;
+
+-- One page, in detail (12 October 2026): /craft/admin/traffic/page?path=...
+-- Every row is (section, label, views, visitors), so one call answers all of it:
+--
+--   day       views and visitors per UTC day, for the line chart
+--   source    the referring host, or 'direct / unknown'. Our own host means
+--             they came from another page on this site
+--   previous  the page this visitor viewed just before, on the same day
+--   next      the page they viewed just after, on the same day
+--   country   from the edge network's header
+--   region    the pricing region the page was showing (only `/` sends one)
+--   device    mobile, tablet or desktop
+--   hour      the hour of day in India time, '00' to '23'
+--   action    every browser event on this page, keyed by admin_event_key()
+--
+-- WHY "SAME DAY". `visitor` is a hash that changes at midnight UTC, so the
+-- same person is two visitors either side of it. Previous and next are read
+-- inside one (visitor, UTC day), which is the longest sequence the data can
+-- honestly show. A null previous is labelled as the first page of the visit.
+--
+-- ONLY THE VISITS THAT REACHED THIS PAGE are sorted. `parts` finds the
+-- (visitor, day) pairs with a view of this page, and lag() and lead() run over
+-- every page view in those pairs only, so "previous" can still be any page.
+-- Those pairs start from the day BEFORE the range: the range begins part-way
+-- through a UTC day, and a view earlier that day must still count as previous.
+--
+-- `action` LEAVES OUT THE THREE EVENTS THE SERVER WRITES (application_saved,
+-- enquiry_saved, resource_requested; see src/lib/analytics/events.ts). The
+-- server stores them under the visit's ENTRY page, not the page where the form
+-- was, so here they would credit a save on / to the tool page somebody landed
+-- on. The funnel counts them correctly.
+create or replace function public.admin_page_detail(days int default 30, p_path text default '/')
+returns table (section text, label text, views bigint, visitors bigint)
+language sql stable as $$
+  with bounds as (
+    select now() - make_interval(days => days) as since
+  ),
+  parts as (
+    select distinct e.visitor, (e.created_at at time zone 'UTC')::date as day
+      from public.events e, bounds b
+     where e.type = 'pageview'
+       and e.path = p_path
+       and e.created_at >= b.since
+  ),
+  pv as (
+    select e.path, e.created_at, e.referrer_host, e.country, e.region, e.device, e.visitor,
+           lag(e.path)  over w as prev_path,
+           lead(e.path) over w as next_path
+      from public.events e
+      join parts p
+        on p.visitor = e.visitor
+       and p.day = (e.created_at at time zone 'UTC')::date
+     where e.type = 'pageview'
+    window w as (partition by e.visitor, (e.created_at at time zone 'UTC')::date
+                 order by e.created_at, e.id)
+  ),
+  here as (
+    select pv.* from pv, bounds b where pv.path = p_path and pv.created_at >= b.since
+  )
+  select 'day', ((h.created_at at time zone 'UTC')::date)::text, count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'source', coalesce(h.referrer_host, 'direct / unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'previous', coalesce(h.prev_path, '(first page of the visit)'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'next', coalesce(h.next_path, '(no further page)'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'country', coalesce(h.country, 'unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'region', coalesce(h.region, 'none sent'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'device', coalesce(h.device, 'unknown'), count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'hour', lpad(extract(hour from h.created_at at time zone 'Asia/Kolkata')::int::text, 2, '0'),
+         count(*), count(distinct h.visitor) from here h group by 2
+  union all
+  select 'action', public.admin_event_key(e.type, e.meta), count(*), count(distinct e.visitor)
+    from public.events e, bounds b
+   where e.path = p_path
+     and e.type <> 'pageview'
+     and e.type not in ('application_saved', 'enquiry_saved', 'resource_requested')
+     and e.created_at >= b.since
+   group by 2;
 $$;
 
 -- ---------------------------------------------------------------------------

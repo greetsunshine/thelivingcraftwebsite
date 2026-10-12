@@ -8,7 +8,8 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 11 October 2026
+**Last updated:** 12 October 2026
+**Console funnel, 12 October:** application starts now have their own row on `/craft/admin/traffic`. `admin_funnel()` changed and a per-page view (`/craft/admin/traffic/page`) with its rollup `admin_page_detail()` was added. The schema ran on production on 12 October, **but the PR #63 review fixes changed it again (new `admin_event_key()`, two functions rewritten): run `supabase/schema.sql` once more before merging.** **"Started a tool: 0" is a true count, not a fault** (checked 12 October): headless Chrome on the live poc-screen sent `tool_started` on the first click, and a tagged beacon was stored and then deleted. The event only exists since 29 September, and the tool pages had 29 views from then to 12 October.
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).

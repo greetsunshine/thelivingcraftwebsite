@@ -1,0 +1,225 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import LineChart from '../../../../components/admin/LineChart.astro';
+import Bars from '../../../../components/admin/Bars.astro';
+import { fillDays, pageDetail, type PageDetailRow } from '../../../../lib/admin/queries';
+import { labelFor } from '../../../../lib/admin/event-labels';
+import { SITE_ORIGIN } from '../../../../data/facts';
+
+// One page from the Pages panel on /craft/admin/traffic, in detail. Everything
+// here is read from events the site already records; nothing new is collected.
+// The rollup is admin_page_detail() in supabase/schema.sql, which says what
+// each section means and why "previous" and "next" stop at midnight UTC.
+
+const RANGES = [7, 30, 90];
+const requested = Number(Astro.url.searchParams.get('days'));
+const days = RANGES.includes(requested) ? requested : 30;
+
+// Only a path shape is accepted. The value is rendered as text and passed to
+// the rollup as a parameter, so this is about a sensible page, not injection.
+const rawPath = Astro.url.searchParams.get('path') ?? '';
+const path = rawPath.startsWith('/') && rawPath.length <= 200 ? rawPath : '';
+
+const rows = path ? await pageDetail(days, path) : [];
+const of = (section: PageDetailRow['section']) =>
+  rows.filter((r) => r.section === section).sort((a, b) => b.views - a.views);
+
+// Every day in the range, zero where the page had no views, so the chart does
+// not join 2 October to 20 October as if they were neighbours.
+const daily = fillDays(
+  rows.filter((r) => r.section === 'day').map((r) => ({ day: r.label, views: r.views, visitors: r.visitors })),
+  days,
+);
+
+const views = daily.reduce((n, d) => n + d.views, 0);
+const visitors = daily.reduce((n, d) => n + d.visitors, 0);
+
+const selfHost = new URL(SITE_ORIGIN).hostname;
+// Our own preview deployments are named after the Vercel project
+// (`thelivingcraft-<hash>-<team>.vercel.app`). Any other *.vercel.app host is
+// somebody else's site and counts as another website.
+const isPreview = (host: string) =>
+  host.endsWith('.vercel.app') && (host === 'thelivingcraft.vercel.app' || host.startsWith('thelivingcraft-'));
+const isSelf = (host: string) => host === selfHost || isPreview(host);
+const sources = of('source');
+const external = sources.filter((r) => !isSelf(r.label) && r.label !== 'direct / unknown').reduce((n, r) => n + r.views, 0);
+const direct = sources.find((r) => r.label === 'direct / unknown')?.views ?? 0;
+const entries = of('previous').find((r) => r.label === '(first page of the visit)')?.views ?? 0;
+const exits = of('next').find((r) => r.label === '(no further page)')?.views ?? 0;
+const pct = (n: number) => (views ? `${Math.round((n / views) * 100)}%` : '—');
+
+const sourceLabel = (host: string) =>
+  host === selfHost ? 'This site (another page)' : isPreview(host) ? 'A preview deployment of this site' : host;
+const samePage = (label: string) => (label === path ? 'This page again (reload or return)' : label);
+
+// Country codes as names, from the browser runtime's own table rather than a
+// list typed out here.
+let countryName = (code: string) => code;
+try {
+  const names = new Intl.DisplayNames(['en'], { type: 'region' });
+  countryName = (code: string) => (/^[A-Z]{2}$/.test(code) ? `${names.of(code) ?? code} (${code})` : code);
+} catch {
+  /* keep the codes */
+}
+
+// Browser events on this page, named by the shared labels. The three events
+// the server writes are left out by admin_page_detail(), because they are
+// stored under the visit's entry page rather than the page where they happened.
+const actions = of('action').map((r) => ({
+  label: labelFor(r.label),
+  value: r.visitors,
+  note: `${r.views} events`,
+}));
+
+const asBars = (list: PageDetailRow[], label: (s: string) => string = (s) => s) =>
+  list.map((r) => ({ label: label(r.label), value: r.views, note: `${r.visitors} uniq` }));
+
+const hours = of('hour').sort((a, b) => a.label.localeCompare(b.label));
+const hourBars = hours.map((r) => ({ label: `${r.label}:00`, value: r.views, note: `${r.visitors} uniq` }));
+const backTo = `/craft/admin/traffic?days=${days}`;
+---
+
+<AdminLayout title={path ? `Traffic · ${path}` : 'Traffic · page'} active="traffic">
+  <div class="page-head">
+    <div>
+      <span class="label">Last {days} days · <a href={backTo}>Back to traffic</a></span>
+      <h1>{path || 'No page chosen'}</h1>
+      <p>
+        Where this page's visitors came from, what they read before and after it, and what they did
+        on it. "Before" and "after" are read within one visitor's day, because the visitor hash
+        changes at midnight UTC.
+      </p>
+    </div>
+    {
+      path && (
+        <div class="cat-nav" style="margin:0">
+          {RANGES.map((r) => (
+            <a class={r === days ? 'on' : ''} href={`/craft/admin/traffic/page?days=${r}&path=${encodeURIComponent(path)}`}>
+              {r} days
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  {
+    !path ? (
+      <p class="faint">Open a page from the Pages panel on <a href={backTo}>Traffic</a>.</p>
+    ) : (
+      <>
+        <div class="tiles">
+          <div class="tile">
+            <div class="n">{views}</div>
+            <div class="k label">Page views</div>
+            <div class="note">{visitors} unique, counted per day</div>
+          </div>
+          <div class="tile">
+            <div class="n">{pct(entries)}</div>
+            <div class="k label">First page of the visit</div>
+            <div class="note">{entries} views began here</div>
+          </div>
+          <div class="tile">
+            <div class="n">{pct(external)}</div>
+            <div class="k label">From another website</div>
+            <div class="note">{pct(direct)} direct or unknown</div>
+          </div>
+          <div class="tile">
+            <div class="n">{pct(exits)}</div>
+            <div class="k label">No further page</div>
+            <div class="note">Left, or went to an untracked page</div>
+          </div>
+        </div>
+
+        <section class="panel">
+          <h2>Daily</h2>
+          <p class="sub">Views and visitors of this page only. Days with none are not drawn.</p>
+          <div class="card">
+            <LineChart points={daily} height={200} />
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="grid-2">
+            <div>
+              <h2>Came from</h2>
+              <p class="sub">The referring website, host only. "Direct" includes most apps and email clients.</p>
+              <div class="card">
+                <Bars rows={asBars(sources, sourceLabel)} limit={rows.length} empty="No views in this range." />
+              </div>
+            </div>
+            <div>
+              <h2>What they did here</h2>
+              <p class="sub">
+                Distinct visitors per action on this page, with the event count beside it. Saved
+                applications and requests are counted in the funnel, not here.
+              </p>
+              <div class="card">
+                <Bars rows={actions} limit={actions.length} empty="Nobody did anything here beyond reading it." />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="grid-2">
+            <div>
+              <h2>Page before</h2>
+              <p class="sub">The page the same visitor viewed just before this one, that day.</p>
+              <div class="card">
+                <Bars rows={asBars(of('previous'), samePage)} limit={rows.length} empty="No views in this range." />
+              </div>
+            </div>
+            <div>
+              <h2>Page after</h2>
+              <p class="sub">The page they viewed next. Only the tracked public pages are counted.</p>
+              <div class="card">
+                <Bars rows={asBars(of('next'), samePage)} limit={rows.length} empty="No views in this range." />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="grid-2">
+            <div>
+              <h2>Country</h2>
+              <p class="sub">From the edge network's location header, never from an IP address we keep.</p>
+              <div class="card">
+                <Bars rows={asBars(of('country'), countryName)} limit={rows.length} empty="No views in this range." />
+              </div>
+            </div>
+            <div>
+              <h2>Device</h2>
+              <p class="sub">From the browser's user agent. Bots are already excluded.</p>
+              <div class="card">
+                <Bars rows={asBars(of('device'))} limit={4} empty="No views in this range." />
+              </div>
+              {
+                path === '/' && (
+                  <>
+                    <h2 style="margin-top:var(--space-5)">Pricing region shown</h2>
+                    <p class="sub">The region the page resolved for the visitor. Only this page sends one.</p>
+                    <div class="card">
+                      <Bars rows={asBars(of('region'))} limit={6} empty="No region recorded." />
+                    </div>
+                  </>
+                )
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Time of day, India time</h2>
+          <p class="sub">Views by the hour they happened in IST. Hours with no views are left out.</p>
+          <div class="card">
+            <Bars rows={hourBars} limit={24} empty="No views in this range." />
+          </div>
+        </section>
+      </>
+    )
+  }
+</AdminLayout>
