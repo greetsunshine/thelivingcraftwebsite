@@ -96,6 +96,25 @@ export async function pageDetail(days: number, path: string): Promise<PageDetail
   return ((data ?? []) as PageDetailRow[]).map((r) => ({ ...r, views: Number(r.views), visitors: Number(r.visitors) }));
 }
 
+export interface StepDetailRow {
+  section: 'day' | 'page' | 'source' | 'country' | 'device' | 'hour' | 'detail';
+  label: string;
+  events: number;
+  visitors: number;
+}
+
+/** One funnel step in detail. The key is an admin_event_key() value; see admin_step_detail(). */
+export async function stepDetail(days: number, key: string): Promise<StepDetailRow[]> {
+  const client = db();
+  if (!client) return [];
+  const { data, error } = await client.rpc('admin_step_detail', { days, p_key: key });
+  if (error) {
+    fail('stepDetail', error);
+    return [];
+  }
+  return ((data ?? []) as StepDetailRow[]).map((r) => ({ ...r, events: Number(r.events), visitors: Number(r.visitors) }));
+}
+
 export interface LabelRow {
   label: string;
   views: number;

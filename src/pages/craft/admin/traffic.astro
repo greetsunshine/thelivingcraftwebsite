@@ -42,17 +42,19 @@ const countOf = (type: string) => Number(steps.find((s) => s.type === type)?.eve
 // by form there; the two that carry no usable form name (`unrecorded`, and
 // `other` for a form nobody has listed yet) appear only when they have rows.
 // Labels come from src/lib/admin/event-labels.ts, shared with the page detail.
-const step = (key: string) => ({ label: labelFor(key), value: stepOf(key) });
+// Every row opens its own detail page: /craft/admin/traffic/step?key=...
+const stepHref = (key: string) => `/craft/admin/traffic/step?days=${days}&key=${encodeURIComponent(key)}`;
+const step = (key: string) => ({ label: labelFor(key), value: stepOf(key), href: stepHref(key) });
 const ifAny = (key: string) => (stepOf(key) > 0 ? [step(key)] : []);
 const FUNNEL = [
   step('pageview'),
   step('tool_started'),
   step('useful_result_completed'),
-  { label: labelFor('resource_requested'), value: countOf('resource_requested') },
+  { label: labelFor('resource_requested'), value: countOf('resource_requested'), href: stepHref('resource_requested') },
   step('requested_delivery_confirmed'),
   step('cohort_cta_clicked'),
   step('form_started:application'),
-  { label: labelFor('application_saved'), value: countOf('application_saved') },
+  { label: labelFor('application_saved'), value: countOf('application_saved'), href: stepHref('application_saved') },
   step('form_started:enquiry'),
   step('form_started:enterprise'),
   step('cta_click'),
@@ -144,7 +146,7 @@ const NAMED: Record<string, string> = { IN: 'India', AE: 'UAE', AU: 'Australia',
       <div>
         <h2>Funnel</h2>
         <p class="sub">
-          Distinct visitors at each step of the assessment → CAIO → cohort spine.
+          Distinct visitors at each step of the assessment → CAIO → cohort spine. Open a step to see where it happened and where those visitors came from.
         </p>
         <div class="card">
           <Bars rows={FUNNEL} limit={FUNNEL.length} empty="No events recorded yet." />

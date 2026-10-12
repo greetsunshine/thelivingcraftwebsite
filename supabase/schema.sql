@@ -1142,6 +1142,60 @@ language sql stable as $$
    group by 2;
 $$;
 
+-- One funnel step, in detail (12 October 2026): /craft/admin/traffic/step?key=...
+-- The key is an admin_event_key() value, so a step here is exactly the row the
+-- funnel counted. Every row is (section, label, events, visitors):
+--
+--   day      events and visitors per UTC day, for the line chart
+--   page     the page the event was recorded on. For the three events the
+--            server writes, that is the visit's ENTRY page, and the console
+--            says so beside the panel
+--   source   the referring host of the page the event happened on
+--   country, device
+--   hour     the hour of day in India time, '00' to '23'
+--   detail   'name: value' for the event's own fields: which tool, which link
+--            and where it sat, which form, which file. ONLY THE NAMED FIELDS
+--            below are read; event_id, env, consent and any record id never are
+--
+-- `visitors` is 0 for the server's events, which carry no visitor hash; the
+-- console shows their event count instead, as the funnel does.
+--
+-- The type filter in `hits` narrows the scan to the event types that can map
+-- to this key, so the (type, created_at) index is used; the key itself is
+-- then checked exactly.
+create or replace function public.admin_step_detail(days int default 30, p_key text default 'pageview')
+returns table (section text, label text, events bigint, visitors bigint)
+language sql stable as $$
+  with hits as (
+    select e.*
+      from public.events e
+     where e.created_at >= now() - make_interval(days => days)
+       and e.type in (
+             case when p_key like 'form_started:%' then 'form_started' else p_key end,
+             case when p_key like 'form_started:%' then 'apply_start'  else p_key end)
+       and public.admin_event_key(e.type, e.meta) = p_key
+  )
+  select 'day', ((h.created_at at time zone 'UTC')::date)::text, count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'page', h.path, count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'source', coalesce(h.referrer_host, 'direct / unknown'), count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'country', coalesce(h.country, 'unknown'), count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'device', coalesce(h.device, 'unknown'), count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'hour', lpad(extract(hour from h.created_at at time zone 'Asia/Kolkata')::int::text, 2, '0'),
+         count(*), count(distinct h.visitor) from hits h group by 2
+  union all
+  select 'detail', f.key || ': ' || left(f.value, 80), count(*), count(distinct h.visitor)
+    from hits h
+    cross join lateral jsonb_each_text(coalesce(h.meta, '{}'::jsonb)) f
+   where f.key in ('tool', 'form', 'to', 'placement', 'resource', 'kind', 'state', 'ok',
+                   'delivered', 'route', 'field', 'code', 'example')
+   group by 2;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Retention
 -- ---------------------------------------------------------------------------
