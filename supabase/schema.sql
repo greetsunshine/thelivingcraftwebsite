@@ -1155,7 +1155,12 @@ $$;
 --   hour     the hour of day in India time, '00' to '23'
 --   detail   'name: value' for the event's own fields: which tool, which link
 --            and where it sat, which form, which file. ONLY THE NAMED FIELDS
---            below are read; event_id, env, consent and any record id never are
+--            below are read; event_id, env, consent and any record id never are.
+--            The server writes the requested resource as `resource_id`, the
+--            browser as `resource`, so both are on the list
+--   total    one row: every event and DISTINCT visitors over the whole range,
+--            which is what the funnel row counts. Summing the daily rows would
+--            count a visitor once per day they returned
 --
 -- `visitors` is 0 for the server's events, which carry no visitor hash; the
 -- console shows their event count instead, as the funnel does.
@@ -1175,6 +1180,8 @@ language sql stable as $$
              case when p_key like 'form_started:%' then 'apply_start'  else p_key end)
        and public.admin_event_key(e.type, e.meta) = p_key
   )
+  select 'total', 'all', count(*), count(distinct h.visitor) from hits h
+  union all
   select 'day', ((h.created_at at time zone 'UTC')::date)::text, count(*), count(distinct h.visitor) from hits h group by 2
   union all
   select 'page', h.path, count(*), count(distinct h.visitor) from hits h group by 2
@@ -1191,8 +1198,8 @@ language sql stable as $$
   select 'detail', f.key || ': ' || left(f.value, 80), count(*), count(distinct h.visitor)
     from hits h
     cross join lateral jsonb_each_text(coalesce(h.meta, '{}'::jsonb)) f
-   where f.key in ('tool', 'form', 'to', 'placement', 'resource', 'kind', 'state', 'ok',
-                   'delivered', 'route', 'field', 'code', 'example')
+   where f.key in ('tool', 'form', 'to', 'placement', 'resource', 'resource_id', 'kind', 'state',
+                   'ok', 'delivered', 'route', 'field', 'code', 'example')
    group by 2;
 $$;
 
