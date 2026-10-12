@@ -457,10 +457,18 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_TOOLS_REVISION,
   },
 
-  // The Rework Cost Check. Its workbook was a plain file under public/ until
-  // 28 September 2026, which put it outside the download gate. It moved to
-  // downloads/ and asks for a name and an address like every other file, so
-  // it needs its own held wording.
+  // The Citation Fit Check and the Gate Routing Map: held wordings, unapproved.
+  {
+    key: 'resource-gate-routing-map',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Gate Routing Map',
+    body:
+      'Here is the Gate Routing Map you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/gate-routing-map\n\nIt helps you decide which of your agent\u2019s gate results should block a release, go to a named person, or wait on a downstream system. Three tabs give every gate case a route, check that each route has what it needs, and score ten checks to a decision of Ready, Fix first or Hold. The worked example is on its own tab.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_TOOLS_REVISION,
+  },
   {
     key: 'resource-citation-fit-check',
     route: 'resource',
@@ -472,6 +480,10 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     actions: [],
     version: RESOURCE_TOOLS_REVISION,
   },
+  // The Rework Cost Check. Its workbook was a plain file under public/ until
+  // 28 September 2026, which put it outside the download gate. It moved to
+  // downloads/ and asks for a name and an address like every other file, so
+  // it needs its own held wording.
   {
     key: 'resource-rework-cost-check',
     route: 'resource',

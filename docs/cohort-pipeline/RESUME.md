@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 9 October 2026
+**Last updated:** 11 October 2026
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
 **Site work now:** `feat/resource-followups-spec` (PR #52), off `origin/main`, in worktree
 `D:\lc-followups`. It brings the resource follow-ups in line with the resource brief (below).
@@ -99,6 +99,25 @@ still `"TBD"`.
 - **Preview links**, private Artifacts like week 3's: learner
   https://claude.ai/artifact/LaRXgBHUQr6V6Pavai33fu, instructor
   https://claude.ai/artifact/QpPPVwxcKweu6PaUWLMprA.
+
+---
+
+## Gate Routing Map — 11 October (`add-gate-routing-map`)
+
+A new tool, built from Sunil's brief: an Excel workbook that gives every agent release-gate
+case one of four routes (Block, Human decides, Check downstream, Track), and its page at
+`/resources/gate-routing-map`. **Released 11 October, not featured**: a row in `resources.ts`
+(Agentic system design 10), none in `resource-choices.ts`. Sunil asked for it to be deployed,
+which overrode the brief's "do not publish". `tools/gate-routing-map/README.md` has the
+rebuild steps and decisions.
+
+- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 87 of 87, every acceptance
+  figure in the brief, the four variants and the three edge cases. `npm test` 206 of 206.
+  `astro check` 0 errors. No horizontal page scroll at 375px. The real gate dialog handed
+  over the file byte for byte in a local test.
+- **Download gate kept**, as for the two tools before it, although the brief said "no email gate".
+- **Still open:** the held delivery email `resource-gate-routing-map` is unapproved; not in
+  the follow-up catalogue; Sunil to confirm the default minimum of 3 trials.
 
 ---
 

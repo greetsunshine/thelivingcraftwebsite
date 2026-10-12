@@ -328,6 +328,28 @@ export const resources: Resource[] = [
     url: '/resources/citation-fit-check',
     publishedAt: '2026-10-07',
   },
+  {
+    id: 'gate-routing-map',
+    topic: 'Gate Routing',
+    number: '10',
+    series: 'Agentic system design',
+    title: 'The Gate Routing Map',
+    kind: 'Excel workbook \u00b7 3 working tabs \u00b7 10 checks \u00b7 1 worked example',
+    summary:
+      'Which of my agent\u2019s gate results should block, go to a human, or wait on a downstream system? A workbook that gives every release-gate case a route.',
+    description:
+      'A gate that only says pass or fail treats every result the same, and agent results are not the same kind of thing. Some must hold on every run, some need a named person\u2019s judgement, some only mean something once another system has acted on the agent\u2019s output, and some measure work still in progress. The workbook gives every gate case one of four routes (Block, Human decides, Check downstream or Track), checks that each route has what it needs before the release, and scores ten checks, four of them critical, to one decision: Ready, Fix first or Hold, with the next thing to fix named. The worked example is an illustrative order-support agent whose refunds are carried out by a separate payments service: 8 gate cases, 5 routes not ready, including a refund check the payments service never verified, and the decision was Hold.',
+    useFor: [
+      'Give every gate case a route from its purpose, severity, who acts on the output and whether a check can decide it',
+      'Require several trials, all passing, before a Block case on non-deterministic behaviour can block a release',
+      'Name an owner, a backup and written halt criteria for every case a person decides',
+      'Find downstream systems whose output contract is not verified before either side deploys',
+    ],
+    format:
+      'Excel workbook, which also opens in Google Sheets and LibreOffice. It asks for a name, a role and an email address before it downloads.',
+    url: '/resources/gate-routing-map',
+    publishedAt: '2026-10-11',
+  },
 ];
 
 /**
