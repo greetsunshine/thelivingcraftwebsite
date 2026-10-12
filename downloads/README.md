@@ -22,6 +22,7 @@ plain URL, and a gate on the button alone is theatre.
 | `agent-design-check-questions.md` | agent-design-check | `npm run tool-downloads` |
 | `rework-cost-check.xlsx` | rework-cost-check | `python tools/rework-cost-check/build_xlsx.py` |
 | `citation-fit-check.xlsx` | citation-fit-check | `python tools/citation-fit-check/build_xlsx.py` |
+| `gate-routing-map.xlsx` | gate-routing-map | `python tools/gate-routing-map/build_xlsx.py` |
 
 ## The tool downloads are the tools, blank
 
