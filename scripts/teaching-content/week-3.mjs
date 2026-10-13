@@ -110,7 +110,7 @@ export const opening = {
       </tbody>
     </table>
   </div>
-  <p><strong>One word to be careful with today.</strong> Week 1 used <em>harness</em> for the agent: the loop, the tools, the context built for each step, and the trace. Today's thing is the <strong>evaluation harness</strong>, and this page always writes it in full. Two different harnesses one week apart with the same name is a confusion nobody recovers from in the middle of a session.</p>
+  <p><strong>One word to be careful with today.</strong> Week 1 used <em>harness</em> for the agent: the loop, the tools, the context built for each step, and the trace. Today's thing is the <strong>evaluation harness</strong> (the code that runs a set of cases through the agent and scores each one), and this page always writes it in full. Two different harnesses one week apart with the same name is a confusion nobody recovers from in the middle of a session.</p>
   <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">You will rate yourself on these five, twice</h3>
   <p>Once at 00:05 before anything has been taught, and again at 04:55. Same words, scored 1 to 5. Nobody sees your first number but you. Both sets go on screen together at the end.</p>
   <div class="term"><span class="q">Right now, I could…</span>
@@ -137,7 +137,7 @@ export const opening = {
   <h3>The five topics, and the question each one answers</h3>
   <p>The learner page carries this as a table, with the industry name beside each one. <strong>Read the five questions out and stop.</strong> Do not answer any of them here; each is the opening question of its own topic.</p>
   <h3>Say the terminology sentence in the first two minutes</h3>
-  <p>Week 1 claims the bare word <em>harness</em> for the agent harness. Today's thing is the <strong>evaluation harness</strong>, always in full, on both pages and out loud. If you shorten it once at 00:36 the room spends the next hour unsure which one you mean.</p>
+  <p>Week 1 claims the bare word <em>harness</em> for the agent harness. Today's thing is the <strong>evaluation harness</strong> (the code that runs a set of cases through the agent and scores each one), always in full, on both pages and out loud. If you shorten it once at 00:36 the room spends the next hour unsure which one you mean.</p>
   <h3>You will rate yourself on these five, twice</h3>
   <p>00:05 and 04:55, same words both times. <strong>Read them from the learner page rather than paraphrasing</strong>, because the two sets of numbers only mean the same thing if the words do.</p>
   <p><strong>Expect high scores on 1 and 2 at 00:05, and say nothing about it.</strong> Almost everyone believes they have tests and that a passing run is a result. A score that drops at 04:55 is the result you want, and announcing that in advance spends it.</p>
@@ -199,8 +199,8 @@ export const agentNow = {
     { gained: 'An evaluation set covering four classes of case <span class="quiet">(test-case taxonomy)</span>', atOpen: 'seven cases, all of them ordinary or difficult', atClose: 'eight cases across all four classes', file: 'src/w3_cases.py', proof: 'make w3-eval' },
     { gained: 'A pass rate over repeated runs, instead of one verdict <span class="quiet">(stochastic evaluation)</span>', atOpen: 'one run per case, pass or fail', atClose: 'twenty runs per case, a rate per case and per class', file: 'src/w3_harness.py', proof: 'make w3-wobble' },
     { gained: 'A rule retrieved from a document rather than read from a field <span class="quiet">(retrieval-augmented generation)</span>', atOpen: 'one number in policy.json', atClose: 'seven clauses of prose, retrieved and scored', file: 'src/w3_docs.py', proof: 'make w3-search' },
-    { gained: 'A grader on the retrieval, not just the answer <span class="quiet">(faithfulness, or groundedness)</span>', atOpen: 'nothing checks which clause was used', atClose: 'the clause the answer used is graded against the case', file: 'src/w3_cases.py', proof: 'make w3-grade' },
-    { gained: 'A grader measured against a person <span class="quiet">(human&#8211;model agreement)</span>', atOpen: 'no grader, and no way to tell if one is any good', atClose: '7 of 10 against ten labels a person wrote', file: 'src/w3_agree.py', proof: 'make w3-agree' },
+    { gained: 'A grader on the retrieval, not just the answer <span class="quiet">(context precision)</span>', atOpen: 'nothing checks which clause was used', atClose: 'the clause the answer used is graded against the case', file: 'src/w3_cases.py', proof: 'make w3-grade' },
+    { gained: 'A grader measured against a person <span class="quiet">(inter-rater agreement)</span>', atOpen: 'no grader, and no way to tell if one is any good', atClose: '7 of 10 against ten labels a person wrote', file: 'src/w3_agree.py', proof: 'make w3-agree' },
     { gained: 'A measured context budget <span class="quiet">(context engineering)</span>', atOpen: 'the budget is untested and nobody knows the limit', atClose: 'the cliff located at 100 characters a clause', file: 'src/w3_trim.py', proof: 'make w3-trim' },
   ],
   learner: `
@@ -237,7 +237,7 @@ export const topics = [
     purpose: {
       lede: 'By the end of it you can write the case your current tests cannot fail, name which of the four classes your suite has none of, and report a result as a rate rather than a verdict.',
       learner: `
-  <p><strong>LLM evaluation, usually shortened to evals, means running a fixed set of cases against the agent and scoring what comes back.</strong> The fixed set of cases is called an <strong>evaluation set</strong>. The thing that does the scoring is called a <strong>grader</strong>. Both words are used all day.</p>
+  <p><strong>LLM evaluation, usually shortened to evals, means running a fixed set of cases against the agent and scoring what comes back.</strong> The fixed set of cases is called an <strong>evaluation set</strong>. Vendor tools call it a <strong>golden dataset</strong> (the fixed cases with known right answers that every version is scored against). The thing that does the scoring is called a <strong>grader</strong>. Both words are used all day.</p>
   <h4>Why the ordinary idea of a test breaks here</h4>
   <p>A unit test assumes one thing: the same input gives the same output. Run it twice and you get the same answer twice. So one run is enough, and pass or fail is a complete result.</p>
   <p>An agent removes that assumption. The model samples its next word, so the same ticket can produce a credit on one run and a refusal on the next. Nothing is broken when that happens. It is how the model works.</p>
@@ -377,9 +377,9 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
     <table>
       <thead><tr><th>Kind of grader</th><th>How it decides</th><th>What it costs</th><th>Used today?</th></tr></thead>
       <tbody>
-        <tr><td><strong>Rule-based</strong><br><span class="quiet">deterministic</span></td><td>Exact match, a number comparison, a regular expression, or a schema check</td><td>Almost nothing, and it never varies between runs. It can only check things you can state exactly</td><td>Yes. Every case today</td></tr>
+        <tr><td><strong>Code-based</strong><br><span class="quiet">rule-based, a deterministic assertion</span></td><td>A check written in code that gives the same score every time: exact match, a number comparison, a regular expression, or a schema check</td><td>Almost nothing, and it never varies between runs. It can only check things you can state exactly</td><td>Yes. Every case today</td></tr>
         <tr><td><strong>Statistical text metrics</strong></td><td>Overlap with a reference answer: BLEU, ROUGE, BERTScore, Levenshtein distance</td><td>Cheap, and it needs one correct answer written down. It scores wording, so a correct answer phrased differently scores badly</td><td>No, and topic 3 says why</td></tr>
-        <tr><td><strong>Model-based</strong><br><span class="quiet">LLM-as-a-judge</span></td><td>A second model reads the answer against a written rubric</td><td>A model call per run, plus the judge's own error rate. It can score things no rule can state</td><td>Topic 3, at 01:45</td></tr>
+        <tr><td><strong>Model-based</strong><br><span class="quiet">LLM-as-a-judge</span></td><td>A second model scores the answer against a <strong>rubric</strong> (the written criteria a grader scores against)</td><td>A model call per run, plus the judge's own error rate. It can score things no rule can state</td><td>Topic 3, at 01:45</td></tr>
         <tr><td><strong>Human</strong><br><span class="quiet">human-in-the-loop</span></td><td>A person reads the answer and labels it</td><td>The most expensive and the most trusted. It does not scale, so it is used on samples</td><td>Topic 3, as the labels the grader is measured against</td></tr>
       </tbody>
     </table>
@@ -400,7 +400,7 @@ delivery 2 · process B · ledger: 2 credits, ₹2,400  &lt;- a set that never h
   <h4>Why there is no single score</h4>
   <p>Use the arithmetic, not the principle. Seven cases at 20/20 and one at 10/20 is 150 of 160, which is 94%. The one failing half the time pays ₹2,50,000 when it fails.</p>
   <h4>How a case gets scored: the four kinds of grader</h4>
-  <p><strong>Name the four and say which one today uses. Do not teach them.</strong> Rule-based, statistical text metrics, model-based, human. Today is rule-based throughout; topic 3 is where model-based and human arrive.</p>
+  <p><strong>Name the four and say which one today uses. Do not teach them.</strong> Code-based (a check written in code that gives the same score every time), statistical text metrics, model-based, human. Today is code-based throughout; topic 3 is where model-based and human arrive.</p>
   <p>The table is on their page with the cost of each. If the room wants to argue about BLEU now, say topic 3 at 01:45 and move.</p>
   <h4>Two words you will meet in any eval tool</h4>
   <p>Reference-based means you wrote the right answer down. Reference-free means you score a property instead, because there is no single right answer. Today is reference-based on the money and the clause, deliberately.</p>
@@ -448,7 +448,7 @@ So: what would that test have had to DO that none of your tests did?</span>
       <p>Use that order. A hand-written attack that also sits over the ceiling is adversarial, not difficult, because the response you need is to refuse rather than to escalate.</p>
       <p>Almost every suite in this room holds cases in only the first two classes. <strong>That is not carelessness.</strong> Ordinary and difficult cases can be written from a specification. The other two need you to have been attacked already, or to have been burnt by missing evidence, and last week is when this room was attacked.</p>
       <p>These are the words the evaluation-gates worksheet in the reading already uses, so filling it next month introduces no new vocabulary.</p>
-      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident so that it cannot happen twice (a regression case). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression case for every attack the room finds.</p>
+      <p><strong>Where a case comes from is a separate question.</strong> A case can be written from the specification (synthetic), copied from real traffic (a production sample), or added after an incident. That last kind is a <strong>regression test</strong> (a case kept so that a failure fixed once is caught if it returns). The class says what failure the case catches. The source says how it got into the suite. Week 4 adds one regression test for every attack the room finds.</p>
       <h4>The second design choice: what the case asserts about</h4>
       <p>A class says what situation the case creates. A level says what the case checks once it runs. The industry uses three levels, and today's cases are all at the third.</p>
       <div class="tw">
@@ -495,7 +495,7 @@ So: what would that test have had to DO that none of your tests did?</span>
   </details>
   <h4>How to tell which class a case is in</h4>
   <p>Their page carries four questions, asked in order, first yes wins. <strong>Read the order out, because the order is the content.</strong> An attack that also sits over the ceiling is adversarial, not difficult: refuse, do not escalate.</p>
-  <p>Their page also separates the class from the source: synthetic, production sample, or regression case. One sentence is enough. It gives week 4 a name for the cases it collects.</p>
+  <p>Their page also separates the class from the source: synthetic, production sample, or <strong>regression test</strong> (a case kept so that a failure fixed once is caught if it returns). One sentence is enough. It gives week 4 a name for the cases it collects.</p>
   <p>This is the part that answers "I could not have named the four". Nobody is asked to name them. They are asked to classify a case with four yes-or-no questions, which anybody can do.</p>
   <h4>The second design choice: what the case asserts about</h4>
   <p><strong>Step, trajectory, end state.</strong> Three levels, and every case today sits at end state. Name them, give the one-line example from their table, then land the last sentence: step and trajectory checks both pass while Ravi is paid twice.</p>
@@ -807,6 +807,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
       learner: `
   <p style="font-size:var(--size-4)"><strong>Retrieval-augmented generation means the model answers from text fetched at request time rather than from what it was trained on.</strong></p>
   <p>Three steps, and the middle one is where today's failure lives.</p>
+  <p>Three words name the middle step, and every RAG tool uses them. The search step is the <strong>retriever</strong> (the part that finds the passages). Each passage it can return is a <strong>chunk</strong> (one piece of a document), and here one chunk is one policy clause. It returns the <strong>top-k</strong> chunks (the k highest-scoring pieces), and on this agent k is 2.</p>
   <div class="tw">
     <table>
       <thead><tr><th class="mono">#</th><th>Step</th><th>What can go wrong here</th></tr></thead>
@@ -883,6 +884,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
   <p>Keep the distinction, because it is the one people collapse. <strong>A faithful answer can be faithful to the wrong clause.</strong> That is exactly what happens at 01:45.</p>`,
       script: `
     <p>One sentence, then the three steps.</p>
+    <p>Say the three words their page gives for step 2. The <strong>retriever</strong> is the search step. A <strong>chunk</strong> is one piece of a document, and here it is one clause. <strong>Top-k</strong> is the k highest-scoring chunks returned, and here k is 2.</p>
     <h4>The same three steps, with the measurement points marked</h4>
     <p><strong>This is the five minutes' centre.</strong> Their page has the diagram: three boxes down the left, and on the right what can be measured at each. Walk down the right-hand column only — the boxes are the same three steps you just named.</p>
     <p>The line to land: <strong>every arrow out of the diagram is a number somebody can report, and today you add exactly one of them.</strong></p>
@@ -894,7 +896,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     <p>Reasons one and two are engineering: seven clauses is not a retrieval problem, and an embedding gives you 0.83 against 0.81 with no account of itself. <strong>Reason three is the one to say out loud:</strong> the same lexical query scores identically on eight laptops, with no model call and no key.</p>
     <p class="quiet">If somebody wants the embedding version, that is week 5 on a corpus where it matters.</p>
     <h4>The three things a retrieval system is measured on</h4>
-    <p><strong>Name the triad, map each to a step, and stop.</strong> Faithfulness, answer relevancy, context precision and recall. The room will have met at least one of these in a vendor demo and will not have been told which step it judges.</p>
+    <p><strong>Name the triad, map each to a step, and stop.</strong> Faithfulness (whether the answer says only what the fetched text supports), answer relevancy, context precision and recall. The room will have met at least one of these in a vendor demo and will not have been told which step it judges.</p>
     <p>The sentence to land: <strong>a faithful answer can be faithful to the wrong clause.</strong> It is the setup for 01:45, and a room that has heard it predicts that failure correctly.</p>
     <p class="quiet">If somebody asks about embeddings and recall@k, say week 5 owns retrieval quality and today owns whether a wrong answer is diagnosable.</p>`,
       ref: {
@@ -961,7 +963,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
     </div>
   </details>
   <h4>The word to stop using today</h4>
-  <p><strong>Hallucination.</strong> On the run at 01:06 the model asserted something a retrieved clause actually said. The clause was the wrong one. Nothing was invented.</p>
+  <p><strong>Hallucination.</strong> The word means a confident statement the sources do not support. On the run at 01:06 the model asserted something a retrieved clause actually said. The clause was the wrong one. Nothing was invented, so the word does not fit.</p>
   <p>Calling that a hallucination names no component and no fix, and it sends an engineer to the prompt, which is the one place the fix is not.</p>
   <div class="writein"><span class="q">Take the last incident your team called a hallucination. Which of the two failures was it?</span>
     <div class="rule"></div>
@@ -981,7 +983,7 @@ GOOD-2.2  enrolment establishes eligibility and names no figure</pre>
         id: 't2-r-two', pairs: 'two failures, and the word to stop using',
         html: `
   <h4>The word to stop using today</h4>
-  <p><strong>Hallucination.</strong> On the 01:06 run the model asserted something a retrieved clause actually said. The clause was the wrong one. Nothing was invented, and the learner page says so in the same words.</p>
+  <p><strong>Hallucination.</strong> The word means a confident statement the sources do not support. On the 01:06 run the model asserted something a retrieved clause actually said. The clause was the wrong one. Nothing was invented, and the learner page says so in the same words.</p>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
@@ -1127,7 +1129,7 @@ def margin_is_thin(result):
     <table>
       <thead><tr><th>Metric</th><th>The question it answers</th><th>Typical target</th><th>What a bad score sends you to</th></tr></thead>
       <tbody>
-        <tr><td><strong>Recall@k</strong><br><span class="quiet">context recall</span></td><td>Of all the passages that should have been found, how many were?</td><td>0.90 and above at k=10 before anyone argues about the rest</td><td>Chunks too small, or an embedding model that does not know your domain words</td></tr>
+        <tr><td><strong>Recall@k</strong><br><span class="quiet">retrieval recall, also context recall</span></td><td>Of all the passages that should have been found, how many were?</td><td>0.90 and above at k=10 before anyone argues about the rest</td><td>Chunks too small, or an embedding model that does not know your domain words</td></tr>
         <tr><td><strong>Precision@k</strong><br><span class="quiet">context precision</span></td><td>Of the passages returned, how many were actually relevant?</td><td>0.7 to 0.8. Lower is tolerated because the model can ignore noise</td><td>k set too high, or a similarity cut-off set too loose</td></tr>
         <tr><td><strong>MRR</strong><br><span class="quiet">mean reciprocal rank</span></td><td>How near the top was the first correct passage?</td><td>0.8 and above. 1.0 means it was always first</td><td>The search finds passages about the right topic that do not contain the answer</td></tr>
         <tr><td><strong>NDCG@k</strong></td><td>Were the most relevant passages ranked above the merely related ones?</td><td>0.85 and above where relevance has grades rather than yes or no</td><td>Ranking, which usually means adding a re-ranker</td></tr>
@@ -1252,7 +1254,7 @@ customer what happens next?</span>
         <tr><td><strong>What it is given</strong></td><td>One finished answer and a rubric</td><td>The task, the tools, and the first agent's working</td></tr>
         <tr><td><strong>What it can do</strong></td><td>Emit a score and a reason. Nothing else</td><td>Send the work back, call tools, change the outcome</td></tr>
         <tr><td><strong>If it is wrong</strong></td><td>Your evaluation number is wrong. The customer is unaffected</td><td>The customer is affected. It is now part of the system</td></tr>
-        <tr><td><strong>What it costs</strong></td><td>One model call per run, offline, on a sample</td><td>One model call per request, in the latency budget, forever</td></tr>
+        <tr><td><strong>What it costs</strong></td><td>One model call per run, on a recorded sample</td><td>One model call per request, in the latency budget, forever</td></tr>
       </tbody>
     </table>
   </div>
@@ -1265,7 +1267,7 @@ customer what happens next?</span>
   <p><strong>Open on the honest case for a model grader, not on its faults</strong>, or the room hears a warning instead of a method.</p>
   <h4>"Not in a state" — what that phrase means</h4>
   <p><strong>Do not define "state" abstractly.</strong> Their page walks the refusal example: the ledger has no row, the clause id is true and useless, and the only place the property lives is the sentence. Read those three lines and stop.</p>
-  <p>Then the three options, in this order: a keyword rule, a person, or a model against a rubric. <strong>Say that the keyword rule is the one most rooms have already built and already distrust.</strong></p>
+  <p>Then the three options, in this order: a keyword rule, a person, or a model against a rubric (the written criteria it scores against). <strong>Say that the keyword rule is the one most rooms have already built and already distrust.</strong></p>
   <h4>A judge is not a second agent reviewing the first</h4>
   <p>This is the confusion worth five minutes of the topic's thirty-seven, because half the room has read about multi-agent review and will map this onto it.</p>
   <p>The distinction is on their page as a five-row table. <strong>If you say one row, say the last but one: if a judge is wrong your number is wrong, and if a reviewing agent is wrong the customer is affected.</strong></p>
@@ -1497,6 +1499,7 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
   <p><strong>And that is the point.</strong> The retrieval grader you built at 01:23 is handed the case, so it catches both of them — with no model call, for nothing. <strong>The expensive grader missed what the cheap one already caught.</strong></p>
   <h4>What does 70% agreement actually mean?</h4>
   <p>It means this, and nothing more: <strong>on 7 of the 10 answers, the grader's verdict was the same as yours.</strong> It is not a mark out of ten for the grader, and it is not an accuracy figure, because nobody has established that you were right either. It is a count of how often two readers agreed.</p>
+  <p>The industry name for that count is <strong>inter-rater agreement</strong> (how often two graders give the same score). Here the two graders are you and the model.</p>
   <p>Here is the full picture behind the 70%, which the rate alone hides.</p>
   <div class="term">                       <span class="q">the grader said</span>
                        pass      fail
@@ -1583,6 +1586,7 @@ seed s7 · BILL-3.2 · paid ₹1,200   outcome PASS  retrieval FAIL</pre>
     <p><span class="mono">make w3-agree</span>. <strong>Say the two directions before the number</strong>, because the number means nothing without them.</p>
     <h4>What does 70% agreement actually mean?</h4>
     <p><strong>Ask the room before answering, and expect "not bad".</strong> Then give the literal reading: on 7 of 10 answers the grader said what you said. It is not a mark for the grader and it is not accuracy, because nobody has established that you were right either.</p>
+    <p>Give the name once: this is <strong>inter-rater agreement</strong> (how often two graders give the same score). Kappa is the version corrected for chance.</p>
     <p>Put the two-by-two table up. <strong>The two off-diagonal cells are different costs</strong>: one review, against two releases of money.</p>
     <h4>Why 70% is not as good as it sounds: Cohen's kappa</h4>
     <p><strong>Do the three steps on the board.</strong> They asked for kappa explained, so explain it rather than naming it. You passed 6 of 10, the grader passed 7 of 10, so chance alone gives 54% agreement. Kappa is 0.16 over 0.46, which is <strong>0.35</strong>.</p>
@@ -1708,7 +1712,7 @@ make w3-agree</div>
     </div>
     <div class="build">
       <h3>Build it, and label before you grade.</h3>
-      <p><strong>Label each of the five yourself, pass or fail, before you run any grader.</strong> Then run your grader and count the agreement.</p>
+      <p><strong>Label each of the five yourself, pass or fail, before you run any grader.</strong> Then run your grader and count the inter-rater agreement between you and it.</p>
       <p>The order is not a formality. A person who runs the grader first labels to agree with it, and the number that comes out means nothing.</p>
       <p class="check">Five labels is too few to trust and it is what fits in ten minutes. The method is right and the sample is a classroom sample.</p>
     </div>
@@ -1798,7 +1802,7 @@ print(f"raw {raw:.0%}   kappa {kappa:.2f}")</div>
     <table>
       <thead><tr><th></th><th>The calibration judge</th><th>The production judge</th></tr></thead>
       <tbody>
-        <tr><td><strong>What it runs on</strong></td><td>The hand-labelled gold set. Hundreds of traces</td><td>Live traffic, sampled. Typically 5% to 20% of it</td></tr>
+        <tr><td><strong>What it runs on</strong></td><td>The hand-labelled golden dataset. Hundreds of traces</td><td>Live traffic, sampled. Typically 5% to 20% of it</td></tr>
         <tr><td><strong>Which model</strong></td><td>The strongest you can justify, because this is the one establishing truth</td><td>A small, fine-tuned or distilled model. Llama Guard and similar purpose-built judges live here</td></tr>
         <tr><td><strong>How often</strong></td><td>On a schedule, and on every model or prompt change</td><td>Continuously</td></tr>
         <tr><td><strong>What it costs</strong></td><td>Few calls, expensive each. A fixed cost you can forecast</td><td>Many calls, cheap each. The sampling rate is the cost dial</td></tr>
@@ -1825,7 +1829,7 @@ print(f"raw {raw:.0%}   kappa {kappa:.2f}")</div>
     script: `
   <p>Three minutes. <strong>Land on the in-house row</strong>, because it is the one teams dismiss and the one that is usually right here.</p>
   <h4>How the judge itself is run at volume: two tiers, not one</h4>
-  <p><strong>Name the split and the reason for it in one sentence</strong>: the model good enough to trust is too expensive to run on everything, so the judge becomes two judges. Calibration on the gold set, production on 5% to 20% of traffic.</p>
+  <p><strong>Name the split and the reason for it in one sentence</strong>: the model good enough to trust is too expensive to run on everything, so the judge becomes two judges. Calibration on the golden dataset (the hand-labelled cases every version is scored against), production on 5% to 20% of traffic.</p>
   <p>The sentence that matters: <strong>the cheap judge is only worth reading because the expensive one gave it a number.</strong> Without that, it is an opinion at scale with a dashboard.</p>
   <h4>Where the judge sits: in the request, or beside it</h4>
   <p>Async is the default. <strong>Read only the bottom row of that table out loud:</strong> the moment the judge can stop an answer it is a control, not an evaluator, and week 2's requirements all apply.</p>
@@ -1904,6 +1908,7 @@ topics.push({
     lede: 'By the end of it you can name who owns the pass bar on one requirement, say what failing it blocks, and turn an evaluation run into a monthly figure at production volume.',
     learner: `
   <p><strong>A release gate is one requirement, the evidence for it, a threshold with a reason, and a named person who accepts the risk when it fails.</strong> Four parts, and most rows in most organisations have two of them.</p>
+  <p>Some tools call the same thing a <strong>quality gate</strong>. It is the same idea under a second name.</p>
   <h4>Which rate? The ones you have been producing all morning</h4>
   <p>Three hours of this session have been about producing numbers. By now you hold several, and every one of them is a candidate for a gate row.</p>
   <div class="tw">
@@ -1956,7 +1961,7 @@ topics.push({
     <summary>Show the answer</summary>
     <div class="reveal">
       <p>A random sample tells you about ordinary cases, because ordinary cases are most of the traffic. <strong>The adversarial ones are rare by definition</strong>, which is exactly why they are written by hand rather than sampled.</p>
-      <p>A sample and a written set do different jobs. The good answer stratifies: sample the ordinary traffic, keep every hand-written case, and run the hand-written ones more times, because they sit on the narrow margins.</p>
+      <p>A sample and a written set do different jobs. The good answer is <strong>stratified sampling</strong> (choosing which live cases to grade so every important kind is represented). Sample the ordinary traffic, keep every hand-written case, and run the hand-written ones more times, because they sit on the narrow margins.</p>
       <p><strong>And every sampled case needs a label.</strong> That is the 02:02 lab at the scale of a thousand cases a month, and it costs minutes of somebody who knows the policy.</p>
     </div>
   </details>`,
@@ -1970,7 +1975,7 @@ topics.push({
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
       <pre>40 cases × 20 runs = 800 runs × 3 calls = 2,400 × ₹0.38 ≈ ₹912 a pass</pre>
-      <p><strong>The good answer stratifies:</strong> sample the ordinary traffic, keep every hand-written case, and run the hand-written ones more times because they sit on narrow margins.</p>
+      <p><strong>The good answer is stratified sampling</strong> (choosing which live cases to grade so every important kind is represented). Sample the ordinary traffic, keep every hand-written case, and run the hand-written ones more times because they sit on narrow margins.</p>
     </div>
   </details>
   <details>
@@ -1999,7 +2004,7 @@ topics.push({
       <tbody>
         <tr><td class="mono">1</td><td><strong>The requirement</strong></td><td>The thing in plain words that must be true</td><td>"The agent must not obey an instruction written in an account note"</td></tr>
         <tr><td class="mono">2</td><td><strong>The evidence</strong></td><td>The measurement that tells you whether it is true, and where it comes from</td><td>The adversarial case in the suite, 20 runs, currently 15 of 20</td></tr>
-        <tr><td class="mono">3</td><td><strong>The threshold, and its reason</strong></td><td>The value that divides ship from do-not-ship, <em>and why that value</em></td><td>20 of 20, because one escape pays ₹2,50,000 and there is no partial credit on a payment</td></tr>
+        <tr><td class="mono">3</td><td><strong>The threshold, and its reason</strong></td><td>The <strong>acceptance threshold</strong> (the score a version must reach to ship), <em>and why that value</em></td><td>20 of 20, because one escape pays ₹2,50,000 and there is no partial credit on a payment</td></tr>
         <tr><td class="mono">4</td><td><strong>The person who accepts the risk</strong></td><td>A named human who signs when the gate fails and the release goes anyway</td><td>The payments lead, by name, not "the platform team"</td></tr>
       </tbody>
     </table>
@@ -2015,7 +2020,7 @@ topics.push({
   <p><strong>A row with the first two and not the last two is a dashboard.</strong> It reports. It cannot stop anything, because there is no agreed value to fail against and nobody whose job it is to decide.</p>
   <p>That is the single most common state of evaluation in production: a team with good numbers, no bar, and a release process in which the numbers are looked at and then the release happens anyway.</p>
   <h4>Where the gate actually runs: before release, and after it</h4>
-  <p>The same evaluation set gets run in two places, and the industry has a name for each.</p>
+  <p>The same evaluation set gets run in two places, and the industry has a name for each. Before release it is <strong>offline evaluation</strong> (scoring on fixed cases). After release it is <strong>online evaluation</strong> (scoring a sample of live traffic).</p>
   <div class="tw">
     <table>
       <thead><tr><th></th><th>Offline evals</th><th>Online evals</th></tr></thead>
@@ -2036,7 +2041,7 @@ topics.push({
       <thead><tr><th>Tier</th><th>Runs on</th><th>Budget</th><th>What it checks</th><th>The build rule</th></tr></thead>
       <tbody>
         <tr><td><strong>1</strong><br><span class="quiet">every push</span></td><td>Each pull request</td><td>Under a minute</td><td>Only what is free and certain: does the output match the schema, do the policy patterns hold, does a known injection string still get refused</td><td class="bad">Any failure stops the build. No discussion</td></tr>
-        <tr><td><strong>2</strong><br><span class="quiet">before merge</span></td><td>Merge or staging</td><td>Three to five minutes</td><td>A small golden set, 50 to 100 cases, plus a fast classifier. And the comparison against the current release</td><td>Stops the build on a regression past the agreed delta</td></tr>
+        <tr><td><strong>2</strong><br><span class="quiet">before merge</span></td><td>Merge or staging</td><td>Three to five minutes</td><td>A small golden dataset, 50 to 100 cases, plus a fast classifier. And the comparison against the current release</td><td>Stops the build on a regression past the agreed delta</td></tr>
         <tr><td><strong>3</strong><br><span class="quiet">nightly</span></td><td>Pre-release</td><td>Fifteen to thirty minutes</td><td>The full set, hundreds of cases. The model graders. The retrieval checks. Multi-step runs end to end</td><td>Produces a report somebody signs, rather than a pass or fail</td></tr>
       </tbody>
     </table>
@@ -2049,15 +2054,15 @@ topics.push({
     <li><strong>Mirror the traffic first — a shadow deployment.</strong> Send real requests to the new version alongside the old one, serve the old one's answers, and score both. Nobody is affected, and you learn whether your offline numbers survive real inputs.</li>
     <li><strong>Then release to a slice — a canary release.</strong> One per cent, then five, then twenty-five, then everyone, with the online score watched at each step.</li>
     <li><strong>Tie the score to an automatic reversal.</strong> If the measured quality drops past a set point, the release rolls back without waiting for somebody to notice. A rollback nobody has to approve at 2am is the only kind that happens at 2am.</li>
-    <li><strong>Then harvest what went wrong.</strong> Every refusal, every complaint, every low-confidence answer gets its personal data stripped and becomes a case in the golden set. <strong>This is the loop that closes.</strong> It is also where the class of case you never thought of comes from.</li>
+    <li><strong>Then harvest what went wrong.</strong> Every refusal, every complaint, every low-confidence answer gets its personal data stripped and becomes a case in the golden dataset. <strong>This is the loop that closes.</strong> It is also where the class of case you never thought of comes from.</li>
   </ul>
   <p><strong>That last item is the one to take away.</strong> Everything before it protects this release. The harvest is what makes the next suite better than this one, and it is the only mechanism in the day that improves your cases without somebody sitting down to invent them.</p>
   <h4>Where the cases come from, and how they go stale</h4>
   <p>A gate is only as good as the evaluation set behind it. Sets are built four ways and all four are used together.</p>
   <ul>
-    <li><strong>A golden set.</strong> Twenty to a hundred cases, written and checked by hand, covering what must never break. Small on purpose, because every case is reviewed by a person.</li>
+    <li><strong>A golden dataset.</strong> Twenty to a hundred cases, written and checked by hand, covering what must never break. Small on purpose, because every case is reviewed by a person.</li>
     <li><strong>Mining production logs.</strong> Real requests that failed, or that nobody anticipated, promoted into cases. This is where your missing classes actually come from.</li>
-    <li><strong>Synthetic generation.</strong> A model writes question-and-context pairs in bulk. Cheap, good for coverage, and never trusted as the golden set.</li>
+    <li><strong>Synthetic generation.</strong> A model writes question-and-context pairs in bulk. Cheap, good for coverage, and never trusted as the golden dataset.</li>
     <li><strong>Adversarial and safety cases.</strong> Written to break the thing: prompt injection, data exfiltration, jailbreaks. Week 2 produced yours and week 4 collects them.</li>
   </ul>
   <p><strong>Two ways the set rots, and both are quiet.</strong></p>
@@ -2068,15 +2073,16 @@ topics.push({
   <p>The defence for both is the same and it is unglamorous: <strong>the evaluation set is version-controlled beside the code</strong>, and a change in behaviour retires the cases it invalidates in the same commit.</p>`,
       script: `
     <h4>Start with the plain version</h4>
-    <p><strong>Lead with the plainest sentence and let it sit: a release gate is a written rule that can stop a release.</strong> Then the word that does the work — a gate is either open or shut, so a number that cannot shut it is a report, whatever the dashboard calls it.</p>
+    <p><strong>Lead with the plainest sentence and let it sit: a release gate is a written rule that can stop a release.</strong> If somebody says <em>quality gate</em>, it is the same thing under a second name. Then the word that does the work — a gate is either open or shut, so a number that cannot shut it is a report, whatever the dashboard calls it.</p>
     <h4>The four parts, on one real row</h4>
     <p>Their page fills the four parts in against <strong>the adversarial case from 00:55, at 15 of 20</strong>. <strong>Read only the right-hand column.</strong> The middle column is a definition; the right-hand column is a decision.</p>
     <p>Land the threshold's reason, because it is the one that teaches: 20 of 20, because one escape pays ₹2,50,000 and <strong>there is no partial credit on a payment.</strong> That is what "a threshold with a reason" means, and it is why the reason is not optional.</p>
+    <p>Name the term on row 3: the <strong>acceptance threshold</strong> (the score a version must reach to ship). The room will meet it in every CI tool.</p>
     <h4>Why most rows are not gates</h4>
     <p>Two of four are nearly always present, two nearly always missing. <strong>Say "a dashboard reports, a gate stops something"</strong> and then the sentence that lands it: a team with good numbers, no bar, and a release process where the numbers are looked at and the release happens anyway.</p>
     <p class="qbadge">Ask the room whether that describes them. Most of it will. Do not push for answers out loud; the recognition is the point.</p>
     <h4>Where the gate actually runs: before release, and after it</h4>
-    <p>Offline and online. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
+    <p><strong>Offline evaluation</strong> scores fixed cases before release. <strong>Online evaluation</strong> scores a sample of live traffic after it. <strong>Give the one-line definition of each and then the sentence that matters</strong>: offline stops a known failure shipping, online is the only thing that finds a class you never had.</p>
     <p>Then the line that ties the day together: <strong>the 00:15 double payment would have been caught by neither.</strong> Offline had no two-process case. Online would have shown ₹2,400 paid and no alert, because nothing was watching for it.</p>
     <h4>Offline is not one gate. It is three, and they run at different speeds</h4>
     <p><strong>Point at the budget column and nothing else.</strong> Under a minute, three to five minutes, fifteen to thirty. The tiers are defined by what an engineer will wait for, and the checks were fitted to the time afterwards.</p>
@@ -2103,7 +2109,7 @@ topics.push({
     </div>
   </details>
   <h4>Where the cases come from, and how they go stale</h4>
-  <p>Golden set, production logs, synthetic, adversarial. Rots: contamination and drift. Defence: version-control the eval set beside the code.</p>`,
+  <p>Golden dataset, production logs, synthetic, adversarial. Rots: contamination and drift. Defence: version-control the eval set beside the code.</p>`,
       },
     },
     {
@@ -2705,7 +2711,7 @@ before you run it.</span>
     <h4>The five levers, and how you would optimise each</h4>
     <p>A table, pointed at rather than walked. <strong>Spend what time you have on lever 5</strong>: give policy and tool definitions their own budget so they can never be evicted for history. It has the sharpest cost and nothing measures it, which makes it the design rule to take home.</p>
     <h4>The three payload measures, and how each one is actually computed</h4>
-    <p><strong>This is the five minutes' centre and it was added because the metric names alone taught nothing.</strong> Precision@3 is 1/3 on ticket 8002. Recall@3 is 1/1. Both are arithmetic over a list a person labelled once — no model, no judgement at run time.</p>
+    <p><strong>This is the five minutes' centre and it was added because the metric names alone taught nothing.</strong> Precision@2 is 1/2 on ticket 8002. Recall@2 is 1/1. Both are arithmetic over a list a person labelled once — no model, no judgement at run time.</p>
     <p>Then the part worth the time: <strong>trim the clauses and run it again. Both numbers are unchanged and the answer is now wrong.</strong></p>
     <p class="qbadge">That is the sentence to land: precision and recall measure whether the right material was <em>fetched</em>, not whether it was <em>used</em>. The gap is exactly what the 01:23 grader covers, so the two are not alternatives.</p>
     <p>Context relevancy is the third, it is the only one needing a model, and it therefore carries the 01:55 error rate. It is for live traffic where nothing is labelled.</p>
@@ -2808,9 +2814,10 @@ before you run it.</span>
   <p><strong>The design answer is the same rule, applied earlier: give memory its own budget and a rule for what it keeps.</strong> Not "the last N turns", which keeps the most recent and drops the decision made four turns ago, but a deliberate choice about what is worth remembering. Measuring those choices is <strong>week 5's</strong>, and the three techniques at 03:54 are how it is done.</p>
   <h4>How much is not the only question. Where also matters.</h4>
   <p><strong>Be careful here, because this is a different mechanism from the one you just watched.</strong> Today's cliff is a retrieval artefact: cutting the clause text pulled the lexical scores together until two clauses became indistinguishable. That is about the search, not about the model.</p>
+  <p>It is also not <strong>context rot</strong> (answers getting worse as the context grows). Context rot is about size going up. Today's context went down, and the answers broke because the search lost its signal.</p>
   <p>There is a second effect, it belongs to the model rather than the retriever, and <strong>this agent's lab does not demonstrate it.</strong> You need to know it exists because you will meet it the first time your context gets long.</p>
   <ul>
-    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. <strong>The property has a name: positional sensitivity</strong> (the same fact scores differently depending on where in the window it sits). The name for the consequence is <strong>lost in the middle</strong>, and the preference for the two ends is <strong>primacy and recency</strong>.</li>
+    <li><strong>Attention is not even across the window.</strong> Models attend most reliably to the beginning and the end of a long context, and least reliably to the middle. <strong>The property has a name: positional sensitivity</strong> (the same fact scores differently depending on where in the window it sits). The name for the consequence is the <strong>lost-in-the-middle effect</strong>, and the preference for the two ends is <strong>primacy and recency</strong>. Where context rot is about how much text there is, this effect is about where a fact sits.</li>
     <li>So the same fact, in the same payload, at the same token count, can be used or ignored depending on where it sits.</li>
   </ul>
   <p><strong>The test for it has a name: needle in a haystack.</strong> You hide one fact — the needle — inside a long filler context, then ask a question only that fact answers. Vary two things independently:</p>
@@ -2839,7 +2846,7 @@ before you run it.</span>
   <h4>How to run one, in five steps</h4>
   <ol>
     <li><strong>Write one fact nothing else in your corpus implies.</strong> A specific figure or id works well: <em>"the approval ceiling for account 6100 is ₹4,000"</em>. If the model could guess it, the test measures nothing.</li>
-    <li><strong>Write a question only that fact answers</strong>, and an exact expected answer so a rule can grade it. This is a rule-based grader from 00:21, not a model one.</li>
+    <li><strong>Write a question only that fact answers</strong>, and an exact expected answer so a rule can grade it. This is a code-based grader from 00:21, not a model one.</li>
     <li><strong>Build filler of several total lengths.</strong> Use text from your own domain, not random words — unrelated filler is easier for a model to ignore than plausible filler, and it makes you look better than you are.</li>
     <li><strong>Insert the fact at several positions in each length</strong>, and run each cell many times. One run per cell tells you nothing, for the reason established at 00:55.</li>
     <li><strong>Report the grid, and set your gate on the worst cell.</strong> Then do the harder version: two facts that must be combined, placed apart.</li>
@@ -2943,7 +2950,8 @@ before you run it.</span>
     <p>The design answer is the same rule applied earlier: memory gets its own budget and a rule for what it keeps. Measuring those choices is week 5's, and 03:54 has the techniques.</p>
     <h4>How much is not the only question. Where also matters.</h4>
     <p><strong>Flag the change of mechanism explicitly or you will create a misconception.</strong> Today's cliff is a retrieval artefact — lexical scores converging. The positional effect belongs to the model, and <strong>this lab does not demonstrate it.</strong> Say both sentences.</p>
-    <p>Then the effect: attention is strongest at the beginning and end of a long context and weakest in the middle, so the same fact at the same token count can be used or ignored depending on where it sits. The name is <strong>lost in the middle</strong>.</p>
+    <p>Somebody will call today's cliff <strong>context rot</strong> (answers getting worse as the context grows). Correct it once: context rot is about size going up, and today's context went down.</p>
+    <p>Then the effect: attention is strongest at the beginning and end of a long context and weakest in the middle, so the same fact at the same token count can be used or ignored depending on where it sits. The name is the <strong>lost-in-the-middle effect</strong>.</p>
     <p>Then the test, which is the actionable part: <strong>needle in a haystack</strong>, varying depth and position independently, and <strong>reading the grid rather than the average.</strong></p>
     <h4>What the grid looks like, and how to read it</h4>
     <p><strong>The grid is now published on their page</strong>, which it was not before 6 October — this beat referred to "the grid" and never showed one. <strong>Say that the figures are illustrative of the shape and are not measurements</strong>, because this agent's context is far too short to need the test.</p>
@@ -3471,7 +3479,7 @@ export const closing = {
   <p><em>Push on this.</em> What is the smallest edit to that document that changes an answer and passes code review? A word.</p>
   <hr class="hair">
   <h4>2 · Forty thousand disputes a month. Which cases do you run, and how often?</h4>
-  <p><em>A good answer</em> stratifies, keeps every hand-written case, and runs the ones on narrow margins more often. It gives a figure for what one full pass costs.</p>
+  <p><em>A good answer</em> uses stratified sampling, keeps every hand-written case, and runs the ones on narrow margins more often. It gives a figure for what one full pass costs.</p>
   <p><em>The wrong answer.</em> "All of them, nightly." Ask what that costs at ₹912 a pass and what it buys over running the narrow ones twenty times.</p>
   <p><em>Push on this.</em> Which case would you run on every commit? Most rooms name the adversarial one, and that is right.</p>
   <hr class="hair">
@@ -3666,7 +3674,7 @@ export const prep = `
     <li><strong>Assign the five teardown questions, by name, before the day.</strong> <em>Done when</em> the list is in your notes and not in your head. <em>Without it</em> the teardown opens with silence and you lose four of its twenty-eight minutes.</li>
     <li><strong>Assign the lab pairs, by name, before the day.</strong> <em>Done when</em> the list exists. Pairs that choose each other pick somebody whose approach they already understand.</li>
     <li><strong>Pick the screen for 00:54 while circulating during the 00:36 lab.</strong> <em>Done when</em> you have a name, and that person’s new case is genuinely in a class their suite lacked.</li>
-    <li><strong>Decide what you say if nobody brought last week’s regression cases.</strong> <em>Done when</em> you have the fallback ready: the room uses C7 and writes a second one against it. <em>Without it</em> the adversarial column is empty all session.</li>
+    <li><strong>Decide what you say if nobody brought last week’s regression tests.</strong> <em>Done when</em> you have the fallback ready: the room uses C7 and writes a second one against it. <em>Without it</em> the adversarial column is empty all session.</li>
   </ul>
   <h3>Prepared material</h3>
   <ul>

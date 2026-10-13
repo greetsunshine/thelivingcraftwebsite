@@ -420,7 +420,7 @@ system you are about to build? Yes or no, and by which route.</span>
   
   <p><strong>Two terms in the title.</strong> A <strong>guardrail</strong> is a control on what the agent is allowed to do, and at <span class="off" data-off="00:37">00:37</span> you make that definition exact. <strong>Policy enforcement</strong> means checking a written rule at the moment an action is attempted.</p>
   <h4>What a limit is, and why the agent needs one</h4>
-  <p><strong>A limit is a rule with a number in it</strong>: the most an action may do without anybody else agreeing. For the dispute agent the first limit is <em>no single credit above ₹1,200</em>, which is one month of the ₹1,200 Pro plan.</p>
+  <p><strong>A limit is a rule with a number in it</strong>: the most an action may do without anybody else agreeing. For the dispute agent the first limit is <em>no single credit above ₹1,200</em>, which is one month of the ₹1,200 Pro plan. The field calls a ceiling like this a <strong>hard limit</strong>: a number the code will not exceed, whatever the model asks.</p>
   <p>An agent needs limits more than ordinary software does, because <strong>the model chooses the arguments</strong>. In week 1 nobody typed "pay ₹5,000 to account 9999". The model picked those values while it ran. A limit is the part that still says no when the model picks badly.</p>
   <p>Week 1 ended with one question about your own system: <strong>where is the limit written down, and who agreed to it?</strong> Most people came back with an honest answer. The limit is a number inside a function, and nobody agreed to it. Somebody typed it during a sprint, and it has been policy ever since.</p>
   <p><strong>Writing the number in a file is the easy half</strong>, and most of this room already does it. The half that costs money is <em>which callers your control covers</em>. The ₹5,000 at <span class="off" data-off="01:12">01:12</span> is what that half costs.</p>
@@ -433,7 +433,7 @@ system you are about to build? Yes or no, and by which route.</span>
   <h4>Why a policy, before anything else</h4>
   <p>A <strong>policy</strong> is a rule written down with a number in it and a named person who owns that number. Without one, the rule lives in somebody's head or inside a function nobody reads. Then a machine cannot enforce it, a colleague cannot check it, and nobody can change it safely.</p>
   <h4>What is on the screen, and what you do</h4>
-  <p>In week 1 your assignment was a <strong>decision record</strong>: the boundary you drew for the agent, and the alternative you rejected. Two of those records, chosen before the session and agreed with their authors, now go on the shared screen. <strong>You do not need to prepare anything new.</strong> Have your own record open.</p>
+  <p>In week 1 your assignment was an <strong>architecture decision record</strong> (ADR): a short written record of one decision, with its context, options, choice and consequences. Yours recorded the boundary you drew for the agent, and the alternative you rejected. Two of those records, chosen before the session and agreed with their authors, now go on the shared screen. <strong>You do not need to prepare anything new.</strong> Have your own record open.</p>
   <p><strong>Step 1, alone, 60 seconds, in writing.</strong> Answer this about your own record:</p>
   <div class="term"><span class="q">Which sentence in my own record could a machine
 enforce tonight, exactly as written?</span>
@@ -870,6 +870,7 @@ control could run. Which one covers the most callers?</span>
 }</pre>
       <p><strong>The numbers.</strong> <span class="mono">1200</span> is the ceiling in rupees: one month of Ravi's ₹1,200 Pro plan, because a double charge is one month. <span class="mono">null</span> means the tool has no ceiling, because it does not move money. <span class="mono">"reversible": false</span> means the action cannot be undone. <span class="mono">owner</span> is the role that may change the number.</p>
       <p class="check">The file is the policy. A person can now read the ceiling without opening any Python.</p>
+      <p>The field calls this <strong>policy as code</strong>: a rule written as code or config that is versioned and tested, not as a sentence in a prompt.</p>
     </div>
     <div class="build">
       <h3>Build step 2: check the ceiling inside issue_credit. Six minutes.</h3>
@@ -947,7 +948,7 @@ paid out ₹5,000 · 1 credit
       <p><strong>Now look at your counter.</strong> It did not move. Not because the check passed, but because the check was never called. A control that is not on the path produces no signal at all, and silence from a control looks exactly like a quiet week. That is what <span class="off" data-off="00:31">00:31</span> was about, and this is the first time it costs you money.</p>
       <p>Your check protects <span class="mono">issue_credit</span>. It does not protect the ledger, and the ledger is where the money is. Every new tool is a new chance for somebody to forget.</p>
       <p><strong>If you predicted the resource of record at <span class="off" data-off="00:42">00:42</span>, you are right and you are ahead of the lab.</strong> A dispatch check only covers callers that go through the agent. Move that tool into another team's service and the dispatch never sees it.</p>
-      <p class="named">The usual name for the fix: a policy enforcement point.</p>
+      <p class="named">The usual name for the fix: a policy enforcement point (PEP). It is the one place in the code where a rule is checked, so every caller passes through it.</p>
     </div>
   </details>
   <div class="writein">
@@ -960,7 +961,7 @@ paid out ₹5,000 · 1 credit
   <span class="step-label">Hands-on lab &#183; <span class="off" data-off="01:20">01:20</span> &#183; alone, 5 minutes</span>
   <h2>Move it to the dispatch</h2>
   
-  <p>Move the check out of <span class="mono">issue_credit</span> and into <span class="mono">src/agent.py</span>, just before the line every tool call passes through: <span class="mono">res = fn(**args)</span>. Then every tool is checked, including tools nobody has written yet.</p>
+  <p>Move the check out of <span class="mono">issue_credit</span> and into <span class="mono">src/agent.py</span>, just before the line every tool call passes through: <span class="mono">res = fn(**args)</span>. Then every tool is checked, including tools nobody has written yet. That line becomes the agent's policy enforcement point.</p>
   <pre># src/agent.py
 from .tools import POLICY, ALLOWED, REFUSED
 
@@ -1041,7 +1042,7 @@ ALTER TABLE credits ADD CONSTRAINT credit_account_exists
   FOREIGN KEY (account_id) REFERENCES accounts (account_id);
 ALTER TABLE credits ADD CONSTRAINT credit_positive CHECK (amount &gt; 0);</pre>
   <p><strong>Now the cost, because it is real.</strong> The ledger belongs to another team. The strongest placement available to you is the one you cannot ship on your own. That is a constraint on your week, not a reason to stop at the dispatch and call it finished.</p>
-  <p>And keep both. Defence in depth is the same rule in two places, and it is correct. What it needs is one sentence saying which copy is authoritative, because two copies that drift are worse than one.</p>
+  <p>And keep both. Keeping both is <strong>defence in depth</strong>: several independent controls, so one failing does not let the harm through. What it needs is one sentence saying which copy is authoritative, because two copies that drift are worse than one.</p>
 </section>
 <section class="card">
   <span class="step-label">At enterprise scale &#183; read after the session</span>
@@ -1188,7 +1189,7 @@ guard_refused_total{tool="issue_credit",rule="ceiling"} 1</span></div>
       <p><strong>The ceiling was chosen by looking at what a normal case costs.</strong> One month, because a double charge is one month. Nobody asked what a <em>legitimate</em> case can cost at the top end. Meera was charged wrongly for seven months, so she is owed seven times the ceiling. She is still one honest customer owed every rupee, and the rule cannot tell her apart from a fraudster.</p>
       <p>Over the limit has to mean <em>ask</em>, not <em>no</em>. <strong>A limit with only one outcome is a wall. A limit with two outcomes is a gate.</strong></p>
       <p>In week 1 you watched a run pay ₹0 to a customer who was owed money, because the model decided wrongly on its own. This time the model chose the right amount, and the rule you wrote at <span class="off" data-off="00:54">00:54</span> stopped it. <strong>That is worse, because the mistake is now in your code.</strong> It repeats on every case like Meera's, and nothing reports it.</p>
-      <p class="named">The name for this is older than any of it: maker-checker. The party that proposes cannot be the party that approves.</p>
+      <p class="named">The industry name is an approval gate: one party proposes, and a different one approves. Banks have run it for decades as maker-checker, also called the four-eyes principle. The party that proposes cannot be the party that approves.</p>
     </div>
   </details>
   <h4>Three phrases, and which one this is</h4>
@@ -1457,6 +1458,7 @@ ______________________________________________</div>
     <li><strong>It refused.</strong> A real ₹44,000 was denied by a timeout, not by a person.</li>
     <li><strong>It paid.</strong> The gate approved what nobody looked at, which means the gate is decoration.</li>
   </ul>
+  <p>The field has names for two of them. A gate that refuses when its check cannot answer is said to <strong>fail closed</strong>. A gate that pays anyway is said to <strong>fail open</strong>.</p>
   <p>All three are a policy. <strong>Nobody in this room chose a wrong answer.</strong> Every one of the three is somebody's production behaviour tonight. The difference between them is not correctness. It is whether the person who wrote the code ever asked the question.</p>
   <p>"It waits" is still not an answer on its own. <strong>Waiting with no upper bound is not a rule, it is the absence of one.</strong> Ask what yours does at hour six.</p>
   <h4>2:14am is one of six paths</h4>
@@ -1663,7 +1665,7 @@ long it takes.</span></div>
   <h4>The concept</h4>
   <p><strong>Idempotency</strong> means running a request twice does the same thing as running it once. It is the fourth of the four facts from <span class="off" data-off="00:48">00:48</span>, <em>what has already happened</em>, and it is the only one that needs memory that outlives the program.</p>
   <h4>Components and design</h4>
-  <p>Two parts, and each one costs something. <strong>A key</strong>: somebody has to choose what makes two requests the same, and a wrong choice either pays twice or refuses an honest second refund. <strong>A store</strong>: the key has to live somewhere, and where it lives decides which callers it protects and whether two of them can race each other. Hold both questions. The lab answers the first at <span class="off" data-off="02:34">02:34</span> and the second at <span class="off" data-off="03:03">03:03</span>.</p>
+  <p>Two parts, and each one costs something. <strong>An idempotency key</strong>, the value the server uses to recognise a repeat: somebody has to choose what makes two requests the same, and a wrong choice either pays twice or refuses an honest second refund. <strong>A store</strong>: the key has to live somewhere, and where it lives decides which callers it protects and whether two of them can race each other. Hold both questions. The lab answers the first at <span class="off" data-off="02:34">02:34</span> and the second at <span class="off" data-off="03:03">03:03</span>.</p>
   <h4>What makes two requests the same</h4>
   <p><strong>Decide first, two minutes, in writing.</strong> The ticket id, the account, the amount, or all three?</p>
   <p>This is not a technical question dressed up as one. Your answer decides whether a customer with two genuine disputes gets paid twice or once, and you cannot get it back from the code afterwards.</p>
@@ -1749,6 +1751,7 @@ else:
   <h4>Why a read then a write loses</h4>
   <p>That distinction is the whole segment, and it is worth being slow about.</p>
   <p>A read to check, followed by a write, has a window between the two. Two processes both read "not paid", both decide to pay, and both write. Nothing in your code is wrong when you read it line by line. The two lines are simply not one thing.</p>
+  <p>The field calls this a <strong>race condition</strong>: two runs read the same state, both decide, and both act. This shape of it has its own name, <strong>TOCTOU</strong>, short for time of check to time of use.</p>
   <p><strong>An insert against a unique key has no window</strong>, because the database serialises the two for you. You are not writing a better check. You are moving the check to something that cannot be raced.</p>
   <p>Now run the second terminal again. It refuses.</p>
   <p>This is <span class="off" data-off="00:42">00:42</span> for the third time today. You moved the control toward the thing being protected, and this time the thing being protected is a file rather than a list.</p>
@@ -1894,9 +1897,9 @@ def handler(event, context):
   <p class="lede">By the end of it you can place a check in the right tier and in-band or out-of-band, attack another pair's guard, and name the control point that would have stopped you.</p>
   
   <p><strong>Two parts.</strong> First, at <span class="off" data-off="03:18">03:18</span>, the different kinds of checker and what each costs. Then, at <span class="off" data-off="03:31">03:31</span>, an attack on the guardrails you built this morning.</p>
-  <p><strong>The kinds of checker, in three tiers.</strong> Every check you wrote today is plain code comparing a value with a number: in <span class="mono">src/agent.py</span>, <span class="mono">amount &gt; 1200</span>. That is <strong>tier 1, deterministic rules</strong>: fast and predictable. <strong>Tier 2</strong> is a small trained classifier, used for fuzzy questions such as "does this text look like an attack?". <strong>Tier 3</strong> is a model asked to judge, such as Llama Guard or a general model with a judging prompt. Each tier is slower and less predictable than the one before, and can handle harder questions.</p>
+  <p><strong>The kinds of checker, in three tiers.</strong> Every check you wrote today is plain code comparing a value with a number: in <span class="mono">src/agent.py</span>, <span class="mono">amount &gt; 1200</span>. That is <strong>tier 1, deterministic rules</strong>: fast and predictable. <strong>Tier 2</strong> is a small trained classifier, used for fuzzy questions such as "does this text look like an attack?". <strong>Tier 3</strong> is a model asked to judge, such as Llama Guard or a general model with a judging prompt. The second is called <strong>LLM-as-a-judge</strong>: a model that reads another model's output and scores or approves it. Each tier is slower and less predictable than the one before, and can handle harder questions.</p>
   <p><strong>In-band or out-of-band.</strong> An in-band check runs before the action, and the action waits for it. An out-of-band check runs beside the action, and nobody waits, so you need a way to undo the action if the check fails. You will decide which of your checks can be which.</p>
-  <p><strong>Then the round.</strong> <strong>Red-teaming</strong> means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
+  <p><strong>Then the round.</strong> <strong>Red-teaming</strong>, also called adversarial testing, means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
   <p><strong>What this topic is not.</strong> It is not an argument that models are unreliable. It is not a defence against text an attacker writes into a ticket, which is week 4. And it is not a measurement of whether a model checker is any good, which is week 3.</p>
 </section>
 <section class="card" id="s-0318">
@@ -1926,6 +1929,7 @@ The judge allows it.</span></div>
     <div class="reveal">
       <p><strong>The judge read the same field the agent read.</strong> It is not a second opinion. It is the same opinion with a different prompt.</p>
       <p style="font-size:var(--size-4)"><strong>Two models reading one attacker-written field are one control, not two.</strong></p>
+      <p>Defence in depth from <span class="off" data-off="01:30">01:30</span> only works when the layers are independent. These two layers share their input, so one hostile sentence gets past both.</p>
       <p>Now run ticket #8812 again. Same text, same judge. You may get a different verdict. <strong>If the same ticket can get a different answer each time, you cannot say in advance what the check will do.</strong> A runbook, the written instructions for the engineer on call, needs a check that behaves the same way every time. A check that says yes on one run and no on the next is a probability, not a guardrail you can operate.</p>
       <p>The control is a deterministic ceiling underneath the judge. A model may widen what gets through a hard limit. It may never be the limit.</p>
     </div>
@@ -1971,7 +1975,7 @@ def check(credit, ticket_text):
   <p><strong>Out-of-band, or asynchronous:</strong> the reply streams to the person while the checks run beside it. Nobody waits. When a check fails mid-stream, you need a fast way to take the reply back: close the stream, or run a compensating action that undoes what was done.</p>
   <p>So the choice follows the undo question from <span class="off" data-off="00:48">00:48</span>. <strong>A payment cannot be taken back, so its checks are in-band, whatever the tax.</strong> A chat reply can be stopped mid-stream, so a slow judge on it can run out-of-band.</p>
   <h4>Latency budgeting</h4>
-  <p>Give each endpoint a written budget for guardrail time. For example: <em>no more than 150 ms of checks on an interactive reply</em>. A tier 3 judge alone does not fit inside that, so it goes out-of-band or onto a sample. The budget turns "is this check worth it?" into arithmetic somebody can review.</p>
+  <p>Give each endpoint a written <strong>latency budget</strong>: how much time its controls may add to each request. For example: <em>no more than 150 ms of checks on an interactive reply</em>. A tier 3 judge alone does not fit inside that, so it goes out-of-band or onto a sample. The budget turns "is this check worth it?" into arithmetic somebody can review.</p>
   <h4>Engineering trade-offs and operations</h4>
   <p>Running guardrails in production is a set of trade-offs. Four of them, with where today covers each:</p>
   <ul>

@@ -36,6 +36,12 @@ Rows 70 to 75 of the "Notes Review" sheet, all topic 2 (indirect injection), ans
   it ignores years and strips invisible characters first.
 - **The lab card gives a skeleton, not the answer**: `CAP = 0`, `SKIP = ()`, no year line.
 - **1,333 a day is week 1's 40,000 a month divided by 30**, and the page now says so.
+- **Industry terms across every week (13 October).** [`docs/teaching/glossary.md`](../teaching/glossary.md) is
+  the one list: each term with its plain gloss, and six rules (lead with the term, gloss it on
+  first use in each file, never rename a clock title). Weeks 1 to 4 were passed against it, and
+  the outlines of weeks 0, 5 and 6. **Add a term to the glossary before it appears on a page.**
+  Found on the way and fixed: week 3's 03:28 script and notes said precision@3 where the page
+  computes @2, and the notes' kappa section still said "80%" against the pages' 0.60 bar.
 
 ## Week 4 review, round 1 — 9 October (`content/week-4-review-round1`)
 

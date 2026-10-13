@@ -79,6 +79,13 @@ free with `make w4-poison-recorded`.
    instructor script says it is reading for after the session, because 5 minutes cannot carry
    it live.
 
+**Follow-up, 13 October: the running text now uses the terms too.** The table alone did not
+answer the row. Every week now leads with the industry term and keeps the plain words as the
+gloss, against one list, [`docs/teaching/glossary.md`](../glossary.md). In topic 2 the four layers
+are named Input sanitisation, Spotlighting, Pre-dispatch tool validation and Output and egress
+filtering; the lab's columns read Spotlighted and Content filter; data exfiltration, system
+prompt leakage and RAG poisoning are named where they are taught.
+
 ## Row 72 · The lab
 
 1. **Rebuilt on DeepSeek**, with the table above. The lab card and its working answer show the

@@ -78,31 +78,35 @@ longer a theory question.
 **1 · Multi-agent orchestration: when to split.** What does a second loop cost
 before it saves anything?
 - The dispute agent split into four agents, and the cost per dispute tripled.
-- Three shapes: a supervisor that routes work, a chain of handoffs, and agents
-  that run in parallel whose results are combined.
+- Three shapes: a supervisor (one agent that routes work to the others), a
+  chain of handoffs, and parallel workers whose results are combined.
 - Decide, no build: which shape for the dispute agent, or none.
 - At enterprise scale: LangGraph, Temporal, AWS Step Functions, OpenAI Agents
   SDK, each with what it costs.
 
-**2 · A2A: the handoff contract.** The approver received valid JSON with the
+**2 · A2A (the Agent2Agent protocol, a standard for one agent to hand work to
+another): the handoff contract.** The approver received valid JSON with the
 wrong account. Which check should have caught it?
 - An agent card says what an agent can do. A task carries the work. A typed
   handoff carries the state.
-- Grade each step on its own: the right tool, and valid arguments. This is
-  step-level evaluation.
+- Step-level evaluation grades each step on its own: the right tool, and valid
+  arguments.
 - Two agents read the ledger at different moments. Which one is right? This is
-  where the CAP trade-off shows up.
+  where the CAP trade-off shows up: when the network splits, a system keeps
+  either consistency or availability, not both.
 - Lab in pairs, `make w5-a2a`: an investigator and an approver, with a
   schema-checked handoff between them.
-- At enterprise scale: A2A, MCP used between agents, and plain HTTP with JSON
+- At enterprise scale: A2A, MCP (Model Context Protocol, week 4's standard for
+  calling another program's tools) used between agents, and plain HTTP with JSON
   Schema, with costs.
 
-**3 · RAG part 2: retrieval quality.** Which change moves your retrieval score
+**3 · RAG part 2: retrieval quality.** RAG (retrieval-augmented generation)
+means the model answers from documents it searched for at run time. Which change moves your retrieval score
 most, and what does it cost per 1,000 queries?
 - Week 3's guard escalates 30% of disputes, because retrieval is thin.
-- Four levers: how documents are split into chunks, keyword search combined with
-  vector search (hybrid search), re-ranking with a second model, and keeping
-  the store up to date.
+- Four levers: chunking (how documents are split into pieces), hybrid search
+  (keyword search combined with vector search), re-ranking (a second model
+  reorders the results), and index freshness (keeping the store up to date).
 - Predict which lever helps most, then see the results table.
 - Retrieval alone gives the same result every run, so it needs no repeat runs.
 - At enterprise scale: OpenSearch hybrid search, pgvector, Pinecone, Cohere
@@ -113,15 +117,16 @@ most, and what does it cost per 1,000 queries?
 the last refund?
 - The agent remembers a goodwill credit given once, and applies it to the next
   dispute.
-- Working memory, episodic memory (past events) and semantic memory (lasting
-  facts).
+- Three kinds: working memory (what the agent holds during one task), episodic
+  memory (past events) and semantic memory (lasting facts).
 - A correction is a memory too.
 - Decide the rules for the dispute agent: what it keeps, for how long, and who
   may correct it.
 - At enterprise scale: Mem0, Zep, Letta, with costs.
 - The tests are homework.
 
-**5 · Memory optimisation.** Compaction saved 80% of the tokens. Which safety
+**5 · Memory optimisation.** Compaction (shrinking a long history so it fits a
+token budget) saved 80% of the tokens. Which safety
 rule did it drop?
 - A 50-turn conversation, and the ₹10,000 approval rule it loses.
 - What stays in full, what becomes a summary, and what is looked up only when it

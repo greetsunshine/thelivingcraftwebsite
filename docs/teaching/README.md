@@ -27,6 +27,9 @@ Nothing in this directory is imported, rendered, or deployed.
                        instructor page, on one clock. Paste it into a session
                        with the week number filled in. Change it when a rule it
                        quotes changes
+    glossary.md        the industry's term for every concept the weeks teach,
+                       with the plain gloss beside it and the rules for using
+                       them. Add a term here before it appears on a page
     cross-week-references.md
                        every promise one week makes about another ("week 4
                        owns this", a verbatim quote of week 1), and whether

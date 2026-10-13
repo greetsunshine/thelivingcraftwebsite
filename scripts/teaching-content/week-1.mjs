@@ -83,7 +83,7 @@ export const week = {
 export const opening = {
   learner: `
   <p class="lede">In week 0 you ran three commands and wrote down what each one paid out. Today you find out why, and the answer is never a fault in the model.</p>
-  <p style="font-size:var(--size-4)"><strong>The harness is everything in your agent that is not the model: the loop, the tool layer, the context built for each step, and the trace.</strong> There are four parts. You watch all four fail today, and you fix what can honestly be fixed in an afternoon. Then a system goes on the table that cannot be fixed in an afternoon, and that one is topic 5.</p>
+  <p style="font-size:var(--size-4)"><strong>The harness is everything in your agent that is not the model: the loop, the tool layer, the context built for each step, and the trace.</strong> A <strong>trace</strong> is the record of every call, tool and result in one run. There are four parts. You watch all four fail today, and you fix what can honestly be fixed in an afternoon. Then a system goes on the table that cannot be fixed in an afternoon, and that one is topic 5.</p>
   <p><strong>One word to be careful with, because week 3 takes it back.</strong> This week claims the bare word <em>harness</em> for the agent: the loop, the tools, the context assembly and the trace. Week 3's thing is the <em>evaluation harness</em> and it is always written in full. Two different harnesses two weeks apart with the same name is a confusion nobody recovers from mid-session.</p>
   <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">You will rate yourself on these five, twice</h3>
   <p>Once at 00:05 before anything has been taught, and again at 04:52. Same words, scored 1 to 5. Nobody sees your first number but you. Both sets go on screen together at the end. We are looking at how much you moved, not at the score itself.</p>
@@ -290,7 +290,7 @@ export const topics = [
               <b>What is missing</b>
               Nothing anywhere remembers that this credit has already been paid. The agent starts every run with an empty head.
             </div>
-            <p class="named">The usual name for the fix: an idempotency key. It is teardown question 1 at 03:28, and week 2 builds it.</p>
+            <p class="named">The usual name for the fix is an <strong>idempotency key</strong> (how a server recognises a repeated request, so doing it twice has the same effect as once). It is teardown question 1 at 03:28, and week 2 builds it.</p>
           </div>
         </details>
         <div class="writein"><span class="q">Where have you seen a system pay, send or charge twice because a message arrived twice?</span>
@@ -333,8 +333,8 @@ export const topics = [
         mode: 'Whole room · 7 min · built on the board',
         learner: `
   <p>You will want to know <em>why</em> it did not remember. The answer is not a fault in the model, so we read those opening lines closely and name what we are looking at.</p>
-  <p><strong>An agent is a control loop over an unreliable oracle.</strong> An oracle here is something you ask a question and get an answer from, without being able to check its working. The loop has a name: <strong>ReAct</strong>, short for reason and act, from Yao et al., 2022. Its three phases are <strong>thought, action, observation</strong>, and they repeat until a stopping condition. The model is one component inside that loop. It is the only probabilistic one, and the only one you cannot unit-test into submission.</p>
-  <p><strong>Be careful with the name when you go reading.</strong> ReAct was a <em>prompting technique</em>, invented when models had no way to call a tool except by writing text you then parsed. Native tool calling arrived soon after and mostly replaced that scaffold. Frameworks kept the loop and dropped the format, and many of them still say "ReAct" for any tool-use loop. This repository parses the JSON by hand, so it is closer to the paper than most production agents you will read about next week.</p>
+  <p><strong>An agent is a control loop over an unreliable oracle.</strong> An oracle here is something you ask a question and get an answer from, without being able to check its working. The industry calls it the <strong>agent loop</strong> (the cycle where the model picks a tool, the code runs it, and the result goes back to the model). The best-known version is <strong>ReAct</strong>, short for reason and act, from Yao et al., 2022. Its three phases are <strong>thought, action, observation</strong>, and they repeat until a stopping condition. The model is one component inside that loop. It is the only probabilistic one, and the only one you cannot unit-test into submission.</p>
+  <p><strong>Be careful with the name when you go reading.</strong> ReAct was a <em>prompting technique</em>, invented when models had no way to call a tool except by writing text you then parsed. Native <strong>tool calling</strong> arrived soon after and mostly replaced that scaffold. Tool calling, also called function calling, means the model asks for a named function with arguments, and code runs it. Frameworks kept the loop and dropped the format, and many of them still say "ReAct" for any tool-use loop. This repository parses the JSON by hand, so it is closer to the paper than most production agents you will read about next week.</p>
   <p>Two words to watch. <span class="mono">▸ plan</span> at the top of a run is the ticket being announced once, before the loop starts, so it is not a phase. And what the code calls a tool <em>result</em> is the <strong>observation</strong>.</p>
   <h4>One step of the loop</h4>
   ${REACT_LOOP}
@@ -361,6 +361,7 @@ export const topics = [
     <h4>Now the part you drew</h4>
     <p>Go back to whoever drew the model in the middle at 00:18 and ask them to redraw it with the model as one box among four. <strong>Them doing it is worth more than you saying it.</strong></p>
     <p><strong>Land one sentence and then move.</strong> <em>Three of the four are ordinary software you already know how to make reliable.</em> That is the sentence the whole course rests on, and it is the reason a room of senior engineers is in the right place.</p>
+    <p><strong>Give the industry term once the loop is on the board.</strong> It is the <em>agent loop</em> (the model picks a tool, the code runs it, and the result goes back to the model). They will meet that phrase in every vendor document, so they need to hear it here.</p>
     <p class="quiet"><strong>The ReAct hedge is not optional.</strong> Somebody in this room has read the paper and somebody else has only met the word in a framework's documentation, and they mean different things by it. Thirty seconds spent on "the frameworks kept the loop and dropped the format" prevents a twenty-minute argument in week 5.</p>`,
         ref: {
           id: 't0-r-harness', pairs: 'the vocabulary, after the drawing',
@@ -432,11 +433,12 @@ export const topics = [
       lede: 'By the end of it you can say how many calls to the model one ticket takes, why you do not control that number, and the difference between changing the odds and changing what is possible.',
       learner: `
   <p>You have drawn the loop and named its four parts. <strong>This topic is about what the loop costs and who decides it</strong>, and it ends on the single distinction the remaining five weeks are built on.</p>
-  <p><strong>What this topic is not.</strong> It is not the four failures, which is topic 2. It is not a fix to the step budget, which is drill 1 in topic 3.</p>
+  <p><strong>What this topic is not.</strong> It is not the four failures, which is topic 2. It is not a fix to the <strong>step budget</strong> (a limit on how many turns of the loop one run may take, often called max iterations). That fix is drill 1 in topic 3.</p>
   <p><strong>Left broken on purpose.</strong> <span class="mono">MAX_STEPS = 6</span> stays exactly where it is, and nothing here stops a run costing whatever it costs.</p>`,
       script: `
   <p>The weak version is a slide about token cost. Every person in this room has optimised something, and they will file it under performance and stop listening.</p>
   <p>The stronger claim is that <strong>the price of one ticket is set by the probabilistic component, not by you</strong>, and that <span class="mono">MAX_STEPS</span> is therefore not a safety valve but the only upper bound on what a ticket can cost. That reframing is what makes the step budget interesting rather than housekeeping.</p>
+  <p>Say the term with its other name the first time: the <em>step budget</em>, also called max iterations (a limit on how many turns of the loop one run may take). Framework documentation uses the second name.</p>
   <p>The topic then ends on the odds-versus-possible split, which is the sentence the whole day rests on. <strong>Protect the last seven minutes for it.</strong> If you are behind, take them out of 00:57 rather than 01:03.</p>`,
     },
     broken: [
@@ -469,7 +471,7 @@ export const topics = [
   <p>The practical version arrives before the interesting one. The free tier most of you are on allows <strong>20 requests per day, per model</strong>, and one run is about three. That is six runs. That is your whole allowance, and the step count is what spends it.</p>`,
         script: `
     <p><strong>This is the correction that has to come before anything else</strong>, because the drawing is almost always wrong in the same way. Ask for the number first: <em>how many times did that run call the model?</em> Most of the room says two.</p>
-    <p>Then the two meanings of "call".</p>
+    <p>Then the two meanings of "call". <strong>Use the industry term for the first one:</strong> <em>tool calling</em>, also called function calling, is the model asking for a named function with arguments. Running it is your code.</p>
     <h4>How the loop ends</h4>
     <p>Four exits, and the model chooses two. <strong>The two the loop controls are the ones nobody is watching</strong>, and both are a drill in topic 3.</p>
     <h4>Three consequences</h4>
@@ -503,7 +505,7 @@ export const topics = [
   <p>The trace shows what the agent <em>did</em>. It does not show what the model was <em>sent</em>. That is the last place in this system where something is still hidden. <span class="mono">make prompt</span> opens it, and it works on the scripted brain, so this runs without spending a request.</p>
   <p><strong>Read it in silence for three minutes before anything is named.</strong> Three things are worth finding for yourself, and the room collects them in this order.</p>
   <h4>There is no conversation</h4>
-  <p>Every step assembles two messages, a system prompt and one user message, and then throws them away. Nothing accumulates. The history you see inside step three is the observations from steps one and two, written out again as text. That is why the token count climbs the way it does.</p>
+  <p>Every step assembles two messages, a system prompt and one user message, and then throws them away. Those two messages fill the <strong>context window</strong> for that call (everything the model can read in one call, measured in tokens). Nothing accumulates. The history you see inside step three is the observations from steps one and two, written out again as text. That is why the token count climbs the way it does.</p>
   <h4>The reasoning is real, and then it is thrown away</h4>
   <p>Be precise about this, because half of it is easy to get wrong. <span class="mono">thought</span> is the <em>first</em> key in the JSON we ask for. So the model writes its reasoning before it writes the action, in the same completion, and that shapes the action it then produces. <strong>Inside a single step it is doing real work.</strong> That is what ReAct is for.</p>
   <p>What is missing is the carry-forward. <span class="mono">agent.py</span> stores <span class="mono">action</span>, <span class="mono">args</span> and <span class="mono">result</span>. It does not store the thought. So none of that reasoning reaches the next step's prompt. Read the history block in <span class="mono">make prompt</span> and look for it. It is not there.</p>
@@ -517,7 +519,7 @@ export const topics = [
     <p><span class="mono">make prompt</span>. <strong>Three minutes of silence before you name anything</strong>, then collect. The order matters: no conversation, then the thought, then no tool API.</p>
     <div class="term">make prompt          # Q +3   (should be 0 — pin --mock in the target)</div>
     <h4>There is no conversation</h4>
-    <p>Two messages, assembled and discarded. This is the beat that explains the token curve they will measure in drill 4.</p>
+    <p>Two messages, assembled and discarded. Those two messages are the whole <em>context window</em> for the call (everything the model can read in one call, measured in tokens). This is the beat that explains the token curve they will measure in drill 4.</p>
     <h4>The reasoning is real, and then it is thrown away</h4>
     <p><strong>Be precise, because half of it is easy to get wrong.</strong> <span class="mono">thought</span> is the first key, so it conditions the action written beside it — real work inside one step — and it never reaches the next prompt. Then land the sentence: <em>the problem is not the choice, it is that nobody made it.</em> You use it again about the ceiling within the hour.</p>
     <h4>There is no tool-calling API</h4>
@@ -603,7 +605,7 @@ export const topics = [
         mode: 'Whole room · 7 min · the sentence the day rests on',
         learner: `
   <p>Then comes the split that the rest of the cohort runs on.</p>
-  <p>Everything you can change in <span class="mono">llm.py</span> moves a <strong>probability</strong>. That means the model, the temperature, the system prompt, and what you let into the context. <span class="mono">MAX_STEPS</span> in <span class="mono">agent.py</span> and the contents of the <span class="mono">TOOLS</span> dictionary are the only two things in this codebase that change what is <strong>possible</strong>.</p>
+  <p>Everything you can change in <span class="mono">llm.py</span> moves a <strong>probability</strong>. That means the model, the temperature, the system prompt, and what you let into the context. <strong>Temperature</strong> is the setting that controls how much the model's choices vary, and 0 is the least. No setting removes <strong>non-determinism</strong> (the same input can give different outputs, even at temperature 0). <span class="mono">MAX_STEPS</span> in <span class="mono">agent.py</span> and the contents of the <span class="mono">TOOLS</span> dictionary are the only two things in this codebase that change what is <strong>possible</strong>.</p>
   <div class="tw">
     <table>
       <thead><tr><th>what you change</th><th>what it moves</th><th>where it lives</th></tr></thead>
@@ -634,7 +636,7 @@ export const topics = [
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
       <p><strong>"Temperature zero makes it deterministic, so that one changes what is possible."</strong> The best wrong answer in the topic, and it comes from somebody who has read the API documentation carefully.</p>
-      <p>Temperature zero is greedy decoding, not a guarantee. It narrows the distribution and it does not remove the tail, and in any case the provider gives no determinism promise across versions. <strong>It makes the bad run rarer, which is the definition of the first column.</strong></p>
+      <p>Temperature zero is greedy decoding, not a guarantee. It narrows the distribution and it does not remove the tail, and in any case the provider gives no determinism promise across versions. The industry term for what survives is <strong>non-determinism</strong> (the same input can give different outputs, even at temperature 0). <strong>It makes the bad run rarer, which is the definition of the first column.</strong></p>
       <p><strong>Probe.</strong> If temperature zero were a guarantee, which of today's four failures would it stop? None. All four happen at temperature zero, and two of them have no model in them at all.</p>
     </div>
   </details>`,
@@ -701,7 +703,7 @@ export const topics = [
       <details>
         <summary>Show what happened</summary>
         <div class="reveal">
-          <p><strong>Nothing here is a hallucination.</strong> The agent was handed the truth and acted against it.</p>
+          <p><strong>Nothing here is a hallucination</strong> (a confident statement the sources do not support). The agent was handed the truth and acted against it.</p>
           <div class="missing">
             <b>What is missing</b>
             <span class="mono">issue_credit</span> in <span class="mono">tools.py</span> accepts any account id and any amount and returns <span class="mono">{'credited': true}</span>. There is no line to point at, which is the answer.
@@ -762,11 +764,13 @@ export const topics = [
     </div>
   </div>
   <p><strong>It is not being fooled about what to do.</strong> It is correctly following what looks like a documented account policy. It cannot tell a real business rule from attacker text. Both arrive through <span class="mono">lookup_account</span> in the same shape, with the same authority.</p>
+  <p>The attack has an industry name: <strong>indirect prompt injection</strong> (Greshake and others, 2023). The instruction is hidden in content the model fetches, here an account record.</p>
   <p>We name the missing piece, then we leave it. The missing piece is a boundary between text that is data and text that is authority. <strong>This is week 4's material and it does not fit into a smaller space.</strong> What you should take today is that the gap exists, that no prompt wording closes it, and that you watched it happen.</p>`,
         script: `
     <p><strong>The full prediction cycle, and it is the only one in the day that gets all three stages.</strong> Thirty seconds alone, two minutes in pairs, then chat. Do not shorten it; this is the failure the room remembers in week 6.</p>
     <div class="term">make injected                 # Q +3, real model</div>
     <p><strong>Run it on a real model, not the mock.</strong> The whole point is that a capable model reads the note more carefully and obeys it more confidently, and the mock cannot show that.</p>
+    <p><strong>Name it once, with its industry term:</strong> <em>indirect prompt injection</em> (an instruction hidden in content the model fetches). Week 4 owns it and uses the term from its first minute.</p>
     <p><strong>Then close it, deliberately, and say you are closing it.</strong> <em>The missing piece is a boundary between text that is data and text that is authority. That is week 4 and it does not fit in a smaller space.</em> A room left with an open security thread spends the drill block on it.</p>`,
         ref: {
           id: 't2-r-injected', pairs: '₹2,50,000, the full prediction cycle',
@@ -1043,13 +1047,13 @@ export const topics = [
       lede: 'By the end of it you can make a silent failure announce itself to a machine, grade a tool by what it reaches, and refuse a call that does not match its contract.',
       learner: `
   <p>Keyboards open here. Three drills, each one a real defect in the agent you have been running, and each one is the floor.</p>
-  <p><strong>Every one of them makes a failure visible, named or measurable. None of them prevents anything.</strong> That is deliberate. Prevention is week 2, and it is worth more when you have spent a week looking at the thing unguarded.</p>
+  <p><strong>Every one of them makes a failure visible, named or measurable. None of them prevents anything.</strong> The industry word for this property is <strong>observability</strong> (being able to answer "what happened and why" from what the system recorded). Preventing nothing is deliberate. Prevention is week 2, and it is worth more when you have spent a week looking at the thing unguarded.</p>
   <p><strong>What this topic is not.</strong> It is not a fix to <span class="mono">issue_credit</span>, and you are asked repeatedly not to write one. It is not the bake-off, which is topic 4.</p>
   <p><strong>Left broken on purpose.</strong> All four failures from topic 2 still happen after all three drills. They just say so now.</p>`,
       script: `
   <p>The weak version is three tickets of housekeeping. The room will do them competently, learn nothing, and file the block under warm-up.</p>
   <p>The stronger claim is in drill 1 and it is the <strong>gradient</strong>: one file makes a failure honest to a human, three make it honest to a machine, and the thing that pages you at 2am is a machine. Stopping after the first file is the failure the drill is about, and most of the room will stop there unless the gradient is on the board before they start.</p>
-  <p><strong>This topic carries outcome 2.</strong> Every drill ends with something a machine can read: an exit code, a grade in the trace line, a refusal that lands in history.</p>
+  <p><strong>This topic carries outcome 2.</strong> The industry word for it is <em>observability</em> (being able to answer "what happened and why" from what the system recorded). Every drill ends with something a machine can read: an exit code, a grade in the trace line, a refusal that lands in history.</p>
   <p>Full problems, solutions and the traps are in <span class="mono">docs/teaching/notes/drill-solutions.md</span>, 552 lines. <strong>Do not put any of it on screen.</strong></p>`,
     },
     broken: [
@@ -1129,12 +1133,14 @@ export const topics = [
     </table>
   </div>
   <p>One line makes it honest to a human. Three files make it honest to a process. <strong>The thing that wakes you at two in the morning is a process. Stopping after the first line is the failure this drill is about.</strong></p>
+  <p>This drill starts a <strong>failure taxonomy</strong> (a fixed list of named failure kinds, so a failure can say which one it is). Today the list has one name on it, <span class="mono">gaveup</span>.</p>
   <div class="ask">Decide this before you prompt: what exit code does <span class="mono">escalate</span> get?</div>
   <p>It is genuinely ambiguous. Escalating is the correct outcome for ticket 9999 and the wrong outcome for ticket 5820, and the code cannot tell them apart. <strong>Whatever number ends up there is a business rule set by autocomplete.</strong></p>
   <p>It is also the first thing the harness tells you about itself. Three files had to agree for one fact to escape, and that is with four files and one loop. Hold that number. In week 5 we ask what happens when one loop is no longer enough.</p>`,
         script: `
     <p><strong>Put the gradient on the board before they start.</strong> One file, two files, three files, and who can see the failure at each. Without it most of the room stops at one line, and the drill's whole point is that stopping there is the failure.</p>
     <p><strong>Ask the exit-code question before anybody prompts.</strong> <em>What exit code does <span class="mono">escalate</span> get?</em> Genuinely ambiguous, the assistant will decide it silently, and that is a business rule set by autocomplete. It is the single best illustration of outcome 4 in the day.</p>
+    <p><strong>Name what they are starting.</strong> A <em>failure taxonomy</em> is a fixed list of named failure kinds, so a failure can say which one it is. <span class="mono">gaveup</span> is its first entry.</p>
     <p class="quiet">Circulate for one thing: did they carry the outcome out through <span class="mono">main.py</span>, or did they make the terminal look right and stop? <strong>Ask the ones who stopped what their monitoring would see.</strong></p>`,
         ref: {
           id: 't3-r-drill1', pairs: 'the gradient, and the exit code nobody chose',
@@ -1171,6 +1177,7 @@ export const topics = [
 ▸ tool  issue_credit(account_id='4471', amount=1200) -&gt; {'credited': True, ...}</div>
   <p>One read a row out of a file. The other moved ₹1,200 you cannot get back. Same colour, same shape, same single line. <strong>There is nothing for your eye to catch on.</strong> That is fine with two calls on a screen. It is not fine at a hundred runs a night in a log file, when the question on Tuesday morning is <em>did anything we cannot undo happen while we were asleep?</em></p>
   <p>Write down what each of the three tools in <span class="mono">tools.py</span> actually does to the world, then put that grade into the trace line. Three levels, one test each.</p>
+  <p>The industry name for this grading is <strong>action tiering</strong>, also called tool risk classification (grading tools by what they can do: read-only, reversible, irreversible). Our read and write are its read-only and reversible.</p>
   <ul>
     <li><strong>read</strong> — run it twice, nothing is different. <span class="mono">lookup_account</span>.</li>
     <li><strong>write</strong> — something changed and you could change it back. <span class="mono">escalate</span>.</li>
@@ -1182,6 +1189,7 @@ export const topics = [
   <p><strong>Three grades here, four levels in the published tool, and that is deliberate.</strong> The Agent Authority Review scores the same judgment on four undo-cost levels, from "undo in seconds, nobody notices" to "cannot be undone". Three is what a room of eight can hold and argue about in ten minutes. Four is what you want in front of a real workflow. <strong>read</strong> and <strong>write</strong> split into the first two levels; <strong>irreversible</strong> is the fourth.</p>`,
         script: `
     <p><strong>Quick.</strong> The code is five minutes and the argument is the block. Do not let the implementation take more than half.</p>
+    <p>Say the industry term once: <em>action tiering</em>, or tool risk classification (grading tools by what they can do). It is the phrase they will search for.</p>
     <p><strong>The argument worth having is <span class="mono">escalate</span>.</strong> Most rooms say write. Ask what would make it irreversible — <em>if escalation notified the customer, it would be</em> — and let the pairs settle it. The grade describes what the function reaches, not what it is called.</p>
     <p class="quiet"><strong>Name the three-versus-four discrepancy before somebody finds it.</strong> Two published surfaces run two scales for one judgment and that was a real defect until 28 September. Three today, the tool's four on their own system.</p>`,
         ref: {
@@ -1217,6 +1225,7 @@ res = fn(**args)         # agent.py:43</div>
   <p>Two things go wrong, and the quiet one is why this drill exists.</p>
   <p><strong>Loud.</strong> The model writes <span class="mono">account</span> instead of <span class="mono">account_id</span>. Python raises <span class="mono">TypeError</span> and the run dies. It never reaches the end, so <span class="mono">trace.summary()</span> never prints, and you lose the cost line on exactly the run you wanted it for.</p>
   <p><strong>Quiet. This is the ₹0.</strong> The account id arrives as a string from the scripted brain and as a number from a real model, on the same ticket. Nothing reports it. <span class="mono">lookup_account</span> happens to call <span class="mono">str()</span> on the way in and quietly repairs it. <strong>That one <span class="mono">str()</span> is doing real work and nobody knows it is there.</strong></p>
+  <p>The fix this drill builds is <strong>pre-dispatch validation</strong>, also called argument validation (checking a tool call's arguments in code before the tool runs).</p>
   <div class="ask">Decide first: what happens when the arguments do not match?</div>
   <p>Your assistant will decide for you and not mention it.</p>
   <ul>
@@ -1227,7 +1236,7 @@ res = fn(**args)         # agent.py:43</div>
   <p>The industry word for that declaration is a <strong>tool schema</strong>. Anthropic and OpenAI both call it that in their function-calling APIs, so it is the word you will meet next week. <em>Contract</em> is the better word for the idea.</p>
   <p>This does not stop the agent paying the wrong person either. It makes a wrong-shaped call <strong>say so, out loud, in the trace</strong>, instead of being repaired behind your back. <strong>That is week 1 in one sentence. You cannot fix what the system will not tell you about.</strong></p>`,
         script: `
-    <p><strong>This is the fix for the ₹0 and the room should be told so.</strong> Connect it explicitly to 01:36, because otherwise it reads as fiddly type-checking rather than as the repair for the failure nobody predicted.</p>
+    <p><strong>This is the fix for the ₹0 and the room should be told so.</strong> Its industry name is <em>pre-dispatch validation</em> (checking a tool call's arguments in code before the tool runs). Connect it explicitly to 01:36, because otherwise it reads as fiddly type-checking rather than as the repair for the failure nobody predicted.</p>
     <p><strong>Enforce the three minutes of writing on the coerce / raise / refuse decision.</strong> It is the one place in the day where the three options have genuinely different consequences and the assistant will pick one silently.</p>
     <p><strong>Refuse-and-return is the answer the repository already argues for</strong>, in the commented block inside <span class="mono">issue_credit</span> that they read as pre-work for week 2. A refusal that returns lands in history, reaches the next prompt, and lets the agent escalate on its own. <strong>A refusal that raises is a step-budget stop by another name.</strong></p>`,
         ref: {
@@ -1487,7 +1496,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
   <h4>3 · The question eight months later</h4>
   <p>A regulator asks why one specific account was credited. What does the audit trail have to contain to answer that? Is a stored prompt and completion enough? Note what you learned at 00:46: <strong>the model's stated reasoning is never stored</strong>, so if you were planning to show someone the <span class="mono">thought</span>, it does not exist.</p>
   <h4>4 · Where the human goes</h4>
-  <p>Approving every credit does not scale. Approving none is what we watched at the start. <strong>Draw the line, and defend it in terms of money rather than confidence.</strong></p>
+  <p>This is the <strong>human-in-the-loop</strong> question (HITL: a person approves or decides at a named step). Approving every credit does not scale. Approving none is what we watched at the start. <strong>Draw the line, and defend it in terms of money rather than confidence.</strong></p>
   <h4>5 · When the model is down</h4>
   <p>The provider has an outage. Do you queue, fail closed, or fall back to rules? And what do you tell the customer waiting inside a four-hour service level agreement? Remember what failing closed looked like at 01:36: <strong>₹0 paid, a clean trace, and a customer who was owed the money.</strong></p>`,
         script: `
@@ -1500,7 +1509,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
     <h4>3 · The question eight months later</h4>
     <p>Weeks 3 and 4. The <span class="mono">thought</span> was never stored, and they learned that at 00:46.</p>
     <h4>4 · Where the human goes</h4>
-    <p>Week 2, cycle B. Defended in money, never in confidence.</p>
+    <p>Week 2, cycle B. The industry term is <em>human-in-the-loop</em> (a person approves or decides at a named step). Defended in money, never in confidence.</p>
     <h4>5 · When the model is down</h4>
     <p>Week 5. All three options are bad and the choice is which customer you disappoint.</p>
     <p class="quiet">Give question 4 to whoever said "put a human in front of every credit" at 01:53. It is their idea, priced.</p>`,
@@ -1569,6 +1578,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
         mode: 'Pairs · 12 min',
         learner: `
   <p>Pick the one question you argued hardest about. Write it up as a one-page decision record, <strong>in the shape you would put in front of an architecture review</strong>. Seven sections, and they do not change from week to week — week 6 has to be readable against week 1.</p>
+  <p>The industry name is an <strong>architecture decision record</strong>, or ADR (a short written record of one decision: context, options, choice, consequences).</p>
   <ol>
     <li><strong>Context.</strong> What breaks today, cited against a run you watched, with the number.</li>
     <li><strong>Goals.</strong> Three at most, each one testable. "Safer" is not a goal. "No dispute is credited twice" is.</li>
@@ -1580,7 +1590,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
   </ol>
   <p><strong>This is the artefact week 2 opens with.</strong> You will be implementing your own document, so write it for the person who has to build it. Next week, that is you.</p>`,
         script: `
-    <p><strong>Twelve minutes, same pairs, one page, seven headings.</strong> The headings are fixed and do not vary by week; only the brief above them changes.</p>
+    <p><strong>Twelve minutes, same pairs, one page, seven headings.</strong> Call it by its industry name, an <em>architecture decision record</em> or ADR (a short written record of one decision). The headings are fixed and do not vary by week; only the brief above them changes.</p>
     <p><strong>Circulate for goals.</strong> That is where it goes wrong, every time. "Safer", "more reliable" and "better controlled" are wishes. Ask the test: could you write a check that passes or fails without a person judging it?</p>
     <p class="quiet"><strong>Alternatives is load-bearing and gets skipped under time pressure.</strong> "Use a better model" is the alternative most of them rejected today, and rejecting it well is most of the session. If a pair has left it blank, that is the one to point at.</p>`,
           ref: {

@@ -79,8 +79,9 @@ second process has that a second thread does not, which is its own copy of that 
 > You added an evaluation harness today. What is this week's version of your own rule
 > working exactly as written and still being wrong?
 
-**Answer.** A thin case set. The suite runs exactly as written, reports a pass, and the bug
-is live. Nothing in it is broken.
+**Answer.** A thin case set. The **evaluation harness** (the code that runs the cases and
+scores each one) runs exactly as written, reports a pass, and the bug is live. Nothing in
+it is broken.
 
 **What a strong answer adds.** It names who can see it. Nobody, unless somebody reads which
 classes of case are present, which is why the per-class figure exists.
@@ -150,12 +151,14 @@ that a retrieved clause is context and is subject to everything context is subje
 - **D.** A grader that checks which clause the retrieval step returned ✅
 
 **Why the others are attractive and wrong.** **A** is what almost every suite has, and the
-ledger is identical in both runs, so it can never see this. **B** is the trap: a model
-grader reads one answer and never sees the case, so it has nothing to compare the clause
+ledger is identical in both runs, so it can never see this. **B** is the trap: a
+**model-based grader** (a model that scores an answer against a rubric) reads one answer
+and never sees the case, so it has nothing to compare the clause
 against. **C** catches a badly worded refusal and nothing about which rule was applied.
 
 **B is the one worth a minute.** Ask what the model grader would have to be given before it
-could answer. The answer is the case, and at that point an assertion is cheaper and exact.
+could answer. The answer is the case, and at that point a **code-based grader** (a check written in code
+that gives the same score every time) is cheaper and exact.
 
 ---
 
@@ -165,7 +168,8 @@ could answer. The answer is the case, and at that point an assertion is cheaper 
 > Your model grader agrees with your labels seven times in ten. Name the two directions it
 > can disagree in, and say which of the two costs you more on a payment path.
 
-**Answer.** It passes an answer you failed, or it fails an answer you passed. On a payment
+**Answer.** It passes an answer you failed, or it fails an answer you passed. Seven in ten
+is the **inter-rater agreement** (how often two graders give the same score). On a payment
 path the first costs more, because a pass is what releases the money and a false alarm only
 costs somebody a review.
 
@@ -200,7 +204,8 @@ rate without the kappa has answered half of it.**
 it is the reason the overall number is the wrong number. **C** is the one to spend time on:
 it is a good engineering instinct and it is also a way of not making the decision. More
 cases sharpen the estimate, and the estimate is not what is missing. **D** is what a great
-many teams do, and a flag moves the failure into production, where each occurrence of this
+many teams do. It swaps **offline evaluation** (scoring fixed cases before release) for
+watching live traffic after release. A flag moves the failure into production, where each occurrence of this
 case pays ₹2,50,000 to somebody who asked for it in a ticket.
 
 **Follow-up if the room splits between A and C.** Who is allowed to say Thursday moves? If
@@ -256,6 +261,8 @@ decision" are different rows, and only one of them can be argued about on a Thur
 > Your suite of seven cases passes. What is that evidence about?
 
 **Answer.** The seven situations somebody thought of. It is not evidence about the system.
+A **golden dataset** (the fixed cases every version is scored against) is only as wide as the
+person who wrote it.
 
 **The wrong answer worth catching.** "It is evidence the system works." Ask which case
 would have to fail before they would believe otherwise. If there is no such case, the suite
@@ -290,6 +297,10 @@ are the same number and not the same evidence.
 **Answer.** Ordinary. It is the case the feature was built for, so it was written from the
 fix rather than against it, and a case written from the fix passes by construction.
 
+**What a strong answer adds.** The case was meant as a **regression test** (a case kept so
+that a failure fixed once is caught if it returns). A regression test written from the fix
+cannot produce the condition the fix missed.
+
 **The wrong answer worth catching.** "Difficult, because concurrency is hard." The case was
 not difficult. It ran one delivery through one process, which is the simplest path there is.
 
@@ -306,7 +317,8 @@ not difficult. It ran one delivery through one process, which is the simplest pa
 **Answer.** Whether the customer is paid ₹2,000 or ₹2,50,000.
 
 **What a strong answer adds.** The gap is one point because somebody wrote the account note
-to make it one point. The attack is on the retrieval, not on the amount.
+to make it one point. The attack is on the **retriever** (the search step), not on the
+amount.
 
 ---
 
@@ -417,7 +429,8 @@ to happen. Nothing. Then ask what the ceiling can stop. A payment.
 - **C.** The relative gate fails and the absolute gate passes
 - **D.** The gates contradict each other, so one of them is configured wrongly
 
-**Answer.** 92 is below 95, so the absolute gate fails. 93 to 92 is a one-point drop, which is
+**Answer.** Faithfulness, or groundedness, is the share of answers that say only what the
+retrieved text supports. 92 is below 95, so the absolute gate fails. 93 to 92 is a one-point drop, which is
 inside the relative gate, so it passes. **Neither gate is broken.** Absolute asks "is this good
 enough"; relative asks "did we make it worse". A system can be not-good-enough and also
 not-worse, and that is exactly where this release sits.
@@ -446,7 +459,8 @@ The old answer is still taught at 02:49 and is still checked by the 02:56 lab's 
 
 **Why the others are attractive and wrong.** **C** and **D** are both real questions and both
 come second. **A** invites an argument about the number with nobody in the room who can move
-it. **B** is first because a threshold with no author is not a gate, it is a number somebody
+it. **B** is first because an **acceptance threshold** (the score a version must reach to ship)
+with no author is not a gate, it is a number somebody
 typed, and that is the same defect as week 2's ceiling.
 
 ---
@@ -490,7 +504,9 @@ verified against `search_policy` at every budget. The stem now asks one thing, a
 is a spoken follow-up.
 
 **The wrong answer worth catching.** "Shorter context is better, we have been overloading it."
-Ask for the next row of the table. At 120 characters the adversarial case is at 55% and
+That is **context rot** reasoning (answers get worse as the context grows), and it does not
+apply here. The change came from the lexical scores, not from the model reading less. Ask for
+the next row of the table. At 120 characters the adversarial case is at 55% and
 ₹22,87,600 has left the building.
 
 ---

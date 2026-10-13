@@ -38,7 +38,8 @@ took four seconds now takes two minutes.
 the request. A second run starts on the same refund. The provider is slow, not
 broken, so **both refunds eventually succeed.**
 
-**22:15** — some runs exhaust the step budget while waiting. The agent prints
+**22:15** — some runs exhaust the **step budget** (the limit on how many turns of
+the loop one run may take) while waiting. The agent prints
 `done` and exits zero. The dashboard counts them as successful runs.
 
 **02:00** — the backlog has been redelivered repeatedly. Roughly 900 refunds have
@@ -87,7 +88,8 @@ will then get wrong, and both are worth the time.
 
 ### The key cannot be minted inside the run
 
-Idempotency is not a property of the payment. It is a property of the **request**,
+**Idempotency** means doing the same request twice has the same effect as doing
+it once. Idempotency is not a property of the payment. It is a property of the **request**,
 carried by a key the **caller** generates, and someone has to decide what makes
 two requests the same request.
 

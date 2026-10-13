@@ -192,23 +192,29 @@ have to sit to stop a caller nobody has written yet? A **guardrail** is a
 control on what the agent is allowed to do. You map the six kinds onto the
 three planes the field uses (input, output, operational) and the threats each
 one meets. Then you build a limit as data, count and time what it does, and
-watch a second team's tool walk past it with ₹5,000.
+watch a second team's tool walk past it with ₹5,000. The fix is a **policy
+enforcement point**: the one place in the code where a rule is checked, so every
+caller passes through it.
 
 **2 · Human-in-the-loop (HITL) approval.** *01:44 to 02:34, through the break.*
 What does your code do when nobody approves inside the time you set? **HITL**
-means the system stops and waits for a person before it acts. You build the
-gate and the decision row. Then your own timer fires during the break, with
+means the system stops and waits for a person before it acts. You build an
+**approval gate**, where one party proposes and a different one approves. Banks
+call it maker-checker. You also build the decision row. Then your own timer fires during the break, with
 nobody watching.
 
 **3 · Idempotency.** *02:34 to 03:13.* Why does a fix that passes in one process
 still pay twice from two? **Idempotency** means running a request twice does the
 same thing as running it once. You make a payment happen once, watch the fix
-fail from a second terminal, then build the fix that holds.
+fail from a second terminal, then build the fix that holds. The second
+terminal finds a **race condition**: two runs read the same state, both decide,
+and both act.
 
 **4 · Red-teaming.** *03:18 to 04:05.* Can another pair get ₹5,000 out of the
 system you built this morning? **Red-teaming** means attacking your own system
 on purpose, before somebody outside does. First a model replaces your ceiling
-and reads the attacker's words. You price three tiers of checker in
+and reads the attacker's words. That setup is **LLM-as-a-judge**: a model that
+reads another model's output and approves it. You price three tiers of checker in
 milliseconds and decide which may run in-band and which out-of-band. Then
 another pair attacks your guard for thirty minutes.
 
@@ -222,8 +228,9 @@ The last 55 minutes follow the same shape every week.
 - **04:05 · Recall, notes closed.** List every control the agent gained today
   and where each one's failure moved.
 - **04:15 · Architectural teardown.** The agent at 40,000 disputes a month.
-  Five questions, two for each pair, including a latency budget, and one row
-  of the policy table built on the board.
+  Five questions, two for each pair. One asks for a latency budget: how much
+  time a control may add to each request. One row of the policy table is built
+  on the board.
 - **04:40 · The quiz.** Eight questions, mixed across today and week 1.
 - **04:50 · Your takeaway, said out loud.** "I can now ___, and I will use it
   on ___ at work."

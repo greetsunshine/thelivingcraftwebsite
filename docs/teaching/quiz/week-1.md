@@ -30,8 +30,9 @@ idea). Other topics get added under their own headings.
 
 **Why the others are attractive and wrong.** **A** is the trap: `_build_prompt`
 *already does this* and the bug survives it — rebuilding from stale history
-reproduces the stale fact perfectly. **C** holds more stale facts and makes the
-oldest one older. **D** is a prompt instruction against a probabilistic
+reproduces the stale fact perfectly. **C** makes the **context window**
+(everything the model can read in one call, measured in tokens) hold more stale
+facts, and it makes the oldest one older. **D** is a prompt instruction against a probabilistic
 component, guarding an irreversible action; ask how they would find out the day
 it did not comply.
 
@@ -98,8 +99,9 @@ facts that no longer hold — and it should be made deliberately, not by a defau
 > the agent reasons correctly every time. Which two pieces of state are missing,
 > and where would each live?
 
-**Answer.** An idempotency key on `issue_credit` (`tools.py`) so a repeated
-request is recognised rather than re-executed; and any memory in the loop that a
+**Answer.** An **idempotency key** on `issue_credit` (`tools.py`), which is how a
+server recognises a repeated request, so doing it twice has the same effect as
+once; and any memory in the loop that a
 request was already acted on (`agent.py:15`). Either alone helps. The key is the
 stronger of the two because it survives a process restart, which loop memory
 does not.
@@ -117,7 +119,9 @@ does not.
 controlled text and genuine business rules arrive with identical authority. The
 model is not being fooled about what to do — it is correctly following what its
 system of record appears to say. There is no trust boundary for it to consult
-because the context does not encode one.
+because the context does not encode one. The industry name for the attack is
+**indirect prompt injection** (Greshake and others, 2023): the instruction is
+hidden in content the model fetches.
 
 **The good follow-up:** would labelling the text as untrusted fix it? Only
 partly — labelling is still an instruction to a probabilistic component. The
@@ -177,7 +181,8 @@ is the *first* boundary chronologically — but a fast failure still gets
 redelivered, and the second run still pays twice. It shortens the night without
 capping the loss. **C** is the best *detection* answer and buys the fastest human
 response, which is why it is worth crediting, but by 22:15 money has already
-moved. **D** caps the loss at roughly ₹300,000 rather than eliminating it. **B**
+moved. The **step budget** in C is the limit on how many turns of the loop one run may
+take, often called max iterations. **D** caps the loss at roughly ₹300,000 rather than eliminating it. **B**
 is the only one under which the second payment never happens at all.
 
 **The point to land:** the expensive failure was not the slow provider. It was one
@@ -199,7 +204,8 @@ counted green. This is drill 1.
 
 **Push back if** they answer "there was no monitoring". There was monitoring. It
 was reading a signal the system was reporting incorrectly, which is a different
-and worse problem.
+and worse problem. The missing property is **observability** (being able to
+answer "what happened and why" from what the system recorded).
 
 ---
 
@@ -216,6 +222,9 @@ room will have watched it do so in the bake-off. It is not a boundary because it
 changes the *odds* of an action, not the *set* of actions that are possible. Every
 other option is enforced outside the probabilistic component; C is enforced inside
 it. This is the session's spine restated as a test.
+
+**B is the one to name.** It is **human-in-the-loop** (HITL: a person approves or
+decides at a named step), and week 2 builds it.
 
 ---
 

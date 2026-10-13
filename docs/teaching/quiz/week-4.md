@@ -142,7 +142,7 @@ unknown part is not in the denominator at all.
 - **C.** A signature on each published version, checked at retrieval ✅
 - **D.** A limit on how many clauses retrieval returns
 
-**Why the others are attractive and wrong.** **A** is the 01:16 lab, and it reads words. An edit
+**Why the others are attractive and wrong.** **A** is the 01:16 lab's content filter, and it reads words. An edit
 that changes "2000" to "2500" and adds no phrase passes it. **B** reads the same words the agent
 reads. **D** changes which clauses are seen, not whether one of them was tampered with.
 
@@ -158,7 +158,7 @@ reads. **D** changes which clauses are seen, not whether one of them was tampere
 
 **The wrong answer worth catching.** "Spend." It did move, to ₹71.94 an hour without the breaker.
 That is about ₹68 an hour more, which no monthly budget alert would notice. The signal that cannot
-be missed is the one that falls to zero.
+be missed is the one that falls to zero. Paging on it is business-level alerting.
 
 ---
 
@@ -170,7 +170,7 @@ be missed is the one that falls to zero.
 - **A.** Nothing, because the proxy blocks every injection
 - **B.** ₹1,200, week 2's ceiling
 - **C.** ₹2,000, and only on an account the programme team enrolled ✅
-- **D.** ₹50,000, because P10 still passes the content check
+- **D.** ₹50,000, because P10 still passes the content filter
 
 **Why the others are attractive and wrong.** **A** confuses limiting with stopping; the note is
 still obeyed 9 times in 40 (A9). **B** forgets that a goodwill credit under GOOD-2.1 pays up to
@@ -189,7 +189,8 @@ approves, which is why A3 is the next weakness.
 > Which number in your own system falls to zero when the agent quietly stops doing its job?
 
 **Model answer.** There is no single right number. A strong answer names a count of completed
-outcomes, not a count of errors or a cost, and names the person it pages.
+outcomes, not a count of errors or a cost, and names the person it pages. That is
+business-level alerting: alerting on an outcome metric, not an error rate.
 
 ---
 
@@ -263,24 +264,24 @@ column). P10 states the figure in words and says "sign-off is deemed given". Nei
 those words.
 
 **The wrong answer.** "It pays sometimes." What is right: a model's decisions do vary, and the
-fenced column shows it. What is wrong: the check is code, so it misses P10 every time, and
+spotlighted column shows it. What is wrong: the check is code, so it misses P10 every time, and
 DeepSeek obeyed P10 every time it reached the model.
 
 ---
 
-### Q22 · Why fencing is not enough
+### Q22 · Why spotlighting is not enough
 `apply` · 01:33
 
-> Fencing cut planted payments from 405 to 47 of 440. Why is that not enough?
+> Spotlighting (fencing) cut planted payments from 405 to 47 of 440. Why is that not enough?
 
-**Answer.** Fencing is a sentence the model weighs, so its effect changes from clause to clause.
+**Answer.** Spotlighting is a sentence the model weighs, so its effect changes from clause to clause.
 P4 still paid on 26 runs in 40 while P3 paid on none, and nobody could have said which in
 advance. A defence you cannot predict is a rate, not a rule. And 47 runs is 47 payments of
 ₹50,000.
 
 **The wrong answer.** "It is enough. 47 is close to zero." What is right: it is a large cut,
 and it needed no list of words. What is wrong: the question a risk committee asks is how much
-money can leave, and fencing cannot put a number on that. Topic 4's limit can.
+money can leave, and spotlighting cannot put a number on that. Topic 4's limit can.
 
 ---
 

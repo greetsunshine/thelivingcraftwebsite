@@ -15,6 +15,10 @@ read and when the agent acts on it, and the gap is not fixed — it is however
 many loop iterations the model decides to take. **The job is not to shrink the
 gap. It is to make the gap safe.**
 
+Context here means what fills the **context window** (everything the model can
+read in one call, measured in tokens). In this repo it is rebuilt from scratch on
+every step.
+
 The move is to stop treating context as a buffer you refresh and start treating
 it as a **query you re-run, with each piece carrying an explicit lifetime and an
 explicit source.**

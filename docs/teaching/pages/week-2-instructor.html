@@ -642,11 +642,11 @@ ol.toc a{color:inherit}
   <h3>Two decision records on screen</h3>
   
   <h4>What a limit is, and why the agent needs one</h4>
-  <p>Learner reading on the topic 1 purpose card, before <span class="off" data-off="00:15">00:15</span>. One sentence if asked: a limit is a rule with a number, the most an action may do without anybody else agreeing, and an agent needs it because the model chooses the arguments.</p>
+  <p>Learner reading on the topic 1 purpose card, before <span class="off" data-off="00:15">00:15</span>. One sentence if asked: a limit is a rule with a number, the most an action may do without anybody else agreeing, and an agent needs it because the model chooses the arguments. Use the industry name once: a <strong>hard limit</strong>, a number the code will not exceed, whatever the model asks.</p>
   <h4>Why a policy, before anything else</h4>
   <p>The learner card now opens with why a policy is needed. Say it in two sentences before the records go up: a rule that lives in somebody's head cannot be enforced or changed safely, and a rule written down with a number and an owner can.</p>
   <h4>What is on the screen, and what you do</h4>
-  <p>Two decision records the room wrote as the week 1 assignment, chosen by you before the day and agreed with their authors (preparation item 8). Learners prepare nothing new. They bring their own record and test one sentence of it.</p>
+  <p>Two architecture decision records (ADRs) the room wrote as the week 1 assignment, chosen by you before the day and agreed with their authors (preparation item 8). Learners prepare nothing new. They bring their own record and test one sentence of it.</p>
   <h4 class="quiet" style="font-weight:700">Most records last week had four wishes and one policy</h4>
   <details>
     <summary><span class="chev">›</span> Answer key</summary>
@@ -982,6 +982,7 @@ issue_credit(account_id='4471', amount=1200)  -&gt; allowed</pre>
   <details>
     <summary><span class="chev">›</span> A working answer</summary>
     <div class="dbody">
+      <p><strong>Name the pattern once: policy as code.</strong> The rule is a versioned file a test can load, not a sentence in a prompt. The at-scale card names four ways firms already run it.</p>
       <p><strong>The full code is on the learner page</strong>, in the build steps and behind "Show a working answer". In short: <span class="mono">data/my-policy.json</span> holds three rows, the ceiling check sits at the top of <span class="mono">issue_credit</span> in <span class="mono">src/tools.py</span>, two counters count allowed and refused, and <span class="mono">src/main.py</span> prints them with the time the check took.</p>
       <p><strong>The check starts inside the tool on purpose.</strong> <span class="off" data-off="01:12">01:12</span> shows the goodwill tool walking past it, and <span class="off" data-off="01:20">01:20</span> moves it to the dispatch in <span class="mono">src/agent.py</span>. If a learner puts it at the dispatch straight away, praise it and ask them to predict <span class="off" data-off="01:12">01:12</span> from there.</p>
       <p>The account-existence check is deliberately not a field in the row. If a room puts it there, that is a good mistake and it is worth two minutes at <span class="off" data-off="01:25">01:25</span>.</p>
@@ -1034,7 +1035,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
       <p><strong>What went wrong.</strong> The check protects <code>issue_credit</code>. It does not protect the ledger, and the ledger holds the money. Every tool added later is a new chance to forget.</p>
-      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point.</p>
+      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point (PEP): the one place in the code where a rule is checked, so every caller passes through it.</p>
       <p><strong>Then the counter.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from <span class="off" data-off="00:31">00:31</span> paid off in their own code.</p>
       <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and <span class="off" data-off="01:30">01:30</span> is where it is said properly.</p>
     </div>
@@ -1100,7 +1101,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
-      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Defence in depth is two copies of one rule in two places and it is correct.</p>
+      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Two copies of one rule in two places is defence in depth: several independent controls, so one failing does not let the harm through. It is correct.</p>
       <p>What is required is naming which copy is authoritative, because two copies that drift are worse than one. The dispatch gives a fast, specific refusal message. The resource of record gives coverage. Keep both and write down which one you trust.</p>
       <p><strong>Probe.</strong> Your ledger constraint refuses and your dispatch check allows. Which one is the bug?</p>
     </div>
@@ -1313,6 +1314,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <div class="dbody">
       <p>The ceiling was set by looking at what a normal case costs. One month, because a double charge is one month. Nobody asked what a <em>legitimate</em> case costs at the top end, and seven months of a billing error is one honest customer.</p>
       <p>The control is that over the limit has to mean <em>ask</em>, not <em>no</em>. A limit with one outcome is a wall; with two it is a gate.</p>
+      <p>Name it as the industry does: an <strong>approval gate</strong>, where one party proposes and a different one approves. In a bank it is maker-checker, also called the four-eyes principle.</p>
     </div>
   </details>
   <details>
@@ -1425,6 +1427,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
     <summary><span class="chev">›</span> The answer key</summary>
     <div class="dbody">
       <p>Three behaviours, and all three appear in a room of eight: it waited, it refused, it paid. Count them on screen.</p>
+      <p>Give the two industry names as you count. Refusing when the check cannot answer is <strong>fail closed</strong>. Paying anyway is <strong>fail open</strong>. The teardown's first question at <span class="off" data-off="04:15">04:15</span> asks the same thing at forty processes.</p>
       <p>All three are a policy. The failure is not picking the wrong one. The failure is that two of the three are usually whatever the code happens to do, chosen by nobody.</p>
       <p><strong>A room that has produced all three has made the argument for you</strong>, and this is much stronger than the discussion it replaced, because it is their own code and they watched it happen.</p>
     </div>
@@ -1655,7 +1658,7 @@ decided_by=human:priya.n   a person agreed, and asked_at says when</pre>
   <h4>The concept</h4>
   <p>One sentence and no more: running it twice does the same thing as running it once. Say that it is the fourth fact from <span class="off" data-off="00:48">00:48</span>, the expensive one.</p>
   <h4>Components and design</h4>
-  <p>A key and a store. Name both and answer neither. The decide step answers the key, and <span class="off" data-off="03:03">03:03</span> answers the store.</p>
+  <p>A key and a store. Call the key by its industry name, the <strong>idempotency key</strong>: the value the server uses to recognise a repeat. Name both and answer neither. The decide step answers the key, and <span class="off" data-off="03:03">03:03</span> answers the store.</p>
   <h4>What makes two requests the same</h4>
   <p>The decide step carries more than the build does, so protect the two minutes.</p>
   <details>
@@ -1698,7 +1701,7 @@ cur = db.execute("INSERT OR IGNORE INTO paid VALUES (?)", (key,))
 if cur.rowcount == 0:
     return refuse(f"already paid: {key}")</pre>
       <p>The middle line is the point. They are not asking whether the key is there. They are inserting it and letting the insert report whether they were first.</p>
-      <p>A read followed by a write has a window between the two, and two processes find it. A constraint has no window, because the database serialises the inserts.</p>
+      <p>A read followed by a write has a window between the two, and two processes find it. Name it: a <strong>race condition</strong>. This shape is TOCTOU, time of check to time of use. A constraint has no window, because the database serialises the inserts.</p>
       <p><strong>Then run the second terminal again.</strong> Let them see it refuse.</p>
     </div>
   </details>
@@ -1810,7 +1813,7 @@ if cur.rowcount == 0:
   <p class="lede"><strong>Can another pair get ₹5,000 out of the system you built this morning?</strong></p>
   
   <p><strong><span class="off" data-off="03:18">03:18</span> answers the question a room of eight always asks</strong>, usually while writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
-  <p><strong>The adversary round is the reason the rest of the day is compressed.</strong> It is the only segment in six weeks where a participant's work is tested by a peer in real time. It tests the <span class="off" data-off="01:30">01:30</span> rule against an attacker, it produces the regression cases week 4 asks for, and it opens the prediction sealed at <span class="off" data-off="00:10">00:10</span>.</p>
+  <p><strong>The adversary round is the reason the rest of the day is compressed.</strong> It is the only segment in six weeks where a participant's work is tested by a peer in real time. Call it by its name, <strong>red teaming</strong>: people try on purpose to make the system fail, before an attacker does. It tests the <span class="off" data-off="01:30">01:30</span> rule against an attacker, it produces the regression cases week 4 asks for, and it opens the prediction sealed at <span class="off" data-off="00:10">00:10</span>.</p>
   <p><strong>The order is deliberate.</strong> The judge comes straight after topic 3, when the room has built three controls by hand and is most tempted to replace them with something cleverer. The round then attacks the three they kept.</p>
 </div>
 <div class="teach">
@@ -1876,6 +1879,7 @@ if cur.rowcount == 0:
     <summary><span class="chev">›</span> The answer key</summary>
     <div class="dbody">
       <p>The judge read the same attacker-controlled field as the agent. It is not a second opinion, it is the same opinion with a different prompt. <strong>Two models reading one hostile field are one control, not two.</strong></p>
+      <p>Use the industry name for the setup: <strong>LLM-as-a-judge</strong>, a model that reads another model's output and approves it. Then tie it to <span class="off" data-off="01:30">01:30</span>. Defence in depth needs independent layers, and these two share their input.</p>
       <p>Then rerun #8812 and get a different verdict. A guard with a pass rate rather than a behaviour is a guard nobody can write a runbook for.</p>
       <p>The control is a deterministic ceiling underneath the judge. <strong>A model may widen what gets through a hard limit. It may never be the limit.</strong></p>
     </div>
@@ -1937,7 +1941,7 @@ if cur.rowcount == 0:
     </div>
   </details>
   <h4>Latency budgeting</h4>
-  <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the budget is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at <span class="off" data-off="04:15">04:15</span> asks for one.</p>
+  <p>The 150 ms figure is a teaching number, not a benchmark. The point is that the <strong>latency budget</strong>, how much time controls may add to each request, is written down per endpoint, with an owner, like the ceiling. The teardown's fourth question at <span class="off" data-off="04:15">04:15</span> asks for one.</p>
   <h4>The order to choose in</h4>
   <p>The five-line order is reading on the learner page. It is the cascade stated as questions.</p>
   <h4>What tier 3 looks like in code</h4>

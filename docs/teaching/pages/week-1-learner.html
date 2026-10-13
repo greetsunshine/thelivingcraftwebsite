@@ -207,7 +207,7 @@ ol.toc a{color:inherit}
   <h2>What today is for</h2>
   
   <p class="lede">In week 0 you ran three commands and wrote down what each one paid out. Today you find out why, and the answer is never a fault in the model.</p>
-  <p style="font-size:var(--size-4)"><strong>The harness is everything in your agent that is not the model: the loop, the tool layer, the context built for each step, and the trace.</strong> There are four parts. You watch all four fail today, and you fix what can honestly be fixed in an afternoon. Then a system goes on the table that cannot be fixed in an afternoon, and that one is topic 5.</p>
+  <p style="font-size:var(--size-4)"><strong>The harness is everything in your agent that is not the model: the loop, the tool layer, the context built for each step, and the trace.</strong> A <strong>trace</strong> is the record of every call, tool and result in one run. There are four parts. You watch all four fail today, and you fix what can honestly be fixed in an afternoon. Then a system goes on the table that cannot be fixed in an afternoon, and that one is topic 5.</p>
   <p><strong>One word to be careful with, because week 3 takes it back.</strong> This week claims the bare word <em>harness</em> for the agent: the loop, the tools, the context assembly and the trace. Week 3's thing is the <em>evaluation harness</em> and it is always written in full. Two different harnesses two weeks apart with the same name is a confusion nobody recovers from mid-session.</p>
   <h3 style="font-size:var(--size-5);margin:var(--space-5) 0 var(--space-3)">You will rate yourself on these five, twice</h3>
   <p>Once at 00:05 before anything has been taught, and again at 04:52. Same words, scored 1 to 5. Nobody sees your first number but you. Both sets go on screen together at the end. We are looking at how much you moved, not at the score itself.</p>
@@ -366,7 +366,7 @@ ol.toc a{color:inherit}
               <b>What is missing</b>
               Nothing anywhere remembers that this credit has already been paid. The agent starts every run with an empty head.
             </div>
-            <p class="named">The usual name for the fix: an idempotency key. It is teardown question 1 at 03:28, and week 2 builds it.</p>
+            <p class="named">The usual name for the fix is an <strong>idempotency key</strong> (how a server recognises a repeated request, so doing it twice has the same effect as once). It is teardown question 1 at 03:28, and week 2 builds it.</p>
           </div>
         </details>
         <div class="writein"><span class="q">Where have you seen a system pay, send or charge twice because a message arrived twice?</span>
@@ -383,8 +383,8 @@ ol.toc a{color:inherit}
   <h2>Name what you drew</h2>
   
   <p>You will want to know <em>why</em> it did not remember. The answer is not a fault in the model, so we read those opening lines closely and name what we are looking at.</p>
-  <p><strong>An agent is a control loop over an unreliable oracle.</strong> An oracle here is something you ask a question and get an answer from, without being able to check its working. The loop has a name: <strong>ReAct</strong>, short for reason and act, from Yao et al., 2022. Its three phases are <strong>thought, action, observation</strong>, and they repeat until a stopping condition. The model is one component inside that loop. It is the only probabilistic one, and the only one you cannot unit-test into submission.</p>
-  <p><strong>Be careful with the name when you go reading.</strong> ReAct was a <em>prompting technique</em>, invented when models had no way to call a tool except by writing text you then parsed. Native tool calling arrived soon after and mostly replaced that scaffold. Frameworks kept the loop and dropped the format, and many of them still say "ReAct" for any tool-use loop. This repository parses the JSON by hand, so it is closer to the paper than most production agents you will read about next week.</p>
+  <p><strong>An agent is a control loop over an unreliable oracle.</strong> An oracle here is something you ask a question and get an answer from, without being able to check its working. The industry calls it the <strong>agent loop</strong> (the cycle where the model picks a tool, the code runs it, and the result goes back to the model). The best-known version is <strong>ReAct</strong>, short for reason and act, from Yao et al., 2022. Its three phases are <strong>thought, action, observation</strong>, and they repeat until a stopping condition. The model is one component inside that loop. It is the only probabilistic one, and the only one you cannot unit-test into submission.</p>
+  <p><strong>Be careful with the name when you go reading.</strong> ReAct was a <em>prompting technique</em>, invented when models had no way to call a tool except by writing text you then parsed. Native <strong>tool calling</strong> arrived soon after and mostly replaced that scaffold. Tool calling, also called function calling, means the model asks for a named function with arguments, and code runs it. Frameworks kept the loop and dropped the format, and many of them still say "ReAct" for any tool-use loop. This repository parses the JSON by hand, so it is closer to the paper than most production agents you will read about next week.</p>
   <p>Two words to watch. <span class="mono">▸ plan</span> at the top of a run is the ticket being announced once, before the loop starts, so it is not a phase. And what the code calls a tool <em>result</em> is the <strong>observation</strong>.</p>
   <h4>One step of the loop</h4>
   
@@ -556,7 +556,7 @@ ol.toc a{color:inherit}
   <p class="lede">By the end of it you can say how many calls to the model one ticket takes, why you do not control that number, and the difference between changing the odds and changing what is possible.</p>
   
   <p>You have drawn the loop and named its four parts. <strong>This topic is about what the loop costs and who decides it</strong>, and it ends on the single distinction the remaining five weeks are built on.</p>
-  <p><strong>What this topic is not.</strong> It is not the four failures, which is topic 2. It is not a fix to the step budget, which is drill 1 in topic 3.</p>
+  <p><strong>What this topic is not.</strong> It is not the four failures, which is topic 2. It is not a fix to the <strong>step budget</strong> (a limit on how many turns of the loop one run may take, often called max iterations). That fix is drill 1 in topic 3.</p>
   <p><strong>Left broken on purpose.</strong> <span class="mono">MAX_STEPS = 6</span> stays exactly where it is, and nothing here stops a run costing whatever it costs.</p>
 </section>
 <section class="card">
@@ -588,7 +588,7 @@ ol.toc a{color:inherit}
   <p>The trace shows what the agent <em>did</em>. It does not show what the model was <em>sent</em>. That is the last place in this system where something is still hidden. <span class="mono">make prompt</span> opens it, and it works on the scripted brain, so this runs without spending a request.</p>
   <p><strong>Read it in silence for three minutes before anything is named.</strong> Three things are worth finding for yourself, and the room collects them in this order.</p>
   <h4>There is no conversation</h4>
-  <p>Every step assembles two messages, a system prompt and one user message, and then throws them away. Nothing accumulates. The history you see inside step three is the observations from steps one and two, written out again as text. That is why the token count climbs the way it does.</p>
+  <p>Every step assembles two messages, a system prompt and one user message, and then throws them away. Those two messages fill the <strong>context window</strong> for that call (everything the model can read in one call, measured in tokens). Nothing accumulates. The history you see inside step three is the observations from steps one and two, written out again as text. That is why the token count climbs the way it does.</p>
   <h4>The reasoning is real, and then it is thrown away</h4>
   <p>Be precise about this, because half of it is easy to get wrong. <span class="mono">thought</span> is the <em>first</em> key in the JSON we ask for. So the model writes its reasoning before it writes the action, in the same completion, and that shapes the action it then produces. <strong>Inside a single step it is doing real work.</strong> That is what ReAct is for.</p>
   <p>What is missing is the carry-forward. <span class="mono">agent.py</span> stores <span class="mono">action</span>, <span class="mono">args</span> and <span class="mono">result</span>. It does not store the thought. So none of that reasoning reaches the next step's prompt. Read the history block in <span class="mono">make prompt</span> and look for it. It is not there.</p>
@@ -726,7 +726,7 @@ ol.toc a{color:inherit}
   <h2>Odds, or what is possible</h2>
   
   <p>Then comes the split that the rest of the cohort runs on.</p>
-  <p>Everything you can change in <span class="mono">llm.py</span> moves a <strong>probability</strong>. That means the model, the temperature, the system prompt, and what you let into the context. <span class="mono">MAX_STEPS</span> in <span class="mono">agent.py</span> and the contents of the <span class="mono">TOOLS</span> dictionary are the only two things in this codebase that change what is <strong>possible</strong>.</p>
+  <p>Everything you can change in <span class="mono">llm.py</span> moves a <strong>probability</strong>. That means the model, the temperature, the system prompt, and what you let into the context. <strong>Temperature</strong> is the setting that controls how much the model's choices vary, and 0 is the least. No setting removes <strong>non-determinism</strong> (the same input can give different outputs, even at temperature 0). <span class="mono">MAX_STEPS</span> in <span class="mono">agent.py</span> and the contents of the <span class="mono">TOOLS</span> dictionary are the only two things in this codebase that change what is <strong>possible</strong>.</p>
   <div class="tw">
     <table>
       <thead><tr><th>what you change</th><th>what it moves</th><th>where it lives</th></tr></thead>
@@ -785,7 +785,7 @@ ol.toc a{color:inherit}
       <details>
         <summary>Show what happened</summary>
         <div class="reveal">
-          <p><strong>Nothing here is a hallucination.</strong> The agent was handed the truth and acted against it.</p>
+          <p><strong>Nothing here is a hallucination</strong> (a confident statement the sources do not support). The agent was handed the truth and acted against it.</p>
           <div class="missing">
             <b>What is missing</b>
             <span class="mono">issue_credit</span> in <span class="mono">tools.py</span> accepts any account id and any amount and returns <span class="mono">{'credited': true}</span>. There is no line to point at, which is the answer.
@@ -821,6 +821,7 @@ ol.toc a{color:inherit}
     </div>
   </div>
   <p><strong>It is not being fooled about what to do.</strong> It is correctly following what looks like a documented account policy. It cannot tell a real business rule from attacker text. Both arrive through <span class="mono">lookup_account</span> in the same shape, with the same authority.</p>
+  <p>The attack has an industry name: <strong>indirect prompt injection</strong> (Greshake and others, 2023). The instruction is hidden in content the model fetches, here an account record.</p>
   <p>We name the missing piece, then we leave it. The missing piece is a boundary between text that is data and text that is authority. <strong>This is week 4's material and it does not fit into a smaller space.</strong> What you should take today is that the gap exists, that no prompt wording closes it, and that you watched it happen.</p>
 </section>
 <section class="card">
@@ -939,7 +940,7 @@ ol.toc a{color:inherit}
   <p class="lede">By the end of it you can make a silent failure announce itself to a machine, grade a tool by what it reaches, and refuse a call that does not match its contract.</p>
   
   <p>Keyboards open here. Three drills, each one a real defect in the agent you have been running, and each one is the floor.</p>
-  <p><strong>Every one of them makes a failure visible, named or measurable. None of them prevents anything.</strong> That is deliberate. Prevention is week 2, and it is worth more when you have spent a week looking at the thing unguarded.</p>
+  <p><strong>Every one of them makes a failure visible, named or measurable. None of them prevents anything.</strong> The industry word for this property is <strong>observability</strong> (being able to answer "what happened and why" from what the system recorded). Preventing nothing is deliberate. Prevention is week 2, and it is worth more when you have spent a week looking at the thing unguarded.</p>
   <p><strong>What this topic is not.</strong> It is not a fix to <span class="mono">issue_credit</span>, and you are asked repeatedly not to write one. It is not the bake-off, which is topic 4.</p>
   <p><strong>Left broken on purpose.</strong> All four failures from topic 2 still happen after all three drills. They just say so now.</p>
 </section>
@@ -983,6 +984,7 @@ ol.toc a{color:inherit}
     </table>
   </div>
   <p>One line makes it honest to a human. Three files make it honest to a process. <strong>The thing that wakes you at two in the morning is a process. Stopping after the first line is the failure this drill is about.</strong></p>
+  <p>This drill starts a <strong>failure taxonomy</strong> (a fixed list of named failure kinds, so a failure can say which one it is). Today the list has one name on it, <span class="mono">gaveup</span>.</p>
   <div class="ask">Decide this before you prompt: what exit code does <span class="mono">escalate</span> get?</div>
   <p>It is genuinely ambiguous. Escalating is the correct outcome for ticket 9999 and the wrong outcome for ticket 5820, and the code cannot tell them apart. <strong>Whatever number ends up there is a business rule set by autocomplete.</strong></p>
   <p>It is also the first thing the harness tells you about itself. Three files had to agree for one fact to escape, and that is with four files and one loop. Hold that number. In week 5 we ask what happens when one loop is no longer enough.</p>
@@ -996,6 +998,7 @@ ol.toc a{color:inherit}
 ▸ tool  issue_credit(account_id='4471', amount=1200) -&gt; {'credited': True, ...}</div>
   <p>One read a row out of a file. The other moved ₹1,200 you cannot get back. Same colour, same shape, same single line. <strong>There is nothing for your eye to catch on.</strong> That is fine with two calls on a screen. It is not fine at a hundred runs a night in a log file, when the question on Tuesday morning is <em>did anything we cannot undo happen while we were asleep?</em></p>
   <p>Write down what each of the three tools in <span class="mono">tools.py</span> actually does to the world, then put that grade into the trace line. Three levels, one test each.</p>
+  <p>The industry name for this grading is <strong>action tiering</strong>, also called tool risk classification (grading tools by what they can do: read-only, reversible, irreversible). Our read and write are its read-only and reversible.</p>
   <ul>
     <li><strong>read</strong> — run it twice, nothing is different. <span class="mono">lookup_account</span>.</li>
     <li><strong>write</strong> — something changed and you could change it back. <span class="mono">escalate</span>.</li>
@@ -1017,6 +1020,7 @@ res = fn(**args)         # agent.py:43</div>
   <p>Two things go wrong, and the quiet one is why this drill exists.</p>
   <p><strong>Loud.</strong> The model writes <span class="mono">account</span> instead of <span class="mono">account_id</span>. Python raises <span class="mono">TypeError</span> and the run dies. It never reaches the end, so <span class="mono">trace.summary()</span> never prints, and you lose the cost line on exactly the run you wanted it for.</p>
   <p><strong>Quiet. This is the ₹0.</strong> The account id arrives as a string from the scripted brain and as a number from a real model, on the same ticket. Nothing reports it. <span class="mono">lookup_account</span> happens to call <span class="mono">str()</span> on the way in and quietly repairs it. <strong>That one <span class="mono">str()</span> is doing real work and nobody knows it is there.</strong></p>
+  <p>The fix this drill builds is <strong>pre-dispatch validation</strong>, also called argument validation (checking a tool call's arguments in code before the tool runs).</p>
   <div class="ask">Decide first: what happens when the arguments do not match?</div>
   <p>Your assistant will decide for you and not mention it.</p>
   <ul>
@@ -1203,7 +1207,7 @@ python -m src.main --ticket 9999 --model &lt;a second model&gt;</div>
   <h4>3 · The question eight months later</h4>
   <p>A regulator asks why one specific account was credited. What does the audit trail have to contain to answer that? Is a stored prompt and completion enough? Note what you learned at 00:46: <strong>the model's stated reasoning is never stored</strong>, so if you were planning to show someone the <span class="mono">thought</span>, it does not exist.</p>
   <h4>4 · Where the human goes</h4>
-  <p>Approving every credit does not scale. Approving none is what we watched at the start. <strong>Draw the line, and defend it in terms of money rather than confidence.</strong></p>
+  <p>This is the <strong>human-in-the-loop</strong> question (HITL: a person approves or decides at a named step). Approving every credit does not scale. Approving none is what we watched at the start. <strong>Draw the line, and defend it in terms of money rather than confidence.</strong></p>
   <h4>5 · When the model is down</h4>
   <p>The provider has an outage. Do you queue, fail closed, or fall back to rules? And what do you tell the customer waiting inside a four-hour service level agreement? Remember what failing closed looked like at 01:36: <strong>₹0 paid, a clean trace, and a customer who was owed the money.</strong></p>
 </section>
@@ -1220,6 +1224,7 @@ python -m src.main --ticket 9999 --model &lt;a second model&gt;</div>
   <h2>Write the boundary down</h2>
   
   <p>Pick the one question you argued hardest about. Write it up as a one-page decision record, <strong>in the shape you would put in front of an architecture review</strong>. Seven sections, and they do not change from week to week — week 6 has to be readable against week 1.</p>
+  <p>The industry name is an <strong>architecture decision record</strong>, or ADR (a short written record of one decision: context, options, choice, consequences).</p>
   <ol>
     <li><strong>Context.</strong> What breaks today, cited against a run you watched, with the number.</li>
     <li><strong>Goals.</strong> Three at most, each one testable. "Safer" is not a goal. "No dispute is credited twice" is.</li>

@@ -37,7 +37,7 @@ Every live session runs the same five beats.
 5. **The Horizon** — where the field is moving and what it means for your career
 
 Between sessions there is about two hours of extending your build, plus a short
-written decision record. Add the live session and its pre-work, and that is the
+architecture decision record (ADR: a written record of one decision you made). Add the live session and its pre-work, and that is the
 ~5 hrs/week you were quoted. It is meant to be honest rather than aspirational.
 
 The Horizon is the one part that changes each time this course runs. It covers
@@ -106,7 +106,8 @@ working this week rather than during the session. `make retry` needs no key
 either way, so a key problem never costs you both demonstrations. If your key
 will not cooperate, say so, and you will pair with someone in the room.
 
-You are done when `make run` gives you something like this:
+You are done when `make run` prints a trace like the one below. A trace is the
+record of every call, tool and result in one run.
 
 ```
 ▸ plan  ticket #4471 — Billing dispute — charged twice for Pro...
@@ -162,7 +163,8 @@ like a success on every dashboard you own. We do that one together.
 
 **Your daily quota.** On the Google AI Studio free tier you get **20 model
 requests per day, per model**. One agent run is roughly three requests, one per
-step. That is about **six runs a day**. `make retry`, `make mock` and
+step. Each step is one turn of the agent loop: the model picks a tool, the code
+runs it, and the result goes back to the model. That is about **six runs a day**. `make retry`, `make mock` and
 `make weird-mock` cost you none of it. Only `make injected` and `make run` do. Do
 not use up the allowance experimenting the night before Class 1. If you do, you
 will be sharing someone else's screen for the drills.

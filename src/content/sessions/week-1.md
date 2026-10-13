@@ -158,8 +158,8 @@ In week 0 you ran three commands and wrote down what each one paid out. Today yo
 find out why, and the answer is never a fault in the model.
 
 **The harness is everything in your agent that is not the model: the loop, the
-tool layer, the context built for each step, and the trace.** There are four
-parts. You watch all four fail today, and you fix what can honestly be fixed in
+tool layer, the context built for each step, and the trace.** A **trace** is the
+record of every call, tool and result in one run. There are four parts. You watch all four fail today, and you fix what can honestly be fixed in
 an afternoon. Then a system goes on the table that cannot be fixed in an
 afternoon, and that one is block 4.
 
@@ -390,7 +390,9 @@ pays ₹1,200 on each of them.
 **Not one wrong decision was made in any of those three runs.** There is no bug
 to find and no prompt to improve. This one needs no key and no model at all. That
 is the point. **There is no smarter brain that fixes it.** Nothing in the system
-remembers that it already acted. We design the fix in block 4, question 1.
+remembers that it already acted. The usual name for the fix is an **idempotency
+key** (how a server recognises a repeated request, so doing it twice has the same
+effect as once). We design the fix in block 4, question 1.
 
 This is the only one of today's four failures you can reason your way to. That is
 why it comes first. You get to work it out rather than be shown it. The other
@@ -405,16 +407,18 @@ model, so we read those opening lines closely and name what we are looking at.
 
 **An agent is a control loop over an unreliable oracle.** An oracle here is
 something you ask a question and get an answer from, without being able to check
-its working. The loop has a name: **ReAct**, short for reason and act, from Yao
-et al., 2022. Its three phases are **thought, action, observation**, and they
+its working. The industry calls it the **agent loop** (the cycle where the model
+picks a tool, the code runs it, and the result goes back to the model). The
+best-known version is **ReAct**, short for reason and act, from Yao et al., 2022. Its three phases are **thought, action, observation**, and they
 repeat until a stopping condition. The model is one component inside that loop.
 It is the only probabilistic one, and the only one you cannot unit-test into
 submission. Draw the loop. Mark the model.
 
 Be careful with the name when you go reading. ReAct was a *prompting technique*.
 It was invented when models had no way to call a tool except by writing text you
-then parsed. Native tool calling arrived soon after and mostly replaced that
-scaffold. Frameworks kept the loop and dropped the format, and many of them still
+then parsed. Native **tool calling** arrived soon after and mostly replaced that
+scaffold. Tool calling, also called function calling, means the model asks for a
+named function with arguments, and code runs it. Frameworks kept the loop and dropped the format, and many of them still
 say "ReAct" for any tool-use loop. This repo parses the JSON by hand, so it is
 closer to the paper than most production agents you will read next week. That is
 exactly why it is worth an afternoon.
@@ -492,8 +496,10 @@ Three consequences follow, and the third belongs on a whiteboard.
 - **You do not decide how many calls a ticket takes. The model does.** It runs
   until it emits `resolve` or `escalate`. So the price of handling one ticket is
   not a number you set. It is a variable the probabilistic component controls,
-  and the only thing bounding it is `MAX_STEPS = 6` in `agent.py`. That changes
-  what the step budget is for. It is not a safety valve for runaway loops. It is
+  and the only thing bounding it is `MAX_STEPS = 6` in `agent.py`. That is the
+  **step budget** (a limit on how many turns of the loop one run may take, often
+  called max iterations). That changes what the step budget is for. It is not a
+  safety valve for runaway loops. It is
   the only upper bound on what a single ticket can cost you.
 
 The practical version of that arrives before you do. The free tier most of you
@@ -514,7 +520,9 @@ Read it in silence for three minutes before anything is named. Three things are
 worth finding for yourself, and the room collects them in this order.
 
 **There is no conversation.** Every step assembles two messages, a system prompt
-and one user message, and then throws them away. Nothing accumulates. The history
+and one user message, and then throws them away. Those two messages fill the
+**context window** for that call (everything the model can read in one call,
+measured in tokens). Nothing accumulates. The history
 you see inside step three is the observations from steps one and two, written out
 again as text. That is why the token count climbs the way it does.
 
@@ -593,7 +601,10 @@ Then comes the split that the rest of the cohort runs on.
 
 Everything you can change in `llm.py` moves a **probability**. That means the
 model, the temperature, the system prompt, and what you let into the context.
-`MAX_STEPS` in `agent.py` and the contents of the `TOOLS` dictionary are the only
+**Temperature** is the setting that controls how much the model's choices vary,
+and 0 is the least. No setting removes **non-determinism** (the same input can
+give different outputs, even at temperature 0). `MAX_STEPS` in `agent.py` and
+the contents of the `TOOLS` dictionary are the only
 two things in this codebase that change what is **possible**.
 
 | what you change | what it moves | where it lives |
@@ -658,8 +669,8 @@ Write down, alone, in 30 seconds:
 > **Which single line of this codebase would have stopped it?** Not "what should
 > the model have done". A line, and which file it is in.
 
-Nothing here is a hallucination. The agent was handed the truth and acted against
-it.
+Nothing here is a **hallucination** (a confident statement the sources do not
+support). The agent was handed the truth and acted against it.
 
 We run this one as `make weird-mock`, on the scripted brain, so that every screen
 in the room shows the identical trace. Nothing then rests on sampling luck. Which
@@ -700,6 +711,10 @@ like a documented account policy. It cannot tell a real business rule from
 attacker text. Both arrive through `lookup_account` in the same shape, with the
 same authority. Nothing in the system has ever marked which text is allowed to
 give instructions.
+
+The attack has an industry name: **indirect prompt injection** (Greshake and
+others, 2023). The instruction is hidden in content the model fetches, here an
+account record.
 
 We name the missing piece, then we leave it. The missing piece is a boundary
 between text that is data and text that is authority. This is week 4's material
@@ -843,7 +858,9 @@ what it is called? And what happens when you give a coding assistant your
 decision instead of your task?
 
 **Every one of them makes a failure visible, named or measurable. None of them
-prevents anything.** That is deliberate. Prevention is week 2, and it is worth
+prevents anything.** The industry word for this property is **observability**
+(being able to answer "what happened and why" from what the system recorded).
+Preventing nothing is deliberate. Prevention is week 2, and it is worth
 more when you have spent a week looking at the thing unguarded.
 
 **Drills 1, 2 and 3 happen in the room.** Drill 4 is your homework. It is the
@@ -897,6 +914,9 @@ thing that wakes you at two in the morning is a process. **Stopping after the
 first line is the failure this drill is about.** Your terminal now looks right,
 and every automated consumer is still being told the run succeeded.
 
+This drill starts a **failure taxonomy** (a fixed list of named failure kinds, so
+a failure can say which one it is). Today the list has one name on it, `gaveup`.
+
 **Decide this one before you prompt, because your assistant will decide it
 silently if you do not:**
 
@@ -933,6 +953,10 @@ So write down what each of the three tools in
 [`tools.py`](https://github.com/greetsunshine/reference-agent/blob/main/src/tools.py)
 actually does to the world. Then put that grade into the trace line. Three
 levels, one test each.
+
+The industry name for this grading is **action tiering**, also called tool risk
+classification (grading tools by what they can do: read-only, reversible,
+irreversible). Our read and write are its read-only and reversible.
 
 - **read** — run it twice, nothing is different. `lookup_account`.
 - **write** — something changed and you could change it back. `escalate`.
@@ -990,8 +1014,9 @@ there.** Take it away and an honest ticket gets ₹0, with a clean trace and no
 error anywhere.
 
 So write down what each tool accepts, names and types, next to the tools. Then
-check the arguments against it before the call. **Decide first what happens when
-they do not match.** Your assistant will decide for you and not mention it.
+check the arguments against it before the call. That check is **pre-dispatch
+validation**, also called argument validation (checking a tool call's arguments in
+code before the tool runs). **Decide first what happens when they do not match.** Your assistant will decide for you and not mention it.
 
 - **coerce** — quietly fix it up. This is what the code does today, and it is
   exactly why the ₹0 was invisible.
@@ -1150,7 +1175,8 @@ Is a stored prompt and completion enough? Note what you learned at 00:46. The
 model's stated reasoning is never stored. So if you were planning to show someone
 the `thought`, it does not exist.
 
-**4 · Where the human goes.** Approving every credit does not scale. Approving
+**4 · Where the human goes.** This is the **human-in-the-loop** question (HITL: a
+person approves or decides at a named step). Approving every credit does not scale. Approving
 none is what we watched at the start. Draw the line, and defend it in terms of
 money rather than confidence.
 
@@ -1178,7 +1204,9 @@ to take into next week.
 Pick the one question you argued hardest about. Write it up as a one-page
 decision record, in the shape you would put in front of an architecture review.
 Seven sections, and they do not change from week to week — week 6 has to be
-readable against week 1.
+readable against week 1. The industry name is an **architecture decision
+record**, or ADR (a short written record of one decision: context, options,
+choice, consequences).
 
 1. **Context.** What breaks today, cited against a run you watched, with the number.
 2. **Goals.** Three at most, each one testable. "Safer" is not a goal. "No dispute is credited twice" is.
