@@ -50,7 +50,7 @@ runOfShow:
   - { at: "00:00", label: "Opening", kind: opening, detail: "What today is for, the first self-rating, and one sealed prediction" }
   - { at: "00:15", label: "1 · Direct prompt injection", kind: block, detail: "Who added \"ignore instructions in the ticket\" to the prompt after week 1?" }
   - { at: "00:54", label: "Pair discussion", kind: standup, detail: "Which of your fields can an outsider write?" }
-  - { at: "00:59", label: "2 · Indirect injection through retrieval", kind: block, detail: "Your check catches nine hostile clauses out of ten. What does the tenth do?" }
+  - { at: "00:59", label: "2 · Indirect injection through retrieval", kind: block, detail: "Your check stops ten planted clauses out of eleven. What does the eleventh do?" }
   - { at: "01:37", label: "3 · Building a Model Context Protocol (MCP) server", kind: block, detail: "You marked issue_credit with idempotentHint: true. What in your code makes that true?" }
   - { at: "02:16", label: "Break", kind: break, detail: "Fifteen minutes. Run make w4-hashes during it" }
   - { at: "02:31", label: "4 · Least privilege for an MCP server you did not write", kind: block, detail: "The injection worked. What is the most it could do?" }
@@ -74,14 +74,14 @@ checkpoints:
       - Review attacks an assistant wrote for the shapes it did not think of
   - at: "01:36"
     items:
-      - Plant a clause in the store that wins the retrieval for an honest ticket
-      - Build a check after retrieval that prints its reason, not only its verdict
+      - Plant a clause in the store that wins the search for an honest ticket, and show DeepSeek paying it
+      - Build a content filter after retrieval that removes invisible characters and prints its reason, not only its verdict
       - State your check's miss rate on planted clauses, and how many genuine clauses it stops
-      - Say why a provenance check is a rule and a content check is a rate
+      - Name the layer of defence each control belongs to, and what it costs at 1,333 disputes a day
   - at: "02:15"
     items:
       - Expose a tool with a schema that requires every field the server needs to decide safely
-      - Make idempotentHint true with a key in a store every server copy shares
+      - Make idempotentHint true with an idempotency key in a store every server copy shares
       - Check a token's scope on every request, and refuse with a reason the model can read
       - Say which of your annotations your code enforces, and which are declared only
   - at: "03:10"
@@ -104,7 +104,7 @@ prework:
     - "Read one page on how MCP works: the Overview and the Architecture page of the specification dated 2026-07-28, at modelcontextprotocol.io. About 10 minutes. None of it is taught live."
     - "Bring one adversarial case from your week 3 suite, or your bypass from week 2's adversary round. Written down, quoted exactly. It becomes your third attack in the 00:33 lab."
     - "Pull the reference agent, run make setup, and run make w4-eval once, about two seconds, so the first lab is not also your first install."
-    - "Get a DeepSeek key for the day's live labs, about 5 minutes (platform.deepseek.com/api_keys, a small top-up). The labs make up to about 270 calls, under ₹20 at deepseek-flash's peak price on 7 October 2026. Save it as DEEPSEEK_API_KEY in the reference agent's .env. Your Gemini key from week 0 also works with W4_PROVIDER=gemini, but its free tier of 20 requests a day covers topic 1 only."
+    - "Get a DeepSeek key for the day's live labs, about 5 minutes (platform.deepseek.com/api_keys, a small top-up). The labs make up to about 450 calls, under ₹40 at deepseek-flash's peak price on 7 October 2026. Save it as DEEPSEEK_API_KEY in the reference agent's .env. Your Gemini key from week 0 also works with W4_PROVIDER=gemini, but its free tier of 20 requests a day covers topic 1 only."
     - "If you added a line to your prompt after week 1, bring it. We start with it at 00:15."
 
 after:
@@ -196,17 +196,19 @@ to the prompt after week 1?
 - At enterprise scale: Lakera Guard, Azure AI Content Safety Prompt Shields,
   Meta Prompt Guard, NVIDIA NeMo Guardrails, each with what it costs.
 
-**2 · Indirect injection through retrieval.** Your check catches nine hostile
-clauses out of ten. What does the tenth do?
-- A clause planted in the policy store credits ₹50,000 without review.
-- Every text the agent reads is an input, including its own documents.
-- Lab, `make w4-poison`: build a check after retrieval, and measure how often it
-  misses, with week 3's harness.
+**2 · Indirect injection through retrieval.** Your check stops ten planted
+clauses out of eleven. What does the eleventh do?
+- A poisoned clause planted in the policy store, which is RAG poisoning: DeepSeek
+  pays its ₹50,000 on 40 runs in 40.
+- Every text the agent reads is an input, including its own documents. The four
+  layers of defence, and what each costs at 1,333 disputes a day.
+- Lab, `make w4-poison`: build a content filter after retrieval, and measure on DeepSeek
+  what it stops and what it misses.
 - At enterprise scale: content scanning and document signing, with costs.
 
 **3 · Build an MCP server.** You marked `issue_credit` with
 `idempotentHint: true`. What in your code makes that true?
-- The retry pays ₹1,200 twice. A hint declares behaviour and enforces nothing.
+- The retry pays ₹1,200 twice. A tool annotation declares behaviour and enforces nothing.
 - How large each tool is, its schema, its annotations.
 - The protocol keeps no session between calls, so authorisation moves into your
   own application code.
@@ -221,20 +223,21 @@ worked. What is the most it could do?
   a token that can also write.
 - When inheriting somebody else's tools is the right call, and what to ask them
   first.
-- Least privilege per tool.
+- Least privilege per tool, enforced by an MCP gateway: here, a proxy you write.
 - Lab, `make w4-proxy`: a proxy that cuts each tool to what it needs. A note
   asking for ₹2,50,000 as an approved record moves ₹0 even when the model obeys it.
 - At enterprise scale: MCP gateways and registries, with costs.
 
 **5 · The runaway loop, and who would notice.** Which signal would have moved,
 and who reads it?
-- A tool whose cursor never ends: up to 30 calls and 52,782 tokens for a ticket
+- Unbounded consumption, from a tool whose cursor never ends: up to 30 calls and 52,782 tokens for a ticket
   that needs 2.
 - The resource guardrail: the sixth kind on week 2's map, and the one week 2 did
   not build.
 - Three limits, and what each one misses: the repeat limit stopped 0 runs of 10.
 - Lab, `make w4-breaker`: stop the loop on a real model with a limit in code.
-- Production monitoring: who sees it, and what they do at 3am.
+- Production monitoring: page on the number that means the job got done
+  (business-level alerting), and say who sees it at 3am.
 - At enterprise scale: Langfuse, Arize Phoenix, Datadog LLM Observability,
   OpenTelemetry's GenAI conventions.
 

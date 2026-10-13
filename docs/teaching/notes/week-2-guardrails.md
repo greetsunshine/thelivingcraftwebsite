@@ -292,6 +292,10 @@ out loud and almost every one is how much and who decides, which is the number
 and the owner. They have derived the answer to the card's own heading, so do not
 state it first.
 
+Use the industry name once. Each record is an architecture decision record
+(ADR): a short written record of one decision, with its context, options, choice
+and consequences.
+
 Ask for the two records in advance and read them before the session. Pick one
 that is mostly wishes and one that has at least one real policy, so the contrast
 is in the room rather than in your commentary.
@@ -634,6 +638,11 @@ Two minutes in writing before anybody types. The third question is the lab.
 One shape, and not the only one. Anything that puts the numbers outside the tool
 and reads them at the dispatch is a pass.
 
+Name two terms while you show it. The ceiling is a hard limit: a number the code
+will not exceed, whatever the model asks. Keeping it in a versioned file is
+policy as code: a rule written as code or config that is versioned and tested,
+not a sentence in a prompt.
+
 ```
 data/policy.json
   "on_missing_row": "refuse"
@@ -748,7 +757,7 @@ would have been refused at the dispatch, because a tool with no policy row is
 refused by default. If somebody predicted the ledger, say so now and name them.
 A dispatch check only covers callers that go through the agent. Move that tool
 into another team's service and the dispatch never sees it. The usual name for
-the fix is a policy enforcement point.
+the fix is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.
 
 ### The wrong answer worth spending time on, and one probe
 
@@ -858,8 +867,9 @@ their week, not a reason to stop at the dispatch and call it finished.
 
 ### The wrong answer worth spending time on, and one probe
 
-"So the dispatch check was a waste of time." No, and this matters. Defence in
-depth is two copies of one rule in two places, and it is correct. What is
+"So the dispatch check was a waste of time." No, and this matters. Two copies
+of one rule in two places is defence in depth: two controls at different points, so a
+caller that skips one still meets the other. It is correct. What is
 required is naming which copy is authoritative, because two copies that drift
 are worse than one. The dispatch check gives a fast, specific refusal message.
 The ledger constraint gives coverage. Keep both and write down which one you
@@ -943,7 +953,11 @@ end, and seven months of a billing error is one honest customer.
 The control: over the limit has to mean **ask**, not **no**. A limit with one
 outcome is a wall. A limit with two outcomes is a gate.
 
-**Say maker-checker early and out loud.** This is the highest-value move in the
+Name it as the industry does. It is an approval gate: one party proposes, and a
+different one approves.
+
+**Say maker-checker early and out loud.** It is the banking name for the same
+gate, also called the four-eyes principle. This is the highest-value move in the
 topic. For anyone who has shipped in a bank, an NBFC or a payments company it
 converts the whole thing from a new agent problem into something they already
 believe and have been audited on. Ask for a show of hands on who has built one.
@@ -1187,6 +1201,10 @@ All three are a policy. The failure is not picking the wrong one. The failure is
 that two of the three are usually whatever the code happens to do, chosen by
 nobody.
 
+Give the industry names as you count. Refusing when the check cannot answer is
+fail closed. Paying anyway is fail open. Teardown question 1 at 04:15 asks the
+same thing at forty processes.
+
 **Say plainly that nobody in the room chose a wrong answer.** Every one of the
 three is somebody's production behaviour tonight. The difference between them is
 not correctness. It is whether the person who wrote the code ever asked the
@@ -1313,8 +1331,9 @@ The ticket id alone is the answer that holds. The account plus the amount is the
 interesting near-miss: it is stable across runs and too stable, because a
 customer legitimately owed two identical ₹1,200 refunds receives one.
 
-The key is derived from the dispute identity and chosen by the caller, not
-minted per run. A fresh `uuid4()` at the start of a run is the most common wrong
+Use the industry name for it: the idempotency key, the value the server uses to
+recognise a repeat. The key is derived from the dispute identity and chosen by
+the caller, not minted per run. A fresh `uuid4()` at the start of a run is the most common wrong
 answer and it fails exactly when it is needed: a new run mints a new key, the
 provider sees two distinct requests, it pays twice.
 
@@ -1368,7 +1387,9 @@ The middle line is the segment. They are not asking whether the key is there. Th
 are inserting it and letting the insert report whether they were first.
 
 A read followed by a write has a window between the two, and two processes find
-it. A constraint has no window, because the database serialises the inserts.
+it. Name it: a race condition, where two runs read the same state, both decide,
+and both act. This shape is TOCTOU, short for time of check to time of use. A
+constraint has no window, because the database serialises the inserts.
 
 Then run the second terminal again. It refuses. **Let them see that**, because
 the false pass at 02:55 is much easier to sit with once the room has watched the
@@ -1467,6 +1488,11 @@ The judge read the same field the agent read. It is not a second opinion. It is
 the same opinion with a different prompt. **Two models reading one
 attacker-written field are one control, not two.**
 
+Use the industry name for the setup: LLM-as-a-judge, a model that reads another
+model's output and scores or approves it. Then tie it to 01:30. Defence in depth
+needs layers that fail for different reasons. These two read the same
+attacker-written text, so one hostile sentence gets past both.
+
 Then run #8812 again and get a different verdict. A guard with a pass rate
 rather than a behaviour is a guard nobody can write a runbook for.
 
@@ -1516,7 +1542,7 @@ instinct answered from two sides. Running both is the same twenty minutes twice.
 
 ### The tiered gateway, 5 minutes, after the reveal
 
-**Sequence.** Ask for the predicted multiple first, in writing: *your check took this many milliseconds at 00:54; how many times slower is a model?* Take three numbers. Then the tier table on the learner page: rules in the process, small classifiers, a model as judge. Then the cascade: stop at the cheapest tier that can decide. Then in-band against out-of-band in one sentence, tied to the undo question from 00:48. Close on a latency budget written per endpoint, because teardown question 4 uses it.
+**Sequence.** Ask for the predicted multiple first, in writing: *your check took this many milliseconds at 00:54; how many times slower is a model?* Take three numbers. Then the tier table on the learner page: rules in the process, small classifiers, a model as judge. Then the cascade: stop at the cheapest tier that can decide. Then in-band against out-of-band in one sentence, tied to the undo question from 00:48. Close on a latency budget written per endpoint, because teardown question 4 uses it. A latency budget is how much time a control may add to each request.
 
 **The answer key.** The learner page prints the ranges the field quotes: tier 1 deterministic rules under 5 ms, tier 2 fast ML classifiers 15 to 40 ms, tier 3 specialised guardrail models 100 to 300 ms, and an in-band latency tax of 50 to 300 ms. **Always say "ranges the field quotes".** The room's own timer is the number that counts. A payment's checks stay in-band whatever they cost, because nothing takes a payment back. A chat reply can run a slow judge out-of-band, because a stream can be stopped.
 
@@ -1531,6 +1557,9 @@ instinct answered from two sides. Running both is the same twenty minutes twice.
 ## 03:31 · Hands-on lab: the adversary round
 
 **Changed 1 October.** The lab is restructured: a table of today's three controls and how each broke, the rules as a list, git commands to run the other pair's code, an `attack.py` harness that replaces the model with scripted tool calls, and a clearer reveal of the six known routes. Route 6 is reworded: it is week 1's prompt injection found again, and week 4 builds the defence. The enterprise card adds a promptfoo configuration sketch.
+
+**This is red teaming**: people try on purpose to make the system fail, before
+an attacker does. Use the term once, in those words.
 
 **The reason the rest of the day is compressed.** Everything
 before it is a control the room was shown how to break. This is the first one

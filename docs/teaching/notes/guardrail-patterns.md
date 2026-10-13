@@ -2,7 +2,8 @@
 
 *Topic note. Not learner-facing, and not tied to one week.*
 
-Week 2 builds four controls and every one of them is a predicate in code. That is
+Week 2 builds four guardrails: controls outside the model that limit what the
+agent can do or say. Every one of them is a predicate in code. That is
 the right default and the session never says so out loud, because until now there
 was nothing to contrast it with. This note is the contrast: the other ways a
 control can reach a verdict, what each one costs, and the order to try them in.
@@ -74,14 +75,17 @@ Code decides. Same input, same verdict, every time.
     pattern                what it is                          when
     ──────────────────────────────────────────────────────────────────────────
     predicate check        an if against a value and a row     the rule is expressible
-    policy as data         rules in a file or engine           the rule needs an owner
+    policy as code         rules in a file or engine           the rule needs an owner
     store constraint       unique or check, in the database    concurrency is involved
     allow-list             enumerate what may happen           always, over a deny-list
     capability token       the right to call is a value        the check must not be forgettable
     schema enforcement     the grammar forbids bad output      structured output
 
-Three of these are already built in the room. Drill 1 builds policy as data,
-drill 3 builds the store constraint, and the dispatch check is a predicate. The
+Three of these are already built in the room. Drill 1 builds policy as code: a
+rule written as code or config that is versioned and tested, not a sentence in a
+prompt. Drill 3 builds the store constraint, which closes a race condition. In a
+race condition, two runs read the same state, both decide, and both act. The
+dispatch check is a predicate. The
 two that are not built are worth one sentence each.
 
 **Allow-list over deny-list.** An action with no policy row is refused. The
@@ -108,7 +112,7 @@ session does not cover and the one the room reaches for first.
     pattern            what it is                                    honest cost
     ──────────────────────────────────────────────────────────────────────────────
     classifier guard   a small trained model, fixed taxonomy         a threshold you own
-    LLM-as-judge       a second model scores or vetoes the first     cost, latency, variance
+    LLM-as-a-judge     a second model scores or vetoes the first     cost, latency, variance
     critic loop        the model reviews its own output              shares the maker's blind spots
     ensemble judge     several judges, majority verdict              cost times the panel
     grounded verifier  check the claim against a tool result         needs the evidence to exist
@@ -125,9 +129,10 @@ Nothing in the system notices. A grounded verifier is the control for that, and
 it is one comparison between two values you already hold. Week 4 owns it, and it
 is worth naming here so that the family does not look like it is only judges.
 
-### LLM-as-judge, and why it is misused
+### LLM-as-a-judge, and why it is misused
 
-Four things, and they are the four minutes the 02:40 question needs.
+LLM-as-a-judge is a model that reads another model's output and scores or
+approves it. Four things, and they are the four minutes the 02:40 question needs.
 
 **A judge is a detective control, not a preventive one.** Use it to route
 something for review. Do not let it authorise a payment. This is the same
@@ -173,8 +178,9 @@ the same model with a different prompt.
 
 ## Family 3 · Human in the path
 
-Named here for completeness. The reasoning is the maker-checker card and is not
-repeated.
+Named here for completeness. The base pattern is the approval gate: one party
+proposes, and a different one approves. Banks call it maker-checker, or the
+four-eyes principle. The reasoning is the maker-checker card and is not repeated.
 
     maker-checker          the proposer cannot be the approver
     dual control           two approvers above a threshold
@@ -192,7 +198,8 @@ without knowing it has a name or a precondition.
 
 ## Family 4 · Architectural patterns
 
-Where the control sits in the system, rather than how it reaches a verdict.
+Where the control sits in the system, rather than how it reaches a verdict. The
+first row is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.
 
     interceptor at dispatch   one enforcement point every call passes through   built, drill 1
     broker                    the agent never holds the credential              teardown q4
@@ -218,11 +225,13 @@ almost nobody runs.
 
 - **A golden set, plus one regression case per bypass found.** Week 4 owes this
   per attack, and week 3 builds the harness that makes it possible.
-- **A red-team corpus that grows.** Week 4.
+- **A red-team corpus that grows.** Red teaming means people try on purpose to
+  make the system fail, before an attacker does. Week 4.
 - **Mutation testing of the control.** Break the guard on purpose and confirm a
   test goes red. A guard whose test passes when the guard is deleted is the most
   common silent failure in this whole area.
-- **Turn the policy store off in staging.** Observe whether the system fails open.
+- **Turn the policy store off in staging.** Observe whether the system fails open
+  (allows the action when the check itself is down).
   Most do, and nobody wrote that down as the policy.
 
 ---

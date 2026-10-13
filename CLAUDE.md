@@ -222,8 +222,10 @@ refusal must name both.
 ### Reference
 The per-session build contract is [docs/teaching/threads.md](docs/teaching/threads.md) — read the week's
 row before writing any block of that week. [docs/teaching/README.md](docs/teaching/README.md) says which
-kind of note belongs in which file. Read them when building or revising a session.
-Do not inline either one here.
+kind of note belongs in which file. [docs/teaching/glossary.md](docs/teaching/glossary.md) is the
+list of industry terms, each with its plain gloss: lead with the term, gloss it on first use,
+and add a new term there before it appears on a page. Read them when building or revising a
+session. Do not inline any of them here.
 
 ## Surfaces (Astro routes)
 - **`/`** — *The Living Craft* cohort, **rebuilt against the 10 September copy**.

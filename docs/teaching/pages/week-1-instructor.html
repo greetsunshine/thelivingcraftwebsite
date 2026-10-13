@@ -422,6 +422,7 @@ ol.toc a{color:inherit}
     <h4>Now the part you drew</h4>
     <p>Go back to whoever drew the model in the middle at 00:18 and ask them to redraw it with the model as one box among four. <strong>Them doing it is worth more than you saying it.</strong></p>
     <p><strong>Land one sentence and then move.</strong> <em>Three of the four are ordinary software you already know how to make reliable.</em> That is the sentence the whole course rests on, and it is the reason a room of senior engineers is in the right place.</p>
+    <p><strong>Give the industry term once the loop is on the board.</strong> It is the <em>agent loop</em> (the model picks a tool, the code runs it, and the result goes back to the model). They will meet that phrase in every vendor document, so they need to hear it here.</p>
     <p class="quiet"><strong>The ReAct hedge is not optional.</strong> Somebody in this room has read the paper and somebody else has only met the word in a framework's documentation, and they mean different things by it. Thirty seconds spent on "the frameworks kept the loop and dropped the format" prevents a twenty-minute argument in week 5.</p>
   </div></div>
 </article>
@@ -708,6 +709,7 @@ ol.toc a{color:inherit}
   
   <p>The weak version is a slide about token cost. Every person in this room has optimised something, and they will file it under performance and stop listening.</p>
   <p>The stronger claim is that <strong>the price of one ticket is set by the probabilistic component, not by you</strong>, and that <span class="mono">MAX_STEPS</span> is therefore not a safety valve but the only upper bound on what a ticket can cost. That reframing is what makes the step budget interesting rather than housekeeping.</p>
+  <p>Say the term with its other name the first time: the <em>step budget</em>, also called max iterations (a limit on how many turns of the loop one run may take). Framework documentation uses the second name.</p>
   <p>The topic then ends on the odds-versus-possible split, which is the sentence the whole day rests on. <strong>Protect the last seven minutes for it.</strong> If you are behind, take them out of 00:57 rather than 01:03.</p>
 </div>
 <div class="teach">
@@ -721,7 +723,7 @@ ol.toc a{color:inherit}
     <span class="pairs">Whole room · 8 min</span>
     
     <p><strong>This is the correction that has to come before anything else</strong>, because the drawing is almost always wrong in the same way. Ask for the number first: <em>how many times did that run call the model?</em> Most of the room says two.</p>
-    <p>Then the two meanings of "call".</p>
+    <p>Then the two meanings of "call". <strong>Use the industry term for the first one:</strong> <em>tool calling</em>, also called function calling, is the model asking for a named function with arguments. Running it is your code.</p>
     <h4>How the loop ends</h4>
     <p>Four exits, and the model chooses two. <strong>The two the loop controls are the ones nobody is watching</strong>, and both are a drill in topic 3.</p>
     <h4>Three consequences</h4>
@@ -736,7 +738,7 @@ ol.toc a{color:inherit}
     <p><span class="mono">make prompt</span>. <strong>Three minutes of silence before you name anything</strong>, then collect. The order matters: no conversation, then the thought, then no tool API.</p>
     <div class="term">make prompt          # Q +3   (should be 0 — pin --mock in the target)</div>
     <h4>There is no conversation</h4>
-    <p>Two messages, assembled and discarded. This is the beat that explains the token curve they will measure in drill 4.</p>
+    <p>Two messages, assembled and discarded. Those two messages are the whole <em>context window</em> for the call (everything the model can read in one call, measured in tokens). This is the beat that explains the token curve they will measure in drill 4.</p>
     <h4>The reasoning is real, and then it is thrown away</h4>
     <p><strong>Be precise, because half of it is easy to get wrong.</strong> <span class="mono">thought</span> is the first key, so it conditions the action written beside it — real work inside one step — and it never reaches the next prompt. Then land the sentence: <em>the problem is not the choice, it is that nobody made it.</em> You use it again about the ceiling within the hour.</p>
     <h4>There is no tool-calling API</h4>
@@ -986,7 +988,7 @@ ol.toc a{color:inherit}
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
       <p><strong>"Temperature zero makes it deterministic, so that one changes what is possible."</strong> The best wrong answer in the topic, and it comes from somebody who has read the API documentation carefully.</p>
-      <p>Temperature zero is greedy decoding, not a guarantee. It narrows the distribution and it does not remove the tail, and in any case the provider gives no determinism promise across versions. <strong>It makes the bad run rarer, which is the definition of the first column.</strong></p>
+      <p>Temperature zero is greedy decoding, not a guarantee. It narrows the distribution and it does not remove the tail, and in any case the provider gives no determinism promise across versions. The industry term for what survives is <strong>non-determinism</strong> (the same input can give different outputs, even at temperature 0). <strong>It makes the bad run rarer, which is the definition of the first column.</strong></p>
       <p><strong>Probe.</strong> If temperature zero were a guarantee, which of today's four failures would it stop? None. All four happen at temperature zero, and two of them have no model in them at all.</p>
     </div>
   </details>
@@ -1049,6 +1051,7 @@ ol.toc a{color:inherit}
     <p><strong>The full prediction cycle, and it is the only one in the day that gets all three stages.</strong> Thirty seconds alone, two minutes in pairs, then chat. Do not shorten it; this is the failure the room remembers in week 6.</p>
     <div class="term">make injected                 # Q +3, real model</div>
     <p><strong>Run it on a real model, not the mock.</strong> The whole point is that a capable model reads the note more carefully and obeys it more confidently, and the mock cannot show that.</p>
+    <p><strong>Name it once, with its industry term:</strong> <em>indirect prompt injection</em> (an instruction hidden in content the model fetches). Week 4 owns it and uses the term from its first minute.</p>
     <p><strong>Then close it, deliberately, and say you are closing it.</strong> <em>The missing piece is a boundary between text that is data and text that is authority. That is week 4 and it does not fit in a smaller space.</em> A room left with an open security thread spends the drill block on it.</p>
   </div></div>
 
@@ -1317,7 +1320,7 @@ ol.toc a{color:inherit}
   
   <p>The weak version is three tickets of housekeeping. The room will do them competently, learn nothing, and file the block under warm-up.</p>
   <p>The stronger claim is in drill 1 and it is the <strong>gradient</strong>: one file makes a failure honest to a human, three make it honest to a machine, and the thing that pages you at 2am is a machine. Stopping after the first file is the failure the drill is about, and most of the room will stop there unless the gradient is on the board before they start.</p>
-  <p><strong>This topic carries outcome 2.</strong> Every drill ends with something a machine can read: an exit code, a grade in the trace line, a refusal that lands in history.</p>
+  <p><strong>This topic carries outcome 2.</strong> The industry word for what this topic builds is <em>observability</em> (being able to answer "what happened and why" from what the system recorded). Every drill ends with something a machine can read: an exit code, a grade in the trace line, a refusal that lands in history.</p>
   <p>Full problems, solutions and the traps are in <span class="mono">docs/teaching/notes/drill-solutions.md</span>, 552 lines. <strong>Do not put any of it on screen.</strong></p>
 </div>
 <div class="teach">
@@ -1347,6 +1350,7 @@ ol.toc a{color:inherit}
     
     <p><strong>Put the gradient on the board before they start.</strong> One file, two files, three files, and who can see the failure at each. Without it most of the room stops at one line, and the drill's whole point is that stopping there is the failure.</p>
     <p><strong>Ask the exit-code question before anybody prompts.</strong> <em>What exit code does <span class="mono">escalate</span> get?</em> Genuinely ambiguous, the assistant will decide it silently, and that is a business rule set by autocomplete. It is the single best illustration of outcome 4 in the day.</p>
+    <p><strong>Name what they are starting.</strong> A <em>failure taxonomy</em> is a fixed list of named failure kinds, so a failure can say which one it is. <span class="mono">gaveup</span> is its first entry.</p>
     <p class="quiet">Circulate for one thing: did they carry the outcome out through <span class="mono">main.py</span>, or did they make the terminal look right and stop? <strong>Ask the ones who stopped what their monitoring would see.</strong></p>
   </div></div>
 
@@ -1355,6 +1359,7 @@ ol.toc a{color:inherit}
     <span class="pairs">Alone, then pairs · 10 min</span>
     
     <p><strong>Quick.</strong> The code is five minutes and the argument is the block. Do not let the implementation take more than half.</p>
+    <p>Say the industry term once: <em>action tiering</em>, or tool risk classification (grading tools by what they can do). It is the phrase they will search for.</p>
     <p><strong>The argument worth having is <span class="mono">escalate</span>.</strong> Most rooms say write. Ask what would make it irreversible — <em>if escalation notified the customer, it would be</em> — and let the pairs settle it. The grade describes what the function reaches, not what it is called.</p>
     <p class="quiet"><strong>Name the three-versus-four discrepancy before somebody finds it.</strong> Two published surfaces run two scales for one judgment and that was a real defect until 28 September. Three today, the tool's four on their own system.</p>
   </div></div>
@@ -1363,7 +1368,7 @@ ol.toc a{color:inherit}
     <h4>Drill 3, check the arguments before you dispatch</h4>
     <span class="pairs">Decide 3 min in writing, then alone · 12 min</span>
     
-    <p><strong>This is the fix for the ₹0 and the room should be told so.</strong> Connect it explicitly to 01:36, because otherwise it reads as fiddly type-checking rather than as the repair for the failure nobody predicted.</p>
+    <p><strong>This is the fix for the ₹0 and the room should be told so.</strong> Its industry name is <em>pre-dispatch validation</em> (checking a tool call's arguments in code before the tool runs). Connect it explicitly to 01:36, because otherwise it reads as fiddly type-checking rather than as the repair for the failure nobody predicted.</p>
     <p><strong>Enforce the three minutes of writing on the coerce / raise / refuse decision.</strong> It is the one place in the day where the three options have genuinely different consequences and the assistant will pick one silently.</p>
     <p><strong>Refuse-and-return is the answer the repository already argues for</strong>, in the commented block inside <span class="mono">issue_credit</span> that they read as pre-work for week 2. A refusal that returns lands in history, reaches the next prompt, and lets the agent escalate on its own. <strong>A refusal that raises is a step-budget stop by another name.</strong></p>
   </div></div>
@@ -1757,7 +1762,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
     <h4>3 · The question eight months later</h4>
     <p>Weeks 3 and 4. The <span class="mono">thought</span> was never stored, and they learned that at 00:46.</p>
     <h4>4 · Where the human goes</h4>
-    <p>Week 2, cycle B. Defended in money, never in confidence.</p>
+    <p>Week 2, cycle B. The industry term is <em>human-in-the-loop</em> (a person approves or decides at a named step). Defended in money, never in confidence.</p>
     <h4>5 · When the model is down</h4>
     <p>Week 5. All three options are bad and the choice is which customer you disappoint.</p>
     <p class="quiet">Give question 4 to whoever said "put a human in front of every credit" at 01:53. It is their idea, priced.</p>
@@ -1776,7 +1781,7 @@ python -m src.main --ticket 9999 --model &lt;other&gt; # own quota, per model</d
     <h4>Write the boundary down</h4>
     <span class="pairs">Pairs · 12 min</span>
     
-    <p><strong>Twelve minutes, same pairs, one page, seven headings.</strong> The headings are fixed and do not vary by week; only the brief above them changes.</p>
+    <p><strong>Twelve minutes, same pairs, one page, seven headings.</strong> Call it by its industry name, an <em>architecture decision record</em> or ADR (a short written record of one decision). The headings are fixed and do not vary by week; only the brief above them changes.</p>
     <p><strong>Circulate for goals.</strong> That is where it goes wrong, every time. "Safer", "more reliable" and "better controlled" are wishes. Ask the test: could you write a check that passes or fails without a person judging it?</p>
     <p class="quiet"><strong>Alternatives is load-bearing and gets skipped under time pressure.</strong> "Use a better model" is the alternative most of them rejected today, and rejecting it well is most of the session. If a pair has left it blank, that is the one to point at.</p>
   </div></div>

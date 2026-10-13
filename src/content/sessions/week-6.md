@@ -64,13 +64,16 @@ decide whether you would fund it.** Nothing new is built after the first hour.
 
 ## The topics
 
-**1 · Tokenomics.** Where did the money go in the October bill?
+**1 · Tokenomics (token economics: what each run costs, and why).** Where did
+the money go in the October bill?
 - The bill for 40,000 disputes, and the line nobody expected.
 - Cost per token, then per step, then per run, then per acceptable outcome. The
-  last one includes the loss from wrong answers that passed, which week 3's
-  agreement rate lets you estimate.
-- Four levers: caching, sending easy steps to a smaller model, batch pricing for
-  work that can wait, and a cost ceiling on each run.
+  last one includes the loss from wrong answers that passed. Week 3's
+  inter-rater agreement (how often two graders give the same score) lets you
+  estimate it.
+- Four levers. Prompt caching charges less for an opening the provider has
+  seen before. Model routing sends easy steps to a smaller model. Batch pricing
+  is cheaper for work that can wait. A hard limit caps what one run may spend.
 - Capacity: provider rate limits, and what the loop does when latency doubles at
   peak.
 - Lab, `make w6-tokens`: price one dispute from start to finish, with your
@@ -81,8 +84,9 @@ decide whether you would fund it.** Nothing new is built after the first hour.
 
 **2 · Governance.** Who owns each decision, and how closely is the code behind
 it reviewed?
-- Three risk tiers: read-only and internal, an outside action that moves no
-  money, and an action that moves money or changes state.
+- Risk tiering grades each action by what it can do. Three tiers: read-only
+  and internal, an outside action that moves no money, and an action that moves
+  money or changes state.
 - The tier of an action sets the depth of review for the AI-written code that
   performs it.
 

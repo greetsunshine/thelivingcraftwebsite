@@ -27,6 +27,9 @@ Nothing in this directory is imported, rendered, or deployed.
                        instructor page, on one clock. Paste it into a session
                        with the week number filled in. Change it when a rule it
                        quotes changes
+    glossary.md        the industry's term for every concept the weeks teach,
+                       with the plain gloss beside it and the rules for using
+                       them. Add a term here before it appears on a page
     cross-week-references.md
                        every promise one week makes about another ("week 4
                        owns this", a verbatim quote of week 1), and whether
@@ -272,6 +275,8 @@ week 3 keeps that convention. Pulling eight people's names out of production int
 HTML is not a decision to make on the way past. **Both weeks report this the same way.**
 
 ## Week 4 · Securing AI Agents — built 7 October, review round 1 on 9 October
+
+**Review round 2, 12 October** ([`reviews/week-4-review-2026-10-12.md`](reviews/week-4-review-2026-10-12.md)) rebuilt topic 2's lab on DeepSeek: `make w4-poison` now asks the model, and `make w4-poison-record` / `-recorded` keep the table.
 
 **Renamed from "Attack your own system" on 9 October.** Every topic now runs on DeepSeek; see
 [`reviews/week-4-review-2026-10-09.md`](reviews/week-4-review-2026-10-09.md). The review

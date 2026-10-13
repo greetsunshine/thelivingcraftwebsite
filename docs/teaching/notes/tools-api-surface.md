@@ -77,8 +77,10 @@ someone who has never read the prompt.
   instruction guarding an irreversible action, which is precisely the shape that
   lost ₹2,50,000. You could never separate *it reasoned correctly* from *it got
   lucky*.
-- **"We'll validate inside the tool."** Right, and it is drill 3 — but be exact
-  about what it buys. Validation says *these arguments are the wrong shape*.
+- **"We'll validate inside the tool."** Right, and drill 3 does it one step earlier,
+  at the dispatch. Be exact about what it buys. The industry name is **pre-dispatch validation** (checking
+  a tool call's arguments in code before the tool runs). Validation says *these
+  arguments are the wrong shape*.
   Authorisation says *you may not do this even correctly formed*. `issue_credit`
   needs both and has neither.
 - **"Use a smaller model, so it can do less."** Capability is the dictionary,
@@ -92,7 +94,9 @@ someone who has never read the prompt.
 ## Where it goes
 
 Drill 2 is this idea made mechanical: sort the three into read, write and
-irreversible, and print the grade beside every call. It does not stop anything —
+irreversible, and print the grade beside every call. The industry name is
+**action tiering**, also called tool risk classification (grading tools by what
+they can do: read-only, reversible, irreversible). It does not stop anything —
 it makes a line that moves money stop looking like a line that read a row.
 
 Week 2 is where the grading becomes enforcement: budgets, allow and deny,

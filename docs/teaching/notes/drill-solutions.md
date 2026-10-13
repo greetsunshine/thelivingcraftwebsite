@@ -30,7 +30,9 @@ which is exactly what the drill tells them not to do.
 
 ### The problem
 
-`agent.py` runs `MAX_STEPS = 6`. When it runs out it calls
+`agent.py` runs `MAX_STEPS = 6`. That constant is the **step budget** (a limit on
+how many turns of the loop one run may take, often called max iterations). When
+it runs out it calls
 `trace.step("done", "reached step budget")`. Three separate signals then report
 success:
 
@@ -44,6 +46,9 @@ An agent that gave up is indistinguishable, downstream, from one that succeeded.
 There is a second lie in the same function. An unknown action hits `break`, falls
 out of the loop, and prints **"reached step budget"** on top of its warning —
 telling you the budget ran out when it did not.
+
+Name what the drill starts. A **failure taxonomy** is a fixed list of named
+failure kinds, so a failure can say which one it is. `gaveup` is its first entry.
 
 ### The solution
 
@@ -173,6 +178,10 @@ which function names spend money.
 
 So the problem is not that the agent did something wrong. It is that **the
 system cannot tell you what kind of thing it did.**
+
+The industry name for the fix is **action tiering**, also called tool risk
+classification (grading tools by what they can do: read-only, reversible,
+irreversible). Our read and write are its read-only and reversible.
 
 ### What "consequence" means here
 
@@ -380,6 +389,10 @@ That is week 1 in one drill: **you cannot fix what the system will not tell you
 about.**
 
 ### The word to use
+
+The check itself is **pre-dispatch validation**, also called argument validation
+(checking a tool call's arguments in code before the tool runs). Say that name
+once, because it is what they will search for.
 
 Say **tool schema** at least once. That is what Anthropic and OpenAI both call
 this declaration in their function-calling APIs, and it is what they will meet

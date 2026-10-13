@@ -14,7 +14,8 @@ clock wins and this file is wrong.
 
 **Terminology, and check any new paragraph for it.** Week 1 claims the bare word
 *harness* for the agent harness: the loop, the tool layer, the per-turn context
-assembly and the trace. So this week always writes **evaluation harness** in full.
+assembly and the trace. So this week always writes **evaluation harness** (the code that runs a set of cases
+through the agent and scores each one) in full.
 Two different harnesses one week apart with the same name is a confusion the room
 cannot recover from in the middle of a session.
 
@@ -97,7 +98,7 @@ each concept went to the topic that already owns the decision it affects:
 | 00:27, topic 1 | The three evaluation levels: step, trajectory, end state, and why today sits at end state |
 | 01:11, topic 2 | The RAG triad: faithfulness, answer relevancy, context precision and recall, each mapped to a retrieval step |
 | 01:50, topic 3 | Why BLEU, ROUGE, BERTScore and Levenshtein fail on agent output. Direct scoring, pairwise comparison and G-Eval. Rubric design |
-| 01:55, topic 3 | The 80% agreement target, Cohen's kappa, and the three judge biases: position, verbosity, self-enhancement |
+| 01:55, topic 3 | The 0.60 kappa bar, Cohen's kappa, and the three judge biases: position, verbosity, self-enhancement |
 | 02:44, topic 4 | Offline against online evals. Where cases come from, and contamination and drift |
 | 03:10, topic 4 | Two more named slots: tools that run the set, and tools that watch it after release |
 
@@ -344,8 +345,8 @@ clean as it is.**
 marked down the right-hand side. Honest line attached: **five levers, and today you measure only
 the third.**
 
-**The three payload measures are now computed rather than named**, on ticket 8002 at k=3:
-precision@3 = 1/3, recall@3 = 1/1. Then the part that earns the section: **trim the clauses, run
+**The three payload measures are now computed rather than named**, on ticket 8002 at k=2,
+the k the agent uses: precision@2 = 1/2, recall@2 = 1/1. Then the part that earns the section: **trim the clauses, run
 it again, both numbers are unchanged and the answer is wrong.** Precision and recall measure
 whether the right material was *fetched*, not whether it was *used* — which is exactly the gap
 the 01:23 grader covers.
@@ -469,8 +470,8 @@ learner needs in order to read anybody else's documentation about it.
 | An evaluation set covering four classes of case *(test-case taxonomy)* | seven cases, all ordinary or difficult | eight cases across all four classes | `src/w3_cases.py` | `make w3-eval` lists the class beside each case |
 | A pass rate over repeated runs, instead of one verdict *(stochastic evaluation)* | one run per case, pass or fail | twenty runs per case, a rate per case and per class | `src/w3_harness.py` | `make w3-wobble` prints 15/20 on the adversarial case |
 | A rule retrieved from a document rather than read from a field *(retrieval-augmented generation)* | one number in `policy.json` | seven clauses of prose, retrieved and scored | `src/w3_docs.py` | `make w3-search` prints two clause scores one point apart |
-| A grader on the retrieval, not just the answer *(faithfulness, or groundedness)* | nothing checks which clause was used | the clause the answer used is graded against the case | `src/w3_cases.py` | `make w3-grade` fails a run that paid the right rupees |
-| A grader measured against a person *(human–model agreement)* | no grader, and no way to tell if one is any good | 7 of 10 against ten labels a person wrote | `src/w3_agree.py` | `make w3-agree` prints the agreement and the two misses |
+| A grader on the retrieval, not just the answer *(context precision)* | nothing checks which clause was used | the clause the answer used is graded against the case | `src/w3_cases.py` | `make w3-grade` fails a run that paid the right rupees |
+| A grader measured against a person *(inter-rater agreement)* | no grader, and no way to tell if one is any good | 7 of 10 against ten labels a person wrote | `src/w3_agree.py` | `make w3-agree` prints the agreement and the two misses |
 | A measured context budget *(context engineering)* | the budget is untested and nobody knows the limit | the cliff located at 100 characters a clause | `src/w3_trim.py` | `make w3-trim` prints 0% adversarial at 100 |
 
 **The first row names the four classes, so both pages print them underneath it**:
@@ -494,7 +495,8 @@ Five minutes, in four moves, and the order changed on 3 October.
 **Open on the word, not on the story.** Today is LLM evaluation, shortened to evals: a
 fixed set of cases, run against the agent, scored by something other than somebody
 reading the output. The fixed set is an evaluation set and the scorer is a grader. Both
-words are used all day, so both are said here.
+words are used all day, so both are said here. Vendor tools call the fixed set a **golden
+dataset** (the fixed cases with known right answers that every version is scored against).
 
 The old opening led with 02:55 last week. Sunil's comment was that the point of the
 section was not coming out, and the cause was the order: the room met an anecdote before
@@ -662,9 +664,9 @@ not teach them.
 
 | Kind | How it decides | Used today? |
 |---|---|---|
-| Rule-based | Exact match, a number comparison, a regular expression, a schema check | Yes, every case |
+| Code-based, or rule-based | A check written in code that gives the same score every time: exact match, a number comparison, a regular expression, a schema check | Yes, every case |
 | Statistical text metrics | Overlap with a written reference answer: BLEU, ROUGE, BERTScore, Levenshtein | No, and 01:50 says why |
-| Model-based, or LLM-as-a-judge | A second model reads the answer against a rubric | Topic 3, at 01:45 |
+| Model-based, or LLM-as-a-judge | A second model scores the answer against a rubric (the written criteria a grader scores against) | Topic 3, at 01:45 |
 | Human | A person reads the answer and labels it | Topic 3, as the labels the grader is measured against |
 
 **And two words from any eval tool.** *Reference-based* means the correct answer is
@@ -734,6 +736,12 @@ yes-or-no questions, in order, first yes wins.
 sits over the ceiling is adversarial, not difficult, and the reason is the response you
 need: refuse rather than escalate. A room that classifies in the wrong order files its
 attacks as edge cases and then builds an escalation path for them.
+
+**Where a case comes from is a separate question, and their page says so in one sentence.**
+A case is written from the specification (synthetic), copied from real traffic (a production
+sample), or added after an incident. That last kind is a **regression test** (a case kept so
+that a failure fixed once is caught if it returns). Week 4 adds one for every attack the room
+finds.
 
 ### The second design choice: what the case asserts about
 
@@ -919,6 +927,10 @@ sentence, name week 4, and move on.
 Five minutes. **Retrieval-augmented generation means the model answers from text fetched
 at request time rather than from what it was trained on.**
 
+Give the three words for the search step, because every RAG tool uses them. The
+**retriever** is the search step. A **chunk** is one piece of a document, and here it is one
+clause. **Top-k** is the k highest-scoring chunks returned, and here k is 2.
+
 Then say why the search here is lexical rather than embeddings, because somebody asks
 inside a minute. Seven clauses is a corpus a person can hold in their head, and a lexical
 score can be read and argued with. An embedding cannot be argued with in a classroom.
@@ -998,7 +1010,9 @@ diagnosis.
 **"The model hallucinated."** Stop properly here. It is the most expensive habit in this
 room's vocabulary.
 
-*What is right.* Something was asserted that was not supported.
+*What is right.* Something was asserted that was not supported. Hallucination means a
+confident statement the sources do not support, so the instinct is reaching for the right
+category.
 
 *What is wrong.* It names no component and no fix. On the 01:06 run the model asserted
 something a retrieved clause actually said. The clause was the wrong one. Nothing was
@@ -1220,7 +1234,8 @@ Seven minutes. `make w3-agree` reads ten answers against ten labels a person wro
       failed what you passed: 1 (A2)       a phrase list, not a meaning
 
 **Say the two directions before the number.** A grader can pass something you failed, or
-fail something you passed. On a payment path the first costs more, because a pass releases
+fail something you passed. The 70% is **inter-rater agreement** (how often two graders give
+the same score), and the two graders are the learner and the model. On a payment path the first costs more, because a pass releases
 money and a false alarm only costs somebody a review.
 
 **Then the pattern.** Both answers it let through name the wrong clause, and the reason is
@@ -1231,8 +1246,8 @@ structural: the grader reads one answer and never sees the case.
 ### Is 70% agreement good? Added 3 October
 
 **Ask the room before answering.** Most say yes, or call it a reasonable start. The answer
-is no. **Above 80% is what teams aim for**, and that is the figure to quote when somebody
-proposes shipping a judge.
+is no. **The bar used in practice is set on kappa, not on raw agreement: 0.60 is the figure
+usually required before a judge runs in production.** This room's grader is at 0.35.
 
 Then the harder half, which is where the time goes. **Some of that 70% is luck.** A grader
 that passes everything already agrees with a mostly-pass label set while reading nothing at
@@ -1242,11 +1257,11 @@ identical.
 
 **The worked example, if the room pushes back.** Ten labels, eight of them pass. A grader
 that passes everything scores 8 of 10, which is 80% raw agreement, having read nothing.
-Its kappa is 0. That is why 80% raw on a lopsided label set is not the 80% target.
+Its kappa is 0. That is why a high raw agreement on a lopsided label set proves nothing.
 
 Do not derive the formula. The claim to hold is one sentence: **a grader reported at "85%
-agreement" with no kappa beside it has not been measured.** They do not compute kappa
-today; they need the word so they can ask for it.
+agreement" with no kappa beside it has not been measured.** They compute kappa by hand in
+the 02:02 lab, in three steps, so they can ask for it afterwards.
 
 ### Three ways a judge is wrong that have nothing to do with your rubric
 
@@ -1394,7 +1409,7 @@ a real advantage and most teams do not count it.
 You ran one grader over ten answers. At volume nobody runs one, because **the model good enough
 to trust is too expensive to run on everything.** So the judge splits:
 
-- **The calibration judge** runs on the hand-labelled gold set, hundreds of traces, with the
+- **The calibration judge** runs on the hand-labelled golden dataset, hundreds of traces, with the
   strongest model you can justify. It produces the agreement figure. Few calls, expensive each,
   a cost you can forecast.
 - **The production judge** runs on sampled live traffic, typically 5% to 20%, with a small,
@@ -1471,7 +1486,8 @@ A random sample tells you about ordinary cases, because ordinary cases are most 
 traffic. **The adversarial ones are rare by definition**, which is exactly why they are
 written by hand rather than sampled. A sample and a written set do different jobs.
 
-The good answer stratifies: sample the ordinary traffic, keep every hand-written case, and
+The good answer is **stratified sampling** (choosing which live cases to grade so every
+important kind is represented). Sample the ordinary traffic, keep every hand-written case, and
 run the hand-written ones more times, because they sit on the narrow margins.
 
 ### The wrong answer worth spending time on
@@ -1494,15 +1510,18 @@ in the Run-Cost Model rather than a rounding error.
 Five minutes. **A release gate is one requirement, the evidence for it, a threshold with a
 reason, and a named person who accepts the risk when it fails.**
 
-Four parts, and most rows in most organisations have two of them.
+Four parts, and most rows in most organisations have two of them. Some tools call it a
+**quality gate**; it is the same thing. The third part is the **acceptance threshold** (the
+score a version must reach to ship), and the room will meet that term in every CI tool.
 
 A row with a requirement and a number is a dashboard. It reports. **A gate has a reason and
 a name**, and it stops something.
 
 ### Offline and online evals, added 3 October
 
-The same evaluation set runs in two places and the industry names both. Give the one-line
-definition of each, then the sentence that matters.
+The same evaluation set runs in two places and the industry names both. **Offline
+evaluation** scores fixed cases before release. **Online evaluation** scores a sample of live
+traffic after it. Give those two one-line definitions, then the sentence that matters.
 
 | | Offline evals | Online evals |
 |---|---|---|
@@ -1529,12 +1548,12 @@ A gate is only as good as the set behind it. **Do not walk this list** — point
 pick the one line the room needs, which is that production log mining is where their
 missing classes come from rather than invention.
 
-- **A golden set.** Twenty to a hundred cases, written and checked by hand, covering what
+- **A golden dataset.** Twenty to a hundred cases, written and checked by hand, covering what
   must never break. Small on purpose, because a person reviews every case.
 - **Mining production logs.** Real requests that failed, or that nobody anticipated,
   promoted into cases.
 - **Synthetic generation.** A model writes question-and-context pairs in bulk. Cheap, good
-  for coverage, never trusted as the golden set.
+  for coverage, never trusted as the golden dataset.
 - **Adversarial and safety cases.** Written to break it: prompt injection, data
   exfiltration, jailbreaks. Week 2 produced theirs and week 4 collects them.
 
@@ -1565,7 +1584,7 @@ from 00:55 is tier 3.
 ### And the gate does not stop at merge
 
 Four steps: mirror the traffic, release to a slice, tie the score to an automatic reversal, then
-harvest what went wrong back into the golden set.
+harvest what went wrong back into the golden dataset.
 
 **Spend the time on the last one.** Everything before it protects this release. The harvest is the
 only mechanism in the whole day that improves the next suite without somebody sitting down to
@@ -1923,9 +1942,13 @@ a retrieval artefact: lexical scores converge until two clauses are indistinguis
 positional effect belongs to the model, and **this lab does not demonstrate it.** Say both
 sentences.
 
+Somebody will call today's cliff **context rot** (answers getting worse as the context grows).
+Correct it once. Context rot is about size going up, and today's context went down.
+
 Then the effect: attention is strongest at the beginning and end of a long context and weakest
 in the middle, so the same fact at the same token count can be used or ignored depending on
-where it sits. The name is **lost in the middle**.
+where it sits. The name is the **lost-in-the-middle effect**. Context rot is about how much
+text there is; this effect is about where a fact sits.
 
 Then the test, which is the actionable part: **needle in a haystack**, varying depth and
 placement independently, and **reading the grid rather than the average.** A model at 95%
@@ -2061,8 +2084,8 @@ code review? A word.
 
 ### 2 · Forty thousand disputes a month. Which cases do you run, and how often?
 
-*A good answer* stratifies, keeps every hand-written case, and runs the ones on narrow
-margins more often. It gives a figure for what one full pass costs.
+*A good answer* uses stratified sampling, keeps every hand-written case, and runs the ones on
+narrow margins more often. It gives a figure for what one full pass costs.
 
 *The wrong answer.* "All of them, nightly." Ask what that costs at ₹912 a pass and what it
 buys over running the narrow ones twenty times.

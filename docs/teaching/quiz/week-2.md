@@ -162,13 +162,18 @@ another deployment. **Do not accept** "add more tests", which is the instinct we
 
 **Why the others are attractive and wrong.** **A** is in every vendor's
 documentation as pattern three of three, and it is the reason this question is in
-the bank. **D** is a real product requirement and not a guardrail; it is worth
+the bank. **D** is a real product requirement and not a guardrail (a control outside the
+model that limits what the agent can do or say). It is worth
 thirty seconds if somebody argues for it, because the distinction between a
 product promise and a control is one senior engineers get wrong in design reviews.
 **C** is a proxy for confidence wearing different clothes.
 
 **The line to land:** it fires on the consequence, not on the confidence. Week 1's
 poisoned ticket paid ₹2,50,000 with complete confidence.
+
+**The name to give it.** This is an approval gate: one party proposes and a
+different one approves. In a bank it is maker-checker, also called the four-eyes
+principle.
 
 ---
 
@@ -224,6 +229,9 @@ that is written.
 - **C.** Use two judges and require both to agree
 - **D.** Raise the judge's confidence threshold
 
+**Name the setup.** A second model approving the first is LLM-as-a-judge: a
+model that reads another model's output and scores or approves it.
+
 **Why A is the answer most of the field gives.** It identifies the mechanism
 correctly, which is that text became instruction, and then answers with the
 wrong shape. Week 4 breaks that line live, so do not settle it here. Say the
@@ -231,15 +239,17 @@ date.
 
 **Why C is the subtle one, and it is worth a minute.** Two judges reading the
 same attacker-written field are not independent, so they agree. Two of something
-correlated is one control. This is the distinction the whole block turns on and
+correlated is one control. Defence in depth (several controls that fail for
+different reasons, so one failing does not let the harm through) needs exactly that.
+This is the distinction the whole block turns on and
 it is the reason C is in the list.
 
 **Why D is wrong for a reason worth naming.** There is no threshold. The judge
 returns a verdict, not a calibrated probability, and nobody in the room has an
 agreement rate against human labels for it.
 
-**The line to land:** a model may widen what gets through a hard limit, and it
-may never be the limit.
+**The line to land:** a model may widen what gets through a hard limit (a number
+the code will not exceed, whatever the model asks), and it may never be the limit.
 
 ---
 
@@ -285,8 +295,7 @@ and incomplete. Ask what retries it after the process dies.
 
 **The likely wrong answer, and what is right about it.** **A**, the dispatch, which
 is what most of the room built at 01:20. It does cover every tool the agent calls,
-including tools nobody has written yet, and it is the strongest placement inside
-this repository. It stops at the agent's edge, and the batch job never crosses it.
+including tools nobody has written yet. That makes it the agent's policy enforcement point, covering every call on the agent's path. It is the strongest placement inside this repository. It stops at the agent's edge, and the batch job never crosses it.
 
 ---
 
@@ -307,6 +316,10 @@ somebody can set to false.
 
 **The test to hand them.** Could a reasonable person want this switched off for
 one tool? Only the ceiling passes it.
+
+**The name for the row.** A limit kept in a versioned file is policy as code: a
+rule written as code or config that is versioned and tested, not a sentence in a
+prompt.
 
 ---
 
@@ -343,7 +356,8 @@ enforce a sentence with no number in it.
 **The likely wrong answer, and what is right about it.** **A**, "it waits", which is
 what most gates did at 02:24. Waiting is often the correct behaviour. What is
 missing is the upper bound: waiting with no limit is not a rule, it is the absence
-of one.
+of one. **C** fails closed: when the check cannot answer, it refuses. **D** fails
+open: when the check cannot answer, it allows.
 
 ---
 
@@ -400,6 +414,10 @@ and the amount. It is stable across runs, which is the property most people are
 reaching for. It is too stable: a customer genuinely owed two identical ₹1,200
 refunds receives one.
 
+**The name for C.** The dispute identity is the idempotency key: the value the
+server uses to recognise a repeat. Idempotency means doing the same request twice
+has the same effect as doing it once.
+
 ---
 
 ### Q18 · What make retry never tested
@@ -411,8 +429,9 @@ refunds receives one.
 keys lived in a Python list that dies with it.
 
 **The likely wrong answer, and what is right about it.** "Concurrency: two requests
-at exactly the same moment." Two processes at the same instant is a real case, and
-the 03:03 constraint handles it. But the second terminal pays even a minute later,
+at exactly the same moment." Two processes at the same instant is a real case, a race
+condition (two runs read the same state, both decide, and both act). The 03:03
+constraint handles it. But the second terminal pays even a minute later,
 with no overlap at all. A second process is enough.
 
 ---
@@ -451,6 +470,9 @@ because the requests repeat. The instinct that repeated requests are the problem
 right. But the key makes the same request pay once, and four different disputes are
 four different requests.
 
+**Name the round.** The adversary round is red teaming: people try on purpose to
+make the system fail, before an attacker does. Route 3 is what it found.
+
 ---
 
 ### Q21 · In-band or out-of-band
@@ -466,6 +488,9 @@ four different requests.
 **The likely wrong answer, and what is right about it.** **B**. For text a person reads it
 is often right: nobody waits and a stream can be cut. It fails exactly where the action
 has no afterwards, because out-of-band needs a way to take the result back.
+
+**The term behind the stem.** The 400 ms is spent from the latency budget: how
+much time a control may add to each request.
 
 ---
 
