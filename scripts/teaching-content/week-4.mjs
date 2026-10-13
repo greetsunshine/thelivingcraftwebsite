@@ -1041,22 +1041,46 @@ topics.push({
     lede: 'By the end of it you can expose a tool as an MCP server, and say which of its annotations your own code actually enforces.',
     learner: `
   <p><strong>MCP, the Model Context Protocol, is the standard way a program offers tools to a model.</strong> The MCP server is the program that offers the tools: it describes them when asked, and runs one when called. The MCP client is the part of the agent that asks. This topic builds a server. Topic 4 adopts one somebody else built.</p>
-  <p class="quiet">Every statement about MCP on this page is checked against the specification dated 2026-07-28, the current version on 7 October 2026.</p>
+  <p class="quiet">Every statement about MCP on this page is checked against the specification dated 2026-07-28, the current version, last checked on 13 October 2026.</p>
+  <h4>What this topic is for</h4>
+  <p>Two things you can do by 02:15 that you could not do at 01:37:</p>
+  <ul>
+    <li><strong>Expose a tool as an MCP server</strong> that answers <span class="mono">server/discover</span>, <span class="mono">tools/list</span> and <span class="mono">tools/call</span>, and reports each kind of error the way the specification asks.</li>
+    <li><strong>Make a tool annotation true in code</strong>, and say which of your annotations your code enforces and which are only declared.</li>
+  </ul>
+  <h4>Where the rest of MCP is taught</h4>
+  <p>The industry teaches MCP in four parts. This table shows where each part sits in this course, and what is left for reading.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Part</th><th>What it covers</th><th>Where it is taught</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · Architecture and primitives</strong></td><td>Host, client and server; JSON-RPC 2.0; the three primitives: tools, resources and prompts</td><td>01:42. Tools are built in the 01:54 lab. Resources and prompts are named, not built</td></tr>
+        <tr><td><strong>2 · Transports and lifecycle</strong></td><td>The two transports, stdio and Streamable HTTP; capability negotiation through <span class="mono">server/discover</span>; progress and cancellation</td><td>Pre-work reading. 01:47 names cancellation and the Tasks extension, because the 31-second credit needs them</td></tr>
+        <tr><td><strong>3 · Security and isolation</strong></td><td>Credential isolation, and a scope checked on every request</td><td>01:47 and the 01:54 lab. Least privilege per tool, through a proxy, is topic 4. Instructions hidden in a tool's result or description are topics 2 and 4</td></tr>
+        <tr><td><strong>4 · Running many servers</strong></td><td>Routing between servers, tool name collisions, limits, timeouts and tracing</td><td>Name collisions: topic 4, at 02:36. Limits on one run and tracing: topic 5. The client's timeout: 01:37</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Left out on purpose:</strong> building a remote server over Streamable HTTP, and a client that manages three or more servers. Each is a lab of its own, and neither moves the boundary this week is about.</p>
   <h4>Why a promise needs code</h4>
   <p>A tool annotation, such as <span class="mono">idempotentHint</span>, is a hint your server attaches to a tool: a sentence you wrote about it. A client is allowed to act on it. So every annotation is a promise, and the only thing that keeps it is your server's code.</p>
   <h4>What this topic is not</h4>
-  <p>It is not the protocol's mechanics: transports, resources and prompts are the pre-work reading. It is not a tour of the specification. The design choices are what you take home, because the specification changed once in July 2026 and can change again.</p>`,
+  <p>It is not the wire format: the transports are pre-work reading, and the table above says where each security and operations question is taught. It is not a tour of the specification. The design choices are what you take home, because the specification changed once in July 2026 and can change again.</p>`,
     script: `
   <p>The weak version is a tour of the protocol, which will be out of date within a year.</p>
   <p class="quiet">Print the specification's date on the board, 2026-07-28. Run <span class="mono">npm run gather</span> on MCP the week before you teach.</p>
+  <h4>What this topic is for</h4>
+  <p>Read the two bullets aloud. They are the 02:15 checkpoint's first and last lines.</p>
+  <h4>Where the rest of MCP is taught</h4>
+  <p>Do not walk the table. Say one sentence: part 1 is the next ten minutes, part 3 is the lab, and parts 2 and 4 are reading or other topics. It answers "are we skipping resources and transports?" before anybody asks.</p>
   <h4>Why a promise needs code</h4>
   <p><strong>The stronger claim:</strong> an annotation is a promise, and a client may act on it. Keeping it is the server's job.</p>
   <h4>What this topic is not</h4>
-  <p>Zero live minutes on mechanics. If somebody asks about transports, say pre-work and move on.</p>`,
+  <p>Zero live minutes on the wire format. If somebody asks about transports, point at the table and move on.</p>`,
   },
   broken: [
     ['The CRM server you will adopt makes no such promises, and you cannot change its code', 'Topic 4, at 02:31'],
-    ['A tool that always says there is another page can be called 25 times on one ticket, and every check here allows it', 'Topic 5, at 03:16'],
+    ['A tool that always says there is another page can be called 30 times on one ticket, and every check here allows it', 'Topic 5, at 03:16'],
   ],
   beats: [
     {
@@ -1125,6 +1149,22 @@ topics.push({
       mode: 'Whole room · 5 min',
       learner: `
   <p style="font-size:var(--size-4)"><strong>An MCP server is a program that answers two questions for any client: what tools do you have, and run this one with these arguments.</strong></p>
+  <h4>Host, client and server</h4>
+  <p>Before MCP, every application that wanted every tool needed its own adapter. Ten applications and twenty tool systems meant 200 adapters. The industry calls this the N × M integration problem. With MCP each application speaks the protocol once and each tool system offers one server, so ten plus twenty is thirty.</p>
+  <p>The <strong>host</strong> is the application that runs the model. Here it is your agent. The host makes one <strong>MCP client</strong> per server, and each client talks to exactly one server. Every message is <strong>JSON-RPC 2.0</strong> (a standard JSON format for a request, a reply and an error).</p>
+  <div class="term">  host: your agent ──> client A ──> billing server   <span class="q">yours, built today</span>
+                   └─> client B ──> CRM server       <span class="q">theirs, topic 4</span></div>
+  <h4>Three primitives, and who decides to use each</h4>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Primitive</th><th>Who decides to use it</th><th>Methods</th><th>Today</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tools</strong></td><td>The model</td><td><span class="mono">tools/list</span>, <span class="mono">tools/call</span></td><td>Built at 01:54</td></tr>
+        <tr><td><strong>Resources</strong></td><td>The application</td><td><span class="mono">resources/list</span>, <span class="mono">resources/read</span>, <span class="mono">resources/templates/list</span></td><td>Named only. Files and records the host attaches to the context</td></tr>
+        <tr><td><strong>Prompts</strong></td><td>The user</td><td><span class="mono">prompts/list</span>, <span class="mono">prompts/get</span></td><td>Named only. Templates a person picks, such as a slash command</td></tr>
+      </tbody>
+    </table>
+  </div>
   <h4>The three messages you need today</h4>
   <div class="term">  server/discover   which versions of the protocol the server speaks
   tools/list        each tool's name, description, input schema and annotations
@@ -1143,10 +1183,14 @@ topics.push({
     </table>
   </div>`,
       script: `
-    <p>One sentence, then the three messages on the board. <strong>Slow down on "there is no session".</strong> It is why check 2 exists, and it is what the field note means by authorisation moving to the application.</p>`,
+    <p>One sentence. Then draw the host with its two clients, because topic 4 needs the second one. Point at the primitives table and say "today is tools only". Then the three messages on the board. <strong>Slow down on "there is no session".</strong> It is why check 2 exists, and it is what the field note means by authorisation moving to the application.</p>`,
       ref: {
         id: 't3-r-concept', pairs: 'two questions, and no session',
         html: `
+  <h4>Host, client and server</h4>
+  <p>One client per server, inside one host. JSON-RPC 2.0 underneath. N × M adapters become N + M.</p>
+  <h4>Three primitives, and who decides to use each</h4>
+  <p>Tools: the model. Resources: the application. Prompts: the user. Today builds tools only.</p>
   <h4>The three messages you need today</h4>
   <p>discover, list, call.</p>
   <h4>The one change in the 2026-07-28 version that matters here</h4>
@@ -1174,6 +1218,16 @@ topics.push({
     <li><strong>Which hints do you declare?</strong> Only what your code enforces. A hint left out defaults to the cautious value: <span class="mono">idempotentHint</span> false, <span class="mono">destructiveHint</span> true. A wrong hint is worse than none, because a client acts on it.</li>
     <li><strong>Where is the token checked?</strong> On every request, in the server's own code. The thing that acts checks who asked.</li>
   </ul>
+  <h4>Two kinds of error, and which one the model sees</h4>
+  <ul>
+    <li><strong>A protocol error</strong> is a JSON-RPC error: an unknown tool or a malformed request. The specification says a model is unlikely to fix it.</li>
+    <li><strong>A tool execution error</strong> comes back as a normal result with <span class="mono">isError: true</span>. A failed input check belongs here, so the model can read it and correct itself.</li>
+  </ul>
+  <p>The starting server does both: "no such account" is a tool execution error, and an unknown tool name is a protocol error. The specification also says a server MUST validate every tool input. The starting <span class="mono">issue_credit</span> does not: it accepts any amount, a negative one included.</p>
+  <h4>No session, so state needs a handle</h4>
+  <p>The protocol keeps nothing between calls. The specification's advice for state is a handle: the server returns an identifier, and the client sends it back on each later call. The handle is a name, not a permission, so the server checks the caller's authorisation on every call. The lab's dispute id is this pattern.</p>
+  <h4>When a call takes longer than the client waits</h4>
+  <p>The credit takes 31 seconds and the client waits 30. The specification gives a client a way to abandon a request: cancellation (a <span class="mono">notifications/cancelled</span> message on stdio, closing the stream on Streamable HTTP). It also has an opt-in <strong>Tasks</strong> extension, which gives a long-running call a handle to check on later. Neither undoes a credit that already ran. Only the dispute id makes the retry safe.</p>
   <h4>A puzzle before the lab</h4>
   <div class="term"><span class="q">You fix the retry. The server keeps a set of dispute ids it has paid, in memory,
 and refuses a second call with the same id. Ops runs two copies of the server
@@ -1187,12 +1241,18 @@ behind a load balancer. What does Ravi get?</span>
     </div>
   </details>`,
       script: `
-    <p>Four choices, one line each. Then the puzzle, in pairs, in writing. <strong>This puzzle is the lab's most common wrong answer, asked before they make it.</strong></p>`,
+    <p>Four choices, one line each. Name the two kinds of error in one sentence each, because the lab's server uses both. The handle and the long-call sections are reading; say only "the dispute id is the specification's handle pattern". Then the puzzle, in pairs, in writing. <strong>This puzzle is the lab's most common wrong answer, asked before they make it.</strong></p>`,
       ref: {
         id: 't3-r-design', pairs: 'four choices, and the set in memory',
         html: `
   <h4>Four design choices, and what each costs</h4>
   <p>Tool size, required fields, honest hints, the token checked on every request.</p>
+  <h4>Two kinds of error, and which one the model sees</h4>
+  <p>Protocol error: JSON-RPC, the model cannot fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
+  <h4>No session, so state needs a handle</h4>
+  <p>The dispute id is the specification's handle pattern: a name, checked against the caller on every call.</p>
+  <h4>When a call takes longer than the client waits</h4>
+  <p>Cancellation and the Tasks extension exist. Neither undoes a credit that ran. Only the dispute id makes the retry safe.</p>
   <h4>A puzzle before the lab</h4>
   <p>A set in memory, two copies of the server.</p>
   <details>
@@ -1488,6 +1548,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
     </table>
   </div>
   <p>A tool with no row cannot be reached at all, so the rows together are an allow-list. The pinned column is pinning: a tool is accepted only if its description hash matches the one you reviewed.</p>
+  <p>A proxy in front of several servers also meets <strong>tool name collisions</strong> (two servers offering a tool with the same name). The specification says tool names only have to be unique within one server, and that a client or proxy combining servers should tell them apart, for example by prefixing each tool's name with a server identifier.</p>
   <p>The money tool gets two more: <strong>max amount</strong>, and the <strong>record</strong> that must back the reason for a credit.</p>
   <div class="term">  agent ──>  <strong>proxy</strong>  ──┬──>  billing server   (yours)
                      └──>  CRM server       (theirs)</div>

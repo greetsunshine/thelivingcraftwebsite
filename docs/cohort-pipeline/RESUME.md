@@ -23,6 +23,15 @@ merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 
 ---
 
+## Week 4 review, round 3 — 13 October (`content/week-4-review-round3`)
+
+Row 76 (topic 3, MCP), answered in
+[`docs/teaching/reviews/week-4-review-2026-10-13.md`](../teaching/reviews/week-4-review-2026-10-13.md).
+Topic 3 now maps the industry's four MCP modules onto the course, adds the host/client/server
+architecture, the three primitives and the two kinds of error, and names cancellation and the
+Tasks extension. **Checked against the 2026-07-28 spec on 13 October**: the row's curriculum
+described sessions, an `initialize` handshake and an SSE transport that this version removed.
+
 ## Week 4 review, round 2 — 12 October (`content/week-4-review-round2`)
 
 Rows 70 to 75 of the "Notes Review" sheet, all topic 2 (indirect injection), answered in

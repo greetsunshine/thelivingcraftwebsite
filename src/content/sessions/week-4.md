@@ -209,6 +209,8 @@ clauses out of eleven. What does the eleventh do?
 **3 · Build an MCP server.** You marked `issue_credit` with
 `idempotentHint: true`. What in your code makes that true?
 - The retry pays ₹1,200 twice. A tool annotation declares behaviour and enforces nothing.
+- Host, client and server; the three primitives (tools, resources, prompts); two
+  kinds of error. Transports are pre-work reading.
 - How large each tool is, its schema, its annotations.
 - The protocol keeps no session between calls, so authorisation moves into your
   own application code.
