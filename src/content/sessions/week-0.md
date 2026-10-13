@@ -37,7 +37,7 @@ Every live session runs the same five beats.
 5. **The Horizon** — where the field is moving and what it means for your career
 
 Between sessions there is about two hours of extending your build, plus a short
-architecture decision record (ADR: a written record of one decision you made). Add the live session and its pre-work, and that is the
+architecture decision record (ADR: a short written record of one decision, with its context, options, choice and consequences). Add the live session and its pre-work, and that is the
 ~5 hrs/week you were quoted. It is meant to be honest rather than aspirational.
 
 The Horizon is the one part that changes each time this course runs. It covers

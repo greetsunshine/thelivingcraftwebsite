@@ -1035,7 +1035,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
       <p><strong>What went wrong.</strong> The check protects <code>issue_credit</code>. It does not protect the ledger, and the ledger holds the money. Every tool added later is a new chance to forget.</p>
-      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point (PEP): the one place in the code where a rule is checked, so every caller passes through it.</p>
+      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.</p>
       <p><strong>Then the counter.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from <span class="off" data-off="00:31">00:31</span> paid off in their own code.</p>
       <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and <span class="off" data-off="01:30">01:30</span> is where it is said properly.</p>
     </div>
@@ -1101,7 +1101,7 @@ GUARD_REFUSED[(act, rule_name)] += 1</pre>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
-      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Two copies of one rule in two places is defence in depth: several independent controls, so one failing does not let the harm through. It is correct.</p>
+      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Two copies of one rule in two places is defence in depth: two controls at different points, so a caller that skips one still meets the other. It is correct.</p>
       <p>What is required is naming which copy is authoritative, because two copies that drift are worse than one. The dispatch gives a fast, specific refusal message. The resource of record gives coverage. Keep both and write down which one you trust.</p>
       <p><strong>Probe.</strong> Your ledger constraint refuses and your dispatch check allows. Which one is the bug?</p>
     </div>
@@ -1879,7 +1879,7 @@ if cur.rowcount == 0:
     <summary><span class="chev">›</span> The answer key</summary>
     <div class="dbody">
       <p>The judge read the same attacker-controlled field as the agent. It is not a second opinion, it is the same opinion with a different prompt. <strong>Two models reading one hostile field are one control, not two.</strong></p>
-      <p>Use the industry name for the setup: <strong>LLM-as-a-judge</strong>, a model that reads another model's output and approves it. Then tie it to <span class="off" data-off="01:30">01:30</span>. Defence in depth needs independent layers, and these two share their input.</p>
+      <p>Use the industry name for the setup: <strong>LLM-as-a-judge</strong>, a model that reads another model's output and scores or approves it. Then tie it to <span class="off" data-off="01:30">01:30</span>. These two layers read the same attacker-written text, so one hostile sentence gets past both.</p>
       <p>Then rerun #8812 and get a different verdict. A guard with a pass rate rather than a behaviour is a guard nobody can write a runbook for.</p>
       <p>The control is a deterministic ceiling underneath the judge. <strong>A model may widen what gets through a hard limit. It may never be the limit.</strong></p>
     </div>

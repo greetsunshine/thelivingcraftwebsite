@@ -116,10 +116,10 @@ pre-work quiz exists to remove. **D** is the most common answer in the lab. It p
 
 > Week 3: *"A pass is a claim about the cases you chose. It is not a claim about your system."*
 >
-> Your regression set passes 346 of 360 adversarial runs. What is that a claim about?
+> Your regression set passes 366 of 380 adversarial runs. What is that a claim about?
 
-**Answer.** The attacks somebody wrote. Eight attacks and ten planted clauses, chosen by this room
-today. It says nothing about the eleventh wording, and 01:16 showed that writing one takes a
+**Answer.** The attacks somebody wrote. Nine attacks and ten planted clauses, chosen by this room
+today. It says nothing about the next wording nobody has written, and 01:16 showed that writing one takes a
 minute.
 
 **What a strong answer adds.** The set is still worth having. Each case is an attack that worked
@@ -265,7 +265,7 @@ those words.
 
 **The wrong answer.** "It pays sometimes." What is right: a model's decisions do vary, and the
 spotlighted column shows it. What is wrong: the check is code, so it misses P10 every time, and
-DeepSeek obeyed P10 every time it reached the model.
+without spotlighting, DeepSeek paid P10 on 40 runs in 40.
 
 ---
 

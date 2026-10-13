@@ -77,8 +77,8 @@ someone who has never read the prompt.
   instruction guarding an irreversible action, which is precisely the shape that
   lost ₹2,50,000. You could never separate *it reasoned correctly* from *it got
   lucky*.
-- **"We'll validate inside the tool."** Right, and it is drill 3 — but be exact
-  about what it buys. The industry name is **pre-dispatch validation** (checking
+- **"We'll validate inside the tool."** Right, and drill 3 does it one step earlier,
+  at the dispatch. Be exact about what it buys. The industry name is **pre-dispatch validation** (checking
   a tool call's arguments in code before the tool runs). Validation says *these
   arguments are the wrong shape*.
   Authorisation says *you may not do this even correctly formed*. `issue_credit`

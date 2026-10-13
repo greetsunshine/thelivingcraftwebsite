@@ -407,9 +407,9 @@ model, so we read those opening lines closely and name what we are looking at.
 
 **An agent is a control loop over an unreliable oracle.** An oracle here is
 something you ask a question and get an answer from, without being able to check
-its working. The industry calls it the **agent loop** (the cycle where the model
+its working. The industry calls this loop the **agent loop** (the cycle where the model
 picks a tool, the code runs it, and the result goes back to the model). The
-best-known version is **ReAct**, short for reason and act, from Yao et al., 2022. Its three phases are **thought, action, observation**, and they
+best-known version is **ReAct**, short for reason and act, from Yao and others, 2022. Its three phases are **thought, action, observation**, and they
 repeat until a stopping condition. The model is one component inside that loop.
 It is the only probabilistic one, and the only one you cannot unit-test into
 submission. Draw the loop. Mark the model.
@@ -498,7 +498,7 @@ Three consequences follow, and the third belongs on a whiteboard.
   not a number you set. It is a variable the probabilistic component controls,
   and the only thing bounding it is `MAX_STEPS = 6` in `agent.py`. That is the
   **step budget** (a limit on how many turns of the loop one run may take, often
-  called max iterations). That changes what the step budget is for. It is not a
+  called max iterations). This changes what the step budget is for. It is not a
   safety valve for runaway loops. It is
   the only upper bound on what a single ticket can cost you.
 

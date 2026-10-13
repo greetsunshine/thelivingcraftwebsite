@@ -239,8 +239,8 @@ date.
 
 **Why C is the subtle one, and it is worth a minute.** Two judges reading the
 same attacker-written field are not independent, so they agree. Two of something
-correlated is one control. Defence in depth (several independent controls, so
-one failing does not let the harm through) needs the layers to be independent.
+correlated is one control. Defence in depth (several controls that fail for
+different reasons, so one failing does not let the harm through) needs exactly that.
 This is the distinction the whole block turns on and
 it is the reason C is in the list.
 
@@ -295,9 +295,7 @@ and incomplete. Ask what retries it after the process dies.
 
 **The likely wrong answer, and what is right about it.** **A**, the dispatch, which
 is what most of the room built at 01:20. It does cover every tool the agent calls,
-including tools nobody has written yet. That makes it a policy enforcement point:
-the one place in the code where a rule is checked, so every caller passes through
-it. It is the strongest placement inside this repository. It stops at the agent's edge, and the batch job never crosses it.
+including tools nobody has written yet. That makes it the agent's policy enforcement point, covering every call on the agent's path. It is the strongest placement inside this repository. It stops at the agent's edge, and the batch job never crosses it.
 
 ---
 

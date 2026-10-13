@@ -59,12 +59,12 @@ Grouped by the week that teaches them first. "Our words" is how the pages said i
 | Term | Plain gloss | Our words |
 |---|---|---|
 | **Guardrail** | A control outside the model that limits what the agent can do or say | "a control" |
-| **Policy enforcement point** (PEP) | The one place in the code where a rule is checked, so every caller passes through it | "where a control can stand", "move it to the dispatch" |
+| **Policy enforcement point** (PEP) | One place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers | "where a control can stand", "move it to the dispatch" |
 | **Policy as code** | A rule written as code or config that is versioned and tested, not as a sentence in a prompt | "the rule in code" |
 | **Approval gate** (in banking, **maker-checker** or the **four-eyes principle**) | One person or system proposes; a different one approves | "the gate" |
 | **Hard limit** (spending limit, ceiling) | A number the code will not exceed, whatever the model asks | "the ceiling" |
 | **Fail closed** / **fail open** | When the check itself breaks, refuse (closed) or allow (open) | "what happens when the check is down" |
-| **Defence in depth** (layered defence) | Several independent controls, so one failing does not let the harm through | "layered defence" |
+| **Defence in depth** (layered defence) | Several controls that fail for different reasons, so one failing does not let the harm through | "layered defence" |
 | **LLM-as-a-judge** | A model that reads another model's output and scores or approves it | "a model checking a model" |
 | **Idempotency** and the **idempotency key** | Doing the same request twice has the same effect as once; the key is how the server recognises the repeat | "pay once" |
 | **Race condition** (here, **TOCTOU**: time of check to time of use) | Two runs read the same state, both decide, and both act | "two runs at once" |
@@ -88,7 +88,7 @@ Grouped by the week that teaches them first. "Our words" is how the pages said i
 | **Retriever**, **chunk**, **top-k** | The search step; one piece of a document; the k highest-scoring pieces returned | "the search", "the clause", "the top two" |
 | **Retrieval recall** (recall@k) | Of the pieces that should have been found, how many were in the top k | "did it find the right clause" |
 | **Context precision** (precision@k; the Ragas metric) | Of the pieces the search returned, how many were relevant | "how much of what it found was useful" |
-| **RAG triad** (TruLens) | Three checks on one answer: was the retrieved context relevant, is the answer grounded in it, does it answer the question | "three questions about one answer" |
+| **RAG triad** (TruLens) | Three checks on one answer: was the retrieved context relevant, is the answer grounded in it, does it answer the question. Ragas reports the same steps as context precision and recall, faithfulness and answer relevancy | "three questions about one answer" |
 | **Faithfulness** (groundedness) | Whether the answer says only what the retrieved text supports | "did it use the clause it found" |
 | **Hallucination** | A confident statement the sources do not support | "it made it up" |
 | **Release gate** (quality gate) | A rule that blocks a release unless the evaluation passes a set bar | "the release gate" |
@@ -114,14 +114,15 @@ Grouped by the week that teaches them first. "Our words" is how the pages said i
 | **Dual-LLM pattern** (Willison, 2023) and **CaMeL** (Google DeepMind, 2025) | A model with no tools reads untrusted text; the model that acts never sees it raw | "a model with no tools in front" |
 | **Input sanitisation** | Removing hidden characters, markup and metadata before text is stored or used | "clean it before it is stored" |
 | **RAG poisoning** (OWASP LLM08:2025, Vector and Embedding Weaknesses) | A document written to win the search, so the retriever hands it to the model | "a planted clause" |
-| **Data poisoning** (OWASP LLM04:2025) | A different attack: it changes the data a model is trained on | not used |
+| **Data and model poisoning** (OWASP LLM04:2025) | A different attack: it changes the data a model is trained on | not used |
 | **Content filter** (guardrail classifier) | A check that reads text and decides whether it looks hostile, by rules or by a model | "the content check" |
 | **Provenance** (content signing) | Proof of who published a piece of text and that it has not changed | "where it came from" |
+| **Trust boundary** | The line between text your team controls and text anyone else can write | "who can write it" |
 | **Excessive agency** (OWASP LLM06:2025) | An agent holds tools that can do more than its task needs | "tools turn it into action" |
 | **Least privilege** | Each tool gets the narrowest access that still does its job | "least privilege" |
 | **Data exfiltration** | Getting private data out, often through a link or image address in a reply | "data out" |
 | **System prompt leakage** (OWASP LLM07:2025) | The agent repeats its own instructions to an attacker | "the agent's own instructions" |
-| **Output filtering** / **egress filtering** (OWASP LLM05:2025, Improper Output Handling) | Checking what leaves: links, images, personal data | "check what goes out" |
+| **Output filtering** / **egress filtering** | Checking what leaves: links, images, personal data | "check what goes out" |
 | **The lethal trifecta** (Willison, 2025) | Private data, untrusted content and a way to send data out, in one agent | not used before |
 | **Model Context Protocol** (MCP): **server**, **client**, **tools/list**, **tools/call** | A standard way for an agent to discover and call tools on another program | "an MCP server" |
 | **Tool annotations** (readOnlyHint, idempotentHint, destructiveHint) | Hints a server attaches to a tool; the spec says they are untrusted | "a hint" |

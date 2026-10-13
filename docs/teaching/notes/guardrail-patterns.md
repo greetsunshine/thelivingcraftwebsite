@@ -199,8 +199,7 @@ without knowing it has a name or a precondition.
 ## Family 4 · Architectural patterns
 
 Where the control sits in the system, rather than how it reaches a verdict. The
-first row is a policy enforcement point (PEP): the one place in the code where a
-rule is checked, so every caller passes through it.
+first row is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.
 
     interceptor at dispatch   one enforcement point every call passes through   built, drill 1
     broker                    the agent never holds the credential              teardown q4

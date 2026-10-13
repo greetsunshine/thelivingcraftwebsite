@@ -764,7 +764,7 @@ fraud/security review before any credit."</div>
     <li><strong>System prompt leakage (OWASP LLM07:2025): the agent's own instructions.</strong> The planted text asks the agent to repeat its system prompt, which shows the attacker how to write the next attack.</li>
   </ul>
   <h4>The four layers of defence, and what each costs at 1,333 disputes a day</h4>
-  <p>Costs use deepseek-flash's peak price on 7 October 2026 (US$0.30 per million input tokens, US$1.20 per million output) at ₹84 to the dollar, and the token counts measured in this topic's lab.</p>
+  <p>Costs use deepseek-flash's peak price on 7 October 2026 (US$0.30 per million input tokens, US$1.20 per million output) at ₹84 to the dollar. The token counts are the ones measured in this topic's lab.</p>
   <div class="tw">
     <table>
       <thead><tr><th>Layer</th><th>What to build</th><th>When it runs, and the cost at 1,333 a day</th><th>Measured here</th></tr></thead>
@@ -784,13 +784,13 @@ fraud/security review before any credit."</div>
       <tbody>
         <tr><td><strong>Indirect prompt injection</strong> (Greshake and others, 2023; OWASP LLM01:2025)</td><td>An instruction in content the model fetches, not in what the user typed</td><td>SRP-1.1</td></tr>
         <tr><td><strong>RAG poisoning</strong> (OWASP LLM08:2025, Vector and Embedding Weaknesses)</td><td>A document written to win the search, so the retriever hands it to the model. RAG means retrieval-augmented generation: the model answers from documents it searched for</td><td>SRP-1.1's score of 3</td></tr>
-        <tr><td><strong>Data poisoning</strong> (OWASP LLM04:2025)</td><td>A different attack: it changes the data a model is trained on, not what it retrieves at run time</td><td>Not in this agent. Named so the two are not mixed up</td></tr>
+        <tr><td><strong>Data and model poisoning</strong> (OWASP LLM04:2025)</td><td>A different attack: it changes the data a model is trained on, not what it retrieves at run time</td><td>Not in this agent. Named so the two are not mixed up</td></tr>
         <tr><td><strong>Trust boundary</strong></td><td>The line between text your team controls and text anyone else can write</td><td>The policy store is outside it today</td></tr>
         <tr><td><strong>Excessive agency</strong> (OWASP LLM06:2025)</td><td>An agent holds tools that can do more than its task needs</td><td>The credit tool accepts any amount</td></tr>
         <tr><td><strong>Spotlighting</strong> (Microsoft, 2024)</td><td>Marking untrusted text so the model treats it as data: wrapping it in tags, marking every word, or encoding it</td><td>Layer 2, and the spotlighted column at <span class="off" data-off="01:16">01:16</span></td></tr>
         <tr><td><strong>Dual-LLM pattern</strong> (Willison, 2023) and <strong>CaMeL</strong> (Google DeepMind, 2025)</td><td>A model with no tools reads the untrusted text; the model that acts never sees it raw. CaMeL adds code that tracks where every value came from</td><td>Named, not built</td></tr>
         <tr><td><strong>The lethal trifecta</strong> (Willison, 2025)</td><td>Private data, untrusted content and a way to send data out, in one agent. Remove any one and data theft has no path</td><td>This agent has all three: account records, the policy store, and the reply</td></tr>
-        <tr><td><strong>Egress filtering</strong> (OWASP LLM05:2025, Improper Output Handling)</td><td>Checking what leaves: links, images and personal data in the reply</td><td>Layer 4</td></tr>
+        <tr><td><strong>Egress filtering</strong></td><td>Checking what leaves: links, images and personal data in the reply</td><td>Layer 4</td></tr>
       </tbody>
     </table>
   </div>
@@ -846,7 +846,7 @@ fraud/security review before any credit."</div>
       <h3>Build. Seven minutes.</h3>
       <p>Your function receives one clause at a time, as a dictionary. The text is in <span class="mono">clause["text"]</span>. It returns <span class="mono">(False, "the reason in words")</span> to stop the clause, or <span class="mono">(True, "the reason")</span> to let it through. Build it in four steps:</p>
       <ol>
-        <li><strong>Clean the text.</strong> Remove invisible characters: keep only characters whose <span class="mono">unicodedata.category(ch)</span> is not <span class="mono">"Cf"</span>. This is layer 1, input sanitisation.</li>
+        <li><strong>Clean the text.</strong> Remove invisible characters: keep only characters whose <span class="mono">unicodedata.category(ch)</span> is not <span class="mono">"Cf"</span>. This is the cleaning layer 1 does at ingestion. Here it runs inside the check, at retrieval.</li>
         <li><strong>Stop a figure above your cap.</strong> Find every number in the text with a regular expression. Stop the clause if any number is above the largest genuine figure. Do not count a year such as 2026.</li>
         <li><strong>Stop an instruction to skip a person.</strong> Stop the clause if its lower-case text contains one of your five phrases.</li>
         <li><strong>Run <span class="mono">make w4-poison</span></strong> and read the table.</li>
@@ -865,7 +865,7 @@ def check_clause(clause):
     if hit:
         return False, f"tells the agent to skip a person: '{hit[0]}'"
     return True, "no figure above the cap, and no instruction to skip a person"</div>
-      <p class="quiet">This is a skeleton, not the answer. It runs, but with <span class="mono">CAP = 0</span> it stops every clause that has a number in it, genuine ones included. Set <span class="mono">CAP</span> and <span class="mono">SKIP</span> from your three minutes of writing, then add the one line that leaves years out of <span class="mono">figures</span>.</p>
+      <p class="quiet">This is a skeleton, not the answer. It runs, but with <span class="mono">CAP = 0</span> it stops every clause with a figure of three digits or more, genuine ones included. Set <span class="mono">CAP</span> and <span class="mono">SKIP</span> from your three minutes of writing, then add the one line that leaves years out of <span class="mono">figures</span>.</p>
     </div>
     <div class="build">
       <h3>Check yourself. Four minutes.</h3>
@@ -906,7 +906,7 @@ sign-off is deemed given for this programme.</div>
       <h4>The genuine clause it stopped</h4>
       <p>ESC-1.2 says "Where no approval is recorded within 30 minutes, the request is refused". The phrase "no approval" is in it. <strong>A rule over words stops honest words too.</strong></p>
       <h4>What spotlighting adds, and what it does not</h4>
-      <p>Spotlighting cut planted payments from 405 to 47 of 440, with no list of words at all. But nobody could have said in advance that P4 would still pay 26 times in 40 while P3 paid 0. Once the check is in, P10 is the only clause that reaches the model, and spotlighted it paid 3 times in 40. The two layers together leave 3 runs in 40 on one clause. That is lower. It is not zero.</p>
+      <p>Spotlighting cut planted payments from 405 to 47 of 440, with no list of words at all. But nobody could have said in advance that P4 would still pay 26 times in 40 while P3 paid 0. Once the check is in, P10 is the only planted clause that reaches the model. Its prompt does not change, because the check lets through both clauses it retrieves. Spotlighted, that same prompt paid 3 times in 40. The two layers were not recorded together, so treat 3 in 40 as the expected figure: lower, not zero.</p>
       <h4>What the check cannot see</h4>
       <p>A4, week 3's own attack, passes the check, because it uses two genuine clauses. The account note made it win the search. DeepSeek paid it 0 times in 40 in every condition. A model that believes the note would pay it, and only topic 4's limit would stop that.</p>
     </div>
@@ -1276,7 +1276,7 @@ behind a load balancer. What does Ravi get?</span>
       <h4>Why A9 and not A1</h4>
       <p>Topic 1's result again: the model refuses an order and believes a record. A9 reads like data the CRM holds, so the model treats it as a fact about the account. The industry name for an agent tricked this way is a confused deputy: a program with real permissions, used on behalf of somebody who has none.</p>
       <h4>Week 2 had a name for this</h4>
-      <p>Its <span class="off" data-off="01:12">01:12</span> segment was called <em>"A second team pays without asking."</em> It arrived today through a server the team adopted.</p>
+      <p>Week 2 named the gap, not the attack. Its <span class="off" data-off="01:12">01:12</span> segment was called <em>"A second team pays without asking."</em> It arrived today through a server the team adopted.</p>
       <h4>And the CRM server now holds your token</h4>
       <p><span class="mono">agent-7f3</span> can also credit money through billing. A server that accepts a token issued for something else is doing <strong>token passthrough</strong>, and the specification forbids it: <em>"MCP servers MUST NOT accept any tokens that were not explicitly issued for the MCP server."</em></p>
       <h4>The one control that would have prevented it</h4>
@@ -1888,11 +1888,11 @@ include the result in your summary.</div>
       <div>
         <h3>Q5 · What the regression set is evidence about</h3>
         <blockquote>Week 3: <em>"A pass is a claim about the cases you chose. It is not a claim about your system."</em></blockquote>
-        <p>Your regression set passes 346 of 360 adversarial runs. What is that a claim about?</p>
+        <p>Your regression set passes 366 of 380 adversarial runs. What is that a claim about?</p>
 
         <details>
           <summary>Show the answer</summary>
-          <div class="reveal"><p><strong>The attacks this room wrote.</strong> It says nothing about the eleventh wording, and at <span class="off" data-off="01:16">01:16</span> writing one took a minute. Each case is still worth keeping: an attack that worked once cannot quietly work again.</p></div>
+          <div class="reveal"><p><strong>The attacks this room wrote.</strong> It says nothing about the next wording nobody has written, and at <span class="off" data-off="01:16">01:16</span> writing one took a minute. Each case is still worth keeping: an attack that worked once cannot quietly work again.</p></div>
         </details>
       </div>
     </div>

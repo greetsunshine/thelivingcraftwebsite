@@ -757,8 +757,7 @@ would have been refused at the dispatch, because a tool with no policy row is
 refused by default. If somebody predicted the ledger, say so now and name them.
 A dispatch check only covers callers that go through the agent. Move that tool
 into another team's service and the dispatch never sees it. The usual name for
-the fix is a policy enforcement point (PEP): the one place in the code where a
-rule is checked, so every caller passes through it.
+the fix is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.
 
 ### The wrong answer worth spending time on, and one probe
 
@@ -869,8 +868,8 @@ their week, not a reason to stop at the dispatch and call it finished.
 ### The wrong answer worth spending time on, and one probe
 
 "So the dispatch check was a waste of time." No, and this matters. Two copies
-of one rule in two places is defence in depth: several independent controls, so
-one failing does not let the harm through. It is correct. What is
+of one rule in two places is defence in depth: two controls at different points, so a
+caller that skips one still meets the other. It is correct. What is
 required is naming which copy is authoritative, because two copies that drift
 are worse than one. The dispatch check gives a fast, specific refusal message.
 The ledger constraint gives coverage. Keep both and write down which one you
@@ -1491,7 +1490,8 @@ attacker-written field are one control, not two.**
 
 Use the industry name for the setup: LLM-as-a-judge, a model that reads another
 model's output and scores or approves it. Then tie it to 01:30. Defence in depth
-needs independent layers, and these two share their input.
+needs layers that fail for different reasons. These two read the same
+attacker-written text, so one hostile sentence gets past both.
 
 Then run #8812 again and get a different verdict. A guard with a pass rate
 rather than a behaviour is a guard nobody can write a runbook for.

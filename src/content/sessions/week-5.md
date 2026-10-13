@@ -91,18 +91,18 @@ wrong account. Which check should have caught it?
   handoff carries the state.
 - Step-level evaluation grades each step on its own: the right tool, and valid
   arguments.
-- Two agents read the ledger at different moments. Which one is right? This is
-  where the CAP trade-off shows up: when the network splits, a system keeps
-  either consistency or availability, not both.
+- Two agents read the ledger at different moments. Which one is right? That is
+  a consistency question. It is also where the CAP trade-off shows up: when the
+  network splits, a system keeps either consistency or availability, not both.
 - Lab in pairs, `make w5-a2a`: an investigator and an approver, with a
   schema-checked handoff between them.
 - At enterprise scale: A2A, MCP (Model Context Protocol, week 4's standard for
   calling another program's tools) used between agents, and plain HTTP with JSON
   Schema, with costs.
 
-**3 · RAG part 2: retrieval quality.** RAG (retrieval-augmented generation)
-means the model answers from documents it searched for at run time. Which change moves your retrieval score
-most, and what does it cost per 1,000 queries?
+**3 · RAG part 2: retrieval quality.** Which change moves your retrieval score
+most, and what does it cost per 1,000 queries? RAG (retrieval-augmented
+generation) means the model answers from documents it searched for at run time.
 - Week 3's guard escalates 30% of disputes, because retrieval is thin.
 - Four levers: chunking (how documents are split into pieces), hybrid search
   (keyword search combined with vector search), re-ranking (a second model

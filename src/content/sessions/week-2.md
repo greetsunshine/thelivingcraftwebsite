@@ -193,8 +193,7 @@ control on what the agent is allowed to do. You map the six kinds onto the
 three planes the field uses (input, output, operational) and the threats each
 one meets. Then you build a limit as data, count and time what it does, and
 watch a second team's tool walk past it with ₹5,000. The fix is a **policy
-enforcement point**: the one place in the code where a rule is checked, so every
-caller passes through it.
+enforcement point**: one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.
 
 **2 · Human-in-the-loop (HITL) approval.** *01:44 to 02:34, through the break.*
 What does your code do when nobody approves inside the time you set? **HITL**
@@ -206,15 +205,15 @@ nobody watching.
 **3 · Idempotency.** *02:34 to 03:13.* Why does a fix that passes in one process
 still pay twice from two? **Idempotency** means running a request twice does the
 same thing as running it once. You make a payment happen once, watch the fix
-fail from a second terminal, then build the fix that holds. The second
-terminal finds a **race condition**: two runs read the same state, both decide,
-and both act.
+fail from a second terminal, then build the fix that holds. The fix that holds
+closes a **race condition**: two runs read the same state, both decide, and both
+act.
 
 **4 · Red-teaming.** *03:18 to 04:05.* Can another pair get ₹5,000 out of the
 system you built this morning? **Red-teaming** means attacking your own system
 on purpose, before somebody outside does. First a model replaces your ceiling
 and reads the attacker's words. That setup is **LLM-as-a-judge**: a model that
-reads another model's output and approves it. You price three tiers of checker in
+reads another model's output and scores or approves it. You price three tiers of checker in
 milliseconds and decide which may run in-band and which out-of-band. Then
 another pair attacks your guard for thirty minutes.
 

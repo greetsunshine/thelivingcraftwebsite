@@ -1224,7 +1224,7 @@ paid out ₹5,000 · 1 credit
       <p><strong>Now look at your counter.</strong> It did not move. Not because the check passed, but because the check was never called. A control that is not on the path produces no signal at all, and silence from a control looks exactly like a quiet week. That is what 00:31 was about, and this is the first time it costs you money.</p>
       <p>Your check protects <span class="mono">issue_credit</span>. It does not protect the ledger, and the ledger is where the money is. Every new tool is a new chance for somebody to forget.</p>
       <p><strong>If you predicted the resource of record at 00:42, you are right and you are ahead of the lab.</strong> A dispatch check only covers callers that go through the agent. Move that tool into another team's service and the dispatch never sees it.</p>
-      <p class="named">The usual name for the fix: a policy enforcement point (PEP). It is the one place in the code where a rule is checked, so every caller passes through it.</p>
+      <p class="named">The usual name for the fix: a policy enforcement point (PEP). It is one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.</p>
     </div>
   </details>
   <div class="writein">
@@ -1243,7 +1243,7 @@ paid out ₹5,000 · 1 credit
     <summary><span class="chev">›</span> Answer key</summary>
     <div class="dbody">
       <p><strong>What went wrong.</strong> The check protects <code>issue_credit</code>. It does not protect the ledger, and the ledger holds the money. Every tool added later is a new chance to forget.</p>
-      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point (PEP): the one place in the code where a rule is checked, so every caller passes through it.</p>
+      <p><strong>The control.</strong> Move the check to the dispatch, where every tool call already passes through one line. The industry name is a policy enforcement point (PEP): one place where a rule is checked, so every call on that path passes through it. Where you put it decides which callers it covers.</p>
       <p><strong>Then the counter.</strong> Their refused counter did not move. Not because the check passed, but because it was never called. A control that is not on the path produces no signal, and silence from a control looks identical to a quiet week. That is the third property from 00:31 paid off in their own code.</p>
       <p><strong>Then give the prediction its due.</strong> Point at the board. A dispatch check only covers callers that go through the agent. Move this tool into another team's service and the dispatch never sees it. They are right, and 01:30 is where it is said properly.</p>
     </div>
@@ -1383,7 +1383,7 @@ ALTER TABLE credits ADD CONSTRAINT credit_account_exists
   FOREIGN KEY (account_id) REFERENCES accounts (account_id);
 ALTER TABLE credits ADD CONSTRAINT credit_positive CHECK (amount &gt; 0);</pre>
   <p><strong>Now the cost, because it is real.</strong> The ledger belongs to another team. The strongest placement available to you is the one you cannot ship on your own. That is a constraint on your week, not a reason to stop at the dispatch and call it finished.</p>
-  <p>And keep both. Keeping both is <strong>defence in depth</strong>: several independent controls, so one failing does not let the harm through. What it needs is one sentence saying which copy is authoritative, because two copies that drift are worse than one.</p>`,
+  <p>And keep both. Keeping both is <strong>defence in depth</strong>: two controls at different points, so a caller that skips one still meets the other. What it needs is one sentence saying which copy is authoritative, because two copies that drift are worse than one.</p>`,
         script: `
     <p><strong>Without this segment the room leaves believing the dispatch is the answer.</strong> That is what an earlier version of this session taught by accident.</p>
     <p>Point at the nine places from 00:42 and at the two the control has now occupied. Then say it: <em>move the control toward the thing being protected, not toward the thing being controlled.</em></p>
@@ -1393,7 +1393,7 @@ ALTER TABLE credits ADD CONSTRAINT credit_positive CHECK (amount &gt; 0);</pre>
   <details>
     <summary><span class="chev">›</span> The wrong answer worth spending time on</summary>
     <div class="dbody">
-      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Two copies of one rule in two places is defence in depth: several independent controls, so one failing does not let the harm through. It is correct.</p>
+      <p><strong>"So the dispatch check was a waste of time."</strong> No, and this matters. Two copies of one rule in two places is defence in depth: two controls at different points, so a caller that skips one still meets the other. It is correct.</p>
       <p>What is required is naming which copy is authoritative, because two copies that drift are worse than one. The dispatch gives a fast, specific refusal message. The resource of record gives coverage. Keep both and write down which one you trust.</p>
       <p><strong>Probe.</strong> Your ledger constraint refuses and your dispatch check allows. Which one is the bug?</p>
     </div>
@@ -2570,9 +2570,9 @@ def handler(event, context):
       lede: "By the end of it you can place a check in the right tier and in-band or out-of-band, attack another pair's guard, and name the control point that would have stopped you.",
       learner: `
   <p><strong>Two parts.</strong> First, at 03:18, the different kinds of checker and what each costs. Then, at 03:31, an attack on the guardrails you built this morning.</p>
-  <p><strong>The kinds of checker, in three tiers.</strong> Every check you wrote today is plain code comparing a value with a number: in <span class="mono">src/agent.py</span>, <span class="mono">amount &gt; 1200</span>. That is <strong>tier 1, deterministic rules</strong>: fast and predictable. <strong>Tier 2</strong> is a small trained classifier, used for fuzzy questions such as "does this text look like an attack?". <strong>Tier 3</strong> is a model asked to judge, such as Llama Guard or a general model with a judging prompt. The second is called <strong>LLM-as-a-judge</strong>: a model that reads another model's output and scores or approves it. Each tier is slower and less predictable than the one before, and can handle harder questions.</p>
+  <p><strong>The kinds of checker, in three tiers.</strong> Every check you wrote today is plain code comparing a value with a number: in <span class="mono">src/agent.py</span>, <span class="mono">amount &gt; 1200</span>. That is <strong>tier 1, deterministic rules</strong>: fast and predictable. <strong>Tier 2</strong> is a small trained classifier, used for fuzzy questions such as "does this text look like an attack?". <strong>Tier 3</strong> is a model asked to judge, such as Llama Guard or a general model with a judging prompt. A model judging another model's output is called <strong>LLM-as-a-judge</strong>: it reads that output and scores or approves it. Each tier is slower and less predictable than the one before, and can handle harder questions.</p>
   <p><strong>In-band or out-of-band.</strong> An in-band check runs before the action, and the action waits for it. An out-of-band check runs beside the action, and nobody waits, so you need a way to undo the action if the check fails. You will decide which of your checks can be which.</p>
-  <p><strong>Then the round.</strong> <strong>Red-teaming</strong>, also called adversarial testing, means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
+  <p><strong>Then the round.</strong> <strong>Red teaming</strong>, also called adversarial testing, means attacking your own system on purpose, before somebody outside does. For thirty minutes another pair tries to get ₹5,000 out of what you built, and you try theirs.</p>
   <p><strong>What this topic is not.</strong> It is not an argument that models are unreliable. It is not a defence against text an attacker writes into a ticket, which is week 4. And it is not a measurement of whether a model checker is any good, which is week 3.</p>`,
       script: `
   <p><strong>03:18 answers the question a room of eight always asks</strong>, usually while writing an <code>if</code>: why not just ask a model whether this credit looks reasonable? The honest answer takes four minutes and needs a structure. Without one it sounds like conservatism.</p>
@@ -2615,7 +2615,7 @@ The judge allows it.</span></div>
     <div class="reveal">
       <p><strong>The judge read the same field the agent read.</strong> It is not a second opinion. It is the same opinion with a different prompt.</p>
       <p style="font-size:var(--size-4)"><strong>Two models reading one attacker-written field are one control, not two.</strong></p>
-      <p>Defence in depth from 01:30 only works when the layers are independent. These two layers share their input, so one hostile sentence gets past both.</p>
+      <p>These two layers read the same attacker-written text, and both can be talked past by it, so one hostile sentence gets past both.</p>
       <p>Now run ticket #8812 again. Same text, same judge. You may get a different verdict. <strong>If the same ticket can get a different answer each time, you cannot say in advance what the check will do.</strong> A runbook, the written instructions for the engineer on call, needs a check that behaves the same way every time. A check that says yes on one run and no on the next is a probability, not a guardrail you can operate.</p>
       <p>The control is a deterministic ceiling underneath the judge. A model may widen what gets through a hard limit. It may never be the limit.</p>
     </div>
@@ -2717,7 +2717,7 @@ def check(credit, ticket_text):
     <summary><span class="chev">›</span> The answer key</summary>
     <div class="dbody">
       <p>The judge read the same attacker-controlled field as the agent. It is not a second opinion, it is the same opinion with a different prompt. <strong>Two models reading one hostile field are one control, not two.</strong></p>
-      <p>Use the industry name for the setup: <strong>LLM-as-a-judge</strong>, a model that reads another model's output and approves it. Then tie it to 01:30. Defence in depth needs independent layers, and these two share their input.</p>
+      <p>Use the industry name for the setup: <strong>LLM-as-a-judge</strong>, a model that reads another model's output and scores or approves it. Then tie it to 01:30. These two layers read the same attacker-written text, so one hostile sentence gets past both.</p>
       <p>Then rerun #8812 and get a different verdict. A guard with a pass rate rather than a behaviour is a guard nobody can write a runbook for.</p>
       <p>The control is a deterministic ceiling underneath the judge. <strong>A model may widen what gets through a hard limit. It may never be the limit.</strong></p>
     </div>
