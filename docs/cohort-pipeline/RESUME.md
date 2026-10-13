@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 12 October 2026
+**Last updated:** 13 October 2026
 **Funnel steps, 12 October (`console/funnel-step-detail`):** each funnel row now opens `/craft/admin/traffic/step`. It needs the new `admin_step_detail()`: **run `supabase/schema.sql` before merging.** **Run the copy from `main` or from this PR's branch, never from an older branch.** On 12 October the week-4 branch's stale copy was run and put the pre-#63 `admin_funnel()` back on production; every statement in the file is `create or replace`, so an old copy silently reverts newer functions. PR #63 below is merged.
 **Console funnel, 12 October:** application starts now have their own row on `/craft/admin/traffic`. `admin_funnel()` changed and a per-page view (`/craft/admin/traffic/page`) with its rollup `admin_page_detail()` was added. The schema ran on production on 12 October, **but the PR #63 review fixes changed it again (new `admin_event_key()`, two functions rewritten): run `supabase/schema.sql` once more before merging.** **"Started a tool: 0" is a true count, not a fault** (checked 12 October): headless Chrome on the live poc-screen sent `tool_started` on the first click, and a tagged beacon was stored and then deleted. The event only exists since 29 September, and the tool pages had 29 views from then to 12 October.
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
@@ -70,9 +70,10 @@ Rows 58 to 69 of the "Notes Review" sheet, answered in
   cell). The second recording disagreed with the first in places, so the prompt line's apparent
   effects are now taught as run-to-run noise. **Rerun before teaching** and add a third
   recording rather than replacing the two: every report sums the whole log.
-- **Reference agent is pushed.** `main` (week 1–3 code, `3393e07`) went out on 9 October, so
-  learners who pull have week 3. `week-4-draft` is on GitHub at `742c6eb`, with `make w4-hint`
-  added for topic 3.
+- **Reference agent: week 4 is released.** `week-4-draft` merged into `main` on 13 October
+  (reference-agent PR #1, merge `1efb3e4`), so learners who pull now have every `w4-` target.
+  The labs need `DEEPSEEK_API_KEY` in `.env`; `make w4-eval` and every `-recorded` target run
+  without one. A clean clone of `main` was checked: `w4-eval` prints 386/420.
 
 ---
 
