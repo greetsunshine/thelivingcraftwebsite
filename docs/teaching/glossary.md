@@ -136,6 +136,10 @@ Grouped by the week that teaches them first. "Our words" is how the pages said i
 | **Cancellation** and the **Tasks extension** (MCP; Tasks is specified outside the core document) | A client abandoning a request; an opt-in way to give a long call a handle to check later | "when a call takes longer than the client waits" |
 | **Tool name collision** | Two servers offering a tool with the same name; a client or proxy prefixes names with a server identifier | "two servers, one name" |
 | **Credential isolation** | Keeping tokens out of the model's context, tool arguments and logs; the server checks them on every request | "whose code checks the token" |
+| **Privilege escalation** (through a tool result) | Text a server returns gets the agent to use more power than the task needs | "A9's note asks for ₹2,50,000" |
+| **Context window pollution** | A result that fills the model's context with far more than the task needs | "a full contact export" |
+| **Client manager** (MCP) | The part of the host that connects to several servers, routes each call and limits each server | "one agent, three servers" |
+| **Progress notifications** (MCP) | A server reporting how far a long call has got, so the client can wait longer | "how far it has got" |
 | **Tool annotations** (readOnlyHint, idempotentHint, destructiveHint) | Hints a server attaches to a tool; the spec says they are untrusted | "a hint" |
 | **Tool poisoning** (Invariant Labs, 2025) | Hostile instructions inside a tool's description, which the model reads as prompt text | "the description change" |
 | **Rug pull** | A tool server changes a tool after you reviewed and approved it | "day 9" |

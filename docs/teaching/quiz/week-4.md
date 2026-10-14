@@ -303,19 +303,19 @@ the right clause. A grader cannot see a hostile author.
 
 ---
 
-## Topic 3 · Build an MCP server · asked at 02:12
+## Topic 3 · MCP, modules 1 and 2 · asked at 02:12
 
-### Q31 · Who reads what
-`recall` · 02:12
+### Q31 · A cancelled credit
+`apply` · 02:12
 
-> Who reads a tool's description, and who reads its annotations?
+> A credit was cancelled after 0.3 seconds. Was the customer paid?
 
-**Answer.** The model reads the description, as prompt text. The client's code reads the
-annotations, and the specification says to treat them as untrusted unless the server is trusted.
+**Answer.** Yes, ₹1,200. The server had already written the credit. Cancellation stops the reply,
+not the work done (`make w4-mcp-wire`, step 7: no reply, and the ledger shows ₹1,200).
 
-**The wrong answer.** "Both go to the model." What is right: many clients do put annotations in the
-prompt. What is wrong: the specification's point is that code may act on them, which is why a false
-hint does damage without the model being involved.
+**The wrong answer.** "No, the call was cancelled." What is right: the client got no answer,
+which is what cancelling means. What is wrong: the ledger is the only thing that says what
+happened, and only the dispute id makes a retry after it safe.
 
 ---
 
@@ -350,18 +350,20 @@ deployment, and nobody chose it.
 
 ---
 
-## Topic 4 · Use an MCP server you did not write, and contain it · asked at 03:07
+## Topic 4 · MCP, modules 3 and 4 · asked at 03:07
 
-### Q41 · The four columns
-`recall` · 03:07
+### Q41 · Two servers, one name
+`apply` · 03:07
 
-> Name the four things a proxy row limits for a tool you did not write.
+> Billing and KYC both offer get_account. What must your client do?
 
-**Answer.** The scope of the token it carries, which account it may touch, which fields of the
-result reach the model, and which reviewed version of the description it accepts.
+**Answer.** Address each tool by server and name, such as `billing.get_account` and
+`kyc.get_account`, so each call goes to exactly one server (`make w4-mcp-many`). The 2026-07-28
+specification says tool names only have to be unique within one server.
 
-**The wrong answer.** "Rate and timeout." Both are worth having. Neither limits what an obeyed
-instruction can do.
+**The wrong answer.** "Rename the tool on one of the servers." What is right: if it is your
+server, you can. What is wrong: most servers you connect are somebody else's, so the client has
+to tell them apart.
 
 ---
 
