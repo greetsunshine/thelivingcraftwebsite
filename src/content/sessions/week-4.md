@@ -14,9 +14,9 @@ outcomes:
   - id: poison
     text: plant a hostile clause in the text my agent retrieves, and state the miss rate of the check meant to catch it
   - id: mcp-serve
-    text: expose a tool as an MCP server, and say which of its annotations my own code actually enforces
+    text: expose tools, resources and prompts from an MCP server, and say which annotations my own code actually enforces
   - id: contain
-    text: cut a tool I did not write to the least privilege it needs, so a successful injection cannot move money
+    text: cut a server I did not write to the least privilege it needs, so a successful injection cannot move money, and limit each server I use
   - id: breaker
     text: stop a runaway loop with a limit written in code, and name who sees that signal at 3am and what they do
 # Week 4's row of the matrix in docs/teaching/threads.md.
@@ -51,9 +51,9 @@ runOfShow:
   - { at: "00:15", label: "1 · Direct prompt injection", kind: block, detail: "Who added \"ignore instructions in the ticket\" to the prompt after week 1?" }
   - { at: "00:54", label: "Pair discussion", kind: standup, detail: "Which of your fields can an outsider write?" }
   - { at: "00:59", label: "2 · Indirect injection through retrieval", kind: block, detail: "Your check stops ten planted clauses out of eleven. What does the eleventh do?" }
-  - { at: "01:37", label: "3 · Building a Model Context Protocol (MCP) server", kind: block, detail: "You marked issue_credit with idempotentHint: true. What in your code makes that true?" }
+  - { at: "01:37", label: "3 · MCP: protocol architecture, primitives and transports", kind: block, detail: "You marked issue_credit with idempotentHint: true. What in your code makes that true?" }
   - { at: "02:16", label: "Break", kind: break, detail: "Fifteen minutes. Run make w4-hashes during it" }
-  - { at: "02:31", label: "4 · Least privilege for an MCP server you did not write", kind: block, detail: "The injection worked. What is the most it could do?" }
+  - { at: "02:31", label: "4 · MCP: security, isolation and production operations", kind: block, detail: "The injection worked. What is the most it could do?" }
   - { at: "03:11", label: "Pair discussion", kind: standup, detail: "Which of your tools holds a token it does not need?" }
   - { at: "03:16", label: "5 · Circuit breakers and production monitoring", kind: block, detail: "Which signal would have moved, and who reads it at 3am?" }
   - { at: "04:02", label: "Recall", kind: block, detail: "Every attack you ran today, and the control it met. Alone, notes closed" }
@@ -80,15 +80,15 @@ checkpoints:
       - Name the layer of defence each control belongs to, and what it costs at 1,333 disputes a day
   - at: "02:15"
     items:
-      - Expose a tool with a schema that requires every field the server needs to decide safely
+      - Draw the host, its clients and two servers, and say who decides to use a tool, a resource and a prompt
       - Make idempotentHint true with an idempotency key in a store every server copy shares
-      - Check a token's scope on every request, and refuse with a reason the model can read
+      - Say what cancelling a slow call does to a credit that already ran
       - Say which of your annotations your code enforces, and which are declared only
   - at: "03:10"
     items:
-      - Say why a ceiling in your dispatch did not cover a tool on somebody else's server
+      - Name four threats an MCP server brings, and what limits each
       - "Write a proxy row: scope, account, fields and a pinned description"
-      - Name the seven questions to ask an owner before adopting their server
+      - Route two tools with the same name to two servers, and set a limit on each server
       - Show an injection that the model obeys and that moves no money
   - at: "04:01"
     rated: false
@@ -206,26 +206,30 @@ clauses out of eleven. What does the eleventh do?
   what it stops and what it misses.
 - At enterprise scale: content scanning and document signing, with costs.
 
-**3 · Build an MCP server.** You marked `issue_credit` with
-`idempotentHint: true`. What in your code makes that true?
+**3 · MCP, modules 1 and 2: protocol architecture, primitives and transports.**
+You marked `issue_credit` with `idempotentHint: true`. What in your code makes
+that true?
 - The retry pays ₹1,200 twice. A tool annotation declares behaviour and enforces nothing.
-- Host, client and server; the three primitives (tools, resources, prompts); two
-  kinds of error. Transports are pre-work reading.
-- How large each tool is, its schema, its annotations.
-- The protocol keeps no session between calls, so authorisation moves into your
-  own application code.
+- Module 1: the N × M integration problem; host, client and server; tools,
+  resources and prompts; two kinds of error.
+- Module 2: no session, so each request says what it supports; stdio and
+  Streamable HTTP; progress, cancellation and the Tasks extension. `make
+  w4-mcp-wire` shows a cancelled credit that was paid anyway.
 - Lab, `make w4-mcp-serve`: expose `get_account` and `issue_credit` as an MCP
-  server.
+  server, and make the hint true.
 - At enterprise scale: the official SDKs, FastMCP and hosted servers, with
   costs.
 
-**4 · Use an MCP server you did not write, and contain it.** The injection
-worked. What is the most it could do?
+**4 · MCP, modules 3 and 4: security, isolation and production operations.** The
+injection worked. What is the most it could do?
 - A third-party CRM server returns customer notes that carry instructions, using
   a token that can also write.
-- When inheriting somebody else's tools is the right call, and what to ask them
-  first.
-- Least privilege per tool, enforced by an MCP gateway: here, a proxy you write.
+- Module 3: the threat landscape; least privilege per tool, enforced by an MCP
+  gateway (here, a proxy you write); credentials kept out of the model; a person
+  confirming calls that change things.
+- Module 4: when adopting a server is right, and seven questions for its owner;
+  many servers at once, with name collisions, routing, limits and tracing (`make
+  w4-mcp-many`).
 - Lab, `make w4-proxy`: a proxy that cuts each tool to what it needs. A note
   asking for ₹2,50,000 as an approved record moves ₹0 even when the model obeys it.
 - At enterprise scale: MCP gateways and registries, with costs.
