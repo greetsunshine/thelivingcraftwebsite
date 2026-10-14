@@ -930,7 +930,7 @@ checker rule and this one are the same rule: the thing that acts checks who aske
 
 **Two kinds of error.** Name each in one sentence, because the lab's server uses both. A
 protocol error is a JSON-RPC error, such as an unknown tool; the specification says a model is
-unlikely to fix it. A tool execution error is a result with `isError: true`, and a failed input
+less likely to fix it. A tool execution error is a result with `isError: true`, and a failed input
 check belongs there so the model can correct itself. The starting server's "no such account" is
 the second kind. **Extension question:** *the specification says a server MUST validate every
 tool input. What does the starting `issue_credit` do with an amount of -1200?* It credits it.
@@ -941,7 +941,8 @@ on every call. The dispute id is that pattern. One sentence, then on.
 
 **When a call takes longer than the client waits.** Reading, not live: cancellation
 (`notifications/cancelled` on stdio, closing the stream on Streamable HTTP) lets a client abandon
-a request, and the opt-in Tasks extension gives a long call a handle to check later. Neither
+a request, and the opt-in Tasks extension (specified outside the core document) gives a long call
+a handle to check later. Neither
 undoes a credit that already ran. If somebody offers either as the fix for 01:37, that is the
 answer: only the dispute id makes the retry safe.
 

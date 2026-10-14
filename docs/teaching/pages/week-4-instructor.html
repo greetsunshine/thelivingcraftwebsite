@@ -1130,7 +1130,7 @@ ol.toc a{color:inherit}
   <h4>Four design choices, and what each costs</h4>
   <p>Tool size, required fields, honest hints, the token checked on every request.</p>
   <h4>Two kinds of error, and which one the model sees</h4>
-  <p>Protocol error: JSON-RPC, the model cannot fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
+  <p>Protocol error: JSON-RPC, a model is less likely to fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
   <h4>No session, so state needs a handle</h4>
   <p>The dispute id is the specification's handle pattern: a name, checked against the caller on every call.</p>
   <h4>When a call takes longer than the client waits</h4>

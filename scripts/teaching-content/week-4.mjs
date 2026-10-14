@@ -105,7 +105,7 @@ export const opening = {
    successful injection cannot move money
 5  stop a runaway loop with a limit written in code, and name who sees
    that signal at 3am and what they do</div>
-  <p>A second agent sharing a tool surface with the first is week 5. What the whole system costs to run is week 6. MCP's transports, resources and prompts are the pre-work reading, and no live minutes go on them.</p>`,
+  <p>A second agent sharing a tool surface with the first is week 5. What the whole system costs to run is week 6. MCP's transports are pre-work reading. Resources and prompts are named at 01:42 and not built.</p>`,
   script: `
   <p><strong>Open on the word, not on the story.</strong> Untrusted input: text the agent reads that somebody outside the team can write. Say the definition before any example.</p>
   <h3>How today starts: a list on the board</h3>
@@ -1055,8 +1055,8 @@ topics.push({
       <thead><tr><th>Part</th><th>What it covers</th><th>Where it is taught</th></tr></thead>
       <tbody>
         <tr><td><strong>1 · Architecture and primitives</strong></td><td>Host, client and server; JSON-RPC 2.0; the three primitives: tools, resources and prompts</td><td>01:42. Tools are built in the 01:54 lab. Resources and prompts are named, not built</td></tr>
-        <tr><td><strong>2 · Transports and lifecycle</strong></td><td>The two transports, stdio and Streamable HTTP; capability negotiation through <span class="mono">server/discover</span>; progress and cancellation</td><td>Pre-work reading. 01:47 names cancellation and the Tasks extension, because the 31-second credit needs them</td></tr>
-        <tr><td><strong>3 · Security and isolation</strong></td><td>Credential isolation, and a scope checked on every request</td><td>01:47 and the 01:54 lab. Least privilege per tool, through a proxy, is topic 4. Instructions hidden in a tool's result or description are topics 2 and 4</td></tr>
+        <tr><td><strong>2 · Transports and lifecycle</strong></td><td>The two transports: stdio (a local subprocess's standard input and output) and Streamable HTTP (HTTP POSTs to one endpoint). <span class="mono">server/discover</span> (which versions and features a server supports). Progress and cancellation</td><td>Pre-work reading. 01:47 names cancellation and the Tasks extension, because the 31-second credit needs them</td></tr>
+        <tr><td><strong>3 · Security and isolation</strong></td><td>Credential isolation (keeping tokens out of the model's context, tool arguments and logs), and a scope checked on every request</td><td>01:47 and the 01:54 lab. Least privilege per tool, through a proxy, is topic 4. Instructions hidden in a tool's result or description are topics 2 and 4</td></tr>
         <tr><td><strong>4 · Running many servers</strong></td><td>Routing between servers, tool name collisions, limits, timeouts and tracing</td><td>Name collisions: topic 4, at 02:36. Limits on one run and tracing: topic 5. The client's timeout: 01:37</td></tr>
       </tbody>
     </table>
@@ -1150,7 +1150,7 @@ topics.push({
       learner: `
   <p style="font-size:var(--size-4)"><strong>An MCP server is a program that answers two questions for any client: what tools do you have, and run this one with these arguments.</strong></p>
   <h4>Host, client and server</h4>
-  <p>Before MCP, every application that wanted every tool needed its own adapter. Ten applications and twenty tool systems meant 200 adapters. The industry calls this the N × M integration problem. With MCP each application speaks the protocol once and each tool system offers one server, so ten plus twenty is thirty.</p>
+  <p>Before MCP, every application that wanted every tool needed its own adapter. Ten applications and twenty tool systems meant 200 adapters. The industry calls this the N × M integration problem (one adapter for every pair). With MCP each application speaks the protocol once and each tool system offers one server, so ten plus twenty is thirty.</p>
   <p>The <strong>host</strong> is the application that runs the model. Here it is your agent. The host makes one <strong>MCP client</strong> per server, and each client talks to exactly one server. Every message is <strong>JSON-RPC 2.0</strong> (a standard JSON format for a request, a reply and an error).</p>
   <div class="term">  host: your agent ──> client A ──> billing server   <span class="q">yours, built today</span>
                    └─> client B ──> CRM server       <span class="q">theirs, topic 4</span></div>
@@ -1220,14 +1220,14 @@ topics.push({
   </ul>
   <h4>Two kinds of error, and which one the model sees</h4>
   <ul>
-    <li><strong>A protocol error</strong> is a JSON-RPC error: an unknown tool or a malformed request. The specification says a model is unlikely to fix it.</li>
+    <li><strong>A protocol error</strong> is a JSON-RPC error: an unknown tool or a malformed request. The specification says a model is less likely to fix it.</li>
     <li><strong>A tool execution error</strong> comes back as a normal result with <span class="mono">isError: true</span>. A failed input check belongs here, so the model can read it and correct itself.</li>
   </ul>
   <p>The starting server does both: "no such account" is a tool execution error, and an unknown tool name is a protocol error. The specification also says a server MUST validate every tool input. The starting <span class="mono">issue_credit</span> does not: it accepts any amount, a negative one included.</p>
   <h4>No session, so state needs a handle</h4>
   <p>The protocol keeps nothing between calls. The specification's advice for state is a handle: the server returns an identifier, and the client sends it back on each later call. The handle is a name, not a permission, so the server checks the caller's authorisation on every call. The lab's dispute id is this pattern.</p>
   <h4>When a call takes longer than the client waits</h4>
-  <p>The credit takes 31 seconds and the client waits 30. The specification gives a client a way to abandon a request: cancellation (a <span class="mono">notifications/cancelled</span> message on stdio, closing the stream on Streamable HTTP). It also has an opt-in <strong>Tasks</strong> extension, which gives a long-running call a handle to check on later. Neither undoes a credit that already ran. Only the dispute id makes the retry safe.</p>
+  <p>The credit takes 31 seconds and the client waits 30. A client can abandon a request: this is cancellation. On stdio it sends <span class="mono">notifications/cancelled</span>. On Streamable HTTP it closes the stream. MCP also has an opt-in <strong>Tasks</strong> extension, specified outside the core document, which gives a long-running call a handle to check on later. Neither undoes a credit that already ran. Only the dispute id makes the retry safe.</p>
   <h4>A puzzle before the lab</h4>
   <div class="term"><span class="q">You fix the retry. The server keeps a set of dispute ids it has paid, in memory,
 and refuses a second call with the same id. Ops runs two copies of the server
@@ -1248,7 +1248,7 @@ behind a load balancer. What does Ravi get?</span>
   <h4>Four design choices, and what each costs</h4>
   <p>Tool size, required fields, honest hints, the token checked on every request.</p>
   <h4>Two kinds of error, and which one the model sees</h4>
-  <p>Protocol error: JSON-RPC, the model cannot fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
+  <p>Protocol error: JSON-RPC, a model is less likely to fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
   <h4>No session, so state needs a handle</h4>
   <p>The dispute id is the specification's handle pattern: a name, checked against the caller on every call.</p>
   <h4>When a call takes longer than the client waits</h4>
@@ -1548,7 +1548,7 @@ import runpy; runpy.run_module('src.w4_proxy', run_name='__main__')"</pre>
     </table>
   </div>
   <p>A tool with no row cannot be reached at all, so the rows together are an allow-list. The pinned column is pinning: a tool is accepted only if its description hash matches the one you reviewed.</p>
-  <p>A proxy in front of several servers also meets <strong>tool name collisions</strong> (two servers offering a tool with the same name). The specification says tool names only have to be unique within one server, and that a client or proxy combining servers should tell them apart, for example by prefixing each tool's name with a server identifier.</p>
+  <p>A proxy in front of several servers also meets <strong>tool name collisions</strong> (two servers offering a tool with the same name). Tool names only have to be unique within one server. A client or proxy that combines servers should tell them apart, for example by putting a server identifier before each name.</p>
   <p>The money tool gets two more: <strong>max amount</strong>, and the <strong>record</strong> that must back the reason for a credit.</p>
   <div class="term">  agent ──>  <strong>proxy</strong>  ──┬──>  billing server   (yours)
                      └──>  CRM server       (theirs)</div>
