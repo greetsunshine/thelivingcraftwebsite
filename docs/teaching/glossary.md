@@ -125,6 +125,17 @@ Grouped by the week that teaches them first. "Our words" is how the pages said i
 | **Output filtering** / **egress filtering** | Checking what leaves: links, images, personal data | "check what goes out" |
 | **The lethal trifecta** (Willison, 2025) | Private data, untrusted content and a way to send data out, in one agent | not used before |
 | **Model Context Protocol** (MCP): **server**, **client**, **tools/list**, **tools/call** | A standard way for an agent to discover and call tools on another program | "an MCP server" |
+| **Host** (MCP) | The application that runs the model and makes one MCP client per server | "your agent" |
+| **N × M integration problem** | Every application needing its own adapter for every tool system; MCP turns N × M adapters into N + M | "200 adapters" |
+| **JSON-RPC 2.0** | A standard JSON format for a request, a reply and an error; every MCP message uses it | "the message format" |
+| **MCP primitives**: **tools**, **resources**, **prompts** | What a server offers: actions the model chooses, data the application attaches, templates the user picks | "tools today; the other two named" |
+| **Capability negotiation** (`server/discover`, MCP 2026-07-28) | Each side says what it supports; in this version every request carries its capabilities, and discover is optional | "which versions the server speaks" |
+| **Transport**: **stdio** and **Streamable HTTP** | How messages travel: through a local subprocess's standard streams, or as HTTP POSTs to one endpoint | "pre-work reading" |
+| **Protocol error** / **tool execution error** | A JSON-RPC error a model is less likely to fix, versus a result with `isError: true` that the model can read and correct | "two kinds of error" |
+| **Handle** (stateful tool) | An identifier a server returns and the client sends back, so state survives a protocol with no session | "the dispute id" |
+| **Cancellation** and the **Tasks extension** (MCP; Tasks is specified outside the core document) | A client abandoning a request; an opt-in way to give a long call a handle to check later | "when a call takes longer than the client waits" |
+| **Tool name collision** | Two servers offering a tool with the same name; a client or proxy prefixes names with a server identifier | "two servers, one name" |
+| **Credential isolation** | Keeping tokens out of the model's context, tool arguments and logs; the server checks them on every request | "whose code checks the token" |
 | **Tool annotations** (readOnlyHint, idempotentHint, destructiveHint) | Hints a server attaches to a tool; the spec says they are untrusted | "a hint" |
 | **Tool poisoning** (Invariant Labs, 2025) | Hostile instructions inside a tool's description, which the model reads as prompt text | "the description change" |
 | **Rug pull** | A tool server changes a tool after you reviewed and approved it | "day 9" |

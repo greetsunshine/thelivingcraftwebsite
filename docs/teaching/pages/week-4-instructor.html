@@ -994,10 +994,14 @@ ol.toc a{color:inherit}
   
   <p>The weak version is a tour of the protocol, which will be out of date within a year.</p>
   <p class="quiet">Print the specification's date on the board, 2026-07-28. Run <span class="mono">npm run gather</span> on MCP the week before you teach.</p>
+  <h4>What this topic is for</h4>
+  <p>Read the two bullets aloud. They are the <span class="off" data-off="02:15">02:15</span> checkpoint's first and last lines.</p>
+  <h4>Where the rest of MCP is taught</h4>
+  <p>Do not walk the table. Say one sentence: part 1 is the next ten minutes, part 3 is the lab, and parts 2 and 4 are reading or other topics. It answers "are we skipping resources and transports?" before anybody asks.</p>
   <h4>Why a promise needs code</h4>
   <p><strong>The stronger claim:</strong> an annotation is a promise, and a client may act on it. Keeping it is the server's job.</p>
   <h4>What this topic is not</h4>
-  <p>Zero live minutes on mechanics. If somebody asks about transports, say pre-work and move on.</p>
+  <p>Zero live minutes on the wire format. If somebody asks about transports, point at the table and move on.</p>
 </div>
 <div class="teach">
 <div class="pane pane-script">
@@ -1017,14 +1021,14 @@ ol.toc a{color:inherit}
     <h4>What an MCP server is</h4>
     <span class="pairs">The concept &#183; Whole room · 5 min</span>
     
-    <p>One sentence, then the three messages on the board. <strong>Slow down on "there is no session".</strong> It is why check 2 exists, and it is what the field note means by authorisation moving to the application.</p>
+    <p>One sentence. Then draw the host with its two clients, because topic 4 needs the second one. Point at the primitives table and say "today is tools only". Then the three messages on the board. <strong>Slow down on "there is no session".</strong> It is why check 2 exists, and it is what the field note means by authorisation moving to the application.</p>
   </div></div>
 
   <div class="beat" id="s-0147" data-ref="t3-r-design"><span class="t"><span class="off" data-off="01:47">01:47</span></span><div class="b">
     <h4>Tool size, schema, hints, and whose code checks the token</h4>
     <span class="pairs">Components and design &#183; Whole room · 7 min · the puzzle in pairs</span>
     
-    <p>Four choices, one line each. Then the puzzle, in pairs, in writing. <strong>This puzzle is the lab's most common wrong answer, asked before they make it.</strong></p>
+    <p>Four choices, one line each. Name the two kinds of error in one sentence each, because the lab's server uses both. The handle and the long-call sections are reading; say only "the dispute id is the specification's handle pattern". Then the puzzle, in pairs, in writing. <strong>This puzzle is the lab's most common wrong answer, asked before they make it.</strong></p>
   </div></div>
 
   <div class="beat" id="s-0154" data-ref="t3-r-lab"><span class="t"><span class="off" data-off="01:54">01:54</span></span><div class="b">
@@ -1059,7 +1063,7 @@ ol.toc a{color:inherit}
     <thead><tr><th>Left unfixed on purpose</th><th>Where it is fixed</th></tr></thead>
     <tbody>
       <tr><td>The CRM server you will adopt makes no such promises, and you cannot change its code</td><td>Topic 4, at <span class="off" data-off="02:31">02:31</span></td></tr>
-      <tr><td>A tool that always says there is another page can be called 25 times on one ticket, and every check here allows it</td><td>Topic 5, at <span class="off" data-off="03:16">03:16</span></td></tr>
+      <tr><td>A tool that always says there is another page can be called 30 times on one ticket, and every check here allows it</td><td>Topic 5, at <span class="off" data-off="03:16">03:16</span></td></tr>
     </tbody>
   </table></div>
 </article>
@@ -1099,6 +1103,10 @@ ol.toc a{color:inherit}
   <span class="pairs">&#8596; <span class="off" data-off="01:42">01:42</span> &#183; two questions, and no session</span>
   <h3>What an MCP server is</h3>
   
+  <h4>Host, client and server</h4>
+  <p>One client per server, inside one host. JSON-RPC 2.0 underneath. N × M adapters become N + M.</p>
+  <h4>Three primitives, and who decides to use each</h4>
+  <p>Tools: the model. Resources: the application. Prompts: the user. Today builds tools only.</p>
   <h4>The three messages you need today</h4>
   <p>discover, list, call.</p>
   <h4>The one change in the 2026-07-28 version that matters here</h4>
@@ -1121,6 +1129,12 @@ ol.toc a{color:inherit}
   
   <h4>Four design choices, and what each costs</h4>
   <p>Tool size, required fields, honest hints, the token checked on every request.</p>
+  <h4>Two kinds of error, and which one the model sees</h4>
+  <p>Protocol error: JSON-RPC, a model is less likely to fix it. Tool execution error: <span class="mono">isError: true</span>, the model can. Input checks go in the second. Extension question: what does the starting server do with an amount of -1200?</p>
+  <h4>No session, so state needs a handle</h4>
+  <p>The dispute id is the specification's handle pattern: a name, checked against the caller on every call.</p>
+  <h4>When a call takes longer than the client waits</h4>
+  <p>Cancellation and the Tasks extension exist. Neither undoes a credit that ran. Only the dispute id makes the retry safe.</p>
   <h4>A puzzle before the lab</h4>
   <p>A set in memory, two copies of the server.</p>
   <details>

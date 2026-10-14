@@ -778,10 +778,37 @@ The MCP server is the program that offers the tools: it describes them when aske
 one when called. The MCP client is the part of the agent that asks. This topic builds the
 server. Topic 4 adopts one somebody else built.
 
-**Protocol mechanics are not taught live.** Transports, resources and prompts are the
-pre-work reading. Bridge 7 reversed bridge 6 §7 on one point only: MCP gets two topics. It
-did not move the mechanics into live minutes. Teach the design choices, and print the
-specification's version date, 2026-07-28, on every page that names it.
+**What this topic is for.** By 02:15 each person can expose a tool as an MCP server that
+answers `server/discover`, `tools/list` and `tools/call` and reports each kind of error the way
+the specification asks; and can make an annotation true in code, saying which annotations their
+code enforces and which are only declared.
+
+**Where the rest of MCP is taught** (added 13 October from review row 76, which offered a
+four-part industry curriculum and asked which parts belong here). Checked that day against the
+2026-07-28 specification on modelcontextprotocol.io.
+
+| Part | What it covers | Where it is taught |
+|---|---|---|
+| 1 · Architecture and primitives | Host, client, server; JSON-RPC 2.0; tools, resources, prompts | 01:42. Tools built at 01:54; resources and prompts named only |
+| 2 · Transports and lifecycle | stdio and Streamable HTTP; `server/discover`; progress; cancellation | Pre-work reading. 01:47 names cancellation and the Tasks extension |
+| 3 · Security and isolation | Credential isolation; a scope checked on every request | 01:47 and the lab. Least privilege per tool: topic 4. Hidden instructions in tool results and descriptions: topics 2 and 4 |
+| 4 · Running many servers | Routing, tool name collisions, limits, timeouts, tracing | Collisions: topic 4 at 02:36. Limits on a run and tracing: topic 5. The client timeout: 01:37 |
+
+**Left out on purpose:** building a remote server over Streamable HTTP, and a client that
+manages three or more servers. Each is a lab of its own, and neither moves the trust boundary.
+
+**Four things in the row's curriculum are out of date for 2026-07-28, and the pages do not
+repeat them.** The specification has no session and no `initialize` handshake any more: every
+request carries its own version and capabilities, and `server/discover` is optional up-front
+discovery. The standalone HTTP-plus-SSE transport is gone: the two transports are stdio and
+Streamable HTTP, where a reply may stream as SSE inside one request. Resource updates arrive
+through `subscriptions/listen`, not a `resources/subscribe` method. And servers no longer send
+requests to the client: when a server needs input it returns an `InputRequiredResult` inside its
+reply.
+
+**The wire format is not taught live.** Bridge 7 reversed bridge 6 §7 on one point only: MCP
+gets two topics. It did not move the wire format into live minutes. Teach the design choices,
+and print the specification's version date, 2026-07-28, on every page that names it.
 
 **The weak version** is a tour of the protocol, which will be wrong within a year.
 
@@ -799,7 +826,7 @@ Five minutes, whole room.
     1  the retry, one server process
     ▸ tool  tools/call issue_credit {"account_id": "4471", "amount": 1200} -> server A
     ▸ warn  no reply after 30s (the credit took 31s) -> timeout
-    ▸ plan  idempotentHint is true, so the client retries the same call
+    ▸ plan  deepseek deepseek-flash decided: issue_credit — it retries the same call
     ▸ tool  tools/call issue_credit (retry) -> server A -> {'credited': True, 'amount': 1200.0}
 
 **The two standing questions, in writing.** What went wrong, and which single control would
@@ -849,6 +876,17 @@ Five minutes. One sentence, then the message flow drawn on the board.
 **The sentence.** An MCP server is a program that answers two questions for any client:
 *what tools do you have*, and *run this one with these arguments*.
 
+**Host, client and server, drawn first.** Before MCP, ten applications and twenty tool systems
+meant 200 adapters: the N × M integration problem. With MCP it is ten plus twenty. The host is
+the application that runs the model, here the agent. It makes one MCP client per server, and
+each client talks to exactly one server. Messages are JSON-RPC 2.0. Draw two clients, because
+topic 4 adopts the CRM server through the second one.
+
+**The three primitives, and who decides to use each.** Tools: the model (`tools/list`,
+`tools/call`). Resources: the application (`resources/list`, `resources/read`,
+`resources/templates/list`). Prompts: the user (`prompts/list`, `prompts/get`). Say "today is
+tools only" and move on.
+
 **The flow, on the board.** `server/discover` tells the client which versions the server speaks.
 `tools/list` returns each tool's name, description, input schema and annotations. `tools/call`
 runs one. Then the one change in the 2026-07-28 version that matters for this room: **there is
@@ -889,6 +927,24 @@ worse than none, because a client will act on it.
 
 **4. Where is the token checked?** On every request, in the server's own code. Week 2's maker-
 checker rule and this one are the same rule: the thing that acts checks who asked.
+
+**Two kinds of error.** Name each in one sentence, because the lab's server uses both. A
+protocol error is a JSON-RPC error, such as an unknown tool; the specification says a model is
+less likely to fix it. A tool execution error is a result with `isError: true`, and a failed input
+check belongs there so the model can correct itself. The starting server's "no such account" is
+the second kind. **Extension question:** *the specification says a server MUST validate every
+tool input. What does the starting `issue_credit` do with an amount of -1200?* It credits it.
+
+**No session, so state needs a handle.** The specification's advice for state across calls is a
+handle the server returns and the client sends back, checked against the caller's authorisation
+on every call. The dispute id is that pattern. One sentence, then on.
+
+**When a call takes longer than the client waits.** Reading, not live: cancellation
+(`notifications/cancelled` on stdio, closing the stream on Streamable HTTP) lets a client abandon
+a request, and the opt-in Tasks extension (specified outside the core document) gives a long call
+a handle to check later. Neither
+undoes a credit that already ran. If somebody offers either as the fix for 01:37, that is the
+answer: only the dispute id makes the retry safe.
 
 **The puzzle, before the lab.** Put this on screen and ask for both answers in writing:
 
