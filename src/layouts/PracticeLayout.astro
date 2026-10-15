@@ -81,6 +81,12 @@ export interface Props {
    * would point at a different offer from the page's own.
    */
   stickyApply?: boolean;
+  /**
+   * V5's reading type (`lc-v5-read`). Default on for a reading page. Off for
+   * the /programmes/ pages, which carry the 15 October package's own type and
+   * layout, and would otherwise have V5's hero and heading rules fighting it.
+   */
+  reading?: boolean;
 }
 
 const {
@@ -94,6 +100,7 @@ const {
   action = { label: 'Explore the cohort', short: 'The cohort', href: '/' },
   related,
   stickyApply = true,
+  reading = true,
 } = Astro.props;
 
 // Every page here wears the V5 chrome (`lc-v5`). A reading page also takes V5's
@@ -108,7 +115,7 @@ const isTool = bodyClass === 'tool-page';
     {tagManager ? <GoogleTagManager /> : <ConsentBanner ask />}
     <SeoHead title={title} description={description} canonical={canonical} schema={schema} noindex={noindex} />
   </head>
-  <body class:list={['lc-v5', !isTool && 'lc-v5-read', bodyClass]}>
+  <body class:list={['lc-v5', !isTool && reading && 'lc-v5-read', bodyClass]}>
     {tagManager && <GoogleTagManagerNoscript />}
     <a class="skip" href="#main">Skip to content</a>
 

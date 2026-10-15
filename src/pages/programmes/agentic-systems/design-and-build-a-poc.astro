@@ -1,0 +1,186 @@
+---
+/**
+ * /programmes/agentic-systems/design-and-build-a-poc/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/agentic-systems/design-and-build-a-poc/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, PATHWAY_NAMES, offerLine } from '../../../data/programme-offers';
+
+const o = OFFERS['design-and-build-a-poc'];
+
+const title = `Build an Agentic AI POC: ${o.hours} Hours | The Living Craft`;
+const description = `Design, build and evaluate an agentic-AI proof of concept with ${practitioner.name}. ${o.hours} live hours, independent work and a fee of ${o.fee} per participant.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/agentic-systems/design-and-build-a-poc/" breadcrumb={['Programmes', PATHWAY_NAMES['agentic-systems']]} enquire="discuss-your-poc" cta="Discuss your POC">
+<section class="hero poc-hero">
+<div class="poc-title">
+<div class="offer-line">
+<p>
+<strong>{offerLine('design-and-build-a-poc')}</strong>
+</p>
+</div>
+<h1>Turn an agentic-AI use case into a working proof of concept.</h1>
+</div>
+<div class="poc-workbench">
+<figure class="art poc-model">
+<img src="/programmes/pathways.webp" alt="A woven architectural model gives a physical illustration of a developing system" width="1513" height="1040" fetchpriority="high" decoding="async">
+</figure>
+<div class="hero-copy poc-brief">
+<p>Design the architecture, build the workflow and evaluate its behaviour with Sunil Mathew. Develop a proof of concept you can explain, with a clear view of its limits and next engineering steps.</p>
+<p>
+<a href="#discuss-your-poc">Discuss your POC</a>
+</p>
+</div>
+</div>
+</section>
+<section class="section poc-intent" id="find-out-what-your-idea-can-demonstrate">
+<div class="section-head">
+<h2>Find out what your idea can demonstrate</h2>
+</div>
+<div class="section-body">
+<p>A proof of concept, or POC, helps you examine an approach through working software. Its value comes from what you learn: which assumptions hold, which behaviours need attention and what remains before deployment.</p>
+<p>This programme connects architecture and implementation with that evaluation. You work on the POC and the reasoning behind its design.</p>
+</div>
+</section>
+<div class="section poc-fit-pair">
+<section class="section poc-who" id="who-this-programme-is-for">
+<div class="section-head">
+<h2>Who this programme is for</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>Senior engineers exploring how to apply agentic systems to a defined use case.</li>
+<li>Developers who want to design and implement a working agentic workflow.</li>
+<li>Experienced technical professionals who need practical work to examine the approach and its limitations.</li>
+</ul>
+<p>Discuss your current capability and the proposed use case before joining. The project needs to fit a {o.hours}-hour learning scope and the independent work you can commit to.</p>
+</div>
+</section>
+<section class="section poc-time" id="your-time-commitment">
+<div class="section-head">
+<h2>Your time commitment</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>
+<strong>Live cohort work:</strong> {o.hours} hours with Sunil.</li>
+<li>
+<strong>Independent work:</strong> {o.independentWork}.</li>
+<li>
+<strong>Schedule:</strong> Discussed and agreed before joining.</li>
+</ul>
+<p>Use the independent time to build, evaluate and revise the POC. The live discussions help you review those choices and decide what to examine next.</p>
+</div>
+</section>
+</div>
+<section class="section substeps poc-process" id="what-you-work-through">
+<h2>What you work through</h2>
+<div class="step-list">
+<article>
+<span class="step-num" aria-hidden="true">01</span>
+<div>
+<h3>Define the use case and success criteria</h3>
+<p>Decide what the POC should demonstrate and what evidence would help you judge it. Bound the task so you can evaluate a clear approach.</p>
+</div>
+</article>
+<article>
+<span class="step-num" aria-hidden="true">02</span>
+<div>
+<h3>Design the architecture</h3>
+<p>Connect the agent&#x27;s responsibilities, context, tools and review points. Explain why the approach fits the problem and which trade-offs it introduces.</p>
+</div>
+</article>
+<article>
+<span class="step-num" aria-hidden="true">03</span>
+<div>
+<h3>Build a working POC</h3>
+<p>Implement the scoped workflow. Examine how the parts interact and whether the system behaves as the architecture intended.</p>
+</div>
+</article>
+<article>
+<span class="step-num" aria-hidden="true">04</span>
+<div>
+<h3>Evaluate and revise</h3>
+<p>Review useful results alongside failures and uncertain behaviour. Use feedback to revise your design and identify the gaps that matter before deployment.</p>
+</div>
+</article>
+</div>
+</section>
+<section class="section poc-output" id="what-you-leave-with">
+<h2>What you leave with</h2>
+<div>
+<p>A working proof of concept, an explained architecture and an evaluation of what the POC demonstrates. You also leave with a clearer view of the further work needed before deployment.</p>
+</div>
+</section>
+<section class="section poc-teacher" id="learn-with-sunil-mathew">
+<div class="section-head">
+<h2>Learn with Sunil Mathew</h2>
+</div>
+<div class="section-body">
+<p>Sunil brings {EXPERIENCE}. The programme draws on that experience through architecture discussion, practical building and review.</p>
+<p>You examine the decisions behind the software as well as the working result.</p>
+</div>
+</section>
+<section class="section faq" id="questions-about-this-programme">
+<h2>Questions about this programme</h2>
+<div>
+<details>
+<summary>Is a POC the same as a deployed production system?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>A POC demonstrates and examines a defined approach. Deployment in an organisation requires further work around its data, access, security, reliability and operating needs.</p>
+</div>
+</details>
+<details>
+<summary>Can I bring an existing idea?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. Discuss the problem and your current work during the fit conversation. Scope and data suitability need to be agreed before the project is selected.</p>
+</div>
+</details>
+<details>
+<summary>Will I work on evaluation as well as implementation?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. Evaluation helps you understand what the POC demonstrates, where it fails and which design choices need revision.</p>
+</div>
+</details>
+<details>
+<summary>When should I choose Design to Deployment?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Choose <a href="/programmes/agentic-systems/design-to-deployment/">Design to Deployment</a> when you want a broader learning project taken through deployment, with deeper review of operating decisions.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-your-poc"
+  heading="Discuss your POC"
+  intro="Share your experience and the use case you want to develop. The team will discuss programme fit, project scope, schedule and payment terms before you decide."
+  action="Send my POC programme enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Your proposed use case"}}
+  order={["name","email","role","question","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  fixed={{ interest: o.slug }}
+/>
+<div class="related">
+<p>
+<a href="/programmes/agentic-systems/">Compare Build programmes</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

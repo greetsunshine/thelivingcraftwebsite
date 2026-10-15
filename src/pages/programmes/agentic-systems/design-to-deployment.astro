@@ -1,0 +1,192 @@
+---
+/**
+ * /programmes/agentic-systems/design-to-deployment/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/agentic-systems/design-to-deployment/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, PATHWAY_NAMES, offerLine } from '../../../data/programme-offers';
+
+const o = OFFERS['design-to-deployment'];
+
+const title = `Design to Deployment: ${o.hours} Hours | The Living Craft`;
+const description = `Take a scoped agentic-system learning project through design, evaluation and deployment with ${practitioner.name}. ${o.hours} live hours; ${o.fee} per participant.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/agentic-systems/design-to-deployment/" breadcrumb={['Programmes', PATHWAY_NAMES['agentic-systems']]} enquire="discuss-design-to-deployment" cta="Discuss Design to Deployment">
+<section class="hero deployment-hero">
+<div class="deployment-title">
+<div class="offer-line">
+<p>
+<strong>{offerLine('design-to-deployment')}</strong>
+</p>
+</div>
+<h1>Take a scoped agentic system from design through deployment.</h1>
+</div>
+<div class="hero-copy deployment-intro">
+<p>Build a working learning project with Sunil Mathew. Examine its architecture, implementation, evaluation and deployment, alongside the decisions needed to operate it responsibly.</p>
+<p>
+<a href="#discuss-design-to-deployment">Discuss Design to Deployment</a>
+</p>
+</div>
+<figure class="art deployment-bridge">
+<img src="/programmes/bridge.webp" alt="Fine woven gold and green structures bridge two architectural platforms" width="1825" height="862" fetchpriority="high" decoding="async">
+</figure>
+</section>
+<section class="section deployment-question" id="build-the-system-develop-the-judgment-to-guide-it">
+<div class="section-head">
+<h2>Build the system. Develop the judgment to guide it.</h2>
+</div>
+<div class="section-body">
+<p>As an agent moves from a demonstration towards operation, the questions become more consequential. What is it authorised to do? How do you know a task completed? What should happen when an action fails or a retry would repeat completed work?</p>
+<p>This programme brings those questions into a scoped learning project. You work through the system, explain the design choices and revise through evaluation, review and continuous feedback.</p>
+</div>
+</section>
+<section class="section deployment-fit" id="who-this-programme-is-for">
+<div class="section-head">
+<h2>Who this programme is for</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>Experienced engineers who want to work through a broader agentic-system project.</li>
+<li>Architects who want to examine decisions across the system&#x27;s operating path.</li>
+<li>Engineering managers and directors who want deeper technical judgment for guiding a team.</li>
+</ul>
+<p>Fit depends on your starting capability, the project scope and the independent work you can commit to. Discuss those before joining.</p>
+</div>
+</section>
+<section class="section deployment-process" id="what-you-work-through">
+<h2>What you work through</h2>
+<div class="deployment-chapters">
+<nav aria-label="Project stages">
+<a href="#define-the-problem-and-operating-boundaries">
+<span aria-hidden="true">01</span>Define the problem and operating boundaries</a>
+<a href="#design-the-architecture">
+<span aria-hidden="true">02</span>Design the architecture</a>
+<a href="#build-and-evaluate-the-system">
+<span aria-hidden="true">03</span>Build and evaluate the system</a>
+<a href="#take-the-project-through-deployment">
+<span aria-hidden="true">04</span>Take the project through deployment</a>
+<a href="#review-the-operating-decisions">
+<span aria-hidden="true">05</span>Review the operating decisions</a>
+</nav>
+<div>
+<article id="define-the-problem-and-operating-boundaries">
+<span class="chapter-number" aria-hidden="true">01</span>
+<h3>Define the problem and operating boundaries</h3>
+<p>Establish the system&#x27;s purpose, the evidence of useful work and the actions it may take. Examine ownership and where human review belongs.</p>
+</article>
+<article id="design-the-architecture">
+<span class="chapter-number" aria-hidden="true">02</span>
+<h3>Design the architecture</h3>
+<p>Connect the agent, tools, context and workflow. Review the trade-offs and explain how the design supports the intended behaviour.</p>
+</article>
+<article id="build-and-evaluate-the-system">
+<span class="chapter-number" aria-hidden="true">03</span>
+<h3>Build and evaluate the system</h3>
+<p>Implement a working learning project. Examine useful results, failures and uncertain outcomes so you can revise the design using evidence.</p>
+</article>
+<article id="take-the-project-through-deployment">
+<span class="chapter-number" aria-hidden="true">04</span>
+<h3>Take the project through deployment</h3>
+<p>Deploy the scoped project in an agreed learning environment. Review how the workflow completes, how failures are handled and what can be observed about its operation.</p>
+</article>
+<article id="review-the-operating-decisions">
+<span class="chapter-number" aria-hidden="true">05</span>
+<h3>Review the operating decisions</h3>
+<p>Examine reliability, authority and cost alongside the working result. Identify the limits of the project and the further requirements an organisation would need to address.</p>
+</article>
+</div>
+</div>
+</section>
+<div class="deployment-takeaway">
+<div class="section deployment-summary">
+<section id="what-you-leave-with">
+<h2>What you leave with</h2>
+<p>A working learning project taken through deployment, with clearer reasoning about its architecture and operating trade-offs. The project gives you practical work to review and explain; the discussions develop the judgment needed to guide similar decisions.</p>
+</section>
+<section class="deployment-time" id="your-time-commitment">
+<h2>Your time commitment</h2>
+<ul>
+<li>
+<strong>Live cohort work:</strong> {o.hours} hours with Sunil.</li>
+<li>
+<strong>Independent work:</strong> {o.independentWork}.</li>
+<li>
+<strong>Schedule:</strong> Discussed and agreed before joining.</li>
+</ul>
+<p>The independent work is additional to the live hours. Use it to build, evaluate and revise your project between discussions.</p>
+</section>
+</div>
+</div>
+<section class="section deployment-teacher" id="learn-with-sunil-mathew">
+<div class="section-head">
+<h2>Learn with Sunil Mathew</h2>
+</div>
+<div class="section-body">
+<p>Sunil brings {EXPERIENCE}. His work with engineering teams informs how the programme examines architecture, evaluation and decisions with operating consequences.</p>
+<p>The focus is practical capability: a working system and reasoning you can explain under review.</p>
+</div>
+</section>
+<section class="section faq" id="questions-about-this-programme">
+<h2>Questions about this programme</h2>
+<div>
+<details>
+<summary>What does deployment mean here?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>It means taking an agreed learning project through deployment in an agreed learning environment. Adoption in an employer&#x27;s production environment requires that organisation&#x27;s own engineering, security, access and operating review.</p>
+</div>
+</details>
+<details>
+<summary>Can I bring a use case from my organisation?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>You can discuss a use case during the fit conversation. Its scope, data and access requirements need to be suitable for the learning programme.</p>
+</div>
+</details>
+<details>
+<summary>How is this different from the POC programme?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>
+<a href="/programmes/agentic-systems/design-and-build-a-poc/">Design and Build a POC</a> centres on developing and evaluating a proof of concept. This programme adds deployment of the learning project and deeper discussion of its operating decisions.</p>
+</div>
+</details>
+<details>
+<summary>Can my organisation arrange a programme for a team?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. <a href="/programmes/agentic-systems/#discuss-your-team">Discuss a team programme</a> so its capability needs, scope, group size, schedule and fee can be considered separately.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-design-to-deployment"
+  heading="Discuss Design to Deployment"
+  intro="Share your experience and the system you want to work on. The team will discuss programme fit, project scope, schedule and payment terms before you decide."
+  action="Send my Design to Deployment enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Your proposed system or learning goal"}}
+  order={["name","email","role","question","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  fixed={{ interest: o.slug }}
+/>
+<div class="related">
+<p>
+<a href="/programmes/agentic-systems/">Compare Build programmes</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

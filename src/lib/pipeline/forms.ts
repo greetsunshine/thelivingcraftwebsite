@@ -49,13 +49,13 @@ export interface Field {
    */
   freeText?: boolean;
   /**
-   * For kind: 'choice'. Rendered only on a page that passes this field's
-   * options to RouteForm's `choices` prop, and then only those options. The
-   * server still checks the value against the full list. The /programmes/
-   * pages use it to ask which offer somebody means; the cohort page does not
-   * pass it, so its form is unchanged.
+   * Rendered only on a page that asks for it: a choice field through
+   * RouteForm's `choices` (with only those options) or `fixed` (as a hidden
+   * value), any other field through `include`. The server validates it the
+   * same way on every page. The /programmes/ pages use these; the cohort page
+   * asks for none of them, so its form is unchanged.
    */
-  pageChoice?: boolean;
+  pageOnly?: boolean;
   /** Rows for a textarea. Affects nothing but the shape of the box. */
   rows?: number;
   /** HTML autocomplete token, so a browser can fill it. */
@@ -320,7 +320,8 @@ export const FORMS: Record<Route, FormDefinition> = {
       // rather than to a new route: an enquiry about a programme is still an
       // enquiry, never an application, and a fourth route would need its own
       // record type, templates and console handling for the same thing. This
-      // field says which offer they meant. See `pageChoice` above.
+      // field says which offer they meant, and the two after `question` are
+      // the package's extra questions on three of its pages. See `pageOnly`.
       {
         name: 'interest',
         label: 'Programme or package',
@@ -329,7 +330,7 @@ export const FORMS: Record<Route, FormDefinition> = {
         max: 60,
         hint: 'Optional. Choose “Help me choose” if you are not sure.',
         options: INTEREST_OPTIONS,
-        pageChoice: true,
+        pageOnly: true,
       },
       {
         name: 'question',
@@ -342,6 +343,27 @@ export const FORMS: Record<Route, FormDefinition> = {
         max: 4000,
         rows: 4,
         hint: 'Please avoid sending confidential company materials.',
+      },
+      // The mock-interview and interview-preparation pages ask when the
+      // interview is; the career-roadmap page asks what to assess.
+      {
+        name: 'timing',
+        label: 'Interview timing',
+        kind: 'text',
+        required: false,
+        max: 200,
+        hint: 'Optional.',
+        pageOnly: true,
+      },
+      {
+        name: 'assess',
+        label: 'What you want help assessing',
+        kind: 'textarea',
+        required: false,
+        max: 4000,
+        rows: 4,
+        hint: 'Optional.',
+        pageOnly: true,
       },
       role(false),
       organisation(false),

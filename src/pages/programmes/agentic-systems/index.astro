@@ -1,0 +1,216 @@
+---
+/**
+ * /programmes/agentic-systems/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/agentic-systems/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, PATHWAY_NAMES, hoursList, interestsFor, offersIn, perWeek, withoutWeek } from '../../../data/programme-offers';
+
+/** The comparison table's second column, in the package's words. */
+const SUMMARY: Record<string, string> = {
+  'focused-agent-build': "A bounded agent and an understanding of its design decisions",
+  'design-and-build-a-poc': "A working proof of concept and a review of what needs further work",
+  'design-to-deployment': "A scoped learning project taken through deployment",
+};
+
+// A link can choose the offer in advance: ?interest=career-readiness-review.
+// Only a value this page offers is honoured; anything else is ignored.
+const offered = interestsFor('agentic-systems');
+const asked = Astro.url.searchParams.get('interest');
+const preset = asked && offered.includes(asked) ? { interest: asked } : undefined;
+
+const title = 'Build Agentic Systems | The Living Craft';
+const description = `Compare ${hoursList('agentic-systems', 'and')}-hour programmes with ${practitioner.name}. Build a focused agent, develop a POC or take a scoped learning project through deployment.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/agentic-systems/" breadcrumb={['Programmes', PATHWAY_NAMES['agentic-systems']]} enquire="discuss-your-programme-fit">
+<section class="hero build-hero">
+<div class="build-opening">
+<h1>Build an agentic system and explain the decisions behind it.</h1>
+<div class="hero-copy">
+<p>Live cohort programmes with Sunil Mathew for experienced engineers, architects and engineering leaders. Choose the depth of work that matches your goal: a focused agent, a working proof of concept or a project taken through deployment.</p>
+<p>
+<a href="#choose-your-programme">Compare the three programmes</a>
+</p>
+</div>
+</div>
+<figure class="art bridge-panorama">
+<img src="/programmes/bridge.webp" alt="A woven bridge connects an early framework to a completed architectural model" width="1825" height="862" fetchpriority="high" decoding="async">
+</figure>
+</section>
+<section class="section build-problem" id="move-from-an-idea-to-engineering-decisions">
+<div class="section-head">
+<h2>Move from an idea to engineering decisions</h2>
+</div>
+<div class="section-body">
+<p>An agent can produce a convincing answer and still take the wrong action. Building one means deciding what it may do, which context it needs, how its behaviour will be evaluated and what should happen when it fails.</p>
+<p>The Build pathway connects those decisions to practical work. You build a system, examine its behaviour, explain your choices and revise through review and feedback.</p>
+</div>
+</section>
+<section class="section build-comparison" id="choose-your-programme">
+<h2>Choose your programme</h2>
+<div class="table-wrap" role="region" aria-label="Programme comparison" tabindex="0">
+<table>
+<thead>
+<tr>
+<th scope="col">Programme</th>
+<th scope="col">Main outcome</th>
+<th scope="col">Live hours</th>
+<th scope="col">Independent work</th>
+<th scope="col">Fee per participant</th>
+</tr>
+</thead>
+<tbody>
+          {
+            offersIn('agentic-systems').map((t) => (
+              <tr>
+                <td>{t.name}</td>
+                <td>{SUMMARY[t.slug]}</td>
+                <td>{t.hours}</td>
+                <td>{perWeek(t.independentWork)}</td>
+                <td>{t.fee}</td>
+              </tr>
+            ))
+          }
+</tbody>
+</table>
+</div>
+<div class="programme-index">
+<article class="programme-row">
+<span class="row-num" aria-hidden="true">01</span>
+<h3>Focused Agent Build</h3>
+<div>
+<p>
+<strong>For a specific use case and a focused introduction to building.</strong>
+</p>
+<p>Developers, product managers and programme managers can explore how a bounded agent workflow is designed, built and assessed. The hands-on scope is matched to your technical starting point.</p>
+<p>Work through the agent&#x27;s responsibilities, tools, context and limits. Identify where human review belongs and what requires further development before broader use.</p>
+<p>
+<a href="/programmes/agentic-systems/focused-agent-build/">Explore Focused Agent Build</a>
+</p>
+</div>
+</article>
+<article class="programme-row">
+<span class="row-num" aria-hidden="true">02</span>
+<h3>Design and Build a POC</h3>
+<div>
+<p>
+<strong>For engineers who want to turn a use case into a working proof of concept.</strong>
+</p>
+<p>Design the architecture, build the workflow and evaluate its behaviour. Use the POC to understand what the approach can demonstrate and where its limits lie.</p>
+<p>The result is practical work you can explain, alongside a clearer view of the engineering required before deployment.</p>
+<p>
+<a href="/programmes/agentic-systems/design-and-build-a-poc/">Explore Design and Build a POC</a>
+</p>
+</div>
+</article>
+<article class="programme-row">
+<span class="row-num" aria-hidden="true">03</span>
+<h3>Design to Deployment</h3>
+<div>
+<p>
+<strong>For a broader project and deeper work on operating decisions.</strong>
+</p>
+<p>Take a scoped learning project through architecture, implementation, evaluation and deployment in an agreed learning environment. Examine reliability, failure handling, authority and cost as part of that journey.</p>
+<p>This programme serves experienced engineers, architects and leaders who want to develop both their system and their engineering judgment.</p>
+<p>
+<a href="/programmes/agentic-systems/design-to-deployment/">Explore Design to Deployment</a>
+</p>
+</div>
+</article>
+</div>
+</section>
+<section class="section build-evidence" id="learn-with-sunil-mathew">
+<h2>Learn with Sunil Mathew</h2>
+<div>
+<p>Sunil brings {EXPERIENCE}. His teaching connects practical building with the reasoning needed to explain and defend a design.</p>
+<p>The work includes evaluation, discussion and revision. You should be able to explain why a system behaves as it does and which decisions need further review.</p>
+</div>
+</section>
+<div class="team-surface">
+<section class="section team-discussion" id="developing-a-whole-team">
+<div class="section-head">
+<h2>Developing a whole team?</h2>
+</div>
+<div class="section-body">
+<p>An enterprise programme starts with the team&#x27;s existing capability and the work it needs to handle. The discussion can cover architecture, evaluation, operating boundaries and shared approaches to reviewing designs.</p>
+<p>Team scope, live hours, group size, schedule and fee are agreed separately. Individual sponsorship is also a distinct route.</p>
+<p>
+<a href="#discuss-your-team">Discuss your team&#x27;s development needs</a>
+</p>
+</div>
+</section>
+</div>
+<section class="section faq" id="questions-before-choosing">
+<h2>Questions before choosing</h2>
+<div>
+<details>
+<summary>Which programme should I choose?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Choose by the work you want to complete and your starting capability. A focused build suits a bounded use case; the POC programme develops a broader proof of concept; Design to Deployment adds deployment and operating review. Your job title alone does not decide fit.</p>
+</div>
+</details>
+<details>
+<summary>What happens outside the live sessions?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>You work on assignments and your project. Allow {OFFERS['focused-agent-build'].independentWork} for Focused Agent Build, or {withoutWeek(OFFERS['design-and-build-a-poc'].independentWork)} for the other two programmes. That independent work is additional to the stated live hours.</p>
+</div>
+</details>
+<details>
+<summary>Can I bring a work-related use case?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>You can discuss it during the fit conversation. Project scope, access and data suitability need to be agreed before it becomes part of the learning work.</p>
+</div>
+</details>
+<details>
+<summary>Does deployment mean the project is ready for my employer&#x27;s production environment?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Design to Deployment covers a scoped learning project in an agreed environment. Adoption in your organisation requires its own review of security, data, access and operating requirements.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-your-programme-fit"
+  heading="Discuss your programme fit"
+  intro="Tell us about your experience and what you want to build. Share which programme interests you, or ask for help choosing."
+  action="Send my programme enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","interest":"Programme of interest","question":"What you want to build"}}
+  order={["name","email","role","interest","question","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  choices={{ interest: interestsFor('agentic-systems') }}
+  preset={preset}
+/>
+<PackageEnquiry
+  id="discuss-your-team"
+  heading="Discuss your team"
+  intro="Share the capability your team wants to develop and the work it needs to handle. The team will discuss an appropriate learning scope with you."
+  route="enterprise"
+  action="Send my team enquiry"
+  labels={{"name":"Full name","email":"Work email address","organisation":"Organisation","role":"Your role","goal":"Your team's learning need","group_size":"Expected group size, optional","phone":"Phone number, optional"}}
+  order={["name","email","organisation","role","goal","group_size","phone"]}
+  omit={["industry","discovery","discovery_detail"]}
+/>
+<div class="related">
+<p>
+<a href="/programmes/career-preparation/">Explore career preparation</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

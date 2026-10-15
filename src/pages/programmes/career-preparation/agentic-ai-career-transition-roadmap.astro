@@ -1,0 +1,172 @@
+---
+/**
+ * /programmes/career-preparation/agentic-ai-career-transition-roadmap/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/career-preparation/agentic-ai-career-transition-roadmap/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, hourWord, offerLine, word } from '../../../data/programme-offers';
+
+const o = OFFERS['agentic-ai-career-transition-roadmap'];
+
+const title = 'Agentic AI Career Roadmap | The Living Craft';
+const description = `Assess your gaps and plan a move towards agentic-AI work with ${practitioner.name}. A career-roadmap report and one mock within ${word(o.hours)} hours, priced at ${o.fee}.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/career-preparation/agentic-ai-career-transition-roadmap/" breadcrumb={['Programmes', 'Career Preparation']} enquire="discuss-your-career-transition" cta="Discuss your career transition">
+<section class="hero roadmap-hero">
+<figure class="art roadmap-art">
+<img src="/programmes/career-folio.webp" alt="A gold thread connects a planning folio to a series of paper steps" width="1498" height="1050" fetchpriority="high" decoding="async">
+</figure>
+<div class="hero-copy">
+<div class="offer-line">
+<p>
+<strong>{offerLine('agentic-ai-career-transition-roadmap')}</strong>
+</p>
+</div>
+<h1>Plan your move towards agentic-AI work.</h1>
+<p>Review your experience, identify your capability gaps and build a practical career roadmap with Sunil Mathew. One mock interview helps you examine how you explain your work and decisions.</p>
+<p>
+<a href="#discuss-your-career-transition">Discuss your career transition</a>
+</p>
+</div>
+</section>
+<section class="section roadmap-direction" id="connect-your-experience-to-the-work-you-want-to-do">
+<div class="section-head">
+<h2>Connect your experience to the work you want to do</h2>
+</div>
+<div class="section-body">
+<p>Moving towards agentic-AI roles or responsibilities starts with a clear assessment. Which parts of your engineering experience are relevant? Which capabilities need development? What practical work would help you demonstrate those capabilities?</p>
+<p>This package gives those questions a structure. Work through your direction and gaps, then use a roadmap to organise learning, project work and preparation.</p>
+</div>
+</section>
+<section class="section roadmap-fit" id="who-this-package-is-for">
+<div class="section-head">
+<h2>Who this package is for</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>Experienced engineers considering agentic-AI roles or new responsibilities.</li>
+<li>Architects and engineering leaders who want to identify the capability needed for their next step.</li>
+<li>Experienced service-company engineers seeking a clearer direction towards product-company or agentic-AI work.</li>
+</ul>
+<p>Experienced professionals from product companies and global capability centres can also discuss fit. This is a career-guidance package for experienced professionals; freshers are outside the current scope.</p>
+</div>
+</section>
+<div class="roadmap-surface">
+<section class="section roadmap-route" id="what-you-work-through">
+<h2>What you work through</h2>
+<div class="roadmap-stations">
+<article>
+<span class="roadmap-station" aria-hidden="true">01</span>
+<h3>Clarify your direction</h3>
+<p>Discuss your experience and the role or responsibilities you want to pursue. Identify what the move means for your technical work and the contribution you want to demonstrate.</p>
+</article>
+<article>
+<span class="roadmap-station" aria-hidden="true">02</span>
+<h3>Assess the gaps</h3>
+<p>Compare your current capability and project evidence with your target direction. Identify learning, practical-work and preparation gaps that need attention.</p>
+</article>
+<article>
+<span class="roadmap-station" aria-hidden="true">03</span>
+<h3>Develop your career roadmap</h3>
+<p>Organise the priorities into a practical plan. Your career-roadmap report brings together the fit-gap analysis, learning needs, project-evidence priorities and preparation steps.</p>
+</article>
+<article>
+<span class="roadmap-station" aria-hidden="true">04</span>
+<h3>Practise through one mock interview</h3>
+<p>Use one agreed interview theme to examine how you explain your experience, approach a problem and defend your decisions. Apply the feedback to your preparation priorities.</p>
+</article>
+</div>
+</section>
+</div>
+<section class="section roadmap-report">
+<section class="roadmap-document" id="what-you-leave-with">
+<h2>What you leave with</h2>
+<p>A career-roadmap report with a fit-gap analysis and practical next actions, plus feedback from one mock interview. You have a clearer direction and a plan for developing the capability and evidence your move requires.</p>
+</section>
+<section class="roadmap-time" id="your-session-time">
+<h2>Your session time</h2>
+<p>The package includes <strong>{o.hours} hours of one-to-one sessions</strong> on a weekly cadence. Personal guidance and the one mock interview fit within that total.</p>
+<p>The schedule and session allocation are discussed before booking. The roadmap guides the learning and practice you undertake beyond the live sessions.</p>
+</section>
+</section>
+<section class="section roadmap-practitioner" id="work-with-sunil-mathew">
+<figure class="portrait ">
+<img src="/programmes/sunil-bookshelf.webp" width="480" height="600" alt="Sunil Mathew seated in front of a bookshelf" loading="lazy">
+</figure>
+<div>
+<h2>Work with Sunil Mathew</h2>
+<p>Sunil brings {EXPERIENCE}. His background includes leading engineering teams and hiring, developing and assessing senior technical professionals.</p>
+<p>The discussion connects your career goal to the capability and evidence you need to build.</p>
+</div>
+</section>
+<section class="section faq" id="questions-about-this-package">
+<h2>Questions about this package</h2>
+<div>
+<details>
+<summary>Will the {word(o.hours)} hours complete my technical transition?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>The package provides assessment, direction, a roadmap and one mock interview. Developing the technical capability involves the further learning and project work identified in that roadmap.</p>
+</div>
+</details>
+<details>
+<summary>Does this include a hands-on agentic-systems programme?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Hands-on programmes are separate. Explore <a href="/programmes/agentic-systems/">Build Agentic Systems</a> if you need practical development through a focused agent, a POC or a deployment project.</p>
+</div>
+</details>
+<details>
+<summary>Is the mock included in the {word(o.hours)} hours?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. The one mock and personal-guidance sessions fit within the {hourWord(o.hours)} total.</p>
+</div>
+</details>
+<details>
+<summary>What if my immediate need is interview preparation?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Explore <a href="/programmes/career-preparation/interview-preparation-and-practice/">Interview Preparation and Practice</a> when you already have a target role and want one preparation-planning session plus two mocks.</p>
+</div>
+</details>
+<details>
+<summary>Are job applications, referrals or placement included?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>The package covers guidance, planning and practice. Applications, referrals and placement are outside its scope.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-your-career-transition"
+  heading="Discuss your career transition"
+  intro="Share your current experience, the direction you are considering and what feels unclear. The team will discuss fit, scope, availability and payment terms before booking."
+  action="Send my career-roadmap enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Your target role or career direction","assess":"What you want help assessing"}}
+  order={["name","email","role","question","assess","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  fixed={{ interest: o.slug }}
+  include={["assess"]}
+/>
+<div class="related">
+<p>
+<a href="/programmes/career-preparation/">Compare career packages</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

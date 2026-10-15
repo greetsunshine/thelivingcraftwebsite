@@ -1,0 +1,179 @@
+---
+/**
+ * /programmes/career-preparation/interview-preparation-and-practice/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/career-preparation/interview-preparation-and-practice/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, hourWord, hoursWord, offerLine } from '../../../data/programme-offers';
+
+const o = OFFERS['interview-preparation-and-practice'];
+const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const title = 'Interview Preparation & Practice | The Living Craft';
+const description = `Prepare with ${practitioner.name} through one planning session and two mock interviews. ${capitalise(hoursWord(o.hours))} of personal guidance and practice, priced at ${o.fee}.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/career-preparation/interview-preparation-and-practice/" breadcrumb={['Programmes', 'Career Preparation']} enquire="discuss-your-interview-preparation" cta="Discuss your interview preparation">
+<section class="hero preparation-hero">
+<div class="offer-line">
+<p>
+<strong>{offerLine('interview-preparation-and-practice')}</strong>
+</p>
+</div>
+<h1>Plan your preparation.<br>
+<span>Practise through two mock interviews.</span>
+</h1>
+<div class="preparation-opening">
+<div class="hero-copy">
+<p>Work with Sunil Mathew to identify your preparation priorities, practise two agreed interview themes and use feedback to decide what to strengthen next.</p>
+<p>
+<a href="#discuss-your-interview-preparation">Discuss your interview preparation</a>
+</p>
+</div>
+<figure class="art preparation-folio">
+<img src="/programmes/career-folio.webp" alt="An open planning folio beside paper steps and a fine gold thread" width="1498" height="1050" fetchpriority="high" decoding="async">
+</figure>
+</div>
+</section>
+<section class="section preparation-focus" id="give-your-preparation-a-clear-focus">
+<div class="section-head">
+<h2>Give your preparation a clear focus</h2>
+</div>
+<div class="section-body">
+<p>An upcoming interview can leave you with several competing priorities: which technical topics to revisit, which project examples to use and how to explain your decisions clearly.</p>
+<p>Start with a planning session. Then use two mocks to examine your approach in practice and identify the gaps that deserve attention.</p>
+</div>
+</section>
+<section class="section preparation-fit" id="who-this-package-is-for">
+<div class="section-head">
+<h2>Who this package is for</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>Experienced engineers with a target role and an interview-preparation goal.</li>
+<li>Architects and engineering leaders who want to practise technical or leadership discussions.</li>
+<li>Experienced service-company engineers preparing for MAANG or other product-company roles.</li>
+</ul>
+<p>Experienced professionals from product companies and global capability centres can also discuss fit. The current service excludes freshers; interview themes are agreed according to your target role and Sunil&#x27;s scope.</p>
+</div>
+</section>
+<section class="section preparation-sequence" id="what-is-included">
+<div class="preparation-sequence-head">
+<h2>What is included</h2>
+</div>
+<div class="preparation-work">
+<article>
+<span aria-hidden="true">01</span>
+<div>
+<h3>One preparation-planning session</h3>
+<p>Review your target role, current preparation and the experience you want to demonstrate. Identify priorities and agree which interview themes to practise.</p>
+</div>
+</article>
+<article>
+<span aria-hidden="true">02</span>
+<div>
+<h3>Two focused mock interviews</h3>
+<p>Work through agreed themes, which can include system design, a project retrospective or engineering leadership. Practise how you structure the discussion and explain your decisions.</p>
+</div>
+</article>
+<article>
+<span aria-hidden="true">03</span>
+<div>
+<h3>Feedback and further practice priorities</h3>
+<p>Review the reasoning, communication and evidence in your responses. Use the feedback to focus the work you do between sessions and after the package.</p>
+</div>
+</article>
+</div>
+</section>
+<div class="preparation-summary">
+<div class="section preparation-summary-inner">
+<section id="what-you-leave-with">
+<h2>What you leave with</h2>
+<p>A focused preparation plan and feedback from two mock interviews. You have a clearer view of which gaps to work on and how to explain your experience in the agreed interview themes.</p>
+</section>
+<section id="your-session-time">
+<h2>Your session time</h2>
+<p>The package includes <strong>{o.hours} hours of one-to-one sessions</strong> on a weekly cadence. The planning session, both mocks and feedback fit within that total.</p>
+<p>Your schedule is discussed before booking. Practice between sessions is useful; the listed time covers the live sessions.</p>
+</section>
+</div>
+</div>
+<section class="section preparation-evidence" id="guidance-from-engineering-and-hiring-experience">
+<div class="section-head">
+<h2>Guidance from engineering and hiring experience</h2>
+</div>
+<div class="section-body">
+<p>Sunil brings {EXPERIENCE}. His background includes hiring, developing and assessing senior technical professionals.</p>
+<p>The work centres on your experience and how you explain it: the problem you handled, the decisions you made and the contribution you can demonstrate.</p>
+</div>
+</section>
+<section class="section faq" id="questions-about-this-package">
+<h2>Questions about this package</h2>
+<div>
+<details>
+<summary>Can the mocks cover different themes?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Discuss the themes your target role requires. The planning session helps agree the focus for the two mocks within the supported scope.</p>
+</div>
+</details>
+<details>
+<summary>Is feedback additional to the {hoursWord(o.hours)}?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Feedback is included within the {hourWord(o.hours)} live-session total, alongside the planning session and mocks.</p>
+</div>
+</details>
+<details>
+<summary>What if I need only one mock?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Choose <a href="/programmes/career-preparation/focused-mock-interview/">Focused Mock Interview</a> when you know the round you want to practise and need one focused session.</p>
+</div>
+</details>
+<details>
+<summary>What if I am still deciding which role to target?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Explore the <a href="/programmes/career-preparation/agentic-ai-career-transition-roadmap/">Agentic AI Career Transition Roadmap</a> if your question concerns a move towards agentic-AI work. You can also discuss a Career Readiness Review through the <a href="/programmes/career-preparation/#discuss-your-next-step">Career pathway</a>.</p>
+</div>
+</details>
+<details>
+<summary>Does this include placement or referrals?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>The package covers preparation planning, interview practice and feedback. Job applications, referrals and placement are outside its scope.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-your-interview-preparation"
+  heading="Discuss your interview preparation"
+  intro="Share your experience, target role and current preparation needs. The team will discuss fit, session themes, availability and payment terms before booking."
+  action="Send my interview-preparation enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Target role and preparation goal","timing":"Interview timing, optional"}}
+  order={["name","email","role","question","timing","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  fixed={{ interest: o.slug }}
+  include={["timing"]}
+/>
+<div class="related">
+<p>
+<a href="/programmes/career-preparation/">Compare career packages</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

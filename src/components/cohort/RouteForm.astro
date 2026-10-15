@@ -78,13 +78,47 @@ export interface Props {
   /** The sentence above the fields. Falls back to the definition's intro. */
   intro?: string;
   /**
-   * The options this page offers for a `pageChoice` field, by field name, in
-   * the order to show them. A `pageChoice` field absent from here is not
-   * rendered at all. Values not in the definition's list are ignored.
+   * False drops the heading and intro inside the form, for a page whose own
+   * section heading already says what the form is (the /programmes/ pages).
+   */
+  head?: boolean;
+
+  // ── What follows is for the /programmes/ pages (15 October 2026), which
+  //    render the package's forms from these same definitions. None of it
+  //    changes what the server accepts: validation still runs against the
+  //    definition in forms.ts, on every page.
+
+  /**
+   * The options this page offers for a `pageOnly` choice field, by field name,
+   * in the order to show them. Values not in the definition's list are
+   * ignored.
    */
   choices?: Record<string, string[]>;
   /** A choice selected on arrival, by field name: the offer the page is about. */
   preset?: Record<string, string>;
+  /**
+   * A `pageOnly` field sent as a hidden value instead of asked: an offer page
+   * already knows which offer the enquiry is about.
+   */
+  fixed?: Record<string, string>;
+  /** Other `pageOnly` fields this page asks for, by name. */
+  include?: string[];
+  /** Optional fields this page does not ask. A required one here is a build error. */
+  omit?: string[];
+  /** The order to show the fields in, by name. Fields not listed keep their place after. */
+  order?: string[];
+  /**
+   * The page's own words for a field, by name. Shown exactly as given, with no
+   * "(optional)" added, and used in the error messages beside that field. The
+   * console still shows the definition's label, so keep the meaning the same.
+   */
+  labels?: Record<string, string>;
+  /** Hide the hints under the fields. */
+  hints?: boolean;
+  /** One screen, even when the definition has steps. */
+  flat?: boolean;
+  /** The submit button's words. Falls back to the definition's action. */
+  action?: string;
 }
 
 const {
@@ -94,33 +128,69 @@ const {
   emphasis = 'secondary',
   consent = true,
   intro,
+  head = true,
   choices = {},
   preset = {},
+  fixed = {},
+  include = [],
+  omit = [],
+  order = [],
+  labels = {},
+  hints = true,
+  flat = false,
+  action,
 } = Astro.props;
 
 const definition = FORMS[route];
+
+for (const name of omit) {
+  if (definition.fields.find((f) => f.name === name)?.required) {
+    throw new Error(`RouteForm: "${name}" is required on the ${route} route and cannot be omitted.`);
+  }
+}
+
+const rank = (name: string) => {
+  const i = order.indexOf(name);
+  return i === -1 ? order.length : i;
+};
+
 /**
- * The definition as this page renders it: a `pageChoice` field kept only when
- * the page asked for it, with its options narrowed to the page's list. Labels,
- * limits and validation are untouched, so the server and the console read the
- * same field the browser shows.
+ * The definition as this page renders it: a `pageOnly` field kept only when
+ * the page asked for it, a choice narrowed to the page's options, the page's
+ * own labels, and the page's order. Limits and validation are untouched.
  */
 const form: FormDefinition = {
   ...definition,
-  fields: definition.fields.flatMap((f): Field[] => {
-    if (!f.pageChoice) return [f];
-    const wanted = choices[f.name];
-    if (!wanted?.length) return [];
-    const options = wanted.flatMap((v) => f.options?.filter((o) => o.value === v) ?? []);
-    return [{ ...f, options }];
-  }),
+  fields: definition.fields
+    .filter((f) => !omit.includes(f.name) && !(f.name in fixed))
+    .flatMap((f): Field[] => {
+      let shown = f;
+      if (f.pageOnly) {
+        if (f.kind === 'choice' && f.options) {
+          const wanted = choices[f.name];
+          if (!wanted?.length) return [];
+          shown = { ...f, options: wanted.flatMap((v) => f.options?.filter((o) => o.value === v) ?? []) };
+        } else if (!include.includes(f.name)) {
+          return [];
+        }
+      }
+      if (labels[f.name]) shown = { ...shown, label: labels[f.name] };
+      if (!hints) shown = { ...shown, hint: undefined };
+      return [shown];
+    })
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => rank(a.f.name) - rank(b.f.name) || a.i - b.i)
+    .map(({ f }) => f),
 };
 const fieldByName = new Map(form.fields.map((f) => [f.name, f]));
+/** "(optional)" is added to the definition's words, never to a page's own. */
+const optionalMark = (field: Field) => !field.required && !labels[field.name];
 
-/** One step holding every field, when the route defines no `steps`. */
-const effectiveSteps: { label: string; fields: string[] }[] = form.steps ?? [
-  { label: form.title, fields: form.fields.map((f) => f.name) },
-];
+/** One step holding every field, when the route defines no `steps` or the page asks for one screen. */
+const effectiveSteps: { label: string; fields: string[] }[] =
+  form.steps && !flat && !order.length
+    ? form.steps
+    : [{ label: form.title, fields: form.fields.map((f) => f.name) }];
 const multiStep = effectiveSteps.length > 1;
 
 /**
@@ -144,12 +214,19 @@ const renderField = (field: Field) => {
   data-route={route}
   data-notify={isApplyConfigured ? APPLY_ACCESS_KEY : undefined}
   data-step-count={effectiveSteps.length}
+  data-labels={Object.keys(labels).length ? JSON.stringify(labels) : undefined}
   novalidate
 >
-  <div class="rf-head">
-    <h3>{heading ?? form.title}</h3>
-    <p class="rf-intro">{intro ?? form.intro}</p>
-  </div>
+  {
+    head && (
+      <div class="rf-head">
+        <h3>{heading ?? form.title}</h3>
+        <p class="rf-intro">{intro ?? form.intro}</p>
+      </div>
+    )
+  }
+
+  {Object.entries(fixed).map(([name, value]) => <input type="hidden" name={name} value={value} />)}
 
   {/* Honeypot. Off-screen rather than display:none, because some bots skip
       what is hidden and fill what is merely positioned away. Real people never
@@ -189,7 +266,7 @@ const renderField = (field: Field) => {
                     <RoleField id={fieldId} name={field.name} required={field.required} labelClass="full" describedBy={describedBy}>
                       <span slot="label" class="rf-label">
                         {field.label}
-                        {!field.required && <span class="rf-opt"> (optional)</span>}
+                        {optionalMark(field) && <span class="rf-opt"> (optional)</span>}
                       </span>
                       <Fragment slot="after">
                         {field.hint && (
@@ -210,7 +287,7 @@ const renderField = (field: Field) => {
                   <label class={isFullWidth(field.kind) ? 'full' : undefined} for={fieldId}>
                     <span class="rf-label">
                       {field.label}
-                      {!field.required && <span class="rf-opt"> (optional)</span>}
+                      {optionalMark(field) && <span class="rf-opt"> (optional)</span>}
                     </span>
 
                     {field.kind === 'textarea' ? (
@@ -299,7 +376,7 @@ const renderField = (field: Field) => {
                 type="submit"
                 class={emphasis === 'primary' ? 'btn btn-primary' : 'btn btn-ghost'}
               >
-                {form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+                {action ?? form.action}&nbsp;<span class="arrow" aria-hidden="true">→</span>
               </button>
             ) : (
               <button type="button" class="btn btn-primary rf-continue" data-step-continue>
@@ -498,7 +575,7 @@ const renderField = (field: Field) => {
    * component's script once no matter how many times the component is used, so
    * this must query all of them rather than assume there is one.
    */
-  import { FORMS, validate, messageFor, EMAIL_RE, type Route, type Field } from '../../lib/pipeline/forms';
+  import { FORMS, validate, messageFor, EMAIL_RE, type Route, type Field, type FieldError } from '../../lib/pipeline/forms';
 
   const forms = document.querySelectorAll<HTMLFormElement>('form.route-form');
 
@@ -593,7 +670,26 @@ const renderField = (field: Field) => {
       });
     };
 
-    const showErrors = (errors: { field: string; message: string; code: string }[]) => {
+    /**
+     * A page's own words for a field (RouteForm's `labels`). An error beside a
+     * box labelled "What you want to build" must not say "Your question or goal
+     * is needed", so the message is rebuilt from the label the page shows.
+     */
+    const pageLabels: Record<string, string> = (() => {
+      try {
+        return JSON.parse(form.dataset.labels ?? '{}');
+      } catch {
+        return {};
+      }
+    })();
+    const inPageWords = (e: { field: string; message: string; code: string }) => {
+      const def = definition.fields.find((f) => f.name === e.field);
+      if (!def || !pageLabels[e.field]) return e;
+      return { ...e, message: messageFor({ ...def, label: pageLabels[e.field] }, e.code as FieldError['code']) };
+    };
+
+    const showErrors = (raw: { field: string; message: string; code: string }[]) => {
+      const errors = raw.map(inPageWords);
       errors.forEach((e) => {
         const el = fieldEl(e.field);
         const err = errEl(e.field);

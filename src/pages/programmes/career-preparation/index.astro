@@ -1,0 +1,217 @@
+---
+/**
+ * /programmes/career-preparation/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/career-preparation/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, READINESS_REVIEW_HOURS, hourWord, hoursFigure, hoursWord, interestsFor, offersIn } from '../../../data/programme-offers';
+
+/** The comparison table's second column, in the package's words. */
+const SUMMARY: Record<string, string> = {
+  'focused-mock-interview': "One agreed interview round, feedback and practice priorities",
+  'interview-preparation-and-practice': "One planning session and two mocks, with feedback",
+  'agentic-ai-career-transition-roadmap': "Direction and gap assessment, a career roadmap and one mock",
+};
+
+// A link can choose the offer in advance: ?interest=career-readiness-review.
+// Only a value this page offers is honoured; anything else is ignored.
+const offered = interestsFor('career-preparation');
+const asked = Astro.url.searchParams.get('interest');
+const preset = asked && offered.includes(asked) ? { interest: asked } : undefined;
+
+const title = 'Career & Interview Preparation | The Living Craft';
+const description = `Compare mock interviews, preparation planning and an agentic-AI career roadmap with ${practitioner.name}. Personal support for experienced engineering professionals.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/career-preparation/" breadcrumb={['Programmes', 'Career Preparation']} enquire="discuss-your-next-step">
+<section class="hero career-hero">
+<figure class="portrait career-portrait">
+<img src="/programmes/sunil-bookshelf.webp" width="480" height="600" alt="Sunil Mathew seated in front of a bookshelf" loading="lazy">
+</figure>
+<div class="hero-copy">
+<h1>Prepare for your next role with a clearer plan and focused practice.</h1>
+<p>One-to-one career guidance and mock interviews with Sunil Mathew for experienced engineers and engineering leaders. Choose support for one interview round, a preparation plan with two mocks, or a roadmap towards agentic-AI work.</p>
+<p>
+<a href="#choose-the-support-you-need">Compare the three packages</a>
+</p>
+</div>
+</section>
+<section class="section career-direction" id="give-your-next-move-a-clear-starting-point">
+<div class="section-head">
+<h2>Give your next move a clear starting point</h2>
+</div>
+<div class="section-body">
+<p>You may have years of engineering experience and still be unsure which role to target, which gaps to address or how to explain your work in an interview.</p>
+<p>Start with the question you need to resolve. Assess your direction, organise your preparation or practise an agreed interview theme. Use specific feedback to decide what to work on next.</p>
+<p>This pathway is especially relevant to experienced service-company engineers targeting MAANG or other product-company roles. Experienced engineers from product companies and global capability centres can also discuss fit.</p>
+</div>
+</section>
+<section class="section career-comparison" id="choose-the-support-you-need">
+<h2>Choose the support you need</h2>
+<div class="table-wrap" role="region" aria-label="Programme comparison" tabindex="0">
+<table>
+<thead>
+<tr>
+<th scope="col">Package</th>
+<th scope="col">What is included</th>
+<th scope="col">Total session time</th>
+<th scope="col">Fee</th>
+</tr>
+</thead>
+<tbody>
+          {
+            offersIn('career-preparation').map((t) => (
+              <tr>
+                <td>{t.name}</td>
+                <td>{SUMMARY[t.slug]}</td>
+                <td>{hoursFigure(t.hours)}</td>
+                <td>{t.fee}</td>
+              </tr>
+            ))
+          }
+</tbody>
+</table>
+</div>
+<div class="support-routes">
+<article>
+<div class="support-heading">
+<span aria-hidden="true">01</span>
+<h3>Focused Mock Interview</h3>
+</div>
+<div>
+<p>
+<strong>You know the round you want to practise.</strong>
+</p>
+<p>Work through one agreed theme, such as system design, a project retrospective or engineering leadership. Review how you structure the discussion, explain trade-offs and demonstrate your experience.</p>
+<p>The {hourWord(OFFERS['focused-mock-interview'].hours)} session includes the mock and feedback.</p>
+<p>
+<a href="/programmes/career-preparation/focused-mock-interview/">Explore Focused Mock Interview</a>
+</p>
+</div>
+</article>
+<article>
+<div class="support-heading">
+<span aria-hidden="true">02</span>
+<h3>Interview Preparation and Practice</h3>
+</div>
+<div>
+<p>
+<strong>You know your target role and want a preparation plan with practice.</strong>
+</p>
+<p>Use one planning session to identify your priorities. Practise through two mock interviews and use feedback to focus your further preparation.</p>
+<p>Planning, mocks and feedback fit within {hoursWord(OFFERS['interview-preparation-and-practice'].hours)} of one-to-one sessions, delivered on a weekly cadence.</p>
+<p>
+<a href="/programmes/career-preparation/interview-preparation-and-practice/">Explore Interview Preparation and Practice</a>
+</p>
+</div>
+</article>
+<article>
+<div class="support-heading">
+<span aria-hidden="true">03</span>
+<h3>Agentic AI Career Transition Roadmap</h3>
+</div>
+<div>
+<p>
+<strong>You want to move towards agentic-AI roles or responsibilities.</strong>
+</p>
+<p>Examine your current experience, the role you want and the capabilities you need to develop. Build a roadmap covering learning, project evidence and preparation, with one mock interview to review how you communicate your experience.</p>
+<p>The {hourWord(OFFERS['agentic-ai-career-transition-roadmap'].hours)} package provides weekly personal guidance, a roadmap and practice. Technical capability development can be pursued through the Build pathway where it fits your needs.</p>
+<p>
+<a href="/programmes/career-preparation/agentic-ai-career-transition-roadmap/">Explore Agentic AI Career Transition Roadmap</a>
+</p>
+</div>
+</article>
+</div>
+</section>
+<section class="section career-proof" id="guidance-grounded-in-engineering-and-hiring-experience">
+<div class="section-head">
+<h2>Guidance grounded in engineering and hiring experience</h2>
+</div>
+<div class="section-body">
+<p>Sunil Mathew brings {EXPERIENCE}. His background includes hiring, developing and assessing senior engineers, architects and engineering leaders.</p>
+<p>The focus is on your experience, your reasoning and the evidence you can use to explain your contribution.</p>
+</div>
+</section>
+<section class="section readiness-entry" id="need-clarity-before-choosing-a-package">
+<figure class="art ">
+<img src="/programmes/career-folio.webp" alt="An ivory planning folio connected to three small paper steps by a gold thread" width="1498" height="1050" loading="lazy" decoding="async">
+</figure>
+<div>
+<h2>Need clarity before choosing a package?</h2>
+<p>The Career Readiness Review is a {hourWord(READINESS_REVIEW_HOURS)} consultation focused on your experience, career goal and preparation gaps. Its outcome is a career-roadmap report covering your direction, gaps and next actions.</p>
+<p>The consultation fee, scope and arrangements are discussed before booking.</p>
+<p>
+<a href="?interest=career-readiness-review#discuss-your-next-step">Discuss a Career Readiness Review</a>
+</p>
+</div>
+</section>
+<section class="section faq" id="questions-before-you-start">
+<h2>Questions before you start</h2>
+<div>
+<details>
+<summary>Who is this pathway for?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>The current services are for experienced engineers, architects and engineering leaders. Freshers are outside the current service scope. Fit also depends on the target role and the interview theme you want to work on.</p>
+</div>
+</details>
+<details>
+<summary>Do I need a readiness review before requesting a mock?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>You can request a mock directly when you know the round you need to practise. A fit discussion confirms whether the theme is supported.</p>
+</div>
+</details>
+<details>
+<summary>Does the transition roadmap teach me to build an agentic system?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>It identifies the capability and evidence you need to develop and helps you plan that work. Hands-on system development is covered by the Build Agentic Systems programmes.</p>
+</div>
+</details>
+<details>
+<summary>Are referrals or placement included?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>These packages cover guidance, planning and practice. Job applications, referrals and placement are outside their scope.</p>
+</div>
+</details>
+<details>
+<summary>Is practice between sessions useful?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. Use your feedback and priorities to practise between sessions. The listed hours cover live one-to-one time.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-your-next-step"
+  heading="Discuss your next step"
+  intro="Tell us about your experience, target role and the support you need. The team will discuss fit, scope and availability before booking."
+  action="Send my career enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Target role or career goal","interest":"Support of interest"}}
+  order={["name","email","role","question","interest","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  choices={{ interest: interestsFor('career-preparation') }}
+  preset={preset}
+/>
+<div class="related">
+<p>
+<a href="/programmes/agentic-systems/">Explore agentic-systems programmes</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

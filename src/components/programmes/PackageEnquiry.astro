@@ -1,0 +1,60 @@
+---
+/**
+ * One enquiry section from the 15 October 2026 package: its heading and intro
+ * on the left, the form on the right. The package's form opened an email
+ * draft; this one is RouteForm, so the enquiry is saved in the pipeline and
+ * reaches the console. The fields, their words, their order and the button's
+ * words are the package's, passed straight through to RouteForm.
+ *
+ * Dropped from the package's form, on purpose: its "This opens an email
+ * draft" notice and copy-to-clipboard fallback (there is no draft), its
+ * required "I agree to be contacted" tick (a person sending an enquiry is
+ * asking to be contacted, and the site's only tick is the separate marketing
+ * one, which these pages do not show, matching the package's "does not
+ * subscribe you to marketing").
+ */
+import RouteForm from '../cohort/RouteForm.astro';
+import type { Route } from '../../lib/pipeline/forms';
+
+export interface Props {
+  id: string;
+  heading: string;
+  intro: string;
+  route?: Route;
+  /** The button's words, without the arrow. */
+  action: string;
+  labels: Record<string, string>;
+  order: string[];
+  choices?: Record<string, string[]>;
+  preset?: Record<string, string>;
+  fixed?: Record<string, string>;
+  include?: string[];
+  omit?: string[];
+}
+
+const { id, heading, intro, route = 'enquiry', action, labels, order, choices, preset, fixed, include, omit } =
+  Astro.props;
+---
+
+<section class="section enquiry" id={id}>
+  <div class="enquiry-intro">
+    <h2>{heading}</h2>
+    <p>{intro}</p>
+  </div>
+  <RouteForm
+    route={route}
+    id={`${id}-form`}
+    head={false}
+    consent={false}
+    hints={false}
+    flat
+    action={action}
+    labels={labels}
+    order={order}
+    choices={choices}
+    preset={preset}
+    fixed={fixed}
+    include={include}
+    omit={omit}
+  />
+</section>

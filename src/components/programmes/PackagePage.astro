@@ -1,0 +1,74 @@
+---
+/**
+ * The shell for the nine /programmes/ pages built from the 15 October 2026
+ * landing-page package (staging branch feat/programme-pathways; must not
+ * merge).
+ *
+ * The site's own header and footer stay, through PracticeLayout, because every
+ * page carries the one Living Craft lockup (CLAUDE.md, "ONE LOCKUP ON EVERY
+ * PAGE"). Inside <main>, the page is the package's markup under #pkg, styled
+ * by the package's own stylesheet (templates/programme-package.css), which is
+ * scoped to that id and imported nowhere else.
+ *
+ * The structured data is the package's: one WebPage node with its breadcrumb,
+ * in Indian English, about The Living Craft.
+ */
+import '../../styles/templates/programme-package.css';
+import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { PATHWAY_NAMES } from '../../data/programme-offers';
+
+export interface Props {
+  title: string;
+  description: string;
+  /** The page's path, with its trailing slash. */
+  path: string;
+  /** The package's breadcrumb names, in order. */
+  breadcrumb: string[];
+  /** The id of the page's enquiry section, for the header's button. */
+  enquire: string;
+  /**
+   * The header button's words. The package uses Enquire on the hub and the
+   * two pathway pages, and the page's own call to action on an offer page.
+   * A phone shows Enquire either way, so the button never wraps.
+   */
+  cta?: string;
+}
+
+const { title, description, path, breadcrumb, enquire, cta = 'Enquire' } = Astro.props;
+
+const schema = [
+  {
+    '@type': 'WebPage',
+    '@id': `${SITE_ORIGIN}${path}#webpage`,
+    url: `${SITE_ORIGIN}${path}`,
+    name: title,
+    description,
+    inLanguage: 'en-IN',
+    about: { '@type': 'EducationalOrganization', name: 'The Living Craft' },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumb.map((name, i) => ({ '@type': 'ListItem', position: i + 1, name })),
+    },
+  },
+];
+---
+
+<PracticeLayout
+  title={title}
+  description={description}
+  canonical={path}
+  schema={schema}
+  action={{ label: cta, short: 'Enquire', href: `#${enquire}` }}
+  related={[
+    ['Programmes', '/programmes/'],
+    [PATHWAY_NAMES['agentic-systems'], '/programmes/agentic-systems/'],
+    ['Career Preparation', '/programmes/career-preparation/'],
+  ]}
+  stickyApply={false}
+  reading={false}
+>
+  <div id="pkg" class="pkg">
+    <slot />
+  </div>
+</PracticeLayout>

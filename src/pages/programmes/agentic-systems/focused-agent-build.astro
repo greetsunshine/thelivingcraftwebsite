@@ -1,0 +1,186 @@
+---
+/**
+ * /programmes/agentic-systems/focused-agent-build/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/agentic-systems/focused-agent-build/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
+ *
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
+ */
+import PackagePage from '../../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../../components/programmes/PackageEnquiry.astro';
+import { practitioner } from '../../../data/facts';
+import { EXPERIENCE, OFFERS, PATHWAY_NAMES, offerLine } from '../../../data/programme-offers';
+
+const o = OFFERS['focused-agent-build'];
+
+const title = `Focused Agent Build: ${o.hours} Hours | The Living Craft`;
+const description = `Build a bounded agent with ${practitioner.name} and examine its workflow, behaviour and limits. ${o.hours} live hours, independent work and a fee of ${o.fee} per participant.`;
+---
+
+<PackagePage title={title} description={description} path="/programmes/agentic-systems/focused-agent-build/" breadcrumb={['Programmes', PATHWAY_NAMES['agentic-systems']]} enquire="discuss-focused-agent-build" cta="Discuss Focused Agent Build">
+<section class="hero focused-hero">
+<div class="hero-copy">
+<div class="offer-line">
+<p>
+<strong>{offerLine('focused-agent-build')}</strong>
+</p>
+</div>
+<h1>Build one focused agent. Understand the decisions behind it.</h1>
+<p>Work with Sunil Mathew on a bounded agent use case. Build its core workflow, examine its behaviour and understand the design choices that shape what it can do.</p>
+<p>
+<a href="#discuss-focused-agent-build">Discuss Focused Agent Build</a>
+</p>
+</div>
+<figure class="art bounded-hero-art">
+<img src="/programmes/bounded-agent.webp" alt="A woven agent sculpture sits within a clear circular boundary" width="1464" height="1074" fetchpriority="high" decoding="async">
+</figure>
+</section>
+<section class="section focused-intent" id="start-with-a-use-case-you-can-examine-closely">
+<div class="section-head">
+<h2>Start with a use case you can examine closely</h2>
+</div>
+<div class="section-body">
+<p>An agent&#x27;s design connects several decisions: the task it is responsible for, the tools it may use, the context it receives and the point at which a person should intervene.</p>
+<p>This programme brings those decisions into one focused build. Working with a bounded scope gives you room to examine the workflow and identify the further development it needs.</p>
+</div>
+</section>
+<section class="section focused-fit" id="who-this-programme-is-for">
+<div class="section-head">
+<h2>Who this programme is for</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>Developers who want practical experience with an agent workflow.</li>
+<li>Product managers who want to understand the design and evaluation decisions behind an agentic feature.</li>
+<li>Programme managers who need a clearer understanding of agentic-system scope, dependencies and review.</li>
+</ul>
+<p>Your starting capability and the work you want to undertake guide the fit discussion. The hands-on scope needs to suit that starting point.</p>
+</div>
+</section>
+<section class="section agent-work" id="what-you-work-through">
+<div>
+<h2>What you work through</h2>
+</div>
+<div class="agent-work-rows">
+<article>
+<span aria-hidden="true">01</span>
+<div>
+<h3>Define the agent&#x27;s responsibility</h3>
+<p>Choose a focused use case. Establish what the agent should achieve, which actions are appropriate and where its responsibility ends.</p>
+</div>
+</article>
+<article>
+<span aria-hidden="true">02</span>
+<div>
+<h3>Build the core workflow</h3>
+<p>Connect the task, tools and context into a working agent workflow. Examine the choices behind each part of the design.</p>
+</div>
+</article>
+<article>
+<span aria-hidden="true">03</span>
+<div>
+<h3>Evaluate its behaviour</h3>
+<p>Review whether the workflow does what you intended. Examine where its behaviour is unclear, where it can fail and where human review belongs.</p>
+</div>
+</article>
+<article>
+<span aria-hidden="true">04</span>
+<div>
+<h3>Explain the limits</h3>
+<p>Use feedback to identify changes and further development needs. Consider the authority, evaluation and failure-handling questions that broader enterprise use would raise.</p>
+</div>
+</article>
+</div>
+</section>
+<div class="focused-result">
+<section class="section focused-outcome" id="what-you-leave-with">
+<div class="section-head">
+<h2>What you leave with</h2>
+</div>
+<div class="section-body">
+<p>A focused agent build and a clearer explanation of its responsibilities, workflow, boundaries and limitations. You should be able to identify the work it needs before wider use.</p>
+</div>
+</section>
+</div>
+<section class="section focused-time" id="your-time-commitment">
+<div class="section-head">
+<h2>Your time commitment</h2>
+</div>
+<div class="section-body">
+<ul>
+<li>
+<strong>Live cohort work:</strong> {o.hours} hours with Sunil.</li>
+<li>
+<strong>Independent work:</strong> {o.independentWork}.</li>
+<li>
+<strong>Schedule:</strong> Discussed and agreed before joining.</li>
+</ul>
+<p>Independent work is part of the build. Use that time to apply the session work, examine behaviour and prepare for the next discussion.</p>
+</div>
+</section>
+<section class="section focused-teacher" id="learn-with-sunil-mathew">
+<div class="section-head">
+<h2>Learn with Sunil Mathew</h2>
+</div>
+<div class="section-body">
+<p>Sunil brings {EXPERIENCE}. His teaching connects a working system with the reasoning needed to explain its design.</p>
+<p>The programme uses practice, evaluation and feedback to develop that reasoning.</p>
+</div>
+</section>
+<section class="section faq" id="questions-about-this-programme">
+<h2>Questions about this programme</h2>
+<div>
+<details>
+<summary>Do I need to be a developer?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Developers, product managers and programme managers can discuss fit. Your technical starting point and intended hands-on work need to be assessed before the scope is agreed.</p>
+</div>
+</details>
+<details>
+<summary>Can I use a problem from my workplace?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>You can propose a use case. Its size, data and access requirements need to be reviewed so it fits a focused learning project.</p>
+</div>
+</details>
+<details>
+<summary>Is the outcome an enterprise deployment?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>The outcome is a bounded agent build with enterprise design considerations. Wider deployment requires further engineering and review appropriate to the environment.</p>
+</div>
+</details>
+<details>
+<summary>When should I choose the {OFFERS['design-and-build-a-poc'].hours}-hour programme?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Choose <a href="/programmes/agentic-systems/design-and-build-a-poc/">Design and Build a POC</a> when you want to develop a broader proof of concept, evaluate it and examine the engineering needed before deployment.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="discuss-focused-agent-build"
+  heading="Discuss Focused Agent Build"
+  intro="Share your experience and the use case you want to explore. The team will discuss fit, project scope, schedule and payment terms before you decide."
+  action="Send my Focused Agent Build enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Your use case or learning goal"}}
+  order={["name","email","role","question","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  fixed={{ interest: o.slug }}
+/>
+<div class="related">
+<p>
+<a href="/programmes/agentic-systems/">Compare Build programmes</a> · <a href="/programmes/">View both pathways</a>
+</p>
+</div>
+</PackagePage>

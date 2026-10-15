@@ -23,17 +23,16 @@ merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 
 ---
 
-## Programme pathways — 15 October (`feat/programme-pathways`, staging only)
+## Programme pathways — 15 October (`feat/programme-pathways`, STAGING ONLY, never merge)
 
-The 15 October landing-page package (`docs/2026-10-15_living-craft-landing-pages/`, a static mock-up, untracked in the main checkout) is built as Astro pages on this branch, in worktree `D:\lc-programmes`.
+The 15 October landing-page package (`docs/2026-10-15_living-craft-landing-pages/`, a static mock-up, untracked in the main checkout) is built on this branch, in worktree `D:lc-programmes`. **The user said on 15 October: do not merge, staging only.** Staging is the branch alias `thelivingcraft-git-feat-pro-f7a1ba-greetsunshine-1213s-projects.vercel.app` (Vercel sign-in).
 
-- **Routes.** `/programmes/` (hub, rewritten), `/programmes/[pathway]/` and `/programmes/[pathway]/[offer]/`: two pathways, six offers. `/programmes/enterprise/` is untouched and wins over the dynamic route.
-- **One source.** Every fee, hour count and sentence is in `src/data/programme-offers.ts`. Copy that repeats a number is built from the field. A sentence-by-sentence check against the package's HTML found nothing missing except what was dropped on purpose (below).
-- **Forms go to the pipeline, not to mailto.** The `enquiry` route gained an optional `interest` field, rendered only where a page passes `choices` to RouteForm. The offer pages preselect their own offer; `?interest=<slug>` preselects on a pathway page. The enquiry's `question` label is now "Your question or goal" on every page, the cohort page included.
-- **Dropped from the package on purpose:** the email-draft forms and their copy, the required "I agree to be contacted" tick, the package's own stylesheet and type (the pages use the site's programme template; the illustrations are kept), and "Walmart Labs" (`facts.ts` says Walmart).
-- **Header and sticky bar.** Pathway and offer pages show "Enquire" (to `#enquire`) and no sticky Apply bar. The hub keeps "Explore the cohort" so `/` stays one click away.
-- **BLOCKED on Sunil before merge:** (1) is Design to Deployment the 6-week, 8-seat cohort at `/`? Same 30 hours and ₹1,20,000, but no weeks, seats or start date. (2) Confirm the six fees; none is region-gated. (3) After that, add the offers to `/llms.txt`, `/api/facts` and the Ask agent, with an eval probe.
-- **Checks:** `astro check` 0 errors, `npm test` 206/206, all eight routes 200 and two unknown slugs 404 on the dev server. An invalid `interest` value gets a 400 from `/api/pipeline/submit`. No submission has been saved on staging yet.
+- **The package's markup and look, not the site's.** Nine static pages under `src/pages/programmes/` carry each package page's `<main>` markup and words unchanged, inside `#pkg`, styled by `src/styles/templates/programme-package.css`: the package stylesheet scoped to `#pkg`, its header and footer rules dropped, plus a block that clears what the site's global CSS sets. The site header and footer stay (one lockup). `PracticeLayout` gained `reading={false}` so V5's reading type does not fight it. A tag-and-class comparison against the package matches element for element outside the forms.
+- **Facts still come from one module.** `src/data/programme-offers.ts` holds the six fees, hours and independent work. Every number in the pages, titles and descriptions is an expression on it. The instructor line reads `facts.ts` (Walmart, not the package's Walmart Labs).
+- **Forms go to the pipeline, not to mailto.** `PackageEnquiry.astro` renders RouteForm with the package's field words, order and button words (`labels`, `order`, `action`, `omit`, `flat`, `head`, `hints`). The `enquiry` route gained three optional `pageOnly` fields: `interest` (a choice, or a hidden value on an offer page), `timing` and `assess`. The team form is the `enterprise` route, one screen, without industry or "how did you hear". No schema change.
+- **Still different from the package:** no email-draft text and no required "I agree to be contacted" tick; "Current role" is the site's role list, not a text box; "Organisation and role" is two fields because the enterprise route requires both; the footer is the site's.
+- **BLOCKED on Sunil, and the reason this stays on staging:** (1) is Design to Deployment the 6-week, 8-seat cohort at `/`? (2) the six fees are not calibrated or region-gated. (3) `/llms.txt`, `/api/facts` and the Ask agent do not know these offers.
+- **Checks:** `astro check` 0 errors, `npm test` 206/206, nine routes 200, unknown slug 404. Every package sentence is present except the email-draft notice and "Walmart Labs". No submission has been saved on staging yet.
 
 ---
 

@@ -1,197 +1,154 @@
 ---
 /**
- * /programmes/ — the hub for the two pathways, from the 15 October 2026
- * landing-page package (docs/2026-10-15_living-craft-landing-pages/).
+ * /programmes/ — from the 15 October 2026 landing-page package
+ * (docs/2026-10-15_living-craft-landing-pages/programmes/index.html).
+ * Staging only: branch feat/programme-pathways must not merge.
  *
- * WHAT CHANGED ON 15 OCTOBER 2026, AND WHAT DID NOT
+ * The markup and the words are the package's, unchanged, except:
+ *   * every fee, hour count and the instructor line read from
+ *     src/data/programme-offers.ts and facts.ts (PRICING REVIEW: the fees are
+ *     not yet calibrated; see that file's header);
+ *   * "Walmart Labs" reads "Walmart", as facts.ts has it;
+ *   * the enquiry form is RouteForm (the pipeline), not the package's
+ *     email draft. See PackageEnquiry.astro for what that dropped.
+ * The look is the package's own stylesheet, scoped: see
+ * src/styles/templates/programme-package.css.
  *
- * Until then this page compared three ROUTES into one offer: the open cohort,
- * an employer-funded place in it, and an enterprise programme. The package
- * replaces that with two PATHWAYS, each with three offers of its own:
+ * WHAT THIS REPLACED. On `main` this page compares three ROUTES into one offer
+ * (open cohort, employer-funded place, enterprise programme). The package
+ * replaces that with two PATHWAYS of three offers each. The cohort page at `/`
+ * and /programmes/enterprise/ are unchanged, and the October campaign links
+ * all point at `/`, so nothing moves or redirects it.
  *
- *   Build Agentic Systems      /programmes/agentic-systems/     10, 20, 30 live hours
- *   Career Transition & Interview Preparation
- *                              /programmes/career-preparation/  1, 3, 4 one-to-one hours
- *
- * Not changed: the cohort page at `/`, its application form and its campaign
- * links, and /programmes/enterprise/. The October campaign posts all point at
- * `/`, so nothing here moves or redirects it.
- *
- * ═══════════════════════════════════════════════════════════════════════════
- * OPEN DECISION, FOR SUNIL, BEFORE THIS MERGES
- * ═══════════════════════════════════════════════════════════════════════════
- * The package never mentions the six-week, eight-seat cohort at `/`. Its
- * "Design to Deployment" has the same 30 live hours and the same ₹1,20,000,
- * but no weeks, no seat cap and no start date. Either it IS the cohort, and
- * `/` and facts.ts have to say the same thing as this page, or it is a second
- * offer, and this hub needs a line pointing at the cohort. Until that is
- * decided, the header's "Explore the cohort" stays on this page as the way
- * back to `/`.
- *
- * WHAT MUST NOT BE ADDED
- *   * A fee, hour count or offer name typed here. They come from
- *     programme-offers.ts, like the pathway and offer pages.
- *   * Scarcity. The package has none and this site publishes none.
+ * OPEN DECISION, FOR SUNIL. The package never mentions the six-week,
+ * eight-seat cohort at `/`. Its Design to Deployment has the same 30 live
+ * hours and the same ₹1,20,000, but no weeks, no seat cap and no start date.
+ * Either it IS the cohort, and `/` and facts.ts must say what these pages say,
+ * or it is a second offer, and this hub needs a line pointing at `/`.
  */
-import '../../styles/templates/programme.css';
-import PracticeLayout from '../../layouts/PracticeLayout.astro';
-import ProgrammeHero from '../../components/programmes/ProgrammeHero.astro';
-import ProgrammeSection from '../../components/programmes/ProgrammeSection.astro';
-import RouteForm from '../../components/cohort/RouteForm.astro';
+import PackagePage from '../../components/programmes/PackagePage.astro';
+import PackageEnquiry from '../../components/programmes/PackageEnquiry.astro';
 import { practitioner } from '../../data/facts';
-import { EXPERIENCE, PATHWAYS, PATHWAY_KEYS, interestsFor, type Section } from '../../data/programme-offers';
+import { EXPERIENCE, READINESS_REVIEW_HOURS, hourWord, hoursList, interestsFor, lowestFee } from '../../data/programme-offers';
 
-const title = 'Programmes with Sunil Mathew — The Living Craft';
+const title = 'Programmes with Sunil Mathew | The Living Craft';
 const description = `Explore agentic-systems programmes and career preparation with ${practitioner.name}. Compare two pathways and choose the support that matches your next step.`;
-
-const build = PATHWAYS['agentic-systems'];
-const career = PATHWAYS['career-preparation'];
-
-const practitionerSection: Section = {
-  kind: 'instructor',
-  id: 'work-with-sunil',
-  heading: 'Work with an experienced practitioner',
-  portrait: true,
-  body: [
-    `${practitioner.name} brings ${EXPERIENCE}. His background includes leading engineering teams and hiring, developing and assessing senior technical professionals.`,
-    'At The Living Craft, that experience informs the work you do: examining a design, explaining trade-offs, practising a decision and learning from feedback.',
-  ],
-};
-
-const questions: Section = {
-  kind: 'faq',
-  id: 'questions',
-  heading: 'Common questions',
-  items: [
-    {
-      q: 'Can I join one programme on its own?',
-      a: 'Yes. Choose the programme that matches your goal and starting point. Each offer has its own scope; you do not need to enrol in the full range.',
-    },
-    {
-      q: 'Does career preparation include technical training?',
-      a: 'Career packages help you assess your gaps, plan preparation and practise interviews. The Build pathway provides hands-on technical development through a scoped project.',
-    },
-    {
-      q: 'Can my employer sponsor me?',
-      a: 'Discuss the programme you want to join and your employer’s requirements. Individual sponsorship and a programme for a whole team are scoped separately.',
-    },
-    {
-      q: 'What if I need help choosing?',
-      a: 'Share your experience and goal in an enquiry. For deeper career planning, you can also discuss the one-hour Career Readiness Review through the Career pathway.',
-    },
-  ],
-};
-
-const joining = [
-  'Share your experience and what you want to achieve.',
-  'Discuss the programme scope and your starting point.',
-  'Review the schedule, availability and payment terms before deciding.',
-  'Join the agreed programme and work through practice and feedback.',
-];
 ---
 
-<PracticeLayout bodyClass="programme-page hub-page" title={title} description={description} canonical="/programmes/">
-  <ProgrammeHero
-    eyebrow="Programmes"
-    title={['Build agentic systems.', 'Prepare for your next career move.']}
-    lede={`Practical programmes with ${practitioner.name} for experienced engineers, architects and engineering leaders. Choose hands-on agentic-system development or focused career and interview preparation.`}
-    cta={{ label: 'Explore the two pathways', href: '#choose' }}
-    image={{
-      src: '/programmes/pathways.webp',
-      alt: 'A woven gold thread branches towards a system model and a rising personal pathway',
-      width: 1513,
-      height: 1040,
-    }}
-  />
-
-  {/* ── the two pathways ─────────────────────────────────────────────────── */}
-  {/* PRICING REVIEW: "Fees from …" is computed in programme-offers.ts from
-      figures that are not yet calibrated. See the header of that file. */}
-  <section class="wrap" id="choose">
-    <div class="sec-head">
-      <h2>Choose your pathway</h2>
-    </div>
-    <ol class="pg-offers">
-      {
-        PATHWAY_KEYS.map((k, i) => {
-          const p = PATHWAYS[k];
-          return (
-            <li class="pg-offer">
-              <span class="n">{String(i + 1).padStart(2, '0')}</span>
-              <div>
-                <h3>{p.name}</h3>
-                <p class="pg-fit">{p.hubFit}</p>
-                <p>{p.hubBody}</p>
-                <p class="pg-facts">{p.hubFacts}</p>
-                <a class="pg-go" href={`/programmes/${k}/`}>
-                  {p.hubLink}&nbsp;<span class="arrow" aria-hidden="true">→</span>
-                </a>
-              </div>
-            </li>
-          );
-        })
-      }
-    </ol>
-  </section>
-
-  <ProgrammeSection section={practitionerSection} />
-
-  {/* ── which pathway ────────────────────────────────────────────────────── */}
-  <section class="wrap" id="start-with-the-outcome">
-    <div class="sec-head">
-      <h2>Start with the outcome you need</h2>
-    </div>
-    <div class="prose stack">
-      <p>
-        If your priority is to build technical capability through a working project, explore the
-        <a href="/programmes/agentic-systems/">{build.name}</a> pathway.
-      </p>
-      <p>
-        If your priority is a target role, preparation plan or interview performance, explore
-        <a href="/programmes/career-preparation/">{career.name}</a>.
-      </p>
-      <p>
-        You can discuss fit before choosing a programme. A company can also enquire about sponsoring
-        an individual or developing a team’s capability.
-      </p>
-    </div>
-  </section>
-
-  {/* ── how joining works ────────────────────────────────────────────────── */}
-  <section class="wrap" id="how-joining-works">
-    <div class="sec-head">
-      <h2>How joining works</h2>
-    </div>
-    <ol class="tlist pg-joining">
-      {
-        joining.map((step, i) => (
-          <li>
-            <span class="n">{String(i + 1).padStart(2, '0')}</span>
-            <p>{step}</p>
-          </li>
-        ))
-      }
-    </ol>
-  </section>
-
-  <ProgrammeSection section={questions} />
-
-  {/* ── the enquiry ──────────────────────────────────────────────────────── */}
-  <section class="wrap" id="enquire">
-    <div class="sec-head">
-      <p class="eyebrow">Next step</p>
-      <h2>Tell us what you want to achieve</h2>
-      <p class="lead">
-        Share a little about your experience and the next step you have in mind. The team will
-        discuss programme fit, scope and availability with you.
-      </p>
-    </div>
-    <RouteForm
-      route="enquiry"
-      id="enquiry-form"
-      heading="Send your enquiry"
-      intro="This is an enquiry, not an application or a booking."
-      choices={{ interest: interestsFor('hub') }}
-    />
-  </section>
-</PracticeLayout>
+<PackagePage title={title} description={description} path="/programmes/" breadcrumb={['Programmes']} enquire="tell-us-what-you-want-to-achieve">
+<section class="hero common-hero">
+<div class="hero-copy">
+<h1>Build agentic systems.<br>
+<span>Prepare for your next career move.</span>
+</h1>
+<p>Practical programmes with Sunil Mathew for experienced engineers, architects and engineering leaders. Choose hands-on agentic-system development or focused career and interview preparation.</p>
+<p>
+<a href="#choose-your-pathway">Explore the two pathways</a>
+</p>
+</div>
+<figure class="art common-art">
+<img src="/programmes/pathways.webp" alt="A woven gold thread branches towards a system model and a rising personal pathway" width="1513" height="1040" fetchpriority="high" decoding="async">
+</figure>
+</section>
+<section class="section choices" id="choose-your-pathway">
+<h2>Choose your pathway</h2>
+<div class="pathway-choices">
+<article class="path-choice path-0">
+<span class="path-num" aria-hidden="true">01</span>
+<h3>Build Agentic Systems</h3>
+<p>You want to understand how an agentic system works, build one and make sound decisions about its behaviour.</p>
+<p>Work on a focused agent, a proof of concept or a project taken through deployment. Build, evaluate and revise your work with guidance and feedback.</p>
+<p>
+<strong>Three live cohort programmes · {hoursList('agentic-systems')} live hours · Fees from {lowestFee('agentic-systems')} per participant</strong>
+</p>
+<p>
+<a href="/programmes/agentic-systems/">Compare agentic-systems programmes</a>
+</p>
+</article>
+<article class="path-choice path-1">
+<span class="path-num" aria-hidden="true">02</span>
+<h3>Career Transition &amp; Interview Preparation</h3>
+<p>You want clarity about your next role, a plan for moving towards agentic-AI work, or practice before an interview.</p>
+<p>Choose a focused mock interview, structured preparation with two mocks, or a career-transition roadmap with personal guidance.</p>
+<p>
+<strong>Three one-to-one packages · {hoursList('career-preparation')} hours · Fees from {lowestFee('career-preparation')}</strong>
+</p>
+<p>
+<a href="/programmes/career-preparation/">Compare career-preparation packages</a>
+</p>
+</article>
+</div>
+</section>
+<section class="section practitioner" id="work-with-an-experienced-practitioner">
+<figure class="portrait ">
+<img src="/programmes/sunil-bookshelf.webp" width="480" height="600" alt="Sunil Mathew seated in front of a bookshelf" loading="lazy">
+</figure>
+<div>
+<h2>Work with an experienced practitioner</h2>
+<p>Sunil Mathew brings {EXPERIENCE}. His background includes leading engineering teams and hiring, developing and assessing senior technical professionals.</p>
+<p>At The Living Craft, that experience informs the work you do: examining a design, explaining trade-offs, practising a decision and learning from feedback.</p>
+</div>
+</section>
+<section class="section outcome-reading" id="start-with-the-outcome-you-need">
+<div class="section-head">
+<h2>Start with the outcome you need</h2>
+</div>
+<div class="section-body">
+<p>If your priority is to build technical capability through a working project, explore the Build Agentic Systems pathway.</p>
+<p>If your priority is a target role, preparation plan or interview performance, explore Career Transition &amp; Interview Preparation.</p>
+<p>You can discuss fit before choosing a programme. A company can also enquire about sponsoring an individual or developing a team&#x27;s capability.</p>
+</div>
+</section>
+<section class="section joining" id="how-joining-works">
+<h2>How joining works</h2>
+<ol>
+<li>Share your experience and what you want to achieve.</li>
+<li>Discuss the programme scope and your starting point.</li>
+<li>Review the schedule, availability and payment terms before deciding.</li>
+<li>Join the agreed programme and work through practice and feedback.</li>
+</ol>
+</section>
+<section class="section faq" id="common-questions">
+<h2>Common questions</h2>
+<div>
+<details>
+<summary>Can I join one programme on its own?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Yes. Choose the programme that matches your goal and starting point. Each offer has its own scope; you do not need to enrol in the full range.</p>
+</div>
+</details>
+<details>
+<summary>Does career preparation include technical training?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Career packages help you assess your gaps, plan preparation and practise interviews. The Build pathway provides hands-on technical development through a scoped project.</p>
+</div>
+</details>
+<details>
+<summary>Can my employer sponsor me?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Discuss the programme you want to join and your employer&#x27;s requirements. Individual sponsorship and a programme for a whole team are scoped separately.</p>
+</div>
+</details>
+<details>
+<summary>What if I need help choosing?<span aria-hidden="true">+</span>
+</summary>
+<div class="answer">
+<p>Share your experience and goal in an enquiry. For deeper career planning, you can also discuss the {hourWord(READINESS_REVIEW_HOURS)} Career Readiness Review through the Career pathway.</p>
+</div>
+</details>
+</div>
+</section>
+<PackageEnquiry
+  id="tell-us-what-you-want-to-achieve"
+  heading="Tell us what you want to achieve"
+  intro="Share a little about your experience and the next step you have in mind. The team will discuss programme fit, scope and availability with you."
+  action="Send my programme enquiry"
+  labels={{"name":"Full name","email":"Email address","role":"Current role","phone":"Phone number, optional","question":"Your goal","interest":"Pathway"}}
+  order={["name","email","role","question","interest","phone"]}
+  omit={["organisation","discovery","discovery_detail"]}
+  choices={{ interest: interestsFor('hub') }}
+/>
+</PackagePage>
